@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+
+  <data name="problem.title.validation" xml:space="preserve"><value>Validation error</value></data>
+  <data name="problem.title.unauthorized" xml:space="preserve"><value>Authentication required</value></data>
+  <data name="problem.title.forbidden" xml:space="preserve"><value>Forbidden</value></data>
+  <data name="problem.title.not_found" xml:space="preserve"><value>Not found</value></data>
+  <data name="problem.title.conflict" xml:space="preserve"><value>Conflict</value></data>
+  <data name="problem.title.rule" xml:space="preserve"><value>Business rule violation</value></data>
+  <data name="problem.title.payment" xml:space="preserve"><value>Subscription required</value></data>
+  <data name="problem.title.failure" xml:space="preserve"><value>Unexpected error</value></data>
+  <data name="problem.title.cancelled" xml:space="preserve"><value>Request cancelled</value></data>
+
+  <data name="general.null_value" xml:space="preserve"><value>Value cannot be empty.</value></data>
+  <data name="general.validation_error" xml:space="preserve"><value>The submitted data failed validation.</value></data>
+  <data name="general.concurrency_conflict" xml:space="preserve"><value>The record was modified by another user; refresh and try again.</value></data>
+  <data name="general.request_cancelled" xml:space="preserve"><value>The client cancelled the request.</value></data>
+  <data name="general.internal_error" xml:space="preserve"><value>An unexpected error occurred.</value></data>
+  <data name="general.not_found" xml:space="preserve"><value>Record not found.</value></data>
+
+  <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
+  <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
+  <data name="auth.out_of_scope" xml:space="preserve"><value>Record not found.</value></data>
+  <data name="auth.invalid_credentials" xml:space="preserve"><value>Invalid e-mail or password.</value></data>
+  <data name="auth.user_disabled" xml:space="preserve"><value>The account is disabled.</value></data>
+  <data name="auth.user_not_activated" xml:space="preserve"><value>The account has not been activated yet. Use the invitation link.</value></data>
+  <data name="auth.locked_out" xml:space="preserve"><value>The account is temporarily locked. Try again in {minutes} minutes.</value></data>
+  <data name="auth.tenant_inactive" xml:space="preserve"><value>The company account is suspended or closed.</value></data>
+  <data name="auth.refresh_token_invalid" xml:space="preserve"><value>Your session has expired; please sign in again.</value></data>
+  <data name="auth.refresh_token_reused" xml:space="preserve"><value>All sessions were closed for security reasons; please sign in again.</value></data>
+  <data name="auth.tenant_required" xml:space="preserve"><value>You have more than one company account; select a company.</value></data>
+  <data name="auth.mfa_required" xml:space="preserve"><value>A two-factor verification code is required.</value></data>
+  <data name="auth.mfa_invalid" xml:space="preserve"><value>The verification code is invalid.</value></data>
+  <data name="tenant.mismatch" xml:space="preserve"><value>The record belongs to another company account.</value></data>
+
+  <data name="tenant.invalid_slug" xml:space="preserve"><value>The company address may only contain lowercase letters, digits and hyphens (3–40 characters).</value></data>
+  <data name="tenant.slug_taken" xml:space="preserve"><value>This company address is already in use.</value></data>
+  <data name="tenant.not_found" xml:space="preserve"><value>Company account not found.</value></data>
+  <data name="tenant.closed" xml:space="preserve"><value>A closed company account cannot be modified.</value></data>
+
+  <data name="user.invalid_email" xml:space="preserve"><value>Invalid e-mail address.</value></data>
+  <data name="user.email_taken" xml:space="preserve"><value>This e-mail address is already registered.</value></data>
+  <data name="user.not_found" xml:space="preserve"><value>User not found.</value></data>
+  <data name="user.no_password" xml:space="preserve"><value>A user without a password cannot be enabled; send an invitation.</value></data>
+  <data name="user.last_owner" xml:space="preserve"><value>The only owner of the account cannot be disabled or demoted.</value></data>
+  <data name="user.cannot_modify_self" xml:space="preserve"><value>You cannot perform this action on your own account.</value></data>
+  <data name="user.password_too_short" xml:space="preserve"><value>The password must be at least {minLength} characters.</value></data>
+  <data name="user.password_mismatch" xml:space="preserve"><value>The current password is incorrect.</value></data>
+
+  <data name="role.invalid_code" xml:space="preserve"><value>The role code may only contain letters, digits, '_' and '-' (max 50 characters).</value></data>
+  <data name="role.system_code" xml:space="preserve"><value>This code is reserved for a system role.</value></data>
+  <data name="role.code_taken" xml:space="preserve"><value>This role code is already in use.</value></data>
+  <data name="role.not_found" xml:space="preserve"><value>Role not found.</value></data>
+  <data name="role.system_readonly" xml:space="preserve"><value>System roles cannot be modified or deleted.</value></data>
+  <data name="role.locked" xml:space="preserve"><value>The permissions of the Owner role cannot be changed.</value></data>
+  <data name="role.in_use" xml:space="preserve"><value>The role is assigned to {count} users; remove the assignments first.</value></data>
+  <data name="role.unknown_permission" xml:space="preserve"><value>Unknown permission: {permission}</value></data>
+
+  <data name="invitation.not_found" xml:space="preserve"><value>Invitation not found.</value></data>
+  <data name="invitation.already_accepted" xml:space="preserve"><value>The invitation has already been accepted.</value></data>
+  <data name="invitation.expired" xml:space="preserve"><value>The invitation has expired or was revoked.</value></data>
+  <data name="invitation.user_active" xml:space="preserve"><value>The user is already active; no invitation needed.</value></data>
+
+  <data name="roles.owner.name" xml:space="preserve"><value>Account Owner</value></data>
+  <data name="roles.owner.description" xml:space="preserve"><value>All permissions; billing and account management. Cannot be deleted.</value></data>
+  <data name="roles.admin.name" xml:space="preserve"><value>System Administrator</value></data>
+  <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions except billing.</value></data>
+  <data name="roles.hr.name" xml:space="preserve"><value>HR Manager</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, GDPR.</value></data>
+  <data name="roles.hrspecialist.name" xml:space="preserve"><value>HR Specialist</value></data>
+  <data name="roles.hrspecialist.description" xml:space="preserve"><value>Subset of HR Manager: no salary visibility, payroll, termination or compensation approvals.</value></data>
+  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Payroll Specialist</value></data>
+  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Payroll periods, parameters, pay items, garnishments, social security filings, bank files, timesheet locks.</value></data>
+  <data name="roles.finance.name" xml:space="preserve"><value>Finance</value></data>
+  <data name="roles.finance.description" xml:space="preserve"><value>Final approval of expenses/advances, bank payment lists, budget view, invoices.</value></data>
+  <data name="roles.manager.name" xml:space="preserve"><value>Manager</value></data>
+  <data name="roles.manager.description" xml:space="preserve"><value>Team leave/overtime/expense approvals, team calendar, timesheets, performance, goals, raise proposals (own team only).</value></data>
+  <data name="roles.timekeeper.name" xml:space="preserve"><value>Timekeeper</value></data>
+  <data name="roles.timekeeper.description" xml:space="preserve"><value>Attendance events, shift planning, timesheet calculation (no locking).</value></data>
+  <data name="roles.recruiter.name" xml:space="preserve"><value>Recruiter</value></data>
+  <data name="roles.recruiter.description" xml:space="preserve"><value>Full ATS, career site, candidate privacy; personnel only for conversion.</value></data>
+  <data name="roles.interviewer.name" xml:space="preserve"><value>Interviewer</value></data>
+  <data name="roles.interviewer.description" xml:space="preserve"><value>Assigned interviews only: candidate summary, interview notes, scorecards.</value></data>
+  <data name="roles.auditor.name" xml:space="preserve"><value>Auditor</value></data>
+  <data name="roles.auditor.description" xml:space="preserve"><value>Read-only: audit log, all reports and exports, payroll/timesheet/leave/document views, consent matrix. No writes; sensitive fields masked.</value></data>
+  <data name="roles.externalaccountant.name" xml:space="preserve"><value>External Accountant</value></data>
+  <data name="roles.externalaccountant.description" xml:space="preserve"><value>Read-only plus files: payroll/timesheet outputs, social security filings, bank lists; sensitive fields masked.</value></data>
+  <data name="roles.itadmin.name" xml:space="preserve"><value>IT Administrator</value></data>
+  <data name="roles.itadmin.description" xml:space="preserve"><value>Users/roles, security policy, SSO, API keys, webhooks, devices/QR checkpoints; no HR data access.</value></data>
+  <data name="roles.employee.name" xml:space="preserve"><value>Employee</value></data>
+  <data name="roles.employee.description" xml:space="preserve"><value>Self-service: profile, leave/overtime/expense/advance requests, payslips, attendance, announcements, directory, documents, training, goals, assistant.</value></data>
+  <data name="roles.intern.name" xml:space="preserve"><value>Intern</value></data>
+  <data name="roles.intern.description" xml:space="preserve"><value>Employee minus payslips/advances; limited directory.</value></data>
+  <data name="roles.contractor.name" xml:space="preserve"><value>Contractor</value></data>
+  <data name="roles.contractor.description" xml:space="preserve"><value>Limited self-service: profile, attendance, announcements, documents.</value></data>
+  <data name="roles.apiintegration.name" xml:space="preserve"><value>Integration (Service Account)</value></data>
+  <data name="roles.apiintegration.description" xml:space="preserve"><value>API key only; scope based. No UI sign-in.</value></data>
+
+  <data name="identity.users.view" xml:space="preserve"><value>View users</value></data>
+  <data name="identity.users.manage" xml:space="preserve"><value>Create/edit users and assign roles</value></data>
+  <data name="identity.users.invite" xml:space="preserve"><value>Invite users</value></data>
+  <data name="identity.users.suspend" xml:space="preserve"><value>Suspend/enable users</value></data>
+  <data name="identity.users.reset_mfa" xml:space="preserve"><value>Reset a user's 2FA</value></data>
+  <data name="identity.users.impersonate" xml:space="preserve"><value>Sign in as another user</value></data>
+  <data name="identity.roles.view" xml:space="preserve"><value>View roles and permission matrix</value></data>
+  <data name="identity.roles.manage" xml:space="preserve"><value>Create roles and edit permissions</value></data>
+  <data name="identity.tenant.view" xml:space="preserve"><value>View company account details</value></data>
+  <data name="identity.tenant.manage" xml:space="preserve"><value>Change company account settings</value></data>
+  <data name="identity.security.manage" xml:space="preserve"><value>Manage security policy</value></data>
+  <data name="identity.api_keys.manage" xml:space="preserve"><value>Manage API keys</value></data>
+  <data name="identity.audit.view" xml:space="preserve"><value>View audit log</value></data>
+  <data name="identity.audit.sensitive_view" xml:space="preserve"><value>View sensitive fields in audit log</value></data>
+  <data name="identity.group.users" xml:space="preserve"><value>Users</value></data>
+  <data name="identity.group.roles" xml:space="preserve"><value>Roles</value></data>
+  <data name="identity.group.account" xml:space="preserve"><value>Account</value></data>
+  <data name="identity.group.security" xml:space="preserve"><value>Security</value></data>
+  <data name="identity.group.audit" xml:space="preserve"><value>Audit</value></data>
+
+  <!-- E-mails -->
+  <data name="email.invitation.subject" xml:space="preserve"><value>Your SenseİK invitation — {tenant}</value></data>
+  <data name="email.invitation.body" xml:space="preserve"><value>Hello {name},
+
+{tenant} invited you to SenseİK. Click the link to activate your account:
+{url}
+
+The link is valid until {expires}.</value></data>
+  <data name="email.password_reset.subject" xml:space="preserve"><value>SenseİK password reset</value></data>
+  <data name="email.password_reset.body" xml:space="preserve"><value>Hello {name},
+
+Click the link to reset your password:
+{url}
+
+The link is valid until {expires}. If you did not request this, ignore this e-mail.</value></data>
+  <data name="email.welcome.subject" xml:space="preserve"><value>Your SenseİK account is ready — {tenant}</value></data>
+  <data name="email.welcome.body" xml:space="preserve"><value>Hello {name},
+
+Your SenseİK account is active. Sign in: {url}</value></data>
+  <!-- Field names used in validation messages (field.{snake_case}) -->
+  <data name="field.code" xml:space="preserve"><value>Code</value></data>
+  <data name="field.company_name" xml:space="preserve"><value>Company name</value></data>
+  <data name="field.email" xml:space="preserve"><value>E-mail</value></data>
+  <data name="field.first_name" xml:space="preserve"><value>First name</value></data>
+  <data name="field.language" xml:space="preserve"><value>Language</value></data>
+  <data name="field.last_name" xml:space="preserve"><value>Last name</value></data>
+  <data name="field.name" xml:space="preserve"><value>Name</value></data>
+  <data name="field.owner_email" xml:space="preserve"><value>Owner e-mail</value></data>
+  <data name="field.owner_first_name" xml:space="preserve"><value>Owner first name</value></data>
+  <data name="field.owner_last_name" xml:space="preserve"><value>Owner last name</value></data>
+  <data name="field.password" xml:space="preserve"><value>Password</value></data>
+  <data name="field.permissions" xml:space="preserve"><value>Permissions</value></data>
+  <data name="field.phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="field.privacy_notice_accepted" xml:space="preserve"><value>Privacy notice consent</value></data>
+  <data name="field.refresh_token" xml:space="preserve"><value>Refresh token</value></data>
+  <data name="field.role_ids" xml:space="preserve"><value>Roles</value></data>
+  <data name="field.slug" xml:space="preserve"><value>Company address</value></data>
+  <data name="field.token" xml:space="preserve"><value>Token</value></data>
+</root>

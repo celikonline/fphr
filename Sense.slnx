@@ -1,0 +1,47 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Sense.Api/Sense.Api.csproj" />
+    <Project Path="src/Sense.Migrator/Sense.Migrator.csproj" />
+    <Project Path="src/Sense.Worker/Sense.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/Employee/">
+    <Project Path="src/Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
+    <Project Path="src/Modules/Employee/Sense.Modules.Employee.Application/Sense.Modules.Employee.Application.csproj" />
+    <Project Path="src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <Project Path="src/Modules/Employee/Sense.Modules.Employee.Domain/Sense.Modules.Employee.Domain.csproj" />
+    <Project Path="src/Modules/Employee/Sense.Modules.Employee.Infrastructure/Sense.Modules.Employee.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Sense.Modules.Identity.Api/Sense.Modules.Identity.Api.csproj" />
+    <Project Path="src/Modules/Identity/Sense.Modules.Identity.Application/Sense.Modules.Identity.Application.csproj" />
+    <Project Path="src/Modules/Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/Sense.Modules.Identity.Domain/Sense.Modules.Identity.Domain.csproj" />
+    <Project Path="src/Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Organization/">
+    <Project Path="src/Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />
+    <Project Path="src/Modules/Organization/Sense.Modules.Organization.Application/Sense.Modules.Organization.Application.csproj" />
+    <Project Path="src/Modules/Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <Project Path="src/Modules/Organization/Sense.Modules.Organization.Domain/Sense.Modules.Organization.Domain.csproj" />
+    <Project Path="src/Modules/Organization/Sense.Modules.Organization.Infrastructure/Sense.Modules.Organization.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="src/Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+    <Project Path="src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <Project Path="src/Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
+    <Project Path="src/Shared/Sense.Shared.Web/Sense.Shared.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Sense.Tests.Architecture/Sense.Tests.Architecture.csproj" />
+    <Project Path="tests/Sense.Tests.Contract/Sense.Tests.Contract.csproj" />
+    <Project Path="tests/Sense.Tests.Integration/Sense.Tests.Integration.csproj" />
+    <Project Path="tests/Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
+    <Project Path="tests/Sense.Tests.TenantIsolation/Sense.Tests.TenantIsolation.csproj" />
+  </Folder>
+  <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/Sense.Modules.Identity.Tests/Sense.Modules.Identity.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Shared.Infrastructure.Tests/Sense.Shared.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Shared.Kernel.Tests/Sense.Shared.Kernel.Tests.csproj" />
+  </Folder>
+</Solution>

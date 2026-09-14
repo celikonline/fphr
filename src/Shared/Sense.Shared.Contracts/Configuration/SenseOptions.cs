@@ -1,0 +1,141 @@
+namespace Sense.Shared.Contracts.Configuration;
+
+/// <summary>appsettings bölüm adları.</summary>
+public static class ConfigurationSections
+{
+    public const string Paging = "Paging";
+    public const string Localization = "Localization";
+    public const string Caching = "Caching";
+    public const string Outbox = "Outbox";
+    public const string Diagnostics = "Diagnostics";
+    public const string ProblemDetails = "ProblemDetails";
+    public const string Auth = "Auth";
+    public const string Storage = "Storage";
+    public const string Email = "Email";
+    public const string Frontend = "Frontend";
+    public const string Identity = "Identity";
+}
+
+public static class ConnectionStringNames
+{
+    public const string Database = "Database";
+    public const string Redis = "Redis";
+}
+
+/// <summary>Liste uçlarının sayfalama sınırları.</summary>
+public sealed class PagingOptions
+{
+    public int DefaultPageSize { get; set; } = PagingDefaults.DefaultPageSize;
+
+    public int MaxPageSize { get; set; } = PagingDefaults.MaxPageSize;
+
+    /// <summary>Bu satır sayısının üstündeki dışa aktarmalar arka plan işine alınır.</summary>
+    public int SyncExportRowLimit { get; set; } = PagingDefaults.SyncExportRowLimit;
+}
+
+public static class PagingDefaults
+{
+    public const int DefaultPageSize = 20;
+    public const int MaxPageSize = 200;
+    public const int SyncExportRowLimit = 5000;
+    public const int FirstPage = 1;
+}
+
+/// <summary>Desteklenen kültürler; varsayılan tr-TR.</summary>
+public sealed class LocalizationOptions
+{
+    public string DefaultCulture { get; set; } = Cultures.Turkish;
+
+    public IList<string> SupportedCultures { get; set; } = [Cultures.Turkish, Cultures.English];
+
+    public string ResourcesPath { get; set; } = LocalizationDefaults.ResourcesPath;
+}
+
+public static class Cultures
+{
+    public const string Turkish = "tr-TR";
+    public const string English = "en-US";
+    public const string TurkishLanguage = "tr";
+    public const string EnglishLanguage = "en";
+}
+
+public static class LocalizationDefaults
+{
+    public const string ResourcesPath = "Resources";
+}
+
+public sealed class CachingOptions
+{
+    public int DefaultExpirationMinutes { get; set; } = CachingDefaults.DefaultExpirationMinutes;
+
+    public int LocalExpirationSeconds { get; set; } = CachingDefaults.LocalExpirationSeconds;
+
+    public int PermissionExpirationMinutes { get; set; } = CachingDefaults.PermissionExpirationMinutes;
+
+    public string KeyPrefixGlobal { get; set; } = CachingDefaults.GlobalPrefix;
+}
+
+public static class CachingDefaults
+{
+    public const int DefaultExpirationMinutes = 5;
+    public const int LocalExpirationSeconds = 30;
+    public const int PermissionExpirationMinutes = 10;
+    public const string GlobalPrefix = "global";
+    public const char KeySeparator = ':';
+}
+
+public sealed class OutboxOptions
+{
+    public int BatchSize { get; set; } = OutboxDefaults.BatchSize;
+
+    public int MaxAttempts { get; set; } = OutboxDefaults.MaxAttempts;
+
+    public int BaseBackoffSeconds { get; set; } = OutboxDefaults.BaseBackoffSeconds;
+
+    public int MaxBackoffSeconds { get; set; } = OutboxDefaults.MaxBackoffSeconds;
+
+    public int PollingIntervalSeconds { get; set; } = OutboxDefaults.PollingIntervalSeconds;
+
+    public int RetentionDays { get; set; } = OutboxDefaults.RetentionDays;
+}
+
+public static class OutboxDefaults
+{
+    public const int BatchSize = 50;
+    public const int MaxAttempts = 10;
+    public const int BaseBackoffSeconds = 5;
+    public const int MaxBackoffSeconds = 3600;
+    public const int PollingIntervalSeconds = 2;
+    public const int RetentionDays = 30;
+    public const int MaxErrorLength = 4000;
+}
+
+public sealed class DiagnosticsOptions
+{
+    public int SlowRequestThresholdMs { get; set; } = DiagnosticsDefaults.SlowRequestThresholdMs;
+
+    public string ActivitySourceName { get; set; } = DiagnosticsDefaults.ActivitySourceName;
+}
+
+public static class DiagnosticsDefaults
+{
+    public const int SlowRequestThresholdMs = 500;
+    public const string ActivitySourceName = "Sense.Dispatcher";
+}
+
+public sealed class ProblemMappingOptions
+{
+    /// <summary>ProblemDetails.type için taban adres; sonuna hata kodu eklenir.</summary>
+    public string TypeBaseUrl { get; set; } = ProblemDetailsDefaults.TypeBaseUrl;
+
+    public bool IncludeExceptionDetails { get; set; }
+}
+
+public static class ProblemDetailsDefaults
+{
+    public const string TypeBaseUrl = "https://docs.senseik.com/errors/";
+    public const string CodeExtension = "code";
+    public const string TraceIdExtension = "traceId";
+    public const string ErrorsExtension = "errors";
+    public const string ArgsExtension = "args";
+}

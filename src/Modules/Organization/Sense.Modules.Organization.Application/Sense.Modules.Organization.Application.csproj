@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Organization.Domain/Sense.Modules.Organization.Domain.csproj" />
+    <ProjectReference Include="../Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

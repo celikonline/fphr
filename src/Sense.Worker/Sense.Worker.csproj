@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Organization/Sense.Modules.Organization.Infrastructure/Sense.Modules.Organization.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Employee/Sense.Modules.Employee.Infrastructure/Sense.Modules.Employee.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" />
+  </ItemGroup>
+
+</Project>

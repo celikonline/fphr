@@ -1,0 +1,116 @@
+name: senseik
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: senseik-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sense}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sense}
+      POSTGRES_DB: ${POSTGRES_DB:-senseik}
+      TZ: Europe/Istanbul
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - senseik_pg:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sense} -d ${POSTGRES_DB:-senseik}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: senseik-redis
+    command: ["redis-server", "--appendonly", "no", "--save", ""]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    container_name: senseik-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minio12345}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - senseik_minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: senseik-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minio} ${MINIO_ROOT_PASSWORD:-minio12345} &&
+      mc mb --ignore-existing local/senseik-files &&
+      mc mb --ignore-existing local/senseik-public &&
+      mc anonymous set download local/senseik-public &&
+      echo 'buckets ready'
+      "
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: senseik-mailpit
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: senseik-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-sense}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-sense}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_UI_PORT:-15672}:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    profiles: ["bus"]
+
+  seq:
+    image: datalust/seq:latest
+    container_name: senseik-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "${SEQ_PORT:-5341}:80"
+    profiles: ["obs"]
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: senseik-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "${JAEGER_UI_PORT:-16686}:16686"
+      - "4317:4317"
+      - "4318:4318"
+    profiles: ["obs"]
+
+volumes:
+  senseik_pg:
+  senseik_minio:

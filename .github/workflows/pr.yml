@@ -1,0 +1,74 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: senseik_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore Sense.slnx
+      - name: Format check
+        run: dotnet format Sense.slnx --verify-no-changes --no-restore
+      - name: Build
+        run: dotnet build Sense.slnx -c Release --no-restore
+      - name: Test
+        env:
+          ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
+          ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
+        run: dotnet test Sense.slnx -c Release --no-build --collect:"XPlat Code Coverage" --results-directory TestResults
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: TestResults
+
+  web:
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('web/package.json') != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web typecheck
+      - run: pnpm --filter web test -- --run
+      - run: pnpm --filter web build

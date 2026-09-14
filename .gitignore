@@ -1,0 +1,43 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.idea/
+*.swp
+TestResults/
+coverage/
+*.snupkg
+artifacts/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.tsbuildinfo
+.pnpm-store/
+.expo/
+.expo-shared/
+web-build/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+*.pfx
+*.pem
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Docker volumes
+infra/.data/
