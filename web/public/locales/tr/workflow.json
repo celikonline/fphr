@@ -1,0 +1,86 @@
+{
+  "requestType": {
+    "Leave": "İzin",
+    "Advance": "Avans",
+    "Expense": "Harcama",
+    "Overtime": "Fazla mesai"
+  },
+  "policies": {
+    "listTitle": "Onay süreçleri",
+    "listSubtitle": "Talep türlerine göre onay adımlarını tanımlayın.",
+    "addNew": "Yeni süreç ekle",
+    "createTitle": "Yeni onay süreci",
+    "createDescription": "Talep türünü, süreç adını ve onay adımlarını girin.",
+    "editTitle": "Onay sürecini düzenle",
+    "editDescription": "Süreç adını ve onay adımlarını güncelleyin.",
+    "name": "Süreç adı",
+    "namePlaceholder": "Örn. Standart izin onayı",
+    "requestType": "Talep türü",
+    "selectRequestType": "Talep türü seçin",
+    "showCurrentApproverToRequester": "Onay sırasının kimde olduğunu görüntülesin",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "empty": "Henüz onay süreci yok. \"Yeni süreç ekle\" ile oluşturun.",
+    "steps": {
+      "title": "Onay adımları",
+      "stepNumber": "Adım {{number}}",
+      "approver": "Onaylayan",
+      "selectApprover": "Onaylayan seçin",
+      "isRequired": "Bu adım zorunlu",
+      "addStep": "Adım ekle",
+      "removeStep": "Adımı kaldır",
+      "empty": "Henüz onay adımı yok. \"Adım ekle\" ile ekleyin."
+    },
+    "save": "Kaydet",
+    "cancel": "Vazgeç",
+    "deactivate": "Pasifleştir",
+    "deactivateTitle": "Onay sürecini pasifleştir",
+    "deactivateConfirm": "\"{{name}}\" onay süreci pasifleştirilecek. Devam etmek istiyor musunuz?",
+    "createSuccess": "Onay süreci oluşturuldu.",
+    "updateSuccess": "Onay süreci güncellendi.",
+    "deactivateSuccess": "Onay süreci pasifleştirildi."
+  },
+  "inbox": {
+    "title": "Onay kutusu",
+    "subtitle": "Onayınızı bekleyen talepler.",
+    "empty": "Onayınızı bekleyen talep yok.",
+    "requester": "Talep sahibi",
+    "step": "Adım {{number}}",
+    "fallbackRole": "Yedek onaylayan olarak görüntülüyorsunuz",
+    "decide": "Karar ver",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "overrideDecide": "Yerine karar ver",
+    "overrideHint": "Bu kararı asıl onaylayan yerine siz veriyorsunuz.",
+    "comment": "Yorum",
+    "commentPlaceholder": "Opsiyonel yorum ekleyin...",
+    "approveSuccess": "Talep onaylandı.",
+    "rejectSuccess": "Talep reddedildi."
+  },
+  "status": {
+    "title": "Onay durumu",
+    "currentApprover": "Şu anki onaylayan: {{name}}",
+    "currentApproverHidden": "Onay sırasının kimde olduğu görüntülenmiyor.",
+    "pending": "Bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "cancelled": "İptal edildi"
+  },
+  "myRequests": {
+    "title": "Taleplerim",
+    "empty": "Henüz talebiniz yok.",
+    "submittedAt": "Gönderim tarihi"
+  },
+  "publicDecision": {
+    "title": "Onay kararı",
+    "subtitle": "\"{{requestType}}\" talebi için kararınızı verin.",
+    "approve": "Onayla",
+    "reject": "Reddet",
+    "comment": "Yorum",
+    "commentPlaceholder": "Opsiyonel yorum ekleyin...",
+    "success": "Kararınız kaydedildi. Bu sayfayı kapatabilirsiniz.",
+    "error": "Kararınız kaydedilemedi. Lütfen tekrar deneyin.",
+    "expired": "Bu onay bağlantısının süresi dolmuş.",
+    "alreadyDecided": "Bu talep için karar zaten verilmiş."
+  }
+}

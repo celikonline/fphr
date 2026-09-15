@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Workflow.Application/Sense.Modules.Workflow.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Web/Sense.Shared.Web.csproj" />
+  </ItemGroup>
+
+</Project>

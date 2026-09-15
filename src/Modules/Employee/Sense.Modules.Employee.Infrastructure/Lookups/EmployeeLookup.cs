@@ -31,4 +31,10 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
             .Where(e => e.TenantId == tenantId && e.Id == employeeId)
             .Select(e => e.OrgUnitId)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<Guid?> GetManagerEmployeeIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.Id == employeeId)
+            .Select(e => e.ManagerEmployeeId)
+            .FirstOrDefaultAsync(cancellationToken);
 }

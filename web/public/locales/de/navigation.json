@@ -35,7 +35,8 @@
     "expenses": "[DE] Expenses & advances",
     "performance": "[DE] Performance",
     "recruitment": "[DE] Recruitment",
-    "analytics": "[DE] Analytics"
+    "analytics": "[DE] Analytics",
+    "workflowInbox": "[DE] Approval inbox"
   },
   "settings": {
     "company": "[DE] Company information",

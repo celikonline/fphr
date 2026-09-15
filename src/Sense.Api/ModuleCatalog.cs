@@ -3,6 +3,7 @@ using Sense.Modules.Documents.Api;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Identity.Api;
 using Sense.Modules.Organization.Api;
+using Sense.Modules.Workflow.Api;
 using Sense.Shared.Contracts.Modules;
 
 namespace Sense.Api;
@@ -17,5 +18,6 @@ public static class ModuleCatalog
         new EmployeeModule(),
         new DocumentsModule(),
         new DataTransferModule(),
+        new WorkflowModule(),
     ];
 }

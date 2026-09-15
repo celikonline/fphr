@@ -15,4 +15,7 @@ public interface IEmployeeLookup
 
     /// <summary>The employee's org unit, or null if the employee does not exist or has no unit.</summary>
     Task<Guid?> GetOrgUnitIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The employee's direct manager, or null if the employee does not exist or has no manager assigned.</summary>
+    Task<Guid?> GetManagerEmployeeIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }

@@ -60,5 +60,13 @@
     <Project Path="tests/Modules/Sense.Modules.Organization.Tests/Sense.Modules.Organization.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Infrastructure.Tests/Sense.Shared.Infrastructure.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Kernel.Tests/Sense.Shared.Kernel.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Workflow.Tests/Sense.Modules.Workflow.Tests.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Workflow/">
+    <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
+    <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Application/Sense.Modules.Workflow.Application.csproj" />
+    <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
+    <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Domain/Sense.Modules.Workflow.Domain.csproj" />
+    <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
   </Folder>
 </Solution>

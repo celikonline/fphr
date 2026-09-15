@@ -9,6 +9,7 @@
     <ProjectReference Include="../Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Organization/Sense.Modules.Organization.Infrastructure/Sense.Modules.Organization.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Employee/Sense.Modules.Employee.Infrastructure/Sense.Modules.Employee.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Workflow/Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

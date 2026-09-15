@@ -12,6 +12,7 @@ import {
   FileText,
   GitBranch,
   Home,
+  Inbox,
   KeyRound,
   LifeBuoy,
   MapPin,
@@ -60,6 +61,7 @@ export const SETTINGS_PERMISSIONS = {
   auditLog: ["identity.audit.view"],
   supportAccess: ["identity.impersonation.approve"],
   dataTransfer: ["datatransfer.import.view"],
+  workflowPolicies: ["workflow.policies.read"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -110,6 +112,13 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/settings/data-transfer",
     icon: FileSpreadsheet,
     permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
+  },
+  {
+    key: "workflowInbox",
+    labelKey: "apps.workflowInbox",
+    path: "/app/inbox",
+    icon: Inbox,
+    permissions: ["workflow.inbox.view"],
   },
   { key: "overtime", labelKey: "apps.overtime", path: "/app/apps", icon: Clock, phase: 2 },
   { key: "timesheet", labelKey: "apps.timesheet", path: "/app/apps", icon: CalendarClock, phase: 2 },
@@ -183,8 +192,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         descriptionKey: "settings.approvalFlowsDesc",
         path: "/app/settings/company/approval-flows",
         icon: Workflow,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 1,
+        permissions: SETTINGS_PERMISSIONS.workflowPolicies,
       },
     ],
   },
