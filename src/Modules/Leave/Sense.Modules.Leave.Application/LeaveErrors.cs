@@ -10,4 +10,5 @@ public static class LeaveErrors
     public const string RuleSetNotFound = "leave.rule_set.not_found";
     public const string TypeNotFound = "leave.type.not_found";
     public const string InvalidRange = "leave.errors.invalid_range";
+    public const string OverridePayableNotAllowed = "leave.errors.overtime_override_payable_not_allowed";
 }

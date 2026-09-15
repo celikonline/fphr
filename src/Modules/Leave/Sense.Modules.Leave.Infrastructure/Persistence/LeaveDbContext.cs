@@ -4,6 +4,7 @@ using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Legislation;
+using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
@@ -31,6 +32,12 @@ public sealed class LeaveDbContext(DbContextOptions<LeaveDbContext> options, ITe
     public DbSet<LegislationParameter> LegislationParameters => Set<LegislationParameter>();
 
     public DbSet<LeaveRequest> Requests => Set<LeaveRequest>();
+
+    public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
+
+    public DbSet<OvertimeConsent> OvertimeConsents => Set<OvertimeConsent>();
+
+    public DbSet<OvertimeConversion> OvertimeConversions => Set<OvertimeConversion>();
 }
 
 internal static class LeaveTables
@@ -41,6 +48,11 @@ internal static class LeaveTables
     public const string LedgerEntries = "ledger_entries";
     public const string LegislationParameters = "legislation_parameters";
     public const string Requests = "leave_requests";
+    public const string OvertimeRequests = "overtime_requests";
+    public const string OvertimeConsents = "overtime_consents";
+    public const string OvertimeConversions = "overtime_conversions";
+    public const int RatePrecision = 5;
+    public const int RateScale = 2;
     public const int IpAddressLength = 64;
     public const int EnumCodeLength = 30;
     public const int KeyLength = 100;
@@ -175,6 +187,61 @@ public sealed class LeaveRequestConfiguration : IEntityTypeConfiguration<LeaveRe
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.StartDate });
         b.HasIndex(x => new { x.TenantId, x.ApprovalRequestId });
         b.Ignore(x => x.IsActive);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OvertimeRequestConfiguration : IEntityTypeConfiguration<OvertimeRequest>
+{
+    public void Configure(EntityTypeBuilder<OvertimeRequest> b)
+    {
+        b.ToTable(LeaveTables.OvertimeRequests);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.DayKind).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.Source).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.Description).HasMaxLength(LeaveLimits.DescriptionMaxLength);
+        b.Property(x => x.SubmittedIpAddress).HasMaxLength(LeaveTables.IpAddressLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.WorkDate });
+        b.HasIndex(x => new { x.TenantId, x.ApprovalRequestId });
+        b.Ignore(x => x.StartAt);
+        b.Ignore(x => x.EndAt);
+        b.Ignore(x => x.IsActive);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OvertimeConsentConfiguration : IEntityTypeConfiguration<OvertimeConsent>
+{
+    public void Configure(EntityTypeBuilder<OvertimeConsent> b)
+    {
+        b.ToTable(LeaveTables.OvertimeConsents);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Source).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OvertimeConversionConfiguration : IEntityTypeConfiguration<OvertimeConversion>
+{
+    public void Configure(EntityTypeBuilder<OvertimeConversion> b)
+    {
+        b.ToTable(LeaveTables.OvertimeConversions);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.MinutesBasis).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.RateSnapshot).HasPrecision(LeaveTables.RatePrecision, LeaveTables.RateScale);
+        b.Property(x => x.ResultDays).HasPrecision(LeaveTables.DaysPrecision, LeaveTables.DaysScale);
+        b.Property(x => x.Note).HasMaxLength(LeaveLimits.ReasonMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId });
+
+        // One active (posted) conversion per overtime request (11.3.5).
+        b.HasIndex(x => x.OvertimeRequestId).IsUnique().HasFilter("status = 'Posted'");
         b.Ignore(x => x.DomainEvents);
     }
 }

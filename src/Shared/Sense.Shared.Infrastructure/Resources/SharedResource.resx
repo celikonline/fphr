@@ -508,4 +508,28 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.above_max_days" xml:space="preserve"><value>Bu izin türünde en fazla {max} gün talep edilebilir.</value></data>
   <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>İzin bakiyesi yetersiz (kullanılabilir: {available} gün).</value></data>
   <data name="leave.errors.description_required" xml:space="preserve"><value>Bu izin türünde açıklama zorunludur.</value></data>
+  <data name="leave.overtimes.read" xml:space="preserve"><value>Fazla mesaileri görüntüleme</value></data>
+  <data name="leave.my.overtimes" xml:space="preserve"><value>Kendi fazla mesai taleplerimi yönetme</value></data>
+  <data name="leave.overtimes.create_on_behalf" xml:space="preserve"><value>Çalışan adına fazla mesai ekleme</value></data>
+  <data name="leave.overtimes.convert" xml:space="preserve"><value>Fazla mesaiyi ekstra izne çevirme</value></data>
+  <data name="leave.overtimes.override_payable" xml:space="preserve"><value>Dönüşümde ödenecek süre yerine tam süreyi kullanma</value></data>
+  <data name="leave.overtime_consents.manage" xml:space="preserve"><value>Fazla çalışma onaylarını yönetme</value></data>
+  <data name="leave.overtime.not_found" xml:space="preserve"><value>Fazla mesai talebi bulunamadı.</value></data>
+  <data name="leave.overtime.not_pending" xml:space="preserve"><value>Fazla mesai talebi artık bekleme durumunda değil.</value></data>
+  <data name="leave.errors.overtime_invalid_duration" xml:space="preserve"><value>Fazla mesai süresi 1 dakika ile {max} dakika arasında olmalıdır.</value></data>
+  <data name="leave.errors.overtime_invalid_overlap" xml:space="preserve"><value>Planlı çalışma saatiyle çakışan süre fazla mesai süresini aşamaz.</value></data>
+  <data name="leave.errors.overtime_not_approved" xml:space="preserve"><value>Yalnız onaylanmış fazla mesai dönüştürülebilir.</value></data>
+  <data name="leave.errors.overtime_already_converted" xml:space="preserve"><value>Bu fazla mesai zaten dönüştürülmüş.</value></data>
+  <data name="leave.errors.overtime_invalid_rate" xml:space="preserve"><value>Çarpan {min} ile {max} arasında olmalıdır.</value></data>
+  <data name="leave.errors.overtime_nothing_to_convert" xml:space="preserve"><value>Dönüştürülecek ödenecek süre yok.</value></data>
+  <data name="leave.errors.overtime_overlap" xml:space="preserve"><value>Bu saatlerde bekleyen veya onaylı başka bir fazla mesai kaydınız var.</value></data>
+  <data name="leave.errors.overtime_consent_revoked" xml:space="preserve"><value>Çalışanın fazla çalışma onayını geri alması bu tarihte yürürlüğe girmiş.</value></data>
+  <data name="leave.errors.overtime_override_payable_not_allowed" xml:space="preserve"><value>Tam süreyle dönüştürme yetkiniz yok.</value></data>
+  <data name="leave.overtime_consent.not_found" xml:space="preserve"><value>Fazla çalışma onayı bulunamadı.</value></data>
+  <data name="leave.overtime_consent.already_revoked" xml:space="preserve"><value>Bu fazla çalışma onayı zaten geri alınmış.</value></data>
+  <data name="leave.overtime_consent.invalid_revocation" xml:space="preserve"><value>Geri alma bildirim tarihi onay tarihinden önce olamaz.</value></data>
+  <data name="leave.warnings.overtime_consent_missing" xml:space="preserve"><value>Çalışanın yazılı fazla çalışma onayı kayıtlı değil.</value></data>
+  <data name="leave.warnings.overtime_night_consent_missing" xml:space="preserve"><value>Kayıt gece saatlerine denk geliyor ancak çalışanın gece fazla çalışma onayı yok.</value></data>
+  <data name="leave.warnings.overtime_overlaps_schedule" xml:space="preserve"><value>Talebin bir kısmı planlı çalışma saatleri içinde; o kısım ödenecek süreden düşüldü.</value></data>
+  <data name="leave.warnings.overtime_annual_limit_exceeded" xml:space="preserve"><value>Bu kayıtla çalışanın yıllık fazla mesai toplamı yasal sınırı aşıyor.</value></data>
 </root>

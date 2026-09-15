@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Ledger;
+using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
@@ -100,4 +101,42 @@ public sealed class LeaveRequestRepository(LeaveDbContext context) : ILeaveReque
         await context.Requests
             .Where(r => r.EmployeeId == employeeId && r.LeaveTypeId == leaveTypeId && r.Status == LeaveRequestStatus.Pending)
             .SumAsync(r => r.CalculatedDays, cancellationToken);
+}
+
+public sealed class OvertimeRequestRepository(LeaveDbContext context) : IOvertimeRequestRepository
+{
+    public void Add(OvertimeRequest request) => context.OvertimeRequests.Add(request);
+
+    public async Task<OvertimeRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.OvertimeRequests.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<OvertimeRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.OvertimeRequests.Where(r => r.EmployeeId == employeeId)
+            .OrderByDescending(r => r.WorkDate).ThenByDescending(r => r.StartTime).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OvertimeRequest>> ListActiveAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.OvertimeRequests
+            .Where(r => r.EmployeeId == employeeId
+                && (r.Status == OvertimeRequestStatus.Pending || r.Status == OvertimeRequestStatus.Approved)
+                && r.WorkDate >= from && r.WorkDate <= to)
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class OvertimeConsentRepository(LeaveDbContext context) : IOvertimeConsentRepository
+{
+    public void Add(OvertimeConsent consent) => context.OvertimeConsents.Add(consent);
+
+    public async Task<OvertimeConsent?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.OvertimeConsents.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.OvertimeConsents.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.GivenAt).ToListAsync(cancellationToken);
+}
+
+public sealed class OvertimeConversionRepository(LeaveDbContext context) : IOvertimeConversionRepository
+{
+    public void Add(OvertimeConversion conversion) => context.OvertimeConversions.Add(conversion);
+
+    public async Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.OvertimeConversions.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.ConvertedAt).ToListAsync(cancellationToken);
 }

@@ -23,6 +23,17 @@ public static class LeaveDomainErrors
     public const string RequestApprovalMismatch = "leave.request.approval_mismatch";
     public const string RequestInvalidRange = "leave.errors.invalid_range";
     public const string RequestZeroDays = "leave.errors.zero_days";
+    public const string OvertimeNotFound = "leave.overtime.not_found";
+    public const string OvertimeNotPending = "leave.overtime.not_pending";
+    public const string OvertimeInvalidDuration = "leave.errors.overtime_invalid_duration";
+    public const string OvertimeInvalidOverlap = "leave.errors.overtime_invalid_overlap";
+    public const string OvertimeNotApproved = "leave.errors.overtime_not_approved";
+    public const string OvertimeAlreadyConverted = "leave.errors.overtime_already_converted";
+    public const string OvertimeInvalidRate = "leave.errors.overtime_invalid_rate";
+    public const string OvertimeNothingToConvert = "leave.errors.overtime_nothing_to_convert";
+    public const string OvertimeConsentNotFound = "leave.overtime_consent.not_found";
+    public const string OvertimeConsentAlreadyRevoked = "leave.overtime_consent.already_revoked";
+    public const string OvertimeConsentInvalidRevocation = "leave.overtime_consent.invalid_revocation";
 }
 
 /// <summary>Domain limits.</summary>
