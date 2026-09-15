@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Group, Pagination, Select, Text } from "@mantine/core";
 import type { PagedResult } from "@/types";
 
 const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100];
@@ -15,7 +13,7 @@ interface PaginationFooterProps {
   pageSizeOptions?: number[];
 }
 
-/** Shared prev/next pager, reused by every Item 20 list screen (Locations, Positions, Users, Audit Log). */
+/** Shared pager, reused by every list screen (Locations, Positions, Users, Audit Log, data tables). */
 export default function PaginationFooter({
   result,
   onPageChange,
@@ -27,48 +25,45 @@ export default function PaginationFooter({
 
   if (result.totalCount === 0) return null;
 
+  const totalPages = Math.max(1, result.totalPages, result.page);
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-3">
-      <p className="text-sm text-muted-foreground">
+    <Group justify="space-between" gap="sm" px="xs" py="sm">
+      <Text size="sm" c="dimmed">
         {t("common:page")} {result.page} {t("common:of")} {result.totalPages} ({result.totalCount})
-      </p>
-      <div className="flex items-center gap-2">
+      </Text>
+      <Group gap="sm" wrap="nowrap">
         {pageSize !== undefined && onPageSizeChange && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="hidden sm:inline">{t("common:rowsPerPage")}</span>
-            <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
-              <SelectTrigger className="h-9 w-20" aria-label={t("common:rowsPerPage")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {pageSizeOptions.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {option}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Group gap="xs" wrap="nowrap">
+            <Text size="sm" c="dimmed" visibleFrom="sm">
+              {t("common:rowsPerPage")}
+            </Text>
+            <Select
+              size="sm"
+              w={80}
+              aria-label={t("common:rowsPerPage")}
+              data={pageSizeOptions.map(String)}
+              value={String(pageSize)}
+              allowDeselect={false}
+              comboboxProps={{ withinPortal: true }}
+              onChange={(value) => value && onPageSizeChange(Number(value))}
+            />
+          </Group>
         )}
-        <Button
-          type="button"
-          variant="outline"
+        <Pagination
           size="sm"
-          disabled={!result.hasPrevious}
-          onClick={() => onPageChange(result.page - 1)}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!result.hasNext}
-          onClick={() => onPageChange(result.page + 1)}
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
+          total={totalPages}
+          value={result.page}
+          siblings={1}
+          boundaries={1}
+          onChange={(page) => onPageChange(page)}
+          getControlProps={(control) => {
+            if (control === "previous") return { disabled: !result.hasPrevious };
+            if (control === "next") return { disabled: !result.hasNext };
+            return {};
+          }}
+        />
+      </Group>
+    </Group>
   );
 }

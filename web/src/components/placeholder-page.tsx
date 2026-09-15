@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, Text, Title } from "@mantine/core";
 
 interface PlaceholderPageProps {
   title: string;
@@ -12,15 +12,13 @@ interface PlaceholderPageProps {
 export default function PlaceholderPage({ title, description }: PlaceholderPageProps) {
   return (
     <div className="p-6 md:p-10">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">{title}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {description ?? "Bu ekran henüz uygulanmadı."}
-          </p>
-        </CardContent>
+      <Card withBorder padding="lg">
+        <Title order={3} mb="sm">
+          {title}
+        </Title>
+        <Text size="sm" c="dimmed">
+          {description ?? "Bu ekran henüz uygulanmadı."}
+        </Text>
       </Card>
     </div>
   );

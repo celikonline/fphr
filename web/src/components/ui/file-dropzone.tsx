@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Loader2, Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Dropzone, type FileRejection } from "@mantine/dropzone";
+import { Stack, Text } from "@mantine/core";
+import { Upload } from "lucide-react";
 
 export type FileRejectReason = "type" | "size";
 
@@ -40,16 +41,23 @@ function matchesAccept(file: File, accept: string | undefined): boolean {
     });
 }
 
-/** Click-or-drop single file picker with type/size checks; replaces a bare `<input type="file">`. */
+/** Click-or-drop single file picker with type/size checks (Mantine `Dropzone`); replaces a bare `<input type="file">`. */
 export const FileDropzone = React.forwardRef<FileDropzoneHandle, FileDropzoneProps>(function FileDropzone(
   { accept, maxBytes, onFile, onReject, disabled, busy, title, hint, busyLabel, icon, className },
   ref
 ) {
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = React.useState(false);
+  const openRef = React.useRef<() => void>(null);
   const inactive = disabled || busy;
 
-  React.useImperativeHandle(ref, () => ({ open: () => inputRef.current?.click() }), []);
+  React.useImperativeHandle(ref, () => ({ open: () => openRef.current?.() }), []);
+
+  // Validation stays ours: the `accept` attribute mixes extensions and MIME types, which react-dropzone's
+  // MIME-keyed `accept` can't express. The validator only drives the drag reject styling.
+  const validator = (file: File) => {
+    // During drag, browsers expose DataTransferItems without a name; don't flag those.
+    if (!(file instanceof File) || !file.name) return null;
+    return matchesAccept(file, accept) ? null : { code: "file-invalid-type", message: "type" };
+  };
 
   function handle(file: File | undefined) {
     if (!file || inactive) return;
@@ -59,60 +67,33 @@ export const FileDropzone = React.forwardRef<FileDropzoneHandle, FileDropzonePro
   }
 
   return (
-    <div
-      role="button"
-      tabIndex={inactive ? -1 : 0}
-      aria-disabled={inactive || undefined}
-      onClick={() => !inactive && inputRef.current?.click()}
-      onKeyDown={(e) => {
-        if (!inactive && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          inputRef.current?.click();
-        }
-      }}
-      onDragOver={(e) => {
-        e.preventDefault();
-        if (!inactive) setDragging(true);
-      }}
-      onDragLeave={() => setDragging(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        setDragging(false);
-        handle(e.dataTransfer.files?.[0]);
-      }}
-      className={cn(
-        "flex flex-col items-center justify-center gap-1 rounded-md border-2 border-dashed p-4 text-center text-sm text-muted-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        inactive ? "cursor-not-allowed" : "cursor-pointer",
-        disabled && "opacity-50",
-        dragging ? "border-primary bg-primary/5" : "border-border",
-        !inactive && !dragging && "hover:bg-muted/50",
-        className
-      )}
+    <Dropzone
+      className={className}
+      openRef={openRef}
+      multiple={false}
+      maxSize={maxBytes}
+      validator={validator}
+      inputProps={{ accept }}
+      onDrop={() => {}}
+      onDropAny={(accepted, rejections: FileRejection[]) => handle(accepted[0] ?? rejections[0]?.file)}
+      disabled={disabled}
+      loading={busy}
+      activateOnClick={!inactive}
+      opacity={disabled ? 0.5 : undefined}
+      style={inactive ? { cursor: "not-allowed" } : undefined}
+      p="md"
     >
-      {busy ? (
-        <>
-          <Loader2 className="h-5 w-5 animate-spin" />
-          {busyLabel ?? title}
-        </>
-      ) : (
-        <>
-          {icon ?? <Upload className="h-5 w-5" />}
-          <span>{title}</span>
-          {hint && <span className="text-xs">{hint}</span>}
-        </>
-      )}
-      <input
-        ref={inputRef}
-        type="file"
-        className="hidden"
-        accept={accept}
-        disabled={inactive}
-        onClick={(e) => e.stopPropagation()}
-        onChange={(e) => {
-          handle(e.target.files?.[0]);
-          e.target.value = "";
-        }}
-      />
-    </div>
+      <Stack align="center" justify="center" gap={4} ta="center" c="dimmed">
+        {!busy && (icon ?? <Upload size={20} />)}
+        <Text size="sm" c="dimmed">
+          {busy ? (busyLabel ?? title) : title}
+        </Text>
+        {hint && !busy && (
+          <Text size="xs" c="dimmed">
+            {hint}
+          </Text>
+        )}
+      </Stack>
+    </Dropzone>
   );
 });

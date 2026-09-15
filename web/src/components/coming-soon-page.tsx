@@ -1,9 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
+import { Badge, Button, Card, Group, Paper, Stack, Text, ThemeIcon, Title } from "@mantine/core";
 import { Hourglass } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface ComingSoonPageProps {
   /** i18n key in the "navigation" namespace for the page title. */
@@ -20,32 +18,34 @@ export default function ComingSoonPage({ titleKey, phase, itemKeys }: ComingSoon
 
   return (
     <div className="mx-auto max-w-3xl p-6 md:p-10">
-      <Card>
-        <CardHeader className="items-center text-center">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-            <Hourglass className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            {t(titleKey)}
-            <Badge variant="secondary">{t("navigation:phase", { phase })}</Badge>
-          </CardTitle>
-          <CardDescription>{t("navigation:comingSoon.description", { phase })}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
+      <Card withBorder padding="xl">
+        <Stack align="center" gap="md">
+          <ThemeIcon size={48} radius="xl" variant="light" color="gray">
+            <Hourglass size={24} />
+          </ThemeIcon>
+          <Group gap="xs" justify="center">
+            <Title order={3}>{t(titleKey)}</Title>
+            <Badge variant="light">{t("navigation:phase", { phase })}</Badge>
+          </Group>
+          <Text size="sm" c="dimmed" ta="center">
+            {t("navigation:comingSoon.description", { phase })}
+          </Text>
           {itemKeys && itemKeys.length > 0 && (
-            <ul className="w-full max-w-sm space-y-2">
+            <Stack gap="xs" w="100%" maw={384} component="ul">
               {itemKeys.map((key) => (
-                <li key={key} className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm">
-                  <span>{t(key)}</span>
-                  <Badge variant="outline">{t("navigation:phase", { phase })}</Badge>
-                </li>
+                <Paper key={key} component="li" withBorder px="sm" py="xs">
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="sm">{t(key)}</Text>
+                    <Badge variant="outline">{t("navigation:phase", { phase })}</Badge>
+                  </Group>
+                </Paper>
               ))}
-            </ul>
+            </Stack>
           )}
-          <Button asChild variant="outline">
-            <Link to="/app">{t("common:backHome")}</Link>
+          <Button component={Link} to="/app" variant="default">
+            {t("common:backHome")}
           </Button>
-        </CardContent>
+        </Stack>
       </Card>
     </div>
   );

@@ -21,7 +21,6 @@ export * from "./popover";
 export * from "./sheet";
 export * from "./radio-group";
 export * from "./tooltip";
-export * from "./calendar";
 export * from "./date-picker";
 export * from "./data-table";
 export * from "./file-dropzone";
