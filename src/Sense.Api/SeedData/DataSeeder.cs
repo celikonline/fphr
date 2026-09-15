@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Documents.Domain.Documents;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Application.Roles;
@@ -19,6 +20,7 @@ using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
 
 namespace Sense.Api.SeedData;
@@ -31,7 +33,8 @@ public class DataSeeder(
     OrganizationDbContext organizationCtx,
     EmployeeDbContext employeeCtx,
     IPermissionCatalog permissionCatalog,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    IIntegrationEventOutbox outbox)
 {
     private const int RandomSeed = 42; // Deterministic seed for reproducibility
     private readonly Random _random = new(RandomSeed);
@@ -167,6 +170,7 @@ public class DataSeeder(
         employeeCtx.Employees.Add(adminEmployee);
         user.LinkEmployee(adminEmployee.Id);
         rootUnit.AssignManager(adminEmployee.Id);
+        EnqueueHiredIfActive(tenant.Id, adminEmployee);
 
         logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role, 1 org unit, 1 location, 1 employee");
     }
@@ -429,6 +433,19 @@ public class DataSeeder(
     }
 
     /// <summary>
+    /// Mirrors CreateEmployeeHandler's post-create step: the seeder builds Employee entities directly (not via the
+    /// application command), so without this, EmployeeHired never reaches the outbox and modules that provision on
+    /// hire (e.g. Leave's EmployeeLeaveProfile) never see these seeded employees.
+    /// </summary>
+    private void EnqueueHiredIfActive(Guid tenantId, Employee employee)
+    {
+        if (employee.Status == EmployeeStatus.Active && employee.HireDate is { } hireDate)
+        {
+            outbox.Enqueue(new EmployeeHired(tenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate));
+        }
+    }
+
+    /// <summary>
     /// Creates one Employee record per demo user (names/work e-mail from the user, deterministic valid TCKN,
     /// phone, hire/birth dates), round-robin-assigned to the given department units (executives/HR go to
     /// Headquarters instead), links each Identity user back to its employee record, and builds a manager
@@ -454,6 +471,7 @@ public class DataSeeder(
             var employee = CreateEmployeeOrThrow(tenantId, NextDemoEmployeeInfo(user), user.Id, orgUnit.Id);
             employeeCtx.Employees.Add(employee);
             user.LinkEmployee(employee.Id);
+            EnqueueHiredIfActive(tenantId, employee);
             created.Add((employee, orgUnit));
 
             if (isExecutive && headquarters.ManagerEmployeeId is null)
