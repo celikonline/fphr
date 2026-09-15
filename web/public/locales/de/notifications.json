@@ -1,0 +1,50 @@
+{
+  "bell": {
+    "label": "[DE] Notifications",
+    "title": "[DE] Notifications",
+    "empty": "[DE] You have no new notifications.",
+    "markAllRead": "[DE] Mark all as read",
+    "preferences": "[DE] Notification preferences",
+    "loadError": "[DE] Notifications could not be loaded."
+  },
+  "templates": {
+    "request.created": {
+      "title": "[DE] Your request was created",
+      "body": "[DE] Your {{RequestType}} request was created and sent for approval."
+    },
+    "approval.task_assigned": {
+      "title": "[DE] Your approval is needed",
+      "body": "[DE] A {{RequestType}} request from {{RequesterName}} is waiting for your approval."
+    },
+    "request.approved": {
+      "title": "[DE] Your request was approved",
+      "body": "[DE] Your {{RequestType}} request was approved."
+    },
+    "request.rejected": {
+      "title": "[DE] Your request was rejected",
+      "body": "[DE] Your {{RequestType}} request was rejected."
+    }
+  },
+  "preferences": {
+    "title": "[DE] Notification preferences",
+    "subtitle": "[DE] Choose when you receive e-mail and in-app notifications.",
+    "notification": "[DE] Notification",
+    "email": "[DE] E-mail",
+    "inApp": "[DE] In-app",
+    "mandatory": "[DE] Cannot be turned off",
+    "save": "[DE] Save",
+    "saved": "[DE] Your notification preferences were saved.",
+    "loadError": "[DE] Notification preferences could not be loaded."
+  },
+  "category": {
+    "general": "[DE] General",
+    "account": "[DE] Account",
+    "request": "[DE] Requests",
+    "approval": "[DE] Approvals",
+    "schedule": "[DE] Shifts",
+    "asset": "[DE] Assets",
+    "report": "[DE] Reports",
+    "recruitment": "[DE] Recruitment",
+    "security": "[DE] Security"
+  }
+}

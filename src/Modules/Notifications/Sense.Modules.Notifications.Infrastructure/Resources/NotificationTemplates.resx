@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="request.created.title" xml:space="preserve"><value>Talebiniz oluşturuldu</value></data>
+  <data name="request.created.body" xml:space="preserve"><value>{RequestType} talebiniz oluşturuldu ve onaya gönderildi.</value></data>
+  <data name="approval.task_assigned.title" xml:space="preserve"><value>Onayınız bekleniyor</value></data>
+  <data name="approval.task_assigned.body" xml:space="preserve"><value>{RequesterName} tarafından oluşturulan {RequestType} talebi onayınızı bekliyor.</value></data>
+  <data name="request.approved.title" xml:space="preserve"><value>Talebiniz onaylandı</value></data>
+  <data name="request.approved.body" xml:space="preserve"><value>{RequestType} talebiniz onaylandı.</value></data>
+  <data name="request.rejected.title" xml:space="preserve"><value>Talebiniz reddedildi</value></data>
+  <data name="request.rejected.body" xml:space="preserve"><value>{RequestType} talebiniz reddedildi.</value></data>
+  <data name="email.greeting" xml:space="preserve"><value>Merhaba {RecipientName},</value></data>
+  <data name="email.open_link" xml:space="preserve"><value>Görüntülemek için: {Url}</value></data>
+  <data name="request_type.Leave" xml:space="preserve"><value>İzin</value></data>
+  <data name="request_type.Overtime" xml:space="preserve"><value>Fazla mesai</value></data>
+  <data name="request_type.Advance" xml:space="preserve"><value>Avans</value></data>
+  <data name="request_type.Expense" xml:space="preserve"><value>Harcama</value></data>
+</root>
