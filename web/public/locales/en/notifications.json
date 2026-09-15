@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "title": "Notifications",
+    "empty": "You have no notifications.",
+    "loading": "Loading...",
+    "markAllRead": "Mark all as read",
+    "preferences": "Notification settings",
+    "loadError": "Notifications could not be loaded."
+  },
+  "template": {
+    "request": {
+      "created": "My request was created",
+      "approved": "My request was approved",
+      "rejected": "My request was rejected"
+    },
+    "approval": {
+      "task_assigned": "A request is waiting for my approval"
+    }
+  },
+  "preferences": {
+    "title": "Notification settings",
+    "subtitle": "Choose which notifications you receive by e-mail and in the app.",
+    "notification": "Notification",
+    "email": "E-mail",
+    "inApp": "In-app",
+    "mandatory": "Cannot be turned off",
+    "save": "Save",
+    "saved": "Your notification settings were saved.",
+    "empty": "There are no configurable notifications.",
+    "loadError": "Notification settings could not be loaded."
+  },
+  "category": {
+    "account": "Account",
+    "request": "Requests",
+    "approval": "Approvals"
+  }
+}

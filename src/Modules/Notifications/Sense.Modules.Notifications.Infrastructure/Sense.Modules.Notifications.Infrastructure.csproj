@@ -24,8 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- {key}.{channel}.{lang}.sbn, _layout.email.{lang}.sbn, labels.{lang}.json; resource name = Templates/<file> -->
-    <EmbeddedResource Include="Templates/**/*" LogicalName="Templates/%(Filename)%(Extension)" />
+    <!-- {key}.{channel}.{lang}.sbn, _layout.email.{lang}.sbn, labels.{lang}.json; resource name = Templates/<file>.
+         WithCulture=false: otherwise MSBuild reads the ".tr"/".en"/".de" part as a culture and moves the file into a
+         satellite assembly, so GetManifestResourceStream on the main assembly finds nothing. -->
+    <EmbeddedResource Include="Templates/**/*" LogicalName="Templates/%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
 
 </Project>

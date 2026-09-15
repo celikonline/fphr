@@ -121,7 +121,7 @@ public static class SystemRoleDefinitions
             ["payroll.my.*", "expense.my.advances.*", "ai.*"]),
 
         new(SystemRoleCodes.Contractor, DataScope.Self,
-            ["employee.my.*", "attendance.my.*", "announcements.feed.*", "documents.my.*"],
+            ["employee.my.*", "attendance.my.*", "announcements.feed.*", "documents.my.*", "notifications.my.*"],
             []),
 
         new(SystemRoleCodes.ApiIntegration, DataScope.Company,

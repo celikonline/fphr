@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Bildirimler",
+    "title": "Bildirimler",
+    "empty": "Bildiriminiz yok.",
+    "loading": "Yükleniyor...",
+    "markAllRead": "Tümünü okundu işaretle",
+    "preferences": "Bildirim ayarları",
+    "loadError": "Bildirimler yüklenemedi."
+  },
+  "template": {
+    "request": {
+      "created": "Talebim oluşturulduğunda",
+      "approved": "Talebim onaylandığında",
+      "rejected": "Talebim reddedildiğinde"
+    },
+    "approval": {
+      "task_assigned": "Onayımı bekleyen bir talep olduğunda"
+    }
+  },
+  "preferences": {
+    "title": "Bildirim ayarları",
+    "subtitle": "Hangi bildirimleri e-posta ile ve uygulama içinde alacağınızı seçin.",
+    "notification": "Bildirim",
+    "email": "E-posta",
+    "inApp": "Uygulama içi",
+    "mandatory": "Kapatılamaz",
+    "save": "Kaydet",
+    "saved": "Bildirim ayarlarınız kaydedildi.",
+    "empty": "Ayarlanabilir bildirim yok.",
+    "loadError": "Bildirim ayarları yüklenemedi."
+  },
+  "category": {
+    "account": "Hesap",
+    "request": "Talepler",
+    "approval": "Onaylar"
+  }
+}
