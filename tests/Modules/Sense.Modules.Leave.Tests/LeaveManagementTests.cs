@@ -279,24 +279,25 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var monday = NextWeekMonday();
 
-        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, Guid>(
+        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
             h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(1), null, true), CancellationToken.None),
             _currentUser, _dataScope, _workflow);
         created.IsSuccess.ShouldBeTrue(created.IsFailure ? created.Error.Code : null);
+        var createdId = created.Value.Id;
 
         (await RunAsync<CancelLeaveRequestHandler>(
-            h => h.Handle(new CancelLeaveRequestCommand(Guid.NewGuid(), created.Value, "yanlış kayıt"), CancellationToken.None), _currentUser, _dataScope, _workflow))
+            h => h.Handle(new CancelLeaveRequestCommand(Guid.NewGuid(), createdId, "yanlış kayıt"), CancellationToken.None), _currentUser, _dataScope, _workflow))
             .Error.Type.ShouldBe(ErrorType.Forbidden);
 
         var cancelled = await RunAsync<CancelLeaveRequestHandler>(
-            h => h.Handle(new CancelLeaveRequestCommand(employeeId, created.Value, "yanlış kayıt"), CancellationToken.None), _currentUser, _dataScope, _workflow);
+            h => h.Handle(new CancelLeaveRequestCommand(employeeId, createdId, "yanlış kayıt"), CancellationToken.None), _currentUser, _dataScope, _workflow);
         cancelled.IsSuccess.ShouldBeTrue(cancelled.IsFailure ? cancelled.Error.Code : null);
         await _workflow.DidNotReceiveWithAnyArgs().CancelAsync(default, default, default);
 
         using (var verify = ServiceProvider!.CreateScope())
         {
             var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
-            var request = await db.Requests.SingleAsync(r => r.Id == created.Value);
+            var request = await db.Requests.SingleAsync(r => r.Id == createdId);
             request.Status.ShouldBe(LeaveRequestStatus.Cancelled);
             request.CancellationReason.ShouldBe("yanlış kayıt");
             request.CancelledByUserId.ShouldBe(_currentUser.UserId);
@@ -305,7 +306,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
             var reversal = await db.LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Reversal);
             reversal.Amount.ShouldBe(2m);
             reversal.EffectiveDate.ShouldBe(monday);
-            reversal.SourceRefId.ShouldBe(created.Value);
+            reversal.SourceRefId.ShouldBe(createdId);
 
             var profile = await db.Profiles.SingleAsync();
             var set = await db.RuleSets.SingleAsync();
@@ -318,7 +319,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
             outbox.ShouldContain(t => t.EndsWith(nameof(Contracts.Events.LeaveCancelled), StringComparison.Ordinal));
 
             var detail = await ActivatorUtilities.CreateInstance<GetMyLeaveRequestHandler>(verify.ServiceProvider, _currentUser, SubstituteDetails(verify.ServiceProvider))
-                .Handle(new GetMyLeaveRequestQuery(created.Value), CancellationToken.None);
+                .Handle(new GetMyLeaveRequestQuery(createdId), CancellationToken.None);
             detail.Value.Status.ShouldBe(LeaveRequestStatus.Cancelled);
             detail.Value.CancellationReason.ShouldBe("yanlış kayıt");
             detail.Value.EmployeeName.ShouldBe("Ada Lovelace");
@@ -327,7 +328,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         }
 
         (await RunAsync<CancelLeaveRequestHandler>(
-            h => h.Handle(new CancelLeaveRequestCommand(employeeId, created.Value, "tekrar"), CancellationToken.None), _currentUser, _dataScope, _workflow))
+            h => h.Handle(new CancelLeaveRequestCommand(employeeId, createdId, "tekrar"), CancellationToken.None), _currentUser, _dataScope, _workflow))
             .Error.Code.ShouldBe(LeaveDomainErrors.RequestNotCancellable);
     }
 
@@ -344,24 +345,25 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var monday = NextWeekMonday();
 
-        var submitted = await RunAsync<SubmitLeaveRequestHandler, Guid>(
+        var submitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
             h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null), CancellationToken.None), _currentUser, _workflow);
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+        var submittedId = submitted.Value.Id;
 
         var cancelled = await RunAsync<CancelLeaveRequestHandler>(
-            h => h.Handle(new CancelLeaveRequestCommand(employeeId, submitted.Value, "vazgeçildi"), CancellationToken.None), _currentUser, _dataScope, _workflow);
+            h => h.Handle(new CancelLeaveRequestCommand(employeeId, submittedId, "vazgeçildi"), CancellationToken.None), _currentUser, _dataScope, _workflow);
         cancelled.IsSuccess.ShouldBeTrue(cancelled.IsFailure ? cancelled.Error.Code : null);
         await _workflow.Received(1).CancelAsync(approvalId, employeeId, Arg.Any<CancellationToken>());
 
         using var verify = ServiceProvider!.CreateScope();
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
-        (await db.Requests.SingleAsync(r => r.Id == submitted.Value)).Status.ShouldBe(LeaveRequestStatus.Cancelled);
+        (await db.Requests.SingleAsync(r => r.Id == submittedId)).Status.ShouldBe(LeaveRequestStatus.Cancelled);
         (await db.LedgerEntries.CountAsync(e => e.Type == LeaveLedgerEntryType.Reversal || e.Type == LeaveLedgerEntryType.Usage)).ShouldBe(0);
 
         // A late Workflow decision for the cancelled request is ignored.
-        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Leave, submitted.Value, employeeId));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Leave, submittedId, employeeId));
         using var after = ServiceProvider.CreateScope();
-        (await after.ServiceProvider.GetRequiredService<LeaveDbContext>().Requests.SingleAsync(r => r.Id == submitted.Value)).Status.ShouldBe(LeaveRequestStatus.Cancelled);
+        (await after.ServiceProvider.GetRequiredService<LeaveDbContext>().Requests.SingleAsync(r => r.Id == submittedId)).Status.ShouldBe(LeaveRequestStatus.Cancelled);
     }
 
     [Fact]
@@ -375,38 +377,39 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var monday = NextWeekMonday();
 
-        var original = await RunAsync<SubmitLeaveRequestHandler, Guid>(
+        var original = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
             h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null), CancellationToken.None), _currentUser, _workflow);
         original.IsSuccess.ShouldBeTrue(original.IsFailure ? original.Error.Code : null);
+        var originalId = original.Value.Id;
 
         // Still pending → not a valid resubmission source; an unknown id neither.
-        (await RunAsync<SubmitLeaveRequestHandler, Guid>(
-            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday.AddDays(7), monday.AddDays(7), null, original.Value), CancellationToken.None), _currentUser, _workflow))
+        (await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday.AddDays(7), monday.AddDays(7), null, originalId), CancellationToken.None), _currentUser, _workflow))
             .Error.Code.ShouldBe(LeaveErrors.ResubmissionSourceInvalid);
-        (await RunAsync<SubmitLeaveRequestHandler, Guid>(
+        (await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
             h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday.AddDays(7), monday.AddDays(7), null, Guid.NewGuid()), CancellationToken.None), _currentUser, _workflow))
             .Error.Type.ShouldBe(ErrorType.Conflict);
 
-        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new ApprovalRejected(tenantId, firstApproval, ApprovalRequestTypes.Leave, original.Value, employeeId, 1));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new ApprovalRejected(tenantId, firstApproval, ApprovalRequestTypes.Leave, originalId, employeeId, 1));
 
         // Someone else's rejected request cannot be resubmitted.
         var stranger = Substitute.For<ICurrentUser>();
         stranger.EmployeeId.Returns(Guid.NewGuid());
-        (await RunAsync<SubmitLeaveRequestHandler, Guid>(
-            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null, original.Value), CancellationToken.None), stranger, _workflow))
+        (await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday, null, originalId), CancellationToken.None), stranger, _workflow))
             .Error.Code.ShouldBe(LeaveErrors.ResubmissionSourceInvalid);
 
-        var resubmitted = await RunAsync<SubmitLeaveRequestHandler, Guid>(
-            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday.AddDays(1), "düzeltildi", original.Value), CancellationToken.None), _currentUser, _workflow);
+        var resubmitted = await RunAsync<SubmitLeaveRequestHandler, LeaveRequestDto>(
+            h => h.Handle(new SubmitLeaveRequestCommand(annualId, monday, monday.AddDays(1), "düzeltildi", originalId), CancellationToken.None), _currentUser, _workflow);
         resubmitted.IsSuccess.ShouldBeTrue(resubmitted.IsFailure ? resubmitted.Error.Code : null);
 
         using var verify = ServiceProvider.CreateScope();
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
-        var stored = await db.Requests.SingleAsync(r => r.Id == resubmitted.Value);
+        var stored = await db.Requests.SingleAsync(r => r.Id == resubmitted.Value.Id);
         stored.Source.ShouldBe(LeaveRequestSource.Resubmission);
-        stored.PreviousRequestId.ShouldBe(original.Value);
+        stored.PreviousRequestId.ShouldBe(originalId);
         stored.Status.ShouldBe(LeaveRequestStatus.Pending);
-        (await db.Requests.SingleAsync(r => r.Id == original.Value)).Status.ShouldBe(LeaveRequestStatus.Rejected);
+        (await db.Requests.SingleAsync(r => r.Id == originalId)).Status.ShouldBe(LeaveRequestStatus.Rejected);
     }
 
     [Fact]
@@ -419,7 +422,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         var monday = NextWeekMonday();
 
         // Approved usage on the seeded Annual type.
-        (await RunAsync<CreateLeaveRequestOnBehalfHandler, Guid>(
+        (await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
             h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(2), null, true), CancellationToken.None),
             _currentUser, _dataScope, _workflow)).IsSuccess.ShouldBeTrue();
 

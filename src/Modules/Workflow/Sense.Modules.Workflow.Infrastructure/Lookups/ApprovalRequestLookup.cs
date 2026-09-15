@@ -19,7 +19,7 @@ public sealed class ApprovalRequestLookup(WorkflowDbContext context) : IApproval
 
         var steps = request.Tasks
             .OrderBy(t => t.StepNumber)
-            .Select(t => new ApprovalStepStatus(t.StepNumber, t.ApproverEmployeeId, t.FallbackRoleCode, t.IsRequired, t.Status.ToString()))
+            .Select(t => new ApprovalStepStatus(t.StepNumber, t.ApproverEmployeeId, t.FallbackRoleCode, t.IsRequired, t.Status.ToString(), t.Comment))
             .ToList();
 
         return new ApprovalStatusDto(

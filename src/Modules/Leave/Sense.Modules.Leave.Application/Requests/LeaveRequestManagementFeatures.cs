@@ -102,7 +102,8 @@ public static class LeaveCancellation
     }
 }
 
-public sealed record LeaveApprovalStepDto(int StepNumber, Guid? ApproverEmployeeId, string? ApproverName, string? FallbackRoleCode, bool IsRequired, string Status);
+public sealed record LeaveApprovalStepDto(
+    int StepNumber, Guid? ApproverEmployeeId, string? ApproverName, string? FallbackRoleCode, bool IsRequired, string Status, string? Comment);
 
 public sealed record LeaveApprovalDto(string Status, int? CurrentStepNumber, IReadOnlyList<LeaveApprovalStepDto> Steps);
 
@@ -150,7 +151,8 @@ public sealed class LeaveRequestDetailBuilder(
                     var hidden = hideUndecidedApprovers && s.Status == PendingStepStatus;
                     var approverId = hidden ? null : s.ApproverEmployeeId;
                     return new LeaveApprovalStepDto(
-                        s.StepNumber, approverId, approverId is { } id ? names.GetValueOrDefault(id) : null, s.FallbackRoleCode, s.IsRequired, CamelCase(s.Status));
+                        s.StepNumber, approverId, approverId is { } id ? names.GetValueOrDefault(id) : null, s.FallbackRoleCode, s.IsRequired, CamelCase(s.Status),
+                        hidden ? null : s.Comment);
                 }).ToList());
         }
 

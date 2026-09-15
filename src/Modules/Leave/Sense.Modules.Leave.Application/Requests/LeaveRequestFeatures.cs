@@ -164,7 +164,7 @@ public sealed class LeaveRequestRules(
 /// </summary>
 [RequiresPermission("leave.my.requests")]
 public sealed record SubmitLeaveRequestCommand(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null)
-    : ICommand<Guid>;
+    : ICommand<LeaveRequestDto>;
 
 public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveRequestCommand>
 {
@@ -173,9 +173,9 @@ public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveR
 
 public sealed class SubmitLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, IWorkflowService workflow, TimeProvider clock)
-    : ICommandHandler<SubmitLeaveRequestCommand, Guid>
+    : ICommandHandler<SubmitLeaveRequestCommand, LeaveRequestDto>
 {
-    public async Task<Result<Guid>> Handle(SubmitLeaveRequestCommand command, CancellationToken cancellationToken)
+    public async Task<Result<LeaveRequestDto>> Handle(SubmitLeaveRequestCommand command, CancellationToken cancellationToken)
     {
         if (currentUser.EmployeeId is not { } employeeId)
         {
@@ -214,7 +214,7 @@ public sealed class SubmitLeaveRequestHandler(
 
         submitted.Value.AttachApproval(approval.Value);
         requests.Add(submitted.Value);
-        return submitted.Value.Id;
+        return LeaveRequestMapper.ToDto(submitted.Value, valid.Value.Type.Name);
     }
 }
 
@@ -460,7 +460,7 @@ public sealed class PreviewEmployeeLeaveRequestHandler(
 /// </summary>
 [RequiresPermission("leave.requests.create_on_behalf")]
 public sealed record CreateLeaveRequestOnBehalfCommand(Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval)
-    : ICommand<Guid>;
+    : ICommand<LeaveRequestDto>;
 
 public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
 {
@@ -470,9 +470,9 @@ public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<Crea
 public sealed class CreateLeaveRequestOnBehalfHandler(
     ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, LeaveRequestRules rules, ILeaveRequestRepository requests,
     ILeaveLedgerRepository ledger, IWorkflowService workflow, TimeProvider clock)
-    : ICommandHandler<CreateLeaveRequestOnBehalfCommand, Guid>
+    : ICommandHandler<CreateLeaveRequestOnBehalfCommand, LeaveRequestDto>
 {
-    public async Task<Result<Guid>> Handle(CreateLeaveRequestOnBehalfCommand command, CancellationToken cancellationToken)
+    public async Task<Result<LeaveRequestDto>> Handle(CreateLeaveRequestOnBehalfCommand command, CancellationToken cancellationToken)
     {
         if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsCreateOnBehalf.Key, command.EmployeeId, cancellationToken))
         {
@@ -523,7 +523,7 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         }
 
         requests.Add(request);
-        return request.Id;
+        return LeaveRequestMapper.ToDto(request, valid.Value.Type.Name);
     }
 }
 

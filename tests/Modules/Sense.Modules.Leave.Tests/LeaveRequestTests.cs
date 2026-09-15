@@ -85,7 +85,7 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
     protected override async Task OnDatabaseReadyAsync() =>
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
 
-    private async Task<Result<Guid>> SubmitAsync(Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end)
+    private async Task<Result<LeaveRequestDto>> SubmitAsync(Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end)
     {
         using var scope = ServiceProvider!.CreateScope();
         var handler = ActivatorUtilities.CreateInstance<SubmitLeaveRequestHandler>(scope.ServiceProvider, _currentUser, _workflow);
@@ -127,18 +127,18 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         (await SubmitAsync(tenantId, annualId, monday.AddDays(2), monday.AddDays(3))).Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
         (await SubmitAsync(tenantId, annualId, monday.AddDays(7), monday.AddDays(7 + 13))).Error.Code.ShouldBe(LeaveRequestErrors.InsufficientBalance);
 
-        await bus.Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Leave, submitted.Value, employeeId));
+        await bus.Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Leave, submitted.Value.Id, employeeId));
 
         using var verify = ServiceProvider.CreateScope();
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
-        var request = await db.Requests.SingleAsync(r => r.Id == submitted.Value);
+        var request = await db.Requests.SingleAsync(r => r.Id == submitted.Value.Id);
         request.Status.ShouldBe(LeaveRequestStatus.Approved);
         request.CalculatedDays.ShouldBe(5m);
         request.ApprovalRequestId.ShouldBe(approvalId);
         var usage = await db.LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
         usage.Amount.ShouldBe(-5m);
         usage.EffectiveDate.ShouldBe(monday);
-        usage.SourceRefId.ShouldBe(submitted.Value);
+        usage.SourceRefId.ShouldBe(submitted.Value.Id);
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         request.LeaveTypeName.ShouldBe("leave.type.annual");
         var ledger = await ActivatorUtilities.CreateInstance<Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerHandler>(verify.ServiceProvider, _currentUser)
             .Handle(new Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerQuery(annualId), CancellationToken.None);
-        ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value);
+        ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value.Id);
     }
 
     [Fact]

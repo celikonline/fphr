@@ -105,6 +105,11 @@ internal static class LeaveTextLocalizer
             : Result.Success<IReadOnlyList<LeaveRequestDto>>(
                 result.Value.Select(r => r with { LeaveTypeName = r.LeaveTypeName is null ? null : localizer.MessageOrText(r.LeaveTypeName) }).ToList());
 
+    public static Result<LeaveRequestDto> Localize(this Result<LeaveRequestDto> result, IErrorLocalizer localizer) =>
+        result.IsFailure || result.Value.LeaveTypeName is null
+            ? result
+            : result.Value with { LeaveTypeName = localizer.MessageOrText(result.Value.LeaveTypeName) };
+
     public static Result<IReadOnlyList<RequestableLeaveTypeDto>> Localize(this Result<IReadOnlyList<RequestableLeaveTypeDto>> result, IErrorLocalizer localizer) =>
         result.IsFailure
             ? result
@@ -173,10 +178,12 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
 
     /// <summary>İşlemler → İzin Ekle.</summary>
     [HttpPost("requests")]
-    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateOnBehalf(Guid employeeId, [FromBody] LeaveRequestOnBehalfBody request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(
-            new CreateLeaveRequestOnBehalfCommand(employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval), ct));
+    [ProducesResponseType<LeaveRequestDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateOnBehalf(
+        Guid employeeId, [FromBody] LeaveRequestOnBehalfBody request, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Send(
+            new CreateLeaveRequestOnBehalfCommand(employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval), ct))
+            .Localize(localizer));
 
     [HttpGet("requests/preview")]
     [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
@@ -239,10 +246,11 @@ public sealed class MyLeaveController : ApiControllerBase
         FromResult((await Dispatcher.Query(new PreviewMyLeaveRequestQuery(leaveTypeId, start, end, editedRequestId), ct)).Localize(localizer));
 
     [HttpPost("requests")]
-    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Submit([FromBody] LeaveRequestBody request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(
-            new SubmitLeaveRequestCommand(request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId), ct));
+    [ProducesResponseType<LeaveRequestDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Submit([FromBody] LeaveRequestBody request, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Send(
+            new SubmitLeaveRequestCommand(request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId), ct))
+            .Localize(localizer));
 
     [HttpPut("requests/" + ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

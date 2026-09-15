@@ -116,6 +116,8 @@ export interface LeaveApprovalStep {
   fallbackRoleCode?: string | null;
   isRequired: boolean;
   status: string;
+  /** Decision note left by the approver; null until the step is decided or the approver left none. */
+  comment?: string | null;
 }
 
 export interface LeaveRequestApproval {
@@ -312,8 +314,8 @@ export interface LeaveRequestOnBehalfInput extends LeaveRequestInput {
   bypassApproval: boolean;
 }
 
-export async function createLeaveRequestOnBehalf(employeeId: string, input: LeaveRequestOnBehalfInput): Promise<string> {
-  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/employees/${employeeId}/requests`, input);
+export async function createLeaveRequestOnBehalf(employeeId: string, input: LeaveRequestOnBehalfInput): Promise<LeaveRequest> {
+  const { data } = await apiClient.post<LeaveRequest>(`${LEAVE_BASE}/employees/${employeeId}/requests`, input);
   return data;
 }
 
@@ -322,8 +324,8 @@ export interface MyLeaveRequestInput extends LeaveRequestInput {
   previousRequestId?: string | null;
 }
 
-export async function submitLeaveRequest(input: MyLeaveRequestInput): Promise<string> {
-  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/me/requests`, input);
+export async function submitLeaveRequest(input: MyLeaveRequestInput): Promise<LeaveRequest> {
+  const { data } = await apiClient.post<LeaveRequest>(`${LEAVE_BASE}/me/requests`, input);
   return data;
 }
 

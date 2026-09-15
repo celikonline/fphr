@@ -166,6 +166,11 @@ function ApprovalChain({ detail }: { detail: LeaveRequestDetail }) {
                         {" · "}
                         {step.isRequired ? t("leave:approval.required") : t("leave:approval.optional")}
                       </Text>
+                      {step.comment && (
+                        <Text size="xs" mt={4} style={{ whiteSpace: "pre-wrap" }}>
+                          {step.comment}
+                        </Text>
+                      )}
                     </div>
                   </Group>
                 </Paper>
