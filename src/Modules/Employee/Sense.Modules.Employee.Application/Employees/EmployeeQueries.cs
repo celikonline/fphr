@@ -285,7 +285,8 @@ public sealed class GetUpcomingBirthdaysHandler(IEmployeeReadStore store, TimePr
 }
 
 /// <summary>
-/// Headcount of active employees per Department-level org unit ("Çalışan Dağılımı" ana sayfa widget'ı). Company-wide
+/// Headcount of employees in <see cref="EmployeeStatus.Active"/> status (Draft and Suspended are not counted) per
+/// Department-level org unit ("Çalışan Dağılımı" ana sayfa widget'ı). Company-wide
 /// like the directory. Employee.OrgUnitId is always the deepest assignment (usually "Title"), so this walks each
 /// employee's ancestor chain to find the Department-level unit, the same way the career screen splits Title/Department.
 /// </summary>
@@ -297,7 +298,7 @@ public sealed class GetDepartmentDistributionHandler(IEmployeeReadStore store, O
 {
     public async Task<Result<IReadOnlyList<DepartmentDistributionItemDto>>> Handle(GetDepartmentDistributionQuery query, CancellationToken cancellationToken)
     {
-        var rows = await store.ListAllAsync(new EmployeeCriteria(ActiveOnly: true), cancellationToken);
+        var rows = await store.ListAllAsync(new EmployeeCriteria(Status: EmployeeStatus.Active), cancellationToken);
         var placement = await placementLoader.LoadAsync(cancellationToken);
 
         // "Department" = Organization.Domain.OrgUnitTypeCodes.Department (Şirket > Şube > Departman > Ünvan sabit sistem
