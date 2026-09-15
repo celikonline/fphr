@@ -4,13 +4,13 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,12 @@ const MANAGE_PERMISSIONS = [
   "organization.locations.delete",
 ];
 
+const DEFAULT_PAGE_SIZE = 10;
+const COLUMN_VISIBILITY_KEY = "senseik.locations.grid.columns";
+
+/** Fields the list endpoint can sort by (ListLocationsHandler.Sort). */
+type LocationSortField = "name" | "type" | "countryCode";
+
 const schema = z.object({
   name: z.string().min(1),
   type: z.enum(LOCATION_TYPES as [LocationType, ...LocationType[]]),
@@ -64,6 +70,8 @@ export default function LocationsPage() {
   const canManage = useAnyPermission(MANAGE_PERMISSIONS);
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sort, setSort] = useState<{ field: LocationSortField; desc: boolean }>({ field: "name", desc: false });
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -79,9 +87,12 @@ export default function LocationsPage() {
     setPage(1);
   }
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["locations", page, debouncedSearch],
-    queryFn: () => listLocations({ page, pageSize: 10, q: debouncedSearch || undefined, sort: "name" }),
+  const sortParam = `${sort.desc ? "-" : ""}${sort.field}`;
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["locations", page, pageSize, debouncedSearch, sortParam],
+    queryFn: () => listLocations({ page, pageSize, q: debouncedSearch || undefined, sort: sortParam }),
+    placeholderData: (previous) => previous,
   });
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
@@ -167,6 +178,91 @@ export default function LocationsPage() {
 
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  function changeSorting(next: SortingState) {
+    const [first] = next;
+    if (!first) return;
+    setSort({ field: first.id as LocationSortField, desc: first.desc });
+    setPage(1);
+  }
+
+  function changePageSize(size: number) {
+    setPageSize(size);
+    setPage(1);
+  }
+
+  const columns: ColumnDef<Location>[] = [
+    {
+      id: "name",
+      accessorKey: "name",
+      enableHiding: false,
+      header: t("locations:name"),
+      meta: { label: t("locations:name"), cellClassName: "font-medium" },
+    },
+    {
+      id: "type",
+      accessorKey: "type",
+      header: t("locations:type"),
+      meta: { label: t("locations:type") },
+      cell: ({ row }) => t(`locations:types.${row.original.type}`),
+    },
+    {
+      id: "countryCode",
+      accessorKey: "countryCode",
+      header: t("locations:countryCode"),
+      meta: { label: t("locations:countryCode") },
+    },
+    {
+      id: "address",
+      enableSorting: false,
+      header: t("locations:address"),
+      meta: { label: t("locations:address") },
+      cell: ({ row }) => row.original.address ?? "—",
+    },
+    ...(canManage
+      ? [
+          {
+            id: "actions",
+            enableSorting: false,
+            enableHiding: false,
+            header: t("common:actions"),
+            meta: { headerClassName: "text-right", cellClassName: "text-right" },
+            cell: ({ row }) => (
+              <div className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  title={t("locations:editLocation")}
+                  onClick={() => openEdit(row.original)}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive"
+                  title={t("locations:deleteLocation")}
+                  onClick={() => setDeleteTarget(row.original)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ),
+          } satisfies ColumnDef<Location>,
+        ]
+      : []),
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: data?.items ?? [],
+    getRowId: (location) => location.id,
+    sorting: [{ id: sort.field, desc: sort.desc }],
+    onSortingChange: changeSorting,
+    columnVisibilityKey: COLUMN_VISIBILITY_KEY,
+  });
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -183,75 +279,23 @@ export default function LocationsPage() {
         )}
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          className="pl-9"
-          placeholder={t("locations:searchPlaceholder")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            className="pl-9"
+            placeholder={t("locations:searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <DataTableViewOptions table={table} className="ml-auto" />
       </div>
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : !data || data.items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("locations:empty")}</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("locations:name")}</TableHead>
-                    <TableHead>{t("locations:type")}</TableHead>
-                    <TableHead>{t("locations:countryCode")}</TableHead>
-                    <TableHead>{t("locations:address")}</TableHead>
-                    {canManage && <TableHead className="text-right">{t("common:actions")}</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((location) => (
-                    <TableRow key={location.id}>
-                      <TableCell className="font-medium">{location.name}</TableCell>
-                      <TableCell>{t(`locations:types.${location.type}`)}</TableCell>
-                      <TableCell>{location.countryCode}</TableCell>
-                      <TableCell>{location.address ?? "—"}</TableCell>
-                      {canManage && (
-                        <TableCell className="text-right">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            title={t("locations:editLocation")}
-                            onClick={() => openEdit(location)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            title={t("locations:deleteLocation")}
-                            onClick={() => setDeleteTarget(location)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <PaginationFooter result={data} onPageChange={setPage} />
-            </>
-          )}
+          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("locations:empty")} />
+          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
         </CardContent>
       </Card>
 
