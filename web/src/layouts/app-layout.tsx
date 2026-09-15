@@ -4,34 +4,26 @@ import {
   ActionIcon,
   Alert,
   Anchor,
-  Avatar,
   Badge,
   Box,
   Breadcrumbs,
-  Button,
   Group,
   Menu,
   NavLink,
   Stack,
   Text,
   Tooltip,
-  UnstyledButton,
+  Button,
 } from "@mantine/core";
 import {
   ChevronRight,
-  Globe,
   LayoutGrid,
-  LogOut,
   Menu as MenuIcon,
-  Monitor,
-  Moon,
   MoreHorizontal,
   ShieldAlert,
-  Sun,
-  User as UserIcon,
 } from "lucide-react";
-import { useUIStore } from "@/store/ui.store";
 import { useAuthStore } from "@/store/auth.store";
+import { useUIStore } from "@/store/ui.store";
 import { useTenantStore } from "@/store/tenant.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
@@ -42,8 +34,6 @@ import {
   resolveBreadcrumbs,
   type NavItem,
 } from "@/config/navigation";
-import { NotificationBell } from "@/components/notifications/notification-bell";
-import { avatarUrl } from "@/components/employees/employee-badges";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -238,90 +228,6 @@ function AppsLauncher() {
   );
 }
 
-function ThemeToggle() {
-  const { t } = useTranslation(["common"]);
-  const theme = useUIStore((state) => state.theme);
-  const setTheme = useUIStore((state) => state.setTheme);
-
-  const icon = theme === "dark" ? <Moon size={16} /> : theme === "light" ? <Sun size={16} /> : <Monitor size={16} />;
-
-  return (
-    <Menu position="bottom-end">
-      <HeaderIconMenuTarget label={t("common:theme")}>{icon}</HeaderIconMenuTarget>
-      <Menu.Dropdown>
-        <Menu.Item leftSection={<Sun size={16} />} onClick={() => setTheme("light")}>
-          {t("common:themeLight")}
-        </Menu.Item>
-        <Menu.Item leftSection={<Moon size={16} />} onClick={() => setTheme("dark")}>
-          {t("common:themeDark")}
-        </Menu.Item>
-        <Menu.Item leftSection={<Monitor size={16} />} onClick={() => setTheme("system")}>
-          {t("common:themeSystem")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
-
-function LanguageSwitcher() {
-  const { t, i18n } = useTranslation(["common"]);
-
-  return (
-    <Menu position="bottom-end">
-      <HeaderIconMenuTarget label={t("common:language")}>
-        <Globe size={16} />
-      </HeaderIconMenuTarget>
-      <Menu.Dropdown>
-        <Menu.Item onClick={() => i18n.changeLanguage("tr")}>Türkçe</Menu.Item>
-        <Menu.Item onClick={() => i18n.changeLanguage("en")}>English</Menu.Item>
-        <Menu.Item onClick={() => i18n.changeLanguage("de")}>Deutsch</Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
-
-function UserMenu() {
-  const { t } = useTranslation(["common", "navigation"]);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const initials = (user?.name || user?.email || "?")
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  return (
-    <Menu position="bottom-end" width={220}>
-      <Menu.Target>
-        <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className={classes.userButton}>
-          <Group gap="xs" wrap="nowrap">
-            <Avatar size={32} radius="xl" src={user?.id ? avatarUrl(user.id) : undefined}>
-              {initials}
-            </Avatar>
-            <Text size="sm" fw={500} truncate className="hidden max-w-[10rem] sm:block">
-              {user?.name || user?.email}
-            </Text>
-          </Group>
-        </UnstyledButton>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Label>
-          <Text size="xs" c="dimmed" fw={500} truncate>
-            {user?.email}
-          </Text>
-        </Menu.Label>
-        <Menu.Divider />
-        <Menu.Item component={Link} to="/app/account" leftSection={<UserIcon size={16} />}>
-          {t("navigation:nav.account")}
-        </Menu.Item>
-        <Menu.Item color="red" leftSection={<LogOut size={16} />} onClick={logout}>
-          {t("common:logout")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
-  );
-}
 
 /** Persistent warning while the session runs under a support-access (impersonation) grant. */
 function ImpersonationBanner() {
@@ -404,10 +310,6 @@ export default function AppLayout() {
 
             <Group gap={4} wrap="nowrap">
               <AppsLauncher />
-              <NotificationBell />
-              <LanguageSwitcher />
-              <ThemeToggle />
-              <UserMenu />
             </Group>
           </header>
 

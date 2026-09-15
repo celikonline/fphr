@@ -32,5 +32,6 @@
   "viewEmployeeCard": "View my employee profile",
   "preferences": "Preferences",
   "preferencesHint": "Language and theme preferences are stored in this browser.",
-  "supportHint": "Help Center and contact support."
+  "supportHint": "Help Center and contact support.",
+  "logoutHint": "End your session."
 }

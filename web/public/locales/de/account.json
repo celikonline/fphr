@@ -32,5 +32,6 @@
   "viewEmployeeCard": "[DE] View my employee profile",
   "preferences": "[DE] Preferences",
   "preferencesHint": "[DE] Language and theme preferences are stored in this browser.",
-  "supportHint": "[DE] Help Center and contact support."
+  "supportHint": "[DE] Help Center and contact support.",
+  "logoutHint": "[DE] End your session."
 }

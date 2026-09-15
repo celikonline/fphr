@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,15 +16,23 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { Palmtree, Eye, EyeOff, Moon, Sun, Monitor, Wallet, Target } from "lucide-react";
+import { ArrowRight, Palmtree, Eye, EyeOff, Moon, Sun, Monitor, Wallet, Target } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import classes from "./login.module.css";
 
-function BrandMark() {
+/** Brand mark: Kurumsal Mavi square over a Kurumsal Lacivert one (white on the navy brand panel). */
+function BrandMark({ onDark = false }: { onDark?: boolean }) {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <rect x="12" y="4" width="24" height="24" rx="6" fill="var(--mantine-color-navy-7)" />
+      <rect
+        x="12"
+        y="4"
+        width="24"
+        height="24"
+        rx="6"
+        fill={onDark ? "var(--mantine-color-white)" : "var(--mantine-color-navy-7)"}
+      />
       <rect x="4" y="12" width="24" height="24" rx="6" fill="var(--mantine-color-brand-6)" />
       <path
         d="M12.5 27.5L21 19M21 19H14.5M21 19V25.5"
@@ -45,14 +53,14 @@ function LoginThemeToggle() {
   const icon = theme === "dark" ? <Moon size={16} /> : theme === "light" ? <Sun size={16} /> : <Monitor size={16} />;
 
   return (
-    <Menu position="bottom-start">
-      <Tooltip label={t("common:theme")} position="right">
+    <Menu position="bottom-end">
+      <Tooltip label={t("common:theme")} position="left">
         <Menu.Target>
           <ActionIcon
             variant="default"
             size="lg"
             radius="xl"
-            className="fixed left-6 top-6 z-20"
+            className="fixed right-6 top-6 z-20"
             aria-label={t("common:theme")}
           >
             {icon}
@@ -79,10 +87,15 @@ function PasswordToggleIcon({ reveal }: { reveal: boolean }) {
 }
 
 const FEATURES = [
-  { icon: Palmtree, key: "featureLeaveTitle" },
-  { icon: Wallet, key: "featurePayrollTitle" },
-  { icon: Target, key: "featurePerformanceTitle" },
+  { icon: Palmtree, key: "featureLeaveTitle", color: "brand.6" },
+  { icon: Wallet, key: "featurePayrollTitle", color: "orange.6" },
+  { icon: Target, key: "featurePerformanceTitle", color: "teal.6" },
 ] as const;
+
+/** Staggered entrance delay for `classes.reveal` elements. */
+function revealDelay(ms: number): CSSProperties {
+  return { animationDelay: `${ms}ms` };
+}
 
 export default function LoginPage() {
   const { t } = useTranslation(["auth"]);
@@ -116,51 +129,82 @@ export default function LoginPage() {
 
       {/* Brand panel */}
       <aside
-        className={`hidden min-w-[420px] flex-none basis-[44%] flex-col justify-between p-14 lg:flex ${classes.brandPanel}`}
+        className={`hidden min-w-[440px] flex-none basis-[46%] flex-col justify-between p-14 lg:flex ${classes.brandPanel}`}
       >
-        <Group gap="sm" wrap="nowrap">
-          <BrandMark />
+        <div className={`${classes.shape} ${classes.shapeBack}`} aria-hidden="true" />
+        <div className={`${classes.shape} ${classes.shapeFront}`} aria-hidden="true" />
+
+        <Group gap="sm" wrap="nowrap" className={classes.reveal}>
+          <BrandMark onDark />
           <Stack gap={2}>
             <Text fz={20} fw={800} lh={1.1} lts={-0.4}>
               SenseİK
             </Text>
-            <Text fz={10.5} c="dimmed" lts={0.5} lh={1.2}>
+            <Text fz={10.5} lts={0.5} lh={1.2} className={classes.muted}>
               {t("auth:brandPoweredBy")}
             </Text>
           </Stack>
         </Group>
 
         <div className="max-w-md">
-          <Title order={1} fz={36} fw={800} lh={1.2} lts={-0.5} className={classes.tagline}>
+          <span className={`${classes.eyebrow} ${classes.reveal}`} style={revealDelay(80)}>
+            <span className={classes.pulse} />
+            {t("auth:brandEyebrow")}
+          </span>
+          <Title
+            order={1}
+            mt="lg"
+            fz={42}
+            fw={800}
+            lh={1.15}
+            lts={-0.8}
+            className={`${classes.tagline} ${classes.reveal}`}
+            style={revealDelay(160)}
+          >
             {t("auth:brandTagline")}
           </Title>
-          <Text mt="md" maw={384} size="md" lh={1.6} c="dimmed">
+          <Text
+            mt="md"
+            maw={400}
+            size="md"
+            lh={1.65}
+            className={`${classes.muted} ${classes.reveal}`}
+            style={revealDelay(240)}
+          >
             {t("auth:brandSubtitle")}
           </Text>
 
-          <Stack mt={40} gap="md">
-            {FEATURES.map(({ icon: Icon, key }) => (
-              <Group key={key} gap={14} wrap="nowrap">
-                <ThemeIcon variant="light" size={40} radius={10}>
+          <Stack mt={40} gap="sm">
+            {FEATURES.map(({ icon: Icon, key, color }, index) => (
+              <div key={key} className={`${classes.feature} ${classes.reveal}`} style={revealDelay(320 + index * 80)}>
+                <ThemeIcon color={color} size={40} radius={10}>
                   <Icon size={20} />
                 </ThemeIcon>
-                <Text size="sm" fw={500}>
+                <Text size="sm" fw={600}>
                   {t(`auth:${key}`)}
                 </Text>
-              </Group>
+              </div>
             ))}
           </Stack>
         </div>
 
-        <Text size="xs" c="dimmed">
+        <Text size="xs" className={classes.muted}>
           {t("auth:footerCopyright", { year: new Date().getFullYear() })}
         </Text>
       </aside>
 
       {/* Form panel */}
-      <main className="flex flex-1 items-center justify-center px-6 py-12">
-        <form className="w-full max-w-sm" onSubmit={handleSubmit} noValidate>
-          <Title order={2} fz={24} fw={700} lts={-0.3}>
+      <main className={`flex flex-1 items-center justify-center px-6 py-16 ${classes.formPanel}`}>
+        <form className={`w-full max-w-sm ${classes.reveal}`} style={revealDelay(120)} onSubmit={handleSubmit} noValidate>
+          <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
+            <BrandMark />
+            <Text fz={20} fw={800} lts={-0.4}>
+              SenseİK
+            </Text>
+          </Group>
+
+          <div className={classes.accentBar} />
+          <Title order={2} mt="md" fz={30} fw={800} lh={1.2} lts={-0.6}>
             {t("auth:welcomeBack")}
           </Title>
           <Text mt={8} size="sm" c="dimmed">
@@ -176,7 +220,7 @@ export default function LoginPage() {
           )}
 
           <TextInput
-            mt="lg"
+            mt="xl"
             size="md"
             id="email"
             type="email"
@@ -188,6 +232,7 @@ export default function LoginPage() {
             disabled={isLoading}
             required
             withAsterisk={false}
+            classNames={{ input: classes.input }}
           />
 
           <PasswordInput
@@ -209,6 +254,7 @@ export default function LoginPage() {
             visibilityToggleButtonProps={{
               "aria-label": showPassword ? t("auth:hidePassword") : t("auth:showPassword"),
             }}
+            classNames={{ input: classes.input }}
           />
 
           <Group mt="md" justify="space-between" wrap="nowrap">
@@ -230,14 +276,24 @@ export default function LoginPage() {
             </Text>
           </Group>
 
-          <Button type="submit" mt="lg" h={44} fullWidth disabled={isLoading}>
+          <Button
+            type="submit"
+            mt="xl"
+            h={48}
+            fullWidth
+            variant="gradient"
+            gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+            rightSection={isLoading ? undefined : <ArrowRight size={18} />}
+            disabled={isLoading}
+            className={classes.submit}
+          >
             {isLoading ? t("auth:loggingIn") : t("auth:login")}
           </Button>
 
           <Text mt="lg" ta="center" size="sm" c="dimmed">
             {t("auth:noAccount")}
           </Text>
-          <Text mt="xl" ta="center" size="xs" c="dimmed">
+          <Text mt="xl" ta="center" size="xs" c="dimmed" className={classes.demo}>
             {t("auth:demoCredentials")}
           </Text>
         </form>
