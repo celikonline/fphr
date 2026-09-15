@@ -6,6 +6,7 @@ pnpm-debug.log*
 # Production
 dist
 dist-ssr
+dev-dist
 
 # Development
 .DS_Store
