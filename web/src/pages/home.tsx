@@ -36,9 +36,10 @@ const CHART_COLORS = [
   "var(--mantine-color-blue-6)",
   "var(--mantine-color-gold-6)",
 ];
+/** Thin border plus a soft outer ring: the reference cards read as a double border. */
 const CARD_STYLE: CSSProperties = {
   borderColor: "var(--mantine-color-default-border)",
-  boxShadow: "0 0 0 4px var(--mantine-color-default-hover)",
+  boxShadow: "0 0 0 4px var(--mantine-color-gray-light)",
 };
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 
@@ -86,7 +87,7 @@ function WidgetCard({
           >
             {icon}
           </span>
-          <Text fz={17} fw={500} truncate>
+          <Text fz={17} fw={450} truncate>
             {title}
           </Text>
         </Group>
@@ -147,7 +148,7 @@ function FooterLink({ to, label }: { to: string; label: string }) {
   );
 }
 
-/** Divided rows; `indent` starts the divider after a leading icon column, as in the reference. */
+/** Divided rows; `indent` starts the divider after a leading icon column, as in the reference. The first row sits closer to the header. */
 function RowList<T>({
   items,
   rowKey,
@@ -164,7 +165,7 @@ function RowList<T>({
       {items.map((item, index) => (
         <li key={rowKey(item)}>
           {index > 0 && <Divider ml={indent} />}
-          <Group justify="space-between" gap="sm" wrap="nowrap" py={10}>
+          <Group justify="space-between" gap="sm" wrap="nowrap" pt={index === 0 ? 2 : 10} pb={10}>
             {render(item)}
           </Group>
         </li>
@@ -200,7 +201,7 @@ function Amount({ days, date }: { days?: string; date: string }) {
 
 /** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (career assignments), manager, hire date. */
 function OrgInfoWidget() {
-  const { t, i18n } = useTranslation(["home", "navigation"]);
+  const { t, i18n } = useTranslation(["home"]);
   const canReadEmployees = usePermission("employee.employees.read");
   const { data: employee, isLoading, error } = useQuery({
     queryKey: ["home", "org-info"],
@@ -260,7 +261,7 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28} src={avatarUrl(employee.id)}>
+            <Avatar size={88} radius="md" fz={28} src={avatarUrl(employee.id)} styles={{ placeholder: { fontWeight: 500 } }}>
               {initials(employee.firstName, employee.lastName)}
             </Avatar>
           </Group>
@@ -276,7 +277,7 @@ function OrgInfoWidget() {
             t("home:orgInfo.hireDate"),
             <Text size="sm">{employee.hireDate ? formatDateOnly(employee.hireDate, i18n.language, SHORT_DATE) : "—"}</Text>,
           )}
-          <FooterLink to="/app/account" label={t("navigation:nav.account")} />
+          <FooterLink to="/app/account" label={t("home:orgInfo.account")} />
         </>
       )}
     </WidgetFrame>
@@ -309,7 +310,7 @@ function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
 function LegendDot({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <Group gap={8} wrap="nowrap">
-      <ColorSwatch color={color} size={6} withShadow={false} />
+      <ColorSwatch color={color} size={8} withShadow={false} />
       <Text size="sm">
         {label}{" "}
         <Text span inherit fw={500}>
@@ -724,8 +725,8 @@ export default function HomePage() {
         <Text size="sm" c="dimmed">
           {t("home:greeting", { name: user?.firstName || user?.name || "" })}
         </Text>
-        <Text fz={22} lh={1.3}>
-          <Text span inherit c="dimmed">
+        <Text fz={20} lh={1.4} mt={2}>
+          <Text span inherit c="dimmed" mr={6}>
             {t("home:today")}
           </Text>{" "}
           {dateLabel}, {weekdayLabel}
