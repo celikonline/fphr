@@ -63,6 +63,7 @@
     <Project Path="tests/Modules/Sense.Modules.Workflow.Tests/Sense.Modules.Workflow.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Notifications.Tests/Sense.Modules.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Attendance.Tests/Sense.Modules.Attendance.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
@@ -85,5 +86,12 @@
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Attendance/">
+    <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Api/Sense.Modules.Attendance.Api.csproj" />
+    <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Application/Sense.Modules.Attendance.Application.csproj" />
+    <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
+    <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Domain/Sense.Modules.Attendance.Domain.csproj" />
+    <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Sense.Modules.Attendance.Infrastructure.csproj" />
   </Folder>
 </Solution>

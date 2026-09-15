@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Attendance.Infrastructure;
+using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
@@ -106,6 +108,18 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 builder.Services.AddLeaveBalanceRecalculationJob();
+
+// Attendance consumes EmployeeHired (default work schedule assignment, Source=Hire) and publishes WorkScheduleAssigned
+// for Leave to eventually replace its Monday–Friday placeholder (roadmap #23).
+builder.Services.AddModuleDbContext<AttendanceDbContext>(builder.Configuration, AttendanceDbContext.SchemaName);
+builder.Services.AddAttendanceCoreServices(builder.Configuration);
+builder.Services.AddAttendanceIntegrationEventHandlers();
+builder.Services.AddModuleHandlers(
+    AttendanceDbContext.SchemaName,
+    typeof(Sense.Modules.Attendance.Contracts.AttendancePermissions).Assembly,
+    typeof(AttendanceDbContext).Assembly,
+    typeof(Sense.Modules.Attendance.Domain.IWorkScheduleRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AttendanceDbContext>>();
 
 await builder.Build().RunAsync();
 

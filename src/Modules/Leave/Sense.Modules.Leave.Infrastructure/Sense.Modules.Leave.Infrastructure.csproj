@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Leave.Application/Sense.Modules.Leave.Application.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <!-- Contract-first consumption of Attendance's work schedule read port (roadmap #23); see WorkScheduleReaderAdapter. -->
+    <ProjectReference Include="../../Attendance/Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -85,12 +85,12 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 | **Workflow** | 1a | Organization (`OrgUnit` onay slotu, Faz 0 #4), Employee (yönetici) | ✅ Evet — onaycı çözümleme portu ile; birim bazlı atama #4 bitince bağlanır |
 | **Notifications** | 1b | Shared e-posta (`SmtpEmailSender`) ve SignalR (`NotificationsHub`) zaten var | ✅ Evet |
 | **Leave** | 1b | Employee, Organization (tatil takvimi, `WorkCalendar`), Workflow, Notifications, DataTransfer (#7/#8), toplu işlem (#9) | 🟡 Backend motoru evet; import, toplu atama ve menü Faz 0 sonrası |
-| Attendance | 2 | Leave (`TimesheetTreatment`), `WorkCalendar` | ❌ Leave motorundan sonra |
+| Attendance | 2 | Leave (`TimesheetTreatment`), `WorkCalendar` | 🟡 Başladı — A1 (çalışma takvimi + atama) bitti; Leave artık kendi Pzt–Cum yer tutucusu yerine `Attendance.Contracts.IWorkScheduleReadService` kullanıyor |
 | Payroll | 3 | `LegislationParameter`, Attendance, Leave, FM dönüşümü | 🟡 Hesap motoru + golden set saf domain olarak mümkün (en uzun ve riskli faz); ancak kapasite varsa |
 | Expense | 4 | Workflow, Documents | ❌ Workflow'dan sonra |
 | Assets, Announcements (+Support), Training | 4 | Employee, Documents | Teknik olarak mümkün, öncelik düşük |
 | Performance, Compensation (+Benefits adayı) | 5 | Employee, Organization, Payroll (Compensation) | ❌ |
-| Recruitment (ATS) | 6 | Identity rolleri, `Location`/`OrgUnit` | Teknik olarak bağımsız; yol haritası Faz 5 ile paralel öneriyor — şimdi önerilmez |
+| Recruitment (ATS) | 6 | Identity rolleri, `Location`/`OrgUnit` | ✅ R0 bitti (2026-09-16, kullanıcı kararıyla erken başlatıldı — bkz. `faz6-durum-takibi.md`); R1+ (requisition+onay, form builder, kariyer sitesi, raporlar) sırayla devam edecek |
 | Analytics, Ai | 7 | Diğer modüllerin verisi | ❌ |
 | Integrations, Billing | 8 | — | ❌ |
 

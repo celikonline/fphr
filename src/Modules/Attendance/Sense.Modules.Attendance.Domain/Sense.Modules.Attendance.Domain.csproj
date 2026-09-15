@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
+  </ItemGroup>
+</Project>

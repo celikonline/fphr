@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Attendance.Infrastructure;
+using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Requests;
@@ -73,6 +75,9 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
     {
         var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
         services.AddModuleDbContext<LeaveDbContext>(configuration, LeaveDbContext.SchemaName);
+        // AddLeaveServices' IWorkScheduleReader now adapts Attendance.Contracts.IWorkScheduleReadService (roadmap #23).
+        services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
+        services.AddAttendanceCoreServices(configuration);
         services.AddLeaveServices(configuration);
         services.AddModuleHandlers(
             LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly);
@@ -82,8 +87,11 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         services.AddSingleton(holidays);
     }
 
-    protected override async Task OnDatabaseReadyAsync() =>
+    protected override async Task OnDatabaseReadyAsync()
+    {
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
+        await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
+    }
 
     private async Task<Result<LeaveRequestDto>> SubmitAsync(Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end)
     {

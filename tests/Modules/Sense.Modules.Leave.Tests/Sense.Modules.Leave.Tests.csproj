@@ -10,6 +10,7 @@
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Application/Sense.Modules.Leave.Application.csproj" />
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Sense.Modules.Attendance.Infrastructure.csproj" />
     <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />

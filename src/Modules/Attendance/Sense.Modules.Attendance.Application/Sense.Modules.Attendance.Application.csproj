@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Attendance.Domain/Sense.Modules.Attendance.Domain.csproj" />
+    <ProjectReference Include="../Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
+    <!-- Cross-module read contracts only, per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+</Project>
