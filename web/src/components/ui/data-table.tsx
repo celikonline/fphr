@@ -86,6 +86,9 @@ export function useDataTable<TData, TValue>({
     data,
     getRowId: getRowId ? (row) => getRowId(row) : undefined,
     state: { sorting, columnVisibility },
+    // Only tables that page on the client need the page index reset when data changes. Leaving it on for
+    // server-paged/unpaged tables turns a fresh `data` array per render into an endless reset → re-render loop.
+    autoResetPageIndex: pageSize !== undefined,
     manualSorting: onSortingChange !== undefined,
     sortDescFirst: false,
     enableSortingRemoval: false,
