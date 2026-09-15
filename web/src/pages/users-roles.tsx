@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Search, ShieldCheck, ShieldOff, Users as UsersIcon, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -43,9 +44,21 @@ import {
 } from "@/services/users.service";
 
 const ALL_VALUE = "__all__";
-const PAGE_SIZE = 10;
-/** Demo dataset is ~50 users (Item 18 seed) - fetched once and filtered/paginated client-side. */
+const DEFAULT_PAGE_SIZE = 10;
+const COLUMN_VISIBILITY_KEY = "senseik.users.grid.columns";
+/** Demo dataset is ~50 users (Item 18 seed) - fetched once and filtered/sorted/paginated client-side. */
 const FETCH_ALL_SIZE = 500;
+
+type UserComparer = (a: UserListItem, b: UserListItem, collator: Intl.Collator) => number;
+
+/** Client-side sort per column id; the whole user list is loaded, so sorting spans every page. */
+const SORT_COMPARERS: Record<string, UserComparer> = {
+  name: (a, b, c) => c.compare(a.lastName, b.lastName) || c.compare(a.firstName, b.firstName),
+  email: (a, b, c) => c.compare(a.email, b.email),
+  status: (a, b, c) => c.compare(a.status, b.status),
+  accessType: (a, b, c) => c.compare(deriveAccessType(a.roles) ?? "", deriveAccessType(b.roles) ?? ""),
+  lastLogin: (a, b) => (a.lastLoginAt ?? "").localeCompare(b.lastLoginAt ?? ""),
+};
 
 const STATUS_BADGE: Record<UserStatus, "success" | "secondary" | "destructive" | "outline"> = {
   active: "success",
@@ -89,6 +102,8 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
   const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sort, setSort] = useState<{ id: string; desc: boolean }>({ id: "name", desc: false });
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState(ALL_VALUE);
@@ -132,9 +147,17 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
     });
   }, [allUsers, debouncedSearch, statusFilter, roleFilter]);
 
-  const totalCount = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const sorted = useMemo(() => {
+    const compare = SORT_COMPARERS[sort.id];
+    if (!compare) return filtered;
+    const collator = new Intl.Collator(locale, { sensitivity: "base" });
+    const direction = sort.desc ? -1 : 1;
+    return [...filtered].sort((a, b) => direction * compare(a, b, collator));
+  }, [filtered, sort, locale]);
+
+  const totalCount = sorted.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const pageItems = sorted.slice((page - 1) * pageSize, page * pageSize);
   const pageResult = {
     page,
     totalPages,
@@ -205,13 +228,173 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
     });
   }
 
-  const allOnPageSelected = pageItems.length > 0 && pageItems.every((u) => selected.has(u.id));
+  const selectedOnPage = pageItems.filter((u) => selected.has(u.id)).length;
+  const allOnPageSelected = pageItems.length > 0 && selectedOnPage === pageItems.length;
   const selectedUsers = (allUsers?.items ?? []).filter((u) => selected.has(u.id));
 
   function formatLastLogin(value: string | null) {
     if (!value) return t("users:never");
     return new Date(value).toLocaleString(locale === "tr" ? "tr-TR" : "en-US");
   }
+
+  function changeSorting(next: SortingState) {
+    const [first] = next;
+    if (!first) return;
+    setSort({ id: first.id, desc: first.desc });
+    setPage(1);
+  }
+
+  function changePageSize(size: number) {
+    setPageSize(size);
+    setPage(1);
+  }
+
+  const columns: ColumnDef<UserListItem>[] = [
+    ...(canManage
+      ? [
+          {
+            id: "select",
+            enableSorting: false,
+            enableHiding: false,
+            meta: { headerClassName: "w-10" },
+            header: () => (
+              <Checkbox
+                checked={allOnPageSelected ? true : selectedOnPage > 0 ? "indeterminate" : false}
+                onCheckedChange={(v) => toggleSelectAllOnPage(v === true)}
+                aria-label={t("common:actions")}
+              />
+            ),
+            cell: ({ row }) => (
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={selected.has(row.original.id)}
+                  onCheckedChange={(v) => toggleSelect(row.original.id, v === true)}
+                  aria-label={`${row.original.firstName} ${row.original.lastName}`}
+                />
+              </div>
+            ),
+          } satisfies ColumnDef<UserListItem>,
+        ]
+      : []),
+    {
+      id: "name",
+      accessorFn: (user) => `${user.lastName} ${user.firstName}`,
+      enableHiding: false,
+      header: t("users:name"),
+      meta: { label: t("users:name"), cellClassName: "font-medium" },
+      cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
+    },
+    {
+      id: "email",
+      accessorKey: "email",
+      header: t("users:email"),
+      meta: { label: t("users:email"), cellClassName: "text-muted-foreground" },
+      cell: ({ row }) => row.original.email,
+    },
+    {
+      id: "status",
+      accessorKey: "status",
+      header: t("users:statusFilter"),
+      meta: { label: t("users:statusFilter") },
+      cell: ({ row }) => (
+        <Badge variant={STATUS_BADGE[row.original.status]}>{t(`users:status.${row.original.status}`)}</Badge>
+      ),
+    },
+    {
+      id: "accessType",
+      accessorFn: (user) => deriveAccessType(user.roles) ?? "",
+      header: t("users:accessType"),
+      meta: { label: t("users:accessType") },
+      cell: ({ row }) => {
+        const accessType = deriveAccessType(row.original.roles);
+        return (
+          <Badge variant="outline">
+            {accessType ? t(`users:accessType.${accessType.toLowerCase()}`) : t("users:accessType.none")}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "roles",
+      enableSorting: false,
+      header: t("users:roles"),
+      meta: { label: t("users:roles") },
+      cell: ({ row }) => (
+        <div className="flex flex-wrap gap-1">
+          {row.original.roles.slice(0, 2).map((r) => (
+            <Badge key={r.id} variant="outline">
+              {r.name ?? r.code}
+            </Badge>
+          ))}
+          {row.original.roles.length > 2 && <Badge variant="outline">+{row.original.roles.length - 2}</Badge>}
+        </div>
+      ),
+    },
+    {
+      id: "mfa",
+      enableSorting: false,
+      header: t("users:mfa"),
+      meta: { label: t("users:mfa") },
+      cell: ({ row }) =>
+        row.original.mfaEnabled ? (
+          <ShieldCheck className="h-4 w-4 text-emerald-600" aria-label={t("users:mfa")} />
+        ) : (
+          <ShieldOff className="h-4 w-4 text-muted-foreground" aria-label={t("users:mfa")} />
+        ),
+    },
+    {
+      id: "lastLogin",
+      accessorFn: (user) => user.lastLoginAt ?? "",
+      header: t("users:lastLogin"),
+      meta: { label: t("users:lastLogin"), cellClassName: "text-muted-foreground" },
+      cell: ({ row }) => formatLastLogin(row.original.lastLoginAt),
+    },
+    ...(canManage
+      ? [
+          {
+            id: "actions",
+            enableSorting: false,
+            enableHiding: false,
+            header: t("common:actions"),
+            meta: { headerClassName: "text-right", cellClassName: "text-right" },
+            cell: ({ row }) => {
+              const user = row.original;
+              return (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button type="button" variant="ghost" size="icon">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setAccessTypeDialogUser(user)}>
+                        {t("users:editAccessType")}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setRolesDialogUser(user)}>{t("users:editRoles")}</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => statusMutation.mutate({ id: user.id, enabled: user.status === "disabled" })}
+                      >
+                        {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              );
+            },
+          } satisfies ColumnDef<UserListItem>,
+        ]
+      : []),
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: pageItems,
+    getRowId: (user) => user.id,
+    sorting: [{ id: sort.id, desc: sort.desc }],
+    onSortingChange: changeSorting,
+    columnVisibilityKey: COLUMN_VISIBILITY_KEY,
+  });
 
   return (
     <div className="space-y-4 pt-4">
@@ -251,6 +434,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
             ))}
           </SelectContent>
         </Select>
+        <DataTableViewOptions table={table} className="ml-auto" />
       </div>
 
       {canManage && selected.size > 0 && (
@@ -281,117 +465,19 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : pageItems.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("users:empty")}</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    {canManage && (
-                      <TableHead className="w-10">
-                        <Checkbox
-                          checked={allOnPageSelected}
-                          onCheckedChange={(v) => toggleSelectAllOnPage(Boolean(v))}
-                          aria-label={t("common:actions")}
-                        />
-                      </TableHead>
-                    )}
-                    <TableHead>{t("users:name")}</TableHead>
-                    <TableHead>{t("users:email")}</TableHead>
-                    <TableHead>{t("users:statusFilter")}</TableHead>
-                    <TableHead>{t("users:accessType")}</TableHead>
-                    <TableHead>{t("users:roles")}</TableHead>
-                    <TableHead>{t("users:mfa")}</TableHead>
-                    <TableHead>{t("users:lastLogin")}</TableHead>
-                    {canManage && <TableHead className="text-right">{t("common:actions")}</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pageItems.map((user) => (
-                    <TableRow key={user.id}>
-                      {canManage && (
-                        <TableCell>
-                          <Checkbox
-                            checked={selected.has(user.id)}
-                            onCheckedChange={(v) => toggleSelect(user.id, Boolean(v))}
-                            aria-label={`${user.firstName} ${user.lastName}`}
-                          />
-                        </TableCell>
-                      )}
-                      <TableCell className="font-medium">
-                        {user.firstName} {user.lastName}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={STATUS_BADGE[user.status]}>{t(`users:status.${user.status}`)}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {(() => {
-                          const accessType = deriveAccessType(user.roles);
-                          return (
-                            <Badge variant="outline">
-                              {accessType ? t(`users:accessType.${accessType.toLowerCase()}`) : t("users:accessType.none")}
-                            </Badge>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.slice(0, 2).map((r) => (
-                            <Badge key={r.id} variant="outline">
-                              {r.name ?? r.code}
-                            </Badge>
-                          ))}
-                          {user.roles.length > 2 && <Badge variant="outline">+{user.roles.length - 2}</Badge>}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {user.mfaEnabled ? (
-                          <ShieldCheck className="h-4 w-4 text-emerald-600" aria-label={t("users:mfa")} />
-                        ) : (
-                          <ShieldOff className="h-4 w-4 text-muted-foreground" aria-label={t("users:mfa")} />
-                        )}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{formatLastLogin(user.lastLoginAt)}</TableCell>
-                      {canManage && (
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button type="button" variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => setAccessTypeDialogUser(user)}>
-                                {t("users:editAccessType")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => setRolesDialogUser(user)}>
-                                {t("users:editRoles")}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  statusMutation.mutate({ id: user.id, enabled: user.status === "disabled" })
-                                }
-                              >
-                                {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <PaginationFooter result={pageResult} onPageChange={setPage} />
-            </>
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            emptyMessage={t("users:empty")}
+            isRowSelected={(user) => selected.has(user.id)}
+          />
+          {!isLoading && (
+            <PaginationFooter
+              result={pageResult}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={changePageSize}
+            />
           )}
         </CardContent>
       </Card>
