@@ -2,7 +2,7 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Anchor, Avatar, Badge, Box, Card, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
+import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
 import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
@@ -70,7 +70,10 @@ function WidgetCard({
     <WidgetFrame>
       <Group justify="space-between" gap="sm" wrap="nowrap" mb="xl">
         <Group gap="md" wrap="nowrap" className="min-w-0">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-white" style={{ backgroundColor: accent }}>
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center"
+            style={{ backgroundColor: accent, color: "white", borderRadius: "var(--mantine-radius-md)" }}
+          >
             {icon}
           </span>
           <Text fz={17} fw={500} truncate>
@@ -284,8 +287,8 @@ function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
   const Icon = look.icon === "check" ? Check : X;
   return (
     <span
-      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
-      style={{ backgroundColor: look.background, color: look.color }}
+      className="flex h-6 w-6 shrink-0 items-center justify-center"
+      style={{ backgroundColor: look.background, color: look.color, borderRadius: "50%" }}
       title={t(`leave:status.${status}`)}
     >
       <Icon size={14} strokeWidth={3} />
@@ -296,7 +299,7 @@ function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
 function LegendDot({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <Group gap={8} wrap="nowrap">
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <ColorSwatch color={color} size={6} withShadow={false} />
       <Text size="sm">
         {label}{" "}
         <Text span inherit fw={500}>
