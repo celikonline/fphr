@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Check, ShieldCheck, ShieldOff } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import NoAccess from "@/components/no-access";
@@ -9,9 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
@@ -35,6 +35,21 @@ const STATUS_VARIANT: Record<ImpersonationGrantStatus, BadgeProps["variant"]> = 
 };
 
 const REVOCABLE: ImpersonationGrantStatus[] = ["Pending", "Approved", "Active"];
+
+/** Lifecycle order used when sorting by status. */
+const STATUS_ORDER = IMPERSONATION_GRANT_STATUSES;
+const PAGE_SIZE = 20;
+/** Stable empty list so client paging does not see new data (and reset) on every render while loading. */
+const NO_GRANTS: ImpersonationGrant[] = [];
+const COLUMN_VISIBILITY_KEY = "senseik.settings.supportAccess.columns";
+
+/** Chronological compare of ISO instants; missing values sort last. */
+function compareInstants(a: string | null, b: string | null): number {
+  if (a === b) return 0;
+  if (!a) return 1;
+  if (!b) return -1;
+  return new Date(a).getTime() - new Date(b).getTime();
+}
 
 type PendingAction = { kind: "approve" | "revoke"; grant: ImpersonationGrant } | null;
 
@@ -86,6 +101,93 @@ function SupportAccessList() {
     else revokeMutation.mutate(pending.grant.id);
   }
 
+  const locale = i18n.language;
+  const requesterOf = (grant: ImpersonationGrant) => grant.platformUserEmail ?? t("settings:supportAccess.senseStaff");
+
+  const columns: ColumnDef<ImpersonationGrant>[] = [
+    {
+      id: "requestedBy",
+      accessorFn: requesterOf,
+      enableHiding: false,
+      header: t("settings:supportAccess.requestedBy"),
+      meta: { label: t("settings:supportAccess.requestedBy"), cellClassName: "font-medium" },
+      sortingFn: (a, b) => requesterOf(a.original).localeCompare(requesterOf(b.original), locale),
+    },
+    {
+      id: "reason",
+      accessorKey: "reason",
+      enableSorting: false,
+      header: t("settings:supportAccess.reason"),
+      meta: { label: t("settings:supportAccess.reason"), cellClassName: "max-w-xs whitespace-pre-wrap text-sm" },
+    },
+    {
+      id: "status",
+      accessorKey: "status",
+      header: t("settings:supportAccess.status"),
+      meta: { label: t("settings:supportAccess.status") },
+      sortingFn: (a, b) => STATUS_ORDER.indexOf(a.original.status) - STATUS_ORDER.indexOf(b.original.status),
+      cell: ({ row }) => (
+        <Badge variant={STATUS_VARIANT[row.original.status] ?? "outline"}>
+          {t(`settings:supportAccess.statuses.${row.original.status}`, row.original.status)}
+        </Badge>
+      ),
+    },
+    {
+      id: "requestedAt",
+      accessorKey: "requestedAt",
+      header: t("settings:supportAccess.requestedAt"),
+      meta: { label: t("settings:supportAccess.requestedAt"), cellClassName: "whitespace-nowrap text-sm" },
+      sortingFn: (a, b) => compareInstants(a.original.requestedAt, b.original.requestedAt),
+      cell: ({ row }) => formatDateTime(row.original.requestedAt, locale),
+    },
+    {
+      id: "expiresAt",
+      accessorKey: "expiresAt",
+      header: t("settings:supportAccess.expiresAt"),
+      meta: { label: t("settings:supportAccess.expiresAt"), cellClassName: "whitespace-nowrap text-sm" },
+      sortingFn: (a, b) => compareInstants(a.original.expiresAt, b.original.expiresAt),
+      cell: ({ row }) => formatDateTime(row.original.expiresAt, locale),
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      enableSorting: false,
+      header: t("common:actions"),
+      meta: { headerClassName: "text-right", cellClassName: "whitespace-nowrap text-right" },
+      cell: ({ row }) => {
+        const grant = row.original;
+        return (
+          <div className="inline-flex gap-2" onClick={(e) => e.stopPropagation()}>
+            {grant.status === "Pending" && (
+              <Button type="button" size="sm" onClick={() => setPending({ kind: "approve", grant })}>
+                <Check className="mr-1 h-4 w-4" /> {t("settings:supportAccess.approve")}
+              </Button>
+            )}
+            {REVOCABLE.includes(grant.status) && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={() => setPending({ kind: "revoke", grant })}
+              >
+                <ShieldOff className="mr-1 h-4 w-4" /> {t("settings:supportAccess.revoke")}
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: data ?? NO_GRANTS,
+    getRowId: (grant) => grant.id,
+    columnVisibilityKey: COLUMN_VISIBILITY_KEY,
+    pageSize: PAGE_SIZE,
+  });
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div>
@@ -101,81 +203,31 @@ function SupportAccessList() {
         <AlertDescription>{t("settings:supportAccess.privacyText")}</AlertDescription>
       </Alert>
 
-      <div className="max-w-xs">
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger aria-label={t("settings:supportAccess.status")}>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>{t("settings:supportAccess.allStatuses")}</SelectItem>
-            {IMPERSONATION_GRANT_STATUSES.map((value) => (
-              <SelectItem key={value} value={value}>
-                {t(`settings:supportAccess.statuses.${value}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="w-full max-w-xs">
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger aria-label={t("settings:supportAccess.status")}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t("settings:supportAccess.allStatuses")}</SelectItem>
+              {IMPERSONATION_GRANT_STATUSES.map((value) => (
+                <SelectItem key={value} value={value}>
+                  {t(`settings:supportAccess.statuses.${value}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DataTableViewOptions table={table} className="ml-auto" />
       </div>
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : isError ? (
+          {isError ? (
             <p className="p-6 text-center text-sm text-destructive">{t("settings:supportAccess.loadError")}</p>
-          ) : !data || data.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("settings:supportAccess.empty")}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("settings:supportAccess.requestedBy")}</TableHead>
-                  <TableHead>{t("settings:supportAccess.reason")}</TableHead>
-                  <TableHead>{t("settings:supportAccess.status")}</TableHead>
-                  <TableHead>{t("settings:supportAccess.requestedAt")}</TableHead>
-                  <TableHead>{t("settings:supportAccess.expiresAt")}</TableHead>
-                  <TableHead className="text-right">{t("common:actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((grant) => (
-                  <TableRow key={grant.id}>
-                    <TableCell className="font-medium">
-                      {grant.platformUserEmail ?? t("settings:supportAccess.senseStaff")}
-                    </TableCell>
-                    <TableCell className="max-w-xs whitespace-pre-wrap text-sm">{grant.reason}</TableCell>
-                    <TableCell>
-                      <Badge variant={STATUS_VARIANT[grant.status] ?? "outline"}>
-                        {t(`settings:supportAccess.statuses.${grant.status}`, grant.status)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{formatDateTime(grant.requestedAt, i18n.language)}</TableCell>
-                    <TableCell className="text-sm">{formatDateTime(grant.expiresAt, i18n.language)}</TableCell>
-                    <TableCell className="space-x-2 whitespace-nowrap text-right">
-                      {grant.status === "Pending" && (
-                        <Button type="button" size="sm" onClick={() => setPending({ kind: "approve", grant })}>
-                          <Check className="mr-1 h-4 w-4" /> {t("settings:supportAccess.approve")}
-                        </Button>
-                      )}
-                      {REVOCABLE.includes(grant.status) && (
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => setPending({ kind: "revoke", grant })}
-                        >
-                          <ShieldOff className="mr-1 h-4 w-4" /> {t("settings:supportAccess.revoke")}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable table={table} isLoading={isLoading} emptyMessage={t("settings:supportAccess.empty")} />
           )}
         </CardContent>
       </Card>

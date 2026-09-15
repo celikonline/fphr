@@ -1,16 +1,17 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarDays, Plus, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NoAccess from "@/components/no-access";
@@ -25,6 +26,7 @@ import {
   listHolidayCalendarEntries,
   listHolidayCalendars,
   type HolidayCalendar,
+  type HolidayCalendarEntry,
 } from "@/services/structure.service";
 
 const CALENDARS_QUERY_KEY = ["organization", "holiday-calendars"] as const;
@@ -73,6 +75,53 @@ function HolidayCalendars() {
         .sort((a, b) => (year === ALL_YEARS ? a.date : a.date.slice(5)).localeCompare(year === ALL_YEARS ? b.date : b.date.slice(5))),
     [entriesQuery.data, year],
   );
+
+  // Recurring entries repeat every year, so a single year is ordered by month/day; "all years" by full date.
+  const dateSortKey = (entry: HolidayCalendarEntry) => (year === ALL_YEARS ? entry.date : entry.date.slice(5));
+  const locale = i18n.language;
+
+  const entryColumns: ColumnDef<HolidayCalendarEntry>[] = [
+    {
+      id: "date",
+      accessorFn: dateSortKey,
+      header: t("structure:calendars.date"),
+      meta: { label: t("structure:calendars.date"), headerClassName: "w-48" },
+      sortingFn: (a, b) => dateSortKey(a.original).localeCompare(dateSortKey(b.original)),
+      cell: ({ row }) =>
+        row.original.isRecurringAnnually
+          ? formatDateOnly(row.original.date, locale, { day: "numeric", month: "long" })
+          : formatDateOnly(row.original.date, locale, { dateStyle: "medium" }),
+    },
+    {
+      id: "name",
+      accessorKey: "name",
+      header: t("structure:calendars.entryName"),
+      meta: { label: t("structure:calendars.entryName"), cellClassName: "font-medium" },
+      sortingFn: (a, b) => a.original.name.localeCompare(b.original.name, locale),
+    },
+    {
+      id: "recurring",
+      accessorKey: "isRecurringAnnually",
+      header: t("structure:calendars.recurring"),
+      meta: { label: t("structure:calendars.recurring"), headerClassName: "w-40" },
+      sortingFn: (a, b) => Number(a.original.isRecurringAnnually) - Number(b.original.isRecurringAnnually),
+      cell: ({ row }) =>
+        row.original.isRecurringAnnually ? (
+          <Badge variant="outline" className="gap-1">
+            <Repeat className="h-3 w-3" /> {t("structure:calendars.everyYear")}
+          </Badge>
+        ) : (
+          <span className="text-sm text-muted-foreground">{t("structure:calendars.oneTime")}</span>
+        ),
+    },
+  ];
+
+  // Client-side sorting over the fully loaded entry list; rows arrive pre-sorted by date.
+  const entriesTable = useDataTable({
+    columns: entryColumns,
+    data: entries,
+    getRowId: (entry) => entry.id,
+  });
 
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
@@ -165,46 +214,14 @@ function HolidayCalendars() {
                 </div>
               </CardHeader>
               <CardContent className="p-0">
-                {entriesQuery.isLoading ? (
-                  <div className="space-y-2 p-4">
-                    <Skeleton className="h-8 w-full" />
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ) : entriesQuery.isError ? (
+                {entriesQuery.isError ? (
                   <p className="p-6 text-center text-sm text-destructive">{t("structure:errors.loadFailed")}</p>
-                ) : entries.length === 0 ? (
-                  <p className="p-8 text-center text-sm text-muted-foreground">{t("structure:calendars.noEntries")}</p>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-48">{t("structure:calendars.date")}</TableHead>
-                        <TableHead>{t("structure:calendars.entryName")}</TableHead>
-                        <TableHead className="w-40">{t("structure:calendars.recurring")}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {entries.map((entry) => (
-                        <TableRow key={entry.id}>
-                          <TableCell>
-                            {entry.isRecurringAnnually
-                              ? formatDateOnly(entry.date, i18n.language, { day: "numeric", month: "long" })
-                              : formatDateOnly(entry.date, i18n.language, { dateStyle: "medium" })}
-                          </TableCell>
-                          <TableCell className="font-medium">{entry.name}</TableCell>
-                          <TableCell>
-                            {entry.isRecurringAnnually ? (
-                              <Badge variant="outline" className="gap-1">
-                                <Repeat className="h-3 w-3" /> {t("structure:calendars.everyYear")}
-                              </Badge>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">{t("structure:calendars.oneTime")}</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                  <DataTable
+                    table={entriesTable}
+                    isLoading={entriesQuery.isLoading}
+                    emptyMessage={t("structure:calendars.noEntries")}
+                  />
                 )}
               </CardContent>
             </Card>
