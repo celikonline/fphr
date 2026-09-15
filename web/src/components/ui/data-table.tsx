@@ -13,21 +13,9 @@ import {
   type Updater,
   type VisibilityState,
 } from "@tanstack/react-table";
+import { Box, Button, Group, Menu, Skeleton, Table, Text, UnstyledButton } from "@mantine/core";
 import { ArrowDown, ArrowUp, ArrowUpDown, Columns3 } from "lucide-react";
 import PaginationFooter from "@/components/pagination-footer";
-import { cn } from "@/lib/utils";
-import { Button } from "./button";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "./dropdown-menu";
-import { Skeleton } from "./skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
 /** Smallest option of PaginationFooter's rows-per-page select. */
 const MIN_PAGE_SIZE_OPTION = 10;
@@ -139,6 +127,8 @@ interface DataTableProps<TData> {
   className?: string;
 }
 
+const SORT_ICON_SIZE = 14;
+
 export function DataTable<TData>({
   table,
   isLoading,
@@ -157,79 +147,89 @@ export function DataTable<TData>({
 
   return (
     <div className={className}>
-      <div className={cn(isFetching && "opacity-70")}>
-        <Table containerClassName={cn(stickyHeader && "max-h-[70vh]")}>
-          <TableHeader className={cn(stickyHeader && "sticky top-0 z-10 bg-card")}>
+      <Box
+        opacity={isFetching ? 0.7 : undefined}
+        style={{ overflow: "auto", maxHeight: stickyHeader ? "70vh" : undefined, position: "relative", width: "100%" }}
+      >
+        <Table stickyHeader={stickyHeader} highlightOnHover={!isLoading && rows.length > 0} verticalSpacing="sm" fz="sm">
+          <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+              <Table.Tr key={headerGroup.id} data-hover={undefined}>
                 {headerGroup.headers.map((header) => {
                   const column = header.column;
                   const sorted = column.getIsSorted();
                   const content = header.isPlaceholder ? null : flexRender(column.columnDef.header, header.getContext());
                   return (
-                    <TableHead
+                    <Table.Th
                       key={header.id}
                       className={column.columnDef.meta?.headerClassName}
+                      c="dimmed"
+                      fw={500}
+                      style={{ whiteSpace: "nowrap" }}
                       aria-sort={column.getCanSort() ? (sorted === "desc" ? "descending" : sorted === "asc" ? "ascending" : "none") : undefined}
                     >
                       {column.getCanSort() ? (
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1 hover:text-foreground"
-                          onClick={column.getToggleSortingHandler()}
-                        >
-                          {content}
-                          {sorted === "desc" ? (
-                            <ArrowDown className="h-3.5 w-3.5" />
-                          ) : sorted === "asc" ? (
-                            <ArrowUp className="h-3.5 w-3.5" />
-                          ) : (
-                            <ArrowUpDown className="h-3.5 w-3.5 opacity-40" />
-                          )}
-                        </button>
+                        <UnstyledButton type="button" fz="sm" fw={500} c="inherit" onClick={column.getToggleSortingHandler()}>
+                          <Group component="span" gap={4} wrap="nowrap">
+                            {content}
+                            {sorted === "desc" ? (
+                              <ArrowDown size={SORT_ICON_SIZE} />
+                            ) : sorted === "asc" ? (
+                              <ArrowUp size={SORT_ICON_SIZE} />
+                            ) : (
+                              <ArrowUpDown size={SORT_ICON_SIZE} opacity={0.4} />
+                            )}
+                          </Group>
+                        </UnstyledButton>
                       ) : (
                         content
                       )}
-                    </TableHead>
+                    </Table.Th>
                   );
                 })}
-              </TableRow>
+              </Table.Tr>
             ))}
-          </TableHeader>
-          <TableBody>
+          </Table.Thead>
+          <Table.Tbody>
             {isLoading ? (
               Array.from({ length: 5 }, (_, i) => (
-                <TableRow key={i} className="hover:bg-transparent">
-                  <TableCell colSpan={visibleColumnCount}>
-                    <Skeleton className="h-6 w-full" />
-                  </TableCell>
-                </TableRow>
+                <Table.Tr key={i}>
+                  <Table.Td colSpan={visibleColumnCount}>
+                    <Skeleton height={24} />
+                  </Table.Td>
+                </Table.Tr>
               ))
             ) : rows.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={visibleColumnCount} className="p-6 text-center text-sm text-muted-foreground">
-                  {emptyMessage}
-                </TableCell>
-              </TableRow>
+              <Table.Tr>
+                <Table.Td colSpan={visibleColumnCount} p="lg">
+                  <Text size="sm" c="dimmed" ta="center">
+                    {emptyMessage}
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
             ) : (
-              rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={cn(onRowClick && "cursor-pointer")}
-                  data-state={isRowSelected?.(row.original) ? "selected" : undefined}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.cellClassName}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              rows.map((row) => {
+                const selected = isRowSelected?.(row.original) ?? false;
+                return (
+                  <Table.Tr
+                    key={row.id}
+                    data-selected={selected || undefined}
+                    bg={selected ? "var(--mantine-primary-color-light)" : undefined}
+                    style={onRowClick ? { cursor: "pointer" } : undefined}
+                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <Table.Td key={cell.id} className={cell.column.columnDef.meta?.cellClassName}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </Table.Td>
+                    ))}
+                  </Table.Tr>
+                );
+              })
             )}
-          </TableBody>
+          </Table.Tbody>
         </Table>
-      </div>
+      </Box>
       {clientPaged && !isLoading && (
         <PaginationFooter
           result={{
@@ -256,28 +256,29 @@ export function DataTableViewOptions<TData>({ table, className }: { table: TanSt
   if (hideable.length === 0) return null;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button type="button" variant="outline" className={className}>
-          <Columns3 className="mr-2 h-4 w-4" /> {t("common:columns")}
+    <Menu position="bottom-end" width={224} closeOnItemClick={false} shadow="md">
+      <Menu.Target>
+        <Button type="button" variant="default" className={className} leftSection={<Columns3 size={16} />}>
+          {t("common:columns")}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>{t("common:visibleColumns")}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Label>{t("common:visibleColumns")}</Menu.Label>
+        <Menu.Divider />
         {hideable.map((column) => (
-          <DropdownMenuCheckboxItem
+          <Menu.CheckboxItem
             key={column.id}
             checked={column.getIsVisible()}
-            onCheckedChange={(checked) => column.toggleVisibility(checked === true)}
-            onSelect={(event) => event.preventDefault()}
+            onChange={(checked) => column.toggleVisibility(checked)}
           >
             {column.columnDef.meta?.label ?? column.id}
-          </DropdownMenuCheckboxItem>
+          </Menu.CheckboxItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => table.resetColumnVisibility()}>{t("common:resetColumns")}</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        <Menu.Divider />
+        <Menu.Item closeMenuOnClick onClick={() => table.resetColumnVisibility()}>
+          {t("common:resetColumns")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

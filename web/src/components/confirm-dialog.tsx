@@ -1,13 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Button, Group, Modal, Text } from "@mantine/core";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -39,21 +31,33 @@ export default function ConfirmDialog({
   const { t } = useTranslation(["common"]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{title ?? t("common:confirmDeleteTitle")}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            {t("common:cancel")}
-          </Button>
-          <Button type="button" variant={confirmVariant} onClick={onConfirm} disabled={isLoading}>
-            {confirmLabel ?? t("common:delete")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <Modal
+      opened={open}
+      onClose={() => onOpenChange(false)}
+      title={
+        <Text fw={600} size="lg">
+          {title ?? t("common:confirmDeleteTitle")}
+        </Text>
+      }
+      centered
+    >
+      <Text size="sm" c="dimmed">
+        {description}
+      </Text>
+      <Group justify="flex-end" gap="sm" mt="lg">
+        <Button type="button" variant="default" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          {t("common:cancel")}
+        </Button>
+        <Button
+          type="button"
+          variant="filled"
+          color={confirmVariant === "destructive" ? "red" : undefined}
+          onClick={onConfirm}
+          loading={isLoading}
+        >
+          {confirmLabel ?? t("common:delete")}
+        </Button>
+      </Group>
+    </Modal>
   );
 }
