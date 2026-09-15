@@ -16,10 +16,28 @@
   },
   "leaves": {
     "title": "Yaklaşan izinler",
-    "planned": "İzin modülü Faz 1 ile geliyor; izinde olacak çalışanlar burada listelenecek."
+    "empty": "Önümüzdeki {{days}} gün içinde izinli olacak çalışan yok."
   },
   "events": {
     "title": "Etkinlik takvimi",
     "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."
+  },
+  "orgInfo": {
+    "title": "Personel kartım",
+    "manager": "Yöneticim",
+    "hireDate": "İşe başlama tarihi"
+  },
+  "leaveInfo": {
+    "title": "İzin bilgilerim",
+    "empty": "Görüntülenecek izin bakiyesi yok.",
+    "availableUntil": "{{date}} tarihine kadar mevcut",
+    "future": "İleri tarihli",
+    "used": "Kullanılan",
+    "recentTitle": "Son taleplerim"
+  },
+  "departmentDistribution": {
+    "title": "Çalışan dağılımı",
+    "empty": "Görüntülenecek çalışan yok.",
+    "unassigned": "Departmansız"
   }
 }

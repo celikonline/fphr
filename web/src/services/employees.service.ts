@@ -220,6 +220,18 @@ export async function getUpcomingBirthdays(days = 30): Promise<UpcomingBirthday[
   return data;
 }
 
+/** Mirrors `DepartmentDistributionItemDto`: active headcount per Department-level org unit ("Çalışan Dağılımı" widget). */
+export interface DepartmentDistributionItem {
+  orgUnitId: string | null;
+  departmentName: string | null;
+  count: number;
+}
+
+export async function getDepartmentDistribution(): Promise<DepartmentDistributionItem[]> {
+  const { data } = await apiClient.get<DepartmentDistributionItem[]>(`${EMPLOYEES_BASE}/department-distribution`);
+  return data;
+}
+
 /**
  * Detail → full PUT body, so a section edit only overrides the fields it owns. Sensitive fields (nationalId,
  * militaryStatus, disabilityDegree, bloodType) round-trip whatever the detail held (masked/null without

@@ -16,10 +16,28 @@
   },
   "leaves": {
     "title": "[DE] Upcoming leave",
-    "planned": "[DE] The leave module arrives in Phase 1; people who will be on leave will be listed here."
+    "empty": "[DE] No one is on leave in the next {{days}} days."
   },
   "events": {
     "title": "[DE] Event calendar",
     "planned": "[DE] The event calendar arrives in Phase 4; meetings and events will be listed here."
+  },
+  "orgInfo": {
+    "title": "[DE] My employee card",
+    "manager": "[DE] Manager",
+    "hireDate": "[DE] Hire date"
+  },
+  "leaveInfo": {
+    "title": "[DE] My leave",
+    "empty": "[DE] There is no leave balance to show.",
+    "availableUntil": "[DE] Available until {{date}}",
+    "future": "[DE] Future",
+    "used": "[DE] Used",
+    "recentTitle": "[DE] Recent requests"
+  },
+  "departmentDistribution": {
+    "title": "[DE] Employee distribution",
+    "empty": "[DE] There are no employees to show.",
+    "unassigned": "[DE] Unassigned"
   }
 }

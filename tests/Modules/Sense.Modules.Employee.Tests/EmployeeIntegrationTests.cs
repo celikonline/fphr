@@ -230,6 +230,29 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task DepartmentDistribution_GroupsActiveEmployeesByDepartmentLevelAncestorAndExcludesTerminated()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var units = await SeedOrgUnitsAsync(tenantId);
+
+        // Root is Company-level (no Department ancestor): falls in the "unassigned" bucket. Sales/Emea are both
+        // Department-level (Emea nested under Sales), so each counts under its own unit, not its parent's.
+        var ceo = await CreateAsync("Ceyda", "Başkan", orgUnitId: units.Root);
+        var cto = await CreateAsync("Tolga", "Teknik", orgUnitId: units.Sales, managerId: ceo.Id);
+        var dev = await CreateAsync("Deniz", "Geliştirici", orgUnitId: units.Emea, managerId: cto.Id);
+        var gone = await CreateAsync("Eski", "Çalışan", orgUnitId: units.Emea);
+        await SetStatusAsync(gone.Id, EmployeeStatus.Terminated);
+
+        var result = (await ExecuteQueryAsync(new GetDepartmentDistributionQuery())).Value;
+
+        result.Sum(d => d.Count).ShouldBe(3);
+        result.ShouldContain(new DepartmentDistributionItemDto(units.Sales, "Sales", 1));
+        result.ShouldContain(new DepartmentDistributionItemDto(units.Emea, "Sales EMEA", 1));
+        result.ShouldContain(new DepartmentDistributionItemDto(null, null, 1));
+    }
+
+    [Fact]
     public async Task CrossModuleContracts_ResolveScopeSelectionsContactsAndUnits()
     {
         var tenantId = Guid.NewGuid();

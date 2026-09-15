@@ -65,3 +65,6 @@ public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUni
 public sealed record OrgChartNodeDto(Guid Id, string DisplayName, Guid? OrgUnitId, IReadOnlyList<OrgChartNodeDto> Children);
 
 public sealed record UpcomingBirthdayDto(Guid Id, string DisplayName, Guid? OrgUnitId, DateOnly NextBirthday);
+
+/// <summary>Headcount of active employees under one Department-level org unit ("Çalışan Dağılımı" ana sayfa widget'ı); OrgUnitId/DepartmentName are null for employees with no department assignment.</summary>
+public sealed record DepartmentDistributionItemDto(Guid? OrgUnitId, string? DepartmentName, int Count);

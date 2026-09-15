@@ -187,4 +187,10 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<UpcomingBirthdayDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> UpcomingBirthdays([FromQuery] int days = GetUpcomingBirthdaysQuery.DefaultDays, CancellationToken ct = default) =>
         FromResult(await Dispatcher.Query(new GetUpcomingBirthdaysQuery(days), ct));
+
+    /// <summary>Active employee headcount grouped by Department-level org unit.</summary>
+    [HttpGet("department-distribution")]
+    [ProducesResponseType<IReadOnlyList<DepartmentDistributionItemDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DepartmentDistribution(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetDepartmentDistributionQuery(), ct));
 }
