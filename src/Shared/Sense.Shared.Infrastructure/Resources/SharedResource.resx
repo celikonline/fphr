@@ -532,4 +532,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.warnings.overtime_night_consent_missing" xml:space="preserve"><value>Kayıt gece saatlerine denk geliyor ancak çalışanın gece fazla çalışma onayı yok.</value></data>
   <data name="leave.warnings.overtime_overlaps_schedule" xml:space="preserve"><value>Talebin bir kısmı planlı çalışma saatleri içinde; o kısım ödenecek süreden düşüldü.</value></data>
   <data name="leave.warnings.overtime_annual_limit_exceeded" xml:space="preserve"><value>Bu kayıtla çalışanın yıllık fazla mesai toplamı yasal sınırı aşıyor.</value></data>
+  <data name="leave.requests.create_on_behalf" xml:space="preserve"><value>Çalışan adına izin ekleme</value></data>
+  <data name="leave.requests.bypass_approval" xml:space="preserve"><value>İzni onay sürecine dahil etmeden onaylama</value></data>
+  <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>Onay süreci olmadan izin kaydetme yetkiniz yok.</value></data>
 </root>

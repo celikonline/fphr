@@ -1,45 +1,32 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ListChecks, Pencil, Undo2 } from "lucide-react";
+import { CalendarDays, ListChecks, ListOrdered, Pencil, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
-import { LeaveBalanceSummary, LeaveRequestsTable, useDays, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
+import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
+import { LeaveRequestDialog, type LeaveRequestTypeOption } from "@/components/leave/leave-request-dialog";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import {
-  getLeaveRuleSet,
   getMyLeaveBalances,
   getMyLeaveRequests,
+  getMyRequestableLeaveTypes,
+  previewMyLeaveRequest,
   submitLeaveRequest,
   updatePendingLeaveRequest,
   withdrawLeaveRequest,
   type EmployeeLeaveBalances,
   type LeaveRequest,
-  type LeaveRequestInput,
-  type LeaveType,
+  type RequestableLeaveType,
 } from "@/services/leave.service";
 
 const MY_LEAVE_KEY = ["leave", "me"] as const;
-
-interface RequestableType {
-  id: string;
-  name: string;
-  description: string | null;
-  requiresDescription: boolean;
-  perRequestMaxDays: number | null;
-  availableBalance: number | null;
-}
 
 export default function MyLeavePage() {
   const canBalances = usePermission("leave.my.balances");
@@ -52,7 +39,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const { t, i18n } = useTranslation(["leave", "common"]);
   const queryClient = useQueryClient();
   const leaveName = useLeaveName();
-  const canReadRuleSets = usePermission("leave.rule_sets.read");
+  const [ledgerOpen, setLedgerOpen] = useState(false);
   const [dialog, setDialog] = useState<{ mode: "add" } | { mode: "edit"; request: LeaveRequest } | null>(null);
   const [withdrawing, setWithdrawing] = useState<LeaveRequest | null>(null);
 
@@ -62,18 +49,16 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
     enabled: canBalances,
     retry: false,
   });
-  const ruleSetId = balancesQuery.data?.ruleSetId;
-  const ruleSetQuery = useQuery({
-    queryKey: ["leave", "rule-sets", ruleSetId],
-    queryFn: () => getLeaveRuleSet(ruleSetId!),
-    enabled: canReadRuleSets && !!ruleSetId,
-  });
+  const typesQuery = useQuery({ queryKey: [...MY_LEAVE_KEY, "leave-types"], queryFn: getMyRequestableLeaveTypes, enabled: canRequests });
   const requestsQuery = useQuery({ queryKey: [...MY_LEAVE_KEY, "requests"], queryFn: getMyLeaveRequests, enabled: canRequests });
 
-  const typeName = useLeaveTypeNames(balancesQuery.data, ruleSetQuery.data);
-  const requestableTypes = useMemo(
-    () => buildRequestableTypes(balancesQuery.data, ruleSetQuery.data?.types, leaveName),
-    [balancesQuery.data, ruleSetQuery.data, leaveName],
+  const typeName = useLeaveTypeNames(balancesQuery.data, undefined);
+  const requestableTypes = useMemo(() => buildRequestableTypes(balancesQuery.data, typesQuery.data), [balancesQuery.data, typesQuery.data]);
+  const ledgerTypes = useMemo(
+    () =>
+      typesQuery.data?.map((type) => ({ id: type.id, name: type.name })) ??
+      (balancesQuery.data?.balances ?? []).map((item) => ({ id: item.balance.leaveTypeId, name: leaveName(item.leaveTypeName) })),
+    [typesQuery.data, balancesQuery.data, leaveName],
   );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["leave"] });
@@ -114,6 +99,13 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           data={balancesQuery.data}
           isLoading={balancesQuery.isLoading}
           emptyMessage={balancesQuery.isError ? getApiErrorMessage(balancesQuery.error, t("leave:summary.unavailable")) : undefined}
+          action={
+            balancesQuery.data ? (
+              <Button type="button" size="sm" variant="outline" onClick={() => setLedgerOpen(true)}>
+                <ListOrdered className="mr-2 h-4 w-4" /> {t("leave:summary.details")}
+              </Button>
+            ) : undefined
+          }
         />
       )}
 
@@ -155,15 +147,24 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           key={dialog.mode === "edit" ? dialog.request.id : "add"}
           editing={dialog.mode === "edit" ? dialog.request : null}
           types={requestableTypes}
-          typesLimited={!ruleSetQuery.data}
+          title={dialog.mode === "edit" ? t("leave:form.editTitle") : t("leave:form.newTitle")}
+          description={t("leave:form.dialogDescription")}
+          submitLabel={dialog.mode === "edit" ? t("common:save") : t("leave:form.submit")}
+          typesHint={typesQuery.isError ? t("leave:form.typesLimited") : undefined}
+          previewScope="me"
+          preview={previewMyLeaveRequest}
+          save={(input) => (dialog.mode === "edit" ? updatePendingLeaveRequest(dialog.request.id, input) : submitLeaveRequest(input))}
           onClose={() => setDialog(null)}
-          onSaved={(message) => {
+          onSaved={() => {
+            const message = dialog.mode === "edit" ? t("leave:my.updated") : t("leave:my.submitted");
             setDialog(null);
             toast({ variant: "success", title: t("common:success"), description: message });
             void refresh();
           }}
         />
       )}
+
+      {ledgerOpen && <LeaveLedgerDialog own employeeId="me" typeOptions={ledgerTypes} onClose={() => setLedgerOpen(false)} />}
 
       <ConfirmDialog
         open={Boolean(withdrawing)}
@@ -182,150 +183,25 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   );
 }
 
-/** Self-service types: the whole rule set when readable (active + self-service types), otherwise only the PerYear types in the balances. */
-function buildRequestableTypes(
-  balances: EmployeeLeaveBalances | undefined,
-  ruleSetTypes: LeaveType[] | undefined,
-  leaveName: (name: string) => string,
-): RequestableType[] {
+/** "+ Talep" types from `/leave/me/leave-types` (with the PerYear balance); falls back to the balance types when that call fails. */
+function buildRequestableTypes(balances: EmployeeLeaveBalances | undefined, types: RequestableLeaveType[] | undefined): LeaveRequestTypeOption[] {
   const available = new Map((balances?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
-  if (ruleSetTypes) {
-    return [...ruleSetTypes]
-      .filter((type) => !type.settings.isDisabled && type.settings.allowSelfServiceRequest)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
-      .map((type) => ({
-        id: type.id,
-        name: leaveName(type.settings.name),
-        description: type.settings.description ?? null,
-        requiresDescription: type.settings.requiresDescription,
-        perRequestMaxDays: type.settings.perRequestMaxDays ?? null,
-        availableBalance: available.get(type.id) ?? null,
-      }));
+  if (types) {
+    return types.map((type) => ({
+      id: type.id,
+      name: type.name,
+      description: type.description ?? null,
+      requiresDescription: type.requiresDescription,
+      perRequestMaxDays: type.perRequestMaxDays ?? null,
+      availableBalance: available.get(type.id) ?? null,
+    }));
   }
   return (balances?.balances ?? []).map((item) => ({
     id: item.balance.leaveTypeId,
-    name: leaveName(item.leaveTypeName),
+    name: item.leaveTypeName,
     description: null,
     requiresDescription: false,
     perRequestMaxDays: null,
     availableBalance: item.balance.availableBalance,
   }));
-}
-
-interface LeaveRequestDialogProps {
-  editing: LeaveRequest | null;
-  types: RequestableType[];
-  typesLimited: boolean;
-  onClose: () => void;
-  onSaved: (message: string) => void;
-}
-
-function LeaveRequestDialog({ editing, types, typesLimited, onClose, onSaved }: LeaveRequestDialogProps) {
-  const { t } = useTranslation(["leave", "common"]);
-  const days = useDays();
-  const [leaveTypeId, setLeaveTypeId] = useState(editing?.leaveTypeId ?? (types.length === 1 ? types[0].id : ""));
-  const [startDate, setStartDate] = useState(editing?.startDate ?? "");
-  const [endDate, setEndDate] = useState(editing?.endDate ?? "");
-  const [description, setDescription] = useState(editing?.description ?? "");
-  const [error, setError] = useState<string | null>(null);
-
-  // A pending request's type may be missing from the list (e.g. no rule set read access); keep it selectable.
-  const options = editing && !types.some((type) => type.id === editing.leaveTypeId)
-    ? [...types, { id: editing.leaveTypeId, name: t(`leave:code.${editing.leaveTypeCode}`), description: null, requiresDescription: false, perRequestMaxDays: null, availableBalance: null }]
-    : types;
-  const selected = options.find((type) => type.id === leaveTypeId) ?? null;
-
-  const mutation = useMutation({
-    mutationFn: (input: LeaveRequestInput) => (editing ? updatePendingLeaveRequest(editing.id, input) : submitLeaveRequest(input).then(() => undefined)),
-    onSuccess: () => onSaved(editing ? t("leave:my.updated") : t("leave:my.submitted")),
-    onError: (err) => setError(getApiErrorMessage(err, t("leave:genericError"))),
-  });
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!leaveTypeId) return setError(t("leave:form.validation.typeRequired"));
-    if (!startDate || !endDate) return setError(t("leave:form.validation.datesRequired"));
-    if (endDate < startDate) return setError(t("leave:form.validation.range"));
-    if (selected?.requiresDescription && !description.trim()) return setError(t("leave:form.validation.descriptionRequired"));
-    setError(null);
-    mutation.mutate({ leaveTypeId, startDate, endDate, description: description.trim() || null });
-  }
-
-  const busy = mutation.isPending;
-
-  return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("leave:form.editTitle") : t("leave:form.newTitle")}</DialogTitle>
-          <DialogDescription>{t("leave:form.dialogDescription")}</DialogDescription>
-        </DialogHeader>
-        {options.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("leave:form.noTypes")}</p>
-        ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <div>
-              <Label htmlFor="leave-type">
-                {t("leave:form.type")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <Select value={leaveTypeId} onValueChange={setLeaveTypeId} disabled={busy}>
-                <SelectTrigger id="leave-type">
-                  <SelectValue placeholder={t("leave:form.type")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {typesLimited && <p className="mt-1 text-xs text-muted-foreground">{t("leave:form.typesLimited")}</p>}
-              {selected && (
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {selected.description && <p>{selected.description}</p>}
-                  {selected.availableBalance !== null && <p>{t("leave:form.available", { days: days(selected.availableBalance) })}</p>}
-                  {selected.perRequestMaxDays !== null && <p>{t("leave:form.perRequestMax", { days: days(selected.perRequestMaxDays) })}</p>}
-                </div>
-              )}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="leave-start">
-                  {t("leave:form.startDate")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <Input id="leave-start" type="date" value={startDate} disabled={busy} onChange={(e) => setStartDate(e.target.value)} />
-              </div>
-              <div>
-                <Label htmlFor="leave-end">
-                  {t("leave:form.endDate")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <Input id="leave-end" type="date" value={endDate} min={startDate || undefined} disabled={busy} onChange={(e) => setEndDate(e.target.value)} />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="leave-description">
-                {t("leave:form.description")}
-                {selected?.requiresDescription && <span className="text-destructive"> *</span>}
-              </Label>
-              <Textarea id="leave-description" value={description} disabled={busy} maxLength={2000} onChange={(e) => setDescription(e.target.value)} />
-            </div>
-            {editing && <p className="text-xs text-muted-foreground">{t("leave:form.calculatedDays", { days: days(editing.calculatedDays) })}</p>}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-                {t("common:cancel")}
-              </Button>
-              <Button type="submit" disabled={busy}>
-                {busy ? t("common:saving") : editing ? t("common:save") : t("leave:form.submit")}
-              </Button>
-            </DialogFooter>
-          </form>
-        )}
-      </DialogContent>
-    </Dialog>
-  );
 }

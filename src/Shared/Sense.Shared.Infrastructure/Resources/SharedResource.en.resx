@@ -523,4 +523,7 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="leave.warnings.overtime_night_consent_missing" xml:space="preserve"><value>The record falls into night hours but the employee has no night overtime consent.</value></data>
   <data name="leave.warnings.overtime_overlaps_schedule" xml:space="preserve"><value>Part of the request is inside planned working hours; that part was deducted from the payable time.</value></data>
   <data name="leave.warnings.overtime_annual_limit_exceeded" xml:space="preserve"><value>With this record the employee's annual overtime total exceeds the statutory limit.</value></data>
+  <data name="leave.requests.create_on_behalf" xml:space="preserve"><value>Add leave for employees</value></data>
+  <data name="leave.requests.bypass_approval" xml:space="preserve"><value>Approve leave without the approval process</value></data>
+  <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>You are not allowed to record leave without the approval process.</value></data>
 </root>

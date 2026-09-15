@@ -107,6 +107,19 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public Result Approve(Guid approvalRequestId, DateTime at) => Decide(approvalRequestId, LeaveRequestStatus.Approved, at);
 
+    /// <summary>"Onay sürecine dahil edilmeden onaylansın": a manager/HR entry approved at creation, without a Workflow approval request.</summary>
+    public Result ApproveWithoutWorkflow(DateTime at)
+    {
+        if (Status != LeaveRequestStatus.Pending || ApprovalRequestId is not null)
+        {
+            return Error.Conflict(LeaveDomainErrors.RequestNotPending);
+        }
+
+        Status = LeaveRequestStatus.Approved;
+        DecidedAt = at;
+        return Result.Success();
+    }
+
     public Result Reject(Guid approvalRequestId, DateTime at) => Decide(approvalRequestId, LeaveRequestStatus.Rejected, at);
 
     public Result Withdraw(DateTime at)

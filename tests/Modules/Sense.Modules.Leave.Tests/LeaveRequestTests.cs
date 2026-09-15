@@ -17,6 +17,7 @@ using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
@@ -138,6 +139,57 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         usage.Amount.ShouldBe(-5m);
         usage.EffectiveDate.ShouldBe(monday);
         usage.SourceRefId.ShouldBe(submitted.Value);
+    }
+
+    [Fact]
+    public async Task RequestableTypes_Preview_AndOnBehalfWithBypass_PostUsageWithoutWorkflow()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        var dataScope = Substitute.For<IDataScopeService>();
+        dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsCreateOnBehalf.Key, employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        using var scope = ServiceProvider.CreateScope();
+        var types = await ActivatorUtilities.CreateInstance<ListMyRequestableLeaveTypesHandler>(scope.ServiceProvider, _currentUser, dataScope)
+            .Handle(new ListMyRequestableLeaveTypesQuery(), CancellationToken.None);
+        types.IsSuccess.ShouldBeTrue();
+        types.Value.ShouldContain(t => t.Code == LeaveTypeCode.Annual && t.Name == "leave.type.annual" && t.HasBalance);
+        var annualId = types.Value.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+
+        var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(6), null), CancellationToken.None);
+        preview.Value.Days.ShouldBe(5m);
+        preview.Value.WeeklyRestDays.ShouldBe(2);
+        preview.Value.Warnings.ShouldBeEmpty();
+        var tooLong = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(27), null), CancellationToken.None);
+        tooLong.Value.Warnings.Single().Code.ShouldBe(LeaveRequestErrors.InsufficientBalance);
+
+        var onBehalf = ActivatorUtilities.CreateInstance<CreateLeaveRequestOnBehalfHandler>(scope.ServiceProvider, _currentUser, dataScope, _workflow);
+        (await onBehalf.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(1), null, true), CancellationToken.None))
+            .Error.Code.ShouldBe(LeaveRequestErrors.BypassNotAllowed);
+        dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsBypassApproval.Key, employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        var created = await onBehalf.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(1), null, true), CancellationToken.None);
+        created.IsSuccess.ShouldBeTrue(created.IsFailure ? created.Error.Code : null);
+        await scope.ServiceProvider.GetRequiredService<LeaveDbContext>().SaveChangesAsync();
+        await _workflow.DidNotReceiveWithAnyArgs().StartAsync(default!, default, default, default, default, default, default);
+
+        using var verify = ServiceProvider.CreateScope();
+        var mine = await ActivatorUtilities.CreateInstance<ListMyLeaveRequestsHandler>(verify.ServiceProvider, _currentUser)
+            .Handle(new ListMyLeaveRequestsQuery(), CancellationToken.None);
+        var request = mine.Value.Single();
+        request.Status.ShouldBe(LeaveRequestStatus.Approved);
+        request.Source.ShouldBe(LeaveRequestSource.OnBehalf);
+        request.LeaveTypeName.ShouldBe("leave.type.annual");
+        var ledger = await ActivatorUtilities.CreateInstance<Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerHandler>(verify.ServiceProvider, _currentUser)
+            .Handle(new Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerQuery(annualId), CancellationToken.None);
+        ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value);
     }
 
     [Fact]

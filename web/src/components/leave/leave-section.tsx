@@ -17,17 +17,20 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
   adjustLeaveBalance,
+  createLeaveRequestOnBehalf,
   getEmployeeLeaveBalances,
   getEmployeeLeaveRequests,
   getLeaveRuleSet,
   getMyLeaveBalances,
   getMyLeaveRequests,
+  previewEmployeeLeaveRequest,
   recalculateLeaveBalances,
   type LeaveAdjustmentInput,
 } from "@/services/leave.service";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
 import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "./leave-shared";
+import { LeaveRequestDialog, type LeaveRequestTypeOption } from "./leave-request-dialog";
 
 export const LEAVE_CARD_TAB_PERMISSIONS = ["leave.balances.read", "leave.requests.read", "leave.my.balances", "leave.my.requests"];
 
@@ -49,6 +52,9 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   const [recalculateOpen, setRecalculateOpen] = useState(false);
   const canAdjust = usePermission("leave.balances.adjust");
   const canRecalculate = usePermission("leave.balances.recalculate");
+  const canAddLeave = usePermission("leave.requests.create_on_behalf");
+  const canBypassApproval = usePermission("leave.requests.bypass_approval");
+  const [addOpen, setAddOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const balancesMode = canReadBalances ? "employee" : isOwn && canMyBalances ? "me" : null;
@@ -77,6 +83,31 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
     if (ruleSetQuery.data) return ruleSetQuery.data.types.map((type) => ({ id: type.id, name: leaveName(type.settings.name) }));
     return (balancesQuery.data?.balances ?? []).map((item) => ({ id: item.balance.leaveTypeId, name: leaveName(item.leaveTypeName) }));
   }, [ruleSetQuery.data, balancesQuery.data, leaveName]);
+  // İzin Ekle: every active type of the rule set (self-service flag does not apply on behalf); balance types when the rule set is not readable.
+  const addLeaveTypes = useMemo<LeaveRequestTypeOption[]>(() => {
+    const available = new Map((balancesQuery.data?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
+    if (ruleSetQuery.data) {
+      return [...ruleSetQuery.data.types]
+        .filter((type) => !type.settings.isDisabled)
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((type) => ({
+          id: type.id,
+          name: leaveName(type.settings.name),
+          description: type.settings.description ?? null,
+          requiresDescription: type.settings.requiresDescription,
+          perRequestMaxDays: type.settings.perRequestMaxDays ?? null,
+          availableBalance: available.get(type.id) ?? null,
+        }));
+    }
+    return (balancesQuery.data?.balances ?? []).map((item) => ({
+      id: item.balance.leaveTypeId,
+      name: leaveName(item.leaveTypeName),
+      description: null,
+      requiresDescription: false,
+      perRequestMaxDays: null,
+      availableBalance: item.balance.availableBalance,
+    }));
+  }, [ruleSetQuery.data, balancesQuery.data, leaveName]);
 
   const recalculateMutation = useMutation({
     mutationFn: () => recalculateLeaveBalances(employee.id),
@@ -103,12 +134,12 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           isLoading={balancesQuery.isLoading}
           emptyMessage={balancesQuery.isError ? getApiErrorMessage(balancesQuery.error, t("leave:summary.unavailable")) : undefined}
           action={
-            canReadBalances && balancesQuery.data ? (
+            balancesQuery.data ? (
               <div className="flex items-center gap-2">
                 <Button type="button" size="sm" variant="outline" onClick={() => setLedgerOpen(true)}>
                   <ListOrdered className="mr-2 h-4 w-4" /> {t("leave:summary.details")}
                 </Button>
-                {(canAdjust || canRecalculate) && (
+                {canReadBalances && (canAdjust || canRecalculate || canAddLeave) && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button type="button" size="sm" variant="outline">
@@ -116,6 +147,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      {canAddLeave && <DropdownMenuItem onSelect={() => setAddOpen(true)}>{t("leave:actions.addLeave")}</DropdownMenuItem>}
                       {canAdjust && balancesQuery.data.balances.length > 0 && (
                         <DropdownMenuItem onSelect={() => setAdjustOpen(true)}>{t("leave:actions.adjust")}</DropdownMenuItem>
                       )}
@@ -149,7 +181,30 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
         </Card>
       )}
 
-      {ledgerOpen && <LeaveLedgerDialog employeeId={employee.id} typeOptions={ledgerTypes} onClose={() => setLedgerOpen(false)} />}
+      {ledgerOpen && (
+        <LeaveLedgerDialog employeeId={employee.id} own={balancesMode === "me"} typeOptions={ledgerTypes} onClose={() => setLedgerOpen(false)} />
+      )}
+
+      {addOpen && (
+        <LeaveRequestDialog
+          editing={null}
+          types={addLeaveTypes}
+          title={t("leave:form.onBehalfTitle")}
+          description={t("leave:form.onBehalfDescription")}
+          submitLabel={t("common:save")}
+          typesHint={ruleSetQuery.data ? undefined : t("leave:form.typesLimited")}
+          previewScope={employee.id}
+          preview={(input) => previewEmployeeLeaveRequest(employee.id, input)}
+          save={(input, bypassApproval) => createLeaveRequestOnBehalf(employee.id, { ...input, bypassApproval })}
+          allowBypass={canBypassApproval}
+          onClose={() => setAddOpen(false)}
+          onSaved={() => {
+            setAddOpen(false);
+            toast({ variant: "success", title: t("common:success"), description: t("leave:form.onBehalfSaved") });
+            void queryClient.invalidateQueries({ queryKey: ["leave"] });
+          }}
+        />
+      )}
 
       {adjustOpen && balancesQuery.data && (
         <AdjustBalanceDialog
