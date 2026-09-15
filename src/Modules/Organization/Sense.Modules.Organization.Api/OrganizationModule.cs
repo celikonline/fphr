@@ -13,7 +13,7 @@ namespace Sense.Modules.Organization.Api;
 
 /// <summary>
 /// Organization module composition root: dynamic org hierarchy (OrgUnitType/OrgUnit), Company
-/// settings, and the OrgUnitApprovalPolicyAssignment stub (roadmap Faz 0 item #4).
+/// settings, holiday calendars, locations and per-unit approval policy assignments.
 /// </summary>
 public sealed class OrganizationModule : IModule
 {
@@ -34,7 +34,14 @@ public sealed class OrganizationModule : IModule
         services.AddModuleDbContext<OrganizationDbContext>(configuration, OrganizationDbContext.SchemaName);
 
         // Register MediatR-style command/query handlers for this module
-        services.AddModuleHandlers(OrganizationDbContext.SchemaName, typeof(Sense.Modules.Organization.Application.OrganizationErrors).Assembly, typeof(OrganizationDbContext).Assembly);
+        // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor, and
+        // Contracts events map to this module's outbox (IIntegrationEventOutbox).
+        services.AddModuleHandlers(
+            OrganizationDbContext.SchemaName,
+            typeof(Sense.Modules.Organization.Application.OrganizationErrors).Assembly,
+            typeof(OrganizationDbContext).Assembly,
+            typeof(IOrgUnitRepository).Assembly,
+            typeof(OrganizationPermissions).Assembly);
 
         // Register repositories
         services.AddScoped<IOrgUnitTypeRepository, OrgUnitTypeRepository>();
@@ -51,5 +58,8 @@ public sealed class OrganizationModule : IModule
         // Cross-module read contract for a tenant's effective holiday calendar (roadmap Faz 0 item #5)
         services.AddScoped<IHolidayCalendarLookup, HolidayCalendarLookup>();
         services.AddScoped<ILocationLookup, LocationLookup>();
+
+        // Unit-based approval policy resolution for Workflow (11.3.02 "Birime onay süreci ataması")
+        services.AddScoped<IOrgApprovalPolicyResolver, OrgApprovalPolicyResolver>();
     }
 }

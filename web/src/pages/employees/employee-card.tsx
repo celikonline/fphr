@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useParams } from "react-router";
+import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Lock, Mail, MoreVertical, SearchX } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,12 +23,15 @@ import { getEmployee, getMyEmployee, type EmployeeDetail } from "@/services/empl
 import { useAuthStore } from "@/store/auth.store";
 import { inviteEmployee } from "@/services/invitations.service";
 import { AccountStatusBadge, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
-import { AccountSection, CareerSection, GeneralSection } from "@/components/employees/employee-card-sections";
+import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 
 export default function EmployeeCardPage() {
-  const { id = "" } = useParams();
+  const { id = "", tab } = useParams();
   const { t } = useTranslation(["employees", "common"]);
+  const navigate = useNavigate();
+  const tabs = useVisibleEmployeeCardTabs();
+  const active = tabs.find((candidate) => candidate.key === tab);
 
   const canReadEmployees = usePermission("employee.employees.read");
   const ownEmployeeId = useAuthStore((state) => state.user?.employeeId);
@@ -81,6 +85,13 @@ export default function EmployeeCardPage() {
     );
   }
 
+  // Unknown or hidden tab (and the bare /employees/:id URL) lands on the first visible tab.
+  if (!active) {
+    return <Navigate to={`/app/employees/${id}/${tabs[0].key}`} replace />;
+  }
+
+  const ActiveTab = active.component;
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <Button asChild variant="ghost" size="sm" className="-ml-3">
@@ -89,9 +100,16 @@ export default function EmployeeCardPage() {
         </Link>
       </Button>
       <CardHeaderBlock key={`header-${employee.id}`} employee={employee} />
-      <GeneralSection key={`general-${employee.id}`} employee={employee} />
-      <CareerSection key={`career-${employee.id}`} employee={employee} />
-      <AccountSection key={`account-${employee.id}-${employee.accessType ?? ""}`} employee={employee} />
+      <Tabs value={active.key} onValueChange={(value) => navigate(`/app/employees/${id}/${value}`)}>
+        <TabsList className="flex h-auto w-full flex-wrap justify-start">
+          {tabs.map((candidate) => (
+            <TabsTrigger key={candidate.key} value={candidate.key}>
+              {t(candidate.labelKey)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+      <ActiveTab key={`${active.key}-${employee.id}-${employee.accessType ?? ""}`} employee={employee} />
     </div>
   );
 }

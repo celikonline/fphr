@@ -1,12 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import SearchPicker, { type PickerOption } from "@/components/structure/search-picker";
+import ApprovalPoliciesSection, { useUnitApprovalPolicies } from "@/components/structure/approval-policies-section";
 import { structureErrorMessage } from "@/components/structure/errors";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorStatus } from "@/lib/api-error";
@@ -15,6 +16,7 @@ import {
   COMPANY_TYPE_CODE,
   assignCompanyHolidayCalendar,
   createCompany,
+  setUnitApprovalPolicies,
   createUnit,
   searchEmployees,
   updateUnit,
@@ -60,6 +62,7 @@ export default function UnitFormDialog({
   onSaved,
 }: UnitFormDialogProps) {
   const { t } = useTranslation(["structure", "common"]);
+  const queryClient = useQueryClient();
   const isCompanyLevel = level.code === COMPANY_TYPE_CODE;
   const isCreate = !unit;
   const isCompanyCreate = isCreate && isCompanyLevel;
@@ -72,6 +75,8 @@ export default function UnitFormDialog({
   const initialCalendar = isCreate ? defaultCalendarId : (company?.holidayCalendarId ?? null);
   const [calendarId, setCalendarId] = useState<string>(initialCalendar ?? NONE);
   const [submitted, setSubmitted] = useState(false);
+  // "Opsiyonel alanlar → Onay süreçleri": edit only (an unassigned policy needs an existing unit id).
+  const approvalPolicies = useUnitApprovalPolicies(unit?.id);
   const [calendarTouched, setCalendarTouched] = useState(false);
 
   // Calendars may load after the dialog opens; apply the default unless the user picked one.
@@ -123,6 +128,9 @@ export default function UnitFormDialog({
       // When locations can't be listed, keep whatever the unit already has.
       const nextLocationId = locations ? toId(locationId) : (unit?.locationId ?? null);
       if (unit) {
+        if (approvalPolicies.changes.length > 0) {
+          await setUnitApprovalPolicies(unit.id, approvalPolicies.changes);
+        }
         await updateUnit(unit.id, {
           name: name.trim(),
           parentId: isCompanyLevel ? null : toId(parentId),
@@ -144,6 +152,7 @@ export default function UnitFormDialog({
       }
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["structure", "unit-approval-policies"] });
       toast({
         variant: "success",
         title: t("common:success"),
@@ -160,7 +169,7 @@ export default function UnitFormDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && !mutation.isPending && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {isCreate
@@ -265,6 +274,10 @@ export default function UnitFormDialog({
               </Select>
               <p className="mt-1 text-xs text-muted-foreground">{t("structure:units.locationHint")}</p>
             </div>
+          )}
+
+          {unit && (
+            <ApprovalPoliciesSection state={approvalPolicies} units={units} disabled={mutation.isPending} />
           )}
 
           <DialogFooter>

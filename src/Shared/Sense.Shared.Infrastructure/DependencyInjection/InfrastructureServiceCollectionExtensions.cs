@@ -69,6 +69,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(CachingBehaviour<,>)));
 
         services.TryAddSingleton<IEventBus, InProcessEventBus>();
+        services.TryAddScoped<IIntegrationEventOutbox, IntegrationEventOutbox>();
         services.TryAddScoped<AuditTenantInterceptor>();
 
         var redis = configuration.GetConnectionString(ConnectionStringNames.Redis);

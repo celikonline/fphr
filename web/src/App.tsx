@@ -69,7 +69,7 @@ export default function App() {
 
           <Route path="employees" element={<EmployeeListPage />} />
           <Route path="employees/org-chart" element={<OrgChartPage />} />
-          <Route path="employees/:id" element={<EmployeeCardPage />} />
+          <Route path="employees/:id/:tab?" element={<EmployeeCardPage />} />
 
           <Route path="leaves" element={<ComingSoonPage titleKey="nav.leaves" phase={1} />} />
           <Route path="calendar" element={<ComingSoonPage titleKey="nav.calendar" phase={1} />} />

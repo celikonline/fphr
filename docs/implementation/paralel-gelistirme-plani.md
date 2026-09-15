@@ -144,7 +144,7 @@ PC-A hattı (kalem ayrıntısı [faz1a-durum-takibi.md](../analysis/kolayik-vide
 
 | Kalem | Durum | Dal | Not |
 |---|---|---|---|
-| E0 senkronizasyon slotları (S1 birim onay süreci, S2 kart sekmeleri) | ❌ Başlanmadı | — | |
+| E0 senkronizasyon slotları (S1 birim onay süreci, S2 kart sekmeleri) | ✅ Bitti | `a/sync-slots` | Bulgu: domain event'ler hiç yayınlanmıyordu (bkz. faz1a-durum-takibi.md); Worker'a yalnız Organization için dar kapsamlı düzeltme yapıldı, genel çözüm PC-B ile koordinasyon gerektiriyor |
 | E1 özlük alanları + durum modeli + kart bölümleri | ❌ Başlanmadı | — | |
 | E2 kariyer geçmişi | ❌ Başlanmadı | — | |
 | E3 maaş + banka | ❌ Başlanmadı | — | |

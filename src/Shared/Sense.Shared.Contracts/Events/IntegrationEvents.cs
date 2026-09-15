@@ -31,3 +31,13 @@ public interface IEventBus
     Task Publish<TEvent>(TEvent integrationEvent, CancellationToken cancellationToken = default)
         where TEvent : IIntegrationEvent;
 }
+
+/// <summary>
+/// Komut handler'ından integration event yayınlama noktası: olayı, tipinin ait olduğu modülün (olay kaydı Contracts
+/// assembly'si AddModuleHandlers'a verilmiş olmalı) outbox'ına ekler. Komutun SaveChanges'i ile aynı transaction'da
+/// kalıcılaşır; OutboxProcessor sonra IEventBus'a yayınlar. Komut başarısız olursa hiçbir şey yazılmaz.
+/// </summary>
+public interface IIntegrationEventOutbox
+{
+    void Enqueue(IIntegrationEvent integrationEvent);
+}

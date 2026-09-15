@@ -132,10 +132,23 @@ public sealed class CompanyRepository(OrganizationDbContext context) : ICompanyR
         await context.Companies.OrderBy(c => c.Id).ToListAsync(cancellationToken);
 }
 
-/// <summary>EF Core-backed OrgUnitApprovalPolicyAssignment repository (stub consumer: future Workflow module).</summary>
+/// <summary>EF Core-backed OrgUnitApprovalPolicyAssignment repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
 public sealed class OrgUnitApprovalPolicyAssignmentRepository(OrganizationDbContext context) : IOrgUnitApprovalPolicyAssignmentRepository
 {
     public void Add(OrgUnitApprovalPolicyAssignment assignment) => context.ApprovalPolicyAssignments.Add(assignment);
+
+    public void Remove(OrgUnitApprovalPolicyAssignment assignment) => context.ApprovalPolicyAssignments.Remove(assignment);
+
+    public async Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitsAsync(IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default)
+    {
+        if (orgUnitIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = orgUnitIds.ToList();
+        return await context.ApprovalPolicyAssignments.Where(a => ids.Contains(a.OrgUnitId)).ToListAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default) =>
         await context.ApprovalPolicyAssignments.Where(a => a.OrgUnitId == orgUnitId).ToListAsync(cancellationToken);

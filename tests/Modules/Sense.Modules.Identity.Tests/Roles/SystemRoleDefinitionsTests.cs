@@ -14,6 +14,7 @@ public sealed class SystemRoleDefinitionsTests
         {
             "employee.employees.read", "employee.employees.create", "employee.employees.update", "employee.employees.bulk_update",
             "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "organization.holidays.view", "organization.units.read",
+            "organization.approval_assignments.manage",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -45,6 +46,14 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldContain("employee.directory.view");
         keys.ShouldContain("employee.orgchart.view");
         keys.ShouldNotContain("employee.salary.view");
+    }
+
+    [Fact]
+    public void UnitApprovalPolicyAssignment_IsGrantedToHR_ButNotToHRSpecialistOrManager()
+    {
+        Resolve(SystemRoleCodes.HR).ShouldContain("organization.approval_assignments.manage");
+        Resolve(SystemRoleCodes.HRSpecialist).ShouldNotContain("organization.approval_assignments.manage");
+        Resolve(SystemRoleCodes.Manager).ShouldNotContain("organization.approval_assignments.manage");
     }
 
     private static List<string> Resolve(string roleCode) =>

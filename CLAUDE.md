@@ -2,16 +2,18 @@
 
 HR/payroll SaaS. .NET 10 modular monolith (`src/Modules/*`, one schema + DbContext + migrations per module, modules talk only via `*.Contracts`), React web app (`web/`, Vite + react-router v7 + Tailwind v4), Expo mobile app (`apps/senseik-mobile`).
 
-## Toolchain (no dotnet/node on the dev hosts)
+## Toolchain (no dotnet on the dev hosts; node/pnpm work on the host)
 
 - .NET: `docker run --rm -v "$PWD":/src -v senseik-nuget:/root/.nuget/packages -v /var/run/docker.sock:/var/run/docker.sock -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet <args>`. Do not pass `-p:UseAppHost=false` (xUnit v3 needs an app host). Testcontainers-based tests work this way.
-- Web: `node:24-alpine`, `corepack enable` first; mount named volumes over `node_modules`, `web/node_modules`, `packages/api-client/node_modules`, `apps/senseik-mobile/node_modules` so host macOS builds don't mix in. Checks: `pnpm exec tsc --noEmit`, `pnpm exec vite build`.
+- Web: host `pnpm` works in `web/` — `pnpm exec tsc --noEmit`, `pnpm exec eslint src` (ESLint runs on the host now: `typescript` is aliased to `@typescript/typescript6` for tooling while `tsc` uses TypeScript 7 via `@typescript/native`), `pnpm exec vite build`. In Docker instead: `node:24-alpine`, `corepack enable` first; mount named volumes over `node_modules`, `web/node_modules`, `packages/api-client/node_modules`, `apps/senseik-mobile/node_modules` so host macOS builds don't mix in.
+- Commits run husky hooks (lint-staged: ESLint on staged web/mobile files, `dotnet format Sense.slnx --include` on staged `.cs` files). The host has no dotnet, so commit with a PATH that provides a `dotnet` shim running the SDK container with the repo mounted at the same absolute path (lint-staged passes absolute paths): `exec docker run --rm -v "$PWD":"$PWD" -v senseik-nuget:/root/.nuget/packages -w "$PWD" mcr.microsoft.com/dotnet/sdk:10.0 dotnet "$@"`.
 - Migrations: generate real EF migrations per module (`dotnet-ef` inside the SDK container, design-time factories exist in each module's Infrastructure).
 
 ## Conventions that bite
 
 - API JSON: camelCase properties, `JsonStringEnumConverter(CamelCase)` (C# enums serialize as `"active"`), nulls omitted (`WhenWritingNull`) — web code must treat missing as null.
-- Register module handlers from the **Application** assembly in `AddModuleHandlers` (Contracts-assembly registration silently registers nothing).
+- Register module handlers from the **Application** assembly in `AddModuleHandlers` (Contracts-assembly registration alone silently registers nothing; pass Domain/Contracts too so their domain/integration event types resolve in the outbox).
+- Integration events: raise them with `IIntegrationEventOutbox.Enqueue(...)` inside a command handler — the row lands in the module's outbox in the command transaction, and `OutboxProcessor` publishes it to `IEventBus`.
 - Error codes and permission names are localized in `src/Shared/Sense.Shared.Infrastructure/Resources/SharedResource{,.en}.resx`.
 - New permission keys reach existing tenants via `SystemRolePermissionSynchronizer` at API startup; add keys to `SystemRoleDefinitions` include lists.
 
