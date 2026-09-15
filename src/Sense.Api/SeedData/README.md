@@ -17,9 +17,20 @@ This directory contains deterministic seed data generation for development and t
   `bordro@demo.local`, `yonetici@demo.local`, `calisan@demo.local`, `denetci@demo.local` —
   see root `README.md`) + 50 randomly generated employees with realistic Turkish names
 - **Roles**: All 17 system roles (Admin, HR, Finance, Manager, Employee, etc.)
+- **Organization**: Headquarters > 4 departments (Sales, Engineering, HR, Finance) > ~21 Turkish
+  job titles (Ünvan level); every employee sits on a title, so `Employee.OrgUnitId` is the deepest
+  assignment like a real placement (department headcounts are unchanged — the department is the
+  title's parent)
+- **Access settings**: every home widget on, including `ShowAllLeavesInCalendar`, so a plain
+  employee sees colleagues on the leave calendar / "Yaklaşan izinler" widget
+- **Leave**: the default "Türk İş Kanunu" rule set, a leave profile with generated
+  Accrual/CarryOver ledger rows for every employee, 6 requests for each fixed login account
+  (approved annual in the previous and the current period, approved sick leave, approved future
+  annual, rejected annual, pending excuse) and upcoming annual leave for 8 more employees, one of
+  them starting today. Dates are relative to "today", so the data stays fresh
 - **Documents**: 3-5 sample documents per tenant
 - **Purpose**: Full-featured UI and workflow testing
-- **Generation Time**: < 500ms
+- **Generation Time**: < 3s
 
 ## Configuration
 
@@ -62,9 +73,13 @@ To reset seed data and re-seed:
      org.locations, org.org_unit_approval_policy_assignments, org.org_unit_types,
      org.org_units, org.outbox_messages,
      employee.employees, employee.inbox_messages, employee.outbox_messages,
-     documents.documents, documents.inbox_messages, documents.outbox_messages
+     documents.documents, documents.inbox_messages, documents.outbox_messages,
+     leave.ledger_entries, leave.leave_requests, leave.employee_leave_profiles,
+     leave.leave_types, leave.rule_sets, leave.inbox_messages, leave.outbox_messages
    CASCADE;
    ```
+
+   `leave.legislation_parameters` is platform data (migrations, not the seeder) — leave it alone.
 
 2. Restart the application with seeding enabled
 
