@@ -22,3 +22,4 @@ export * from "./textarea";
 export * from "./popover";
 export * from "./sheet";
 export * from "./radio-group";
+export * from "./tooltip";

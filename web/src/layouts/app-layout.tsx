@@ -38,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
@@ -67,11 +68,11 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
   const { t } = useTranslation(["navigation"]);
   const Icon = item.icon;
 
-  return (
+  const link = (
     <NavLink
       to={item.path}
       end={item.end}
-      title={collapsed ? label : undefined}
+      aria-label={collapsed ? label : undefined}
       className={({ isActive }) =>
         cn(
           "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
@@ -93,6 +94,15 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
         </>
       )}
     </NavLink>
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{link}</TooltipTrigger>
+      <TooltipContent side="right">{label}</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -299,6 +309,7 @@ function ImpersonationBanner() {
  * Main application shell: single left sidebar (Kolay İK order) + header (breadcrumbs, apps launcher) + content.
  */
 export default function AppLayout() {
+  const { t } = useTranslation(["navigation"]);
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const tenant = useTenantStore((state) => state.currentTenant);
@@ -338,7 +349,7 @@ export default function AppLayout() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                aria-label="Toggle sidebar"
+                aria-label={t("navigation:nav.toggleSidebar")}
                 className="hidden md:inline-flex"
               >
                 <Menu className="h-5 w-5" />
