@@ -1,0 +1,25 @@
+{
+  "title": "Denetim Kaydı",
+  "subtitle": "Sistemdeki kullanıcı ve sistem etkinliklerini inceleyin.",
+  "timestamp": "Zaman",
+  "actor": "Kullanıcı",
+  "action": "İşlem",
+  "resource": "Kaynak",
+  "details": "Detaylar",
+  "allActors": "Tüm kullanıcılar",
+  "allActions": "Tüm işlemler",
+  "from": "Başlangıç",
+  "to": "Bitiş",
+  "searchPlaceholder": "Detaylarda ara...",
+  "exportCsv": "CSV Dışa Aktar",
+  "empty": "Kayıt bulunamadı.",
+  "clearFilters": "Filtreleri temizle",
+  "actionTypes": {
+    "create": "Oluşturma",
+    "update": "Güncelleme",
+    "delete": "Silme",
+    "login": "Giriş",
+    "invite": "Davet",
+    "role_change": "Rol değişikliği"
+  }
+}

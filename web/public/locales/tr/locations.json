@@ -1,0 +1,21 @@
+{
+  "title": "Lokasyonlar",
+  "subtitle": "Şirketinizin fiziksel ofislerini ve lokasyonlarını yönetin.",
+  "addLocation": "Lokasyon Ekle",
+  "editLocation": "Lokasyonu düzenle",
+  "deleteLocation": "Lokasyonu sil",
+  "dialogCreateTitle": "Yeni Lokasyon",
+  "dialogEditTitle": "Lokasyonu Düzenle",
+  "name": "Ad",
+  "address": "Adres",
+  "timeZone": "Saat Dilimi",
+  "orgUnit": "Organizasyon Birimi",
+  "noneOrgUnit": "Yok",
+  "searchPlaceholder": "Lokasyon ara...",
+  "createSuccess": "Lokasyon oluşturuldu.",
+  "updateSuccess": "Lokasyon güncellendi.",
+  "deleteSuccess": "Lokasyon silindi.",
+  "genericError": "Bir şeyler ters gitti.",
+  "empty": "Henüz lokasyon yok.",
+  "deleteConfirmDescription": "\"{{name}}\" lokasyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+}

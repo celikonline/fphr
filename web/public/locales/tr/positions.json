@@ -1,0 +1,29 @@
+{
+  "title": "Pozisyonlar",
+  "subtitle": "Şirketinizin iş pozisyonlarını ve unvanlarını yönetin.",
+  "addPosition": "Pozisyon Ekle",
+  "editPosition": "Pozisyonu düzenle",
+  "deletePosition": "Pozisyonu sil",
+  "dialogCreateTitle": "Yeni Pozisyon",
+  "dialogEditTitle": "Pozisyonu Düzenle",
+  "titleLabel": "Unvan",
+  "level": "Seviye",
+  "orgUnit": "Organizasyon Birimi",
+  "noneOrgUnit": "Yok",
+  "allOrgUnits": "Tüm birimler",
+  "searchPlaceholder": "Pozisyon ara...",
+  "createSuccess": "Pozisyon oluşturuldu.",
+  "updateSuccess": "Pozisyon güncellendi.",
+  "deleteSuccess": "Pozisyon silindi.",
+  "genericError": "Bir şeyler ters gitti.",
+  "empty": "Henüz pozisyon yok.",
+  "deleteConfirmDescription": "\"{{title}}\" pozisyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+  "levels": {
+    "junior": "Junior",
+    "mid": "Mid",
+    "senior": "Senior",
+    "lead": "Lead",
+    "manager": "Yönetici",
+    "director": "Direktör"
+  }
+}

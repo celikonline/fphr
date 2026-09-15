@@ -16,5 +16,6 @@
   "deleteSuccess": "Organizasyon birimi silindi.",
   "deleteHasChildrenError": "Bu birimin hâlâ alt birimleri var, silinemez.",
   "genericError": "Bir şeyler ters gitti.",
-  "empty": "Henüz organizasyon birimi yok."
+  "empty": "Henüz organizasyon birimi yok.",
+  "deleteConfirmDescription": "\"{{name}}\" birimini silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
 }

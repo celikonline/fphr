@@ -1,0 +1,21 @@
+{
+  "title": "Locations",
+  "subtitle": "Manage your company's physical offices and locations.",
+  "addLocation": "Add Location",
+  "editLocation": "Edit location",
+  "deleteLocation": "Delete location",
+  "dialogCreateTitle": "New Location",
+  "dialogEditTitle": "Edit Location",
+  "name": "Name",
+  "address": "Address",
+  "timeZone": "Time Zone",
+  "orgUnit": "Organization Unit",
+  "noneOrgUnit": "None",
+  "searchPlaceholder": "Search locations...",
+  "createSuccess": "Location created.",
+  "updateSuccess": "Location updated.",
+  "deleteSuccess": "Location deleted.",
+  "genericError": "Something went wrong.",
+  "empty": "No locations yet.",
+  "deleteConfirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+}

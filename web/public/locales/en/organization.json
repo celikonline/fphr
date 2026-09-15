@@ -16,5 +16,6 @@
   "deleteSuccess": "Organization unit deleted.",
   "deleteHasChildrenError": "This unit still has sub-units and cannot be deleted.",
   "genericError": "Something went wrong.",
-  "empty": "No organization units yet."
+  "empty": "No organization units yet.",
+  "deleteConfirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
 }
