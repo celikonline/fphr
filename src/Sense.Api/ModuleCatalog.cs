@@ -1,3 +1,4 @@
+using Sense.Modules.Analytics.Api;
 using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.Documents.Api;
 using Sense.Modules.Employee.Api;
@@ -27,6 +28,7 @@ public static class ModuleCatalog
         new NotificationsModule(),
         new LeaveModule(),
         new AttendanceModule(),
+        new AnalyticsModule(),
         new PayrollModule(),
         new RecruitmentModule(),
     ];

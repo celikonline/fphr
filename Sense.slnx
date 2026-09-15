@@ -65,6 +65,7 @@
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Attendance.Tests/Sense.Modules.Attendance.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Payroll.Tests/Sense.Modules.Payroll.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Analytics.Tests/Sense.Modules.Analytics.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Recruitment.Tests/Sense.Modules.Recruitment.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
   </Folder>
@@ -88,6 +89,11 @@
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Analytics/">
+    <Project Path="src/Modules/Analytics/Sense.Modules.Analytics.Api/Sense.Modules.Analytics.Api.csproj" />
+    <Project Path="src/Modules/Analytics/Sense.Modules.Analytics.Application/Sense.Modules.Analytics.Application.csproj" />
+    <Project Path="src/Modules/Analytics/Sense.Modules.Analytics.Contracts/Sense.Modules.Analytics.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Attendance/">
     <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Api/Sense.Modules.Attendance.Api.csproj" />
