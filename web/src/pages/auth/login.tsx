@@ -1,24 +1,30 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import {
+  ActionIcon,
+  Alert,
+  Button,
+  Checkbox,
+  Group,
+  Menu,
+  PasswordInput,
+  Stack,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { Palmtree, Eye, EyeOff, Moon, Sun, Monitor, Wallet, Target } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 function BrandMark() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
       <rect x="12" y="4" width="24" height="24" rx="6" className="fill-petrol" />
-      <rect x="4" y="12" width="24" height="24" rx="6" className="fill-brand" />
+      <rect x="4" y="12" width="24" height="24" rx="6" fill="var(--mantine-color-algosenseGreen-5)" />
       <path
         d="M12.5 27.5L21 19M21 19H14.5M21 19V25.5"
         stroke="white"
@@ -35,34 +41,40 @@ function LoginThemeToggle() {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
 
-  const icon =
-    theme === "dark" ? <Moon className="h-4 w-4" /> : theme === "light" ? <Sun className="h-4 w-4" /> : <Monitor className="h-4 w-4" />;
+  const icon = theme === "dark" ? <Moon size={16} /> : theme === "light" ? <Sun size={16} /> : <Monitor size={16} />;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed left-6 top-6 z-20 rounded-full"
-          aria-label={t("common:theme")}
-        >
-          {icon}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" /> {t("common:themeLight")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" /> {t("common:themeDark")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          <Monitor className="mr-2 h-4 w-4" /> {t("common:themeSystem")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu position="bottom-start">
+      <Tooltip label={t("common:theme")} position="right">
+        <Menu.Target>
+          <ActionIcon
+            variant="default"
+            size="lg"
+            radius="xl"
+            className="fixed left-6 top-6 z-20"
+            aria-label={t("common:theme")}
+          >
+            {icon}
+          </ActionIcon>
+        </Menu.Target>
+      </Tooltip>
+      <Menu.Dropdown>
+        <Menu.Item leftSection={<Sun size={16} />} onClick={() => setTheme("light")}>
+          {t("common:themeLight")}
+        </Menu.Item>
+        <Menu.Item leftSection={<Moon size={16} />} onClick={() => setTheme("dark")}>
+          {t("common:themeDark")}
+        </Menu.Item>
+        <Menu.Item leftSection={<Monitor size={16} />} onClick={() => setTheme("system")}>
+          {t("common:themeSystem")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
+}
+
+function PasswordToggleIcon({ reveal }: { reveal: boolean }) {
+  return reveal ? <EyeOff size={16} /> : <Eye size={16} />;
 }
 
 const FEATURES = [
@@ -107,120 +119,129 @@ export default function LoginPage() {
           bg-gradient-to-br from-[#EAF8F1] via-[#F5FBF8] to-white
           p-14 dark:from-[#16463B] dark:via-[#12332C] dark:to-[#0A211C] lg:flex"
       >
-        <div className="flex items-center gap-3">
+        <Group gap="sm" wrap="nowrap">
           <BrandMark />
-          <span className="flex flex-col leading-tight">
-            <span className="text-xl font-extrabold tracking-tight text-foreground dark:text-white">SenseİK</span>
-            <span className="mt-0.5 text-[10.5px] tracking-wider text-muted-foreground dark:text-white/55">
+          <Stack gap={2}>
+            <Text fz={20} fw={800} lh={1.1} lts={-0.4}>
+              SenseİK
+            </Text>
+            <Text fz={10.5} c="dimmed" lts={0.5} lh={1.2}>
               {t("auth:brandPoweredBy")}
-            </span>
-          </span>
-        </div>
+            </Text>
+          </Stack>
+        </Group>
 
         <div className="max-w-md">
-          <h1 className="text-balance text-3xl font-extrabold leading-tight tracking-tight text-foreground dark:text-white lg:text-4xl">
+          <Title order={1} fz={36} fw={800} lh={1.2} lts={-0.5} className="text-balance">
             {t("auth:brandTagline")}
-          </h1>
-          <p className="mt-4 max-w-sm text-base leading-relaxed text-muted-foreground dark:text-white/70">
+          </Title>
+          <Text mt="md" maw={384} size="md" lh={1.6} c="dimmed">
             {t("auth:brandSubtitle")}
-          </p>
+          </Text>
 
-          <div className="mt-10 flex flex-col gap-4">
+          <Stack mt={40} gap="md">
             {FEATURES.map(({ icon: Icon, key }) => (
-              <div key={key} className="flex items-center gap-3.5">
-                <span className="flex h-10 w-10 flex-none items-center justify-center rounded-[10px] bg-brand/10 dark:bg-white/10">
-                  <Icon className="h-5 w-5 text-brand-strong dark:text-brand" />
-                </span>
-                <span className="text-sm font-medium text-foreground dark:text-white/90">{t(`auth:${key}`)}</span>
-              </div>
+              <Group key={key} gap={14} wrap="nowrap">
+                <ThemeIcon variant="light" color="algosenseGreen" size={40} radius={10}>
+                  <Icon size={20} />
+                </ThemeIcon>
+                <Text size="sm" fw={500}>
+                  {t(`auth:${key}`)}
+                </Text>
+              </Group>
             ))}
-          </div>
+          </Stack>
         </div>
 
-        <p className="text-xs text-muted-foreground dark:text-white/40">
+        <Text size="xs" c="dimmed">
           {t("auth:footerCopyright", { year: new Date().getFullYear() })}
-        </p>
+        </Text>
       </aside>
 
       {/* Form panel */}
       <main className="flex flex-1 items-center justify-center px-6 py-12">
         <form className="w-full max-w-sm" onSubmit={handleSubmit} noValidate>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">{t("auth:welcomeBack")}</h2>
-          <p className="mt-2 text-sm text-muted-foreground">{t("auth:welcomeSubtitle")}</p>
+          <Title order={2} fz={24} fw={700} lts={-0.3}>
+            {t("auth:welcomeBack")}
+          </Title>
+          <Text mt={8} size="sm" c="dimmed">
+            {t("auth:welcomeSubtitle")}
+          </Text>
 
           {error && (
-            <div className="mt-6 rounded-md bg-destructive/10 p-3">
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            </div>
+            <Alert mt="lg" color="red" variant="light">
+              <Text size="sm" fw={500} c="red">
+                {error}
+              </Text>
+            </Alert>
           )}
 
-          <div className="mt-6 space-y-2">
-            <Label htmlFor="email">{t("auth:email")}</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={t("auth:emailPlaceholder")}
-              disabled={isLoading}
-              required
+          <TextInput
+            mt="lg"
+            size="md"
+            id="email"
+            type="email"
+            label={t("auth:email")}
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.currentTarget.value)}
+            placeholder={t("auth:emailPlaceholder")}
+            disabled={isLoading}
+            required
+            withAsterisk={false}
+          />
+
+          <PasswordInput
+            mt="md"
+            size="md"
+            id="password"
+            label={t("auth:password")}
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => setPassword(e.currentTarget.value)}
+            placeholder={t("auth:passwordPlaceholder")}
+            disabled={isLoading}
+            required
+            withAsterisk={false}
+            visible={showPassword}
+            onVisibilityChange={setShowPassword}
+            visibilityToggleIcon={PasswordToggleIcon}
+            visibilityToggleFocusable
+            visibilityToggleButtonProps={{
+              "aria-label": showPassword ? t("auth:hidePassword") : t("auth:showPassword"),
+            }}
+          />
+
+          <Group mt="md" justify="space-between" wrap="nowrap">
+            <Checkbox
+              color="algosenseGreen.5"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.currentTarget.checked)}
+              label={t("auth:rememberMe")}
+              styles={{ label: { color: "var(--mantine-color-dimmed)" } }}
             />
-          </div>
-
-          <div className="mt-4 space-y-2">
-            <Label htmlFor="password">{t("auth:password")}</Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={t("auth:passwordPlaceholder")}
-                disabled={isLoading}
-                required
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? t("auth:hidePassword") : t("auth:showPassword")}
-                className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <label className="flex select-none items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-4 w-4 rounded border-input accent-brand"
-              />
-              {t("auth:rememberMe")}
-            </label>
-            <span
-              className="cursor-not-allowed text-sm font-medium text-muted-foreground/60"
+            <Text
+              size="sm"
+              fw={500}
+              c="dimmed"
+              opacity={0.6}
+              style={{ cursor: "not-allowed" }}
               title={t("auth:forgotPassword")}
             >
               {t("auth:forgotPassword")}
-            </span>
-          </div>
+            </Text>
+          </Group>
 
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="mt-6 h-11 w-full bg-brand text-brand-foreground hover:bg-brand-strong"
-          >
+          <Button type="submit" mt="lg" h={44} fullWidth color="algosenseGreen.5" disabled={isLoading}>
             {isLoading ? t("auth:loggingIn") : t("auth:login")}
           </Button>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">{t("auth:noAccount")}</p>
-          <p className="mt-8 text-center text-xs text-muted-foreground">{t("auth:demoCredentials")}</p>
+          <Text mt="lg" ta="center" size="sm" c="dimmed">
+            {t("auth:noAccount")}
+          </Text>
+          <Text mt="xl" ta="center" size="xs" c="dimmed">
+            {t("auth:demoCredentials")}
+          </Text>
         </form>
       </main>
     </div>

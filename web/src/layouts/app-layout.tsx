@@ -1,16 +1,32 @@
-import { Fragment } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
+  ActionIcon,
+  Alert,
+  Anchor,
+  Avatar,
+  Badge,
+  Breadcrumbs,
+  Button,
+  Group,
+  Menu,
+  Stack,
+  Text,
+  Tooltip,
+  UnstyledButton,
+} from "@mantine/core";
+import {
+  ChevronRight,
   Globe,
   LayoutGrid,
   LogOut,
-  Menu,
+  Menu as MenuIcon,
+  Monitor,
   Moon,
+  MoreHorizontal,
   ShieldAlert,
   Sun,
   User as UserIcon,
-  Monitor,
 } from "lucide-react";
 import { useUIStore } from "@/store/ui.store";
 import { useAuthStore } from "@/store/auth.store";
@@ -25,28 +41,7 @@ import {
   type NavItem,
 } from "@/config/navigation";
 import { cn } from "@/lib/utils";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbEllipsis,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
@@ -95,9 +90,9 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
         <>
           <span className="flex-1 truncate">{label}</span>
           {item.phase !== undefined && (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            <Badge size="xs" variant="light" color="gray" tt="none">
               {t("navigation:phase", { phase: item.phase })}
-            </span>
+            </Badge>
           )}
         </>
       )}
@@ -106,63 +101,87 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
 
   if (!collapsed) return link;
 
+  // Tooltip merges `className` as a string, which would drop NavLink's active-state class function; wrap instead.
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{link}</TooltipTrigger>
-      <TooltipContent side="right">{label}</TooltipContent>
+    <Tooltip label={label} position="right" openDelay={300}>
+      <div>{link}</div>
     </Tooltip>
   );
 }
 
-function Breadcrumbs() {
+type Crumb = { path: string; label: string; link: boolean };
+
+function crumbNode(item: Crumb, isLast: boolean) {
+  if (isLast) {
+    return (
+      <Text key={item.path} size="sm" fw={500} aria-current="page" truncate>
+        {item.label}
+      </Text>
+    );
+  }
+  if (item.link) {
+    return (
+      <Anchor key={item.path} component={Link} to={item.path} size="sm" c="dimmed" underline="hover">
+        {item.label}
+      </Anchor>
+    );
+  }
+  return (
+    <Text key={item.path} size="sm" c="dimmed">
+      {item.label}
+    </Text>
+  );
+}
+
+function HeaderBreadcrumbs() {
   const { t } = useTranslation(["navigation"]);
   const location = useLocation();
   const crumbs = resolveBreadcrumbs(location.pathname);
-  const items = [
+  const items: Crumb[] = [
     { path: "/app", label: t("nav.home"), link: true },
     ...crumbs.map((crumb) => ({ path: crumb.path, label: t(crumb.labelKey), link: crumb.link })),
   ];
+  const separator = <ChevronRight size={14} color="var(--mantine-color-dimmed)" aria-hidden="true" />;
+  const full = (
+    <Breadcrumbs separator={separator} separatorMargin={6} className="flex-nowrap">
+      {items.map((item, index) => crumbNode(item, index === items.length - 1))}
+    </Breadcrumbs>
+  );
+
   // Below md, keep the first and last two crumbs and fold the middle ones into an ellipsis.
-  const collapsible = items.length > 3;
-  const isMiddle = (index: number) => collapsible && index > 0 && index < items.length - 2;
+  if (items.length <= 3) return full;
+
   const middleLabel = items
-    .filter((_, index) => isMiddle(index))
+    .slice(1, -2)
     .map((item) => item.label)
     .join(" / ");
+  const tail = items.slice(-2);
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList className="flex-nowrap">
-        {items.map((item, index) => {
-          const isLast = index === items.length - 1;
-          const middleClass = isMiddle(index) ? "hidden md:inline-flex" : undefined;
-          return (
-            <Fragment key={item.path}>
-              {index > 0 && <BreadcrumbSeparator className={middleClass} />}
-              {collapsible && index === 1 && (
-                <>
-                  <BreadcrumbItem className="md:hidden">
-                    <BreadcrumbEllipsis label={middleLabel} title={middleLabel} />
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="md:hidden" />
-                </>
-              )}
-              <BreadcrumbItem className={middleClass}>
-                {isLast ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                ) : item.link ? (
-                  <BreadcrumbLink asChild>
-                    <Link to={item.path}>{item.label}</Link>
-                  </BreadcrumbLink>
-                ) : (
-                  <span>{item.label}</span>
-                )}
-              </BreadcrumbItem>
-            </Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
+    <>
+      <div className="hidden md:block">{full}</div>
+      <div className="md:hidden">
+        <Breadcrumbs separator={separator} separatorMargin={6} className="flex-nowrap">
+          {crumbNode(items[0], false)}
+          <Text key="ellipsis" span c="dimmed" title={middleLabel} aria-label={middleLabel} className="flex items-center">
+            <MoreHorizontal size={16} aria-hidden="true" />
+          </Text>
+          {tail.map((item, index) => crumbNode(item, index === tail.length - 1))}
+        </Breadcrumbs>
+      </div>
+    </>
+  );
+}
+
+function HeaderIconMenuTarget({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Tooltip label={label}>
+      <Menu.Target>
+        <ActionIcon variant="subtle" color="gray" size="lg" aria-label={label}>
+          {children}
+        </ActionIcon>
+      </Menu.Target>
+    </Tooltip>
   );
 }
 
@@ -171,52 +190,52 @@ function AppsLauncher() {
   const allowed = useVisibleItems(ACTIVE_APPS);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("navigation:nav.apps")} title={t("navigation:nav.apps")}>
-          <LayoutGrid className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-2">
-        <DropdownMenuLabel>{t("navigation:nav.apps")}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+    <Menu position="bottom-end" width={320}>
+      <HeaderIconMenuTarget label={t("navigation:nav.apps")}>
+        <LayoutGrid size={16} />
+      </HeaderIconMenuTarget>
+      <Menu.Dropdown p="xs">
+        <Menu.Label>{t("navigation:nav.apps")}</Menu.Label>
+        <Menu.Divider />
         <div className="grid grid-cols-3 gap-1">
           {allowed.map((item) => {
             const Icon = item.icon;
             return (
-              <DropdownMenuItem key={item.key} asChild className="flex h-auto flex-col items-center gap-1 p-2 text-center">
-                <Link to={item.path}>
-                  <Icon className="h-5 w-5 text-primary" />
-                  <span className="text-xs leading-tight">{t(item.labelKey)}</span>
-                </Link>
-              </DropdownMenuItem>
+              <Menu.Item key={item.key} component={Link} to={item.path} p="xs">
+                <Stack gap={4} align="center" ta="center">
+                  <Icon size={20} color="var(--mantine-primary-color-filled)" />
+                  <Text size="xs" lh={1.2}>
+                    {t(item.labelKey)}
+                  </Text>
+                </Stack>
+              </Menu.Item>
             );
           })}
           {PLANNED_APPS.map((item) => {
             const Icon = item.icon;
             return (
-              <DropdownMenuItem
-                key={item.key}
-                disabled
-                className="flex h-auto flex-col items-center gap-1 p-2 text-center"
-              >
-                <Icon className="h-5 w-5 text-muted-foreground" />
-                <span className="text-xs leading-tight">{t(item.labelKey)}</span>
-                <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
-                  {t("navigation:phase", { phase: item.phase })}
-                </Badge>
-              </DropdownMenuItem>
+              <Menu.Item key={item.key} disabled p="xs">
+                <Stack gap={4} align="center" ta="center">
+                  <Icon size={20} color="var(--mantine-color-dimmed)" />
+                  <Text size="xs" lh={1.2}>
+                    {t(item.labelKey)}
+                  </Text>
+                  <Badge size="xs" variant="outline" color="gray" tt="none">
+                    {t("navigation:phase", { phase: item.phase })}
+                  </Badge>
+                </Stack>
+              </Menu.Item>
             );
           })}
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/app/apps" className="justify-center text-sm">
+        <Menu.Divider />
+        <Menu.Item component={Link} to="/app/apps">
+          <Text size="sm" ta="center">
             {t("navigation:apps.viewAll")}
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </Text>
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 
@@ -225,28 +244,23 @@ function ThemeToggle() {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
 
-  const icon =
-    theme === "dark" ? <Moon className="h-4 w-4" /> : theme === "light" ? <Sun className="h-4 w-4" /> : <Monitor className="h-4 w-4" />;
+  const icon = theme === "dark" ? <Moon size={16} /> : theme === "light" ? <Sun size={16} /> : <Monitor size={16} />;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("common:theme")}>
-          {icon}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          <Sun className="mr-2 h-4 w-4" /> {t("common:themeLight")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          <Moon className="mr-2 h-4 w-4" /> {t("common:themeDark")}
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          <Monitor className="mr-2 h-4 w-4" /> {t("common:themeSystem")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu position="bottom-end">
+      <HeaderIconMenuTarget label={t("common:theme")}>{icon}</HeaderIconMenuTarget>
+      <Menu.Dropdown>
+        <Menu.Item leftSection={<Sun size={16} />} onClick={() => setTheme("light")}>
+          {t("common:themeLight")}
+        </Menu.Item>
+        <Menu.Item leftSection={<Moon size={16} />} onClick={() => setTheme("dark")}>
+          {t("common:themeDark")}
+        </Menu.Item>
+        <Menu.Item leftSection={<Monitor size={16} />} onClick={() => setTheme("system")}>
+          {t("common:themeSystem")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 
@@ -254,18 +268,16 @@ function LanguageSwitcher() {
   const { t, i18n } = useTranslation(["common"]);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t("common:language")}>
-          <Globe className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => i18n.changeLanguage("tr")}>Türkçe</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => i18n.changeLanguage("en")}>English</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => i18n.changeLanguage("de")}>Deutsch</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu position="bottom-end">
+      <HeaderIconMenuTarget label={t("common:language")}>
+        <Globe size={16} />
+      </HeaderIconMenuTarget>
+      <Menu.Dropdown>
+        <Menu.Item onClick={() => i18n.changeLanguage("tr")}>Türkçe</Menu.Item>
+        <Menu.Item onClick={() => i18n.changeLanguage("en")}>English</Menu.Item>
+        <Menu.Item onClick={() => i18n.changeLanguage("de")}>Deutsch</Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 
@@ -281,30 +293,34 @@ function UserMenu() {
     .toUpperCase();
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-2 rounded-md p-1 pr-2 hover:bg-accent" aria-label={t("navigation:nav.account")}>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <span className="hidden max-w-[10rem] truncate text-sm font-medium sm:inline">
-            {user?.name || user?.email}
-          </span>
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuLabel className="truncate">{user?.email}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/app/account">
-            <UserIcon className="mr-2 h-4 w-4" /> {t("navigation:nav.account")}
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
-          <LogOut className="mr-2 h-4 w-4" /> {t("common:logout")}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Menu position="bottom-end" width={220}>
+      <Menu.Target>
+        <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className="hover:bg-accent">
+          <Group gap="xs" wrap="nowrap">
+            <Avatar size={32} radius="xl">
+              {initials}
+            </Avatar>
+            <Text size="sm" fw={500} truncate className="hidden max-w-[10rem] sm:block">
+              {user?.name || user?.email}
+            </Text>
+          </Group>
+        </UnstyledButton>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Label>
+          <Text size="xs" c="dimmed" fw={500} truncate>
+            {user?.email}
+          </Text>
+        </Menu.Label>
+        <Menu.Divider />
+        <Menu.Item component={Link} to="/app/account" leftSection={<UserIcon size={16} />}>
+          {t("navigation:nav.account")}
+        </Menu.Item>
+        <Menu.Item color="red" leftSection={<LogOut size={16} />} onClick={logout}>
+          {t("common:logout")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 
@@ -317,18 +333,14 @@ function ImpersonationBanner() {
   if (!impersonatorId) return null;
 
   return (
-    <div
-      role="alert"
-      className="flex shrink-0 items-center justify-between gap-3 border-b border-amber-500/50 bg-amber-100 px-4 py-2 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-200"
-    >
-      <span className="flex items-center gap-2">
-        <ShieldAlert className="h-4 w-4 shrink-0" />
-        {t("common:impersonation.banner")}
-      </span>
-      <Button size="sm" variant="outline" onClick={logout}>
-        {t("common:impersonation.end")}
-      </Button>
-    </div>
+    <Alert color="yellow" variant="light" radius={0} py={8} icon={<ShieldAlert size={16} />} className="shrink-0">
+      <Group justify="space-between" gap="sm" wrap="nowrap">
+        <Text size="sm">{t("common:impersonation.banner")}</Text>
+        <Button size="xs" variant="default" onClick={logout}>
+          {t("common:impersonation.end")}
+        </Button>
+      </Group>
+    </Alert>
   );
 }
 
@@ -354,9 +366,9 @@ export default function AppLayout() {
           )}
         >
           <div className={cn("flex h-16 items-center border-b border-border px-4", !sidebarOpen && "justify-center px-2")}>
-            <Link to="/app" className="text-lg font-bold text-primary">
+            <Anchor component={Link} to="/app" size="lg" fw={700} underline="never">
               {sidebarOpen ? "SenseİK" : "S"}
-            </Link>
+            </Anchor>
           </div>
           <NavList collapsed={!sidebarOpen} />
         </aside>
@@ -364,36 +376,43 @@ export default function AppLayout() {
         {/* Mobile icon rail - always icon-only, no store dependency */}
         <aside className="flex w-14 shrink-0 flex-col border-r border-border bg-card md:hidden">
           <div className="flex h-16 items-center justify-center border-b border-border">
-            <span className="text-lg font-bold text-primary">S</span>
+            <Text span size="lg" fw={700} c="var(--mantine-primary-color-filled)">
+              S
+            </Text>
           </div>
           <NavList collapsed />
         </aside>
 
         <div className="flex flex-1 flex-col overflow-hidden">
           <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleSidebar}
-                aria-label={t("navigation:nav.toggleSidebar")}
-                className="hidden md:inline-flex"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div className="hidden flex-col leading-tight sm:flex">
-                <span className="text-sm font-semibold">{tenant?.name ?? userTenantName ?? "SenseİK"}</span>
-                <Breadcrumbs />
+            <div className="flex min-w-0 items-center gap-3">
+              <Tooltip label={t("navigation:nav.toggleSidebar")}>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size="lg"
+                  onClick={toggleSidebar}
+                  aria-label={t("navigation:nav.toggleSidebar")}
+                  className="hidden md:inline-flex"
+                >
+                  <MenuIcon size={20} />
+                </ActionIcon>
+              </Tooltip>
+              <div className="hidden min-w-0 flex-col leading-tight sm:flex">
+                <Text size="sm" fw={600} truncate>
+                  {tenant?.name ?? userTenantName ?? "SenseİK"}
+                </Text>
+                <HeaderBreadcrumbs />
               </div>
             </div>
 
-            <div className="flex items-center gap-1">
+            <Group gap={4} wrap="nowrap">
               <AppsLauncher />
               <NotificationBell />
               <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />
-            </div>
+            </Group>
           </header>
 
           <main className="flex-1 overflow-auto">

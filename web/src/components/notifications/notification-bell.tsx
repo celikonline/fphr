@@ -2,19 +2,9 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, Button, Group, Indicator, Menu, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
 import { Bell, Settings2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { usePermission } from "@/components/permission-guard";
-import { cn } from "@/lib/utils";
 import {
   NOTIFICATIONS_QUERY_KEY,
   NOTIFICATIONS_UNREAD_KEY,
@@ -68,70 +58,98 @@ function NotificationBellMenu() {
   }
 
   return (
-    <DropdownMenu open={open} onOpenChange={setOpen}>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative"
-          aria-label={t("notifications:bell.label")}
-          title={t("notifications:bell.label")}
-        >
-          <Bell className="h-4 w-4" />
-          {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-none text-destructive-foreground">
-              {unread > 99 ? "99+" : unread}
-            </span>
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between px-3 py-2">
-          <DropdownMenuLabel className="p-0">{t("notifications:bell.title")}</DropdownMenuLabel>
+    <Menu opened={open} onChange={setOpen} position="bottom-end" width={320}>
+      <Tooltip label={t("notifications:bell.label")}>
+        <Menu.Target>
+          <ActionIcon
+            variant="subtle"
+            color="gray"
+            size="lg"
+            aria-label={t("notifications:bell.label")}
+            style={{ overflow: "visible" }}
+          >
+            <Indicator
+              color="red"
+              size={16}
+              offset={2}
+              label={unread}
+              maxValue={99}
+              disabled={unread === 0}
+              styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
+              inline
+            >
+              <Bell size={16} className="block" />
+            </Indicator>
+          </ActionIcon>
+        </Menu.Target>
+      </Tooltip>
+      <Menu.Dropdown p={0}>
+        <Group justify="space-between" wrap="nowrap" px="sm" py="xs">
+          <Text size="sm" fw={600}>
+            {t("notifications:bell.title")}
+          </Text>
           {canManage && (
             <Button
-              variant="link"
-              size="sm"
-              className="h-auto p-0 text-xs"
+              variant="subtle"
+              size="compact-xs"
               disabled={unread === 0 || markAll.isPending}
               onClick={() => markAll.mutate()}
             >
               {t("notifications:bell.markAllRead")}
             </Button>
           )}
-        </div>
-        <DropdownMenuSeparator className="m-0" />
-        <ScrollArea className="max-h-96 [&>[data-radix-scroll-area-viewport]]:max-h-96 [&>[data-radix-scroll-area-viewport]>div]:block!">
+        </Group>
+        <Menu.Divider m={0} />
+        <ScrollArea.Autosize mah={384} type="auto">
           {listQuery.isError ? (
-            <p className="p-4 text-sm text-destructive">{t("notifications:bell.loadError")}</p>
+            <Text size="sm" c="red" p="md">
+              {t("notifications:bell.loadError")}
+            </Text>
           ) : listQuery.isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("notifications:bell.loading")}</p>
+            <Text size="sm" c="dimmed" p="md">
+              {t("notifications:bell.loading")}
+            </Text>
           ) : items.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("notifications:bell.empty")}</p>
+            <Text size="sm" c="dimmed" p="md">
+              {t("notifications:bell.empty")}
+            </Text>
           ) : (
             items.map((item) => (
-              <DropdownMenuItem
+              <Menu.Item
                 key={item.id}
-                onSelect={() => openItem(item)}
-                className={cn(
-                  "flex cursor-pointer flex-col items-start gap-0.5 rounded-none px-3 py-2",
-                  !item.readAt && "bg-accent/40"
-                )}
+                onClick={() => openItem(item)}
+                bdrs={0}
+                px="sm"
+                py="xs"
+                bg={item.readAt ? undefined : "var(--mantine-primary-color-light)"}
               >
-                <span className={cn("text-sm", !item.readAt && "font-semibold")}>{item.title}</span>
-                <span className="text-xs text-muted-foreground">{item.body}</span>
-                <span className="text-[11px] text-muted-foreground">{dateFormat.format(new Date(item.createdAt))}</span>
-              </DropdownMenuItem>
+                <Stack gap={2} align="flex-start">
+                  <Text size="sm" fw={item.readAt ? 400 : 600}>
+                    {item.title}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {item.body}
+                  </Text>
+                  <Text fz={11} c="dimmed">
+                    {dateFormat.format(new Date(item.createdAt))}
+                  </Text>
+                </Stack>
+              </Menu.Item>
             ))
           )}
-        </ScrollArea>
-        <DropdownMenuSeparator className="m-0" />
-        <DropdownMenuItem asChild className="rounded-none px-3 py-2">
-          <Link to={NOTIFICATION_SETTINGS_PATH}>
-            <Settings2 className="mr-2 h-4 w-4" /> {t("notifications:bell.preferences")}
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </ScrollArea.Autosize>
+        <Menu.Divider m={0} />
+        <Menu.Item
+          component={Link}
+          to={NOTIFICATION_SETTINGS_PATH}
+          leftSection={<Settings2 size={16} />}
+          bdrs={0}
+          px="sm"
+          py="xs"
+        >
+          {t("notifications:bell.preferences")}
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }

@@ -5,14 +5,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Alert, Button, Card, Center, Checkbox, PasswordInput, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
 import { AlertTriangle, MailCheck } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
@@ -36,9 +30,11 @@ type FormValues = z.infer<typeof schema>;
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12">
-      <Card className="w-full max-w-md">{children}</Card>
-    </div>
+    <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-default-hover)">
+      <Card withBorder shadow="sm" padding="xl" w="100%" maw={448}>
+        {children}
+      </Card>
+    </Center>
   );
 }
 
@@ -46,16 +42,16 @@ function InvalidInvitation({ reason }: { reason: "invalid" | "unusable" | "error
   const { t } = useTranslation(["auth"]);
   return (
     <CenteredCard>
-      <CardHeader className="items-center text-center">
-        <AlertTriangle className="mb-2 h-10 w-10 text-amber-500" />
-        <CardTitle>{t(`auth:invite.${reason}Title`)}</CardTitle>
-        <CardDescription>{t(`auth:invite.${reason}Description`)}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex justify-center">
-        <Button asChild variant="outline">
-          <Link to="/login">{t("auth:invite.goToLogin")}</Link>
+      <Stack align="center" ta="center" gap="xs">
+        <AlertTriangle size={40} color="var(--mantine-color-yellow-6)" />
+        <Title order={3}>{t(`auth:invite.${reason}Title`)}</Title>
+        <Text size="sm" c="dimmed">
+          {t(`auth:invite.${reason}Description`)}
+        </Text>
+        <Button component={Link} to="/login" variant="default" mt="md">
+          {t("auth:invite.goToLogin")}
         </Button>
-      </CardContent>
+      </Stack>
     </CenteredCard>
   );
 }
@@ -105,12 +101,12 @@ export default function InviteAcceptPage() {
   if (preview.isLoading || !preview.data) {
     return (
       <CenteredCard>
-        <CardContent className="space-y-3 p-6">
-          <Skeleton className="h-8 w-2/3" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-10 w-full" />
-        </CardContent>
+        <Stack gap="sm">
+          <Skeleton h={32} w="66%" />
+          <Skeleton h={16} />
+          <Skeleton h={40} />
+          <Skeleton h={40} />
+        </Stack>
       </CenteredCard>
     );
   }
@@ -123,69 +119,61 @@ export default function InviteAcceptPage() {
 
   return (
     <CenteredCard>
-      <CardHeader>
-        <MailCheck className="mb-2 h-8 w-8 text-primary" />
-        <CardTitle>{t("auth:invite.title", { tenant: invitation.tenantName })}</CardTitle>
-        <CardDescription>
+      <Stack gap="xs" mb="lg">
+        <MailCheck size={32} color="var(--mantine-primary-color-filled)" />
+        <Title order={3}>{t("auth:invite.title", { tenant: invitation.tenantName })}</Title>
+        <Text size="sm" c="dimmed">
           {t("auth:invite.subtitle", { name: `${invitation.firstName} ${invitation.lastName}`.trim() })}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form
-          className="space-y-4"
-          onSubmit={handleSubmit((values) => {
-            setSubmitError(null);
-            acceptMutation.mutate(values);
-          })}
-        >
+        </Text>
+      </Stack>
+      <form
+        onSubmit={handleSubmit((values) => {
+          setSubmitError(null);
+          acceptMutation.mutate(values);
+        })}
+      >
+        <Stack gap="md">
           {submitError && (
-            <Alert variant="destructive">
-              <AlertDescription>{submitError}</AlertDescription>
+            <Alert color="red" variant="light">
+              {submitError}
             </Alert>
           )}
 
-          <div>
-            <Label htmlFor="invite-email">{t("auth:email")}</Label>
-            <Input id="invite-email" value={invitation.email} readOnly disabled />
-          </div>
-          <div>
-            <Label htmlFor="invite-password">{t("auth:password")}</Label>
-            <Input id="invite-password" type="password" autoComplete="new-password" {...register("password")} />
-            <p className={errors.password ? "mt-1 text-xs text-destructive" : "mt-1 text-xs text-muted-foreground"}>
-              {errorText(errors.password?.message) ?? t("auth:invite.passwordHint", { min: MIN_PASSWORD_LENGTH })}
-            </p>
-          </div>
-          <div>
-            <Label htmlFor="invite-confirm">{t("auth:invite.confirmPassword")}</Label>
-            <Input id="invite-confirm" type="password" autoComplete="new-password" {...register("confirmPassword")} />
-            {errors.confirmPassword && (
-              <p className="mt-1 text-xs text-destructive">{errorText(errors.confirmPassword.message)}</p>
-            )}
-          </div>
-          <div>
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="invite-privacy"
-                checked={privacyAccepted}
-                onCheckedChange={(checked) => setValue("privacyNoticeAccepted", checked === true, { shouldValidate: true })}
-              />
-              <Label htmlFor="invite-privacy" className="text-sm font-normal leading-snug">
-                {t("auth:invite.privacyNotice")}
-              </Label>
-            </div>
-            {errors.privacyNoticeAccepted && (
-              <p className="mt-1 text-xs text-destructive">{errorText(errors.privacyNoticeAccepted.message)}</p>
-            )}
-          </div>
+          <TextInput id="invite-email" label={t("auth:email")} value={invitation.email} readOnly disabled />
+          <PasswordInput
+            id="invite-password"
+            label={t("auth:password")}
+            autoComplete="new-password"
+            inputWrapperOrder={["label", "input", "description", "error"]}
+            description={errors.password ? undefined : t("auth:invite.passwordHint", { min: MIN_PASSWORD_LENGTH })}
+            error={errorText(errors.password?.message)}
+            {...register("password")}
+          />
+          <PasswordInput
+            id="invite-confirm"
+            label={t("auth:invite.confirmPassword")}
+            autoComplete="new-password"
+            error={errorText(errors.confirmPassword?.message)}
+            {...register("confirmPassword")}
+          />
+          <Checkbox
+            id="invite-privacy"
+            checked={privacyAccepted}
+            onChange={(event) =>
+              setValue("privacyNoticeAccepted", event.currentTarget.checked, { shouldValidate: true })
+            }
+            label={t("auth:invite.privacyNotice")}
+            error={errorText(errors.privacyNoticeAccepted?.message)}
+          />
 
-          <Button type="submit" className="w-full" disabled={acceptMutation.isPending}>
+          <Button type="submit" fullWidth disabled={acceptMutation.isPending}>
             {acceptMutation.isPending ? t("auth:invite.accepting") : t("auth:invite.accept")}
           </Button>
-          <p className="text-center text-xs text-muted-foreground">
+          <Text size="xs" c="dimmed" ta="center">
             {t("auth:invite.expiresAt", { date: formatDateTime(invitation.expiresAt, i18n.language) })}
-          </p>
-        </form>
-      </CardContent>
+          </Text>
+        </Stack>
+      </form>
     </CenteredCard>
   );
 }

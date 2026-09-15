@@ -1,30 +1,38 @@
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
+import {
+  Anchor,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  DataList,
+  Group,
+  Input,
+  SegmentedControl,
+  Select,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { LifeBuoy, UserCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore, type Theme } from "@/store/ui.store";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const LANGUAGES = [
-  { code: "tr", label: "Türkçe" },
-  { code: "en", label: "English" },
-  { code: "de", label: "Deutsch" },
+  { value: "tr", label: "Türkçe" },
+  { value: "en", label: "English" },
+  { value: "de", label: "Deutsch" },
 ];
 
 const THEMES: Theme[] = ["light", "dark", "system"];
 
 function ProfileRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-1 py-3 sm:grid-cols-3 sm:gap-4">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm sm:col-span-2">{children}</dd>
-    </div>
+    <DataList.Item>
+      <DataList.ItemLabel>{label}</DataList.ItemLabel>
+      <DataList.ItemValue>{children}</DataList.ItemValue>
+    </DataList.Item>
   );
 }
 
@@ -41,110 +49,112 @@ export default function AccountPage() {
     .join("")
     .slice(0, 2)
     .toUpperCase();
-  const currentLanguage = LANGUAGES.find((lang) => i18n.resolvedLanguage?.startsWith(lang.code))?.code ?? "tr";
+  const currentLanguage = LANGUAGES.find((lang) => i18n.resolvedLanguage?.startsWith(lang.value))?.value ?? "tr";
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <UserCircle className="h-6 w-6" /> {t("account:title")}
-        </h1>
-        <p className="text-muted-foreground">{t("account:subtitle")}</p>
+        <Title order={1} fz={24}>
+          <Group gap="xs" component="span">
+            <UserCircle size={24} /> {t("account:title")}
+          </Group>
+        </Title>
+        <Text c="dimmed">{t("account:subtitle")}</Text>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-4 space-y-0">
-          <Avatar className="h-14 w-14">
-            <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+      <Card withBorder padding="lg">
+        <Group gap="md" wrap="nowrap" mb="lg">
+          <Avatar size={56} radius="xl" fz="lg">
+            {initials}
           </Avatar>
           <div className="min-w-0">
-            <CardTitle className="truncate">{user?.name || user?.email}</CardTitle>
-            <CardDescription className="truncate">{user?.email}</CardDescription>
+            <Text fz="xl" fw={600} truncate>
+              {user?.name || user?.email}
+            </Text>
+            <Text size="sm" c="dimmed" truncate>
+              {user?.email}
+            </Text>
           </div>
-        </CardHeader>
-        <CardContent>
-          <dl className="divide-y divide-border">
-            <ProfileRow label={t("account:firstName")}>{user?.firstName || "—"}</ProfileRow>
-            <ProfileRow label={t("account:lastName")}>{user?.lastName || "—"}</ProfileRow>
-            <ProfileRow label={t("account:email")}>{user?.email ?? "—"}</ProfileRow>
-            <ProfileRow label={t("account:company")}>{user?.tenant?.name ?? "—"}</ProfileRow>
-            <ProfileRow label={t("account:roles")}>
-              {user && user.roles.length > 0 ? (
-                <div className="flex flex-wrap gap-1">
-                  {user.roles.map((role) => (
-                    <Badge key={role} variant="secondary">
-                      {t(`account:roleNames.${role}`, role)}
-                    </Badge>
-                  ))}
-                </div>
-              ) : (
-                "—"
-              )}
-            </ProfileRow>
-            <ProfileRow label={t("account:mfa")}>
-              {user?.mfaEnabled ? t("account:mfaEnabled") : t("account:mfaDisabled")}
-            </ProfileRow>
-            {user?.employeeId && (
-              <ProfileRow label={t("account:employeeCard")}>
-                <Link to={`/app/employees/${user.employeeId}`} className="text-primary hover:underline">
-                  {t("account:viewEmployeeCard")}
-                </Link>
-              </ProfileRow>
-            )}
-          </dl>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("account:preferences")}</CardTitle>
-          <CardDescription>{t("account:preferencesHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="max-w-xs space-y-2">
-            <Label htmlFor="account-language">{t("common:language")}</Label>
-            <Select value={currentLanguage} onValueChange={(code) => i18n.changeLanguage(code)}>
-              <SelectTrigger id="account-language">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LANGUAGES.map((lang) => (
-                  <SelectItem key={lang.code} value={lang.code}>
-                    {lang.label}
-                  </SelectItem>
+        </Group>
+        <DataList withDivider labelWidth="33%">
+          <ProfileRow label={t("account:firstName")}>{user?.firstName || "—"}</ProfileRow>
+          <ProfileRow label={t("account:lastName")}>{user?.lastName || "—"}</ProfileRow>
+          <ProfileRow label={t("account:email")}>{user?.email ?? "—"}</ProfileRow>
+          <ProfileRow label={t("account:company")}>{user?.tenant?.name ?? "—"}</ProfileRow>
+          <ProfileRow label={t("account:roles")}>
+            {user && user.roles.length > 0 ? (
+              <Group gap={4}>
+                {user.roles.map((role) => (
+                  <Badge key={role} variant="light" color="gray" tt="none">
+                    {t(`account:roleNames.${role}`, role)}
+                  </Badge>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>{t("common:theme")}</Label>
-            <RadioGroup value={theme} onValueChange={(value) => setTheme(value as Theme)} className="flex flex-wrap gap-6">
-              {THEMES.map((value) => (
-                <div key={value} className="flex items-center gap-2">
-                  <RadioGroupItem id={`theme-${value}`} value={value} />
-                  <Label htmlFor={`theme-${value}`} className="font-normal">
-                    {t(`common:theme${value.charAt(0).toUpperCase()}${value.slice(1)}`)}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </div>
-        </CardContent>
+              </Group>
+            ) : (
+              "—"
+            )}
+          </ProfileRow>
+          <ProfileRow label={t("account:mfa")}>
+            {user?.mfaEnabled ? t("account:mfaEnabled") : t("account:mfaDisabled")}
+          </ProfileRow>
+          {user?.employeeId && (
+            <ProfileRow label={t("account:employeeCard")}>
+              <Anchor component={Link} to={`/app/employees/${user.employeeId}`} size="sm">
+                {t("account:viewEmployeeCard")}
+              </Anchor>
+            </ProfileRow>
+          )}
+        </DataList>
       </Card>
 
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-6">
+      <Card withBorder padding="lg">
+        <Stack gap={4} mb="lg">
+          <Text fw={600}>{t("account:preferences")}</Text>
+          <Text size="sm" c="dimmed">
+            {t("account:preferencesHint")}
+          </Text>
+        </Stack>
+        <Stack gap="lg">
+          <Select
+            id="account-language"
+            label={t("common:language")}
+            data={LANGUAGES}
+            value={currentLanguage}
+            onChange={(code) => {
+              if (code) void i18n.changeLanguage(code);
+            }}
+            allowDeselect={false}
+            maw={320}
+          />
+
+          <Input.Wrapper label={t("common:theme")} labelElement="div">
+            <div>
+              <SegmentedControl<Theme>
+                value={theme}
+                onChange={setTheme}
+                data={THEMES.map((value) => ({
+                  value,
+                  label: t(`common:theme${value.charAt(0).toUpperCase()}${value.slice(1)}`),
+                }))}
+                mt={4}
+              />
+            </div>
+          </Input.Wrapper>
+        </Stack>
+      </Card>
+
+      <Card withBorder padding="lg">
+        <Group justify="space-between" gap="sm">
           <div>
-            <p className="font-medium">{t("navigation:nav.support")}</p>
-            <p className="text-sm text-muted-foreground">{t("account:supportHint")}</p>
+            <Text fw={500}>{t("navigation:nav.support")}</Text>
+            <Text size="sm" c="dimmed">
+              {t("account:supportHint")}
+            </Text>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/app/support">
-              <LifeBuoy className="mr-2 h-4 w-4" /> {t("navigation:nav.support")}
-            </Link>
+          <Button component={Link} to="/app/support" variant="default" leftSection={<LifeBuoy size={16} />}>
+            {t("navigation:nav.support")}
           </Button>
-        </CardContent>
+        </Group>
       </Card>
     </div>
   );
