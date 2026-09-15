@@ -48,6 +48,6 @@
 | `Command*` (arama seçicileri) | `Combobox` + `useCombobox` (sunucu araması korunur) |
 | `Calendar` / `DatePicker` | `@mantine/dates` (`DatePickerInput`, `TimeInput`, `TimePicker`); değerler `YYYY-MM-DD` string |
 
-## Son adım
+## Durum
 
-Tüm dosyalar taşındığında `web/src/components/ui/` altındaki shadcn primitive'leri, Radix paketleri, `class-variance-authority`, `tw-animate-css` ve `TooltipProvider` kaldırılır.
+**Tamamlandı (2026-09-15).** Tüm ekranlar Mantine'e taşındı. `web/src/components/ui/` altında yalnızca Mantine üzerine kurulu uygulama bileşenleri kaldı (`data-table`, `date-picker`, `time-picker`, `file-dropzone`); shadcn primitive'leri, tüm `@radix-ui/*` paketleri, `class-variance-authority`, `cmdk`, `react-day-picker`, `tw-animate-css` ve `TooltipProvider` kaldırıldı. Yeni ekranlarda doğrudan Mantine kullanılır; shadcn/Radix bileşeni eklenmez. Yukarıdaki eşleme tablosu eski kodu okurken başvuru içindir.

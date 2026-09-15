@@ -1,6 +1,6 @@
 # SenseİK — agent notes
 
-HR/payroll SaaS. .NET 10 modular monolith (`src/Modules/*`, one schema + DbContext + migrations per module, modules talk only via `*.Contracts`), React web app (`web/`, Vite + react-router v7 + Tailwind v4), Expo mobile app (`apps/senseik-mobile`).
+HR/payroll SaaS. .NET 10 modular monolith (`src/Modules/*`, one schema + DbContext + migrations per module, modules talk only via `*.Contracts`), React web app (`web/`, Vite + react-router v7 + Mantine 9 + Tailwind v4 for layout; no shadcn/Radix — see `docs/implementation/mantine-gecis.md`), Expo mobile app (`apps/senseik-mobile`).
 
 ## Toolchain (no dotnet on the dev hosts; node/pnpm work on the host)
 

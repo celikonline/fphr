@@ -6,8 +6,8 @@ Modern React 18 web frontend for the SenseİK HR/Payroll SaaS platform.
 
 - **Framework:** React 18 with TypeScript
 - **Build Tool:** Vite (fast bundler & dev server)
-- **Styling:** Tailwind CSS + PostCSS
-- **UI Components:** shadcn/ui (Radix UI + Tailwind)
+- **UI Components:** Mantine 9 (`@mantine/core`, `dates`, `notifications`, `dropzone`, `charts`)
+- **Styling:** Mantine props for components, Tailwind CSS v4 for layout utilities
 - **Routing:** React Router v6
 - **State Management:** Zustand
 - **Internationalization:** i18next + react-i18next (Turkish/English)
@@ -50,7 +50,7 @@ The app will be available at `http://localhost:3000` (or next available port if 
 ```
 src/
 ├── components/           # Reusable React components
-│   ├── ui/              # shadcn/ui components (auto-generated)
+│   ├── ui/              # App composites on Mantine (data table, date/time pickers, file dropzone)
 │   └── protected-route  # Auth wrapper
 ├── pages/               # Page components (screens)
 │   ├── auth/
@@ -232,51 +232,29 @@ export async function getCompanies() {
 }
 ```
 
-## Tailwind CSS & shadcn/ui
+## Mantine & Tailwind
 
-### Using shadcn Components
-
-Components are in `src/components/ui/`. Example:
+Components come from Mantine; Tailwind is used for layout (`flex`, `grid`, `gap-*`, `p-*`). Rules and the component mapping are in `docs/implementation/mantine-gecis.md`.
 
 ```typescript
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button, Card, Text, Title } from "@mantine/core";
 
 export function MyCard() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Title</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Button>Click me</Button>
-      </CardContent>
+    <Card withBorder>
+      <Title order={4}>Title</Title>
+      <Text c="dimmed" size="sm">Description</Text>
+      <Button mt="md">Click me</Button>
     </Card>
   );
 }
 ```
 
-### Customizing Colors & Spacing
+App-level composites stay in `src/components/ui/`: `useDataTable`/`DataTable`, `DatePicker` ("yyyy-MM-dd"), `TimePicker` ("HH:mm") and `FileDropzone`. Notifications go through `toast()` from `@/hooks/use-toast`.
 
-Edit `tailwind.config.ts` to extend Tailwind's default theme. Theme colors are defined as CSS variables in `src/styles/index.css`:
+### Theme & Dark Mode
 
-```css
-:root {
-  --color-primary: 217 91% 60%;
-  --color-secondary: 217 32.6% 17.5%;
-  /* ... */
-}
-```
-
-### Dark Mode
-
-Tailwind's dark mode is configured in class strategy (`tailwind.config.ts`). Use the `dark:` prefix:
-
-```tsx
-<div className="bg-white dark:bg-gray-900">
-  Light background in light mode, dark background in dark mode
-</div>
-```
+`src/components/mantine-root.tsx` wires `MantineProvider` (theme from `src/lib/mantine-theme.ts`), `DatesProvider` and `Notifications`. The color scheme follows the UI store (light/dark/system); the same store toggles the `.dark` class so Tailwind's `dark:` variant and the CSS tokens in `src/styles/index.css` stay in sync with Mantine.
 
 ## State Management (Zustand)
 
@@ -318,8 +296,8 @@ When building new components (Item 20):
 
 1. **Functional Components:** Use React hooks (prefer composition over class components)
 2. **Props:** Typed with TypeScript interfaces
-3. **Styling:** Tailwind CSS classes, composed with `cn()`
-4. **Accessibility:** Radix UI (via shadcn) provides accessible primitives
+3. **Styling:** Mantine component props; Tailwind classes only for layout
+4. **Accessibility:** Mantine components (labels via `label`/`error` props, `aria-label` on `ActionIcon`s)
 5. **Internationalization:** Use `useTranslation()` for user-facing text
 6. **State:** Zustand for global, React hooks for local state
 
@@ -404,7 +382,7 @@ Check that JSON files exist in `public/locales/{lang}/{namespace}.json` and name
 - [React Documentation](https://react.dev)
 - [Vite Documentation](https://vitejs.dev)
 - [Tailwind CSS Documentation](https://tailwindcss.com)
-- [shadcn/ui Documentation](https://ui.shadcn.com)
+- [Mantine Documentation](https://mantine.dev)
 - [Zustand Documentation](https://github.com/pmndrs/zustand)
 - [i18next Documentation](https://www.i18next.com)
 - [React Router Documentation](https://reactrouter.com)
