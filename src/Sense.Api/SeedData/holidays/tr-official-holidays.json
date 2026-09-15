@@ -13,6 +13,60 @@
     { "name": "Cumhuriyet Bayramı", "month": 10, "day": 29, "recurringAnnually": true },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "date": "2026-03-19",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (1. gün)",
+      "date": "2026-03-20",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (2. gün)",
+      "date": "2026-03-21",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (3. gün)",
+      "date": "2026-03-22",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "date": "2026-05-26",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (1. gün)",
+      "date": "2026-05-27",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (2. gün)",
+      "date": "2026-05-28",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (3. gün)",
+      "date": "2026-05-29",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (4. gün)",
+      "date": "2026-05-30",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı Arifesi (yarım gün)",
       "date": "2027-03-08",
       "recurringAnnually": false,
       "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
