@@ -27,7 +27,8 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.locations",
     path: "/app/locations",
     icon: MapPin,
-    permissions: ["organization.locations.view", "organization.locations.manage"],
+    // Real backend permission keys (LocationsController): organization.locations.{create,read,update,delete}.
+    permissions: ["organization.locations.read"],
   },
   {
     labelKey: "nav.positions",

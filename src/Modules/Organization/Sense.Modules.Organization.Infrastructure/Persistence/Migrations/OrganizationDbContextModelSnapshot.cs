@@ -254,6 +254,70 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                     b.ToTable("holiday_calendar_entries", "org");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.Locations.Location", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country_code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_locations");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_locations_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("ix_locations_tenant_id_name");
+
+                    b.ToTable("locations", "org");
+                });
+
             modelBuilder.Entity("Sense.Modules.Organization.Domain.OrgUnitTypes.OrgUnitType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -571,6 +635,12 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.OrgUnits.OrgUnit", b =>
                 {
+                    b.HasOne("Sense.Modules.Organization.Domain.Locations.Location", null)
+                        .WithMany()
+                        .HasForeignKey("LocationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_org_units_locations_location_id");
+
                     b.HasOne("Sense.Modules.Organization.Domain.OrgUnits.OrgUnit", null)
                         .WithMany()
                         .HasForeignKey("ParentId")

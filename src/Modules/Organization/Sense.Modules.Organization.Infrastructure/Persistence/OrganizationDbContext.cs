@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
+using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Contracts.Context;
@@ -33,6 +34,8 @@ public sealed class OrganizationDbContext(DbContextOptions<OrganizationDbContext
     public DbSet<HolidayCalendar> HolidayCalendars => Set<HolidayCalendar>();
 
     public DbSet<HolidayCalendarEntry> HolidayCalendarEntries => Set<HolidayCalendarEntry>();
+
+    public DbSet<Location> Locations => Set<Location>();
 }
 
 internal static class OrganizationTables
@@ -43,11 +46,18 @@ internal static class OrganizationTables
     public const string ApprovalPolicyAssignments = "org_unit_approval_policy_assignments";
     public const string HolidayCalendars = "holiday_calendars";
     public const string HolidayCalendarEntries = "holiday_calendar_entries";
+    public const string Locations = "locations";
 
     public const int CodeLength = 50;
     public const int NameLength = 200;
     public const int RequestTypeLength = 50;
-    public const int CountryCodeLength = 10;
+    public const int AddressLength = 500;
+
+    /// <summary>HolidayCalendar's own country field (looser: not strictly validated as ISO alpha-2).</summary>
+    public const int HolidayCalendarCountryCodeLength = 10;
+
+    /// <summary>ISO 3166-1 alpha-2 country code length (e.g. "TR"), used by Location.</summary>
+    public const int CountryCodeLength = 2;
 }
 
 public sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUnitType>
@@ -86,6 +96,30 @@ public sealed class OrgUnitConfiguration : IEntityTypeConfiguration<OrgUnit>
         b.HasOne<OrgUnitType>().WithMany().HasForeignKey(x => x.TypeId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Restrict);
 
+        // LocationId was reserved (no FK) by roadmap item #4; this item (#6) adds the Location entity
+        // and wires the FK now that the referenced table exists. Same module/schema as OrgUnit, so -
+        // unlike ManagerEmployeeId (Employee.Contracts) - this gets a real DB constraint.
+        b.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class LocationConfiguration : IEntityTypeConfiguration<Location>
+{
+    public void Configure(EntityTypeBuilder<Location> b)
+    {
+        b.ToTable(OrganizationTables.Locations);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
+        b.Property(x => x.CountryCode).HasMaxLength(OrganizationTables.CountryCodeLength).IsRequired();
+        b.Property(x => x.Address).HasMaxLength(OrganizationTables.AddressLength);
+        b.Property(x => x.Type).HasConversion<int>();
+
+        b.HasIndex(x => x.TenantId);
+        b.HasIndex(x => new { x.TenantId, x.Name });
+
         b.Ignore(x => x.DomainEvents);
     }
 }
@@ -119,7 +153,7 @@ public sealed class HolidayCalendarConfiguration : IEntityTypeConfiguration<Holi
         b.HasKey(x => x.Id);
 
         b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
-        b.Property(x => x.CountryCode).HasMaxLength(OrganizationTables.CountryCodeLength).IsRequired();
+        b.Property(x => x.CountryCode).HasMaxLength(OrganizationTables.HolidayCalendarCountryCodeLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.Name });
 

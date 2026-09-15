@@ -1,5 +1,6 @@
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Shared.Contracts.Context;
@@ -32,7 +33,8 @@ public sealed class CreateOrgUnitHandler(
     ITenantContext tenant,
     IOrgUnitRepository units,
     IOrgUnitTypeRepository types,
-    IEmployeeLookup? employeeLookup = null) : ICommandHandler<CreateOrgUnitCommand, OrgUnitDto>
+    IEmployeeLookup? employeeLookup = null,
+    ILocationLookup? locationLookup = null) : ICommandHandler<CreateOrgUnitCommand, OrgUnitDto>
 {
     public async Task<Result<OrgUnitDto>> Handle(CreateOrgUnitCommand command, CancellationToken cancellationToken)
     {
@@ -60,6 +62,12 @@ public sealed class CreateOrgUnitHandler(
             !await employeeLookup.ExistsActiveAsync(tenant.TenantId, managerId, cancellationToken))
         {
             return Error.NotFound(OrganizationErrors.ManagerEmployeeNotFound);
+        }
+
+        if (command.LocationId is { } locationId && locationLookup is not null &&
+            !await locationLookup.ExistsActiveAsync(tenant.TenantId, locationId, cancellationToken))
+        {
+            return Error.NotFound(OrganizationErrors.LocationReferenceNotFound);
         }
 
         var result = OrgUnit.Create(tenant.TenantId, command.TypeId, command.ParentId, command.Name, command.SortOrder);
@@ -100,7 +108,8 @@ public sealed class UpdateOrgUnitValidator : AbstractValidator<UpdateOrgUnitComm
 public sealed class UpdateOrgUnitHandler(
     ITenantContext tenant,
     IOrgUnitRepository units,
-    IEmployeeLookup? employeeLookup = null) : ICommandHandler<UpdateOrgUnitCommand, OrgUnitDto>
+    IEmployeeLookup? employeeLookup = null,
+    ILocationLookup? locationLookup = null) : ICommandHandler<UpdateOrgUnitCommand, OrgUnitDto>
 {
     public async Task<Result<OrgUnitDto>> Handle(UpdateOrgUnitCommand command, CancellationToken cancellationToken)
     {
@@ -128,6 +137,12 @@ public sealed class UpdateOrgUnitHandler(
             !await employeeLookup.ExistsActiveAsync(tenant.TenantId, managerId, cancellationToken))
         {
             return Error.NotFound(OrganizationErrors.ManagerEmployeeNotFound);
+        }
+
+        if (command.LocationId is { } locationId && locationLookup is not null &&
+            !await locationLookup.ExistsActiveAsync(tenant.TenantId, locationId, cancellationToken))
+        {
+            return Error.NotFound(OrganizationErrors.LocationReferenceNotFound);
         }
 
         var unit = existing.Value;

@@ -43,11 +43,13 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IOrgUnitApprovalPolicyAssignmentRepository, OrgUnitApprovalPolicyAssignmentRepository>();
         services.AddScoped<IHolidayCalendarRepository, HolidayCalendarRepository>();
         services.AddScoped<IHolidayCalendarEntryRepository, HolidayCalendarEntryRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
 
-        // Cross-module read contract consumed by Employee (see IOrgUnitLookup)
+        // Cross-module read contracts consumed by other modules (see IOrgUnitLookup / ILocationLookup)
         services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();
 
         // Cross-module read contract for a tenant's effective holiday calendar (roadmap Faz 0 item #5)
         services.AddScoped<IHolidayCalendarLookup, HolidayCalendarLookup>();
+        services.AddScoped<ILocationLookup, LocationLookup>();
     }
 }

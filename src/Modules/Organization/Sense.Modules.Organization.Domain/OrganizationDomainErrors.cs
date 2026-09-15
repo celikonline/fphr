@@ -26,6 +26,12 @@ public static class OrganizationDomainErrors
 
     public const string HolidayCalendarEntryCalendarIdRequired = "organization.holiday_calendar_entry.calendar_id_required";
     public const string HolidayCalendarEntryNameRequired = "organization.holiday_calendar_entry.name_required";
+
+    public const string LocationNotFound = "organization.location.not_found";
+    public const string LocationNameRequired = "organization.location.name_required";
+    public const string LocationTypeInvalid = "organization.location.type_invalid";
+    public const string LocationCountryCodeInvalid = "organization.location.country_code_invalid";
+    public const string LocationAlreadyInactive = "organization.location.already_inactive";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -35,6 +41,10 @@ public static class OrganizationLimits
     public const int NameMaxLength = 200;
     public const int RequestTypeMaxLength = 50;
     public const int CountryCodeMaxLength = 10;
+    public const int AddressMaxLength = 500;
+
+    /// <summary>ISO 3166-1 alpha-2 country code length (e.g. "TR").</summary>
+    public const int CountryCodeLength = 2;
 
     /// <summary>Default cap on how many hierarchy levels (OrgUnitType rows) a tenant may define; see IOptions&lt;OrganizationOptions&gt; (future item).</summary>
     public const int MaxUnitTypesDefault = 10;
