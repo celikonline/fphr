@@ -1,7 +1,7 @@
 import * as Notifications from "expo-notifications";
 import { apiClient } from "@/lib/apiClient";
 import { SecureStorage } from "@/lib/storage";
-import { PushToken, NotificationPayload } from "@/types";
+import { NotificationPayload } from "@/types";
 
 // Set notification handler
 Notifications.setNotificationHandler({
@@ -13,8 +13,8 @@ Notifications.setNotificationHandler({
 });
 
 export class PushNotificationService {
-  private listenerRef: any = null;
-  private responseListenerRef: any = null;
+  private listenerRef: Notifications.Subscription | null = null;
+  private responseListenerRef: Notifications.Subscription | null = null;
 
   async registerPushToken(): Promise<string> {
     try {

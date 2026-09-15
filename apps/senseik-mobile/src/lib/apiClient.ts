@@ -1,10 +1,15 @@
-import axios, { AxiosInstance, AxiosError } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 import { SecureStorage } from "./storage";
 
-let isRefreshing = false;
-let failedQueue: any[] = [];
+interface QueuedRequest {
+  resolve: (token?: string | null) => void;
+  reject: (error: unknown) => void;
+}
 
-const processQueue = (error: any, token?: string | null) => {
+let isRefreshing = false;
+let failedQueue: QueuedRequest[] = [];
+
+const processQueue = (error: unknown, token?: string | null) => {
   failedQueue.forEach(prom => {
     if (error) {
       prom.reject(error);
@@ -12,7 +17,7 @@ const processQueue = (error: any, token?: string | null) => {
       prom.resolve(token);
     }
   });
-  
+
   isRefreshing = false;
   failedQueue = [];
 };
@@ -98,23 +103,23 @@ class ApiClient {
     );
   }
 
-  get<T = any>(url: string, config?: any) {
+  get<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.instance.get<T>(url, config);
   }
 
-  post<T = any>(url: string, data?: any, config?: any) {
+  post<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.instance.post<T>(url, data, config);
   }
 
-  put<T = any>(url: string, data?: any, config?: any) {
+  put<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.instance.put<T>(url, data, config);
   }
 
-  patch<T = any>(url: string, data?: any, config?: any) {
+  patch<T = unknown>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.instance.patch<T>(url, data, config);
   }
 
-  delete<T = any>(url: string, config?: any) {
+  delete<T = unknown>(url: string, config?: AxiosRequestConfig) {
     return this.instance.delete<T>(url, config);
   }
 

@@ -1,6 +1,6 @@
 import { authService } from "@/services/AuthService";
-import * as SecureStore from "expo-secure-store";
 import { apiClient } from "@/lib/apiClient";
+import { SecureStorage } from "@/lib/storage";
 
 jest.mock("@/lib/apiClient");
 jest.mock("@/lib/storage");
@@ -67,7 +67,7 @@ describe("AuthService", () => {
 
   describe("validateToken", () => {
     it("should validate token successfully", async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue("valid-token");
+      (SecureStorage.getAccessToken as jest.Mock).mockResolvedValue("valid-token");
       (apiClient.get as jest.Mock).mockResolvedValue({
         data: { id: "user-123", email: "test@example.com" }
       });
@@ -78,7 +78,7 @@ describe("AuthService", () => {
     });
 
     it("should return false if no token exists", async () => {
-      (SecureStore.getItemAsync as jest.Mock).mockResolvedValue(null);
+      (SecureStorage.getAccessToken as jest.Mock).mockResolvedValue(null);
 
       const result = await authService.validateToken();
 

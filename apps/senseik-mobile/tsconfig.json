@@ -24,8 +24,7 @@
       "@/store/*": ["src/store/*"],
       "@/types/*": ["src/types/*"],
       "@/styles/*": ["src/styles/*"]
-    },
-    "include": ["node_modules/@types", "node_modules/@senseik/"]
+    }
   },
   "include": [
     "src/**/*.ts",

@@ -25,7 +25,7 @@ export interface AuthStore {
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthStore>((set, get) => ({
+export const useAuthStore = create<AuthStore>((set) => ({
   // Initial state
   isAuthenticated: false,
   isLoading: false,
@@ -48,10 +48,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         tokens: response.tokens,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isAuthenticated: false,
-        error: error.message || "Login failed",
+        error: error instanceof Error ? error.message : "Login failed",
         isLoading: false
       });
       throw error;
@@ -69,10 +69,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         tokens: response.tokens,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isAuthenticated: false,
-        error: error.message || "Biometric login failed",
+        error: error instanceof Error ? error.message : "Biometric login failed",
         isLoading: false
       });
       throw error;
@@ -90,9 +90,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         tokens: null,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.message || "Logout failed",
+        error: error instanceof Error ? error.message : "Logout failed",
         isLoading: false
       });
       throw error;
@@ -107,10 +107,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         tokens,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
         isAuthenticated: false,
-        error: error.message || "Token refresh failed",
+        error: error instanceof Error ? error.message : "Token refresh failed",
         isLoading: false
       });
       throw error;
@@ -130,7 +130,6 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       if (isValid) {
         const user = await authService.getCurrentUser();
         const tenantId = await SecureStorage.getTenantId();
-        const userId = await SecureStorage.getUserId();
         const biometricEnabled = await SecureStorage.getBiometricEnabled();
 
         set({
@@ -143,11 +142,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       } else {
         set({ isAuthenticated: false, isLoading: false });
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Auth check failed:", error);
       set({
         isAuthenticated: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : "Auth check failed",
         isLoading: false
       });
     }
@@ -161,9 +160,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         biometricEnabled: true,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.message || "Failed to enable biometric",
+        error: error instanceof Error ? error.message : "Failed to enable biometric",
         isLoading: false
       });
       throw error;
@@ -178,9 +177,9 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         biometricEnabled: false,
         isLoading: false
       });
-    } catch (error: any) {
+    } catch (error) {
       set({
-        error: error.message || "Failed to disable biometric",
+        error: error instanceof Error ? error.message : "Failed to disable biometric",
         isLoading: false
       });
       throw error;

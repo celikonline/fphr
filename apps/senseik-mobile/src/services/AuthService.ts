@@ -3,6 +3,14 @@ import { SecureStorage, PreferenceStorage } from "@/lib/storage";
 import { biometricService } from "@/lib/biometric";
 import { User, AuthResponse, AuthTokens } from "@/types";
 
+interface RefreshTokenApiResponse {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn?: number;
+  };
+}
+
 export class AuthService {
   async login(email: string, password: string): Promise<AuthResponse> {
     try {
@@ -48,7 +56,7 @@ export class AuthService {
         throw new Error("No refresh token available");
       }
 
-      const response = await apiClient.post<any>("/api/auth/refresh", {
+      const response = await apiClient.post<RefreshTokenApiResponse>("/api/auth/refresh", {
         refreshToken
       });
 
@@ -94,7 +102,7 @@ export class AuthService {
     }
   }
 
-  async loginWithBiometric(email: string): Promise<AuthResponse> {
+  async loginWithBiometric(_email: string): Promise<AuthResponse> {
     try {
       // Authenticate with biometric
       const authenticated = await biometricService.authenticate("Login with your biometric");

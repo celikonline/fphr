@@ -7,7 +7,6 @@ import { useAuthStore } from "@/store/authStore";
 import { RootStackParamList, AuthStackParamList, AppStackParamList, MainTabsParamList } from "@/types/navigation";
 
 // Screens (will be created)
-import SplashScreen from "@/screens/SplashScreen";
 import LoginScreen from "@/screens/auth/LoginScreen";
 import BiometricPromptScreen from "@/screens/auth/BiometricPromptScreen";
 import ForgotPasswordScreen from "@/screens/auth/ForgotPasswordScreen";
@@ -27,8 +26,7 @@ function AuthNavigator() {
   return (
     <AuthStack.Navigator
       screenOptions={{
-        headerShown: false,
-        animationEnabled: true
+        headerShown: false
       }}
     >
       <AuthStack.Screen name="Login" component={LoginScreen} />
@@ -155,7 +153,7 @@ export function RootNavigator() {
             name="Auth"
             component={AuthNavigator}
             options={{
-              animationEnabled: false
+              animation: "none"
             }}
           />
         ) : (
@@ -163,7 +161,7 @@ export function RootNavigator() {
             name="App"
             component={AppNavigator}
             options={{
-              animationEnabled: false
+              animation: "none"
             }}
           />
         )}

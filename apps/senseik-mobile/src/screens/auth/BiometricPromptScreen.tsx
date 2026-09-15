@@ -7,15 +7,16 @@ import { useAuthStore } from "@/store/authStore";
 type Props = NativeStackScreenProps<AuthStackParamList, "BiometricPrompt">;
 
 export default function BiometricPromptScreen({ navigation, route }: Props) {
-  const { loginWithBiometric, isLoading } = useAuthStore();
+  const { loginWithBiometric } = useAuthStore();
   const { email } = route.params;
 
   useEffect(() => {
     const attemptBiometric = async () => {
       try {
         await loginWithBiometric(email);
-      } catch (error: any) {
-        Alert.alert("Biometric Login Failed", error.message || "Please try again");
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Please try again";
+        Alert.alert("Biometric Login Failed", message);
         navigation.goBack();
       }
     };

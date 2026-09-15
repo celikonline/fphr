@@ -3,7 +3,6 @@ import { StatusBar } from "expo-status-bar";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootNavigator } from "@/navigation/RootNavigator";
 import { pushNotificationService } from "@/services/PushNotificationService";
-import { SecureStorage } from "@/lib/storage";
 
 export default function App() {
   useEffect(() => {
@@ -43,7 +42,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar style="light" />
       <RootNavigator />
     </GestureHandlerRootView>
   );

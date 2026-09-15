@@ -49,7 +49,7 @@ export class BiometricService {
   async authenticate(reason: string = "Authenticate to access your account"): Promise<boolean> {
     try {
       const result = await LocalAuthentication.authenticateAsync({
-        reason,
+        promptMessage: reason,
         fallbackLabel: "Use password instead",
         disableDeviceFallback: false
       });

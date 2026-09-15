@@ -29,8 +29,9 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       await login(email, password);
-    } catch (error: any) {
-      Alert.alert("Login Failed", error.message || "An error occurred");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "An error occurred";
+      Alert.alert("Login Failed", message);
     }
   };
 

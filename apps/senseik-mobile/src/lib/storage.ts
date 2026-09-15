@@ -121,7 +121,7 @@ export const PreferenceStorage = {
   async getTheme(): Promise<"light" | "dark" | "auto"> {
     try {
       const theme = await AsyncStorage.getItem("theme");
-      return (theme as any) || "auto";
+      return (theme as "light" | "dark" | "auto" | null) || "auto";
     } catch (error) {
       console.error("Failed to retrieve theme preference:", error);
       return "auto";
@@ -163,7 +163,7 @@ export const PreferenceStorage = {
     }
   },
 
-  async setAppState(state: any): Promise<void> {
+  async setAppState(state: unknown): Promise<void> {
     try {
       await AsyncStorage.setItem("appState", JSON.stringify(state));
     } catch (error) {
@@ -171,7 +171,7 @@ export const PreferenceStorage = {
     }
   },
 
-  async getAppState(): Promise<any | null> {
+  async getAppState(): Promise<unknown | null> {
     try {
       const state = await AsyncStorage.getItem("appState");
       return state ? JSON.parse(state) : null;
