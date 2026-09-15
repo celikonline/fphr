@@ -29,6 +29,9 @@ import {
 import { Skeleton } from "./skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
+/** Smallest option of PaginationFooter's rows-per-page select. */
+const MIN_PAGE_SIZE_OPTION = 10;
+
 declare module "@tanstack/react-table" {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> {
@@ -46,6 +49,8 @@ export interface UseDataTableOptions<TData, TValue> {
   /** Controlled sorting. Passing `onSortingChange` switches to manual (server-side) sorting. */
   sorting?: SortingState;
   onSortingChange?: (sorting: SortingState) => void;
+  /** Starting sort for uncontrolled (client-side) sorting. */
+  initialSorting?: SortingState;
   /** Columns hidden until the user shows them from the column chooser. */
   initialColumnVisibility?: VisibilityState;
   /** localStorage key that remembers the user's column choice per browser. */
@@ -75,11 +80,12 @@ export function useDataTable<TData, TValue>({
   getRowId,
   sorting: controlledSorting,
   onSortingChange,
+  initialSorting = [],
   initialColumnVisibility = {},
   columnVisibilityKey,
   pageSize,
 }: UseDataTableOptions<TData, TValue>): TanStackTable<TData> {
-  const [localSorting, setLocalSorting] = React.useState<SortingState>([]);
+  const [localSorting, setLocalSorting] = React.useState<SortingState>(initialSorting);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
     () => readVisibility(columnVisibilityKey) ?? initialColumnVisibility
   );
@@ -145,7 +151,9 @@ export function DataTable<TData>({
 }: DataTableProps<TData>) {
   const rows = table.getRowModel().rows;
   const visibleColumnCount = table.getVisibleLeafColumns().length;
-  const clientPaged = table.options.getPaginationRowModel !== undefined;
+  // Client pager only once the rows exceed the smallest rows-per-page option; a handful of rows needs no footer.
+  const clientPaged =
+    table.options.getPaginationRowModel !== undefined && table.getPrePaginationRowModel().rows.length > MIN_PAGE_SIZE_OPTION;
 
   return (
     <div className={className}>

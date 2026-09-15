@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
@@ -68,58 +69,112 @@ export function OvertimeStatusBadge({ status }: { status: OvertimeRequestStatus 
 export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; actions?: (row: OvertimeRequest) => ReactNode }) {
   const { t, i18n } = useTranslation(["leave"]);
   const minutes = useMinutes();
-  const sorted = useMemo(
-    () => [...rows].sort((a, b) => b.workDate.localeCompare(a.workDate) || b.startTime.localeCompare(a.startTime)),
-    [rows],
-  );
 
-  if (sorted.length === 0) {
+  const columns: ColumnDef<OvertimeRequest>[] = [
+    {
+      id: "workDate",
+      // Date then start time, so the default newest-first order keeps same-day records in time order.
+      accessorFn: (row) => `${row.workDate}T${row.startTime}`,
+      header: t("leave:overtime.workDate"),
+      meta: { label: t("leave:overtime.workDate"), cellClassName: "whitespace-nowrap font-medium" },
+      cell: ({ row }) => formatDateOnly(row.original.workDate, i18n.language),
+    },
+    {
+      id: "startTime",
+      accessorKey: "startTime",
+      header: t("leave:overtime.startTime"),
+      meta: { label: t("leave:overtime.startTime"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => formatTimeOnly(row.original.startTime),
+    },
+    {
+      id: "duration",
+      accessorKey: "durationMinutes",
+      header: t("leave:overtime.duration"),
+      meta: { label: t("leave:overtime.duration"), cellClassName: "whitespace-nowrap text-right" },
+      cell: ({ row }) => minutes(row.original.durationMinutes),
+    },
+    {
+      id: "payable",
+      accessorKey: "payableMinutes",
+      header: t("leave:overtime.payable"),
+      meta: { label: t("leave:overtime.payable"), cellClassName: "whitespace-nowrap text-right" },
+      cell: ({ row }) => (
+        <span
+          title={
+            row.original.overlapWithScheduleMinutes > 0
+              ? t("leave:overtime.overlapHint", { value: minutes(row.original.overlapWithScheduleMinutes) })
+              : undefined
+          }
+        >
+          {minutes(row.original.payableMinutes)}
+        </span>
+      ),
+    },
+    {
+      id: "dayKind",
+      accessorFn: (row) => t(`leave:overtime.dayKinds.${row.dayKind}`),
+      header: t("leave:overtime.dayKind"),
+      meta: { label: t("leave:overtime.dayKind") },
+    },
+    {
+      id: "status",
+      accessorKey: "status",
+      header: t("leave:requests.status"),
+      meta: { label: t("leave:requests.status") },
+      cell: ({ row }) => (
+        <div className="flex flex-wrap items-center gap-1">
+          <OvertimeStatusBadge status={row.original.status} />
+          {row.original.conversionId && <Badge variant="outline">{t("leave:overtime.converted")}</Badge>}
+        </div>
+      ),
+    },
+    {
+      id: "source",
+      accessorFn: (row) => t(`leave:overtime.sources.${row.source}`),
+      header: t("leave:requests.source"),
+      meta: { label: t("leave:requests.source") },
+    },
+    {
+      id: "description",
+      enableSorting: false,
+      header: t("leave:requests.description"),
+      meta: { label: t("leave:requests.description"), cellClassName: "max-w-[16rem] truncate" },
+      cell: ({ row }) => <span title={row.original.description ?? undefined}>{row.original.description ?? "—"}</span>,
+    },
+    ...(actions
+      ? [
+          {
+            id: "actions",
+            enableSorting: false,
+            enableHiding: false,
+            meta: { headerClassName: "w-0" },
+            header: () => null,
+            cell: ({ row }) => actions(row.original),
+          } satisfies ColumnDef<OvertimeRequest>,
+        ]
+      : []),
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: rows,
+    getRowId: (row) => row.id,
+    initialSorting: [{ id: "workDate", desc: true }],
+    columnVisibilityKey: "senseik.leave.overtimes.columns",
+    pageSize: 20,
+  });
+
+  if (rows.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("leave:overtime.empty")}</p>;
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("leave:overtime.workDate")}</TableHead>
-          <TableHead>{t("leave:overtime.startTime")}</TableHead>
-          <TableHead className="text-right">{t("leave:overtime.duration")}</TableHead>
-          <TableHead className="text-right">{t("leave:overtime.payable")}</TableHead>
-          <TableHead>{t("leave:overtime.dayKind")}</TableHead>
-          <TableHead>{t("leave:requests.status")}</TableHead>
-          <TableHead>{t("leave:requests.source")}</TableHead>
-          <TableHead>{t("leave:requests.description")}</TableHead>
-          {actions && <TableHead className="w-0" />}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sorted.map((row) => (
-          <TableRow key={row.id}>
-            <TableCell className="whitespace-nowrap font-medium">{formatDateOnly(row.workDate, i18n.language)}</TableCell>
-            <TableCell className="whitespace-nowrap">{formatTimeOnly(row.startTime)}</TableCell>
-            <TableCell className="whitespace-nowrap text-right">{minutes(row.durationMinutes)}</TableCell>
-            <TableCell
-              className="whitespace-nowrap text-right"
-              title={row.overlapWithScheduleMinutes > 0 ? t("leave:overtime.overlapHint", { value: minutes(row.overlapWithScheduleMinutes) }) : undefined}
-            >
-              {minutes(row.payableMinutes)}
-            </TableCell>
-            <TableCell>{t(`leave:overtime.dayKinds.${row.dayKind}`)}</TableCell>
-            <TableCell>
-              <div className="flex flex-wrap items-center gap-1">
-                <OvertimeStatusBadge status={row.status} />
-                {row.conversionId && <Badge variant="outline">{t("leave:overtime.converted")}</Badge>}
-              </div>
-            </TableCell>
-            <TableCell>{t(`leave:overtime.sources.${row.source}`)}</TableCell>
-            <TableCell className="max-w-[16rem] truncate" title={row.description ?? undefined}>
-              {row.description ?? "—"}
-            </TableCell>
-            {actions && <TableCell>{actions(row)}</TableCell>}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="space-y-2">
+      <div className="flex justify-end">
+        <DataTableViewOptions table={table} />
+      </div>
+      <DataTable table={table} />
+    </div>
   );
 }
 
