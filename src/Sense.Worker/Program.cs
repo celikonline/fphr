@@ -8,6 +8,9 @@ using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Modules.Workflow.Contracts;
+using Sense.Modules.Workflow.Domain;
+using Sense.Modules.Workflow.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -40,6 +43,16 @@ builder.Services.AddModuleHandlers(
     typeof(EmployeeDbContext).Assembly,
     typeof(IEmployeeRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<EmployeeDbContext>>();
+
+// Workflow writes ApprovalCompleted/ApprovalRejected to its own outbox (see IIntegrationEventOutbox usages in
+// Sense.Modules.Workflow.Application's decision handlers) - same reasoning as Organization above.
+builder.Services.AddModuleDbContext<WorkflowDbContext>(builder.Configuration, WorkflowDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    WorkflowDbContext.SchemaName,
+    typeof(WorkflowPermissions).Assembly,
+    typeof(WorkflowDbContext).Assembly,
+    typeof(IApprovalPolicyRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<WorkflowDbContext>>();
 
 await builder.Build().RunAsync();
 

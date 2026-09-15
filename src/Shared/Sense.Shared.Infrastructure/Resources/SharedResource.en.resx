@@ -391,4 +391,27 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="import.outcome.Updated" xml:space="preserve"><value>Updated</value></data>
   <data name="import.outcome.Skipped" xml:space="preserve"><value>Skipped</value></data>
   <data name="import.outcome.Error" xml:space="preserve"><value>Error</value></data>
+
+  <!-- Workflow: approval policies, requests/tasks, e-mail decisions (Faz 1a B1) -->
+  <data name="workflow.policies.read" xml:space="preserve"><value>View approval policies</value></data>
+  <data name="workflow.policies.create" xml:space="preserve"><value>Create approval policy</value></data>
+  <data name="workflow.policies.update" xml:space="preserve"><value>Update approval policy</value></data>
+  <data name="workflow.policies.delete" xml:space="preserve"><value>Deactivate approval policy</value></data>
+  <data name="workflow.inbox.view" xml:space="preserve"><value>View approval inbox</value></data>
+  <data name="workflow.inbox.decide" xml:space="preserve"><value>Decide approval task</value></data>
+  <data name="workflow.request.override" xml:space="preserve"><value>Override approval decision</value></data>
+  <data name="workflow.my.requests" xml:space="preserve"><value>View my approval requests</value></data>
+
+  <data name="workflow.policy.not_found" xml:space="preserve"><value>Approval policy not found.</value></data>
+  <data name="workflow.policy.max_steps_exceeded" xml:space="preserve"><value>An approval policy can have at most {MaxSteps} steps.</value></data>
+  <data name="workflow.policy.step_approver_invalid" xml:space="preserve"><value>The selected approver was not found or is inactive.</value></data>
+  <data name="workflow.request.not_found" xml:space="preserve"><value>Approval request not found.</value></data>
+  <data name="workflow.request.not_pending" xml:space="preserve"><value>The approval request is no longer pending.</value></data>
+  <data name="workflow.request.requester_not_found" xml:space="preserve"><value>Requester not found.</value></data>
+  <data name="workflow.task.not_found" xml:space="preserve"><value>Approval task not found.</value></data>
+  <data name="workflow.task.not_current" xml:space="preserve"><value>This task is no longer the current step.</value></data>
+  <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
+  <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
+  <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
+  <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
 </root>

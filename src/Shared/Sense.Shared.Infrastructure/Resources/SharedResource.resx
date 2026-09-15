@@ -400,4 +400,27 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.outcome.Updated" xml:space="preserve"><value>Güncellendi</value></data>
   <data name="import.outcome.Skipped" xml:space="preserve"><value>Atlandı</value></data>
   <data name="import.outcome.Error" xml:space="preserve"><value>Hata</value></data>
+
+  <!-- Workflow: approval policies, requests/tasks, e-mail decisions (Faz 1a B1) -->
+  <data name="workflow.policies.read" xml:space="preserve"><value>Onay süreçlerini görüntüleme</value></data>
+  <data name="workflow.policies.create" xml:space="preserve"><value>Onay süreci oluşturma</value></data>
+  <data name="workflow.policies.update" xml:space="preserve"><value>Onay sürecini düzenleme</value></data>
+  <data name="workflow.policies.delete" xml:space="preserve"><value>Onay sürecini devre dışı bırakma</value></data>
+  <data name="workflow.inbox.view" xml:space="preserve"><value>Onay kutusunu görüntüleme</value></data>
+  <data name="workflow.inbox.decide" xml:space="preserve"><value>Onay görevine karar verme</value></data>
+  <data name="workflow.request.override" xml:space="preserve"><value>Onay kararını yetkiyle geçersiz kılma</value></data>
+  <data name="workflow.my.requests" xml:space="preserve"><value>Kendi taleplerimi görüntüleme</value></data>
+
+  <data name="workflow.policy.not_found" xml:space="preserve"><value>Onay süreci bulunamadı.</value></data>
+  <data name="workflow.policy.max_steps_exceeded" xml:space="preserve"><value>Onay süreci en fazla {MaxSteps} kademe içerebilir.</value></data>
+  <data name="workflow.policy.step_approver_invalid" xml:space="preserve"><value>Onaycı olarak seçilen çalışan bulunamadı veya pasif.</value></data>
+  <data name="workflow.request.not_found" xml:space="preserve"><value>Onay talebi bulunamadı.</value></data>
+  <data name="workflow.request.not_pending" xml:space="preserve"><value>Onay talebi artık bekleme durumunda değil.</value></data>
+  <data name="workflow.request.requester_not_found" xml:space="preserve"><value>Talep sahibi bulunamadı.</value></data>
+  <data name="workflow.task.not_found" xml:space="preserve"><value>Onay görevi bulunamadı.</value></data>
+  <data name="workflow.task.not_current" xml:space="preserve"><value>Bu görev artık sırada değil.</value></data>
+  <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>Bu onay görevine karar verme yetkiniz yok.</value></data>
+  <data name="workflow.token.invalid" xml:space="preserve"><value>Onay bağlantısı geçersiz.</value></data>
+  <data name="workflow.token.expired" xml:space="preserve"><value>Onay bağlantısının süresi dolmuş.</value></data>
+  <data name="workflow.token.already_used" xml:space="preserve"><value>Onay bağlantısı daha önce kullanılmış.</value></data>
 </root>
