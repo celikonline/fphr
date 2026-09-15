@@ -1,11 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2, Upload } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FileDropzone } from "@/components/ui/file-dropzone";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,7 +24,8 @@ import {
   type WeekDay,
 } from "@/services/company.service";
 
-const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const WEEK_DAYS: WeekDay[] =["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 const schema = z.object({
   name: z.string().min(1),
@@ -56,7 +58,6 @@ function toFormValues(profile: CompanyProfile): FormValues {
 export default function CompanyProfilePage() {
   const { t } = useTranslation(["company", "common"]);
   const queryClient = useQueryClient();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const canManage = usePermission("identity.tenant.manage");
 
   const { data: profile, isLoading } = useQuery({
@@ -166,26 +167,18 @@ export default function CompanyProfilePage() {
             <AvatarImage src={profile.logoUrl} alt={profile.name} />
             <AvatarFallback>{profile.name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <input
-            ref={fileInputRef}
-            type="file"
+          <FileDropzone
+            className="flex-1"
             accept="image/png,image/jpeg"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) logoMutation.mutate(file);
-              e.target.value = "";
-            }}
+            maxBytes={LOGO_MAX_BYTES}
+            disabled={!canManage}
+            busy={logoMutation.isPending}
+            title={t("company:uploadLogo")}
+            hint={t("company:logoDropHint")}
+            busyLabel={t("company:uploadingLogo")}
+            onFile={(file) => logoMutation.mutate(file)}
+            onReject={() => toast({ variant: "destructive", title: t("common:error"), description: t("company:logoRejected") })}
           />
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!canManage || logoMutation.isPending}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            {logoMutation.isPending ? t("company:uploadingLogo") : t("company:uploadLogo")}
-          </Button>
         </CardContent>
       </Card>
 

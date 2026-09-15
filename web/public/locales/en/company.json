@@ -16,6 +16,8 @@
   "uploadLogo": "Upload Logo",
   "uploadingLogo": "Uploading...",
   "logoHint": "PNG or JPG, up to 2MB.",
+  "logoDropHint": "Drag and drop the logo or click to choose",
+  "logoRejected": "The logo must be a PNG or JPG of at most 2MB.",
   "saveSuccess": "Company profile saved.",
   "saveError": "Could not save company profile.",
   "logoSuccess": "Logo updated.",
