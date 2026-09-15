@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Auth;
+using Sense.Modules.Identity.Application.Invitations;
 using Sense.Modules.Identity.Application.Tenants;
 using Sense.Modules.Identity.Application.Users;
 using Sense.Shared.Web.Controllers;
@@ -81,6 +82,10 @@ public sealed class TenantsController : ApiControllerBase
 
 public sealed record AcceptInvitationRequest(string Token, string Password, bool PrivacyNoticeAccepted);
 
+public sealed record InviteEmployeeRequest(Guid EmployeeId);
+
+public sealed record BulkInviteEmployeesRequest(Sense.Modules.Employee.Contracts.EmployeeSelection Selection);
+
 /// <summary>Davetler: liste, iptal (yetkili) ve anonim önizleme/kabul.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route(IdentityRoutes.Invitations)]
@@ -96,6 +101,20 @@ public sealed class InvitationsController : ApiControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Revoke(Guid id, CancellationToken ct) => FromResult(await Dispatcher.Send(new RevokeInvitationCommand(id), ct));
+
+    /// <summary>Çalışana davet (iş e-postası, yoksa kişisel e-posta); hesabı yoksa Employee rolüyle oluşturulur.</summary>
+    [HttpPost("employee")]
+    [Authorize]
+    [ProducesResponseType<EmployeeInvitationResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> InviteEmployee([FromBody] InviteEmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new InviteEmployeeCommand(request.EmployeeId), ct));
+
+    /// <summary>Grid seçimindeki çalışanlara toplu davet ("Giriş bilgilerini gönder").</summary>
+    [HttpPost("employees/bulk")]
+    [Authorize]
+    [ProducesResponseType<Shared.Contracts.Bulk.BulkOperationResult>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> BulkInviteEmployees([FromBody] BulkInviteEmployeesRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new BulkInviteEmployeesCommand(request.Selection), ct));
 
     [HttpGet("preview/{token}")]
     [AllowAnonymous]

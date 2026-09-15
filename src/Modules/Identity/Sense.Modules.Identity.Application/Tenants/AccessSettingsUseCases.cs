@@ -25,6 +25,8 @@ public sealed record AccessSettingsDto(
     bool ShowCalendarMenu,
     bool ShowAllLeavesInCalendar)
 {
+    public static readonly AccessSettingsDto AllEnabled = new(true, true, true, true, true, true, true, true, true, true, true);
+
     public static AccessSettingsDto From(TenantAccessSettings s) => new(
         s.ShowOrgInfo, s.ShowUpcomingLeaves, s.ShowUpcomingBirthdays, s.ShowEventCalendar, s.ShowFiles, s.ShowAssets,
         s.ShowWorkPhoneNumbers, s.ShowOrgChart, s.ShowCustomFields,

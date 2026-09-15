@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Kernel.Results;
@@ -18,16 +19,31 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         return employee is null ? Error.NotFound(EmployeeDomainErrors.EmployeeNotFound) : employee;
     }
 
-    public async Task<IReadOnlyList<EmployeeEntity>> ListByTenantAsync(int skip, int take, CancellationToken cancellationToken = default) =>
-        await context.Employees
-            .OrderBy(e => e.DisplayName)
-            .Skip(skip)
-            .Take(take)
-            .ToListAsync(cancellationToken);
+    public async Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
 
-    public async Task<int> CountByTenantAsync(CancellationToken cancellationToken = default) =>
-        await context.Employees.CountAsync(cancellationToken);
+        var list = ids.ToList();
+        return await context.Employees.Where(e => list.Contains(e.Id)).ToListAsync(cancellationToken);
+    }
 
     public async Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(e => e.Id == employeeId && e.Status != EmployeeStatus.Inactive, cancellationToken);
+
+    public async Task<bool> NationalIdTakenAsync(string nationalId, Guid? exceptEmployeeId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AnyAsync(e => e.NationalId == nationalId && (exceptEmployeeId == null || e.Id != exceptEmployeeId), cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default) =>
+        await context.Employees.AsNoTracking()
+            .Select(e => new { e.Id, e.ManagerEmployeeId })
+            .ToDictionaryAsync(e => e.Id, e => e.ManagerEmployeeId, cancellationToken);
+}
+
+/// <summary>Saves the Employee DbContext directly (SaveChanges is atomic: all pending changes or none).</summary>
+public sealed class EmployeeUnitOfWork(EmployeeDbContext context) : IEmployeeUnitOfWork
+{
+    public Task SaveChangesAsync(CancellationToken ct) => context.SaveChangesAsync(ct);
 }

@@ -30,6 +30,10 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
                     b.Property<Guid?>("ApprovedByUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("approved_by_user_id");
@@ -112,6 +116,10 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("accepted_at");
 
+                    b.Property<Guid?>("BatchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("batch_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -125,6 +133,12 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("character varying(254)")
                         .HasColumnName("email");
+
+                    b.Property<string>("EmailSource")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("email_source");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
@@ -168,6 +182,9 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id")
                         .HasName("pk_invitations");
+
+                    b.HasIndex("BatchId")
+                        .HasDatabaseName("ix_invitations_batch_id");
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_invitations_tenant_id");
@@ -900,7 +917,6 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                                 .HasColumnName("user_id");
 
                             b1.Property<Guid>("RoleId")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("uuid")
                                 .HasColumnName("role_id");
 

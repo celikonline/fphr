@@ -158,15 +158,35 @@ public sealed class ObservabilityOptions
 
     public bool EnableTracing { get; set; } = true;
 
+    /// <summary>Kök (parent'sız) izlerin örneklenme oranı (0.0-1.0); üst servisten gelen örnekleme kararına her zaman uyulur.</summary>
+    public double TracingSampleRatio { get; set; } = ObservabilityDefaults.TracingSampleRatio;
+
     public bool EnableMetrics { get; set; } = true;
+
+    /// <summary>Prometheus'un scrape ettiği uç nokta (OpenTelemetry metrikleri Prometheus metin formatında).</summary>
+    public string MetricsPath { get; set; } = ObservabilityDefaults.MetricsPath;
 
     /// <summary>Sentry performans izleme örnekleme oranı (0.0-1.0); hata yakalama her zaman 1.0'dır.</summary>
     public double SentryTracesSampleRate { get; set; } = ObservabilityDefaults.SentryTracesSampleRate;
+
+    public LogExportOptions Logs { get; set; } = new();
+}
+
+/// <summary>Serilog → OTLP/HTTP log aktarımı (varsayılan hedef: Loki'nin yerel OTLP alıcısı, Grafana'dan sorgulanır).</summary>
+public sealed class LogExportOptions
+{
+    public bool Enabled { get; set; }
+
+    /// <summary>Tam OTLP logs URL'i; Loki için <c>http://{host}:3100/otlp/v1/logs</c>.</summary>
+    public string Endpoint { get; set; } = ObservabilityDefaults.LogsEndpoint;
 }
 
 public static class ObservabilityDefaults
 {
     public const string ServiceName = "SenseIK.Api";
     public const string OtlpEndpoint = "http://localhost:4317";
+    public const string LogsEndpoint = "http://localhost:3100/otlp/v1/logs";
+    public const string MetricsPath = "/metrics";
+    public const double TracingSampleRatio = 1.0;
     public const double SentryTracesSampleRate = 0.1;
 }

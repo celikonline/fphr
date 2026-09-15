@@ -10,21 +10,35 @@ namespace Sense.Shared.Infrastructure.Messaging.Behaviours;
 /// <summary>
 /// [RequiresPermission] ile işaretli isteklerde izin, <see cref="IScopedRequest"/> isteklerde hedef çalışan kapsamı denetlenir.
 /// API dışından (job, event) çağrılan use case'ler için de aynı kural geçerlidir.
+/// Platform bayraklı (platform_admin / act) bir kimlik yalnız aktif, süresi dolmamış bir ImpersonationGrant ile
+/// (<see cref="IImpersonationSessionValidator"/>) kiracı üzerinde işlem yapabilir; aksi halde her istek 403'tür.
 /// </summary>
 public sealed class AuthorizationBehaviour<TRequest, TResponse>(
     ICurrentUser user,
     IPermissionService permissions,
-    IDataScopeService dataScope) : IPipelineBehaviour<TRequest, TResponse>
+    IDataScopeService dataScope,
+    IImpersonationSessionValidator? impersonationSessions = null) : IPipelineBehaviour<TRequest, TResponse>
     where TRequest : notnull
     where TResponse : Result
 {
     private const string PermissionArg = "permission";
+    private const string ImpersonationCheck = "platform.impersonation_session";
 
     private static readonly RequiresPermissionAttribute[] Required =
         typeof(TRequest).GetCustomAttributes<RequiresPermissionAttribute>(inherit: true).ToArray();
 
     public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
+        if (user.ClaimsPlatformAccess())
+        {
+            var sessionActive = impersonationSessions is not null
+                && await impersonationSessions.IsActiveAsync(cancellationToken).ConfigureAwait(false);
+            TracePermissionCheck(ImpersonationCheck, sessionActive);
+            return sessionActive
+                ? await next().ConfigureAwait(false)
+                : Fail(Error.Forbidden(ErrorCodes.Forbidden, (PermissionArg, ImpersonationCheck)));
+        }
+
         if (Required.Length == 0)
         {
             return await next().ConfigureAwait(false);
@@ -33,11 +47,6 @@ public sealed class AuthorizationBehaviour<TRequest, TResponse>(
         if (!user.IsAuthenticated || user.UserId is null)
         {
             return Fail(Error.Unauthorized(ErrorCodes.Unauthenticated));
-        }
-
-        if (user.IsPlatformAdmin)
-        {
-            return await next().ConfigureAwait(false);
         }
 
         foreach (var attr in Required)

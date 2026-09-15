@@ -71,8 +71,10 @@ public sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUnitT
         b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
-        b.HasIndex(x => new { x.TenantId, x.SortOrder }).IsUnique();
+        // Not unique: renumbering several levels in one SaveChanges would trip a non-deferrable unique index mid-update.
+        b.HasIndex(x => new { x.TenantId, x.SortOrder });
 
+        b.Ignore(x => x.IsCompanyLevel);
         b.Ignore(x => x.DomainEvents);
     }
 }

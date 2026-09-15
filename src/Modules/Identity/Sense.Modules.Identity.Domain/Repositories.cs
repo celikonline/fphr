@@ -83,6 +83,12 @@ public interface IImpersonationGrantRepository
     Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct);
 
     void Add(ImpersonationGrant grant);
+
+    /// <summary>
+    /// Ekler ve hemen kaydeder: talep, çağıranın (platform) kiracısından hedef kiracının kapsamına geçilerek oluşturulur; komutun
+    /// unit of work'ü kapsam sona erdikten sonra (platform kiracısında) kaydedeceği için kiracı yazma denetimine takılırdı.
+    /// </summary>
+    Task AddAndSaveAsync(ImpersonationGrant grant, CancellationToken ct);
 }
 
 public interface IUnitAuthorizationRepository

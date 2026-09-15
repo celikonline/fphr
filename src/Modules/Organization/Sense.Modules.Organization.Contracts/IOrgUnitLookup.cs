@@ -12,4 +12,19 @@ public interface IOrgUnitLookup
 {
     /// <summary>True if an active org unit with this id exists for the given tenant.</summary>
     Task<bool> ExistsActiveAsync(Guid tenantId, Guid orgUnitId, CancellationToken cancellationToken = default);
+
+    /// <summary>The given active units plus all of their active descendants (inactive/unknown ids are dropped; an inactive unit's subtree is not walked).</summary>
+    Task<IReadOnlyList<Guid>> GetSelfAndDescendantIdsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default);
+
+    /// <summary>Active hierarchy levels ordered by SortOrder (Company first).</summary>
+    Task<IReadOnlyList<OrgUnitTypeInfo>> ListActiveTypesAsync(Guid tenantId, CancellationToken ct = default);
+
+    /// <summary>All active org units of the tenant (flat; ParentId gives the tree).</summary>
+    Task<IReadOnlyList<OrgUnitInfo>> ListActiveUnitsAsync(Guid tenantId, CancellationToken ct = default);
 }
+
+/// <summary>Active hierarchy level (OrgUnitType) as seen by other modules.</summary>
+public sealed record OrgUnitTypeInfo(Guid Id, string Code, string Name, int SortOrder);
+
+/// <summary>Active org unit as seen by other modules.</summary>
+public sealed record OrgUnitInfo(Guid Id, Guid TypeId, Guid? ParentId, string Name);

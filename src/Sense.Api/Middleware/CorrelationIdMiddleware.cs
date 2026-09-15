@@ -1,30 +1,58 @@
+using System.Diagnostics;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Observability;
 
 namespace Sense.Api.Middleware;
 
 /// <summary>
-/// Pipeline'ın en başında çalışır (kimlik doğrulamadan bile önce): X-Correlation-Id isteği okur, yoksa üretir;
-/// HttpContext.Items ve AsyncLocal tabanlı <see cref="ICorrelationIdContextSetter"/> içine yazar ve yanıt
-/// başlığına ekler. Böylece hem sonraki middleware'ler (RequestContextMiddleware, GlobalExceptionHandler)
-/// hem de Serilog <see cref="CorrelationIdEnricher"/> aynı kimliği görür.
+/// Pipeline'ın en başında çalışır (kimlik doğrulamadan bile önce) ve isteğin izleme kimliklerini kurar:
+/// <list type="bullet">
+/// <item><c>X-Correlation-Id</c>: istekten okunur; yoksa (veya geçersizse) proxy'nin <c>X-Request-Id</c>'si, o da yoksa yeni GUID.
+/// HttpContext.Items ve AsyncLocal tabanlı <see cref="ICorrelationIdContextSetter"/> içine yazılır, span'e etiketlenir.</item>
+/// <item><c>X-Request-Id</c>: bu tek isteğin kimliği; gelen değer korunur, yoksa <see cref="HttpContext.TraceIdentifier"/>.</item>
+/// <item><c>X-Trace-Id</c>: aktif W3C trace id; istemci/destek ekibi izi Jaeger'de doğrudan bulabilsin diye yanıtta döner.</item>
+/// </list>
+/// Böylece hem sonraki middleware'ler (RequestContextMiddleware, GlobalExceptionHandler) hem de Serilog
+/// <see cref="CorrelationIdEnricher"/> aynı kimliği görür. Yanıt başlıkları <c>OnStarting</c>'de yeniden yazılır:
+/// UseExceptionHandler hata durumunda yanıtı (başlıklar dahil) temizlediğinden 500 yanıtları da kimlikleri taşır.
 /// </summary>
 public sealed class CorrelationIdMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, ICorrelationIdContextSetter correlationIdContextSetter)
     {
-        var correlationId = context.Request.Headers[SenseHeaderNames.CorrelationId].FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(correlationId))
-        {
-            correlationId = Guid.NewGuid().ToString();
-        }
+        var headers = context.Request.Headers;
+        var incomingRequestId = HeaderValues.Read(headers, SenseHeaderNames.RequestId, HeaderValues.MaxIdLength);
+        var correlationId = HeaderValues.Read(headers, SenseHeaderNames.CorrelationId, HeaderValues.MaxIdLength)
+            ?? incomingRequestId
+            ?? Guid.NewGuid().ToString();
+        var requestId = incomingRequestId ?? context.TraceIdentifier;
+
+        var activity = Activity.Current;
+        activity?.SetTag(SenseActivitySources.Tags.CorrelationId, correlationId);
+        var traceId = activity?.TraceId.ToHexString();
 
         context.Items[CorrelationIdContext.HttpContextItemKey] = correlationId;
-        context.Response.Headers[SenseHeaderNames.CorrelationId] = correlationId;
+
+        WriteResponseHeaders(context.Response, correlationId, requestId, traceId);
+        context.Response.OnStarting(() =>
+        {
+            WriteResponseHeaders(context.Response, correlationId, requestId, traceId);
+            return Task.CompletedTask;
+        });
 
         using (correlationIdContextSetter.BeginScope(correlationId))
         {
             await next(context).ConfigureAwait(false);
+        }
+    }
+
+    private static void WriteResponseHeaders(HttpResponse response, string correlationId, string requestId, string? traceId)
+    {
+        response.Headers[SenseHeaderNames.CorrelationId] = correlationId;
+        response.Headers[SenseHeaderNames.RequestId] = requestId;
+        if (traceId is not null)
+        {
+            response.Headers[SenseHeaderNames.TraceId] = traceId;
         }
     }
 }

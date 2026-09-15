@@ -36,7 +36,7 @@ export function useAsync<T>(
     error: null,
   });
 
-  const executeRef = useRef<() => Promise<T>>();
+  const executeRef = useRef<(() => Promise<T>) | undefined>(undefined);
 
   const execute = useCallback(async () => {
     setState({ status: "loading", data: null, error: null });

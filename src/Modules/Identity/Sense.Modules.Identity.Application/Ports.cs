@@ -25,8 +25,8 @@ public sealed record AccessToken(string Token, DateTime ExpiresAtUtc);
 public interface ITokenService
 {
     /// <summary>
-    /// <paramref name="impersonatorUserId"/> verilirse token'a `act` claim'i ve (bypass ile geniş erişim için)
-    /// `platform_admin` claim'i eklenir; <paramref name="maxExpiresAtUtc"/> verilirse token süresi bununla sınırlanır
+    /// <paramref name="impersonatorUserId"/> verilirse token'a `act` ve `platform_admin` claim'leri eklenir (erişim yalnız aktif
+    /// grant varken geçerlidir, bkz. IImpersonationSessionValidator); <paramref name="maxExpiresAtUtc"/> verilirse token süresi bununla sınırlanır
     /// (ör. onaylı impersonation grantının ExpiresAt'i) — oturum, standart JWT doğrulaması sayesinde her istekte
     /// otomatik olarak sona erer.
     /// </summary>

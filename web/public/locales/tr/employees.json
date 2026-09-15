@@ -1,0 +1,185 @@
+{
+  "title": "Çalışanlar",
+  "subtitle": "Çalışan kayıtlarını görüntüleyin, filtreleyin ve toplu işlem yapın.",
+  "cardTitle": "Çalışan kartı",
+  "orgChartTitle": "Organizasyon şeması",
+  "searchPlaceholder": "Ad, e-posta veya kimlik numarası ara",
+  "empty": "Henüz çalışan yok.",
+  "emptyFiltered": "Filtreye uyan çalışan bulunamadı.",
+  "genericError": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
+  "loading": "Yükleniyor...",
+  "unknownUnit": "Bilinmeyen birim",
+  "unknownEmployee": "Bilinmeyen çalışan",
+  "noUnit": "Birim yok",
+  "phase": "Faz {{phase}}",
+  "create": {
+    "button": "Yeni çalışan ekle",
+    "title": "Yeni çalışan ekle",
+    "description": "Ad ve soyad yeterlidir; diğer bilgileri daha sonra çalışan kartından tamamlayabilirsiniz.",
+    "success": "Çalışan oluşturuldu."
+  },
+  "filters": {
+    "orgUnit": "Birim",
+    "allUnits": "Tüm birimler",
+    "includeSubUnits": "Alt birimler dahil",
+    "status": "Durum",
+    "all": "Tümü",
+    "hasUserAccount": "Kullanıcı hesabı",
+    "withAccount": "Hesabı olanlar",
+    "withoutAccount": "Hesabı olmayanlar"
+  },
+  "columns": {
+    "name": "Ad soyad",
+    "orgUnit": "Birim",
+    "manager": "Yönetici",
+    "workEmail": "İş e-postası",
+    "workPhone": "İş telefonu",
+    "status": "Durum",
+    "accountStatus": "Hesap",
+    "hireDate": "İşe başlama"
+  },
+  "status": {
+    "Active": "Aktif",
+    "Inactive": "Pasif",
+    "OnLeave": "İzinde"
+  },
+  "accountStatus": {
+    "none": "Hesap yok",
+    "invited": "Davet edildi",
+    "active": "Aktif",
+    "locked": "Kilitli",
+    "disabled": "Devre dışı"
+  },
+  "accessType": {
+    "Employee": "Çalışan",
+    "Owner": "Hesap sahibi",
+    "Admin": "Yönetici"
+  },
+  "fields": {
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "nationalId": "Kimlik numarası",
+    "workEmail": "İş e-postası",
+    "personalEmail": "Kişisel e-posta",
+    "workPhone": "İş telefonu",
+    "hireDate": "İşe başlama tarihi",
+    "birthDate": "Doğum tarihi",
+    "orgUnit": "Birim",
+    "manager": "Yönetici",
+    "accountStatus": "Hesap durumu",
+    "lastInvitationSentAt": "Son davet gönderimi",
+    "accessType": "Erişim türü"
+  },
+  "validation": {
+    "nationalId": "Kimlik numarası 11 haneli olmalıdır.",
+    "email": "Geçerli bir e-posta adresi girin."
+  },
+  "picker": {
+    "placeholder": "Çalışan seçin",
+    "search": "Çalışan ara",
+    "empty": "Çalışan bulunamadı.",
+    "clear": "Seçimi kaldır"
+  },
+  "bulk": {
+    "menu": "Toplu işlemler",
+    "chooseAction": "İşlem seç",
+    "run": "Başlat",
+    "continue": "Devam",
+    "selectHint": "Toplu işlem için çalışan seçin.",
+    "selectedCount_one": "{{count}} çalışan seçildi",
+    "selectedCount_other": "{{count}} çalışan seçildi",
+    "clearSelection": "Seçimi temizle",
+    "selectPage": "Bu sayfadakilerin tümünü seç",
+    "pageSelected_one": "Bu sayfadaki {{count}} çalışan seçildi.",
+    "pageSelected_other": "Bu sayfadaki {{count}} çalışan seçildi.",
+    "selectAllMatching_one": "Filtreye uyan tüm {{count}} çalışanı seç",
+    "selectAllMatching_other": "Filtreye uyan tüm {{count}} çalışanı seç",
+    "allMatchingSelected_one": "Filtreye uyan tüm çalışanlar seçildi ({{count}}).",
+    "allMatchingSelected_other": "Filtreye uyan tüm çalışanlar seçildi ({{count}}).",
+    "excludedCount_one": "{{count}} çalışan hariç tutuldu.",
+    "excludedCount_other": "{{count}} çalışan hariç tutuldu.",
+    "actions": {
+      "sendLoginInfo": "Giriş bilgilerini gönder",
+      "assignManager": "Yönetici ata",
+      "addWorkSchedule": "Çalışma takvimi ekle",
+      "assignLeaveRule": "İzin kuralı ata"
+    },
+    "confirm": {
+      "sendLoginInfo_one": "Seçilen {{count}} çalışana davet e-postası gönderilecek (iş e-postası, yoksa kişisel e-posta). Hesabı aktif olanlar ve e-postası olmayanlar atlanır.",
+      "sendLoginInfo_other": "Seçilen {{count}} çalışana davet e-postası gönderilecek (iş e-postası, yoksa kişisel e-posta). Hesabı aktif olanlar ve e-postası olmayanlar atlanır.",
+      "default_one": "İşlem seçilen {{count}} çalışana uygulanacak.",
+      "default_other": "İşlem seçilen {{count}} çalışana uygulanacak."
+    },
+    "assignManager": {
+      "description_one": "Seçilen {{count}} çalışanın yöneticisi olarak atanacak kişiyi seçin.",
+      "description_other": "Seçilen {{count}} çalışanın yöneticisi olarak atanacak kişiyi seçin."
+    },
+    "result": {
+      "requested_one": "{{count}} çalışan için işlem sonucu",
+      "requested_other": "{{count}} çalışan için işlem sonucu",
+      "outcome": "Sonuç",
+      "reason": "Açıklama"
+    },
+    "outcome": {
+      "succeeded": "Başarılı",
+      "skipped": "Atlandı",
+      "failed": "Başarısız"
+    }
+  },
+  "codes": {
+    "identity_invitation_email_required": "E-posta adresi yok (iş veya kişisel e-posta ekleyin).",
+    "identity_invitation_already_active": "Hesap zaten aktif.",
+    "employee_manager_self": "Çalışan kendi yöneticisi olamaz.",
+    "employee_manager_cycle": "Bu atama yönetici hiyerarşisinde döngü oluşturur.",
+    "employee_not_found": "Çalışan bulunamadı veya erişim kapsamınız dışında."
+  },
+  "directory": {
+    "title": "Çalışan rehberi",
+    "subtitle": "Şirketteki çalışanların iletişim bilgileri."
+  },
+  "orgChart": {
+    "title": "Organizasyon şeması",
+    "subtitle": "Yönetici ve ekip hiyerarşisi.",
+    "searchPlaceholder": "Kişi ara",
+    "expandAll": "Tümünü aç",
+    "collapseAll": "Tümünü kapat",
+    "expand": "Aç",
+    "collapse": "Kapat",
+    "matchCount_one": "{{count}} eşleşme",
+    "matchCount_other": "{{count}} eşleşme",
+    "reports_one": "{{count}} kişilik ekip",
+    "reports_other": "{{count}} kişilik ekip",
+    "empty": "Gösterilecek çalışan yok.",
+    "forbiddenTitle": "Organizasyon şeması görüntülenemiyor",
+    "forbiddenDescription": "Organizasyon şeması şirketiniz tarafından çalışanlara kapatılmış olabilir veya bu sayfa için yetkiniz yok."
+  },
+  "card": {
+    "backToList": "Çalışanlara dön",
+    "notFoundTitle": "Çalışan bulunamadı",
+    "notFoundDescription": "Kayıt silinmiş veya erişim kapsamınız dışında olabilir.",
+    "saved": "Çalışan bilgileri kaydedildi.",
+    "sections": {
+      "general": "Genel",
+      "career": "Kariyer",
+      "account": "Hesap"
+    },
+    "noAccountHint": "Bu çalışanın henüz kullanıcı hesabı yok. Üç nokta menüsünden davetiye göndererek hesap oluşturabilirsiniz.",
+    "accessTypeHint": "Hesap sahibi rolünü yalnızca bir hesap sahibi verebilir veya kaldırabilir.",
+    "accessTypeSaved": "Erişim türü güncellendi."
+  },
+  "invite": {
+    "send": "Davetiye gönder",
+    "resend": "Daveti yeniden gönder",
+    "emailRequiredHint": "Davet göndermek için önce iş veya kişisel e-posta ekleyin.",
+    "confirm": {
+      "work": "{{name}} için davet e-postası iş e-postasına ({{email}}) gönderilecek. Onaylıyor musunuz?",
+      "personal": "{{name}} için davet e-postası kişisel e-postaya ({{email}}) gönderilecek. Onaylıyor musunuz?"
+    },
+    "outcome": {
+      "sent": "Davetiye gönderildi",
+      "resent": "Davetiye yeniden gönderildi",
+      "alreadyactive": "Hesap zaten aktif"
+    },
+    "sentTo": "Gönderilen adres: {{email}}"
+  }
+}

@@ -1,3 +1,4 @@
+using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.Documents.Api;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Identity.Api;
@@ -15,5 +16,6 @@ public static class ModuleCatalog
         new OrganizationModule(),
         new EmployeeModule(),
         new DocumentsModule(),
+        new DataTransferModule(),
     ];
 }

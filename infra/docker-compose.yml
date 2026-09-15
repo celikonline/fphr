@@ -33,7 +33,9 @@ services:
       retries: 20
 
   minio:
-    image: minio/minio:latest
+    # MinIO pulled minio/minio and minio/mc off Docker Hub; quay.io/minio/* is the
+    # image source they now publish to.
+    image: quay.io/minio/minio:latest
     container_name: senseik-minio
     command: server /data --console-address ":9001"
     environment:
@@ -51,7 +53,7 @@ services:
       retries: 20
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: senseik-minio-init
     depends_on:
       minio:
@@ -100,17 +102,84 @@ services:
       - "${SEQ_PORT:-5341}:80"
     profiles: ["obs"]
 
+  # --- Observability (profile "obs") ---------------------------------------------------------------
+  # Traces:  Sense.Api --OTLP/gRPC--> jaeger:4317        (UI: http://localhost:16686)
+  # Metrics: prometheus --scrape--> Sense.Api /metrics   (UI: http://localhost:9090)
+  # Logs:    Sense.Api --OTLP/HTTP--> loki:3100/otlp
+  # Grafana (http://localhost:3001) üçünü de datasource olarak alır; dashboard'lar otomatik yüklenir.
+  # Başlatma: docker compose -f infra/docker-compose.yml --profile obs up -d
+
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    # Jaeger v2 (OpenTelemetry Collector tabanlı); v1 all-in-one imajı artık geliştirilmiyor.
+    # 2.20.0'a sabit: 2.21.0 eski /api/services|traces HTTP API'sini kaldırdı, Grafana'nın Jaeger datasource'u
+    # hâlâ bu API'yi kullanıyor (yükseltmeden önce Grafana → Connections → Jaeger → "Save & test" ile doğrulayın).
+    image: jaegertracing/jaeger:2.20.0
     container_name: senseik-jaeger
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
     ports:
       - "${JAEGER_UI_PORT:-16686}:16686"
-      - "4317:4317"
-      - "4318:4318"
+      - "${OTLP_GRPC_PORT:-4317}:4317"
+      - "${OTLP_HTTP_PORT:-4318}:4318"
+    profiles: ["obs"]
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: senseik-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/rules:/etc/prometheus/rules:ro
+      - senseik_prometheus:/prometheus
+    # API host'ta (dotnet run) çalışırken scrape edebilmek için (Linux'ta host.docker.internal varsayılan değildir).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    profiles: ["obs"]
+
+  loki:
+    image: grafana/loki:3.7.7
+    container_name: senseik-loki
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ./observability/loki/loki.yml:/etc/loki/loki.yml:ro
+      - senseik_loki:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    profiles: ["obs"]
+
+  grafana:
+    image: grafana/grafana:13.2.1
+    container_name: senseik-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/senseik-api-overview.json
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - senseik_grafana:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - jaeger
     profiles: ["obs"]
 
 volumes:
   senseik_pg:
   senseik_minio:
+  senseik_prometheus:
+  senseik_loki:
+  senseik_grafana:

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Identity.Application.Users;
 using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Domain.UnitAuthorizations;
 using Sense.Modules.Organization.Contracts;
@@ -71,9 +72,7 @@ public sealed class GrantUnitAuthorizationHandler(
                 return updated.Error;
             }
 
-            // Bu görev DataScope çözümleme pipeline'ını henüz uygulamıyor (bkz. UnitAuthorization doc);
-            // yine de "pv" invalidation'ı roadmap tasarımına göre şimdiden yapılır, ileride bir
-            // IDataScopeService/IEmployeeScopeLookup tüketicisi eklendiğinde cache tutarlılığı hazır olsun diye.
+            // Birim yetkileri etkin izin/kapsam snapshot'ına dahildir (PermissionService): önbellek geçersizlenmeli.
             await cache.InvalidateUserAsync(command.UserId, cancellationToken).ConfigureAwait(false);
             return existing.Id;
         }
@@ -121,13 +120,28 @@ public sealed class RevokeUnitAuthorizationHandler(IUnitAuthorizationRepository 
 [RequiresPermission(IdentityPermissions.UnitAuthorizationsRead)]
 public sealed record ListUnitAuthorizationsQuery(Guid OrgUnitId) : IQuery<IReadOnlyList<UnitAuthorizationDto>>;
 
-public sealed class ListUnitAuthorizationsHandler(IUnitAuthorizationRepository grants)
+public sealed class ListUnitAuthorizationsHandler(IUnitAuthorizationRepository grants, IIdentityReadStore store)
     : IQueryHandler<ListUnitAuthorizationsQuery, IReadOnlyList<UnitAuthorizationDto>>
 {
     public async Task<Result<IReadOnlyList<UnitAuthorizationDto>>> Handle(ListUnitAuthorizationsQuery query, CancellationToken cancellationToken)
     {
         var list = await grants.ListActiveByOrgUnitAsync(query.OrgUnitId, cancellationToken).ConfigureAwait(false);
-        IReadOnlyList<UnitAuthorizationDto> dtos = list.Select(UnitAuthorizationDto.From).ToList();
+        var users = await store.GetUserSummariesAsync(list.Select(a => a.UserId).Distinct().ToList(), cancellationToken).ConfigureAwait(false);
+        IReadOnlyList<UnitAuthorizationDto> dtos = list.Select(a => UnitAuthorizationDto.From(a, users.GetValueOrDefault(a.UserId))).ToList();
         return Result.Success(dtos);
     }
+}
+
+/// <summary>"Birim yetkilendirme" kişi seçicisi: aktif veya davet edilmiş kullanıcılar (ad/soyad/e-posta araması).</summary>
+[RequiresPermission(IdentityPermissions.UnitAuthorizationsManage)]
+public sealed record ListUnitAuthorizationCandidatesQuery(string? Q) : IQuery<IReadOnlyList<UnitAuthorizationCandidateDto>>
+{
+    public const int Limit = 50;
+}
+
+public sealed class ListUnitAuthorizationCandidatesHandler(IIdentityReadStore store)
+    : IQueryHandler<ListUnitAuthorizationCandidatesQuery, IReadOnlyList<UnitAuthorizationCandidateDto>>
+{
+    public async Task<Result<IReadOnlyList<UnitAuthorizationCandidateDto>>> Handle(ListUnitAuthorizationCandidatesQuery query, CancellationToken cancellationToken) =>
+        Result.Success(await store.ListUnitAuthorizationCandidatesAsync(query.Q, ListUnitAuthorizationCandidatesQuery.Limit, cancellationToken).ConfigureAwait(false));
 }

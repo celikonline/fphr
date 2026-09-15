@@ -3,11 +3,12 @@ using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Sense.Api;
 using Sense.Api.HealthChecks;
-using Sense.Api.Hubs;
 using Sense.Api.Middleware;
 using Sense.Api.Observability;
 using Sense.Api.SeedData;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Notifications;
 using Sense.Shared.Infrastructure.Observability;
 using Sense.Shared.Web.DependencyInjection;
 using Sense.Shared.Web.Middleware;
@@ -33,7 +34,14 @@ try
         .Enrich.With<TenantEnricher>()
         .Enrich.With<CorrelationIdEnricher>()
         .Enrich.With(new UserEnricher(services.GetRequiredService<IHttpContextAccessor>()))
-        .Enrich.WithProperty(HostConstants.ApplicationProperty, context.Configuration[HostConstants.ApplicationNameKey] ?? HostConstants.DefaultApplicationName));
+        .Enrich.WithProperty(HostConstants.ApplicationProperty, context.Configuration[HostConstants.ApplicationNameKey] ?? HostConstants.DefaultApplicationName)
+        .WriteToSenseLogExport(context.Configuration, context.HostingEnvironment));
+
+    // "Server: Kestrel" başlığı sunucu teknolojisini ifşa etmesin.
+    builder.WebHost.ConfigureKestrel(o => o.AddServerHeader = false);
+
+    var observabilityOptions = builder.Configuration.GetSection(ConfigurationSections.Observability).Get<ObservabilityOptions>()
+        ?? new ObservabilityOptions();
 
     var modules = ModuleCatalog.Modules;
     builder.Services.AddSenseWeb(builder.Configuration, modules);
@@ -49,14 +57,21 @@ try
 
     // En erken middleware: sonraki her şey (exception handler dahil) aynı correlation id'yi görsün.
     app.UseCorrelationId();
+    app.UseClientContext();
+    app.UseSecurityHeaders();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHsts();
+    }
 
     app.UseExceptionHandler();
     app.UseSerilogRequestLogging(o =>
     {
-        // Health check polling'i log gürültüsü yaratmasın.
+        // Health check polling'i ve Prometheus scrape'i log gürültüsü yaratmasın.
         o.GetLevel = (httpContext, elapsedMs, ex) => ex is not null
             ? LogEventLevel.Error
-            : httpContext.Request.Path.StartsWithSegments(HostConstants.HealthPath)
+            : OpenTelemetryExtensions.IsInfrastructureRequest(httpContext.Request.Path, observabilityOptions)
                 ? LogEventLevel.Verbose
                 : httpContext.Response.StatusCode >= StatusCodes.Status500InternalServerError
                     ? LogEventLevel.Error
@@ -66,6 +81,7 @@ try
     });
     app.UseHttpsRedirection();
     app.UseSenseLocalization();
+    app.UseSenseCors();
 
     app.UseAuthentication();
     app.UseRequestContext();
@@ -73,6 +89,7 @@ try
 
     app.MapControllers();
     app.MapSenseHealthChecks();
+    app.MapSenseMetrics(app.Configuration);
     app.MapOpenApi(HostConstants.OpenApiRoutePattern);
     app.MapScalarApiReference(HostConstants.ScalarPath, o => o.WithTitle(HostConstants.ApiTitle));
 

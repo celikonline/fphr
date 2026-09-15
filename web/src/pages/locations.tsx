@@ -23,6 +23,7 @@ import ConfirmDialog from "@/components/confirm-dialog";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
 import { useAnyPermission } from "@/components/permission-guard";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import {
   createLocation,
   deleteLocation,
@@ -92,11 +93,11 @@ export default function LocationsPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", type: "Office", countryCode: "TR", address: "" },
+    defaultValues: { name: "", type: "office", countryCode: "TR", address: "" },
   });
 
   function openCreate() {
-    reset({ name: "", type: "Office", countryCode: "TR", address: "" });
+    reset({ name: "", type: "office", countryCode: "TR", address: "" });
     setDialog({ open: true });
   }
 
@@ -139,8 +140,15 @@ export default function LocationsPage() {
       toast({ variant: "success", title: t("common:success"), description: t("locations:deleteSuccess") });
       setDeleteTarget(null);
     },
-    onError: () => {
-      toast({ variant: "destructive", title: t("common:error"), description: t("locations:genericError") });
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description:
+          getApiErrorStatus(error) === 409
+            ? t("locations:inUseError")
+            : getApiErrorMessage(error, t("locations:genericError")),
+      });
       setDeleteTarget(null);
     },
   });

@@ -76,7 +76,7 @@ public sealed class RequestImpersonationHandler(
         }
 
         var grant = created.Value;
-        grants.Add(grant);
+        await grants.AddAndSaveAsync(grant, cancellationToken).ConfigureAwait(false);
 
         await notifications.BroadcastAuditAlertAsync(command.TenantId,
             AuditAlertDto.Create(ImpersonationAudit.Requested, ImpersonationAudit.Resource, platformUser.Email, command.Reason))
@@ -195,5 +195,43 @@ public sealed class RevokeImpersonationHandler(IImpersonationGrantRepository gra
         }
 
         return grant.Revoke(clock.GetUtcNow().UtcDateTime);
+    }
+}
+
+/// <summary>Ayarlar &gt; Destek erişimi: kiracının grant listesi, isteğe bağlı durum filtresiyle (Pending|Approved|Active|Expired|Revoked).</summary>
+[RequiresPermission(IdentityPermissions.ImpersonationApprove)]
+public sealed record ListImpersonationGrantsQuery(string? Status) : IQuery<IReadOnlyList<ImpersonationGrantDto>>
+{
+    public static bool TryParseStatus(string? value, out ImpersonationGrantStatus? status)
+    {
+        status = null;
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return true;
+        }
+
+        if (Enum.TryParse<ImpersonationGrantStatus>(value.Trim(), ignoreCase: true, out var parsed) && Enum.IsDefined(parsed))
+        {
+            status = parsed;
+            return true;
+        }
+
+        return false;
+    }
+}
+
+public sealed class ListImpersonationGrantsValidator : AbstractValidator<ListImpersonationGrantsQuery>
+{
+    public ListImpersonationGrantsValidator() =>
+        RuleFor(x => x.Status).Must(s => ListImpersonationGrantsQuery.TryParseStatus(s, out _)).WithMessage(IdentityErrors.ImpersonationStatusInvalid);
+}
+
+public sealed class ListImpersonationGrantsHandler(Users.IIdentityReadStore store, TimeProvider clock)
+    : IQueryHandler<ListImpersonationGrantsQuery, IReadOnlyList<ImpersonationGrantDto>>
+{
+    public async Task<Result<IReadOnlyList<ImpersonationGrantDto>>> Handle(ListImpersonationGrantsQuery query, CancellationToken cancellationToken)
+    {
+        ListImpersonationGrantsQuery.TryParseStatus(query.Status, out var status);
+        return Result.Success(await store.ListImpersonationGrantsAsync(status, clock.GetUtcNow().UtcDateTime, cancellationToken).ConfigureAwait(false));
     }
 }

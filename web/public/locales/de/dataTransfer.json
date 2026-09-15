@@ -1,0 +1,163 @@
+{
+  "title": "[DE] Data transfer center",
+  "subtitle": "[DE] Download a template, upload your completed file, map the columns and run the import.",
+  "tabs": {
+    "import": "[DE] Import",
+    "history": "[DE] History"
+  },
+  "rules": {
+    "title": "[DE] Template rules",
+    "headers": "[DE] Do not change the headers; if you do, map those columns manually in the column mapping step.",
+    "deleteColumns": "[DE] You can delete columns you don't need; data in deleted columns is left unchanged.",
+    "dates": "[DE] Write dates as DD.MM.YYYY or DD/MM/YYYY (e.g. 01.06.2026); textual dates are not accepted.",
+    "lookups": "[DE] Option values as well as unit and manager values must already exist in the system.",
+    "matching": "[DE] Employees are matched by National ID + First name + Last name."
+  },
+  "templates": {
+    "columns": "[DE] Columns",
+    "matchKey": "[DE] Match key",
+    "requiredLegend": "[DE] Required",
+    "matchKeyLegend": "[DE] Match key",
+    "download": "[DE] Download template",
+    "upload": "[DE] Upload file",
+    "downloadError": "[DE] The template could not be downloaded.",
+    "loadError": "[DE] Templates could not be loaded.",
+    "empty": "[DE] No import templates are available."
+  },
+  "upload": {
+    "dropHint": "[DE] Drag the file here or click to choose",
+    "limits": "[DE] .xlsx or .csv, up to 10 MB",
+    "uploading": "[DE] Uploading file…",
+    "invalidType": "[DE] Only .xlsx or .csv files can be uploaded.",
+    "tooLarge": "[DE] The file size cannot exceed 10 MB.",
+    "error": "[DE] The file could not be uploaded."
+  },
+  "history": {
+    "template": "[DE] Template",
+    "file": "[DE] File",
+    "mode": "[DE] Mode",
+    "status": "[DE] Status",
+    "date": "[DE] Date",
+    "user": "[DE] User",
+    "empty": "[DE] No imports yet.",
+    "loadError": "[DE] Import history could not be loaded."
+  },
+  "counts": {
+    "total": "[DE] Total rows",
+    "inserted": "[DE] Inserted",
+    "updated": "[DE] Updated",
+    "skipped": "[DE] Skipped",
+    "errors": "[DE] Errors"
+  },
+  "mode": {
+    "Upsert": "[DE] Insert / update",
+    "UpdateOnly": "[DE] Update only"
+  },
+  "status": {
+    "Uploaded": "[DE] Uploaded",
+    "Mapped": "[DE] Mapped",
+    "Completed": "[DE] Completed",
+    "CompletedWithErrors": "[DE] Completed with errors",
+    "Failed": "[DE] Failed"
+  },
+  "outcome": {
+    "Inserted": "[DE] Inserted",
+    "Updated": "[DE] Updated",
+    "Skipped": "[DE] Skipped",
+    "Error": "[DE] Error"
+  },
+  "outcomeFilter": {
+    "all": "[DE] All",
+    "Inserted": "[DE] Inserted",
+    "Updated": "[DE] Updated",
+    "Skipped": "[DE] Skipped",
+    "Error": "[DE] Error"
+  },
+  "steps": {
+    "file": "[DE] File",
+    "mapping": "[DE] Column mapping",
+    "options": "[DE] Options",
+    "run": "[DE] Run",
+    "result": "[DE] Result"
+  },
+  "mapping": {
+    "title": "[DE] Column mapping",
+    "subtitle": "[DE] Choose the field each file column should be imported into, or ignore it. {{mapped}} of {{total}} columns mapped.",
+    "sourceColumn": "[DE] File column",
+    "samples": "[DE] Sample values",
+    "target": "[DE] Import into",
+    "untitledColumn": "[DE] Untitled column {{index}}",
+    "ignore": "[DE] Ignore",
+    "ignored": "[DE] Ignored",
+    "alreadyMapped": "[DE] mapped",
+    "autoMatched": "[DE] matched",
+    "missingRequiredTitle": "[DE] Map these columns to continue",
+    "allRequiredMapped": "[DE] All required and match key columns are mapped.",
+    "onInsertHint": "[DE] Unmapped columns that may be needed when new records are created: {{columns}}",
+    "saveAndContinue": "[DE] Save and continue",
+    "saveError": "[DE] The mapping could not be saved."
+  },
+  "options": {
+    "title": "[DE] Options",
+    "updateOnly": "[DE] Update only mode",
+    "updateOnlyHelp": {
+      "updates": "[DE] Existing records are updated.",
+      "noInsert": "[DE] No new records are created.",
+      "noMatchError": "[DE] Rows that don't match an existing record are reported as errors.",
+      "mappedOnly": "[DE] Only mapped columns are written; empty cells leave existing data unchanged."
+    },
+    "updateOnlyUnsupported": "[DE] This template does not support update only mode.",
+    "failurePolicy": "[DE] Invalid rows"
+  },
+  "failurePolicy": {
+    "SkipInvalidRows": "[DE] Skip invalid rows",
+    "SkipInvalidRowsHelp": "[DE] Valid rows are imported; invalid rows are reported in the result file.",
+    "AllOrNothing": "[DE] All or nothing",
+    "AllOrNothingHelp": "[DE] If any row is invalid, nothing is imported."
+  },
+  "run": {
+    "running": "[DE] Importing…",
+    "runningHint": "[DE] Please don't leave this page.",
+    "error": "[DE] The import could not be run.",
+    "noPermission": "[DE] You don't have permission to run imports."
+  },
+  "result": {
+    "completed": "[DE] The import completed successfully",
+    "rowsWithErrors_one": "[DE] {{count}} row has errors",
+    "rowsWithErrors_other": "[DE] {{count}} rows have errors",
+    "completedWithErrorsHint": "[DE] Valid rows were imported. Fix the invalid rows in the result file and upload it again.",
+    "failed": "[DE] The import could not be completed",
+    "failedAllOrNothingHint": "[DE] Because “All or nothing” was selected, no records were imported.",
+    "failedHint": "[DE] No records were imported.",
+    "download": "[DE] Download result file",
+    "downloadError": "[DE] The result file could not be downloaded.",
+    "fileSuffix": "result",
+    "newUpload": "[DE] Upload a new file",
+    "rowsTitle": "[DE] Row results",
+    "rowsEmpty": "[DE] No rows match this filter.",
+    "rowsLoadError": "[DE] Row results could not be loaded.",
+    "rowNumber": "[DE] Row",
+    "matchKey": "[DE] Match key",
+    "outcome": "[DE] Outcome",
+    "errorDescription": "[DE] Error description"
+  },
+  "job": {
+    "back": "[DE] Back to data transfer center",
+    "uploadedAt": "[DE] Uploaded:",
+    "rowCount_one": "[DE] {{count}} row",
+    "rowCount_other": "[DE] {{count}} rows",
+    "notFound": "[DE] Import job not found.",
+    "loadError": "[DE] The import job could not be loaded.",
+    "templateUnavailable": "[DE] Template \"{{code}}\" is not available."
+  },
+  "errorCodes": {
+    "IMPORT_UNMAPPED_REQUIRED": "[DE] Required columns are not mapped",
+    "IMPORT_NO_MATCH": "[DE] No matching record found (update only mode does not create new records).",
+    "IMPORT_NAME_MISMATCH": "[DE] The national ID matched, but the first or last name differs from the existing record.",
+    "IMPORT_DUPLICATE_ROW": "[DE] The same national ID appears in more than one row of the file.",
+    "IMPORT_INVALID_DATE": "[DE] Invalid date; use DD.MM.YYYY or DD/MM/YYYY.",
+    "IMPORT_INVALID_NATIONAL_ID": "[DE] Invalid national ID.",
+    "IMPORT_LOOKUP_NOT_FOUND": "[DE] The value is not defined in the system; create the related record first.",
+    "IMPORT_REQUIRED_MISSING": "[DE] A required field is empty."
+  }
+}

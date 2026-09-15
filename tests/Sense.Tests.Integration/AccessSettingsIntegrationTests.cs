@@ -4,10 +4,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Identity.Api;
 using Sense.Modules.Identity.Application.Tenants;
 using Sense.Modules.Identity.Domain;
+using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Context;
-using Sense.Tests.Shared.Fixtures;
+using Sense.Tests.Integration.Identity;
 using Shouldly;
 using Xunit;
 
@@ -17,31 +18,17 @@ namespace Sense.Tests.Integration;
 /// Erişim ayarları uçtan uca: gerçek Postgres (Testcontainers) + tam Identity modülü (AuthorizationBehaviour dahil
 /// pipeline) üzerinden Dispatcher.Send/Query. API controller'ları bu handler'lara ince bir HTTP sarmalayıcıdır;
 /// asıl davranış (yetki, kalıcılık, kiracı izolasyonu) burada, gerçek veritabanına karşı doğrulanır.
+/// Çağıran, gerçek Owner rolüyle seed edilmiş bir kiracı kullanıcısıdır (platform_admin bayrağı artık tek başına yetki vermez).
 /// </summary>
 [Collection("PostgreSQL")]
-public sealed class AccessSettingsIntegrationTests : TestFixture
+public sealed class AccessSettingsIntegrationTests : IdentityStackTestBase
 {
-    protected override void ConfigureServices(IServiceCollection services)
-    {
-        // TestFixture zaten IConfiguration'ı kaydetti (ConnectionStrings:Database dahil); Identity modülünün
-        // kendi ayarları (Identity/Auth/Security/Frontend/Email) burada olmasa da varsayılanlarla bağlanır.
-        using var bootstrap = services.BuildServiceProvider();
-        var configuration = bootstrap.GetRequiredService<IConfiguration>();
-        new IdentityModule().AddModule(services, configuration);
-    }
-
-    protected override async Task OnDatabaseReadyAsync()
-    {
-        var db = ServiceProvider!.GetRequiredService<IdentityDbContext>();
-        await db.Database.MigrateAsync();
-    }
-
     [Fact]
     [Trait("Category", "Integration")]
     public async Task AccessSettings_RoundTrip_ThroughDispatcher_PersistsToPostgres()
     {
         var tenantId = await SeedTenantAsync("acme");
-        SetPlatformAdminUser(tenantId);
+        ActAs(tenantId, await OwnerOfAsync(tenantId));
 
         var current = await ExecuteQueryAsync(new GetAccessSettingsQuery());
         current.IsSuccess.ShouldBeTrue();
@@ -72,7 +59,7 @@ public sealed class AccessSettingsIntegrationTests : TestFixture
         var tenantAId = await SeedTenantAsync("tenant-a");
         var tenantBId = await SeedTenantAsync("tenant-b");
 
-        SetPlatformAdminUser(tenantAId);
+        ActAs(tenantAId, await OwnerOfAsync(tenantAId));
         var updateA = new UpdateAccessSettingsCommand(
             ShowOrgInfo: false, ShowUpcomingLeaves: false, ShowUpcomingBirthdays: false, ShowEventCalendar: false,
             ShowFiles: false, ShowAssets: false, ShowWorkPhoneNumbers: false, ShowOrgChart: false,
@@ -80,13 +67,13 @@ public sealed class AccessSettingsIntegrationTests : TestFixture
         (await ExecuteCommandAsync(updateA)).IsSuccess.ShouldBeTrue();
 
         // Kiracı B'ye geçildiğinde, A'nın "Kaydet" ettiği değerler görünmemeli (varsayılanlarda kalmalı).
-        SetPlatformAdminUser(tenantBId);
+        ActAs(tenantBId, await OwnerOfAsync(tenantBId));
         var tenantBSettings = await ExecuteQueryAsync(new GetAccessSettingsQuery());
         tenantBSettings.IsSuccess.ShouldBeTrue();
         tenantBSettings.Value.ShouldBe(AccessSettingsDto.From(TenantAccessSettings.Default));
 
         // Kiracı A'ya dönüldüğünde kendi değişikliği hâlâ yerinde.
-        SetPlatformAdminUser(tenantAId);
+        ActAs(tenantAId, await OwnerOfAsync(tenantAId));
         var tenantASettings = await ExecuteQueryAsync(new GetAccessSettingsQuery());
         tenantASettings.Value.ShouldBe(updateA.ToDto());
 
@@ -99,29 +86,17 @@ public sealed class AccessSettingsIntegrationTests : TestFixture
         allTenants.Single(t => t.Id == tenantBId).AccessSettings.ShouldBe(TenantAccessSettings.Default);
     }
 
-    private async Task<Guid> SeedTenantAsync(string slug)
-    {
-        var tenants = ServiceProvider!.GetRequiredService<ITenantRepository>();
-        var db = ServiceProvider!.GetRequiredService<IdentityDbContext>();
-        var tenant = Tenant.Create(slug, slug, DateTime.UtcNow, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+    private readonly Dictionary<Guid, Guid> _owners = [];
 
-        using (TenantContextSetter!.BeginScope(tenant.Id, tenant.Slug))
+    /// <summary>Seeds (once) a real Owner for the tenant; the caller then sets the principal synchronously so the tenant scope (AsyncLocal) stays in the test.</summary>
+    private async Task<Guid> OwnerOfAsync(Guid tenantId)
+    {
+        if (!_owners.TryGetValue(tenantId, out var ownerId))
         {
-            tenants.Add(tenant);
-            await db.SaveChangesAsync();
+            ownerId = await SeedUserAsync(tenantId, $"owner-{tenantId:N}@test.local", SystemRoleCodes.Owner);
+            _owners[tenantId] = ownerId;
         }
 
-        return tenant.Id;
-    }
-
-    /// <summary>Platform admin: AuthorizationBehaviour izin denetimini atlar, rol/izin seed'i olmadan handler'ı test etmeyi sağlar.</summary>
-    private void SetPlatformAdminUser(Guid tenantId)
-    {
-        var accessor = (CurrentUserAccessor)CurrentUser!;
-        accessor.Set(new AuthenticatedUser(
-            UserId: Guid.NewGuid(), EmployeeId: null, Email: "admin@test.local", DisplayName: "Admin",
-            Roles: new HashSet<string>(StringComparer.Ordinal), IsPlatformAdmin: true,
-            ImpersonatorUserId: null, ApiKeyId: null, CorrelationId: null, IpAddress: "127.0.0.1"));
-        TenantContextSetter!.BeginScope(tenantId);
+        return ownerId;
     }
 }

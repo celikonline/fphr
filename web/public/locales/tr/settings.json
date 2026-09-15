@@ -1,0 +1,97 @@
+{
+  "hub": {
+    "title": "Ayarlar",
+    "subtitle": "Şirket bilgileri, kurallar, sistem ayarları ve veri aktarımı."
+  },
+  "access": {
+    "title": "Erişim ayarları",
+    "subtitle": "Çalışanların ana sayfada, hesaplarında ve takvimde neleri görebileceğini belirleyin.",
+    "scopeNotice": "Erişim ayarları yalnızca Çalışan erişim türündeki kullanıcıları kısıtlar; Hesap sahibi, Yönetici ve İK kullanıcıları etkilenmez. Değişiklikler kaydedildiği anda geçerli olur.",
+    "readOnly": "Erişim ayarlarını görüntüleyebilirsiniz ancak değiştirme yetkiniz yok.",
+    "loadError": "Erişim ayarları yüklenemedi.",
+    "saveSuccess": "Erişim ayarları kaydedildi.",
+    "saveError": "Erişim ayarları kaydedilemedi.",
+    "groups": {
+      "home": "Ana sayfa",
+      "account": "Hesap",
+      "calendar": "Takvim"
+    },
+    "keys": {
+      "showOrgInfo": {
+        "label": "Çalışan ve birim bilgileri",
+        "help": "Birimlerle ilgili bilgiler (birim, yönetici, ekip) çalışanlar tarafından ana sayfada görülebilir."
+      },
+      "showUpcomingLeaves": {
+        "label": "Yaklaşan izinler",
+        "help": "İzinde olacak kişiler ana sayfada listelenir. İzin türü gösterilmez."
+      },
+      "showUpcomingBirthdays": {
+        "label": "Yaklaşan doğum günleri",
+        "help": "Çalışanlar arkadaşlarının yaklaşan doğum günlerini ana sayfada görür."
+      },
+      "showEventCalendar": {
+        "label": "Etkinlik takvimi",
+        "help": "Uygulama üzerinden eklenen toplantı ve benzeri etkinlikler ana sayfada liste halinde görünür."
+      },
+      "showFiles": {
+        "label": "Dosyalar",
+        "help": "Çalışanlar kendi kartlarındaki dosyaları görebilir."
+      },
+      "showAssets": {
+        "label": "Zimmet",
+        "help": "Çalışanlar kendi zimmetlerini görebilir."
+      },
+      "showWorkPhoneNumbers": {
+        "label": "Çalışanların telefon numaraları",
+        "help": "İş telefonu tanımlıysa diğer çalışanlar tarafından görülebilir."
+      },
+      "showOrgChart": {
+        "label": "Organizasyon şeması",
+        "help": "Çalışanlar menüsündeki organizasyon şeması çalışanlara açılır."
+      },
+      "showCustomFields": {
+        "label": "Özel alanlar",
+        "help": "Birim yetkilileri çalışan kartlarındaki özel alanları görebilir. Çalışanlar görmez."
+      },
+      "showCalendarMenu": {
+        "label": "Takvim menüsü",
+        "help": "Sol menüde Takvim görünür."
+      },
+      "showAllLeavesInCalendar": {
+        "label": "Takvimdeki tüm izinler",
+        "help": "Kapalıyken çalışanlar takvimde yalnızca kendi departmanlarının izinlerini görür; açıkken tüm şirketin izinlerini görür. Yalnızca “izinli” bilgisi gösterilir, izin türü gösterilmez."
+      }
+    }
+  },
+  "supportAccess": {
+    "title": "Destek erişimi",
+    "subtitle": "Sense destek ekibinin şirketinizin hesabına erişim taleplerini onaylayın veya iptal edin.",
+    "privacyTitle": "Verileriniz sizin kontrolünüzde",
+    "privacyText": "Sense çalışanları, sizin onayladığınız ve süresi sınırlı bir erişim izni olmadan şirketinizin verilerine erişemez. Onay verdiğiniz erişim süre dolunca kendiliğinden kapanır, istediğiniz an iptal edilebilir ve tüm işlemler denetim kaydına yazılır.",
+    "status": "Durum",
+    "allStatuses": "Tüm durumlar",
+    "statuses": {
+      "Pending": "Onay bekliyor",
+      "Approved": "Onaylandı",
+      "Active": "Kullanımda",
+      "Expired": "Süresi doldu",
+      "Revoked": "İptal edildi"
+    },
+    "requestedBy": "Talep eden",
+    "reason": "Gerekçe",
+    "requestedAt": "Talep zamanı",
+    "expiresAt": "Geçerlilik bitişi",
+    "approve": "Onayla",
+    "revoke": "İptal et",
+    "approveTitle": "Destek erişimini onayla",
+    "approveConfirm": "{{requester}} için süreli destek erişimini onaylamak istediğinize emin misiniz? Erişim, süre dolana veya siz iptal edene kadar geçerli olur.",
+    "revokeTitle": "Destek erişimini iptal et",
+    "revokeConfirm": "Bu destek erişimini iptal etmek istediğinize emin misiniz? Devam eden oturum kapatılır.",
+    "approveSuccess": "Destek erişimi onaylandı.",
+    "revokeSuccess": "Destek erişimi iptal edildi.",
+    "actionError": "İşlem gerçekleştirilemedi.",
+    "loadError": "Destek erişim talepleri yüklenemedi.",
+    "empty": "Destek erişim talebi yok.",
+    "senseStaff": "Sense destek ekibi"
+  }
+}

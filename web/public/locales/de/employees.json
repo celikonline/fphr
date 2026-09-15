@@ -1,0 +1,185 @@
+{
+  "title": "[DE] Employees",
+  "subtitle": "[DE] View, filter and run bulk operations on employee records.",
+  "cardTitle": "[DE] Employee card",
+  "orgChartTitle": "[DE] Organization chart",
+  "searchPlaceholder": "[DE] Search name, email or national ID",
+  "empty": "[DE] No employees yet.",
+  "emptyFiltered": "[DE] No employees match the filter.",
+  "genericError": "[DE] The operation could not be completed. Please try again.",
+  "loading": "[DE] Loading...",
+  "unknownUnit": "[DE] Unknown unit",
+  "unknownEmployee": "[DE] Unknown employee",
+  "noUnit": "[DE] No unit",
+  "phase": "[DE] Phase {{phase}}",
+  "create": {
+    "button": "[DE] Add new employee",
+    "title": "[DE] Add new employee",
+    "description": "[DE] First and last name are enough; you can complete the rest later on the employee card.",
+    "success": "[DE] Employee created."
+  },
+  "filters": {
+    "orgUnit": "[DE] Unit",
+    "allUnits": "[DE] All units",
+    "includeSubUnits": "[DE] Include sub-units",
+    "status": "[DE] Status",
+    "all": "[DE] All",
+    "hasUserAccount": "[DE] User account",
+    "withAccount": "[DE] With account",
+    "withoutAccount": "[DE] Without account"
+  },
+  "columns": {
+    "name": "[DE] Name",
+    "orgUnit": "[DE] Unit",
+    "manager": "[DE] Manager",
+    "workEmail": "[DE] Work email",
+    "workPhone": "[DE] Work phone",
+    "status": "[DE] Status",
+    "accountStatus": "[DE] Account",
+    "hireDate": "[DE] Hire date"
+  },
+  "status": {
+    "Active": "[DE] Active",
+    "Inactive": "[DE] Inactive",
+    "OnLeave": "[DE] On leave"
+  },
+  "accountStatus": {
+    "none": "[DE] No account",
+    "invited": "[DE] Invited",
+    "active": "[DE] Active",
+    "locked": "[DE] Locked",
+    "disabled": "[DE] Disabled"
+  },
+  "accessType": {
+    "Employee": "[DE] Employee",
+    "Owner": "[DE] Account owner",
+    "Admin": "[DE] Administrator"
+  },
+  "fields": {
+    "firstName": "[DE] First name",
+    "lastName": "[DE] Last name",
+    "nationalId": "[DE] National ID",
+    "workEmail": "[DE] Work email",
+    "personalEmail": "[DE] Personal email",
+    "workPhone": "[DE] Work phone",
+    "hireDate": "[DE] Hire date",
+    "birthDate": "[DE] Birth date",
+    "orgUnit": "[DE] Unit",
+    "manager": "[DE] Manager",
+    "accountStatus": "[DE] Account status",
+    "lastInvitationSentAt": "[DE] Last invitation sent",
+    "accessType": "[DE] Access type"
+  },
+  "validation": {
+    "nationalId": "[DE] National ID must be 11 digits.",
+    "email": "[DE] Enter a valid email address."
+  },
+  "picker": {
+    "placeholder": "[DE] Select an employee",
+    "search": "[DE] Search employees",
+    "empty": "[DE] No employees found.",
+    "clear": "[DE] Clear selection"
+  },
+  "bulk": {
+    "menu": "[DE] Bulk operations",
+    "chooseAction": "[DE] Choose action",
+    "run": "[DE] Run",
+    "continue": "[DE] Continue",
+    "selectHint": "[DE] Select employees to run a bulk operation.",
+    "selectedCount_one": "[DE] {{count}} employee selected",
+    "selectedCount_other": "[DE] {{count}} employees selected",
+    "clearSelection": "[DE] Clear selection",
+    "selectPage": "[DE] Select all on this page",
+    "pageSelected_one": "[DE] {{count}} employee on this page is selected.",
+    "pageSelected_other": "[DE] All {{count}} employees on this page are selected.",
+    "selectAllMatching_one": "[DE] Select the {{count}} employee matching the filter",
+    "selectAllMatching_other": "[DE] Select all {{count}} employees matching the filter",
+    "allMatchingSelected_one": "[DE] All employees matching the filter are selected ({{count}}).",
+    "allMatchingSelected_other": "[DE] All employees matching the filter are selected ({{count}}).",
+    "excludedCount_one": "[DE] {{count}} employee excluded.",
+    "excludedCount_other": "[DE] {{count}} employees excluded.",
+    "actions": {
+      "sendLoginInfo": "[DE] Send login details",
+      "assignManager": "[DE] Assign manager",
+      "addWorkSchedule": "[DE] Add work schedule",
+      "assignLeaveRule": "[DE] Assign leave rule"
+    },
+    "confirm": {
+      "sendLoginInfo_one": "[DE] An invitation email will be sent to the selected employee (work email, otherwise personal email). Active accounts and employees without an email are skipped.",
+      "sendLoginInfo_other": "[DE] Invitation emails will be sent to the {{count}} selected employees (work email, otherwise personal email). Active accounts and employees without an email are skipped.",
+      "default_one": "[DE] The action will be applied to the selected employee.",
+      "default_other": "[DE] The action will be applied to the {{count}} selected employees."
+    },
+    "assignManager": {
+      "description_one": "[DE] Choose the manager to assign to the selected employee.",
+      "description_other": "[DE] Choose the manager to assign to the {{count}} selected employees."
+    },
+    "result": {
+      "requested_one": "[DE] Result for {{count}} employee",
+      "requested_other": "[DE] Result for {{count}} employees",
+      "outcome": "[DE] Outcome",
+      "reason": "[DE] Reason"
+    },
+    "outcome": {
+      "succeeded": "[DE] Succeeded",
+      "skipped": "[DE] Skipped",
+      "failed": "[DE] Failed"
+    }
+  },
+  "codes": {
+    "identity_invitation_email_required": "[DE] No email address (add a work or personal email).",
+    "identity_invitation_already_active": "[DE] Account is already active.",
+    "employee_manager_self": "[DE] An employee cannot be their own manager.",
+    "employee_manager_cycle": "[DE] This assignment would create a cycle in the manager hierarchy.",
+    "employee_not_found": "[DE] Employee not found or outside your access scope."
+  },
+  "directory": {
+    "title": "[DE] Employee directory",
+    "subtitle": "[DE] Contact details of people in your company."
+  },
+  "orgChart": {
+    "title": "[DE] Organization chart",
+    "subtitle": "[DE] Manager and team hierarchy.",
+    "searchPlaceholder": "[DE] Search people",
+    "expandAll": "[DE] Expand all",
+    "collapseAll": "[DE] Collapse all",
+    "expand": "[DE] Expand",
+    "collapse": "[DE] Collapse",
+    "matchCount_one": "[DE] {{count}} match",
+    "matchCount_other": "[DE] {{count}} matches",
+    "reports_one": "[DE] {{count}} direct report",
+    "reports_other": "[DE] {{count}} direct reports",
+    "empty": "[DE] No employees to show.",
+    "forbiddenTitle": "[DE] The organization chart is not available",
+    "forbiddenDescription": "[DE] Your company may have hidden the organization chart from employees, or you don't have permission for this page."
+  },
+  "card": {
+    "backToList": "[DE] Back to employees",
+    "notFoundTitle": "[DE] Employee not found",
+    "notFoundDescription": "[DE] The record may have been removed or is outside your access scope.",
+    "saved": "[DE] Employee details saved.",
+    "sections": {
+      "general": "[DE] General",
+      "career": "[DE] Career",
+      "account": "[DE] Account"
+    },
+    "noAccountHint": "[DE] This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
+    "accessTypeHint": "[DE] Only an account owner can grant or revoke the account owner role.",
+    "accessTypeSaved": "[DE] Access type updated."
+  },
+  "invite": {
+    "send": "[DE] Send invitation",
+    "resend": "[DE] Resend invitation",
+    "emailRequiredHint": "[DE] Add a work or personal email before sending an invitation.",
+    "confirm": {
+      "work": "[DE] An invitation for {{name}} will be sent to the work email ({{email}}). Continue?",
+      "personal": "[DE] An invitation for {{name}} will be sent to the personal email ({{email}}). Continue?"
+    },
+    "outcome": {
+      "sent": "[DE] Invitation sent",
+      "resent": "[DE] Invitation resent",
+      "alreadyactive": "[DE] Account is already active"
+    },
+    "sentTo": "[DE] Sent to: {{email}}"
+  }
+}

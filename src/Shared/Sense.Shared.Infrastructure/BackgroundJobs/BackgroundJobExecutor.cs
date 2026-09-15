@@ -34,13 +34,15 @@ public class BackgroundJobExecutor : IBackgroundJobExecutor
     public async Task ExecuteAsync(JobType jobType, Guid tenantId, string payload)
     {
         // Job'un kendi correlation id'si: tetikleyen istekten bağımsız, iş için tek başına iz sürülebilir bir kimlik.
-        using var correlationScope = _correlationIdContextSetter.BeginScope($"job-{Guid.NewGuid():N}");
+        var correlationId = $"job-{Guid.NewGuid():N}";
+        using var correlationScope = _correlationIdContextSetter.BeginScope(correlationId);
         using var tenantScope = _tenantContextSetter.BeginScope(tenantId);
         using var activity = SenseActivitySources.BackgroundJobs.StartActivity(
             $"job.{jobType}".ToLowerInvariant(),
             ActivityKind.Internal);
         activity?.SetTag("sense.job.type", jobType.ToString());
         activity?.SetTag("sense.tenant.id", tenantId);
+        activity?.SetTag(SenseActivitySources.Tags.CorrelationId, correlationId);
 
         var stopwatch = Stopwatch.StartNew();
 
@@ -55,6 +57,7 @@ public class BackgroundJobExecutor : IBackgroundJobExecutor
             await ExecuteJobAsync(jobType, tenantId, payload);
 
             stopwatch.Stop();
+            RecordDuration(jobType, stopwatch.Elapsed, SenseMeters.Outcomes.Success);
 
             _logger.LogInformation(
                 "Background job completed successfully. JobType: {JobType}, TenantId: {TenantId}, Duration: {DurationMs}ms",
@@ -74,6 +77,7 @@ public class BackgroundJobExecutor : IBackgroundJobExecutor
         catch (Exception ex)
         {
             stopwatch.Stop();
+            RecordDuration(jobType, stopwatch.Elapsed, SenseMeters.Outcomes.Exception);
 
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
 
@@ -96,6 +100,12 @@ public class BackgroundJobExecutor : IBackgroundJobExecutor
             throw;
         }
     }
+
+    private static void RecordDuration(JobType jobType, TimeSpan elapsed, string outcome) =>
+        SenseMeters.BackgroundJobDuration.Record(
+            elapsed.TotalSeconds,
+            new KeyValuePair<string, object?>(SenseMeters.Tags.JobType, jobType.ToString()),
+            new KeyValuePair<string, object?>(SenseMeters.Tags.Outcome, outcome));
 
     /// <summary>
     /// Routes job to appropriate handler based on job type.

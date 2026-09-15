@@ -51,6 +51,7 @@
 
   <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
+  <data name="auth.feature_disabled" xml:space="preserve"><value>This feature has been turned off in your company's access settings.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Record not found.</value></data>
   <data name="auth.invalid_credentials" xml:space="preserve"><value>Invalid e-mail or password.</value></data>
   <data name="auth.user_disabled" xml:space="preserve"><value>The account is disabled.</value></data>
@@ -147,6 +148,83 @@
   <data name="identity.group.security" xml:space="preserve"><value>Security</value></data>
   <data name="identity.group.audit" xml:space="preserve"><value>Audit</value></data>
 
+  <!-- Employee -->
+  <data name="employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="employee.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
+  <data name="employee.manager_not_found" xml:space="preserve"><value>The selected manager was not found or is inactive.</value></data>
+  <data name="employee.national_id_taken" xml:space="preserve"><value>This national ID is already registered to another employee.</value></data>
+  <data name="employee.status_invalid" xml:space="preserve"><value>Invalid employee status.</value></data>
+  <data name="employee.days_out_of_range" xml:space="preserve"><value>Days must be between 0 and 366.</value></data>
+  <data name="employee.first_name_required" xml:space="preserve"><value>First name is required.</value></data>
+  <data name="employee.last_name_required" xml:space="preserve"><value>Last name is required.</value></data>
+  <data name="employee.name_too_long" xml:space="preserve"><value>First and last name can be at most 100 characters.</value></data>
+  <data name="employee.national_id_invalid" xml:space="preserve"><value>Invalid Turkish national ID number.</value></data>
+  <data name="employee.work_email_invalid" xml:space="preserve"><value>Invalid work e-mail.</value></data>
+  <data name="employee.personal_email_invalid" xml:space="preserve"><value>Invalid personal e-mail.</value></data>
+  <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
+  <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
+  <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
+  <data name="employee.employees.read" xml:space="preserve"><value>View employees</value></data>
+  <data name="employee.employees.create" xml:space="preserve"><value>Add employees</value></data>
+  <data name="employee.employees.update" xml:space="preserve"><value>Edit employee details</value></data>
+  <data name="employee.employees.bulk_update" xml:space="preserve"><value>Bulk operations on employees</value></data>
+  <data name="employee.directory.view" xml:space="preserve"><value>View the employee directory</value></data>
+  <data name="employee.orgchart.view" xml:space="preserve"><value>View the organization chart</value></data>
+  <data name="employee.salary.view" xml:space="preserve"><value>View salary and payment information</value></data>
+
+  <!-- Organization -->
+  <data name="organization.unit_type.not_found" xml:space="preserve"><value>Level not found.</value></data>
+  <data name="organization.unit_type.name_required" xml:space="preserve"><value>Level name is required.</value></data>
+  <data name="organization.unit_type.name_too_long" xml:space="preserve"><value>Level name can be at most {max} characters.</value></data>
+  <data name="organization.unit_type.system_immutable" xml:space="preserve"><value>The Company level cannot be removed or moved.</value></data>
+  <data name="organization.unit_type.in_use" xml:space="preserve"><value>This level cannot be removed because active employees are assigned to its units.</value></data>
+  <data name="organization.unit_type.already_inactive" xml:space="preserve"><value>This level is already inactive.</value></data>
+  <data name="organization.unit_type.already_active" xml:space="preserve"><value>This level is already active.</value></data>
+  <data name="organization.unit_type.limit_reached" xml:space="preserve"><value>At most {max} levels can be defined.</value></data>
+  <data name="organization.unit_type.insert_position_invalid" xml:space="preserve"><value>The insert position is not an active level.</value></data>
+  <data name="organization.unit_type.order_invalid" xml:space="preserve"><value>The order must contain every active level exactly once.</value></data>
+  <data name="organization.unit_type.company_must_be_first" xml:space="preserve"><value>The Company level must always come first.</value></data>
+  <data name="organization.unit_type.company_level_missing" xml:space="preserve"><value>No active Company level was found.</value></data>
+  <data name="organization.unit_type.inactive" xml:space="preserve"><value>Units cannot be created on an inactive level.</value></data>
+  <data name="organization.company.not_found" xml:space="preserve"><value>Company not found.</value></data>
+  <data name="organization.holiday_calendar.not_found" xml:space="preserve"><value>Holiday calendar not found.</value></data>
+  <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Days must be between 0 and 366.</value></data>
+  <data name="organization.unit_types.manage" xml:space="preserve"><value>Manage organization structure levels</value></data>
+  <data name="organization.companies.create" xml:space="preserve"><value>Add companies</value></data>
+  <data name="organization.holidays.view" xml:space="preserve"><value>View official holidays</value></data>
+
+  <!-- Identity: access settings, unit authorization, invitations, support access (Faz 0 P2) -->
+  <data name="identity.access_settings.bypass" xml:space="preserve"><value>Bypass access setting restrictions</value></data>
+  <data name="identity.group.access_settings" xml:space="preserve"><value>Access settings</value></data>
+  <data name="identity.impersonation.approve" xml:space="preserve"><value>Approve support access requests</value></data>
+  <data name="identity.unit_authorizations.manage" xml:space="preserve"><value>Manage unit authorizations</value></data>
+  <data name="identity.unit_authorizations.read" xml:space="preserve"><value>View unit authorizations</value></data>
+  <data name="identity.group.impersonation" xml:space="preserve"><value>Support access</value></data>
+  <data name="identity.group.unit_authorizations" xml:space="preserve"><value>Unit authorization</value></data>
+  <data name="employee.my.view" xml:space="preserve"><value>View own employee card</value></data>
+  <data name="employee.org_unit_out_of_scope" xml:space="preserve"><value>You are not authorized to add or move employees to this unit.</value></data>
+  <data name="user.access_type_owner_only" xml:space="preserve"><value>Only an account owner can grant or revoke the account owner access type.</value></data>
+  <data name="user.access_type_forbidden" xml:space="preserve"><value>Only an account owner or administrator can grant or revoke the administrator access type.</value></data>
+  <data name="user.access_type_invalid" xml:space="preserve"><value>Invalid access type.</value></data>
+  <data name="identity.invitation.email_required" xml:space="preserve"><value>The employee needs a work or personal e-mail address to be invited.</value></data>
+  <data name="identity.invitation.already_active" xml:space="preserve"><value>The employee's account is already active.</value></data>
+  <data name="identity.invitation.employee_not_found" xml:space="preserve"><value>The employee to invite was not found.</value></data>
+  <data name="identity.invitation.email_in_use" xml:space="preserve"><value>This e-mail address belongs to a user linked to another employee.</value></data>
+  <data name="identity.invitation.user_disabled" xml:space="preserve"><value>The employee's user account is disabled; enable it first.</value></data>
+  <data name="impersonation.not_found" xml:space="preserve"><value>Support access request not found.</value></data>
+  <data name="impersonation.not_pending" xml:space="preserve"><value>The request is not pending approval.</value></data>
+  <data name="impersonation.not_approved" xml:space="preserve"><value>The request has not been approved.</value></data>
+  <data name="impersonation.expired" xml:space="preserve"><value>The support access window has expired.</value></data>
+  <data name="impersonation.not_revocable" xml:space="preserve"><value>This support access cannot be revoked.</value></data>
+  <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Only platform staff can request support access.</value></data>
+  <data name="impersonation.forbidden" xml:space="preserve"><value>You are not allowed to use this support access.</value></data>
+  <data name="impersonation.reason_required" xml:space="preserve"><value>A reason is required (max 500 characters).</value></data>
+  <data name="impersonation.status_invalid" xml:space="preserve"><value>Invalid status filter.</value></data>
+  <data name="identity.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
+  <data name="unit_authorization.not_found" xml:space="preserve"><value>Unit authorization not found.</value></data>
+  <data name="unit_authorization.already_revoked" xml:space="preserve"><value>The unit authorization has already been revoked.</value></data>
+  <data name="unit_authorization.no_grants_selected" xml:space="preserve"><value>Select at least one permission.</value></data>
+
   <!-- E-mails -->
   <data name="email.invitation.subject" xml:space="preserve"><value>Your SenseİK invitation — {tenant}</value></data>
   <data name="email.invitation.body" xml:space="preserve"><value>Hello {name},
@@ -185,4 +263,106 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="field.role_ids" xml:space="preserve"><value>Roles</value></data>
   <data name="field.slug" xml:space="preserve"><value>Company address</value></data>
   <data name="field.token" xml:space="preserve"><value>Token</value></data>
+  <data name="field.national_id" xml:space="preserve"><value>National ID</value></data>
+  <data name="field.work_email" xml:space="preserve"><value>Work e-mail</value></data>
+  <data name="field.personal_email" xml:space="preserve"><value>Personal e-mail</value></data>
+  <data name="field.work_phone" xml:space="preserve"><value>Work phone</value></data>
+  <data name="field.selection" xml:space="preserve"><value>Selection</value></data>
+  <data name="field.manager_employee_id" xml:space="preserve"><value>Manager</value></data>
+
+  <!-- Veri aktarım merkezi (DataTransfer) -->
+  <data name="employee.employees.import" xml:space="preserve"><value>Import employees from a file</value></data>
+  <data name="datatransfer.import.view" xml:space="preserve"><value>View data imports</value></data>
+  <data name="datatransfer.import.run" xml:space="preserve"><value>Run data imports</value></data>
+  <data name="datatransfer.template.download" xml:space="preserve"><value>Download import templates</value></data>
+  <data name="datatransfer.result.download" xml:space="preserve"><value>Download import result files</value></data>
+  <data name="datatransfer.template_not_found" xml:space="preserve"><value>Import template not found.</value></data>
+  <data name="datatransfer.job_not_found" xml:space="preserve"><value>Import job not found.</value></data>
+  <data name="datatransfer.job_not_finished" xml:space="preserve"><value>The import has not finished yet; no result file is available.</value></data>
+  <data name="datatransfer.job_not_editable" xml:space="preserve"><value>The mapping of an import that has already run cannot be changed; upload the file again.</value></data>
+  <data name="datatransfer.job_not_runnable" xml:space="preserve"><value>The import cannot run: the column mapping is not saved or the import has already run.</value></data>
+  <data name="datatransfer.file_required" xml:space="preserve"><value>Select a file.</value></data>
+  <data name="datatransfer.file_too_large" xml:space="preserve"><value>The file can be at most {max}.</value></data>
+  <data name="datatransfer.file_type_not_supported" xml:space="preserve"><value>Only .xlsx and .csv files can be uploaded.</value></data>
+  <data name="datatransfer.file_unreadable" xml:space="preserve"><value>The file could not be read. Upload a valid .xlsx or .csv file.</value></data>
+  <data name="datatransfer.file_empty" xml:space="preserve"><value>The file has no header row or no data rows.</value></data>
+  <data name="datatransfer.too_many_rows" xml:space="preserve"><value>The file can contain at most {max} data rows.</value></data>
+  <data name="datatransfer.mapping_invalid" xml:space="preserve"><value>Invalid column mapping: unknown column or a target mapped more than once.</value></data>
+  <data name="datatransfer.mode_invalid" xml:space="preserve"><value>Invalid import mode.</value></data>
+  <data name="datatransfer.mode_not_supported" xml:space="preserve"><value>This template does not support the selected import mode.</value></data>
+  <data name="datatransfer.failure_policy_invalid" xml:space="preserve"><value>Invalid failure policy.</value></data>
+  <data name="datatransfer.outcome_invalid" xml:space="preserve"><value>Invalid row outcome filter.</value></data>
+  <data name="datatransfer.run_failed" xml:space="preserve"><value>The import failed unexpectedly; no records were changed.</value></data>
+  <data name="IMPORT_UNMAPPED_REQUIRED" xml:space="preserve"><value>Required and match-key columns must be mapped before continuing: {missing}</value></data>
+  <data name="IMPORT_REQUIRED_MISSING" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="IMPORT_INVALID_NATIONAL_ID" xml:space="preserve"><value>Invalid national ID number: '{value}'.</value></data>
+  <data name="IMPORT_INVALID_DATE" xml:space="preserve"><value>Invalid date: '{value}'. Use DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD.</value></data>
+  <data name="IMPORT_INVALID_EMAIL" xml:space="preserve"><value>Invalid e-mail address: '{value}'.</value></data>
+  <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Invalid phone number: '{value}'.</value></data>
+  <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>The value can be at most {max} characters.</value></data>
+  <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>This national ID also appears on row {row} of the file.</value></data>
+  <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>The name of the employee matching this national ID differs from the file ({value}).</value></data>
+  <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>No employee is registered with this national ID (Update only mode does not create records).</value></data>
+  <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' was not found; it must be defined first.</value></data>
+  <data name="IMPORT_AMBIGUOUS_MATCH" xml:space="preserve"><value>'{value}' matches more than one record.</value></data>
+  <data name="IMPORT_OUT_OF_SCOPE" xml:space="preserve"><value>You are not allowed to change this record or unit.</value></data>
+  <data name="import.template.employee.master.name" xml:space="preserve"><value>Employees</value></data>
+  <data name="import.template.employee.master.description" xml:space="preserve"><value>Bulk insert or update employee identity, contact, manager and unit information.</value></data>
+  <data name="import.template.employee.master.instruction.match" xml:space="preserve"><value>Employees are matched by National ID + First name + Last name: if the national ID matches but the name differs, the row is rejected.</value></data>
+  <data name="import.template.employee.master.instruction.new_employee" xml:space="preserve"><value>First name, last name and national ID are required to add a new employee.</value></data>
+  <data name="import.template.employee.master.instruction.manager" xml:space="preserve"><value>In the Manager column write the first and last name of an existing active employee (e.g. Ayşe Yılmaz).</value></data>
+  <data name="import.template.employee.master.instruction.org_units" xml:space="preserve"><value>Unit columns are your company's hierarchy levels; pick an existing unit from the list. If several levels are filled the employee is assigned to the deepest one.</value></data>
+  <data name="import.template.employee.master.sample.valid_new" xml:space="preserve"><value>Correct: new employee (dates DD.MM.YYYY and DD/MM/YYYY).</value></data>
+  <data name="import.template.employee.master.sample.valid_manager" xml:space="preserve"><value>Correct: employee with a manager given by full name (date YYYY-MM-DD).</value></data>
+  <data name="import.template.employee.master.sample.invalid_national_id" xml:space="preserve"><value>Incorrect: invalid national ID.</value></data>
+  <data name="import.template.employee.master.sample.invalid_date" xml:space="preserve"><value>Incorrect: date written as text (1 Ocak 2020).</value></data>
+  <data name="import.template.employee.master.sample.invalid_email" xml:space="preserve"><value>Incorrect: incomplete e-mail address.</value></data>
+  <data name="import.column.employee.firstName" xml:space="preserve"><value>First name</value></data>
+  <data name="import.column.employee.lastName" xml:space="preserve"><value>Last name</value></data>
+  <data name="import.column.employee.nationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="import.column.employee.workEmail" xml:space="preserve"><value>Work e-mail</value></data>
+  <data name="import.column.employee.personalEmail" xml:space="preserve"><value>Personal e-mail</value></data>
+  <data name="import.column.employee.workPhone" xml:space="preserve"><value>Work phone</value></data>
+  <data name="import.column.employee.hireDate" xml:space="preserve"><value>Hire date</value></data>
+  <data name="import.column.employee.birthDate" xml:space="preserve"><value>Birth date</value></data>
+  <data name="import.column.employee.manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Employee's first name (used for matching).</value></data>
+  <data name="import.column.employee.lastName.description" xml:space="preserve"><value>Employee's last name (used for matching).</value></data>
+  <data name="import.column.employee.nationalId.description" xml:space="preserve"><value>11-digit Turkish national ID; employees are matched by this number.</value></data>
+  <data name="import.column.employee.workEmail.description" xml:space="preserve"><value>Work e-mail address (can be used for invitations).</value></data>
+  <data name="import.column.employee.personalEmail.description" xml:space="preserve"><value>Personal e-mail address.</value></data>
+  <data name="import.column.employee.workPhone.description" xml:space="preserve"><value>Work phone, at most 30 characters.</value></data>
+  <data name="import.column.employee.hireDate.description" xml:space="preserve"><value>DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD.</value></data>
+  <data name="import.column.employee.birthDate.description" xml:space="preserve"><value>DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD.</value></data>
+  <data name="import.column.employee.manager.description" xml:space="preserve"><value>Full name of an existing active employee.</value></data>
+  <data name="import.column.employee.orgUnit.description" xml:space="preserve"><value>Name of an active unit defined at this level (pick from the list).</value></data>
+  <data name="import.instructions.headers" xml:space="preserve"><value>Do not rename the header row; do not delete the hidden key row (row 2). Renamed columns can be mapped manually after upload.</value></data>
+  <data name="import.instructions.columns" xml:space="preserve"><value>You may delete unused columns, reorder columns or insert your own columns (extra columns are left as 'Ignore').</value></data>
+  <data name="import.instructions.dates" xml:space="preserve"><value>Dates must be DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD (optionally with HH:MM) or Excel date cells; text such as '1 January 2020' is rejected.</value></data>
+  <data name="import.instructions.lookups" xml:space="preserve"><value>Values of list columns (manager, units) must already exist; letter case and leading/trailing spaces are ignored.</value></data>
+  <data name="import.instructions.update_only" xml:space="preserve"><value>With 'Update only mode' on, only existing employees are updated, no records are created and only mapped columns are written; columns removed from the file are left untouched.</value></data>
+  <data name="import.instructions.empty_cells" xml:space="preserve"><value>When updating an existing employee, empty cells are ignored (the current value is kept).</value></data>
+  <data name="import.instructions.examples" xml:space="preserve"><value>Green rows on the 'Examples' sheet are correct and red rows are incorrect examples; that sheet is not imported.</value></data>
+  <data name="import.instructions.limits" xml:space="preserve"><value>The file must be .xlsx or .csv, at most 10 MB and {max} data rows. After the import you can download a file with a Result and Error description per row.</value></data>
+  <data name="import.template.label.instructions_sheet" xml:space="preserve"><value>Instructions</value></data>
+  <data name="import.template.label.examples_sheet" xml:space="preserve"><value>Examples</value></data>
+  <data name="import.template.label.lists_sheet" xml:space="preserve"><value>Lists</value></data>
+  <data name="import.template.label.instructions_title" xml:space="preserve"><value>Import rules</value></data>
+  <data name="import.template.label.columns_title" xml:space="preserve"><value>Columns</value></data>
+  <data name="import.template.label.column" xml:space="preserve"><value>Column</value></data>
+  <data name="import.template.label.requirement" xml:space="preserve"><value>Requirement</value></data>
+  <data name="import.template.label.description" xml:space="preserve"><value>Description</value></data>
+  <data name="import.template.label.example_note" xml:space="preserve"><value>Note</value></data>
+  <data name="import.template.label.match_key" xml:space="preserve"><value>Required (match key)</value></data>
+  <data name="import.template.label.required" xml:space="preserve"><value>Required</value></data>
+  <data name="import.template.label.required_on_insert" xml:space="preserve"><value>Required for new records</value></data>
+  <data name="import.template.label.optional" xml:space="preserve"><value>Optional</value></data>
+  <data name="import.result.sheet" xml:space="preserve"><value>Result</value></data>
+  <data name="import.result.outcome_header" xml:space="preserve"><value>Result</value></data>
+  <data name="import.result.error_header" xml:space="preserve"><value>Error description</value></data>
+  <data name="import.result.file_suffix" xml:space="preserve"><value>result</value></data>
+  <data name="import.outcome.Inserted" xml:space="preserve"><value>Inserted</value></data>
+  <data name="import.outcome.Updated" xml:space="preserve"><value>Updated</value></data>
+  <data name="import.outcome.Skipped" xml:space="preserve"><value>Skipped</value></data>
+  <data name="import.outcome.Error" xml:space="preserve"><value>Error</value></data>
 </root>

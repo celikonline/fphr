@@ -6,6 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
     <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Application/Sense.Modules.Organization.Application.csproj" />
     <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Domain/Sense.Modules.Organization.Domain.csproj" />
     <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Infrastructure/Sense.Modules.Organization.Infrastructure.csproj" />

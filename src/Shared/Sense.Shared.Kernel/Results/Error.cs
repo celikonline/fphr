@@ -64,6 +64,7 @@ public static class ErrorCodes
     public const string ValidationError = "general.validation_error";
     public const string Unauthenticated = "auth.unauthenticated";
     public const string Forbidden = "auth.forbidden";
+    public const string FeatureDisabled = "auth.feature_disabled";
     public const string OutOfScope = "auth.out_of_scope";
     public const string TenantMismatch = "tenant.mismatch";
     public const string ConcurrencyConflict = "general.concurrency_conflict";

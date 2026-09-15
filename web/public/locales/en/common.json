@@ -44,5 +44,11 @@
   "close": "Close",
   "back": "Back",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "impersonation": {
+    "banner": "This session is being used by the Sense support team under an approved, time-limited support access grant. All actions are recorded in the audit log.",
+    "end": "End session"
+  },
+  "noAccessTitle": "You don't have access to this page",
+  "noAccessDescription": "Contact your company administrator for the required permission."
 }

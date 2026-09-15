@@ -11,6 +11,9 @@ public static class OrganizationErrors
     public const string ParentNotFound = "organization.unit.parent_not_found";
     public const string ParentCausesCycle = "organization.unit.parent_cycle";
     public const string HasActiveChildren = "organization.unit_type.in_use";
+    public const string UnitTypeInUse = "organization.unit_type.in_use";
+    public const string CompanyLevelMissing = "organization.unit_type.company_level_missing";
+    public const string HolidayDaysOutOfRange = "organization.holidays.days_out_of_range";
 
     public const string HolidayCalendarNotFound = "organization.holiday_calendar.not_found";
     public const string CompanyNotFound = "organization.company.not_found";

@@ -13,7 +13,9 @@ This directory contains deterministic seed data generation for development and t
 
 ### Demo Profile
 - **Tenant**: "Demo HR Company" (TenantId: `b2c3d4e5-f6a7-5b6c-ad9e-8f7a6b5c4d3e`)
-- **Users**: 50 employees with realistic Turkish names
+- **Users**: 6 fixed, memorable login accounts (`owner@demo.local`, `ik@demo.local`,
+  `bordro@demo.local`, `yonetici@demo.local`, `calisan@demo.local`, `denetci@demo.local` —
+  see root `README.md`) + 50 randomly generated employees with realistic Turkish names
 - **Roles**: All 17 system roles (Admin, HR, Finance, Manager, Employee, etc.)
 - **Documents**: 3-5 sample documents per tenant
 - **Purpose**: Full-featured UI and workflow testing
@@ -46,10 +48,22 @@ Enable seeding in `appsettings.json` or `appsettings.Development.json`:
 
 To reset seed data and re-seed:
 
-1. Delete the tenant entries from the database:
+1. `identity.tenants` alone isn't enough: `identity`, `org`, `employee` and `documents` are
+   separate schemas/DbContexts (ADR 0003) with no cross-schema FK enforcement, so deleting
+   only the tenant row leaves the other schemas' rows orphaned instead of cascading. Truncate
+   every seeded table across all four schemas instead:
    ```sql
-   DELETE FROM identity.tenants WHERE id = 'a1b2c3d4-e5f6-4a5b-9c8d-7e6f5a4b3c2d'; -- Minimal
-   DELETE FROM identity.tenants WHERE id = 'b2c3d4e5-f6a7-5b6c-ad9e-8f7a6b5c4d3e'; -- Demo
+   TRUNCATE TABLE
+     identity.impersonation_grants, identity.inbox_messages, identity.invitations,
+     identity.outbox_messages, identity.refresh_tokens, identity.role_permissions,
+     identity.roles, identity.tenants, identity.unit_authorizations,
+     identity.user_permission_overrides, identity.user_roles, identity.users,
+     org.companies, org.holiday_calendar_entries, org.holiday_calendars, org.inbox_messages,
+     org.locations, org.org_unit_approval_policy_assignments, org.org_unit_types,
+     org.org_units, org.outbox_messages,
+     employee.employees, employee.inbox_messages, employee.outbox_messages,
+     documents.documents, documents.inbox_messages, documents.outbox_messages
+   CASCADE;
    ```
 
 2. Restart the application with seeding enabled
@@ -58,8 +72,11 @@ To reset seed data and re-seed:
 
 All seed data is **fictional**:
 - Employee names are randomly generated from Turkish name lists
-- Email addresses follow the pattern: `firstname.lastname@democompany.com`
-- Passwords are dummy hashes (should not be used in production)
+- Email addresses follow the pattern: `firstname.lastname@democompany.com` (except the 6
+  fixed `@demo.local` accounts above)
+- All seeded users (minimal admin + every demo account) share one password,
+  `SeedDataConstants.SeedUserPassword` (`"Demo123!"`), hashed for real via the app's own
+  `IPasswordHasher` — dev/test-only, never used in production seeding
 - No real personal data is used
 
 ## Deterministic Output

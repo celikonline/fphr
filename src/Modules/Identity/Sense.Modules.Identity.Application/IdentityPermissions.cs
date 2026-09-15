@@ -31,6 +31,9 @@ public static class IdentityPermissions
     /// <summary>Bir birim için mevcut yetkilendirme listesini görüntüleme.</summary>
     public const string UnitAuthorizationsRead = "identity.unit_authorizations.read";
 
+    /// <summary>Erişim ayarları kısıtlarını aşar (Owner/Admin joker ile, HR açıkça); çalışan tipi kullanıcılara verilmez.</summary>
+    public const string AccessSettingsBypass = AccessSettingPermissions.Bypass;
+
     public static class Groups
     {
         public const string Users = "identity.group.users";
@@ -40,6 +43,7 @@ public static class IdentityPermissions
         public const string Audit = "identity.group.audit";
         public const string Impersonation = "identity.group.impersonation";
         public const string UnitAuthorizations = "identity.group.unit_authorizations";
+        public const string AccessSettings = "identity.group.access_settings";
     }
 
     public static readonly IReadOnlyList<Permission> All =
@@ -61,5 +65,6 @@ public static class IdentityPermissions
         new(ImpersonationApprove, Module, ImpersonationApprove, Groups.Impersonation),
         new(UnitAuthorizationsManage, Module, UnitAuthorizationsManage, Groups.UnitAuthorizations),
         new(UnitAuthorizationsRead, Module, UnitAuthorizationsRead, Groups.UnitAuthorizations),
+        new(AccessSettingsBypass, Module, AccessSettingsBypass, Groups.AccessSettings),
     ];
 }

@@ -8,6 +8,7 @@ using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Infrastructure.Context;
+using Sense.Shared.Infrastructure.Observability;
 using Sense.Shared.Kernel.Domain;
 
 namespace Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -52,6 +53,7 @@ public sealed partial class OutboxProcessor<TContext>(
                 message.ProcessedAt = clock.GetUtcNow().UtcDateTime;
                 message.Error = null;
                 processed++;
+                RecordResult(SenseMeters.OutboxResults.Processed);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -62,12 +64,14 @@ public sealed partial class OutboxProcessor<TContext>(
                 {
                     message.IsDead = true;
                     Log.DeadLettered(logger, ex, message.Id, message.Type, message.Attempts);
+                    RecordResult(SenseMeters.OutboxResults.DeadLettered);
                 }
                 else
                 {
                     var seconds = Math.Min(Math.Pow(2, message.Attempts) * cfg.BaseBackoffSeconds, cfg.MaxBackoffSeconds);
                     message.NextAttemptAt = clock.GetUtcNow().UtcDateTime.AddSeconds(seconds);
                     Log.Retry(logger, ex, message.Id, message.Type, seconds);
+                    RecordResult(SenseMeters.OutboxResults.Retried);
                 }
             }
         }
@@ -75,6 +79,12 @@ public sealed partial class OutboxProcessor<TContext>(
         await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return processed;
     }
+
+    private static void RecordResult(string result) =>
+        SenseMeters.OutboxMessages.Add(
+            1,
+            new KeyValuePair<string, object?>(SenseMeters.Tags.OutboxContext, typeof(TContext).Name),
+            new KeyValuePair<string, object?>(SenseMeters.Tags.OutboxResult, result));
 
     private static async Task DispatchAsync(IServiceProvider services, OutboxMessage message, CancellationToken cancellationToken)
     {

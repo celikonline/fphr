@@ -54,6 +54,7 @@
   <!-- Kimlik doğrulama / yetki -->
   <data name="auth.unauthenticated" xml:space="preserve"><value>Kimlik doğrulaması gerekli.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>Bu işlem için '{permission}' izni gerekli.</value></data>
+  <data name="auth.feature_disabled" xml:space="preserve"><value>Bu özellik şirketinizin erişim ayarlarında kapatılmış.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
   <data name="auth.invalid_credentials" xml:space="preserve"><value>E-posta veya parola hatalı.</value></data>
   <data name="auth.user_disabled" xml:space="preserve"><value>Hesap devre dışı.</value></data>
@@ -156,6 +157,83 @@
   <data name="identity.group.security" xml:space="preserve"><value>Güvenlik</value></data>
   <data name="identity.group.audit" xml:space="preserve"><value>Denetim</value></data>
 
+  <!-- Çalışan -->
+  <data name="employee.not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
+  <data name="employee.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
+  <data name="employee.manager_not_found" xml:space="preserve"><value>Seçilen yönetici bulunamadı veya pasif.</value></data>
+  <data name="employee.national_id_taken" xml:space="preserve"><value>Bu kimlik numarası başka bir çalışana kayıtlı.</value></data>
+  <data name="employee.status_invalid" xml:space="preserve"><value>Geçersiz çalışan durumu.</value></data>
+  <data name="employee.days_out_of_range" xml:space="preserve"><value>Gün sayısı 0 ile 366 arasında olmalı.</value></data>
+  <data name="employee.first_name_required" xml:space="preserve"><value>Ad zorunludur.</value></data>
+  <data name="employee.last_name_required" xml:space="preserve"><value>Soyad zorunludur.</value></data>
+  <data name="employee.name_too_long" xml:space="preserve"><value>Ad ve soyad en fazla 100 karakter olabilir.</value></data>
+  <data name="employee.national_id_invalid" xml:space="preserve"><value>Geçersiz T.C. kimlik numarası.</value></data>
+  <data name="employee.work_email_invalid" xml:space="preserve"><value>Geçersiz iş e-postası.</value></data>
+  <data name="employee.personal_email_invalid" xml:space="preserve"><value>Geçersiz kişisel e-posta.</value></data>
+  <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
+  <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
+  <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
+  <data name="employee.employees.read" xml:space="preserve"><value>Çalışanları görüntüleme</value></data>
+  <data name="employee.employees.create" xml:space="preserve"><value>Çalışan ekleme</value></data>
+  <data name="employee.employees.update" xml:space="preserve"><value>Çalışan bilgilerini düzenleme</value></data>
+  <data name="employee.employees.bulk_update" xml:space="preserve"><value>Çalışanlarda toplu işlem</value></data>
+  <data name="employee.directory.view" xml:space="preserve"><value>Çalışan rehberini görüntüleme</value></data>
+  <data name="employee.orgchart.view" xml:space="preserve"><value>Organizasyon şemasını görüntüleme</value></data>
+  <data name="employee.salary.view" xml:space="preserve"><value>Maaş ve ödeme bilgilerini görüntüleme</value></data>
+
+  <!-- Organizasyon -->
+  <data name="organization.unit_type.not_found" xml:space="preserve"><value>Seviye bulunamadı.</value></data>
+  <data name="organization.unit_type.name_required" xml:space="preserve"><value>Seviye adı zorunludur.</value></data>
+  <data name="organization.unit_type.name_too_long" xml:space="preserve"><value>Seviye adı en fazla {max} karakter olabilir.</value></data>
+  <data name="organization.unit_type.system_immutable" xml:space="preserve"><value>Şirket seviyesi silinemez veya taşınamaz.</value></data>
+  <data name="organization.unit_type.in_use" xml:space="preserve"><value>Bu seviyedeki birimlerde aktif çalışan bulunduğu için seviye silinemez.</value></data>
+  <data name="organization.unit_type.already_inactive" xml:space="preserve"><value>Bu seviye zaten pasif.</value></data>
+  <data name="organization.unit_type.already_active" xml:space="preserve"><value>Bu seviye zaten aktif.</value></data>
+  <data name="organization.unit_type.limit_reached" xml:space="preserve"><value>En fazla {max} seviye tanımlanabilir.</value></data>
+  <data name="organization.unit_type.insert_position_invalid" xml:space="preserve"><value>Yeni seviyenin ekleneceği konum geçerli bir aktif seviye değil.</value></data>
+  <data name="organization.unit_type.order_invalid" xml:space="preserve"><value>Sıralama tüm aktif seviyeleri birer kez içermelidir.</value></data>
+  <data name="organization.unit_type.company_must_be_first" xml:space="preserve"><value>Şirket seviyesi her zaman ilk sırada olmalıdır.</value></data>
+  <data name="organization.unit_type.company_level_missing" xml:space="preserve"><value>Aktif bir Şirket seviyesi bulunamadı.</value></data>
+  <data name="organization.unit_type.inactive" xml:space="preserve"><value>Pasif bir seviyede birim oluşturulamaz.</value></data>
+  <data name="organization.company.not_found" xml:space="preserve"><value>Şirket bulunamadı.</value></data>
+  <data name="organization.holiday_calendar.not_found" xml:space="preserve"><value>Tatil takvimi bulunamadı.</value></data>
+  <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Gün sayısı 0 ile 366 arasında olmalıdır.</value></data>
+  <data name="organization.unit_types.manage" xml:space="preserve"><value>Şirket yapısı seviyelerini yönetme</value></data>
+  <data name="organization.companies.create" xml:space="preserve"><value>Şirket ekleme</value></data>
+  <data name="organization.holidays.view" xml:space="preserve"><value>Resmi tatilleri görüntüleme</value></data>
+
+  <!-- Identity: access settings, unit authorization, invitations, support access (Faz 0 P2) -->
+  <data name="identity.access_settings.bypass" xml:space="preserve"><value>Erişim ayarı kısıtlarından etkilenmeme</value></data>
+  <data name="identity.group.access_settings" xml:space="preserve"><value>Erişim ayarları</value></data>
+  <data name="identity.impersonation.approve" xml:space="preserve"><value>Destek erişimi taleplerini onaylama</value></data>
+  <data name="identity.unit_authorizations.manage" xml:space="preserve"><value>Birim yetkilendirme yönetimi</value></data>
+  <data name="identity.unit_authorizations.read" xml:space="preserve"><value>Birim yetkilendirmelerini görüntüleme</value></data>
+  <data name="identity.group.impersonation" xml:space="preserve"><value>Destek erişimi</value></data>
+  <data name="identity.group.unit_authorizations" xml:space="preserve"><value>Birim yetkilendirme</value></data>
+  <data name="employee.my.view" xml:space="preserve"><value>Kendi çalışan kartını görüntüleme</value></data>
+  <data name="employee.org_unit_out_of_scope" xml:space="preserve"><value>Bu birime çalışan ekleme veya taşıma yetkiniz yok.</value></data>
+  <data name="user.access_type_owner_only" xml:space="preserve"><value>Hesap sahibi erişim türünü yalnız bir hesap sahibi verebilir veya kaldırabilir.</value></data>
+  <data name="user.access_type_forbidden" xml:space="preserve"><value>Yönetici erişim türünü yalnız hesap sahibi veya yönetici verebilir veya kaldırabilir.</value></data>
+  <data name="user.access_type_invalid" xml:space="preserve"><value>Geçersiz erişim türü.</value></data>
+  <data name="identity.invitation.email_required" xml:space="preserve"><value>Davet göndermek için çalışanın iş veya kişisel e-postası tanımlı olmalıdır.</value></data>
+  <data name="identity.invitation.already_active" xml:space="preserve"><value>Çalışanın hesabı zaten aktif.</value></data>
+  <data name="identity.invitation.employee_not_found" xml:space="preserve"><value>Davet edilecek çalışan bulunamadı.</value></data>
+  <data name="identity.invitation.email_in_use" xml:space="preserve"><value>Bu e-posta adresi başka bir çalışana bağlı bir kullanıcıya ait.</value></data>
+  <data name="identity.invitation.user_disabled" xml:space="preserve"><value>Çalışanın kullanıcı hesabı pasif; önce hesabı etkinleştirin.</value></data>
+  <data name="impersonation.not_found" xml:space="preserve"><value>Destek erişimi talebi bulunamadı.</value></data>
+  <data name="impersonation.not_pending" xml:space="preserve"><value>Talep onay beklemiyor.</value></data>
+  <data name="impersonation.not_approved" xml:space="preserve"><value>Talep onaylanmamış.</value></data>
+  <data name="impersonation.expired" xml:space="preserve"><value>Destek erişimi süresi dolmuş.</value></data>
+  <data name="impersonation.not_revocable" xml:space="preserve"><value>Bu destek erişimi iptal edilemez.</value></data>
+  <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Destek erişimi yalnız platform personeli tarafından talep edilebilir.</value></data>
+  <data name="impersonation.forbidden" xml:space="preserve"><value>Bu destek erişimini kullanma yetkiniz yok.</value></data>
+  <data name="impersonation.reason_required" xml:space="preserve"><value>Gerekçe zorunludur (en fazla 500 karakter).</value></data>
+  <data name="impersonation.status_invalid" xml:space="preserve"><value>Geçersiz durum filtresi.</value></data>
+  <data name="identity.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
+  <data name="unit_authorization.not_found" xml:space="preserve"><value>Birim yetkilendirmesi bulunamadı.</value></data>
+  <data name="unit_authorization.already_revoked" xml:space="preserve"><value>Birim yetkilendirmesi zaten kaldırılmış.</value></data>
+  <data name="unit_authorization.no_grants_selected" xml:space="preserve"><value>En az bir yetki seçilmelidir.</value></data>
+
   <!-- E-postalar -->
   <data name="email.invitation.subject" xml:space="preserve"><value>{tenant} — SenseİK davetiniz</value></data>
   <data name="email.invitation.body" xml:space="preserve"><value>Merhaba {name},
@@ -194,4 +272,106 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="field.role_ids" xml:space="preserve"><value>Roller</value></data>
   <data name="field.slug" xml:space="preserve"><value>Şirket adresi</value></data>
   <data name="field.token" xml:space="preserve"><value>Belirteç</value></data>
+  <data name="field.national_id" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="field.work_email" xml:space="preserve"><value>İş e-postası</value></data>
+  <data name="field.personal_email" xml:space="preserve"><value>Kişisel e-posta</value></data>
+  <data name="field.work_phone" xml:space="preserve"><value>İş telefonu</value></data>
+  <data name="field.selection" xml:space="preserve"><value>Seçim</value></data>
+  <data name="field.manager_employee_id" xml:space="preserve"><value>Yönetici</value></data>
+
+  <!-- Veri aktarım merkezi (DataTransfer) -->
+  <data name="employee.employees.import" xml:space="preserve"><value>Çalışanları dosyadan içe aktarma</value></data>
+  <data name="datatransfer.import.view" xml:space="preserve"><value>Veri aktarım geçmişini görüntüleme</value></data>
+  <data name="datatransfer.import.run" xml:space="preserve"><value>Veri aktarımı çalıştırma</value></data>
+  <data name="datatransfer.template.download" xml:space="preserve"><value>Aktarım şablonu indirme</value></data>
+  <data name="datatransfer.result.download" xml:space="preserve"><value>Aktarım sonuç dosyası indirme</value></data>
+  <data name="datatransfer.template_not_found" xml:space="preserve"><value>Aktarım şablonu bulunamadı.</value></data>
+  <data name="datatransfer.job_not_found" xml:space="preserve"><value>Aktarım bulunamadı.</value></data>
+  <data name="datatransfer.job_not_finished" xml:space="preserve"><value>Aktarım henüz tamamlanmadı; sonuç dosyası hazır değil.</value></data>
+  <data name="datatransfer.job_not_editable" xml:space="preserve"><value>Çalıştırılmış bir aktarımın kolon eşleştirmesi değiştirilemez; dosyayı yeniden yükleyin.</value></data>
+  <data name="datatransfer.job_not_runnable" xml:space="preserve"><value>Aktarım çalıştırılamaz: kolon eşleştirmesi kaydedilmemiş veya aktarım zaten çalıştırılmış.</value></data>
+  <data name="datatransfer.file_required" xml:space="preserve"><value>Bir dosya seçin.</value></data>
+  <data name="datatransfer.file_too_large" xml:space="preserve"><value>Dosya en fazla {max} olabilir.</value></data>
+  <data name="datatransfer.file_type_not_supported" xml:space="preserve"><value>Yalnızca .xlsx ve .csv dosyaları yüklenebilir.</value></data>
+  <data name="datatransfer.file_unreadable" xml:space="preserve"><value>Dosya okunamadı. Geçerli bir .xlsx veya .csv dosyası yükleyin.</value></data>
+  <data name="datatransfer.file_empty" xml:space="preserve"><value>Dosyada başlık satırı veya veri satırı yok.</value></data>
+  <data name="datatransfer.too_many_rows" xml:space="preserve"><value>Dosya en fazla {max} veri satırı içerebilir.</value></data>
+  <data name="datatransfer.mapping_invalid" xml:space="preserve"><value>Kolon eşleştirmesi geçersiz: bilinmeyen kolon veya aynı alana birden fazla kolon eşlenmiş.</value></data>
+  <data name="datatransfer.mode_invalid" xml:space="preserve"><value>Geçersiz aktarım modu.</value></data>
+  <data name="datatransfer.mode_not_supported" xml:space="preserve"><value>Bu şablon seçilen aktarım modunu desteklemiyor.</value></data>
+  <data name="datatransfer.failure_policy_invalid" xml:space="preserve"><value>Geçersiz hata politikası.</value></data>
+  <data name="datatransfer.outcome_invalid" xml:space="preserve"><value>Geçersiz satır sonucu filtresi.</value></data>
+  <data name="datatransfer.run_failed" xml:space="preserve"><value>Aktarım beklenmeyen bir hata nedeniyle tamamlanamadı; hiçbir kayıt değiştirilmedi.</value></data>
+  <data name="IMPORT_UNMAPPED_REQUIRED" xml:space="preserve"><value>Zorunlu ve eşleştirme anahtarı kolonlar eşlenmeden devam edilemez: {missing}</value></data>
+  <data name="IMPORT_REQUIRED_MISSING" xml:space="preserve"><value>Bu alan zorunludur.</value></data>
+  <data name="IMPORT_INVALID_NATIONAL_ID" xml:space="preserve"><value>Geçersiz T.C. kimlik numarası: '{value}'.</value></data>
+  <data name="IMPORT_INVALID_DATE" xml:space="preserve"><value>Geçersiz tarih: '{value}'. GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG biçimini kullanın.</value></data>
+  <data name="IMPORT_INVALID_EMAIL" xml:space="preserve"><value>Geçersiz e-posta adresi: '{value}'.</value></data>
+  <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Geçersiz telefon numarası: '{value}'.</value></data>
+  <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>Değer en fazla {max} karakter olabilir.</value></data>
+  <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>Bu kimlik numarası dosyada {row}. satırda da var.</value></data>
+  <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>Kimlik numarası eşleşen çalışanın adı soyadı dosyadakiyle ({value}) aynı değil.</value></data>
+  <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>Bu kimlik numarasıyla kayıtlı çalışan yok (Sadece güncelleme modunda yeni kayıt açılmaz).</value></data>
+  <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' sistemde bulunamadı; önce tanımlanmalıdır.</value></data>
+  <data name="IMPORT_AMBIGUOUS_MATCH" xml:space="preserve"><value>'{value}' birden fazla kayıtla eşleşiyor.</value></data>
+  <data name="IMPORT_OUT_OF_SCOPE" xml:space="preserve"><value>Bu kayıt veya birim üzerinde işlem yetkiniz yok.</value></data>
+  <data name="import.template.employee.master.name" xml:space="preserve"><value>Çalışanlar</value></data>
+  <data name="import.template.employee.master.description" xml:space="preserve"><value>Çalışan kimlik, iletişim, yönetici ve birim bilgilerini toplu ekleyin veya güncelleyin.</value></data>
+  <data name="import.template.employee.master.instruction.match" xml:space="preserve"><value>Çalışanlar Kimlik numarası + Ad + Soyad ile eşleştirilir: kimlik numarası kayıtlı bir çalışanla eşleşir ama ad veya soyad farklıysa satır hatalı sayılır.</value></data>
+  <data name="import.template.employee.master.instruction.new_employee" xml:space="preserve"><value>Yeni çalışan eklemek için Ad, Soyad ve Kimlik numarası zorunludur.</value></data>
+  <data name="import.template.employee.master.instruction.manager" xml:space="preserve"><value>Yönetici kolonuna sistemde kayıtlı aktif bir çalışanın adını ve soyadını yazın (ör. Ayşe Yılmaz).</value></data>
+  <data name="import.template.employee.master.instruction.org_units" xml:space="preserve"><value>Birim kolonları şirketinizin hiyerarşi seviyeleridir; listeden var olan bir birim seçin. Birden fazla seviye doluysa çalışan en alt seviyedeki birime atanır.</value></data>
+  <data name="import.template.employee.master.sample.valid_new" xml:space="preserve"><value>Doğru: yeni çalışan (tarih GG.AA.YYYY ve GG/AA/YYYY).</value></data>
+  <data name="import.template.employee.master.sample.valid_manager" xml:space="preserve"><value>Doğru: yöneticisi ad soyad ile belirtilmiş çalışan (tarih YYYY-AA-GG).</value></data>
+  <data name="import.template.employee.master.sample.invalid_national_id" xml:space="preserve"><value>Hatalı: kimlik numarası geçersiz.</value></data>
+  <data name="import.template.employee.master.sample.invalid_date" xml:space="preserve"><value>Hatalı: tarih metin olarak yazılmış (1 Ocak 2020).</value></data>
+  <data name="import.template.employee.master.sample.invalid_email" xml:space="preserve"><value>Hatalı: e-posta adresi eksik.</value></data>
+  <data name="import.column.employee.firstName" xml:space="preserve"><value>Ad</value></data>
+  <data name="import.column.employee.lastName" xml:space="preserve"><value>Soyad</value></data>
+  <data name="import.column.employee.nationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.employee.workEmail" xml:space="preserve"><value>İş e-postası</value></data>
+  <data name="import.column.employee.personalEmail" xml:space="preserve"><value>Kişisel e-posta</value></data>
+  <data name="import.column.employee.workPhone" xml:space="preserve"><value>İş telefonu</value></data>
+  <data name="import.column.employee.hireDate" xml:space="preserve"><value>İşe başlama tarihi</value></data>
+  <data name="import.column.employee.birthDate" xml:space="preserve"><value>Doğum tarihi</value></data>
+  <data name="import.column.employee.manager" xml:space="preserve"><value>Yönetici</value></data>
+  <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Çalışanın adı (eşleştirmede kullanılır).</value></data>
+  <data name="import.column.employee.lastName.description" xml:space="preserve"><value>Çalışanın soyadı (eşleştirmede kullanılır).</value></data>
+  <data name="import.column.employee.nationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.employee.workEmail.description" xml:space="preserve"><value>İş e-posta adresi (davet için kullanılabilir).</value></data>
+  <data name="import.column.employee.personalEmail.description" xml:space="preserve"><value>Kişisel e-posta adresi.</value></data>
+  <data name="import.column.employee.workPhone.description" xml:space="preserve"><value>İş telefonu, en fazla 30 karakter.</value></data>
+  <data name="import.column.employee.hireDate.description" xml:space="preserve"><value>GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG.</value></data>
+  <data name="import.column.employee.birthDate.description" xml:space="preserve"><value>GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG.</value></data>
+  <data name="import.column.employee.manager.description" xml:space="preserve"><value>Sistemde kayıtlı aktif bir çalışanın adı soyadı.</value></data>
+  <data name="import.column.employee.orgUnit.description" xml:space="preserve"><value>Bu seviyede tanımlı aktif bir birimin adı (listeden seçin).</value></data>
+  <data name="import.instructions.headers" xml:space="preserve"><value>Başlık satırındaki kolon adlarını değiştirmeyin; gizli 2. satırdaki kolon anahtarlarını silmeyin. Başlığı değişen kolonlar yükleme sonrası elle eşleştirilebilir.</value></data>
+  <data name="import.instructions.columns" xml:space="preserve"><value>Kullanmadığınız kolonları silebilir, kolonların sırasını değiştirebilir veya araya kendi kolonlarınızı ekleyebilirsiniz (eklenen kolonlar 'Yok say' olarak bırakılır).</value></data>
+  <data name="import.instructions.dates" xml:space="preserve"><value>Tarihler GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG biçiminde (isteğe bağlı SS:DD saatiyle) ya da Excel tarih hücresi olarak yazılmalıdır; '1 Ocak 2020' gibi metinler kabul edilmez.</value></data>
+  <data name="import.instructions.lookups" xml:space="preserve"><value>Liste kolonlarındaki değerler (yönetici, birimler) sistemde önceden tanımlı olmalıdır; büyük/küçük harf ve baştaki/sondaki boşluklar önemsenmez.</value></data>
+  <data name="import.instructions.update_only" xml:space="preserve"><value>'Sadece güncelleme modu' açıkken yalnız kayıtlı çalışanlar güncellenir, yeni kayıt açılmaz ve yalnız eşlenen kolonlar yazılır; dosyadan silinen kolonlara dokunulmaz.</value></data>
+  <data name="import.instructions.empty_cells" xml:space="preserve"><value>Mevcut bir çalışanı güncellerken boş bırakılan hücreler dikkate alınmaz (mevcut değer korunur).</value></data>
+  <data name="import.instructions.examples" xml:space="preserve"><value>'Örnekler' sayfasındaki yeşil satırlar doğru, kırmızı satırlar hatalı örneklerdir; bu sayfa içe aktarılmaz.</value></data>
+  <data name="import.instructions.limits" xml:space="preserve"><value>Dosya .xlsx veya .csv olmalı, en fazla 10 MB ve {max} veri satırı içerebilir. Aktarım sonunda satır bazlı Sonuç ve Hata açıklaması içeren bir dosya indirebilirsiniz.</value></data>
+  <data name="import.template.label.instructions_sheet" xml:space="preserve"><value>Açıklamalar</value></data>
+  <data name="import.template.label.examples_sheet" xml:space="preserve"><value>Örnekler</value></data>
+  <data name="import.template.label.lists_sheet" xml:space="preserve"><value>Listeler</value></data>
+  <data name="import.template.label.instructions_title" xml:space="preserve"><value>Veri aktarım kuralları</value></data>
+  <data name="import.template.label.columns_title" xml:space="preserve"><value>Kolonlar</value></data>
+  <data name="import.template.label.column" xml:space="preserve"><value>Kolon</value></data>
+  <data name="import.template.label.requirement" xml:space="preserve"><value>Zorunluluk</value></data>
+  <data name="import.template.label.description" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="import.template.label.example_note" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="import.template.label.match_key" xml:space="preserve"><value>Zorunlu (eşleştirme anahtarı)</value></data>
+  <data name="import.template.label.required" xml:space="preserve"><value>Zorunlu</value></data>
+  <data name="import.template.label.required_on_insert" xml:space="preserve"><value>Yeni kayıtta zorunlu</value></data>
+  <data name="import.template.label.optional" xml:space="preserve"><value>İsteğe bağlı</value></data>
+  <data name="import.result.sheet" xml:space="preserve"><value>Sonuç</value></data>
+  <data name="import.result.outcome_header" xml:space="preserve"><value>Sonuç</value></data>
+  <data name="import.result.error_header" xml:space="preserve"><value>Hata açıklaması</value></data>
+  <data name="import.result.file_suffix" xml:space="preserve"><value>sonuc</value></data>
+  <data name="import.outcome.Inserted" xml:space="preserve"><value>Eklendi</value></data>
+  <data name="import.outcome.Updated" xml:space="preserve"><value>Güncellendi</value></data>
+  <data name="import.outcome.Skipped" xml:space="preserve"><value>Atlandı</value></data>
+  <data name="import.outcome.Error" xml:space="preserve"><value>Hata</value></data>
 </root>

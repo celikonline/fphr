@@ -9,11 +9,11 @@
   "name": "[DE] Name",
   "type": "[DE] Type",
   "types": {
-    "Office": "[DE] Office",
-    "Store": "[DE] Store",
-    "Warehouse": "[DE] Warehouse",
-    "Factory": "[DE] Factory",
-    "Remote": "[DE] Remote"
+    "office": "[DE] Office",
+    "store": "[DE] Store",
+    "warehouse": "[DE] Warehouse",
+    "factory": "[DE] Factory",
+    "remote": "[DE] Remote"
   },
   "countryCode": "[DE] Country Code",
   "countryCodeInvalid": "[DE] Enter a 2-letter country code (e.g. TR).",
@@ -24,5 +24,6 @@
   "deleteSuccess": "[DE] Location deleted.",
   "genericError": "[DE] Something went wrong.",
   "empty": "[DE] No locations yet.",
-  "deleteConfirmDescription": "[DE] Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+  "deleteConfirmDescription": "[DE] Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+  "inUseError": "[DE] This location is linked to an active unit and can't be deleted. Change the unit's location in Company structure first."
 }

@@ -59,12 +59,13 @@ public static class SystemRoleDefinitions
         new(SystemRoleCodes.HR, DataScope.Company,
             ["identity.users.*", "identity.roles.view", "identity.audit.view", "organization.*", "employee.*", "leave.*", "workflow.*", "attendance.*",
              "assets.*", "expense.*", "training.*", "documents.*", "announcements.*", "performance.*", "compensation.*", "recruitment.*",
-             "analytics.*", "reports.*", "notifications.*", "payroll.payslips.view", "payroll.periods.view", "ai.*", .. PermissionPatterns.SelfService],
+             "analytics.*", "reports.*", "notifications.*", "payroll.payslips.view", "payroll.periods.view", "ai.*", "datatransfer.*", AccessSettingPermissions.Bypass,
+             .. PermissionPatterns.SelfService],
             ["identity.users.impersonate", "identity.security.manage", "identity.api_keys.manage", "payroll.periods.lock", "billing.*"]),
 
         new(SystemRoleCodes.HRSpecialist, DataScope.Company,
             ["organization.*.view", "employee.*", "leave.*", "workflow.*", "attendance.*", "assets.*", "expense.*.view", "training.*", "documents.*",
-             "announcements.*", "recruitment.*", "reports.*", .. PermissionPatterns.SelfService],
+             "announcements.*", "recruitment.*", "reports.*", "datatransfer.*", .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
@@ -107,14 +108,16 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.ITAdmin, DataScope.Company,
             ["identity.*", "integrations.*", "attendance.devices.*", "attendance.checkpoints.*", "notifications.settings.*", .. PermissionPatterns.SelfService],
-            ["identity.users.impersonate", "identity.audit.sensitive_view"]),
+            ["identity.users.impersonate", "identity.audit.sensitive_view", AccessSettingPermissions.Bypass]),
 
         new(SystemRoleCodes.Employee, DataScope.Self,
-            [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "announcements.feed.*", "documents.company.view", "ai.assistant.use"],
+            [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
+             "announcements.feed.*", "documents.company.view", "ai.assistant.use"],
             []),
 
         new(SystemRoleCodes.Intern, DataScope.Self,
-            [.. PermissionPatterns.SelfService, "org.directory.view", "announcements.feed.*", "documents.company.view"],
+            [.. PermissionPatterns.SelfService, "org.directory.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
+             "announcements.feed.*", "documents.company.view"],
             ["payroll.my.*", "expense.my.advances.*", "ai.*"]),
 
         new(SystemRoleCodes.Contractor, DataScope.Self,

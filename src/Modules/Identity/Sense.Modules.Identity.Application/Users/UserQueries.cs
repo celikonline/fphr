@@ -26,6 +26,15 @@ public interface IIdentityReadStore
     Task<IReadOnlyList<RoleDto>> ListRolesAsync(CancellationToken ct);
 
     Task<RoleDto?> GetRoleAsync(Guid roleId, CancellationToken ct);
+
+    /// <summary>Bulunamayan (veya silinmiş) kullanıcılar sözlükte yer almaz.</summary>
+    Task<IReadOnlyDictionary<Guid, UserSummaryDto>> GetUserSummariesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct);
+
+    /// <summary>Aktif/davetli kullanıcılar; ad, soyad veya e-postada arama.</summary>
+    Task<IReadOnlyList<UnitAuthorizationCandidateDto>> ListUnitAuthorizationCandidatesAsync(string? q, int limit, CancellationToken ct);
+
+    /// <summary>Kiracının grantları (yeniden eskiye); platform kullanıcısının e-postası kendi (platform) kiracısından okunur.</summary>
+    Task<IReadOnlyList<ImpersonationGrantDto>> ListImpersonationGrantsAsync(Domain.Impersonation.ImpersonationGrantStatus? status, DateTime nowUtc, CancellationToken ct);
 }
 
 public sealed class ListUsersHandler(IIdentityReadStore store) : IQueryHandler<ListUsersQuery, PagedResult<UserListItemDto>>

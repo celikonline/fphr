@@ -7,6 +7,13 @@ public static class OrganizationDomainErrors
     public const string OrgUnitTypeCodeRequired = "organization.unit_type.code_required";
     public const string OrgUnitTypeNameRequired = "organization.unit_type.name_required";
     public const string OrgUnitTypeSystemImmutable = "organization.unit_type.system_immutable";
+    public const string OrgUnitTypeNameTooLong = "organization.unit_type.name_too_long";
+    public const string OrgUnitTypeAlreadyInactive = "organization.unit_type.already_inactive";
+    public const string OrgUnitTypeAlreadyActive = "organization.unit_type.already_active";
+    public const string OrgUnitTypeLimitReached = "organization.unit_type.limit_reached";
+    public const string OrgUnitTypeInsertPositionInvalid = "organization.unit_type.insert_position_invalid";
+    public const string OrgUnitTypeOrderInvalid = "organization.unit_type.order_invalid";
+    public const string OrgUnitTypeCompanyMustBeFirst = "organization.unit_type.company_must_be_first";
 
     public const string OrgUnitNotFound = "organization.unit.not_found";
     public const string OrgUnitNameRequired = "organization.unit.name_required";

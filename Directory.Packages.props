@@ -79,7 +79,11 @@
     <PackageVersion Include="Serilog.Sinks.Seq" Version="9.*" />
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.*" />
     <PackageVersion Include="Serilog.Formatting.Compact" Version="3.*" />
+    <!-- Loglar OTLP/HTTP ile doğrudan Loki'nin yerel OTLP alıcısına akar (bkz. docs/observability.md). -->
+    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.*" />
     <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.*" />
+    <!-- Upstream'de hâlâ yalnızca beta olarak yayımlanıyor; /metrics scrape uç noktası için tek resmi exporter. -->
+    <PackageVersion Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.*-beta.*" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.*" />

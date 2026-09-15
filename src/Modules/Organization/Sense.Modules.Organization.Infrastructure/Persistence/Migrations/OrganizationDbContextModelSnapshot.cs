@@ -384,7 +384,6 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_org_unit_types_tenant_id_code");
 
                     b.HasIndex("TenantId", "SortOrder")
-                        .IsUnique()
                         .HasDatabaseName("ix_org_unit_types_tenant_id_sort_order");
 
                     b.ToTable("org_unit_types", "org");

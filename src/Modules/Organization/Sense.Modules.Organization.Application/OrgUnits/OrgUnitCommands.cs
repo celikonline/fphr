@@ -2,6 +2,7 @@ using FluentValidation;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
+using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -10,7 +11,7 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Organization.Application.OrgUnits;
 
-/// <summary>Creates an org unit at any hierarchy level (TypeId selects the level).</summary>
+/// <summary>Creates an org unit at any hierarchy level (TypeId selects the level); a Company-level unit also gets its Company row.</summary>
 [RequiresPermission("organization.units.create")]
 public sealed record CreateOrgUnitCommand(
     Guid TypeId,
@@ -33,6 +34,7 @@ public sealed class CreateOrgUnitHandler(
     ITenantContext tenant,
     IOrgUnitRepository units,
     IOrgUnitTypeRepository types,
+    ICompanyRepository companies,
     IEmployeeLookup? employeeLookup = null,
     ILocationLookup? locationLookup = null) : ICommandHandler<CreateOrgUnitCommand, OrgUnitDto>
 {
@@ -81,6 +83,17 @@ public sealed class CreateOrgUnitHandler(
         unit.AssignLocation(command.LocationId);
 
         units.Add(unit);
+
+        if (type.Value.IsCompanyLevel)
+        {
+            var company = Company.Create(tenant.TenantId, unit.Id);
+            if (company.IsFailure)
+            {
+                return company.Error;
+            }
+
+            companies.Add(company.Value);
+        }
 
         return new OrgUnitDto(unit.Id, unit.TypeId, unit.ParentId, unit.Name, unit.ManagerEmployeeId, unit.LocationId, unit.SortOrder, unit.IsActive);
     }

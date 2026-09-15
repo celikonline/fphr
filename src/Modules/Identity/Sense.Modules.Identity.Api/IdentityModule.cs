@@ -3,7 +3,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sense.Modules.Identity.Application;
+using Sense.Modules.Identity.Application.Invitations;
 using Sense.Modules.Identity.Application.Users;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Infrastructure.Messaging;
 using Sense.Modules.Identity.Infrastructure.Persistence;
@@ -56,6 +58,17 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IDataScopeService, DataScopeService>();
         services.AddScoped<IAccessSettingsService, AccessSettingsService>();
+        services.AddScoped<IImpersonationSessionValidator, ImpersonationSessionValidator>();
+
+        services.AddScoped<AccessTypeGuard>();
+        services.AddScoped<EmployeeInvitationService>();
+
+        // Mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşır (API başlangıcı).
+        services.AddScoped<SystemRolePermissionSynchronizer>();
+        services.AddHostedService<SystemRolePermissionSyncHostedService>();
+
+        // Cross-module read contract consumed by Employee (hesap durumu / erişim tipi / son davet)
+        services.AddScoped<IUserAccountLookup, UserAccountLookup>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();

@@ -30,7 +30,7 @@ public sealed class DocumentsModule : IModule
         services.AddModuleDbContext<DocumentsDbContext>(configuration, DocumentsDbContext.SchemaName);
 
         // Register MediatR handlers for this module
-        services.AddModuleHandlers(DocumentsDbContext.SchemaName, typeof(DocumentsPermissions).Assembly, typeof(DocumentsDbContext).Assembly);
+        services.AddModuleHandlers(DocumentsDbContext.SchemaName, typeof(Application.DocumentsErrors).Assembly, typeof(DocumentsDbContext).Assembly);
 
         // Register repositories
         services.AddScoped<IDocumentRepository, DocumentRepository>();

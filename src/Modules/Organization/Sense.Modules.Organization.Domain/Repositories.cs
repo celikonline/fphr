@@ -19,6 +19,8 @@ public interface IOrgUnitTypeRepository
 
     Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
 
+    Task<OrgUnitType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
+
     Task<int> CountAsync(CancellationToken cancellationToken = default);
 }
 
@@ -62,6 +64,8 @@ public interface ICompanyRepository
     Task<Result<Company>> GetByOrgUnitIdAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
 
     Task<Result<Company>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Company>> ListAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>OrgUnitApprovalPolicyAssignment repository (stub consumer: future Workflow module).</summary>
@@ -78,6 +82,8 @@ public interface IHolidayCalendarRepository
     void Add(HolidayCalendar calendar);
 
     Task<Result<HolidayCalendar>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<HolidayCalendar>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>All calendars for the current tenant (system-seeded TR calendar + any tenant-authored custom ones).</summary>
     Task<IReadOnlyList<HolidayCalendar>> ListAsync(CancellationToken cancellationToken = default);

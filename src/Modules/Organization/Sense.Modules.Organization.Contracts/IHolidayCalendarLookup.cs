@@ -26,7 +26,20 @@ public interface IHolidayCalendarLookup
     /// its exact date only if it has not passed yet. Empty (not an error) if the tenant has no calendar.
     /// </summary>
     Task<IReadOnlyList<UpcomingHoliday>> GetUpcomingHolidaysAsync(Guid tenantId, int count = 10, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Effective calendar: the given company's calendar, else (with <paramref name="orgUnitId"/>) the calendar of the
+    /// Company found by walking that unit's parents up to a Company-level unit, else the tenant default (earliest
+    /// company with a calendar, then the seeded system TR calendar). Null if the tenant has no calendar at all.
+    /// </summary>
+    Task<HolidayCalendarRef?> ResolveCalendarAsync(Guid tenantId, Guid? companyId, Guid? orgUnitId, CancellationToken cancellationToken = default);
+
+    /// <summary>Holiday occurrences of one calendar within [from, to], recurring entries projected into every year of the window; ordered by date.</summary>
+    Task<IReadOnlyList<UpcomingHoliday>> GetHolidaysAsync(Guid tenantId, Guid holidayCalendarId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
 
 /// <summary>One resolved upcoming holiday occurrence.</summary>
 public sealed record UpcomingHoliday(DateOnly Date, string Name);
+
+/// <summary>Identity and display name of a resolved holiday calendar.</summary>
+public sealed record HolidayCalendarRef(Guid Id, string Name);

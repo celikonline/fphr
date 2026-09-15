@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: senseik
+    folder: SenseİK
+    type: file
+    disableDeletion: false
+    # UI'da düzenlenebilir; kalıcı değişiklik için dashboard JSON'unu dışa aktarıp
+    # infra/observability/grafana/dashboards/ altına geri yazın.
+    allowUiUpdates: true
+    updateIntervalSeconds: 30
+    options:
+      path: /var/lib/grafana/dashboards

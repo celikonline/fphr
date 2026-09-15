@@ -43,6 +43,8 @@ public sealed class ImpersonationGrant : TenantAggregateRoot<Guid>, IAuditLogged
 
     public string Reason { get; private set; } = string.Empty;
 
+    public DateTime? ApprovedAt { get; private set; }
+
     public DateTime RequestedAt { get; private set; }
 
     /// <summary>Onay ile birlikte belirlenen kullanım penceresi bitişi.</summary>
@@ -53,6 +55,15 @@ public sealed class ImpersonationGrant : TenantAggregateRoot<Guid>, IAuditLogged
     public DateTime? RevokedAt { get; private set; }
 
     public ImpersonationGrantStatus Status { get; private set; }
+
+    /// <summary>Oturum hâlâ kullanılabilir mi: başlatılmış, iptal edilmemiş ve süresi dolmamış (durum geçişi tembel olduğundan ExpiresAt ayrıca kontrol edilir).</summary>
+    public bool IsSessionActive(DateTime nowUtc) => Status == ImpersonationGrantStatus.Active && ExpiresAt is { } exp && exp > nowUtc;
+
+    /// <summary>Görüntülenen durum: süresi dolmuş ama henüz dokunulmamış Approved/Active grant Expired görünür.</summary>
+    public ImpersonationGrantStatus EffectiveStatus(DateTime nowUtc) =>
+        Status is ImpersonationGrantStatus.Approved or ImpersonationGrantStatus.Active && ExpiresAt is { } exp && exp <= nowUtc
+            ? ImpersonationGrantStatus.Expired
+            : Status;
 
     public static Result<ImpersonationGrant> Create(Guid tenantId, Guid platformUserId, string reason, DateTime nowUtc)
     {
@@ -71,6 +82,7 @@ public sealed class ImpersonationGrant : TenantAggregateRoot<Guid>, IAuditLogged
         }
 
         ApprovedByUserId = approvedByUserId;
+        ApprovedAt = nowUtc;
         ExpiresAt = nowUtc.Add(window);
         Status = ImpersonationGrantStatus.Approved;
         Raise(new ImpersonationApproved(Id, TenantId, PlatformUserId, approvedByUserId, ExpiresAt.Value));

@@ -35,6 +35,9 @@ public sealed class OrgUnitTypeRepository(OrganizationDbContext context) : IOrgU
     public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default) =>
         await context.OrgUnitTypes.AnyAsync(t => t.Code == code, cancellationToken);
 
+    public async Task<OrgUnitType?> GetByCodeAsync(string code, CancellationToken cancellationToken = default) =>
+        await context.OrgUnitTypes.FirstOrDefaultAsync(t => t.Code == code, cancellationToken);
+
     public async Task<int> CountAsync(CancellationToken cancellationToken = default) =>
         await context.OrgUnitTypes.CountAsync(cancellationToken);
 }
@@ -124,6 +127,9 @@ public sealed class CompanyRepository(OrganizationDbContext context) : ICompanyR
         var company = await context.Companies.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         return company is null ? Error.NotFound(OrganizationDomainErrors.CompanyNotFound) : company;
     }
+
+    public async Task<IReadOnlyList<Company>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.Companies.OrderBy(c => c.Id).ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed OrgUnitApprovalPolicyAssignment repository (stub consumer: future Workflow module).</summary>
@@ -144,6 +150,17 @@ public sealed class HolidayCalendarRepository(OrganizationDbContext context) : I
     {
         var calendar = await context.HolidayCalendars.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
         return calendar is null ? Error.NotFound(OrganizationDomainErrors.HolidayCalendarNotFound) : calendar;
+    }
+
+    public async Task<IReadOnlyList<HolidayCalendar>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var list = ids.ToList();
+        return await context.HolidayCalendars.Where(c => list.Contains(c.Id)).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<HolidayCalendar>> ListAsync(CancellationToken cancellationToken = default) =>

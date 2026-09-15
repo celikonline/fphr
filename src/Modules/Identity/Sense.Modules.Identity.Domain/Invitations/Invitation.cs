@@ -13,6 +13,14 @@ public enum InvitationStatus
     Revoked = 3,
 }
 
+/// <summary>Davetin gönderildiği adresin kaynağı: çalışanın iş/kişisel e-postası ya da kullanıcı hesabının kendi e-postası.</summary>
+public enum InvitationEmailSource
+{
+    Account = 0,
+    Work = 1,
+    Personal = 2,
+}
+
 /// <summary>Kullanıcı daveti. Token yalnız hash olarak saklanır; ham token e-posta bağlantısında taşınır.</summary>
 public sealed class Invitation : TenantAggregateRoot<Guid>
 {
@@ -20,9 +28,12 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
     {
     }
 
-    private Invitation(Guid id, Guid tenantId, Guid userId, string email, string tokenHash, DateTime expiresAt, Guid? invitedByUserId)
+    private Invitation(
+        Guid id, Guid tenantId, Guid userId, string email, string tokenHash, DateTime expiresAt, Guid? invitedByUserId, InvitationEmailSource emailSource, Guid? batchId)
         : base(id, tenantId)
     {
+        EmailSource = emailSource;
+        BatchId = batchId;
         UserId = userId;
         Email = email;
         TokenHash = tokenHash;
@@ -48,9 +59,25 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
 
     public int SendCount { get; private set; }
 
-    public static Invitation Create(Guid tenantId, Guid userId, string email, string tokenHash, DateTime nowUtc, TimeSpan validity, Guid? invitedByUserId)
+    /// <summary><see cref="Email"/> = son gönderilen adres; bu alan onun kaynağıdır.</summary>
+    public InvitationEmailSource EmailSource { get; private set; }
+
+    /// <summary>Toplu "Giriş bilgilerini gönder" partisi (tekil gönderimde null).</summary>
+    public Guid? BatchId { get; private set; }
+
+    public static Invitation Create(
+        Guid tenantId,
+        Guid userId,
+        string email,
+        string tokenHash,
+        DateTime nowUtc,
+        TimeSpan validity,
+        Guid? invitedByUserId,
+        InvitationEmailSource emailSource = InvitationEmailSource.Account,
+        Guid? batchId = null)
     {
-        var inv = new Invitation(Guid.CreateVersion7(), tenantId, userId, EmailAddress.Of(email).Value, Guard.NotEmpty(tokenHash), nowUtc.Add(validity), invitedByUserId);
+        var inv = new Invitation(
+            Guid.CreateVersion7(), tenantId, userId, EmailAddress.Of(email).Value, Guard.NotEmpty(tokenHash), nowUtc.Add(validity), invitedByUserId, emailSource, batchId);
         inv.Raise(new InvitationCreated(inv.Id, tenantId, userId, inv.Email));
         return inv;
     }
@@ -83,14 +110,21 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
         }
     }
 
-    /// <summary>Yeniden gönderim: yeni token, süre uzatılır.</summary>
-    public Result Renew(string newTokenHash, DateTime nowUtc, TimeSpan validity)
+    /// <summary>Yeniden gönderim: yeni token, süre uzatılır; hedef adres verilirse (çalışan e-postası değiştiyse) güncellenir.</summary>
+    public Result Renew(string newTokenHash, DateTime nowUtc, TimeSpan validity, string? email = null, InvitationEmailSource? emailSource = null, Guid? batchId = null)
     {
         if (Status == InvitationStatus.Accepted)
         {
             return Error.Conflict(IdentityDomainErrors.InvitationAlreadyAccepted);
         }
 
+        if (email is not null)
+        {
+            Email = EmailAddress.Of(email).Value;
+        }
+
+        EmailSource = emailSource ?? EmailSource;
+        BatchId = batchId;
         TokenHash = Guard.NotEmpty(newTokenHash);
         ExpiresAt = nowUtc.Add(validity);
         Status = InvitationStatus.Pending;

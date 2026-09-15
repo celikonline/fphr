@@ -1,0 +1,49 @@
+# Grafana datasource'ları; uid'ler dashboard JSON'larında sabit olarak referans verilir - değiştirmeyin.
+# Not: provisioning dosyalarında "$" ortam değişkeni olarak yorumlanır, Grafana değişkenleri "$$" ile kaçırılır.
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    jsonData:
+      timeInterval: 15s
+      httpMethod: POST
+
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      maxLines: 1000
+      # Log satırındaki trace_id (structured metadata) → Jaeger'deki ize tek tıkla geçiş.
+      derivedFields:
+        - name: TraceID
+          matcherType: label
+          matcherRegex: trace_id
+          url: "$${__value.raw}"
+          datasourceUid: jaeger
+          urlDisplayLabel: Jaeger'de izi aç
+
+  - name: Jaeger
+    uid: jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    jsonData:
+      nodeGraph:
+        enabled: true
+      # Span → aynı trace_id'ye sahip Loki logları.
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: "-5m"
+        spanEndTimeShift: "5m"
+        customQuery: true
+        query: '{service_name="$${__span.process.serviceName}"} | trace_id="$${__span.traceId}"'
+      tracesToMetrics:
+        datasourceUid: prometheus

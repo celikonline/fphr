@@ -52,6 +52,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.TryAddScoped<ICorrelationIdContext>(sp => sp.GetRequiredService<CorrelationIdContext>());
         services.TryAddScoped<ICorrelationIdContextSetter>(sp => sp.GetRequiredService<CorrelationIdContext>());
 
+        // Tüm IHttpClientFactory istemcileri correlation id'yi aşağı akış servislerine taşır.
+        services.TryAddTransient<CorrelationIdPropagationHandler>();
+        services.ConfigureHttpClientDefaults(http => http.AddHttpMessageHandler<CorrelationIdPropagationHandler>());
+
         services.TryAddScoped<IDispatcher, Dispatcher>();
         services.TryAddScoped<IModuleUnitOfWorkResolver, ModuleUnitOfWorkResolver>();
 
@@ -156,8 +160,10 @@ public static class InfrastructureServiceCollectionExtensions
                 .Build();
         });
 
-        // Register file storage adapter
-        services.AddSingleton<IFileStorage, MinioAdapter>();
+        // Register file storage adapter. Scoped, not Singleton: MinioAdapter takes a
+        // constructor dependency on the (request-scoped) ITenantContext/ICurrentUser, and a
+        // singleton can't consume a scoped service.
+        services.AddScoped<IFileStorage, MinioAdapter>();
 
         return services;
     }

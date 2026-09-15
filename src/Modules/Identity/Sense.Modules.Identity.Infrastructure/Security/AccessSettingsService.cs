@@ -9,10 +9,15 @@ namespace Sense.Modules.Identity.Infrastructure.Security;
 
 /// <summary>
 /// <see cref="IAccessSettingsService"/> uygulaması: mevcut kiracının <see cref="Tenant.AccessSettings"/> alanından
-/// tek anahtar okur (<see cref="AccessSettingsRegistry"/> ile). AuthorizationBehaviour ile aynı desende:
-/// PermissionService kullanıcı izinlerini, bu servis kiracı özelliği açık mı sorusunu yanıtlar.
+/// tek anahtar okur (<see cref="AccessSettingsRegistry"/> ile). Erişim ayarları yalnız çalışan tipini kısıtlar:
+/// <see cref="AccessSettingPermissions.Bypass"/> sahibi (Owner/Admin/HR) veya aktif impersonation oturumu için etkin değer her zaman true'dur.
 /// </summary>
-public sealed class AccessSettingsService(IdentityDbContext db, ITenantContext tenant) : IAccessSettingsService
+public sealed class AccessSettingsService(
+    IdentityDbContext db,
+    ITenantContext tenant,
+    ICurrentUser user,
+    IPermissionService permissions,
+    IImpersonationSessionValidator? impersonationSessions = null) : IAccessSettingsService
 {
     public async Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default)
     {
@@ -27,5 +32,23 @@ public sealed class AccessSettingsService(IdentityDbContext db, ITenantContext t
             .ConfigureAwait(false);
 
         return getter(current?.AccessSettings ?? TenantAccessSettings.Default);
+    }
+
+    public async Task<bool> IsEnabledForCurrentUserAsync(string key, CancellationToken cancellationToken = default)
+    {
+        if (user.ClaimsPlatformAccess())
+        {
+            if (impersonationSessions is not null && await impersonationSessions.IsActiveAsync(cancellationToken).ConfigureAwait(false))
+            {
+                return true;
+            }
+        }
+        else if (user.UserId is { } userId && tenant.IsResolved
+            && await permissions.HasAsync(userId, AccessSettingPermissions.Bypass, cancellationToken).ConfigureAwait(false))
+        {
+            return true;
+        }
+
+        return await IsEnabledAsync(key, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -14,6 +14,9 @@ public static class SeedDataConstants
     public const string DemoTenantSlug = "demo-hr-company";
     public const string DemoTenantName = "Demo HR Company";
 
+    /// <summary>Login password for every seeded user (minimal admin + demo accounts). Documented in README.md.</summary>
+    public const string SeedUserPassword = "Demo123!";
+
     // Turkish Names for Demo Data (realistic mix)
     public static readonly string[] TurkishFirstNames =
     [

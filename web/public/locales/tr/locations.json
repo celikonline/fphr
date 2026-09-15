@@ -9,11 +9,11 @@
   "name": "Ad",
   "type": "Tür",
   "types": {
-    "Office": "Ofis",
-    "Store": "Mağaza",
-    "Warehouse": "Depo",
-    "Factory": "Fabrika",
-    "Remote": "Uzaktan"
+    "office": "Ofis",
+    "store": "Mağaza",
+    "warehouse": "Depo",
+    "factory": "Fabrika",
+    "remote": "Uzaktan"
   },
   "countryCode": "Ülke Kodu",
   "countryCodeInvalid": "2 harfli ülke kodu girin (örn. TR).",
@@ -24,5 +24,6 @@
   "deleteSuccess": "Lokasyon silindi.",
   "genericError": "Bir şeyler ters gitti.",
   "empty": "Henüz lokasyon yok.",
-  "deleteConfirmDescription": "\"{{name}}\" lokasyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz."
+  "deleteConfirmDescription": "\"{{name}}\" lokasyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
+  "inUseError": "Bu lokasyon aktif bir birime bağlı olduğu için silinemez. Önce Şirket yapısı ekranında birimin lokasyonunu değiştirin."
 }

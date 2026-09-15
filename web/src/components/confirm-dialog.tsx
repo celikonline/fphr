@@ -16,6 +16,10 @@ interface ConfirmDialogProps {
   description: string;
   onConfirm: () => void;
   isLoading?: boolean;
+  /** Confirm button text (default: common:delete). */
+  confirmLabel?: string;
+  /** Confirm button style (default: destructive). */
+  confirmVariant?: "default" | "destructive";
 }
 
 /**
@@ -29,6 +33,8 @@ export default function ConfirmDialog({
   description,
   onConfirm,
   isLoading,
+  confirmLabel,
+  confirmVariant = "destructive",
 }: ConfirmDialogProps) {
   const { t } = useTranslation(["common"]);
 
@@ -43,8 +49,8 @@ export default function ConfirmDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             {t("common:cancel")}
           </Button>
-          <Button type="button" variant="destructive" onClick={onConfirm} disabled={isLoading}>
-            {t("common:delete")}
+          <Button type="button" variant={confirmVariant} onClick={onConfirm} disabled={isLoading}>
+            {confirmLabel ?? t("common:delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

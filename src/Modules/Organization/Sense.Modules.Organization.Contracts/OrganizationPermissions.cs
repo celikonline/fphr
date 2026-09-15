@@ -61,9 +61,26 @@ public static class OrganizationPermissions
     public static readonly Permission LocationsDelete = new(
         "organization.locations.delete", Module, "Deactivate Location", Group, "Deactivate a location");
 
+    /// <summary>Add, activate, rename, reorder, and remove hierarchy levels.</summary>
+    public static readonly Permission UnitTypesManage = new(
+        UnitTypesManageKey, Module, "Manage Hierarchy Levels", Group, "Add, rename, reorder, activate, or remove organization hierarchy levels");
+
+    /// <summary>Create a company (Company-level org unit with its holiday calendar).</summary>
+    public static readonly Permission CompaniesCreate = new(
+        CompaniesCreateKey, Module, "Create Company", Group, "Create a company together with its holiday calendar");
+
+    /// <summary>View the effective upcoming holidays (home page list).</summary>
+    public static readonly Permission HolidaysView = new(
+        HolidaysViewKey, Module, "View Holidays", Group, "View upcoming official holidays");
+
+    public const string UnitTypesManageKey = "organization.unit_types.manage";
+    public const string CompaniesCreateKey = "organization.companies.create";
+    public const string HolidaysViewKey = "organization.holidays.view";
+
     /// <summary>All Organization module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete,
          HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate,
-         LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete];
+         LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete,
+         UnitTypesManage, CompaniesCreate, HolidaysView];
 }

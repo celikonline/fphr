@@ -2,29 +2,107 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Contracts;
+using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Employee.Api.Controllers;
 
-/// <summary>Request to create a minimal employee stub record.</summary>
-public sealed record CreateEmployeeRequest(string DisplayName, Guid? UserId, Guid? OrgUnitId);
+/// <summary>Create/update body for an employee record.</summary>
+public sealed record EmployeeRequest(
+    string FirstName,
+    string LastName,
+    string? NationalId,
+    string? WorkEmail,
+    string? PersonalEmail,
+    string? WorkPhone,
+    DateOnly? HireDate,
+    DateOnly? BirthDate,
+    Guid? OrgUnitId,
+    Guid? ManagerEmployeeId);
 
-/// <summary>Minimal employee stub (Faz 0 madde 4): enough to be referenced by OrgUnit.ManagerEmployeeId; full personnel record is Faz 1.</summary>
+/// <summary>Employee grid filters (query string), next to the grid-standard paging parameters.</summary>
+public sealed record EmployeeListFilterRequest
+{
+    public Guid? OrgUnitId { get; init; }
+
+    public bool IncludeSubUnits { get; init; }
+
+    public string? Status { get; init; }
+
+    public bool? HasUserAccount { get; init; }
+
+    public Guid? ManagerEmployeeId { get; init; }
+}
+
+public sealed record BulkAssignManagerRequest(EmployeeSelection Selection, Guid ManagerEmployeeId);
+
+/// <summary>Employee records (Faz 0 item 9): list/detail/create/update, bulk manager assignment, directory, org chart, birthdays.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/employees")]
 [Authorize]
 public sealed class EmployeesController : ApiControllerBase
 {
-    /// <summary>Lists minimal employee records for the current tenant (paginated).</summary>
+    /// <summary>Paged, searchable, sortable employee list filtered by the caller's data scope.</summary>
     [HttpGet]
     [ProducesResponseType<PagedResult<EmployeeListItemDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] PagedQuery paging, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListEmployeesQuery(paging), ct));
+    public async Task<IActionResult> List([FromQuery] PagedQuery paging, [FromQuery] EmployeeListFilterRequest filter, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(
+            new ListEmployeesQuery(paging, new EmployeeFilter(paging.Q, filter.OrgUnitId, filter.IncludeSubUnits, filter.Status, filter.HasUserAccount, filter.ManagerEmployeeId)),
+            ct));
 
-    /// <summary>Creates a minimal employee stub record.</summary>
+    /// <summary>The caller's own employee card (404 when the caller has no employee record).</summary>
+    [HttpGet("me")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Me(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyEmployeeQuery(), ct));
+
+    /// <summary>Employee card (404 when missing or outside the caller's data scope).</summary>
+    [HttpGet(ApiRoutes.IdParam)]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeQuery(id), ct));
+
+    /// <summary>Creates an employee record.</summary>
     [HttpPost]
-    [ProducesResponseType<EmployeeListItemDto>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Create([FromBody] CreateEmployeeRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateEmployeeCommand(request.DisplayName, request.UserId, request.OrgUnitId), ct));
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Create([FromBody] EmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new CreateEmployeeCommand(request.FirstName, request.LastName, request.NationalId, request.WorkEmail, request.PersonalEmail,
+                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId),
+            ct));
+
+    /// <summary>Updates an employee record.</summary>
+    [HttpPut(ApiRoutes.IdParam)]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] EmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new UpdateEmployeeCommand(id, request.FirstName, request.LastName, request.NationalId, request.WorkEmail, request.PersonalEmail,
+                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId),
+            ct));
+
+    /// <summary>Assigns a manager to every employee in the selection; per-item outcome.</summary>
+    [HttpPost("bulk/assign-manager")]
+    [ProducesResponseType<BulkOperationResult>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> BulkAssignManager([FromBody] BulkAssignManagerRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new BulkAssignManagerCommand(request.Selection, request.ManagerEmployeeId), ct));
+
+    /// <summary>Company directory of active employees.</summary>
+    [HttpGet("directory")]
+    [ProducesResponseType<PagedResult<DirectoryEntryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Directory([FromQuery] PagedQuery paging, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeDirectoryQuery(paging, orgUnitId), ct));
+
+    /// <summary>Organization chart by manager hierarchy.</summary>
+    [HttpGet("org-chart")]
+    [ProducesResponseType<IReadOnlyList<OrgChartNodeDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> OrgChart(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetOrgChartQuery(), ct));
+
+    /// <summary>Active employees with a birthday in the next <paramref name="days"/> days.</summary>
+    [HttpGet("upcoming-birthdays")]
+    [ProducesResponseType<IReadOnlyList<UpcomingBirthdayDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpcomingBirthdays([FromQuery] int days = GetUpcomingBirthdaysQuery.DefaultDays, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new GetUpcomingBirthdaysQuery(days), ct));
 }

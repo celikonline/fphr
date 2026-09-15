@@ -108,6 +108,9 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             r.ToTable(IdentityTables.UserRoles);
             r.WithOwner().HasForeignKey(x => x.UserId);
             r.HasKey(x => new { x.UserId, x.RoleId });
+
+            // Without this EF treats RoleId as store-generated, so a newly added role row is saved as an UPDATE (0 rows).
+            r.Property(x => x.RoleId).ValueGeneratedNever();
             r.HasIndex(x => x.RoleId);
         });
 
@@ -160,6 +163,8 @@ public sealed class InvitationConfiguration : IEntityTypeConfiguration<Invitatio
         b.HasIndex(x => x.TokenHash).IsUnique();
         b.HasIndex(x => x.UserId);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(IdentityTables.CodeLength);
+        b.Property(x => x.EmailSource).HasConversion<string>().HasMaxLength(IdentityTables.CodeLength);
+        b.HasIndex(x => x.BatchId);
         b.Ignore(x => x.DomainEvents);
     }
 }

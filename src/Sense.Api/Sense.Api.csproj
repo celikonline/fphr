@@ -11,6 +11,7 @@
     <ProjectReference Include="../Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />
     <ProjectReference Include="../Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
     <ProjectReference Include="../Modules/Documents/Sense.Modules.Documents.Api/Sense.Modules.Documents.Api.csproj" />
+    <ProjectReference Include="../Modules/DataTransfer/Sense.Modules.DataTransfer.Api/Sense.Modules.DataTransfer.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

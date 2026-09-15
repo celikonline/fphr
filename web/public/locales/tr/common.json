@@ -44,5 +44,11 @@
   "close": "Kapat",
   "back": "Geri",
   "yes": "Evet",
-  "no": "Hayır"
+  "no": "Hayır",
+  "impersonation": {
+    "banner": "Bu oturum, onaylı ve süreli bir destek erişimi ile Sense destek ekibi tarafından kullanılıyor. Tüm işlemler denetim kaydına yazılır.",
+    "end": "Oturumu sonlandır"
+  },
+  "noAccessTitle": "Bu sayfaya erişiminiz yok",
+  "noAccessDescription": "Gerekli yetki için şirket yöneticinizle iletişime geçin."
 }

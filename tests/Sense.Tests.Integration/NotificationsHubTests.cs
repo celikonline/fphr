@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sense.Api.Hubs;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Infrastructure.Context;
+using Sense.Shared.Infrastructure.Notifications;
 using Xunit;
 
 namespace Sense.Tests.Integration;

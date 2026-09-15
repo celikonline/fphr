@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.DataTransfer.Contracts/Sense.Modules.DataTransfer.Contracts.csproj" />
+    <ProjectReference Include="../Sense.Modules.DataTransfer.Domain/Sense.Modules.DataTransfer.Domain.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

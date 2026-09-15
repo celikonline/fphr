@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/DataTransfer/Sense.Modules.DataTransfer.Api/Sense.Modules.DataTransfer.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="coverlet.collector" />
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+
+</Project>

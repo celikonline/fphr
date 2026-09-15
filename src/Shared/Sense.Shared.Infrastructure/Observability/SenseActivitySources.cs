@@ -15,4 +15,13 @@ public static class SenseActivitySources
 
     public static readonly ActivitySource Documents = new(DocumentsName);
     public static readonly ActivitySource BackgroundJobs = new(BackgroundJobsName);
+
+    /// <summary>Span etiketleri; Jaeger'de "Tags" aramasıyla (ör. <c>sense.correlation_id=...</c>) bulunabilir.</summary>
+    public static class Tags
+    {
+        public const string CorrelationId = "sense.correlation_id";
+        public const string ClientApp = "sense.client.app";
+        public const string ClientVersion = "sense.client.version";
+        public const string ClientPlatform = "sense.client.platform";
+    }
 }

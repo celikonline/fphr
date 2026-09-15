@@ -14,9 +14,13 @@ public interface IEmployeeRepository
 
     Task<Result<EmployeeEntity>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<EmployeeEntity>> ListByTenantAsync(int skip, int take, CancellationToken cancellationToken = default);
-
-    Task<int> CountByTenantAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>True if another employee of the tenant already uses this national id.</summary>
+    Task<bool> NationalIdTakenAsync(string nationalId, Guid? exceptEmployeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Every employee id of the tenant mapped to its current manager (hierarchy checks).</summary>
+    Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default);
 }

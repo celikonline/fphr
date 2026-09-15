@@ -1,0 +1,31 @@
+namespace Sense.Modules.Employee.Contracts;
+
+/// <summary>Employee grid filter; also the "select all matching" part of an <see cref="EmployeeSelection"/>.</summary>
+public sealed record EmployeeFilter(string? Q, Guid? OrgUnitId, bool IncludeSubUnits, string? Status, bool? HasUserAccount, Guid? ManagerEmployeeId);
+
+/// <summary>
+/// Grid selection. "Tümünü seç": Filter set + EmployeeIds null => every employee matching the filter (within the caller's
+/// data scope) minus ExcludedEmployeeIds. EmployeeIds set => exactly those (still scope-filtered), minus ExcludedEmployeeIds.
+/// </summary>
+public sealed record EmployeeSelection(IReadOnlyList<Guid>? EmployeeIds, EmployeeFilter? Filter, IReadOnlyList<Guid>? ExcludedEmployeeIds);
+
+/// <summary>Contact data other modules need to reach an employee (e.g. invitations).</summary>
+public sealed record EmployeeContact(Guid EmployeeId, string FirstName, string LastName, string? WorkEmail, string? PersonalEmail, Guid? UserId, string Status);
+
+/// <summary>Cross-module employee reads over selections/units.</summary>
+public interface IEmployeeDirectory
+{
+    /// <summary>Resolves a grid selection to employee ids, applying the caller's data scope for employee.employees.read.</summary>
+    Task<IReadOnlyList<Guid>> ResolveSelectionAsync(Guid tenantId, EmployeeSelection selection, CancellationToken ct = default);
+
+    Task<IReadOnlyList<EmployeeContact>> GetContactsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default);
+
+    /// <summary>Active (not Inactive) employees assigned directly to one of the given units (callers expand subtrees themselves).</summary>
+    Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default);
+}
+
+/// <summary>Links an Identity user to an employee record; idempotent and persisted immediately.</summary>
+public interface IEmployeeUserLinker
+{
+    Task LinkUserAsync(Guid tenantId, Guid employeeId, Guid userId, CancellationToken ct = default);
+}

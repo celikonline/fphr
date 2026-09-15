@@ -30,7 +30,8 @@ public class DataSeeder(
     DocumentsDbContext documentsCtx,
     OrganizationDbContext organizationCtx,
     EmployeeDbContext employeeCtx,
-    IPermissionCatalog permissionCatalog)
+    IPermissionCatalog permissionCatalog,
+    IPasswordHasher passwordHasher)
 {
     private const int RandomSeed = 42; // Deterministic seed for reproducibility
     private readonly Random _random = new(RandomSeed);
@@ -132,8 +133,7 @@ public class DataSeeder(
         // Assign admin role
         user.SetRoles([adminRole.Id]);
 
-        // Set password (dummy hash for seed purposes)
-        user.SetPassword("$2a$11$dummy_minimal_seed_hash");
+        user.SetPassword(passwordHasher.Hash(SeedDataConstants.SeedUserPassword));
 
         // Organization: system hierarchy levels + a single root Company org unit (roadmap Faz 0 item #4)
         var (companyTypeId, _) = SeedOrgUnitTypes(tenant.Id);
@@ -151,8 +151,19 @@ public class DataSeeder(
         organizationCtx.Locations.Add(headOffice);
         rootUnit.AssignLocation(headOffice.Id);
 
-        // Employee: minimal stub for the admin user, linked back via User.EmployeeId
-        var adminEmployee = CreateEmployeeOrThrow(tenant.Id, "Admin User", user.Id, rootUnit.Id);
+        // Employee record for the admin user, linked back via User.EmployeeId
+        var adminEmployee = CreateEmployeeOrThrow(
+            tenant.Id,
+            new EmployeeInfo(
+                FirstName: user.FirstName,
+                LastName: user.LastName,
+                NationalId: NextNationalId(),
+                WorkEmail: user.Email,
+                WorkPhone: "+90 212 555 00 00",
+                HireDate: new DateOnly(2020, 1, 1),
+                BirthDate: new DateOnly(1985, 6, 15)),
+            user.Id,
+            rootUnit.Id);
         employeeCtx.Employees.Add(adminEmployee);
         user.LinkEmployee(adminEmployee.Id);
         rootUnit.AssignManager(adminEmployee.Id);
@@ -192,8 +203,16 @@ public class DataSeeder(
             roles[roleCode] = role;
         }
 
-        // Create demo users with role assignments
-        var (demoUsers, roleAssignments) = GenerateDemoUsersWithRoles(tenant.Id, roles);
+        // Create demo users with role assignments: the fixed, documented (README.md) login accounts
+        // first, then the 50 randomly generated employees.
+        var (fixedUsers, fixedRoleAssignments) = CreateFixedDemoAccounts(tenant.Id, roles);
+        var (generatedUsers, generatedRoleAssignments) = GenerateDemoUsersWithRoles(tenant.Id, roles);
+        var demoUsers = fixedUsers.Concat(generatedUsers).ToList();
+        var roleAssignments = fixedRoleAssignments
+            .Concat(generatedRoleAssignments)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        var seedPasswordHash = passwordHasher.Hash(SeedDataConstants.SeedUserPassword);
         foreach (var user in demoUsers)
         {
             var assignedRoles = roleAssignments.TryGetValue(user.Id, out var userRoles) ? userRoles : [];
@@ -202,7 +221,7 @@ public class DataSeeder(
                 user.SetRoles(assignedRoles.Select(r => r.Id).ToList());
             }
             identityCtx.Users.Add(user);
-            user.SetPassword("$2a$11$dummy_demo_seed_hash");
+            user.SetPassword(seedPasswordHash);
         }
 
         // Organization: system hierarchy levels + demo tree (Headquarters -> Sales/Engineering/HR/Finance),
@@ -398,22 +417,23 @@ public class DataSeeder(
         return result.Value;
     }
 
-    private Employee CreateEmployeeOrThrow(Guid tenantId, string displayName, Guid? userId, Guid? orgUnitId)
+    private static Employee CreateEmployeeOrThrow(Guid tenantId, EmployeeInfo info, Guid? userId, Guid? orgUnitId)
     {
-        var result = Employee.Create(tenantId, displayName, userId, orgUnitId);
+        var result = Employee.Create(tenantId, info, userId, orgUnitId);
         if (result.IsFailure)
         {
-            throw new InvalidOperationException($"Failed to seed employee '{displayName}': {result.Error}");
+            throw new InvalidOperationException($"Failed to seed employee '{info.FirstName} {info.LastName}': {result.Error}");
         }
 
         return result.Value;
     }
 
     /// <summary>
-    /// Creates one minimal Employee stub per demo user, round-robin-assigned to the given department
-    /// units (executives/HR go to Headquarters instead), links each Identity user back to its
-    /// employee record, and best-effort assigns each unit's first Manager-role employee as its
-    /// ManagerEmployeeId. Returns the number of employees created.
+    /// Creates one Employee record per demo user (names/work e-mail from the user, deterministic valid TCKN,
+    /// phone, hire/birth dates), round-robin-assigned to the given department units (executives/HR go to
+    /// Headquarters instead), links each Identity user back to its employee record, and builds a manager
+    /// hierarchy: first executive (Owner) at the top, each department's first Manager-role employee
+    /// reporting to it and managing the rest of that department. Returns the number of employees created.
     /// </summary>
     private int SeedDemoEmployees(
         Guid tenantId,
@@ -423,7 +443,7 @@ public class DataSeeder(
         IReadOnlyList<OrgUnit> departments)
     {
         var deptCursor = 0;
-        var created = 0;
+        var created = new List<(Employee Employee, OrgUnit Unit)>();
 
         foreach (var user in users)
         {
@@ -431,10 +451,10 @@ public class DataSeeder(
             var isExecutive = userRoles.Any(role => role.Code is SystemRoleCodes.Owner or SystemRoleCodes.Admin or SystemRoleCodes.HR);
             var orgUnit = isExecutive || departments.Count == 0 ? headquarters : departments[deptCursor++ % departments.Count];
 
-            var employee = CreateEmployeeOrThrow(tenantId, user.FullName, user.Id, orgUnit.Id);
+            var employee = CreateEmployeeOrThrow(tenantId, NextDemoEmployeeInfo(user), user.Id, orgUnit.Id);
             employeeCtx.Employees.Add(employee);
             user.LinkEmployee(employee.Id);
-            created++;
+            created.Add((employee, orgUnit));
 
             if (isExecutive && headquarters.ManagerEmployeeId is null)
             {
@@ -447,7 +467,78 @@ public class DataSeeder(
             }
         }
 
-        return created;
+        var managerMap = created.ToDictionary(c => c.Employee.Id, _ => (Guid?)null);
+        foreach (var (employee, unit) in created)
+        {
+            var managerId = employee.Id == unit.ManagerEmployeeId || unit.ManagerEmployeeId is null
+                ? headquarters.ManagerEmployeeId
+                : unit.ManagerEmployeeId;
+            if (managerId is null || managerId == employee.Id)
+            {
+                continue;
+            }
+
+            if (employee.AssignManager(managerId, managerMap).IsSuccess)
+            {
+                managerMap[employee.Id] = managerId;
+            }
+        }
+
+        return created.Count;
+    }
+
+    private readonly HashSet<string> _usedNationalIds = new(StringComparer.Ordinal);
+
+    /// <summary>Random but checksum-valid, tenant-unique 11-digit TCKN (TcKimlik algorithm: 10th/11th digits derived from the first nine).</summary>
+    private string NextNationalId()
+    {
+        while (true)
+        {
+            var d = new int[11];
+            d[0] = _random.Next(1, 10);
+            for (var i = 1; i < 9; i++)
+            {
+                d[i] = _random.Next(0, 10);
+            }
+
+            var oddSum = d[0] + d[2] + d[4] + d[6] + d[8];
+            var evenSum = d[1] + d[3] + d[5] + d[7];
+            d[9] = (((oddSum * 7) - evenSum) % 10 + 10) % 10;
+            d[10] = d.Take(10).Sum() % 10;
+
+            var value = string.Concat(d);
+            if (_usedNationalIds.Add(value))
+            {
+                return value;
+            }
+        }
+    }
+
+    private EmployeeInfo NextDemoEmployeeInfo(User user)
+    {
+        var birthDate = new DateOnly(1970, 1, 1).AddDays(_random.Next(0, 365 * 33));
+        var hireDate = new DateOnly(2015, 1, 1).AddDays(_random.Next(0, 365 * 11));
+        var phone = string.Create(CultureInfo.InvariantCulture, $"+90 5{_random.Next(30, 60)} {_random.Next(100, 1000)} {_random.Next(10, 100)} {_random.Next(10, 100)}");
+        var personalEmail = _random.Next(0, 3) == 0
+            ? null
+            : $"{AsciiFold(user.FirstName)}.{AsciiFold(user.LastName)}{_random.Next(1, 100)}@example.com";
+
+        return new EmployeeInfo(user.FirstName, user.LastName, NextNationalId(), user.Email, personalEmail, phone, hireDate, birthDate);
+    }
+
+    private static string AsciiFold(string value)
+    {
+        var chars = value.ToLower(new CultureInfo("tr-TR")).Select(c => c switch
+        {
+            'ç' => 'c',
+            'ğ' => 'g',
+            'ı' => 'i',
+            'ö' => 'o',
+            'ş' => 's',
+            'ü' => 'u',
+            _ => c,
+        }).Where(char.IsAsciiLetterOrDigit);
+        return string.Concat(chars);
     }
 
     private void SeedRolePermissions(Role role, string roleCode)
@@ -460,6 +551,51 @@ public class DataSeeder(
 
         // Set permissions on role (use unchecked method since this is seed data)
         role.ReplacePermissionsUnchecked(permissions);
+    }
+
+    /// <summary>
+    /// The fixed, memorable login accounts documented in README.md ("Demo kullanıcılar"), one per
+    /// representative role, in addition to the 50 randomly generated employees.
+    /// </summary>
+    private static readonly (string Email, string FirstName, string LastName, string RoleCode)[] FixedDemoAccounts =
+    [
+        ("owner@demo.local", "Ahmet", "Yılmaz", SystemRoleCodes.Owner),
+        ("ik@demo.local", "Ayşe", "Demir", SystemRoleCodes.HR),
+        ("bordro@demo.local", "Mehmet", "Kaya", SystemRoleCodes.PayrollSpecialist),
+        ("yonetici@demo.local", "Fatma", "Çelik", SystemRoleCodes.Manager),
+        ("calisan@demo.local", "Ali", "Şahin", SystemRoleCodes.Employee),
+        ("denetci@demo.local", "Zeynep", "Arslan", SystemRoleCodes.Auditor),
+    ];
+
+    private static (List<User> Users, Dictionary<Guid, List<Role>> RoleAssignments) CreateFixedDemoAccounts(Guid tenantId, Dictionary<string, Role> roles)
+    {
+        var users = new List<User>();
+        var roleAssignments = new Dictionary<Guid, List<Role>>();
+
+        foreach (var (email, firstName, lastName, roleCode) in FixedDemoAccounts)
+        {
+            var userResult = User.Create(
+                tenantId: tenantId,
+                email: email,
+                firstName: firstName,
+                lastName: lastName,
+                preferredLanguage: "tr");
+
+            if (!userResult.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to create fixed demo account '{email}': {userResult.Error}");
+            }
+
+            var user = userResult.Value;
+            users.Add(user);
+
+            if (roles.TryGetValue(roleCode, out var role))
+            {
+                roleAssignments[user.Id] = [role];
+            }
+        }
+
+        return (users, roleAssignments);
     }
 
     private (List<User> Users, Dictionary<Guid, List<Role>> RoleAssignments) GenerateDemoUsersWithRoles(Guid tenantId, Dictionary<string, Role> roles)

@@ -28,6 +28,9 @@ public static class WebServiceCollectionExtensions
     private const string OpenApiDocumentName = "v1";
     private const string ApiVersionGroupFormat = "'v'VVV";
 
+    /// <summary>Name of the CORS policy registered in <see cref="AddSenseWeb"/> and applied via <see cref="UseSenseCors"/>.</summary>
+    public const string CorsPolicyName = "SenseFrontend";
+
     /// <summary>
     /// API host'u için ortak kayıt: controller'lar (her modülün Api assembly'si application part olarak eklenir),
     /// sürümleme, yerelleştirme, ProblemDetails, izin policy'leri, OpenAPI, health.
@@ -93,6 +96,27 @@ public static class WebServiceCollectionExtensions
         services.AddProblemDetails();
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
+        // The SPA (web/) is served from its own origin (nginx :8080 in containers, Vite :3000 on
+        // host) and calls this API cross-origin, so without a CORS policy the browser blocks every
+        // request before it reaches the server - unlike curl/Postman, which don't enforce CORS.
+        // Frontend:BaseUrl is already configured per-environment for email links; reuse it here too.
+        var frontendBaseUrl = configuration.GetSection(ConfigurationSections.Frontend)["BaseUrl"];
+        services.AddCors(options =>
+        {
+            options.AddPolicy(CorsPolicyName, policy =>
+            {
+                if (!string.IsNullOrWhiteSpace(frontendBaseUrl))
+                {
+                    // Exposed headers: tarayıcı JS'i X-Correlation-Id / X-Trace-Id gibi başlıkları ancak böyle okuyabilir
+                    // (hata ekranında "destek kodu" göstermek, Content-Disposition'dan dosya adı almak vb.).
+                    policy.WithOrigins(frontendBaseUrl)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .WithExposedHeaders(Sense.Shared.Contracts.Security.SenseHeaderNames.ExposedToClients);
+                }
+            });
+        });
+
         services.TryAddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IAuthorizationHandler, PermissionHandler>());
         services.AddAuthorization();
@@ -144,6 +168,9 @@ public static class WebServiceCollectionExtensions
         var options = app.ApplicationServices.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value;
         return app.UseRequestLocalization(options);
     }
+
+    /// <summary>Applies the CORS policy registered by <see cref="AddSenseWeb"/>. Must run before UseAuthentication/UseAuthorization.</summary>
+    public static IApplicationBuilder UseSenseCors(this IApplicationBuilder app) => app.UseCors(CorsPolicyName);
 }
 
 /// <summary>Doğrulama mesajlarındaki alan adlarının kaynak anahtarları: field.{snake_case}.</summary>

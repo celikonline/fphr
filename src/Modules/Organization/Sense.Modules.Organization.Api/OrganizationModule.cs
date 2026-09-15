@@ -34,7 +34,7 @@ public sealed class OrganizationModule : IModule
         services.AddModuleDbContext<OrganizationDbContext>(configuration, OrganizationDbContext.SchemaName);
 
         // Register MediatR-style command/query handlers for this module
-        services.AddModuleHandlers(OrganizationDbContext.SchemaName, typeof(OrganizationPermissions).Assembly, typeof(OrganizationDbContext).Assembly);
+        services.AddModuleHandlers(OrganizationDbContext.SchemaName, typeof(Sense.Modules.Organization.Application.OrganizationErrors).Assembly, typeof(OrganizationDbContext).Assembly);
 
         // Register repositories
         services.AddScoped<IOrgUnitTypeRepository, OrgUnitTypeRepository>();

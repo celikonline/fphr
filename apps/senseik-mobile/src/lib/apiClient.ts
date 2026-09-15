@@ -1,5 +1,24 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { SecureStorage } from "./storage";
+
+/** Header names mirror SenseHeaderNames on the API (Sense.Shared.Contracts.Security). */
+const SenseHeaders = {
+  CorrelationId: "X-Correlation-Id",
+  ClientApp: "X-Client-App",
+  ClientVersion: "X-Client-Version",
+  ClientPlatform: "X-Client-Platform"
+} as const;
+
+const clientVersion = Constants.expoConfig?.version ?? "dev";
+
+/** Hermes has no crypto.randomUUID; a v4-shaped random id is enough for log/trace correlation. */
+const newCorrelationId = (): string =>
+  "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16);
+  });
 
 interface QueuedRequest {
   resolve: (token?: string | null) => void;
@@ -41,6 +60,13 @@ class ApiClient {
     // Request interceptor
     this.instance.interceptors.request.use(
       async config => {
+        if (!config.headers.has(SenseHeaders.CorrelationId)) {
+          config.headers.set(SenseHeaders.CorrelationId, newCorrelationId());
+        }
+        config.headers.set(SenseHeaders.ClientApp, "mobile");
+        config.headers.set(SenseHeaders.ClientPlatform, Platform.OS);
+        config.headers.set(SenseHeaders.ClientVersion, clientVersion);
+
         const token = await SecureStorage.getAccessToken();
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;

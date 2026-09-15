@@ -1,17 +1,21 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Employee.Application;
+using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
 
 namespace Sense.Modules.Employee.Api;
 
-/// <summary>Employee module composition root (Faz 0 minimal stub: Id/UserId/DisplayName/Status/OrgUnitId only - full personnel record is Faz 1).</summary>
+/// <summary>Employee module composition root (Faz 0: employee record, manager hierarchy, directory/org chart; full personnel record is Faz 1).</summary>
 public sealed class EmployeeModule : IModule
 {
     public string Name => EmployeeDbContext.SchemaName;
@@ -27,16 +31,26 @@ public sealed class EmployeeModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        // Register DbContext for this module
         services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
 
-        // Register MediatR-style command/query handlers for this module
-        services.AddModuleHandlers(EmployeeDbContext.SchemaName, typeof(EmployeePermissions).Assembly, typeof(EmployeeDbContext).Assembly);
+        // Handlers/validators live in the Application assembly (EmployeePermissions is in Contracts, so it must not be the scan anchor).
+        services.AddModuleHandlers(EmployeeDbContext.SchemaName, typeof(EmployeeErrors).Assembly, typeof(EmployeeDbContext).Assembly);
 
-        // Register repositories
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+        services.AddScoped<IEmployeeReadStore, EmployeeReadStore>();
+        services.AddScoped<EmployeeSelectionResolver>();
+        services.AddScoped<EmployeeDetailBuilder>();
+        services.AddScoped<EmployeeReferenceValidator>();
+        services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();
 
-        // Cross-module read contract consumed by Organization (see IEmployeeLookup)
+        // Data import template "employee.master" (collected by the DataTransfer module)
+        services.AddScoped<IImportTemplate, EmployeeMasterImportTemplate>();
+        services.AddScoped<IImportRowHandler, EmployeeImportRowHandler>();
+
+        // Cross-module contracts consumed by Organization/Identity
         services.AddScoped<IEmployeeLookup, EmployeeLookup>();
+        services.AddScoped<IEmployeeDirectory, EmployeeDirectory>();
+        services.AddScoped<IEmployeeUserLinker, EmployeeUserLinker>();
+        services.AddScoped<IEmployeeScopeLookup, EmployeeScopeLookup>();
     }
 }

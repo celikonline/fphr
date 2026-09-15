@@ -89,6 +89,39 @@ public sealed class Role : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Seed/migrasyon: kilitli rol dahil izinleri yeniden yazar.</summary>
     public void ReplacePermissionsUnchecked(IEnumerable<RolePermission> permissions) => ReplacePermissions(permissions);
 
+    /// <summary>
+    /// Sistem rolü senkronizasyonu (kilitli rol dahil): yalnız farkları uygular — eksikler eklenir, artık eşleşmeyenler kaldırılır,
+    /// kapsamı farklı olanlar güncellenir; değişmeyen satırlara dokunulmaz. Bir değişiklik olduysa true.
+    /// </summary>
+    public bool SyncPermissionsUnchecked(IEnumerable<RolePermission> desired)
+    {
+        var target = desired.GroupBy(p => p.Permission, StringComparer.Ordinal).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+        var changed = _permissions.RemoveAll(p => !target.ContainsKey(p.Permission)) > 0;
+
+        foreach (var existing in _permissions)
+        {
+            var wanted = target[existing.Permission];
+            if (existing.Scope != wanted.Scope || existing.ScopeIdsJson != wanted.ScopeIdsJson)
+            {
+                existing.ChangeScope(wanted.Scope, wanted.ScopeIdsJson);
+                changed = true;
+            }
+        }
+
+        foreach (var missing in target.Values.Where(p => _permissions.All(e => e.Permission != p.Permission)))
+        {
+            _permissions.Add(new RolePermission(Id, missing.Permission, missing.Scope, missing.ScopeIdsJson));
+            changed = true;
+        }
+
+        if (changed)
+        {
+            Raise(new RolePermissionsChanged(Id, TenantId));
+        }
+
+        return changed;
+    }
+
     public Result EnsureDeletable(int assignedUserCount)
     {
         if (IsSystem)
@@ -140,6 +173,12 @@ public sealed class RolePermission : AuditableRecord
 
     /// <summary>Scope=Custom ise birim/lokasyon kimlikleri (jsonb dizi).</summary>
     public string? ScopeIdsJson { get; private set; }
+
+    internal void ChangeScope(int scope, string? scopeIdsJson)
+    {
+        Scope = scope;
+        ScopeIdsJson = scopeIdsJson;
+    }
 }
 
 public sealed record RolePermissionsChanged(Guid RoleId, Guid TenantId) : DomainEvent;

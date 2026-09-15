@@ -1,0 +1,58 @@
+# Temel SLO/sağlık alarmları. Local'de Alertmanager yok; durumları Prometheus UI → Alerts ve Grafana'dan izlenir.
+# Üretimde aynı kurallar Alertmanager/Grafana Alerting'e bağlanmalıdır.
+
+groups:
+  - name: senseik-api
+    rules:
+      - alert: SenseApiDown
+        # İki hedeften (container/host) yalnızca biri çalışır; hiçbiri ayakta değilse alarm.
+        expr: absent(up{job="senseik-api"} == 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sense.Api metrik uç noktasına 2 dakikadır ulaşılamıyor"
+          description: "Prometheus hiçbir senseik-api hedefini scrape edemiyor. API ayakta mı, /metrics açık mı?"
+
+      - alert: SenseApiHighErrorRate
+        expr: |
+          (
+            sum(rate(http_server_request_duration_seconds_count{job="senseik-api", http_response_status_code=~"5.."}[5m]))
+            /
+            sum(rate(http_server_request_duration_seconds_count{job="senseik-api"}[5m]))
+          ) > 0.05
+          and sum(rate(http_server_request_duration_seconds_count{job="senseik-api"}[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Sense.Api 5xx oranı %5'in üzerinde"
+          description: "Son 5 dakikada isteklerin {{ $value | humanizePercentage }} kadarı 5xx döndü."
+
+      - alert: SenseApiHighLatencyP95
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_server_request_duration_seconds_bucket{job="senseik-api", http_route!~"/health.*|/metrics|/hubs/.*"}[5m]))
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Sense.Api p95 gecikmesi 1 saniyenin üzerinde"
+          description: "p95 = {{ $value | humanizeDuration }} (10 dakikadır)."
+
+      - alert: SenseOutboxDeadLetters
+        expr: sum(increase(sense_outbox_messages_total{sense_outbox_result="dead_lettered"}[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Outbox mesajları dead-letter'a düştü"
+          description: "Son 15 dakikada {{ $value }} outbox mesajı MaxAttempts'e ulaştı; outbox_messages tablosunda is_dead=true kayıtlarına bakın."
+
+      - alert: SenseBackgroundJobFailures
+        expr: sum by (sense_job_type) (increase(sense_background_job_duration_seconds_count{sense_outcome!="success"}[15m])) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Arka plan işi başarısız: {{ $labels.sense_job_type }}"
+          description: "Son 15 dakikada {{ $value }} başarısız çalıştırma."

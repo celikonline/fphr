@@ -11,6 +11,7 @@ namespace Sense.Modules.Organization.Domain.OrgUnitTypes;
 /// bir seviyedir" - Title is a level, not a separate JobTitle entity). System levels (IsSystem) are
 /// seeded once per tenant (see <see cref="OrgUnitTypeCatalog"/>) and the Company level specifically
 /// can never be deactivated (a tenant must always have at least one active top-level unit type).
+/// Ordering rules across the whole level set live in <see cref="OrgUnitTypeHierarchy"/>.
 /// </summary>
 public sealed class OrgUnitType : TenantAggregateRoot<Guid>, IAuditLogged
 {
@@ -82,7 +83,20 @@ public sealed class OrgUnitType : TenantAggregateRoot<Guid>, IAuditLogged
         return type;
     }
 
-    public void Rename(string name) => Name = Guard.MaxLength(Guard.NotEmpty(name), OrganizationLimits.NameMaxLength);
+    /// <summary>The system Company level: always active and always first.</summary>
+    public bool IsCompanyLevel => IsSystem && string.Equals(Code, OrgUnitTypeCodes.Company, StringComparison.Ordinal);
+
+    public Result Rename(string name)
+    {
+        var validated = ValidateName(name);
+        if (validated.IsFailure)
+        {
+            return validated.Error;
+        }
+
+        Name = validated.Value;
+        return Result.Success();
+    }
 
     public void Reorder(int sortOrder) => SortOrder = sortOrder;
 
@@ -90,14 +104,32 @@ public sealed class OrgUnitType : TenantAggregateRoot<Guid>, IAuditLogged
 
     public Result Deactivate()
     {
-        if (IsSystem && string.Equals(Code, OrgUnitTypeCodes.Company, StringComparison.Ordinal))
+        if (IsCompanyLevel)
         {
             return Error.Rule(OrganizationDomainErrors.OrgUnitTypeSystemImmutable);
+        }
+
+        if (!IsActive)
+        {
+            return Error.Rule(OrganizationDomainErrors.OrgUnitTypeAlreadyInactive);
         }
 
         IsActive = false;
         Raise(new OrgUnitTypeRemoved(Id, TenantId));
         return Result.Success();
+    }
+
+    internal static Result<string> ValidateName(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Error.Validation(OrganizationDomainErrors.OrgUnitTypeNameRequired);
+        }
+
+        var trimmed = name.Trim();
+        return trimmed.Length > OrganizationLimits.NameMaxLength
+            ? Error.Validation(OrganizationDomainErrors.OrgUnitTypeNameTooLong, ("max", OrganizationLimits.NameMaxLength))
+            : trimmed;
     }
 }
 

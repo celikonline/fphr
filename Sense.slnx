@@ -5,6 +5,13 @@
     <Project Path="src/Sense.Worker/Sense.Worker.csproj" />
   </Folder>
   <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/DataTransfer/">
+    <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Api/Sense.Modules.DataTransfer.Api.csproj" />
+    <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Application/Sense.Modules.DataTransfer.Application.csproj" />
+    <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Contracts/Sense.Modules.DataTransfer.Contracts.csproj" />
+    <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Domain/Sense.Modules.DataTransfer.Domain.csproj" />
+    <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Infrastructure/Sense.Modules.DataTransfer.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Employee/">
     <Project Path="src/Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
     <Project Path="src/Modules/Employee/Sense.Modules.Employee.Application/Sense.Modules.Employee.Application.csproj" />
@@ -40,6 +47,8 @@
     <Project Path="tests/Sense.Tests.TenantIsolation/Sense.Tests.TenantIsolation.csproj" />
   </Folder>
   <Folder Name="/tests/Modules/">
+    <Project Path="tests/Modules/Sense.Modules.DataTransfer.Tests/Sense.Modules.DataTransfer.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Employee.Tests/Sense.Modules.Employee.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Identity.Tests/Sense.Modules.Identity.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Organization.Tests/Sense.Modules.Organization.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Infrastructure.Tests/Sense.Shared.Infrastructure.Tests.csproj" />

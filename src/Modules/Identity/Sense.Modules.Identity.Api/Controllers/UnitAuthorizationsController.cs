@@ -24,6 +24,12 @@ public sealed class UnitAuthorizationsController : ApiControllerBase
     public async Task<IActionResult> List([FromQuery] Guid orgUnitId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListUnitAuthorizationsQuery(orgUnitId), ct));
 
+    /// <summary>Kişi seçicisi: aktif/davetli kullanıcılar.</summary>
+    [HttpGet("candidates")]
+    [ProducesResponseType<IReadOnlyList<UnitAuthorizationCandidateDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Candidates([FromQuery] string? q, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListUnitAuthorizationCandidatesQuery(q), ct));
+
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status201Created)]
     public async Task<IActionResult> Grant([FromBody] GrantUnitAuthorizationRequest request, CancellationToken ct)

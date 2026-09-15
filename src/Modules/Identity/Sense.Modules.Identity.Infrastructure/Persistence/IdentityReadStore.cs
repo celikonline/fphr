@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Roles;
 using Sense.Modules.Identity.Application.Users;
+using Sense.Modules.Identity.Domain.Impersonation;
 using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Users;
@@ -98,6 +99,56 @@ public sealed class IdentityReadStore(IdentityDbContext db) : IIdentityReadStore
         var count = await db.Users.AsNoTracking().CountAsync(u => u.Roles.Any(r => r.RoleId == roleId), ct).ConfigureAwait(false);
         return ToDto(role, count);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, UserSummaryDto>> GetUserSummariesAsync(IReadOnlyCollection<Guid> userIds, CancellationToken ct)
+    {
+        if (userIds.Count == 0)
+        {
+            return new Dictionary<Guid, UserSummaryDto>();
+        }
+
+        var ids = userIds.Distinct().ToList();
+        var rows = await db.Users.AsNoTracking().Where(u => ids.Contains(u.Id))
+            .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.EmployeeId })
+            .ToListAsync(ct).ConfigureAwait(false);
+        return rows.ToDictionary(u => u.Id, u => new UserSummaryDto(u.Id, FullName(u.FirstName, u.LastName), u.Email, u.EmployeeId));
+    }
+
+    public async Task<IReadOnlyList<UnitAuthorizationCandidateDto>> ListUnitAuthorizationCandidatesAsync(string? q, int limit, CancellationToken ct)
+    {
+        var query = db.Users.AsNoTracking().Where(u => u.Status == UserStatus.Active || u.Status == UserStatus.Invited);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var pattern = LikePattern.Contains(q);
+            query = query.Where(u => EF.Functions.ILike(u.Email, pattern) || EF.Functions.ILike(u.FirstName, pattern) || EF.Functions.ILike(u.LastName, pattern)
+                || EF.Functions.ILike(u.FirstName + " " + u.LastName, pattern));
+        }
+
+        var rows = await query.OrderBy(u => u.FirstName).ThenBy(u => u.LastName).ThenBy(u => u.Email).Take(limit)
+            .Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.EmployeeId })
+            .ToListAsync(ct).ConfigureAwait(false);
+        return rows.Select(u => new UnitAuthorizationCandidateDto(u.Id, FullName(u.FirstName, u.LastName), u.Email, u.EmployeeId)).ToList();
+    }
+
+    public async Task<IReadOnlyList<ImpersonationGrantDto>> ListImpersonationGrantsAsync(ImpersonationGrantStatus? status, DateTime nowUtc, CancellationToken ct)
+    {
+        var grants = await db.ImpersonationGrants.AsNoTracking().OrderByDescending(g => g.RequestedAt).ToListAsync(ct).ConfigureAwait(false);
+        var filtered = status is { } wanted ? grants.Where(g => g.EffectiveStatus(nowUtc) == wanted).ToList() : grants;
+
+        // Platform kullanıcısı başka (platform) kiracıdadır: yalnız e-posta için kiracı filtresi bilinçli olarak kaldırılır.
+        var platformUserIds = filtered.Select(g => g.PlatformUserId).Distinct().ToList();
+        var emails = platformUserIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await db.Users.IgnoreQueryFilters([IdentityDbContext.TenantFilter]).AsNoTracking()
+                .Where(u => platformUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.Email, ct).ConfigureAwait(false);
+
+        return filtered.Select(g => new ImpersonationGrantDto(
+            g.Id, g.PlatformUserId, emails.GetValueOrDefault(g.PlatformUserId), g.Reason, g.EffectiveStatus(nowUtc).ToString(), g.RequestedAt,
+            g.ApprovedAt, g.ApprovedByUserId, g.ExpiresAt, g.UsedAt, g.RevokedAt)).ToList();
+    }
+
+    private static string FullName(string firstName, string lastName) => string.Concat(firstName, " ", lastName).Trim();
 
     private static RoleDto ToDto(Role r, int userCount) => new(r.Id, r.Code, r.Name, r.Description, r.IsSystem, r.IsLocked, userCount,
         r.Permissions.Select(p => new RolePermissionDto(p.Permission, (DataScope)p.Scope, RolePermissionMapper.ParseScopeIds(p.ScopeIdsJson))).ToList());

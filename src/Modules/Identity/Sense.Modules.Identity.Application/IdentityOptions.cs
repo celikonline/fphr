@@ -106,6 +106,21 @@ public static class IdentityErrors
 
     public const string AccessTypeInvalid = "user.access_type_invalid";
 
+    /// <summary>Owner rolünü yalnız bir Owner verebilir/kaldırabilir.</summary>
+    public const string AccessTypeOwnerOnly = "user.access_type_owner_only";
+
+    /// <summary>Admin rolünü yalnız Owner veya Admin verebilir/kaldırabilir.</summary>
+    public const string AccessTypeForbidden = "user.access_type_forbidden";
+
+    public const string InvitationEmailRequired = "identity.invitation.email_required";
+    public const string InvitationAlreadyActive = "identity.invitation.already_active";
+    public const string InvitationEmployeeNotFound = "identity.invitation.employee_not_found";
+
+    /// <summary>Hedef e-posta, başka bir çalışana bağlı bir kullanıcıya ait.</summary>
+    public const string InvitationEmailInUse = "identity.invitation.email_in_use";
+
+    public const string InvitationUserDisabled = "identity.invitation.user_disabled";
+
     public const string ImpersonationNotFound = "impersonation.not_found";
     public const string ImpersonationNotPending = "impersonation.not_pending";
     public const string ImpersonationNotApproved = "impersonation.not_approved";
@@ -114,6 +129,7 @@ public static class IdentityErrors
     public const string ImpersonationRequiresPlatformStaff = "impersonation.requires_platform_staff";
     public const string ImpersonationForbidden = "impersonation.forbidden";
     public const string ImpersonationReasonRequired = "impersonation.reason_required";
+    public const string ImpersonationStatusInvalid = "impersonation.status_invalid";
 
     /// <summary>Organization.Contracts.IOrgUnitLookup ile doğrulanamayan OrgUnitId (Birim yetkilendirme grant'i).</summary>
     public const string OrgUnitNotFound = "identity.org_unit_not_found";

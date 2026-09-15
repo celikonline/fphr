@@ -35,6 +35,8 @@ public sealed class GetMeHandler(
         var userRoles = await roles.GetByIdsAsync(user.Roles.Select(r => r.RoleId), cancellationToken).ConfigureAwait(false);
         var effective = await permissions.GetPermissionsAsync(user.Id, cancellationToken).ConfigureAwait(false);
 
+        var bypass = effective.Contains(IdentityPermissions.AccessSettingsBypass);
+
         var scopes = new Dictionary<string, DataScope>(StringComparer.Ordinal);
         foreach (var p in effective)
         {
@@ -47,6 +49,6 @@ public sealed class GetMeHandler(
             userRoles.Select(r => new RoleRefDto(r.Id, r.Code, r.Name)).ToList(),
             effective.Order(StringComparer.Ordinal).ToList(),
             scopes,
-            new FeaturesDto(AccessSettingsDto.From(tenant.AccessSettings)));
+            new FeaturesDto(bypass ? AccessSettingsDto.AllEnabled : AccessSettingsDto.From(tenant.AccessSettings), bypass));
     }
 }

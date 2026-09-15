@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
+using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 
 namespace Sense.Modules.Organization.Infrastructure.Lookups;
@@ -10,9 +11,8 @@ namespace Sense.Modules.Organization.Infrastructure.Lookups;
 /// (Company.HolidayCalendarId, falling back to the tenant's seeded system TR calendar - see
 /// docs/analysis/kolayik-video/11.3.02-sirket-yapisi.md: "çözümleme: çalışanın Company ataması →
 /// Company.HolidayCalendarId → ... varsayılan") and answers holiday-membership/upcoming-list queries
-/// against it. Faz 0 has exactly one Company per tenant (see Company's own doc comment), so "the
-/// tenant's Company" is unambiguous for now; a future multi-Company tenant would need this to take an
-/// explicit Company/OrgUnit scope instead of just a TenantId.
+/// against it. The tenant-only overloads use the tenant default; <see cref="ResolveCalendarAsync"/> takes an
+/// explicit Company or OrgUnit scope for multi-company tenants.
 /// </summary>
 public sealed class HolidayCalendarLookup(OrganizationDbContext context) : IHolidayCalendarLookup
 {
@@ -65,24 +65,94 @@ public sealed class HolidayCalendarLookup(OrganizationDbContext context) : IHoli
         return thisYear >= today ? thisYear : thisYear.AddYears(1);
     }
 
+    public async Task<HolidayCalendarRef?> ResolveCalendarAsync(Guid tenantId, Guid? companyId, Guid? orgUnitId, CancellationToken cancellationToken = default)
+    {
+        Guid? calendarId = null;
+        if (companyId is { } id)
+        {
+            calendarId = await context.Companies.AsNoTracking()
+                .Where(c => c.TenantId == tenantId && c.Id == id)
+                .Select(c => c.HolidayCalendarId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+        else if (orgUnitId is { } unitId && await FindCompanyUnitIdAsync(tenantId, unitId, cancellationToken) is { } companyUnitId)
+        {
+            calendarId = await context.Companies.AsNoTracking()
+                .Where(c => c.TenantId == tenantId && c.OrgUnitId == companyUnitId)
+                .Select(c => c.HolidayCalendarId)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        calendarId ??= await ResolveCalendarIdAsync(tenantId, cancellationToken);
+        if (calendarId is null)
+        {
+            return null;
+        }
+
+        return await context.HolidayCalendars.AsNoTracking()
+            .Where(c => c.TenantId == tenantId && c.Id == calendarId)
+            .Select(c => new HolidayCalendarRef(c.Id, c.Name))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<UpcomingHoliday>> GetHolidaysAsync(Guid tenantId, Guid holidayCalendarId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        var entries = await context.HolidayCalendarEntries.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.HolidayCalendarId == holidayCalendarId)
+            .ToListAsync(cancellationToken);
+
+        return entries
+            .SelectMany(e => e.OccurrencesBetween(from, to).Select(date => new UpcomingHoliday(date, e.Name)))
+            .OrderBy(h => h.Date)
+            .ThenBy(h => h.Name, StringComparer.Ordinal)
+            .ToList();
+    }
+
+    /// <summary>Walks parent links from the unit up to the nearest Company-level unit (inactive units included).</summary>
+    private async Task<Guid?> FindCompanyUnitIdAsync(Guid tenantId, Guid orgUnitId, CancellationToken cancellationToken)
+    {
+        var companyTypeIds = await context.OrgUnitTypes.AsNoTracking()
+            .Where(t => t.TenantId == tenantId && t.Code == OrgUnitTypeCodes.Company)
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+
+        var units = await context.OrgUnits.AsNoTracking()
+            .Where(u => u.TenantId == tenantId)
+            .Select(u => new { u.Id, u.ParentId, u.TypeId })
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var visited = new HashSet<Guid>();
+        Guid? current = orgUnitId;
+        while (current is { } id && visited.Add(id) && units.TryGetValue(id, out var unit))
+        {
+            if (companyTypeIds.Contains(unit.TypeId))
+            {
+                return unit.Id;
+            }
+
+            current = unit.ParentId;
+        }
+
+        return null;
+    }
+
+    /// <summary>Tenant default: the earliest company with an assigned calendar, else the tenant's system TR calendar.</summary>
     private async Task<Guid?> ResolveCalendarIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {
-        var company = await context.Companies.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.TenantId == tenantId, cancellationToken);
+        var assigned = await context.Companies.AsNoTracking()
+            .Where(c => c.TenantId == tenantId && c.HolidayCalendarId != null)
+            .OrderBy(c => c.Id)
+            .Select(c => c.HolidayCalendarId)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        if (company?.HolidayCalendarId is { } assigned)
+        if (assigned is not null)
         {
             return assigned;
         }
 
-        // Defensive fallback: DataSeeder always assigns the seeded TR calendar to the tenant's Company
-        // at creation time, so this branch is normally unreachable, but a tenant provisioned outside
-        // that path (or with the assignment later cleared) still falls back to its own system calendar.
-        var systemCalendar = await context.HolidayCalendars.AsNoTracking()
+        return await context.HolidayCalendars.AsNoTracking()
             .Where(c => c.TenantId == tenantId && c.IsSystemDefined && c.CountryCode == "TR")
             .Select(c => (Guid?)c.Id)
             .FirstOrDefaultAsync(cancellationToken);
-
-        return systemCalendar;
     }
 }

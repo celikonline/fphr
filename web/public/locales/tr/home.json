@@ -1,0 +1,25 @@
+{
+  "greeting": "Merhaba, {{name}}",
+  "subtitle": "Şirketinizde yaklaşan önemli günler.",
+  "unavailable": "Bu bilgi şu anda gösterilemiyor.",
+  "today": "Bugün",
+  "inDays_one": "{{count}} gün sonra",
+  "inDays_other": "{{count}} gün sonra",
+  "noWidgets": "Ana sayfanızda gösterilecek bir bilgi yok.",
+  "holidays": {
+    "title": "Resmi tatiller",
+    "empty": "Önümüzdeki {{days}} gün içinde resmi tatil yok."
+  },
+  "birthdays": {
+    "title": "Yaklaşan doğum günleri",
+    "empty": "Önümüzdeki {{days}} gün içinde doğum günü yok."
+  },
+  "leaves": {
+    "title": "Yaklaşan izinler",
+    "planned": "İzin modülü Faz 1 ile geliyor; izinde olacak çalışanlar burada listelenecek."
+  },
+  "events": {
+    "title": "Etkinlik takvimi",
+    "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."
+  }
+}

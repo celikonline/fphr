@@ -68,6 +68,19 @@ public interface IDataScopeService
     Task<IReadOnlySet<Guid>?> GetVisibleEmployeeIdsAsync(string permission, CancellationToken cancellationToken = default);
 
     Task<bool> CanAccessEmployeeAsync(string permission, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Org units the caller may place/move employees into for <paramref name="permission"/>; null = unrestricted (Company scope).</summary>
+    Task<IReadOnlySet<Guid>?> GetAccessibleOrgUnitIdsAsync(string permission, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Platform (Sense staff) access to tenant data exists only as an impersonation session: a token carrying the `act` claim whose
+/// ImpersonationGrant is still Active and unexpired in the current tenant. Implemented by Identity; when absent nobody gets platform bypass.
+/// </summary>
+public interface IImpersonationSessionValidator
+{
+    /// <summary>True only when the current principal is an impersonation session backed by an active, unexpired, unrevoked grant for the current tenant.</summary>
+    Task<bool> IsActiveAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Handler üzerinde gerekli izni bildirir; AuthorizationBehaviour denetler.</summary>
@@ -94,6 +107,15 @@ public interface IAccessSettingsService
 {
     /// <summary>Anahtar tanınmıyorsa veya kiracı bağlamı yoksa <c>true</c> döner (güvenli varsayılan: kısıtlama yok — bunlar görünürlük anahtarlarıdır, yetki değil).</summary>
     Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>Effective value for the caller: true when the tenant setting is on, or the caller holds <see cref="AccessSettingPermissions.Bypass"/> or is in an active impersonation session.</summary>
+    Task<bool> IsEnabledForCurrentUserAsync(string key, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Access settings only restrict plain employees; holders of this permission (Owner/Admin/HR) see every gated feature.</summary>
+public static class AccessSettingPermissions
+{
+    public const string Bypass = "identity.access_settings.bypass";
 }
 
 /// <summary>Handler'ın belirli bir "Erişim ayarı" açık olmadıkça çalışmamasını bildirir; AccessSettingsAuthorizationBehaviour denetler.</summary>

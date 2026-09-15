@@ -46,8 +46,9 @@ public sealed class PermissionPolicyProvider(IOptions<AuthorizationOptions> opti
     }
 }
 
-/// <summary>İzin kararı: platform admin her zaman geçer; aksi halde IPermissionService (Redis cache'li) sorulur.</summary>
-public sealed class PermissionHandler(ICurrentUser user, IPermissionService permissions) : AuthorizationHandler<PermissionRequirement>
+/// <summary>İzin kararı: platform kimliği yalnız aktif impersonation oturumuyla geçer; aksi halde IPermissionService (Redis cache'li) sorulur.</summary>
+public sealed class PermissionHandler(ICurrentUser user, IPermissionService permissions, IImpersonationSessionValidator? impersonationSessions = null)
+    : AuthorizationHandler<PermissionRequirement>
 {
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
@@ -56,7 +57,17 @@ public sealed class PermissionHandler(ICurrentUser user, IPermissionService perm
             return;
         }
 
-        if (user.IsPlatformAdmin || await permissions.HasAsync(user.UserId.Value, requirement.Permission).ConfigureAwait(false))
+        if (user.ClaimsPlatformAccess())
+        {
+            if (impersonationSessions is not null && await impersonationSessions.IsActiveAsync().ConfigureAwait(false))
+            {
+                context.Succeed(requirement);
+            }
+
+            return;
+        }
+
+        if (await permissions.HasAsync(user.UserId.Value, requirement.Permission).ConfigureAwait(false))
         {
             context.Succeed(requirement);
         }

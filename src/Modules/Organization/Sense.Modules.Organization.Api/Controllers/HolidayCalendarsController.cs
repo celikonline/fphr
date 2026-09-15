@@ -29,6 +29,12 @@ public sealed class HolidayCalendarsController : ApiControllerBase
     public async Task<IActionResult> List(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListHolidayCalendarsQuery(), ct));
 
+    /// <summary>Upcoming holidays (next <paramref name="days"/> days) of the caller's effective calendar, or of the given company's.</summary>
+    [HttpGet("upcoming")]
+    [ProducesResponseType<IReadOnlyList<UpcomingHolidayDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Upcoming([FromQuery] int? days, [FromQuery] Guid? companyId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetUpcomingHolidaysQuery(days ?? GetUpcomingHolidaysQuery.DefaultDays, companyId), ct));
+
     /// <summary>Lists the entries (holidays) of one calendar, ordered by date.</summary>
     [HttpGet("{id:guid}/entries")]
     [ProducesResponseType<IReadOnlyList<HolidayCalendarEntryDto>>(StatusCodes.Status200OK)]

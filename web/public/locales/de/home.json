@@ -1,0 +1,25 @@
+{
+  "greeting": "[DE] Hello, {{name}}",
+  "subtitle": "[DE] Upcoming important days at your company.",
+  "unavailable": "[DE] This information can't be shown right now.",
+  "today": "[DE] Today",
+  "inDays_one": "[DE] In {{count}} day",
+  "inDays_other": "[DE] In {{count}} days",
+  "noWidgets": "[DE] There is nothing to show on your home page.",
+  "holidays": {
+    "title": "[DE] Public holidays",
+    "empty": "[DE] No public holidays in the next {{days}} days."
+  },
+  "birthdays": {
+    "title": "[DE] Upcoming birthdays",
+    "empty": "[DE] No birthdays in the next {{days}} days."
+  },
+  "leaves": {
+    "title": "[DE] Upcoming leave",
+    "planned": "[DE] The leave module arrives in Phase 1; people who will be on leave will be listed here."
+  },
+  "events": {
+    "title": "[DE] Event calendar",
+    "planned": "[DE] The event calendar arrives in Phase 4; meetings and events will be listed here."
+  }
+}

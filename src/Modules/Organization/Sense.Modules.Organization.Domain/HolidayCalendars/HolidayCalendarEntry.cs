@@ -77,6 +77,34 @@ public sealed class HolidayCalendarEntry : TenantAggregateRoot<Guid>, IAuditLogg
         IsRecurringAnnually
             ? Date.Month == candidate.Month && Date.Day == candidate.Day
             : Date == candidate;
+
+    /// <summary>Dates of this entry within [<paramref name="from"/>, <paramref name="to"/>]: every yearly projection when recurring (Feb 29 only in leap years), otherwise the exact date.</summary>
+    public IEnumerable<DateOnly> OccurrencesBetween(DateOnly from, DateOnly to)
+    {
+        if (!IsRecurringAnnually)
+        {
+            if (Date >= from && Date <= to)
+            {
+                yield return Date;
+            }
+
+            yield break;
+        }
+
+        for (var year = from.Year; year <= to.Year; year++)
+        {
+            if (Date.Month == 2 && Date.Day == 29 && !DateTime.IsLeapYear(year))
+            {
+                continue;
+            }
+
+            var occurrence = new DateOnly(year, Date.Month, Date.Day);
+            if (occurrence >= from && occurrence <= to)
+            {
+                yield return occurrence;
+            }
+        }
+    }
 }
 
 public sealed record HolidayCalendarEntryAdded(

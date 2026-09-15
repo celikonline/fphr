@@ -7,12 +7,18 @@
 # management, so the whole src/ tree - not just this folder - needs to be in the build
 # context.)
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# Pinned to the exact SDK patch in global.json (rather than the floating :10.0 tag): the
+# SDK's default Roslyn analyzer set changes between patches, and a newer patch than what
+# global.json pins can turn on new CA rules that break `TreatWarningsAsErrors` builds that
+# were never validated against them.
+FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
 WORKDIR /src
 
 # Repo-root MSBuild config first: these rarely change, so they cache well independently
-# of application source.
-COPY Directory.Build.props Directory.Packages.props global.json ./
+# of application source. .editorconfig is required too - it's where CA1716/CA1711/CA1000/
+# CA1863/CA1859/etc. are demoted to `none`; without it those analyzers fall back to
+# AnalysisLevel's default severity and TreatWarningsAsErrors fails the build.
+COPY Directory.Build.props Directory.Packages.props global.json .editorconfig ./
 COPY src/ src/
 
 RUN --mount=type=cache,target=/root/.nuget/packages \

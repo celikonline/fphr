@@ -1,0 +1,185 @@
+{
+  "title": "Employees",
+  "subtitle": "View, filter and run bulk operations on employee records.",
+  "cardTitle": "Employee card",
+  "orgChartTitle": "Organization chart",
+  "searchPlaceholder": "Search name, email or national ID",
+  "empty": "No employees yet.",
+  "emptyFiltered": "No employees match the filter.",
+  "genericError": "The operation could not be completed. Please try again.",
+  "loading": "Loading...",
+  "unknownUnit": "Unknown unit",
+  "unknownEmployee": "Unknown employee",
+  "noUnit": "No unit",
+  "phase": "Phase {{phase}}",
+  "create": {
+    "button": "Add new employee",
+    "title": "Add new employee",
+    "description": "First and last name are enough; you can complete the rest later on the employee card.",
+    "success": "Employee created."
+  },
+  "filters": {
+    "orgUnit": "Unit",
+    "allUnits": "All units",
+    "includeSubUnits": "Include sub-units",
+    "status": "Status",
+    "all": "All",
+    "hasUserAccount": "User account",
+    "withAccount": "With account",
+    "withoutAccount": "Without account"
+  },
+  "columns": {
+    "name": "Name",
+    "orgUnit": "Unit",
+    "manager": "Manager",
+    "workEmail": "Work email",
+    "workPhone": "Work phone",
+    "status": "Status",
+    "accountStatus": "Account",
+    "hireDate": "Hire date"
+  },
+  "status": {
+    "Active": "Active",
+    "Inactive": "Inactive",
+    "OnLeave": "On leave"
+  },
+  "accountStatus": {
+    "none": "No account",
+    "invited": "Invited",
+    "active": "Active",
+    "locked": "Locked",
+    "disabled": "Disabled"
+  },
+  "accessType": {
+    "Employee": "Employee",
+    "Owner": "Account owner",
+    "Admin": "Administrator"
+  },
+  "fields": {
+    "firstName": "First name",
+    "lastName": "Last name",
+    "nationalId": "National ID",
+    "workEmail": "Work email",
+    "personalEmail": "Personal email",
+    "workPhone": "Work phone",
+    "hireDate": "Hire date",
+    "birthDate": "Birth date",
+    "orgUnit": "Unit",
+    "manager": "Manager",
+    "accountStatus": "Account status",
+    "lastInvitationSentAt": "Last invitation sent",
+    "accessType": "Access type"
+  },
+  "validation": {
+    "nationalId": "National ID must be 11 digits.",
+    "email": "Enter a valid email address."
+  },
+  "picker": {
+    "placeholder": "Select an employee",
+    "search": "Search employees",
+    "empty": "No employees found.",
+    "clear": "Clear selection"
+  },
+  "bulk": {
+    "menu": "Bulk operations",
+    "chooseAction": "Choose action",
+    "run": "Run",
+    "continue": "Continue",
+    "selectHint": "Select employees to run a bulk operation.",
+    "selectedCount_one": "{{count}} employee selected",
+    "selectedCount_other": "{{count}} employees selected",
+    "clearSelection": "Clear selection",
+    "selectPage": "Select all on this page",
+    "pageSelected_one": "{{count}} employee on this page is selected.",
+    "pageSelected_other": "All {{count}} employees on this page are selected.",
+    "selectAllMatching_one": "Select the {{count}} employee matching the filter",
+    "selectAllMatching_other": "Select all {{count}} employees matching the filter",
+    "allMatchingSelected_one": "All employees matching the filter are selected ({{count}}).",
+    "allMatchingSelected_other": "All employees matching the filter are selected ({{count}}).",
+    "excludedCount_one": "{{count}} employee excluded.",
+    "excludedCount_other": "{{count}} employees excluded.",
+    "actions": {
+      "sendLoginInfo": "Send login details",
+      "assignManager": "Assign manager",
+      "addWorkSchedule": "Add work schedule",
+      "assignLeaveRule": "Assign leave rule"
+    },
+    "confirm": {
+      "sendLoginInfo_one": "An invitation email will be sent to the selected employee (work email, otherwise personal email). Active accounts and employees without an email are skipped.",
+      "sendLoginInfo_other": "Invitation emails will be sent to the {{count}} selected employees (work email, otherwise personal email). Active accounts and employees without an email are skipped.",
+      "default_one": "The action will be applied to the selected employee.",
+      "default_other": "The action will be applied to the {{count}} selected employees."
+    },
+    "assignManager": {
+      "description_one": "Choose the manager to assign to the selected employee.",
+      "description_other": "Choose the manager to assign to the {{count}} selected employees."
+    },
+    "result": {
+      "requested_one": "Result for {{count}} employee",
+      "requested_other": "Result for {{count}} employees",
+      "outcome": "Outcome",
+      "reason": "Reason"
+    },
+    "outcome": {
+      "succeeded": "Succeeded",
+      "skipped": "Skipped",
+      "failed": "Failed"
+    }
+  },
+  "codes": {
+    "identity_invitation_email_required": "No email address (add a work or personal email).",
+    "identity_invitation_already_active": "Account is already active.",
+    "employee_manager_self": "An employee cannot be their own manager.",
+    "employee_manager_cycle": "This assignment would create a cycle in the manager hierarchy.",
+    "employee_not_found": "Employee not found or outside your access scope."
+  },
+  "directory": {
+    "title": "Employee directory",
+    "subtitle": "Contact details of people in your company."
+  },
+  "orgChart": {
+    "title": "Organization chart",
+    "subtitle": "Manager and team hierarchy.",
+    "searchPlaceholder": "Search people",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "matchCount_one": "{{count}} match",
+    "matchCount_other": "{{count}} matches",
+    "reports_one": "{{count}} direct report",
+    "reports_other": "{{count}} direct reports",
+    "empty": "No employees to show.",
+    "forbiddenTitle": "The organization chart is not available",
+    "forbiddenDescription": "Your company may have hidden the organization chart from employees, or you don't have permission for this page."
+  },
+  "card": {
+    "backToList": "Back to employees",
+    "notFoundTitle": "Employee not found",
+    "notFoundDescription": "The record may have been removed or is outside your access scope.",
+    "saved": "Employee details saved.",
+    "sections": {
+      "general": "General",
+      "career": "Career",
+      "account": "Account"
+    },
+    "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
+    "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
+    "accessTypeSaved": "Access type updated."
+  },
+  "invite": {
+    "send": "Send invitation",
+    "resend": "Resend invitation",
+    "emailRequiredHint": "Add a work or personal email before sending an invitation.",
+    "confirm": {
+      "work": "An invitation for {{name}} will be sent to the work email ({{email}}). Continue?",
+      "personal": "An invitation for {{name}} will be sent to the personal email ({{email}}). Continue?"
+    },
+    "outcome": {
+      "sent": "Invitation sent",
+      "resent": "Invitation resent",
+      "alreadyactive": "Account is already active"
+    },
+    "sentTo": "Sent to: {{email}}"
+  }
+}

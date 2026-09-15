@@ -8,8 +8,8 @@ namespace Sense.Shared.Infrastructure.Messaging.Behaviours;
 /// <summary>
 /// [RequiresAccessSetting] ile işaretli isteklerde kiracının "Erişim ayarları" anahtarı denetlenir.
 /// <see cref="AuthorizationBehaviour{TRequest,TResponse}"/> ile aynı desen ("izin var mı" yerine "bu özellik açık mı").
-/// Şu an hiçbir handler bu özelliği kullanmıyor (Faz 0 madde 1: mekanizma hazırlanır, ilk tüketici sonraki bir
-/// roadmap kalemidir); attribute yoksa davranış no-op'tur.
+/// Etkin değer çağırana göre çözülür: bypass izni (Owner/Admin/HR) veya aktif impersonation oturumu ayarı aşar.
+/// Attribute yoksa davranış no-op'tur.
 /// </summary>
 public sealed class AccessSettingsAuthorizationBehaviour<TRequest, TResponse>(IAccessSettingsService accessSettings) : IPipelineBehaviour<TRequest, TResponse>
     where TRequest : notnull
@@ -29,9 +29,9 @@ public sealed class AccessSettingsAuthorizationBehaviour<TRequest, TResponse>(IA
 
         foreach (var attr in Required)
         {
-            if (!await accessSettings.IsEnabledAsync(attr.Key, cancellationToken).ConfigureAwait(false))
+            if (!await accessSettings.IsEnabledForCurrentUserAsync(attr.Key, cancellationToken).ConfigureAwait(false))
             {
-                return Fail(Error.Forbidden(ErrorCodes.Forbidden, (AccessSettingArg, attr.Key)));
+                return Fail(Error.Forbidden(ErrorCodes.FeatureDisabled, (AccessSettingArg, attr.Key)));
             }
         }
 

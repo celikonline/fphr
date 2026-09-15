@@ -61,9 +61,10 @@ public sealed record LoginResultDto(string Status, AuthTokensDto? Tokens, IReadO
     public static LoginResultDto MfaRequired(string mfaToken) => new(LoginStatuses.MfaRequired, null, null, mfaToken);
 }
 
+/// <summary>Destek erişimi (impersonation) grant satırı. Status: Pending|Approved|Active|Expired|Revoked (süresi dolan grant Expired görünür).</summary>
 public sealed record ImpersonationGrantDto(
-    Guid Id, Guid TenantId, Guid PlatformUserId, Guid? ApprovedByUserId, string Reason, string Status,
-    DateTime RequestedAt, DateTime? ExpiresAt, DateTime? UsedAt, DateTime? RevokedAt);
+    Guid Id, Guid PlatformUserId, string? PlatformUserEmail, string Reason, string Status, DateTime RequestedAt, DateTime? ApprovedAt,
+    Guid? ApprovedByUserId, DateTime? ExpiresAt, DateTime? StartedAt, DateTime? RevokedAt);
 
 public sealed record ImpersonationSessionDto(string AccessToken, DateTime AccessTokenExpiresAt)
 {
@@ -75,8 +76,11 @@ public sealed record MeDto(
     TenantDto Tenant, IReadOnlyList<RoleRefDto> Roles, IReadOnlyList<string> Permissions, IReadOnlyDictionary<string, DataScope> Scopes,
     FeaturesDto Features);
 
-/// <summary>Kiracıya bağlı, izin dışı özellik ayarları; ön yüz menü/widget filtrelemesi için tek yanıtta taşınır.</summary>
-public sealed record FeaturesDto(Tenants.AccessSettingsDto Access);
+/// <summary>
+/// Kiracıya bağlı, izin dışı özellik ayarları; ön yüz menü/widget filtrelemesi için tek yanıtta taşınır.
+/// Access = çağırana göre ETKİN değerler (bypass varsa hepsi true).
+/// </summary>
+public sealed record FeaturesDto(Tenants.AccessSettingsDto Access, bool AccessSettingsBypass);
 
 /// <summary>Birim ağacı satır menüsü "Birim yetkilendirme" listesindeki tek bir grant (bkz. UnitAuthorizations.UnitAuthorizationCommands).</summary>
 public sealed record UnitAuthorizationDto(
@@ -87,8 +91,28 @@ public sealed record UnitAuthorizationDto(
     bool CanViewUnitReports,
     Guid GrantedByUserId,
     DateTime GrantedAt,
-    bool IsActive)
+    bool IsActive,
+    string UserFullName,
+    string UserEmail,
+    Guid? EmployeeId)
 {
-    public static UnitAuthorizationDto From(Domain.UnitAuthorizations.UnitAuthorization a) => new(
-        a.Id, a.OrgUnitId, a.UserId, a.CanViewSalaryAndPayments, a.CanViewUnitReports, a.GrantedByUserId, a.GrantedAt, a.IsActive);
+    public static UnitAuthorizationDto From(Domain.UnitAuthorizations.UnitAuthorization a, UserSummaryDto? user) => new(
+        a.Id, a.OrgUnitId, a.UserId, a.CanViewSalaryAndPayments, a.CanViewUnitReports, a.GrantedByUserId, a.GrantedAt, a.IsActive,
+        user?.FullName ?? string.Empty, user?.Email ?? string.Empty, user?.EmployeeId);
+}
+
+/// <summary>"Birim yetkilendirme" kişi seçicisi: aktif veya davet edilmiş kullanıcılar.</summary>
+public sealed record UnitAuthorizationCandidateDto(Guid UserId, string FullName, string Email, Guid? EmployeeId);
+
+/// <summary>Kullanıcı özet satırı (liste zenginleştirme).</summary>
+public sealed record UserSummaryDto(Guid UserId, string FullName, string Email, Guid? EmployeeId);
+
+/// <summary>Çalışana davet sonucu. Outcome: Sent|Resent|AlreadyActive; EmailSource: Work|Personal|Account.</summary>
+public sealed record EmployeeInvitationResultDto(Guid EmployeeId, string Outcome, string? SentToEmail, string? EmailSource);
+
+public static class EmployeeInvitationOutcomes
+{
+    public const string Sent = "Sent";
+    public const string Resent = "Resent";
+    public const string AlreadyActive = "AlreadyActive";
 }

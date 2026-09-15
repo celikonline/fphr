@@ -12,4 +12,23 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
         await context.Employees.AnyAsync(
             e => e.TenantId == tenantId && e.Id == employeeId && e.Status != EmployeeStatus.Inactive,
             cancellationToken);
+
+    public async Task<bool> AnyActiveInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default)
+    {
+        if (orgUnitIds.Count == 0)
+        {
+            return false;
+        }
+
+        var units = orgUnitIds.ToList();
+        return await context.Employees.AnyAsync(
+            e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Inactive,
+            cancellationToken);
+    }
+
+    public async Task<Guid?> GetOrgUnitIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.Id == employeeId)
+            .Select(e => e.OrgUnitId)
+            .FirstOrDefaultAsync(cancellationToken);
 }

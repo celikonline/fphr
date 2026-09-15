@@ -38,6 +38,10 @@ services:
       Seeding__Enabled: "true"
       Seeding__Profile: ${SEED_PROFILE:-demo}
       SENTRY_DSN: ${SENTRY_DSN:-}
+      # Observability (profile "obs" ile jaeger/loki/prometheus/grafana ayaktaysa veri akar; değilse exporter'lar sessizce düşer).
+      Observability__OtlpEndpoint: http://jaeger:4317
+      Observability__Logs__Enabled: "true"
+      Observability__Logs__Endpoint: http://loki:3100/otlp/v1/logs
     ports:
       - "${API_PORT:-8080}:8080"
     depends_on:
@@ -54,6 +58,11 @@ services:
     build:
       context: .
       dockerfile: web/Dockerfile
+      args:
+        # Baked into the JS bundle at build time (see web/Dockerfile) - must be the URL the
+        # *browser* reaches the API on, i.e. the host-published API_PORT, not the api service's
+        # container-internal address.
+        VITE_API_BASE_URL: http://localhost:${API_PORT:-8080}/api
     container_name: senseik-web
     ports:
       - "${WEB_PORT:-3000}:8080"

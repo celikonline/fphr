@@ -20,6 +20,12 @@ public sealed record StartImpersonationRequest(Guid TenantId);
 [Authorize]
 public sealed class ImpersonationController : ApiControllerBase
 {
+    /// <summary>Kiracının destek erişimi grantları (?status=Pending|Approved|Active|Expired|Revoked).</summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<ImpersonationGrantDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] string? status, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListImpersonationGrantsQuery(status), ct));
+
     [HttpPost("request")]
     [ProducesResponseType<Guid>(StatusCodes.Status201Created)]
     public async Task<IActionResult> RequestGrant([FromBody] RequestImpersonationRequest request, CancellationToken ct)

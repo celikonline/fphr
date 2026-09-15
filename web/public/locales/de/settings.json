@@ -1,0 +1,97 @@
+{
+  "hub": {
+    "title": "[DE] Settings",
+    "subtitle": "[DE] Company information, rules, system settings and data transfer."
+  },
+  "access": {
+    "title": "[DE] Access settings",
+    "subtitle": "[DE] Decide what employees can see on their home page, in their account and in the calendar.",
+    "scopeNotice": "[DE] Access settings only restrict users with the Employee access type; Account owners, Administrators and HR users are not affected. Changes take effect as soon as they are saved.",
+    "readOnly": "[DE] You can view access settings but are not allowed to change them.",
+    "loadError": "[DE] Access settings could not be loaded.",
+    "saveSuccess": "[DE] Access settings saved.",
+    "saveError": "[DE] Access settings could not be saved.",
+    "groups": {
+      "home": "[DE] Home",
+      "account": "[DE] Account",
+      "calendar": "[DE] Calendar"
+    },
+    "keys": {
+      "showOrgInfo": {
+        "label": "[DE] Employee and unit information",
+        "help": "[DE] Information about units (unit, manager, team) is visible to employees on the home page."
+      },
+      "showUpcomingLeaves": {
+        "label": "[DE] Upcoming leave",
+        "help": "[DE] People who will be on leave are listed on the home page. The leave type is not shown."
+      },
+      "showUpcomingBirthdays": {
+        "label": "[DE] Upcoming birthdays",
+        "help": "[DE] Employees see their colleagues' upcoming birthdays on the home page."
+      },
+      "showEventCalendar": {
+        "label": "[DE] Event calendar",
+        "help": "[DE] Meetings and similar events added in the app are listed on the home page."
+      },
+      "showFiles": {
+        "label": "[DE] Files",
+        "help": "[DE] Employees can see the files on their own profile."
+      },
+      "showAssets": {
+        "label": "[DE] Assets",
+        "help": "[DE] Employees can see the assets assigned to them."
+      },
+      "showWorkPhoneNumbers": {
+        "label": "[DE] Employees' phone numbers",
+        "help": "[DE] If a work phone is set, it is visible to other employees."
+      },
+      "showOrgChart": {
+        "label": "[DE] Org chart",
+        "help": "[DE] The org chart under Employees is opened to employees."
+      },
+      "showCustomFields": {
+        "label": "[DE] Custom fields",
+        "help": "[DE] Unit authorized users can see custom fields on employee profiles. Employees cannot."
+      },
+      "showCalendarMenu": {
+        "label": "[DE] Calendar menu",
+        "help": "[DE] Calendar is shown in the left menu."
+      },
+      "showAllLeavesInCalendar": {
+        "label": "[DE] All leave in the calendar",
+        "help": "[DE] When off, employees only see leave in their own department; when on, they see leave across the whole company. Only \"on leave\" is shown, never the leave type."
+      }
+    }
+  },
+  "supportAccess": {
+    "title": "[DE] Support access",
+    "subtitle": "[DE] Approve or revoke requests from the Sense support team to access your company account.",
+    "privacyTitle": "[DE] Your data stays under your control",
+    "privacyText": "[DE] Sense staff cannot access your company's data without a time-limited access grant that you approve. An approved grant closes automatically when it expires, can be revoked at any time, and every action is recorded in the audit log.",
+    "status": "[DE] Status",
+    "allStatuses": "[DE] All statuses",
+    "statuses": {
+      "Pending": "[DE] Pending approval",
+      "Approved": "[DE] Approved",
+      "Active": "[DE] In use",
+      "Expired": "[DE] Expired",
+      "Revoked": "[DE] Revoked"
+    },
+    "requestedBy": "[DE] Requested by",
+    "reason": "[DE] Reason",
+    "requestedAt": "[DE] Requested at",
+    "expiresAt": "[DE] Valid until",
+    "approve": "[DE] Approve",
+    "revoke": "[DE] Revoke",
+    "approveTitle": "[DE] Approve support access",
+    "approveConfirm": "[DE] Approve time-limited support access for {{requester}}? Access stays valid until it expires or you revoke it.",
+    "revokeTitle": "[DE] Revoke support access",
+    "revokeConfirm": "[DE] Revoke this support access? Any ongoing session will be closed.",
+    "approveSuccess": "[DE] Support access approved.",
+    "revokeSuccess": "[DE] Support access revoked.",
+    "actionError": "[DE] The action could not be completed.",
+    "loadError": "[DE] Support access requests could not be loaded.",
+    "empty": "[DE] No support access requests.",
+    "senseStaff": "[DE] Sense support team"
+  }
+}

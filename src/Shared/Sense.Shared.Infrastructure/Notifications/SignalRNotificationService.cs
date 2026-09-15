@@ -10,15 +10,14 @@ namespace Sense.Shared.Infrastructure.Notifications;
 /// </summary>
 public class SignalRNotificationService : INotificationService
 {
-    private readonly IHubContext _hubContext;
+    private readonly IHubContext<NotificationsHub> _hubContext;
     private readonly ILogger<SignalRNotificationService> _logger;
 
     /// <summary>
     /// Initializes a new instance of the SignalRNotificationService.
-    /// The hub context is obtained through DI without explicit hub type reference.
     /// </summary>
     public SignalRNotificationService(
-        IHubContext hubContext,
+        IHubContext<NotificationsHub> hubContext,
         ILogger<SignalRNotificationService> logger)
     {
         _hubContext = hubContext;

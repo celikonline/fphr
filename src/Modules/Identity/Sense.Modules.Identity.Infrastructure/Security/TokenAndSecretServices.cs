@@ -65,8 +65,8 @@ public sealed class JwtTokenService(RsaSecurityKey key, IOptions<JwtIssuerOption
 
         if (impersonatorUserId is { } impersonator)
         {
-            // Impersonation oturumu: gerçek aktör `act` claim'inde izlenir; hedef kiracıda ayrı bir rol/izin kaydı
-            // olmadığından erişim, mevcut platform_admin bypass mekanizması (AuthorizationBehaviour) ile sağlanır.
+            // Impersonation oturumu: gerçek aktör `act` claim'inde izlenir. Bu claim'ler tek başına yetki vermez; her istekte
+            // ImpersonationSessionValidator hedef kiracıda Active, süresi dolmamış ve iptal edilmemiş bir grant arar.
             claims.Add(new Claim(ClaimNames.Impersonator, impersonator.ToString()));
             claims.Add(new Claim(ClaimNames.PlatformAdmin, ClaimNames.TrueValue));
         }

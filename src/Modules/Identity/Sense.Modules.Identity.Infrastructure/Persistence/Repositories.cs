@@ -121,6 +121,12 @@ public sealed class ImpersonationGrantRepository(IdentityDbContext db) : IImpers
     public Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct) => db.ImpersonationGrants.FirstOrDefaultAsync(g => g.Id == id, ct);
 
     public void Add(ImpersonationGrant grant) => db.ImpersonationGrants.Add(grant);
+
+    public async Task AddAndSaveAsync(ImpersonationGrant grant, CancellationToken ct)
+    {
+        db.ImpersonationGrants.Add(grant);
+        await db.SaveChangesAsync(ct).ConfigureAwait(false);
+    }
 }
 
 public sealed class UnitAuthorizationRepository(IdentityDbContext db) : IUnitAuthorizationRepository

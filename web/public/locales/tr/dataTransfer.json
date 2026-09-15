@@ -1,0 +1,163 @@
+{
+  "title": "Veri aktarım merkezi",
+  "subtitle": "Şablonu indirin, doldurduğunuz dosyayı yükleyin, kolonları eşleştirin ve aktarımı çalıştırın.",
+  "tabs": {
+    "import": "İçe aktar",
+    "history": "Geçmiş"
+  },
+  "rules": {
+    "title": "Şablon kuralları",
+    "headers": "Başlıkları değiştirmeyin; değiştirirseniz kolon eşleştirme adımında elle eşleyin.",
+    "deleteColumns": "Gereksiz kolonları silebilirsiniz; silinen kolonlardaki bilgiler değiştirilmez.",
+    "dates": "Tarihleri GG.AA.YYYY veya GG/AA/YYYY biçiminde yazın (ör. 01.06.2026); metinsel tarih kabul edilmez.",
+    "lookups": "Seçenek değerleri ile birim ve yönetici değerleri sistemde önceden tanımlı olmalıdır.",
+    "matching": "Çalışanlar Kimlik numarası + Ad + Soyad ile eşleştirilir."
+  },
+  "templates": {
+    "columns": "Kolonlar",
+    "matchKey": "Eşleştirme anahtarı",
+    "requiredLegend": "Zorunlu",
+    "matchKeyLegend": "Eşleştirme anahtarı",
+    "download": "Şablon indir",
+    "upload": "Dosya yükle",
+    "downloadError": "Şablon indirilemedi.",
+    "loadError": "Şablonlar yüklenemedi.",
+    "empty": "Kullanılabilir aktarım şablonu yok."
+  },
+  "upload": {
+    "dropHint": "Dosyayı buraya sürükleyin veya seçmek için tıklayın",
+    "limits": ".xlsx veya .csv, en fazla 10 MB",
+    "uploading": "Dosya yükleniyor…",
+    "invalidType": "Yalnızca .xlsx veya .csv dosyaları yüklenebilir.",
+    "tooLarge": "Dosya boyutu 10 MB'ı aşamaz.",
+    "error": "Dosya yüklenemedi."
+  },
+  "history": {
+    "template": "Şablon",
+    "file": "Dosya",
+    "mode": "Mod",
+    "status": "Durum",
+    "date": "Tarih",
+    "user": "Kullanıcı",
+    "empty": "Henüz aktarım yapılmadı.",
+    "loadError": "Aktarım geçmişi yüklenemedi."
+  },
+  "counts": {
+    "total": "Toplam satır",
+    "inserted": "Eklendi",
+    "updated": "Güncellendi",
+    "skipped": "Atlandı",
+    "errors": "Hatalı"
+  },
+  "mode": {
+    "Upsert": "Ekle / güncelle",
+    "UpdateOnly": "Sadece güncelleme"
+  },
+  "status": {
+    "Uploaded": "Yüklendi",
+    "Mapped": "Eşleştirildi",
+    "Completed": "Tamamlandı",
+    "CompletedWithErrors": "Hatalarla tamamlandı",
+    "Failed": "Başarısız"
+  },
+  "outcome": {
+    "Inserted": "Eklendi",
+    "Updated": "Güncellendi",
+    "Skipped": "Atlandı",
+    "Error": "Hata"
+  },
+  "outcomeFilter": {
+    "all": "Hepsi",
+    "Inserted": "Eklendi",
+    "Updated": "Güncellendi",
+    "Skipped": "Atlandı",
+    "Error": "Hata"
+  },
+  "steps": {
+    "file": "Dosya",
+    "mapping": "Kolon eşleştirme",
+    "options": "Seçenekler",
+    "run": "Çalıştır",
+    "result": "Sonuç"
+  },
+  "mapping": {
+    "title": "Kolon eşleştirme",
+    "subtitle": "Dosyadaki her kolon için aktarılacağı alanı seçin ya da yok sayın. {{total}} kolondan {{mapped}} tanesi eşlendi.",
+    "sourceColumn": "Dosyadaki kolon",
+    "samples": "Örnek değerler",
+    "target": "Buraya aktar",
+    "untitledColumn": "Başlıksız kolon {{index}}",
+    "ignore": "Yok say",
+    "ignored": "Yok sayıldı",
+    "alreadyMapped": "eşlendi",
+    "autoMatched": "eşleşti",
+    "missingRequiredTitle": "Devam etmek için şu kolonları eşleyin",
+    "allRequiredMapped": "Zorunlu ve eşleştirme anahtarı kolonlarının tamamı eşlendi.",
+    "onInsertHint": "Yeni kayıt açılırken gerekebilecek eşlenmemiş kolonlar: {{columns}}",
+    "saveAndContinue": "Kaydet ve devam et",
+    "saveError": "Eşleştirme kaydedilemedi."
+  },
+  "options": {
+    "title": "Seçenekler",
+    "updateOnly": "Sadece güncelleme modu",
+    "updateOnlyHelp": {
+      "updates": "Mevcut kayıtlar güncellenir.",
+      "noInsert": "Yeni kayıt açılmaz.",
+      "noMatchError": "Sistemdeki bir kayıtla eşleşmeyen satırlar hata olarak raporlanır.",
+      "mappedOnly": "Yalnızca eşlenen kolonlar yazılır; boş hücreler mevcut bilgiyi değiştirmez."
+    },
+    "updateOnlyUnsupported": "Bu şablon sadece güncelleme modunu desteklemiyor.",
+    "failurePolicy": "Hatalı satırlar"
+  },
+  "failurePolicy": {
+    "SkipInvalidRows": "Hatalı satırları atla",
+    "SkipInvalidRowsHelp": "Geçerli satırlar aktarılır, hatalı satırlar sonuç dosyasında raporlanır.",
+    "AllOrNothing": "Tümü ya da hiçbiri",
+    "AllOrNothingHelp": "Tek bir satır bile hatalıysa hiçbir kayıt aktarılmaz."
+  },
+  "run": {
+    "running": "Aktarım yapılıyor…",
+    "runningHint": "Lütfen bu sayfadan ayrılmayın.",
+    "error": "Aktarım çalıştırılamadı.",
+    "noPermission": "Aktarımı çalıştırma yetkiniz yok."
+  },
+  "result": {
+    "completed": "Aktarım başarıyla tamamlanmıştır",
+    "rowsWithErrors_one": "{{count}} satır hatalı",
+    "rowsWithErrors_other": "{{count}} satır hatalı",
+    "completedWithErrorsHint": "Geçerli satırlar aktarıldı. Hatalı satırları sonuç dosyasında düzeltip yeniden yükleyebilirsiniz.",
+    "failed": "Aktarım tamamlanamadı",
+    "failedAllOrNothingHint": "“Tümü ya da hiçbiri” seçildiği için hiçbir kayıt aktarılmadı.",
+    "failedHint": "Hiçbir kayıt aktarılmadı.",
+    "download": "Sonuç dosyasını indir",
+    "downloadError": "Sonuç dosyası indirilemedi.",
+    "fileSuffix": "sonuc",
+    "newUpload": "Yeni dosya yükle",
+    "rowsTitle": "Satır sonuçları",
+    "rowsEmpty": "Bu filtreye uyan satır yok.",
+    "rowsLoadError": "Satır sonuçları yüklenemedi.",
+    "rowNumber": "Satır",
+    "matchKey": "Eşleştirme anahtarı",
+    "outcome": "Sonuç",
+    "errorDescription": "Hata açıklaması"
+  },
+  "job": {
+    "back": "Veri aktarım merkezine dön",
+    "uploadedAt": "Yüklenme:",
+    "rowCount_one": "{{count}} satır",
+    "rowCount_other": "{{count}} satır",
+    "notFound": "Aktarım işi bulunamadı.",
+    "loadError": "Aktarım işi yüklenemedi.",
+    "templateUnavailable": "\"{{code}}\" şablonu kullanılamıyor."
+  },
+  "errorCodes": {
+    "IMPORT_UNMAPPED_REQUIRED": "Zorunlu kolonlar eşlenmedi",
+    "IMPORT_NO_MATCH": "Sistemde eşleşen kayıt bulunamadı (sadece güncelleme modunda yeni kayıt açılmaz).",
+    "IMPORT_NAME_MISMATCH": "Kimlik numarası eşleşti ancak ad veya soyad sistemdeki kayıtla uyuşmuyor.",
+    "IMPORT_DUPLICATE_ROW": "Aynı kimlik numarası dosyada birden fazla satırda yer alıyor.",
+    "IMPORT_INVALID_DATE": "Geçersiz tarih; GG.AA.YYYY veya GG/AA/YYYY biçimini kullanın.",
+    "IMPORT_INVALID_NATIONAL_ID": "Geçersiz kimlik numarası.",
+    "IMPORT_LOOKUP_NOT_FOUND": "Değer sistemde tanımlı değil; önce ilgili kaydı oluşturun.",
+    "IMPORT_REQUIRED_MISSING": "Zorunlu alan boş."
+  }
+}

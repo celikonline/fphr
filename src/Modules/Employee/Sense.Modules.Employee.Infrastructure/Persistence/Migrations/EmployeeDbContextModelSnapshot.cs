@@ -30,6 +30,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<DateOnly?>("BirthDate")
+                        .HasColumnType("date")
+                        .HasColumnName("birth_date");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -40,9 +44,29 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(201)
+                        .HasColumnType("character varying(201)")
                         .HasColumnName("display_name");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("first_name");
+
+                    b.Property<DateOnly?>("HireDate")
+                        .HasColumnType("date")
+                        .HasColumnName("hire_date");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("last_name");
+
+                    b.Property<Guid?>("ManagerEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("manager_employee_id");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
@@ -52,9 +76,19 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
 
+                    b.Property<string>("NationalId")
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)")
+                        .HasColumnName("national_id");
+
                     b.Property<Guid?>("OrgUnitId")
                         .HasColumnType("uuid")
                         .HasColumnName("org_unit_id");
+
+                    b.Property<string>("PersonalEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("personal_email");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -70,8 +104,21 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<string>("WorkEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("work_email");
+
+                    b.Property<string>("WorkPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("work_phone");
+
                     b.HasKey("Id")
                         .HasName("pk_employees");
+
+                    b.HasIndex("ManagerEmployeeId")
+                        .HasDatabaseName("ix_employees_manager_employee_id");
 
                     b.HasIndex("OrgUnitId")
                         .HasDatabaseName("ix_employees_org_unit_id");
@@ -83,6 +130,11 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_employees_user_id")
                         .HasFilter("user_id IS NOT NULL");
+
+                    b.HasIndex("TenantId", "NationalId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employees_tenant_id_national_id")
+                        .HasFilter("national_id IS NOT NULL");
 
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("ix_employees_tenant_id_status");
