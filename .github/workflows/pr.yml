@@ -15,7 +15,45 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
+  # Determines which parts of the monorepo changed so unrelated pipelines
+  # (backend / web / mobile) are skipped on PRs that don't touch them.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      web: ${{ steps.filter.outputs.web }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'tests/**'
+              - '*.slnx'
+              - 'Directory.Build.props'
+              - 'Directory.Packages.props'
+              - 'global.json'
+              - '.github/workflows/pr.yml'
+            web:
+              - 'web/**'
+              - 'packages/**'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - '.github/workflows/pr.yml'
+            mobile:
+              - 'apps/senseik-mobile/**'
+              - 'packages/**'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
+              - 'package.json'
+              - '.github/workflows/pr.yml'
+
   backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -38,6 +76,10 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
       - name: Restore
         run: dotnet restore Sense.slnx
       - name: Format check
@@ -76,19 +118,54 @@ jobs:
           comment_mode: always
 
   web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
-    if: ${{ hashFiles('web/package.json') != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: ".nvmrc"
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web lint
-      - run: pnpm --filter web typecheck
-      - run: pnpm --filter web test -- --run
+      - run: pnpm --filter web type-check
+      - run: pnpm --filter web test -- --run --passWithNoTests
       - run: pnpm --filter web build
+
+  mobile:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "apps/senseik-mobile/.nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @senseik/mobile lint
+      - run: pnpm --filter @senseik/mobile type-check
+      - run: pnpm --filter @senseik/mobile test -- --ci
+      # NOTE: EAS builds (native binaries for TestFlight / Play Store) are intentionally not run
+      # here - they require eas.json plus an Expo account/token secret. Wire up a separate,
+      # manually-triggered workflow once the project is ready to ship native builds.
+
+  # Single stable required-status-check for branch protection: succeeds whenever every
+  # job that actually ran succeeded, regardless of which jobs were skipped by path filters.
+  pr-status:
+    needs: [changes, backend, web, mobile]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate required jobs
+        run: |
+          for result in "${{ needs.backend.result }}" "${{ needs.web.result }}" "${{ needs.mobile.result }}"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "A required job failed: $result"
+              exit 1
+            fi
+          done
+          echo "All required jobs passed (or were skipped as not applicable)."

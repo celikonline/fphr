@@ -1,0 +1,153 @@
+name: Main
+
+# Runs after a PR merges to main: full test suite (no path filtering - everything is
+# validated on every merge), then builds container images. Images are ALWAYS built (to
+# catch broken Dockerfiles) but are only PUSHED to GHCR once the repo owner opts in by
+# setting the `ENABLE_IMAGE_PUSH` repository variable to "true" (Settings > Secrets and
+# variables > Actions > Variables). No secrets are required to build; pushing uses the
+# automatically-provided GITHUB_TOKEN. See docs/ci-cd.md for details.
+#
+# Deployment is intentionally out of scope - this workflow only builds, tests and
+# publishes images.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: main-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  REGISTRY: ghcr.io
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: senseik_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            Directory.Packages.props
+            **/*.csproj
+      - run: dotnet restore Sense.slnx
+      - run: dotnet format Sense.slnx --verify-no-changes --no-restore
+      - run: dotnet build Sense.slnx -c Release --no-restore
+      - name: Architecture Tests
+        run: dotnet test tests/Sense.Tests.Architecture/ -c Release --no-build --logger "trx;LogFileName=architecture-tests.trx"
+      - name: Unit Tests
+        env:
+          ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
+          ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
+        run: dotnet test Sense.slnx -c Release --no-build --filter "Category=Unit" --logger "trx;LogFileName=unit-tests.trx"
+      - name: Integration Tests
+        env:
+          ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
+          ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
+        run: dotnet test Sense.slnx -c Release --no-build --filter "Category=Integration" --logger "trx;LogFileName=integration-tests.trx"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: TestResults
+
+  web-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web type-check
+      - run: pnpm --filter web test -- --run --passWithNoTests
+      - run: pnpm --filter web build
+
+  mobile-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "apps/senseik-mobile/.nvmrc"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @senseik/mobile lint
+      - run: pnpm --filter @senseik/mobile type-check
+      - run: pnpm --filter @senseik/mobile test -- --ci
+
+  build-images:
+    needs: [backend-tests, web-tests, mobile-tests]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - image: api
+            context: .
+            dockerfile: src/Sense.Api/Dockerfile
+          - image: web
+            context: .
+            dockerfile: web/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Derive image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.image }}
+          tags: |
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Placeholder registry login: GITHUB_TOKEN always exists and is enough to push to
+      # GHCR for this repo, but we gate the actual push behind an explicit opt-in
+      # repository variable (see the file header) so nothing publishes by accident.
+      - name: Log in to GHCR
+        if: vars.ENABLE_IMAGE_PUSH == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (and push if enabled)
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ vars.ENABLE_IMAGE_PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}

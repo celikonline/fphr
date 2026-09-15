@@ -1,0 +1,61 @@
+name: senseik
+
+# Full-stack local dev: builds and runs the API and web app as containers alongside the
+# same postgres / redis / minio / mailpit dependencies defined in infra/docker-compose.yml
+# (reused here via `include` so there is a single source of truth for those services).
+#
+# Quick start:
+#   cp .env.example .env
+#   docker compose up -d --build
+#   dotnet run --project src/Sense.Migrator -- migrate
+#   dotnet run --project src/Sense.Migrator -- seed --profile demo
+#
+# If you'd rather run the API/web with hot-reload on the host (dotnet watch / vite) and
+# only containerize the infrastructure, use `docker compose -f infra/docker-compose.yml
+# up -d` instead - that's what the root README's quick start does.
+
+include:
+  - infra/docker-compose.yml
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: src/Sense.Api/Dockerfile
+    container_name: senseik-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-senseik};Username=${POSTGRES_USER:-sense};Password=${POSTGRES_PASSWORD:-sense};Include Error Detail=true
+      ConnectionStrings__Redis: redis:6379,abortConnect=false
+      Storage__Provider: MinIO
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_ROOT_USER:-minio}
+      MinIO__SecretKey: ${MINIO_ROOT_PASSWORD:-minio12345}
+      MinIO__UseHttps: "false"
+      Email__Smtp__Host: mailpit
+      Email__Smtp__Port: "1025"
+      Frontend__BaseUrl: http://localhost:${WEB_PORT:-3000}
+      Seeding__Enabled: "true"
+      Seeding__Profile: ${SEED_PROFILE:-demo}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: senseik-web
+    ports:
+      - "${WEB_PORT:-3000}:8080"
+    depends_on:
+      - api

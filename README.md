@@ -1,5 +1,9 @@
 # SenseİK
 
+[![PR](https://github.com/algosense-yazilim/senseik/actions/workflows/pr.yml/badge.svg)](https://github.com/algosense-yazilim/senseik/actions/workflows/pr.yml)
+[![Main](https://github.com/algosense-yazilim/senseik/actions/workflows/main.yml/badge.svg)](https://github.com/algosense-yazilim/senseik/actions/workflows/main.yml)
+[![CodeQL](https://github.com/algosense-yazilim/senseik/actions/workflows/codeql.yml/badge.svg)](https://github.com/algosense-yazilim/senseik/actions/workflows/codeql.yml)
+
 Algosense'in bulut tabanlı İnsan Kaynakları platformu: özlük, izin & fazla mesai, PDKS/vardiya/puantaj, bordro, zimmet, harcama & avans, eğitim, dosya & KVKK, duyuru & akış, performans, ücret değerlendirme, işe alım (ATS), İK analitiği & raporlama, AI asistan (chatbot + MCP), faturalama.
 
 **Stack:** .NET 10 (modüler monolit, Onion Architecture, EF Core, PostgreSQL) · React 18 + Vite + TypeScript (PWA) · Expo (mobil) · Redis · MinIO/S3 · Hangfire · SignalR · RabbitMQ (Faz 4+).
@@ -35,4 +39,4 @@ infra/                 docker-compose, k6, bicep
 docs/adr               Mimari kararlar
 ```
 
-Ayrıntılar: `docs/architecture.md`, `docs/conventions.md`, `docs/adr/`.
+Ayrıntılar: `docs/architecture.md`, `docs/conventions.md`, `docs/ci-cd.md`, `docs/adr/`.
