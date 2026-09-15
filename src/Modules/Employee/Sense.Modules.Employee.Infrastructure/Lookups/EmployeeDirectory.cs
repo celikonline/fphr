@@ -38,7 +38,7 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
 
         var units = orgUnitIds.ToList();
         return await context.Employees.AsNoTracking()
-            .Where(e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Inactive)
+            .Where(e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Terminated)
             .Select(e => e.Id)
             .ToListAsync(ct);
     }

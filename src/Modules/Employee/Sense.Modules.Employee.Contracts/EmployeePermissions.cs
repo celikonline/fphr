@@ -18,6 +18,9 @@ public static class EmployeePermissions
     public const string MyViewKey = "employee.my.view";
     public const string EmployeesImportKey = "employee.employees.import";
 
+    /// <summary>Unmasked TCKN and health/disability fields (DisabilityDegree, BloodType, MilitaryStatus); everyone else gets masked/null.</summary>
+    public const string SensitiveViewKey = "employee.sensitive.view";
+
     /// <summary>Read employee records (list/detail), filtered by data scope.</summary>
     public static readonly Permission EmployeesRead = new(
         EmployeesReadKey, Module, "Read Employees", Group, "View employee records");
@@ -54,6 +57,11 @@ public static class EmployeePermissions
     public static readonly Permission EmployeesImport = new(
         EmployeesImportKey, Module, "Import Employees", Group, "Insert or update employee records from an import file");
 
+    /// <summary>Unmasked TCKN and health/disability fields.</summary>
+    public static readonly Permission SensitiveView = new(
+        SensitiveViewKey, Module, "View Sensitive Fields", Group, "View unmasked national id and health/disability fields");
+
     /// <summary>All Employee module permissions.</summary>
-    public static IEnumerable<Permission> All => [EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, MyView, EmployeesImport];
+    public static IEnumerable<Permission> All =>
+        [EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, MyView, EmployeesImport, SensitiveView];
 }

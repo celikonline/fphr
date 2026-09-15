@@ -10,7 +10,7 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
 {
     public async Task<bool> ExistsActiveAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(
-            e => e.TenantId == tenantId && e.Id == employeeId && e.Status != EmployeeStatus.Inactive,
+            e => e.TenantId == tenantId && e.Id == employeeId && e.Status != EmployeeStatus.Terminated,
             cancellationToken);
 
     public async Task<bool> AnyActiveInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default)
@@ -22,7 +22,7 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
 
         var units = orgUnitIds.ToList();
         return await context.Employees.AnyAsync(
-            e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Inactive,
+            e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Terminated,
             cancellationToken);
     }
 

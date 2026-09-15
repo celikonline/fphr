@@ -34,13 +34,16 @@ public sealed class EmployeeModule : IModule
         services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
 
         // Handlers/validators live in the Application assembly (EmployeePermissions is in Contracts, so it must not be the scan anchor).
-        services.AddModuleHandlers(EmployeeDbContext.SchemaName, typeof(EmployeeErrors).Assembly, typeof(EmployeeDbContext).Assembly);
+        // Contracts assembly is also required: EmployeeHired/EmployeeSuspended/EmployeeReactivated live there, and
+        // IIntegrationEventOutbox/ModuleUnitOfWorkResolver resolve an event's owning module by its assembly.
+        services.AddModuleHandlers(EmployeeDbContext.SchemaName, typeof(EmployeeErrors).Assembly, typeof(EmployeeDbContext).Assembly, typeof(EmployeePermissions).Assembly);
 
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IEmployeeReadStore, EmployeeReadStore>();
         services.AddScoped<EmployeeSelectionResolver>();
         services.AddScoped<EmployeeDetailBuilder>();
         services.AddScoped<EmployeeReferenceValidator>();
+        services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();
 
         // Data import template "employee.master" (collected by the DataTransfer module)

@@ -4,15 +4,33 @@ using Sense.Shared.Kernel.ValueObjects;
 
 namespace Sense.Modules.Employee.Domain.Employees;
 
-/// <summary>Lifecycle status of an employee. Full status/lifecycle modeling is Faz 1 scope.</summary>
+/// <summary>
+/// Employee lifecycle status. Quick-add without a hire date creates <see cref="Draft"/>; setting the hire date the
+/// first time transitions it to <see cref="Active"/> (Application layer raises the <c>EmployeeHired</c> integration
+/// event exactly once for that transition). <see cref="Suspended"/>/<see cref="Terminated"/> are later, explicit
+/// transitions (<see cref="Employee.Suspend"/>/<see cref="Employee.Reactivate"/>; termination is a later package).
+/// </summary>
 public enum EmployeeStatus
 {
-    Active = 0,
-    Inactive = 1,
-    OnLeave = 2,
+    Draft = 0,
+    Active = 1,
+    Suspended = 2,
+    Terminated = 3,
 }
 
-/// <summary>Editable personal/contact fields of an employee, validated together by <see cref="Employee.Create"/> and <see cref="Employee.UpdateInfo"/>.</summary>
+/// <summary>Why an employee is currently <see cref="EmployeeStatus.Suspended"/> (askıya alma nedeni, 11.3.03).</summary>
+public enum SuspensionReason
+{
+    MilitaryService = 0,
+    UnionOffice = 1,
+    LongUnpaidLeave = 2,
+    Detention = 3,
+    HealthReport = 4,
+    ForceMajeure = 5,
+    Other = 6,
+}
+
+/// <summary>Editable personal/contact/employment fields of an employee, validated together by <see cref="Employee.Create"/> and <see cref="Employee.UpdateInfo"/>.</summary>
 public sealed record EmployeeInfo(
     string FirstName,
     string LastName,
@@ -21,10 +39,27 @@ public sealed record EmployeeInfo(
     string? PersonalEmail = null,
     string? WorkPhone = null,
     DateOnly? HireDate = null,
-    DateOnly? BirthDate = null);
+    DateOnly? BirthDate = null,
+    Gender Gender = Gender.Unspecified,
+    MaritalStatus MaritalStatus = MaritalStatus.Unspecified,
+    int? ChildCount = null,
+    EducationStatus? EducationStatus = null,
+    HighestEducationLevel? HighestEducationLevel = null,
+    MilitaryStatus? MilitaryStatus = null,
+    DisabilityDegree? DisabilityDegree = null,
+    BloodType? BloodType = null,
+    string? MobilePhone = null,
+    string? HomePhone = null,
+    string? AddressLine = null,
+    string? City = null,
+    string? PostalCode = null,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null);
 
 /// <summary>
-/// Employee record (Faz 0: identity/contact fields + org unit + manager hierarchy; career/contract/documents are Faz 1).
+/// Employee record (Faz 0: identity/contact fields + org unit + manager hierarchy; Faz 1a adds personal/employment
+/// fields and the Draft/Active/Suspended/Terminated status model; career/contract history, salary/bank, custom
+/// fields, union and employment periods are later packages).
 /// <see cref="UserId"/>, <see cref="OrgUnitId"/> are plain cross-module identifiers (no FK) validated in the Application layer;
 /// <see cref="ManagerEmployeeId"/> is same-module but likewise FK-less so the hierarchy check stays a domain rule
 /// (<see cref="ManagerHierarchy"/>).
@@ -40,7 +75,7 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     {
         UserId = userId;
         OrgUnitId = orgUnitId;
-        Status = EmployeeStatus.Active;
+        Status = EmployeeStatus.Draft;
     }
 
     /// <summary>Cross-module reference to Identity.User; nullable because an employee record can exist before a login account.</summary>
@@ -67,6 +102,44 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     public DateOnly? BirthDate { get; private set; }
 
     public EmployeeStatus Status { get; private set; }
+
+    /// <summary>Set when <see cref="Status"/> is <see cref="EmployeeStatus.Suspended"/>; cleared on <see cref="Reactivate"/>.</summary>
+    public SuspensionReason? SuspensionReason { get; private set; }
+
+    public DateTime? SuspendedAtUtc { get; private set; }
+
+    public Gender Gender { get; private set; }
+
+    public MaritalStatus MaritalStatus { get; private set; }
+
+    public int? ChildCount { get; private set; }
+
+    public EducationStatus? EducationStatus { get; private set; }
+
+    public HighestEducationLevel? HighestEducationLevel { get; private set; }
+
+    /// <summary>Sensitive: only exposed with employee.sensitive.view (Application layer masks it otherwise).</summary>
+    public MilitaryStatus? MilitaryStatus { get; private set; }
+
+    /// <summary>Sensitive: only exposed with employee.sensitive.view (Application layer masks it otherwise).</summary>
+    public DisabilityDegree? DisabilityDegree { get; private set; }
+
+    /// <summary>Sensitive: only exposed with employee.sensitive.view (Application layer masks it otherwise).</summary>
+    public BloodType? BloodType { get; private set; }
+
+    public string? MobilePhone { get; private set; }
+
+    public string? HomePhone { get; private set; }
+
+    public string? AddressLine { get; private set; }
+
+    public string? City { get; private set; }
+
+    public string? PostalCode { get; private set; }
+
+    public ContractType? ContractType { get; private set; }
+
+    public EmploymentType? EmploymentType { get; private set; }
 
     /// <summary>Cross-module reference to Organization.OrgUnit; nullable (an employee may not be assigned to a unit yet).</summary>
     public Guid? OrgUnitId { get; private set; }
@@ -98,16 +171,18 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         return employee;
     }
 
-    public Result UpdateInfo(EmployeeInfo info)
+    /// <summary>True if this call transitioned the employee from Draft (no hire date) to Active (hire date set) - the caller enqueues EmployeeHired exactly once for that transition.</summary>
+    public Result<bool> UpdateInfo(EmployeeInfo info)
     {
+        var wasHired = Status == EmployeeStatus.Active;
         var applied = Apply(info);
         if (applied.IsFailure)
         {
-            return applied;
+            return applied.Error;
         }
 
         Raise(new EmployeeUpdated(Id, TenantId));
-        return Result.Success();
+        return Result.Success(!wasHired && Status == EmployeeStatus.Active);
     }
 
     /// <summary>Assigns (or clears) the direct manager. <paramref name="managerOf"/> maps every employee id of the tenant to its current manager (used to detect cycles).</summary>
@@ -154,6 +229,36 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         Raise(new EmployeeStatusChanged(Id, TenantId, status));
     }
 
+    /// <summary>Suspends an Active employee (askıya alma, 11.3.03); does not touch the Identity account.</summary>
+    public Result Suspend(SuspensionReason reason, DateTime nowUtc)
+    {
+        if (Status != EmployeeStatus.Active)
+        {
+            return Error.Rule(EmployeeDomainErrors.SuspendInvalidStatus);
+        }
+
+        SuspensionReason = reason;
+        SuspendedAtUtc = nowUtc;
+        Status = EmployeeStatus.Suspended;
+        Raise(new EmployeeStatusChanged(Id, TenantId, Status));
+        return Result.Success();
+    }
+
+    /// <summary>Reactivates a Suspended employee back to Active.</summary>
+    public Result Reactivate()
+    {
+        if (Status != EmployeeStatus.Suspended)
+        {
+            return Error.Rule(EmployeeDomainErrors.ReactivateNotSuspended);
+        }
+
+        SuspensionReason = null;
+        SuspendedAtUtc = null;
+        Status = EmployeeStatus.Active;
+        Raise(new EmployeeStatusChanged(Id, TenantId, Status));
+        return Result.Success();
+    }
+
     /// <summary>Last 4 digits only, e.g. "*******1234".</summary>
     public static string? MaskNationalId(string? nationalId) =>
         string.IsNullOrEmpty(nationalId) || nationalId.Length <= 4
@@ -179,6 +284,29 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         WorkPhone = Normalize(info.WorkPhone);
         HireDate = info.HireDate;
         BirthDate = info.BirthDate;
+        Gender = info.Gender;
+        MaritalStatus = info.MaritalStatus;
+        ChildCount = info.ChildCount;
+        EducationStatus = info.EducationStatus;
+        HighestEducationLevel = info.HighestEducationLevel;
+        MilitaryStatus = info.MilitaryStatus;
+        DisabilityDegree = info.DisabilityDegree;
+        BloodType = info.BloodType;
+        MobilePhone = PhoneNormalizer.Normalize(info.MobilePhone);
+        HomePhone = PhoneNormalizer.Normalize(info.HomePhone);
+        AddressLine = Normalize(info.AddressLine);
+        City = Normalize(info.City);
+        PostalCode = Normalize(info.PostalCode);
+        ContractType = info.ContractType;
+        EmploymentType = info.EmploymentType;
+
+        // Draft -> Active the first time a hire date is set; later statuses (Suspended/Terminated) are not
+        // reopened by a hire date edit alone.
+        if (Status == EmployeeStatus.Draft && HireDate is not null)
+        {
+            Status = EmployeeStatus.Active;
+        }
+
         return Result.Success();
     }
 
@@ -217,6 +345,36 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         if (Normalize(info.WorkPhone) is { Length: > EmployeeLimits.PhoneMaxLength })
         {
             return Error.Validation(EmployeeDomainErrors.WorkPhoneTooLong);
+        }
+
+        if (info.ChildCount is < 0)
+        {
+            return Error.Validation(EmployeeDomainErrors.ChildCountInvalid);
+        }
+
+        if (PhoneNormalizer.Normalize(info.MobilePhone) is { Length: > EmployeeLimits.PhoneMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.MobilePhoneTooLong);
+        }
+
+        if (PhoneNormalizer.Normalize(info.HomePhone) is { Length: > EmployeeLimits.PhoneMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.HomePhoneTooLong);
+        }
+
+        if (Normalize(info.AddressLine) is { Length: > EmployeeLimits.AddressLineMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.AddressLineTooLong);
+        }
+
+        if (Normalize(info.City) is { Length: > EmployeeLimits.CityMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.CityTooLong);
+        }
+
+        if (Normalize(info.PostalCode) is { Length: > EmployeeLimits.PostalCodeMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.PostalCodeTooLong);
         }
 
         return Result.Success();

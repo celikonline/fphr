@@ -81,7 +81,8 @@ public sealed class OrgUnitIntegrationTests : TestFixture
 
         // Create the manager employee (Employee module - separate schema, separate DbContext) and
         // assign them as the unit's manager via a plain cross-module Guid, no EF FK between schemas.
-        var employeeResult = EmployeeEntity.Create(tenantId, new EmployeeInfo("Ada", "Yönetici"), userId: null, orgUnitId: unit.Id);
+        var employeeResult = EmployeeEntity.Create(
+            tenantId, new EmployeeInfo("Ada", "Yönetici", HireDate: new DateOnly(2020, 1, 1)), userId: null, orgUnitId: unit.Id);
         employeeResult.IsSuccess.ShouldBeTrue();
         var employee = employeeResult.Value;
         employeeDb.Employees.Add(employee);

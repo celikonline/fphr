@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Web.Controllers;
@@ -20,7 +21,25 @@ public sealed record EmployeeRequest(
     DateOnly? HireDate,
     DateOnly? BirthDate,
     Guid? OrgUnitId,
-    Guid? ManagerEmployeeId);
+    Guid? ManagerEmployeeId,
+    Gender Gender = Gender.Unspecified,
+    MaritalStatus MaritalStatus = MaritalStatus.Unspecified,
+    int? ChildCount = null,
+    EducationStatus? EducationStatus = null,
+    HighestEducationLevel? HighestEducationLevel = null,
+    MilitaryStatus? MilitaryStatus = null,
+    DisabilityDegree? DisabilityDegree = null,
+    BloodType? BloodType = null,
+    string? MobilePhone = null,
+    string? HomePhone = null,
+    string? AddressLine = null,
+    string? City = null,
+    string? PostalCode = null,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null);
+
+/// <summary>Suspend body.</summary>
+public sealed record SuspendEmployeeRequest(SuspensionReason Reason);
 
 /// <summary>Employee grid filters (query string), next to the grid-standard paging parameters.</summary>
 public sealed record EmployeeListFilterRequest
@@ -70,7 +89,10 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> Create([FromBody] EmployeeRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new CreateEmployeeCommand(request.FirstName, request.LastName, request.NationalId, request.WorkEmail, request.PersonalEmail,
-                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId),
+                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
+                request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
+                request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType),
             ct));
 
     /// <summary>Updates an employee record.</summary>
@@ -79,8 +101,23 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] EmployeeRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new UpdateEmployeeCommand(id, request.FirstName, request.LastName, request.NationalId, request.WorkEmail, request.PersonalEmail,
-                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId),
+                request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
+                request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
+                request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType),
             ct));
+
+    /// <summary>Suspends an Active employee (askıya alma).</summary>
+    [HttpPost(ApiRoutes.IdParam + "/suspend")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Suspend(Guid id, [FromBody] SuspendEmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SuspendEmployeeCommand(id, request.Reason), ct));
+
+    /// <summary>Reactivates a Suspended employee back to Active.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/reactivate")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Reactivate(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ReactivateEmployeeCommand(id), ct));
 
     /// <summary>Assigns a manager to every employee in the selection; per-item outcome.</summary>
     [HttpPost("bulk/assign-manager")]

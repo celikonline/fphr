@@ -164,6 +164,15 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
+  <data name="employee.child_count_invalid" xml:space="preserve"><value>Child count cannot be negative.</value></data>
+  <data name="employee.mobile_phone_too_long" xml:space="preserve"><value>Mobile phone can be at most 30 characters.</value></data>
+  <data name="employee.home_phone_too_long" xml:space="preserve"><value>Home phone can be at most 30 characters.</value></data>
+  <data name="employee.address_line_too_long" xml:space="preserve"><value>Address can be at most 250 characters.</value></data>
+  <data name="employee.city_too_long" xml:space="preserve"><value>City can be at most 100 characters.</value></data>
+  <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
+  <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
+  <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
+  <data name="employee.sensitive.view" xml:space="preserve"><value>View sensitive fields</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>View employees</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Add employees</value></data>
   <data name="employee.employees.update" xml:space="preserve"><value>Edit employee details</value></data>

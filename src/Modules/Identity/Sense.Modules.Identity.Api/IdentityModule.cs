@@ -37,7 +37,6 @@ public sealed class IdentityModule : IModule
     {
         services.AddOptions<IdentityOptions>().Bind(configuration.GetSection(ConfigurationSections.Identity)).ValidateOnStart();
         services.AddOptions<JwtIssuerOptions>().Bind(configuration.GetSection(ConfigurationSections.Auth));
-        services.AddOptions<SecurityOptions>().Bind(configuration.GetSection(SecurityOptions.Section));
         services.AddOptions<FrontendOptions>().Bind(configuration.GetSection(ConfigurationSections.Frontend));
         services.AddOptions<EmailOptions>().Bind(configuration.GetSection(ConfigurationSections.Email));
 
@@ -73,7 +72,6 @@ public sealed class IdentityModule : IModule
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();
         services.AddSingleton<ISecretGenerator, SecretGenerator>();
-        services.AddSingleton<IEncryptionProvider, AesGcmEncryptionProvider>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IIdentityMailer, IdentityMailer>();
         services.AddSingleton<IFrontendLinks, FrontendLinks>();

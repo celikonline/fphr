@@ -33,11 +33,29 @@ public sealed record EmployeeRow(
     EmployeeStatus Status,
     Guid? OrgUnitId,
     Guid? ManagerEmployeeId,
-    Guid? UserId)
+    Guid? UserId,
+    Gender Gender = Gender.Unspecified,
+    MaritalStatus MaritalStatus = MaritalStatus.Unspecified,
+    int? ChildCount = null,
+    EducationStatus? EducationStatus = null,
+    HighestEducationLevel? HighestEducationLevel = null,
+    MilitaryStatus? MilitaryStatus = null,
+    DisabilityDegree? DisabilityDegree = null,
+    BloodType? BloodType = null,
+    string? MobilePhone = null,
+    string? HomePhone = null,
+    string? AddressLine = null,
+    string? City = null,
+    string? PostalCode = null,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null,
+    SuspensionReason? SuspensionReason = null)
 {
     public static EmployeeRow From(Domain.Employees.Employee e) => new(
         e.Id, e.FirstName, e.LastName, e.DisplayName, e.NationalId, e.WorkEmail, e.PersonalEmail, e.WorkPhone,
-        e.HireDate, e.BirthDate, e.Status, e.OrgUnitId, e.ManagerEmployeeId, e.UserId);
+        e.HireDate, e.BirthDate, e.Status, e.OrgUnitId, e.ManagerEmployeeId, e.UserId,
+        e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
+        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType, e.SuspensionReason);
 }
 
 /// <summary>Grid sort field names accepted by the employee list (?sort=).</summary>

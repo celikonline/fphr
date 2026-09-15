@@ -94,7 +94,7 @@ public sealed class EmployeeReadStore(EmployeeDbContext db) : IEmployeeReadStore
 
         if (c.ActiveOnly)
         {
-            query = query.Where(e => e.Status != EmployeeStatus.Inactive);
+            query = query.Where(e => e.Status != EmployeeStatus.Terminated);
         }
 
         if (c.HasUserAccount is { } hasUser)

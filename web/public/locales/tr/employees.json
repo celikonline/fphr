@@ -39,9 +39,10 @@
     "hireDate": "İşe başlama"
   },
   "status": {
+    "Draft": "Taslak",
     "Active": "Aktif",
-    "Inactive": "Pasif",
-    "OnLeave": "İzinde"
+    "Suspended": "Askıda",
+    "Terminated": "İşten ayrıldı"
   },
   "accountStatus": {
     "none": "Hesap yok",
@@ -68,11 +69,96 @@
     "manager": "Yönetici",
     "accountStatus": "Hesap durumu",
     "lastInvitationSentAt": "Son davet gönderimi",
-    "accessType": "Erişim türü"
+    "accessType": "Erişim türü",
+    "contractType": "Sözleşme türü",
+    "employmentType": "İstihdam türü",
+    "gender": "Cinsiyet",
+    "maritalStatus": "Medeni durum",
+    "childCount": "Çocuk sayısı",
+    "educationStatus": "Eğitim durumu",
+    "highestEducationLevel": "Son mezuniyet derecesi",
+    "militaryStatus": "Askerlik durumu",
+    "disabilityDegree": "Engellilik derecesi",
+    "bloodType": "Kan grubu",
+    "mobilePhone": "Cep telefonu",
+    "homePhone": "Ev telefonu",
+    "addressLine": "Adres",
+    "city": "Şehir",
+    "postalCode": "Posta kodu"
+  },
+  "enum": {
+    "notSet": "Belirtilmemiş",
+    "gender": {
+      "unspecified": "Belirtilmemiş",
+      "male": "Erkek",
+      "female": "Kadın",
+      "other": "Diğer"
+    },
+    "maritalStatus": {
+      "unspecified": "Belirtilmemiş",
+      "single": "Bekar",
+      "married": "Evli",
+      "divorced": "Boşanmış"
+    },
+    "educationStatus": {
+      "student": "Öğrenci",
+      "graduate": "Mezun"
+    },
+    "highestEducationLevel": {
+      "primary": "İlkokul",
+      "middleSchool": "Ortaokul",
+      "highSchool": "Lise",
+      "associate": "Ön lisans",
+      "bachelor": "Lisans",
+      "master": "Yüksek lisans",
+      "doctorate": "Doktora"
+    },
+    "militaryStatus": {
+      "notCompleted": "Yapılmadı",
+      "completed": "Yapıldı",
+      "deferred": "Tecilli",
+      "exempt": "Muaf",
+      "draftEvader": "Bakaya",
+      "absentee": "Yoklama kaçağı"
+    },
+    "disabilityDegree": {
+      "none": "Yok",
+      "first": "1. derece",
+      "second": "2. derece",
+      "third": "3. derece"
+    },
+    "bloodType": {
+      "oPos": "0 Rh+",
+      "oNeg": "0 Rh-",
+      "aPos": "A Rh+",
+      "aNeg": "A Rh-",
+      "bPos": "B Rh+",
+      "bNeg": "B Rh-",
+      "abPos": "AB Rh+",
+      "abNeg": "AB Rh-"
+    },
+    "contractType": {
+      "indefinite": "Belirsiz süreli",
+      "fixedTerm": "Belirli süreli"
+    },
+    "employmentType": {
+      "fullTime": "Tam zamanlı",
+      "partTime": "Yarı zamanlı",
+      "temporary": "Geçici",
+      "contract": "Sözleşmeli",
+      "freelance": "Serbest çalışan",
+      "intern": "Stajyer",
+      "mobile": "Seyyar",
+      "apprentice": "Çırak",
+      "seasonal": "Mevsimlik",
+      "agencyWorker": "Geçici iş ilişkisi (Büro)",
+      "subcontractor": "Alt işveren"
+    }
   },
   "validation": {
     "nationalId": "Kimlik numarası 11 haneli olmalıdır.",
-    "email": "Geçerli bir e-posta adresi girin."
+    "email": "Geçerli bir e-posta adresi girin.",
+    "childCount": "Çocuk sayısı 0 veya daha büyük bir tam sayı olmalıdır."
   },
   "picker": {
     "placeholder": "Çalışan seçin",
@@ -160,6 +246,7 @@
     "saved": "Çalışan bilgileri kaydedildi.",
     "sections": {
       "general": "Genel",
+      "personal": "Kişisel bilgiler",
       "career": "Kariyer",
       "account": "Hesap"
     },
@@ -174,7 +261,6 @@
       "account": "Hesap"
     },
     "tabNotes": {
-      "personal": "Kişisel bilgiler (kimlik, adres, iletişim, aile) Faz 1a'da bu sekmeye gelecek.",
       "payments": "Maaş ve ödeme bilgileri Faz 1a'da bu sekmeye gelecek.",
       "leave": "İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
       "overtime": "Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
@@ -182,7 +268,8 @@
     },
     "noAccountHint": "Bu çalışanın henüz kullanıcı hesabı yok. Üç nokta menüsünden davetiye göndererek hesap oluşturabilirsiniz.",
     "accessTypeHint": "Hesap sahibi rolünü yalnızca bir hesap sahibi verebilir veya kaldırabilir.",
-    "accessTypeSaved": "Erişim türü güncellendi."
+    "accessTypeSaved": "Erişim türü güncellendi.",
+    "sensitiveHidden": "Askerlik durumu, engellilik derecesi ve kan grubu alanları için görüntüleme yetkiniz yok."
   },
   "invite": {
     "send": "Davetiye gönder",

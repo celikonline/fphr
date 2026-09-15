@@ -113,7 +113,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
         var ali = await CreateAsync("Ali", "Kaya", orgUnitId: units.Sales, managerId: boss.Id, nationalId: aliNationalId, workEmail: "ali.kaya@acme.com");
         var berk = await CreateAsync("Berk", "Çelik", orgUnitId: units.Emea, managerId: boss.Id);
         var cem = await CreateAsync("Cem", "Aydın");
-        await SetStatusAsync(berk.Id, EmployeeStatus.Inactive);
+        await SetStatusAsync(berk.Id, EmployeeStatus.Terminated);
 
         var userId = Guid.NewGuid();
         await ServiceProvider!.GetRequiredService<IEmployeeUserLinker>().LinkUserAsync(tenantId, boss.Id, userId);
@@ -123,7 +123,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
         (await ListAsync(sort: "-firstName")).Select(e => e.FirstName).ShouldBe(["Zeynep", "Cem", "Berk", "Ali"]);
         (await ListAsync(filter: Filter(orgUnitId: units.Sales))).Select(e => e.Id).ShouldBe([ali.Id]);
         (await ListAsync(filter: Filter(orgUnitId: units.Sales, includeSubUnits: true))).Select(e => e.Id).ShouldBe([ali.Id, berk.Id], ignoreOrder: true);
-        (await ListAsync(filter: Filter(status: "inactive"))).Select(e => e.Id).ShouldBe([berk.Id]);
+        (await ListAsync(filter: Filter(status: "terminated"))).Select(e => e.Id).ShouldBe([berk.Id]);
         (await ListAsync(filter: Filter(hasUserAccount: false))).Count.ShouldBe(3);
         (await ListAsync(filter: Filter(managerId: boss.Id))).Select(e => e.Id).ShouldBe([ali.Id, berk.Id], ignoreOrder: true);
         (await ListAsync(q: "ALI.KAYA@")).Select(e => e.Id).ShouldBe([ali.Id]);
@@ -206,7 +206,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
         var cto = await CreateAsync("Tolga", "Teknik", orgUnitId: units.Sales, managerId: ceo.Id, workPhone: "+90 212 000 00 01");
         var dev = await CreateAsync("Deniz", "Geliştirici", orgUnitId: units.Emea, managerId: cto.Id, birthDate: today.AddYears(-25).AddDays(60));
         var gone = await CreateAsync("Eski", "Çalışan", managerId: ceo.Id, birthDate: today.AddYears(-30).AddDays(1));
-        await SetStatusAsync(gone.Id, EmployeeStatus.Inactive);
+        await SetStatusAsync(gone.Id, EmployeeStatus.Terminated);
 
         // Self-scoped caller (e.g. Employee role) still sees the whole company in these views.
         SetUser(tenantId, platformAdmin: false);
@@ -264,7 +264,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
         var contact = (await directory.GetContactsAsync(tenantId, [lead.Id])).ShouldHaveSingleItem();
         contact.ShouldBe(new EmployeeContact(lead.Id, "Lale", "Lider", "lale@acme.com", null, null, nameof(EmployeeStatus.Active)));
 
-        await SetStatusAsync(member.Id, EmployeeStatus.Inactive);
+        await SetStatusAsync(member.Id, EmployeeStatus.Terminated);
         (await directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, [units.Sales, units.Emea])).ShouldBe([lead.Id]);
 
         var employeeLookup = ServiceProvider!.GetRequiredService<IEmployeeLookup>();
@@ -299,6 +299,9 @@ public sealed class EmployeeIntegrationTests : TestFixture
         return new OrgUnits(root.Id, sales.Id, emea.Id, closed.Id);
     }
 
+    private static readonly DateOnly DefaultHireDate = new(2020, 1, 1);
+
+    /// <summary>Hired (Active) by default - matches the old Faz 0 fixture behavior; pass asDraft: true to test the Draft quick-add path.</summary>
     private async Task<EmployeeDetailDto> CreateAsync(
         string firstName,
         string lastName,
@@ -307,10 +310,13 @@ public sealed class EmployeeIntegrationTests : TestFixture
         string? nationalId = null,
         string? workEmail = null,
         string? workPhone = null,
-        DateOnly? birthDate = null)
+        DateOnly? birthDate = null,
+        DateOnly? hireDate = null,
+        bool asDraft = false)
     {
+        DateOnly? effectiveHireDate = asDraft ? null : hireDate ?? DefaultHireDate;
         var result = await ExecuteCommandAsync(new CreateEmployeeCommand(
-            firstName, lastName, nationalId ?? Tckn.Next(), workEmail, null, workPhone, null, birthDate, orgUnitId, managerId));
+            firstName, lastName, nationalId ?? Tckn.Next(), workEmail, null, workPhone, effectiveHireDate, birthDate, orgUnitId, managerId));
         result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
         return result.Value;
     }

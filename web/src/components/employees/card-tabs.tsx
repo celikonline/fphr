@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
-import { AccountSection, CareerSection, GeneralSection } from "./employee-card-sections";
+import { AccountSection, CareerSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 
 export interface EmployeeCardTabProps {
   employee: EmployeeDetail;
@@ -56,7 +56,7 @@ function tabPlaceholder(key: string, phase?: string) {
  */
 export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   { key: "general", labelKey: "employees:card.tabs.general", component: GeneralSection },
-  { key: "personal", labelKey: "employees:card.tabs.personal", phase: "1a", component: tabPlaceholder("personal", "1a") },
+  { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalSection },
   { key: "career", labelKey: "employees:card.tabs.career", component: CareerSection },
   {
     key: "payments",

@@ -10,10 +10,11 @@ const ACCOUNT_VARIANT: Record<UserAccountStatus, "success" | "secondary" | "dest
   disabled: "destructive",
 };
 
-const STATUS_VARIANT: Record<EmployeeStatus, "success" | "secondary" | "outline"> = {
+const STATUS_VARIANT: Record<EmployeeStatus, "success" | "secondary" | "outline" | "destructive"> = {
+  Draft: "secondary",
   Active: "success",
-  OnLeave: "secondary",
-  Inactive: "outline",
+  Suspended: "outline",
+  Terminated: "destructive",
 };
 
 export function AccountStatusBadge({ status }: { status: UserAccountStatus }) {

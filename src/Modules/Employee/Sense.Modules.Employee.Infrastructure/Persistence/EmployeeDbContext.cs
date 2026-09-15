@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
@@ -41,6 +42,23 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.Property(x => x.PersonalEmail).HasMaxLength(EmployeeLimits.EmailMaxLength);
         b.Property(x => x.WorkPhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.SuspensionReason).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+
+        b.Property(x => x.Gender).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired().HasDefaultValue(Gender.Unspecified);
+        b.Property(x => x.MaritalStatus).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired().HasDefaultValue(MaritalStatus.Unspecified);
+        b.Property(x => x.EducationStatus).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.HighestEducationLevel).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.MilitaryStatus).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.DisabilityDegree).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.BloodType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.ContractType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.EmploymentType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+
+        b.Property(x => x.MobilePhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
+        b.Property(x => x.HomePhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
+        b.Property(x => x.AddressLine).HasMaxLength(EmployeeLimits.AddressLineMaxLength);
+        b.Property(x => x.City).HasMaxLength(EmployeeLimits.CityMaxLength);
+        b.Property(x => x.PostalCode).HasMaxLength(EmployeeLimits.PostalCodeMaxLength);
 
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => x.OrgUnitId);
