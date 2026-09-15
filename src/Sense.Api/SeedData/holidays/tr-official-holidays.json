@@ -1,0 +1,69 @@
+{
+  "code": "TR",
+  "name": "Türkiye Resmi Tatilleri",
+  "countryCode": "TR",
+  "religiousHolidaysNote": "Ramazan Bayramı and Kurban Bayramı entries below follow the lunar Hijri calendar and shift every Gregorian year - this file intentionally does NOT compute them. Only a couple of near-term dates are seeded (recurringAnnually=false), each carrying a 'note' flagging it as an estimate pending official Diyanet İşleri Başkanlığı confirmation. A Platform admin MUST add a fresh row for each subsequent year (see HolidayCalendarEntry's class doc comment) - do not extrapolate or auto-generate future dates from these.",
+  "entries": [
+    { "name": "Yılbaşı", "month": 1, "day": 1, "recurringAnnually": true },
+    { "name": "Ulusal Egemenlik ve Çocuk Bayramı", "month": 4, "day": 23, "recurringAnnually": true },
+    { "name": "Emek ve Dayanışma Günü", "month": 5, "day": 1, "recurringAnnually": true },
+    { "name": "Atatürk'ü Anma, Gençlik ve Spor Bayramı", "month": 5, "day": 19, "recurringAnnually": true },
+    { "name": "Demokrasi ve Millî Birlik Günü", "month": 7, "day": 15, "recurringAnnually": true },
+    { "name": "Zafer Bayramı", "month": 8, "day": 30, "recurringAnnually": true },
+    { "name": "Cumhuriyet Bayramı", "month": 10, "day": 29, "recurringAnnually": true },
+    {
+      "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "date": "2027-03-08",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (1. gün)",
+      "date": "2027-03-09",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (2. gün)",
+      "date": "2027-03-10",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Ramazan Bayramı (3. gün)",
+      "date": "2027-03-11",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "date": "2027-05-15",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (1. gün)",
+      "date": "2027-05-16",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (2. gün)",
+      "date": "2027-05-17",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (3. gün)",
+      "date": "2027-05-18",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    },
+    {
+      "name": "Kurban Bayramı (4. gün)",
+      "date": "2027-05-19",
+      "recurringAnnually": false,
+      "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
+    }
+  ]
+}

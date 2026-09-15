@@ -33,6 +33,19 @@ public static class OrganizationPermissions
     public static readonly Permission UnitsDelete = new(
         "organization.units.delete", Module, "Deactivate Org Unit", Group, "Deactivate an organization unit");
 
+    /// <summary>Create a tenant-custom holiday calendar.</summary>
+    public static readonly Permission HolidayCalendarsCreate = new(
+        "organization.holiday_calendars.create", Module, "Create Holiday Calendar", Group, "Create a tenant-custom holiday calendar");
+
+    /// <summary>Read holiday calendars and their entries.</summary>
+    public static readonly Permission HolidayCalendarsRead = new(
+        "organization.holiday_calendars.read", Module, "Read Holiday Calendars", Group, "View holiday calendars and their entries");
+
+    /// <summary>Add entries to a calendar, or assign a calendar to a Company.</summary>
+    public static readonly Permission HolidayCalendarsUpdate = new(
+        "organization.holiday_calendars.update", Module, "Update Holiday Calendar", Group, "Add entries to a holiday calendar, or assign a calendar to a company");
+
     /// <summary>All Organization module permissions.</summary>
-    public static IEnumerable<Permission> All => [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete];
+    public static IEnumerable<Permission> All =>
+        [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete, HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate];
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Kernel.Results;
@@ -102,4 +103,31 @@ public sealed class OrgUnitApprovalPolicyAssignmentRepository(OrganizationDbCont
 
     public async Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default) =>
         await context.ApprovalPolicyAssignments.Where(a => a.OrgUnitId == orgUnitId).ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed HolidayCalendar repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class HolidayCalendarRepository(OrganizationDbContext context) : IHolidayCalendarRepository
+{
+    public void Add(HolidayCalendar calendar) => context.HolidayCalendars.Add(calendar);
+
+    public async Task<Result<HolidayCalendar>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var calendar = await context.HolidayCalendars.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return calendar is null ? Error.NotFound(OrganizationDomainErrors.HolidayCalendarNotFound) : calendar;
+    }
+
+    public async Task<IReadOnlyList<HolidayCalendar>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.HolidayCalendars.OrderBy(c => c.Name).ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed HolidayCalendarEntry repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class HolidayCalendarEntryRepository(OrganizationDbContext context) : IHolidayCalendarEntryRepository
+{
+    public void Add(HolidayCalendarEntry entry) => context.HolidayCalendarEntries.Add(entry);
+
+    public async Task<IReadOnlyList<HolidayCalendarEntry>> ListByCalendarAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default) =>
+        await context.HolidayCalendarEntries
+            .Where(e => e.HolidayCalendarId == holidayCalendarId)
+            .OrderBy(e => e.Date)
+            .ToListAsync(cancellationToken);
 }

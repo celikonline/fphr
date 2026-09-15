@@ -19,6 +19,13 @@ public static class OrganizationDomainErrors
     public const string ApprovalAssignmentOrgUnitRequired = "organization.approval_assignment.org_unit_required";
     public const string ApprovalAssignmentRequestTypeRequired = "organization.approval_assignment.request_type_required";
     public const string ApprovalAssignmentPolicyRequired = "organization.approval_assignment.policy_id_required";
+
+    public const string HolidayCalendarNotFound = "organization.holiday_calendar.not_found";
+    public const string HolidayCalendarNameRequired = "organization.holiday_calendar.name_required";
+    public const string HolidayCalendarCountryCodeRequired = "organization.holiday_calendar.country_code_required";
+
+    public const string HolidayCalendarEntryCalendarIdRequired = "organization.holiday_calendar_entry.calendar_id_required";
+    public const string HolidayCalendarEntryNameRequired = "organization.holiday_calendar_entry.name_required";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -27,6 +34,7 @@ public static class OrganizationLimits
     public const int CodeMaxLength = 50;
     public const int NameMaxLength = 200;
     public const int RequestTypeMaxLength = 50;
+    public const int CountryCodeMaxLength = 10;
 
     /// <summary>Default cap on how many hierarchy levels (OrgUnitType rows) a tenant may define; see IOptions&lt;OrganizationOptions&gt; (future item).</summary>
     public const int MaxUnitTypesDefault = 10;

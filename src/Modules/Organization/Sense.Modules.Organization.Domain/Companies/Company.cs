@@ -35,7 +35,13 @@ public sealed class Company : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>The OrgUnit (Type=Company) this settings row belongs to. Unique per tenant (1:1).</summary>
     public Guid OrgUnitId { get; private set; }
 
-    /// <summary>Cross-module reference to a future HolidayCalendar entity (different roadmap item); column reserved, no FK yet.</summary>
+    /// <summary>
+    /// Same-module reference to <see cref="HolidayCalendars.HolidayCalendar"/> (roadmap Faz 0 item #5;
+    /// previously a reserved column with no FK - see OrganizationDbContext.CompanyConfiguration for the
+    /// real FK now wired here). Null means "no calendar assigned yet"; resolution to an effective
+    /// calendar (with a fallback to the tenant's seeded system TR calendar) is the concern of
+    /// Sense.Modules.Organization.Contracts.IHolidayCalendarLookup, not of this property.
+    /// </summary>
     public Guid? HolidayCalendarId { get; private set; }
 
     /// <summary>

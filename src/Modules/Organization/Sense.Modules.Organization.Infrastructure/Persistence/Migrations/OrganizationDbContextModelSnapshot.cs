@@ -123,6 +123,9 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                     b.HasKey("Id")
                         .HasName("pk_companies");
 
+                    b.HasIndex("HolidayCalendarId")
+                        .HasDatabaseName("ix_companies_holiday_calendar_id");
+
                     b.HasIndex("OrgUnitId")
                         .HasDatabaseName("ix_companies_org_unit_id");
 
@@ -134,6 +137,121 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_companies_tenant_id_org_unit_id");
 
                     b.ToTable("companies", "org");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CountryCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("country_code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsSystemDefined")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_system_defined");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holiday_calendars");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_holiday_calendars_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("ix_holiday_calendars_tenant_id_name");
+
+                    b.ToTable("holiday_calendars", "org");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendarEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<Guid>("HolidayCalendarId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("holiday_calendar_id");
+
+                    b.Property<bool>("IsRecurringAnnually")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_recurring_annually");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_holiday_calendar_entries");
+
+                    b.HasIndex("HolidayCalendarId")
+                        .HasDatabaseName("ix_holiday_calendar_entries_holiday_calendar_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_holiday_calendar_entries_tenant_id");
+
+                    b.HasIndex("TenantId", "HolidayCalendarId")
+                        .HasDatabaseName("ix_holiday_calendar_entries_tenant_id_holiday_calendar_id");
+
+                    b.ToTable("holiday_calendar_entries", "org");
                 });
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.OrgUnitTypes.OrgUnitType", b =>
@@ -427,12 +545,28 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.Companies.Company", b =>
                 {
+                    b.HasOne("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendar", null)
+                        .WithMany()
+                        .HasForeignKey("HolidayCalendarId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_companies_holiday_calendars_holiday_calendar_id");
+
                     b.HasOne("Sense.Modules.Organization.Domain.OrgUnits.OrgUnit", null)
                         .WithMany()
                         .HasForeignKey("OrgUnitId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_companies_org_units_org_unit_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendarEntry", b =>
+                {
+                    b.HasOne("Sense.Modules.Organization.Domain.HolidayCalendars.HolidayCalendar", null)
+                        .WithMany()
+                        .HasForeignKey("HolidayCalendarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_holiday_calendar_entries_holiday_calendars_holiday_calendar");
                 });
 
             modelBuilder.Entity("Sense.Modules.Organization.Domain.OrgUnits.OrgUnit", b =>
