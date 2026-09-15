@@ -1,5 +1,6 @@
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Kernel.Results;
@@ -35,6 +36,21 @@ public interface IOrgUnitRepository
     Task<bool> HasChildrenAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
+
+    /// <summary>True if any active org unit currently points at this location (used to block Location deactivation while referenced).</summary>
+    Task<bool> HasActiveLocationReferenceAsync(Guid locationId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Location aggregate repository.</summary>
+public interface ILocationRepository
+{
+    void Add(Location location);
+
+    Task<Result<Location>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Location>> ListAllAsync(bool activeOnly = true, CancellationToken cancellationToken = default);
+
+    Task<bool> ExistsActiveAsync(Guid locationId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Company aggregate repository.</summary>

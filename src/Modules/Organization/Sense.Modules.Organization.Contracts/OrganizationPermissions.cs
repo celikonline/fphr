@@ -33,6 +33,23 @@ public static class OrganizationPermissions
     public static readonly Permission UnitsDelete = new(
         "organization.units.delete", Module, "Deactivate Org Unit", Group, "Deactivate an organization unit");
 
+    /// <summary>Create a location (roadmap Faz 0 item #6: office/store/warehouse/factory/remote + country).</summary>
+    public static readonly Permission LocationsCreate = new(
+        "organization.locations.create", Module, "Create Location", Group, "Create a physical location");
+
+    /// <summary>Read locations.</summary>
+    public static readonly Permission LocationsRead = new(
+        "organization.locations.read", Module, "Read Locations", Group, "View locations");
+
+    /// <summary>Rename/retype/re-address a location.</summary>
+    public static readonly Permission LocationsUpdate = new(
+        "organization.locations.update", Module, "Update Location", Group, "Rename, retype, or re-address a location");
+
+    /// <summary>Deactivate (soft delete) a location.</summary>
+    public static readonly Permission LocationsDelete = new(
+        "organization.locations.delete", Module, "Deactivate Location", Group, "Deactivate a location");
+
     /// <summary>All Organization module permissions.</summary>
-    public static IEnumerable<Permission> All => [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete];
+    public static IEnumerable<Permission> All =>
+        [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete, LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete];
 }

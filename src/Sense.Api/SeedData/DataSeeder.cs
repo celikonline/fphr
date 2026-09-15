@@ -11,6 +11,7 @@ using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Domain.Users;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
@@ -136,13 +137,18 @@ public class DataSeeder(
         organizationCtx.OrgUnits.Add(rootUnit);
         organizationCtx.Companies.Add(CreateCompanyOrThrow(tenant.Id, rootUnit.Id));
 
+        // Location (roadmap Faz 0 item #6): single head office, linked back from the root org unit.
+        var headOffice = CreateLocationOrThrow(tenant.Id, $"{tenant.Name} Head Office", LocationType.Office, "TR", null);
+        organizationCtx.Locations.Add(headOffice);
+        rootUnit.AssignLocation(headOffice.Id);
+
         // Employee: minimal stub for the admin user, linked back via User.EmployeeId
         var adminEmployee = CreateEmployeeOrThrow(tenant.Id, "Admin User", user.Id, rootUnit.Id);
         employeeCtx.Employees.Add(adminEmployee);
         user.LinkEmployee(adminEmployee.Id);
         rootUnit.AssignManager(adminEmployee.Id);
 
-        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role, 1 org unit, 1 employee");
+        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role, 1 org unit, 1 location, 1 employee");
     }
 
     private async Task SeedDemoAsync(CancellationToken cancellationToken)
@@ -207,6 +213,17 @@ public class DataSeeder(
             departments.Add(department);
         }
 
+        // Locations (roadmap Faz 0 item #6): matches the 3 sample rows web/src/services/locations.service.ts
+        // used to mock before this item wired the real backend, so a manual QA pass sees the same data.
+        var istanbulHq = CreateLocationOrThrow(tenant.Id, "İstanbul HQ", LocationType.Office, "TR", "Maslak, İstanbul");
+        var ankaraOffice = CreateLocationOrThrow(tenant.Id, "Ankara Office", LocationType.Office, "TR", "Çankaya, Ankara");
+        var izmirOffice = CreateLocationOrThrow(tenant.Id, "İzmir Office", LocationType.Office, "TR", "Konak, İzmir");
+        organizationCtx.Locations.AddRange(istanbulHq, ankaraOffice, izmirOffice);
+
+        headquarters.AssignLocation(istanbulHq.Id);
+        departments.First(d => d.Name == "Sales").AssignLocation(ankaraOffice.Id);
+        departments.First(d => d.Name == "Engineering").AssignLocation(izmirOffice.Id);
+
         // Employee: one minimal stub per demo user, assigned round-robin across the 4 departments
         // (executives/HR go to Headquarters), linked back via User.EmployeeId, first Manager per unit
         // becomes that unit's ManagerEmployeeId.
@@ -216,8 +233,8 @@ public class DataSeeder(
         await SeedSampleDocumentsAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
 
         logger.LogInformation(
-            "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units, {EmployeeCount} employees",
-            demoUsers.Count, roles.Count, 3, 1 + departments.Count, employeeCount);
+            "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units, {LocationCount} locations, {EmployeeCount} employees",
+            demoUsers.Count, roles.Count, 3, 1 + departments.Count, 3, employeeCount);
     }
 
     /// <summary>Seeds the system OrgUnitType catalog for a tenant; returns the Company and Department level ids for convenience.</summary>
@@ -265,6 +282,17 @@ public class DataSeeder(
         if (result.IsFailure)
         {
             throw new InvalidOperationException($"Failed to seed company for org unit '{orgUnitId}': {result.Error}");
+        }
+
+        return result.Value;
+    }
+
+    private static Location CreateLocationOrThrow(Guid tenantId, string name, LocationType type, string countryCode, string? address)
+    {
+        var result = Location.Create(tenantId, name, type, countryCode, address);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to seed location '{name}': {result.Error}");
         }
 
         return result.Value;

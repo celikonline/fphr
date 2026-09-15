@@ -22,23 +22,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import ConfirmDialog from "@/components/confirm-dialog";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
-import { usePermission } from "@/components/permission-guard";
+import { useAnyPermission } from "@/components/permission-guard";
 import {
   createLocation,
   deleteLocation,
   listLocations,
   updateLocation,
+  LOCATION_TYPES,
   type Location,
+  type LocationType,
 } from "@/services/locations.service";
-import { listOrgUnits } from "@/services/organization.service";
 
-const NONE_VALUE = "__none__";
+const MANAGE_PERMISSIONS = [
+  "organization.locations.create",
+  "organization.locations.update",
+  "organization.locations.delete",
+];
 
 const schema = z.object({
   name: z.string().min(1),
-  address: z.string().min(1),
-  timeZone: z.string().min(1),
-  orgUnitId: z.string(),
+  type: z.enum(LOCATION_TYPES as [LocationType, ...LocationType[]]),
+  countryCode: z
+    .string()
+    .trim()
+    .length(2)
+    .transform((v) => v.toUpperCase()),
+  address: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -51,7 +60,7 @@ interface DialogState {
 export default function LocationsPage() {
   const { t } = useTranslation(["locations", "common"]);
   const queryClient = useQueryClient();
-  const canManage = usePermission("organization.locations.manage");
+  const canManage = useAnyPermission(MANAGE_PERMISSIONS);
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
@@ -71,9 +80,6 @@ export default function LocationsPage() {
     queryFn: () => listLocations({ page, pageSize: 10, q: debouncedSearch || undefined, sort: "name" }),
   });
 
-  const { data: orgUnits } = useQuery({ queryKey: ["org-units"], queryFn: listOrgUnits });
-  const orgUnitName = (id: string | null) => orgUnits?.find((u) => u.id === id)?.name ?? "—";
-
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
 
@@ -86,20 +92,20 @@ export default function LocationsPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", address: "", timeZone: "", orgUnitId: NONE_VALUE },
+    defaultValues: { name: "", type: "Office", countryCode: "TR", address: "" },
   });
 
   function openCreate() {
-    reset({ name: "", address: "", timeZone: "", orgUnitId: NONE_VALUE });
+    reset({ name: "", type: "Office", countryCode: "TR", address: "" });
     setDialog({ open: true });
   }
 
   function openEdit(location: Location) {
     reset({
       name: location.name,
-      address: location.address,
-      timeZone: location.timeZone,
-      orgUnitId: location.orgUnitId ?? NONE_VALUE,
+      type: location.type,
+      countryCode: location.countryCode,
+      address: location.address ?? "",
     });
     setDialog({ open: true, location });
   }
@@ -117,8 +123,7 @@ export default function LocationsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...input }: { id: string } & FormValues) =>
-      updateLocation(id, { ...input, orgUnitId: input.orgUnitId === NONE_VALUE ? null : input.orgUnitId }),
+    mutationFn: ({ id, ...input }: { id: string } & FormValues) => updateLocation(id, input),
     onSuccess: () => {
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("locations:updateSuccess") });
@@ -141,11 +146,10 @@ export default function LocationsPage() {
   });
 
   function onSubmit(values: FormValues) {
-    const orgUnitId = values.orgUnitId === NONE_VALUE ? null : values.orgUnitId;
     if (dialog.location) {
       updateMutation.mutate({ id: dialog.location.id, ...values });
     } else {
-      createMutation.mutate({ ...values, orgUnitId });
+      createMutation.mutate(values);
     }
   }
 
@@ -193,9 +197,9 @@ export default function LocationsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>{t("locations:name")}</TableHead>
+                    <TableHead>{t("locations:type")}</TableHead>
+                    <TableHead>{t("locations:countryCode")}</TableHead>
                     <TableHead>{t("locations:address")}</TableHead>
-                    <TableHead>{t("locations:timeZone")}</TableHead>
-                    <TableHead>{t("locations:orgUnit")}</TableHead>
                     {canManage && <TableHead className="text-right">{t("common:actions")}</TableHead>}
                   </TableRow>
                 </TableHeader>
@@ -203,9 +207,9 @@ export default function LocationsPage() {
                   {data.items.map((location) => (
                     <TableRow key={location.id}>
                       <TableCell className="font-medium">{location.name}</TableCell>
-                      <TableCell>{location.address}</TableCell>
-                      <TableCell>{location.timeZone}</TableCell>
-                      <TableCell>{orgUnitName(location.orgUnitId)}</TableCell>
+                      <TableCell>{t(`locations:types.${location.type}`)}</TableCell>
+                      <TableCell>{location.countryCode}</TableCell>
+                      <TableCell>{location.address ?? "—"}</TableCell>
                       {canManage && (
                         <TableCell className="text-right">
                           <Button
@@ -251,30 +255,28 @@ export default function LocationsPage() {
               {errors.name && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
             </div>
             <div>
-              <Label htmlFor="loc-address">{t("locations:address")}</Label>
-              <Input id="loc-address" {...register("address")} />
-              {errors.address && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-            </div>
-            <div>
-              <Label htmlFor="loc-tz">{t("locations:timeZone")}</Label>
-              <Input id="loc-tz" placeholder="Europe/Istanbul" {...register("timeZone")} />
-              {errors.timeZone && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-            </div>
-            <div>
-              <Label htmlFor="loc-org-unit">{t("locations:orgUnit")}</Label>
-              <Select value={watch("orgUnitId")} onValueChange={(value) => setValue("orgUnitId", value)}>
-                <SelectTrigger id="loc-org-unit">
+              <Label htmlFor="loc-type">{t("locations:type")}</Label>
+              <Select value={watch("type")} onValueChange={(value) => setValue("type", value as LocationType)}>
+                <SelectTrigger id="loc-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NONE_VALUE}>{t("locations:noneOrgUnit")}</SelectItem>
-                  {orgUnits?.map((unit) => (
-                    <SelectItem key={unit.id} value={unit.id}>
-                      {unit.name}
+                  {LOCATION_TYPES.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {t(`locations:types.${type}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="loc-country">{t("locations:countryCode")}</Label>
+              <Input id="loc-country" maxLength={2} placeholder="TR" {...register("countryCode")} />
+              {errors.countryCode && <p className="mt-1 text-xs text-destructive">{t("locations:countryCodeInvalid")}</p>}
+            </div>
+            <div>
+              <Label htmlFor="loc-address">{t("locations:address")}</Label>
+              <Input id="loc-address" {...register("address")} />
             </div>
             <DialogFooter>
               <Button

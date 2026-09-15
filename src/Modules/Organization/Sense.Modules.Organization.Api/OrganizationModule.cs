@@ -41,8 +41,10 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IOrgUnitRepository, OrgUnitRepository>();
         services.AddScoped<ICompanyRepository, CompanyRepository>();
         services.AddScoped<IOrgUnitApprovalPolicyAssignmentRepository, OrgUnitApprovalPolicyAssignmentRepository>();
+        services.AddScoped<ILocationRepository, LocationRepository>();
 
-        // Cross-module read contract consumed by Employee (see IOrgUnitLookup)
+        // Cross-module read contracts consumed by other modules (see IOrgUnitLookup / ILocationLookup)
         services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();
+        services.AddScoped<ILocationLookup, LocationLookup>();
     }
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Kernel.Results;
@@ -75,6 +76,35 @@ public sealed class OrgUnitRepository(OrganizationDbContext context) : IOrgUnitR
 
     public async Task<bool> ExistsActiveAsync(Guid orgUnitId, CancellationToken cancellationToken = default) =>
         await context.OrgUnits.AnyAsync(u => u.Id == orgUnitId && u.IsActive, cancellationToken);
+
+    public async Task<bool> HasActiveLocationReferenceAsync(Guid locationId, CancellationToken cancellationToken = default) =>
+        await context.OrgUnits.AnyAsync(u => u.LocationId == locationId && u.IsActive, cancellationToken);
+}
+
+/// <summary>EF Core-backed Location repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class LocationRepository(OrganizationDbContext context) : ILocationRepository
+{
+    public void Add(Location location) => context.Locations.Add(location);
+
+    public async Task<Result<Location>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var location = await context.Locations.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+        return location is null ? Error.NotFound(OrganizationDomainErrors.LocationNotFound) : location;
+    }
+
+    public async Task<IReadOnlyList<Location>> ListAllAsync(bool activeOnly = true, CancellationToken cancellationToken = default)
+    {
+        var query = context.Locations.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(l => l.IsActive);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsActiveAsync(Guid locationId, CancellationToken cancellationToken = default) =>
+        await context.Locations.AnyAsync(l => l.Id == locationId && l.IsActive, cancellationToken);
 }
 
 /// <summary>EF Core-backed Company repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

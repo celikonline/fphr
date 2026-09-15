@@ -7,7 +7,10 @@ public static class OrganizationErrors
     public const string OrgUnitTypeNotFound = "organization.unit_type.not_found";
     public const string OrgUnitTypeInactive = "organization.unit_type.inactive";
     public const string ManagerEmployeeNotFound = "organization.unit.manager_not_found";
+    public const string LocationReferenceNotFound = "organization.unit.location_not_found";
     public const string ParentNotFound = "organization.unit.parent_not_found";
     public const string ParentCausesCycle = "organization.unit.parent_cycle";
     public const string HasActiveChildren = "organization.unit_type.in_use";
+    public const string LocationNotFound = "organization.location.not_found";
+    public const string LocationInUse = "organization.location.in_use";
 }
