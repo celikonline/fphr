@@ -68,12 +68,17 @@ public interface ICompanyRepository
     Task<IReadOnlyList<Company>> ListAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>OrgUnitApprovalPolicyAssignment repository (stub consumer: future Workflow module).</summary>
+/// <summary>OrgUnitApprovalPolicyAssignment repository (unique per tenant, org unit and request type).</summary>
 public interface IOrgUnitApprovalPolicyAssignmentRepository
 {
     void Add(OrgUnitApprovalPolicyAssignment assignment);
 
+    void Remove(OrgUnitApprovalPolicyAssignment assignment);
+
     Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
+
+    /// <summary>Assignments of all request types on any of the given units (tracked, so the caller can change them).</summary>
+    Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitsAsync(IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default);
 }
 
 /// <summary>HolidayCalendar aggregate repository.</summary>

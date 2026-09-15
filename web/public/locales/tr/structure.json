@@ -53,6 +53,23 @@
     "deactivateConfirm": "\"{{name}}\" birimi pasifleştirilecek. Devam etmek istiyor musunuz?",
     "deactivateSuccess": "Birim pasifleştirildi."
   },
+  "approvalPolicies": {
+    "title": "Onay süreçleri",
+    "hint": "Opsiyonel alanlar. Boş bırakılan tür üst birimden devralınır.",
+    "requestType": {
+      "Leave": "İzin onay süreci",
+      "Advance": "Avans onay süreci",
+      "Expense": "Harcama onay süreci",
+      "Overtime": "Fazla mesai onay süreci"
+    },
+    "inherit": "Üst birimden devral",
+    "inheritedFrom": "Üst birimden: {{unit}}",
+    "inheritedFromWithPolicy": "Üst birimden: {{unit}} · {{policy}}",
+    "defaultFirstManager": "Süreç atanmadı; talepler çalışanın ilk yöneticisine gider.",
+    "workflowUnavailable": "Onay süreçleri Workflow modülü devreye girdiğinde seçilebilecek.",
+    "unknownPolicy": "Tanımsız süreç",
+    "unknownUnit": "Bilinmeyen birim"
+  },
   "companies": {
     "createDescription": "Şirket adı ve tatil takvimini girin. Tatil takvimi şirketin en alt yapısına kadar tüm birimlerine uygulanır.",
     "holidayCalendar": "Tatil takvimi",

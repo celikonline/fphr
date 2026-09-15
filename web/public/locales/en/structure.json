@@ -53,6 +53,23 @@
     "deactivateConfirm": "The \"{{name}}\" unit will be deactivated. Continue?",
     "deactivateSuccess": "Unit deactivated."
   },
+  "approvalPolicies": {
+    "title": "Approval processes",
+    "hint": "Optional fields. A request type left empty is inherited from the parent unit.",
+    "requestType": {
+      "Leave": "Leave approval process",
+      "Advance": "Advance approval process",
+      "Expense": "Expense approval process",
+      "Overtime": "Overtime approval process"
+    },
+    "inherit": "Inherit from parent unit",
+    "inheritedFrom": "From parent unit: {{unit}}",
+    "inheritedFromWithPolicy": "From parent unit: {{unit}} · {{policy}}",
+    "defaultFirstManager": "No process assigned; requests go to the employee's first manager.",
+    "workflowUnavailable": "Approval processes can be selected once the Workflow module is available.",
+    "unknownPolicy": "Unknown process",
+    "unknownUnit": "Unknown unit"
+  },
   "companies": {
     "createDescription": "Enter the company name and holiday calendar. The calendar applies to every unit down to the lowest level of the company.",
     "holidayCalendar": "Holiday calendar",

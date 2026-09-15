@@ -182,6 +182,58 @@ export function pickDefaultHolidayCalendar(calendars: HolidayCalendar[]): Holida
   return system.find((c) => c.countryCode.toUpperCase() === "TR") ?? system[0] ?? calendars[0];
 }
 
+// ---------------------------------------------------------------- Unit approval policies ("Opsiyonel alanlar")
+
+/** Request types a unit can carry an approval policy for; mirrors Organization.Contracts.ApprovalRequestTypes.All. */
+export const APPROVAL_REQUEST_TYPES = ["Leave", "Advance", "Expense", "Overtime"] as const;
+
+export type ApprovalRequestType = (typeof APPROVAL_REQUEST_TYPES)[number];
+
+/** Mirrors `OrgUnitApprovalPolicyDto`; nulls are omitted by the API, so treat missing as null. */
+export interface OrgUnitApprovalPolicy {
+  requestType: string;
+  /** The unit's own assignment; missing = inherits from an ancestor. */
+  approvalPolicyId?: string | null;
+  /** Own assignment, else the nearest active ancestor's; missing = Workflow default (first manager). */
+  effectiveApprovalPolicyId?: string | null;
+  /** Ancestor supplying the effective policy; missing when the policy is the unit's own (or there is none). */
+  inheritedFromOrgUnitId?: string | null;
+}
+
+export interface OrgUnitApprovalPolicyInput {
+  requestType: string;
+  /** null clears the unit's own assignment (it inherits again). */
+  approvalPolicyId: string | null;
+}
+
+export async function listUnitApprovalPolicies(unitId: string): Promise<OrgUnitApprovalPolicy[]> {
+  const { data } = await apiClient.get<OrgUnitApprovalPolicy[]>(`${UNITS}/${unitId}/approval-policies`);
+  return data;
+}
+
+export async function setUnitApprovalPolicies(
+  unitId: string,
+  assignments: OrgUnitApprovalPolicyInput[],
+): Promise<OrgUnitApprovalPolicy[]> {
+  const { data } = await apiClient.put<OrgUnitApprovalPolicy[]>(`${UNITS}/${unitId}/approval-policies`, { assignments });
+  return data;
+}
+
+/** Workflow-owned approval policy option. */
+export interface ApprovalPolicyOption {
+  id: string;
+  name: string;
+}
+
+/**
+ * Policy options come from the Workflow module, which is not built yet: a 404/403/network error means "no Workflow",
+ * and the caller renders the selects disabled with a hint instead of failing.
+ */
+export async function listApprovalPolicies(): Promise<ApprovalPolicyOption[]> {
+  const { data } = await apiClient.get<ApprovalPolicyOption[]>("/v1/workflow/approval-policies");
+  return data;
+}
+
 // ---------------------------------------------------------------- Unit authorizations
 
 export interface UnitAuthorization {

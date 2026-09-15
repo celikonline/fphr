@@ -9,8 +9,10 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 1 satırları, ayrın
 
 | Kod | Kalem | Durum | Kanıt | Eksik / Not |
 |---|---|---|---|---|
-| S1 | Birime onay süreci ataması slotu (talep türü başına politika, üst birimden devralma, çözümleme kontratı) — #29'un Organization tarafı | ❌ Başlanmadı | — | Politika kataloğu Workflow'dan gelecek (PC-B) |
-| S2 | Çalışan kartı sekme slotları (İzinler, Fazla mesailer, Ekstra izinler) | ❌ Başlanmadı | — | İçerik Leave'den gelecek (PC-B) |
+| S1 | Birime onay süreci ataması slotu (talep türü başına politika, üst birimden devralma, çözümleme kontratı) — #29'un Organization tarafı | ✅ Bitti | `IOrgApprovalPolicyResolver` (Organization.Contracts, unit + aktif atalar, ilk eşleşme kazanır), `ApprovalRequestTypes{Leave,Advance,Expense,Overtime}`, `GET/PUT /organization/units/{id}/approval-policies`, entegrasyon olayı `OrgUnitApprovalPolicyChanged`; web: birim düzenleme diyaloğunda "Onay süreçleri" bölümü (kendi/miras değeri gösterir; Workflow henüz yoksa seçiciler devre dışı + bilgi notu) | Politika kataloğu (seçenek listesi) Workflow'dan gelecek (PC-B); `ApprovalPolicyId` bugün doğrulanmıyor — Workflow, silinmiş politika id'lerine tolerans göstermeli |
+| S2 | Çalışan kartı sekme slotları (İzinler, Fazla mesailer, Ekstra izinler) | ✅ Bitti | Rota `/app/employees/:id/:tab?`, sekme kayıt defteri `web/src/components/employees/card-tabs.tsx` (key/labelKey/permission/accessSetting/phase/component — tek satırlık ekleme notu); Genel/Kariyer/Hesap dolu, Kişisel/Ödemeler/Diğer boş durum, İzinler/Fazla mesailer "Faz 1b" rozetiyle | İçerik (İzinler, Fazla mesailer) Leave'den gelecek (PC-B); Kişisel/Ödemeler/Diğer içeriği E3/E4/sonraki fazlarda |
+
+**Önemli bulgu (E0 sırasında tespit edildi, kapsamı Faz 1a'yı aşıyor):** Agregatların `Raise(...)` ile ürettiği domain event'ler (`UserCreated`, `EmployeeCreated`, `OrgUnitCreated` vb.) hiçbir yerde okunmuyor/kaydedilmiyor — outbox'a yalnızca elle `IIntegrationEventOutbox` çağrılan entegrasyon olayları düşüyor (bugüne kadar tek örnek: S1'in `OrgUnitApprovalPolicyChanged`'i). Ayrıca `Sense.Worker` yalnızca Identity'nin outbox'ını dinliyordu; Organization'ın outbox'ı hiç işlenmiyordu. Kullanıcı kararıyla dar kapsamlı düzeltme yapıldı: `Sense.Worker/Program.cs`'e Organization için de outbox dinleyicisi ve `EventTypeRegistry` kaydı eklendi (izole ortamda gerçek Worker sürecinde uçtan uca doğrulandı — bkz. değişiklik geçmişi). Identity/Employee/Documents/DataTransfer için henüz outbox'a yazan bir çağrı yok, bu yüzden dokunulmadı. **Genel çözüm** (agregat event'lerinin SaveChanges sırasında otomatik outbox'a yazılması + Worker'ın tüm modülleri yüklemesi) PC-B ile koordine edilerek ayrı bir görev olarak ele alınmalı; Workflow modülü bu boru hattına dayanacağı için özellikle önemli.
 
 ## Faz 1a kalemleri
 
@@ -37,3 +39,4 @@ E0 (S1, S2) → E1 (kimlik/kişisel/istihdam alanları, durum modeli, kart böl�
 ## Değişiklik geçmişi
 
 - 2026-09-15: Dosya oluşturuldu; PC-A hattı başlatıldı.
+- 2026-09-15: E0 tamamlandı (S1, S2). Ek olarak `Sense.Worker`'a Organization outbox dinleyicisi eklendi; izole Docker ortamında sahte bir `OrgUnitApprovalPolicyChanged` satırı outbox'a yazılıp gerçek Worker süreciyle işlendi, `processed_at` doldu ve hata oluşmadı. Backend derleniyor, tüm test projeleri (Organization 65, Identity 45 dahil) geçiyor. Web `tsc`/`eslint`/`vite build` temiz.

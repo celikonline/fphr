@@ -163,6 +163,23 @@
       "career": "[DE] Career",
       "account": "[DE] Account"
     },
+    "tabs": {
+      "general": "[DE] Genel",
+      "personal": "[DE] Kişisel bilgiler",
+      "career": "[DE] Kariyer",
+      "payments": "[DE] Ödemeler",
+      "leave": "[DE] İzinler",
+      "overtime": "[DE] Fazla mesailer",
+      "other": "[DE] Diğer",
+      "account": "[DE] Hesap"
+    },
+    "tabNotes": {
+      "personal": "[DE] Kişisel bilgiler (kimlik, adres, iletişim, aile) Faz 1a'da bu sekmeye gelecek.",
+      "payments": "[DE] Maaş ve ödeme bilgileri Faz 1a'da bu sekmeye gelecek.",
+      "leave": "[DE] İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
+      "overtime": "[DE] Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
+      "other": "[DE] Zimmetler, eğitimler ve dosyalar sonraki fazlarda bu sekmeye eklenecek."
+    },
     "noAccountHint": "[DE] This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "[DE] Only an account owner can grant or revoke the account owner role.",
     "accessTypeSaved": "[DE] Access type updated."

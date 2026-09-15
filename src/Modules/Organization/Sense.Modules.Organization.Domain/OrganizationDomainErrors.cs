@@ -26,6 +26,7 @@ public static class OrganizationDomainErrors
     public const string ApprovalAssignmentOrgUnitRequired = "organization.approval_assignment.org_unit_required";
     public const string ApprovalAssignmentRequestTypeRequired = "organization.approval_assignment.request_type_required";
     public const string ApprovalAssignmentPolicyRequired = "organization.approval_assignment.policy_id_required";
+    public const string ApprovalAssignmentRequestTypeInvalid = "organization.approval_assignment.request_type_invalid";
 
     public const string HolidayCalendarNotFound = "organization.holiday_calendar.not_found";
     public const string HolidayCalendarNameRequired = "organization.holiday_calendar.name_required";

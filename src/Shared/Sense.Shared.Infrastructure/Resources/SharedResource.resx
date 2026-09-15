@@ -201,6 +201,15 @@
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Şirket yapısı seviyelerini yönetme</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Şirket ekleme</value></data>
   <data name="organization.holidays.view" xml:space="preserve"><value>Resmi tatilleri görüntüleme</value></data>
+  <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Birim onay süreçlerini yönetme</value></data>
+  <data name="organization.unit.not_found" xml:space="preserve"><value>Birim bulunamadı.</value></data>
+  <data name="organization.approval_assignment.org_unit_required" xml:space="preserve"><value>Birim zorunludur.</value></data>
+  <data name="organization.approval_assignment.request_type_required" xml:space="preserve"><value>Talep türü zorunludur.</value></data>
+  <data name="organization.approval_assignment.request_type_invalid" xml:space="preserve"><value>Talep türü harfle başlayan, yalnız harf ve rakam içeren en fazla 50 karakterlik bir kod olmalıdır.</value></data>
+  <data name="organization.approval_assignment.request_type_unknown" xml:space="preserve"><value>Bu talep türü için birime onay süreci atanamaz.</value></data>
+  <data name="organization.approval_assignment.duplicate_request_type" xml:space="preserve"><value>Aynı talep türü birden fazla kez gönderilemez.</value></data>
+  <data name="organization.approval_assignment.policy_id_required" xml:space="preserve"><value>Onay süreci seçilmelidir.</value></data>
+  <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>Pasif bir birime onay süreci atanamaz.</value></data>
 
   <!-- Identity: access settings, unit authorization, invitations, support access (Faz 0 P2) -->
   <data name="identity.access_settings.bypass" xml:space="preserve"><value>Erişim ayarı kısıtlarından etkilenmeme</value></data>

@@ -73,14 +73,19 @@ public static class OrganizationPermissions
     public static readonly Permission HolidaysView = new(
         HolidaysViewKey, Module, "View Holidays", Group, "View upcoming official holidays");
 
+    /// <summary>Assign/clear the approval policy per request type on an org unit ("Opsiyonel alanlar").</summary>
+    public static readonly Permission ApprovalAssignmentsManage = new(
+        ApprovalAssignmentsManageKey, Module, "Manage Unit Approval Policies", Group, "Assign or clear the approval policy of each request type on an organization unit");
+
     public const string UnitTypesManageKey = "organization.unit_types.manage";
     public const string CompaniesCreateKey = "organization.companies.create";
     public const string HolidaysViewKey = "organization.holidays.view";
+    public const string ApprovalAssignmentsManageKey = "organization.approval_assignments.manage";
 
     /// <summary>All Organization module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete,
          HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate,
          LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete,
-         UnitTypesManage, CompaniesCreate, HolidaysView];
+         UnitTypesManage, CompaniesCreate, HolidaysView, ApprovalAssignmentsManage];
 }

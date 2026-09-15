@@ -192,6 +192,15 @@
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Manage organization structure levels</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Add companies</value></data>
   <data name="organization.holidays.view" xml:space="preserve"><value>View official holidays</value></data>
+  <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Manage unit approval processes</value></data>
+  <data name="organization.unit.not_found" xml:space="preserve"><value>Unit not found.</value></data>
+  <data name="organization.approval_assignment.org_unit_required" xml:space="preserve"><value>Unit is required.</value></data>
+  <data name="organization.approval_assignment.request_type_required" xml:space="preserve"><value>Request type is required.</value></data>
+  <data name="organization.approval_assignment.request_type_invalid" xml:space="preserve"><value>Request type must be a code of at most 50 letters and digits starting with an uppercase letter.</value></data>
+  <data name="organization.approval_assignment.request_type_unknown" xml:space="preserve"><value>An approval process cannot be assigned to a unit for this request type.</value></data>
+  <data name="organization.approval_assignment.duplicate_request_type" xml:space="preserve"><value>The same request type cannot be sent more than once.</value></data>
+  <data name="organization.approval_assignment.policy_id_required" xml:space="preserve"><value>An approval process must be selected.</value></data>
+  <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>An approval process cannot be assigned to an inactive unit.</value></data>
 
   <!-- Identity: access settings, unit authorization, invitations, support access (Faz 0 P2) -->
   <data name="identity.access_settings.bypass" xml:space="preserve"><value>Bypass access setting restrictions</value></data>

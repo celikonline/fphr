@@ -19,4 +19,8 @@ public static class OrganizationErrors
     public const string CompanyNotFound = "organization.company.not_found";
     public const string LocationNotFound = "organization.location.not_found";
     public const string LocationInUse = "organization.location.in_use";
+
+    public const string ApprovalAssignmentRequestTypeUnknown = "organization.approval_assignment.request_type_unknown";
+    public const string ApprovalAssignmentDuplicateRequestType = "organization.approval_assignment.duplicate_request_type";
+    public const string ApprovalAssignmentOrgUnitInactive = "organization.approval_assignment.org_unit_inactive";
 }
