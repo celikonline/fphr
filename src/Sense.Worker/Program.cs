@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Persistence;
@@ -17,16 +18,25 @@ using Sense.Shared.Infrastructure.Persistence.Outbox;
 
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.Services.AddSenseCore(builder.Configuration);
+// Every module's outbox receives both Aggregate.Raise(...) domain events (AuditTenantInterceptor collects them on
+// SaveChanges) and explicit IIntegrationEventOutbox writes. EventTypeRegistry must know each polled module's
+// Domain+Contracts assemblies or OutboxProcessor retries forever with "Event type could not be resolved".
 builder.Services.AddModuleDbContext<IdentityDbContext>(builder.Configuration, IdentityDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    IdentityDbContext.SchemaName,
+    typeof(Sense.Modules.Identity.Contracts.AccessSettingKeys).Assembly,
+    typeof(IdentityDbContext).Assembly,
+    typeof(Sense.Modules.Identity.Domain.IUserRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<IdentityDbContext>>();
 
-// Organization writes integration events (see IIntegrationEventOutbox, e.g. OrgUnitApprovalPolicyChanged) that only
-// get delivered once this outbox is polled; EventTypeRegistry must know Organization's Domain+Contracts assemblies
-// or OutboxProcessor throws "unknown event type" on the first dequeued message. Identity/Documents/DataTransfer
-// don't write to their outbox yet (nothing calls IIntegrationEventOutbox for them), so wiring them up
-// here is deferred until they do - see faz1a-durum-takibi.md for the broader finding (domain events raised via
-// Aggregate.Raise(...) are never persisted/dispatched anywhere; this Faz 0 outbox only carries explicit
-// IIntegrationEventOutbox writes).
+builder.Services.AddModuleDbContext<DocumentsDbContext>(builder.Configuration, DocumentsDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    DocumentsDbContext.SchemaName,
+    typeof(Sense.Modules.Documents.Contracts.DocumentsPermissions).Assembly,
+    typeof(DocumentsDbContext).Assembly,
+    typeof(Sense.Modules.Documents.Domain.IDocumentRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<DocumentsDbContext>>();
+
 builder.Services.AddModuleDbContext<OrganizationDbContext>(builder.Configuration, OrganizationDbContext.SchemaName);
 builder.Services.AddModuleHandlers(
     OrganizationDbContext.SchemaName,
@@ -45,7 +55,7 @@ builder.Services.AddModuleHandlers(
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<EmployeeDbContext>>();
 
 // Workflow writes ApprovalCompleted/ApprovalRejected to its own outbox (see IIntegrationEventOutbox usages in
-// Sense.Modules.Workflow.Application's decision handlers) - same reasoning as Organization above.
+// Sense.Modules.Workflow.Application's decision handlers) - see the EventTypeRegistry note at the top.
 builder.Services.AddModuleDbContext<WorkflowDbContext>(builder.Configuration, WorkflowDbContext.SchemaName);
 builder.Services.AddModuleHandlers(
     WorkflowDbContext.SchemaName,
