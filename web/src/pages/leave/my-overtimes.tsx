@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, Button, Card, Group, Skeleton, Text, Title, Tooltip } from "@mantine/core";
 import { Clock, Undo2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -47,39 +45,50 @@ function MyOvertimes() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Title order={1} size="h2" className="flex items-center gap-2">
             <Clock className="h-6 w-6" /> {t("leave:overtime.myTitle")}
-          </h1>
-          <p className="text-muted-foreground">{t("leave:overtime.mySubtitle")}</p>
+          </Title>
+          <Text c="dimmed">{t("leave:overtime.mySubtitle")}</Text>
         </div>
         <Button type="button" onClick={() => setAdding(true)}>
           {t("leave:overtime.newRequest")}
         </Button>
-      </div>
+      </Group>
 
-      <Card>
-        <CardContent className="overflow-x-auto pt-6">
+      <Card withBorder padding="lg">
+        <div className="overflow-x-auto">
           {query.isLoading ? (
-            <Skeleton className="h-32 w-full" />
+            <Skeleton h={128} />
           ) : query.isError ? (
-            <p className="text-sm text-destructive">{getApiErrorMessage(query.error, t("leave:genericError"))}</p>
+            <Text size="sm" c="red">
+              {getApiErrorMessage(query.error, t("leave:genericError"))}
+            </Text>
           ) : (
             <OvertimesTable
               rows={query.data ?? []}
               actions={(row) =>
                 row.status === "pending" ? (
-                  <div className="flex justify-end">
-                    <Button type="button" variant="ghost" size="icon" title={t("leave:my.withdraw")} onClick={() => setWithdrawing(row)}>
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  <Group justify="flex-end" wrap="nowrap">
+                    <Tooltip label={t("leave:my.withdraw")}>
+                      <ActionIcon
+                        type="button"
+                        variant="subtle"
+                        color="gray"
+                        size="lg"
+                        aria-label={t("leave:my.withdraw")}
+                        onClick={() => setWithdrawing(row)}
+                      >
+                        <Undo2 className="h-4 w-4" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                 ) : null
               }
             />
           )}
-        </CardContent>
+        </div>
       </Card>
 
       {adding && (

@@ -2,16 +2,11 @@ import { useCallback, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Alert, Badge, Button, Group, Input, Modal, NumberInput, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
 import { AlertTriangle } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { TimePicker } from "@/components/ui/time-picker";
-import { Label } from "@/components/ui/label";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import type { OvertimeRequest, OvertimeRequestInput, OvertimeRequestStatus, OvertimeSubmission } from "@/services/leave.service";
@@ -52,17 +47,17 @@ export function formatTimeOnly(value: string): string {
   return value.slice(0, 5);
 }
 
-const STATUS_VARIANT: Record<OvertimeRequestStatus, BadgeProps["variant"]> = {
-  pending: "secondary",
-  approved: "success",
-  rejected: "destructive",
-  withdrawn: "outline",
-  cancelled: "outline",
+const STATUS_BADGE: Record<OvertimeRequestStatus, Pick<BadgeProps, "variant" | "color">> = {
+  pending: { variant: "light" },
+  approved: { variant: "filled", color: "green" },
+  rejected: { variant: "filled", color: "red" },
+  withdrawn: { variant: "outline", color: "gray" },
+  cancelled: { variant: "outline", color: "gray" },
 };
 
 export function OvertimeStatusBadge({ status }: { status: OvertimeRequestStatus }) {
   const { t } = useTranslation(["leave"]);
-  return <Badge variant={STATUS_VARIANT[status]}>{t(`leave:status.${status}`)}</Badge>;
+  return <Badge {...STATUS_BADGE[status]}>{t(`leave:status.${status}`)}</Badge>;
 }
 
 /** Overtime list (Tarih, Başlangıç, Süre, Ödenecek, Gün türü, Durum, Kaynak, Açıklama); newest work date first. */
@@ -124,7 +119,11 @@ export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; act
       cell: ({ row }) => (
         <div className="flex flex-wrap items-center gap-1">
           <OvertimeStatusBadge status={row.original.status} />
-          {row.original.conversionId && <Badge variant="outline">{t("leave:overtime.converted")}</Badge>}
+          {row.original.conversionId && (
+            <Badge variant="outline" color="gray">
+              {t("leave:overtime.converted")}
+            </Badge>
+          )}
         </div>
       ),
     },
@@ -165,16 +164,20 @@ export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; act
   });
 
   if (rows.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("leave:overtime.empty")}</p>;
+    return (
+      <Text size="sm" c="dimmed">
+        {t("leave:overtime.empty")}
+      </Text>
+    );
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-end">
+    <Stack gap="xs">
+      <Group justify="flex-end">
         <DataTableViewOptions table={table} />
-      </div>
+      </Group>
       <DataTable table={table} />
-    </div>
+    </Stack>
   );
 }
 
@@ -228,96 +231,113 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && (submission ? onSaved(submission) : onClose())}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
-        </DialogHeader>
+    <Modal opened onClose={() => (submission ? onSaved(submission) : onClose())} title={title} size="lg">
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {dialogDescription}
+        </Text>
         {submission ? (
-          <div className="space-y-4">
-            <p className="text-sm">{t("leave:overtime.savedWithWarnings", { payable: minutes(submission.payableMinutes) })}</p>
-            <ul className="space-y-2 rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-              {submission.warnings.map((code) => (
-                <li key={code} className="flex items-start gap-2">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                  <span>{warningText(code)}</span>
-                </li>
-              ))}
-            </ul>
-            <DialogFooter>
+          <>
+            <Text size="sm">{t("leave:overtime.savedWithWarnings", { payable: minutes(submission.payableMinutes) })}</Text>
+            <Alert color="yellow" variant="light" p="sm">
+              <ul className="space-y-2">
+                {submission.warnings.map((code) => (
+                  <li key={code} className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" color="var(--mantine-color-yellow-filled)" />
+                    <Text size="sm">{warningText(code)}</Text>
+                  </li>
+                ))}
+              </ul>
+            </Alert>
+            <Group justify="flex-end">
               <Button type="button" onClick={() => onSaved(submission)}>
                 {t("common:close")}
               </Button>
-            </DialogFooter>
-          </div>
+            </Group>
+          </>
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="overtime-date">
-                  {t("leave:overtime.workDate")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <DatePicker id="overtime-date" value={workDate} disabled={busy} onChange={setWorkDate} />
+          <form onSubmit={submit}>
+            <Stack gap="md">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input.Wrapper id="overtime-date" label={t("leave:overtime.workDate")} withAsterisk>
+                  <DatePicker id="overtime-date" value={workDate} disabled={busy} onChange={setWorkDate} />
+                </Input.Wrapper>
+                <Input.Wrapper id="overtime-start" label={t("leave:overtime.startTime")} withAsterisk>
+                  <TimePicker id="overtime-start" value={startTime} minuteStep={5} disabled={busy} onChange={setStartTime} />
+                </Input.Wrapper>
               </div>
-              <div>
-                <Label htmlFor="overtime-start">
-                  {t("leave:overtime.startTime")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <TimePicker id="overtime-start" value={startTime} minuteStep={5} disabled={busy} onChange={setStartTime} />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="overtime-hours">
-                {t("leave:overtime.duration")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <div className="mt-1 grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Input id="overtime-hours" type="number" min={0} max={24} step={1} value={hours} disabled={busy} onChange={(e) => setHours(e.target.value)} />
-                  <span className="text-sm text-muted-foreground">{t("leave:overtime.hoursUnit")}</span>
+              <Input.Wrapper
+                id="overtime-hours"
+                label={t("leave:overtime.duration")}
+                description={t("leave:overtime.durationHint")}
+                inputWrapperOrder={["label", "input", "description"]}
+                withAsterisk
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <Group gap="xs" wrap="nowrap">
+                    <NumberInput
+                      id="overtime-hours"
+                      className="flex-1"
+                      min={0}
+                      max={24}
+                      step={1}
+                      allowDecimal={false}
+                      allowNegative={false}
+                      value={hours}
+                      disabled={busy}
+                      onChange={(value) => setHours(String(value))}
+                    />
+                    <Text size="sm" c="dimmed">
+                      {t("leave:overtime.hoursUnit")}
+                    </Text>
+                  </Group>
+                  <Group gap="xs" wrap="nowrap">
+                    <NumberInput
+                      id="overtime-minutes"
+                      aria-label={t("leave:overtime.minutesUnit")}
+                      className="flex-1"
+                      min={0}
+                      max={59}
+                      step={1}
+                      allowDecimal={false}
+                      allowNegative={false}
+                      value={mins}
+                      disabled={busy}
+                      onChange={(value) => setMins(String(value))}
+                    />
+                    <Text size="sm" c="dimmed">
+                      {t("leave:overtime.minutesUnit")}
+                    </Text>
+                  </Group>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="overtime-minutes"
-                    aria-label={t("leave:overtime.minutesUnit")}
-                    type="number"
-                    min={0}
-                    max={59}
-                    step={1}
-                    value={mins}
-                    disabled={busy}
-                    onChange={(e) => setMins(e.target.value)}
-                  />
-                  <span className="text-sm text-muted-foreground">{t("leave:overtime.minutesUnit")}</span>
-                </div>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{t("leave:overtime.durationHint")}</p>
-            </div>
-            <div>
-              <Label htmlFor="overtime-description">{t("leave:requests.description")}</Label>
+              </Input.Wrapper>
               <Textarea
                 id="overtime-description"
+                label={t("leave:requests.description")}
                 value={description}
                 maxLength={DESCRIPTION_MAX_LENGTH}
                 disabled={busy}
-                onChange={(e) => setDescription(e.target.value)}
+                autosize
+                minRows={3}
+                onChange={(e) => setDescription(e.currentTarget.value)}
               />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-                {t("common:cancel")}
-              </Button>
-              <Button type="submit" disabled={busy}>
-                {busy ? t("common:saving") : submitLabel}
-              </Button>
-            </DialogFooter>
+              {error && (
+                <Text size="sm" c="red">
+                  {error}
+                </Text>
+              )}
+              <Group justify="flex-end">
+                <Button type="button" variant="default" onClick={onClose} disabled={busy}>
+                  {t("common:cancel")}
+                </Button>
+                <Button type="submit" disabled={busy}>
+                  {busy ? t("common:saving") : submitLabel}
+                </Button>
+              </Group>
+            </Stack>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </Stack>
+    </Modal>
   );
 }

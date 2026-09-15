@@ -1,12 +1,8 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { ActionIcon, Button, Group, Paper, Skeleton, Text, Title, Tooltip } from "@mantine/core";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
@@ -98,68 +94,87 @@ function LeaveCalendar() {
 
   const tooltip = (entry: LeaveCalendarEntry) => (
     <div className="space-y-0.5">
-      <p className="font-semibold">{entry.employeeName}</p>
-      <p>{typeLabel(entry)}</p>
-      <p>
+      <Text size="xs" fw={600}>
+        {entry.employeeName}
+      </Text>
+      <Text size="xs">{typeLabel(entry)}</Text>
+      <Text size="xs">
         {formatDateOnly(entry.startDate, i18n.language)} – {formatDateOnly(entry.endDate, i18n.language)} · {days(entry.calculatedDays)}{" "}
         {t("leave:days")}
-      </p>
-      <p>{t(`leave:status.${entry.status}`)}</p>
+      </Text>
+      <Text size="xs">{t(`leave:status.${entry.status}`)}</Text>
     </div>
   );
 
   return (
     <div className="mx-auto max-w-[96rem] space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <CalendarDays className="h-6 w-6" /> {t("leave:calendar.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("leave:calendar.subtitle")}</p>
-        </div>
+      <div>
+        <Title order={1} size="h2" className="flex items-center gap-2">
+          <CalendarDays className="h-6 w-6" /> {t("leave:calendar.title")}
+        </Title>
+        <Text c="dimmed">{t("leave:calendar.subtitle")}</Text>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="icon" title={t("leave:calendar.previous")} onClick={() => shift(-1)}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => setMonth(startOfMonth(new Date()))}>
+      <Group justify="space-between" gap="sm">
+        <Group gap="xs" wrap="nowrap">
+          <Tooltip label={t("leave:calendar.previous")}>
+            <ActionIcon type="button" variant="default" size="lg" aria-label={t("leave:calendar.previous")} onClick={() => shift(-1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </ActionIcon>
+          </Tooltip>
+          <Button type="button" variant="default" size="sm" onClick={() => setMonth(startOfMonth(new Date()))}>
             {t("leave:calendar.today")}
           </Button>
-          <Button type="button" variant="outline" size="icon" title={t("leave:calendar.next")} onClick={() => shift(1)}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <h2 className="ml-2 text-lg font-semibold capitalize">{monthLabel}</h2>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-5 rounded-sm bg-emerald-600" /> {t("leave:status.approved")}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-5 rounded-sm border border-amber-500" style={PENDING_STYLE} /> {t("leave:status.pending")}
-            </span>
-          </div>
+          <Tooltip label={t("leave:calendar.next")}>
+            <ActionIcon type="button" variant="default" size="lg" aria-label={t("leave:calendar.next")} onClick={() => shift(1)}>
+              <ChevronRight className="h-4 w-4" />
+            </ActionIcon>
+          </Tooltip>
+          <Title order={2} size="h4" ml="xs" tt="capitalize">
+            {monthLabel}
+          </Title>
+        </Group>
+        <Group gap="md">
+          <Group gap="sm" wrap="nowrap">
+            <Group gap={6} wrap="nowrap">
+              <span className="inline-block h-3 w-5 rounded-sm bg-emerald-600" />
+              <Text size="xs" c="dimmed">
+                {t("leave:status.approved")}
+              </Text>
+            </Group>
+            <Group gap={6} wrap="nowrap">
+              <span className="inline-block h-3 w-5 rounded-sm border border-amber-500" style={PENDING_STYLE} />
+              <Text size="xs" c="dimmed">
+                {t("leave:status.pending")}
+              </Text>
+            </Group>
+          </Group>
           {nameById.size > 0 && (
             <div className="w-64">
-              <Label htmlFor="calendar-unit" className="sr-only">
+              <label htmlFor="calendar-unit" className="sr-only">
                 {t("employees:fields.orgUnit")}
-              </Label>
+              </label>
               <OrgUnitSelect id="calendar-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:filters.allUnits")} />
             </div>
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
-      <Card>
-        <CardContent className="p-0">
+      {/* Paper (background = --mantine-color-body = --card) so the sticky name column matches the surface in both schemes. */}
+      <Paper withBorder className="overflow-hidden">
+        <div>
           {query.isLoading ? (
-            <Skeleton className="m-4 h-64" />
+            <div className="p-4">
+              <Skeleton h={256} />
+            </div>
           ) : query.isError ? (
-            <p className="p-4 text-sm text-destructive">{getApiErrorMessage(query.error, t("leave:genericError"))}</p>
+            <Text size="sm" c="red" p="md">
+              {getApiErrorMessage(query.error, t("leave:genericError"))}
+            </Text>
           ) : rows.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("leave:calendar.empty")}</p>
+            <Text size="sm" c="dimmed" p="md">
+              {t("leave:calendar.empty")}
+            </Text>
           ) : (
             <>
               {/* md+: employees × days grid */}
@@ -203,24 +218,23 @@ function LeaveCalendar() {
                       ))}
                       {row.lanes.flatMap((lane, laneIndex) =>
                         lane.map(({ entry, start, end }) => (
-                          <Tooltip key={entry.requestId}>
-                            <TooltipTrigger asChild>
-                              <div
-                                tabIndex={0}
-                                className={cn(
-                                  "relative z-10 mx-0.5 my-1 flex items-center overflow-hidden rounded px-1.5 text-[11px] font-medium",
-                                  entry.status === "approved" ? "bg-emerald-600 text-white" : "border border-amber-500 text-amber-950 dark:text-amber-100",
-                                )}
-                                style={{
-                                  gridColumn: `${start + 2} / ${end + 3}`,
-                                  gridRow: laneIndex + 1,
-                                  ...(entry.status === "pending" ? PENDING_STYLE : {}),
-                                }}
-                              >
-                                <span className="truncate">{typeLabel(entry)}</span>
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>{tooltip(entry)}</TooltipContent>
+                          <Tooltip key={entry.requestId} label={tooltip(entry)} multiline>
+                            <div
+                              tabIndex={0}
+                              className={cn(
+                                "relative z-10 mx-0.5 my-1 flex items-center overflow-hidden rounded px-1.5 text-[11px] font-medium",
+                                entry.status === "approved"
+                                  ? "bg-emerald-600 text-white"
+                                  : "border border-amber-500 text-amber-950 dark:text-amber-100",
+                              )}
+                              style={{
+                                gridColumn: `${start + 2} / ${end + 3}`,
+                                gridRow: laneIndex + 1,
+                                ...(entry.status === "pending" ? PENDING_STYLE : {}),
+                              }}
+                            >
+                              <span className="truncate">{typeLabel(entry)}</span>
+                            </div>
                           </Tooltip>
                         )),
                       )}
@@ -265,8 +279,8 @@ function LeaveCalendar() {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </Paper>
     </div>
   );
 }

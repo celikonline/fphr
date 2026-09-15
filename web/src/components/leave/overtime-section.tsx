@@ -1,21 +1,28 @@
-import { useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ArrowRightLeft, Clock, FileSignature, Plus, Repeat } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Input,
+  Modal,
+  NumberInput,
+  Paper,
+  Radio,
+  Select,
+  Skeleton,
+  Stack,
+  Switch,
+  Text,
+  Textarea,
+  Title,
+} from "@mantine/core";
+import { ArrowRightLeft, Clock, FileSignature, Plus, Repeat, type LucideIcon } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -53,6 +60,40 @@ const COLUMN_CHOOSER_CLASS = "h-9 px-3";
 
 /** Today as a backend DateOnly in the user's local calendar. */
 const todayDateOnly = () => toDateOnly(new Date());
+
+/** Bordered card with an icon + title header, optional header actions and a horizontally scrollable body. */
+function SectionCard({ icon: Icon, title, actions, children }: { icon: LucideIcon; title: string; actions?: ReactNode; children: ReactNode }) {
+  return (
+    <Card withBorder padding="lg">
+      <Group justify="space-between" gap="xs" mb="md">
+        <Group gap="xs" wrap="nowrap">
+          <Icon className="h-4 w-4" color="var(--mantine-color-dimmed)" />
+          <Title order={3} size="h4">
+            {title}
+          </Title>
+        </Group>
+        {actions && (
+          <Group gap="xs" justify="flex-end">
+            {actions}
+          </Group>
+        )}
+      </Group>
+      <div className="overflow-x-auto">{children}</div>
+    </Card>
+  );
+}
+
+function ErrorText({ children }: { children: ReactNode }) {
+  return (
+    <Text size="sm" c="red">
+      {children}
+    </Text>
+  );
+}
+
+function DialogFooter({ children }: { children: ReactNode }) {
+  return <Group justify="flex-end">{children}</Group>;
+}
 
 /**
  * Employee card "Fazla mesailer": overtime list (add on behalf, convert approved rows to time off), time-off conversions
@@ -97,47 +138,54 @@ export function OvertimeSection({ employee }: { employee: EmployeeDetail }) {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["leave"] });
 
   if (!canRead) {
-    return <p className="text-sm text-muted-foreground">{t("leave:overtime.noAccess")}</p>;
+    return (
+      <Text size="sm" c="dimmed">
+        {t("leave:overtime.noAccess")}
+      </Text>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{t("leave:overtime.cardTitle")}</CardTitle>
-          </div>
-          {canCreate && (
-            <Button type="button" size="sm" variant="outline" onClick={() => setAdding(true)}>
-              <Plus className="mr-2 h-4 w-4" /> {t("leave:overtime.addOnBehalf")}
+    <Stack gap="lg">
+      <SectionCard
+        icon={Clock}
+        title={t("leave:overtime.cardTitle")}
+        actions={
+          canCreate && (
+            <Button type="button" size="sm" variant="default" leftSection={<Plus className="h-4 w-4" />} onClick={() => setAdding(true)}>
+              {t("leave:overtime.addOnBehalf")}
             </Button>
-          )}
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
-          {overtimesQuery.isLoading ? (
-            <Skeleton className="h-32 w-full" />
-          ) : overtimesQuery.isError ? (
-            <p className="text-sm text-destructive">{getApiErrorMessage(overtimesQuery.error, t("leave:genericError"))}</p>
-          ) : (
-            <OvertimesTable
-              rows={overtimesQuery.data ?? []}
-              actions={
-                canConvert
-                  ? (row) =>
-                      row.status === "approved" && !row.conversionId ? (
-                        <div className="flex justify-end">
-                          <Button type="button" size="sm" variant="outline" onClick={() => setConverting(row)}>
-                            <ArrowRightLeft className="mr-2 h-4 w-4" /> {t("leave:overtime.convert")}
-                          </Button>
-                        </div>
-                      ) : null
-                  : undefined
-              }
-            />
-          )}
-        </CardContent>
-      </Card>
+          )
+        }
+      >
+        {overtimesQuery.isLoading ? (
+          <Skeleton h={128} />
+        ) : overtimesQuery.isError ? (
+          <ErrorText>{getApiErrorMessage(overtimesQuery.error, t("leave:genericError"))}</ErrorText>
+        ) : (
+          <OvertimesTable
+            rows={overtimesQuery.data ?? []}
+            actions={
+              canConvert
+                ? (row) =>
+                    row.status === "approved" && !row.conversionId ? (
+                      <Group justify="flex-end" wrap="nowrap">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="default"
+                          leftSection={<ArrowRightLeft className="h-4 w-4" />}
+                          onClick={() => setConverting(row)}
+                        >
+                          {t("leave:overtime.convert")}
+                        </Button>
+                      </Group>
+                    ) : null
+                : undefined
+            }
+          />
+        )}
+      </SectionCard>
 
       <ConversionsCard
         isLoading={conversionsQuery.isLoading}
@@ -178,7 +226,7 @@ export function OvertimeSection({ employee }: { employee: EmployeeDetail }) {
           }}
         />
       )}
-    </div>
+    </Stack>
   );
 }
 
@@ -271,7 +319,7 @@ function ConversionsCard({
       header: t("leave:requests.status"),
       meta: { label: t("leave:requests.status") },
       cell: ({ row }) => (
-        <Badge variant={row.original.status === "posted" ? "success" : "outline"}>
+        <Badge variant={row.original.status === "posted" ? "filled" : "outline"} color={row.original.status === "posted" ? "green" : "gray"}>
           {t(`leave:overtime.conversionStatus.${row.original.status}`)}
         </Badge>
       ),
@@ -286,26 +334,23 @@ function ConversionsCard({
   });
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-        <div className="flex items-center gap-2">
-          <Repeat className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-lg">{t("leave:overtime.conversionsTitle")}</CardTitle>
-        </div>
-        {!isLoading && !error && sorted.length > 0 && <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />}
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        {isLoading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : error ? (
-          <p className="text-sm text-destructive">{error}</p>
-        ) : sorted.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("leave:overtime.conversionsEmpty")}</p>
-        ) : (
-          <DataTable table={table} />
-        )}
-      </CardContent>
-    </Card>
+    <SectionCard
+      icon={Repeat}
+      title={t("leave:overtime.conversionsTitle")}
+      actions={!isLoading && !error && sorted.length > 0 && <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />}
+    >
+      {isLoading ? (
+        <Skeleton h={96} />
+      ) : error ? (
+        <ErrorText>{error}</ErrorText>
+      ) : sorted.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("leave:overtime.conversionsEmpty")}
+        </Text>
+      ) : (
+        <DataTable table={table} />
+      )}
+    </SectionCard>
   );
 }
 
@@ -353,97 +398,81 @@ function ConvertOvertimeDialog({ employeeId, overtime, allowFull, typeOptions, o
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("leave:overtime.convertTitle")}</DialogTitle>
-          <DialogDescription>
+    <Modal opened onClose={onClose} title={t("leave:overtime.convertTitle")} size="lg">
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
             {t("leave:overtime.convertDescription", {
               date: formatDateOnly(overtime.workDate, i18n.language),
               time: formatTimeOnly(overtime.startTime),
               duration: minutes(overtime.durationMinutes),
               payable: minutes(overtime.payableMinutes),
             })}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label>{t("leave:overtime.basis")}</Label>
-            <RadioGroup value={basis} onValueChange={(value) => setBasis(value as OvertimeMinutesBasis)} className="mt-2" disabled={busy}>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem id="basis-payable" value="payable" />
-                <Label htmlFor="basis-payable" className="font-normal">
-                  {t("leave:overtime.basisOptions.payable")} ({minutes(overtime.payableMinutes)})
-                </Label>
-              </div>
+          </Text>
+          <Radio.Group label={t("leave:overtime.basis")} value={basis} onChange={(value) => setBasis(value as OvertimeMinutesBasis)} disabled={busy}>
+            <Stack gap="xs" mt="xs">
+              <Radio id="basis-payable" value="payable" label={`${t("leave:overtime.basisOptions.payable")} (${minutes(overtime.payableMinutes)})`} />
               {allowFull && (
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem id="basis-full" value="full" />
-                  <Label htmlFor="basis-full" className="font-normal">
-                    {t("leave:overtime.basisOptions.full")} ({minutes(overtime.durationMinutes)})
-                  </Label>
-                </div>
+                <Radio id="basis-full" value="full" label={`${t("leave:overtime.basisOptions.full")} (${minutes(overtime.durationMinutes)})`} />
               )}
-            </RadioGroup>
-          </div>
+            </Stack>
+          </Radio.Group>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="convert-rate">
-                {t("leave:overtime.rate")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <Input
-                id="convert-rate"
-                type="number"
-                inputMode="decimal"
-                min={MIN_RATE}
-                max={MAX_RATE}
-                step="0.05"
-                value={rate}
-                disabled={busy}
-                onChange={(e) => setRate(e.target.value)}
-              />
-            </div>
+            <NumberInput
+              id="convert-rate"
+              label={t("leave:overtime.rate")}
+              withAsterisk
+              inputMode="decimal"
+              min={MIN_RATE}
+              max={MAX_RATE}
+              step={0.05}
+              allowNegative={false}
+              value={rate}
+              disabled={busy}
+              onChange={(value) => setRate(String(value))}
+            />
             {typeOptions.length > 0 && (
-              <div>
-                <Label htmlFor="convert-type">{t("leave:ledger.type")}</Label>
-                <Select value={leaveTypeId} onValueChange={setLeaveTypeId} disabled={busy}>
-                  <SelectTrigger id="convert-type">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={DEFAULT_TYPE}>{t("leave:overtime.defaultType")}</SelectItem>
-                    {typeOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select
+                id="convert-type"
+                label={t("leave:ledger.type")}
+                data={[
+                  { value: DEFAULT_TYPE, label: t("leave:overtime.defaultType") },
+                  ...typeOptions.map((option) => ({ value: option.id, label: option.name })),
+                ]}
+                value={leaveTypeId}
+                allowDeselect={false}
+                disabled={busy}
+                onChange={(value) => value && setLeaveTypeId(value)}
+              />
             )}
           </div>
           {rateValid && (
-            <p className="rounded-md border bg-muted/40 p-3 text-sm" aria-live="polite">
-              {t("leave:overtime.convertPreview", { minutes: minutes(Math.round(basisMinutes * parsedRate)) })}
-            </p>
+            <Paper withBorder p="sm" bg="var(--mantine-color-default-hover)" aria-live="polite">
+              <Text size="sm">{t("leave:overtime.convertPreview", { minutes: minutes(Math.round(basisMinutes * parsedRate)) })}</Text>
+            </Paper>
           )}
-          <div>
-            <Label htmlFor="convert-note">{t("leave:overtime.note")}</Label>
-            <Textarea id="convert-note" value={note} maxLength={NOTE_MAX_LENGTH} disabled={busy} onChange={(e) => setNote(e.target.value)} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Textarea
+            id="convert-note"
+            label={t("leave:overtime.note")}
+            value={note}
+            maxLength={NOTE_MAX_LENGTH}
+            disabled={busy}
+            autosize
+            minRows={3}
+            onChange={(e) => setNote(e.currentTarget.value)}
+          />
+          {error && <ErrorText>{error}</ErrorText>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={busy}>
               {busy ? t("common:saving") : t("leave:overtime.convert")}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -513,7 +542,10 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
       cell: ({ row }) => {
         const state = consentState(row.original, today);
         return (
-          <Badge variant={state === "inEffect" ? "success" : state === "revoked" ? "outline" : "secondary"}>
+          <Badge
+            variant={state === "inEffect" ? "filled" : state === "revoked" ? "outline" : "light"}
+            color={state === "inEffect" ? "green" : state === "revoked" ? "gray" : undefined}
+          >
             {t(`leave:overtime.consentStates.${state}`)}
           </Badge>
         );
@@ -528,7 +560,7 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
       cell: ({ row }) =>
         !row.original.revocationNoticeAt && (
           <div onClick={(event) => event.stopPropagation()}>
-            <Button type="button" size="sm" variant="ghost" onClick={() => setRevoking(row.original)}>
+            <Button type="button" size="sm" variant="subtle" onClick={() => setRevoking(row.original)}>
               {t("leave:overtime.revokeConsent")}
             </Button>
           </div>
@@ -544,30 +576,29 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
   });
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
-        <div className="flex items-center gap-2">
-          <FileSignature className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-lg">{t("leave:overtime.consentsTitle")}</CardTitle>
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-2">
+    <SectionCard
+      icon={FileSignature}
+      title={t("leave:overtime.consentsTitle")}
+      actions={
+        <>
           {!query.isLoading && !query.isError && sorted.length > 0 && <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />}
-          <Button type="button" size="sm" variant="outline" onClick={() => setRecording(true)}>
-            <Plus className="mr-2 h-4 w-4" /> {t("leave:overtime.recordConsent")}
+          <Button type="button" size="sm" variant="default" leftSection={<Plus className="h-4 w-4" />} onClick={() => setRecording(true)}>
+            {t("leave:overtime.recordConsent")}
           </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        {query.isLoading ? (
-          <Skeleton className="h-24 w-full" />
-        ) : query.isError ? (
-          <p className="text-sm text-destructive">{getApiErrorMessage(query.error, t("leave:genericError"))}</p>
-        ) : sorted.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("leave:overtime.consentsEmpty")}</p>
-        ) : (
-          <DataTable table={table} />
-        )}
-      </CardContent>
+        </>
+      }
+    >
+      {query.isLoading ? (
+        <Skeleton h={96} />
+      ) : query.isError ? (
+        <ErrorText>{getApiErrorMessage(query.error, t("leave:genericError"))}</ErrorText>
+      ) : sorted.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("leave:overtime.consentsEmpty")}
+        </Text>
+      ) : (
+        <DataTable table={table} />
+      )}
 
       {recording && (
         <RecordConsentDialog
@@ -597,7 +628,7 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
           }}
         />
       )}
-    </Card>
+    </SectionCard>
   );
 }
 
@@ -624,53 +655,53 @@ function RecordConsentDialog({ employeeId, onClose, onSaved }: { employeeId: str
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:overtime.recordConsent")}</DialogTitle>
-          <DialogDescription>{t("leave:overtime.recordConsentDescription")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+    <Modal opened onClose={onClose} title={t("leave:overtime.recordConsent")} size="md">
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("leave:overtime.recordConsentDescription")}
+          </Text>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="consent-date">
-                {t("leave:overtime.givenAt")}
-                <span className="text-destructive"> *</span>
-              </Label>
+            <Input.Wrapper id="consent-date" label={t("leave:overtime.givenAt")} withAsterisk>
               <DatePicker id="consent-date" value={givenAt} disabled={busy} onChange={setGivenAt} />
-            </div>
-            <div>
-              <Label htmlFor="consent-source">{t("leave:overtime.consentSource")}</Label>
-              <Select value={source} onValueChange={(value) => setSource(value as OvertimeConsentSource)} disabled={busy}>
-                <SelectTrigger id="consent-source">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="employmentContract">{t("leave:overtime.consentSources.employmentContract")}</SelectItem>
-                  <SelectItem value="standaloneForm">{t("leave:overtime.consentSources.standaloneForm")}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            </Input.Wrapper>
+            <Select
+              id="consent-source"
+              label={t("leave:overtime.consentSource")}
+              data={[
+                { value: "employmentContract", label: t("leave:overtime.consentSources.employmentContract") },
+                { value: "standaloneForm", label: t("leave:overtime.consentSources.standaloneForm") },
+              ]}
+              value={source}
+              allowDeselect={false}
+              disabled={busy}
+              onChange={(value) => value && setSource(value as OvertimeConsentSource)}
+            />
           </div>
-          <div className="flex items-start justify-between gap-4 rounded-md border p-3">
-            <div>
-              <Label htmlFor="consent-night">{t("leave:overtime.coversNightWork")}</Label>
-              <p className="mt-1 text-xs text-muted-foreground">{t("leave:overtime.coversNightWorkHint")}</p>
-            </div>
-            <Switch id="consent-night" checked={coversNightWork} onCheckedChange={setCoversNightWork} disabled={busy} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          <Paper withBorder p="sm">
+            <Switch
+              id="consent-night"
+              label={t("leave:overtime.coversNightWork")}
+              description={t("leave:overtime.coversNightWorkHint")}
+              labelPosition="left"
+              classNames={{ body: "justify-between gap-4" }}
+              checked={coversNightWork}
+              disabled={busy}
+              onChange={(event) => setCoversNightWork(event.currentTarget.checked)}
+            />
+          </Paper>
+          {error && <ErrorText>{error}</ErrorText>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={busy}>
               {busy ? t("common:saving") : t("common:save")}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -705,33 +736,26 @@ function RevokeConsentDialog({
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:overtime.revokeTitle")}</DialogTitle>
-          <DialogDescription>
+    <Modal opened onClose={onClose} title={t("leave:overtime.revokeTitle")} size="md">
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
             {t("leave:overtime.revokeDescription", { date: formatDateOnly(consent.givenAt, i18n.language) })}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label htmlFor="revoke-notice">
-              {t("leave:overtime.revocationNoticeAt")}
-              <span className="text-destructive"> *</span>
-            </Label>
+          </Text>
+          <Input.Wrapper id="revoke-notice" label={t("leave:overtime.revocationNoticeAt")} withAsterisk>
             <DatePicker id="revoke-notice" value={noticeAt} min={consent.givenAt} disabled={busy} onChange={setNoticeAt} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
+          </Input.Wrapper>
+          {error && <ErrorText>{error}</ErrorText>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" variant="destructive" disabled={busy}>
+            <Button type="submit" color="red" disabled={busy}>
               {busy ? t("common:saving") : t("leave:overtime.revokeConsent")}
             </Button>
           </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
