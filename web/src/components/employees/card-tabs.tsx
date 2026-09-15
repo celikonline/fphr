@@ -9,6 +9,7 @@ import type { EmployeeDetail } from "@/services/employees.service";
 import { CareerSection } from "./career-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
+import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
 
 export interface EmployeeCardTabProps {
   employee: EmployeeDetail;
@@ -67,7 +68,7 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     permission: ["employee.salary.view", "employee.employees.read", "employee.my.view"],
     component: PaymentsSection,
   },
-  { key: "leave", labelKey: "employees:card.tabs.leave", phase: "1b", component: tabPlaceholder("leave", "1b") },
+  { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, component: LeaveSection },
   { key: "overtime", labelKey: "employees:card.tabs.overtime", phase: "1b", component: tabPlaceholder("overtime", "1b") },
   { key: "other", labelKey: "employees:card.tabs.other", component: tabPlaceholder("other") },
   { key: "account", labelKey: "employees:card.tabs.account", component: AccountSection },

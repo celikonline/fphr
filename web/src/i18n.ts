@@ -29,6 +29,7 @@ i18n
       "audit",
       "workflow",
       "notifications",
+      "leave",
     ],
     interpolation: {
       escapeValue: false,

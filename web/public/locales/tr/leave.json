@@ -1,0 +1,221 @@
+{
+  "days": "gün",
+  "noAccess": "İzin bilgilerini görüntüleme yetkiniz yok.",
+  "genericError": "İşlem sırasında bir hata oluştu.",
+  "names": {
+    "rule_set_seed_turkish_labour_law": "Örnek Türk İş Kanunu kuralı",
+    "type_annual": "Yıllık izin",
+    "type_excuse": "Mazeret izni",
+    "type_sick": "Hastalık izni",
+    "type_job_search": "Yeni iş arama izni",
+    "type_marriage": "Evlilik izni",
+    "type_bereavement": "Ölüm izni",
+    "type_paternity": "Babalık izni",
+    "type_maternity": "Doğum izni",
+    "type_postnatal_unpaid": "Doğum sonrası ücretsiz izin",
+    "type_paid_military_service": "Bedelli askerlik izni",
+    "type_unpaid": "Ücretsiz izin",
+    "type_foster_care": "Koruyucu aile izni",
+    "type_template_remote_work": "Uzaktan Çalışma",
+    "type_template_birthday": "Doğum günü izni"
+  },
+  "code": {
+    "custom": "Özel izin",
+    "annual": "Yıllık izin",
+    "excuse": "Mazeret izni",
+    "sick": "Hastalık izni",
+    "jobSearch": "Yeni iş arama izni",
+    "marriage": "Evlilik izni",
+    "bereavement": "Ölüm izni",
+    "paternity": "Babalık izni",
+    "maternity": "Doğum izni",
+    "postnatalUnpaid": "Doğum sonrası ücretsiz izin",
+    "paidMilitaryService": "Bedelli askerlik izni",
+    "unpaid": "Ücretsiz izin",
+    "fosterCare": "Koruyucu aile izni",
+    "remoteWork": "Uzaktan Çalışma",
+    "birthday": "Doğum günü izni"
+  },
+  "status": {
+    "pending": "Bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "withdrawn": "Geri çekildi",
+    "cancelled": "İptal edildi"
+  },
+  "requestSource": {
+    "selfService": "Talep",
+    "onBehalf": "Yönetici",
+    "import": "İçe aktarım",
+    "attendance": "Puantaj",
+    "resubmission": "Yeniden gönderim"
+  },
+  "ledgerType": {
+    "openingBalance": "Açılış bakiyesi",
+    "accrual": "Hak ediş",
+    "carryOver": "Devir",
+    "usage": "Kullanım",
+    "adjustment": "Düzeltme",
+    "extraGrant": "Ekstra izin"
+  },
+  "ledgerSource": {
+    "system": "Sistem",
+    "manual": "Elle",
+    "import": "İçe aktarım",
+    "request": "Talep",
+    "overtimeConversion": "Fazla mesai dönüşümü"
+  },
+  "limitType": {
+    "unlimited": "Limitsiz",
+    "perRequest": "Her talep için limitli",
+    "perYear": "Yıl içinde limitli"
+  },
+  "accrualFrequency": {
+    "yearly": "Yıllık",
+    "monthly": "Aylık",
+    "daily": "Günlük"
+  },
+  "carryOverMode": {
+    "reset": "Sıfırlansın",
+    "unlimited": "Limitsiz devretme",
+    "limited": "Limitli devretme"
+  },
+  "unit": {
+    "fullDay": "Tam gün",
+    "halfDay": "Yarım gün",
+    "hourly": "Saatlik"
+  },
+  "summary": {
+    "title": "Özet",
+    "details": "Detaylar",
+    "unavailable": "İzin bakiyesi bulunamadı.",
+    "noBalances": "Bakiye tutan (yıl içinde limitli) izin türü yok.",
+    "hireDate": "İşe giriş tarihi",
+    "accrualStartDate": "İzne esas hak ediş tarihi",
+    "available": "Kullanılabilir",
+    "currentPeriod": "Güncel hak ediş dönemi",
+    "totalAccrued": "Toplam hak edilen",
+    "totalUsed": "Toplam kullanılan",
+    "futureApprovedInPeriod": "Dönemdeki ileri tarihli onaylanmış izinler",
+    "currentBalance": "Güncel bakiye",
+    "availableBalance": "Kullanılabilir izin bakiyesi",
+    "lastPeriodAccrued": "Son dönemde hak edilen",
+    "currentPeriodUsed": "Dönemde kullanılan",
+    "nextPeriodApproved": "Sonraki dönem onaylanmış izinler",
+    "carriedOver": "Güncel döneme devreden",
+    "extraGrants": "Ekstra izinler",
+    "nextAccrualDate": "Sonraki izin hak ediş tarihi"
+  },
+  "ledger": {
+    "title": "İzin defteri",
+    "description": "Hak ediş, devir, kullanım ve düzeltme kayıtları.",
+    "allTypes": "Tüm türler",
+    "empty": "Kayıt yok.",
+    "effectiveDate": "Tarih",
+    "type": "İzin türü",
+    "entryType": "Kayıt türü",
+    "amount": "Gün",
+    "source": "Kaynak",
+    "reason": "Açıklama",
+    "recordedAt": "Kayıt zamanı"
+  },
+  "requests": {
+    "title": "İzin talepleri",
+    "empty": "İzin talebi yok.",
+    "type": "Tür",
+    "startDate": "Başlangıç",
+    "endDate": "Bitiş",
+    "days": "Gün",
+    "status": "Durum",
+    "source": "Kaynak",
+    "description": "Açıklama"
+  },
+  "my": {
+    "title": "İzinlerim",
+    "subtitle": "İzin bakiyeleriniz ve talepleriniz.",
+    "newRequest": "+ Talep",
+    "edit": "Düzenle",
+    "withdraw": "Geri çek",
+    "withdrawTitle": "Talep geri çekilsin mi?",
+    "withdrawDescription": "{{type}} ({{start}} – {{end}}) talebi geri çekilecek ve onay süreci iptal edilecek.",
+    "withdrawn": "Talep geri çekildi.",
+    "submitted": "İzin talebiniz gönderildi.",
+    "updated": "İzin talebiniz güncellendi."
+  },
+  "form": {
+    "newTitle": "İzin talebi",
+    "editTitle": "İzin talebini düzenle",
+    "dialogDescription": "Gün sayısı çalışma takvimi ve resmi tatillere göre sistemce hesaplanır.",
+    "type": "İzin türü",
+    "startDate": "Başlangıç",
+    "endDate": "Bitiş",
+    "description": "Açıklama",
+    "submit": "Gönder",
+    "noTypes": "Talep edilebilecek izin türü bulunamadı.",
+    "available": "Kullanılabilir bakiye: {{days}} gün",
+    "perRequestMax": "Bir talepte en fazla {{days}} gün.",
+    "calculatedDays": "Hesaplanan gün: {{days}}",
+    "typesLimited": "Yalnız bakiyeli izin türleri listeleniyor.",
+    "validation": {
+      "typeRequired": "İzin türü seçin.",
+      "datesRequired": "Başlangıç ve bitiş tarihi zorunludur.",
+      "range": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
+      "descriptionRequired": "Bu izin türünde açıklama zorunludur."
+    }
+  },
+  "ruleSets": {
+    "title": "İzin kuralları",
+    "subtitle": "Kural setleri ve izin türleri.",
+    "default": "Varsayılan",
+    "systemSeed": "Sistem",
+    "typeCount": "{{active}} aktif / {{inactive}} pasif tür",
+    "assignedCount": "{{count}} çalışan",
+    "clone": "Kopyala ve düzenle",
+    "cloneTitle": "Kural setini kopyala",
+    "cloneDescription": "\"{{name}}\" kural seti türleriyle birlikte yeni bir ada kopyalanır.",
+    "name": "Ad",
+    "copySuffix": "(kopya)",
+    "cloned": "Kural seti kopyalandı.",
+    "empty": "Kural seti yok.",
+    "typesTitle": "İzin türleri",
+    "noTypes": "Bu kural setinde tür yok.",
+    "col": {
+      "name": "Tür adı",
+      "code": "Kod",
+      "paid": "Ücret",
+      "limit": "Limit",
+      "accrual": "Hak ediş sıklığı",
+      "carryOver": "Devretme",
+      "unit": "Birim",
+      "calendar": "Takvimde tür adı",
+      "status": "Durum"
+    },
+    "paid": "Ücretli",
+    "unpaid": "Ücretsiz",
+    "active": "Aktif",
+    "disabled": "Devre dışı",
+    "visible": "Görünür",
+    "hidden": "Gizli",
+    "nameRequired": "Ad zorunludur."
+  },
+  "actions": {
+    "menu": "İşlemler",
+    "adjust": "Bakiye düzeltmesi",
+    "recalculate": "Bakiyeyi yeniden hesapla",
+    "recalculateTitle": "Bakiye yeniden hesaplansın mı?",
+    "recalculateDescription": "Hak ediş ve devir kayıtları güncel kurallara göre yeniden üretilir; kullanım, düzeltme ve ekstra izin kayıtları korunur.",
+    "recalculated": "Bakiye yeniden hesaplandı.",
+    "adjusted": "Bakiye düzeltmesi kaydedildi.",
+    "adjustDescription": "Artı değer bakiyeye ekler, eksi değer düşer. Kayıt izin defterine yazılır.",
+    "type": "İzin türü",
+    "days": "Gün (±)",
+    "effectiveDate": "Etki tarihi",
+    "reason": "Gerekçe",
+    "validation": {
+      "typeRequired": "İzin türü seçin.",
+      "daysInvalid": "Gün sayısı sıfırdan farklı bir sayı olmalıdır.",
+      "dateRequired": "Etki tarihi zorunludur.",
+      "reasonRequired": "Gerekçe zorunludur."
+    }
+  }
+}

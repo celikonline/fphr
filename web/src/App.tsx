@@ -29,6 +29,8 @@ import ApprovalFlowsPage from "@/pages/settings/approval-flows";
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
+import MyLeavePage from "@/pages/leave/my-leave";
+import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -85,6 +87,7 @@ export default function App() {
           <Route path="account" element={<AccountPage />} />
           <Route path="inbox" element={<WorkflowInboxPage />} />
           <Route path="notifications/settings" element={<NotificationPreferencesPage />} />
+          <Route path="leave" element={<MyLeavePage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />
@@ -109,6 +112,7 @@ export default function App() {
           <Route path="settings/system/billing" element={<ComingSoonPage titleKey="settings.billing" phase={8} />} />
           <Route path="settings/data-transfer" element={<DataTransferPage />} />
           <Route path="settings/data-transfer/jobs/:id" element={<DataTransferJobPage />} />
+          <Route path="settings/leave/rule-sets" element={<LeaveRuleSetsPage />} />
 
           {/* Old paths (pre settings IA) */}
           <Route path="organization" element={<Navigate to={STRUCTURE_PATH} replace />} />

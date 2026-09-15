@@ -1,0 +1,221 @@
+{
+  "days": "days",
+  "noAccess": "You don't have permission to view leave information.",
+  "genericError": "Something went wrong.",
+  "names": {
+    "rule_set_seed_turkish_labour_law": "Sample Turkish Labour Law rule set",
+    "type_annual": "Annual leave",
+    "type_excuse": "Excuse leave",
+    "type_sick": "Sick leave",
+    "type_job_search": "Job search leave",
+    "type_marriage": "Marriage leave",
+    "type_bereavement": "Bereavement leave",
+    "type_paternity": "Paternity leave",
+    "type_maternity": "Maternity leave",
+    "type_postnatal_unpaid": "Postnatal unpaid leave",
+    "type_paid_military_service": "Paid military service leave",
+    "type_unpaid": "Unpaid leave",
+    "type_foster_care": "Foster care leave",
+    "type_template_remote_work": "Remote Work",
+    "type_template_birthday": "Birthday leave"
+  },
+  "code": {
+    "custom": "Custom leave",
+    "annual": "Annual leave",
+    "excuse": "Excuse leave",
+    "sick": "Sick leave",
+    "jobSearch": "Job search leave",
+    "marriage": "Marriage leave",
+    "bereavement": "Bereavement leave",
+    "paternity": "Paternity leave",
+    "maternity": "Maternity leave",
+    "postnatalUnpaid": "Postnatal unpaid leave",
+    "paidMilitaryService": "Paid military service leave",
+    "unpaid": "Unpaid leave",
+    "fosterCare": "Foster care leave",
+    "remoteWork": "Remote Work",
+    "birthday": "Birthday leave"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "withdrawn": "Withdrawn",
+    "cancelled": "Cancelled"
+  },
+  "requestSource": {
+    "selfService": "Request",
+    "onBehalf": "Manager",
+    "import": "Import",
+    "attendance": "Timesheet",
+    "resubmission": "Resubmission"
+  },
+  "ledgerType": {
+    "openingBalance": "Opening balance",
+    "accrual": "Accrual",
+    "carryOver": "Carry-over",
+    "usage": "Usage",
+    "adjustment": "Adjustment",
+    "extraGrant": "Extra leave"
+  },
+  "ledgerSource": {
+    "system": "System",
+    "manual": "Manual",
+    "import": "Import",
+    "request": "Request",
+    "overtimeConversion": "Overtime conversion"
+  },
+  "limitType": {
+    "unlimited": "Unlimited",
+    "perRequest": "Limited per request",
+    "perYear": "Limited per year"
+  },
+  "accrualFrequency": {
+    "yearly": "Yearly",
+    "monthly": "Monthly",
+    "daily": "Daily"
+  },
+  "carryOverMode": {
+    "reset": "Reset",
+    "unlimited": "Unlimited carry-over",
+    "limited": "Limited carry-over"
+  },
+  "unit": {
+    "fullDay": "Full day",
+    "halfDay": "Half day",
+    "hourly": "Hourly"
+  },
+  "summary": {
+    "title": "Summary",
+    "details": "Details",
+    "unavailable": "No leave balance found.",
+    "noBalances": "No leave type with a yearly balance.",
+    "hireDate": "Hire date",
+    "accrualStartDate": "Leave accrual start date",
+    "available": "Available",
+    "currentPeriod": "Current accrual period",
+    "totalAccrued": "Total accrued",
+    "totalUsed": "Total used",
+    "futureApprovedInPeriod": "Future approved leave in period",
+    "currentBalance": "Current balance",
+    "availableBalance": "Available leave balance",
+    "lastPeriodAccrued": "Accrued in last period",
+    "currentPeriodUsed": "Used in period",
+    "nextPeriodApproved": "Approved leave in next period",
+    "carriedOver": "Carried over into period",
+    "extraGrants": "Extra leave",
+    "nextAccrualDate": "Next accrual date"
+  },
+  "ledger": {
+    "title": "Leave ledger",
+    "description": "Accrual, carry-over, usage and adjustment entries.",
+    "allTypes": "All types",
+    "empty": "No entries.",
+    "effectiveDate": "Date",
+    "type": "Leave type",
+    "entryType": "Entry type",
+    "amount": "Days",
+    "source": "Source",
+    "reason": "Note",
+    "recordedAt": "Recorded at"
+  },
+  "requests": {
+    "title": "Leave requests",
+    "empty": "No leave requests.",
+    "type": "Type",
+    "startDate": "Start",
+    "endDate": "End",
+    "days": "Days",
+    "status": "Status",
+    "source": "Source",
+    "description": "Description"
+  },
+  "my": {
+    "title": "My leave",
+    "subtitle": "Your leave balances and requests.",
+    "newRequest": "+ Request",
+    "edit": "Edit",
+    "withdraw": "Withdraw",
+    "withdrawTitle": "Withdraw request?",
+    "withdrawDescription": "The {{type}} request ({{start}} – {{end}}) will be withdrawn and its approval cancelled.",
+    "withdrawn": "Request withdrawn.",
+    "submitted": "Your leave request was submitted.",
+    "updated": "Your leave request was updated."
+  },
+  "form": {
+    "newTitle": "Leave request",
+    "editTitle": "Edit leave request",
+    "dialogDescription": "Days are calculated from the work schedule and public holidays.",
+    "type": "Leave type",
+    "startDate": "Start",
+    "endDate": "End",
+    "description": "Description",
+    "submit": "Submit",
+    "noTypes": "No requestable leave type found.",
+    "available": "Available balance: {{days}} days",
+    "perRequestMax": "At most {{days}} days per request.",
+    "calculatedDays": "Calculated days: {{days}}",
+    "typesLimited": "Only leave types with a balance are listed.",
+    "validation": {
+      "typeRequired": "Select a leave type.",
+      "datesRequired": "Start and end dates are required.",
+      "range": "End date cannot be before the start date.",
+      "descriptionRequired": "A description is required for this leave type."
+    }
+  },
+  "ruleSets": {
+    "title": "Leave policies",
+    "subtitle": "Rule sets and leave types.",
+    "default": "Default",
+    "systemSeed": "System",
+    "typeCount": "{{active}} active / {{inactive}} disabled types",
+    "assignedCount": "{{count}} employees",
+    "clone": "Copy and edit",
+    "cloneTitle": "Copy rule set",
+    "cloneDescription": "\"{{name}}\" is copied with its types under a new name.",
+    "name": "Name",
+    "copySuffix": "(copy)",
+    "cloned": "Rule set copied.",
+    "empty": "No rule sets.",
+    "typesTitle": "Leave types",
+    "noTypes": "This rule set has no types.",
+    "col": {
+      "name": "Type name",
+      "code": "Code",
+      "paid": "Pay",
+      "limit": "Limit",
+      "accrual": "Accrual frequency",
+      "carryOver": "Carry-over",
+      "unit": "Unit",
+      "calendar": "Type name on calendar",
+      "status": "Status"
+    },
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "active": "Active",
+    "disabled": "Disabled",
+    "visible": "Visible",
+    "hidden": "Hidden",
+    "nameRequired": "Name is required."
+  },
+  "actions": {
+    "menu": "Actions",
+    "adjust": "Balance adjustment",
+    "recalculate": "Recalculate balance",
+    "recalculateTitle": "Recalculate balance?",
+    "recalculateDescription": "Accrual and carry-over entries are regenerated from the current rules; usage, adjustment and extra leave entries are kept.",
+    "recalculated": "Balance recalculated.",
+    "adjusted": "Balance adjustment saved.",
+    "adjustDescription": "A positive value adds to the balance, a negative value deducts. The entry is written to the leave ledger.",
+    "type": "Leave type",
+    "days": "Days (±)",
+    "effectiveDate": "Effective date",
+    "reason": "Reason",
+    "validation": {
+      "typeRequired": "Select a leave type.",
+      "daysInvalid": "Days must be a non-zero number.",
+      "dateRequired": "Effective date is required.",
+      "reasonRequired": "Reason is required."
+    }
+  }
+}
