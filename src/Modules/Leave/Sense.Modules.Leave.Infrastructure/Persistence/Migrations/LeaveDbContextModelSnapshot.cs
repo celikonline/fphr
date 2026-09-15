@@ -421,6 +421,303 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Sense.Modules.Leave.Domain.Overtime.OvertimeConsent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("CoversNightWork")
+                        .HasColumnType("boolean")
+                        .HasColumnName("covers_night_work");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid?>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly>("GivenAt")
+                        .HasColumnType("date")
+                        .HasColumnName("given_at");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid?>("RecordedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recorded_by_user_id");
+
+                    b.Property<DateOnly?>("RevocationEffectiveAt")
+                        .HasColumnType("date")
+                        .HasColumnName("revocation_effective_at");
+
+                    b.Property<DateOnly?>("RevocationNoticeAt")
+                        .HasColumnType("date")
+                        .HasColumnName("revocation_notice_at");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_overtime_consents");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_overtime_consents_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_overtime_consents_tenant_id_employee_id");
+
+                    b.ToTable("overtime_consents", "leave");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Leave.Domain.Overtime.OvertimeConversion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BasisMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("basis_minutes");
+
+                    b.Property<DateTime>("ConvertedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("converted_at");
+
+                    b.Property<Guid?>("ConvertedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("converted_by_user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int>("DailyWorkMinutesSnapshot")
+                        .HasColumnType("integer")
+                        .HasColumnName("daily_work_minutes_snapshot");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid?>("LeaveTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("leave_type_id");
+
+                    b.Property<Guid?>("LedgerEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("ledger_entry_id");
+
+                    b.Property<string>("MinutesBasis")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("minutes_basis");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("OvertimeRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("overtime_request_id");
+
+                    b.Property<decimal>("RateSnapshot")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("rate_snapshot");
+
+                    b.Property<decimal>("ResultDays")
+                        .HasPrecision(9, 4)
+                        .HasColumnType("numeric(9,4)")
+                        .HasColumnName("result_days");
+
+                    b.Property<int>("ResultMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("result_minutes");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_overtime_conversions");
+
+                    b.HasIndex("OvertimeRequestId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_overtime_conversions_overtime_request_id")
+                        .HasFilter("status = 'Posted'");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_overtime_conversions_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_overtime_conversions_tenant_id_employee_id");
+
+                    b.ToTable("overtime_conversions", "leave");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Leave.Domain.Overtime.OvertimeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approval_request_id");
+
+                    b.Property<Guid?>("ConversionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conversion_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DayKind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("day_kind");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DurationMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_minutes");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<int>("OverlapWithScheduleMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("overlap_with_schedule_minutes");
+
+                    b.Property<int>("PayableMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("payable_minutes");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<Guid?>("SubmittedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("submitted_by_user_id");
+
+                    b.Property<string>("SubmittedIpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("submitted_ip_address");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("WorkDate")
+                        .HasColumnType("date")
+                        .HasColumnName("work_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_overtime_requests");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_overtime_requests_tenant_id");
+
+                    b.HasIndex("TenantId", "ApprovalRequestId")
+                        .HasDatabaseName("ix_overtime_requests_tenant_id_approval_request_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WorkDate")
+                        .HasDatabaseName("ix_overtime_requests_tenant_id_employee_id_work_date");
+
+                    b.ToTable("overtime_requests", "leave");
+                });
+
             modelBuilder.Entity("Sense.Modules.Leave.Domain.Profiles.EmployeeLeaveProfile", b =>
                 {
                     b.Property<Guid>("Id")

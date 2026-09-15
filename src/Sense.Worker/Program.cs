@@ -9,6 +9,7 @@ using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
@@ -18,7 +19,6 @@ using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
-using Sense.Modules.Leave.Infrastructure;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -100,28 +100,29 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext).Assembly,
     typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
+builder.Services.AddLeaveBalanceRecalculationJob();
 
 await builder.Build().RunAsync();
 
 namespace Sense.Worker
 {
-/// <summary>Faz 0: Hangfire gelene kadar basit polling ile modül outbox'ını işler.</summary>
-public sealed class OutboxPollingService<TContext>(IServiceProvider services, IOptions<OutboxOptions> options) : BackgroundService
-    where TContext : Sense.Shared.Infrastructure.Persistence.ModuleDbContext
-{
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    /// <summary>Faz 0: Hangfire gelene kadar basit polling ile modül outbox'ını işler.</summary>
+    public sealed class OutboxPollingService<TContext>(IServiceProvider services, IOptions<OutboxOptions> options) : BackgroundService
+        where TContext : Sense.Shared.Infrastructure.Persistence.ModuleDbContext
     {
-        var interval = TimeSpan.FromSeconds(options.Value.PollingIntervalSeconds);
-        while (!stoppingToken.IsCancellationRequested)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var scope = services.CreateScope();
-            var processor = scope.ServiceProvider.GetRequiredService<OutboxProcessor<TContext>>();
-            var processed = await processor.ProcessAsync(stoppingToken);
-            if (processed == 0)
+            var interval = TimeSpan.FromSeconds(options.Value.PollingIntervalSeconds);
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await Task.Delay(interval, stoppingToken);
+                using var scope = services.CreateScope();
+                var processor = scope.ServiceProvider.GetRequiredService<OutboxProcessor<TContext>>();
+                var processed = await processor.ProcessAsync(stoppingToken);
+                if (processed == 0)
+                {
+                    await Task.Delay(interval, stoppingToken);
+                }
             }
         }
     }
-}
 }

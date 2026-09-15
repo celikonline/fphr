@@ -56,8 +56,11 @@ public sealed class LeaveIntegrationTests : TestFixture
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();
         scope.ServiceProvider.GetServices<IIntegrationEventHandler<EmployeeHired>>().ShouldHaveSingleItem();
-        scope.ServiceProvider.GetServices<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalCompleted>>().ShouldHaveSingleItem();
-        scope.ServiceProvider.GetServices<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalRejected>>().ShouldHaveSingleItem();
+        // Leave requests and overtime requests each handle Workflow decisions for their own request type.
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalCompleted>>().Select(h => h.GetType().Name)
+            .ShouldBe(["LeaveApprovalCompletedHandler", "OvertimeApprovalCompletedHandler"], ignoreOrder: true);
+        scope.ServiceProvider.GetServices<IIntegrationEventHandler<Sense.Modules.Workflow.Contracts.Events.ApprovalRejected>>().Select(h => h.GetType().Name)
+            .ShouldBe(["LeaveApprovalRejectedHandler", "OvertimeApprovalRejectedHandler"], ignoreOrder: true);
     }
 
     [Fact]

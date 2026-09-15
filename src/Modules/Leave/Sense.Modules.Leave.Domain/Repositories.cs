@@ -1,4 +1,5 @@
 using Sense.Modules.Leave.Domain.Ledger;
+using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
@@ -48,4 +49,32 @@ public interface ILeaveRequestRepository
 
     /// <summary>Total days of the employee's pending requests of one type (reservations not yet in the ledger).</summary>
     Task<decimal> SumPendingDaysAsync(Guid employeeId, Guid leaveTypeId, CancellationToken cancellationToken = default);
+}
+
+public interface IOvertimeRequestRepository
+{
+    void Add(OvertimeRequest request);
+
+    Task<OvertimeRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OvertimeRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Pending/approved requests of the employee whose work date is inside [from, to].</summary>
+    Task<IReadOnlyList<OvertimeRequest>> ListActiveAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface IOvertimeConsentRepository
+{
+    void Add(OvertimeConsent consent);
+
+    Task<OvertimeConsent?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+public interface IOvertimeConversionRepository
+{
+    void Add(OvertimeConversion conversion);
+
+    Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 }

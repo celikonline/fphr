@@ -499,4 +499,28 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="leave.errors.above_max_days" xml:space="preserve"><value>At most {max} days can be requested for this leave type.</value></data>
   <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>Insufficient leave balance (available: {available} days).</value></data>
   <data name="leave.errors.description_required" xml:space="preserve"><value>A description is required for this leave type.</value></data>
+  <data name="leave.overtimes.read" xml:space="preserve"><value>View overtime</value></data>
+  <data name="leave.my.overtimes" xml:space="preserve"><value>Manage my overtime requests</value></data>
+  <data name="leave.overtimes.create_on_behalf" xml:space="preserve"><value>Add overtime for employees</value></data>
+  <data name="leave.overtimes.convert" xml:space="preserve"><value>Convert overtime to extra leave</value></data>
+  <data name="leave.overtimes.override_payable" xml:space="preserve"><value>Convert the full duration instead of payable minutes</value></data>
+  <data name="leave.overtime_consents.manage" xml:space="preserve"><value>Manage overtime consents</value></data>
+  <data name="leave.overtime.not_found" xml:space="preserve"><value>Overtime request not found.</value></data>
+  <data name="leave.overtime.not_pending" xml:space="preserve"><value>The overtime request is no longer pending.</value></data>
+  <data name="leave.errors.overtime_invalid_duration" xml:space="preserve"><value>Overtime duration must be between 1 and {max} minutes.</value></data>
+  <data name="leave.errors.overtime_invalid_overlap" xml:space="preserve"><value>The overlap with planned working hours cannot exceed the overtime duration.</value></data>
+  <data name="leave.errors.overtime_not_approved" xml:space="preserve"><value>Only approved overtime can be converted.</value></data>
+  <data name="leave.errors.overtime_already_converted" xml:space="preserve"><value>This overtime has already been converted.</value></data>
+  <data name="leave.errors.overtime_invalid_rate" xml:space="preserve"><value>The multiplier must be between {min} and {max}.</value></data>
+  <data name="leave.errors.overtime_nothing_to_convert" xml:space="preserve"><value>There is no payable time to convert.</value></data>
+  <data name="leave.errors.overtime_overlap" xml:space="preserve"><value>You already have pending or approved overtime in these hours.</value></data>
+  <data name="leave.errors.overtime_consent_revoked" xml:space="preserve"><value>The employee's overtime consent revocation is in effect on this date.</value></data>
+  <data name="leave.errors.overtime_override_payable_not_allowed" xml:space="preserve"><value>You are not allowed to convert the full duration.</value></data>
+  <data name="leave.overtime_consent.not_found" xml:space="preserve"><value>Overtime consent not found.</value></data>
+  <data name="leave.overtime_consent.already_revoked" xml:space="preserve"><value>This overtime consent has already been revoked.</value></data>
+  <data name="leave.overtime_consent.invalid_revocation" xml:space="preserve"><value>The revocation notice date cannot be before the consent date.</value></data>
+  <data name="leave.warnings.overtime_consent_missing" xml:space="preserve"><value>No written overtime consent is recorded for the employee.</value></data>
+  <data name="leave.warnings.overtime_night_consent_missing" xml:space="preserve"><value>The record falls into night hours but the employee has no night overtime consent.</value></data>
+  <data name="leave.warnings.overtime_overlaps_schedule" xml:space="preserve"><value>Part of the request is inside planned working hours; that part was deducted from the payable time.</value></data>
+  <data name="leave.warnings.overtime_annual_limit_exceeded" xml:space="preserve"><value>With this record the employee's annual overtime total exceeds the statutory limit.</value></data>
 </root>

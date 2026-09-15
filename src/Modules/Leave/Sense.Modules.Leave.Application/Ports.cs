@@ -1,5 +1,6 @@
 using Sense.Modules.Leave.Domain.Balances;
 using Sense.Modules.Leave.Domain.Calendar;
+using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Legislation;
@@ -17,6 +18,9 @@ public interface ILeaveUnitOfWork : IUnitOfWork;
 public interface IWorkScheduleReader
 {
     Task<Func<DateOnly, bool>> GetWorkingDayPredicateAsync(Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Planned working intervals (local wall-clock) on the days [from, to], holidays not yet removed.</summary>
+    Task<IReadOnlyList<ScheduledInterval>> GetScheduledIntervalsAsync(Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Leave day calculation for a date range (work schedule + the tenant's effective holiday calendar).</summary>
