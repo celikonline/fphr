@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Badge, Button, Card, Divider, Group, Progress, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { Avatar, Badge, Button, Card, ColorSwatch, Divider, Group, Progress, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
 import { Building2, CalendarCheck, CalendarHeart, CalendarRange, Cake, IdCard, Palmtree, UserCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
@@ -408,10 +408,7 @@ function DepartmentDistributionWidget() {
           <SimpleGrid cols={2} spacing="xs" className="w-full">
             {chartData.map((item) => (
               <Group key={item.key} gap="xs" wrap="nowrap">
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: `var(--mantine-color-${item.color}-6)` }}
-                />
+                <ColorSwatch size={10} color={`var(--mantine-color-${item.color}-6)`} withShadow={false} className="shrink-0" />
                 <Text size="xs" c="dimmed" truncate>
                   {item.name}
                 </Text>
