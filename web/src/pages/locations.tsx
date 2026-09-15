@@ -183,7 +183,12 @@ export default function LocationsPage() {
       accessorKey: "name",
       enableHiding: false,
       header: t("locations:name"),
-      meta: { label: t("locations:name"), cellClassName: "font-medium" },
+      meta: { label: t("locations:name") },
+      cell: ({ row }) => (
+        <Text size="sm" fw={500}>
+          {row.original.name}
+        </Text>
+      ),
     },
     {
       id: "type",

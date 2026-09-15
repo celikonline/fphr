@@ -6,13 +6,14 @@ import { Button, Card, Center, Group, Stack, Text, Textarea, Title } from "@mant
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { getApiProblem } from "@/lib/api-error";
 import { decideByToken, type DecideByTokenPayload } from "@/services/workflow.service";
+import classes from "./approve.module.css";
 
 type Result = "success" | "expired" | "alreadyDecided" | "error";
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
     <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-default-hover)">
-      <Card withBorder shadow="sm" padding="xl" w="100%" maw={448}>
+      <Card withBorder padding="xl" w="100%" maw={448} className={classes.card}>
         {children}
       </Card>
     </Center>

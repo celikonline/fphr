@@ -11,7 +11,7 @@ Modern React 18 web frontend for the SenseİK HR/Payroll SaaS platform.
 - **Routing:** React Router v6
 - **State Management:** Zustand
 - **Internationalization:** i18next + react-i18next (Turkish/English)
-- **Dark Mode:** Tailwind CSS class strategy
+- **Dark Mode:** Mantine color scheme (light/dark/system from the UI store)
 - **PWA:** vite-plugin-pwa
 - **Code Quality:** ESLint + Prettier + TypeScript strict mode
 - **Testing:** Vitest + React Testing Library (configured, optional)
@@ -60,14 +60,14 @@ src/
 ├── layouts/             # Common layouts (Item 20)
 ├── hooks/               # Custom React hooks
 ├── lib/                 # Utility functions
-│   └── utils.ts        # cn() for classname combining
+│   └── mantine-theme.ts # Mantine theme (colors, fonts, radius)
 ├── services/            # API calls (using @senseik/api-client)
 ├── store/              # Zustand stores
 │   ├── auth.store.ts   # Authentication state
 │   └── ui.store.ts     # Theme, sidebar, notifications
 ├── types/              # TypeScript interfaces/types
 ├── styles/             # Global CSS
-│   └── index.css       # Tailwind imports + theme variables
+│   └── index.css       # Mantine styles + Tailwind (layout utilities) with CSS layer order
 ├── i18n.ts             # i18next configuration
 ├── App.tsx             # Root component with routing
 └── main.tsx            # Entry point
@@ -89,7 +89,8 @@ public/
 | File | Purpose |
 |------|---------|
 | `vite.config.ts` | Vite bundler configuration, API proxy, PWA plugin |
-| `tailwind.config.ts` | Tailwind CSS theming, colors, dark mode |
+| `src/lib/mantine-theme.ts` | Mantine theme: colors, fonts, radius, dark palette |
+| `postcss.config.cjs` | PostCSS: Mantine preset (`light-dark()`, `rem()`, mixins) + Tailwind |
 | `tsconfig.json` | TypeScript compiler options, path aliases |
 | `eslint.config.js` | Code linting rules |
 | `.prettierrc.json` | Code formatting rules |
@@ -254,7 +255,7 @@ App-level composites stay in `src/components/ui/`: `useDataTable`/`DataTable`, `
 
 ### Theme & Dark Mode
 
-`src/components/mantine-root.tsx` wires `MantineProvider` (theme from `src/lib/mantine-theme.ts`), `DatesProvider` and `Notifications`. The color scheme follows the UI store (light/dark/system); the same store toggles the `.dark` class so Tailwind's `dark:` variant and the CSS tokens in `src/styles/index.css` stay in sync with Mantine.
+`src/components/mantine-root.tsx` wires `MantineProvider` (theme from `src/lib/mantine-theme.ts`), `DatesProvider` and `Notifications`. The color scheme follows the UI store (light/dark/system) and Mantine sets `data-mantine-color-scheme` on `<html>`. There are no app CSS tokens or `dark:` classes: use Mantine props and variables (`var(--mantine-color-body)`, `var(--mantine-color-default-border)`, `var(--mantine-color-dimmed)`), or a colocated `*.module.css` with `light-dark()` for custom surfaces (see `layouts/app-layout.module.css`).
 
 ## State Management (Zustand)
 

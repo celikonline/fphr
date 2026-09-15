@@ -6,14 +6,14 @@
 
 - Paketler: `@mantine/core`, `hooks`, `dates` (+ `dayjs`), `notifications`, `dropzone`, `charts` (+ `recharts`); PostCSS: `postcss-preset-mantine`, `postcss-simple-vars`.
 - `web/src/components/mantine-root.tsx`: `MantineProvider` (tema + UI store'daki light/dark/system), `DatesProvider` (i18n dilinde dayjs locale, hafta pazartesi başlar), `Notifications`.
-- `web/src/lib/mantine-theme.ts`: `brandBlue` birincil renk (`--primary`), `algosenseGreen` (login gibi marka yüzeyleri), Inter, `md` radius. Mantine body/text/border/dimmed değişkenleri `styles/index.css` token'larına bağlıdır.
+- `web/src/lib/mantine-theme.ts`: `brandBlue` birincil renk (`--primary`), `algosenseGreen` (login gibi marka yüzeyleri), neredeyse siyah `dark` paleti, Inter, `md` radius. Uygulamaya ait CSS token'ı (`--background`, `--card` …) ve `.dark` class'ı yoktur; renkler Mantine değişkenlerinden gelir.
 - CSS katman sırası `theme, base, mantine, components, utilities`: Tailwind preflight Mantine'in altında, Tailwind utility'leri üstünde kalır.
 - `toast()` (`@/hooks/use-toast`) artık Mantine notifications üzerinden çalışır; çağıran kod değişmez (`variant: "success" | "destructive"`).
 
 ## Kurallar
 
 - Sahip olduğun dosyalarda `@/components/ui/<primitive>` importlarının hepsi Mantine'e çevrilir. Geçiş boyunca kalabilecek uygulama bileşenleri: `ui/data-table`, `ui/date-picker`, `ui/time-picker`, `ui/file-dropzone`, `components/pagination-footer`, `components/confirm-dialog` (bunların içleri ayrıca Mantine'e taşınır, dışa açık API'leri korunur).
-- İkonlar `lucide-react` olarak kalır. Tailwind yalnızca yerleşim/boşluk için kullanılabilir (`flex`, `grid`, `gap-*`, `p-*`, `max-w-*`); renk, kenarlık, tipografi ve bileşen görünümü Mantine prop'larıyla verilir (`c="dimmed"`, `fw={500}`, `size="sm"`, `withBorder`).
+- İkonlar `lucide-react` olarak kalır. Tailwind yalnızca yerleşim/boşluk için kullanılabilir (`flex`, `grid`, `gap-*`, `p-*`, `max-w-*`); renk, kenarlık, tipografi ve bileşen görünümü Mantine prop'larıyla verilir (`c="dimmed"`, `fw={500}`, `size="sm"`, `withBorder`). Hover, gradient veya duruma bağlı renkler için yanındaki `*.module.css` dosyasında Mantine değişkenleri ve `light-dark()` kullanılır; `dark:` class'ı ve `cn()` yoktur.
 - Form alanlarında ayrı `Label` + hata `<p>` yerine Mantine'in `label`, `description`, `error`, `withAsterisk` prop'ları kullanılır; `id` korunursa testler/erişilebilirlik bozulmaz.
 - Davranış, izinler, sorgu anahtarları, çeviri anahtarları ve servis çağrıları değişmez. Yeni çeviri anahtarı gerekiyorsa tr/en/de üçüne birden eklenir (de: `"[DE] English text"`).
 - Mantine `Select` değeri `string | null` döndürür; boş seçenek için `clearable` veya `allowDeselect={false}` bilinçli seçilir.
@@ -50,4 +50,4 @@
 
 ## Durum
 
-**Tamamlandı (2026-09-15).** Tüm ekranlar Mantine'e taşındı. `web/src/components/ui/` altında yalnızca Mantine üzerine kurulu uygulama bileşenleri kaldı (`data-table`, `date-picker`, `time-picker`, `file-dropzone`); shadcn primitive'leri, tüm `@radix-ui/*` paketleri, `class-variance-authority`, `cmdk`, `react-day-picker`, `tw-animate-css` ve `TooltipProvider` kaldırıldı. Yeni ekranlarda doğrudan Mantine kullanılır; shadcn/Radix bileşeni eklenmez. Yukarıdaki eşleme tablosu eski kodu okurken başvuru içindir.
+**Tamamlandı (2026-09-15).** Tüm ekranlar Mantine'e taşındı. `web/src/components/ui/` altında yalnızca Mantine üzerine kurulu uygulama bileşenleri kaldı (`data-table`, `date-picker`, `time-picker`, `file-dropzone`); shadcn primitive'leri, tüm `@radix-ui/*` paketleri, `class-variance-authority`, `cmdk`, `react-day-picker`, `tw-animate-css` ve `TooltipProvider` kaldırıldı. Ardından shadcn token sistemi de kaldırıldı: `styles/index.css`'teki `--background`/`--card` vb. değişkenler ve `@theme` eşlemeleri, `.dark` class'ı, `cn()` (`clsx` + `tailwind-merge`), `@tailwindcss/forms` ve `@tailwindcss/typography`. Tailwind yalnızca yerleşim utility'leri için kaldı. Yeni ekranlarda doğrudan Mantine kullanılır; shadcn/Radix bileşeni eklenmez. Yukarıdaki eşleme tablosu eski kodu okurken başvuru içindir.

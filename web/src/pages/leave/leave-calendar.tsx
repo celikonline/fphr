@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Button, Group, Paper, Skeleton, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Paper, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -11,13 +11,8 @@ import { useDays, useLeaveName } from "@/components/leave/leave-shared";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
-import { cn } from "@/lib/utils";
 import { getLeaveCalendar, type LeaveCalendarEntry } from "@/services/leave.service";
-
-/** Pending entries: striped, lighter than the solid approved bars. */
-const PENDING_STYLE: CSSProperties = {
-  backgroundImage: "repeating-linear-gradient(135deg, rgb(245 158 11 / 0.55) 0 5px, rgb(245 158 11 / 0.2) 5px 10px)",
-};
+import classes from "./leave-calendar.module.css";
 
 function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1);
@@ -93,7 +88,7 @@ function LeaveCalendar() {
   const shift = (delta: number) => setMonth((current) => new Date(current.getFullYear(), current.getMonth() + delta, 1));
 
   const tooltip = (entry: LeaveCalendarEntry) => (
-    <div className="space-y-0.5">
+    <Stack gap={2}>
       <Text size="xs" fw={600}>
         {entry.employeeName}
       </Text>
@@ -103,11 +98,11 @@ function LeaveCalendar() {
         {t("leave:days")}
       </Text>
       <Text size="xs">{t(`leave:status.${entry.status}`)}</Text>
-    </div>
+    </Stack>
   );
 
   return (
-    <div className="mx-auto max-w-[96rem] space-y-6 p-6 md:p-10">
+    <div className={`${classes.root} mx-auto flex max-w-[96rem] flex-col gap-6 p-6 md:p-10`}>
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <CalendarDays className="h-6 w-6" /> {t("leave:calendar.title")}
@@ -137,13 +132,13 @@ function LeaveCalendar() {
         <Group gap="md">
           <Group gap="sm" wrap="nowrap">
             <Group gap={6} wrap="nowrap">
-              <span className="inline-block h-3 w-5 rounded-sm bg-emerald-600" />
+              <span className={`${classes.swatch} inline-block h-3 w-5`} data-status="approved" />
               <Text size="xs" c="dimmed">
                 {t("leave:status.approved")}
               </Text>
             </Group>
             <Group gap={6} wrap="nowrap">
-              <span className="inline-block h-3 w-5 rounded-sm border border-amber-500" style={PENDING_STYLE} />
+              <span className={`${classes.swatch} inline-block h-3 w-5`} data-status="pending" />
               <Text size="xs" c="dimmed">
                 {t("leave:status.pending")}
               </Text>
@@ -160,7 +155,7 @@ function LeaveCalendar() {
         </Group>
       </Group>
 
-      {/* Paper (background = --mantine-color-body = --card) so the sticky name column matches the surface in both schemes. */}
+      {/* Paper and the sticky name column both use --mantine-color-body, so they match in both schemes. */}
       <Paper withBorder className="overflow-hidden">
         <div>
           {query.isLoading ? (
@@ -179,19 +174,17 @@ function LeaveCalendar() {
             <>
               {/* md+: employees × days grid */}
               <div className="hidden overflow-x-auto md:block">
-                <div className="min-w-max text-xs">
-                  <div className="grid border-b" style={gridTemplate}>
-                    <div className="sticky left-0 z-20 bg-card px-3 py-2 font-medium text-muted-foreground">{t("leave:calendar.employee")}</div>
+                <Box fz="xs" className="min-w-max">
+                  <div className={`${classes.headerRow} grid`} style={gridTemplate}>
+                    <div className={`${classes.nameHeader} sticky left-0 z-20 px-3 py-2`}>{t("leave:calendar.employee")}</div>
                     {dates.map((date) => {
                       const key = toDateOnly(date);
                       return (
                         <div
                           key={key}
-                          className={cn(
-                            "flex flex-col items-center border-l py-1 leading-tight",
-                            isWeekend(date) && "bg-muted/60 text-muted-foreground",
-                            key === today && "bg-primary/10 font-semibold text-primary",
-                          )}
+                          className={`${classes.dayHeader} flex flex-col items-center py-1`}
+                          data-weekend={isWeekend(date) || undefined}
+                          data-today={key === today || undefined}
                         >
                           <span>{weekday.format(date)}</span>
                           <span>{date.getDate()}</span>
@@ -200,9 +193,9 @@ function LeaveCalendar() {
                     })}
                   </div>
                   {rows.map((row) => (
-                    <div key={row.employeeId} className="grid border-b last:border-b-0" style={{ ...gridTemplate, gridAutoRows: "1.75rem" }}>
+                    <div key={row.employeeId} className={`${classes.row} grid`} style={{ ...gridTemplate, gridAutoRows: "1.75rem" }}>
                       <div
-                        className="sticky left-0 z-20 flex items-center truncate bg-card px-3 text-sm font-medium"
+                        className={`${classes.nameCell} sticky left-0 z-20 flex items-center truncate px-3`}
                         style={{ gridColumn: 1, gridRow: `1 / span ${row.lanes.length}` }}
                         title={row.employeeName}
                       >
@@ -212,7 +205,9 @@ function LeaveCalendar() {
                         <div
                           key={index}
                           aria-hidden
-                          className={cn("border-l", isWeekend(date) && "bg-muted/60", toDateOnly(date) === today && "bg-primary/5")}
+                          className={classes.dayCell}
+                          data-weekend={isWeekend(date) || undefined}
+                          data-today={toDateOnly(date) === today || undefined}
                           style={{ gridColumn: index + 2, gridRow: `1 / span ${row.lanes.length}` }}
                         />
                       ))}
@@ -221,17 +216,9 @@ function LeaveCalendar() {
                           <Tooltip key={entry.requestId} label={tooltip(entry)} multiline>
                             <div
                               tabIndex={0}
-                              className={cn(
-                                "relative z-10 mx-0.5 my-1 flex items-center overflow-hidden rounded px-1.5 text-[11px] font-medium",
-                                entry.status === "approved"
-                                  ? "bg-emerald-600 text-white"
-                                  : "border border-amber-500 text-amber-950 dark:text-amber-100",
-                              )}
-                              style={{
-                                gridColumn: `${start + 2} / ${end + 3}`,
-                                gridRow: laneIndex + 1,
-                                ...(entry.status === "pending" ? PENDING_STYLE : {}),
-                              }}
+                              className={`${classes.bar} relative z-10 mx-0.5 my-1 flex items-center overflow-hidden px-1.5`}
+                              data-status={entry.status}
+                              style={{ gridColumn: `${start + 2} / ${end + 3}`, gridRow: laneIndex + 1 }}
                             >
                               <span className="truncate">{typeLabel(entry)}</span>
                             </div>
@@ -240,11 +227,11 @@ function LeaveCalendar() {
                       )}
                     </div>
                   ))}
-                </div>
+                </Box>
               </div>
 
               {/* Narrow screens: list by day */}
-              <div className="divide-y md:hidden">
+              <div className={`${classes.dayList} md:hidden`}>
                 {dates.map((date) => {
                   const key = toDateOnly(date);
                   const entries = (query.data ?? [])
@@ -252,24 +239,20 @@ function LeaveCalendar() {
                     .sort((a, b) => a.employeeName.localeCompare(b.employeeName, i18n.language));
                   if (entries.length === 0) return null;
                   return (
-                    <div key={key} className={cn("space-y-2 p-3", isWeekend(date) && "bg-muted/40")}>
-                      <p className={cn("text-sm font-semibold", key === today && "text-primary")}>
+                    <div key={key} className={`${classes.dayGroup} flex flex-col gap-2 p-3`} data-weekend={isWeekend(date) || undefined}>
+                      <Text size="sm" fw={600} c={key === today ? "var(--mantine-primary-color-filled)" : undefined}>
                         {formatDateOnly(key, i18n.language, { weekday: "long", day: "numeric", month: "long" })}
-                      </p>
-                      <ul className="space-y-1.5">
+                      </Text>
+                      <ul className="flex flex-col gap-1.5">
                         {entries.map((entry) => (
-                          <li key={entry.requestId} className="flex items-center gap-2 text-sm">
-                            <span
-                              className={cn(
-                                "inline-block h-3 w-3 shrink-0 rounded-sm",
-                                entry.status === "approved" ? "bg-emerald-600" : "border border-amber-500",
-                              )}
-                              style={entry.status === "pending" ? PENDING_STYLE : undefined}
-                            />
-                            <span className="font-medium">{entry.employeeName}</span>
-                            <span className="truncate text-muted-foreground">
+                          <li key={entry.requestId} className="flex items-center gap-2">
+                            <span className={`${classes.swatch} inline-block h-3 w-3 shrink-0`} data-status={entry.status} />
+                            <Text span size="sm" fw={500}>
+                              {entry.employeeName}
+                            </Text>
+                            <Text span size="sm" c="dimmed" className="truncate">
                               {typeLabel(entry)} · {days(entry.calculatedDays)} {t("leave:days")}
-                            </span>
+                            </Text>
                           </li>
                         ))}
                       </ul>

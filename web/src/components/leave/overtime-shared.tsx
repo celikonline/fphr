@@ -71,8 +71,12 @@ export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; act
       // Date then start time, so the default newest-first order keeps same-day records in time order.
       accessorFn: (row) => `${row.workDate}T${row.startTime}`,
       header: t("leave:overtime.workDate"),
-      meta: { label: t("leave:overtime.workDate"), cellClassName: "whitespace-nowrap font-medium" },
-      cell: ({ row }) => formatDateOnly(row.original.workDate, i18n.language),
+      meta: { label: t("leave:overtime.workDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (
+        <Text span inherit fw={500}>
+          {formatDateOnly(row.original.workDate, i18n.language)}
+        </Text>
+      ),
     },
     {
       id: "startTime",
@@ -240,7 +244,7 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
           <>
             <Text size="sm">{t("leave:overtime.savedWithWarnings", { payable: minutes(submission.payableMinutes) })}</Text>
             <Alert color="yellow" variant="light" p="sm">
-              <ul className="space-y-2">
+              <ul className="flex flex-col gap-2">
                 {submission.warnings.map((code) => (
                   <li key={code} className="flex items-start gap-2">
                     <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" color="var(--mantine-color-yellow-filled)" />

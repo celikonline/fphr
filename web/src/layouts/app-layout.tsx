@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { Link, NavLink as RouterNavLink, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -6,10 +6,12 @@ import {
   Anchor,
   Avatar,
   Badge,
+  Box,
   Breadcrumbs,
   Button,
   Group,
   Menu,
+  NavLink,
   Stack,
   Text,
   Tooltip,
@@ -40,8 +42,8 @@ import {
   resolveBreadcrumbs,
   type NavItem,
 } from "@/config/navigation";
-import { cn } from "@/lib/utils";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
@@ -53,58 +55,54 @@ function NavList({ collapsed }: { collapsed: boolean }) {
 
   return (
     <>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
+      <Stack component="nav" gap={4} className="flex-1 overflow-y-auto px-2 py-4">
         {items.map((item) => (
           <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
         ))}
-      </nav>
-      <nav className="space-y-1 border-t border-border px-2 py-3">
+      </Stack>
+      <Stack component="nav" gap={4} className={`px-2 py-3 ${classes.footerNav}`}>
         {footerItems.map((item) => (
           <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
         ))}
-      </nav>
+      </Stack>
     </>
   );
 }
+
+const NAV_LINK_CLASS_NAMES = { root: classes.navLink, section: classes.navSection, body: classes.navBody };
 
 function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boolean; label: string }) {
   const { t } = useTranslation(["navigation"]);
   const Icon = item.icon;
 
+  // React Router sets aria-current="page" on the matching link, which Mantine's NavLink styles as active.
   const link = (
     <NavLink
+      component={RouterNavLink}
       to={item.path}
       end={item.end}
+      variant="filled"
       aria-label={collapsed ? label : undefined}
-      className={({ isActive }) =>
-        cn(
-          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-          "hover:bg-accent hover:text-accent-foreground",
-          isActive ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground" : "text-foreground/80",
-          collapsed && "justify-center px-2"
-        )
+      mod={{ collapsed }}
+      classNames={NAV_LINK_CLASS_NAMES}
+      leftSection={<Icon size={20} />}
+      label={collapsed ? undefined : label}
+      noWrap
+      rightSection={
+        !collapsed && item.phase !== undefined ? (
+          <Badge size="xs" variant="light" color="gray" tt="none">
+            {t("navigation:phase", { phase: item.phase })}
+          </Badge>
+        ) : undefined
       }
-    >
-      <Icon className="h-5 w-5 shrink-0" />
-      {!collapsed && (
-        <>
-          <span className="flex-1 truncate">{label}</span>
-          {item.phase !== undefined && (
-            <Badge size="xs" variant="light" color="gray" tt="none">
-              {t("navigation:phase", { phase: item.phase })}
-            </Badge>
-          )}
-        </>
-      )}
-    </NavLink>
+    />
   );
 
   if (!collapsed) return link;
 
-  // Tooltip merges `className` as a string, which would drop NavLink's active-state class function; wrap instead.
   return (
     <Tooltip label={label} position="right" openDelay={300}>
-      <div>{link}</div>
+      {link}
     </Tooltip>
   );
 }
@@ -295,7 +293,7 @@ function UserMenu() {
   return (
     <Menu position="bottom-end" width={220}>
       <Menu.Target>
-        <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className="hover:bg-accent">
+        <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className={classes.userButton}>
           <Group gap="xs" wrap="nowrap">
             <Avatar size={32} radius="xl">
               {initials}
@@ -355,17 +353,12 @@ export default function AppLayout() {
   const userTenantName = useAuthStore((state) => state.user?.tenant?.name);
 
   return (
-    <div className="flex h-screen flex-col bg-background text-foreground">
+    <Box className="flex h-screen flex-col" bg="var(--mantine-color-body)" c="var(--mantine-color-text)">
       <ImpersonationBanner />
       <div className="flex min-h-0 flex-1">
         {/* Sidebar - collapses to an icon rail below md, or when toggled */}
-        <aside
-          className={cn(
-            "hidden shrink-0 flex-col border-r border-border bg-card transition-all duration-300 md:flex",
-            sidebarOpen ? "w-64" : "w-16"
-          )}
-        >
-          <div className={cn("flex h-16 items-center border-b border-border px-4", !sidebarOpen && "justify-center px-2")}>
+        <aside className={`hidden shrink-0 flex-col md:flex ${sidebarOpen ? "w-64" : "w-16"} ${classes.sidebar}`}>
+          <div className={`flex h-16 items-center ${sidebarOpen ? "px-4" : "justify-center px-2"} ${classes.brandRow}`}>
             <Anchor component={Link} to="/app" size="lg" fw={700} underline="never">
               {sidebarOpen ? "SenseİK" : "S"}
             </Anchor>
@@ -374,8 +367,8 @@ export default function AppLayout() {
         </aside>
 
         {/* Mobile icon rail - always icon-only, no store dependency */}
-        <aside className="flex w-14 shrink-0 flex-col border-r border-border bg-card md:hidden">
-          <div className="flex h-16 items-center justify-center border-b border-border">
+        <aside className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
+          <div className={`flex h-16 items-center justify-center ${classes.brandRow}`}>
             <Text span size="lg" fw={700} c="var(--mantine-primary-color-filled)">
               S
             </Text>
@@ -384,7 +377,7 @@ export default function AppLayout() {
         </aside>
 
         <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-4 md:px-6">
+          <header className={`flex h-16 shrink-0 items-center justify-between px-4 md:px-6 ${classes.header}`}>
             <div className="flex min-w-0 items-center gap-3">
               <Tooltip label={t("navigation:nav.toggleSidebar")}>
                 <ActionIcon
@@ -398,7 +391,7 @@ export default function AppLayout() {
                   <MenuIcon size={20} />
                 </ActionIcon>
               </Tooltip>
-              <div className="hidden min-w-0 flex-col leading-tight sm:flex">
+              <div className="hidden min-w-0 flex-col sm:flex">
                 <Text size="sm" fw={600} truncate>
                   {tenant?.name ?? userTenantName ?? "SenseİK"}
                 </Text>
@@ -420,6 +413,6 @@ export default function AppLayout() {
           </main>
         </div>
       </div>
-    </div>
+    </Box>
   );
 }

@@ -102,8 +102,13 @@ function HolidayCalendars() {
       id: "name",
       accessorKey: "name",
       header: t("structure:calendars.entryName"),
-      meta: { label: t("structure:calendars.entryName"), cellClassName: "font-medium" },
+      meta: { label: t("structure:calendars.entryName") },
       sortingFn: (a, b) => a.original.name.localeCompare(b.original.name, locale),
+      cell: ({ row }) => (
+        <Text size="sm" fw={500}>
+          {row.original.name}
+        </Text>
+      ),
     },
     {
       id: "recurring",

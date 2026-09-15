@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { useEffect } from "react";
-import { useUIStore } from "@/store/ui.store";
 import { useAuthStore } from "@/store/auth.store";
 import LoginPage from "@/pages/auth/login";
 import InviteAcceptPage from "@/pages/auth/invite-accept";
@@ -37,18 +36,8 @@ import MyOvertimesPage from "@/pages/leave/my-overtimes";
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
 export default function App() {
-  const theme = useUIStore((state) => state.theme);
   const hasToken = useAuthStore((state) => !!state.token);
   const refreshMe = useAuthStore((state) => state.refreshMe);
-
-  useEffect(() => {
-    const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [theme]);
 
   // Persisted permissions/access settings may be stale (e.g. changed by an admin since last visit).
   useEffect(() => {

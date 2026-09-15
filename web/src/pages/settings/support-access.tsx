@@ -109,8 +109,13 @@ function SupportAccessList() {
       accessorFn: requesterOf,
       enableHiding: false,
       header: t("settings:supportAccess.requestedBy"),
-      meta: { label: t("settings:supportAccess.requestedBy"), cellClassName: "font-medium" },
+      meta: { label: t("settings:supportAccess.requestedBy") },
       sortingFn: (a, b) => requesterOf(a.original).localeCompare(requesterOf(b.original), locale),
+      cell: ({ row }) => (
+        <Text size="sm" fw={500}>
+          {requesterOf(row.original)}
+        </Text>
+      ),
     },
     {
       id: "reason",
