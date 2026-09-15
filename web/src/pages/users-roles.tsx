@@ -161,7 +161,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
 
   const totalCount = sorted.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const pageItems = sorted.slice((page - 1) * pageSize, page * pageSize);
+  const pageItems = useMemo(() => sorted.slice((page - 1) * pageSize, page * pageSize), [sorted, page, pageSize]);
   const pageResult = {
     page,
     totalPages,
