@@ -61,7 +61,26 @@ public abstract class TestFixture : IAsyncLifetime
             DbAdapter = DbAdapter.Postgres,
             SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents" },
         };
-        _respawner = await Respawner.CreateAsync(connectionString, options);
+
+        // Respawn 6.x's string-connection overload only supports SqlAdapter.SqlServer regardless of
+        // options.DbAdapter; a non-SqlServer adapter (Postgres here) requires the DbConnection overload.
+        await using (var setupConnection = new Npgsql.NpgsqlConnection(connectionString))
+        {
+            await setupConnection.OpenAsync();
+
+            // Respawner.CreateAsync inspects existing tables and throws "No tables found" against a
+            // brand-new container (before any module has run its migrations, which happens later,
+            // per-test, if at all). A harmless bootstrap table guarantees at least one table exists so
+            // construction succeeds regardless of whether/when a test applies real migrations; Respawn
+            // resetting it between tests is a no-op since nothing ever writes to it.
+            await using (var bootstrapCommand = new Npgsql.NpgsqlCommand(
+                "CREATE TABLE IF NOT EXISTS public.__respawn_bootstrap (id int)", setupConnection))
+            {
+                await bootstrapCommand.ExecuteNonQueryAsync();
+            }
+
+            _respawner = await Respawner.CreateAsync(setupConnection, options);
+        }
 
         // Build service collection with shared infrastructure
         var services = new ServiceCollection();

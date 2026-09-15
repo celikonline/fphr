@@ -1,0 +1,33 @@
+namespace Sense.Modules.Organization.Domain;
+
+/// <summary>Domain error codes for Organization module.</summary>
+public static class OrganizationDomainErrors
+{
+    public const string OrgUnitTypeNotFound = "organization.unit_type.not_found";
+    public const string OrgUnitTypeCodeRequired = "organization.unit_type.code_required";
+    public const string OrgUnitTypeNameRequired = "organization.unit_type.name_required";
+    public const string OrgUnitTypeSystemImmutable = "organization.unit_type.system_immutable";
+
+    public const string OrgUnitNotFound = "organization.unit.not_found";
+    public const string OrgUnitNameRequired = "organization.unit.name_required";
+    public const string OrgUnitTypeIdRequired = "organization.unit.type_id_required";
+    public const string OrgUnitAlreadyInactive = "organization.unit.already_inactive";
+
+    public const string CompanyNotFound = "organization.company.not_found";
+    public const string CompanyOrgUnitRequired = "organization.company.org_unit_required";
+
+    public const string ApprovalAssignmentOrgUnitRequired = "organization.approval_assignment.org_unit_required";
+    public const string ApprovalAssignmentRequestTypeRequired = "organization.approval_assignment.request_type_required";
+    public const string ApprovalAssignmentPolicyRequired = "organization.approval_assignment.policy_id_required";
+}
+
+/// <summary>Domain constants and length limits.</summary>
+public static class OrganizationLimits
+{
+    public const int CodeMaxLength = 50;
+    public const int NameMaxLength = 200;
+    public const int RequestTypeMaxLength = 50;
+
+    /// <summary>Default cap on how many hierarchy levels (OrgUnitType rows) a tenant may define; see IOptions&lt;OrganizationOptions&gt; (future item).</summary>
+    public const int MaxUnitTypesDefault = 10;
+}

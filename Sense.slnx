@@ -41,6 +41,7 @@
   </Folder>
   <Folder Name="/tests/Modules/">
     <Project Path="tests/Modules/Sense.Modules.Identity.Tests/Sense.Modules.Identity.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Organization.Tests/Sense.Modules.Organization.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Infrastructure.Tests/Sense.Shared.Infrastructure.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Kernel.Tests/Sense.Shared.Kernel.Tests.csproj" />
   </Folder>
