@@ -88,5 +88,8 @@ public sealed class EmployeeModule : IModule
 
         // Cross-module contract consumed by Documents (document requirement evaluation): derived booleans only, never raw sensitive fields
         services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
+
+        // Cross-module contract consumed by Analytics (workforce KPIs)
+        services.AddScoped<IEmployeeAnalyticsQueries, EmployeeAnalyticsQueries>();
     }
 }
