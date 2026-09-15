@@ -173,6 +173,15 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
+  <data name="employee.child_count_invalid" xml:space="preserve"><value>Çocuk sayısı negatif olamaz.</value></data>
+  <data name="employee.mobile_phone_too_long" xml:space="preserve"><value>Cep telefonu en fazla 30 karakter olabilir.</value></data>
+  <data name="employee.home_phone_too_long" xml:space="preserve"><value>Ev telefonu en fazla 30 karakter olabilir.</value></data>
+  <data name="employee.address_line_too_long" xml:space="preserve"><value>Adres en fazla 250 karakter olabilir.</value></data>
+  <data name="employee.city_too_long" xml:space="preserve"><value>Şehir en fazla 100 karakter olabilir.</value></data>
+  <data name="employee.postal_code_too_long" xml:space="preserve"><value>Posta kodu en fazla 20 karakter olabilir.</value></data>
+  <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Yalnızca aktif çalışanlar askıya alınabilir.</value></data>
+  <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Yalnızca askıda olan çalışanlar yeniden aktifleştirilebilir.</value></data>
+  <data name="employee.sensitive.view" xml:space="preserve"><value>Hassas alanları görüntüleme</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>Çalışanları görüntüleme</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Çalışan ekleme</value></data>
   <data name="employee.employees.update" xml:space="preserve"><value>Çalışan bilgilerini düzenleme</value></data>

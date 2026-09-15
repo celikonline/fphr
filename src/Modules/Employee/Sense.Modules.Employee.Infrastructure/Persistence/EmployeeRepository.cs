@@ -31,7 +31,7 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
     }
 
     public async Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
-        await context.Employees.AnyAsync(e => e.Id == employeeId && e.Status != EmployeeStatus.Inactive, cancellationToken);
+        await context.Employees.AnyAsync(e => e.Id == employeeId && e.Status != EmployeeStatus.Terminated, cancellationToken);
 
     public async Task<bool> NationalIdTakenAsync(string nationalId, Guid? exceptEmployeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(e => e.NationalId == nationalId && (exceptEmployeeId == null || e.Id != exceptEmployeeId), cancellationToken);

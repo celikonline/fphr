@@ -39,9 +39,10 @@
     "hireDate": "Hire date"
   },
   "status": {
+    "Draft": "Draft",
     "Active": "Active",
-    "Inactive": "Inactive",
-    "OnLeave": "On leave"
+    "Suspended": "Suspended",
+    "Terminated": "Terminated"
   },
   "accountStatus": {
     "none": "No account",
@@ -68,11 +69,96 @@
     "manager": "Manager",
     "accountStatus": "Account status",
     "lastInvitationSentAt": "Last invitation sent",
-    "accessType": "Access type"
+    "accessType": "Access type",
+    "contractType": "Contract type",
+    "employmentType": "Employment type",
+    "gender": "Gender",
+    "maritalStatus": "Marital status",
+    "childCount": "Number of children",
+    "educationStatus": "Education status",
+    "highestEducationLevel": "Highest education level",
+    "militaryStatus": "Military status",
+    "disabilityDegree": "Disability degree",
+    "bloodType": "Blood type",
+    "mobilePhone": "Mobile phone",
+    "homePhone": "Home phone",
+    "addressLine": "Address",
+    "city": "City",
+    "postalCode": "Postal code"
+  },
+  "enum": {
+    "notSet": "Not set",
+    "gender": {
+      "unspecified": "Unspecified",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other"
+    },
+    "maritalStatus": {
+      "unspecified": "Unspecified",
+      "single": "Single",
+      "married": "Married",
+      "divorced": "Divorced"
+    },
+    "educationStatus": {
+      "student": "Student",
+      "graduate": "Graduate"
+    },
+    "highestEducationLevel": {
+      "primary": "Primary school",
+      "middleSchool": "Middle school",
+      "highSchool": "High school",
+      "associate": "Associate degree",
+      "bachelor": "Bachelor's degree",
+      "master": "Master's degree",
+      "doctorate": "Doctorate"
+    },
+    "militaryStatus": {
+      "notCompleted": "Not completed",
+      "completed": "Completed",
+      "deferred": "Deferred",
+      "exempt": "Exempt",
+      "draftEvader": "Draft evader",
+      "absentee": "Absentee"
+    },
+    "disabilityDegree": {
+      "none": "None",
+      "first": "1st degree",
+      "second": "2nd degree",
+      "third": "3rd degree"
+    },
+    "bloodType": {
+      "oPos": "O Rh+",
+      "oNeg": "O Rh-",
+      "aPos": "A Rh+",
+      "aNeg": "A Rh-",
+      "bPos": "B Rh+",
+      "bNeg": "B Rh-",
+      "abPos": "AB Rh+",
+      "abNeg": "AB Rh-"
+    },
+    "contractType": {
+      "indefinite": "Indefinite term",
+      "fixedTerm": "Fixed term"
+    },
+    "employmentType": {
+      "fullTime": "Full-time",
+      "partTime": "Part-time",
+      "temporary": "Temporary",
+      "contract": "Contractor",
+      "freelance": "Freelance",
+      "intern": "Intern",
+      "mobile": "Mobile worker",
+      "apprentice": "Apprentice",
+      "seasonal": "Seasonal",
+      "agencyWorker": "Agency worker",
+      "subcontractor": "Subcontractor"
+    }
   },
   "validation": {
     "nationalId": "National ID must be 11 digits.",
-    "email": "Enter a valid email address."
+    "email": "Enter a valid email address.",
+    "childCount": "Number of children must be an integer of 0 or more."
   },
   "picker": {
     "placeholder": "Select an employee",
@@ -160,6 +246,7 @@
     "saved": "Employee details saved.",
     "sections": {
       "general": "General",
+      "personal": "Personal details",
       "career": "Career",
       "account": "Account"
     },
@@ -174,7 +261,6 @@
       "account": "Account"
     },
     "tabNotes": {
-      "personal": "Personal details (identity, address, contact, family) arrive on this tab in phase 1a.",
       "payments": "Salary and payment details arrive on this tab in phase 1a.",
       "leave": "Leave balances and requests appear here once the Leave module is available.",
       "overtime": "Overtime records and requests appear here once the Leave/Overtime module is available.",
@@ -182,7 +268,8 @@
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
-    "accessTypeSaved": "Access type updated."
+    "accessTypeSaved": "Access type updated.",
+    "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type."
   },
   "invite": {
     "send": "Send invitation",

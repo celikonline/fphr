@@ -1,10 +1,14 @@
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+// Not "using Sense.Modules.Employee.Contracts.Events" - it declares its own SuspensionReason (Contracts stays
+// independent of Domain, per architecture rule), which would collide with Domain.Employees.SuspensionReason below;
+// event types (EmployeeHired/EmployeeSuspended/EmployeeReactivated) are referenced as Contracts.Events.* instead.
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -26,9 +30,27 @@ public sealed record CreateEmployeeCommand(
     DateOnly? HireDate,
     DateOnly? BirthDate,
     Guid? OrgUnitId,
-    Guid? ManagerEmployeeId) : ICommand<EmployeeDetailDto>
+    Guid? ManagerEmployeeId,
+    Gender Gender = Gender.Unspecified,
+    MaritalStatus MaritalStatus = MaritalStatus.Unspecified,
+    int? ChildCount = null,
+    EducationStatus? EducationStatus = null,
+    HighestEducationLevel? HighestEducationLevel = null,
+    MilitaryStatus? MilitaryStatus = null,
+    DisabilityDegree? DisabilityDegree = null,
+    BloodType? BloodType = null,
+    string? MobilePhone = null,
+    string? HomePhone = null,
+    string? AddressLine = null,
+    string? City = null,
+    string? PostalCode = null,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null) : ICommand<EmployeeDetailDto>
 {
-    public EmployeeInfo ToInfo() => new(FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate);
+    public EmployeeInfo ToInfo() => new(
+        FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
+        Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType);
 }
 
 /// <summary>Updates an employee record (same body as create); out-of-scope targets return 404 (IScopedRequest).</summary>
@@ -44,22 +66,47 @@ public sealed record UpdateEmployeeCommand(
     DateOnly? HireDate,
     DateOnly? BirthDate,
     Guid? OrgUnitId,
-    Guid? ManagerEmployeeId) : ICommand<EmployeeDetailDto>, IScopedRequest
+    Guid? ManagerEmployeeId,
+    Gender Gender = Gender.Unspecified,
+    MaritalStatus MaritalStatus = MaritalStatus.Unspecified,
+    int? ChildCount = null,
+    EducationStatus? EducationStatus = null,
+    HighestEducationLevel? HighestEducationLevel = null,
+    MilitaryStatus? MilitaryStatus = null,
+    DisabilityDegree? DisabilityDegree = null,
+    BloodType? BloodType = null,
+    string? MobilePhone = null,
+    string? HomePhone = null,
+    string? AddressLine = null,
+    string? City = null,
+    string? PostalCode = null,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null) : ICommand<EmployeeDetailDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => Id;
 
-    public EmployeeInfo ToInfo() => new(FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate);
+    public EmployeeInfo ToInfo() => new(
+        FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
+        Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType);
 }
 
 /// <summary>Shared field rules for create/update (mirrors the domain checks so the client gets per-field 400s).</summary>
 public static class EmployeeInfoRules
 {
-    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info)
+    /// <summary>
+    /// <paramref name="sensitiveAccess"/> gates the NationalId format rule: without employee.sensitive.view the
+    /// caller only ever sees a masked value back, which the handler discards and replaces with the stored one
+    /// (EmployeeSensitiveAccess.PreserveSensitiveFields) - validating that masked string against TcKimlik would
+    /// otherwise reject a request that never touches NationalId.
+    /// </summary>
+    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info, EmployeeSensitiveAccess sensitiveAccess)
     {
         v.RuleFor(x => info(x).FirstName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.FirstName));
         v.RuleFor(x => info(x).LastName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.LastName));
         v.RuleFor(x => info(x).NationalId)
             .Must(id => string.IsNullOrWhiteSpace(id) || TcKimlik.IsValid(id))
+            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
             .WithMessage(EmployeeDomainErrors.NationalIdInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
         v.RuleFor(x => info(x).WorkEmail)
@@ -71,20 +118,31 @@ public static class EmployeeInfoRules
             .WithMessage(EmployeeDomainErrors.PersonalEmailInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.PersonalEmail));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
+            .When(x => info(x).ChildCount is not null)
+            .WithMessage(EmployeeDomainErrors.ChildCountInvalid)
+            .OverridePropertyName(nameof(EmployeeInfo.ChildCount));
+        v.RuleFor(x => PhoneNormalizer.Normalize(info(x).MobilePhone)).MaximumLength(EmployeeLimits.PhoneMaxLength)
+            .WithMessage(EmployeeDomainErrors.MobilePhoneTooLong).OverridePropertyName(nameof(EmployeeInfo.MobilePhone));
+        v.RuleFor(x => PhoneNormalizer.Normalize(info(x).HomePhone)).MaximumLength(EmployeeLimits.PhoneMaxLength)
+            .WithMessage(EmployeeDomainErrors.HomePhoneTooLong).OverridePropertyName(nameof(EmployeeInfo.HomePhone));
+        v.RuleFor(x => info(x).AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).OverridePropertyName(nameof(EmployeeInfo.AddressLine));
+        v.RuleFor(x => info(x).City).MaximumLength(EmployeeLimits.CityMaxLength).OverridePropertyName(nameof(EmployeeInfo.City));
+        v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
     }
 }
 
 public sealed class CreateEmployeeValidator : AbstractValidator<CreateEmployeeCommand>
 {
-    public CreateEmployeeValidator() => EmployeeInfoRules.Apply(this, x => x.ToInfo());
+    public CreateEmployeeValidator(EmployeeSensitiveAccess sensitiveAccess) => EmployeeInfoRules.Apply(this, x => x.ToInfo(), sensitiveAccess);
 }
 
 public sealed class UpdateEmployeeValidator : AbstractValidator<UpdateEmployeeCommand>
 {
-    public UpdateEmployeeValidator()
+    public UpdateEmployeeValidator(EmployeeSensitiveAccess sensitiveAccess)
     {
         RuleFor(x => x.Id).NotEmpty();
-        EmployeeInfoRules.Apply(this, x => x.ToInfo());
+        EmployeeInfoRules.Apply(this, x => x.ToInfo(), sensitiveAccess);
     }
 }
 
@@ -126,15 +184,39 @@ public sealed class EmployeeReferenceValidator(ITenantContext tenant, IEmployeeR
     }
 }
 
+/// <summary>employee.sensitive.view: gates TCKN (full vs masked) and health/disability fields (full vs null) everywhere they are read or written.</summary>
+public sealed class EmployeeSensitiveAccess(ICurrentUser currentUser, IPermissionService permissions)
+{
+    public async Task<bool> CanViewAsync(CancellationToken ct) =>
+        currentUser.UserId is { } userId && await permissions.HasAsync(userId, EmployeePermissions.SensitiveViewKey, ct).ConfigureAwait(false);
+
+    /// <summary>Without the permission, a caller cannot set (or clear) what they cannot see: the current stored values win over whatever the request sent.</summary>
+    public static EmployeeInfo PreserveSensitiveFields(EmployeeInfo info, EmployeeEntity? existing) => info with
+    {
+        NationalId = existing?.NationalId,
+        MilitaryStatus = existing?.MilitaryStatus,
+        DisabilityDegree = existing?.DisabilityDegree,
+        BloodType = existing?.BloodType,
+    };
+}
+
 public sealed class CreateEmployeeHandler(
     ITenantContext tenant,
+    ICurrentUser currentUser,
     IEmployeeRepository employees,
     EmployeeReferenceValidator references,
+    EmployeeSensitiveAccess sensitiveAccess,
+    IIntegrationEventOutbox outbox,
     EmployeeDetailBuilder details) : ICommandHandler<CreateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(CreateEmployeeCommand command, CancellationToken cancellationToken)
     {
         var info = command.ToInfo();
+        if (!await sensitiveAccess.CanViewAsync(cancellationToken).ConfigureAwait(false))
+        {
+            info = EmployeeSensitiveAccess.PreserveSensitiveFields(info, existing: null);
+        }
+
         var checkedRefs = await references.ValidateAsync(info, command.OrgUnitId, command.ManagerEmployeeId, existing: null, EmployeePermissions.EmployeesCreateKey, cancellationToken);
         if (checkedRefs.IsFailure)
         {
@@ -147,14 +229,25 @@ public sealed class CreateEmployeeHandler(
             return result.Error;
         }
 
-        employees.Add(result.Value);
-        return await details.BuildAsync(EmployeeRow.From(result.Value), cancellationToken);
+        var employee = result.Value;
+        employees.Add(employee);
+
+        if (employee.Status == EmployeeStatus.Active && employee.HireDate is { } hireDate)
+        {
+            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, hireDate) { ActorUserId = currentUser.UserId });
+        }
+
+        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
     }
 }
 
 public sealed class UpdateEmployeeHandler(
+    ITenantContext tenant,
+    ICurrentUser currentUser,
     IEmployeeRepository employees,
     EmployeeReferenceValidator references,
+    EmployeeSensitiveAccess sensitiveAccess,
+    IIntegrationEventOutbox outbox,
     EmployeeDetailBuilder details) : ICommandHandler<UpdateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(UpdateEmployeeCommand command, CancellationToken cancellationToken)
@@ -167,6 +260,10 @@ public sealed class UpdateEmployeeHandler(
 
         var employee = found.Value;
         var info = command.ToInfo();
+        if (!await sensitiveAccess.CanViewAsync(cancellationToken).ConfigureAwait(false))
+        {
+            info = EmployeeSensitiveAccess.PreserveSensitiveFields(info, employee);
+        }
 
         var checkedRefs = await references.ValidateAsync(info, command.OrgUnitId, command.ManagerEmployeeId, employee, EmployeePermissions.EmployeesUpdateKey, cancellationToken);
         if (checkedRefs.IsFailure)
@@ -191,6 +288,102 @@ public sealed class UpdateEmployeeHandler(
         }
 
         employee.AssignOrgUnit(command.OrgUnitId);
+
+        if (updated.Value && employee.HireDate is { } hireDate)
+        {
+            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, hireDate) { ActorUserId = currentUser.UserId });
+        }
+
+        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+    }
+}
+
+/// <summary>Suspends an Active employee (askıya alma); does not touch the Identity account.</summary>
+[RequiresPermission(EmployeePermissions.EmployeesUpdateKey)]
+public sealed record SuspendEmployeeCommand(Guid Id, SuspensionReason Reason) : ICommand<EmployeeDetailDto>, IScopedRequest
+{
+    public Guid? TargetEmployeeId => Id;
+}
+
+public sealed class SuspendEmployeeValidator : AbstractValidator<SuspendEmployeeCommand>
+{
+    public SuspendEmployeeValidator() => RuleFor(x => x.Id).NotEmpty();
+}
+
+public sealed class SuspendEmployeeHandler(
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IEmployeeRepository employees,
+    IIntegrationEventOutbox outbox,
+    TimeProvider clock,
+    EmployeeDetailBuilder details) : ICommandHandler<SuspendEmployeeCommand, EmployeeDetailDto>
+{
+    public async Task<Result<EmployeeDetailDto>> Handle(SuspendEmployeeCommand command, CancellationToken cancellationToken)
+    {
+        var found = await employees.GetByIdAsync(command.Id, cancellationToken);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        var employee = found.Value;
+        var suspended = employee.Suspend(command.Reason, clock.GetUtcNow().UtcDateTime);
+        if (suspended.IsFailure)
+        {
+            return suspended.Error;
+        }
+
+        outbox.Enqueue(new Contracts.Events.EmployeeSuspended(tenant.TenantId, employee.Id, ToContractReason(command.Reason)) { ActorUserId = currentUser.UserId });
+        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+    }
+
+    private static Contracts.Events.SuspensionReason ToContractReason(SuspensionReason reason) => reason switch
+    {
+        SuspensionReason.MilitaryService => Contracts.Events.SuspensionReason.MilitaryService,
+        SuspensionReason.UnionOffice => Contracts.Events.SuspensionReason.UnionOffice,
+        SuspensionReason.LongUnpaidLeave => Contracts.Events.SuspensionReason.LongUnpaidLeave,
+        SuspensionReason.Detention => Contracts.Events.SuspensionReason.Detention,
+        SuspensionReason.HealthReport => Contracts.Events.SuspensionReason.HealthReport,
+        SuspensionReason.ForceMajeure => Contracts.Events.SuspensionReason.ForceMajeure,
+        _ => Contracts.Events.SuspensionReason.Other,
+    };
+}
+
+/// <summary>Reactivates a Suspended employee back to Active.</summary>
+[RequiresPermission(EmployeePermissions.EmployeesUpdateKey)]
+public sealed record ReactivateEmployeeCommand(Guid Id) : ICommand<EmployeeDetailDto>, IScopedRequest
+{
+    public Guid? TargetEmployeeId => Id;
+}
+
+public sealed class ReactivateEmployeeValidator : AbstractValidator<ReactivateEmployeeCommand>
+{
+    public ReactivateEmployeeValidator() => RuleFor(x => x.Id).NotEmpty();
+}
+
+public sealed class ReactivateEmployeeHandler(
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IEmployeeRepository employees,
+    IIntegrationEventOutbox outbox,
+    EmployeeDetailBuilder details) : ICommandHandler<ReactivateEmployeeCommand, EmployeeDetailDto>
+{
+    public async Task<Result<EmployeeDetailDto>> Handle(ReactivateEmployeeCommand command, CancellationToken cancellationToken)
+    {
+        var found = await employees.GetByIdAsync(command.Id, cancellationToken);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        var employee = found.Value;
+        var reactivated = employee.Reactivate();
+        if (reactivated.IsFailure)
+        {
+            return reactivated.Error;
+        }
+
+        outbox.Enqueue(new Contracts.Events.EmployeeReactivated(tenant.TenantId, employee.Id) { ActorUserId = currentUser.UserId });
         return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
     }
 }

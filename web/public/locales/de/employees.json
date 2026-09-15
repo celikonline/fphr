@@ -39,9 +39,10 @@
     "hireDate": "[DE] Hire date"
   },
   "status": {
+    "Draft": "[DE] Draft",
     "Active": "[DE] Active",
-    "Inactive": "[DE] Inactive",
-    "OnLeave": "[DE] On leave"
+    "Suspended": "[DE] Suspended",
+    "Terminated": "[DE] Terminated"
   },
   "accountStatus": {
     "none": "[DE] No account",
@@ -68,11 +69,96 @@
     "manager": "[DE] Manager",
     "accountStatus": "[DE] Account status",
     "lastInvitationSentAt": "[DE] Last invitation sent",
-    "accessType": "[DE] Access type"
+    "accessType": "[DE] Access type",
+    "contractType": "[DE] Contract type",
+    "employmentType": "[DE] Employment type",
+    "gender": "[DE] Gender",
+    "maritalStatus": "[DE] Marital status",
+    "childCount": "[DE] Number of children",
+    "educationStatus": "[DE] Education status",
+    "highestEducationLevel": "[DE] Highest education level",
+    "militaryStatus": "[DE] Military status",
+    "disabilityDegree": "[DE] Disability degree",
+    "bloodType": "[DE] Blood type",
+    "mobilePhone": "[DE] Mobile phone",
+    "homePhone": "[DE] Home phone",
+    "addressLine": "[DE] Address",
+    "city": "[DE] City",
+    "postalCode": "[DE] Postal code"
+  },
+  "enum": {
+    "notSet": "[DE] Not set",
+    "gender": {
+      "unspecified": "[DE] Unspecified",
+      "male": "[DE] Male",
+      "female": "[DE] Female",
+      "other": "[DE] Other"
+    },
+    "maritalStatus": {
+      "unspecified": "[DE] Unspecified",
+      "single": "[DE] Single",
+      "married": "[DE] Married",
+      "divorced": "[DE] Divorced"
+    },
+    "educationStatus": {
+      "student": "[DE] Student",
+      "graduate": "[DE] Graduate"
+    },
+    "highestEducationLevel": {
+      "primary": "[DE] Primary school",
+      "middleSchool": "[DE] Middle school",
+      "highSchool": "[DE] High school",
+      "associate": "[DE] Associate degree",
+      "bachelor": "[DE] Bachelor's degree",
+      "master": "[DE] Master's degree",
+      "doctorate": "[DE] Doctorate"
+    },
+    "militaryStatus": {
+      "notCompleted": "[DE] Not completed",
+      "completed": "[DE] Completed",
+      "deferred": "[DE] Deferred",
+      "exempt": "[DE] Exempt",
+      "draftEvader": "[DE] Draft evader",
+      "absentee": "[DE] Absentee"
+    },
+    "disabilityDegree": {
+      "none": "[DE] None",
+      "first": "[DE] 1st degree",
+      "second": "[DE] 2nd degree",
+      "third": "[DE] 3rd degree"
+    },
+    "bloodType": {
+      "oPos": "[DE] O Rh+",
+      "oNeg": "[DE] O Rh-",
+      "aPos": "[DE] A Rh+",
+      "aNeg": "[DE] A Rh-",
+      "bPos": "[DE] B Rh+",
+      "bNeg": "[DE] B Rh-",
+      "abPos": "[DE] AB Rh+",
+      "abNeg": "[DE] AB Rh-"
+    },
+    "contractType": {
+      "indefinite": "[DE] Indefinite term",
+      "fixedTerm": "[DE] Fixed term"
+    },
+    "employmentType": {
+      "fullTime": "[DE] Full-time",
+      "partTime": "[DE] Part-time",
+      "temporary": "[DE] Temporary",
+      "contract": "[DE] Contractor",
+      "freelance": "[DE] Freelance",
+      "intern": "[DE] Intern",
+      "mobile": "[DE] Mobile worker",
+      "apprentice": "[DE] Apprentice",
+      "seasonal": "[DE] Seasonal",
+      "agencyWorker": "[DE] Agency worker",
+      "subcontractor": "[DE] Subcontractor"
+    }
   },
   "validation": {
     "nationalId": "[DE] National ID must be 11 digits.",
-    "email": "[DE] Enter a valid email address."
+    "email": "[DE] Enter a valid email address.",
+    "childCount": "[DE] Number of children must be an integer of 0 or more."
   },
   "picker": {
     "placeholder": "[DE] Select an employee",
@@ -160,6 +246,7 @@
     "saved": "[DE] Employee details saved.",
     "sections": {
       "general": "[DE] General",
+      "personal": "[DE] Personal details",
       "career": "[DE] Career",
       "account": "[DE] Account"
     },
@@ -174,7 +261,6 @@
       "account": "[DE] Hesap"
     },
     "tabNotes": {
-      "personal": "[DE] Kişisel bilgiler (kimlik, adres, iletişim, aile) Faz 1a'da bu sekmeye gelecek.",
       "payments": "[DE] Maaş ve ödeme bilgileri Faz 1a'da bu sekmeye gelecek.",
       "leave": "[DE] İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
       "overtime": "[DE] Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
@@ -182,7 +268,8 @@
     },
     "noAccountHint": "[DE] This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "[DE] Only an account owner can grant or revoke the account owner role.",
-    "accessTypeSaved": "[DE] Access type updated."
+    "accessTypeSaved": "[DE] Access type updated.",
+    "sensitiveHidden": "[DE] You don't have permission to view military status, disability degree or blood type."
   },
   "invite": {
     "send": "[DE] Send invitation",

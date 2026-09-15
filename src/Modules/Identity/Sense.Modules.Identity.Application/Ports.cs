@@ -77,11 +77,3 @@ public interface IFrontendLinks
 
     string Login(string tenantSlug);
 }
-
-/// <summary>Hassas alan şifreleme (TOTP secret vb.). AES-GCM, anahtar Key Vault/user-secrets.</summary>
-public interface IEncryptionProvider
-{
-    string Encrypt(string plaintext);
-
-    string Decrypt(string ciphertext);
-}

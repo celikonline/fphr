@@ -1,3 +1,4 @@
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Contracts;
 
 namespace Sense.Modules.Employee.Application.Employees;
@@ -20,7 +21,7 @@ public sealed record EmployeeListItemDto(
     UserAccountStatus AccountStatus,
     DateOnly? HireDate);
 
-/// <summary>Employee card.</summary>
+/// <summary>Employee card. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(
     Guid Id,
     string FirstName,
@@ -39,7 +40,23 @@ public sealed record EmployeeDetailDto(
     Guid? UserId,
     UserAccountStatus AccountStatus,
     string? AccessType,
-    DateTime? LastInvitationSentAt);
+    DateTime? LastInvitationSentAt,
+    Gender Gender,
+    MaritalStatus MaritalStatus,
+    int? ChildCount,
+    EducationStatus? EducationStatus,
+    HighestEducationLevel? HighestEducationLevel,
+    MilitaryStatus? MilitaryStatus,
+    DisabilityDegree? DisabilityDegree,
+    BloodType? BloodType,
+    string? MobilePhone,
+    string? HomePhone,
+    string? AddressLine,
+    string? City,
+    string? PostalCode,
+    ContractType? ContractType,
+    EmploymentType? EmploymentType,
+    string? SuspensionReason);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

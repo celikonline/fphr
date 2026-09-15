@@ -7,13 +7,38 @@ import type { BulkOperationResult, EmployeeFilter, EmployeeSelection, PagedQuery
 
 const EMPLOYEES_BASE = "/v1/employees";
 
-export type EmployeeStatus = "Active" | "Inactive" | "OnLeave";
-export const EMPLOYEE_STATUSES: EmployeeStatus[] = ["Active", "Inactive", "OnLeave"];
+/** Draft = quick-add without a hire date; Active = hired; Suspended/Terminated are later lifecycle transitions. */
+export type EmployeeStatus = "Draft" | "Active" | "Suspended" | "Terminated";
+export const EMPLOYEE_STATUSES: EmployeeStatus[] = ["Draft", "Active", "Suspended", "Terminated"];
 
 /** Mirrors Identity `UserAccountStatus` (camelCase enum JSON); "none" = no linked user. */
 export type UserAccountStatus = "none" | "invited" | "active" | "locked" | "disabled";
 
 export type EmployeeSortField = "displayName" | "firstName" | "lastName" | "hireDate" | "status";
+
+/** Native C# enums (unlike Status/SuspensionReason) go through the API's camelCase JsonStringEnumConverter. */
+export type Gender = "unspecified" | "male" | "female" | "other";
+export type MaritalStatus = "unspecified" | "single" | "married" | "divorced";
+export type EducationStatus = "student" | "graduate";
+export type HighestEducationLevel = "primary" | "middleSchool" | "highSchool" | "associate" | "bachelor" | "master" | "doctorate";
+export type MilitaryStatus = "notCompleted" | "completed" | "deferred" | "exempt" | "draftEvader" | "absentee";
+export type DisabilityDegree = "none" | "first" | "second" | "third";
+export type BloodType = "oPos" | "oNeg" | "aPos" | "aNeg" | "bPos" | "bNeg" | "abPos" | "abNeg";
+export type ContractType = "indefinite" | "fixedTerm";
+export type EmploymentType =
+  | "fullTime"
+  | "partTime"
+  | "temporary"
+  | "contract"
+  | "freelance"
+  | "intern"
+  | "mobile"
+  | "apprentice"
+  | "seasonal"
+  | "agencyWorker"
+  | "subcontractor";
+/** Employee.SuspensionReason.ToString() (like Status, pre-stringified server-side: exact PascalCase member name). */
+export type SuspensionReason = "MilitaryService" | "UnionOffice" | "LongUnpaidLeave" | "Detention" | "HealthReport" | "ForceMajeure" | "Other";
 
 export interface EmployeeListItem {
   id: string;
@@ -33,6 +58,7 @@ export interface EmployeeListItem {
   hireDate: string | null;
 }
 
+/** Sensitive fields (nationalId when unmasked, militaryStatus, disabilityDegree, bloodType) are null/masked without employee.sensitive.view. */
 export interface EmployeeDetail {
   id: string;
   firstName: string;
@@ -52,9 +78,29 @@ export interface EmployeeDetail {
   accountStatus: UserAccountStatus;
   accessType: "Employee" | "Owner" | "Admin" | null;
   lastInvitationSentAt: string | null;
+  gender: Gender;
+  maritalStatus: MaritalStatus;
+  childCount: number | null;
+  educationStatus: EducationStatus | null;
+  highestEducationLevel: HighestEducationLevel | null;
+  militaryStatus: MilitaryStatus | null;
+  disabilityDegree: DisabilityDegree | null;
+  bloodType: BloodType | null;
+  mobilePhone: string | null;
+  homePhone: string | null;
+  addressLine: string | null;
+  city: string | null;
+  postalCode: string | null;
+  contractType: ContractType | null;
+  employmentType: EmploymentType | null;
+  suspensionReason: SuspensionReason | null;
 }
 
-/** Create/update body (`EmployeeRequest`); PUT replaces every field. */
+/**
+ * Create/update body (`EmployeeRequest`); PUT replaces every field. The fields below `managerEmployeeId` are all
+ * optional client-side (the quick-add dialog only sets first/last name) - the API defaults them the same way
+ * (Gender/MaritalStatus to "unspecified", the rest to null).
+ */
 export interface EmployeeInput {
   firstName: string;
   lastName: string;
@@ -66,6 +112,21 @@ export interface EmployeeInput {
   birthDate: string | null;
   orgUnitId: string | null;
   managerEmployeeId: string | null;
+  gender?: Gender;
+  maritalStatus?: MaritalStatus;
+  childCount?: number | null;
+  educationStatus?: EducationStatus | null;
+  highestEducationLevel?: HighestEducationLevel | null;
+  militaryStatus?: MilitaryStatus | null;
+  disabilityDegree?: DisabilityDegree | null;
+  bloodType?: BloodType | null;
+  mobilePhone?: string | null;
+  homePhone?: string | null;
+  addressLine?: string | null;
+  city?: string | null;
+  postalCode?: string | null;
+  contractType?: ContractType | null;
+  employmentType?: EmploymentType | null;
 }
 
 export interface DirectoryEntry {
@@ -153,7 +214,11 @@ export async function getUpcomingBirthdays(days = 30): Promise<UpcomingBirthday[
   return data;
 }
 
-/** Detail → full PUT body, so a section edit only overrides the fields it owns. */
+/**
+ * Detail → full PUT body, so a section edit only overrides the fields it owns. Sensitive fields (nationalId,
+ * militaryStatus, disabilityDegree, bloodType) round-trip whatever the detail held (masked/null without
+ * employee.sensitive.view) - the server always preserves the real stored values for a caller who cannot see them.
+ */
 export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<EmployeeInput> = {}): EmployeeInput {
   return {
     firstName: detail.firstName,
@@ -166,6 +231,21 @@ export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<Emplo
     birthDate: detail.birthDate,
     orgUnitId: detail.orgUnitId,
     managerEmployeeId: detail.managerEmployeeId,
+    gender: detail.gender,
+    maritalStatus: detail.maritalStatus,
+    childCount: detail.childCount,
+    educationStatus: detail.educationStatus,
+    highestEducationLevel: detail.highestEducationLevel,
+    militaryStatus: detail.militaryStatus,
+    disabilityDegree: detail.disabilityDegree,
+    bloodType: detail.bloodType,
+    mobilePhone: detail.mobilePhone,
+    homePhone: detail.homePhone,
+    addressLine: detail.addressLine,
+    city: detail.city,
+    postalCode: detail.postalCode,
+    contractType: detail.contractType,
+    employmentType: detail.employmentType,
     ...overrides,
   };
 }

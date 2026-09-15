@@ -30,9 +30,33 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AddressLine")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("address_line");
+
                     b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date")
                         .HasColumnName("birth_date");
+
+                    b.Property<string>("BloodType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("blood_type");
+
+                    b.Property<int?>("ChildCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("child_count");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("ContractType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("contract_type");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -42,11 +66,26 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
 
+                    b.Property<string>("DisabilityDegree")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("disability_degree");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(201)
                         .HasColumnType("character varying(201)")
                         .HasColumnName("display_name");
+
+                    b.Property<string>("EducationStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("education_status");
+
+                    b.Property<string>("EmploymentType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("employment_type");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -54,9 +93,27 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
 
+                    b.Property<string>("Gender")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Unspecified")
+                        .HasColumnName("gender");
+
+                    b.Property<string>("HighestEducationLevel")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("highest_education_level");
+
                     b.Property<DateOnly?>("HireDate")
                         .HasColumnType("date")
                         .HasColumnName("hire_date");
+
+                    b.Property<string>("HomePhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("home_phone");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -67,6 +124,24 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ManagerEmployeeId")
                         .HasColumnType("uuid")
                         .HasColumnName("manager_employee_id");
+
+                    b.Property<string>("MaritalStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Unspecified")
+                        .HasColumnName("marital_status");
+
+                    b.Property<string>("MilitaryStatus")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("military_status");
+
+                    b.Property<string>("MobilePhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("mobile_phone");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
@@ -90,11 +165,25 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(254)")
                         .HasColumnName("personal_email");
 
+                    b.Property<string>("PostalCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("postal_code");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
+
+                    b.Property<DateTime?>("SuspendedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("suspended_at_utc");
+
+                    b.Property<string>("SuspensionReason")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("suspension_reason");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")

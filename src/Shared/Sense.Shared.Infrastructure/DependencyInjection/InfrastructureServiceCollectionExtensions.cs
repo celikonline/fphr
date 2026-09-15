@@ -11,6 +11,7 @@ using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Persistence;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Contracts.Storage;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Events;
@@ -19,6 +20,7 @@ using Sense.Shared.Infrastructure.Messaging.Behaviours;
 using Sense.Shared.Infrastructure.Observability;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
+using Sense.Shared.Infrastructure.Security;
 using Sense.Shared.Infrastructure.Storage;
 
 namespace Sense.Shared.Infrastructure.DependencyInjection;
@@ -38,6 +40,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(ConfigurationSections.Outbox)).ValidateOnStart();
         services.AddOptions<DiagnosticsOptions>().Bind(configuration.GetSection(ConfigurationSections.Diagnostics)).ValidateOnStart();
         services.AddOptions<ProblemMappingOptions>().Bind(configuration.GetSection(ConfigurationSections.ProblemDetails)).ValidateOnStart();
+        services.AddOptions<SecurityOptions>().Bind(configuration.GetSection(SecurityOptions.Section));
+
+        // Shared field-level encryption port (moved from Identity so other modules, e.g. Employee, can reuse it).
+        services.TryAddSingleton<IEncryptionProvider, AesGcmEncryptionProvider>();
 
         services.TryAddSingleton(TimeProvider.System);
 

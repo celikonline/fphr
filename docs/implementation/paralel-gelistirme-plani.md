@@ -145,7 +145,7 @@ PC-A hattı (kalem ayrıntısı [faz1a-durum-takibi.md](../analysis/kolayik-vide
 | Kalem | Durum | Dal | Not |
 |---|---|---|---|
 | E0 senkronizasyon slotları (S1 birim onay süreci, S2 kart sekmeleri) | ✅ Bitti | `a/sync-slots` | Bulgu: domain event'ler hiç yayınlanmıyordu (bkz. faz1a-durum-takibi.md); Worker'a yalnız Organization için dar kapsamlı düzeltme yapıldı, genel çözüm PC-B ile koordinasyon gerektiriyor |
-| E1 özlük alanları + durum modeli + kart bölümleri | ❌ Başlanmadı | — | |
+| E1 özlük alanları + durum modeli + kart bölümleri | ✅ Bitti | `a/e1-personal-employment-fields` | PC-B için: `EmployeeHired`, `EmployeeSuspended`, `EmployeeReactivated` (Employee.Contracts/Events), Worker Employee outbox'ını işliyor |
 | E2 kariyer geçmişi | ❌ Başlanmadı | — | |
 | E3 maaş + banka | ❌ Başlanmadı | — | |
 | E4 özel alanlar + self-servis | ❌ Başlanmadı | — | |

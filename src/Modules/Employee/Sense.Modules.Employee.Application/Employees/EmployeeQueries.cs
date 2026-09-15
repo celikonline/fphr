@@ -88,8 +88,8 @@ public sealed class GetEmployeeHandler(EmployeeDetailBuilder builder, IEmployeeR
     }
 }
 
-/// <summary>Builds <see cref="EmployeeDetailDto"/> (manager name + Identity account info).</summary>
-public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadStore store, IUserAccountLookup accounts)
+/// <summary>Builds <see cref="EmployeeDetailDto"/> (manager name + Identity account info); masks sensitive fields per employee.sensitive.view.</summary>
+public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadStore store, IUserAccountLookup accounts, EmployeeSensitiveAccess sensitiveAccess)
 {
     public async Task<EmployeeDetailDto> BuildAsync(EmployeeRow e, CancellationToken ct)
     {
@@ -107,12 +107,14 @@ public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadSt
             account = infos.GetValueOrDefault(userId);
         }
 
+        var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
+
         return new EmployeeDetailDto(
             e.Id,
             e.FirstName,
             e.LastName,
             e.DisplayName,
-            e.NationalId,
+            canViewSensitive ? e.NationalId : Domain.Employees.Employee.MaskNationalId(e.NationalId),
             e.WorkEmail,
             e.PersonalEmail,
             e.WorkPhone,
@@ -125,7 +127,23 @@ public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadSt
             e.UserId,
             account?.Status ?? UserAccountStatus.None,
             account?.AccessType,
-            account?.LastInvitationSentAt);
+            account?.LastInvitationSentAt,
+            e.Gender,
+            e.MaritalStatus,
+            e.ChildCount,
+            e.EducationStatus,
+            e.HighestEducationLevel,
+            canViewSensitive ? e.MilitaryStatus : null,
+            canViewSensitive ? e.DisabilityDegree : null,
+            canViewSensitive ? e.BloodType : null,
+            e.MobilePhone,
+            e.HomePhone,
+            e.AddressLine,
+            e.City,
+            e.PostalCode,
+            e.ContractType,
+            e.EmploymentType,
+            e.SuspensionReason?.ToString());
     }
 }
 

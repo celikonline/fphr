@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
@@ -16,8 +19,8 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<IdentityDbCo
 
 // Organization writes integration events (see IIntegrationEventOutbox, e.g. OrgUnitApprovalPolicyChanged) that only
 // get delivered once this outbox is polled; EventTypeRegistry must know Organization's Domain+Contracts assemblies
-// or OutboxProcessor throws "unknown event type" on the first dequeued message. Identity/Employee/Documents/
-// DataTransfer don't write to their outbox yet (nothing calls IIntegrationEventOutbox for them), so wiring them up
+// or OutboxProcessor throws "unknown event type" on the first dequeued message. Identity/Documents/DataTransfer
+// don't write to their outbox yet (nothing calls IIntegrationEventOutbox for them), so wiring them up
 // here is deferred until they do - see faz1a-durum-takibi.md for the broader finding (domain events raised via
 // Aggregate.Raise(...) are never persisted/dispatched anywhere; this Faz 0 outbox only carries explicit
 // IIntegrationEventOutbox writes).
@@ -28,6 +31,15 @@ builder.Services.AddModuleHandlers(
     typeof(OrganizationDbContext).Assembly,
     typeof(IOrgUnitRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<OrganizationDbContext>>();
+
+// Employee lifecycle integration events (EmployeeHired/Suspended/Reactivated) consumed by Leave/Workflow.
+builder.Services.AddModuleDbContext<EmployeeDbContext>(builder.Configuration, EmployeeDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    EmployeeDbContext.SchemaName,
+    typeof(EmployeePermissions).Assembly,
+    typeof(EmployeeDbContext).Assembly,
+    typeof(IEmployeeRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<EmployeeDbContext>>();
 
 await builder.Build().RunAsync();
 

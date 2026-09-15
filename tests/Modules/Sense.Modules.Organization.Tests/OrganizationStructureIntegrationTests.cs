@@ -118,7 +118,7 @@ public sealed class OrganizationStructureIntegrationTests : TestFixture
         inUse.Error.Code.ShouldBe(OrganizationErrors.UnitTypeInUse);
         inUse.Error.Type.ShouldBe(ErrorType.Conflict);
 
-        await SetEmployeeStatusAsync(employee, EmployeeStatus.Inactive);
+        await SetEmployeeStatusAsync(employee, EmployeeStatus.Terminated);
         (await ExecuteCommandAsync(new DeleteOrgUnitTypeCommand(types[OrgUnitTypeCodes.Branch]))).IsSuccess.ShouldBeTrue();
 
         var levels = (await ExecuteQueryAsync(new ListOrgUnitTypesQuery())).Value;

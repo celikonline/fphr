@@ -90,6 +90,63 @@ public sealed class EmployeeDomainTests
     }
 
     [Fact]
+    public void Create_WithoutHireDate_IsDraft_AndFirstHireDateOnUpdateActivatesExactlyOnce()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("Ali", "Kaya")).Value;
+        e.Status.ShouldBe(EmployeeStatus.Draft);
+
+        var firstHire = e.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: new DateOnly(2024, 1, 1)));
+        firstHire.IsSuccess.ShouldBeTrue();
+        firstHire.Value.ShouldBeTrue();
+        e.Status.ShouldBe(EmployeeStatus.Active);
+
+        var secondUpdate = e.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: new DateOnly(2024, 1, 1)));
+        secondUpdate.Value.ShouldBeFalse();
+        e.Status.ShouldBe(EmployeeStatus.Active);
+    }
+
+    [Fact]
+    public void Create_WithHireDate_IsActiveImmediately()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("Ali", "Kaya", HireDate: new DateOnly(2024, 1, 1))).Value;
+        e.Status.ShouldBe(EmployeeStatus.Active);
+    }
+
+    [Fact]
+    public void Create_WithNegativeChildCount_Fails() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", ChildCount: -1)).Error.Code.ShouldBe(EmployeeDomainErrors.ChildCountInvalid);
+
+    [Theory]
+    [InlineData("0532 123 45 67", "5321234567")]
+    [InlineData("+90 (532) 123-45-67", "+905321234567")]
+    [InlineData(null, null)]
+    public void MobilePhone_IsNormalized(string? input, string? expected) =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", MobilePhone: input)).Value.MobilePhone.ShouldBe(expected);
+
+    [Fact]
+    public void Suspend_OnlyFromActive_AndReactivate_OnlyFromSuspended()
+    {
+        var draft = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+        draft.Suspend(SuspensionReason.Other, DateTime.UtcNow).Error.Code.ShouldBe(EmployeeDomainErrors.SuspendInvalidStatus);
+
+        var active = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", HireDate: new DateOnly(2024, 1, 1))).Value;
+        active.Reactivate().Error.Code.ShouldBe(EmployeeDomainErrors.ReactivateNotSuspended);
+
+        var now = DateTime.UtcNow;
+        active.Suspend(SuspensionReason.HealthReport, now).IsSuccess.ShouldBeTrue();
+        active.Status.ShouldBe(EmployeeStatus.Suspended);
+        active.SuspensionReason.ShouldBe(SuspensionReason.HealthReport);
+        active.SuspendedAtUtc.ShouldBe(now);
+
+        active.Suspend(SuspensionReason.Other, now).Error.Code.ShouldBe(EmployeeDomainErrors.SuspendInvalidStatus);
+
+        active.Reactivate().IsSuccess.ShouldBeTrue();
+        active.Status.ShouldBe(EmployeeStatus.Active);
+        active.SuspensionReason.ShouldBeNull();
+        active.SuspendedAtUtc.ShouldBeNull();
+    }
+
+    [Fact]
     public void Create_WithSelfAsManager_Fails()
     {
         var id = Guid.NewGuid();

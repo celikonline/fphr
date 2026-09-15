@@ -92,6 +92,8 @@ interface EmployeeGeneralFieldsProps {
   /** Only render these fields (default: all), e.g. the create dialog's short form. */
   fields?: EmployeeGeneralField[];
   disabled?: boolean;
+  /** Individually-disabled fields, e.g. a masked nationalId without employee.sensitive.view. */
+  disabledFields?: ReadonlySet<EmployeeGeneralField>;
 }
 
 const FIELD_TYPES: Record<EmployeeGeneralField, string> = {
@@ -108,7 +110,15 @@ const FIELD_TYPES: Record<EmployeeGeneralField, string> = {
 const ALL_FIELDS = Object.keys(FIELD_TYPES) as EmployeeGeneralField[];
 const REQUIRED: ReadonlySet<EmployeeGeneralField> = new Set(["firstName", "lastName"]);
 
-export function EmployeeGeneralFields({ idPrefix, values, errors, onChange, fields = ALL_FIELDS, disabled }: EmployeeGeneralFieldsProps) {
+export function EmployeeGeneralFields({
+  idPrefix,
+  values,
+  errors,
+  onChange,
+  fields = ALL_FIELDS,
+  disabled,
+  disabledFields,
+}: EmployeeGeneralFieldsProps) {
   const { t } = useTranslation(["employees"]);
 
   return (
@@ -125,7 +135,7 @@ export function EmployeeGeneralFields({ idPrefix, values, errors, onChange, fiel
             inputMode={field === "nationalId" ? "numeric" : undefined}
             maxLength={field === "nationalId" ? 11 : undefined}
             value={values[field]}
-            disabled={disabled}
+            disabled={disabled || disabledFields?.has(field)}
             onChange={(e) => onChange(field, e.target.value)}
           />
           {errors[field] && <p className="mt-1 text-xs text-destructive">{errors[field]}</p>}
