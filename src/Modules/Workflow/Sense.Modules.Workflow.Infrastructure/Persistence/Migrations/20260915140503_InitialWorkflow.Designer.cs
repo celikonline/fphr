@@ -12,7 +12,7 @@ using Sense.Modules.Workflow.Infrastructure.Persistence;
 namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(WorkflowDbContext))]
-    [Migration("20260915133217_InitialWorkflow")]
+    [Migration("20260915140503_InitialWorkflow")]
     partial class InitialWorkflow
     {
         /// <inheritdoc />
@@ -88,7 +88,6 @@ namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Sense.Modules.Workflow.Domain.ApprovalRequests.ApprovalHistoryEntry", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -286,7 +285,6 @@ namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Sense.Modules.Workflow.Domain.ApprovalRequests.ApprovalTask", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -390,7 +388,6 @@ namespace Sense.Modules.Workflow.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Sense.Modules.Workflow.Domain.ApprovalRequests.EmailDecisionToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
