@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
@@ -166,14 +166,14 @@ export function LeaveRequestDialog({
                   {t("leave:form.startDate")}
                   <span className="text-destructive"> *</span>
                 </Label>
-                <Input id="leave-start" type="date" value={startDate} disabled={busy} onChange={(e) => setStartDate(e.target.value)} />
+                <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={setStartDate} />
               </div>
               <div>
                 <Label htmlFor="leave-end">
                   {t("leave:form.endDate")}
                   <span className="text-destructive"> *</span>
                 </Label>
-                <Input id="leave-end" type="date" value={endDate} min={startDate || undefined} disabled={busy} onChange={(e) => setEndDate(e.target.value)} />
+                <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
               </div>
             </div>
             {canPreview && (
