@@ -52,6 +52,19 @@ public sealed record CareerRecordRequest(
 /// <summary>Suspend body.</summary>
 public sealed record SuspendEmployeeRequest(SuspensionReason Reason);
 
+/// <summary>Bulk-set body for custom field values: only the entries present change (DefinitionId -&gt; raw value, null clears it).</summary>
+public sealed record SetCustomFieldsRequest(IReadOnlyDictionary<Guid, string?> Values);
+
+/// <summary>Self-service profile edit body ("Self-servis düzenleme"): own contact fields + own employee-editable custom field values.</summary>
+public sealed record UpdateMyProfileRequest(
+    string? PersonalEmail,
+    string? MobilePhone,
+    string? HomePhone,
+    string? AddressLine,
+    string? City,
+    string? PostalCode,
+    IReadOnlyDictionary<Guid, string?>? CustomFieldValues);
+
 /// <summary>Employee grid filters (query string), next to the grid-standard paging parameters.</summary>
 public sealed record EmployeeListFilterRequest
 {
@@ -93,6 +106,14 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> MyCareer(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyCareerQuery(), ct));
+
+    /// <summary>Self-service edit ("Self-servis düzenleme"): own contact fields + own employee-editable custom field values.</summary>
+    [HttpPut("me/profile")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateMyProfileRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new UpdateMyProfileCommand(request.PersonalEmail, request.MobilePhone, request.HomePhone, request.AddressLine, request.City, request.PostalCode, request.CustomFieldValues),
+            ct));
 
     /// <summary>Employee card (404 when missing or outside the caller's data scope).</summary>
     [HttpGet(ApiRoutes.IdParam)]
@@ -163,6 +184,15 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Reactivate(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ReactivateEmployeeCommand(id), ct));
+
+    /// <summary>
+    /// HR/admin write of custom field values: only the entries present in the body change, any active definition may
+    /// be set (a sensitive one is preserved without employee.sensitive.view). Returns the employee's full custom field list.
+    /// </summary>
+    [HttpPut(ApiRoutes.IdParam + "/custom-fields")]
+    [ProducesResponseType<IReadOnlyList<CustomFieldValueDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetCustomFields(Guid id, [FromBody] SetCustomFieldsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetEmployeeCustomFieldsCommand(id, request.Values), ct));
 
     /// <summary>Assigns a manager to every employee in the selection; per-item outcome.</summary>
     [HttpPost("bulk/assign-manager")]

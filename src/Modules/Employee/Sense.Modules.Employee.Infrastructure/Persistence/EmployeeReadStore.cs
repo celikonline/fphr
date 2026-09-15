@@ -65,6 +65,16 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
             .AsSplitQuery()
             .FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
 
+    public async Task<IReadOnlyDictionary<Guid, string?>> GetCustomFieldValuesAsync(Guid employeeId, CancellationToken ct)
+    {
+        var employee = await db.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Include(e => e.CustomFieldValues)
+            .FirstOrDefaultAsync(e => e.Id == employeeId, ct).ConfigureAwait(false);
+        return employee is null
+            ? new Dictionary<Guid, string?>()
+            : employee.CustomFieldValues.ToDictionary(v => v.DefinitionId, v => v.Value);
+    }
+
     private DateOnly Today => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)

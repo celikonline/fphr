@@ -218,6 +218,28 @@
   <data name="employee.salary.view" xml:space="preserve"><value>Maaş ve ödeme bilgilerini görüntüleme</value></data>
   <data name="employee.salary.edit" xml:space="preserve"><value>Maaş bilgilerini düzenleme</value></data>
   <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Banka hesaplarını düzenleme</value></data>
+  <data name="employee.customfield.manage" xml:space="preserve"><value>Özel alan tanımlarını yönetme</value></data>
+  <data name="employee.customfield.view" xml:space="preserve"><value>Özel alan tanımlarını görüntüleme</value></data>
+  <data name="employee.profile.self.edit" xml:space="preserve"><value>Kendi profilini düzenleme</value></data>
+  <data name="employee.custom_field.not_found" xml:space="preserve"><value>Özel alan tanımı bulunamadı.</value></data>
+  <data name="employee.custom_field.key_required" xml:space="preserve"><value>Özel alan anahtarı zorunludur.</value></data>
+  <data name="employee.custom_field.key_too_long" xml:space="preserve"><value>Özel alan anahtarı en fazla 100 karakter olabilir.</value></data>
+  <data name="employee.custom_field.key_invalid" xml:space="preserve"><value>Özel alan anahtarı küçük harfle başlamalı ve yalnızca küçük harf, rakam, alt çizgi içermelidir.</value></data>
+  <data name="employee.custom_field.key_taken" xml:space="preserve"><value>Bu anahtar başka bir özel alan tanımında zaten kullanılıyor.</value></data>
+  <data name="employee.custom_field.name_required" xml:space="preserve"><value>Özel alan adı zorunludur.</value></data>
+  <data name="employee.custom_field.name_too_long" xml:space="preserve"><value>Özel alan adı en fazla 150 karakter olabilir.</value></data>
+  <data name="employee.custom_field.section_invalid" xml:space="preserve"><value>Geçersiz bölüm.</value></data>
+  <data name="employee.custom_field.data_type_invalid" xml:space="preserve"><value>Geçersiz veri türü.</value></data>
+  <data name="employee.custom_field.options_required" xml:space="preserve"><value>Seçim listesi türleri için en az bir seçenek gereklidir.</value></data>
+  <data name="employee.custom_field.option_too_long" xml:space="preserve"><value>Seçenek en fazla 100 karakter olabilir.</value></data>
+  <data name="employee.custom_field.too_many_options" xml:space="preserve"><value>En fazla 50 seçenek eklenebilir.</value></data>
+  <data name="employee.custom_field.already_inactive" xml:space="preserve"><value>Özel alan tanımı zaten pasif.</value></data>
+  <data name="employee.custom_field.already_active" xml:space="preserve"><value>Özel alan tanımı zaten aktif.</value></data>
+  <data name="employee.custom_field.value_required" xml:space="preserve"><value>Bu özel alan zorunludur.</value></data>
+  <data name="employee.custom_field.value_invalid" xml:space="preserve"><value>Özel alan değeri geçersiz.</value></data>
+  <data name="employee.custom_field.value_too_long" xml:space="preserve"><value>Özel alan değeri en fazla 1000 karakter olabilir.</value></data>
+  <data name="employee.custom_field.option_unknown" xml:space="preserve"><value>Seçilen değer bu özel alanın seçenek listesinde yok.</value></data>
+  <data name="employee.custom_field.not_employee_editable" xml:space="preserve"><value>Bu özel alan çalışan tarafından düzenlenemez.</value></data>
 
   <!-- Organizasyon -->
   <data name="organization.unit_type.not_found" xml:space="preserve"><value>Seviye bulunamadı.</value></data>

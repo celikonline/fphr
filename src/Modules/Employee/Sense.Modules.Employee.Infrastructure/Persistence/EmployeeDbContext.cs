@@ -1,6 +1,10 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -19,6 +23,8 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
     public override string Schema => SchemaName;
 
     public DbSet<EmployeeEntity> Employees => Set<EmployeeEntity>();
+
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
 }
 
 internal static class EmployeeTables
@@ -29,8 +35,29 @@ internal static class EmployeeTables
     public const string CareerRecordIdColumn = "CareerRecordId";
     public const string SalaryRecords = "salary_records";
     public const string BankAccounts = "bank_accounts";
+    public const string CustomFieldDefinitions = "custom_field_definitions";
+    public const string CustomFieldValues = "custom_field_values";
 
     public const int StatusLength = 30;
+}
+
+/// <summary>jsonb value conversion for the small immutable string list on a custom field definition (its Options).</summary>
+internal static class JsonColumn
+{
+    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
+
+    public static PropertyBuilder<IReadOnlyList<string>> AsJsonb(this PropertyBuilder<IReadOnlyList<string>> property)
+    {
+        var converter = new ValueConverter<IReadOnlyList<string>, string>(
+            v => JsonSerializer.Serialize(v, Options),
+            s => JsonSerializer.Deserialize<List<string>>(s, Options) ?? new List<string>());
+        var comparer = new ValueComparer<IReadOnlyList<string>>(
+            (a, b) => JsonSerializer.Serialize(a, Options) == JsonSerializer.Serialize(b, Options),
+            v => JsonSerializer.Serialize(v, Options).GetHashCode(StringComparison.Ordinal),
+            v => v);
+        property.HasConversion(converter, comparer).HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
+        return property;
+    }
 }
 
 public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEntity>
@@ -80,9 +107,11 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasMany(x => x.CareerRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         b.Navigation(x => x.CareerRecords).AutoInclude();
 
-        // Salary history and bank accounts: explicitly included by the payment use cases only (never auto-included).
+        // Salary history, bank accounts and custom field values: explicitly included by their own use cases only
+        // (never auto-included, unlike career history).
         b.HasMany(x => x.SalaryRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(x => x.BankAccounts).WithOne().HasForeignKey(a => a.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(x => x.CustomFieldValues).WithOne().HasForeignKey(v => v.EmployeeId).OnDelete(DeleteBehavior.Cascade);
 
         b.Ignore(x => x.CareerTimeline);
         b.Ignore(x => x.SalaryHistory);
@@ -161,5 +190,50 @@ public sealed class BankAccountConfiguration : IEntityTypeConfiguration<BankAcco
         b.Property(x => x.Note).HasMaxLength(EmployeeLimits.BankAccountNoteMaxLength);
 
         b.HasIndex(x => x.EmployeeId);
+    }
+}
+
+public sealed class CustomFieldDefinitionConfiguration : IEntityTypeConfiguration<CustomFieldDefinition>
+{
+    public void Configure(EntityTypeBuilder<CustomFieldDefinition> b)
+    {
+        b.ToTable(EmployeeTables.CustomFieldDefinitions);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Key).HasMaxLength(CustomFieldLimits.KeyMaxLength).IsRequired();
+        b.Property(x => x.Name).HasMaxLength(CustomFieldLimits.NameMaxLength).IsRequired();
+        b.Property(x => x.DataType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.Section).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.SortOrder).IsRequired();
+        b.Property(x => x.IsActive).IsRequired();
+        b.Property(x => x.IsReportable).IsRequired();
+
+        // Options has no setter (backed by the private _options field): field-only access lets EF read/materialize
+        // it without one, the same way CareerRecord's owned Assignments collection is backed by a private field.
+        b.Property(x => x.Options)
+            .HasField("_options")
+            .UsePropertyAccessMode(PropertyAccessMode.Field)
+            .AsJsonb();
+
+        b.HasIndex(x => new { x.TenantId, x.Key }).IsUnique();
+        b.HasIndex(x => new { x.TenantId, x.IsActive });
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class CustomFieldValueConfiguration : IEntityTypeConfiguration<CustomFieldValue>
+{
+    public void Configure(EntityTypeBuilder<CustomFieldValue> b)
+    {
+        b.ToTable(EmployeeTables.CustomFieldValues);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Value).HasMaxLength(CustomFieldLimits.ValueMaxLength);
+
+        b.HasIndex(x => x.EmployeeId);
+        b.HasIndex(x => new { x.EmployeeId, x.DefinitionId }).IsUnique();
+        b.HasIndex(x => x.DefinitionId);
     }
 }

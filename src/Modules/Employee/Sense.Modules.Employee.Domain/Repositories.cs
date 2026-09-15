@@ -1,3 +1,4 @@
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee": a using-alias literally named "Employee" does not win
 // over the enclosing Sense.Modules.Employee namespace segment (CS0118) regardless of where the
@@ -17,6 +18,9 @@ public interface IEmployeeRepository
     /// <summary>Tracked employee with its salary records and bank accounts loaded (not auto-included anywhere else).</summary>
     Task<Result<EmployeeEntity>> GetWithPaymentsAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Tracked employee with its custom field values loaded (not auto-included anywhere else).</summary>
+    Task<Result<EmployeeEntity>> GetWithCustomFieldsAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default);
@@ -26,4 +30,21 @@ public interface IEmployeeRepository
 
     /// <summary>Every employee id of the tenant mapped to its current manager (hierarchy checks).</summary>
     Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>Custom field definition repository (tenant admin catalog; see <see cref="CustomFieldDefinition"/> for why it is never hard-deleted).</summary>
+public interface ICustomFieldDefinitionRepository
+{
+    void Add(CustomFieldDefinition definition);
+
+    Task<Result<CustomFieldDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>True if another definition of the tenant already uses this key.</summary>
+    Task<bool> KeyTakenAsync(string key, Guid? exceptId, CancellationToken cancellationToken = default);
+
+    /// <summary>All definitions (admin catalog, includes inactive when requested), ordered by SortOrder then Name.</summary>
+    Task<IReadOnlyList<CustomFieldDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    /// <summary>Active definitions only - the set employee custom field values are validated/rendered against.</summary>
+    Task<IReadOnlyList<CustomFieldDefinition>> ListActiveAsync(CancellationToken cancellationToken = default);
 }

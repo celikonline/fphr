@@ -58,7 +58,8 @@ public sealed record EmployeeDetailDto(
     EmploymentType? EmploymentType,
     string? SuspensionReason,
     DateOnly? LeaveAccrualStartDate = null,
-    DateOnly? PositionStartDate = null);
+    DateOnly? PositionStartDate = null,
+    IReadOnlyList<CustomFieldValueDto>? CustomFields = null);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

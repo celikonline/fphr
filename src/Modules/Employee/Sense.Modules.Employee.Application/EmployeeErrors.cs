@@ -12,4 +12,10 @@ public static class EmployeeErrors
 
     /// <summary>Target org unit is outside the units the caller may manage (e.g. a unit manager adding to another unit).</summary>
     public const string OrgUnitOutOfScope = "employee.org_unit_out_of_scope";
+
+    public const string CustomFieldDefinitionNotFound = "employee.custom_field.not_found";
+    public const string CustomFieldKeyTaken = "employee.custom_field.key_taken";
+
+    /// <summary>A self-service request tried to touch a definition that is not IsEmployeeEditable.</summary>
+    public const string CustomFieldNotEmployeeEditable = "employee.custom_field.not_employee_editable";
 }

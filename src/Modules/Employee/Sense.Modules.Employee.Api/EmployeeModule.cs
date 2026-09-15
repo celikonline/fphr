@@ -8,6 +8,7 @@ using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
@@ -48,6 +49,10 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<EmployeeReferenceValidator>();
         services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();
+
+        // Custom field definitions (tenant admin catalog) + employee values (E4)
+        services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>();
+        services.AddScoped<CustomFieldValueReader>();
 
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();

@@ -91,6 +91,12 @@ public static class EmployeeProfileSections
 {
     /// <summary>Bank accounts (added/edited/deleted/primary changed).</summary>
     public const string Bank = "bank";
+
+    /// <summary>Custom field values changed via the HR/admin write path (PUT /employees/{id}/custom-fields).</summary>
+    public const string CustomFields = "custom_fields";
+
+    /// <summary>Self-service edit (PUT /employees/me/profile): contact fields and/or own employee-editable custom field values.</summary>
+    public const string SelfService = "self_service";
 }
 
 /// <summary>

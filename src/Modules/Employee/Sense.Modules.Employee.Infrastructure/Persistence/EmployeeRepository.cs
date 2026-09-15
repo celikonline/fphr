@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
@@ -24,6 +25,15 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         var employee = await context.Employees
             .Include(e => e.SalaryRecords)
             .Include(e => e.BankAccounts)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        return employee is null ? Error.NotFound(EmployeeDomainErrors.EmployeeNotFound) : employee;
+    }
+
+    public async Task<Result<EmployeeEntity>> GetWithCustomFieldsAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var employee = await context.Employees
+            .Include(e => e.CustomFieldValues)
             .AsSplitQuery()
             .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
         return employee is null ? Error.NotFound(EmployeeDomainErrors.EmployeeNotFound) : employee;
@@ -56,4 +66,35 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
 public sealed class EmployeeUnitOfWork(EmployeeDbContext context) : IEmployeeUnitOfWork
 {
     public Task SaveChangesAsync(CancellationToken ct) => context.SaveChangesAsync(ct);
+}
+
+/// <summary>EF Core-backed custom field definition repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class CustomFieldDefinitionRepository(EmployeeDbContext context) : ICustomFieldDefinitionRepository
+{
+    public void Add(CustomFieldDefinition definition) => context.CustomFieldDefinitions.Add(definition);
+
+    public async Task<Result<CustomFieldDefinition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var definition = await context.CustomFieldDefinitions.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return definition is null ? Error.NotFound(CustomFieldDomainErrors.NotFound) : definition;
+    }
+
+    public async Task<bool> KeyTakenAsync(string key, Guid? exceptId, CancellationToken cancellationToken = default) =>
+        await context.CustomFieldDefinitions.AnyAsync(d => d.Key == key && (exceptId == null || d.Id != exceptId), cancellationToken);
+
+    public async Task<IReadOnlyList<CustomFieldDefinition>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = context.CustomFieldDefinitions.AsNoTracking();
+        if (!includeInactive)
+        {
+            query = query.Where(d => d.IsActive);
+        }
+
+        return await query.OrderBy(d => d.SortOrder).ThenBy(d => d.Name).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<CustomFieldDefinition>> ListActiveAsync(CancellationToken cancellationToken = default) =>
+        await context.CustomFieldDefinitions.AsNoTracking().Where(d => d.IsActive)
+            .OrderBy(d => d.SortOrder).ThenBy(d => d.Name)
+            .ToListAsync(cancellationToken);
 }

@@ -27,6 +27,19 @@ public static class EmployeePermissions
     /// <summary>Unmasked TCKN, IBAN and health/disability fields (DisabilityDegree, BloodType, MilitaryStatus); everyone else gets masked/null.</summary>
     public const string SensitiveViewKey = "employee.sensitive.view";
 
+    /// <summary>Create/update/deactivate/reactivate custom field definitions (tenant admin catalog).</summary>
+    public const string CustomFieldManageKey = "employee.customfield.manage";
+
+    /// <summary>List custom field definitions (on top of employees.read for reading employees' values).</summary>
+    public const string CustomFieldViewKey = "employee.customfield.view";
+
+    /// <summary>
+    /// Self-service edit of one's own contact/address fields and employee-editable custom field values
+    /// ("Self-servis düzenleme", 11.3.03). Contains ".self." so the wildcard role wiring (PermissionPatterns.SelfService)
+    /// grants it automatically.
+    /// </summary>
+    public const string ProfileSelfEditKey = "employee.profile.self.edit";
+
     /// <summary>Read employee records (list/detail), filtered by data scope.</summary>
     public static readonly Permission EmployeesRead = new(
         EmployeesReadKey, Module, "Read Employees", Group, "View employee records");
@@ -75,7 +88,22 @@ public static class EmployeePermissions
     public static readonly Permission SensitiveView = new(
         SensitiveViewKey, Module, "View Sensitive Fields", Group, "View unmasked national id, IBAN and health/disability fields");
 
+    /// <summary>Maintain custom field definitions.</summary>
+    public static readonly Permission CustomFieldManage = new(
+        CustomFieldManageKey, Module, "Manage Custom Fields", Group, "Create, update, deactivate and reactivate custom field definitions");
+
+    /// <summary>List custom field definitions.</summary>
+    public static readonly Permission CustomFieldView = new(
+        CustomFieldViewKey, Module, "View Custom Field Definitions", Group, "View the custom field definition catalog");
+
+    /// <summary>Self-service profile edit (own contact fields + own employee-editable custom fields).</summary>
+    public static readonly Permission ProfileSelfEdit = new(
+        ProfileSelfEditKey, Module, "Edit Own Profile", Group, "Edit one's own contact fields and employee-editable custom fields");
+
     /// <summary>All Employee module permissions.</summary>
     public static IEnumerable<Permission> All =>
-        [EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit, BankAccountsEdit, MyView, EmployeesImport, SensitiveView];
+        [
+            EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
+            BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, ProfileSelfEdit,
+        ];
 }

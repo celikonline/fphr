@@ -90,7 +90,13 @@ public sealed class GetEmployeeHandler(EmployeeDetailBuilder builder, IEmployeeR
 }
 
 /// <summary>Builds <see cref="EmployeeDetailDto"/> (manager name + Identity account info); masks sensitive fields per employee.sensitive.view.</summary>
-public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadStore store, IUserAccountLookup accounts, EmployeeSensitiveAccess sensitiveAccess, TimeProvider clock)
+public sealed class EmployeeDetailBuilder(
+    ITenantContext tenant,
+    IEmployeeReadStore store,
+    IUserAccountLookup accounts,
+    EmployeeSensitiveAccess sensitiveAccess,
+    CustomFieldValueReader customFields,
+    TimeProvider clock)
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
@@ -113,6 +119,7 @@ public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadSt
         }
 
         var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
+        var customFieldValues = await customFields.BuildAsync(e, ct).ConfigureAwait(false);
 
         return new EmployeeDetailDto(
             e.Id,
@@ -150,7 +157,8 @@ public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadSt
             e.EmploymentType,
             e.SuspensionReason?.ToString(),
             e.LeaveAccrualStartDate,
-            e.PositionStartDate);
+            e.PositionStartDate,
+            customFieldValues);
     }
 }
 
