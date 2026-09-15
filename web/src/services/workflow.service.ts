@@ -46,8 +46,9 @@ export async function getPolicy(id: string): Promise<ApprovalPolicyDto> {
   return data;
 }
 
-export async function createPolicy(payload: CreateOrUpdatePolicyPayload): Promise<{ id: string }> {
-  const { data } = await apiClient.post<{ id: string }>(POLICIES, payload);
+/** The command returns the new policy's id as a raw GUID (not wrapped in an object). */
+export async function createPolicy(payload: CreateOrUpdatePolicyPayload): Promise<string> {
+  const { data } = await apiClient.post<string>(POLICIES, payload);
   return data;
 }
 
@@ -68,7 +69,7 @@ export interface InboxTaskDto {
   subjectId: string;
   requesterName?: string;
   stepNumber: number;
-  isFallbackRole: boolean;
+  isFallbackRoleTask: boolean;
 }
 
 export async function listInbox(): Promise<InboxTaskDto[]> {
@@ -91,34 +92,32 @@ export async function overrideDecideTask(taskId: string, payload: DecideTaskPayl
 
 // ---------------------------------------------------------------- Approval status / history
 
-export interface ApprovalStepStatusDto {
-  stepNumber: number;
-  approverEmployeeId?: string;
-  fallbackRoleCode?: string;
-  isRequired: boolean;
-  status: string;
-}
-
-export interface ApprovalStatusDto {
+export interface ApprovalRequestStatusDto {
   approvalRequestId: string;
   requestType: string;
   subjectId: string;
+  requesterEmployeeId: string;
   status: string;
+  stepCount: number;
   currentStepNumber?: number;
-  showCurrentApproverToRequester: boolean;
-  steps: ApprovalStepStatusDto[];
+  /** Only populated when the request's ShowCurrentApproverToRequester flag is set and the current task has a concrete assignee. */
+  currentApproverEmployeeId?: string;
 }
 
-export async function getApprovalStatus(id: string): Promise<ApprovalStatusDto> {
-  const { data } = await apiClient.get<ApprovalStatusDto>(`${REQUESTS}/${id}/status`);
+export async function getApprovalStatus(id: string): Promise<ApprovalRequestStatusDto> {
+  const { data } = await apiClient.get<ApprovalRequestStatusDto>(`${REQUESTS}/${id}/status`);
   return data;
 }
 
 export interface MyApprovalRequestDto {
-  id: string;
+  approvalRequestId: string;
   requestType: string;
+  subjectId: string;
   status: string;
+  stepCount: number;
+  currentStepNumber?: number;
   submittedAt: string;
+  completedAt?: string;
 }
 
 export async function listMyRequests(): Promise<MyApprovalRequestDto[]> {
