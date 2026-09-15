@@ -3,6 +3,7 @@ using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
 using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
@@ -60,6 +61,9 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         await context.Employees.AsNoTracking()
             .Select(e => new { e.Id, e.ManagerEmployeeId })
             .ToDictionaryAsync(e => e.Id, e => e.ManagerEmployeeId, cancellationToken);
+
+    public async Task<int> CountActiveAsync(CancellationToken cancellationToken = default) =>
+        await context.Employees.CountAsync(e => e.Status == EmployeeStatus.Active, cancellationToken);
 }
 
 /// <summary>Saves the Employee DbContext directly (SaveChanges is atomic: all pending changes or none).</summary>
@@ -97,4 +101,30 @@ public sealed class CustomFieldDefinitionRepository(EmployeeDbContext context) :
         await context.CustomFieldDefinitions.AsNoTracking().Where(d => d.IsActive)
             .OrderBy(d => d.SortOrder).ThenBy(d => d.Name)
             .ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed termination reason repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class TerminationReasonRepository(EmployeeDbContext context) : ITerminationReasonRepository
+{
+    public void Add(TerminationReason reason) => context.TerminationReasons.Add(reason);
+
+    public async Task<Result<TerminationReason>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var reason = await context.TerminationReasons.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return reason is null ? Error.NotFound(EmployeeDomainErrors.TerminationReasonNotFound) : reason;
+    }
+
+    public async Task<IReadOnlyList<TerminationReason>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = context.TerminationReasons.AsNoTracking();
+        if (!includeInactive)
+        {
+            query = query.Where(r => r.IsActive);
+        }
+
+        return await query.OrderBy(r => r.SortOrder).ThenBy(r => r.Name).ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> AnyForTenantAsync(CancellationToken cancellationToken = default) =>
+        await context.TerminationReasons.AnyAsync(cancellationToken);
 }

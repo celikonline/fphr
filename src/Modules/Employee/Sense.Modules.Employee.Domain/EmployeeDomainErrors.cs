@@ -22,6 +22,20 @@ public static class EmployeeDomainErrors
     public const string SuspendInvalidStatus = "employee.suspend_invalid_status";
     public const string ReactivateNotSuspended = "employee.reactivate_not_suspended";
 
+    /// <summary>Terminate is only allowed from Active/Suspended (not Draft, not already Terminated).</summary>
+    public const string TerminateInvalidStatus = "employee.terminate_invalid_status";
+
+    public const string TerminationDateBeforeHireDate = "employee.termination_date_before_hire_date";
+    public const string TerminationReasonNotFound = "employee.termination_reason_not_found";
+    public const string TerminationReasonCodeRequired = "employee.termination_reason_code_required";
+    public const string TerminationReasonCodeTooLong = "employee.termination_reason_code_too_long";
+
+    /// <summary>Tenant-unique per <see cref="Terminations.TerminationReason"/>'s Code uniqueness rule (checked by a future CRUD command; not used by this pass's system seed).</summary>
+    public const string TerminationReasonCodeTaken = "employee.termination_reason_code_taken";
+
+    public const string TerminationReasonNameRequired = "employee.termination_reason_name_required";
+    public const string TerminationReasonNameTooLong = "employee.termination_reason_name_too_long";
+
     public const string CareerRecordNotFound = "employee.career_record_not_found";
 
     /// <summary>A new/edited record must start after the previous record's ValidFrom.</summary>

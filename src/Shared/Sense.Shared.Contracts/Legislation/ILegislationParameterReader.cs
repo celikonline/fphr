@@ -90,4 +90,9 @@ public static class LegislationParameterKeys
     public const string OvertimeAnnualLimitHours = "Overtime.AnnualLimitHours";
     public const string OvertimeCompTimeExpiryMonths = "Overtime.CompTimeExpiryMonths";
     public const string OvertimeConsentRevocationNoticeDays = "Overtime.ConsentRevocationNoticeDays";
+
+    // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"). Seeded via a Leave migration
+    // (ADR 0008: single owner table leave.legislation_parameters) - Employee only reads them through this reader.
+    public const string JobSecurityMinHeadcount = "JobSecurity.MinHeadcount";
+    public const string JobSecurityMinSeniorityMonths = "JobSecurity.MinSeniorityMonths";
 }

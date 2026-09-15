@@ -1,9 +1,11 @@
 using FluentValidation;
 using Sense.Modules.Employee.Application.Career;
+using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Contracts;
-// Not "using Sense.Modules.Employee.Contracts.Events" - it declares its own SuspensionReason (Contracts stays
-// independent of Domain, per architecture rule), which would collide with Domain.Employees.SuspensionReason below;
-// event types (EmployeeHired/EmployeeSuspended/EmployeeReactivated) are referenced as Contracts.Events.* instead.
+// Not "using Sense.Modules.Employee.Contracts.Events" - it declares its own SuspensionReason/TerminationType
+// (Contracts stays independent of Domain, per architecture rule), which would collide with Domain.Employees'
+// versions below; event types (EmployeeHired/EmployeeSuspended/EmployeeReactivated/EmployeeTerminated) are
+// referenced as Contracts.Events.* instead.
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Organization.Contracts;
@@ -421,6 +423,92 @@ public sealed class ReactivateEmployeeHandler(
         outbox.Enqueue(new Contracts.Events.EmployeeReactivated(tenant.TenantId, employee.Id) { ActorUserId = currentUser.UserId });
         return await details.BuildAsync(employee, cancellationToken);
     }
+}
+
+/// <summary>
+/// Terminates an Active or Suspended employee ("İşten ayrılış sihirbazı", 11.3.03 E5a); does not touch the Identity
+/// account. TerminationType/SgkExitCode are optional overrides - when omitted, the chosen reason's defaults are used
+/// (both null when the reason has none, which the domain accepts: TerminationType.Other has no implicit fallback here,
+/// the caller must send one or pick a reason that defaults it).
+/// </summary>
+[RequiresPermission(EmployeePermissions.EmployeesUpdateKey)]
+public sealed record TerminateEmployeeCommand(
+    Guid Id,
+    DateOnly TerminationDate,
+    Guid TerminationReasonId,
+    TerminationType? TerminationType = null,
+    string? SgkExitCode = null) : ICommand<TerminateEmployeeResultDto>, IScopedRequest
+{
+    public Guid? TargetEmployeeId => Id;
+}
+
+public sealed class TerminateEmployeeValidator : AbstractValidator<TerminateEmployeeCommand>
+{
+    public TerminateEmployeeValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.TerminationReasonId).NotEmpty();
+        RuleFor(x => x.TerminationType).IsInEnum().When(x => x.TerminationType is not null);
+    }
+}
+
+public sealed class TerminateEmployeeHandler(
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IEmployeeRepository employees,
+    ITerminationReasonRepository reasons,
+    TerminationReasonProvisioningService reasonProvisioning,
+    JobSecurityEvaluator jobSecurity,
+    IIntegrationEventOutbox outbox,
+    EmployeeDetailBuilder details) : ICommandHandler<TerminateEmployeeCommand, TerminateEmployeeResultDto>
+{
+    public async Task<Result<TerminateEmployeeResultDto>> Handle(TerminateEmployeeCommand command, CancellationToken cancellationToken)
+    {
+        var found = await employees.GetByIdAsync(command.Id, cancellationToken);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        var employee = found.Value;
+
+        // The reason catalog may not exist yet for a tenant that never opened the wizard/list before terminating.
+        await reasonProvisioning.EnsureSeededAsync(tenant.TenantId, cancellationToken);
+        var foundReason = await reasons.GetByIdAsync(command.TerminationReasonId, cancellationToken);
+        if (foundReason.IsFailure)
+        {
+            return foundReason.Error;
+        }
+
+        var reason = foundReason.Value;
+        var terminationType = command.TerminationType ?? reason.DefaultTerminationType ?? Domain.Employees.TerminationType.Other;
+        var sgkExitCode = command.SgkExitCode ?? reason.DefaultSgkExitCode;
+
+        var evaluation = await jobSecurity.EvaluateAsync(employee, terminationType, cancellationToken);
+
+        var terminated = employee.Terminate(command.TerminationDate, reason.Id, terminationType, sgkExitCode);
+        if (terminated.IsFailure)
+        {
+            return terminated.Error;
+        }
+
+        outbox.Enqueue(new Contracts.Events.EmployeeTerminated(
+            tenant.TenantId, employee.Id, ToContractType(terminationType), reason.Code, sgkExitCode) { ActorUserId = currentUser.UserId });
+
+        var dto = await details.BuildAsync(employee, cancellationToken);
+        return new TerminateEmployeeResultDto(dto, evaluation.InScope, evaluation.ShowWarning, evaluation.WarningMessage);
+    }
+
+    private static Contracts.Events.TerminationType ToContractType(Domain.Employees.TerminationType type) => type switch
+    {
+        Domain.Employees.TerminationType.ValidCause_Art18 => Contracts.Events.TerminationType.ValidCause_Art18,
+        Domain.Employees.TerminationType.EmployeeJustCause_Art24 => Contracts.Events.TerminationType.EmployeeJustCause_Art24,
+        Domain.Employees.TerminationType.EmployerJustCause_Art25 => Contracts.Events.TerminationType.EmployerJustCause_Art25,
+        Domain.Employees.TerminationType.MutualRescission => Contracts.Events.TerminationType.MutualRescission,
+        Domain.Employees.TerminationType.Resignation => Contracts.Events.TerminationType.Resignation,
+        Domain.Employees.TerminationType.FixedTermExpiry => Contracts.Events.TerminationType.FixedTermExpiry,
+        _ => Contracts.Events.TerminationType.Other,
+    };
 }
 
 /// <summary>Assigns one manager to every employee of a grid selection; per-item outcome (self → Skipped, cycle → Failed).</summary>

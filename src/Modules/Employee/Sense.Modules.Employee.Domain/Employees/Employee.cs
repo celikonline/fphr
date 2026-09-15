@@ -8,7 +8,7 @@ namespace Sense.Modules.Employee.Domain.Employees;
 /// Employee lifecycle status. Quick-add without a hire date creates <see cref="Draft"/>; setting the hire date the
 /// first time transitions it to <see cref="Active"/> (Application layer raises the <c>EmployeeHired</c> integration
 /// event exactly once for that transition). <see cref="Suspended"/>/<see cref="Terminated"/> are later, explicit
-/// transitions (<see cref="Employee.Suspend"/>/<see cref="Employee.Reactivate"/>; termination is a later package).
+/// transitions (<see cref="Employee.Suspend"/>/<see cref="Employee.Reactivate"/>/<see cref="Employee.Terminate"/>).
 /// </summary>
 public enum EmployeeStatus
 {
@@ -27,6 +27,31 @@ public enum SuspensionReason
     Detention = 3,
     HealthReport = 4,
     ForceMajeure = 5,
+    Other = 6,
+}
+
+/// <summary>
+/// How an employee's contract ended ("İşten ayrılış sihirbazı", 11.3.03 E5a). A termination reason (Employee.Domain.Terminations.TerminationReason)
+/// may suggest a default via its DefaultTerminationType; the wizard lets the user override it.
+/// <see cref="ValidCause_Art18"/> is the only value that can trigger the job-security advisory warning
+/// (see JobSecurityEvaluator in the Application layer).
+/// </summary>
+public enum TerminationType
+{
+    /// <summary>4857 md.18 - işveren feshi, geçerli neden.</summary>
+    ValidCause_Art18 = 0,
+
+    /// <summary>4857 md.24 - işçinin haklı nedenle feshi.</summary>
+    EmployeeJustCause_Art24 = 1,
+
+    /// <summary>4857 md.25 - işverenin haklı nedenle feshi.</summary>
+    EmployerJustCause_Art25 = 2,
+
+    /// <summary>İkale (anlaşmalı fesih).</summary>
+    MutualRescission = 3,
+
+    Resignation = 4,
+    FixedTermExpiry = 5,
     Other = 6,
 }
 
@@ -116,6 +141,31 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     public SuspensionReason? SuspensionReason { get; private set; }
 
     public DateTime? SuspendedAtUtc { get; private set; }
+
+    /// <summary>Set once <see cref="Status"/> becomes <see cref="EmployeeStatus.Terminated"/> ("İşten ayrılış sihirbazı", 11.3.03 E5a).</summary>
+    public DateOnly? TerminationDate { get; private set; }
+
+    /// <summary>Cross-reference to Employee.Domain.Terminations.TerminationReason (same-module, deliberately FK-less like <see cref="ManagerEmployeeId"/>).</summary>
+    public Guid? TerminationReasonId { get; private set; }
+
+    public TerminationType? TerminationType { get; private set; }
+
+    /// <summary>SGK işten çıkış kodu; pre-filled from the chosen reason's default but editable.</summary>
+    public string? SgkExitCode { get; private set; }
+
+    /// <summary>
+    /// "İşveren vekili" (4857 md.18) - excludes the employee from the job-security scope check regardless of headcount/seniority.
+    /// Not yet exposed on the create/update API (Faz 1a E5a gap): set only via <see cref="SetEmployerRepresentative"/>, a later
+    /// package should surface it on the employee card.
+    /// </summary>
+    public bool IsEmployerRepresentative { get; private set; }
+
+    /// <summary>
+    /// "Yer altı işçisi" (4857 md.53/md.18). Exists as a field per the 11.3.03 spec; TODO: the statutory job-security rule
+    /// also exempts underground workers from the minimum-seniority requirement, which JobSecurityEvaluator does not apply
+    /// yet (see its own TODO). Not yet exposed on the create/update API.
+    /// </summary>
+    public bool IsUndergroundWorker { get; private set; }
 
     public Gender Gender { get; private set; }
 
@@ -588,6 +638,40 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         Raise(new EmployeeStatusChanged(Id, TenantId, Status));
         return Result.Success();
     }
+
+    /// <summary>
+    /// Terminates an Active or Suspended employee ("İşten ayrılış sihirbazı", 11.3.03 E5a); does not touch the Identity
+    /// account. <paramref name="terminationReasonId"/> is validated for existence by the Application layer (same-module
+    /// FK-less reference, per <see cref="TerminationReasonId"/>).
+    /// </summary>
+    public Result Terminate(DateOnly terminationDate, Guid terminationReasonId, TerminationType terminationType, string? sgkExitCode)
+    {
+        if (Status is not (EmployeeStatus.Active or EmployeeStatus.Suspended))
+        {
+            return Error.Rule(EmployeeDomainErrors.TerminateInvalidStatus);
+        }
+
+        if (HireDate is { } hireDate && terminationDate < hireDate)
+        {
+            return Error.Rule(EmployeeDomainErrors.TerminationDateBeforeHireDate);
+        }
+
+        TerminationDate = terminationDate;
+        TerminationReasonId = terminationReasonId;
+        TerminationType = terminationType;
+        SgkExitCode = string.IsNullOrWhiteSpace(sgkExitCode) ? null : sgkExitCode.Trim();
+        SuspensionReason = null;
+        SuspendedAtUtc = null;
+        Status = EmployeeStatus.Terminated;
+        Raise(new EmployeeStatusChanged(Id, TenantId, Status));
+        return Result.Success();
+    }
+
+    /// <summary>See <see cref="IsEmployerRepresentative"/> doc comment for why this is a standalone setter rather than part of <see cref="Apply"/>.</summary>
+    public void SetEmployerRepresentative(bool value) => IsEmployerRepresentative = value;
+
+    /// <summary>See <see cref="IsUndergroundWorker"/> doc comment for why this is a standalone setter rather than part of <see cref="Apply"/>.</summary>
+    public void SetUndergroundWorker(bool value) => IsUndergroundWorker = value;
 
     /// <summary>Last 4 digits only, e.g. "*******1234".</summary>
     public static string? MaskNationalId(string? nationalId) =>

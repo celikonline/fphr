@@ -32,6 +32,28 @@ public sealed record EmployeeSuspended(Guid TenantId, Guid EmployeeId, Suspensio
 public sealed record EmployeeReactivated(Guid TenantId, Guid EmployeeId) : IntegrationEvent(TenantId);
 
 /// <summary>
+/// How an employee's contract ended ("İşten ayrılış sihirbazı", 11.3.03 E5a). Mirrors the Domain's own TerminationType
+/// enum (Contracts stays independent of Domain, per architecture rule); the Application layer maps between the two.
+/// </summary>
+public enum TerminationType
+{
+    ValidCause_Art18 = 0,
+    EmployeeJustCause_Art24 = 1,
+    EmployerJustCause_Art25 = 2,
+    MutualRescission = 3,
+    Resignation = 4,
+    FixedTermExpiry = 5,
+    Other = 6,
+}
+
+/// <summary>
+/// Raised when an Active/Suspended employee is terminated; the Identity account is not touched by this event.
+/// <paramref name="ReasonCode"/> is the chosen TerminationReason's stable Code (not its id - consumers outside
+/// Employee never resolve the tenant catalog).
+/// </summary>
+public sealed record EmployeeTerminated(Guid TenantId, Guid EmployeeId, TerminationType TerminationType, string ReasonCode, string? SgkExitCode) : IntegrationEvent(TenantId);
+
+/// <summary>
 /// Why a career period starts. Mirrors the Domain's CareerChangeType (Contracts stays independent of Domain, per
 /// architecture rule); the Application layer maps between the two.
 /// </summary>

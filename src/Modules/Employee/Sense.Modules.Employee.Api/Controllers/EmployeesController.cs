@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Bulk;
@@ -51,6 +52,9 @@ public sealed record CareerRecordRequest(
 
 /// <summary>Suspend body.</summary>
 public sealed record SuspendEmployeeRequest(SuspensionReason Reason);
+
+/// <summary>Termination wizard's submit body ("İşten ayrılış sihirbazı"); TerminationType/SgkExitCode override the chosen reason's defaults when sent.</summary>
+public sealed record TerminateEmployeeRequest(DateOnly TerminationDate, Guid TerminationReasonId, TerminationType? TerminationType, string? SgkExitCode);
 
 /// <summary>Bulk-set body for custom field values: only the entries present change (DefinitionId -&gt; raw value, null clears it).</summary>
 public sealed record SetCustomFieldsRequest(IReadOnlyDictionary<Guid, string?> Values);
@@ -184,6 +188,23 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Reactivate(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ReactivateEmployeeCommand(id), ct));
+
+    /// <summary>Termination reason catalog for the wizard's dropdown (system-seeded per tenant on first use).</summary>
+    [HttpGet("termination-reasons")]
+    [ProducesResponseType<IReadOnlyList<TerminationReasonDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> TerminationReasons([FromQuery] bool includeInactive, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListTerminationReasonsQuery(includeInactive), ct));
+
+    /// <summary>
+    /// Terminates an Active or Suspended employee ("İşten ayrılış sihirbazı", E5a). Returns the updated card plus an
+    /// advisory job-security warning when applicable - the warning never blocks the termination.
+    /// </summary>
+    [HttpPost(ApiRoutes.IdParam + "/terminate")]
+    [ProducesResponseType<TerminateEmployeeResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Terminate(Guid id, [FromBody] TerminateEmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new TerminateEmployeeCommand(id, request.TerminationDate, request.TerminationReasonId, request.TerminationType, request.SgkExitCode),
+            ct));
 
     /// <summary>
     /// HR/admin write of custom field values: only the entries present in the body change, any active definition may

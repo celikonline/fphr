@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Kernel.ValueObjects;
@@ -25,6 +26,8 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
     public DbSet<EmployeeEntity> Employees => Set<EmployeeEntity>();
 
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+
+    public DbSet<TerminationReason> TerminationReasons => Set<TerminationReason>();
 }
 
 internal static class EmployeeTables
@@ -37,6 +40,7 @@ internal static class EmployeeTables
     public const string BankAccounts = "bank_accounts";
     public const string CustomFieldDefinitions = "custom_field_definitions";
     public const string CustomFieldValues = "custom_field_values";
+    public const string TerminationReasons = "termination_reasons";
 
     public const int StatusLength = 30;
 }
@@ -76,6 +80,10 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.Property(x => x.WorkPhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
         b.Property(x => x.SuspensionReason).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.TerminationType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.SgkExitCode).HasMaxLength(TerminationReasonLimits.SgkExitCodeMaxLength);
+        b.Property(x => x.IsEmployerRepresentative).IsRequired().HasDefaultValue(false);
+        b.Property(x => x.IsUndergroundWorker).IsRequired().HasDefaultValue(false);
 
         b.Property(x => x.Gender).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired().HasDefaultValue(Gender.Unspecified);
         b.Property(x => x.MaritalStatus).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired().HasDefaultValue(MaritalStatus.Unspecified);
@@ -96,6 +104,7 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => x.OrgUnitId);
         b.HasIndex(x => x.ManagerEmployeeId);
+        b.HasIndex(x => x.TerminationReasonId);
 
         // One employee record per Identity user, when linked; NULL (not-yet-linked) rows are excluded
         // from the uniqueness check by the partial index filter.
@@ -235,5 +244,27 @@ public sealed class CustomFieldValueConfiguration : IEntityTypeConfiguration<Cus
         b.HasIndex(x => x.EmployeeId);
         b.HasIndex(x => new { x.EmployeeId, x.DefinitionId }).IsUnique();
         b.HasIndex(x => x.DefinitionId);
+    }
+}
+
+public sealed class TerminationReasonConfiguration : IEntityTypeConfiguration<TerminationReason>
+{
+    public void Configure(EntityTypeBuilder<TerminationReason> b)
+    {
+        b.ToTable(EmployeeTables.TerminationReasons);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Code).HasMaxLength(TerminationReasonLimits.CodeMaxLength).IsRequired();
+        b.Property(x => x.Name).HasMaxLength(TerminationReasonLimits.NameMaxLength).IsRequired();
+        b.Property(x => x.DefaultSgkExitCode).HasMaxLength(TerminationReasonLimits.SgkExitCodeMaxLength);
+        b.Property(x => x.DefaultTerminationType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.IsSystem).IsRequired();
+        b.Property(x => x.IsActive).IsRequired();
+        b.Property(x => x.SortOrder).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
+        b.HasIndex(x => new { x.TenantId, x.IsActive });
+
+        b.Ignore(x => x.DomainEvents);
     }
 }

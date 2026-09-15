@@ -59,7 +59,17 @@ public sealed record EmployeeDetailDto(
     string? SuspensionReason,
     DateOnly? LeaveAccrualStartDate = null,
     DateOnly? PositionStartDate = null,
-    IReadOnlyList<CustomFieldValueDto>? CustomFields = null);
+    IReadOnlyList<CustomFieldValueDto>? CustomFields = null,
+    DateOnly? TerminationDate = null,
+    Guid? TerminationReasonId = null,
+    TerminationType? TerminationType = null,
+    string? SgkExitCode = null);
+
+/// <summary>
+/// Result of the termination wizard's submit step: the updated card plus the advisory job-security warning (never
+/// gates the termination - see JobSecurityEvaluator).
+/// </summary>
+public sealed record TerminateEmployeeResultDto(EmployeeDetailDto Employee, bool JobSecurityInScope, bool JobSecurityWarning, string? JobSecurityWarningMessage);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

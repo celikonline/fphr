@@ -6,6 +6,7 @@ using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Application.Payments;
+using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
@@ -53,6 +54,13 @@ public sealed class EmployeeModule : IModule
         // Custom field definitions (tenant admin catalog) + employee values (E4)
         services.AddScoped<ICustomFieldDefinitionRepository, CustomFieldDefinitionRepository>();
         services.AddScoped<CustomFieldValueReader>();
+
+        // Termination wizard (E5a): reason catalog (system-seeded per tenant) + the advisory job-security scope check.
+        // ILegislationParameterReader is registered by the Leave module (ADR 0008 single-owner table); Employee only
+        // consumes it here, no registration needed on this side.
+        services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
+        services.AddScoped<TerminationReasonProvisioningService>();
+        services.AddScoped<JobSecurityEvaluator>();
 
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();

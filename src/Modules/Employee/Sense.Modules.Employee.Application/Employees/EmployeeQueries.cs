@@ -168,7 +168,11 @@ public sealed class EmployeeDetailBuilder(
             e.SuspensionReason?.ToString(),
             e.LeaveAccrualStartDate,
             e.PositionStartDate,
-            customFieldValues);
+            customFieldValues,
+            e.TerminationDate,
+            e.TerminationReasonId,
+            e.TerminationType,
+            e.SgkExitCode);
     }
 }
 

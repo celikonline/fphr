@@ -49,6 +49,11 @@ public static class LegislationParameterSeed
         P(22, "Overtime.AnnualLimitHours", 270m, Law4857, null, Md41 + " - yıllık 270 saat"),
         P(23, "Overtime.CompTimeExpiryMonths", 6m, Law4857, null, Md41 + " - serbest zaman 6 ay içinde kullanılır"),
         P(24, "Overtime.ConsentRevocationNoticeDays", 30m, Regulation2017, null, "Fazla Çalışma Yönetmeliği md.9 (RG 25.08.2017/30165) - onay 30 gün önceden yazılı bildirimle geri alınır"),
+
+        // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"): approximated with total
+        // active tenant headcount (no iş kolu/business-line grouping in the codebase yet - see JobSecurityEvaluator).
+        P(37, "JobSecurity.MinHeadcount", 30m, Law4857, null, "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: 30 ve üzeri işçi çalıştıran işyeri (yaklaşık, iş kolu gruplaması hariç)"),
+        P(38, "JobSecurity.MinSeniorityMonths", 6m, Law4857, null, "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: en az 6 aylık kıdem"),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

@@ -23,6 +23,106 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.CustomFields.CustomFieldDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DataType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("data_type");
+
+                    b.Property<bool>("EmployeeEditRequiresApproval")
+                        .HasColumnType("boolean")
+                        .HasColumnName("employee_edit_requires_approval");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsEmployeeEditable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_employee_editable");
+
+                    b.Property<bool>("IsReportable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_reportable");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<bool>("IsSensitive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_sensitive");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("key");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Options")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("options");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("section");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_custom_field_definitions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_custom_field_definitions_tenant_id");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("ix_custom_field_definitions_tenant_id_is_active");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique()
+                        .HasDatabaseName("ix_custom_field_definitions_tenant_id_key");
+
+                    b.ToTable("custom_field_definitions", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.BankAccount", b =>
                 {
                     b.Property<Guid>("Id")
@@ -176,6 +276,64 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("career_records", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CustomFieldValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("DefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("definition_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Value")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id")
+                        .HasName("pk_custom_field_values");
+
+                    b.HasIndex("DefinitionId")
+                        .HasDatabaseName("ix_custom_field_values_definition_id");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_custom_field_values_employee_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_custom_field_values_tenant_id");
+
+                    b.HasIndex("EmployeeId", "DefinitionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_custom_field_values_employee_id_definition_id");
+
+                    b.ToTable("custom_field_values", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -268,6 +426,18 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("home_phone");
 
+                    b.Property<bool>("IsEmployerRepresentative")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_employer_representative");
+
+                    b.Property<bool>("IsUndergroundWorker")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_underground_worker");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -327,6 +497,11 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("postal_code");
 
+                    b.Property<string>("SgkExitCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("sgk_exit_code");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -345,6 +520,19 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly?>("TerminationDate")
+                        .HasColumnType("date")
+                        .HasColumnName("termination_date");
+
+                    b.Property<Guid?>("TerminationReasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("termination_reason_id");
+
+                    b.Property<string>("TerminationType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("termination_type");
 
                     b.Property<Guid?>("UserId")
                         .HasColumnType("uuid")
@@ -371,6 +559,9 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_employees_tenant_id");
+
+                    b.HasIndex("TerminationReasonId")
+                        .HasDatabaseName("ix_employees_termination_reason_id");
 
                     b.HasIndex("UserId")
                         .IsUnique()
@@ -478,6 +669,83 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_salary_records_employee_id_effective_from");
 
                     b.ToTable("salary_records", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Terminations.TerminationReason", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DefaultSgkExitCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("default_sgk_exit_code");
+
+                    b.Property<string>("DefaultTerminationType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("default_termination_type");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsSystem")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_system");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_termination_reasons");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_termination_reasons_tenant_id");
+
+                    b.HasIndex("TenantId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_termination_reasons_tenant_id_code");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("ix_termination_reasons_tenant_id_is_active");
+
+                    b.ToTable("termination_reasons", "employee");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>
@@ -652,6 +920,16 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Navigation("Assignments");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CustomFieldValue", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("CustomFieldValues")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_custom_field_values_employees_employee_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
                 {
                     b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
@@ -667,6 +945,8 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Navigation("BankAccounts");
 
                     b.Navigation("CareerRecords");
+
+                    b.Navigation("CustomFieldValues");
 
                     b.Navigation("SalaryRecords");
                 });

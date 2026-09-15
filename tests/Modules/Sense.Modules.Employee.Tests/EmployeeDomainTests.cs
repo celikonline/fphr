@@ -147,6 +147,50 @@ public sealed class EmployeeDomainTests
     }
 
     [Fact]
+    public void Terminate_FromActiveOrSuspended_RejectsDraftAndAlreadyTerminatedAndDateBeforeHire()
+    {
+        var reasonId = Guid.NewGuid();
+
+        var draft = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+        draft.Terminate(new DateOnly(2026, 1, 1), reasonId, TerminationType.Resignation, "29").Error.Code.ShouldBe(EmployeeDomainErrors.TerminateInvalidStatus);
+
+        var hireDate = new DateOnly(2024, 1, 1);
+        var active = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", HireDate: hireDate)).Value;
+        active.Terminate(hireDate.AddDays(-1), reasonId, TerminationType.Resignation, "29").Error.Code.ShouldBe(EmployeeDomainErrors.TerminationDateBeforeHireDate);
+
+        var terminationDate = new DateOnly(2026, 3, 15);
+        var terminated = active.Terminate(terminationDate, reasonId, TerminationType.Resignation, " 29 ");
+        terminated.IsSuccess.ShouldBeTrue();
+        active.Status.ShouldBe(EmployeeStatus.Terminated);
+        active.TerminationDate.ShouldBe(terminationDate);
+        active.TerminationReasonId.ShouldBe(reasonId);
+        active.TerminationType.ShouldBe(TerminationType.Resignation);
+        active.SgkExitCode.ShouldBe("29");
+
+        active.Terminate(terminationDate, reasonId, TerminationType.Other, null).Error.Code.ShouldBe(EmployeeDomainErrors.TerminateInvalidStatus);
+
+        var suspended = EmployeeEntity.Create(TenantId, new EmployeeInfo("C", "D", HireDate: hireDate)).Value;
+        suspended.Suspend(SuspensionReason.Other, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+        suspended.Terminate(terminationDate, reasonId, TerminationType.EmployerJustCause_Art25, null).IsSuccess.ShouldBeTrue();
+        suspended.Status.ShouldBe(EmployeeStatus.Terminated);
+        suspended.SuspensionReason.ShouldBeNull();
+        suspended.SuspendedAtUtc.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetEmployerRepresentativeAndUndergroundWorker_UpdateFlags()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+        e.IsEmployerRepresentative.ShouldBeFalse();
+        e.IsUndergroundWorker.ShouldBeFalse();
+
+        e.SetEmployerRepresentative(true);
+        e.SetUndergroundWorker(true);
+        e.IsEmployerRepresentative.ShouldBeTrue();
+        e.IsUndergroundWorker.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Create_WithSelfAsManager_Fails()
     {
         var id = Guid.NewGuid();

@@ -1,4 +1,5 @@
 using Sense.Modules.Employee.Domain.CustomFields;
+using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee": a using-alias literally named "Employee" does not win
 // over the enclosing Sense.Modules.Employee namespace segment (CS0118) regardless of where the
@@ -30,6 +31,13 @@ public interface IEmployeeRepository
 
     /// <summary>Every employee id of the tenant mapped to its current manager (hierarchy checks).</summary>
     Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Headcount of employees in <see cref="EmployeeStatus.Active"/> status (Draft/Suspended/Terminated not counted) -
+    /// same definition as the "Çalışan Dağılımı" widget. Feeds the job-security scope check's headcount approximation
+    /// (JobSecurityEvaluator; no iş kolu/business-line grouping exists yet, see its own TODO).
+    /// </summary>
+    Task<int> CountActiveAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Custom field definition repository (tenant admin catalog; see <see cref="CustomFieldDefinition"/> for why it is never hard-deleted).</summary>
@@ -47,4 +55,18 @@ public interface ICustomFieldDefinitionRepository
 
     /// <summary>Active definitions only - the set employee custom field values are validated/rendered against.</summary>
     Task<IReadOnlyList<CustomFieldDefinition>> ListActiveAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>Termination reason catalog repository (tenant-scoped, system-seeded; see <see cref="TerminationReason"/> for why CRUD is out of scope this pass).</summary>
+public interface ITerminationReasonRepository
+{
+    void Add(TerminationReason reason);
+
+    Task<Result<TerminationReason>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Reasons ordered by SortOrder then Name; inactive ones included only when asked.</summary>
+    Task<IReadOnlyList<TerminationReason>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    /// <summary>True once the tenant's catalog has been seeded (any row at all).</summary>
+    Task<bool> AnyForTenantAsync(CancellationToken cancellationToken = default);
 }
