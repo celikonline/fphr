@@ -2,22 +2,30 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Plus, Trash2, Workflow as WorkflowIcon } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  NavLink,
+  Paper,
+  Select,
+  Skeleton,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { cn } from "@/lib/utils";
 import { getEmployee } from "@/services/employees.service";
 import {
   createPolicy,
@@ -64,73 +72,72 @@ function ApprovalFlows() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <WorkflowIcon className="h-6 w-6" /> {t("workflow:policies.listTitle")}
-          </h1>
-          <p className="text-muted-foreground">{t("workflow:policies.listSubtitle")}</p>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <WorkflowIcon size={24} /> {t("workflow:policies.listTitle")}
+          </Title>
+          <Text c="dimmed">{t("workflow:policies.listSubtitle")}</Text>
         </div>
         {canCreate && (
           <Button
             type="button"
+            leftSection={<Plus size={16} />}
             onClick={() => {
               setIsCreating(true);
               setSelectedId(null);
             }}
           >
-            <Plus className="mr-2 h-4 w-4" /> {t("workflow:policies.addNew")}
+            {t("workflow:policies.addNew")}
           </Button>
         )}
-      </div>
+      </Group>
 
       {policiesQuery.isLoading ? (
         <div className="grid gap-6 lg:grid-cols-[20rem_1fr]">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-96 w-full" />
+          <Skeleton h={256} />
+          <Skeleton h={384} />
         </div>
       ) : policiesQuery.isError ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-destructive">
+        <Card withBorder padding="lg">
+          <Text size="sm" c="red" ta="center">
             {getApiErrorMessage(policiesQuery.error, t("common:errorGeneric"))}
-          </CardContent>
+          </Text>
         </Card>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[20rem_1fr]">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("workflow:policies.listTitle")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 px-3 pb-4">
-              {policies.length === 0 ? (
-                <p className="p-3 text-sm text-muted-foreground">{t("workflow:policies.empty")}</p>
-              ) : (
-                policies.map((policy) => (
-                  <button
+          <Card withBorder padding="md">
+            <Text fw={600} mb="sm">
+              {t("workflow:policies.listTitle")}
+            </Text>
+            {policies.length === 0 ? (
+              <Text size="sm" c="dimmed" p="xs">
+                {t("workflow:policies.empty")}
+              </Text>
+            ) : (
+              <Stack gap={4}>
+                {policies.map((policy) => (
+                  <NavLink
                     key={policy.id}
+                    component="button"
                     type="button"
+                    active={!isCreating && policy.id === selected?.id}
                     onClick={() => {
                       setIsCreating(false);
                       setSelectedId(policy.id);
                     }}
-                    className={cn(
-                      "flex w-full flex-col items-start gap-0.5 rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                      !isCreating && policy.id === selected?.id
-                        ? "border-primary bg-primary/5 font-semibold"
-                        : "border-transparent hover:bg-muted",
-                    )}
-                  >
-                    <span className="text-xs text-muted-foreground">{t(`workflow:requestType.${policy.requestType}`)}</span>
-                    <span className="flex w-full items-center gap-2">
-                      <span className="min-w-0 flex-1 truncate">{policy.name}</span>
-                      <Badge variant={policy.isActive ? "success" : "secondary"}>
+                    noWrap
+                    label={policy.name}
+                    description={t(`workflow:requestType.${policy.requestType}`)}
+                    rightSection={
+                      <Badge color={policy.isActive ? "green" : "gray"} variant="light">
                         {policy.isActive ? t("workflow:policies.active") : t("workflow:policies.inactive")}
                       </Badge>
-                    </span>
-                  </button>
-                ))
-              )}
-            </CardContent>
+                    }
+                  />
+                ))}
+              </Stack>
+            )}
           </Card>
 
           {isCreating || selected ? (
@@ -146,8 +153,10 @@ function ApprovalFlows() {
               }}
             />
           ) : (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-muted-foreground">{t("workflow:policies.empty")}</CardContent>
+            <Card withBorder padding="lg">
+              <Text size="sm" c="dimmed" ta="center">
+                {t("workflow:policies.empty")}
+              </Text>
             </Card>
           )}
         </div>
@@ -260,163 +269,177 @@ function PolicyEditor({ policy, readOnly, canDeactivate, onCancel, onSaved }: Po
   const stepsInvalid = steps.length === 0 || steps.some((s) => !s.approverEmployeeId);
   const canSubmit = !readOnly && !nameMissing && !stepsInvalid;
 
+  const requestTypeOptions = REQUEST_TYPES.map((type) => ({ value: type, label: t(`workflow:requestType.${type}`) }));
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-4">
-        <CardTitle className="text-lg">
+    <Card withBorder padding="lg">
+      <Group justify="space-between" gap="sm" mb="md">
+        <Text fw={600} size="lg">
           {policy ? t("workflow:policies.editTitle") : t("workflow:policies.createTitle")}
-        </CardTitle>
+        </Text>
         {policy && policy.isActive && canDeactivate && (
-          <Button type="button" variant="outline" onClick={() => setDeactivateOpen(true)}>
+          <Button type="button" variant="default" onClick={() => setDeactivateOpen(true)}>
             {t("workflow:policies.deactivate")}
           </Button>
         )}
-      </CardHeader>
-      <CardContent>
-        <form
-          className="space-y-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            if (canSubmit) mutation.mutate();
-          }}
-        >
-          <div>
-            <Label htmlFor="policy-name">{t("workflow:policies.name")}</Label>
-            <Input
-              id="policy-name"
-              autoFocus
-              maxLength={200}
-              placeholder={t("workflow:policies.namePlaceholder")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={readOnly}
-            />
-            {submitted && nameMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-          </div>
+      </Group>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSubmitted(true);
+          if (canSubmit) mutation.mutate();
+        }}
+      >
+        <Stack gap="lg">
+          <TextInput
+            id="policy-name"
+            autoFocus
+            label={t("workflow:policies.name")}
+            maxLength={200}
+            placeholder={t("workflow:policies.namePlaceholder")}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            disabled={readOnly}
+            error={submitted && nameMissing ? t("common:required") : undefined}
+          />
 
-          <div>
-            <Label htmlFor="policy-request-type">{t("workflow:policies.requestType")}</Label>
-            <Select value={requestType} onValueChange={setRequestType} disabled={readOnly}>
-              <SelectTrigger id="policy-request-type">
-                <SelectValue placeholder={t("workflow:policies.selectRequestType")} />
-              </SelectTrigger>
-              <SelectContent>
-                {REQUEST_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {t(`workflow:requestType.${type}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            id="policy-request-type"
+            label={t("workflow:policies.requestType")}
+            placeholder={t("workflow:policies.selectRequestType")}
+            data={requestTypeOptions}
+            value={requestType}
+            onChange={(value) => value && setRequestType(value)}
+            allowDeselect={false}
+            disabled={readOnly}
+          />
 
-          <div className="flex items-center gap-2">
-            <Switch
-              id="policy-show-current-approver"
-              checked={showCurrentApprover}
-              onCheckedChange={setShowCurrentApprover}
-              disabled={readOnly}
-            />
-            <Label htmlFor="policy-show-current-approver" className="font-normal">
-              {t("workflow:policies.showCurrentApproverToRequester")}
-            </Label>
-          </div>
+          <Switch
+            id="policy-show-current-approver"
+            label={t("workflow:policies.showCurrentApproverToRequester")}
+            checked={showCurrentApprover}
+            onChange={(e) => setShowCurrentApprover(e.currentTarget.checked)}
+            disabled={readOnly}
+          />
 
-          <div className="space-y-3 rounded-md border p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">{t("workflow:policies.steps.title")}</h3>
-              {!readOnly && (
-                <Button type="button" variant="outline" size="sm" onClick={addStep} disabled={steps.length >= MAX_STEPS}>
-                  <Plus className="mr-1 h-4 w-4" /> {t("workflow:policies.steps.addStep")}
-                </Button>
+          <Paper withBorder p="md">
+            <Stack gap="sm">
+              <Group justify="space-between">
+                <Text size="sm" fw={600} component="h3">
+                  {t("workflow:policies.steps.title")}
+                </Text>
+                {!readOnly && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="xs"
+                    leftSection={<Plus size={16} />}
+                    onClick={addStep}
+                    disabled={steps.length >= MAX_STEPS}
+                  >
+                    {t("workflow:policies.steps.addStep")}
+                  </Button>
+                )}
+              </Group>
+
+              {steps.length === 0 ? (
+                <Text size="sm" c="dimmed">
+                  {t("workflow:policies.steps.empty")}
+                </Text>
+              ) : (
+                <Stack gap="sm">
+                  {steps.map((step, index) => (
+                    <Paper key={index} withBorder p="sm">
+                      <Group gap="xs">
+                        <Badge variant="outline" className="shrink-0">
+                          {t("workflow:policies.steps.stepNumber", { number: index + 1 })}
+                        </Badge>
+                        <div className="min-w-[14rem] flex-1">
+                          <EmployeePicker
+                            value={
+                              step.approverEmployeeId
+                                ? { id: step.approverEmployeeId, displayName: nameById.get(step.approverEmployeeId) ?? step.approverEmployeeId }
+                                : null
+                            }
+                            onChange={(picked: PickedEmployee | null) => updateStep(index, { approverEmployeeId: picked?.id ?? "" })}
+                            placeholder={t("workflow:policies.steps.selectApprover")}
+                            disabled={readOnly}
+                          />
+                        </div>
+                        <Checkbox
+                          id={`step-required-${index}`}
+                          label={t("workflow:policies.steps.isRequired")}
+                          checked={step.isRequired}
+                          onChange={(e) => updateStep(index, { isRequired: e.currentTarget.checked })}
+                          disabled={readOnly}
+                          className="whitespace-nowrap"
+                        />
+                        {!readOnly && (
+                          <Group gap={4} ml="auto" wrap="nowrap">
+                            <Tooltip label={t("workflow:policies.steps.moveUp")}>
+                              <ActionIcon
+                                type="button"
+                                variant="subtle"
+                                color="gray"
+                                aria-label={t("workflow:policies.steps.moveUp")}
+                                onClick={() => moveStep(index, -1)}
+                                disabled={index === 0}
+                              >
+                                <ArrowUp size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label={t("workflow:policies.steps.moveDown")}>
+                              <ActionIcon
+                                type="button"
+                                variant="subtle"
+                                color="gray"
+                                aria-label={t("workflow:policies.steps.moveDown")}
+                                onClick={() => moveStep(index, 1)}
+                                disabled={index === steps.length - 1}
+                              >
+                                <ArrowDown size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label={t("workflow:policies.steps.removeStep")}>
+                              <ActionIcon
+                                type="button"
+                                variant="subtle"
+                                color="gray"
+                                aria-label={t("workflow:policies.steps.removeStep")}
+                                onClick={() => removeStep(index)}
+                              >
+                                <Trash2 size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
+                        )}
+                      </Group>
+                    </Paper>
+                  ))}
+                </Stack>
               )}
-            </div>
-
-            {steps.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("workflow:policies.steps.empty")}</p>
-            ) : (
-              <div className="space-y-3">
-                {steps.map((step, index) => (
-                  <div key={index} className="flex flex-wrap items-center gap-2 rounded-md border p-3">
-                    <Badge variant="outline" className="shrink-0">
-                      {t("workflow:policies.steps.stepNumber", { number: index + 1 })}
-                    </Badge>
-                    <div className="min-w-[14rem] flex-1">
-                      <EmployeePicker
-                        value={
-                          step.approverEmployeeId
-                            ? { id: step.approverEmployeeId, displayName: nameById.get(step.approverEmployeeId) ?? step.approverEmployeeId }
-                            : null
-                        }
-                        onChange={(picked: PickedEmployee | null) => updateStep(index, { approverEmployeeId: picked?.id ?? "" })}
-                        placeholder={t("workflow:policies.steps.selectApprover")}
-                        disabled={readOnly}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Checkbox
-                        id={`step-required-${index}`}
-                        checked={step.isRequired}
-                        onCheckedChange={(checked) => updateStep(index, { isRequired: checked === true })}
-                        disabled={readOnly}
-                      />
-                      <Label htmlFor={`step-required-${index}`} className="whitespace-nowrap font-normal">
-                        {t("workflow:policies.steps.isRequired")}
-                      </Label>
-                    </div>
-                    {!readOnly && (
-                      <div className="ml-auto flex items-center gap-1">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveStep(index, -1)}
-                          disabled={index === 0}
-                        >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => moveStep(index, 1)}
-                          disabled={index === steps.length - 1}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title={t("workflow:policies.steps.removeStep")}
-                          onClick={() => removeStep(index)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            {submitted && stepsInvalid && <p className="text-xs text-destructive">{t("common:required")}</p>}
-          </div>
+              {submitted && stepsInvalid && (
+                <Text size="xs" c="red">
+                  {t("common:required")}
+                </Text>
+              )}
+            </Stack>
+          </Paper>
 
           {!readOnly && (
-            <div className="flex justify-end gap-2">
+            <Group justify="flex-end" gap="sm">
               {onCancel && (
-                <Button type="button" variant="outline" onClick={onCancel} disabled={mutation.isPending}>
+                <Button type="button" variant="default" onClick={onCancel} disabled={mutation.isPending}>
                   {t("workflow:policies.cancel")}
                 </Button>
               )}
               <Button type="submit" disabled={mutation.isPending}>
                 {mutation.isPending ? t("common:saving") : t("workflow:policies.save")}
               </Button>
-            </div>
+            </Group>
           )}
-        </form>
-      </CardContent>
+        </Stack>
+      </form>
 
       {policy && (
         <ConfirmDialog
