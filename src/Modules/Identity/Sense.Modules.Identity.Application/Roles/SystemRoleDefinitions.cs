@@ -70,7 +70,7 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
             ["payroll.*", "attendance.timesheets.*", "attendance.*.view", "leave.*.view", "employee.*.view", "employee.salary.*", "employee.bank_accounts.*", "expense.adjustments.*",
-             "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService],
+             "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService, "leave.*.read"],
             []),
 
         new(SystemRoleCodes.Finance, DataScope.Company,
@@ -81,11 +81,11 @@ public static class SystemRoleDefinitions
             ["leave.requests.view", "leave.requests.approve", "leave.calendar.view", "leave.balances.view", "workflow.inbox.*", "attendance.*.view",
              "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
              "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
-             .. PermissionPatterns.SelfService],
+             .. PermissionPatterns.SelfService, "leave.balances.read"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
-            ["attendance.*", "leave.*.view", "employee.*.view", "organization.*.view", "reports.attendance.*", .. PermissionPatterns.SelfService],
+            ["attendance.*", "leave.*.view", "employee.*.view", "organization.*.view", "reports.attendance.*", .. PermissionPatterns.SelfService, "leave.*.read"],
             ["attendance.timesheets.lock", "attendance.timesheets.unlock", "attendance.settings.*", .. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Recruiter, DataScope.Company,
@@ -121,7 +121,7 @@ public static class SystemRoleDefinitions
             ["payroll.my.*", "expense.my.advances.*", "ai.*"]),
 
         new(SystemRoleCodes.Contractor, DataScope.Self,
-            ["employee.my.*", "attendance.my.*", "announcements.feed.*", "documents.my.*"],
+            ["employee.my.*", "attendance.my.*", "announcements.feed.*", "documents.my.*", "notifications.my.*"],
             []),
 
         new(SystemRoleCodes.ApiIntegration, DataScope.Company,

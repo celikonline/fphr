@@ -61,6 +61,8 @@
     <Project Path="tests/Modules/Sense.Shared.Infrastructure.Tests/Sense.Shared.Infrastructure.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Shared.Kernel.Tests/Sense.Shared.Kernel.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Workflow.Tests/Sense.Modules.Workflow.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Notifications.Tests/Sense.Modules.Notifications.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
@@ -68,5 +70,19 @@
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Domain/Sense.Modules.Workflow.Domain.csproj" />
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
+    <Project Path="src/Modules/Notifications/Sense.Modules.Notifications.Api/Sense.Modules.Notifications.Api.csproj" />
+    <Project Path="src/Modules/Notifications/Sense.Modules.Notifications.Application/Sense.Modules.Notifications.Application.csproj" />
+    <Project Path="src/Modules/Notifications/Sense.Modules.Notifications.Contracts/Sense.Modules.Notifications.Contracts.csproj" />
+    <Project Path="src/Modules/Notifications/Sense.Modules.Notifications.Domain/Sense.Modules.Notifications.Domain.csproj" />
+    <Project Path="src/Modules/Notifications/Sense.Modules.Notifications.Infrastructure/Sense.Modules.Notifications.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Leave/">
+    <Project Path="src/Modules/Leave/Sense.Modules.Leave.Api/Sense.Modules.Leave.Api.csproj" />
+    <Project Path="src/Modules/Leave/Sense.Modules.Leave.Application/Sense.Modules.Leave.Application.csproj" />
+    <Project Path="src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
+    <Project Path="src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
+    <Project Path="src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
   </Folder>
 </Solution>

@@ -1,0 +1,2 @@
+{{- subject = "Ihr Antrag (" + request_type_name + ") wurde erstellt" -}}
+Ihr Antrag wurde zur Genehmigung weitergeleitet.

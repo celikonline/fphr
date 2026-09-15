@@ -1,0 +1,3 @@
+{{- subject = request_type_name + " talebiniz reddedildi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ request_type_name | html.escape }}</strong> talebiniz {{ if rejected_at_step }}{{ rejected_at_step | html.escape }}. onay adımında {{ end }}reddedildi.</p>

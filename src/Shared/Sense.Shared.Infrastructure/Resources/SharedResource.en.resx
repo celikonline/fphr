@@ -435,4 +435,68 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
+  <!-- Notifications: in-app notifications, notification settings (Faz 1b B2) -->
+  <data name="notifications.my.view" xml:space="preserve"><value>View my notifications</value></data>
+  <data name="notifications.my.manage" xml:space="preserve"><value>Manage my notifications</value></data>
+  <data name="notifications.notification.not_found" xml:space="preserve"><value>Notification not found.</value></data>
+  <data name="notifications.preference.unknown_template" xml:space="preserve"><value>Unknown notification type: {TemplateKey}.</value></data>
+  <data name="notifications.preference.unknown_channel" xml:space="preserve"><value>This notification type is not delivered over the "{Channel}" channel.</value></data>
+  <data name="notifications.preference.not_configurable" xml:space="preserve"><value>This notification is mandatory and cannot be turned off.</value></data>
+  <data name="leave.rule_sets.read" xml:space="preserve"><value>View leave rule sets</value></data>
+  <data name="leave.rule_sets.manage" xml:space="preserve"><value>Manage leave rule sets</value></data>
+  <data name="leave.rule_sets.assign" xml:space="preserve"><value>Assign leave rule sets</value></data>
+  <data name="leave.types.manage" xml:space="preserve"><value>Manage leave types</value></data>
+  <data name="leave.balances.read" xml:space="preserve"><value>View leave balances</value></data>
+  <data name="leave.balances.adjust" xml:space="preserve"><value>Adjust leave balances</value></data>
+  <data name="leave.balances.recalculate" xml:space="preserve"><value>Recalculate leave balances</value></data>
+  <data name="leave.extra_grants.manage" xml:space="preserve"><value>Grant extra leave</value></data>
+  <data name="leave.my.balances" xml:space="preserve"><value>View my leave balances</value></data>
+  <data name="leave.rule_set.not_found" xml:space="preserve"><value>Leave rule set not found.</value></data>
+  <data name="leave.rule_set.name_required" xml:space="preserve"><value>Leave rule set name is required.</value></data>
+  <data name="leave.type.not_found" xml:space="preserve"><value>Leave type not found.</value></data>
+  <data name="leave.type.name_required" xml:space="preserve"><value>Leave type name is required.</value></data>
+  <data name="leave.type.code_duplicate" xml:space="preserve"><value>This rule set already has a leave type with the same code.</value></data>
+  <data name="leave.type.per_request_max_days_invalid" xml:space="preserve"><value>Days per request must be between 0.5 and 365.</value></data>
+  <data name="leave.type.annual_days_invalid" xml:space="preserve"><value>Annual days must be greater than 0 and at most 365.</value></data>
+  <data name="leave.type.negative_balance_limit_invalid" xml:space="preserve"><value>Negative balance limit must be between 0.5 and the annual days.</value></data>
+  <data name="leave.type.carry_over_limit_invalid" xml:space="preserve"><value>Carry-over limit must be greater than 0.</value></data>
+  <data name="leave.type.consecutive_days_invalid" xml:space="preserve"><value>Minimum days cannot exceed maximum days.</value></data>
+  <data name="leave.type.waiting_period_invalid" xml:space="preserve"><value>Waiting period must be between 0 and 24 months.</value></data>
+  <data name="leave.type.seniority_tiers_only_annual" xml:space="preserve"><value>Seniority tiers can only be defined on the annual leave type.</value></data>
+  <data name="leave.type.no_balance" xml:space="preserve"><value>This leave type does not keep a balance (only per-year limited types do).</value></data>
+  <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Days cannot be zero.</value></data>
+  <data name="leave.ledger.reason_required" xml:space="preserve"><value>A reason is required.</value></data>
+  <data name="leave.profile.not_found" xml:space="preserve"><value>The employee's leave profile was not found.</value></data>
+  <data name="leave.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's leave data.</value></data>
+  <data name="leave.employee.not_linked" xml:space="preserve"><value>Your user is not linked to an employee record.</value></data>
+  <data name="leave.errors.invalid_range" xml:space="preserve"><value>End date cannot be before start date.</value></data>
+  <data name="leave.rule_set.seed.turkish_labour_law" xml:space="preserve"><value>Sample Turkish Labour Law rule set</value></data>
+  <data name="leave.type.annual" xml:space="preserve"><value>Annual leave</value></data>
+  <data name="leave.type.excuse" xml:space="preserve"><value>Excuse leave</value></data>
+  <data name="leave.type.sick" xml:space="preserve"><value>Sick leave</value></data>
+  <data name="leave.type.job_search" xml:space="preserve"><value>Job search leave</value></data>
+  <data name="leave.type.marriage" xml:space="preserve"><value>Marriage leave</value></data>
+  <data name="leave.type.bereavement" xml:space="preserve"><value>Bereavement leave</value></data>
+  <data name="leave.type.paternity" xml:space="preserve"><value>Paternity leave</value></data>
+  <data name="leave.type.maternity" xml:space="preserve"><value>Maternity leave</value></data>
+  <data name="leave.type.postnatal_unpaid" xml:space="preserve"><value>Postnatal unpaid leave</value></data>
+  <data name="leave.type.paid_military_service" xml:space="preserve"><value>Paid military service leave</value></data>
+  <data name="leave.type.unpaid" xml:space="preserve"><value>Unpaid leave</value></data>
+  <data name="leave.type.foster_care" xml:space="preserve"><value>Foster care leave</value></data>
+  <data name="leave.type.template.remote_work" xml:space="preserve"><value>Remote Work</value></data>
+  <data name="leave.type.template.birthday" xml:space="preserve"><value>Birthday leave</value></data>
+  <data name="leave.requests.read" xml:space="preserve"><value>View leave requests</value></data>
+  <data name="leave.my.requests" xml:space="preserve"><value>Manage my leave requests</value></data>
+  <data name="leave.request.not_found" xml:space="preserve"><value>Leave request not found.</value></data>
+  <data name="leave.request.not_pending" xml:space="preserve"><value>The leave request is no longer pending.</value></data>
+  <data name="leave.request.approval_mismatch" xml:space="preserve"><value>The approval decision does not belong to the current revision of the request.</value></data>
+  <data name="leave.request.not_owner" xml:space="preserve"><value>Only the requester can do this.</value></data>
+  <data name="leave.errors.zero_days" xml:space="preserve"><value>The selected dates contain no chargeable leave days.</value></data>
+  <data name="leave.errors.type_not_available" xml:space="preserve"><value>This leave type cannot be requested.</value></data>
+  <data name="leave.errors.overlap" xml:space="preserve"><value>You already have a pending or approved leave on these dates.</value></data>
+  <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>At most {max} days can be requested at once for this leave type.</value></data>
+  <data name="leave.errors.below_min_days" xml:space="preserve"><value>At least {min} days must be requested for this leave type.</value></data>
+  <data name="leave.errors.above_max_days" xml:space="preserve"><value>At most {max} days can be requested for this leave type.</value></data>
+  <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>Insufficient leave balance (available: {available} days).</value></data>
+  <data name="leave.errors.description_required" xml:space="preserve"><value>A description is required for this leave type.</value></data>
 </root>

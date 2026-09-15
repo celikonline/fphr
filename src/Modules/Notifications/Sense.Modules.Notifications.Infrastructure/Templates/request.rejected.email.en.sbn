@@ -1,0 +1,3 @@
+{{- subject = "Your " + request_type_name + " request was rejected" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Your <strong>{{ request_type_name | html.escape }}</strong> request was rejected{{ if rejected_at_step }} at approval step {{ rejected_at_step | html.escape }}{{ end }}.</p>

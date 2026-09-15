@@ -24,6 +24,16 @@ public interface IEmployeeDirectory
     Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default);
 }
 
+/// <summary>
+/// Contact reads only (no data-scope dependency), so hosts without the caller/permission pipeline - e.g. Sense.Worker
+/// resolving notification recipients - can resolve it with just EmployeeDbContext. Same data as
+/// <see cref="IEmployeeDirectory.GetContactsAsync"/>.
+/// </summary>
+public interface IEmployeeContactLookup
+{
+    Task<IReadOnlyList<EmployeeContact>> GetContactsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default);
+}
+
 /// <summary>Links an Identity user to an employee record; idempotent and persisted immediately.</summary>
 public interface IEmployeeUserLinker
 {

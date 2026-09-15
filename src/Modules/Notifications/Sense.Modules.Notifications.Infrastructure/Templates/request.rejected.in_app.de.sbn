@@ -1,0 +1,2 @@
+{{- subject = "Ihr Antrag (" + request_type_name + ") wurde abgelehnt" -}}
+{{ if rejected_at_step }}In Genehmigungsschritt {{ rejected_at_step }} abgelehnt.{{ else }}Ihr Antrag wurde abgelehnt.{{ end }}

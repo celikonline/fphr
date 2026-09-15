@@ -12,6 +12,27 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
     public Task<IReadOnlyList<Guid>> ResolveSelectionAsync(Guid tenantId, EmployeeSelection selection, CancellationToken ct = default) =>
         resolver.ResolveAsync(tenantId, selection, EmployeePermissions.EmployeesReadKey, ct);
 
+    public Task<IReadOnlyList<EmployeeContact>> GetContactsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default) =>
+        new EmployeeContactLookup(context).GetContactsAsync(tenantId, employeeIds, ct);
+
+    public async Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default)
+    {
+        if (orgUnitIds.Count == 0)
+        {
+            return [];
+        }
+
+        var units = orgUnitIds.ToList();
+        return await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Terminated)
+            .Select(e => e.Id)
+            .ToListAsync(ct);
+    }
+}
+
+/// <summary>Implements Employee.Contracts.IEmployeeContactLookup (EmployeeDbContext only).</summary>
+public sealed class EmployeeContactLookup(EmployeeDbContext context) : IEmployeeContactLookup
+{
     public async Task<IReadOnlyList<EmployeeContact>> GetContactsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default)
     {
         if (employeeIds.Count == 0)
@@ -27,20 +48,6 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
         return rows
             .Select(e => new EmployeeContact(e.Id, e.FirstName, e.LastName, e.WorkEmail, e.PersonalEmail, e.UserId, e.Status.ToString()))
             .ToList();
-    }
-
-    public async Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default)
-    {
-        if (orgUnitIds.Count == 0)
-        {
-            return [];
-        }
-
-        var units = orgUnitIds.ToList();
-        return await context.Employees.AsNoTracking()
-            .Where(e => e.TenantId == tenantId && e.OrgUnitId != null && units.Contains(e.OrgUnitId.Value) && e.Status != EmployeeStatus.Terminated)
-            .Select(e => e.Id)
-            .ToListAsync(ct);
     }
 }
 

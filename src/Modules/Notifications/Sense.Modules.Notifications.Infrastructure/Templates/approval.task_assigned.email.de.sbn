@@ -1,0 +1,17 @@
+{{- subject = "Genehmigung erforderlich: Antrag (" + request_type_name + ")" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+{{~ if requester_name ~}}
+<p>Ein von <strong>{{ requester_name | html.escape }}</strong> erstellter Antrag (<strong>{{ request_type_name | html.escape }}</strong>) wartet auf Ihre Genehmigung.</p>
+{{~ else ~}}
+<p>Ein Antrag (<strong>{{ request_type_name | html.escape }}</strong>) wartet auf Ihre Genehmigung.</p>
+{{~ end ~}}
+{{~ if is_direct_assignee != "true" ~}}
+<p>Der Antrag liegt in der Genehmigungswarteschlange einer Rolle, der Sie angehören.</p>
+{{~ end ~}}
+{{~ if decision_url ~}}
+{{ button "Genehmigen oder ablehnen" decision_url }}
+<p style="font-size:12px;color:#71717a">Dieser Link ist nur einmal verwendbar und gültig bis {{ date.to_string decision_expires_at "%d.%m.%Y %H:%M" }} (UTC).</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Genehmigungseingang öffnen" action_url }}
+{{~ end ~}}

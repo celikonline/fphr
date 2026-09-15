@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Benachrichtigungen",
+    "title": "Benachrichtigungen",
+    "empty": "Sie haben keine Benachrichtigungen.",
+    "loading": "Wird geladen...",
+    "markAllRead": "Alle als gelesen markieren",
+    "preferences": "Benachrichtigungseinstellungen",
+    "loadError": "Benachrichtigungen konnten nicht geladen werden."
+  },
+  "template": {
+    "request": {
+      "created": "Mein Antrag wurde erstellt",
+      "approved": "Mein Antrag wurde genehmigt",
+      "rejected": "Mein Antrag wurde abgelehnt"
+    },
+    "approval": {
+      "task_assigned": "Ein Antrag wartet auf meine Genehmigung"
+    }
+  },
+  "preferences": {
+    "title": "Benachrichtigungseinstellungen",
+    "subtitle": "Wählen Sie, welche Benachrichtigungen Sie per E-Mail und in der App erhalten.",
+    "notification": "Benachrichtigung",
+    "email": "E-Mail",
+    "inApp": "In der App",
+    "mandatory": "Kann nicht deaktiviert werden",
+    "save": "Speichern",
+    "saved": "Ihre Benachrichtigungseinstellungen wurden gespeichert.",
+    "empty": "Es gibt keine konfigurierbaren Benachrichtigungen.",
+    "loadError": "Benachrichtigungseinstellungen konnten nicht geladen werden."
+  },
+  "category": {
+    "account": "Konto",
+    "request": "Anträge",
+    "approval": "Genehmigungen"
+  }
+}

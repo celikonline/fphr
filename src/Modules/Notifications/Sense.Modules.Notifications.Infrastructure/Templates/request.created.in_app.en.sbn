@@ -1,0 +1,2 @@
+{{- subject = "Your " + request_type_name + " request was created" -}}
+Your request has been sent for approval.

@@ -4,14 +4,21 @@ using Microsoft.Extensions.Options;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Identity.Infrastructure.Persistence;
+using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Modules.Notifications.Infrastructure;
+using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
+using Sense.Modules.Workflow.Infrastructure.Messaging;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
+using Sense.Modules.Leave.Infrastructure;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -63,6 +70,36 @@ builder.Services.AddModuleHandlers(
     typeof(WorkflowDbContext).Assembly,
     typeof(IApprovalPolicyRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<WorkflowDbContext>>();
+
+// Notifications (B2) consumes the Workflow events above (request created/approved/rejected, task assigned): writes
+// in-app notifications + pushes them over SignalR (Redis backplane → Api connections), queues e-mail deliveries and
+// sends them with EmailDeliveryPollingService. Its handlers need these cross-module lookups, which resolve here
+// with just the modules' DbContexts registered above.
+var redisConnection = builder.Configuration.GetConnectionString(ConnectionStringNames.Redis);
+var signalR = builder.Services.AddSignalR();
+if (!string.IsNullOrWhiteSpace(redisConnection))
+{
+    signalR.AddStackExchangeRedis(redisConnection, o => o.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("senseik-signalr-"));
+}
+
+builder.Services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
+builder.Services.AddScoped<IUserProfileLookup, UserProfileLookup>();
+builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
+builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
+builder.Services.AddNotificationsCore(builder.Configuration);
+builder.Services.AddHostedService<EmailDeliveryPollingService>();
+// Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
+// (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
+// Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
+builder.Services.AddModuleDbContext<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>(builder.Configuration, Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName);
+builder.Services.AddLeaveCoreServices(builder.Configuration);
+builder.Services.AddLeaveIntegrationEventHandlers();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName,
+    typeof(Sense.Modules.Leave.Contracts.LeavePermissions).Assembly,
+    typeof(Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext).Assembly,
+    typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 
 await builder.Build().RunAsync();
 

@@ -12,6 +12,8 @@
     <ProjectReference Include="../Modules/Documents/Sense.Modules.Documents.Infrastructure/Sense.Modules.Documents.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/DataTransfer/Sense.Modules.DataTransfer.Infrastructure/Sense.Modules.DataTransfer.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Workflow/Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Notifications/Sense.Modules.Notifications.Infrastructure/Sense.Modules.Notifications.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
