@@ -16,6 +16,8 @@
   "uploadLogo": "Logo Yükle",
   "uploadingLogo": "Yükleniyor...",
   "logoHint": "PNG veya JPG, en fazla 2MB.",
+  "logoDropHint": "Logoyu sürükleyip bırakın veya seçmek için tıklayın",
+  "logoRejected": "Logo PNG veya JPG olmalı ve 2MB’ı geçmemeli.",
   "saveSuccess": "Şirket profili kaydedildi.",
   "saveError": "Şirket profili kaydedilemedi.",
   "logoSuccess": "Logo güncellendi.",

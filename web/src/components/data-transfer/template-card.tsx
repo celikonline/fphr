@@ -1,4 +1,4 @@
-import { useRef, useState, type DragEvent } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,10 +6,10 @@ import { Download, FileSpreadsheet, KeyRound, Loader2, Upload } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileDropzone, type FileDropzoneHandle } from "@/components/ui/file-dropzone";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { cn } from "@/lib/utils";
 import {
   DataTransferPermissions,
   IMPORT_ALLOWED_EXTENSIONS,
@@ -33,8 +33,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   const lang = useApiLanguage();
   const canDownload = usePermission(DataTransferPermissions.TemplateDownload);
   const canRun = usePermission(DataTransferPermissions.Run);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [dragging, setDragging] = useState(false);
+  const dropzoneRef = useRef<FileDropzoneHandle>(null);
 
   const downloadMutation = useMutation({
     mutationFn: () => downloadImportTemplate(template.code, lang),
@@ -61,26 +60,6 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         description: getApiErrorMessage(error, t("dataTransfer:upload.error")),
       }),
   });
-
-  function handleFile(file: File | undefined) {
-    if (!file || uploadMutation.isPending) return;
-    const name = file.name.toLowerCase();
-    if (!IMPORT_ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext))) {
-      toast({ variant: "destructive", title: t("common:error"), description: t("dataTransfer:upload.invalidType") });
-      return;
-    }
-    if (file.size > IMPORT_MAX_FILE_BYTES) {
-      toast({ variant: "destructive", title: t("common:error"), description: t("dataTransfer:upload.tooLarge") });
-      return;
-    }
-    uploadMutation.mutate(file);
-  }
-
-  function onDrop(event: DragEvent<HTMLDivElement>) {
-    event.preventDefault();
-    setDragging(false);
-    if (canRun) handleFile(event.dataTransfer.files?.[0]);
-  }
 
   return (
     <Card className="flex flex-col">
@@ -118,46 +97,24 @@ export default function TemplateCard({ template }: TemplateCardProps) {
         </div>
 
         {canRun && (
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => inputRef.current?.click()}
-            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && inputRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setDragging(true);
-            }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={onDrop}
-            className={cn(
-              "flex cursor-pointer flex-col items-center gap-1 rounded-md border-2 border-dashed p-4 text-center text-sm text-muted-foreground transition-colors",
-              dragging ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
-            )}
-          >
-            {uploadMutation.isPending ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                {t("dataTransfer:upload.uploading")}
-              </>
-            ) : (
-              <>
-                <Upload className="h-5 w-5" />
-                {t("dataTransfer:upload.dropHint")}
-                <span className="text-xs">{t("dataTransfer:upload.limits")}</span>
-              </>
-            )}
-          </div>
+          <FileDropzone
+            ref={dropzoneRef}
+            accept={IMPORT_ALLOWED_EXTENSIONS.join(",")}
+            maxBytes={IMPORT_MAX_FILE_BYTES}
+            busy={uploadMutation.isPending}
+            title={t("dataTransfer:upload.dropHint")}
+            hint={t("dataTransfer:upload.limits")}
+            busyLabel={t("dataTransfer:upload.uploading")}
+            onFile={(file) => uploadMutation.mutate(file)}
+            onReject={(reason) =>
+              toast({
+                variant: "destructive",
+                title: t("common:error"),
+                description: t(reason === "type" ? "dataTransfer:upload.invalidType" : "dataTransfer:upload.tooLarge"),
+              })
+            }
+          />
         )}
-        <input
-          ref={inputRef}
-          type="file"
-          className="hidden"
-          accept={IMPORT_ALLOWED_EXTENSIONS.join(",")}
-          onChange={(e) => {
-            handleFile(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
         {canDownload && (
@@ -176,7 +133,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
           </Button>
         )}
         {canRun && (
-          <Button type="button" onClick={() => inputRef.current?.click()} disabled={uploadMutation.isPending}>
+          <Button type="button" onClick={() => dropzoneRef.current?.open()} disabled={uploadMutation.isPending}>
             <Upload className="mr-2 h-4 w-4" /> {t("dataTransfer:templates.upload")}
           </Button>
         )}
