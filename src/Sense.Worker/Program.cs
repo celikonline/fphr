@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
@@ -43,6 +44,10 @@ builder.Services.AddModuleHandlers(
     typeof(DocumentsDbContext).Assembly,
     typeof(Sense.Modules.Documents.Domain.IDocumentRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<DocumentsDbContext>>();
+// Documents consumes EmployeeHired (personnel document requirement materialization at hire time); registered
+// explicitly (not the whole Application assembly) so API-only handler dependencies stay out, mirroring Leave/Attendance below.
+builder.Services.AddDocumentsCoreServices();
+builder.Services.AddDocumentsIntegrationEventHandlers();
 
 builder.Services.AddModuleDbContext<OrganizationDbContext>(builder.Configuration, OrganizationDbContext.SchemaName);
 builder.Services.AddModuleHandlers(
