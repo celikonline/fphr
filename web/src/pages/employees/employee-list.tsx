@@ -2,22 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown, GitBranch, Plus, Search, Users } from "lucide-react";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { GitBranch, Plus, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks";
 import { formatDateOnly } from "@/lib/dates";
-import { EMPLOYEE_STATUSES, listEmployees, type EmployeeSortField } from "@/services/employees.service";
+import { EMPLOYEE_STATUSES, listEmployees, type EmployeeListItem, type EmployeeSortField } from "@/services/employees.service";
 import type { EmployeeFilter, EmployeeSelection } from "@/types";
 import { AccountStatusBadge, EmployeeStatusBadge } from "@/components/employees/employee-badges";
 import BulkActionsMenu from "@/components/employees/bulk-actions-menu";
@@ -27,7 +27,8 @@ import EmployeeDirectory from "@/components/employees/employee-directory";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
+const COLUMN_VISIBILITY_KEY = "senseik.employees.grid.columns";
 const ALL = "__all__";
 const BULK_PERMISSIONS = [...new Set(BULK_ACTIONS.map((a) => a.permission))];
 
@@ -55,6 +56,7 @@ function EmployeeGrid() {
   const { nameById: unitNames } = useOrgUnits();
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
@@ -93,11 +95,11 @@ function EmployeeGrid() {
   const sortParam = `${sort.desc ? "-" : ""}${sort.field}`;
 
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["employees", "list", filter, page, sortParam],
+    queryKey: ["employees", "list", filter, page, pageSize, sortParam],
     queryFn: () =>
       listEmployees({
         page,
-        pageSize: PAGE_SIZE,
+        pageSize,
         sort: sortParam,
         q: filter.q ?? undefined,
         orgUnitId: filter.orgUnitId,
@@ -165,10 +167,114 @@ function EmployeeGrid() {
     });
   }
 
-  function toggleSort(field: EmployeeSortField) {
-    setSort((prev) => (prev.field === field ? { field, desc: !prev.desc } : { field, desc: false }));
+  function changeSorting(next: SortingState) {
+    const [first] = next;
+    if (!first) return;
+    setSort({ field: first.id as EmployeeSortField, desc: first.desc });
     setPage(1);
   }
+
+  function changePageSize(size: number) {
+    setPageSize(size);
+    setPage(1);
+  }
+
+  const locale = i18n.language;
+
+  const columns: ColumnDef<EmployeeListItem>[] = [
+    ...(canBulk
+      ? [
+          {
+            id: "select",
+            enableSorting: false,
+            enableHiding: false,
+            meta: { headerClassName: "w-10" },
+            header: () => (
+              <Checkbox
+                aria-label={t("employees:bulk.selectPage")}
+                checked={pageFullySelected ? true : selectedOnPage > 0 ? "indeterminate" : false}
+                onCheckedChange={(checked) => togglePage(checked === true)}
+              />
+            ),
+            cell: ({ row }) => (
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  aria-label={row.original.displayName}
+                  checked={isSelected(row.original.id)}
+                  onCheckedChange={(checked) => toggleRow(row.original.id, checked === true)}
+                />
+              </div>
+            ),
+          } satisfies ColumnDef<EmployeeListItem>,
+        ]
+      : []),
+    {
+      id: "displayName",
+      accessorKey: "displayName",
+      enableHiding: false,
+      header: t("employees:columns.name"),
+      meta: { label: t("employees:columns.name"), cellClassName: "font-medium" },
+    },
+    {
+      id: "orgUnit",
+      enableSorting: false,
+      header: t("employees:columns.orgUnit"),
+      meta: { label: t("employees:columns.orgUnit") },
+      cell: ({ row }) => (row.original.orgUnitId && unitNames.get(row.original.orgUnitId)) || "—",
+    },
+    {
+      id: "manager",
+      enableSorting: false,
+      header: t("employees:columns.manager"),
+      meta: { label: t("employees:columns.manager") },
+      cell: ({ row }) => row.original.managerDisplayName ?? "—",
+    },
+    {
+      id: "workEmail",
+      enableSorting: false,
+      header: t("employees:columns.workEmail"),
+      meta: { label: t("employees:columns.workEmail") },
+      cell: ({ row }) => row.original.workEmail ?? "—",
+    },
+    {
+      id: "workPhone",
+      enableSorting: false,
+      header: t("employees:columns.workPhone"),
+      meta: { label: t("employees:columns.workPhone"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => row.original.workPhone ?? "—",
+    },
+    {
+      id: "status",
+      accessorKey: "status",
+      header: t("employees:columns.status"),
+      meta: { label: t("employees:columns.status") },
+      cell: ({ row }) => <EmployeeStatusBadge status={row.original.status} />,
+    },
+    {
+      id: "accountStatus",
+      enableSorting: false,
+      header: t("employees:columns.accountStatus"),
+      meta: { label: t("employees:columns.accountStatus") },
+      cell: ({ row }) => <AccountStatusBadge status={row.original.accountStatus} />,
+    },
+    {
+      id: "hireDate",
+      accessorKey: "hireDate",
+      header: t("employees:columns.hireDate"),
+      meta: { label: t("employees:columns.hireDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (row.original.hireDate ? formatDateOnly(row.original.hireDate, locale) : "—"),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: items,
+    getRowId: (employee) => employee.id,
+    sorting: [{ id: sort.field, desc: sort.desc }],
+    onSortingChange: changeSorting,
+    initialColumnVisibility: { workPhone: false },
+    columnVisibilityKey: COLUMN_VISIBILITY_KEY,
+  });
 
   function onBulkCompleted() {
     setSelection(EMPTY_SELECTION);
@@ -176,7 +282,6 @@ function EmployeeGrid() {
   }
 
   const hasActiveFilters = filter.q || filter.orgUnitId || filter.status || filter.hasUserAccount !== null;
-  const locale = i18n.language;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
@@ -260,6 +365,7 @@ function EmployeeGrid() {
             </SelectContent>
           </Select>
         </div>
+        <DataTableViewOptions table={table} className="ml-auto" />
       </div>
 
       {canBulk && (
@@ -306,102 +412,20 @@ function EmployeeGrid() {
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              {Array.from({ length: 5 }, (_, i) => (
-                <Skeleton key={i} className="h-8 w-full" />
-              ))}
-            </div>
-          ) : items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">
-              {hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
-            </p>
-          ) : (
-            <>
-              <div className={`overflow-x-auto ${isFetching ? "opacity-70" : ""}`}>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      {canBulk && (
-                        <TableHead className="w-10">
-                          <Checkbox
-                            aria-label={t("employees:bulk.selectPage")}
-                            checked={pageFullySelected ? true : selectedOnPage > 0 ? "indeterminate" : false}
-                            onCheckedChange={(checked) => togglePage(checked === true)}
-                          />
-                        </TableHead>
-                      )}
-                      <SortableHead label={t("employees:columns.name")} field="displayName" sort={sort} onSort={toggleSort} />
-                      <TableHead>{t("employees:columns.orgUnit")}</TableHead>
-                      <TableHead>{t("employees:columns.manager")}</TableHead>
-                      <TableHead>{t("employees:columns.workEmail")}</TableHead>
-                      <SortableHead label={t("employees:columns.status")} field="status" sort={sort} onSort={toggleSort} />
-                      <TableHead>{t("employees:columns.accountStatus")}</TableHead>
-                      <SortableHead label={t("employees:columns.hireDate")} field="hireDate" sort={sort} onSort={toggleSort} />
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((employee) => (
-                      <TableRow
-                        key={employee.id}
-                        className="cursor-pointer"
-                        data-state={isSelected(employee.id) ? "selected" : undefined}
-                        onClick={() => navigate(`/app/employees/${employee.id}`)}
-                      >
-                        {canBulk && (
-                          <TableCell onClick={(e) => e.stopPropagation()}>
-                            <Checkbox
-                              aria-label={employee.displayName}
-                              checked={isSelected(employee.id)}
-                              onCheckedChange={(checked) => toggleRow(employee.id, checked === true)}
-                            />
-                          </TableCell>
-                        )}
-                        <TableCell className="font-medium">{employee.displayName}</TableCell>
-                        <TableCell>{(employee.orgUnitId && unitNames.get(employee.orgUnitId)) || "—"}</TableCell>
-                        <TableCell>{employee.managerDisplayName ?? "—"}</TableCell>
-                        <TableCell>{employee.workEmail ?? "—"}</TableCell>
-                        <TableCell>
-                          <EmployeeStatusBadge status={employee.status} />
-                        </TableCell>
-                        <TableCell>
-                          <AccountStatusBadge status={employee.accountStatus} />
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {employee.hireDate ? formatDateOnly(employee.hireDate, locale) : "—"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              {data && <PaginationFooter result={data} onPageChange={setPage} />}
-            </>
-          )}
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            stickyHeader
+            emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
+            isRowSelected={(employee) => isSelected(employee.id)}
+            onRowClick={(employee) => navigate(`/app/employees/${employee.id}`)}
+          />
+          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
         </CardContent>
       </Card>
 
       <CreateEmployeeDialog open={createOpen} onOpenChange={setCreateOpen} />
     </div>
-  );
-}
-
-interface SortableHeadProps {
-  label: string;
-  field: EmployeeSortField;
-  sort: { field: EmployeeSortField; desc: boolean };
-  onSort: (field: EmployeeSortField) => void;
-}
-
-function SortableHead({ label, field, sort, onSort }: SortableHeadProps) {
-  const active = sort.field === field;
-  const Icon = !active ? ArrowUpDown : sort.desc ? ArrowDown : ArrowUp;
-  return (
-    <TableHead aria-sort={active ? (sort.desc ? "descending" : "ascending") : "none"}>
-      <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => onSort(field)}>
-        {label}
-        <Icon className={`h-3.5 w-3.5 ${active ? "" : "opacity-40"}`} />
-      </button>
-    </TableHead>
   );
 }
