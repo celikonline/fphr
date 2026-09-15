@@ -11,7 +11,7 @@ export default [
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
-      globals: globals.browser,
+      globals: { ...globals.browser, ...globals.node },
       parser: typescriptParser,
       parserOptions: {
         ecmaVersion: "latest",
@@ -32,6 +32,10 @@ export default [
       ...react.configs.recommended.rules,
       ...react.configs["jsx-runtime"].rules,
       ...reactHooks.configs.recommended.rules,
+      ...typescript.configs.recommended.rules,
+      "no-unused-vars": "off",
+      "no-undef": "off",
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
       "react/jsx-no-target-blank": "off",
       "react/prop-types": "off",
     },

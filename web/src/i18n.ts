@@ -10,7 +10,17 @@ i18n
   .init({
     fallbackLng: "tr",
     defaultNS: "common",
-    ns: ["common", "auth"],
+    ns: [
+      "common",
+      "auth",
+      "navigation",
+      "company",
+      "organization",
+      "locations",
+      "positions",
+      "users",
+      "audit",
+    ],
     interpolation: {
       escapeValue: false,
     },

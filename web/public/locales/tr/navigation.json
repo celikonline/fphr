@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "companyProfile": "Şirket Profili",
+    "organization": "Organizasyon",
+    "locations": "Lokasyonlar",
+    "positions": "Pozisyonlar",
+    "usersRoles": "Kullanıcılar ve Roller",
+    "auditLog": "Denetim Kaydı"
+  }
+}

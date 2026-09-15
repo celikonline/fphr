@@ -1,0 +1,33 @@
+{
+  "title": "Şirket Profili",
+  "subtitle": "Organizasyonunuzun temel bilgilerini, çalışma saatlerini ve logosunu yönetin.",
+  "sectionGeneral": "Genel Bilgiler",
+  "sectionHours": "Çalışma Saatleri ve Günleri",
+  "sectionLogo": "Şirket Logosu",
+  "name": "Şirket Adı",
+  "registrationNumber": "Sicil Numarası",
+  "taxNumber": "Vergi Numarası",
+  "address": "Adres",
+  "city": "Şehir",
+  "country": "Ülke",
+  "operatingHoursStart": "Açılış",
+  "operatingHoursEnd": "Kapanış",
+  "workingDays": "Çalışma Günleri",
+  "uploadLogo": "Logo Yükle",
+  "uploadingLogo": "Yükleniyor...",
+  "logoHint": "PNG veya JPG, en fazla 2MB.",
+  "saveSuccess": "Şirket profili kaydedildi.",
+  "saveError": "Şirket profili kaydedilemedi.",
+  "logoSuccess": "Logo güncellendi.",
+  "logoError": "Logo yüklenemedi.",
+  "readOnlyNotice": "Şirket profili için salt okunur erişiminiz var.",
+  "days": {
+    "mon": "Pzt",
+    "tue": "Sal",
+    "wed": "Çar",
+    "thu": "Per",
+    "fri": "Cum",
+    "sat": "Cmt",
+    "sun": "Paz"
+  }
+}

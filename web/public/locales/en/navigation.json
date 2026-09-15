@@ -1,0 +1,11 @@
+{
+  "nav": {
+    "home": "Home",
+    "companyProfile": "Company Profile",
+    "organization": "Organization",
+    "locations": "Locations",
+    "positions": "Positions",
+    "usersRoles": "Users & Roles",
+    "auditLog": "Audit Log"
+  }
+}

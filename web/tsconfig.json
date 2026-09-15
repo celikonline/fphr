@@ -14,8 +14,10 @@
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "jsx": "react-jsx",
+    "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],

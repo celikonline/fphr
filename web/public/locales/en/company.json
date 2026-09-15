@@ -1,0 +1,33 @@
+{
+  "title": "Company Profile",
+  "subtitle": "Manage your organization's core information, operating hours and logo.",
+  "sectionGeneral": "General Information",
+  "sectionHours": "Operating Hours & Working Days",
+  "sectionLogo": "Company Logo",
+  "name": "Company Name",
+  "registrationNumber": "Registration Number",
+  "taxNumber": "Tax Number",
+  "address": "Address",
+  "city": "City",
+  "country": "Country",
+  "operatingHoursStart": "Opens at",
+  "operatingHoursEnd": "Closes at",
+  "workingDays": "Working Days",
+  "uploadLogo": "Upload Logo",
+  "uploadingLogo": "Uploading...",
+  "logoHint": "PNG or JPG, up to 2MB.",
+  "saveSuccess": "Company profile saved.",
+  "saveError": "Could not save company profile.",
+  "logoSuccess": "Logo updated.",
+  "logoError": "Could not upload logo.",
+  "readOnlyNotice": "You have read-only access to the company profile.",
+  "days": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  }
+}
