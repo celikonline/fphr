@@ -25,6 +25,9 @@ import AccessSettingsPage from "@/pages/settings/access-settings";
 import SupportAccessPage from "@/pages/settings/support-access";
 import DataTransferPage from "@/pages/settings/data-transfer";
 import DataTransferJobPage from "@/pages/settings/data-transfer-job";
+import ApprovalFlowsPage from "@/pages/settings/approval-flows";
+import WorkflowInboxPage from "@/pages/inbox";
+import ApproveTokenPage from "@/pages/public/approve";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -55,6 +58,7 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/invite/:token" element={<InviteAcceptPage />} />
+        <Route path="/approve/:token" element={<ApproveTokenPage />} />
 
         {/* Protected Routes: single app shell (sidebar + header) */}
         <Route
@@ -78,16 +82,14 @@ export default function App() {
           <Route path="support" element={<ComingSoonPage titleKey="nav.support" phase={4} />} />
           <Route path="apps" element={<AppsPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="inbox" element={<WorkflowInboxPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />
           <Route path="settings/company/holiday-calendars" element={<HolidayCalendarsPage />} />
           <Route path="settings/company/locations" element={<LocationsPage />} />
           <Route path="settings/company/profile" element={<CompanyProfilePage />} />
-          <Route
-            path="settings/company/approval-flows"
-            element={<ComingSoonPage titleKey="settings.approvalFlows" phase={1} />}
-          />
+          <Route path="settings/company/approval-flows" element={<ApprovalFlowsPage />} />
           <Route
             path="settings/rules/*"
             element={
