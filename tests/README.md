@@ -60,7 +60,7 @@ Enforce structural rules for the entire solution:
   - TenantId immutability enforced by interceptor
 
 - **Naming Conventions**
-  - Handlers: `*CommandHandler`, `*QueryHandler` (sealed)
+  - Handlers: `{Action}Handler`, e.g. `CreateUserHandler`, `ListRolesHandler` (sealed) — not `{Action}CommandHandler`/`{Action}QueryHandler`
   - Events: `*Event` or `*DomainEvent` (Domain layer only)
   - Permissions: `{module}.{resource_plural}.{action}` (snake_case)
   - Controllers: Inherit from `ApiControllerBase`
@@ -399,7 +399,7 @@ jobs:
 
 ## See Also
 
-- [ADR 0002 - Onion Architecture](../../docs/adr/0002-onion-architecture.md)
-- [ADR 0003 - Module Database Contexts](../../docs/adr/0003-module-database-contexts.md)
-- [Multi-Tenant Architecture](../../docs/architecture/multi-tenancy.md)
-- [API Testing Guide](../../docs/testing/api-testing.md)
+- [ADR 0002 - Onion Architecture](../docs/adr/0002-onion-architecture.md)
+- [ADR 0003 - Per-Module DbContext](../docs/adr/0003-per-module-dbcontext.md)
+- [Architecture overview](../docs/architecture.md)
+- [Coding and repo conventions](../docs/conventions.md)
