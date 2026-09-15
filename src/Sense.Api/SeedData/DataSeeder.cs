@@ -3,11 +3,17 @@ using Microsoft.Extensions.Logging;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Documents.Domain.Documents;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Application.Roles;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Domain.Users;
 using Sense.Modules.Identity.Infrastructure.Persistence;
+using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.OrgUnits;
+using Sense.Modules.Organization.Domain.OrgUnitTypes;
+using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Security;
 
 namespace Sense.Api.SeedData;
@@ -17,6 +23,8 @@ public class DataSeeder(
     ILogger<DataSeeder> logger,
     IdentityDbContext identityCtx,
     DocumentsDbContext documentsCtx,
+    OrganizationDbContext organizationCtx,
+    EmployeeDbContext employeeCtx,
     IPermissionCatalog permissionCatalog)
 {
     private const int RandomSeed = 42; // Deterministic seed for reproducibility
@@ -51,6 +59,8 @@ public class DataSeeder(
             }
 
             await identityCtx.SaveChangesAsync(cancellationToken);
+            await organizationCtx.SaveChangesAsync(cancellationToken);
+            await employeeCtx.SaveChangesAsync(cancellationToken);
             sw.Stop();
 
             logger.LogInformation("Seed data generation completed in {Elapsed}ms", sw.ElapsedMilliseconds);
@@ -120,7 +130,19 @@ public class DataSeeder(
         // Set password (dummy hash for seed purposes)
         user.SetPassword("$2a$11$dummy_minimal_seed_hash");
 
-        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role");
+        // Organization: system hierarchy levels + a single root Company org unit (roadmap Faz 0 item #4)
+        var (companyTypeId, _) = SeedOrgUnitTypes(tenant.Id);
+        var rootUnit = CreateOrgUnitOrThrow(tenant.Id, companyTypeId, parentId: null, name: tenant.Name);
+        organizationCtx.OrgUnits.Add(rootUnit);
+        organizationCtx.Companies.Add(CreateCompanyOrThrow(tenant.Id, rootUnit.Id));
+
+        // Employee: minimal stub for the admin user, linked back via User.EmployeeId
+        var adminEmployee = CreateEmployeeOrThrow(tenant.Id, "Admin User", user.Id, rootUnit.Id);
+        employeeCtx.Employees.Add(adminEmployee);
+        user.LinkEmployee(adminEmployee.Id);
+        rootUnit.AssignManager(adminEmployee.Id);
+
+        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role, 1 org unit, 1 employee");
     }
 
     private async Task SeedDemoAsync(CancellationToken cancellationToken)
@@ -168,11 +190,136 @@ public class DataSeeder(
             user.SetPassword("$2a$11$dummy_demo_seed_hash");
         }
 
+        // Organization: system hierarchy levels + demo tree (Headquarters -> Sales/Engineering/HR/Finance),
+        // matching the shape web/src/services/organization.service.ts already mocks (Item 20 frontend).
+        var (companyTypeId, departmentTypeId) = SeedOrgUnitTypes(tenant.Id);
+
+        var headquarters = CreateOrgUnitOrThrow(tenant.Id, companyTypeId, parentId: null, name: "Headquarters");
+        organizationCtx.OrgUnits.Add(headquarters);
+        organizationCtx.Companies.Add(CreateCompanyOrThrow(tenant.Id, headquarters.Id));
+
+        string[] departmentNames = ["Sales", "Engineering", "HR", "Finance"];
+        var departments = new List<OrgUnit>();
+        foreach (var name in departmentNames)
+        {
+            var department = CreateOrgUnitOrThrow(tenant.Id, departmentTypeId, headquarters.Id, name);
+            organizationCtx.OrgUnits.Add(department);
+            departments.Add(department);
+        }
+
+        // Employee: one minimal stub per demo user, assigned round-robin across the 4 departments
+        // (executives/HR go to Headquarters), linked back via User.EmployeeId, first Manager per unit
+        // becomes that unit's ManagerEmployeeId.
+        var employeeCount = SeedDemoEmployees(tenant.Id, demoUsers, roleAssignments, headquarters, departments);
+
         // Create sample documents
         await SeedSampleDocumentsAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
 
-        logger.LogInformation("Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents",
-            demoUsers.Count, roles.Count, 3);
+        logger.LogInformation(
+            "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units, {EmployeeCount} employees",
+            demoUsers.Count, roles.Count, 3, 1 + departments.Count, employeeCount);
+    }
+
+    /// <summary>Seeds the system OrgUnitType catalog for a tenant; returns the Company and Department level ids for convenience.</summary>
+    private (Guid CompanyTypeId, Guid DepartmentTypeId) SeedOrgUnitTypes(Guid tenantId)
+    {
+        var companyTypeId = Guid.Empty;
+        var departmentTypeId = Guid.Empty;
+
+        foreach (var result in OrgUnitTypeCatalog.CreateAll(tenantId))
+        {
+            if (!result.IsSuccess)
+            {
+                throw new InvalidOperationException($"Failed to seed org unit type: {result.Error}");
+            }
+
+            organizationCtx.OrgUnitTypes.Add(result.Value);
+
+            if (result.Value.Code == OrgUnitTypeCodes.Company)
+            {
+                companyTypeId = result.Value.Id;
+            }
+            else if (result.Value.Code == OrgUnitTypeCodes.Department)
+            {
+                departmentTypeId = result.Value.Id;
+            }
+        }
+
+        return (companyTypeId, departmentTypeId);
+    }
+
+    private static OrgUnit CreateOrgUnitOrThrow(Guid tenantId, Guid typeId, Guid? parentId, string name)
+    {
+        var result = OrgUnit.Create(tenantId, typeId, parentId, name);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to seed org unit '{name}': {result.Error}");
+        }
+
+        return result.Value;
+    }
+
+    private static Company CreateCompanyOrThrow(Guid tenantId, Guid orgUnitId)
+    {
+        var result = Company.Create(tenantId, orgUnitId);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to seed company for org unit '{orgUnitId}': {result.Error}");
+        }
+
+        return result.Value;
+    }
+
+    private Employee CreateEmployeeOrThrow(Guid tenantId, string displayName, Guid? userId, Guid? orgUnitId)
+    {
+        var result = Employee.Create(tenantId, displayName, userId, orgUnitId);
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to seed employee '{displayName}': {result.Error}");
+        }
+
+        return result.Value;
+    }
+
+    /// <summary>
+    /// Creates one minimal Employee stub per demo user, round-robin-assigned to the given department
+    /// units (executives/HR go to Headquarters instead), links each Identity user back to its
+    /// employee record, and best-effort assigns each unit's first Manager-role employee as its
+    /// ManagerEmployeeId. Returns the number of employees created.
+    /// </summary>
+    private int SeedDemoEmployees(
+        Guid tenantId,
+        List<User> users,
+        Dictionary<Guid, List<Role>> roleAssignments,
+        OrgUnit headquarters,
+        IReadOnlyList<OrgUnit> departments)
+    {
+        var deptCursor = 0;
+        var created = 0;
+
+        foreach (var user in users)
+        {
+            var userRoles = roleAssignments.TryGetValue(user.Id, out var r) ? r : [];
+            var isExecutive = userRoles.Any(role => role.Code is SystemRoleCodes.Owner or SystemRoleCodes.Admin or SystemRoleCodes.HR);
+            var orgUnit = isExecutive || departments.Count == 0 ? headquarters : departments[deptCursor++ % departments.Count];
+
+            var employee = CreateEmployeeOrThrow(tenantId, user.FullName, user.Id, orgUnit.Id);
+            employeeCtx.Employees.Add(employee);
+            user.LinkEmployee(employee.Id);
+            created++;
+
+            if (isExecutive && headquarters.ManagerEmployeeId is null)
+            {
+                headquarters.AssignManager(employee.Id);
+            }
+
+            if (orgUnit.ManagerEmployeeId is null && userRoles.Any(role => role.Code == SystemRoleCodes.Manager))
+            {
+                orgUnit.AssignManager(employee.Id);
+            }
+        }
+
+        return created;
     }
 
     private void SeedRolePermissions(Role role, string roleCode)

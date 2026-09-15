@@ -1,23 +1,48 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Organization.Domain;
+using Sense.Modules.Organization.Infrastructure.Lookups;
+using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Infrastructure.DependencyInjection;
 
 namespace Sense.Modules.Organization.Api;
 
-/// <summary>Organization modülü kompozisyon kökü (Faz 0: iskelet; şirket/birim/lokasyon/pozisyon bir sonraki adımda).</summary>
+/// <summary>
+/// Organization module composition root: dynamic org hierarchy (OrgUnitType/OrgUnit), Company
+/// settings, and the OrgUnitApprovalPolicyAssignment stub (roadmap Faz 0 item #4).
+/// </summary>
 public sealed class OrganizationModule : IModule
 {
-    public const string ModuleName = "org";
+    public string Name => OrganizationDbContext.SchemaName;
 
-    public string Name => ModuleName;
+    public IReadOnlyList<Assembly> Assemblies { get; } =
+    [
+        typeof(OrganizationModule).Assembly,
+        typeof(OrganizationPermissions).Assembly,
+        typeof(OrganizationDbContext).Assembly,
+    ];
 
-    public IReadOnlyList<Assembly> Assemblies { get; } = [typeof(OrganizationModule).Assembly];
-
-    public IEnumerable<Permission> Permissions => [];
+    public IEnumerable<Permission> Permissions => OrganizationPermissions.All;
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
+        // Register DbContext for this module
+        services.AddModuleDbContext<OrganizationDbContext>(configuration, OrganizationDbContext.SchemaName);
+
+        // Register MediatR-style command/query handlers for this module
+        services.AddModuleHandlers(OrganizationDbContext.SchemaName, typeof(OrganizationPermissions).Assembly, typeof(OrganizationDbContext).Assembly);
+
+        // Register repositories
+        services.AddScoped<IOrgUnitTypeRepository, OrgUnitTypeRepository>();
+        services.AddScoped<IOrgUnitRepository, OrgUnitRepository>();
+        services.AddScoped<ICompanyRepository, CompanyRepository>();
+        services.AddScoped<IOrgUnitApprovalPolicyAssignmentRepository, OrgUnitApprovalPolicyAssignmentRepository>();
+
+        // Cross-module read contract consumed by Employee (see IOrgUnitLookup)
+        services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();
     }
 }
