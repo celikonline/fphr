@@ -1,0 +1,79 @@
+using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Recruitment.Domain;
+using Sense.Modules.Recruitment.Domain.Applications;
+using Sense.Modules.Recruitment.Domain.Candidates;
+using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Shared.Kernel.Results;
+
+namespace Sense.Modules.Recruitment.Infrastructure.Persistence;
+
+/// <summary>EF Core-backed JobPosting repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPostingRepository
+{
+    public void Add(JobPosting posting) => context.JobPostings.Add(posting);
+
+    public async Task<Result<JobPosting>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var posting = await context.JobPostings.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return posting is null ? Error.NotFound(RecruitmentDomainErrors.PostingNotFound) : posting;
+    }
+
+    public async Task<IReadOnlyList<JobPosting>> ListAsync(JobPostingStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = context.JobPostings.AsQueryable();
+        if (status is not null)
+        {
+            query = query.Where(p => p.Status == status);
+        }
+
+        return await query.OrderByDescending(p => p.CreatedAt).ToListAsync(cancellationToken);
+    }
+}
+
+/// <summary>EF Core-backed Candidate repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class CandidateRepository(RecruitmentDbContext context) : ICandidateRepository
+{
+    public void Add(Candidate candidate) => context.Candidates.Add(candidate);
+
+    public async Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var candidate = await context.Candidates.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return candidate is null ? Error.NotFound(RecruitmentDomainErrors.CandidateNotFound) : candidate;
+    }
+
+    public async Task<IReadOnlyList<Candidate>> ListAsync(string? search = null, CancellationToken cancellationToken = default)
+    {
+        var query = context.Candidates.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = $"%{search.Trim()}%";
+            query = query.Where(c => EF.Functions.ILike(c.FirstName, term) || EF.Functions.ILike(c.LastName, term) || EF.Functions.ILike(c.Email, term));
+        }
+
+        return await query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
+    }
+}
+
+/// <summary>EF Core-backed JobApplication repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class JobApplicationRepository(RecruitmentDbContext context) : IJobApplicationRepository
+{
+    public void Add(JobApplication application) => context.JobApplications.Add(application);
+
+    public async Task<Result<JobApplication>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var application = await context.JobApplications.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return application is null ? Error.NotFound(RecruitmentDomainErrors.ApplicationNotFound) : application;
+    }
+
+    public async Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default) =>
+        await context.JobApplications
+            .Where(a => a.JobPostingId == jobPostingId)
+            .OrderByDescending(a => a.AppliedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default) =>
+        await context.JobApplications
+            .Where(a => a.CandidateId == candidateId)
+            .OrderByDescending(a => a.AppliedAt)
+            .ToListAsync(cancellationToken);
+}

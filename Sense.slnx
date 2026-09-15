@@ -65,6 +65,7 @@
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Attendance.Tests/Sense.Modules.Attendance.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Payroll.Tests/Sense.Modules.Payroll.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Recruitment.Tests/Sense.Modules.Recruitment.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
@@ -101,5 +102,12 @@
     <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Contracts/Sense.Modules.Payroll.Contracts.csproj" />
     <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Domain/Sense.Modules.Payroll.Domain.csproj" />
     <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Infrastructure/Sense.Modules.Payroll.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Recruitment/">
+    <Project Path="src/Modules/Recruitment/Sense.Modules.Recruitment.Api/Sense.Modules.Recruitment.Api.csproj" />
+    <Project Path="src/Modules/Recruitment/Sense.Modules.Recruitment.Application/Sense.Modules.Recruitment.Application.csproj" />
+    <Project Path="src/Modules/Recruitment/Sense.Modules.Recruitment.Contracts/Sense.Modules.Recruitment.Contracts.csproj" />
+    <Project Path="src/Modules/Recruitment/Sense.Modules.Recruitment.Domain/Sense.Modules.Recruitment.Domain.csproj" />
+    <Project Path="src/Modules/Recruitment/Sense.Modules.Recruitment.Infrastructure/Sense.Modules.Recruitment.Infrastructure.csproj" />
   </Folder>
 </Solution>

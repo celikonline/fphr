@@ -143,7 +143,20 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
   { key: "payroll", labelKey: "apps.payroll", path: "/app/apps", icon: Wallet, phase: 3 },
   { key: "expenses", labelKey: "apps.expenses", path: "/app/apps", icon: FileText, phase: 4 },
   { key: "performance", labelKey: "apps.performance", path: "/app/apps", icon: Target, phase: 5 },
-  { key: "recruitment", labelKey: "apps.recruitment", path: "/app/apps", icon: UserPlus, phase: 6 },
+  {
+    key: "recruitment",
+    labelKey: "apps.recruitment",
+    path: "/app/recruitment/postings",
+    icon: UserPlus,
+    permissions: ["recruitment.postings.read"],
+  },
+  {
+    key: "recruitmentCandidates",
+    labelKey: "apps.recruitmentCandidates",
+    path: "/app/recruitment/candidates",
+    icon: Users,
+    permissions: ["recruitment.candidates.read"],
+  },
   { key: "analytics", labelKey: "apps.analytics", path: "/app/apps", icon: PieChart, phase: 7 },
 ];
 

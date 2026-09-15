@@ -1,0 +1,300 @@
+import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router";
+import { useTranslation } from "react-i18next";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, Briefcase, Plus, UserPlus } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  Divider,
+  Group,
+  Modal,
+  Select,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
+import NoAccess from "@/components/no-access";
+import { usePermission } from "@/components/permission-guard";
+import { toast } from "@/hooks/use-toast";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateTime } from "@/lib/dates";
+import { useOrgUnits } from "@/components/employees/use-org-units";
+import {
+  createCandidate,
+  createJobApplication,
+  getJobPosting,
+  listApplicationsByPosting,
+  listCandidates,
+  moveJobApplicationStage,
+  APPLICATION_STAGES,
+  type ApplicationStage,
+  type Candidate,
+  type JobPosting,
+} from "@/services/recruitment.service";
+
+const STATUS_COLOR: Record<JobPosting["status"], string> = {
+  draft: "gray",
+  open: "green",
+  onHold: "yellow",
+  closed: "orange",
+  archived: "dark",
+};
+
+const newCandidateSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().optional(),
+});
+type NewCandidateValues = z.infer<typeof newCandidateSchema>;
+
+export default function JobPostingDetailPage() {
+  const canRead = usePermission("recruitment.postings.read");
+  if (!canRead) return <NoAccess />;
+  return <JobPostingDetail />;
+}
+
+function JobPostingDetail() {
+  const { id } = useParams<{ id: string }>();
+  const { t, i18n } = useTranslation(["recruitment", "common"]);
+  const queryClient = useQueryClient();
+  const canManageApplications = usePermission("recruitment.applications.manage");
+  const { nameById: orgUnitNameById } = useOrgUnits();
+
+  const postingQuery = useQuery({
+    queryKey: ["recruitment", "postings", id],
+    queryFn: () => getJobPosting(id!),
+    enabled: Boolean(id),
+  });
+  const applicationsQuery = useQuery({
+    queryKey: ["recruitment", "applications", "by-posting", id],
+    queryFn: () => listApplicationsByPosting(id!),
+    enabled: Boolean(id),
+  });
+  const candidatesQuery = useQuery({ queryKey: ["recruitment", "candidates"], queryFn: () => listCandidates() });
+
+  const candidateById = useMemo(() => new Map((candidatesQuery.data ?? []).map((c: Candidate) => [c.id, c])), [candidatesQuery.data]);
+
+  const invalidateApplications = () => queryClient.invalidateQueries({ queryKey: ["recruitment", "applications", "by-posting", id] });
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [pickCandidateId, setPickCandidateId] = useState<string | null>(null);
+  const [creatingNew, setCreatingNew] = useState(false);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<NewCandidateValues>({
+    resolver: zodResolver(newCandidateSchema),
+    defaultValues: { firstName: "", lastName: "", email: "", phone: "" },
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: (candidateId: string) => createJobApplication(id!, candidateId),
+    onSuccess: () => {
+      invalidateApplications();
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:applications.createSuccess") });
+      closeAddDialog();
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const createAndApplyMutation = useMutation({
+    mutationFn: async (values: NewCandidateValues) => {
+      const candidateId = await createCandidate({ ...values, phone: values.phone || null });
+      await createJobApplication(id!, candidateId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recruitment", "candidates"] });
+      invalidateApplications();
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:applications.createSuccess") });
+      closeAddDialog();
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const stageMutation = useMutation({
+    mutationFn: ({ applicationId, stage }: { applicationId: string; stage: ApplicationStage }) => moveJobApplicationStage(applicationId, stage),
+    onSuccess: () => {
+      invalidateApplications();
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:applications.stageChanged") });
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  function closeAddDialog() {
+    setAddOpen(false);
+    setPickCandidateId(null);
+    setCreatingNew(false);
+    reset();
+  }
+
+  const candidateOptions = (candidatesQuery.data ?? []).map((c) => ({ value: c.id, label: `${c.firstName} ${c.lastName} (${c.email})` }));
+
+  if (postingQuery.isLoading) {
+    return (
+      <div className="mx-auto max-w-5xl p-6 md:p-10">
+        <Text c="dimmed">{t("common:loading")}</Text>
+      </div>
+    );
+  }
+
+  if (postingQuery.isError || !postingQuery.data) {
+    return (
+      <div className="mx-auto max-w-5xl p-6 md:p-10">
+        <Text c="red">{getApiErrorMessage(postingQuery.error, t("recruitment:genericError"))}</Text>
+      </div>
+    );
+  }
+
+  const posting = postingQuery.data;
+
+  return (
+    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+      <Link to="/app/recruitment/postings" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+        <ArrowLeft size={14} /> {t("recruitment:postings.title")}
+      </Link>
+
+      <Group justify="space-between" align="flex-start" gap="sm">
+        <div>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <Briefcase size={24} /> {posting.title}
+          </Title>
+          <Group gap="xs" mt={4}>
+            <Badge color={STATUS_COLOR[posting.status]} variant="light">
+              {t(`recruitment:postings.statuses.${posting.status}`)}
+            </Badge>
+            <Text c="dimmed" size="sm">
+              {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {t(`recruitment:employmentTypes.${posting.employmentType}`)}
+            </Text>
+          </Group>
+        </div>
+      </Group>
+
+      {posting.description && (
+        <Card withBorder>
+          <Text size="sm">{posting.description}</Text>
+        </Card>
+      )}
+
+      <Divider label={t("recruitment:applications.title")} labelPosition="left" />
+
+      <Group justify="flex-end">
+        {canManageApplications && (
+          <Button type="button" leftSection={<UserPlus size={16} />} onClick={() => setAddOpen(true)}>
+            {t("recruitment:applications.addApplication")}
+          </Button>
+        )}
+      </Group>
+
+      <Card withBorder padding={0}>
+        {applicationsQuery.isLoading ? (
+          <Text p="md" size="sm" c="dimmed">
+            {t("common:loading")}
+          </Text>
+        ) : !applicationsQuery.data || applicationsQuery.data.length === 0 ? (
+          <Text p="md" size="sm" c="dimmed">
+            {t("recruitment:applications.empty")}
+          </Text>
+        ) : (
+          <Table striped highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t("recruitment:applications.candidate")}</Table.Th>
+                <Table.Th>{t("recruitment:applications.appliedAt")}</Table.Th>
+                <Table.Th>{t("recruitment:applications.stage")}</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {applicationsQuery.data.map((application) => {
+                const candidate = candidateById.get(application.candidateId);
+                const isTerminal = application.stage === "hired" || application.stage === "rejected";
+                return (
+                  <Table.Tr key={application.id}>
+                    <Table.Td>{candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}</Table.Td>
+                    <Table.Td>{formatDateTime(application.appliedAt, i18n.language)}</Table.Td>
+                    <Table.Td className="max-w-[220px]">
+                      <Select
+                        data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
+                        value={application.stage}
+                        disabled={!canManageApplications || isTerminal}
+                        allowDeselect={false}
+                        onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
+                      />
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        )}
+      </Card>
+
+      <Modal opened={addOpen} onClose={closeAddDialog} title={t("recruitment:applications.dialogTitle")}>
+        <Stack gap="md">
+          {!creatingNew ? (
+            <>
+              <Select
+                label={t("recruitment:applications.pickExisting")}
+                data={candidateOptions}
+                value={pickCandidateId}
+                onChange={setPickCandidateId}
+                searchable
+                clearable
+              />
+              <Button type="button" variant="subtle" leftSection={<Plus size={14} />} onClick={() => setCreatingNew(true)}>
+                {t("recruitment:applications.orCreateNew")}
+              </Button>
+              <Group justify="flex-end" gap="sm">
+                <Button type="button" variant="default" onClick={closeAddDialog} disabled={applyMutation.isPending}>
+                  {t("common:cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  disabled={!pickCandidateId || applyMutation.isPending}
+                  onClick={() => pickCandidateId && applyMutation.mutate(pickCandidateId)}
+                >
+                  {applyMutation.isPending ? t("common:saving") : t("common:save")}
+                </Button>
+              </Group>
+            </>
+          ) : (
+            <form onSubmit={handleSubmit((values) => createAndApplyMutation.mutate(values))}>
+              <Stack gap="md">
+                <TextInput
+                  data-autofocus
+                  label={t("recruitment:candidates.firstName")}
+                  error={errors.firstName ? t("common:required") : undefined}
+                  {...register("firstName")}
+                />
+                <TextInput
+                  label={t("recruitment:candidates.lastName")}
+                  error={errors.lastName ? t("common:required") : undefined}
+                  {...register("lastName")}
+                />
+                <TextInput
+                  label={t("recruitment:candidates.email")}
+                  error={errors.email ? t("common:required") : undefined}
+                  {...register("email")}
+                />
+                <TextInput label={t("recruitment:candidates.phone")} {...register("phone")} />
+                <Group justify="flex-end" gap="sm">
+                  <Button type="button" variant="default" onClick={() => setCreatingNew(false)} disabled={createAndApplyMutation.isPending}>
+                    {t("common:cancel")}
+                  </Button>
+                  <Button type="submit" disabled={createAndApplyMutation.isPending}>
+                    {createAndApplyMutation.isPending ? t("common:saving") : t("common:save")}
+                  </Button>
+                </Group>
+              </Stack>
+            </form>
+          )}
+        </Stack>
+      </Modal>
+    </div>
+  );
+}

@@ -8,6 +8,7 @@ using Sense.Modules.Workflow.Api;
 using Sense.Modules.Leave.Api;
 using Sense.Modules.Attendance.Api;
 using Sense.Modules.Payroll.Api;
+using Sense.Modules.Recruitment.Api;
 using Sense.Shared.Contracts.Modules;
 
 namespace Sense.Api;
@@ -27,5 +28,6 @@ public static class ModuleCatalog
         new LeaveModule(),
         new AttendanceModule(),
         new PayrollModule(),
+        new RecruitmentModule(),
     ];
 }

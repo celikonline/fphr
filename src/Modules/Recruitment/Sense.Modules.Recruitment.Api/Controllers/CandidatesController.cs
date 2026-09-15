@@ -1,0 +1,48 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Sense.Modules.Recruitment.Application.Applications;
+using Sense.Modules.Recruitment.Application.Candidates;
+using Sense.Shared.Web.Controllers;
+
+namespace Sense.Modules.Recruitment.Api.Controllers;
+
+/// <summary>Request to create or update a candidate's contact information.</summary>
+public sealed record CandidateContactRequest(string FirstName, string LastName, string Email, string? Phone);
+
+/// <summary>Candidate management (Kolay İK ATS "Adaylar"). R0: added manually - the career-site apply flow is a later Recruitment package.</summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route("api/v{version:apiVersion}/recruitment/candidates")]
+[Authorize]
+public sealed class CandidatesController : ApiControllerBase
+{
+    /// <summary>Lists candidates, optionally filtered by a name/email search term.</summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<CandidateDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] string? search, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListCandidatesQuery(search), ct));
+
+    /// <summary>A single candidate by id.</summary>
+    [HttpGet(ApiRoutes.IdParam)]
+    [ProducesResponseType<CandidateDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetCandidateQuery(id), ct));
+
+    /// <summary>Adds a candidate manually.</summary>
+    [HttpPost]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Create([FromBody] CandidateContactRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CreateCandidateCommand(request.FirstName, request.LastName, request.Email, request.Phone), ct));
+
+    /// <summary>Edits a candidate's contact information.</summary>
+    [HttpPut(ApiRoutes.IdParam)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] CandidateContactRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateCandidateCommand(id, request.FirstName, request.LastName, request.Email, request.Phone), ct));
+
+    /// <summary>Lists a candidate's applications (their history across postings).</summary>
+    [HttpGet(ApiRoutes.IdParam + "/applications")]
+    [ProducesResponseType<IReadOnlyList<JobApplicationDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListApplications(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListApplicationsByCandidateQuery(id), ct));
+}

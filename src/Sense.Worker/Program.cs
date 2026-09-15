@@ -18,6 +18,7 @@ using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Infrastructure;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
@@ -134,6 +135,17 @@ builder.Services.AddModuleHandlers(
     typeof(PayrollDbContext).Assembly,
     typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PayrollDbContext>>();
+
+// Recruitment (R0): no cross-module event consumers yet - JobPostingPublished/JobApplicationStageChanged have no
+// subscriber until a later Recruitment package (Notifications) is built. Registered anyway so EventTypeRegistry
+// knows these event types and the outbox drains instead of accumulating unpublishable rows.
+builder.Services.AddModuleDbContext<RecruitmentDbContext>(builder.Configuration, RecruitmentDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    RecruitmentDbContext.SchemaName,
+    typeof(Sense.Modules.Recruitment.Contracts.RecruitmentPermissions).Assembly,
+    typeof(RecruitmentDbContext).Assembly,
+    typeof(Sense.Modules.Recruitment.Domain.IJobPostingRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<RecruitmentDbContext>>();
 
 await builder.Build().RunAsync();
 

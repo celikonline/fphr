@@ -33,6 +33,9 @@ import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
 import LeaveCalendarPage from "@/pages/leave/leave-calendar";
 import MyOvertimesPage from "@/pages/leave/my-overtimes";
+import JobPostingsPage from "@/pages/recruitment/job-postings";
+import JobPostingDetailPage from "@/pages/recruitment/job-posting-detail";
+import CandidatesPage from "@/pages/recruitment/candidates";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -82,6 +85,10 @@ export default function App() {
           <Route path="leave" element={<MyLeavePage />} />
           <Route path="leave/calendar" element={<LeaveCalendarPage />} />
           <Route path="leave/overtimes" element={<MyOvertimesPage />} />
+
+          <Route path="recruitment/postings" element={<JobPostingsPage />} />
+          <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />
+          <Route path="recruitment/candidates" element={<CandidatesPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

@@ -30,6 +30,7 @@ i18n
       "workflow",
       "notifications",
       "leave",
+      "recruitment",
     ],
     interpolation: {
       escapeValue: false,

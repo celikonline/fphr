@@ -1,0 +1,183 @@
+/**
+ * Recruitment module (Faz 6 R0): mirrors `JobPostingsController`/`CandidatesController`/`JobApplicationsController.cs`
+ * (`api/v1/recruitment/{postings,candidates,applications}`). R0 scope only: manual posting lifecycle, candidates
+ * added manually, fixed pipeline stage set. Career site, requisitions, form builder etc. are later Recruitment
+ * packages (see docs/analysis/kolayik-video/faz6-durum-takibi.md).
+ */
+import { apiClient } from "@senseik/api-client";
+
+const RECRUITMENT_BASE = "/v1/recruitment";
+
+export type JobPostingStatus = "draft" | "open" | "onHold" | "closed" | "archived";
+export type JobPostingArchiveReason = "positionFilled" | "positionCancelled" | "other";
+export const JOB_POSTING_ARCHIVE_REASONS: JobPostingArchiveReason[] = ["positionFilled", "positionCancelled", "other"];
+
+/** Mirrors `RecruitmentEmploymentType` (same value set as Employee's EmploymentType, kept local until R1's IEmploymentTypeLookup). */
+export type RecruitmentEmploymentType =
+  | "fullTime"
+  | "partTime"
+  | "temporary"
+  | "contract"
+  | "freelance"
+  | "intern"
+  | "mobile"
+  | "apprentice"
+  | "seasonal"
+  | "agencyWorker"
+  | "subcontractor";
+export const RECRUITMENT_EMPLOYMENT_TYPES: RecruitmentEmploymentType[] = [
+  "fullTime",
+  "partTime",
+  "temporary",
+  "contract",
+  "freelance",
+  "intern",
+  "mobile",
+  "apprentice",
+  "seasonal",
+  "agencyWorker",
+  "subcontractor",
+];
+
+export interface JobPosting {
+  id: string;
+  title: string;
+  orgUnitId: string;
+  locationId: string | null;
+  employmentType: RecruitmentEmploymentType;
+  description: string | null;
+  companyNotes: string | null;
+  ownerUserId: string;
+  hiringManagerUserId: string | null;
+  status: JobPostingStatus;
+  applySlug: string;
+  closingDate: string | null;
+  publishedAt: string | null;
+  archivedAt: string | null;
+  archiveReason: JobPostingArchiveReason | null;
+  accessUserIds: string[];
+}
+
+export interface CreateJobPostingInput {
+  title: string;
+  orgUnitId: string;
+  locationId?: string | null;
+  employmentType: RecruitmentEmploymentType;
+  description?: string | null;
+  ownerUserId: string;
+  hiringManagerUserId?: string | null;
+}
+
+export interface UpdateJobPostingInput {
+  title: string;
+  orgUnitId: string;
+  locationId?: string | null;
+  employmentType: RecruitmentEmploymentType;
+  description?: string | null;
+  companyNotes?: string | null;
+  hiringManagerUserId?: string | null;
+  closingDate?: string | null;
+}
+
+export async function listJobPostings(status?: JobPostingStatus): Promise<JobPosting[]> {
+  const { data } = await apiClient.get<JobPosting[]>(`${RECRUITMENT_BASE}/postings`, { params: { status } });
+  return data;
+}
+
+export async function getJobPosting(id: string): Promise<JobPosting> {
+  const { data } = await apiClient.get<JobPosting>(`${RECRUITMENT_BASE}/postings/${id}`);
+  return data;
+}
+
+export async function createJobPosting(input: CreateJobPostingInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/postings`, input);
+  return data;
+}
+
+export async function updateJobPosting(id: string, input: UpdateJobPostingInput): Promise<void> {
+  await apiClient.put(`${RECRUITMENT_BASE}/postings/${id}`, input);
+}
+
+export async function publishJobPosting(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/postings/${id}/publish`);
+}
+
+export async function closeJobPosting(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/postings/${id}/close`);
+}
+
+export async function archiveJobPosting(id: string, reason: JobPostingArchiveReason): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/postings/${id}/archive`, { reason });
+}
+
+export async function setJobPostingAccess(id: string, userIds: string[]): Promise<void> {
+  await apiClient.put(`${RECRUITMENT_BASE}/postings/${id}/access`, { userIds });
+}
+
+export type CandidateSource = "manual" | "careerSite" | "referral" | "other";
+
+export interface Candidate {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string | null;
+  source: CandidateSource;
+}
+
+export interface CandidateContactInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+}
+
+export async function listCandidates(search?: string): Promise<Candidate[]> {
+  const { data } = await apiClient.get<Candidate[]>(`${RECRUITMENT_BASE}/candidates`, { params: { search } });
+  return data;
+}
+
+export async function getCandidate(id: string): Promise<Candidate> {
+  const { data } = await apiClient.get<Candidate>(`${RECRUITMENT_BASE}/candidates/${id}`);
+  return data;
+}
+
+export async function createCandidate(input: CandidateContactInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/candidates`, input);
+  return data;
+}
+
+export async function updateCandidate(id: string, input: CandidateContactInput): Promise<void> {
+  await apiClient.put(`${RECRUITMENT_BASE}/candidates/${id}`, input);
+}
+
+export type ApplicationStage = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
+export const APPLICATION_STAGES: ApplicationStage[] = ["applied", "screening", "interview", "offer", "hired", "rejected"];
+
+export interface JobApplication {
+  id: string;
+  jobPostingId: string;
+  candidateId: string;
+  stage: ApplicationStage;
+  appliedAt: string;
+  archivedAt: string | null;
+}
+
+export async function listApplicationsByPosting(jobPostingId: string): Promise<JobApplication[]> {
+  const { data } = await apiClient.get<JobApplication[]>(`${RECRUITMENT_BASE}/applications`, { params: { jobPostingId } });
+  return data;
+}
+
+export async function listApplicationsByCandidate(candidateId: string): Promise<JobApplication[]> {
+  const { data } = await apiClient.get<JobApplication[]>(`${RECRUITMENT_BASE}/candidates/${candidateId}/applications`);
+  return data;
+}
+
+export async function createJobApplication(jobPostingId: string, candidateId: string): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/applications`, { jobPostingId, candidateId });
+  return data;
+}
+
+export async function moveJobApplicationStage(id: string, stage: ApplicationStage): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/applications/${id}/stage`, { stage });
+}

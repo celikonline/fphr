@@ -46,6 +46,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 | `src/Shared/*` (Kernel, Contracts, Infrastructure, Web) | Sahip | Ayrı küçük PR |
 | `web/src/pages/employees/*`, `settings/*`, `config/navigation.ts`, layout | Sahip | — |
 | `web/src/pages/leave/*`, `requests/*`, `approvals/*`, `notifications/*` | — | Sahip |
+| `src/Modules/Recruitment`, `web/src/pages/recruitment/*` | Sahip (2026-09-16, kullanıcı kararıyla Faz 6'ya erken geçildi — bkz. `faz6-durum-takibi.md`) | — |
 | `web/public/locales/*/<namespace>.json` | Kendi namespace'leri | Kendi namespace'leri (`leave.json`, `workflow.json`, `notifications.json`) — ayrı dosya olduğu için çakışmaz |
 | `tests/Modules/Sense.Modules.<M>.Tests` | Kendi modülleri | Kendi modülleri |
 
