@@ -28,3 +28,6 @@ export * from "./date-picker";
 export * from "./data-table";
 export * from "./file-dropzone";
 export * from "./time-picker";
+export * from "./breadcrumb";
+export * from "./scroll-area";
+export * from "./command";
