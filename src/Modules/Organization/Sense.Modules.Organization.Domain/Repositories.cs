@@ -1,5 +1,6 @@
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Kernel.Results;
@@ -53,4 +54,23 @@ public interface IOrgUnitApprovalPolicyAssignmentRepository
     void Add(OrgUnitApprovalPolicyAssignment assignment);
 
     Task<IReadOnlyList<OrgUnitApprovalPolicyAssignment>> ListByOrgUnitAsync(Guid orgUnitId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>HolidayCalendar aggregate repository.</summary>
+public interface IHolidayCalendarRepository
+{
+    void Add(HolidayCalendar calendar);
+
+    Task<Result<HolidayCalendar>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>All calendars for the current tenant (system-seeded TR calendar + any tenant-authored custom ones).</summary>
+    Task<IReadOnlyList<HolidayCalendar>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>HolidayCalendarEntry aggregate repository.</summary>
+public interface IHolidayCalendarEntryRepository
+{
+    void Add(HolidayCalendarEntry entry);
+
+    Task<IReadOnlyList<HolidayCalendarEntry>> ListByCalendarAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default);
 }

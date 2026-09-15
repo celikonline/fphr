@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Shared.Contracts.Context;
@@ -28,6 +29,10 @@ public sealed class OrganizationDbContext(DbContextOptions<OrganizationDbContext
     public DbSet<Company> Companies => Set<Company>();
 
     public DbSet<OrgUnitApprovalPolicyAssignment> ApprovalPolicyAssignments => Set<OrgUnitApprovalPolicyAssignment>();
+
+    public DbSet<HolidayCalendar> HolidayCalendars => Set<HolidayCalendar>();
+
+    public DbSet<HolidayCalendarEntry> HolidayCalendarEntries => Set<HolidayCalendarEntry>();
 }
 
 internal static class OrganizationTables
@@ -36,10 +41,13 @@ internal static class OrganizationTables
     public const string OrgUnits = "org_units";
     public const string Companies = "companies";
     public const string ApprovalPolicyAssignments = "org_unit_approval_policy_assignments";
+    public const string HolidayCalendars = "holiday_calendars";
+    public const string HolidayCalendarEntries = "holiday_calendar_entries";
 
     public const int CodeLength = 50;
     public const int NameLength = 200;
     public const int RequestTypeLength = 50;
+    public const int CountryCodeLength = 10;
 }
 
 public sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUnitType>
@@ -93,6 +101,47 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
 
         b.HasIndex(x => new { x.TenantId, x.OrgUnitId }).IsUnique();
         b.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.OrgUnitId).OnDelete(DeleteBehavior.Restrict);
+
+        // Same-module, same-schema FK now that HolidayCalendar exists (roadmap item #5); this column
+        // was a reserved Guid? with no FK when Company was created by item #4. Restrict: a calendar
+        // still assigned to a company cannot be hard-deleted (there is no delete endpoint yet anyway).
+        b.HasOne<HolidayCalendar>().WithMany().HasForeignKey(x => x.HolidayCalendarId).OnDelete(DeleteBehavior.Restrict);
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class HolidayCalendarConfiguration : IEntityTypeConfiguration<HolidayCalendar>
+{
+    public void Configure(EntityTypeBuilder<HolidayCalendar> b)
+    {
+        b.ToTable(OrganizationTables.HolidayCalendars);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
+        b.Property(x => x.CountryCode).HasMaxLength(OrganizationTables.CountryCodeLength).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.Name });
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class HolidayCalendarEntryConfiguration : IEntityTypeConfiguration<HolidayCalendarEntry>
+{
+    public void Configure(EntityTypeBuilder<HolidayCalendarEntry> b)
+    {
+        b.ToTable(OrganizationTables.HolidayCalendarEntries);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
+        b.Property(x => x.Date).HasColumnType("date").IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.HolidayCalendarId });
+
+        // Same-module, same-schema referential integrity; deliberately no navigation property on the
+        // domain entity (see OrgUnitConfiguration's identical note for Type/Parent).
+        b.HasOne<HolidayCalendar>().WithMany().HasForeignKey(x => x.HolidayCalendarId).OnDelete(DeleteBehavior.Cascade);
 
         b.Ignore(x => x.DomainEvents);
     }

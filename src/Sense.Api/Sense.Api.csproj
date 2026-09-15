@@ -13,4 +13,10 @@
     <ProjectReference Include="../Modules/Documents/Sense.Modules.Documents.Api/Sense.Modules.Documents.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- TR official holiday seed data (roadmap Faz 0 item #5) read at seed-time by DataSeeder; not
+         hardcoded date constants, see HolidayCalendarEntry's class doc comment. -->
+    <None Include="SeedData\holidays\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
