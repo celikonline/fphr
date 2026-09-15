@@ -32,7 +32,10 @@ public sealed class JobSecurityEvaluator(IEmployeeRepository employees, ILegisla
             LegislationParameterKeys.JobSecurityMinSeniorityMonths, today, FallbackMinSeniorityMonths, cancellationToken).ConfigureAwait(false);
 
         var headcount = await employees.CountActiveAsync(cancellationToken).ConfigureAwait(false);
-        var seniorityMonths = SeniorityMonths(employee, today);
+
+        // "Fasılalı dönemler birleşik" (11.3.03): every employment period counts, including probation and suspensions.
+        // Falls back to the hire date when the caller loaded the employee without its periods.
+        var seniorityMonths = employee.SeniorityMonths(SeniorityPurpose.JobSecurity, today);
 
         // Simplification (11.3.03 spec, noted explicitly): the real rule groups headcount by "iş kolu" (business
         // line) across worksites and excludes "yer altı işçisi" (IsUndergroundWorker) from the seniority requirement.
@@ -47,28 +50,5 @@ public sealed class JobSecurityEvaluator(IEmployeeRepository employees, ILegisla
         // just-cause termination are excluded here because only ValidCause_Art18 shows the warning.
         var showWarning = inScope && terminationType == TerminationType.ValidCause_Art18;
         return new JobSecurityEvaluation(inScope, showWarning, showWarning ? JobSecurityEvaluation.DefaultWarningMessage : null);
-    }
-
-    /// <summary>Completed months between the employee's seniority start (LeaveAccrualStartDate when earlier than HireDate, else HireDate) and <paramref name="today"/>; 0 when there is no hire date yet.</summary>
-    private static decimal SeniorityMonths(EmployeeEntity employee, DateOnly today)
-    {
-        if (employee.HireDate is not { } hireDate)
-        {
-            return 0m;
-        }
-
-        var start = employee.LeaveAccrualStartDate is { } accrualStart && accrualStart < hireDate ? accrualStart : hireDate;
-        if (today < start)
-        {
-            return 0m;
-        }
-
-        var months = ((today.Year - start.Year) * 12) + today.Month - start.Month;
-        if (start.AddMonths(months) > today)
-        {
-            months--;
-        }
-
-        return Math.Max(0, months);
     }
 }

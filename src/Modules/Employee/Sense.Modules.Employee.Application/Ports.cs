@@ -99,6 +99,9 @@ public interface IEmployeeReadStore
     /// <summary>Untracked employee with its salary records and bank accounts (the payment reads reuse the aggregate's current-salary / ordering rules).</summary>
     Task<Domain.Employees.Employee?> GetWithPaymentsAsync(Guid id, CancellationToken ct);
 
+    /// <summary>Untracked employee with its employment periods (the seniority reads reuse the aggregate's own counting rules).</summary>
+    Task<Domain.Employees.Employee?> GetWithEmploymentPeriodsAsync(Guid id, CancellationToken ct);
+
     /// <summary>Stored custom field values of one employee, keyed by CustomFieldDefinition id.</summary>
     Task<IReadOnlyDictionary<Guid, string?>> GetCustomFieldValuesAsync(Guid employeeId, CancellationToken ct);
 

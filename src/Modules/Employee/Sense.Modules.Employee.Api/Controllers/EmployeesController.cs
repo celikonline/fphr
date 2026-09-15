@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
@@ -53,8 +54,21 @@ public sealed record CareerRecordRequest(
 /// <summary>Suspend body.</summary>
 public sealed record SuspendEmployeeRequest(SuspensionReason Reason);
 
-/// <summary>Termination wizard's submit body ("İşten ayrılış sihirbazı"); TerminationType/SgkExitCode override the chosen reason's defaults when sent.</summary>
-public sealed record TerminateEmployeeRequest(DateOnly TerminationDate, Guid TerminationReasonId, TerminationType? TerminationType, string? SgkExitCode);
+/// <summary>
+/// Termination wizard's submit body ("İşten ayrılış sihirbazı"); TerminationType/SgkExitCode override the chosen
+/// reason's defaults when sent. SeverancePaid/LeaveSettledAtExit are the exit settlement flags: they close the
+/// employment period and decide whether it still counts towards a later rehire's seniority.
+/// </summary>
+public sealed record TerminateEmployeeRequest(
+    DateOnly TerminationDate,
+    Guid TerminationReasonId,
+    TerminationType? TerminationType,
+    string? SgkExitCode,
+    bool SeverancePaid = false,
+    bool LeaveSettledAtExit = false);
+
+/// <summary>"Yeniden işe al" body; MergePreviousPeriods carries the counted previous periods into the new leave accrual start.</summary>
+public sealed record RehireEmployeeRequest(DateOnly HireDate, bool MergePreviousPeriods = true, DateOnly? LeaveAccrualStartDate = null);
 
 /// <summary>Bulk-set body for custom field values: only the entries present change (DefinitionId -&gt; raw value, null clears it).</summary>
 public sealed record SetCustomFieldsRequest(IReadOnlyDictionary<Guid, string?> Values);
@@ -203,7 +217,28 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<TerminateEmployeeResultDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Terminate(Guid id, [FromBody] TerminateEmployeeRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
-            new TerminateEmployeeCommand(id, request.TerminationDate, request.TerminationReasonId, request.TerminationType, request.SgkExitCode),
+            new TerminateEmployeeCommand(
+                id,
+                request.TerminationDate,
+                request.TerminationReasonId,
+                request.TerminationType,
+                request.SgkExitCode,
+                request.SeverancePaid,
+                request.LeaveSettledAtExit),
+            ct));
+
+    /// <summary>Employment periods and merged seniority of an employee ("Çalışma dönemleri ve kıdem birleştirme").</summary>
+    [HttpGet(ApiRoutes.IdParam + "/employment-periods")]
+    [ProducesResponseType<EmploymentHistoryDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> EmploymentPeriods(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmploymentHistoryQuery(id), ct));
+
+    /// <summary>Re-hires a terminated employee ("Yeniden işe al"); returns the refreshed card with the new period and merged seniority.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/rehire")]
+    [ProducesResponseType<RehireEmployeeResultDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Rehire(Guid id, [FromBody] RehireEmployeeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new RehireEmployeeCommand(id, request.HireDate, request.MergePreviousPeriods, request.LeaveAccrualStartDate),
             ct));
 
     /// <summary>

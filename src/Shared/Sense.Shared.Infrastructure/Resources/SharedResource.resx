@@ -181,6 +181,11 @@
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Posta kodu en fazla 20 karakter olabilir.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Yalnızca aktif çalışanlar askıya alınabilir.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Yalnızca askıda olan çalışanlar yeniden aktifleştirilebilir.</value></data>
+  <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Yalnızca aktif veya askıda olan çalışanlar işten çıkarılabilir.</value></data>
+  <data name="employee.termination_date_before_hire_date" xml:space="preserve"><value>İşten ayrılma tarihi işe başlama tarihinden önce olamaz.</value></data>
+  <data name="employee.termination_reason_not_found" xml:space="preserve"><value>İşten ayrılma nedeni bulunamadı.</value></data>
+  <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
+  <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.career_record_not_found" xml:space="preserve"><value>Kariyer kaydı bulunamadı.</value></data>
   <data name="employee.career_valid_from_invalid" xml:space="preserve"><value>Pozisyon başlama tarihi önceki kariyer kaydının başlangıcından sonra olmalıdır.</value></data>
   <data name="employee.career_before_hire_date" xml:space="preserve"><value>Pozisyon başlama tarihi işe başlama tarihinden önce olamaz.</value></data>

@@ -22,6 +22,9 @@ public interface IEmployeeRepository
     /// <summary>Tracked employee with its custom field values loaded (not auto-included anywhere else).</summary>
     Task<Result<EmployeeEntity>> GetWithCustomFieldsAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Tracked employee with its employment periods loaded (not auto-included anywhere else); required by the termination/rehire/seniority paths.</summary>
+    Task<Result<EmployeeEntity>> GetWithEmploymentPeriodsAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default);

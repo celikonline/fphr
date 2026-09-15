@@ -54,6 +54,20 @@ public enum TerminationType
 public sealed record EmployeeTerminated(Guid TenantId, Guid EmployeeId, TerminationType TerminationType, string ReasonCode, string? SgkExitCode) : IntegrationEvent(TenantId);
 
 /// <summary>
+/// Raised when a terminated employee is re-hired ("Yeniden işe al", 11.3.03 E5a). <paramref name="LeaveAccrualStartDate"/>
+/// and <paramref name="SeniorityStartDate"/> are the merged ("as if worked continuously") dates the rehire settled on:
+/// Leave recalculates entitlement from the first, Payroll's severance seniority uses the second. Periods whose leave was
+/// settled at exit are already excluded from the first, periods whose severance was paid from the second.
+/// </summary>
+public sealed record EmployeeRehired(
+    Guid TenantId,
+    Guid EmployeeId,
+    DateOnly HireDate,
+    DateOnly LeaveAccrualStartDate,
+    DateOnly SeniorityStartDate,
+    bool PreviousPeriodsMerged) : IntegrationEvent(TenantId);
+
+/// <summary>
 /// Why a career period starts. Mirrors the Domain's CareerChangeType (Contracts stays independent of Domain, per
 /// architecture rule); the Application layer maps between the two.
 /// </summary>

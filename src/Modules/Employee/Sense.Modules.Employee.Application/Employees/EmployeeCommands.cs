@@ -437,7 +437,9 @@ public sealed record TerminateEmployeeCommand(
     DateOnly TerminationDate,
     Guid TerminationReasonId,
     TerminationType? TerminationType = null,
-    string? SgkExitCode = null) : ICommand<TerminateEmployeeResultDto>, IScopedRequest
+    string? SgkExitCode = null,
+    bool SeverancePaid = false,
+    bool LeaveSettledAtExit = false) : ICommand<TerminateEmployeeResultDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => Id;
 }
@@ -464,13 +466,16 @@ public sealed class TerminateEmployeeHandler(
 {
     public async Task<Result<TerminateEmployeeResultDto>> Handle(TerminateEmployeeCommand command, CancellationToken cancellationToken)
     {
-        var found = await employees.GetByIdAsync(command.Id, cancellationToken);
+        // Employment periods come along: the open one is closed by Terminate with the settlement flags, and the
+        // job-security seniority is measured across all of them ("fasılalı dönemler birleşik", 11.3.03).
+        var found = await employees.GetWithEmploymentPeriodsAsync(command.Id, cancellationToken);
         if (found.IsFailure)
         {
             return found.Error;
         }
 
         var employee = found.Value;
+        employee.EnsureInitialEmploymentPeriod();
 
         // The reason catalog may not exist yet for a tenant that never opened the wizard/list before terminating.
         await reasonProvisioning.EnsureSeededAsync(tenant.TenantId, cancellationToken);
@@ -486,7 +491,8 @@ public sealed class TerminateEmployeeHandler(
 
         var evaluation = await jobSecurity.EvaluateAsync(employee, terminationType, cancellationToken);
 
-        var terminated = employee.Terminate(command.TerminationDate, reason.Id, terminationType, sgkExitCode);
+        var terminated = employee.Terminate(
+            command.TerminationDate, reason.Id, terminationType, sgkExitCode, command.SeverancePaid, command.LeaveSettledAtExit);
         if (terminated.IsFailure)
         {
             return terminated.Error;

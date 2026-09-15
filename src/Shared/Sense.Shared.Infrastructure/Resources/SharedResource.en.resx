@@ -172,6 +172,11 @@
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
+  <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Only active or suspended employees can be terminated.</value></data>
+  <data name="employee.termination_date_before_hire_date" xml:space="preserve"><value>The termination date cannot be before the hire date.</value></data>
+  <data name="employee.termination_reason_not_found" xml:space="preserve"><value>Termination reason not found.</value></data>
+  <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Only terminated employees can be rehired.</value></data>
+  <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
   <data name="employee.career_record_not_found" xml:space="preserve"><value>Career record not found.</value></data>
   <data name="employee.career_valid_from_invalid" xml:space="preserve"><value>The position start date must be after the start of the previous career record.</value></data>
   <data name="employee.career_before_hire_date" xml:space="preserve"><value>The position start date cannot be before the hire date.</value></data>

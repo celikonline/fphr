@@ -644,7 +644,13 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// account. <paramref name="terminationReasonId"/> is validated for existence by the Application layer (same-module
     /// FK-less reference, per <see cref="TerminationReasonId"/>).
     /// </summary>
-    public Result Terminate(DateOnly terminationDate, Guid terminationReasonId, TerminationType terminationType, string? sgkExitCode)
+    public Result Terminate(
+        DateOnly terminationDate,
+        Guid terminationReasonId,
+        TerminationType terminationType,
+        string? sgkExitCode,
+        bool severancePaid = false,
+        bool leaveSettledAtExit = false)
     {
         if (Status is not (EmployeeStatus.Active or EmployeeStatus.Suspended))
         {
@@ -655,6 +661,9 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         {
             return Error.Rule(EmployeeDomainErrors.TerminationDateBeforeHireDate);
         }
+
+        // Settlement flags close the open employment period (no-op when periods were not loaded, see Employee.EmploymentPeriods).
+        CloseOpenEmploymentPeriod(terminationDate, terminationReasonId, severancePaid, leaveSettledAtExit);
 
         TerminationDate = terminationDate;
         TerminationReasonId = terminationReasonId;

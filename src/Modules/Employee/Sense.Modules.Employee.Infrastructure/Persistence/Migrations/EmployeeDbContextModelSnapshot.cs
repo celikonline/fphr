@@ -579,6 +579,74 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("employees", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmploymentPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<bool>("LeaveSettledAtExit")
+                        .HasColumnType("boolean")
+                        .HasColumnName("leave_settled_at_exit");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<bool>("SeverancePaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("severance_paid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid?>("TerminationReasonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("termination_reason_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employment_periods");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employment_periods_tenant_id");
+
+                    b.HasIndex("EmployeeId", "StartDate")
+                        .HasDatabaseName("ix_employment_periods_employee_id_start_date");
+
+                    b.ToTable("employment_periods", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -930,6 +998,16 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_custom_field_values_employees_employee_id");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmploymentPeriod", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("EmploymentPeriods")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_employment_periods_employees_employee_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
                 {
                     b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
@@ -947,6 +1025,8 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Navigation("CareerRecords");
 
                     b.Navigation("CustomFieldValues");
+
+                    b.Navigation("EmploymentPeriods");
 
                     b.Navigation("SalaryRecords");
                 });

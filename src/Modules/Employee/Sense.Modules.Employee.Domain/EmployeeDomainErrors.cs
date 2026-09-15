@@ -26,6 +26,12 @@ public static class EmployeeDomainErrors
     public const string TerminateInvalidStatus = "employee.terminate_invalid_status";
 
     public const string TerminationDateBeforeHireDate = "employee.termination_date_before_hire_date";
+
+    /// <summary>Rehire is only allowed on a Terminated employee.</summary>
+    public const string RehireInvalidStatus = "employee.rehire_invalid_status";
+
+    /// <summary>The new hire date must be after the previous period's exit date.</summary>
+    public const string RehireDateBeforePreviousExit = "employee.rehire_date_before_previous_exit";
     public const string TerminationReasonNotFound = "employee.termination_reason_not_found";
     public const string TerminationReasonCodeRequired = "employee.termination_reason_code_required";
     public const string TerminationReasonCodeTooLong = "employee.termination_reason_code_too_long";

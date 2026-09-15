@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Application.Terminations;
@@ -61,6 +62,9 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
         services.AddScoped<TerminationReasonProvisioningService>();
         services.AddScoped<JobSecurityEvaluator>();
+
+        // Employment periods + rehire (E5a): merged seniority for leave, severance and the job-security check.
+        services.AddScoped<EmploymentHistoryReader>();
 
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();
