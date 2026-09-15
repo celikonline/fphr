@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
@@ -235,10 +235,15 @@ function LeaveInfoWidget() {
     queryFn: getMyLeaveBalances,
     retry: retryUnlessClientError,
   });
-  const { data: requests } = useQuery({
+  // Own requests need their own permission; without it (or on error) the "recent requests" part is hidden.
+  const canViewRequests = usePermission("leave.my.requests");
+  const { data: requests, error: requestsError } = useQuery({
     queryKey: ["home", "leave-requests"],
     queryFn: getMyLeaveRequests,
+    enabled: canViewRequests,
+    retry: retryUnlessClientError,
   });
+  const showRecentRequests = canViewRequests && !requestsError;
   const typeName = useLeaveTypeNames(balances, undefined);
   const recentRequests = useMemo(
     () => [...(requests ?? [])].sort((a, b) => b.startDate.localeCompare(a.startDate)).slice(0, 4),
@@ -293,8 +298,8 @@ function LeaveInfoWidget() {
             );
           })}
 
-          <Divider label={t("home:leaveInfo.recentTitle")} labelPosition="left" />
-          {recentRequests.length === 0 ? (
+          {showRecentRequests && <Divider label={t("home:leaveInfo.recentTitle")} labelPosition="left" />}
+          {!showRecentRequests ? null : recentRequests.length === 0 ? (
             <Text size="sm" c="dimmed">
               {t("leave:requests.empty")}
             </Text>
@@ -328,8 +333,12 @@ function LeaveInfoWidget() {
 /** Colleagues' upcoming/pending leave in the next `UPCOMING_LEAVE_DAYS` days. */
 function UpcomingLeavesWidget() {
   const { t, i18n } = useTranslation(["home"]);
-  const from = toDateOnly(new Date());
-  const to = toDateOnly(new Date(Date.now() + UPCOMING_LEAVE_DAYS * 86_400_000));
+  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
+  const [{ from, to }] = useState(() => {
+    const today = new Date();
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + UPCOMING_LEAVE_DAYS);
+    return { from: toDateOnly(today), to: toDateOnly(end) };
+  });
   const { data, isLoading, error } = useQuery({
     queryKey: ["home", "upcoming-leaves", from, to],
     queryFn: () => getLeaveCalendar({ from, to }),
@@ -376,6 +385,7 @@ function DepartmentDistributionWidget() {
   const chartData = useMemo(
     () =>
       (data ?? []).map((item, index) => ({
+        key: item.orgUnitId ?? "unassigned",
         name: item.departmentName ?? t("home:departmentDistribution.unassigned"),
         value: item.count,
         color: DEPARTMENT_COLORS[index % DEPARTMENT_COLORS.length],
@@ -397,7 +407,7 @@ function DepartmentDistributionWidget() {
           <DonutChart data={chartData} chartLabel={String(total)} size={160} thickness={22} />
           <SimpleGrid cols={2} spacing="xs" className="w-full">
             {chartData.map((item) => (
-              <Group key={item.name} gap="xs" wrap="nowrap">
+              <Group key={item.key} gap="xs" wrap="nowrap">
                 <span
                   className="h-2.5 w-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: `var(--mantine-color-${item.color}-6)` }}
@@ -440,7 +450,10 @@ export default function HomePage() {
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
   const canViewLeaveBalances = usePermission("leave.my.balances");
-  const canViewLeaveCalendar = usePermission("leave.my.calendar");
+  // The leave calendar endpoint also requires the Calendar.ShowMenu access setting.
+  const hasLeaveCalendarPermission = usePermission("leave.my.calendar");
+  const showCalendarMenu = useAccessSetting("showCalendarMenu");
+  const canViewLeaveCalendar = hasLeaveCalendarPermission && showCalendarMenu;
   const showOrgInfo = useAccessSetting("showOrgInfo");
   const showBirthdays = useAccessSetting("showUpcomingBirthdays");
   const showLeaves = useAccessSetting("showUpcomingLeaves");
