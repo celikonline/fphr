@@ -100,7 +100,7 @@
     <PackageVersion Include="xunit.v3" Version="3.*" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.*" />
     <PackageVersion Include="Shouldly" Version="4.*" />
-    <PackageVersion Include="NSubstitute" Version="5.*" />
+    <PackageVersion Include="NSubstitute" Version="6.*" />
     <PackageVersion Include="Testcontainers.PostgreSql" Version="4.*" />
     <PackageVersion Include="Testcontainers.Redis" Version="4.*" />
     <PackageVersion Include="Respawn" Version="6.*" />
