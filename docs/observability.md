@@ -162,21 +162,9 @@ Yanıt örneği (`/health`):
 - **`/health` 503 dönüyor ama uygulama çalışıyor**: hangi kontrolün `Unhealthy` olduğunu görmek için `/health`
   yanıtındaki `entries` dizisine bakın (`description` alanı hatayı özetler).
 
-## Bilinen sınırlama (Item 23 kapsamı dışı)
+## Geçmiş not
 
-Bu değişiklikler sırasında, gözlemlenebilirlikle **ilgisiz**, önceden var olan bir build sorunu tespit edildi:
-`Sense.Shared.Infrastructure` projesi şu anda üç ayrı, birbiriyle ilgisiz nedenle derlenmiyor (floating NuGet
-sürümlerinin zamanla farklı/uyumsuz API'lere kaymasından kaynaklanıyor, henüz `packages.lock.json` yok):
-
-1. `MinioAdapter.cs` (Item 15) — kurulu `Minio` 7.0.0 paketi, kodun kullandığı eski `*Args` tabanlı API'yi
-   (`BucketExistsArgs`, `StatObjectArgs`, ...) artık içermiyor (SDK büyük bir sürüm değişikliği geçirmiş).
-2. `BackgroundJobServiceCollectionExtensions.cs` (Item 16) — `Hangfire.PostgreSql` 1.20.13'te
-   `PostgreSqlStorageOptions.TransactionIsolationLevel`/`CommandBatchSize` yok ve kullanılan
-   `UsePostgreSqlStorage` aşırı yüklemesi artık deprecated/kaldırılmış.
-3. `TenantDbFactory.cs` (Item 17, test altyapısı) — `Npgsql.EntityFrameworkCore.PostgreSQL` 10.0.3'te
-   `NpgsqlOptionsExtension` beklenen ad alanında değil.
-
-Bunlar Item 23'ün konusu değil ve bu PR'da düzeltilmedi (kapsam dışı, ayrı bir düzeltme gerektiriyor — muhtemelen
-`packages.lock.json` ile sürüm sabitleme). Bu nedenle şu an tam bir `dotnet build`/`dotnet test` çalıştırılamıyor;
-Item 23'ün kendi kodu, izole bir scratch projesiyle (gerçek paket sürümleriyle) API doğruluğu açısından ayrıca
-doğrulandı ve `Sense.Shared.Contracts` gibi etkilenmeyen projelerde tam derleme testi yapıldı.
+Item 23 sırasında `Sense.Shared.Infrastructure`'ın floating NuGet sürüm kaymasından (Minio/Hangfire.PostgreSql/
+Npgsql API değişiklikleri) kaynaklanan üç ayrı, gözlemlenebilirlikle ilgisiz build hatası tespit edilmişti; bunlar
+Item 23'ün kapsamı dışında bırakılmıştı. Sonraki bir düzeltmeyle (bkz. `git log --grep "NuGet API drift"`) giderildi
+— `dotnet build Sense.slnx` ve `dotnet test tests/Sense.Tests.Architecture/` şu an temiz geçiyor.

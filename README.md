@@ -20,6 +20,7 @@ dotnet run --project src/Sense.Migrator -- seed --profile demo
 dotnet watch --project src/Sense.Api          # https://localhost:5001/scalar/v1
 dotnet run --project src/Sense.Worker
 pnpm install && pnpm --filter web dev         # http://localhost:3000
+pnpm --filter @senseik/mobile start           # Expo (mobil, apps/senseik-mobile/)
 ```
 
 Demo kullanıcılar (`seed --profile demo`): `owner@demo.local / Demo123!`, `ik@demo.local`, `bordro@demo.local`, `yonetici@demo.local`, `calisan@demo.local`, `denetci@demo.local`.
@@ -34,9 +35,19 @@ src/Shared/            Kernel · Contracts · Infrastructure · Web
 src/Modules/<M>/       Domain · Application · Infrastructure · Contracts · Api
 tests/                 Shared · Architecture · Contract · Integration · TenantIsolation · Modules/*
 web/                   React + Vite PWA
-mobile/                Expo
+apps/senseik-mobile/   Expo (React Native)
+packages/              Paylaşılan pnpm paketleri (ör. @senseik/api-client)
 infra/                 docker-compose, k6, bicep
 docs/adr               Mimari kararlar
 ```
 
-Ayrıntılar: `docs/architecture.md`, `docs/conventions.md`, `docs/ci-cd.md`, `docs/adr/`.
+Ayrıntılar: `docs/architecture.md`, `docs/conventions.md`, `docs/ci-cd.md`, `docs/observability.md`, `docs/adr/`. Yeni modül iskeleti için `./build/new-module.ps1 -Name <Modül>`.
+
+## Bilinen sınırlama (Faz 0)
+
+`dotnet run --project src/Sense.Migrator -- migrate` şu an yalnızca `identity` şemasını
+migrate eder (`src/Sense.Migrator/Program.cs`'de yalnızca `IdentityDbContext` kayıtlı).
+Documents modülünün henüz üretilmiş bir EF Core migration'ı da yok. Yeni bir modülün
+şemasını migrator'a dahil etmek için modülün `AddModuleDbContext<...>` çağrısını
+`Program.cs`'e eklemeniz gerekir — `./build/new-module.ps1` bunu "Next steps" çıktısında
+hatırlatır.
