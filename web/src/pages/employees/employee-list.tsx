@@ -3,15 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { Anchor, Button, Card, Checkbox, Group, Input, Paper, Select, Switch, Text, TextInput, Title } from "@mantine/core";
 import { GitBranch, Plus, Search, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
@@ -31,6 +25,10 @@ const DEFAULT_PAGE_SIZE = 20;
 const COLUMN_VISIBILITY_KEY = "senseik.employees.grid.columns";
 const ALL = "__all__";
 const BULK_PERMISSIONS = [...new Set(BULK_ACTIONS.map((a) => a.permission))];
+/** Small dimmed filter labels, matching the org unit filter's `Input.Label`. */
+const FILTER_LABEL_STYLES = {
+  label: { fontSize: "var(--mantine-font-size-xs)", fontWeight: 400, color: "var(--mantine-color-dimmed)" },
+};
 
 type SelectionState = { mode: "ids"; ids: Set<string> } | { mode: "all"; excluded: Set<string> };
 
@@ -192,8 +190,9 @@ function EmployeeGrid() {
             header: () => (
               <Checkbox
                 aria-label={t("employees:bulk.selectPage")}
-                checked={pageFullySelected ? true : selectedOnPage > 0 ? "indeterminate" : false}
-                onCheckedChange={(checked) => togglePage(checked === true)}
+                checked={pageFullySelected}
+                indeterminate={!pageFullySelected && selectedOnPage > 0}
+                onChange={(e) => togglePage(e.currentTarget.checked)}
               />
             ),
             cell: ({ row }) => (
@@ -201,7 +200,7 @@ function EmployeeGrid() {
                 <Checkbox
                   aria-label={row.original.displayName}
                   checked={isSelected(row.original.id)}
-                  onCheckedChange={(checked) => toggleRow(row.original.id, checked === true)}
+                  onChange={(e) => toggleRow(row.original.id, e.currentTarget.checked)}
                 />
               </div>
             ),
@@ -285,144 +284,139 @@ function EmployeeGrid() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Users className="h-6 w-6" /> {t("employees:title")}
-          </h1>
-          <p className="text-muted-foreground">{t("employees:subtitle")}</p>
+          <Title order={1} size="h2">
+            <Group component="span" gap="xs">
+              <Users size={24} /> {t("employees:title")}
+            </Group>
+          </Title>
+          <Text c="dimmed">{t("employees:subtitle")}</Text>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <Group gap="xs">
           {hasOrgChartPermission && orgChartEnabled && (
-            <Button asChild variant="outline">
-              <Link to="/app/employees/org-chart">
-                <GitBranch className="mr-2 h-4 w-4" /> {t("employees:orgChart.title")}
-              </Link>
+            <Button component={Link} to="/app/employees/org-chart" variant="default" leftSection={<GitBranch size={16} />}>
+              {t("employees:orgChart.title")}
             </Button>
           )}
           {canCreate && (
-            <Button type="button" onClick={() => setCreateOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" /> {t("employees:create.button")}
+            <Button type="button" onClick={() => setCreateOpen(true)} leftSection={<Plus size={16} />}>
+              {t("employees:create.button")}
             </Button>
           )}
-        </div>
-      </div>
+        </Group>
+      </Group>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="relative w-full max-w-xs">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder={t("employees:searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <Group align="flex-end" gap="sm">
+        <TextInput
+          className="w-full max-w-xs"
+          leftSection={<Search size={16} />}
+          placeholder={t("employees:searchPlaceholder")}
+          aria-label={t("employees:searchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
         <div className="w-56">
-          <Label htmlFor="emp-filter-unit" className="text-xs text-muted-foreground">
+          <Input.Label htmlFor="emp-filter-unit" size="xs" c="dimmed" fw={400}>
             {t("employees:filters.orgUnit")}
-          </Label>
+          </Input.Label>
           <OrgUnitSelect id="emp-filter-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:filters.allUnits")} />
         </div>
         {orgUnitId && (
-          <div className="flex h-10 items-center gap-2">
-            <Switch id="emp-filter-sub" checked={includeSubUnits} onCheckedChange={setIncludeSubUnits} />
-            <Label htmlFor="emp-filter-sub" className="text-sm">
-              {t("employees:filters.includeSubUnits")}
-            </Label>
+          <div className="flex h-9 items-center">
+            <Switch
+              id="emp-filter-sub"
+              checked={includeSubUnits}
+              onChange={(e) => setIncludeSubUnits(e.currentTarget.checked)}
+              label={t("employees:filters.includeSubUnits")}
+            />
           </div>
         )}
-        <div className="w-40">
-          <Label htmlFor="emp-filter-status" className="text-xs text-muted-foreground">
-            {t("employees:filters.status")}
-          </Label>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger id="emp-filter-status">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{t("employees:filters.all")}</SelectItem>
-              {EMPLOYEE_STATUSES.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {t(`employees:status.${s}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-44">
-          <Label htmlFor="emp-filter-account" className="text-xs text-muted-foreground">
-            {t("employees:filters.hasUserAccount")}
-          </Label>
-          <Select value={account} onValueChange={setAccount}>
-            <SelectTrigger id="emp-filter-account">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{t("employees:filters.all")}</SelectItem>
-              <SelectItem value="yes">{t("employees:filters.withAccount")}</SelectItem>
-              <SelectItem value="no">{t("employees:filters.withoutAccount")}</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          id="emp-filter-status"
+          w={160}
+          label={t("employees:filters.status")}
+          styles={FILTER_LABEL_STYLES}
+          value={status}
+          onChange={(value) => setStatus(value ?? ALL)}
+          allowDeselect={false}
+          data={[
+            { value: ALL, label: t("employees:filters.all") },
+            ...EMPLOYEE_STATUSES.map((s) => ({ value: s, label: t(`employees:status.${s}`) })),
+          ]}
+        />
+        <Select
+          id="emp-filter-account"
+          w={176}
+          label={t("employees:filters.hasUserAccount")}
+          styles={FILTER_LABEL_STYLES}
+          value={account}
+          onChange={(value) => setAccount(value ?? ALL)}
+          allowDeselect={false}
+          data={[
+            { value: ALL, label: t("employees:filters.all") },
+            { value: "yes", label: t("employees:filters.withAccount") },
+            { value: "no", label: t("employees:filters.withoutAccount") },
+          ]}
+        />
         <DataTableViewOptions table={table} className="ml-auto" />
-      </div>
+      </Group>
 
       {canBulk && (
-        <div className="flex flex-wrap items-center gap-3">
+        <Group gap="sm">
           <BulkActionsMenu
             selection={apiSelection}
             selectedCount={selectedCount}
             nameById={nameById}
             onCompleted={onBulkCompleted}
           />
-          <span className="text-sm text-muted-foreground">
+          <Text size="sm" c="dimmed">
             {selectedCount > 0 ? t("employees:bulk.selectedCount", { count: selectedCount }) : t("employees:bulk.selectHint")}
-          </span>
+          </Text>
           {selectedCount > 0 && (
-            <Button type="button" variant="link" size="sm" className="px-0" onClick={() => setSelection(EMPTY_SELECTION)}>
+            <Anchor component="button" type="button" size="sm" onClick={() => setSelection(EMPTY_SELECTION)}>
               {t("employees:bulk.clearSelection")}
-            </Button>
+            </Anchor>
           )}
-        </div>
+        </Group>
       )}
 
       {canBulk && selection.mode === "ids" && pageFullySelected && totalCount > selection.ids.size && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/50 px-4 py-2 text-sm">
-          <span>{t("employees:bulk.pageSelected", { count: selection.ids.size })}</span>
-          <Button
-            type="button"
-            variant="link"
-            size="sm"
-            className="h-auto px-0"
-            onClick={() => setSelection({ mode: "all", excluded: new Set() })}
-          >
-            {t("employees:bulk.selectAllMatching", { count: totalCount })}
-          </Button>
-        </div>
+        <Paper withBorder px="md" py="xs" bg="var(--mantine-color-default-hover)">
+          <Group gap="xs">
+            <Text size="sm">{t("employees:bulk.pageSelected", { count: selection.ids.size })}</Text>
+            <Anchor component="button" type="button" size="sm" onClick={() => setSelection({ mode: "all", excluded: new Set() })}>
+              {t("employees:bulk.selectAllMatching", { count: totalCount })}
+            </Anchor>
+          </Group>
+        </Paper>
       )}
       {canBulk && selection.mode === "all" && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-primary/40 bg-primary/5 px-4 py-2 text-sm">
-          <span>
+        <Paper
+          withBorder
+          px="md"
+          py="xs"
+          bg="var(--mantine-primary-color-light)"
+          style={{ borderColor: "var(--mantine-primary-color-light-color)" }}
+        >
+          <Text size="sm">
             {t("employees:bulk.allMatchingSelected", { count: selectedCount })}
             {selection.excluded.size > 0 && ` ${t("employees:bulk.excludedCount", { count: selection.excluded.size })}`}
-          </span>
-        </div>
+          </Text>
+        </Paper>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable
-            table={table}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            stickyHeader
-            emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
-            isRowSelected={(employee) => isSelected(employee.id)}
-            onRowClick={(employee) => navigate(`/app/employees/${employee.id}`)}
-          />
-          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
-        </CardContent>
+      <Card withBorder padding={0}>
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          stickyHeader
+          emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
+          isRowSelected={(employee) => isSelected(employee.id)}
+          onRowClick={(employee) => navigate(`/app/employees/${employee.id}`)}
+        />
+        {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
 
       <CreateEmployeeDialog open={createOpen} onOpenChange={setCreateOpen} />

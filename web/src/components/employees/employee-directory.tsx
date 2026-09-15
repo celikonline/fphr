@@ -2,13 +2,8 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Anchor, Button, Card, Group, Input, Skeleton, Stack, Table, Text, TextInput, Title } from "@mantine/core";
 import { GitBranch, Search, Users } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks";
@@ -50,83 +45,87 @@ export default function EmployeeDirectory() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <Users className="h-6 w-6" /> {t("employees:directory.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("employees:directory.subtitle")}</p>
+          <Title order={1} size="h2">
+            <Group component="span" gap="xs">
+              <Users size={24} /> {t("employees:directory.title")}
+            </Group>
+          </Title>
+          <Text c="dimmed">{t("employees:directory.subtitle")}</Text>
         </div>
         {canViewOrgChart && (
-          <Button asChild variant="outline">
-            <Link to="/app/employees/org-chart">
-              <GitBranch className="mr-2 h-4 w-4" /> {t("employees:orgChart.title")}
-            </Link>
+          <Button component={Link} to="/app/employees/org-chart" variant="default" leftSection={<GitBranch size={16} />}>
+            {t("employees:orgChart.title")}
           </Button>
         )}
-      </div>
+      </Group>
 
-      <div className="flex flex-wrap items-end gap-3">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input className="pl-9" placeholder={t("employees:searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} />
-        </div>
+      <Group align="flex-end" gap="sm">
+        <TextInput
+          className="w-full max-w-sm"
+          leftSection={<Search size={16} />}
+          placeholder={t("employees:searchPlaceholder")}
+          aria-label={t("employees:searchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
         {nameById.size > 0 && (
           <div className="w-64">
-            <Label htmlFor="dir-unit" className="sr-only">
+            <Input.Label htmlFor="dir-unit" className="sr-only">
               {t("employees:fields.orgUnit")}
-            </Label>
+            </Input.Label>
             <OrgUnitSelect id="dir-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:filters.allUnits")} />
           </div>
         )}
-      </div>
+      </Group>
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : !data || data.items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("employees:empty")}</p>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t("employees:columns.name")}</TableHead>
-                      <TableHead>{t("employees:columns.orgUnit")}</TableHead>
-                      <TableHead>{t("employees:columns.workEmail")}</TableHead>
-                      <TableHead>{t("employees:columns.workPhone")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {data.items.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell className="font-medium">{entry.displayName}</TableCell>
-                        <TableCell>{(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}</TableCell>
-                        <TableCell>
-                          {entry.workEmail ? (
-                            <a className="hover:underline" href={`mailto:${entry.workEmail}`}>
-                              {entry.workEmail}
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </TableCell>
-                        <TableCell>{entry.workPhone ?? "—"}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <PaginationFooter result={data} onPageChange={setPage} />
-            </>
-          )}
-        </CardContent>
+      <Card withBorder padding={0}>
+        {isLoading ? (
+          <Stack gap="xs" p="md">
+            <Skeleton h={32} />
+            <Skeleton h={32} />
+            <Skeleton h={32} />
+          </Stack>
+        ) : !data || data.items.length === 0 ? (
+          <Text p="lg" ta="center" size="sm" c="dimmed">
+            {t("employees:empty")}
+          </Text>
+        ) : (
+          <>
+            <Table.ScrollContainer minWidth={600}>
+              <Table highlightOnHover>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("employees:columns.name")}</Table.Th>
+                    <Table.Th>{t("employees:columns.orgUnit")}</Table.Th>
+                    <Table.Th>{t("employees:columns.workEmail")}</Table.Th>
+                    <Table.Th>{t("employees:columns.workPhone")}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.items.map((entry) => (
+                    <Table.Tr key={entry.id}>
+                      <Table.Td fw={500}>{entry.displayName}</Table.Td>
+                      <Table.Td>{(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}</Table.Td>
+                      <Table.Td>
+                        {entry.workEmail ? (
+                          <Anchor href={`mailto:${entry.workEmail}`} size="sm" c="inherit">
+                            {entry.workEmail}
+                          </Anchor>
+                        ) : (
+                          "—"
+                        )}
+                      </Table.Td>
+                      <Table.Td>{entry.workPhone ?? "—"}</Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Table.ScrollContainer>
+            <PaginationFooter result={data} onPageChange={setPage} />
+          </>
+        )}
       </Card>
     </div>
   );

@@ -1,19 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
+import { Badge, Button, Group, Input, Menu, Modal, Stack, Text } from "@mantine/core";
 import { ChevronDown, ListChecks } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -61,30 +50,39 @@ export default function BulkActionsMenu({ selection, selectedCount, nameById, on
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button type="button" variant="outline" disabled={disabled}>
-            <ListChecks className="mr-2 h-4 w-4" />
+      <Menu position="bottom-start" width={256}>
+        <Menu.Target>
+          <Button
+            type="button"
+            variant="default"
+            disabled={disabled}
+            leftSection={<ListChecks size={16} />}
+            rightSection={<ChevronDown size={16} />}
+          >
             {t("employees:bulk.menu")}
-            <ChevronDown className="ml-2 h-4 w-4" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel>{t("employees:bulk.chooseAction")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Label>{t("employees:bulk.chooseAction")}</Menu.Label>
+          <Menu.Divider />
           {actions.map((action) => (
-            <DropdownMenuItem
+            <Menu.Item
               key={action.code}
               disabled={action.phase !== undefined || !action.run}
-              onSelect={() => setPending(action)}
-              className="justify-between"
+              onClick={() => setPending(action)}
+              rightSection={
+                action.phase !== undefined && (
+                  <Badge variant="outline" size="sm">
+                    {t("employees:phase", { phase: action.phase })}
+                  </Badge>
+                )
+              }
             >
-              <span>{t(`employees:${action.labelKey}`)}</span>
-              {action.phase !== undefined && <Badge variant="outline">{t("employees:phase", { phase: action.phase })}</Badge>}
-            </DropdownMenuItem>
+              {t(`employees:${action.labelKey}`)}
+            </Menu.Item>
           ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </Menu.Dropdown>
+      </Menu>
 
       <ConfirmDialog
         open={pending !== null && pending.input === undefined}
@@ -100,26 +98,24 @@ export default function BulkActionsMenu({ selection, selectedCount, nameById, on
         onConfirm={() => pending && mutation.mutate({ action: pending, input: {} })}
       />
 
-      <Dialog
-        open={pending?.input === "manager"}
-        onOpenChange={(open) => {
-          if (!open) {
-            setPending(null);
-            setManager(null);
-          }
+      <Modal
+        opened={pending?.input === "manager"}
+        onClose={() => {
+          setPending(null);
+          setManager(null);
         }}
+        title={t("employees:bulk.actions.assignManager")}
       >
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("employees:bulk.actions.assignManager")}</DialogTitle>
-            <DialogDescription>{t("employees:bulk.assignManager.description", { count: selectedCount })}</DialogDescription>
-          </DialogHeader>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("employees:bulk.assignManager.description", { count: selectedCount })}
+          </Text>
           <div>
-            <Label htmlFor="bulk-manager">{t("employees:fields.manager")}</Label>
+            <Input.Label htmlFor="bulk-manager">{t("employees:fields.manager")}</Input.Label>
             <EmployeePicker id="bulk-manager" value={manager} onChange={setManager} />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setPending(null)} disabled={mutation.isPending}>
+          <Group justify="flex-end">
+            <Button type="button" variant="default" onClick={() => setPending(null)} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button
@@ -129,9 +125,9 @@ export default function BulkActionsMenu({ selection, selectedCount, nameById, on
             >
               {t("employees:bulk.continue")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </Group>
+        </Stack>
+      </Modal>
 
       <BulkResultDialog
         open={result !== null}

@@ -1,8 +1,7 @@
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
+import { Badge, Card, Group, Text, Title } from "@mantine/core";
 import { Hourglass } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
@@ -33,15 +32,15 @@ export interface EmployeeCardTab {
 function Placeholder({ titleKey, noteKey, phase }: { titleKey: string; noteKey: string; phase?: string }) {
   const { t } = useTranslation(["employees"]);
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-        <Hourglass className="h-4 w-4 text-muted-foreground" />
-        <CardTitle className="text-lg">{t(titleKey)}</CardTitle>
-        {phase && <Badge variant="secondary">{t("employees:phase", { phase })}</Badge>}
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{t(noteKey)}</p>
-      </CardContent>
+    <Card withBorder padding="lg">
+      <Group gap="xs" mb="sm">
+        <Hourglass size={16} color="var(--mantine-color-dimmed)" />
+        <Title order={4}>{t(titleKey)}</Title>
+        {phase && <Badge variant="light">{t("employees:phase", { phase })}</Badge>}
+      </Group>
+      <Text size="sm" c="dimmed">
+        {t(noteKey)}
+      </Text>
     </Card>
   );
 }
