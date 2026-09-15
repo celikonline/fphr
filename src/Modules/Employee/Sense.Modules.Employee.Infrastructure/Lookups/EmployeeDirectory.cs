@@ -73,3 +73,21 @@ internal static class EmployeeLinkerMessages
 {
     public const string EmployeeNotFound = "Employee to link was not found in the tenant.";
 }
+
+/// <summary>Implements Employee.Contracts.IEmployeeProfileLookup (EmployeeDbContext only).</summary>
+public sealed class EmployeeProfileLookup(EmployeeDbContext context) : IEmployeeProfileLookup
+{
+    public async Task<IReadOnlyList<EmployeeProfileDetail>> GetProfileDetailsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = employeeIds.ToList();
+        return await context.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Where(e => e.TenantId == tenantId && ids.Contains(e.Id))
+            .Select(e => new EmployeeProfileDetail(e.Id, e.HireDate, e.WorkPhone))
+            .ToListAsync(ct);
+    }
+}

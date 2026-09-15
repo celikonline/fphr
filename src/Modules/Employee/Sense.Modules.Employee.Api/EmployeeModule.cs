@@ -72,5 +72,8 @@ public sealed class EmployeeModule : IModule
 
         // Cross-module contract consumed by Notifications (recipient resolution, also in Sense.Worker)
         services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
+
+        // Cross-module contract consumed by Performance (individual report profile fields)
+        services.AddScoped<IEmployeeProfileLookup, EmployeeProfileLookup>();
     }
 }

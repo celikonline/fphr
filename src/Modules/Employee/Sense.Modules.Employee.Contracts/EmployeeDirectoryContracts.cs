@@ -39,3 +39,15 @@ public interface IEmployeeUserLinker
 {
     Task LinkUserAsync(Guid tenantId, Guid employeeId, Guid userId, CancellationToken ct = default);
 }
+
+/// <summary>Profile fields beyond <see cref="EmployeeContact"/> (name/email) that a report or card needs. Missing/unset fields are null.</summary>
+public sealed record EmployeeProfileDetail(Guid EmployeeId, DateOnly? HireDate, string? WorkPhone);
+
+/// <summary>
+/// Profile reads only (no data-scope dependency), same shape as <see cref="IEmployeeContactLookup"/> so hosts without
+/// the caller/permission pipeline (e.g. Sense.Worker) can resolve it with just EmployeeDbContext.
+/// </summary>
+public interface IEmployeeProfileLookup
+{
+    Task<IReadOnlyList<EmployeeProfileDetail>> GetProfileDetailsAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct = default);
+}
