@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Notifications;
 
 namespace Sense.Api.Hubs;
 
@@ -35,7 +36,7 @@ public class NotificationsHub : Hub
             }
 
             // Auto-join tenant group
-            var groupName = GetTenantGroupName(tenantId);
+            var groupName = SignalRGroupNames.ForTenant(tenantId);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
             _logger.LogInformation(
@@ -93,9 +94,4 @@ public class NotificationsHub : Hub
 
         return Guid.Empty;
     }
-
-    /// <summary>
-    /// Gets the tenant group name for SignalR group isolation.
-    /// </summary>
-    public static string GetTenantGroupName(Guid tenantId) => $"tenant-{tenantId:N}";
 }

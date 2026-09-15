@@ -11,7 +11,7 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Documents.Application.Documents;
 
 /// <summary>Gets a single document with presigned download URL.</summary>
-[RequiresPermission(DocumentsPermissions.FilesRead)]
+[RequiresPermission("documents.files.read")]
 public sealed record GetDocumentQuery(Guid DocumentId) : IQuery<DocumentDetailDto>;
 
 public sealed class GetDocumentHandler(
@@ -48,11 +48,10 @@ public sealed class GetDocumentHandler(
 }
 
 /// <summary>Lists all documents for the current tenant (paginated).</summary>
-[RequiresPermission(DocumentsPermissions.FilesRead)]
+[RequiresPermission("documents.files.read")]
 public sealed record ListDocumentsQuery(PagedQuery Paging) : IQuery<PagedResult<DocumentListItemDto>>;
 
 public sealed class ListDocumentsHandler(
-    ITenantContext tenant,
     IDocumentRepository documents) : IQueryHandler<ListDocumentsQuery, PagedResult<DocumentListItemDto>>
 {
     public async Task<Result<PagedResult<DocumentListItemDto>>> Handle(ListDocumentsQuery query, CancellationToken cancellationToken)

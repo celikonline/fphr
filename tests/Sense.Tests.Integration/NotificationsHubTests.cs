@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Api.Hubs;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Infrastructure.Context;
 using Xunit;
 
@@ -55,7 +56,7 @@ public class NotificationsHubTests
         var tenantId = new Guid("12345678-1234-1234-1234-123456789012");
 
         // Act
-        var groupName = NotificationsHub.GetTenantGroupName(tenantId);
+        var groupName = SignalRGroupNames.ForTenant(tenantId);
 
         // Assert
         Assert.Equal("tenant-12345678123412341234123456789012", groupName);

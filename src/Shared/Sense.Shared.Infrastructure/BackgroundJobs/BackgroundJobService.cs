@@ -1,4 +1,5 @@
 using Hangfire;
+using Microsoft.Extensions.Logging;
 using Sense.Shared.Contracts.BackgroundJobs;
 
 namespace Sense.Shared.Infrastructure.BackgroundJobs;

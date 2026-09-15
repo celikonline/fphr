@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
-using Sense.Api.Hubs;
+using Microsoft.Extensions.Logging;
 using Sense.Shared.Contracts.Notifications;
 
 namespace Sense.Shared.Infrastructure.Notifications;
@@ -10,11 +10,15 @@ namespace Sense.Shared.Infrastructure.Notifications;
 /// </summary>
 public class SignalRNotificationService : INotificationService
 {
-    private readonly IHubContext<NotificationsHub> _hubContext;
+    private readonly IHubContext _hubContext;
     private readonly ILogger<SignalRNotificationService> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the SignalRNotificationService.
+    /// The hub context is obtained through DI without explicit hub type reference.
+    /// </summary>
     public SignalRNotificationService(
-        IHubContext<NotificationsHub> hubContext,
+        IHubContext hubContext,
         ILogger<SignalRNotificationService> logger)
     {
         _hubContext = hubContext;
@@ -25,7 +29,7 @@ public class SignalRNotificationService : INotificationService
     {
         try
         {
-            var groupName = NotificationsHub.GetTenantGroupName(tenantId);
+            var groupName = SignalRGroupNames.ForTenant(tenantId);
 
             await _hubContext.Clients
                 .Group(groupName)
@@ -52,7 +56,7 @@ public class SignalRNotificationService : INotificationService
     {
         try
         {
-            var groupName = NotificationsHub.GetTenantGroupName(tenantId);
+            var groupName = SignalRGroupNames.ForTenant(tenantId);
 
             await _hubContext.Clients
                 .Group(groupName)
@@ -79,7 +83,7 @@ public class SignalRNotificationService : INotificationService
     {
         try
         {
-            var groupName = NotificationsHub.GetTenantGroupName(tenantId);
+            var groupName = SignalRGroupNames.ForTenant(tenantId);
 
             await _hubContext.Clients
                 .Group(groupName)

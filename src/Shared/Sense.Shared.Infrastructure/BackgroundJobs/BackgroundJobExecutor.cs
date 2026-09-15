@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Hangfire;
+using Microsoft.Extensions.Logging;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Notifications;

@@ -3,6 +3,7 @@ using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Shared.Contracts.BackgroundJobs;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.BackgroundJobs;
 
 namespace Sense.Shared.Infrastructure.DependencyInjection;

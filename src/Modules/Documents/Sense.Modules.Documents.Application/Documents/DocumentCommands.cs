@@ -11,7 +11,7 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Documents.Application.Documents;
 
 /// <summary>Initiates a file upload by generating a presigned URL.</summary>
-[RequiresPermission(DocumentsPermissions.FilesCreate)]
+[RequiresPermission("documents.files.create")]
 public sealed record InitiateUploadCommand(
     string FileName,
     string ContentType,
@@ -27,7 +27,7 @@ public sealed class InitiateUploadValidator : AbstractValidator<InitiateUploadCo
         RuleFor(x => x.FileSizeBytes)
             .GreaterThan(0)
             .LessThanOrEqualTo(DocumentsLimits.MaxFileSize);
-        RuleFor(x => x.BucketName).Empty().Or(MaximumLength(50));
+        RuleFor(x => x.BucketName).Empty().Or().MaximumLength(50);
     }
 }
 
@@ -76,13 +76,13 @@ public sealed class InitiateUploadHandler(
         }
         catch (InvalidOperationException ex)
         {
-            return Error.Server("documents.upload_initiation_failed", null, ex.Message);
+            return Error.Failure(DocumentsErrors.UploadInitiationFailed);
         }
     }
 }
 
 /// <summary>Confirms an upload and validates the ETag (content hash).</summary>
-[RequiresPermission(DocumentsPermissions.FilesCreate)]
+[RequiresPermission("documents.files.create")]
 public sealed record ConfirmUploadCommand(
     Guid DocumentId,
     string ETag,
@@ -131,13 +131,13 @@ public sealed class ConfirmUploadHandler(
         }
         catch (InvalidOperationException ex)
         {
-            return Error.Server("documents.confirmation_failed", null, ex.Message);
+            return Error.Failure(DocumentsErrors.ConfirmationFailed);
         }
     }
 }
 
 /// <summary>Deletes a document and removes file from storage.</summary>
-[RequiresPermission(DocumentsPermissions.FilesDelete)]
+[RequiresPermission("documents.files.delete")]
 public sealed record DeleteDocumentCommand(Guid DocumentId) : ICommand;
 
 public sealed class DeleteDocumentValidator : AbstractValidator<DeleteDocumentCommand>
@@ -178,7 +178,7 @@ public sealed class DeleteDocumentHandler(
         }
         catch (InvalidOperationException ex)
         {
-            return Error.Server("documents.deletion_failed", null, ex.Message);
+            return Error.Failure(DocumentsErrors.DeletionFailed);
         }
     }
 }
