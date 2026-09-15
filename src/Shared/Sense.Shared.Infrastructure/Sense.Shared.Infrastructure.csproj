@@ -25,6 +25,7 @@
     <PackageReference Include="StackExchange.Redis" />
     <PackageReference Include="Hangfire.Core" />
     <PackageReference Include="Hangfire.PostgreSql" />
+    <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Serilog.AspNetCore" />
     <PackageReference Include="Serilog.Sinks.Console" />
@@ -37,6 +38,10 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Http" />
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
     <PackageReference Include="Npgsql.OpenTelemetry" />
+    <PackageReference Include="Sentry.AspNetCore" />
+    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
+    <PackageReference Include="AspNetCore.HealthChecks.Redis" />
+    <PackageReference Include="AspNetCore.HealthChecks.Hangfire" />
     <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="MailKit" />
     <PackageReference Include="Scriban" />

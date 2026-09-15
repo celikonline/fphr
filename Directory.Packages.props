@@ -84,6 +84,10 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.*" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.*" />
     <PackageVersion Include="Npgsql.OpenTelemetry" Version="10.0.*" />
+    <PackageVersion Include="Sentry.AspNetCore" Version="5.*" />
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.*" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Redis" Version="9.*" />
+    <PackageVersion Include="AspNetCore.HealthChecks.Hangfire" Version="9.*" />
   </ItemGroup>
 
   <ItemGroup Label="Tests">

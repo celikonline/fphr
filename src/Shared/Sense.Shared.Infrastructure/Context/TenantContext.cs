@@ -19,6 +19,12 @@ public sealed class TenantContext : ITenantContext, ITenantContextSetter
 
     public string? TenantSlug => Current.Value?.Slug;
 
+    /// <summary>
+    /// DI kapsamından bağımsız, statik AsyncLocal'e doğrudan erişim: Serilog enricher gibi tek seferlik
+    /// (root provider'dan) oluşturulan bileşenlerin, mantıksal akışın güncel kiracısını görmesini sağlar.
+    /// </summary>
+    public static Guid? CurrentTenantIdOrNull => Current.Value?.TenantId;
+
     public IDisposable BeginScope(Guid tenantId, string? slug = null)
     {
         var previous = Current.Value;

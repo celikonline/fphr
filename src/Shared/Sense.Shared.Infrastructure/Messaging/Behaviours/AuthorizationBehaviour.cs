@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Reflection;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -41,7 +42,10 @@ public sealed class AuthorizationBehaviour<TRequest, TResponse>(
 
         foreach (var attr in Required)
         {
-            if (!await permissions.HasAsync(user.UserId.Value, attr.Permission, cancellationToken).ConfigureAwait(false))
+            var granted = await permissions.HasAsync(user.UserId.Value, attr.Permission, cancellationToken).ConfigureAwait(false);
+            TracePermissionCheck(attr.Permission, granted);
+
+            if (!granted)
             {
                 return Fail(Error.Forbidden(ErrorCodes.Forbidden, (PermissionArg, attr.Permission)));
             }
@@ -55,6 +59,21 @@ public sealed class AuthorizationBehaviour<TRequest, TResponse>(
         }
 
         return await next().ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// İzin kararını, isteğin TracingBehaviour tarafından açılmış mevcut span'ine olay olarak ekler
+    /// (yeni span açmaz; permission service çağrılarının maliyeti zaten ayrı span'lerinde görünür).
+    /// </summary>
+    private static void TracePermissionCheck(string permission, bool granted)
+    {
+        Activity.Current?.AddEvent(new ActivityEvent(
+            "sense.permission_check",
+            tags: new ActivityTagsCollection
+            {
+                { "sense.permission", permission },
+                { "sense.permission.granted", granted },
+            }));
     }
 
     private static TResponse Fail(Error error)

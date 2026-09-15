@@ -14,6 +14,7 @@ public static class ConfigurationSections
     public const string Email = "Email";
     public const string Frontend = "Frontend";
     public const string Identity = "Identity";
+    public const string Observability = "Observability";
 }
 
 public static class ConnectionStringNames
@@ -138,4 +139,34 @@ public static class ProblemDetailsDefaults
     public const string TraceIdExtension = "traceId";
     public const string ErrorsExtension = "errors";
     public const string ArgsExtension = "args";
+}
+
+/// <summary>
+/// Gözlemlenebilirlik ayarları: OpenTelemetry (Jaeger/OTLP) ve Sentry. SentryDsn appsettings'te boş bırakılmalı;
+/// üretimde <c>Observability__SentryDsn</c> ortam değişkeni veya <c>SENTRY_DSN</c> üzerinden sağlanır
+/// (bkz. SentryExtensions.ResolveDsn). Boşsa Sentry devre dışı kalır (özellikle local dev'de gürültü istenmez).
+/// </summary>
+public sealed class ObservabilityOptions
+{
+    public string ServiceName { get; set; } = ObservabilityDefaults.ServiceName;
+
+    /// <summary>OTLP collector/Jaeger uç noktası (gRPC), örn. http://localhost:4317.</summary>
+    public string OtlpEndpoint { get; set; } = ObservabilityDefaults.OtlpEndpoint;
+
+    /// <summary>Boş bırakılırsa Sentry devre dışıdır; asıl değer SENTRY_DSN ortam değişkeninden okunur.</summary>
+    public string SentryDsn { get; set; } = string.Empty;
+
+    public bool EnableTracing { get; set; } = true;
+
+    public bool EnableMetrics { get; set; } = true;
+
+    /// <summary>Sentry performans izleme örnekleme oranı (0.0-1.0); hata yakalama her zaman 1.0'dır.</summary>
+    public double SentryTracesSampleRate { get; set; } = ObservabilityDefaults.SentryTracesSampleRate;
+}
+
+public static class ObservabilityDefaults
+{
+    public const string ServiceName = "SenseIK.Api";
+    public const string OtlpEndpoint = "http://localhost:4317";
+    public const double SentryTracesSampleRate = 0.1;
 }

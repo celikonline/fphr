@@ -27,6 +27,11 @@ public sealed partial class GlobalExceptionHandler(
         if (status >= StatusCodes.Status500InternalServerError)
         {
             Log.Unhandled(logger, exception, httpContext.Request.Path);
+
+            // UseExceptionHandler bu noktada istisnayı tamamen yutar (pipeline'a yeniden fırlatmaz), bu yüzden
+            // Sentry'nin kendi middleware'i bunu göremez; burada açıkça yakalıyoruz. Sentry başlatılmadıysa
+            // (DSN yok) bu çağrı zararsız bir no-op'tur.
+            Sentry.SentrySdk.CaptureException(exception);
         }
         else
         {

@@ -16,6 +16,7 @@ using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Events;
 using Sense.Shared.Infrastructure.Messaging;
 using Sense.Shared.Infrastructure.Messaging.Behaviours;
+using Sense.Shared.Infrastructure.Observability;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
 using Sense.Shared.Infrastructure.Storage;
@@ -46,6 +47,10 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.TryAddScoped<CurrentUserAccessor>();
         services.TryAddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUserAccessor>());
+
+        services.TryAddScoped<CorrelationIdContext>();
+        services.TryAddScoped<ICorrelationIdContext>(sp => sp.GetRequiredService<CorrelationIdContext>());
+        services.TryAddScoped<ICorrelationIdContextSetter>(sp => sp.GetRequiredService<CorrelationIdContext>());
 
         services.TryAddScoped<IDispatcher, Dispatcher>();
         services.TryAddScoped<IModuleUnitOfWorkResolver, ModuleUnitOfWorkResolver>();

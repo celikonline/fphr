@@ -7,6 +7,7 @@ using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Infrastructure.BackgroundJobs;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Notifications;
+using Sense.Shared.Infrastructure.Observability;
 using Xunit;
 
 namespace Sense.Tests.Integration;
@@ -35,6 +36,8 @@ public class BackgroundJobServiceTests : IAsyncLifetime
         // Register services
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<ITenantContextSetter>(sp => sp.GetRequiredService<TenantContext>());
+        services.AddScoped<CorrelationIdContext>();
+        services.AddScoped<ICorrelationIdContextSetter>(sp => sp.GetRequiredService<CorrelationIdContext>());
         services.AddScoped<IBackgroundJobService, BackgroundJobService>();
         services.AddScoped<INotificationService, MockNotificationService>();
         services.AddScoped<IBackgroundJobExecutor, BackgroundJobExecutor>();

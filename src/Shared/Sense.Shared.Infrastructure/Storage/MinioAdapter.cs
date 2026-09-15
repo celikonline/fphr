@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Storage;
+using Sense.Shared.Infrastructure.Observability;
 using Sense.Shared.Kernel;
 
 namespace Sense.Shared.Infrastructure.Storage;
@@ -62,6 +64,8 @@ public sealed class MinioAdapter : IFileStorage
         string contentType,
         CancellationToken cancellationToken = default)
     {
+        using var activity = StartStorageActivity("document.upload.initiate", tenantId, bucketName, key);
+
         ValidateParameters(tenantId, bucketName, key);
 
         var isolatedBucket = CreateBucketName(tenantId, bucketName);
@@ -119,6 +123,8 @@ public sealed class MinioAdapter : IFileStorage
         string eTag,
         CancellationToken cancellationToken = default)
     {
+        using var activity = StartStorageActivity("document.upload.confirm", tenantId, bucketName, key);
+
         ValidateParameters(tenantId, bucketName, key);
         Guard.NotEmpty(eTag, nameof(eTag));
 
@@ -173,6 +179,8 @@ public sealed class MinioAdapter : IFileStorage
         int expirationMinutes = 15,
         CancellationToken cancellationToken = default)
     {
+        using var activity = StartStorageActivity("document.download.url", tenantId, bucketName, key);
+
         ValidateParameters(tenantId, bucketName, key);
 
         if (expirationMinutes < 1 || expirationMinutes > 7 * 24 * 60) // Max 7 days
@@ -227,6 +235,8 @@ public sealed class MinioAdapter : IFileStorage
         string key,
         CancellationToken cancellationToken = default)
     {
+        using var activity = StartStorageActivity("document.delete", tenantId, bucketName, key);
+
         ValidateParameters(tenantId, bucketName, key);
 
         var isolatedBucket = CreateBucketName(tenantId, bucketName);
@@ -252,6 +262,19 @@ public sealed class MinioAdapter : IFileStorage
                 tenantId, bucketName, key);
             throw new InvalidOperationException($"Failed to delete file: {ex.Message}", ex);
         }
+    }
+
+    /// <summary>
+    /// Belge işlemi için span açar: yalnızca kimlik/metadata etiketlenir (tenant, bucket, key), asla içerik.
+    /// Kiracılar arası veri sızıntısını önlemek amacıyla span'ler bu adaptörün dışına çıkmaz.
+    /// </summary>
+    private static Activity? StartStorageActivity(string operationName, Guid tenantId, string bucketName, string key)
+    {
+        var activity = SenseActivitySources.Documents.StartActivity(operationName, ActivityKind.Client);
+        activity?.SetTag("sense.tenant.id", tenantId);
+        activity?.SetTag("sense.storage.bucket", bucketName);
+        activity?.SetTag("sense.storage.key", key);
+        return activity;
     }
 
     /// <summary>Creates a tenant-isolated bucket name.</summary>

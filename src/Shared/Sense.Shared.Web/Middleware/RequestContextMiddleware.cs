@@ -1,24 +1,20 @@
 using Sense.Shared.Contracts.Context;
-using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Context;
+using Sense.Shared.Infrastructure.Observability;
 
 namespace Sense.Shared.Web.Middleware;
 
 /// <summary>
 /// Kimlik doğrulamasından sonra çalışır: JWT claim'lerinden ICurrentUser'ı doldurur ve tenant claim'i ile kiracı bağlamını kurar.
-/// Sıra: UseAuthentication → UseRequestContext → UseAuthorization. URL'de kiracı asla taşınmaz.
+/// Sıra: UseCorrelationId → UseAuthentication → UseRequestContext → UseAuthorization. URL'de kiracı asla taşınmaz.
+/// Correlation id, pipeline'ın başında CorrelationIdMiddleware tarafından zaten üretilip HttpContext.Items'a
+/// yazılmıştır (yoksa TraceIdentifier'a geri düşülür: örn. CorrelationIdMiddleware eklenmeden çalışan testler).
 /// </summary>
 public sealed class RequestContextMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context, CurrentUserAccessor userAccessor, ITenantContextSetter tenantSetter)
     {
-        var correlationId = context.Request.Headers[SenseHeaderNames.CorrelationId].FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(correlationId))
-        {
-            correlationId = context.TraceIdentifier;
-        }
-
-        context.Response.Headers[SenseHeaderNames.CorrelationId] = correlationId;
+        var correlationId = context.Items[CorrelationIdContext.HttpContextItemKey] as string ?? context.TraceIdentifier;
 
         var principal = context.User;
         IDisposable? tenantScope = null;
