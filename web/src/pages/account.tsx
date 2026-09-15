@@ -15,8 +15,8 @@ import {
   Text,
   Title,
 } from "@mantine/core";
-import { LifeBuoy, UserCircle } from "lucide-react";
-import { avatarUrl } from "@/components/employees/employee-badges";
+import { LifeBuoy, LogOut, UserCircle } from "lucide-react";
+import { avatarColor } from "@/components/employees/employee-badges";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore, type Theme } from "@/store/ui.store";
 
@@ -41,6 +41,7 @@ function ProfileRow({ label, children }: { label: string; children: React.ReactN
 export default function AccountPage() {
   const { t, i18n } = useTranslation(["account", "common", "navigation"]);
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
 
@@ -65,7 +66,7 @@ export default function AccountPage() {
 
       <Card withBorder padding="lg">
         <Group gap="md" wrap="nowrap" mb="lg">
-          <Avatar size={56} radius="xl" fz="lg" src={user?.id ? avatarUrl(user.id) : undefined}>
+          <Avatar size={56} radius="xl" fz="lg" color={user?.id ? avatarColor(user.id) : undefined}>
             {initials}
           </Avatar>
           <div className="min-w-0">
@@ -154,6 +155,20 @@ export default function AccountPage() {
           </div>
           <Button component={Link} to="/app/support" variant="default" leftSection={<LifeBuoy size={16} />}>
             {t("navigation:nav.support")}
+          </Button>
+        </Group>
+      </Card>
+
+      <Card withBorder padding="lg" color="red">
+        <Group justify="space-between" gap="sm">
+          <div>
+            <Text fw={500}>{t("common:logout")}</Text>
+            <Text size="sm" c="dimmed">
+              {t("account:logoutHint")}
+            </Text>
+          </div>
+          <Button color="red" variant="default" leftSection={<LogOut size={16} />} onClick={logout}>
+            {t("common:logout")}
           </Button>
         </Group>
       </Card>

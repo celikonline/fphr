@@ -38,7 +38,13 @@ export function initials(firstName: string, lastName: string): string {
   return `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toLocaleUpperCase("tr") || "?";
 }
 
-/** Deterministic placeholder avatar (DiceBear, no key/backend needed) - same `seed` always renders the same face, so a person doesn't reshuffle on every render. Pass `Avatar`'s existing initials as children: it falls back to them if this fails to load. */
-export function avatarUrl(seed: string): string {
-  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+const AVATAR_COLORS = ["blue", "cyan", "grape", "green", "indigo", "lime", "orange", "pink", "red", "teal", "violet", "yellow"];
+
+/** Deterministic background color for an initials-only `Avatar` (no photo yet) - same `seed` always picks the same color, entirely client-side so it can't fail to load like a remote placeholder image would. */
+export function avatarColor(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }

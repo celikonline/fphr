@@ -8,10 +8,9 @@ import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane
 import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
-import { avatarUrl, initials } from "@/components/employees/employee-badges";
-import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
+import { avatarColor, initials } from "@/components/employees/employee-badges";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
-import { getDepartmentDistribution, getMyCareer, getMyEmployee } from "@/services/employees.service";
+import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
 import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
 import { getApiErrorStatus } from "@/lib/api-error";
@@ -21,6 +20,7 @@ const HOLIDAY_DAYS = 90;
 const BIRTHDAY_DAYS = 30;
 const UPCOMING_LEAVE_DAYS = 30;
 const LIST_LIMIT = 3;
+const BIRTHDAY_LIMIT = 5;
 const REQUEST_LIMIT = 4;
 const SLATE = "var(--mantine-color-gray-6)";
 const ACCENT = "var(--mantine-primary-color-filled)";
@@ -199,7 +199,7 @@ function Amount({ days, date }: { days?: string; date: string }) {
   );
 }
 
-/** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (career assignments), manager, hire date. */
+/** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (resolved by the API from the org placement), manager, hire date. */
 function OrgInfoWidget() {
   const { t, i18n } = useTranslation(["home"]);
   const canReadEmployees = usePermission("employee.employees.read");
@@ -208,22 +208,8 @@ function OrgInfoWidget() {
     queryFn: getMyEmployee,
     retry: retryUnlessClientError,
   });
-  const { data: career } = useQuery({
-    queryKey: ["home", "org-info", "career"],
-    queryFn: getMyCareer,
-    enabled: Boolean(employee),
-  });
-  const { levels } = useOrgLevels();
-  const { nameById } = useOrgUnits();
-
-  const current = career?.find((record) => record.isCurrent) ?? null;
-  const levelUnitName = (code: string) => {
-    const level = levels.find((l) => l.code === code);
-    const assignment = level ? current?.assignments.find((a) => a.orgUnitTypeId === level.id) : undefined;
-    return assignment ? nameById.get(assignment.orgUnitId) : undefined;
-  };
-  const title = levelUnitName("Title");
-  const department = levelUnitName("Department");
+  const title = employee?.titleName ?? undefined;
+  const department = employee?.departmentName ?? undefined;
 
   const row = (label: string, value: ReactNode) => (
     <>
@@ -261,7 +247,7 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28} src={avatarUrl(employee.id)} styles={{ placeholder: { fontWeight: 500 } }}>
+            <Avatar size={88} radius="md" fz={28} color={avatarColor(employee.id)} styles={{ placeholder: { fontWeight: 500 } }}>
               {initials(employee.firstName, employee.lastName)}
             </Avatar>
           </Group>
@@ -478,7 +464,7 @@ function UpcomingLeavesWidget() {
           render={(entry) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" src={avatarUrl(entry.employeeId)}>
+                <Avatar size={30} radius="xl" color={avatarColor(entry.employeeId)}>
                   {nameInitials(entry.employeeName)}
                 </Avatar>
                 <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
@@ -568,7 +554,7 @@ function BirthdaysWidget() {
     queryFn: () => getUpcomingBirthdays(BIRTHDAY_DAYS),
     retry: retryUnlessClientError,
   });
-  const items = (data ?? []).slice(0, LIST_LIMIT);
+  const items = (data ?? []).slice(0, BIRTHDAY_LIMIT);
 
   return (
     <WidgetCard
@@ -589,7 +575,7 @@ function BirthdaysWidget() {
           render={(birthday) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" src={avatarUrl(birthday.id)}>
+                <Avatar size={30} radius="xl" color={avatarColor(birthday.id)}>
                   {nameInitials(birthday.displayName)}
                 </Avatar>
                 <PersonName name={birthday.displayName} employeeId={birthday.id} canOpen={canReadEmployees} />
