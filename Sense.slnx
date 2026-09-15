@@ -63,6 +63,7 @@
     <Project Path="tests/Modules/Sense.Modules.Workflow.Tests/Sense.Modules.Workflow.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Notifications.Tests/Sense.Modules.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />

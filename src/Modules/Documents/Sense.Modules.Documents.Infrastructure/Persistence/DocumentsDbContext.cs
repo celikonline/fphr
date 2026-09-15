@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sense.Modules.Documents.Application;
+using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Documents.Domain.Documents;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -8,13 +10,17 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence;
 
 /// <summary>Documents module DbContext with file document entities.</summary>
 public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> options, ITenantContext tenantContext)
-    : ModuleDbContext(options, tenantContext)
+    : ModuleDbContext(options, tenantContext), IDocumentsUnitOfWork
 {
     public const string SchemaName = "documents";
 
     public override string Schema => SchemaName;
 
     public DbSet<Document> Documents => Set<Document>();
+
+    public DbSet<DocumentTypeDefinition> DocumentTypeDefinitions => Set<DocumentTypeDefinition>();
+
+    public DbSet<EmployeeDocumentRequirement> EmployeeDocumentRequirements => Set<EmployeeDocumentRequirement>();
 }
 
 internal static class DocumentsTables

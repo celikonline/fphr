@@ -31,11 +31,56 @@ public static class DocumentsPermissions
         "Documents",
         "Delete file documents");
 
+    /// <summary>View the tenant's personnel document type catalog.</summary>
+    public static readonly Permission DocumentTypesView = new(
+        "documents.document_types.view",
+        Module,
+        "View Document Types",
+        "Documents",
+        "View the personnel document type catalog");
+
+    /// <summary>Create/edit/activate/deactivate personnel document types.</summary>
+    public static readonly Permission DocumentTypesManage = new(
+        "documents.document_types.manage",
+        Module,
+        "Manage Document Types",
+        "Documents",
+        "Create, edit and (de)activate personnel document types");
+
+    /// <summary>View employees' document requirement status.</summary>
+    public static readonly Permission RequirementsView = new(
+        "documents.requirements.view",
+        Module,
+        "View Document Requirements",
+        "Documents",
+        "View employees' personnel document requirement status");
+
+    /// <summary>Waive/clear-waive/link/reevaluate employees' document requirements.</summary>
+    public static readonly Permission RequirementsManage = new(
+        "documents.requirements.manage",
+        Module,
+        "Manage Document Requirements",
+        "Documents",
+        "Waive, clear, link and reevaluate employees' personnel document requirements");
+
+    /// <summary>Self-service: view the caller's own document requirement status.</summary>
+    public static readonly Permission MyRequirements = new(
+        "documents.my.requirements",
+        Module,
+        "My Document Requirements",
+        "Documents",
+        "View the caller's own personnel document requirement status");
+
     /// <summary>All Documents module permissions.</summary>
     public static IEnumerable<Permission> All =>
     [
         FilesCreate,
         FilesRead,
         FilesDelete,
+        DocumentTypesView,
+        DocumentTypesManage,
+        RequirementsView,
+        RequirementsManage,
+        MyRequirements,
     ];
 }

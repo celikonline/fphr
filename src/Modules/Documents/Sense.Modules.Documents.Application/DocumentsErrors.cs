@@ -8,4 +8,9 @@ public static class DocumentsErrors
     public const string ConfirmationFailed = "documents.confirmation_failed";
     public const string DeletionFailed = "documents.deletion_failed";
     public const string TenantNotAuthorized = "document.tenant_not_authorized";
+
+    /// <summary>Uniqueness check requires a DB round-trip, so it lives here rather than in the Domain (mirrors Employee's EmployeeErrors.CustomFieldKeyTaken).</summary>
+    public const string DocumentTypeCodeTaken = "document_type.code_taken";
+
+    public const string NoEmployeeForUser = "documents.employee.not_linked";
 }

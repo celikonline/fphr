@@ -6,6 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Documents.Contracts/Sense.Modules.Documents.Contracts.csproj" />
     <ProjectReference Include="../Sense.Modules.Documents.Domain/Sense.Modules.Documents.Domain.csproj" />
+    <!-- Cross-module read contract only (IEmployeeDocumentEligibilityLookup, IEmployeeContactLookup), per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
