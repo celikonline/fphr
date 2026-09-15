@@ -67,6 +67,14 @@ public sealed record TerminateEmployeeRequest(
     bool SeverancePaid = false,
     bool LeaveSettledAtExit = false);
 
+/// <summary>Termination reason create/edit body; Code is only read on create (it is immutable afterwards).</summary>
+public sealed record TerminationReasonRequest(
+    string? Code,
+    string Name,
+    string? DefaultSgkExitCode = null,
+    TerminationType? DefaultTerminationType = null,
+    int SortOrder = 0);
+
 /// <summary>"Yeniden işe al" body; MergePreviousPeriods carries the counted previous periods into the new leave accrual start.</summary>
 public sealed record RehireEmployeeRequest(DateOnly HireDate, bool MergePreviousPeriods = true, DateOnly? LeaveAccrualStartDate = null);
 
@@ -226,6 +234,34 @@ public sealed class EmployeesController : ApiControllerBase
                 request.SeverancePaid,
                 request.LeaveSettledAtExit),
             ct));
+
+    /// <summary>Adds a tenant-authored termination reason.</summary>
+    [HttpPost("termination-reasons")]
+    [ProducesResponseType<TerminationReasonDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateTerminationReason([FromBody] TerminationReasonRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new CreateTerminationReasonCommand(request.Code ?? string.Empty, request.Name, request.DefaultSgkExitCode, request.DefaultTerminationType, request.SortOrder),
+            ct));
+
+    /// <summary>Renames a termination reason and changes what it pre-fills (its code never changes).</summary>
+    [HttpPut("termination-reasons/{reasonId:guid}")]
+    [ProducesResponseType<TerminationReasonDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateTerminationReason(Guid reasonId, [FromBody] TerminationReasonRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new UpdateTerminationReasonCommand(reasonId, request.Name, request.DefaultSgkExitCode, request.DefaultTerminationType, request.SortOrder),
+            ct));
+
+    /// <summary>Hides a termination reason from the wizard (reasons are never deleted).</summary>
+    [HttpPost("termination-reasons/{reasonId:guid}/deactivate")]
+    [ProducesResponseType<TerminationReasonDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeactivateTerminationReason(Guid reasonId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeactivateTerminationReasonCommand(reasonId), ct));
+
+    /// <summary>Brings a deactivated termination reason back.</summary>
+    [HttpPost("termination-reasons/{reasonId:guid}/reactivate")]
+    [ProducesResponseType<TerminationReasonDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ReactivateTerminationReason(Guid reasonId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ReactivateTerminationReasonCommand(reasonId), ct));
 
     /// <summary>
     /// Collective-dismissal status of the rolling 30-day window ("Toplu işten çıkarma eşik uyarısı"): what the wizard

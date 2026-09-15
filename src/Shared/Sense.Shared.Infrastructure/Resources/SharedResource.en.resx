@@ -175,6 +175,9 @@
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Only active or suspended employees can be terminated.</value></data>
   <data name="employee.termination_date_before_hire_date" xml:space="preserve"><value>The termination date cannot be before the hire date.</value></data>
   <data name="employee.termination_reason_not_found" xml:space="preserve"><value>Termination reason not found.</value></data>
+  <data name="employee.termination_reason_code_taken" xml:space="preserve"><value>A termination reason with this code already exists.</value></data>
+  <data name="employee.termination_reason_code_required" xml:space="preserve"><value>The termination reason code is required.</value></data>
+  <data name="employee.termination_reason_name_required" xml:space="preserve"><value>The termination reason name is required.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Only terminated employees can be rehired.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
   <data name="employee.career_record_not_found" xml:space="preserve"><value>Career record not found.</value></data>
@@ -216,6 +219,7 @@
   <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Edit bank accounts</value></data>
   <data name="employee.customfield.manage" xml:space="preserve"><value>Manage custom field definitions</value></data>
   <data name="employee.customfield.view" xml:space="preserve"><value>View custom field definitions</value></data>
+  <data name="employee.termination_reason.manage" xml:space="preserve"><value>Manage termination reasons</value></data>
   <data name="employee.self.edit" xml:space="preserve"><value>Edit own profile</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Custom field definition not found.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>The custom field key is required.</value></data>

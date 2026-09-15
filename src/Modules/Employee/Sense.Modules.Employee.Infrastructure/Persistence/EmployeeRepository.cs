@@ -147,4 +147,7 @@ public sealed class TerminationReasonRepository(EmployeeDbContext context) : ITe
 
     public async Task<bool> AnyForTenantAsync(CancellationToken cancellationToken = default) =>
         await context.TerminationReasons.AnyAsync(cancellationToken);
+
+    public async Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default) =>
+        await context.TerminationReasons.AnyAsync(r => r.Code == code && (exceptId == null || r.Id != exceptId), cancellationToken);
 }

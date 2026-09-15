@@ -174,6 +174,47 @@ public sealed class TerminationIntegrationTests : TestFixture
         representative.Value.JobSecurityWarning.ShouldBeFalse();
     }
 
+    /// <summary>Tenant-authored termination reasons ("kiracı kendi nedenini oluşturur"): create, rename, deactivate, and terminate with one.</summary>
+    [Fact]
+    public async Task TerminationReasons_TenantCanAddRenameAndDeactivateItsOwn()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+
+        var created = await ExecuteCommandAsync(new CreateTerminationReasonCommand(
+            "ProjectEnded", "Proje sonu", "22", TerminationType.Other, 200));
+        created.IsSuccess.ShouldBeTrue();
+        created.Value.IsSystem.ShouldBeFalse();
+        created.Value.IsActive.ShouldBeTrue();
+
+        // Codes are tenant-unique, including against the auto-seeded system rows.
+        (await ExecuteCommandAsync(new CreateTerminationReasonCommand("ProjectEnded", "Kopya")))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.TerminationReasonCodeTaken);
+        (await ExecuteCommandAsync(new CreateTerminationReasonCommand("Resignation", "Kopya")))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.TerminationReasonCodeTaken);
+
+        var renamed = await ExecuteCommandAsync(new UpdateTerminationReasonCommand(
+            created.Value.Id, "Proje bitişi", "23", TerminationType.FixedTermExpiry, 210));
+        renamed.Value.Name.ShouldBe("Proje bitişi");
+        renamed.Value.Code.ShouldBe("ProjectEnded", "the code never changes");
+        renamed.Value.DefaultSgkExitCode.ShouldBe("23");
+
+        // The custom reason pre-fills the wizard just like a system one.
+        var hireDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1);
+        var employee = await ExecuteCommandAsync(new CreateEmployeeCommand("Özel", "Neden", null, null, null, null, hireDate, null, null, null));
+        var terminated = await ExecuteCommandAsync(new TerminateEmployeeCommand(employee.Value.Id, hireDate.AddMonths(6), created.Value.Id));
+        terminated.Value.Employee.TerminationType.ShouldBe(TerminationType.FixedTermExpiry);
+        terminated.Value.Employee.SgkExitCode.ShouldBe("23");
+
+        // Deactivating hides it from the wizard's dropdown but keeps it for the terminated employee.
+        (await ExecuteCommandAsync(new DeactivateTerminationReasonCommand(created.Value.Id))).Value.IsActive.ShouldBeFalse();
+        (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.ShouldNotContain(r => r.Id == created.Value.Id);
+        (await ExecuteQueryAsync(new ListTerminationReasonsQuery(IncludeInactive: true))).Value.ShouldContain(r => r.Id == created.Value.Id);
+
+        (await ExecuteCommandAsync(new ReactivateTerminationReasonCommand(created.Value.Id))).Value.IsActive.ShouldBeTrue();
+        (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.ShouldContain(r => r.Id == created.Value.Id);
+    }
+
     /// <summary>
     /// Collective dismissal ("Toplu işten çıkarma eşik uyarısı", 4857 md.29): the tier table is stubbed down to
     /// "2+ employees -> 2 dismissals" so a handful of employees is enough, and only md.18 dismissals count - a

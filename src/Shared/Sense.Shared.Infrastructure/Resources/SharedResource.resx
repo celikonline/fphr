@@ -184,6 +184,9 @@
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Yalnızca aktif veya askıda olan çalışanlar işten çıkarılabilir.</value></data>
   <data name="employee.termination_date_before_hire_date" xml:space="preserve"><value>İşten ayrılma tarihi işe başlama tarihinden önce olamaz.</value></data>
   <data name="employee.termination_reason_not_found" xml:space="preserve"><value>İşten ayrılma nedeni bulunamadı.</value></data>
+  <data name="employee.termination_reason_code_taken" xml:space="preserve"><value>Bu kod ile zaten bir işten ayrılma nedeni var.</value></data>
+  <data name="employee.termination_reason_code_required" xml:space="preserve"><value>İşten ayrılma nedeni kodu zorunludur.</value></data>
+  <data name="employee.termination_reason_name_required" xml:space="preserve"><value>İşten ayrılma nedeni adı zorunludur.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.career_record_not_found" xml:space="preserve"><value>Kariyer kaydı bulunamadı.</value></data>
@@ -225,6 +228,7 @@
   <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Banka hesaplarını düzenleme</value></data>
   <data name="employee.customfield.manage" xml:space="preserve"><value>Özel alan tanımlarını yönetme</value></data>
   <data name="employee.customfield.view" xml:space="preserve"><value>Özel alan tanımlarını görüntüleme</value></data>
+  <data name="employee.termination_reason.manage" xml:space="preserve"><value>İşten ayrılma nedenlerini yönetme</value></data>
   <data name="employee.self.edit" xml:space="preserve"><value>Kendi profilini düzenleme</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Özel alan tanımı bulunamadı.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>Özel alan anahtarı zorunludur.</value></data>

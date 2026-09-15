@@ -33,6 +33,9 @@ public static class EmployeePermissions
     /// <summary>List custom field definitions (on top of employees.read for reading employees' values).</summary>
     public const string CustomFieldViewKey = "employee.customfield.view";
 
+    /// <summary>Create/update/deactivate termination reasons (tenant catalog; reading them needs only employees.read).</summary>
+    public const string TerminationReasonManageKey = "employee.termination_reason.manage";
+
     /// <summary>
     /// Self-service edit of one's own contact/address fields and employee-editable custom field values
     /// ("Self-servis düzenleme", 11.3.03). Contains ".self." so the wildcard role wiring (PermissionPatterns.SelfService)
@@ -97,6 +100,10 @@ public static class EmployeePermissions
     public static readonly Permission CustomFieldView = new(
         CustomFieldViewKey, Module, "View Custom Field Definitions", Group, "View the custom field definition catalog");
 
+    /// <summary>Maintain the termination reason catalog.</summary>
+    public static readonly Permission TerminationReasonManage = new(
+        TerminationReasonManageKey, Module, "Manage Termination Reasons", Group, "Create, rename, deactivate and reactivate termination reasons");
+
     /// <summary>Self-service profile edit (own contact fields + own employee-editable custom fields).</summary>
     public static readonly Permission ProfileSelfEdit = new(
         ProfileSelfEditKey, Module, "Edit Own Profile", Group, "Edit one's own contact fields and employee-editable custom fields");
@@ -105,6 +112,6 @@ public static class EmployeePermissions
     public static IEnumerable<Permission> All =>
         [
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
-            BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, ProfileSelfEdit,
+            BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, ProfileSelfEdit,
         ];
 }

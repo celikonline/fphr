@@ -77,4 +77,7 @@ public interface ITerminationReasonRepository
 
     /// <summary>True once the tenant's catalog has been seeded (any row at all).</summary>
     Task<bool> AnyForTenantAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>True if another reason of the tenant already uses this code.</summary>
+    Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default);
 }
