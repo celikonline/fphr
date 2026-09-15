@@ -1,13 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput } from "@/services/leave.service";
 import { useDays } from "./leave-shared";
@@ -124,110 +119,130 @@ export function LeaveRequestDialog({
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
-        </DialogHeader>
+    <Modal opened onClose={onClose} size="32rem" title={title}>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {dialogDescription}
+        </Text>
         {options.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("leave:form.noTypes")}</p>
+          <Text size="sm" c="dimmed">
+            {t("leave:form.noTypes")}
+          </Text>
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <div>
-              <Label htmlFor="leave-type">
-                {t("leave:form.type")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <Select value={leaveTypeId} onValueChange={setLeaveTypeId} disabled={busy}>
-                <SelectTrigger id="leave-type">
-                  <SelectValue placeholder={t("leave:form.type")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {options.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {typesHint && <p className="mt-1 text-xs text-muted-foreground">{typesHint}</p>}
-              {selected && (
-                <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {selected.description && <p>{selected.description}</p>}
-                  {selected.availableBalance !== null && <p>{t("leave:form.available", { days: days(selected.availableBalance) })}</p>}
-                  {selected.perRequestMaxDays !== null && <p>{t("leave:form.perRequestMax", { days: days(selected.perRequestMaxDays) })}</p>}
-                </div>
+          <form onSubmit={submit}>
+            <Stack gap="md">
+              <div>
+                <Select
+                  id="leave-type"
+                  label={t("leave:form.type")}
+                  withAsterisk
+                  placeholder={t("leave:form.type")}
+                  description={typesHint}
+                  value={leaveTypeId || null}
+                  onChange={(value) => setLeaveTypeId(value ?? "")}
+                  allowDeselect={false}
+                  disabled={busy}
+                  data={options.map((type) => ({ value: type.id, label: type.name }))}
+                  inputWrapperOrder={["label", "input", "description", "error"]}
+                />
+                {selected && (
+                  <Stack gap={4} mt="xs">
+                    {selected.description && (
+                      <Text size="xs" c="dimmed">
+                        {selected.description}
+                      </Text>
+                    )}
+                    {selected.availableBalance !== null && (
+                      <Text size="xs" c="dimmed">
+                        {t("leave:form.available", { days: days(selected.availableBalance) })}
+                      </Text>
+                    )}
+                    {selected.perRequestMaxDays !== null && (
+                      <Text size="xs" c="dimmed">
+                        {t("leave:form.perRequestMax", { days: days(selected.perRequestMaxDays) })}
+                      </Text>
+                    )}
+                  </Stack>
+                )}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Input.Wrapper id="leave-start" label={t("leave:form.startDate")} withAsterisk>
+                  <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={setStartDate} />
+                </Input.Wrapper>
+                <Input.Wrapper id="leave-end" label={t("leave:form.endDate")} withAsterisk>
+                  <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
+                </Input.Wrapper>
+              </div>
+              {canPreview && (
+                <Paper withBorder p="sm" bg="var(--mantine-color-default-hover)" aria-live="polite">
+                  {previewQuery.isFetching && !previewQuery.data ? (
+                    <Text size="sm" c="dimmed">
+                      {t("leave:form.previewLoading")}
+                    </Text>
+                  ) : previewQuery.isError ? (
+                    <Text size="sm" c="red">
+                      {getApiErrorMessage(previewQuery.error, t("leave:genericError"))}
+                    </Text>
+                  ) : previewQuery.data ? (
+                    <>
+                      <Text size="sm">
+                        {t("leave:form.previewDays", {
+                          days: days(previewQuery.data.days),
+                          rest: previewQuery.data.weeklyRestDays,
+                          holidays: previewQuery.data.publicHolidayDays,
+                        })}
+                      </Text>
+                      {(previewQuery.data.warnings ?? []).map((warning) => (
+                        <Text key={warning.code} size="sm" c="red" mt={4}>
+                          {warning.message}
+                        </Text>
+                      ))}
+                    </>
+                  ) : null}
+                </Paper>
               )}
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="leave-start">
-                  {t("leave:form.startDate")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={setStartDate} />
-              </div>
-              <div>
-                <Label htmlFor="leave-end">
-                  {t("leave:form.endDate")}
-                  <span className="text-destructive"> *</span>
-                </Label>
-                <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
-              </div>
-            </div>
-            {canPreview && (
-              <div className="rounded-md border bg-muted/40 p-3 text-sm" aria-live="polite">
-                {previewQuery.isFetching && !previewQuery.data ? (
-                  <p className="text-muted-foreground">{t("leave:form.previewLoading")}</p>
-                ) : previewQuery.isError ? (
-                  <p className="text-destructive">{getApiErrorMessage(previewQuery.error, t("leave:genericError"))}</p>
-                ) : previewQuery.data ? (
-                  <>
-                    <p>
-                      {t("leave:form.previewDays", {
-                        days: days(previewQuery.data.days),
-                        rest: previewQuery.data.weeklyRestDays,
-                        holidays: previewQuery.data.publicHolidayDays,
-                      })}
-                    </p>
-                    {(previewQuery.data.warnings ?? []).map((warning) => (
-                      <p key={warning.code} className="mt-1 text-destructive">
-                        {warning.message}
-                      </p>
-                    ))}
-                  </>
-                ) : null}
-              </div>
-            )}
-            <div>
-              <Label htmlFor="leave-description">
-                {t("leave:form.description")}
-                {selected?.requiresDescription && <span className="text-destructive"> *</span>}
-              </Label>
-              <Textarea id="leave-description" value={description} disabled={busy} maxLength={2000} onChange={(e) => setDescription(e.target.value)} />
-            </div>
-            {allowBypass && (
-              <div className="flex items-start justify-between gap-4 rounded-md border p-3">
-                <div>
-                  <Label htmlFor="leave-bypass">{t("leave:form.bypassApproval")}</Label>
-                  <p className="mt-1 text-xs text-muted-foreground">{t("leave:form.bypassHint")}</p>
-                </div>
-                <Switch id="leave-bypass" checked={bypassApproval} onCheckedChange={setBypassApproval} disabled={busy} />
-              </div>
-            )}
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-                {t("common:cancel")}
-              </Button>
-              <Button type="submit" disabled={busy}>
-                {busy ? t("common:saving") : submitLabel}
-              </Button>
-            </DialogFooter>
+              <Textarea
+                id="leave-description"
+                label={t("leave:form.description")}
+                withAsterisk={selected?.requiresDescription ?? false}
+                value={description}
+                disabled={busy}
+                maxLength={2000}
+                autosize
+                minRows={3}
+                onChange={(e) => setDescription(e.currentTarget.value)}
+              />
+              {allowBypass && (
+                <Paper withBorder p="sm">
+                  <Switch
+                    id="leave-bypass"
+                    label={t("leave:form.bypassApproval")}
+                    description={t("leave:form.bypassHint")}
+                    labelPosition="left"
+                    checked={bypassApproval}
+                    onChange={(e) => setBypassApproval(e.currentTarget.checked)}
+                    disabled={busy}
+                    styles={{ body: { justifyContent: "space-between" } }}
+                  />
+                </Paper>
+              )}
+              {error && (
+                <Text size="sm" c="red" role="alert">
+                  {error}
+                </Text>
+              )}
+              <Group justify="flex-end" gap="xs">
+                <Button type="button" variant="default" onClick={onClose} disabled={busy}>
+                  {t("common:cancel")}
+                </Button>
+                <Button type="submit" loading={busy}>
+                  {busy ? t("common:saving") : submitLabel}
+                </Button>
+              </Group>
+            </Stack>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </Stack>
+    </Modal>
   );
 }

@@ -2,14 +2,9 @@ import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
+import { Anchor, Badge, Button, Card, Divider, Group, Modal, Progress, Select, Skeleton, Stack, Text, Title, type BadgeProps } from "@mantine/core";
 import { CalendarRange, ListOrdered } from "lucide-react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import {
   getEmployeeLeaveLedger,
@@ -67,24 +62,46 @@ export function useLeaveTypeNames(balances: EmployeeLeaveBalances | undefined, r
   );
 }
 
-const STATUS_VARIANT: Record<LeaveRequestStatus, BadgeProps["variant"]> = {
-  pending: "secondary",
-  approved: "success",
-  rejected: "destructive",
-  withdrawn: "outline",
-  cancelled: "outline",
+const STATUS_BADGE: Record<LeaveRequestStatus, Pick<BadgeProps, "variant" | "color">> = {
+  pending: { variant: "light" },
+  approved: { variant: "filled", color: "green" },
+  rejected: { variant: "filled", color: "red" },
+  withdrawn: { variant: "outline", color: "gray" },
+  cancelled: { variant: "outline", color: "gray" },
 };
 
 export function LeaveStatusBadge({ status }: { status: LeaveRequestStatus }) {
   const { t } = useTranslation(["leave"]);
-  return <Badge variant={STATUS_VARIANT[status]}>{t(`leave:status.${status}`)}</Badge>;
+  return <Badge {...STATUS_BADGE[status]}>{t(`leave:status.${status}`)}</Badge>;
 }
 
 export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{children}</dd>
+      <Text component="dt" size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text component="dd" size="sm" mt={2}>
+        {children}
+      </Text>
+    </div>
+  );
+}
+
+/** Used share of what the employee has been entitled to so far (used + current balance); hidden when nothing was entitled. */
+function BalanceUsage({ used, currentBalance }: { used: number; currentBalance: number }) {
+  const { t } = useTranslation(["leave"]);
+  const days = useDays();
+  const entitled = used + currentBalance;
+  if (entitled <= 0 && used <= 0) return null;
+  const percent = entitled <= 0 ? 100 : Math.min(100, (used / entitled) * 100);
+  const label = `${t("leave:summary.totalUsed")}: ${days(used)} / ${days(entitled)} ${t("leave:days")}`;
+  return (
+    <div>
+      <Progress value={percent} color={currentBalance < 0 ? "red" : undefined} size="sm" aria-label={label} />
+      <Text size="xs" c="dimmed" mt={4}>
+        {label}
+      </Text>
     </div>
   );
 }
@@ -110,19 +127,21 @@ export function LeaveBalanceSummary({
   const date = (value: string) => formatDateOnly(value, i18n.language);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <div className="flex items-center gap-2">
-          <CalendarRange className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-lg">{t("leave:summary.title")}</CardTitle>
-        </div>
+    <Card withBorder padding="lg">
+      <Group justify="space-between" gap="sm" mb="md">
+        <Group gap="xs">
+          <CalendarRange size={16} color="var(--mantine-color-dimmed)" />
+          <Title order={4}>{t("leave:summary.title")}</Title>
+        </Group>
         {action}
-      </CardHeader>
-      <CardContent className="space-y-6">
+      </Group>
+      <Stack gap="lg">
         {isLoading ? (
-          <Skeleton className="h-32 w-full" />
+          <Skeleton h={128} />
         ) : !data ? (
-          <p className="text-sm text-muted-foreground">{emptyMessage ?? t("leave:summary.unavailable")}</p>
+          <Text size="sm" c="dimmed">
+            {emptyMessage ?? t("leave:summary.unavailable")}
+          </Text>
         ) : (
           <>
             <dl className="grid gap-4 sm:grid-cols-3">
@@ -131,19 +150,28 @@ export function LeaveBalanceSummary({
               {ruleSet && <Field label={t("leave:summary.ruleSet")}>{ruleSet}</Field>}
             </dl>
             {data.balances.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t("leave:summary.noBalances")}</p>
+              <Text size="sm" c="dimmed">
+                {t("leave:summary.noBalances")}
+              </Text>
             ) : (
               data.balances.map((item: LeaveBalanceItem) => {
                 const b = item.balance;
                 return (
-                  <div key={b.leaveTypeId} className="space-y-3 border-t pt-4">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <h3 className="font-semibold">{leaveName(item.leaveTypeName)}</h3>
-                      <span className="text-sm">
-                        {t("leave:summary.available")}: <span className="text-base font-semibold">{days(b.availableBalance)}</span>{" "}
+                  <Stack key={b.leaveTypeId} gap="sm">
+                    <Divider />
+                    <Group justify="space-between" align="baseline" gap="xs">
+                      <Text component="h3" fw={600}>
+                        {leaveName(item.leaveTypeName)}
+                      </Text>
+                      <Text size="sm">
+                        {t("leave:summary.available")}:{" "}
+                        <Text span fw={600}>
+                          {days(b.availableBalance)}
+                        </Text>{" "}
                         {t("leave:days")}
-                      </span>
-                    </div>
+                      </Text>
+                    </Group>
+                    <BalanceUsage used={b.totalUsed} currentBalance={b.currentBalance} />
                     <dl className="grid gap-4 sm:grid-cols-3">
                       <Field label={t("leave:summary.currentPeriod")}>
                         {date(b.currentPeriodFrom)} – {date(b.currentPeriodTo)}
@@ -160,13 +188,13 @@ export function LeaveBalanceSummary({
                       <Field label={t("leave:summary.extraGrants")}>{days(b.extraGrants)}</Field>
                       <Field label={t("leave:summary.nextAccrualDate")}>{date(b.nextAccrualDate)}</Field>
                     </dl>
-                  </div>
+                  </Stack>
                 );
               })
             )}
           </>
         )}
-      </CardContent>
+      </Stack>
     </Card>
   );
 }
@@ -219,10 +247,10 @@ export function LeaveLedgerDialog({
       header: t("leave:ledger.amount"),
       meta: { label: t("leave:ledger.amount"), headerClassName: "text-right", cellClassName: "text-right" },
       cell: ({ row }) => (
-        <span className={row.original.amount < 0 ? "text-destructive" : undefined}>
+        <Text span inherit c={row.original.amount < 0 ? "red" : undefined}>
           {row.original.amount > 0 ? "+" : ""}
           {days(row.original.amount)}
-        </span>
+        </Text>
       ),
     },
     {
@@ -243,8 +271,12 @@ export function LeaveLedgerDialog({
       id: "recordedAt",
       accessorKey: "recordedAt",
       header: t("leave:ledger.recordedAt"),
-      meta: { label: t("leave:ledger.recordedAt"), cellClassName: "whitespace-nowrap text-xs text-muted-foreground" },
-      cell: ({ row }) => formatDateTime(row.original.recordedAt, i18n.language),
+      meta: { label: t("leave:ledger.recordedAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (
+        <Text span size="xs" c="dimmed">
+          {formatDateTime(row.original.recordedAt, i18n.language)}
+        </Text>
+      ),
     },
   ];
 
@@ -257,50 +289,51 @@ export function LeaveLedgerDialog({
   });
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <ListOrdered className="h-5 w-5" /> {t("leave:ledger.title")}
-          </DialogTitle>
-          <DialogDescription>{t("leave:ledger.description")}</DialogDescription>
-        </DialogHeader>
+    <Modal
+      opened
+      onClose={onClose}
+      size="56rem"
+      title={
+        <span className="flex items-center gap-2">
+          <ListOrdered size={20} /> {t("leave:ledger.title")}
+        </span>
+      }
+    >
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {t("leave:ledger.description")}
+        </Text>
         {(typeOptions.length > 1 || rows.length > 0) && (
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <Group justify="space-between" gap="xs">
             {typeOptions.length > 1 && (
-              <div className="w-full max-w-xs">
-                <Select value={typeId} onValueChange={setTypeId}>
-                  <SelectTrigger aria-label={t("leave:ledger.type")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={ALL_TYPES}>{t("leave:ledger.allTypes")}</SelectItem>
-                    {typeOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select
+                className="w-full max-w-xs"
+                aria-label={t("leave:ledger.type")}
+                value={typeId}
+                onChange={(value) => setTypeId(value ?? ALL_TYPES)}
+                allowDeselect={false}
+                data={[{ value: ALL_TYPES, label: t("leave:ledger.allTypes") }, ...typeOptions.map((option) => ({ value: option.id, label: option.name }))]}
+              />
             )}
             {rows.length > 0 && <DataTableViewOptions table={table} className={`ml-auto ${COLUMN_CHOOSER_CLASS}`} />}
-          </div>
+          </Group>
         )}
         {isLoading ? (
-          <Skeleton className="h-40 w-full" />
+          <Skeleton h={160} />
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("leave:ledger.empty")}</p>
+          <Text size="sm" c="dimmed">
+            {t("leave:ledger.empty")}
+          </Text>
         ) : (
           <DataTable table={table} />
         )}
-        <div className="flex justify-end">
-          <Button type="button" variant="outline" onClick={onClose}>
+        <Group justify="flex-end">
+          <Button type="button" variant="default" onClick={onClose}>
             {t("common:close")}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -330,21 +363,28 @@ export function LeaveRequestsTable({
       accessorFn: (request) => typeName(request),
       enableHiding: false,
       header: t("leave:requests.type"),
-      meta: { label: t("leave:requests.type"), cellClassName: "font-medium" },
+      meta: { label: t("leave:requests.type") },
       cell: ({ row }) =>
         onOpen ? (
-          <button
+          <Anchor
+            component="button"
             type="button"
-            className="text-left hover:underline"
+            inherit
+            c="inherit"
+            fw={500}
+            ta="left"
+            underline="hover"
             onClick={(event) => {
               event.stopPropagation();
               onOpen(row.original);
             }}
           >
             {typeName(row.original)}
-          </button>
+          </Anchor>
         ) : (
-          typeName(row.original)
+          <Text span inherit fw={500}>
+            {typeName(row.original)}
+          </Text>
         ),
     },
     {
@@ -377,9 +417,9 @@ export function LeaveRequestsTable({
         <>
           <LeaveStatusBadge status={row.original.status} />
           {row.original.status === "cancelled" && row.original.cancellationReason && (
-            <p className="mt-1 max-w-[12rem] truncate text-xs text-muted-foreground" title={row.original.cancellationReason}>
+            <Text size="xs" c="dimmed" mt={4} maw="12rem" truncate="end" title={row.original.cancellationReason}>
               {row.original.cancellationReason}
-            </p>
+            </Text>
           )}
         </>
       ),
@@ -421,15 +461,19 @@ export function LeaveRequestsTable({
   });
 
   if (sorted.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("leave:requests.empty")}</p>;
+    return (
+      <Text size="sm" c="dimmed">
+        {t("leave:requests.empty")}
+      </Text>
+    );
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-end">
+    <Stack gap="xs">
+      <Group justify="flex-end">
         <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />
-      </div>
+      </Group>
       <DataTable table={table} onRowClick={onOpen} />
-    </div>
+    </Stack>
   );
 }

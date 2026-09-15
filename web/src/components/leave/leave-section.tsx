@@ -1,17 +1,9 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, Anchor, Button, Card, Group, Input, Menu, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
 import { Ban, Eye, ListChecks, ListOrdered, MoreVertical } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -134,7 +126,11 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   });
 
   if (balancesMode === null && requestsMode === null) {
-    return <p className="text-sm text-muted-foreground">{t("leave:noAccess")}</p>;
+    return (
+      <Text size="sm" c="dimmed">
+        {t("leave:noAccess")}
+      </Text>
+    );
   }
 
   // Cancelling is an employee-scoped action: only offered through the scoped requests list.
@@ -143,7 +139,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   const canChangeRuleSet = balancesMode === "employee" && canAssignRuleSet && !!ruleSetId;
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       {balancesMode !== null && (
         <LeaveBalanceSummary
           data={balancesQuery.data}
@@ -154,74 +150,76 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
               <span className="flex flex-wrap items-center gap-2">
                 <span>{ruleSetQuery.data ? leaveName(ruleSetQuery.data.name) : "—"}</span>
                 {canChangeRuleSet && (
-                  <Button type="button" size="sm" variant="link" className="h-auto p-0" onClick={() => setRuleSetOpen(true)}>
+                  <Anchor component="button" type="button" size="sm" onClick={() => setRuleSetOpen(true)}>
                     {t("leave:ruleSetChange.action")}
-                  </Button>
+                  </Anchor>
                 )}
               </span>
             ) : undefined
           }
           action={
             balancesQuery.data ? (
-              <div className="flex items-center gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => setLedgerOpen(true)}>
-                  <ListOrdered className="mr-2 h-4 w-4" /> {t("leave:summary.details")}
+              <Group gap="xs">
+                <Button type="button" size="sm" variant="default" leftSection={<ListOrdered size={16} />} onClick={() => setLedgerOpen(true)}>
+                  {t("leave:summary.details")}
                 </Button>
                 {canReadBalances && (canAdjust || canRecalculate || canAddLeave) && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button type="button" size="sm" variant="outline">
-                        {t("leave:actions.menu")} <MoreVertical className="ml-1 h-4 w-4" />
+                  <Menu position="bottom-end">
+                    <Menu.Target>
+                      <Button type="button" size="sm" variant="default" rightSection={<MoreVertical size={16} />}>
+                        {t("leave:actions.menu")}
                       </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {canAddLeave && <DropdownMenuItem onSelect={() => setAddOpen(true)}>{t("leave:actions.addLeave")}</DropdownMenuItem>}
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      {canAddLeave && <Menu.Item onClick={() => setAddOpen(true)}>{t("leave:actions.addLeave")}</Menu.Item>}
                       {canAdjust && balancesQuery.data.balances.length > 0 && (
-                        <DropdownMenuItem onSelect={() => setAdjustOpen(true)}>{t("leave:actions.adjust")}</DropdownMenuItem>
+                        <Menu.Item onClick={() => setAdjustOpen(true)}>{t("leave:actions.adjust")}</Menu.Item>
                       )}
-                      {canRecalculate && (
-                        <DropdownMenuItem onSelect={() => setRecalculateOpen(true)}>{t("leave:actions.recalculate")}</DropdownMenuItem>
-                      )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      {canRecalculate && <Menu.Item onClick={() => setRecalculateOpen(true)}>{t("leave:actions.recalculate")}</Menu.Item>}
+                    </Menu.Dropdown>
+                  </Menu>
                 )}
-              </div>
+              </Group>
             ) : undefined
           }
         />
       )}
 
       {requestsMode !== null && (
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-            <ListChecks className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{t("leave:requests.title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {requestsQuery.isLoading ? (
-              <Skeleton className="h-32 w-full" />
-            ) : requestsQuery.isError ? (
-              <p className="text-sm text-destructive">{getApiErrorMessage(requestsQuery.error, t("leave:genericError"))}</p>
-            ) : (
-              <LeaveRequestsTable
-                requests={requestsQuery.data ?? []}
-                typeName={typeName}
-                onOpen={(request) => setDetailId(request.id)}
-                actions={(request) => (
-                  <div className="flex justify-end gap-1">
-                    <Button type="button" variant="ghost" size="icon" title={t("leave:detail.open")} onClick={() => setDetailId(request.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {cancellable(request) && (
-                      <Button type="button" variant="ghost" size="icon" title={t("leave:cancel.action")} onClick={() => setCancelling(request)}>
-                        <Ban className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              />
-            )}
-          </CardContent>
+        <Card withBorder padding="lg">
+          <Group gap="xs" mb="md">
+            <ListChecks size={16} color="var(--mantine-color-dimmed)" />
+            <Title order={4}>{t("leave:requests.title")}</Title>
+          </Group>
+          {requestsQuery.isLoading ? (
+            <Skeleton h={128} />
+          ) : requestsQuery.isError ? (
+            <Text size="sm" c="red">
+              {getApiErrorMessage(requestsQuery.error, t("leave:genericError"))}
+            </Text>
+          ) : (
+            <LeaveRequestsTable
+              requests={requestsQuery.data ?? []}
+              typeName={typeName}
+              onOpen={(request) => setDetailId(request.id)}
+              actions={(request) => (
+                <Group justify="flex-end" gap={4} wrap="nowrap">
+                  <Tooltip label={t("leave:detail.open")}>
+                    <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("leave:detail.open")} onClick={() => setDetailId(request.id)}>
+                      <Eye size={16} />
+                    </ActionIcon>
+                  </Tooltip>
+                  {cancellable(request) && (
+                    <Tooltip label={t("leave:cancel.action")}>
+                      <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("leave:cancel.action")} onClick={() => setCancelling(request)}>
+                        <Ban size={16} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
+                </Group>
+              )}
+            />
+          )}
         </Card>
       )}
 
@@ -236,7 +234,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
             cancellable(detail) ? (
               <Button
                 type="button"
-                variant="destructive"
+                color="red"
                 onClick={() => {
                   setDetailId(null);
                   setCancelling(detail);
@@ -329,7 +327,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
         isLoading={recalculateMutation.isPending}
         onConfirm={() => recalculateMutation.mutate()}
       />
-    </div>
+    </Stack>
   );
 }
 
@@ -376,65 +374,65 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("leave:actions.adjust")}</DialogTitle>
-          <DialogDescription>{t("leave:actions.adjustDescription")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label htmlFor="adjust-type">
-              {t("leave:actions.type")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Select value={leaveTypeId} onValueChange={setLeaveTypeId} disabled={busy}>
-              <SelectTrigger id="adjust-type">
-                <SelectValue placeholder={t("leave:actions.type")} />
-              </SelectTrigger>
-              <SelectContent>
-                {typeOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+    <Modal opened onClose={onClose} size="32rem" title={t("leave:actions.adjust")}>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("leave:actions.adjustDescription")}
+          </Text>
+          <Select
+            id="adjust-type"
+            label={t("leave:actions.type")}
+            withAsterisk
+            placeholder={t("leave:actions.type")}
+            value={leaveTypeId || null}
+            onChange={(value) => setLeaveTypeId(value ?? "")}
+            allowDeselect={false}
+            disabled={busy}
+            data={typeOptions.map((option) => ({ value: option.id, label: option.name }))}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="adjust-days">
-                {t("leave:actions.days")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <Input id="adjust-days" type="number" inputMode="decimal" step="0.5" value={days} disabled={busy} onChange={(e) => setDays(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="adjust-date">
-                {t("leave:actions.effectiveDate")}
-                <span className="text-destructive"> *</span>
-              </Label>
+            <NumberInput
+              id="adjust-days"
+              label={t("leave:actions.days")}
+              withAsterisk
+              inputMode="decimal"
+              step={0.5}
+              decimalScale={2}
+              value={days}
+              disabled={busy}
+              onChange={(value) => setDays(String(value))}
+            />
+            <Input.Wrapper id="adjust-date" label={t("leave:actions.effectiveDate")} withAsterisk>
               <DatePicker id="adjust-date" value={effectiveDate} disabled={busy} onChange={setEffectiveDate} />
-            </div>
+            </Input.Wrapper>
           </div>
-          <div>
-            <Label htmlFor="adjust-reason">
-              {t("leave:actions.reason")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Textarea id="adjust-reason" value={reason} maxLength={1000} disabled={busy} onChange={(e) => setReason(e.target.value)} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+          <Textarea
+            id="adjust-reason"
+            label={t("leave:actions.reason")}
+            withAsterisk
+            value={reason}
+            maxLength={1000}
+            disabled={busy}
+            autosize
+            minRows={3}
+            onChange={(e) => setReason(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="xs">
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" disabled={busy}>
+            <Button type="submit" loading={busy}>
               {busy ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
