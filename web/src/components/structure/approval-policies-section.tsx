@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Paper, Select, Stack, Text } from "@mantine/core";
 import { usePermission } from "@/components/permission-guard";
 import {
   APPROVAL_REQUEST_TYPES,
@@ -95,59 +94,62 @@ export default function ApprovalPoliciesSection({ state, units, disabled }: Appr
   const optionName = (id: string) => options.find((option) => option.id === id)?.name ?? t("structure:approvalPolicies.unknownPolicy");
 
   return (
-    <div className="space-y-3 rounded-md border border-border p-4">
-      <div>
-        <p className="text-sm font-medium">{t("structure:approvalPolicies.title")}</p>
-        <p className="text-xs text-muted-foreground">{t("structure:approvalPolicies.hint")}</p>
-      </div>
+    <Paper withBorder p="md">
+      <Stack gap="sm">
+        <div>
+          <Text size="sm" fw={500}>
+            {t("structure:approvalPolicies.title")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t("structure:approvalPolicies.hint")}
+          </Text>
+        </div>
 
-      {optionsUnavailable && <p className="text-xs text-muted-foreground">{t("structure:approvalPolicies.workflowUnavailable")}</p>}
+        {optionsUnavailable && (
+          <Text size="xs" c="dimmed">
+            {t("structure:approvalPolicies.workflowUnavailable")}
+          </Text>
+        )}
 
-      {rows.map((row) => {
-        const own = draft[row.requestType] !== undefined ? draft[row.requestType] : (row.approvalPolicyId ?? null);
-        const inheritedFrom = row.inheritedFromOrgUnitId;
-        const inheritedName = inheritedFrom ? (unitNameById.get(inheritedFrom) ?? t("structure:approvalPolicies.unknownUnit")) : null;
-        return (
-          <div key={row.requestType}>
-            <Label htmlFor={`approval-${row.requestType}`}>
-              {t(`structure:approvalPolicies.requestType.${row.requestType}`, { defaultValue: row.requestType })}
-            </Label>
+        {rows.map((row) => {
+          const own = draft[row.requestType] !== undefined ? draft[row.requestType] : (row.approvalPolicyId ?? null);
+          const inheritedFrom = row.inheritedFromOrgUnitId;
+          const inheritedName = inheritedFrom ? (unitNameById.get(inheritedFrom) ?? t("structure:approvalPolicies.unknownUnit")) : null;
+          const data = [
+            { value: INHERIT, label: t("structure:approvalPolicies.inherit") },
+            ...options.map((option) => ({ value: option.id, label: option.name })),
+            ...(own && !options.some((option) => option.id === own)
+              ? [{ value: own, label: t("structure:approvalPolicies.unknownPolicy") }]
+              : []),
+          ];
+          const hint =
+            own === null && inheritedName && row.effectiveApprovalPolicyId
+              ? options.length > 0
+                ? t("structure:approvalPolicies.inheritedFromWithPolicy", {
+                    unit: inheritedName,
+                    policy: optionName(row.effectiveApprovalPolicyId),
+                  })
+                : t("structure:approvalPolicies.inheritedFrom", { unit: inheritedName })
+              : own === null && !row.effectiveApprovalPolicyId
+                ? t("structure:approvalPolicies.defaultFirstManager")
+                : undefined;
+          return (
             <Select
+              key={row.requestType}
+              id={`approval-${row.requestType}`}
+              label={t(`structure:approvalPolicies.requestType.${row.requestType}`, { defaultValue: row.requestType })}
+              description={hint}
+              inputWrapperOrder={["label", "input", "description", "error"]}
+              data={data}
               value={own ?? INHERIT}
-              onValueChange={(value) => setValue(row.requestType, value === INHERIT ? null : value)}
+              allowDeselect={false}
+              placeholder={t("structure:approvalPolicies.inherit")}
+              onChange={(value) => value !== null && setValue(row.requestType, value === INHERIT ? null : value)}
               disabled={disabled || optionsUnavailable || !canManage}
-            >
-              <SelectTrigger id={`approval-${row.requestType}`}>
-                <SelectValue placeholder={t("structure:approvalPolicies.inherit")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={INHERIT}>{t("structure:approvalPolicies.inherit")}</SelectItem>
-                {options.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-                {own && !options.some((option) => option.id === own) && (
-                  <SelectItem value={own}>{t("structure:approvalPolicies.unknownPolicy")}</SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            {own === null && inheritedName && row.effectiveApprovalPolicyId && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                {options.length > 0
-                  ? t("structure:approvalPolicies.inheritedFromWithPolicy", {
-                      unit: inheritedName,
-                      policy: optionName(row.effectiveApprovalPolicyId),
-                    })
-                  : t("structure:approvalPolicies.inheritedFrom", { unit: inheritedName })}
-              </p>
-            )}
-            {own === null && !row.effectiveApprovalPolicyId && (
-              <p className="mt-1 text-xs text-muted-foreground">{t("structure:approvalPolicies.defaultFirstManager")}</p>
-            )}
-          </div>
-        );
-      })}
-    </div>
+            />
+          );
+        })}
+      </Stack>
+    </Paper>
   );
 }

@@ -2,15 +2,22 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Info, Pencil, Plus, ShieldCheck, Trash2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Button,
+  Group,
+  Modal,
+  Paper,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  Tooltip,
+} from "@mantine/core";
 import ConfirmDialog from "@/components/confirm-dialog";
 import SearchPicker, { type PickerOption } from "@/components/structure/search-picker";
 import { structureErrorMessage } from "@/components/structure/errors";
@@ -38,7 +45,13 @@ interface EditorState {
   existing?: UnitAuthorization;
 }
 
-const personLabel = (grant: UnitAuthorization) => grant.userFullName || grant.userEmail || grant.userId;
+/** Label on the left, switch pushed to the right edge (settings-row layout). */
+const SWITCH_STYLES = {
+  body: { justifyContent: "space-between", gap: "var(--mantine-spacing-md)" },
+  labelWrapper: { flex: 1 },
+} as const;
+
+const personLabel =(grant: UnitAuthorization) => grant.userFullName || grant.userEmail || grant.userId;
 
 /** "Birim yetkilendirme": grants a person access to a unit and all of its sub-units. */
 export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthorizationDialogProps) {
@@ -101,109 +114,133 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
 
   return (
     <>
-      <Dialog open onOpenChange={(open) => !open && !saveMutation.isPending && onClose()}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5" /> {t("structure:authorization.title")}
-            </DialogTitle>
-            <DialogDescription>{t("structure:authorization.subtitle", { name: unit.name })}</DialogDescription>
-          </DialogHeader>
+      <Modal
+        opened
+        size="xl"
+        onClose={() => !saveMutation.isPending && onClose()}
+        title={
+          <Group gap="xs" wrap="nowrap">
+            <ShieldCheck size={20} />
+            <Text fw={600}>{t("structure:authorization.title")}</Text>
+          </Group>
+        }
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("structure:authorization.subtitle", { name: unit.name })}
+          </Text>
 
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription className="space-y-1 text-xs">
-              <p>{t("structure:authorization.explainScope")}</p>
-              <p>{t("structure:authorization.explainAbilities")}</p>
-              <p>{t("structure:authorization.explainCustomReports")}</p>
-            </AlertDescription>
+          <Alert variant="light" icon={<Info size={16} />}>
+            <Stack gap={4}>
+              <Text size="xs">{t("structure:authorization.explainScope")}</Text>
+              <Text size="xs">{t("structure:authorization.explainAbilities")}</Text>
+              <Text size="xs">{t("structure:authorization.explainCustomReports")}</Text>
+            </Stack>
           </Alert>
 
           {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
+            <Stack gap="xs">
+              <Skeleton h={32} />
+              <Skeleton h={32} />
+            </Stack>
           ) : isError ? (
-            <p className="text-sm text-destructive">{t("structure:errors.generic")}</p>
+            <Text size="sm" c="red">
+              {t("structure:errors.generic")}
+            </Text>
           ) : grants.length === 0 ? (
-            <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-              {t("structure:authorization.empty")}
-            </p>
+            <Paper withBorder p="md" style={{ borderStyle: "dashed" }}>
+              <Text size="sm" c="dimmed" ta="center">
+                {t("structure:authorization.empty")}
+              </Text>
+            </Paper>
           ) : (
-            <ScrollArea className="max-h-72 rounded-md border [&>[data-radix-scroll-area-viewport]]:max-h-72 [&>[data-radix-scroll-area-viewport]>div]:block!">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("structure:authorization.person")}</TableHead>
-                    <TableHead>{t("structure:authorization.permissions")}</TableHead>
-                    {canManage && <TableHead className="w-24 text-right">{t("common:actions")}</TableHead>}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {grants.map((grant) => (
-                    <TableRow key={grant.id}>
-                      <TableCell>
-                        <div className="font-medium">{personLabel(grant)}</div>
-                        {grant.userEmail && grant.userFullName && (
-                          <div className="text-xs text-muted-foreground">{grant.userEmail}</div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          <Badge variant="outline">{t("structure:authorization.base")}</Badge>
-                          {grant.canViewSalaryAndPayments && (
-                            <Badge variant="secondary">{t("structure:authorization.salaryShort")}</Badge>
-                          )}
-                          {grant.canViewUnitReports && (
-                            <Badge variant="secondary">{t("structure:authorization.reportsShort")}</Badge>
-                          )}
-                        </div>
-                      </TableCell>
+            <Paper withBorder>
+              <ScrollArea.Autosize mah={288}>
+                <Table>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>{t("structure:authorization.person")}</Table.Th>
+                      <Table.Th>{t("structure:authorization.permissions")}</Table.Th>
                       {canManage && (
-                        <TableCell className="text-right">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            title={t("common:edit")}
-                            onClick={() => {
-                              setSubmitted(false);
-                              setEditor({
-                                person: { id: grant.userId, label: personLabel(grant) },
-                                canViewSalaryAndPayments: grant.canViewSalaryAndPayments,
-                                canViewUnitReports: grant.canViewUnitReports,
-                                existing: grant,
-                              });
-                            }}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            title={t("structure:authorization.remove")}
-                            onClick={() => setRemoveTarget(grant)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
+                        <Table.Th w={96} ta="right">
+                          {t("common:actions")}
+                        </Table.Th>
                       )}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </ScrollArea>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {grants.map((grant) => (
+                      <Table.Tr key={grant.id}>
+                        <Table.Td>
+                          <Text size="sm" fw={500}>
+                            {personLabel(grant)}
+                          </Text>
+                          {grant.userEmail && grant.userFullName && (
+                            <Text size="xs" c="dimmed">
+                              {grant.userEmail}
+                            </Text>
+                          )}
+                        </Table.Td>
+                        <Table.Td>
+                          <Group gap={4}>
+                            <Badge variant="outline">{t("structure:authorization.base")}</Badge>
+                            {grant.canViewSalaryAndPayments && (
+                              <Badge variant="light">{t("structure:authorization.salaryShort")}</Badge>
+                            )}
+                            {grant.canViewUnitReports && (
+                              <Badge variant="light">{t("structure:authorization.reportsShort")}</Badge>
+                            )}
+                          </Group>
+                        </Table.Td>
+                        {canManage && (
+                          <Table.Td>
+                            <Group gap={4} justify="flex-end" wrap="nowrap">
+                              <Tooltip label={t("common:edit")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  aria-label={t("common:edit")}
+                                  onClick={() => {
+                                    setSubmitted(false);
+                                    setEditor({
+                                      person: { id: grant.userId, label: personLabel(grant) },
+                                      canViewSalaryAndPayments: grant.canViewSalaryAndPayments,
+                                      canViewUnitReports: grant.canViewUnitReports,
+                                      existing: grant,
+                                    });
+                                  }}
+                                >
+                                  <Pencil size={16} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip label={t("structure:authorization.remove")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  aria-label={t("structure:authorization.remove")}
+                                  onClick={() => setRemoveTarget(grant)}
+                                >
+                                  <Trash2 size={16} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        )}
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </ScrollArea.Autosize>
+            </Paper>
           )}
 
           {canManage && editor && (
-            <div className="space-y-4 rounded-md border bg-muted/30 p-4">
-              <div>
-                <Label htmlFor="auth-person">{t("structure:authorization.person")}</Label>
+            <Paper withBorder p="md" bg="var(--mantine-color-default-hover)">
+              <Stack gap="md">
                 <SearchPicker
                   id="auth-person"
+                  label={t("structure:authorization.person")}
+                  error={submitted && personMissing ? t("common:required") : undefined}
                   queryKey={["identity", "unit-authorization-candidates"]}
                   search={async (q) =>
                     (await searchUnitAuthorizationCandidates(q)).map((c) => ({
@@ -218,70 +255,72 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
                   disabled={!!editor.existing}
                   allowClear={!editor.existing}
                 />
-                {submitted && personMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <Label htmlFor="auth-salary" className="font-normal leading-snug">
-                  {t("structure:authorization.canViewSalary")}
-                </Label>
                 <Switch
                   id="auth-salary"
+                  labelPosition="left"
+                  label={t("structure:authorization.canViewSalary")}
+                  styles={SWITCH_STYLES}
                   checked={editor.canViewSalaryAndPayments}
-                  onCheckedChange={(checked) =>
-                    setEditor((prev) => (prev ? { ...prev, canViewSalaryAndPayments: checked } : prev))
-                  }
+                  onChange={(e) => {
+                    const checked = e.currentTarget.checked;
+                    setEditor((prev) => (prev ? { ...prev, canViewSalaryAndPayments: checked } : prev));
+                  }}
                 />
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <Label htmlFor="auth-reports" className="font-normal leading-snug">
-                  {t("structure:authorization.canViewReports")}
-                </Label>
                 <Switch
                   id="auth-reports"
+                  labelPosition="left"
+                  label={t("structure:authorization.canViewReports")}
+                  styles={SWITCH_STYLES}
                   checked={editor.canViewUnitReports}
-                  onCheckedChange={(checked) => setEditor((prev) => (prev ? { ...prev, canViewUnitReports: checked } : prev))}
+                  onChange={(e) => {
+                    const checked = e.currentTarget.checked;
+                    setEditor((prev) => (prev ? { ...prev, canViewUnitReports: checked } : prev));
+                  }}
                 />
-              </div>
-              {submitted && flagMissing && (
-                <p className="text-xs text-destructive">{t("structure:authorization.flagRequired")}</p>
-              )}
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditor(null)}
-                  disabled={saveMutation.isPending}
-                >
-                  {t("common:cancel")}
-                </Button>
-                <Button type="button" onClick={submit} disabled={saveMutation.isPending}>
-                  {saveMutation.isPending ? t("common:saving") : t("common:save")}
-                </Button>
-              </div>
-            </div>
+                {submitted && flagMissing && (
+                  <Text size="xs" c="red">
+                    {t("structure:authorization.flagRequired")}
+                  </Text>
+                )}
+                <Group justify="flex-end" gap="sm">
+                  <Button
+                    type="button"
+                    variant="default"
+                    onClick={() => setEditor(null)}
+                    disabled={saveMutation.isPending}
+                  >
+                    {t("common:cancel")}
+                  </Button>
+                  <Button type="button" onClick={submit} disabled={saveMutation.isPending}>
+                    {saveMutation.isPending ? t("common:saving") : t("common:save")}
+                  </Button>
+                </Group>
+              </Stack>
+            </Paper>
           )}
 
-          <DialogFooter className="sm:justify-between">
+          <Group justify="space-between">
             {canManage && !editor ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="default"
+                leftSection={<Plus size={16} />}
                 onClick={() => {
                   setSubmitted(false);
                   setEditor({ person: null, canViewSalaryAndPayments: false, canViewUnitReports: true });
                 }}
               >
-                <Plus className="mr-2 h-4 w-4" /> {t("structure:authorization.add")}
+                {t("structure:authorization.add")}
               </Button>
             ) : (
               <span />
             )}
-            <Button type="button" variant="ghost" onClick={onClose}>
+            <Button type="button" variant="subtle" onClick={onClose}>
               {t("common:close")}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </Group>
+        </Stack>
+      </Modal>
 
       <ConfirmDialog
         open={removeTarget !== null}
