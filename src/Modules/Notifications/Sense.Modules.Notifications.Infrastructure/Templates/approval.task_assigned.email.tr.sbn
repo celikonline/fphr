@@ -1,0 +1,17 @@
+{{- subject = "Onayınız bekleniyor: " + request_type_name + " talebi" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+{{~ if requester_name ~}}
+<p><strong>{{ requester_name | html.escape }}</strong> tarafından oluşturulan <strong>{{ request_type_name | html.escape }}</strong> talebi onayınızı bekliyor.</p>
+{{~ else ~}}
+<p>Bir <strong>{{ request_type_name | html.escape }}</strong> talebi onayınızı bekliyor.</p>
+{{~ end ~}}
+{{~ if is_direct_assignee != "true" ~}}
+<p>Talep, üyesi olduğunuz rolün onay kuyruğunda.</p>
+{{~ end ~}}
+{{~ if decision_url ~}}
+{{ button "Onayla veya reddet" decision_url }}
+<p style="font-size:12px;color:#71717a">Bu bağlantı tek kullanımlıktır ve {{ date.to_string decision_expires_at "%d.%m.%Y %H:%M" }} (UTC) tarihine kadar geçerlidir.</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Onay kutusunu aç" action_url }}
+{{~ end ~}}

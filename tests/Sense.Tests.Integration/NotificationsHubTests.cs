@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Notifications;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Notifications;
 using Xunit;
@@ -69,6 +70,17 @@ public sealed class NotificationsHubTests : IDisposable
         Assert.Equal("tenant-12345678123412341234123456789012", groupName);
     }
 
+    [Fact]
+    public async Task OnConnected_JoinsTenantAndUserGroups_FromJwtClaims()
+    {
+        var groups = (MockGroupManager)_hub.Groups;
+
+        await _hub.OnConnectedAsync();
+
+        Assert.Contains(SignalRGroupNames.ForTenant(_hubContext.TenantId), groups.Joined);
+        Assert.Contains(SignalRGroupNames.ForUser(_hubContext.UserId), groups.Joined);
+    }
+
     /// <summary>
     /// Mock implementation of HubCallerClients for testing.
     /// </summary>
@@ -120,9 +132,13 @@ public sealed class NotificationsHubTests : IDisposable
             ConnectionId = Guid.NewGuid().ToString();
             User = new ClaimsPrincipal(
                 new ClaimsIdentity(
-                    new[] { new Claim("tenant", Guid.NewGuid().ToString()) },
+                    new[] { new Claim(ClaimNames.Tenant, TenantId.ToString()), new Claim(ClaimNames.Subject, UserId.ToString()) },
                     "test"));
         }
+
+        public Guid TenantId { get; } = Guid.NewGuid();
+
+        public Guid UserId { get; } = Guid.NewGuid();
 
         public override string ConnectionId { get; }
 
@@ -144,8 +160,11 @@ public sealed class NotificationsHubTests : IDisposable
     /// </summary>
     private sealed class MockGroupManager : IGroupManager
     {
+        public List<string> Joined { get; } = [];
+
         public Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
         {
+            Joined.Add(groupName);
             return Task.CompletedTask;
         }
 

@@ -1,0 +1,3 @@
+{{- subject = request_type_name + " talebiniz onaylandı" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ request_type_name | html.escape }}</strong> talebiniz tüm onay adımlarından geçerek onaylandı.</p>

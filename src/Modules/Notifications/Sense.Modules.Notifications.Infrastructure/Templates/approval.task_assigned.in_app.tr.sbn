@@ -1,0 +1,2 @@
+{{- subject = "Onayınız bekleniyor: " + request_type_name + " talebi" -}}
+{{ if requester_name }}{{ requester_name }} tarafından oluşturuldu.{{ else }}Bir talep onayınızı bekliyor.{{ end }}

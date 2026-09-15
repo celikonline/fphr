@@ -1,0 +1,2 @@
+{{- subject = "Your " + request_type_name + " request was rejected" -}}
+{{ if rejected_at_step }}Rejected at approval step {{ rejected_at_step }}.{{ else }}Your request was rejected.{{ end }}

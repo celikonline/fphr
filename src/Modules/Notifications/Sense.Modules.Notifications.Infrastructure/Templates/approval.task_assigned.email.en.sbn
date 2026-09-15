@@ -1,0 +1,17 @@
+{{- subject = "Approval needed: " + request_type_name + " request" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+{{~ if requester_name ~}}
+<p>A <strong>{{ request_type_name | html.escape }}</strong> request created by <strong>{{ requester_name | html.escape }}</strong> is waiting for your approval.</p>
+{{~ else ~}}
+<p>A <strong>{{ request_type_name | html.escape }}</strong> request is waiting for your approval.</p>
+{{~ end ~}}
+{{~ if is_direct_assignee != "true" ~}}
+<p>The request is in the approval queue of a role you belong to.</p>
+{{~ end ~}}
+{{~ if decision_url ~}}
+{{ button "Approve or reject" decision_url }}
+<p style="font-size:12px;color:#71717a">This link can be used once and is valid until {{ date.to_string decision_expires_at "%Y-%m-%d %H:%M" }} (UTC).</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Open approval inbox" action_url }}
+{{~ end ~}}

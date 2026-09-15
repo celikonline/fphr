@@ -1,0 +1,2 @@
+{{- subject = "Approval needed: " + request_type_name + " request" -}}
+{{ if requester_name }}Created by {{ requester_name }}.{{ else }}A request is waiting for your approval.{{ end }}

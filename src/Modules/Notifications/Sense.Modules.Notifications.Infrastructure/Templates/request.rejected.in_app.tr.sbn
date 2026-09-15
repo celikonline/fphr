@@ -1,0 +1,2 @@
+{{- subject = request_type_name + " talebiniz reddedildi" -}}
+{{ if rejected_at_step }}{{ rejected_at_step }}. onay adımında reddedildi.{{ else }}Talebiniz reddedildi.{{ end }}
