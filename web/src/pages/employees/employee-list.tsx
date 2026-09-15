@@ -212,7 +212,12 @@ function EmployeeGrid() {
       accessorKey: "displayName",
       enableHiding: false,
       header: t("employees:columns.name"),
-      meta: { label: t("employees:columns.name"), cellClassName: "font-medium" },
+      meta: { label: t("employees:columns.name") },
+      cell: ({ row }) => (
+        <Text size="sm" fw={500}>
+          {row.original.displayName}
+        </Text>
+      ),
     },
     {
       id: "orgUnit",

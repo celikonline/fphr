@@ -56,7 +56,7 @@ export default function ImportHistory({ templates }: ImportHistoryProps) {
       enableSorting: false,
       enableHiding: false,
       header: t("dataTransfer:history.template"),
-      meta: { label: t("dataTransfer:history.template"), cellClassName: "font-medium" },
+      meta: { label: t("dataTransfer:history.template") },
       cell: ({ row }) => (
         // A real link keeps the job reachable from the keyboard; the row click covers the mouse.
         <Anchor
