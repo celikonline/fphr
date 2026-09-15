@@ -3,15 +3,8 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Anchor, Badge, Box, Button, Card, Group, Input, Modal, Select, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -68,8 +61,12 @@ function useUnitLookup() {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{children}</dd>
+      <Text component="dt" size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text component="dd" size="sm" mt={2}>
+        {children}
+      </Text>
     </div>
   );
 }
@@ -126,23 +123,25 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
       .join(" / ") || "—";
 
   if (isLoading) {
-    return <Skeleton className="h-64 w-full" />;
+    return <Skeleton h={256} />;
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <CardTitle className="text-lg">{t("employees:career.currentTitle")}</CardTitle>
+    <Stack gap="lg">
+      <Card withBorder padding="lg">
+        <Group justify="space-between" wrap="nowrap" mb="md">
+          <Title order={4}>{t("employees:career.currentTitle")}</Title>
           {editable && (
-            <Button type="button" size="sm" onClick={() => setDialog({ mode: "add" })}>
-              <Plus className="mr-2 h-4 w-4" /> {t("employees:career.addPosition")}
+            <Button type="button" size="sm" leftSection={<Plus size={16} />} onClick={() => setDialog({ mode: "add" })}>
+              {t("employees:career.addPosition")}
             </Button>
           )}
-        </CardHeader>
-        <CardContent>
+        </Group>
+        <div>
           {!current ? (
-            <p className="text-sm text-muted-foreground">{t("employees:career.empty")}</p>
+            <Text size="sm" c="dimmed">
+              {t("employees:career.empty")}
+            </Text>
           ) : (
             <dl className="grid gap-4 sm:grid-cols-2">
               {levels.map((level) => (
@@ -152,9 +151,9 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
               ))}
               <Field label={t("employees:fields.manager")}>
                 {current.managerEmployeeId ? (
-                  <Link className="text-primary hover:underline" to={`/app/employees/${current.managerEmployeeId}`}>
+                  <Anchor component={Link} size="sm" to={`/app/employees/${current.managerEmployeeId}`}>
                     {current.managerDisplayName ?? t("employees:unknownEmployee")}
-                  </Link>
+                  </Anchor>
                 ) : (
                   "—"
                 )}
@@ -166,61 +165,79 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
               <Field label={t("employees:career.changeType")}>{t(`employees:enum.careerChangeType.${current.changeType}`)}</Field>
             </dl>
           )}
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{t("employees:career.historyTitle")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {records.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("employees:career.empty")}</p>
-          ) : (
-            <ol className="relative space-y-4 border-l border-border pl-5">
-              {records.map((record) => {
-                const isLatest = record.id === latest?.id;
-                return (
-                  <li key={record.id} className="relative">
-                    <span className={`absolute -left-[26px] top-1.5 h-2.5 w-2.5 rounded-full ${record.isCurrent ? "bg-primary" : "bg-muted-foreground/40"}`} />
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0 space-y-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-sm font-medium">
-                            {t("employees:career.period", {
-                              from: date(record.validFrom),
-                              to: record.validTo ? date(record.validTo) : t("employees:career.ongoing"),
-                            })}
-                          </span>
-                          <Badge variant="secondary">{t(`employees:enum.careerChangeType.${record.changeType}`)}</Badge>
-                          {record.isCurrent && <Badge>{t("employees:career.current")}</Badge>}
-                        </div>
-                        <p className="text-sm">{placementSummary(record)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t("employees:fields.manager")}: {record.managerDisplayName ?? "—"}
-                          {record.employmentType && ` · ${t(`employees:enum.employmentType.${record.employmentType}`)}`}
-                        </p>
-                        {record.note && <p className="text-xs text-muted-foreground">{record.note}</p>}
-                      </div>
-                      {editable && (
-                        <div className="flex gap-1">
-                          <Button type="button" variant="ghost" size="sm" onClick={() => setDialog({ mode: "edit", record })}>
-                            <Pencil className="mr-2 h-4 w-4" /> {t("common:edit")}
-                          </Button>
-                          {isLatest && records.length > 1 && (
-                            <Button type="button" variant="ghost" size="sm" onClick={() => setDeleting(record)}>
-                              <Trash2 className="mr-2 h-4 w-4" /> {t("common:delete")}
-                            </Button>
-                          )}
-                        </div>
+      <Card withBorder padding="lg">
+        <Title order={4} mb="md">
+          {t("employees:career.historyTitle")}
+        </Title>
+        {records.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            {t("employees:career.empty")}
+          </Text>
+        ) : (
+          <Box component="ol" className="relative space-y-4 pl-5" style={{ borderLeft: "1px solid var(--mantine-color-default-border)" }}>
+            {records.map((record) => {
+              const isLatest = record.id === latest?.id;
+              return (
+                <li key={record.id} className="relative">
+                  <Box
+                    component="span"
+                    className="absolute -left-[26px] top-1.5 h-2.5 w-2.5"
+                    style={{
+                      borderRadius: "50%",
+                      background: record.isCurrent ? "var(--mantine-primary-color-filled)" : "var(--mantine-color-dimmed)",
+                      opacity: record.isCurrent ? 1 : 0.4,
+                    }}
+                  />
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <Stack gap={4} className="min-w-0">
+                      <Group gap="xs" wrap="wrap">
+                        <Text size="sm" fw={500}>
+                          {t("employees:career.period", {
+                            from: date(record.validFrom),
+                            to: record.validTo ? date(record.validTo) : t("employees:career.ongoing"),
+                          })}
+                        </Text>
+                        <Badge variant="light">{t(`employees:enum.careerChangeType.${record.changeType}`)}</Badge>
+                        {record.isCurrent && <Badge variant="filled">{t("employees:career.current")}</Badge>}
+                      </Group>
+                      <Text size="sm">{placementSummary(record)}</Text>
+                      <Text size="xs" c="dimmed">
+                        {t("employees:fields.manager")}: {record.managerDisplayName ?? "—"}
+                        {record.employmentType && ` · ${t(`employees:enum.employmentType.${record.employmentType}`)}`}
+                      </Text>
+                      {record.note && (
+                        <Text size="xs" c="dimmed">
+                          {record.note}
+                        </Text>
                       )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          )}
-        </CardContent>
+                    </Stack>
+                    {editable && (
+                      <Group gap={4}>
+                        <Button
+                          type="button"
+                          variant="subtle"
+                          size="sm"
+                          leftSection={<Pencil size={16} />}
+                          onClick={() => setDialog({ mode: "edit", record })}
+                        >
+                          {t("common:edit")}
+                        </Button>
+                        {isLatest && records.length > 1 && (
+                          <Button type="button" variant="subtle" size="sm" leftSection={<Trash2 size={16} />} onClick={() => setDeleting(record)}>
+                            {t("common:delete")}
+                          </Button>
+                        )}
+                      </Group>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </Box>
+        )}
       </Card>
 
       {dialog && (
@@ -246,7 +263,7 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
         isLoading={deleteMutation.isPending}
         onConfirm={() => deleting && deleteMutation.mutate(deleting)}
       />
-    </div>
+    </Stack>
   );
 }
 
@@ -337,104 +354,109 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("employees:career.editPosition") : t("employees:career.addPosition")}</DialogTitle>
-          <DialogDescription>{t("employees:career.dialogDescription")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          {levels.length === 0 && <p className="text-sm text-muted-foreground">{t("employees:career.noLevels")}</p>}
+    <Modal
+      opened
+      onClose={onClose}
+      title={editing ? t("employees:career.editPosition") : t("employees:career.addPosition")}
+      size="42rem"
+    >
+      <Text size="sm" c="dimmed" mb="md">
+        {t("employees:career.dialogDescription")}
+      </Text>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          {levels.length === 0 && (
+            <Text size="sm" c="dimmed">
+              {t("employees:career.noLevels")}
+            </Text>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             {levels.map((level, index) => {
               const value = selection[level.id] ?? null;
               const options = optionsFor(index);
               const missing = value && !options.some((u) => u.id === value);
               return (
-                <div key={level.id}>
-                  <Label htmlFor={`career-level-${level.id}`}>{level.name}</Label>
-                  <Select value={value ?? NONE} onValueChange={(v) => choose(index, v === NONE ? null : v)} disabled={mutation.isPending}>
-                    <SelectTrigger id={`career-level-${level.id}`}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>{t("employees:career.noUnitSelected")}</SelectItem>
-                      {missing && <SelectItem value={value}>{t("employees:unknownUnit")}</SelectItem>}
-                      {options.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Select
+                  key={level.id}
+                  id={`career-level-${level.id}`}
+                  label={level.name}
+                  data={[
+                    { value: NONE, label: t("employees:career.noUnitSelected") },
+                    ...(missing ? [{ value, label: t("employees:unknownUnit") }] : []),
+                    ...options.map((unit) => ({ value: unit.id, label: unit.name })),
+                  ]}
+                  value={value ?? NONE}
+                  onChange={(v) => choose(index, v === null || v === NONE ? null : v)}
+                  allowDeselect={false}
+                  disabled={mutation.isPending}
+                />
               );
             })}
-            <div>
-              <Label htmlFor="career-manager">{t("employees:fields.manager")}</Label>
-              <EmployeePicker id="career-manager" value={manager} onChange={setManager} excludeId={employee.id} allowClear disabled={mutation.isPending} />
-            </div>
-            <div>
-              <Label htmlFor="career-employmentType">{t("employees:fields.employmentType")}</Label>
-              <Select
-                value={employmentType ?? NONE}
-                onValueChange={(v) => setEmploymentType(v === NONE ? null : (v as EmploymentType))}
-                disabled={mutation.isPending}
-              >
-                <SelectTrigger id="career-employmentType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("employees:enum.notSet")}</SelectItem>
-                  {EMPLOYMENT_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`employees:enum.employmentType.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="career-validFrom">
-                {t("employees:fields.positionStartDate")}
-                <span className="text-destructive"> *</span>
-              </Label>
+            <EmployeePicker
+              id="career-manager"
+              label={t("employees:fields.manager")}
+              value={manager}
+              onChange={setManager}
+              excludeId={employee.id}
+              allowClear
+              disabled={mutation.isPending}
+            />
+            <Select
+              id="career-employmentType"
+              label={t("employees:fields.employmentType")}
+              data={[
+                { value: NONE, label: t("employees:enum.notSet") },
+                ...EMPLOYMENT_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.employmentType.${option}`) })),
+              ]}
+              value={employmentType ?? NONE}
+              onChange={(v) => setEmploymentType(v === null || v === NONE ? null : (v as EmploymentType))}
+              allowDeselect={false}
+              disabled={mutation.isPending}
+            />
+            <Input.Wrapper
+              id="career-validFrom"
+              label={t("employees:fields.positionStartDate")}
+              withAsterisk
+              description={isLatest ? t("employees:career.validFromHint") : t("employees:career.validFromLocked")}
+              inputWrapperOrder={["label", "input", "description"]}
+            >
               <DatePicker id="career-validFrom" value={validFrom} disabled={mutation.isPending || !isLatest} onChange={setValidFrom} />
-              <p className="mt-1 text-xs text-muted-foreground">
-                {isLatest ? t("employees:career.validFromHint") : t("employees:career.validFromLocked")}
-              </p>
-            </div>
-            <div>
-              <Label htmlFor="career-changeType">{t("employees:career.changeType")}</Label>
-              <Select value={changeType} onValueChange={(v) => setChangeType(v as CareerChangeType)} disabled={mutation.isPending}>
-                <SelectTrigger id="career-changeType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CAREER_CHANGE_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`employees:enum.careerChangeType.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            </Input.Wrapper>
+            <Select
+              id="career-changeType"
+              label={t("employees:career.changeType")}
+              data={CAREER_CHANGE_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.careerChangeType.${option}`) }))}
+              value={changeType}
+              onChange={(v) => v !== null && setChangeType(v as CareerChangeType)}
+              allowDeselect={false}
+              disabled={mutation.isPending}
+            />
           </div>
-          <div>
-            <Label htmlFor="career-note">{t("employees:career.note")}</Label>
-            <Textarea id="career-note" value={note} maxLength={500} disabled={mutation.isPending} onChange={(e) => setNote(e.target.value)} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Textarea
+            id="career-note"
+            label={t("employees:career.note")}
+            value={note}
+            maxLength={500}
+            autosize
+            minRows={3}
+            disabled={mutation.isPending}
+            onChange={(e) => setNote(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }

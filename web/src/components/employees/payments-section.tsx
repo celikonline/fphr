@@ -2,18 +2,28 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Landmark, Pencil, Plus, Star, Trash2, Wallet } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  Group,
+  Input,
+  Modal,
+  NumberInput,
+  Select,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Textarea,
+  Title,
+  Tooltip,
+} from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -70,9 +80,49 @@ function amountText(value: number | null | undefined): string {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{children}</dd>
+      <Text component="dt" size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text component="dd" size="sm" mt={2}>
+        {children}
+      </Text>
     </div>
+  );
+}
+
+function SectionHeader({ icon, title, action }: { icon?: ReactNode; title: string; action?: ReactNode }) {
+  return (
+    <Group justify="space-between" wrap="nowrap" mb="md">
+      <Group gap="xs" wrap="nowrap">
+        {icon}
+        <Title order={4}>{title}</Title>
+      </Group>
+      {action}
+    </Group>
+  );
+}
+
+function RowIconButton({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) {
+  return (
+    <Tooltip label={label}>
+      <ActionIcon type="button" variant="subtle" color="gray" aria-label={label} onClick={onClick}>
+        {icon}
+      </ActionIcon>
+    </Tooltip>
+  );
+}
+
+function DialogFooter({ busy, onCancel }: { busy: boolean; onCancel: () => void }) {
+  const { t } = useTranslation(["common"]);
+  return (
+    <Group justify="flex-end" gap="sm">
+      <Button type="button" variant="default" onClick={onCancel} disabled={busy}>
+        {t("common:cancel")}
+      </Button>
+      <Button type="submit" disabled={busy}>
+        {busy ? t("common:saving") : t("common:save")}
+      </Button>
+    </Group>
   );
 }
 
@@ -92,14 +142,18 @@ export function PaymentsSection({ employee }: { employee: EmployeeDetail }) {
   const showBank = isOwnCard || canRead;
 
   if (!showSalary && !showBank) {
-    return <p className="text-sm text-muted-foreground">{t("employees:payments.noAccess")}</p>;
+    return (
+      <Text size="sm" c="dimmed">
+        {t("employees:payments.noAccess")}
+      </Text>
+    );
   }
 
   return (
-    <div className="space-y-6">
+    <Stack gap="lg">
       {showSalary && <SalarySection employee={employee} isOwnCard={isOwnCard} />}
       {showBank && <BankAccountsSection employee={employee} isOwnCard={isOwnCard} />}
-    </div>
+    </Stack>
   );
 }
 
@@ -142,97 +196,103 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
   const today = todayDateOnly();
 
   if (isLoading) {
-    return <Skeleton className="h-48 w-full" />;
+    return <Skeleton h={192} />;
   }
 
   return (
     <>
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-          <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{t("employees:payments.salary.currentTitle")}</CardTitle>
-          </div>
-          {editable && (
-            <Button type="button" size="sm" onClick={() => setDialog({ mode: "add" })}>
-              <Plus className="mr-2 h-4 w-4" /> {t("employees:payments.salary.add")}
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          {!current ? (
-            <p className="text-sm text-muted-foreground">
-              {records.length === 0 ? t("employees:payments.salary.empty") : t("employees:payments.salary.noCurrent")}
-            </p>
-          ) : (
-            <dl className="grid gap-4 sm:grid-cols-3">
-              <Field label={t("employees:payments.salary.amount")}>
-                <span className="text-base font-semibold">{money(current.amount, current.currency)}</span>
-              </Field>
-              <Field label={t("employees:payments.salary.salaryType")}>{t(`employees:enum.salaryType.${current.salaryType}`)}</Field>
-              <Field label={t("employees:payments.salary.payFrequency")}>{t(`employees:enum.payFrequency.${current.payFrequency}`)}</Field>
-              <Field label={t("employees:payments.salary.effectiveFrom")}>{date(current.effectiveFrom)}</Field>
-              <Field label={t("employees:payments.salary.transportAllowance")}>{money(current.transportAllowance, current.currency)}</Field>
-              <Field label={t("employees:payments.salary.mealAllowance")}>{money(current.mealAllowance, current.currency)}</Field>
-            </dl>
-          )}
-        </CardContent>
+      <Card withBorder padding="lg">
+        <SectionHeader
+          icon={<Wallet size={16} style={{ color: "var(--mantine-color-dimmed)" }} />}
+          title={t("employees:payments.salary.currentTitle")}
+          action={
+            editable && (
+              <Button type="button" size="sm" leftSection={<Plus size={16} />} onClick={() => setDialog({ mode: "add" })}>
+                {t("employees:payments.salary.add")}
+              </Button>
+            )
+          }
+        />
+        {!current ? (
+          <Text size="sm" c="dimmed">
+            {records.length === 0 ? t("employees:payments.salary.empty") : t("employees:payments.salary.noCurrent")}
+          </Text>
+        ) : (
+          <dl className="grid gap-4 sm:grid-cols-3">
+            <Field label={t("employees:payments.salary.amount")}>
+              <Text component="span" size="md" fw={600}>
+                {money(current.amount, current.currency)}
+              </Text>
+            </Field>
+            <Field label={t("employees:payments.salary.salaryType")}>{t(`employees:enum.salaryType.${current.salaryType}`)}</Field>
+            <Field label={t("employees:payments.salary.payFrequency")}>{t(`employees:enum.payFrequency.${current.payFrequency}`)}</Field>
+            <Field label={t("employees:payments.salary.effectiveFrom")}>{date(current.effectiveFrom)}</Field>
+            <Field label={t("employees:payments.salary.transportAllowance")}>{money(current.transportAllowance, current.currency)}</Field>
+            <Field label={t("employees:payments.salary.mealAllowance")}>{money(current.mealAllowance, current.currency)}</Field>
+          </dl>
+        )}
       </Card>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{t("employees:payments.salary.historyTitle")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {records.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("employees:payments.salary.empty")}</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("employees:payments.salary.effectiveFrom")}</TableHead>
-                  <TableHead className="text-right">{t("employees:payments.salary.amount")}</TableHead>
-                  <TableHead>{t("employees:payments.salary.salaryType")}</TableHead>
-                  <TableHead>{t("employees:payments.salary.payFrequency")}</TableHead>
-                  <TableHead className="text-right">{t("employees:payments.salary.transportAllowance")}</TableHead>
-                  <TableHead className="text-right">{t("employees:payments.salary.mealAllowance")}</TableHead>
-                  {editable && <TableHead className="w-0" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+      <Card withBorder padding="lg">
+        <SectionHeader title={t("employees:payments.salary.historyTitle")} />
+        {records.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            {t("employees:payments.salary.empty")}
+          </Text>
+        ) : (
+          <Table.ScrollContainer minWidth={640}>
+            <Table verticalSpacing="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>{t("employees:payments.salary.effectiveFrom")}</Table.Th>
+                  <Table.Th ta="right">{t("employees:payments.salary.amount")}</Table.Th>
+                  <Table.Th>{t("employees:payments.salary.salaryType")}</Table.Th>
+                  <Table.Th>{t("employees:payments.salary.payFrequency")}</Table.Th>
+                  <Table.Th ta="right">{t("employees:payments.salary.transportAllowance")}</Table.Th>
+                  <Table.Th ta="right">{t("employees:payments.salary.mealAllowance")}</Table.Th>
+                  {editable && <Table.Th w={0} />}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
                 {records.map((record) => (
-                  <TableRow key={record.id}>
-                    <TableCell className="whitespace-nowrap">
-                      <div className="flex flex-wrap items-center gap-2">
+                  <Table.Tr key={record.id}>
+                    <Table.Td className="whitespace-nowrap">
+                      <Group gap="xs" wrap="wrap">
                         {date(record.effectiveFrom)}
-                        {record.isCurrent && <Badge>{t("employees:payments.salary.current")}</Badge>}
-                        {record.effectiveFrom > today && <Badge variant="secondary">{t("employees:payments.salary.upcoming")}</Badge>}
-                      </div>
-                      {record.note && <p className="mt-1 text-xs text-muted-foreground">{record.note}</p>}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-right font-medium">{money(record.amount, record.currency)}</TableCell>
-                    <TableCell>{t(`employees:enum.salaryType.${record.salaryType}`)}</TableCell>
-                    <TableCell>{t(`employees:enum.payFrequency.${record.payFrequency}`)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right">{money(record.transportAllowance, record.currency)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right">{money(record.mealAllowance, record.currency)}</TableCell>
+                        {record.isCurrent && <Badge variant="filled">{t("employees:payments.salary.current")}</Badge>}
+                        {record.effectiveFrom > today && <Badge variant="light">{t("employees:payments.salary.upcoming")}</Badge>}
+                      </Group>
+                      {record.note && (
+                        <Text size="xs" c="dimmed" mt={4}>
+                          {record.note}
+                        </Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td ta="right" fw={500} className="whitespace-nowrap">
+                      {money(record.amount, record.currency)}
+                    </Table.Td>
+                    <Table.Td>{t(`employees:enum.salaryType.${record.salaryType}`)}</Table.Td>
+                    <Table.Td>{t(`employees:enum.payFrequency.${record.payFrequency}`)}</Table.Td>
+                    <Table.Td ta="right" className="whitespace-nowrap">
+                      {money(record.transportAllowance, record.currency)}
+                    </Table.Td>
+                    <Table.Td ta="right" className="whitespace-nowrap">
+                      {money(record.mealAllowance, record.currency)}
+                    </Table.Td>
                     {editable && (
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button type="button" variant="ghost" size="icon" title={t("common:edit")} onClick={() => setDialog({ mode: "edit", record })}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button type="button" variant="ghost" size="icon" title={t("common:delete")} onClick={() => setDeleting(record)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      <Table.Td>
+                        <Group gap={4} justify="flex-end" wrap="nowrap">
+                          <RowIconButton label={t("common:edit")} icon={<Pencil size={16} />} onClick={() => setDialog({ mode: "edit", record })} />
+                          <RowIconButton label={t("common:delete")} icon={<Trash2 size={16} />} onClick={() => setDeleting(record)} />
+                        </Group>
+                      </Table.Td>
                     )}
-                  </TableRow>
+                  </Table.Tr>
                 ))}
-              </TableBody>
+              </Table.Tbody>
             </Table>
-          )}
-        </CardContent>
+          </Table.ScrollContainer>
+        )}
       </Card>
 
       {dialog && (
@@ -328,127 +388,101 @@ function SalaryRecordDialog({ employeeId, records, editing, onClose, onSaved }: 
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("employees:payments.salary.edit") : t("employees:payments.salary.add")}</DialogTitle>
-          <DialogDescription>{t("employees:payments.salary.dialogDescription")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+    <Modal opened onClose={onClose} title={editing ? t("employees:payments.salary.edit") : t("employees:payments.salary.add")} size="42rem">
+      <Text size="sm" c="dimmed" mb="md">
+        {t("employees:payments.salary.dialogDescription")}
+      </Text>
+      <form onSubmit={submit}>
+        <Stack gap="md">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="salary-effectiveFrom">
-                {t("employees:payments.salary.effectiveFrom")}
-                <span className="text-destructive"> *</span>
-              </Label>
+            <Input.Wrapper id="salary-effectiveFrom" label={t("employees:payments.salary.effectiveFrom")} withAsterisk>
               <DatePicker id="salary-effectiveFrom" value={effectiveFrom} disabled={busy} onChange={setEffectiveFrom} />
-            </div>
-            <div>
-              <Label htmlFor="salary-amount">
-                {t("employees:payments.salary.amount")}
-                <span className="text-destructive"> *</span>
-              </Label>
-              <Input
-                id="salary-amount"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={amount}
-                disabled={busy}
-                onChange={(e) => setAmount(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="salary-currency">{t("employees:payments.salary.currency")}</Label>
-              <Select value={currency} onValueChange={setCurrency} disabled={busy}>
-                <SelectTrigger id="salary-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencyOptions(currency).map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="salary-type">{t("employees:payments.salary.salaryType")}</Label>
-              <Select value={salaryType} onValueChange={(v) => setSalaryType(v as SalaryType)} disabled={busy}>
-                <SelectTrigger id="salary-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SALARY_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`employees:enum.salaryType.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="salary-payFrequency">{t("employees:payments.salary.payFrequency")}</Label>
-              <Select value={payFrequency} onValueChange={(v) => setPayFrequency(v as PayFrequency)} disabled={busy}>
-                <SelectTrigger id="salary-payFrequency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAY_FREQUENCY_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`employees:enum.payFrequency.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            </Input.Wrapper>
+            <NumberInput
+              id="salary-amount"
+              label={t("employees:payments.salary.amount")}
+              withAsterisk
+              inputMode="decimal"
+              min={0}
+              step={0.01}
+              hideControls
+              value={amount}
+              disabled={busy}
+              onChange={(v) => setAmount(String(v))}
+            />
+            <Select
+              id="salary-currency"
+              label={t("employees:payments.salary.currency")}
+              data={currencyOptions(currency)}
+              value={currency}
+              onChange={(v) => v !== null && setCurrency(v)}
+              allowDeselect={false}
+              disabled={busy}
+            />
+            <Select
+              id="salary-type"
+              label={t("employees:payments.salary.salaryType")}
+              data={SALARY_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.salaryType.${option}`) }))}
+              value={salaryType}
+              onChange={(v) => v !== null && setSalaryType(v as SalaryType)}
+              allowDeselect={false}
+              disabled={busy}
+            />
+            <Select
+              id="salary-payFrequency"
+              label={t("employees:payments.salary.payFrequency")}
+              data={PAY_FREQUENCY_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.payFrequency.${option}`) }))}
+              value={payFrequency}
+              onChange={(v) => v !== null && setPayFrequency(v as PayFrequency)}
+              allowDeselect={false}
+              disabled={busy}
+            />
             <div />
-            <div>
-              <Label htmlFor="salary-transport">{t("employees:payments.salary.transportAllowance")}</Label>
-              <Input
-                id="salary-transport"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={transport}
-                disabled={busy}
-                onChange={(e) => setTransport(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="salary-meal">{t("employees:payments.salary.mealAllowance")}</Label>
-              <Input
-                id="salary-meal"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={meal}
-                disabled={busy}
-                onChange={(e) => setMeal(e.target.value)}
-              />
-            </div>
+            <NumberInput
+              id="salary-transport"
+              label={t("employees:payments.salary.transportAllowance")}
+              inputMode="decimal"
+              min={0}
+              step={0.01}
+              hideControls
+              value={transport}
+              disabled={busy}
+              onChange={(v) => setTransport(String(v))}
+            />
+            <NumberInput
+              id="salary-meal"
+              label={t("employees:payments.salary.mealAllowance")}
+              inputMode="decimal"
+              min={0}
+              step={0.01}
+              hideControls
+              value={meal}
+              disabled={busy}
+              onChange={(v) => setMeal(String(v))}
+            />
           </div>
-          <p className="text-xs text-muted-foreground">{t("employees:payments.salary.integrityHint")}</p>
-          <div>
-            <Label htmlFor="salary-note">{t("employees:payments.salary.note")}</Label>
-            <Textarea id="salary-note" value={note} maxLength={500} disabled={busy} onChange={(e) => setNote(e.target.value)} />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-              {t("common:cancel")}
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {busy ? t("common:saving") : t("common:save")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          <Text size="xs" c="dimmed">
+            {t("employees:payments.salary.integrityHint")}
+          </Text>
+          <Textarea
+            id="salary-note"
+            label={t("employees:payments.salary.note")}
+            value={note}
+            maxLength={500}
+            autosize
+            minRows={3}
+            disabled={busy}
+            onChange={(e) => setNote(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red">
+              {error}
+            </Text>
+          )}
+          <DialogFooter busy={busy} onCancel={onClose} />
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -493,65 +527,71 @@ function BankAccountsSection({ employee, isOwnCard }: { employee: EmployeeDetail
   });
 
   if (isLoading) {
-    return <Skeleton className="h-32 w-full" />;
+    return <Skeleton h={128} />;
   }
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <div className="flex items-center gap-2">
-          <Landmark className="h-4 w-4 text-muted-foreground" />
-          <CardTitle className="text-lg">{t("employees:payments.bank.title")}</CardTitle>
-        </div>
-        {editable && (
-          <Button type="button" size="sm" onClick={() => setDialog({ mode: "add" })}>
-            <Plus className="mr-2 h-4 w-4" /> {t("employees:payments.bank.add")}
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {accounts.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("employees:payments.bank.empty")}</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {accounts.map((account) => (
-              <li key={account.id} className="flex flex-wrap items-start justify-between gap-2 py-3 first:pt-0 last:pb-0">
-                <div className="min-w-0 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-mono text-sm">{account.iban}</span>
-                    {account.isPrimary && <Badge>{t("employees:payments.bank.primary")}</Badge>}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
+    <Card withBorder padding="lg">
+      <SectionHeader
+        icon={<Landmark size={16} style={{ color: "var(--mantine-color-dimmed)" }} />}
+        title={t("employees:payments.bank.title")}
+        action={
+          editable && (
+            <Button type="button" size="sm" leftSection={<Plus size={16} />} onClick={() => setDialog({ mode: "add" })}>
+              {t("employees:payments.bank.add")}
+            </Button>
+          )
+        }
+      />
+      {accounts.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("employees:payments.bank.empty")}
+        </Text>
+      ) : (
+        <ul>
+          {accounts.map((account, index) => (
+            <li key={account.id}>
+              {index > 0 && <Divider my="sm" />}
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <Stack gap={4} className="min-w-0">
+                  <Group gap="xs" wrap="wrap">
+                    <Text size="sm" ff="monospace">
+                      {account.iban}
+                    </Text>
+                    {account.isPrimary && <Badge variant="filled">{t("employees:payments.bank.primary")}</Badge>}
+                  </Group>
+                  <Text size="xs" c="dimmed">
                     {[t(`employees:enum.bankAccountType.${account.accountType}`), account.bankName, account.currency].filter(Boolean).join(" · ")}
-                  </p>
-                  {account.note && <p className="text-xs text-muted-foreground">{account.note}</p>}
-                </div>
+                  </Text>
+                  {account.note && (
+                    <Text size="xs" c="dimmed">
+                      {account.note}
+                    </Text>
+                  )}
+                </Stack>
                 {editable && (
-                  <div className="flex gap-1">
+                  <Group gap={4} wrap="nowrap">
                     {!account.isPrimary && (
                       <Button
                         type="button"
-                        variant="ghost"
+                        variant="subtle"
                         size="sm"
+                        leftSection={<Star size={16} />}
                         disabled={primaryMutation.isPending}
                         onClick={() => primaryMutation.mutate(account)}
                       >
-                        <Star className="mr-2 h-4 w-4" /> {t("employees:payments.bank.makePrimary")}
+                        {t("employees:payments.bank.makePrimary")}
                       </Button>
                     )}
-                    <Button type="button" variant="ghost" size="icon" title={t("common:edit")} onClick={() => setDialog({ mode: "edit", account })}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button type="button" variant="ghost" size="icon" title={t("common:delete")} onClick={() => setDeleting(account)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                    <RowIconButton label={t("common:edit")} icon={<Pencil size={16} />} onClick={() => setDialog({ mode: "edit", account })} />
+                    <RowIconButton label={t("common:delete")} icon={<Trash2 size={16} />} onClick={() => setDeleting(account)} />
+                  </Group>
                 )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {dialog && (
         <BankAccountDialog
@@ -640,97 +680,96 @@ function BankAccountDialog({ employeeId, hasAccounts, editing, onClose, onSaved 
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>{editing ? t("employees:payments.bank.edit") : t("employees:payments.bank.add")}</DialogTitle>
-          <DialogDescription>{t("employees:payments.bank.dialogDescription")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+    <Modal opened onClose={onClose} title={editing ? t("employees:payments.bank.edit") : t("employees:payments.bank.add")} size="36rem">
+      <Text size="sm" c="dimmed" mb="md">
+        {t("employees:payments.bank.dialogDescription")}
+      </Text>
+      <form onSubmit={submit}>
+        <Stack gap="md">
           <div>
-            <Label htmlFor="bank-iban">
-              {t("employees:payments.bank.iban")}
-              {!maskedOriginal && <span className="text-destructive"> *</span>}
-            </Label>
-            <Input
+            <TextInput
               id="bank-iban"
-              className="font-mono"
+              label={t("employees:payments.bank.iban")}
+              withAsterisk={!maskedOriginal}
+              description={maskedOriginal ? t("employees:payments.bank.ibanMaskedHint") : undefined}
+              inputWrapperOrder={["label", "input", "description", "error"]}
+              error={liveProblem ? t(`employees:payments.bank.validation.${liveProblem}`) : undefined}
+              styles={{ input: { fontFamily: "var(--mantine-font-family-monospace)" } }}
               autoComplete="off"
               spellCheck={false}
               maxLength={42}
               placeholder={maskedOriginal ? editing?.iban : "TR00 0000 0000 0000 0000 0000 00"}
               value={iban}
               disabled={busy}
-              onChange={(e) => setIban(formatIban(e.target.value))}
+              onChange={(e) => setIban(formatIban(e.currentTarget.value))}
             />
-            {maskedOriginal && <p className="mt-1 text-xs text-muted-foreground">{t("employees:payments.bank.ibanMaskedHint")}</p>}
-            {liveProblem && <p className="mt-1 text-xs text-destructive">{t(`employees:payments.bank.validation.${liveProblem}`)}</p>}
             {normalized !== "" && problem === null && (
-              <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-                <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> {t("employees:payments.bank.ibanValid")}
-              </p>
+              <Group gap={4} mt={4} wrap="nowrap">
+                <CheckCircle2 size={14} style={{ color: "var(--mantine-color-green-6)" }} />
+                <Text size="xs" c="dimmed">
+                  {t("employees:payments.bank.ibanValid")}
+                </Text>
+              </Group>
             )}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="bank-accountType">{t("employees:payments.bank.accountType")}</Label>
-              <Select value={accountType} onValueChange={(v) => setAccountType(v as BankAccountType)} disabled={busy}>
-                <SelectTrigger id="bank-accountType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {BANK_ACCOUNT_TYPE_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {t(`employees:enum.bankAccountType.${option}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="bank-currency">{t("employees:payments.bank.currency")}</Label>
-              <Select value={currency ?? NONE} onValueChange={(v) => setCurrency(v === NONE ? null : v)} disabled={busy}>
-                <SelectTrigger id="bank-currency">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("employees:enum.notSet")}</SelectItem>
-                  {currencyOptions(currency).map((code) => (
-                    <SelectItem key={code} value={code}>
-                      {code}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select
+              id="bank-accountType"
+              label={t("employees:payments.bank.accountType")}
+              data={BANK_ACCOUNT_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.bankAccountType.${option}`) }))}
+              value={accountType}
+              onChange={(v) => v !== null && setAccountType(v as BankAccountType)}
+              allowDeselect={false}
+              disabled={busy}
+            />
+            <Select
+              id="bank-currency"
+              label={t("employees:payments.bank.currency")}
+              data={[
+                { value: NONE, label: t("employees:enum.notSet") },
+                ...currencyOptions(currency).map((code) => ({ value: code, label: code })),
+              ]}
+              value={currency ?? NONE}
+              onChange={(v) => setCurrency(v === null || v === NONE ? null : v)}
+              allowDeselect={false}
+              disabled={busy}
+            />
           </div>
-          <div>
-            <Label htmlFor="bank-name">{t("employees:payments.bank.bankName")}</Label>
-            <Input id="bank-name" value={bankName} maxLength={100} disabled={busy} onChange={(e) => setBankName(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="bank-note">{t("employees:payments.bank.note")}</Label>
-            <Textarea id="bank-note" value={note} maxLength={500} disabled={busy} onChange={(e) => setNote(e.target.value)} />
-          </div>
+          <TextInput
+            id="bank-name"
+            label={t("employees:payments.bank.bankName")}
+            value={bankName}
+            maxLength={100}
+            disabled={busy}
+            onChange={(e) => setBankName(e.currentTarget.value)}
+          />
+          <Textarea
+            id="bank-note"
+            label={t("employees:payments.bank.note")}
+            value={note}
+            maxLength={500}
+            autosize
+            minRows={3}
+            disabled={busy}
+            onChange={(e) => setNote(e.currentTarget.value)}
+          />
           {!editing && hasAccounts && (
-            <div className="flex items-center gap-2">
-              <Checkbox id="bank-primary" checked={isPrimary} disabled={busy} onCheckedChange={(checked) => setIsPrimary(checked === true)} />
-              <Label htmlFor="bank-primary" className="font-normal">
-                {t("employees:payments.bank.setAsPrimary")}
-              </Label>
-            </div>
+            <Checkbox
+              id="bank-primary"
+              label={t("employees:payments.bank.setAsPrimary")}
+              checked={isPrimary}
+              disabled={busy}
+              onChange={(e) => setIsPrimary(e.currentTarget.checked)}
+            />
           )}
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-              {t("common:cancel")}
-            </Button>
-            <Button type="submit" disabled={busy}>
-              {busy ? t("common:saving") : t("common:save")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          {error && (
+            <Text size="sm" c="red">
+              {error}
+            </Text>
+          )}
+          <DialogFooter busy={busy} onCancel={onClose} />
+        </Stack>
+      </form>
+    </Modal>
   );
 }
