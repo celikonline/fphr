@@ -1,0 +1,107 @@
+/* Leave calendar surfaces. States come from data attributes: data-weekend, data-today, data-status="approved|pending". */
+
+.root {
+  --calendar-weekend-bg: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  --calendar-today-bg: var(--mantine-primary-color-light);
+  /* green-8 keeps white 11px labels readable in both schemes. */
+  --calendar-approved-bg: var(--mantine-color-green-8);
+  --calendar-pending-border: var(--mantine-color-yellow-outline);
+  /* Pending entries: striped, lighter than the solid approved bars. */
+  --calendar-pending-stripes: repeating-linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--mantine-color-yellow-6) 55%, transparent) 0 5px,
+    color-mix(in srgb, var(--mantine-color-yellow-6) 20%, transparent) 5px 10px
+  );
+}
+
+/* md+: employees × days grid */
+
+.headerRow,
+.row {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.nameHeader {
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+}
+
+.nameCell {
+  background-color: var(--mantine-color-body);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+}
+
+.dayHeader {
+  border-inline-start: 1px solid var(--mantine-color-default-border);
+  line-height: 1.25;
+
+  &[data-weekend] {
+    background-color: var(--calendar-weekend-bg);
+    color: var(--mantine-color-dimmed);
+  }
+
+  &[data-today] {
+    background-color: var(--calendar-today-bg);
+    color: var(--mantine-primary-color-filled);
+    font-weight: 600;
+  }
+}
+
+.dayCell {
+  border-inline-start: 1px solid var(--mantine-color-default-border);
+
+  &[data-weekend] {
+    background-color: var(--calendar-weekend-bg);
+  }
+
+  &[data-today] {
+    background-color: color-mix(in srgb, var(--calendar-today-bg) 60%, transparent);
+  }
+}
+
+.bar {
+  border-radius: var(--mantine-radius-sm);
+  font-size: rem(11px);
+  font-weight: 500;
+
+  &:focus-visible {
+    outline: 2px solid var(--mantine-primary-color-filled);
+    outline-offset: 1px;
+  }
+}
+
+/* Shared status colours for grid bars, legend and mobile list swatches. */
+
+.swatch {
+  border-radius: rem(2px);
+}
+
+.bar,
+.swatch {
+  &[data-status="approved"] {
+    background-color: var(--calendar-approved-bg);
+    color: var(--mantine-color-white);
+  }
+
+  &[data-status="pending"] {
+    border: 1px solid var(--calendar-pending-border);
+    background-image: var(--calendar-pending-stripes);
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-yellow-0));
+  }
+}
+
+/* Narrow screens: list by day */
+
+.dayList > * + * {
+  border-top: 1px solid var(--mantine-color-default-border);
+}
+
+.dayGroup[data-weekend] {
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}

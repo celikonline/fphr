@@ -256,8 +256,12 @@ function ConversionsCard({
       id: "convertedAt",
       accessorKey: "convertedAt",
       header: t("leave:overtime.convertedAt"),
-      meta: { label: t("leave:overtime.convertedAt"), cellClassName: "whitespace-nowrap text-xs text-muted-foreground" },
-      cell: ({ row }) => formatDateTime(row.original.convertedAt, i18n.language),
+      meta: { label: t("leave:overtime.convertedAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (
+        <Text span size="xs" c="dimmed">
+          {formatDateTime(row.original.convertedAt, i18n.language)}
+        </Text>
+      ),
     },
     {
       id: "workDate",
@@ -505,8 +509,12 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
       accessorKey: "givenAt",
       enableHiding: false,
       header: t("leave:overtime.givenAt"),
-      meta: { label: t("leave:overtime.givenAt"), cellClassName: "whitespace-nowrap font-medium" },
-      cell: ({ row }) => date(row.original.givenAt),
+      meta: { label: t("leave:overtime.givenAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (
+        <Text span inherit fw={500}>
+          {date(row.original.givenAt)}
+        </Text>
+      ),
     },
     {
       id: "source",
