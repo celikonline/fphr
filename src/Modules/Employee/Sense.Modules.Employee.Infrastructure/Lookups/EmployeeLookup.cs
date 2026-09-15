@@ -37,4 +37,15 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
             .Where(e => e.TenantId == tenantId && e.Id == employeeId)
             .Select(e => e.ManagerEmployeeId)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<Guid?> FindActiveByNationalIdAsync(Guid tenantId, string nationalId, CancellationToken cancellationToken = default)
+    {
+        var matches = await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.NationalId == nationalId && e.Status != EmployeeStatus.Terminated)
+            .Select(e => e.Id)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        return matches.Count == 1 ? matches[0] : null;
+    }
 }

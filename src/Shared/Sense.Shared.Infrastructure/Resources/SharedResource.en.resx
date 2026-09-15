@@ -617,4 +617,22 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
   <data name="attendance.day.not_found" xml:space="preserve"><value>Attendance day not found.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
+  <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
+  <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>
+  <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
+  <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Timesheet</value></data>
+  <data name="import.template.attendance.pdks.description" xml:space="preserve"><value>Bulk-import employees' check-in/check-out times from turnstile/PDKS data.</value></data>
+  <data name="import.template.attendance.pdks.instruction.match" xml:space="preserve"><value>Employees are matched by national id; a row is invalid if no matching active employee is found.</value></data>
+  <data name="import.template.attendance.pdks.instruction.overwrite" xml:space="preserve"><value>Re-uploading a row for the same employee and day overwrites the previous record.</value></data>
+  <data name="import.template.attendance.pdks.instruction.time_format" xml:space="preserve"><value>Enter check-in/check-out times as HH:mm (e.g. 09:00).</value></data>
+  <data name="import.template.attendance.pdks.sample.valid" xml:space="preserve"><value>Valid: a normal working day.</value></data>
+  <data name="import.template.attendance.pdks.sample.invalid_order" xml:space="preserve"><value>Invalid: check-out time is before check-in time.</value></data>
+  <data name="import.column.attendance.employeeNationalId" xml:space="preserve"><value>National id</value></data>
+  <data name="import.column.attendance.employeeNationalId.description" xml:space="preserve"><value>The employee's national id; used to match the row to an employee.</value></data>
+  <data name="import.column.attendance.date" xml:space="preserve"><value>Date</value></data>
+  <data name="import.column.attendance.date.description" xml:space="preserve"><value>The attendance day (DD.MM.YYYY).</value></data>
+  <data name="import.column.attendance.checkIn" xml:space="preserve"><value>Check-in time</value></data>
+  <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
+  <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
+  <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
 </root>

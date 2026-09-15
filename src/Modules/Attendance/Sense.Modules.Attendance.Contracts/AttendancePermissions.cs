@@ -36,6 +36,12 @@ public static class AttendancePermissions
     public static readonly Permission MyTimesheet = new(
         "attendance.my.timesheet", Module, "View My Timesheet", Group, "View the caller's own recorded attendance days");
 
+    public const string TimesheetImportKey = "attendance.timesheet.import";
+
+    /// <summary>PDKS Excel import (package A2b); checked on top of datatransfer.import.run by the DataTransfer module's ImportTemplateCatalog.</summary>
+    public static readonly Permission TimesheetImport = new(
+        TimesheetImportKey, Module, "Import Timesheets (PDKS)", Group, "Import check-in/check-out times from a PDKS Excel file");
+
     public static IEnumerable<Permission> All =>
-        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet];
+        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport];
 }

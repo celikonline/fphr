@@ -626,4 +626,22 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
   <data name="attendance.day.not_found" xml:space="preserve"><value>Puantaj kaydı bulunamadı.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
+  <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
+  <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
+  <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
+  <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Puantaj</value></data>
+  <data name="import.template.attendance.pdks.description" xml:space="preserve"><value>Turnike/PDKS verilerinden çalışanların giriş-çıkış saatlerini toplu olarak içe aktarın.</value></data>
+  <data name="import.template.attendance.pdks.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
+  <data name="import.template.attendance.pdks.instruction.overwrite" xml:space="preserve"><value>Aynı çalışan ve aynı gün için tekrar yüklenen satır, önceki kaydın üzerine yazar.</value></data>
+  <data name="import.template.attendance.pdks.instruction.time_format" xml:space="preserve"><value>Giriş ve çıkış saatlerini SS:dd biçiminde yazın (örn. 09:00).</value></data>
+  <data name="import.template.attendance.pdks.sample.valid" xml:space="preserve"><value>Doğru: normal bir çalışma günü.</value></data>
+  <data name="import.template.attendance.pdks.sample.invalid_order" xml:space="preserve"><value>Hatalı: çıkış saati giriş saatinden önce.</value></data>
+  <data name="import.column.attendance.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.attendance.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.attendance.date" xml:space="preserve"><value>Tarih</value></data>
+  <data name="import.column.attendance.date.description" xml:space="preserve"><value>Puantaj günü (GG.AA.YYYY).</value></data>
+  <data name="import.column.attendance.checkIn" xml:space="preserve"><value>Giriş saati</value></data>
+  <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
+  <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
 </root>

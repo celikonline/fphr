@@ -2,10 +2,12 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Application;
+using Sense.Modules.Attendance.Application.Import;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -36,5 +38,9 @@ public sealed class AttendanceModule : IModule
             typeof(IWorkScheduleRepository).Assembly,
             typeof(AttendancePermissions).Assembly);
         services.AddAttendanceServices(configuration);
+
+        // PDKS Excel import template "attendance.pdks" (collected by the DataTransfer module)
+        services.AddScoped<IImportTemplate, AttendanceImportTemplate>();
+        services.AddScoped<IImportRowHandler, AttendanceImportRowHandler>();
     }
 }
