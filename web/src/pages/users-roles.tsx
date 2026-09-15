@@ -3,29 +3,29 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Search, ShieldCheck, ShieldOff, Users as UsersIcon, MoreHorizontal } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  Group,
+  Menu,
+  Modal,
+  NavLink,
+  Paper,
+  ScrollArea,
+  Select,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  TextInput,
+  Title,
+  type BadgeProps,
+} from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
@@ -60,12 +60,14 @@ const SORT_COMPARERS: Record<string, UserComparer> = {
   lastLogin: (a, b) => (a.lastLoginAt ?? "").localeCompare(b.lastLoginAt ?? ""),
 };
 
-const STATUS_BADGE: Record<UserStatus, "success" | "secondary" | "destructive" | "outline"> = {
-  active: "success",
-  invited: "secondary",
-  locked: "destructive",
-  disabled: "outline",
+const STATUS_BADGE: Record<UserStatus, Pick<BadgeProps, "variant" | "color">> = {
+  active: { variant: "filled", color: "green" },
+  invited: { variant: "light", color: "gray" },
+  locked: { variant: "filled", color: "red" },
+  disabled: { variant: "outline", color: "gray" },
 };
+
+const USER_STATUSES: UserStatus[] = ["invited", "active", "locked", "disabled"];
 
 export default function UsersRolesPage() {
   const { t, i18n } = useTranslation(["users", "common"]);
@@ -74,23 +76,23 @@ export default function UsersRolesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
+        <Title order={1} size="h2" className="flex items-center gap-2">
           <UsersIcon className="h-6 w-6" /> {t("users:title")}
-        </h1>
-        <p className="text-muted-foreground">{t("users:subtitle")}</p>
+        </Title>
+        <Text c="dimmed">{t("users:subtitle")}</Text>
       </div>
 
-      <Tabs defaultValue="users">
-        <TabsList>
-          <TabsTrigger value="users">{t("users:tabUsers")}</TabsTrigger>
-          <TabsTrigger value="roles">{t("users:tabRoles")}</TabsTrigger>
-        </TabsList>
-        <TabsContent value="users">
+      <Tabs defaultValue="users" keepMounted={false}>
+        <Tabs.List>
+          <Tabs.Tab value="users">{t("users:tabUsers")}</Tabs.Tab>
+          <Tabs.Tab value="roles">{t("users:tabRoles")}</Tabs.Tab>
+        </Tabs.List>
+        <Tabs.Panel value="users">
           <UsersTab canManage={canManage} t={t} locale={i18n.language} />
-        </TabsContent>
-        <TabsContent value="roles">
+        </Tabs.Panel>
+        <Tabs.Panel value="roles">
           <RolesTab t={t} />
-        </TabsContent>
+        </Tabs.Panel>
       </Tabs>
     </div>
   );
@@ -133,6 +135,8 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
   });
 
   const { data: roles } = useQuery({ queryKey: ["roles"], queryFn: listRoles });
+
+  const roleOptions = useMemo(() => (roles ?? []).map((r) => ({ value: r.id, label: r.name ?? r.code })), [roles]);
 
   const filtered = useMemo(() => {
     const items = allUsers?.items ?? [];
@@ -259,8 +263,9 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
             meta: { headerClassName: "w-10" },
             header: () => (
               <Checkbox
-                checked={allOnPageSelected ? true : selectedOnPage > 0 ? "indeterminate" : false}
-                onCheckedChange={(v) => toggleSelectAllOnPage(v === true)}
+                checked={allOnPageSelected}
+                indeterminate={!allOnPageSelected && selectedOnPage > 0}
+                onChange={(e) => toggleSelectAllOnPage(e.currentTarget.checked)}
                 aria-label={t("common:actions")}
               />
             ),
@@ -268,7 +273,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
               <div onClick={(e) => e.stopPropagation()}>
                 <Checkbox
                   checked={selected.has(row.original.id)}
-                  onCheckedChange={(v) => toggleSelect(row.original.id, v === true)}
+                  onChange={(e) => toggleSelect(row.original.id, e.currentTarget.checked)}
                   aria-label={`${row.original.firstName} ${row.original.lastName}`}
                 />
               </div>
@@ -281,15 +286,23 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       accessorFn: (user) => `${user.lastName} ${user.firstName}`,
       enableHiding: false,
       header: t("users:name"),
-      meta: { label: t("users:name"), cellClassName: "font-medium" },
-      cell: ({ row }) => `${row.original.firstName} ${row.original.lastName}`,
+      meta: { label: t("users:name") },
+      cell: ({ row }) => (
+        <Text size="sm" fw={500}>
+          {row.original.firstName} {row.original.lastName}
+        </Text>
+      ),
     },
     {
       id: "email",
       accessorKey: "email",
       header: t("users:email"),
-      meta: { label: t("users:email"), cellClassName: "text-muted-foreground" },
-      cell: ({ row }) => row.original.email,
+      meta: { label: t("users:email") },
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {row.original.email}
+        </Text>
+      ),
     },
     {
       id: "status",
@@ -297,7 +310,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       header: t("users:statusFilter"),
       meta: { label: t("users:statusFilter") },
       cell: ({ row }) => (
-        <Badge variant={STATUS_BADGE[row.original.status]}>{t(`users:status.${row.original.status}`)}</Badge>
+        <Badge {...STATUS_BADGE[row.original.status]}>{t(`users:status.${row.original.status}`)}</Badge>
       ),
     },
     {
@@ -308,7 +321,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       cell: ({ row }) => {
         const accessType = deriveAccessType(row.original.roles);
         return (
-          <Badge variant="outline">
+          <Badge variant="outline" color="gray">
             {accessType ? t(`users:accessType.${accessType.toLowerCase()}`) : t("users:accessType.none")}
           </Badge>
         );
@@ -320,14 +333,18 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       header: t("users:roles"),
       meta: { label: t("users:roles") },
       cell: ({ row }) => (
-        <div className="flex flex-wrap gap-1">
+        <Group gap={4}>
           {row.original.roles.slice(0, 2).map((r) => (
-            <Badge key={r.id} variant="outline">
+            <Badge key={r.id} variant="outline" color="gray">
               {r.name ?? r.code}
             </Badge>
           ))}
-          {row.original.roles.length > 2 && <Badge variant="outline">+{row.original.roles.length - 2}</Badge>}
-        </div>
+          {row.original.roles.length > 2 && (
+            <Badge variant="outline" color="gray">
+              +{row.original.roles.length - 2}
+            </Badge>
+          )}
+        </Group>
       ),
     },
     {
@@ -337,17 +354,25 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       meta: { label: t("users:mfa") },
       cell: ({ row }) =>
         row.original.mfaEnabled ? (
-          <ShieldCheck className="h-4 w-4 text-emerald-600" aria-label={t("users:mfa")} />
+          <Text component="span" c="green" className="inline-flex">
+            <ShieldCheck className="h-4 w-4" aria-label={t("users:mfa")} />
+          </Text>
         ) : (
-          <ShieldOff className="h-4 w-4 text-muted-foreground" aria-label={t("users:mfa")} />
+          <Text component="span" c="dimmed" className="inline-flex">
+            <ShieldOff className="h-4 w-4" aria-label={t("users:mfa")} />
+          </Text>
         ),
     },
     {
       id: "lastLogin",
       accessorFn: (user) => user.lastLoginAt ?? "",
       header: t("users:lastLogin"),
-      meta: { label: t("users:lastLogin"), cellClassName: "text-muted-foreground" },
-      cell: ({ row }) => formatLastLogin(row.original.lastLoginAt),
+      meta: { label: t("users:lastLogin") },
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {formatLastLogin(row.original.lastLoginAt)}
+        </Text>
+      ),
     },
     ...(canManage
       ? [
@@ -361,24 +386,22 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
               const user = row.original;
               return (
                 <div onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon">
+                  <Menu position="bottom-end" withinPortal>
+                    <Menu.Target>
+                      <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("common:actions")}>
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => setAccessTypeDialogUser(user)}>
-                        {t("users:editAccessType")}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setRolesDialogUser(user)}>{t("users:editRoles")}</DropdownMenuItem>
-                      <DropdownMenuItem
+                      </ActionIcon>
+                    </Menu.Target>
+                    <Menu.Dropdown>
+                      <Menu.Item onClick={() => setAccessTypeDialogUser(user)}>{t("users:editAccessType")}</Menu.Item>
+                      <Menu.Item onClick={() => setRolesDialogUser(user)}>{t("users:editRoles")}</Menu.Item>
+                      <Menu.Item
                         onClick={() => statusMutation.mutate({ id: user.id, enabled: user.status === "disabled" })}
                       >
                         {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 </div>
               );
             },
@@ -398,88 +421,78 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
 
   return (
     <div className="space-y-4 pt-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder={t("users:searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>{t("users:allStatuses")}</SelectItem>
-            {(["invited", "active", "locked", "disabled"] as UserStatus[]).map((s) => (
-              <SelectItem key={s} value={s}>
-                {t(`users:status.${s}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_VALUE}>{t("users:allRoles")}</SelectItem>
-            {roles?.map((r) => (
-              <SelectItem key={r.id} value={r.id}>
-                {r.name ?? r.code}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <Group gap="sm">
+        <TextInput
+          className="max-w-sm flex-1"
+          leftSection={<Search className="h-4 w-4" />}
+          placeholder={t("users:searchPlaceholder")}
+          aria-label={t("users:searchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
+        <Select
+          className="w-44"
+          aria-label={t("users:statusFilter")}
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value ?? ALL_VALUE)}
+          allowDeselect={false}
+          data={[
+            { value: ALL_VALUE, label: t("users:allStatuses") },
+            ...USER_STATUSES.map((s) => ({ value: s, label: t(`users:status.${s}`) })),
+          ]}
+        />
+        <Select
+          className="w-56"
+          aria-label={t("users:roleFilter")}
+          value={roleFilter}
+          onChange={(value) => setRoleFilter(value ?? ALL_VALUE)}
+          allowDeselect={false}
+          data={[{ value: ALL_VALUE, label: t("users:allRoles") }, ...roleOptions]}
+        />
         <DataTableViewOptions table={table} className="ml-auto" />
-      </div>
+      </Group>
 
       {canManage && selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-muted/40 p-3">
-          <span className="text-sm font-medium">{t("users:selectedCount", { count: selected.size })}</span>
-          <Select value={bulkRoleId} onValueChange={setBulkRoleId}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder={t("users:bulkAssignRole")} />
-            </SelectTrigger>
-            <SelectContent>
-              {roles?.map((r) => (
-                <SelectItem key={r.id} value={r.id}>
-                  {r.name ?? r.code}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            size="sm"
-            disabled={!bulkRoleId || bulkMutation.isPending}
-            onClick={() => bulkMutation.mutate({ users: selectedUsers, roleId: bulkRoleId })}
-          >
-            {t("users:assign")}
-          </Button>
-        </div>
+        <Paper withBorder p="sm" bg="var(--mantine-color-default-hover)">
+          <Group gap="sm">
+            <Text size="sm" fw={500}>
+              {t("users:selectedCount", { count: selected.size })}
+            </Text>
+            <Select
+              className="w-56"
+              aria-label={t("users:bulkAssignRole")}
+              placeholder={t("users:bulkAssignRole")}
+              value={bulkRoleId || null}
+              onChange={(value) => setBulkRoleId(value ?? "")}
+              data={roleOptions}
+            />
+            <Button
+              type="button"
+              size="sm"
+              disabled={!bulkRoleId || bulkMutation.isPending}
+              onClick={() => bulkMutation.mutate({ users: selectedUsers, roleId: bulkRoleId })}
+            >
+              {t("users:assign")}
+            </Button>
+          </Group>
+        </Paper>
       )}
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable
-            table={table}
-            isLoading={isLoading}
-            emptyMessage={t("users:empty")}
-            isRowSelected={(user) => selected.has(user.id)}
+      <Card withBorder padding={0}>
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          emptyMessage={t("users:empty")}
+          isRowSelected={(user) => selected.has(user.id)}
+        />
+        {!isLoading && (
+          <PaginationFooter
+            result={pageResult}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={changePageSize}
           />
-          {!isLoading && (
-            <PaginationFooter
-              result={pageResult}
-              onPageChange={setPage}
-              pageSize={pageSize}
-              onPageSizeChange={changePageSize}
-            />
-          )}
-        </CardContent>
+        )}
       </Card>
 
       {rolesDialogUser && (
@@ -524,34 +537,30 @@ function EditAccessTypeDialog({
   const [selected, setSelected] = useState<AccessType>(deriveAccessType(user.roles) ?? "Employee");
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("users:dialogEditAccessTypeTitle", { name: `${user.firstName} ${user.lastName}` })}</DialogTitle>
-        </DialogHeader>
-        <p className="text-sm text-muted-foreground">{t("users:accessTypeHint")}</p>
-        <Select value={selected} onValueChange={(v) => setSelected(v as AccessType)}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {ACCESS_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>
-                {t(`users:accessType.${type.toLowerCase()}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("users:dialogEditAccessTypeTitle", { name: `${user.firstName} ${user.lastName}` })}
+    >
+      <Stack>
+        <Select
+          label={t("users:accessType")}
+          description={t("users:accessTypeHint")}
+          value={selected}
+          onChange={(value) => value && setSelected(value as AccessType)}
+          allowDeselect={false}
+          data={ACCESS_TYPES.map((type) => ({ value: type, label: t(`users:accessType.${type.toLowerCase()}`) }))}
+        />
+        <Group justify="flex-end">
+          <Button type="button" variant="default" onClick={onClose} disabled={isSaving}>
             {t("common:cancel")}
           </Button>
           <Button type="button" onClick={() => onSave(selected)} disabled={isSaving}>
             {isSaving ? t("common:saving") : t("common:save")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -573,42 +582,42 @@ function EditRolesDialog({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(user.roles.map((r) => r.id)));
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("users:dialogEditRolesTitle", { name: `${user.firstName} ${user.lastName}` })}</DialogTitle>
-        </DialogHeader>
-        <div className="max-h-80 space-y-2 overflow-y-auto">
-          {roles.map((role) => {
-            const checked = selectedIds.has(role.id);
-            return (
-              <label key={role.id} className="flex items-center gap-2 rounded-md p-2 text-sm hover:bg-accent">
-                <Checkbox
-                  checked={checked}
-                  onCheckedChange={(v) => {
-                    setSelectedIds((prev) => {
-                      const next = new Set(prev);
-                      if (v) next.add(role.id);
-                      else next.delete(role.id);
-                      return next;
-                    });
-                  }}
-                />
-                {role.name ?? role.code}
-              </label>
-            );
-          })}
-        </div>
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("users:dialogEditRolesTitle", { name: `${user.firstName} ${user.lastName}` })}
+    >
+      <Stack>
+        <ScrollArea.Autosize mah={320}>
+          <Stack gap="sm" p={4}>
+            {roles.map((role) => (
+              <Checkbox
+                key={role.id}
+                label={role.name ?? role.code}
+                checked={selectedIds.has(role.id)}
+                onChange={(e) => {
+                  const checked = e.currentTarget.checked;
+                  setSelectedIds((prev) => {
+                    const next = new Set(prev);
+                    if (checked) next.add(role.id);
+                    else next.delete(role.id);
+                    return next;
+                  });
+                }}
+              />
+            ))}
+          </Stack>
+        </ScrollArea.Autosize>
+        <Group justify="flex-end">
+          <Button type="button" variant="default" onClick={onClose} disabled={isSaving}>
             {t("common:cancel")}
           </Button>
           <Button type="button" onClick={() => onSave(Array.from(selectedIds))} disabled={isSaving}>
             {isSaving ? t("common:saving") : t("common:save")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -634,72 +643,86 @@ function RolesTab({ t }: { t: TFn }) {
 
   if (isLoading) {
     return (
-      <div className="space-y-2 pt-4">
-        <Skeleton className="h-8 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
+      <Stack gap="xs" pt="md">
+        <Skeleton h={32} />
+        <Skeleton h={256} />
+      </Stack>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-4 pt-4 md:grid-cols-3">
-      <Card className="md:col-span-1">
-        <CardContent className="max-h-[32rem] space-y-1 overflow-y-auto p-2">
-          {roles?.map((role) => (
-            <button
-              key={role.id}
-              type="button"
-              onClick={() => setSelectedRoleId(role.id)}
-              className={`flex w-full flex-col rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent ${
-                role.id === selectedRoleId ? "bg-accent font-medium" : ""
-              }`}
-            >
-              <span>{role.name ?? role.code}</span>
-              <span className="text-xs text-muted-foreground">{t("users:userCount", { count: role.userCount })}</span>
-            </button>
-          ))}
-        </CardContent>
+      <Card withBorder padding="xs" className="md:col-span-1">
+        <ScrollArea.Autosize mah="32rem">
+          <Stack gap={4}>
+            {roles?.map((role) => (
+              <NavLink
+                key={role.id}
+                component="button"
+                type="button"
+                onClick={() => setSelectedRoleId(role.id)}
+                active={role.id === selectedRoleId}
+                variant="light"
+                label={role.name ?? role.code}
+                description={t("users:userCount", { count: role.userCount })}
+              />
+            ))}
+          </Stack>
+        </ScrollArea.Autosize>
       </Card>
 
-      <Card className="md:col-span-2">
-        <CardContent className="space-y-4 p-4">
-          {!selectedRole ? (
-            <p className="text-sm text-muted-foreground">{t("users:selectRoleHint")}</p>
-          ) : (
-            <>
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold">{selectedRole.name ?? selectedRole.code}</h2>
-                <Badge variant={selectedRole.isSystem ? "secondary" : "outline"}>
-                  {selectedRole.isSystem ? t("users:systemRole") : t("users:customRole")}
+      <Card withBorder padding="md" className="md:col-span-2">
+        {!selectedRole ? (
+          <Text size="sm" c="dimmed">
+            {t("users:selectRoleHint")}
+          </Text>
+        ) : (
+          <Stack>
+            <Group gap="xs">
+              <Title order={2} size="h4">
+                {selectedRole.name ?? selectedRole.code}
+              </Title>
+              {selectedRole.isSystem ? (
+                <Badge variant="light" color="gray">
+                  {t("users:systemRole")}
                 </Badge>
-              </div>
-              {selectedRole.description && (
-                <p className="text-sm text-muted-foreground">{selectedRole.description}</p>
+              ) : (
+                <Badge variant="outline" color="gray">
+                  {t("users:customRole")}
+                </Badge>
               )}
-              <Separator />
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">{t("users:permissionsGranted")}</h3>
-                {selectedRole.permissions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("users:noPermissions")}</p>
-                ) : (
-                  <ul className="space-y-1.5">
-                    {selectedRole.permissions.map((perm) => (
-                      <li
-                        key={perm.permission}
-                        className="flex items-center justify-between gap-2 rounded-md border border-border px-3 py-1.5 text-sm"
-                      >
-                        <span>{permissionMap.get(perm.permission)?.displayName ?? perm.permission}</span>
-                        <Badge variant="outline" className="shrink-0">
+            </Group>
+            {selectedRole.description && (
+              <Text size="sm" c="dimmed">
+                {selectedRole.description}
+              </Text>
+            )}
+            <Divider />
+            <div>
+              <Title order={3} size="h6" mb="xs">
+                {t("users:permissionsGranted")}
+              </Title>
+              {selectedRole.permissions.length === 0 ? (
+                <Text size="sm" c="dimmed">
+                  {t("users:noPermissions")}
+                </Text>
+              ) : (
+                <Stack component="ul" gap={6}>
+                  {selectedRole.permissions.map((perm) => (
+                    <Paper component="li" key={perm.permission} withBorder px="sm" py={6}>
+                      <Group justify="space-between" gap="xs" wrap="nowrap">
+                        <Text size="sm">{permissionMap.get(perm.permission)?.displayName ?? perm.permission}</Text>
+                        <Badge variant="outline" color="gray" className="shrink-0">
                           {t(`users:scope.${perm.scope}`)}
                         </Badge>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
+                      </Group>
+                    </Paper>
+                  ))}
+                </Stack>
+              )}
+            </div>
+          </Stack>
+        )}
       </Card>
     </div>
   );

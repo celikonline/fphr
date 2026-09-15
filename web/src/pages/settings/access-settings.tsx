@@ -2,14 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Info, KeyRound } from "lucide-react";
+import { Alert, Button, Card, Divider, Group, Skeleton, Stack, Switch, Text, Title } from "@mantine/core";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import NoAccess from "@/components/no-access";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth.store";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -70,17 +65,17 @@ function AccessSettingsForm() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Title order={1} size="h2" className="flex items-center gap-2">
             <KeyRound className="h-6 w-6" /> {t("settings:access.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("settings:access.subtitle")}</p>
+          </Title>
+          <Text c="dimmed">{t("settings:access.subtitle")}</Text>
         </div>
         {canManage && (
-          <div className="flex gap-2">
+          <Group gap="xs">
             {dirty && (
-              <Button type="button" variant="outline" onClick={() => setEdits(null)} disabled={saveMutation.isPending}>
+              <Button type="button" variant="default" onClick={() => setEdits(null)} disabled={saveMutation.isPending}>
                 {t("common:cancel")}
               </Button>
             )}
@@ -91,55 +86,59 @@ function AccessSettingsForm() {
             >
               {saveMutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </div>
+          </Group>
         )}
-      </div>
+      </Group>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>{t("settings:access.scopeNotice")}</AlertDescription>
+      <Alert variant="light" color="gray" icon={<Info className="h-4 w-4" />}>
+        {t("settings:access.scopeNotice")}
       </Alert>
 
       {!canManage && (
-        <Alert variant="warning">
-          <AlertDescription>{t("settings:access.readOnly")}</AlertDescription>
+        <Alert variant="light" color="yellow">
+          {t("settings:access.readOnly")}
         </Alert>
       )}
 
       {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-40 w-full" />
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-28 w-full" />
-        </div>
+        <Stack>
+          <Skeleton h={160} />
+          <Skeleton h={192} />
+          <Skeleton h={112} />
+        </Stack>
       ) : isError || !draft ? (
-        <Alert variant="destructive">
-          <AlertDescription>{t("settings:access.loadError")}</AlertDescription>
+        <Alert variant="light" color="red">
+          {t("settings:access.loadError")}
         </Alert>
       ) : (
         ACCESS_SETTING_GROUPS.map(({ group, keys }) => (
-          <Card key={group}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">{t(`settings:access.groups.${group}`)}</CardTitle>
-            </CardHeader>
-            <CardContent className="divide-y divide-border">
-              {keys.map((key) => (
-                <div key={key} className="flex items-start justify-between gap-6 py-4 first:pt-0 last:pb-0">
-                  <div className="space-y-1">
-                    <Label htmlFor={`access-${key}`} className="text-sm font-medium">
-                      {t(`settings:access.keys.${key}.label`)}
-                    </Label>
-                    <p className="text-sm text-muted-foreground">{t(`settings:access.keys.${key}.help`)}</p>
-                  </div>
-                  <Switch
-                    id={`access-${key}`}
-                    checked={draft[key]}
-                    onCheckedChange={(value) => toggle(key, value)}
-                    disabled={!canManage || saveMutation.isPending}
-                  />
-                </div>
+          <Card key={group} withBorder padding="lg">
+            <Title order={2} size="h5" mb="md">
+              {t(`settings:access.groups.${group}`)}
+            </Title>
+            <Stack gap="md">
+              {keys.map((key, index) => (
+                <Stack key={key} gap="md">
+                  {index > 0 && <Divider />}
+                  <Group justify="space-between" align="flex-start" gap="xl" wrap="nowrap">
+                    <div className="space-y-1">
+                      <Text component="label" htmlFor={`access-${key}`} size="sm" fw={500}>
+                        {t(`settings:access.keys.${key}.label`)}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {t(`settings:access.keys.${key}.help`)}
+                      </Text>
+                    </div>
+                    <Switch
+                      id={`access-${key}`}
+                      checked={draft[key]}
+                      onChange={(e) => toggle(key, e.currentTarget.checked)}
+                      disabled={!canManage || saveMutation.isPending}
+                    />
+                  </Group>
+                </Stack>
               ))}
-            </CardContent>
+            </Stack>
           </Card>
         ))
       )}

@@ -3,14 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Download, ScrollText, Search, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Badge, Button, Card, Group, Input, Select, Text, TextInput, Title, type BadgeProps } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationFooter from "@/components/pagination-footer";
 import {
   exportAuditEventsToCsv,
@@ -27,13 +22,13 @@ const COLUMN_VISIBILITY_KEY = "senseik.audit.grid.columns";
 /** The audit service only sorts by timestamp. */
 const SORT_FIELD = "occurredAt";
 
-const ACTION_BADGE: Record<AuditActionType, "default" | "secondary" | "destructive" | "outline" | "success"> = {
-  create: "success",
-  update: "default",
-  delete: "destructive",
-  login: "secondary",
-  invite: "secondary",
-  role_change: "outline",
+const ACTION_BADGE: Record<AuditActionType, Pick<BadgeProps, "variant" | "color">> = {
+  create: { variant: "filled", color: "green" },
+  update: { variant: "filled" },
+  delete: { variant: "filled", color: "red" },
+  login: { variant: "light", color: "gray" },
+  invite: { variant: "light", color: "gray" },
+  role_change: { variant: "outline", color: "gray" },
 };
 
 export default function AuditLogPage() {
@@ -126,8 +121,12 @@ export default function AuditLogPage() {
       id: SORT_FIELD,
       accessorKey: "occurredAt",
       header: t("audit:timestamp"),
-      meta: { label: t("audit:timestamp"), cellClassName: "whitespace-nowrap text-muted-foreground" },
-      cell: ({ row }) => formatTimestamp(row.original.occurredAt),
+      meta: { label: t("audit:timestamp"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => (
+        <Text size="sm" c="dimmed">
+          {formatTimestamp(row.original.occurredAt)}
+        </Text>
+      ),
     },
     {
       id: "actor",
@@ -142,7 +141,7 @@ export default function AuditLogPage() {
       header: t("audit:action"),
       meta: { label: t("audit:action") },
       cell: ({ row }) => (
-        <Badge variant={ACTION_BADGE[row.original.action]}>{t(`audit:actionTypes.${row.original.action}`)}</Badge>
+        <Badge {...ACTION_BADGE[row.original.action]}>{t(`audit:actionTypes.${row.original.action}`)}</Badge>
       ),
     },
     {
@@ -156,11 +155,11 @@ export default function AuditLogPage() {
       id: "details",
       enableSorting: false,
       header: t("audit:details"),
-      meta: { label: t("audit:details"), cellClassName: "max-w-md text-muted-foreground" },
+      meta: { label: t("audit:details"), cellClassName: "max-w-md" },
       cell: ({ row }) => (
-        <div className="truncate" title={row.original.details}>
+        <Text size="sm" c="dimmed" truncate="end" title={row.original.details}>
           {row.original.details}
-        </div>
+        </Text>
       ),
     },
   ];
@@ -176,87 +175,78 @@ export default function AuditLogPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Title order={1} size="h2" className="flex items-center gap-2">
             <ScrollText className="h-6 w-6" /> {t("audit:title")}
-          </h1>
-          <p className="text-muted-foreground">{t("audit:subtitle")}</p>
+          </Title>
+          <Text c="dimmed">{t("audit:subtitle")}</Text>
         </div>
-        <Button type="button" variant="outline" onClick={handleExport} disabled={!data || data.items.length === 0}>
-          <Download className="mr-2 h-4 w-4" /> {t("audit:exportCsv")}
+        <Button
+          type="button"
+          variant="default"
+          leftSection={<Download className="h-4 w-4" />}
+          onClick={handleExport}
+          disabled={!data || data.items.length === 0}
+        >
+          {t("audit:exportCsv")}
         </Button>
-      </div>
+      </Group>
 
-      <Card>
-        <CardContent className="flex flex-wrap items-end gap-3 p-4">
-          <div className="min-w-[14rem] flex-1">
-            <Label htmlFor="audit-search">{t("common:search")}</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="audit-search"
-                className="pl-9"
-                placeholder={t("audit:searchPlaceholder")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-          <div>
-            <Label>{t("audit:actor")}</Label>
-            <Select value={actor} onValueChange={setActor}>
-              <SelectTrigger className="w-56">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_VALUE}>{t("audit:allActors")}</SelectItem>
-                {actors.map((a) => (
-                  <SelectItem key={a} value={a}>
-                    {a}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>{t("audit:action")}</Label>
-            <Select value={action} onValueChange={setAction}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_VALUE}>{t("audit:allActions")}</SelectItem>
-                {actionTypes.map((a) => (
-                  <SelectItem key={a} value={a}>
-                    {t(`audit:actionTypes.${a}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="audit-from">{t("audit:from")}</Label>
+      <Card withBorder padding="md">
+        <Group align="flex-end" gap="sm">
+          <TextInput
+            id="audit-search"
+            className="min-w-[14rem] flex-1"
+            label={t("common:search")}
+            leftSection={<Search className="h-4 w-4" />}
+            placeholder={t("audit:searchPlaceholder")}
+            value={search}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <Select
+            className="w-56"
+            label={t("audit:actor")}
+            value={actor}
+            onChange={(value) => setActor(value ?? ALL_VALUE)}
+            allowDeselect={false}
+            data={[{ value: ALL_VALUE, label: t("audit:allActors") }, ...actors.map((a) => ({ value: a, label: a }))]}
+          />
+          <Select
+            className="w-48"
+            label={t("audit:action")}
+            value={action}
+            onChange={(value) => setAction(value ?? ALL_VALUE)}
+            allowDeselect={false}
+            data={[
+              { value: ALL_VALUE, label: t("audit:allActions") },
+              ...actionTypes.map((a) => ({ value: a, label: t(`audit:actionTypes.${a}`) })),
+            ]}
+          />
+          <Input.Wrapper id="audit-from" label={t("audit:from")}>
             <DatePicker id="audit-from" value={from} max={to || undefined} clearable onChange={setFrom} />
-          </div>
-          <div>
-            <Label htmlFor="audit-to">{t("audit:to")}</Label>
+          </Input.Wrapper>
+          <Input.Wrapper id="audit-to" label={t("audit:to")}>
             <DatePicker id="audit-to" value={to} min={from || undefined} clearable onChange={setTo} />
-          </div>
+          </Input.Wrapper>
           {hasFilters && (
-            <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>
-              <X className="mr-1 h-4 w-4" /> {t("audit:clearFilters")}
+            <Button
+              type="button"
+              variant="subtle"
+              size="sm"
+              leftSection={<X className="h-4 w-4" />}
+              onClick={clearFilters}
+            >
+              {t("audit:clearFilters")}
             </Button>
           )}
           <DataTableViewOptions table={table} className="ml-auto" />
-        </CardContent>
+        </Group>
       </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />
-          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
-        </CardContent>
+      <Card withBorder padding={0}>
+        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />
+        {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
     </div>
   );

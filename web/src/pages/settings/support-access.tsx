@@ -3,15 +3,11 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, ShieldCheck, ShieldOff } from "lucide-react";
+import { Alert, Badge, Button, Card, Group, Select, Text, Title, type BadgeProps } from "@mantine/core";
 import { usePermission } from "@/components/permission-guard";
 import NoAccess from "@/components/no-access";
 import ConfirmDialog from "@/components/confirm-dialog";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
@@ -26,13 +22,16 @@ import {
 
 const ALL = "all";
 
-const STATUS_VARIANT: Record<ImpersonationGrantStatus, BadgeProps["variant"]> = {
-  Pending: "secondary",
-  Approved: "default",
-  Active: "success",
-  Expired: "outline",
-  Revoked: "destructive",
+type BadgeStyle = Pick<BadgeProps, "variant" | "color">;
+
+const STATUS_BADGE: Record<ImpersonationGrantStatus, BadgeStyle> = {
+  Pending: { variant: "light", color: "gray" },
+  Approved: { variant: "filled" },
+  Active: { variant: "filled", color: "green" },
+  Expired: { variant: "outline", color: "gray" },
+  Revoked: { variant: "filled", color: "red" },
 };
+const FALLBACK_BADGE: BadgeStyle = { variant: "outline", color: "gray" };
 
 const REVOCABLE: ImpersonationGrantStatus[] = ["Pending", "Approved", "Active"];
 
@@ -118,7 +117,7 @@ function SupportAccessList() {
       accessorKey: "reason",
       enableSorting: false,
       header: t("settings:supportAccess.reason"),
-      meta: { label: t("settings:supportAccess.reason"), cellClassName: "max-w-xs whitespace-pre-wrap text-sm" },
+      meta: { label: t("settings:supportAccess.reason"), cellClassName: "max-w-xs whitespace-pre-wrap" },
     },
     {
       id: "status",
@@ -127,7 +126,7 @@ function SupportAccessList() {
       meta: { label: t("settings:supportAccess.status") },
       sortingFn: (a, b) => STATUS_ORDER.indexOf(a.original.status) - STATUS_ORDER.indexOf(b.original.status),
       cell: ({ row }) => (
-        <Badge variant={STATUS_VARIANT[row.original.status] ?? "outline"}>
+        <Badge {...(STATUS_BADGE[row.original.status] ?? FALLBACK_BADGE)}>
           {t(`settings:supportAccess.statuses.${row.original.status}`, row.original.status)}
         </Badge>
       ),
@@ -136,7 +135,7 @@ function SupportAccessList() {
       id: "requestedAt",
       accessorKey: "requestedAt",
       header: t("settings:supportAccess.requestedAt"),
-      meta: { label: t("settings:supportAccess.requestedAt"), cellClassName: "whitespace-nowrap text-sm" },
+      meta: { label: t("settings:supportAccess.requestedAt"), cellClassName: "whitespace-nowrap" },
       sortingFn: (a, b) => compareInstants(a.original.requestedAt, b.original.requestedAt),
       cell: ({ row }) => formatDateTime(row.original.requestedAt, locale),
     },
@@ -144,7 +143,7 @@ function SupportAccessList() {
       id: "expiresAt",
       accessorKey: "expiresAt",
       header: t("settings:supportAccess.expiresAt"),
-      meta: { label: t("settings:supportAccess.expiresAt"), cellClassName: "whitespace-nowrap text-sm" },
+      meta: { label: t("settings:supportAccess.expiresAt"), cellClassName: "whitespace-nowrap" },
       sortingFn: (a, b) => compareInstants(a.original.expiresAt, b.original.expiresAt),
       cell: ({ row }) => formatDateTime(row.original.expiresAt, locale),
     },
@@ -159,19 +158,25 @@ function SupportAccessList() {
         return (
           <div className="inline-flex gap-2" onClick={(e) => e.stopPropagation()}>
             {grant.status === "Pending" && (
-              <Button type="button" size="sm" onClick={() => setPending({ kind: "approve", grant })}>
-                <Check className="mr-1 h-4 w-4" /> {t("settings:supportAccess.approve")}
+              <Button
+                type="button"
+                size="xs"
+                leftSection={<Check className="h-4 w-4" />}
+                onClick={() => setPending({ kind: "approve", grant })}
+              >
+                {t("settings:supportAccess.approve")}
               </Button>
             )}
             {REVOCABLE.includes(grant.status) && (
               <Button
                 type="button"
-                size="sm"
+                size="xs"
                 variant="outline"
-                className="text-destructive hover:text-destructive"
+                color="red"
+                leftSection={<ShieldOff className="h-4 w-4" />}
                 onClick={() => setPending({ kind: "revoke", grant })}
               >
-                <ShieldOff className="mr-1 h-4 w-4" /> {t("settings:supportAccess.revoke")}
+                {t("settings:supportAccess.revoke")}
               </Button>
             )}
           </div>
@@ -191,45 +196,47 @@ function SupportAccessList() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
+        <Title order={1} size="h2" className="flex items-center gap-2">
           <ShieldCheck className="h-6 w-6" /> {t("settings:supportAccess.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("settings:supportAccess.subtitle")}</p>
+        </Title>
+        <Text c="dimmed">{t("settings:supportAccess.subtitle")}</Text>
       </div>
 
-      <Alert>
-        <ShieldCheck className="h-4 w-4" />
-        <AlertTitle>{t("settings:supportAccess.privacyTitle")}</AlertTitle>
-        <AlertDescription>{t("settings:supportAccess.privacyText")}</AlertDescription>
+      <Alert
+        variant="light"
+        color="gray"
+        icon={<ShieldCheck className="h-4 w-4" />}
+        title={t("settings:supportAccess.privacyTitle")}
+      >
+        {t("settings:supportAccess.privacyText")}
       </Alert>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-full max-w-xs">
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger aria-label={t("settings:supportAccess.status")}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>{t("settings:supportAccess.allStatuses")}</SelectItem>
-              {IMPERSONATION_GRANT_STATUSES.map((value) => (
-                <SelectItem key={value} value={value}>
-                  {t(`settings:supportAccess.statuses.${value}`)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <Group gap="sm">
+        <Select
+          className="w-full max-w-xs"
+          aria-label={t("settings:supportAccess.status")}
+          value={status}
+          onChange={(value) => setStatus(value ?? ALL)}
+          allowDeselect={false}
+          data={[
+            { value: ALL, label: t("settings:supportAccess.allStatuses") },
+            ...IMPERSONATION_GRANT_STATUSES.map((value) => ({
+              value,
+              label: t(`settings:supportAccess.statuses.${value}`),
+            })),
+          ]}
+        />
         <DataTableViewOptions table={table} className="ml-auto" />
-      </div>
+      </Group>
 
-      <Card>
-        <CardContent className="p-0">
-          {isError ? (
-            <p className="p-6 text-center text-sm text-destructive">{t("settings:supportAccess.loadError")}</p>
-          ) : (
-            <DataTable table={table} isLoading={isLoading} emptyMessage={t("settings:supportAccess.empty")} />
-          )}
-        </CardContent>
+      <Card withBorder padding={0}>
+        {isError ? (
+          <Text size="sm" c="red" ta="center" p="lg">
+            {t("settings:supportAccess.loadError")}
+          </Text>
+        ) : (
+          <DataTable table={table} isLoading={isLoading} emptyMessage={t("settings:supportAccess.empty")} />
+        )}
       </Card>
 
       <ConfirmDialog
