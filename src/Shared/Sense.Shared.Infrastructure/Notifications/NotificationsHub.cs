@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Notifications;
+using Sense.Shared.Contracts.Security;
 
 namespace Sense.Shared.Infrastructure.Notifications;
 
@@ -45,6 +46,12 @@ public class NotificationsHub : Hub
             var groupName = SignalRGroupNames.ForTenant(tenantId);
             await Groups.AddToGroupAsync(Context.ConnectionId, groupName);
 
+            // Auto-join the per-user group (user-targeted notifications, e.g. Notifications module in-app items)
+            if (Guid.TryParse(Context.User?.FindFirst(ClaimNames.Subject)?.Value, out var userId))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, SignalRGroupNames.ForUser(userId));
+            }
+
             _logger.LogInformation(
                 "Client connected to tenant group. ConnectionId: {ConnectionId}, TenantId: {TenantId}",
                 Context.ConnectionId,
@@ -86,7 +93,7 @@ public class NotificationsHub : Hub
     private Guid ExtractTenantIdFromContext()
     {
         // First, try to get from claims (JWT)
-        var tenantClaim = Context.User?.FindFirst("tenant");
+        var tenantClaim = Context.User?.FindFirst(ClaimNames.Tenant);
         if (tenantClaim != null && Guid.TryParse(tenantClaim.Value, out var tenantId))
         {
             return tenantId;
