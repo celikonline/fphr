@@ -1,0 +1,126 @@
+import axios, { AxiosInstance, AxiosError } from "axios";
+import { SecureStorage } from "./storage";
+
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token?: string | null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  
+  isRefreshing = false;
+  failedQueue = [];
+};
+
+class ApiClient {
+  private instance: AxiosInstance;
+
+  constructor() {
+    this.instance = axios.create({
+      baseURL: process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5000",
+      timeout: 30000,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors(): void {
+    // Request interceptor
+    this.instance.interceptors.request.use(
+      async config => {
+        const token = await SecureStorage.getAccessToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      error => Promise.reject(error)
+    );
+
+    // Response interceptor
+    this.instance.interceptors.response.use(
+      response => response,
+      async error => {
+        const originalRequest = error.config;
+
+        if (error.response?.status === 401 && !originalRequest._retry) {
+          if (isRefreshing) {
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            })
+              .then(token => {
+                originalRequest.headers.Authorization = `Bearer ${token}`;
+                return this.instance(originalRequest);
+              })
+              .catch(error => Promise.reject(error));
+          }
+
+          originalRequest._retry = true;
+          isRefreshing = true;
+
+          try {
+            const refreshToken = await SecureStorage.getRefreshToken();
+            if (!refreshToken) {
+              throw new Error("No refresh token available");
+            }
+
+            const response = await this.instance.post("/api/auth/refresh", {
+              refreshToken
+            });
+
+            const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+            
+            await SecureStorage.setAccessToken(accessToken);
+            await SecureStorage.setRefreshToken(newRefreshToken);
+
+            originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+            processQueue(null, accessToken);
+
+            return this.instance(originalRequest);
+          } catch (err) {
+            processQueue(err, null);
+            // Clear tokens and redirect to login will be handled by store
+            await SecureStorage.clearAll();
+            return Promise.reject(err);
+          }
+        }
+
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  get<T = any>(url: string, config?: any) {
+    return this.instance.get<T>(url, config);
+  }
+
+  post<T = any>(url: string, data?: any, config?: any) {
+    return this.instance.post<T>(url, data, config);
+  }
+
+  put<T = any>(url: string, data?: any, config?: any) {
+    return this.instance.put<T>(url, data, config);
+  }
+
+  patch<T = any>(url: string, data?: any, config?: any) {
+    return this.instance.patch<T>(url, data, config);
+  }
+
+  delete<T = any>(url: string, config?: any) {
+    return this.instance.delete<T>(url, config);
+  }
+
+  getBaseURL(): string {
+    return this.instance.defaults.baseURL || "";
+  }
+}
+
+export const apiClient = new ApiClient();

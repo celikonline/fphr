@@ -1,0 +1,31 @@
+# Expo
+.expo/
+dist/
+npm-debug.*
+.env
+.env.local
+
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Build
+build/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/

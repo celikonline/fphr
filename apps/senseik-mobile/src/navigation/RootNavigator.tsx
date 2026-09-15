@@ -1,0 +1,173 @@
+import React, { useEffect, useState } from "react";
+import { NavigationContainer } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { ActivityIndicator, View } from "react-native";
+import { useAuthStore } from "@/store/authStore";
+import { RootStackParamList, AuthStackParamList, AppStackParamList, MainTabsParamList } from "@/types/navigation";
+
+// Screens (will be created)
+import SplashScreen from "@/screens/SplashScreen";
+import LoginScreen from "@/screens/auth/LoginScreen";
+import BiometricPromptScreen from "@/screens/auth/BiometricPromptScreen";
+import ForgotPasswordScreen from "@/screens/auth/ForgotPasswordScreen";
+import DashboardScreen from "@/screens/app/DashboardScreen";
+import AttendanceScreen from "@/screens/app/AttendanceScreen";
+import LeaveScreen from "@/screens/app/LeaveScreen";
+import PayrollScreen from "@/screens/app/PayrollScreen";
+import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
+import ProfileScreen from "@/screens/app/ProfileScreen";
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+const AuthStack = createNativeStackNavigator<AuthStackParamList>();
+const AppStack = createNativeStackNavigator<AppStackParamList>();
+const Tab = createBottomTabNavigator<MainTabsParamList>();
+
+function AuthNavigator() {
+  return (
+    <AuthStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animationEnabled: true
+      }}
+    >
+      <AuthStack.Screen name="Login" component={LoginScreen} />
+      <AuthStack.Screen name="BiometricPrompt" component={BiometricPromptScreen} />
+      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+    </AuthStack.Navigator>
+  );
+}
+
+function MainTabsNavigator() {
+  return (
+    <Tab.Navigator
+      screenOptions={{
+        tabBarActiveTintColor: "#0066cc",
+        tabBarInactiveTintColor: "#999999",
+        headerShown: true
+      }}
+    >
+      <Tab.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={{
+          title: "Dashboard",
+          tabBarLabel: "Home"
+        }}
+      />
+      <Tab.Screen
+        name="Attendance"
+        component={AttendanceScreen}
+        options={{
+          title: "Attendance",
+          tabBarLabel: "Attendance"
+        }}
+      />
+      <Tab.Screen
+        name="Leave"
+        component={LeaveScreen}
+        options={{
+          title: "Leave",
+          tabBarLabel: "Leave"
+        }}
+      />
+      <Tab.Screen
+        name="Payroll"
+        component={PayrollScreen}
+        options={{
+          title: "Payroll",
+          tabBarLabel: "Payroll"
+        }}
+      />
+      <Tab.Screen
+        name="Approvals"
+        component={ApprovalsScreen}
+        options={{
+          title: "Approvals",
+          tabBarLabel: "Approvals"
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: "Profile",
+          tabBarLabel: "Profile"
+        }}
+      />
+    </Tab.Navigator>
+  );
+}
+
+function AppNavigator() {
+  return (
+    <AppStack.Navigator
+      screenOptions={{
+        headerShown: true
+      }}
+    >
+      <AppStack.Screen
+        name="MainTabs"
+        component={MainTabsNavigator}
+        options={{
+          headerShown: false
+        }}
+      />
+    </AppStack.Navigator>
+  );
+}
+
+export function RootNavigator() {
+  const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
+  const [appReady, setAppReady] = useState(false);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await checkAuth();
+      } catch (error) {
+        console.error("Failed to check authentication:", error);
+      } finally {
+        setAppReady(true);
+      }
+    };
+
+    initializeApp();
+  }, [checkAuth]);
+
+  if (!appReady || isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#0066cc" />
+      </View>
+    );
+  }
+
+  return (
+    <NavigationContainer>
+      <RootStack.Navigator
+        screenOptions={{
+          headerShown: false
+        }}
+      >
+        {!isAuthenticated ? (
+          <RootStack.Screen
+            name="Auth"
+            component={AuthNavigator}
+            options={{
+              animationEnabled: false
+            }}
+          />
+        ) : (
+          <RootStack.Screen
+            name="App"
+            component={AppNavigator}
+            options={{
+              animationEnabled: false
+            }}
+          />
+        )}
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+}

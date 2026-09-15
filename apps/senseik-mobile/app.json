@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "SenseİK Mobile",
+    "slug": "senseik-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.algosense.senseik",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.algosense.senseik",
+      "versionCode": 1
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-local-authentication",
+      "expo-notifications",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "senseik-mobile"
+      }
+    },
+    "scheme": "senseik"
+  }
+}
