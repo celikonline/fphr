@@ -151,10 +151,10 @@ public sealed class MinioAdapter : IFileStorage
 
             // TODO: Write audit event to outbox (Item 17 will integrate with audit system)
         }
-        catch (ObjectNotFoundException)
+        catch (Exception ex) when (ex.Message.Contains("NoSuchKey") || ex.Message.Contains("not found"))
         {
             _logger.LogError("Object not found for confirmation: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
-            throw new InvalidOperationException("File not found for confirmation");
+            throw new InvalidOperationException("File not found for confirmation", ex);
         }
         catch (Exception ex) when (!(ex is InvalidOperationException))
         {
@@ -206,10 +206,10 @@ public sealed class MinioAdapter : IFileStorage
 
             return new PresignedUrlResponse(downloadUrl, expiresAt);
         }
-        catch (ObjectNotFoundException)
+        catch (Exception ex) when (ex.Message.Contains("NoSuchKey") || ex.Message.Contains("not found"))
         {
             _logger.LogWarning("Object not found for download: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
-            throw new InvalidOperationException("File not found");
+            throw new InvalidOperationException("File not found", ex);
         }
         catch (Exception ex) when (!(ex is ArgumentOutOfRangeException || ex is InvalidOperationException))
         {
