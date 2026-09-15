@@ -117,7 +117,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 
 | Olay (merge edildiğinde) | Kimden | PC-B'de açılan iş |
 |---|---|---|
-| Faz 0 #4 `OrgUnit` onay slotu | PC-A | Workflow birim bazlı onaycı ataması + devralma |
+| Faz 0 #4 `OrgUnit` onay slotu | PC-A | ✅ Tüketildi — B1'in `DefaultApproverResolver`'ı `IOrgApprovalPolicyResolver`'ı ilk basamak olarak kullanıyor (birim ağacı → devralma → yoksa yönetici → yoksa HR kuyruğu) |
 | Faz 0 #7/#8 veri aktarım çekirdeği + şablon kuralları | PC-A | Leave import şablonu |
 | Faz 0 #9 toplu işlem sözleşmesi | PC-A | "İzin kuralı ata" toplu aksiyonu |
 | Faz 0 #12 navigasyon | PC-A | Menü öğeleri |
@@ -135,7 +135,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 |---|---|---|---|
 | §2 ön koşullar (PC-A) | 🟡 Kısmi | `a/parallel-prereqs` | Commit + push, Faz 0 takip tablosu, Documents → `Sense.slnx`, kök `CLAUDE.md`, `paralel-baslangic` etiketi yapıldı; mantıksal commit'lere bölme yapılmadı (tek commit `eb82c17`); CI durumu bu makineden doğrulanamadı (`gh` yok) |
 | §3 PC-B kurulumu + baz doğrulama | ✅ Bitti | — | Ayrı klon gerekmedi (aynı çalışma ağacı); `dotnet build Sense.slnx` ve `pnpm exec tsc --noEmit && vite build` Docker üzerinden yeşil (2026-09-15) |
-| B1 Workflow çekirdeği | ❌ Başlanmadı | — | |
+| B1 Workflow çekirdeği | ✅ Bitti | `b/workflow-core` | 5 projeli modül (Domain/Contracts/Application/Infrastructure/Api); `ApprovalPolicy`/`ApprovalRequest` state machine, ≤6 adım, zorunlu/opsiyonel onaycı, Admin doğrudan onay, e-postadan tek kullanımlık token ile onay/red, IP/UA/kanal audit; onaycı çözümleme sırası: Organization'ın `IOrgApprovalPolicyResolver` (birim ağacı, S1 senkron noktası kullanılarak) → doğrudan yönetici → HR rol kuyruğu (kullanıcı kararı). Event'ler `IIntegrationEventOutbox` ile Workflow'un kendi outbox'ına yazılıyor, `Sense.Worker`'a poller eklendi. Admin ekranı (`/app/settings/company/approval-flows`), inbox (`/app/inbox`), public onay sayfası (`/approve/:token`) dahil. Contract-first: `Identity.Contracts.IRoleAssignmentLookup` (yeni), `Employee.Contracts.IEmployeeLookup.GetManagerEmployeeIdAsync` (yeni). Önemli düzeltme: `ApprovalTask`/`ApprovalHistoryEntry`/`EmailDecisionToken`'ın client-generated Guid id'leri `ValueGeneratedNever()` olmadan EF'in Added/Modified sınıflandırmasını bozup her gerçek karar isteğinde `TenantId` immutability hatası veriyordu — testler bu haliyle 15/15 geçiyor. Tam çözüm build+test yeşil (2026-09-15). Kapsam dışı: birim/ünvan bazlı politika ataması entegrasyonu şimdi eklendi ama delegasyon, tek onaycılı vize kilidi, koşullu/paralel "Gelişmiş mod", `RequestTypeDefinition` kataloğu, ana sayfa widget'ı, tam e-posta şablonlama (B2'nin işi) hâlâ yok. Henüz main'e merge edilmedi. |
 | B2 Notifications | ❌ Başlanmadı | — | |
 | B3 `LegislationParameter` ADR | ❌ Başlanmadı | — | |
 | B3 Leave backend motoru | ❌ Başlanmadı | — | |
