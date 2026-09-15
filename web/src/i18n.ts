@@ -27,6 +27,7 @@ i18n
       "locations",
       "users",
       "audit",
+      "workflow",
     ],
     interpolation: {
       escapeValue: false,

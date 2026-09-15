@@ -1,0 +1,86 @@
+{
+  "requestType": {
+    "Leave": "[DE] Leave",
+    "Advance": "[DE] Advance",
+    "Expense": "[DE] Expense",
+    "Overtime": "[DE] Overtime"
+  },
+  "policies": {
+    "listTitle": "[DE] Approval processes",
+    "listSubtitle": "[DE] Define approval steps per request type.",
+    "addNew": "[DE] New approval process",
+    "createTitle": "[DE] New approval process",
+    "createDescription": "[DE] Enter the request type, process name and approval steps.",
+    "editTitle": "[DE] Edit approval process",
+    "editDescription": "[DE] Update the process name and approval steps.",
+    "name": "[DE] Process name",
+    "namePlaceholder": "[DE] e.g. Standard leave approval",
+    "requestType": "[DE] Request type",
+    "selectRequestType": "[DE] Select a request type",
+    "showCurrentApproverToRequester": "[DE] Show the requester who currently holds the approval",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "empty": "[DE] No approval processes yet. Use \"New approval process\" to create one.",
+    "steps": {
+      "title": "[DE] Approval steps",
+      "stepNumber": "[DE] Step {{number}}",
+      "approver": "[DE] Approver",
+      "selectApprover": "[DE] Select an approver",
+      "isRequired": "[DE] This step is required",
+      "addStep": "[DE] Add step",
+      "removeStep": "[DE] Remove step",
+      "empty": "[DE] No approval steps yet. Use \"Add step\" to create one."
+    },
+    "save": "[DE] Save",
+    "cancel": "[DE] Cancel",
+    "deactivate": "[DE] Deactivate",
+    "deactivateTitle": "[DE] Deactivate approval process",
+    "deactivateConfirm": "[DE] The \"{{name}}\" approval process will be deactivated. Continue?",
+    "createSuccess": "[DE] Approval process created.",
+    "updateSuccess": "[DE] Approval process updated.",
+    "deactivateSuccess": "[DE] Approval process deactivated."
+  },
+  "inbox": {
+    "title": "[DE] Approval inbox",
+    "subtitle": "[DE] Requests waiting for your approval.",
+    "empty": "[DE] No requests are waiting for your approval.",
+    "requester": "[DE] Requester",
+    "step": "[DE] Step {{number}}",
+    "fallbackRole": "[DE] You're viewing this as a fallback approver",
+    "decide": "[DE] Decide",
+    "approve": "[DE] Approve",
+    "reject": "[DE] Reject",
+    "overrideDecide": "[DE] Decide on their behalf",
+    "overrideHint": "[DE] You're making this decision in place of the assigned approver.",
+    "comment": "[DE] Comment",
+    "commentPlaceholder": "[DE] Add an optional comment...",
+    "approveSuccess": "[DE] Request approved.",
+    "rejectSuccess": "[DE] Request rejected."
+  },
+  "status": {
+    "title": "[DE] Approval status",
+    "currentApprover": "[DE] Current approver: {{name}}",
+    "currentApproverHidden": "[DE] The current approver isn't shown.",
+    "pending": "[DE] Pending",
+    "approved": "[DE] Approved",
+    "rejected": "[DE] Rejected",
+    "cancelled": "[DE] Cancelled"
+  },
+  "myRequests": {
+    "title": "[DE] My requests",
+    "empty": "[DE] You don't have any requests yet.",
+    "submittedAt": "[DE] Submitted"
+  },
+  "publicDecision": {
+    "title": "[DE] Approval decision",
+    "subtitle": "[DE] Give your decision for the \"{{requestType}}\" request.",
+    "approve": "[DE] Approve",
+    "reject": "[DE] Reject",
+    "comment": "[DE] Comment",
+    "commentPlaceholder": "[DE] Add an optional comment...",
+    "success": "[DE] Your decision has been recorded. You can close this page.",
+    "error": "[DE] Your decision couldn't be recorded. Please try again.",
+    "expired": "[DE] This approval link has expired.",
+    "alreadyDecided": "[DE] A decision has already been made for this request."
+  }
+}
