@@ -110,7 +110,7 @@ public abstract class TestFixture : IAsyncLifetime
         var options = new RespawnerOptions
         {
             DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents", "datatransfer" },
+            SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents", "datatransfer", "workflow" },
         };
 
         await using (var respawnerConnection = new Npgsql.NpgsqlConnection(connectionString))
