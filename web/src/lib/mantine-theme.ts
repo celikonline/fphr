@@ -1,4 +1,4 @@
-import { createTheme, type MantineColorsTuple } from "@mantine/core";
+import { Badge, createTheme, type MantineColorsTuple } from "@mantine/core";
 
 /** App primary blue (the `--primary` token, hsl(217 91% 60%) = #3b82f6 at index 5). */
 const brandBlue: MantineColorsTuple = [
@@ -49,8 +49,13 @@ export const mantineTheme = createTheme({
   primaryColor: "brandBlue",
   primaryShade: { light: 6, dark: 5 },
   colors: { brandBlue, algosenseGreen, dark: neutralDark },
-  fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
-  headings: { fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif' },
+  // Bundled via @fontsource-variable/inter (imported in main.tsx), including the latin-ext subset for Turkish.
+  fontFamily: '"Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif',
+  headings: { fontFamily: '"Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif' },
   defaultRadius: "md",
   cursorType: "pointer",
+  components: {
+    // Mantine badges are uppercase by default; the app shows statuses and counts in normal case.
+    Badge: Badge.extend({ styles: { root: { textTransform: "none" } } }),
+  },
 });

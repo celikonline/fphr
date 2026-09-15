@@ -16,6 +16,7 @@ import {
 import { Box, Button, Group, Menu, Skeleton, Table, Text, UnstyledButton } from "@mantine/core";
 import { ArrowDown, ArrowUp, ArrowUpDown, Columns3 } from "lucide-react";
 import PaginationFooter from "@/components/pagination-footer";
+import classes from "./data-table.module.css";
 
 /** Smallest option of PaginationFooter's rows-per-page select. */
 const MIN_PAGE_SIZE_OPTION = 10;
@@ -154,7 +155,13 @@ export function DataTable<TData>({
         opacity={isFetching ? 0.7 : undefined}
         style={{ overflow: "auto", maxHeight: stickyHeader ? "70vh" : undefined, position: "relative", width: "100%" }}
       >
-        <Table stickyHeader={stickyHeader} highlightOnHover={!isLoading && rows.length > 0} verticalSpacing="sm" fz="sm">
+        <Table
+          className={classes.table}
+          stickyHeader={stickyHeader}
+          highlightOnHover={!isLoading && rows.length > 0}
+          verticalSpacing="sm"
+          fz="sm"
+        >
           <Table.Thead>
             {table.getHeaderGroups().map((headerGroup) => (
               <Table.Tr key={headerGroup.id} data-hover={undefined}>
