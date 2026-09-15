@@ -61,5 +61,8 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<IEmployeeDirectory, EmployeeDirectory>();
         services.AddScoped<IEmployeeUserLinker, EmployeeUserLinker>();
         services.AddScoped<IEmployeeScopeLookup, EmployeeScopeLookup>();
+
+        // Cross-module contract consumed by Notifications (recipient resolution, also in Sense.Worker)
+        services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
     }
 }
