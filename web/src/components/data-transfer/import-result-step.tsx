@@ -120,7 +120,7 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
       id: "errors",
       enableSorting: false,
       header: t("dataTransfer:result.errorDescription"),
-      meta: { headerClassName: "pr-6", cellClassName: "pr-6" },
+      meta: { headerClassName: "pr-6", cellClassName: "pr-6 whitespace-normal" },
       cell: ({ row }) =>
         row.original.errors.length === 0 ? (
           <Text span c="dimmed" inherit>

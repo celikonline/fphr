@@ -1,0 +1,11 @@
+/*
+ * Data grids keep cell text on one line and scroll horizontally instead of breaking words.
+ * The rule lives in the `components` layer: it beats Mantine's table styles but loses to Tailwind
+ * utilities, so a column can opt back in with `meta.cellClassName: "whitespace-normal"`.
+ */
+@layer components {
+  .table th,
+  .table td {
+    white-space: nowrap;
+  }
+}
