@@ -18,6 +18,7 @@ using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
+using Sense.Modules.Leave.Infrastructure;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -87,6 +88,18 @@ builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
+// Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
+// (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
+// Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
+builder.Services.AddModuleDbContext<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>(builder.Configuration, Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName);
+builder.Services.AddLeaveCoreServices(builder.Configuration);
+builder.Services.AddLeaveIntegrationEventHandlers();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName,
+    typeof(Sense.Modules.Leave.Contracts.LeavePermissions).Assembly,
+    typeof(Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext).Assembly,
+    typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 
 await builder.Build().RunAsync();
 
