@@ -22,7 +22,7 @@ public sealed class MinioOptions
     public string SecretKey { get; set; } = string.Empty;
 
     /// <summary>Use HTTPS for MinIO communication (default false for local dev).</summary>
-    public bool UseHttps { get; set; } = false;
+    public bool UseHttps { get; set; }
 
     /// <summary>Default upload presigned URL expiration in minutes (default 60).</summary>
     public int UploadExpirationMinutes { get; set; } = 60;
@@ -282,7 +282,7 @@ public sealed class MinioAdapter : IFileStorage
         }
 
         // Ensure key doesn't try to escape the tenant bucket
-        if (key.Contains("..") || key.StartsWith("/"))
+        if (key.Contains("..") || key.StartsWith('/'))
         {
             throw new ArgumentException("Invalid key format", nameof(key));
         }

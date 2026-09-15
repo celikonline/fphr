@@ -74,7 +74,7 @@ public sealed class InitiateUploadHandler(
                 presignedRequest.RequestId,
                 presignedRequest.ExpiresAt);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
             return Error.Failure(DocumentsErrors.UploadInitiationFailed);
         }
@@ -129,7 +129,7 @@ public sealed class ConfirmUploadHandler(
                 doc.Value.Title,
                 doc.Value.UploadedAt);
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
             return Error.Failure(DocumentsErrors.ConfirmationFailed);
         }
@@ -176,7 +176,7 @@ public sealed class DeleteDocumentHandler(
 
             return Result.Success();
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
             return Error.Failure(DocumentsErrors.DeletionFailed);
         }
