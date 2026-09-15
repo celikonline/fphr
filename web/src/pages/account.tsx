@@ -16,6 +16,7 @@ import {
   Title,
 } from "@mantine/core";
 import { LifeBuoy, UserCircle } from "lucide-react";
+import { avatarUrl } from "@/components/employees/employee-badges";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore, type Theme } from "@/store/ui.store";
 
@@ -64,7 +65,7 @@ export default function AccountPage() {
 
       <Card withBorder padding="lg">
         <Group gap="md" wrap="nowrap" mb="lg">
-          <Avatar size={56} radius="xl" fz="lg">
+          <Avatar size={56} radius="xl" fz="lg" src={user?.id ? avatarUrl(user.id) : undefined}>
             {initials}
           </Avatar>
           <div className="min-w-0">

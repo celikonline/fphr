@@ -43,6 +43,7 @@ import {
   type NavItem,
 } from "@/config/navigation";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { avatarUrl } from "@/components/employees/employee-badges";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -112,7 +113,7 @@ type Crumb = { path: string; label: string; link: boolean };
 function crumbNode(item: Crumb, isLast: boolean) {
   if (isLast) {
     return (
-      <Text key={item.path} size="sm" fw={500} aria-current="page" truncate>
+      <Text key={item.path} size="sm" fw={600} lh={1.5} aria-current="page" truncate>
         {item.label}
       </Text>
     );
@@ -295,7 +296,7 @@ function UserMenu() {
       <Menu.Target>
         <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className={classes.userButton}>
           <Group gap="xs" wrap="nowrap">
-            <Avatar size={32} radius="xl">
+            <Avatar size={32} radius="xl" src={user?.id ? avatarUrl(user.id) : undefined}>
               {initials}
             </Avatar>
             <Text size="sm" fw={500} truncate className="hidden max-w-[10rem] sm:block">
@@ -392,10 +393,10 @@ export default function AppLayout() {
                 </ActionIcon>
               </Tooltip>
               <div className="hidden min-w-0 flex-col sm:flex">
-                <Text size="sm" fw={600} truncate>
+                <HeaderBreadcrumbs />
+                <Text size="xs" c="dimmed" truncate>
                   {tenant?.name ?? userTenantName ?? "SenseİK"}
                 </Text>
-                <HeaderBreadcrumbs />
               </div>
             </div>
 

@@ -37,3 +37,8 @@ export function EmployeeStatusBadge({ status }: { status: EmployeeStatus }) {
 export function initials(firstName: string, lastName: string): string {
   return `${firstName.trim().charAt(0)}${lastName.trim().charAt(0)}`.toLocaleUpperCase("tr") || "?";
 }
+
+/** Deterministic placeholder avatar (DiceBear, no key/backend needed) - same `seed` always renders the same face, so a person doesn't reshuffle on every render. Pass `Avatar`'s existing initials as children: it falls back to them if this fails to load. */
+export function avatarUrl(seed: string): string {
+  return `https://api.dicebear.com/9.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+}

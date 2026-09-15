@@ -11,7 +11,7 @@ import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { getEmployee, getMyEmployee, type EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
 import { inviteEmployee } from "@/services/invitations.service";
-import { AccountStatusBadge, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
+import { AccountStatusBadge, avatarUrl, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 
@@ -143,7 +143,7 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
   return (
     <Card withBorder padding="lg">
       <Group gap="md" wrap="nowrap">
-        <Avatar size={64} radius="xl">
+        <Avatar size={64} radius="xl" src={avatarUrl(employee.id)}>
           {initials(employee.firstName, employee.lastName)}
         </Avatar>
         <div className="min-w-0 flex-1">

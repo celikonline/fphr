@@ -8,7 +8,7 @@ import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane
 import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
-import { initials } from "@/components/employees/employee-badges";
+import { avatarUrl, initials } from "@/components/employees/employee-badges";
 import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyCareer, getMyEmployee } from "@/services/employees.service";
@@ -250,7 +250,7 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28}>
+            <Avatar size={88} radius="md" fz={28} src={avatarUrl(employee.id)}>
               {initials(employee.firstName, employee.lastName)}
             </Avatar>
           </Group>
@@ -467,7 +467,7 @@ function UpcomingLeavesWidget() {
           render={(entry) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl">
+                <Avatar size={30} radius="xl" src={avatarUrl(entry.employeeId)}>
                   {nameInitials(entry.employeeName)}
                 </Avatar>
                 <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
@@ -578,7 +578,7 @@ function BirthdaysWidget() {
           render={(birthday) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl">
+                <Avatar size={30} radius="xl" src={avatarUrl(birthday.id)}>
                   {nameInitials(birthday.displayName)}
                 </Avatar>
                 <PersonName name={birthday.displayName} employeeId={birthday.id} canOpen={canReadEmployees} />
