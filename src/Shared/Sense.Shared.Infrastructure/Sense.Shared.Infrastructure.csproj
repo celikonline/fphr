@@ -44,6 +44,7 @@
     <PackageReference Include="ClosedXML" />
     <PackageReference Include="CsvHelper" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Minio" />
   </ItemGroup>
 
 </Project>

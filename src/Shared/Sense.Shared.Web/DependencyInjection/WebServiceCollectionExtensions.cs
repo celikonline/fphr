@@ -3,16 +3,21 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Asp.Versioning;
 using FluentValidation;
+using Hangfire;
+using Hangfire.Dashboard;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Sense.Api.Hubs;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Modules;
+using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Infrastructure;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Notifications;
 using Sense.Shared.Web.Authorization;
 using Sense.Shared.Web.ErrorHandling;
 using Sense.Shared.Web.Localization;
@@ -96,6 +101,25 @@ public static class WebServiceCollectionExtensions
         services.AddOpenApi(OpenApiDocumentName);
         services.AddHealthChecks();
         services.AddHttpContextAccessor();
+
+        // Configure SignalR with Redis backplane
+        var redisConnection = configuration.GetConnectionString(ConnectionStringNames.Redis);
+        if (!string.IsNullOrWhiteSpace(redisConnection))
+        {
+            services.AddSignalR()
+                .AddStackExchangeRedis(redisConnection, options =>
+                {
+                    options.Configuration.ChannelPrefix = "senseik-signalr-";
+                });
+        }
+        else
+        {
+            // Fallback to in-memory SignalR if Redis is not configured
+            services.AddSignalR();
+        }
+
+        // Register notification service
+        services.TryAddScoped<INotificationService, SignalRNotificationService>();
 
         return services;
     }

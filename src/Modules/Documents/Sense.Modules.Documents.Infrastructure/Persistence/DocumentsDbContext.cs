@@ -1,0 +1,62 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sense.Modules.Documents.Domain.Documents;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Infrastructure.Persistence;
+
+namespace Sense.Modules.Documents.Infrastructure.Persistence;
+
+/// <summary>Documents module DbContext with file document entities.</summary>
+public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> options, ITenantContext tenantContext)
+    : ModuleDbContext(options, tenantContext)
+{
+    public const string SchemaName = "documents";
+
+    public override string Schema => SchemaName;
+
+    public DbSet<Document> Documents => Set<Document>();
+}
+
+internal static class DocumentsTables
+{
+    public const string Documents = "documents";
+
+    public const int TitleLength = 255;
+    public const int FileKeyLength = 500;
+    public const int ContentTypeLength = 100;
+    public const int BucketNameLength = 100;
+    public const int ETagLength = 256;
+    public const int StatusLength = 50;
+}
+
+/// <summary>Document entity configuration.</summary>
+public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
+{
+    public void Configure(EntityTypeBuilder<Document> b)
+    {
+        b.ToTable(DocumentsTables.Documents);
+        b.HasKey(x => x.Id);
+
+        // Tenant isolation index
+        b.HasIndex(x => new { x.TenantId, x.Status });
+        b.HasIndex(x => new { x.TenantId, x.FileKey }).IsUnique();
+
+        // Properties
+        b.Property(x => x.Title).HasMaxLength(DocumentsTables.TitleLength).IsRequired();
+        b.Property(x => x.FileKey).HasMaxLength(DocumentsTables.FileKeyLength).IsRequired();
+        b.Property(x => x.ContentType).HasMaxLength(DocumentsTables.ContentTypeLength).IsRequired();
+        b.Property(x => x.Size).IsRequired();
+        b.Property(x => x.UploadedBy).IsRequired();
+        b.Property(x => x.UploadedAt).IsRequired();
+        b.Property(x => x.ETag).HasMaxLength(DocumentsTables.ETagLength);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(DocumentsTables.StatusLength).IsRequired();
+        b.Property(x => x.DeletedAt);
+        b.Property(x => x.DeletedBy);
+        b.Property(x => x.BucketName).HasMaxLength(DocumentsTables.BucketNameLength).IsRequired();
+
+        // Ignore domain events (handled by outbox processor)
+        b.Ignore(x => x.DomainEvents);
+
+        // Audit trail (CreatedAt, ModifiedAt, etc. via IAuditLogged interface)
+    }
+}

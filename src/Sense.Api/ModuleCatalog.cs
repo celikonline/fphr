@@ -1,3 +1,4 @@
+using Sense.Modules.Documents.Api;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Identity.Api;
 using Sense.Modules.Organization.Api;
@@ -13,5 +14,6 @@ public static class ModuleCatalog
         new IdentityModule(),
         new OrganizationModule(),
         new EmployeeModule(),
+        new DocumentsModule(),
     ];
 }

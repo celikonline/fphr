@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="../../src/Sense.Api/Sense.Api.csproj" />
     <ProjectReference Include="../../src/Sense.Migrator/Sense.Migrator.csproj" />
+    <ProjectReference Include="../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,6 +21,8 @@
     <PackageReference Include="Shouldly" />
     <PackageReference Include="Bogus" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" />
   </ItemGroup>
 
 </Project>

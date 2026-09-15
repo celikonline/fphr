@@ -66,6 +66,7 @@
     <PackageVersion Include="ModelContextProtocol.AspNetCore" Version="0.*" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.*" />
     <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.*" />
+    <PackageVersion Include="Minio" Version="7.*" />
     <!-- Geçişli bağımlılıklarda bilinen açıkları kapatmak için sabitlenen paketler -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.*" />
     <PackageVersion Include="MessagePack" Version="3.*" />

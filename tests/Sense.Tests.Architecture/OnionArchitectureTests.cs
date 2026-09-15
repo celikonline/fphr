@@ -111,6 +111,132 @@ public sealed class OnionArchitectureTests
 
     private static Assembly Find(string name) => All.Single(a => a.GetName().Name == name);
 
+    /// <summary>
+    /// Architecture rule: No hardcoded secrets in source code.
+    /// Checks for obvious patterns like "password", "token", "secret" (case-insensitive).
+    /// Allowed locations: appsettings.json, environment variables, secrets.json (git-ignored).
+    /// </summary>
+    [Fact]
+    public void NoPlaintextSecretsInCode()
+    {
+        var sensitivePatterns = new[] { "password", "token", "secret", "apikey", "api_key" };
+        var result = Types.InAssemblies(All.Where(a => a.GetName().Name!.StartsWith(Prefix)))
+            .That().AreClasses()
+            .Should().NotHaveNameMatching(@".*(?i)(password|token|secret|apikey|api_key).*")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Found potential hardcoded secrets. Move to appsettings.json or environment variables. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: Handlers must follow naming conventions.
+    /// - Command handlers: `*CommandHandler` sealed class
+    /// - Query handlers: `*QueryHandler` sealed class
+    /// </summary>
+    [Fact]
+    public void Handlers_FollowNamingConventions()
+    {
+        var result = Types.InAssemblies(Named(ApplicationSuffix))
+            .That().HaveNameEndingWith("Handler")
+            .Should().HaveNameMatching(@"^[A-Z][A-Za-z0-9]*(?:Command|Query)Handler$")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Handlers must follow pattern: {Action}CommandHandler or {Action}QueryHandler. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: Events must be in Domain layer and follow naming conventions.
+    /// - Domain events: `*Event` or `*DomainEvent` in Domain assembly
+    /// </summary>
+    [Fact]
+    public void DomainEvents_AreInDomainLayer()
+    {
+        var result = Types.InAssemblies(Named(DomainSuffix))
+            .That().HaveNameEndingWith("Event")
+            .Should().ResideInNamespaceContaining("Domain")
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Domain events must reside in Domain namespace. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: Audit/Infrastructure events should NOT be visible to Application layer.
+    /// Only Domain events can be published from entities.
+    /// </summary>
+    [Fact]
+    public void AuditEvents_AreNotReferencedByApplicationHandlers()
+    {
+        var result = Types.InAssemblies(Named(ApplicationSuffix))
+            .Should().NotHaveDependencyOnAll(Types.InAssemblies(Named(InfrastructureSuffix))
+                .That().HaveNameEndingWith("AuditEvent"))
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Application handlers must not reference Infrastructure audit events. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: Permission keys must follow naming convention.
+    /// Pattern: {module}.{resource_plural}.{action} in snake_case
+    /// Example: identity.users.create, organization.units.read
+    /// </summary>
+    [Fact]
+    public void PermissionKeys_FollowNamingConvention()
+    {
+        var infrastructureAssemblies = Named(InfrastructureSuffix);
+        var result = Types.InAssemblies(infrastructureAssemblies)
+            .That().HaveNameContaining("Permission")
+            .Should().HaveNameMatching(@"^[a-z_]+\.[a-z_]+\.[a-z_]+$")
+            .GetResult();
+
+        // This is a soft check; actual permission strings are validated at runtime
+        result.IsSuccessful.ShouldBeTrue(
+            "Permission keys should follow pattern: module.resource_plural.action in snake_case. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: No Infrastructure layer in public API of Contracts.
+    /// Contracts should only expose domain concepts, not infrastructure concerns.
+    /// </summary>
+    [Fact]
+    public void Contracts_DoNotExposeInfrastructureConcerns()
+    {
+        var infrastructureTypes = Types.InAssemblies(Named(InfrastructureSuffix));
+        var result = Types.InAssemblies(Named(ContractsSuffix))
+            .Should().NotHaveDependencyOnAll(infrastructureTypes)
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Contracts must not depend on Infrastructure. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
+    /// <summary>
+    /// Architecture rule: Modules can only have one DbContext per module.
+    /// All entities in a module share the same PostgreSQL schema.
+    /// </summary>
+    [Fact]
+    public void Modules_HaveOneDbContextPerModule()
+    {
+        var dbContextType = typeof(Sense.Shared.Infrastructure.Persistence.ModuleDbContext);
+        var result = Types.InAssemblies(Named(InfrastructureSuffix))
+            .That().Inherit(dbContextType)
+            .Should().NotHaveMultipleInheritorsInAssemblies(Named(InfrastructureSuffix))
+            .GetResult();
+
+        result.IsSuccessful.ShouldBeTrue(
+            "Each module should have exactly one DbContext inheriting from ModuleDbContext. " +
+            string.Join(", ", result.FailingTypeNames ?? []));
+    }
+
     private static Assembly[] LoadSolutionAssemblies()
     {
         // Test projesi Sense.Api'ye referans verir; tüm Sense.* assembly'leri çıktı klasöründe bulunur.

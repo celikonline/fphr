@@ -1,0 +1,290 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Minio;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Storage;
+using Sense.Shared.Kernel;
+
+namespace Sense.Shared.Infrastructure.Storage;
+
+/// <summary>Configuration for MinIO storage provider.</summary>
+public sealed class MinioOptions
+{
+    public const string Section = "MinIO";
+
+    /// <summary>MinIO server endpoint (e.g., "localhost:9000").</summary>
+    public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>MinIO access key.</summary>
+    public string AccessKey { get; set; } = string.Empty;
+
+    /// <summary>MinIO secret key.</summary>
+    public string SecretKey { get; set; } = string.Empty;
+
+    /// <summary>Use HTTPS for MinIO communication (default false for local dev).</summary>
+    public bool UseHttps { get; set; } = false;
+
+    /// <summary>Default upload presigned URL expiration in minutes (default 60).</summary>
+    public int UploadExpirationMinutes { get; set; } = 60;
+
+    /// <summary>Default download presigned URL expiration in minutes (default 15).</summary>
+    public int DownloadExpirationMinutes { get; set; } = 15;
+}
+
+/// <summary>MinIO implementation of IFileStorage with tenant isolation via bucket naming.</summary>
+public sealed class MinioAdapter : IFileStorage
+{
+    private readonly IMinioClient _client;
+    private readonly MinioOptions _options;
+    private readonly ITenantContext _tenantContext;
+    private readonly ICurrentUser _currentUser;
+    private readonly ILogger<MinioAdapter> _logger;
+
+    public MinioAdapter(
+        IMinioClient client,
+        IOptions<MinioOptions> options,
+        ITenantContext tenantContext,
+        ICurrentUser currentUser,
+        ILogger<MinioAdapter> logger)
+    {
+        _client = Guard.NotNull(client);
+        _options = Guard.NotNull(options).Value;
+        _tenantContext = Guard.NotNull(tenantContext);
+        _currentUser = Guard.NotNull(currentUser);
+        _logger = Guard.NotNull(logger);
+    }
+
+    /// <inheritdoc />
+    public async Task<PresignedUrlRequest> InitiateUploadAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateParameters(tenantId, bucketName, key);
+
+        var isolatedBucket = CreateBucketName(tenantId, bucketName);
+
+        try
+        {
+            // Ensure bucket exists
+            var bucketExistsArgs = new BucketExistsArgs().WithBucket(isolatedBucket);
+            var bucketExists = await _client.BucketExistsAsync(bucketExistsArgs, cancellationToken);
+
+            if (!bucketExists)
+            {
+                var makeBucketArgs = new MakeBucketArgs().WithBucket(isolatedBucket);
+                await _client.MakeBucketAsync(makeBucketArgs, cancellationToken);
+                _logger.LogInformation("Created bucket {Bucket} for tenant {TenantId}", isolatedBucket, tenantId);
+            }
+
+            // Generate presigned upload URL
+            var presignedArgs = new PresignedGetObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key)
+                .WithExpiry(_options.UploadExpirationMinutes * 60); // Convert to seconds
+
+            var uploadUrl = await _client.PresignedPutObjectAsync(presignedArgs, cancellationToken);
+            var expiresAt = DateTime.UtcNow.AddMinutes(_options.UploadExpirationMinutes);
+            var requestId = Guid.CreateVersion7().ToString("N");
+
+            _logger.LogInformation(
+                "Generated presigned upload URL for {TenantId}/{BucketName}/{Key}, expires at {ExpiresAt}",
+                tenantId, bucketName, key, expiresAt);
+
+            return new PresignedUrlRequest(
+                uploadUrl,
+                requestId,
+                expiresAt,
+                new Dictionary<string, string>
+                {
+                    { "Content-Type", contentType }
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to initiate upload for {TenantId}/{BucketName}/{Key}",
+                tenantId, bucketName, key);
+            throw new InvalidOperationException($"Failed to initiate upload: {ex.Message}", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task ConfirmUploadAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        string eTag,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateParameters(tenantId, bucketName, key);
+        Guard.NotEmpty(eTag, nameof(eTag));
+
+        var isolatedBucket = CreateBucketName(tenantId, bucketName);
+
+        try
+        {
+            // Verify object exists and check ETag
+            var statArgs = new StatObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key);
+
+            var stat = await _client.StatObjectAsync(statArgs, cancellationToken);
+
+            // Normalize ETags (MinIO might return quoted ETags)
+            var normalizedExpectedETag = eTag.Trim('"');
+            var normalizedActualETag = stat.ETag.Trim('"');
+
+            if (!normalizedActualETag.Equals(normalizedExpectedETag, StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning(
+                    "ETag mismatch for {TenantId}/{BucketName}/{Key}: expected {ExpectedETag}, got {ActualETag}",
+                    tenantId, bucketName, key, normalizedExpectedETag, normalizedActualETag);
+                throw new InvalidOperationException("Upload confirmation failed: ETag mismatch");
+            }
+
+            _logger.LogInformation(
+                "Confirmed upload for {TenantId}/{BucketName}/{Key} (ETag: {ETag}, Size: {Size} bytes)",
+                tenantId, bucketName, key, stat.ETag, stat.Size);
+
+            // TODO: Write audit event to outbox (Item 17 will integrate with audit system)
+        }
+        catch (ObjectNotFoundException)
+        {
+            _logger.LogError("Object not found for confirmation: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
+            throw new InvalidOperationException("File not found for confirmation");
+        }
+        catch (Exception ex) when (!(ex is InvalidOperationException))
+        {
+            _logger.LogError(ex,
+                "Failed to confirm upload for {TenantId}/{BucketName}/{Key}",
+                tenantId, bucketName, key);
+            throw new InvalidOperationException($"Failed to confirm upload: {ex.Message}", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<PresignedUrlResponse> GetDownloadUrlAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        int expirationMinutes = 15,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateParameters(tenantId, bucketName, key);
+
+        if (expirationMinutes < 1 || expirationMinutes > 7 * 24 * 60) // Max 7 days
+        {
+            throw new ArgumentOutOfRangeException(nameof(expirationMinutes), "Must be between 1 and 10080 minutes");
+        }
+
+        var isolatedBucket = CreateBucketName(tenantId, bucketName);
+
+        try
+        {
+            // Verify object exists
+            var statArgs = new StatObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key);
+
+            await _client.StatObjectAsync(statArgs, cancellationToken);
+
+            // Generate presigned download URL
+            var presignedArgs = new PresignedGetObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key)
+                .WithExpiry(expirationMinutes * 60); // Convert to seconds
+
+            var downloadUrl = await _client.PresignedGetObjectAsync(presignedArgs, cancellationToken);
+            var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
+
+            _logger.LogInformation(
+                "Generated presigned download URL for {TenantId}/{BucketName}/{Key}, expires at {ExpiresAt}",
+                tenantId, bucketName, key, expiresAt);
+
+            return new PresignedUrlResponse(downloadUrl, expiresAt);
+        }
+        catch (ObjectNotFoundException)
+        {
+            _logger.LogWarning("Object not found for download: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
+            throw new InvalidOperationException("File not found");
+        }
+        catch (Exception ex) when (!(ex is ArgumentOutOfRangeException || ex is InvalidOperationException))
+        {
+            _logger.LogError(ex,
+                "Failed to generate download URL for {TenantId}/{BucketName}/{Key}",
+                tenantId, bucketName, key);
+            throw new InvalidOperationException($"Failed to generate download URL: {ex.Message}", ex);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteFileAsync(
+        Guid tenantId,
+        string bucketName,
+        string key,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateParameters(tenantId, bucketName, key);
+
+        var isolatedBucket = CreateBucketName(tenantId, bucketName);
+
+        try
+        {
+            var removeArgs = new RemoveObjectArgs()
+                .WithBucket(isolatedBucket)
+                .WithObject(key);
+
+            await _client.RemoveObjectAsync(removeArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Deleted file {TenantId}/{BucketName}/{Key} by user {UserId}",
+                tenantId, bucketName, key, _currentUser.UserId);
+
+            // TODO: Write audit event to outbox (Item 17 will integrate with audit system)
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to delete file {TenantId}/{BucketName}/{Key}",
+                tenantId, bucketName, key);
+            throw new InvalidOperationException($"Failed to delete file: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>Creates a tenant-isolated bucket name.</summary>
+    private static string CreateBucketName(Guid tenantId, string bucketName)
+    {
+        // MinIO bucket names must be lowercase, 3-63 chars, start with letter/digit, contain only alphanumeric/dash
+        var tenant = tenantId.ToString("N").ToLowerInvariant()[..12]; // Use first 12 chars of tenant ID
+        var name = bucketName.ToLowerInvariant().Replace('_', '-');
+        return $"{tenant}-{name}";
+    }
+
+    /// <summary>Validates input parameters for security and correctness.</summary>
+    private static void ValidateParameters(Guid tenantId, string bucketName, string key)
+    {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant ID cannot be empty", nameof(tenantId));
+        }
+
+        if (string.IsNullOrWhiteSpace(bucketName))
+        {
+            throw new ArgumentException("Bucket name cannot be empty", nameof(bucketName));
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("Key cannot be empty", nameof(key));
+        }
+
+        // Ensure key doesn't try to escape the tenant bucket
+        if (key.Contains("..") || key.StartsWith("/"))
+        {
+            throw new ArgumentException("Invalid key format", nameof(key));
+        }
+    }
+}

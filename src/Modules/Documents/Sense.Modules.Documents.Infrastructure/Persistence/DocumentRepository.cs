@@ -1,0 +1,65 @@
+using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Documents.Domain;
+using Sense.Modules.Documents.Domain.Documents;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Kernel.Results;
+
+namespace Sense.Modules.Documents.Infrastructure.Persistence;
+
+/// <summary>Document repository implementation with tenant isolation.</summary>
+public sealed class DocumentRepository(DocumentsDbContext context, ITenantContext tenantContext) : IDocumentRepository
+{
+    public void Add(Document document)
+    {
+        context.Documents.Add(document);
+    }
+
+    public async Task<Result<Document>> GetByIdAsync(Guid documentId, CancellationToken cancellationToken = default)
+    {
+        // Query is automatically filtered by tenant via global filter in DbContext
+        var document = await context.Documents
+            .FirstOrDefaultAsync(d => d.Id == documentId, cancellationToken);
+
+        if (document is null)
+        {
+            return Error.NotFound(DocumentsDomainErrors.DocumentNotFound);
+        }
+
+        return document;
+    }
+
+    public async Task<IReadOnlyList<Document>> ListByTenantAsync(
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        // Query is automatically filtered by tenant via global filter in DbContext
+        var documents = await context.Documents
+            .Where(d => d.Status != DocumentStatus.Deleted)
+            .OrderByDescending(d => d.UploadedAt)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return documents.AsReadOnly();
+    }
+
+    public async Task<int> CountByTenantAsync(CancellationToken cancellationToken = default)
+    {
+        // Query is automatically filtered by tenant via global filter in DbContext
+        return await context.Documents
+            .Where(d => d.Status != DocumentStatus.Deleted)
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsByKeyAsync(
+        string fileKey,
+        string bucketName,
+        CancellationToken cancellationToken = default)
+    {
+        // Query is automatically filtered by tenant via global filter in DbContext
+        return await context.Documents
+            .Where(d => d.Status != DocumentStatus.Deleted)
+            .AnyAsync(d => d.FileKey == fileKey && d.BucketName == bucketName, cancellationToken);
+    }
+}

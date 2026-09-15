@@ -5,17 +5,20 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using Minio;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Persistence;
+using Sense.Shared.Contracts.Storage;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Events;
 using Sense.Shared.Infrastructure.Messaging;
 using Sense.Shared.Infrastructure.Messaging.Behaviours;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
+using Sense.Shared.Infrastructure.Storage;
 
 namespace Sense.Shared.Infrastructure.DependencyInjection;
 
@@ -122,6 +125,34 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IModuleUnitOfWork>(sp => sp.GetRequiredService<TContext>());
         services.AddScoped<ModuleDbContext>(sp => sp.GetRequiredService<TContext>());
         services.AddScoped<OutboxProcessor<TContext>>();
+        return services;
+    }
+
+    /// <summary>File storage with MinIO adapter and presigned URLs.</summary>
+    public static IServiceCollection AddFileStorage(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<MinioOptions>().Bind(configuration.GetSection(MinioOptions.Section)).ValidateOnStart();
+
+        var minioOptions = configuration.GetSection(MinioOptions.Section).Get<MinioOptions>();
+        if (minioOptions is null || string.IsNullOrWhiteSpace(minioOptions.Endpoint))
+        {
+            throw new InvalidOperationException("MinIO configuration (MinIO:Endpoint, MinIO:AccessKey, MinIO:SecretKey) is required.");
+        }
+
+        // Register MinIO client
+        services.AddSingleton<IMinioClient>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<MinioOptions>>().Value;
+            return new MinioClient()
+                .WithEndpoint(options.Endpoint)
+                .WithCredentials(options.AccessKey, options.SecretKey)
+                .WithSSL(options.UseHttps)
+                .Build();
+        });
+
+        // Register file storage adapter
+        services.AddSingleton<IFileStorage, MinioAdapter>();
+
         return services;
     }
 }
