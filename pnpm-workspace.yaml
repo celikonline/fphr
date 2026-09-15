@@ -2,6 +2,11 @@ packages:
   - "web"
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  '@parcel/watcher': true
+  dtrace-provider: true
+  protobufjs: true
+  unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@expo/apple-utils@2.2.1'
   - '@react-navigation/bottom-tabs@7.19.0'
