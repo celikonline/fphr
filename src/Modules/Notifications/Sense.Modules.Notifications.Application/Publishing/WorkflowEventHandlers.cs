@@ -1,0 +1,128 @@
+using System.Globalization;
+using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Notifications.Contracts;
+using Sense.Modules.Workflow.Contracts.Events;
+using Sense.Shared.Contracts.Events;
+
+namespace Sense.Modules.Notifications.Application.Publishing;
+
+/// <summary>Template variable names shared by the Workflow-driven templates and <see cref="ApprovalDecisionLinkEnricher"/>.</summary>
+public static class WorkflowTemplateModel
+{
+    public const string RequestType = "request_type";
+    public const string RequesterName = "requester_name";
+    public const string StepNumber = "step_number";
+    public const string RejectedAtStep = "rejected_at_step";
+    public const string ApprovalTaskId = "approval_task_id";
+
+    /// <summary>"true" when the task has a concrete approver (a single-use decision link is minted); "false" for a role queue.</summary>
+    public const string IsDirectAssignee = "is_direct_assignee";
+
+    public const string DecisionUrl = "decision_url";
+    public const string DecisionExpiresAt = "decision_expires_at";
+
+    /// <summary>Web route of the approval inbox (web/src/App.tsx).</summary>
+    public const string InboxPath = "/app/inbox";
+}
+
+/// <summary>request.created → requester.</summary>
+public sealed class ApprovalRequestedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
+    : IIntegrationEventHandler<ApprovalRequested>
+{
+    public async Task Handle(ApprovalRequested integrationEvent, CancellationToken cancellationToken)
+    {
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.RequesterEmployeeId], cancellationToken);
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.RequestCreated,
+                to,
+                new Dictionary<string, string?> { [WorkflowTemplateModel.RequestType] = integrationEvent.RequestType },
+                ActionPath: null),
+            cancellationToken);
+    }
+}
+
+/// <summary>approval.task_assigned → the approver, or every member of the fallback role queue.</summary>
+public sealed class ApprovalTaskAssignedNotificationHandler(
+    NotificationRecipientResolver recipients, NotificationPublisher publisher, IRoleAssignmentLookup roleAssignments)
+    : IIntegrationEventHandler<ApprovalTaskAssigned>
+{
+    public async Task Handle(ApprovalTaskAssigned integrationEvent, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Guid> approverIds = integrationEvent switch
+        {
+            { ApproverEmployeeId: { } approverId } => [approverId],
+            { FallbackRoleCode: { Length: > 0 } roleCode } =>
+                await roleAssignments.ListEmployeeIdsInRoleAsync(integrationEvent.TenantId, roleCode, cancellationToken),
+            _ => [],
+        };
+        if (approverIds.Count == 0)
+        {
+            return;
+        }
+
+        var requester = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.RequesterEmployeeId], cancellationToken);
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, approverIds, cancellationToken);
+
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.ApprovalTaskAssigned,
+                to,
+                new Dictionary<string, string?>
+                {
+                    [WorkflowTemplateModel.RequestType] = integrationEvent.RequestType,
+                    [WorkflowTemplateModel.RequesterName] = requester.FirstOrDefault()?.DisplayName,
+                    [WorkflowTemplateModel.StepNumber] = integrationEvent.StepNumber.ToString(CultureInfo.InvariantCulture),
+                    [WorkflowTemplateModel.ApprovalTaskId] = integrationEvent.ApprovalTaskId.ToString(),
+                    [WorkflowTemplateModel.IsDirectAssignee] = integrationEvent.ApproverEmployeeId is null ? "false" : "true",
+                },
+                WorkflowTemplateModel.InboxPath),
+            cancellationToken);
+    }
+}
+
+/// <summary>request.approved → requester.</summary>
+public sealed class ApprovalCompletedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
+    : IIntegrationEventHandler<ApprovalCompleted>
+{
+    public async Task Handle(ApprovalCompleted integrationEvent, CancellationToken cancellationToken)
+    {
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.RequesterEmployeeId], cancellationToken);
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.RequestApproved,
+                to,
+                new Dictionary<string, string?> { [WorkflowTemplateModel.RequestType] = integrationEvent.RequestType },
+                ActionPath: null),
+            cancellationToken);
+    }
+}
+
+/// <summary>request.rejected → requester.</summary>
+public sealed class ApprovalRejectedNotificationHandler(NotificationRecipientResolver recipients, NotificationPublisher publisher)
+    : IIntegrationEventHandler<ApprovalRejected>
+{
+    public async Task Handle(ApprovalRejected integrationEvent, CancellationToken cancellationToken)
+    {
+        var to = await recipients.ResolveAsync(integrationEvent.TenantId, [integrationEvent.RequesterEmployeeId], cancellationToken);
+        await publisher.PublishAsync(
+            integrationEvent.TenantId,
+            new NotificationRequest(
+                integrationEvent.EventId,
+                NotificationTemplateKeys.RequestRejected,
+                to,
+                new Dictionary<string, string?>
+                {
+                    [WorkflowTemplateModel.RequestType] = integrationEvent.RequestType,
+                    [WorkflowTemplateModel.RejectedAtStep] = integrationEvent.RejectedAtStep.ToString(CultureInfo.InvariantCulture),
+                },
+                ActionPath: null),
+            cancellationToken);
+    }
+}

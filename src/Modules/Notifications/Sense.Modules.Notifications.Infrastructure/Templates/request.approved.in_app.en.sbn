@@ -1,0 +1,2 @@
+{{- subject = "Your " + request_type_name + " request was approved" -}}
+All approval steps are complete.

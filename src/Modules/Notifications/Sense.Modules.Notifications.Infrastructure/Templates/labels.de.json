@@ -1,0 +1,8 @@
+{
+  "request_types": {
+    "Leave": "Urlaub",
+    "Advance": "Vorschuss",
+    "Expense": "Spesen",
+    "Overtime": "Überstunden"
+  }
+}

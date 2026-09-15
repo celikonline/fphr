@@ -1,0 +1,2 @@
+{{- subject = "Genehmigung erforderlich: Antrag (" + request_type_name + ")" -}}
+{{ if requester_name }}Erstellt von {{ requester_name }}.{{ else }}Ein Antrag wartet auf Ihre Genehmigung.{{ end }}

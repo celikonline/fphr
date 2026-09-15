@@ -1,0 +1,8 @@
+{
+  "request_types": {
+    "Leave": "İzin",
+    "Advance": "Avans",
+    "Expense": "Harcama",
+    "Overtime": "Fazla mesai"
+  }
+}

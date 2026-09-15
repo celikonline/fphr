@@ -1,0 +1,8 @@
+{
+  "request_types": {
+    "Leave": "Leave",
+    "Advance": "Advance",
+    "Expense": "Expense",
+    "Overtime": "Overtime"
+  }
+}
