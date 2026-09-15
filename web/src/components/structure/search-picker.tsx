@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
+import { Check, ChevronsUpDown, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandLoading,
+} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +35,7 @@ interface SearchPickerProps {
   onError?: (error: unknown) => void;
 }
 
-/** Async search combobox (popover + text search) used for person pickers. */
+/** Async search combobox (popover + server-side search, keyboard navigable) used for person pickers. */
 export default function SearchPicker({
   id,
   queryKey,
@@ -60,6 +68,8 @@ export default function SearchPicker({
     if (error && onError) onError(error);
   }, [error, onError]);
 
+  const options = data ?? [];
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <div className="flex items-center gap-1">
@@ -83,48 +93,47 @@ export default function SearchPicker({
           </Button>
         )}
       </div>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-72 p-2" align="start">
-        <div className="relative mb-2">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            autoFocus
-            className="pl-8"
-            placeholder={t("structure:searchPerson")}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-          />
-        </div>
-        <div className="max-h-60 overflow-y-auto">
-          {isFetching && !data ? (
-            <div className="flex justify-center p-3">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          ) : error ? (
-            <p className="p-3 text-center text-sm text-muted-foreground">{t("common:errorGeneric")}</p>
-          ) : !data || data.length === 0 ? (
-            <p className="p-3 text-center text-sm text-muted-foreground">{t("common:noResults")}</p>
-          ) : (
-            data.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent hover:text-accent-foreground"
-                onClick={() => {
-                  onChange(option);
-                  setOpen(false);
-                }}
-              >
-                <Check className={cn("h-4 w-4 shrink-0", value?.id === option.id ? "opacity-100" : "opacity-0")} />
-                <span className="min-w-0">
-                  <span className="block truncate">{option.label}</span>
-                  {option.description && (
-                    <span className="block truncate text-xs text-muted-foreground">{option.description}</span>
-                  )}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0" align="start">
+        <Command shouldFilter={false} loop>
+          <CommandInput autoFocus placeholder={t("structure:searchPerson")} value={text} onValueChange={setText} />
+          <CommandList className="max-h-60">
+            {isFetching && !data ? (
+              <CommandLoading>
+                <div className="flex justify-center">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                </div>
+              </CommandLoading>
+            ) : error ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">{t("common:errorGeneric")}</p>
+            ) : (
+              <>
+                <CommandEmpty>{t("common:noResults")}</CommandEmpty>
+                {options.length > 0 && (
+                  <CommandGroup>
+                    {options.map((option) => (
+                      <CommandItem
+                        key={option.id}
+                        value={option.id}
+                        onSelect={() => {
+                          onChange(option);
+                          setOpen(false);
+                        }}
+                      >
+                        <Check className={cn("h-4 w-4", value?.id === option.id ? "opacity-100" : "opacity-0")} />
+                        <span className="min-w-0">
+                          <span className="block truncate">{option.label}</span>
+                          {option.description && (
+                            <span className="block truncate text-xs text-muted-foreground">{option.description}</span>
+                          )}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </>
+            )}
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   );

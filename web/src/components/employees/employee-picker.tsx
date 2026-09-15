@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronsUpDown, Search, X } from "lucide-react";
+import { Check, ChevronsUpDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandLoading,
+} from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { listEmployees } from "@/services/employees.service";
 import { cn } from "@/lib/utils";
@@ -24,7 +32,7 @@ interface EmployeePickerProps {
   disabled?: boolean;
 }
 
-/** Searchable single-employee picker backed by `GET /v1/employees?q` (active employees). */
+/** Searchable single-employee combobox backed by `GET /v1/employees?q` (active employees). */
 export default function EmployeePicker({ id, value, onChange, excludeId, placeholder, allowClear, disabled }: EmployeePickerProps) {
   const { t } = useTranslation(["employees"]);
   const [open, setOpen] = useState(false);
@@ -67,42 +75,41 @@ export default function EmployeePicker({ id, value, onChange, excludeId, placeho
           </Button>
         )}
       </div>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-72 p-2" align="start">
-        <div className="relative mb-2">
-          <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            autoFocus
-            className="pl-8"
-            placeholder={t("employees:picker.search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <div className="max-h-64 overflow-y-auto">
-          {isFetching && items.length === 0 ? (
-            <p className="p-2 text-sm text-muted-foreground">{t("employees:loading")}</p>
-          ) : items.length === 0 ? (
-            <p className="p-2 text-sm text-muted-foreground">{t("employees:picker.empty")}</p>
-          ) : (
-            items.map((employee) => (
-              <button
-                key={employee.id}
-                type="button"
-                className={cn(
-                  "flex w-full flex-col items-start rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent",
-                  value?.id === employee.id && "bg-accent"
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0" align="start">
+        <Command shouldFilter={false} loop>
+          <CommandInput autoFocus placeholder={t("employees:picker.search")} value={search} onValueChange={setSearch} />
+          <CommandList className="max-h-64">
+            {isFetching && items.length === 0 ? (
+              <CommandLoading>{t("employees:loading")}</CommandLoading>
+            ) : (
+              <>
+                <CommandEmpty>{t("employees:picker.empty")}</CommandEmpty>
+                {items.length > 0 && (
+                  <CommandGroup>
+                    {items.map((employee) => (
+                      <CommandItem
+                        key={employee.id}
+                        value={employee.id}
+                        onSelect={() => {
+                          onChange({ id: employee.id, displayName: employee.displayName });
+                          setOpen(false);
+                        }}
+                      >
+                        <Check className={cn("h-4 w-4", value?.id === employee.id ? "opacity-100" : "opacity-0")} />
+                        <span className="min-w-0">
+                          <span className="block truncate">{employee.displayName}</span>
+                          {employee.workEmail && (
+                            <span className="block truncate text-xs text-muted-foreground">{employee.workEmail}</span>
+                          )}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
                 )}
-                onClick={() => {
-                  onChange({ id: employee.id, displayName: employee.displayName });
-                  setOpen(false);
-                }}
-              >
-                <span>{employee.displayName}</span>
-                {employee.workEmail && <span className="text-xs text-muted-foreground">{employee.workEmail}</span>}
-              </button>
-            ))
-          )}
-        </div>
+              </>
+            )}
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   );
