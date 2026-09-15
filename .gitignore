@@ -18,6 +18,9 @@ dist-ssr/
 .vite/
 *.tsbuildinfo
 .pnpm-store/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
 .expo/
 .expo-shared/
 web-build/

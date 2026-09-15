@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+pnpm-debug.log*
+
+# Production
+dist
+dist-ssr
+
+# Development
+.DS_Store
+.env.local
+.env.*.local
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+coverage
+.vitest
+
+# PWA
+sw.js
+workbox-*.js
