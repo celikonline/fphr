@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
 import { acceptInvitation, getInvitationPreview } from "@/services/invitations.service";
+import classes from "./invite-accept.module.css";
 
 /** Mirrors IdentityDefaults.MinPasswordLength; the server validates the configured value. */
 const MIN_PASSWORD_LENGTH = 10;
@@ -31,7 +32,7 @@ type FormValues = z.infer<typeof schema>;
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
     <Center mih="100vh" px="md" py={48} bg="var(--mantine-color-default-hover)">
-      <Card withBorder shadow="sm" padding="xl" w="100%" maw={448}>
+      <Card withBorder padding="xl" w="100%" maw={448} className={classes.card}>
         {children}
       </Card>
     </Center>

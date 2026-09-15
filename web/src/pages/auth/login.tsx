@@ -19,11 +19,15 @@ import {
 import { Palmtree, Eye, EyeOff, Moon, Sun, Monitor, Wallet, Target } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
+import classes from "./login.module.css";
+
+/** Algosense petrol (#12332C), the dark square of the brand mark in both color schemes. */
+const PETROL = "#12332c";
 
 function BrandMark() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <rect x="12" y="4" width="24" height="24" rx="6" className="fill-petrol" />
+      <rect x="12" y="4" width="24" height="24" rx="6" fill={PETROL} />
       <rect x="4" y="12" width="24" height="24" rx="6" fill="var(--mantine-color-algosenseGreen-5)" />
       <path
         d="M12.5 27.5L21 19M21 19H14.5M21 19V25.5"
@@ -110,14 +114,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className={`flex min-h-screen ${classes.page}`}>
       <LoginThemeToggle />
 
       {/* Brand panel */}
       <aside
-        className="hidden min-w-[420px] flex-none basis-[44%] flex-col justify-between border-r border-border
-          bg-gradient-to-br from-[#EAF8F1] via-[#F5FBF8] to-white
-          p-14 dark:from-[#16463B] dark:via-[#12332C] dark:to-[#0A211C] lg:flex"
+        className={`hidden min-w-[420px] flex-none basis-[44%] flex-col justify-between p-14 lg:flex ${classes.brandPanel}`}
       >
         <Group gap="sm" wrap="nowrap">
           <BrandMark />
@@ -132,7 +134,7 @@ export default function LoginPage() {
         </Group>
 
         <div className="max-w-md">
-          <Title order={1} fz={36} fw={800} lh={1.2} lts={-0.5} className="text-balance">
+          <Title order={1} fz={36} fw={800} lh={1.2} lts={-0.5} className={classes.tagline}>
             {t("auth:brandTagline")}
           </Title>
           <Text mt="md" maw={384} size="md" lh={1.6} c="dimmed">

@@ -1,0 +1,17 @@
+.page {
+  background-color: var(--mantine-color-body);
+}
+
+.brandPanel {
+  border-inline-end: 1px solid var(--mantine-color-default-border);
+  background-image: linear-gradient(
+    to bottom right,
+    light-dark(#eaf8f1, #16463b),
+    light-dark(#f5fbf8, #12332c),
+    light-dark(#ffffff, #0a211c)
+  );
+}
+
+.tagline {
+  text-wrap: balance;
+}
