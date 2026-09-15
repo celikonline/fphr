@@ -3,23 +3,29 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarDays, Plus, Repeat } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Input,
+  Modal,
+  NavLink,
+  Select,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { structureErrorMessage } from "@/components/structure/errors";
 import { toast } from "@/hooks/use-toast";
 import { formatDateOnly } from "@/lib/dates";
-import { cn } from "@/lib/utils";
 import {
   addHolidayCalendarEntry,
   createHolidayCalendar,
@@ -107,11 +113,13 @@ function HolidayCalendars() {
       sortingFn: (a, b) => Number(a.original.isRecurringAnnually) - Number(b.original.isRecurringAnnually),
       cell: ({ row }) =>
         row.original.isRecurringAnnually ? (
-          <Badge variant="outline" className="gap-1">
-            <Repeat className="h-3 w-3" /> {t("structure:calendars.everyYear")}
+          <Badge variant="outline" leftSection={<Repeat size={12} />}>
+            {t("structure:calendars.everyYear")}
           </Badge>
         ) : (
-          <span className="text-sm text-muted-foreground">{t("structure:calendars.oneTime")}</span>
+          <Text size="sm" c="dimmed" component="span">
+            {t("structure:calendars.oneTime")}
+          </Text>
         ),
     },
   ];
@@ -126,96 +134,107 @@ function HolidayCalendars() {
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [entryDialogOpen, setEntryDialogOpen] = useState(false);
 
+  const yearOptions = [
+    { value: ALL_YEARS, label: t("structure:calendars.allYears") },
+    ...years.map((y) => ({ value: y, label: y })),
+  ];
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <CalendarDays className="h-6 w-6" /> {t("structure:holidayCalendarsTitle")}
-          </h1>
-          <p className="text-muted-foreground">{t("structure:calendars.subtitle")}</p>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <CalendarDays size={24} /> {t("structure:holidayCalendarsTitle")}
+          </Title>
+          <Text c="dimmed">{t("structure:calendars.subtitle")}</Text>
         </div>
         {canCreate && (
-          <Button type="button" onClick={() => setCalendarDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> {t("structure:calendars.addCalendar")}
+          <Button type="button" leftSection={<Plus size={16} />} onClick={() => setCalendarDialogOpen(true)}>
+            {t("structure:calendars.addCalendar")}
           </Button>
         )}
-      </div>
+      </Group>
 
       {calendarsQuery.isLoading ? (
         <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+          <Skeleton h={256} />
+          <Skeleton h={256} />
         </div>
       ) : calendarsQuery.isError ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-destructive">{t("structure:errors.loadFailed")}</CardContent>
+        <Card withBorder padding="lg">
+          <Text size="sm" c="red" ta="center">
+            {t("structure:errors.loadFailed")}
+          </Text>
         </Card>
       ) : calendars.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">{t("structure:calendars.empty")}</CardContent>
+        <Card withBorder padding="lg">
+          <Text size="sm" c="dimmed" ta="center">
+            {t("structure:calendars.empty")}
+          </Text>
         </Card>
       ) : (
         <div className="grid items-start gap-6 lg:grid-cols-[18rem_1fr]">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t("structure:calendars.listTitle")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-1 px-3 pb-4">
+          <Card withBorder padding="md">
+            <Text fw={600} mb="sm">
+              {t("structure:calendars.listTitle")}
+            </Text>
+            <Stack gap={4}>
               {calendars.map((calendar) => (
-                <button
+                <NavLink
                   key={calendar.id}
+                  component="button"
                   type="button"
+                  active={calendar.id === selected?.id}
                   onClick={() => setSelectedId(calendar.id)}
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                    calendar.id === selected?.id ? "border-primary bg-primary/5 font-semibold" : "border-transparent hover:bg-muted",
-                  )}
-                >
-                  <span className="min-w-0 flex-1 truncate">{calendar.name}</span>
-                  <span className="text-xs text-muted-foreground">{calendar.countryCode}</span>
-                  {calendar.isSystemDefined && <Badge variant="secondary">{t("structure:calendars.system")}</Badge>}
-                </button>
+                  noWrap
+                  label={calendar.name}
+                  rightSection={
+                    <Group gap={6} wrap="nowrap">
+                      <Text size="xs" c="dimmed" component="span">
+                        {calendar.countryCode}
+                      </Text>
+                      {calendar.isSystemDefined && <Badge variant="light">{t("structure:calendars.system")}</Badge>}
+                    </Group>
+                  }
+                />
               ))}
-            </CardContent>
+            </Stack>
           </Card>
 
           {selected && (
-            <Card>
-              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0 pb-4">
+            <Card withBorder padding="lg">
+              <Group justify="space-between" gap="sm" mb="md">
                 <div>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    {selected.name}
-                    {selected.isSystemDefined && <Badge variant="secondary">{t("structure:calendars.system")}</Badge>}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground">
+                  <Group gap="xs">
+                    <Text fw={600} size="lg">
+                      {selected.name}
+                    </Text>
+                    {selected.isSystemDefined && <Badge variant="light">{t("structure:calendars.system")}</Badge>}
+                  </Group>
+                  <Text size="xs" c="dimmed">
                     {t("structure:calendars.country", { code: selected.countryCode })}
-                  </p>
+                  </Text>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Select value={year} onValueChange={setYear}>
-                    <SelectTrigger className="h-9 w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL_YEARS}>{t("structure:calendars.allYears")}</SelectItem>
-                      {years.map((y) => (
-                        <SelectItem key={y} value={y}>
-                          {y}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <Group gap="xs">
+                  <Select
+                    w={128}
+                    data={yearOptions}
+                    value={year}
+                    onChange={(value) => value && setYear(value)}
+                    allowDeselect={false}
+                  />
                   {canUpdate && (
-                    <Button type="button" onClick={() => setEntryDialogOpen(true)}>
-                      <Plus className="mr-2 h-4 w-4" /> {t("structure:calendars.addEntry")}
+                    <Button type="button" leftSection={<Plus size={16} />} onClick={() => setEntryDialogOpen(true)}>
+                      {t("structure:calendars.addEntry")}
                     </Button>
                   )}
-                </div>
-              </CardHeader>
-              <CardContent className="p-0">
+                </Group>
+              </Group>
+              <Card.Section withBorder>
                 {entriesQuery.isError ? (
-                  <p className="p-6 text-center text-sm text-destructive">{t("structure:errors.loadFailed")}</p>
+                  <Text size="sm" c="red" ta="center" p="lg">
+                    {t("structure:errors.loadFailed")}
+                  </Text>
                 ) : (
                   <DataTable
                     table={entriesTable}
@@ -223,7 +242,7 @@ function HolidayCalendars() {
                     emptyMessage={t("structure:calendars.noEntries")}
                   />
                 )}
-              </CardContent>
+              </Card.Section>
             </Card>
           )}
         </div>
@@ -265,49 +284,47 @@ function CreateCalendarDialog({ onClose, onCreated }: { onClose: () => void; onC
   const countryInvalid = !/^[A-Za-z]{2}$/.test(countryCode.trim());
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !mutation.isPending && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("structure:calendars.createTitle")}</DialogTitle>
-          <DialogDescription>{t("structure:calendars.createDescription")}</DialogDescription>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            if (!nameMissing && !countryInvalid) mutation.mutate();
-          }}
-        >
-          <div>
-            <Label htmlFor="calendar-name">{t("structure:calendars.name")}</Label>
-            <Input id="calendar-name" autoFocus maxLength={200} value={name} onChange={(e) => setName(e.target.value)} />
-            {submitted && nameMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-          </div>
-          <div>
-            <Label htmlFor="calendar-country">{t("structure:calendars.countryCode")}</Label>
-            <Input
-              id="calendar-country"
-              maxLength={2}
-              placeholder="TR"
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-            />
-            {submitted && countryInvalid && (
-              <p className="mt-1 text-xs text-destructive">{t("structure:calendars.countryCodeInvalid")}</p>
-            )}
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+    <Modal opened onClose={() => !mutation.isPending && onClose()} title={t("structure:calendars.createTitle")}>
+      <Text size="sm" c="dimmed" mb="md">
+        {t("structure:calendars.createDescription")}
+      </Text>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSubmitted(true);
+          if (!nameMissing && !countryInvalid) mutation.mutate();
+        }}
+      >
+        <Stack gap="md">
+          <TextInput
+            id="calendar-name"
+            data-autofocus
+            label={t("structure:calendars.name")}
+            maxLength={200}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            error={submitted && nameMissing ? t("common:required") : undefined}
+          />
+          <TextInput
+            id="calendar-country"
+            label={t("structure:calendars.countryCode")}
+            maxLength={2}
+            placeholder="TR"
+            value={countryCode}
+            onChange={(e) => setCountryCode(e.currentTarget.value)}
+            error={submitted && countryInvalid ? t("structure:calendars.countryCodeInvalid") : undefined}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -334,52 +351,50 @@ function AddEntryDialog({ calendar, onClose }: { calendar: HolidayCalendar; onCl
   const dateMissing = !date;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !mutation.isPending && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("structure:calendars.addEntryTitle")}</DialogTitle>
-          <DialogDescription>{calendar.name}</DialogDescription>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            if (!nameMissing && !dateMissing) mutation.mutate();
-          }}
-        >
-          <div>
-            <Label htmlFor="entry-date">{t("structure:calendars.date")}</Label>
+    <Modal opened onClose={() => !mutation.isPending && onClose()} title={t("structure:calendars.addEntryTitle")}>
+      <Text size="sm" c="dimmed" mb="md">
+        {calendar.name}
+      </Text>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSubmitted(true);
+          if (!nameMissing && !dateMissing) mutation.mutate();
+        }}
+      >
+        <Stack gap="md">
+          <Input.Wrapper
+            id="entry-date"
+            label={t("structure:calendars.date")}
+            error={submitted && dateMissing ? t("common:required") : undefined}
+          >
             <DatePicker id="entry-date" value={date} onChange={setDate} />
-            {submitted && dateMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-          </div>
-          <div>
-            <Label htmlFor="entry-name">{t("structure:calendars.entryName")}</Label>
-            <Input
-              id="entry-name"
-              maxLength={200}
-              placeholder={t("structure:calendars.entryNamePlaceholder")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            {submitted && nameMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-          </div>
-          <div className="flex items-center gap-2">
-            <Checkbox id="entry-recurring" checked={recurring} onCheckedChange={(checked) => setRecurring(checked === true)} />
-            <Label htmlFor="entry-recurring" className="font-normal">
-              {t("structure:calendars.recurringLabel")}
-            </Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          </Input.Wrapper>
+          <TextInput
+            id="entry-name"
+            label={t("structure:calendars.entryName")}
+            maxLength={200}
+            placeholder={t("structure:calendars.entryNamePlaceholder")}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            error={submitted && nameMissing ? t("common:required") : undefined}
+          />
+          <Checkbox
+            id="entry-recurring"
+            label={t("structure:calendars.recurringLabel")}
+            checked={recurring}
+            onChange={(e) => setRecurring(e.currentTarget.checked)}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }

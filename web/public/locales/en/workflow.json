@@ -29,6 +29,8 @@
       "isRequired": "This step is required",
       "addStep": "Add step",
       "removeStep": "Remove step",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
       "empty": "No approval steps yet. Use \"Add step\" to create one."
     },
     "save": "Save",

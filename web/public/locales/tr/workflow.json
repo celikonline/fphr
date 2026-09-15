@@ -29,6 +29,8 @@
       "isRequired": "Bu adım zorunlu",
       "addStep": "Adım ekle",
       "removeStep": "Adımı kaldır",
+      "moveUp": "Yukarı taşı",
+      "moveDown": "Aşağı taşı",
       "empty": "Henüz onay adımı yok. \"Adım ekle\" ile ekleyin."
     },
     "save": "Kaydet",

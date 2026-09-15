@@ -4,17 +4,10 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Building2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Building2, Info } from "lucide-react";
+import { Alert, Avatar, Button, Card, Chip, Group, Input, Skeleton, Text, TextInput, Title } from "@mantine/core";
 import { FileDropzone } from "@/components/ui/file-dropzone";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TimePicker } from "@/components/ui/time-picker";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
 import {
@@ -26,7 +19,7 @@ import {
 } from "@/services/company.service";
 
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
-const WEEK_DAYS: WeekDay[] =["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 const schema = z.object({
   name: z.string().min(1),
@@ -137,8 +130,8 @@ export default function CompanyProfilePage() {
   if (isLoading || !profile) {
     return (
       <div className="space-y-4 p-6 md:p-10">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-64 w-full" />
+        <Skeleton h={32} w={256} />
+        <Skeleton h={256} />
       </div>
     );
   }
@@ -146,27 +139,26 @@ export default function CompanyProfilePage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <Building2 className="h-6 w-6" /> {t("company:title")}
-        </h1>
-        <p className="text-muted-foreground">{t("company:subtitle")}</p>
+        <Title order={1} size="h2" className="flex items-center gap-2">
+          <Building2 size={24} /> {t("company:title")}
+        </Title>
+        <Text c="dimmed">{t("company:subtitle")}</Text>
       </div>
 
       {!canManage && (
-        <Alert>
-          <AlertDescription>{t("company:readOnlyNotice")}</AlertDescription>
+        <Alert variant="light" icon={<Info size={16} />}>
+          {t("company:readOnlyNotice")}
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("company:sectionLogo")}</CardTitle>
-          <CardDescription>{t("company:logoHint")}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex items-center gap-4">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={profile.logoUrl} alt={profile.name} />
-            <AvatarFallback>{profile.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+      <Card withBorder padding="lg">
+        <Text fw={600}>{t("company:sectionLogo")}</Text>
+        <Text size="sm" c="dimmed">
+          {t("company:logoHint")}
+        </Text>
+        <div className="mt-4 flex items-center gap-4">
+          <Avatar size={64} src={profile.logoUrl} alt={profile.name}>
+            {profile.name.slice(0, 2).toUpperCase()}
           </Avatar>
           <FileDropzone
             className="flex-1"
@@ -180,7 +172,7 @@ export default function CompanyProfilePage() {
             onFile={(file) => logoMutation.mutate(file)}
             onReject={() => toast({ variant: "destructive", title: t("common:error"), description: t("company:logoRejected") })}
           />
-        </CardContent>
+        </div>
       </Card>
 
       <form
@@ -188,100 +180,86 @@ export default function CompanyProfilePage() {
         className="space-y-6"
         aria-label={t("company:title")}
       >
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t("company:sectionGeneral")}</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label htmlFor="name">{t("company:name")}</Label>
-              <Input id="name" disabled={!canManage} {...register("name")} />
-              {errors.name && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-            </div>
-            <div>
-              <Label htmlFor="registrationNumber">{t("company:registrationNumber")}</Label>
-              <Input id="registrationNumber" disabled={!canManage} {...register("registrationNumber")} />
-            </div>
-            <div>
-              <Label htmlFor="taxNumber">{t("company:taxNumber")}</Label>
-              <Input id="taxNumber" disabled={!canManage} {...register("taxNumber")} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label htmlFor="address">{t("company:address")}</Label>
-              <Input id="address" disabled={!canManage} {...register("address")} />
-            </div>
-            <div>
-              <Label htmlFor="city">{t("company:city")}</Label>
-              <Input id="city" disabled={!canManage} {...register("city")} />
-            </div>
-            <div>
-              <Label htmlFor="country">{t("company:country")}</Label>
-              <Input id="country" disabled={!canManage} {...register("country")} />
-            </div>
-          </CardContent>
+        <Card withBorder padding="lg">
+          <Text fw={600} mb="md">
+            {t("company:sectionGeneral")}
+          </Text>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <TextInput
+              id="name"
+              className="sm:col-span-2"
+              label={t("company:name")}
+              disabled={!canManage}
+              error={errors.name ? t("common:required") : undefined}
+              {...register("name")}
+            />
+            <TextInput
+              id="registrationNumber"
+              label={t("company:registrationNumber")}
+              disabled={!canManage}
+              {...register("registrationNumber")}
+            />
+            <TextInput id="taxNumber" label={t("company:taxNumber")} disabled={!canManage} {...register("taxNumber")} />
+            <TextInput
+              id="address"
+              className="sm:col-span-2"
+              label={t("company:address")}
+              disabled={!canManage}
+              {...register("address")}
+            />
+            <TextInput id="city" label={t("company:city")} disabled={!canManage} {...register("city")} />
+            <TextInput id="country" label={t("company:country")} disabled={!canManage} {...register("country")} />
+          </div>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t("company:sectionHours")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card withBorder padding="lg">
+          <Text fw={600} mb="md">
+            {t("company:sectionHours")}
+          </Text>
+          <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4 sm:max-w-xs">
-              <div>
-                <Label htmlFor="operatingHoursStart">{t("company:operatingHoursStart")}</Label>
+              <Input.Wrapper id="operatingHoursStart" label={t("company:operatingHoursStart")}>
                 <Controller
                   control={control}
                   name="operatingHoursStart"
                   render={({ field }) => <TimePicker id="operatingHoursStart" disabled={!canManage} {...field} />}
                 />
-              </div>
-              <div>
-                <Label htmlFor="operatingHoursEnd">{t("company:operatingHoursEnd")}</Label>
+              </Input.Wrapper>
+              <Input.Wrapper id="operatingHoursEnd" label={t("company:operatingHoursEnd")}>
                 <Controller
                   control={control}
                   name="operatingHoursEnd"
                   render={({ field }) => <TimePicker id="operatingHoursEnd" disabled={!canManage} {...field} />}
                 />
-              </div>
+              </Input.Wrapper>
             </div>
 
-            <div>
-              <Label>{t("company:workingDays")}</Label>
+            <Input.Wrapper label={t("company:workingDays")} labelElement="div">
               <Controller
                 control={control}
                 name="workingDays"
                 render={({ field }) => (
-                  <div className="mt-2 flex flex-wrap gap-3">
-                    {WEEK_DAYS.map((day) => {
-                      const checked = field.value.includes(day);
-                      return (
-                        <label key={day} className="flex items-center gap-1.5 text-sm">
-                          <Checkbox
-                            checked={checked}
-                            disabled={!canManage}
-                            onCheckedChange={(value) => {
-                              field.onChange(
-                                value ? [...field.value, day] : field.value.filter((d) => d !== day)
-                              );
-                            }}
-                          />
+                  <Group gap="xs" mt="xs">
+                    <Chip.Group multiple value={field.value} onChange={field.onChange}>
+                      {WEEK_DAYS.map((day) => (
+                        <Chip key={day} value={day} disabled={!canManage}>
                           {t(`company:days.${day}`)}
-                        </label>
-                      );
-                    })}
-                  </div>
+                        </Chip>
+                      ))}
+                    </Chip.Group>
+                  </Group>
                 )}
               />
-            </div>
-          </CardContent>
+            </Input.Wrapper>
+          </div>
         </Card>
 
         {canManage && (
-          <div className="flex justify-end">
+          <Group justify="flex-end">
             <Button type="submit" disabled={!isDirty || saveMutation.isPending}>
               {saveMutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </div>
+          </Group>
         )}
       </form>
     </div>

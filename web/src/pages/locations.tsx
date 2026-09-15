@@ -1,24 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { ActionIcon, Button, Card, Group, Modal, Select, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ConfirmDialog from "@/components/confirm-dialog";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
@@ -103,13 +92,11 @@ export default function LocationsPage() {
     handleSubmit,
     reset,
     control,
-    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", type: "office", countryCode: "TR", address: "" },
   });
-  const selectedType = useWatch({ control, name: "type" });
 
   function openCreate() {
     reset({ name: "", type: "office", countryCode: "TR", address: "" });
@@ -227,27 +214,30 @@ export default function LocationsPage() {
             header: t("common:actions"),
             meta: { headerClassName: "text-right", cellClassName: "text-right" },
             cell: ({ row }) => (
-              <div className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  title={t("locations:editLocation")}
-                  onClick={() => openEdit(row.original)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive hover:text-destructive"
-                  title={t("locations:deleteLocation")}
-                  onClick={() => setDeleteTarget(row.original)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
+              <Group gap={4} justify="flex-end" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
+                <Tooltip label={t("locations:editLocation")}>
+                  <ActionIcon
+                    type="button"
+                    variant="subtle"
+                    color="gray"
+                    aria-label={t("locations:editLocation")}
+                    onClick={() => openEdit(row.original)}
+                  >
+                    <Pencil size={16} />
+                  </ActionIcon>
+                </Tooltip>
+                <Tooltip label={t("locations:deleteLocation")}>
+                  <ActionIcon
+                    type="button"
+                    variant="subtle"
+                    color="red"
+                    aria-label={t("locations:deleteLocation")}
+                    onClick={() => setDeleteTarget(row.original)}
+                  >
+                    <Trash2 size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
             ),
           } satisfies ColumnDef<Location>,
         ]
@@ -263,93 +253,91 @@ export default function LocationsPage() {
     columnVisibilityKey: COLUMN_VISIBILITY_KEY,
   });
 
+  const typeOptions = LOCATION_TYPES.map((type) => ({ value: type, label: t(`locations:types.${type}`) }));
+  const closeDialog = () => setDialog((prev) => ({ ...prev, open: false }));
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
-            <MapPin className="h-6 w-6" /> {t("locations:title")}
-          </h1>
-          <p className="text-muted-foreground">{t("locations:subtitle")}</p>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <MapPin size={24} /> {t("locations:title")}
+          </Title>
+          <Text c="dimmed">{t("locations:subtitle")}</Text>
         </div>
         {canManage && (
-          <Button type="button" onClick={openCreate}>
-            <Plus className="mr-2 h-4 w-4" /> {t("locations:addLocation")}
+          <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
+            {t("locations:addLocation")}
           </Button>
         )}
-      </div>
+      </Group>
 
       <div className="flex flex-wrap items-end gap-3">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-9"
-            placeholder={t("locations:searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <TextInput
+          className="w-full max-w-sm"
+          leftSection={<Search size={16} />}
+          placeholder={t("locations:searchPlaceholder")}
+          aria-label={t("locations:searchPlaceholder")}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+        />
         <DataTableViewOptions table={table} className="ml-auto" />
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("locations:empty")} />
-          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
-        </CardContent>
+      <Card withBorder padding={0}>
+        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("locations:empty")} />
+        {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
 
-      <Dialog open={dialog.open} onOpenChange={(open) => setDialog((prev) => ({ ...prev, open }))}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{dialog.location ? t("locations:dialogEditTitle") : t("locations:dialogCreateTitle")}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="loc-name">{t("locations:name")}</Label>
-              <Input id="loc-name" {...register("name")} />
-              {errors.name && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-            </div>
-            <div>
-              <Label htmlFor="loc-type">{t("locations:type")}</Label>
-              <Select value={selectedType}onValueChange={(value) => setValue("type", value as LocationType)}>
-                <SelectTrigger id="loc-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOCATION_TYPES.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {t(`locations:types.${type}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="loc-country">{t("locations:countryCode")}</Label>
-              <Input id="loc-country" maxLength={2} placeholder="TR" {...register("countryCode")} />
-              {errors.countryCode && <p className="mt-1 text-xs text-destructive">{t("locations:countryCodeInvalid")}</p>}
-            </div>
-            <div>
-              <Label htmlFor="loc-address">{t("locations:address")}</Label>
-              <Input id="loc-address" {...register("address")} />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialog((prev) => ({ ...prev, open: false }))}
-                disabled={isSaving}
-              >
+      <Modal
+        opened={dialog.open}
+        onClose={closeDialog}
+        title={dialog.location ? t("locations:dialogEditTitle") : t("locations:dialogCreateTitle")}
+      >
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack gap="md">
+            <TextInput
+              id="loc-name"
+              data-autofocus
+              label={t("locations:name")}
+              error={errors.name ? t("common:required") : undefined}
+              {...register("name")}
+            />
+            <Controller
+              control={control}
+              name="type"
+              render={({ field }) => (
+                <Select
+                  id="loc-type"
+                  label={t("locations:type")}
+                  data={typeOptions}
+                  value={field.value}
+                  onChange={(value) => value && field.onChange(value as LocationType)}
+                  onBlur={field.onBlur}
+                  allowDeselect={false}
+                />
+              )}
+            />
+            <TextInput
+              id="loc-country"
+              label={t("locations:countryCode")}
+              maxLength={2}
+              placeholder="TR"
+              error={errors.countryCode ? t("locations:countryCodeInvalid") : undefined}
+              {...register("countryCode")}
+            />
+            <TextInput id="loc-address" label={t("locations:address")} {...register("address")} />
+            <Group justify="flex-end" gap="sm">
+              <Button type="button" variant="default" onClick={closeDialog} disabled={isSaving}>
                 {t("common:cancel")}
               </Button>
               <Button type="submit" disabled={isSaving}>
                 {isSaving ? t("common:saving") : t("common:save")}
               </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
 
       <ConfirmDialog
         open={deleteTarget !== null}
