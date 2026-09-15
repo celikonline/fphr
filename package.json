@@ -22,7 +22,7 @@
   ],
   "lint-staged": {
     "web/**/*.{ts,tsx}": ["pnpm --dir web exec eslint --fix"],
-    "apps/senseik-mobile/**/*.{ts,tsx}": ["eslint --fix"],
+    "apps/senseik-mobile/**/*.{ts,tsx}": ["pnpm --dir apps/senseik-mobile exec eslint --fix"],
     "src/**/*.cs": ["dotnet format Sense.slnx --include"]
   },
   "devDependencies": {

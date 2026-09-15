@@ -36,7 +36,12 @@ export default function EmployeeDirectory() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => setPage(1), [debounced, orgUnitId]);
+  // Back to the first page whenever the effective filters change (adjusted during render, not in an effect).
+  const [prevFilters, setPrevFilters] = useState({ debounced, orgUnitId });
+  if (prevFilters.debounced !== debounced || prevFilters.orgUnitId !== orgUnitId) {
+    setPrevFilters({ debounced, orgUnitId });
+    setPage(1);
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["employees", "directory", page, debounced, orgUnitId],

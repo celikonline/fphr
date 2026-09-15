@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -57,9 +57,12 @@ export default function OrgChartPage() {
     retry: (count, err) => getApiErrorStatus(err) !== 403 && count < 1,
   });
 
-  useEffect(() => {
+  // Fresh chart data opens the top level (adjusted during render, not in an effect).
+  const [expandedFor, setExpandedFor] = useState<typeof data>(undefined);
+  if (expandedFor !== data) {
+    setExpandedFor(data);
     if (data) setExpanded(new Set(data.filter((root) => root.children.length > 0).map((root) => root.id)));
-  }, [data]);
+  }
 
   const needle = normalize(search.trim());
   const found = useMemo(() => (data && needle ? searchTree(data, needle) : null), [data, needle]);

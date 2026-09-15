@@ -134,7 +134,7 @@ export const useAuthStore = create<AuthStore>()(
           localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
           const message = toErrorMessage(error);
           set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
-          throw new Error(message);
+          throw new Error(message, { cause: error });
         }
       },
 

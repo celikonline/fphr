@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface UseAsyncState<T> {
   status: "idle" | "loading" | "success" | "error";
@@ -10,6 +10,8 @@ interface UseAsyncOptions {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
+
+const LOADING = { status: "loading", data: null, error: null } as const;
 
 /**
  * Custom hook for handling async operations (API calls)
@@ -36,30 +38,46 @@ export function useAsync<T>(
     error: null,
   });
 
-  const executeRef = useRef<(() => Promise<T>) | undefined>(undefined);
+  /** Runs the async function and records its outcome; the caller is responsible for the loading state. */
+  const run = useCallback(
+    (): Promise<T> =>
+      // Same semantics as an async wrapper: asyncFunction is called synchronously and a sync throw rejects.
+      // Outcomes are recorded in promise callbacks, so starting a run from an effect sets no state synchronously.
+      new Promise<T>((resolve) => resolve(asyncFunction()))
+        .then(
+          (response) => {
+            setState({ status: "success", data: response, error: null });
+            options?.onSuccess?.();
+            return response;
+          },
+          (error: unknown) => {
+            const err = error instanceof Error ? error : new Error(String(error));
+            setState({ status: "error", data: null, error: err });
+            options?.onError?.(err);
+            throw err;
+          }
+        ),
+    [asyncFunction, options]
+  );
 
-  const execute = useCallback(async () => {
-    setState({ status: "loading", data: null, error: null });
-    try {
-      const response = await asyncFunction();
-      setState({ status: "success", data: response, error: null });
-      options?.onSuccess?.();
-      return response;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      setState({ status: "error", data: null, error: err });
-      options?.onError?.(err);
-      throw err;
-    }
-  }, [asyncFunction, options]);
+  const execute = useCallback(() => {
+    setState(LOADING);
+    return run();
+  }, [run]);
 
-  executeRef.current = execute;
+  // Immediate mode re-runs whenever `run` or `immediate` changes. The loading state is entered during
+  // render when that happens, so the effect below only has to start the request.
+  const [immediateRun, setImmediateRun] = useState<{ run: typeof run; immediate: boolean } | null>(null);
+  if (immediateRun?.run !== run || immediateRun.immediate !== immediate) {
+    setImmediateRun({ run, immediate });
+    if (immediate) setState(LOADING);
+  }
 
   useEffect(() => {
     if (immediate) {
-      execute();
+      run();
     }
-  }, [execute, immediate]);
+  }, [run, immediate]);
 
   return { ...state, execute };
 }

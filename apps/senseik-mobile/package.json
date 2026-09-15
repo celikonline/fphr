@@ -56,6 +56,7 @@
     "@types/react": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "babel-jest": "^30.5.1",
     "eas-cli": "^24.4.2",
     "eslint": "^10.10.0",
@@ -65,6 +66,6 @@
     "jest-expo": "^57.0.5",
     "metro-react-native-babel-preset": "^0.77.0",
     "prettier": "^3.9.6",
-    "typescript": "^7.0.2"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }
