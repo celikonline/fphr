@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ActionIcon, Avatar, Button, Card, Group, Paper, Skeleton, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { ChevronDown, ChevronRight, EyeOff, GitBranch, Search } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
-import { avatarUrl } from "@/components/employees/employee-badges";
+import { avatarColor } from "@/components/employees/employee-badges";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { getOrgChart, type OrgChartNode } from "@/services/employees.service";
 import { useOrgUnits } from "@/components/employees/use-org-units";
@@ -185,7 +185,7 @@ function OrgChartItem({ node, expanded, forcedOpen, matches, onToggle, canOpenCa
 
   const content: ReactNode = (
     <Group gap="sm" wrap="nowrap" className="min-w-0">
-      <Avatar size={32} radius="xl" src={avatarUrl(node.id)}>
+      <Avatar size={32} radius="xl" color={avatarColor(node.id)}>
         {`${first.charAt(0)}${rest[rest.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr")}
       </Avatar>
       <div className="min-w-0">

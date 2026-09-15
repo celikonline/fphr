@@ -8,7 +8,7 @@ import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane
 import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
-import { avatarUrl, initials } from "@/components/employees/employee-badges";
+import { avatarColor, initials } from "@/components/employees/employee-badges";
 import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyCareer, getMyEmployee } from "@/services/employees.service";
@@ -21,6 +21,7 @@ const HOLIDAY_DAYS = 90;
 const BIRTHDAY_DAYS = 30;
 const UPCOMING_LEAVE_DAYS = 30;
 const LIST_LIMIT = 3;
+const BIRTHDAY_LIMIT = 5;
 const REQUEST_LIMIT = 4;
 const SLATE = "var(--mantine-color-gray-6)";
 const ACCENT = "var(--mantine-primary-color-filled)";
@@ -260,7 +261,7 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28} src={avatarUrl(employee.id)}>
+            <Avatar size={88} radius="md" fz={28} color={avatarColor(employee.id)}>
               {initials(employee.firstName, employee.lastName)}
             </Avatar>
           </Group>
@@ -477,7 +478,7 @@ function UpcomingLeavesWidget() {
           render={(entry) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" src={avatarUrl(entry.employeeId)}>
+                <Avatar size={30} radius="xl" color={avatarColor(entry.employeeId)}>
                   {nameInitials(entry.employeeName)}
                 </Avatar>
                 <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
@@ -567,7 +568,7 @@ function BirthdaysWidget() {
     queryFn: () => getUpcomingBirthdays(BIRTHDAY_DAYS),
     retry: retryUnlessClientError,
   });
-  const items = (data ?? []).slice(0, LIST_LIMIT);
+  const items = (data ?? []).slice(0, BIRTHDAY_LIMIT);
 
   return (
     <WidgetCard
@@ -588,7 +589,7 @@ function BirthdaysWidget() {
           render={(birthday) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" src={avatarUrl(birthday.id)}>
+                <Avatar size={30} radius="xl" color={avatarColor(birthday.id)}>
                   {nameInitials(birthday.displayName)}
                 </Avatar>
                 <PersonName name={birthday.displayName} employeeId={birthday.id} canOpen={canReadEmployees} />
