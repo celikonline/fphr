@@ -1,3 +1,6 @@
+# Claude Code agent worktrees (local scratch, never part of the repo)
+.claude/worktrees/
+
 # .NET
 bin/
 obj/

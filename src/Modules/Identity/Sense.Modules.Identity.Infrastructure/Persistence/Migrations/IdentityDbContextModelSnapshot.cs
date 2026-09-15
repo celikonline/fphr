@@ -726,6 +726,51 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                     b.Navigation("Permissions");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Identity.Domain.Tenants.Tenant", b =>
+                {
+                    b.OwnsOne("Sense.Modules.Identity.Domain.Tenants.TenantAccessSettings", "AccessSettings", b1 =>
+                        {
+                            b1.Property<Guid>("TenantId");
+
+                            b1.Property<bool>("ShowAllLeavesInCalendar");
+
+                            b1.Property<bool>("ShowAssets");
+
+                            b1.Property<bool>("ShowCalendarMenu");
+
+                            b1.Property<bool>("ShowCustomFields");
+
+                            b1.Property<bool>("ShowEventCalendar");
+
+                            b1.Property<bool>("ShowFiles");
+
+                            b1.Property<bool>("ShowOrgChart");
+
+                            b1.Property<bool>("ShowOrgInfo");
+
+                            b1.Property<bool>("ShowUpcomingBirthdays");
+
+                            b1.Property<bool>("ShowUpcomingLeaves");
+
+                            b1.Property<bool>("ShowWorkPhoneNumbers");
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("tenants", "identity");
+
+                            b1
+                                .ToJson("access_settings")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId")
+                                .HasConstraintName("fk_tenants_tenants_id");
+                        });
+
+                    b.Navigation("AccessSettings")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Sense.Modules.Identity.Domain.Users.User", b =>
                 {
                     b.OwnsMany("Sense.Modules.Identity.Domain.Users.UserPermissionOverride", "PermissionOverrides", b1 =>

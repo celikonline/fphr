@@ -72,4 +72,8 @@ public sealed record ImpersonationSessionDto(string AccessToken, DateTime Access
 
 public sealed record MeDto(
     Guid UserId, string Email, string FirstName, string LastName, Guid? EmployeeId, string PreferredLanguage, bool MfaEnabled,
-    TenantDto Tenant, IReadOnlyList<RoleRefDto> Roles, IReadOnlyList<string> Permissions, IReadOnlyDictionary<string, DataScope> Scopes);
+    TenantDto Tenant, IReadOnlyList<RoleRefDto> Roles, IReadOnlyList<string> Permissions, IReadOnlyDictionary<string, DataScope> Scopes,
+    FeaturesDto Features);
+
+/// <summary>Kiracıya bağlı, izin dışı özellik ayarları; ön yüz menü/widget filtrelemesi için tek yanıtta taşınır.</summary>
+public sealed record FeaturesDto(Tenants.AccessSettingsDto Access);

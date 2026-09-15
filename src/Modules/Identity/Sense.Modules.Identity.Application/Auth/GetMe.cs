@@ -1,3 +1,4 @@
+using Sense.Modules.Identity.Application.Tenants;
 using Sense.Modules.Identity.Domain;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -45,6 +46,7 @@ public sealed class GetMeHandler(
             new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone),
             userRoles.Select(r => new RoleRefDto(r.Id, r.Code, r.Name)).ToList(),
             effective.Order(StringComparer.Ordinal).ToList(),
-            scopes);
+            scopes,
+            new FeaturesDto(AccessSettingsDto.From(tenant.AccessSettings)));
     }
 }

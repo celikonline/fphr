@@ -53,6 +53,7 @@ internal static class IdentityTables
     public const int TimeZoneLength = 60;
     public const int PhoneLength = 30;
     public const int TaxNumberLength = 20;
+    public const string AccessSettingsColumn = "access_settings";
 }
 
 public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
@@ -70,6 +71,11 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         b.Property(x => x.SettingsJson).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.Property(x => x.SuspendReason).HasMaxLength(Domain.IdentityLimits.ReasonMaxLength);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(IdentityTables.CodeLength);
+
+        // Erişim ayarları: tek jsonb kolon (owned/JSON column). Yeni anahtar eklemek migration istemez
+        // (eksik alanlar C# varsayımına düşer); yeni bir ayar "bölümü" eklemek ayrı bir OwnsOne(...).ToJson() ister.
+        b.OwnsOne(x => x.AccessSettings, a => a.ToJson(IdentityTables.AccessSettingsColumn));
+
         b.Ignore(x => x.DomainEvents);
     }
 }

@@ -19,6 +19,7 @@ public static class IdentityRoutes
     public const string Permissions = ApiRoutes.VersionedBase + "/identity/permissions";
     public const string Me = ApiRoutes.VersionedBase + "/identity/me";
     public const string Impersonation = ApiRoutes.VersionedBase + "/identity/impersonation";
+    public const string Settings = ApiRoutes.VersionedBase + "/identity/settings";
 }
 
 public sealed record LoginRequest(string Email, string Password, string? TenantSlug);
