@@ -21,7 +21,7 @@ public sealed record EmployeeListItemDto(
     UserAccountStatus AccountStatus,
     DateOnly? HireDate);
 
-/// <summary>Employee card. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
+/// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(
     Guid Id,
     string FirstName,
@@ -56,7 +56,9 @@ public sealed record EmployeeDetailDto(
     string? PostalCode,
     ContractType? ContractType,
     EmploymentType? EmploymentType,
-    string? SuspensionReason);
+    string? SuspensionReason,
+    DateOnly? LeaveAccrualStartDate = null,
+    DateOnly? PositionStartDate = null);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

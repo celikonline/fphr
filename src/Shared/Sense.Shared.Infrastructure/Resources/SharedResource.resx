@@ -181,6 +181,14 @@
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Posta kodu en fazla 20 karakter olabilir.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Yalnızca aktif çalışanlar askıya alınabilir.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Yalnızca askıda olan çalışanlar yeniden aktifleştirilebilir.</value></data>
+  <data name="employee.career_record_not_found" xml:space="preserve"><value>Kariyer kaydı bulunamadı.</value></data>
+  <data name="employee.career_valid_from_invalid" xml:space="preserve"><value>Pozisyon başlama tarihi önceki kariyer kaydının başlangıcından sonra olmalıdır.</value></data>
+  <data name="employee.career_before_hire_date" xml:space="preserve"><value>Pozisyon başlama tarihi işe başlama tarihinden önce olamaz.</value></data>
+  <data name="employee.career_duplicate_level" xml:space="preserve"><value>Her seviye için en fazla bir birim seçilebilir.</value></data>
+  <data name="employee.career_assignment_invalid" xml:space="preserve"><value>Seviye ve birim bilgisi eksik.</value></data>
+  <data name="employee.career_not_latest" xml:space="preserve"><value>Yalnızca en son kariyer kaydının başlangıç tarihi değiştirilebilir veya kaydı silinebilir.</value></data>
+  <data name="employee.career_last_record" xml:space="preserve"><value>Çalışanın tek kariyer kaydı silinemez; kaydı düzenleyin.</value></data>
+  <data name="employee.career_note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="employee.sensitive.view" xml:space="preserve"><value>Hassas alanları görüntüleme</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>Çalışanları görüntüleme</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Çalışan ekleme</value></data>

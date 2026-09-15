@@ -1,6 +1,5 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,9 +50,6 @@ import {
   type EmployeeGeneralValues,
   type FieldErrors,
 } from "./employee-form";
-import EmployeePicker, { type PickedEmployee } from "./employee-picker";
-import OrgUnitSelect from "./org-unit-select";
-import { useOrgUnits } from "./use-org-units";
 
 const ACCESS_TYPES: AccessType[] = ["Employee", "Owner", "Admin"];
 const SENSITIVE_PERMISSION = "employee.sensitive.view";
@@ -204,6 +200,7 @@ export function GeneralSection({ employee }: SectionProps) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [contractType, setContractType] = useState<ContractType | null>(employee.contractType);
   const [employmentType, setEmploymentType] = useState<EmploymentType | null>(employee.employmentType);
+  const [leaveAccrualStartDate, setLeaveAccrualStartDate] = useState(employee.leaveAccrualStartDate ?? "");
   const mutation = useEmployeeUpdate(employee, () => setEditing(false), (error) => setErrors(serverFieldErrors(error)));
 
   function startEdit() {
@@ -211,6 +208,7 @@ export function GeneralSection({ employee }: SectionProps) {
     setErrors({});
     setContractType(employee.contractType);
     setEmploymentType(employee.employmentType);
+    setLeaveAccrualStartDate(employee.leaveAccrualStartDate ?? "");
     setEditing(true);
   }
 
@@ -218,7 +216,8 @@ export function GeneralSection({ employee }: SectionProps) {
     event.preventDefault();
     const found = validateGeneral(values, t);
     setErrors(found);
-    if (Object.keys(found).length === 0) mutation.mutate({ ...generalValuesToInput(values), contractType, employmentType });
+    if (Object.keys(found).length === 0)
+      mutation.mutate({ ...generalValuesToInput(values), contractType, employmentType, leaveAccrualStartDate: leaveAccrualStartDate || null });
   }
 
   const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
@@ -261,6 +260,17 @@ export function GeneralSection({ employee }: SectionProps) {
                 disabled={mutation.isPending}
               />
             </div>
+            <div>
+              <Label htmlFor="card-general-leaveAccrualStartDate">{t("employees:fields.leaveAccrualStartDate")}</Label>
+              <Input
+                id="card-general-leaveAccrualStartDate"
+                type="date"
+                value={leaveAccrualStartDate}
+                disabled={mutation.isPending}
+                onChange={(e) => setLeaveAccrualStartDate(e.target.value)}
+              />
+              <p className="mt-1 text-xs text-muted-foreground">{t("employees:card.leaveAccrualStartDateHint")}</p>
+            </div>
           </div>
           <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
         </form>
@@ -273,6 +283,8 @@ export function GeneralSection({ employee }: SectionProps) {
           <Field label={t("employees:fields.personalEmail")}>{employee.personalEmail ?? "—"}</Field>
           <Field label={t("employees:fields.workPhone")}>{employee.workPhone ?? "—"}</Field>
           <Field label={t("employees:fields.hireDate")}>{date(employee.hireDate)}</Field>
+          <Field label={t("employees:fields.leaveAccrualStartDate")}>{date(employee.leaveAccrualStartDate)}</Field>
+          <Field label={t("employees:fields.positionStartDate")}>{date(employee.positionStartDate)}</Field>
           <Field label={t("employees:fields.birthDate")}>{date(employee.birthDate)}</Field>
           <Field label={t("employees:fields.contractType")}>
             {employee.contractType ? t(`employees:enum.contractType.${employee.contractType}`) : "—"}
@@ -501,72 +513,6 @@ export function PersonalSection({ employee }: SectionProps) {
           <Field label={t("employees:fields.addressLine")}>{orDash(employee.addressLine)}</Field>
           <Field label={t("employees:fields.city")}>{orDash(employee.city)}</Field>
           <Field label={t("employees:fields.postalCode")}>{orDash(employee.postalCode)}</Field>
-        </dl>
-      )}
-    </SectionCard>
-  );
-}
-
-/** "Kariyer": org unit and direct manager. */
-export function CareerSection({ employee }: SectionProps) {
-  const { t } = useTranslation(["employees", "common"]);
-  const canUpdate = usePermission("employee.employees.update");
-  const { nameById } = useOrgUnits();
-  const [editing, setEditing] = useState(false);
-  const [orgUnitId, setOrgUnitId] = useState<string | null>(employee.orgUnitId);
-  const [manager, setManager] = useState<PickedEmployee | null>(null);
-  const mutation = useEmployeeUpdate(employee, () => setEditing(false));
-
-  function startEdit() {
-    setOrgUnitId(employee.orgUnitId);
-    setManager(
-      employee.managerEmployeeId
-        ? { id: employee.managerEmployeeId, displayName: employee.managerDisplayName ?? t("employees:unknownEmployee") }
-        : null
-    );
-    setEditing(true);
-  }
-
-  function submit(event: FormEvent) {
-    event.preventDefault();
-    mutation.mutate({ orgUnitId, managerEmployeeId: manager?.id ?? null });
-  }
-
-  return (
-    <SectionCard title={t("employees:card.sections.career")} action={canUpdate && !editing ? <EditButton onClick={startEdit} /> : undefined}>
-      {editing ? (
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="card-unit">{t("employees:fields.orgUnit")}</Label>
-              <OrgUnitSelect id="card-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:noUnit")} disabled={mutation.isPending} />
-            </div>
-            <div>
-              <Label htmlFor="card-manager">{t("employees:fields.manager")}</Label>
-              <EmployeePicker
-                id="card-manager"
-                value={manager}
-                onChange={setManager}
-                excludeId={employee.id}
-                allowClear
-                disabled={mutation.isPending}
-              />
-            </div>
-          </div>
-          <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
-        </form>
-      ) : (
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("employees:fields.orgUnit")}>{(employee.orgUnitId && nameById.get(employee.orgUnitId)) || "—"}</Field>
-          <Field label={t("employees:fields.manager")}>
-            {employee.managerEmployeeId ? (
-              <Link className="text-primary hover:underline" to={`/app/employees/${employee.managerEmployeeId}`}>
-                {employee.managerDisplayName ?? t("employees:unknownEmployee")}
-              </Link>
-            ) : (
-              "—"
-            )}
-          </Field>
         </dl>
       )}
     </SectionCard>

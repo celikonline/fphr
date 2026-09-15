@@ -172,6 +172,14 @@
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
+  <data name="employee.career_record_not_found" xml:space="preserve"><value>Career record not found.</value></data>
+  <data name="employee.career_valid_from_invalid" xml:space="preserve"><value>The position start date must be after the start of the previous career record.</value></data>
+  <data name="employee.career_before_hire_date" xml:space="preserve"><value>The position start date cannot be before the hire date.</value></data>
+  <data name="employee.career_duplicate_level" xml:space="preserve"><value>At most one unit can be selected per level.</value></data>
+  <data name="employee.career_assignment_invalid" xml:space="preserve"><value>Level and unit are required for every assignment.</value></data>
+  <data name="employee.career_not_latest" xml:space="preserve"><value>Only the latest career record can change its start date or be deleted.</value></data>
+  <data name="employee.career_last_record" xml:space="preserve"><value>An employee's only career record cannot be deleted; edit it instead.</value></data>
+  <data name="employee.career_note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="employee.sensitive.view" xml:space="preserve"><value>View sensitive fields</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>View employees</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Add employees</value></data>

@@ -1,3 +1,4 @@
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
@@ -22,7 +23,8 @@ public sealed class EmployeeImportRowHandler(
     IEmployeeRepository employees,
     IEmployeeUnitOfWork unitOfWork,
     IOrgUnitLookup orgUnits,
-    IDataScopeService dataScope) : IImportRowHandler
+    IDataScopeService dataScope,
+    CareerService career) : IImportRowHandler
 {
     public string TemplateCode => EmployeeImportColumns.TemplateCode;
 
@@ -51,7 +53,7 @@ public sealed class EmployeeImportRowHandler(
             return NotApplied(batch, results, plans);
         }
 
-        var applied = await ApplyAsync(plans, results, cancellationToken).ConfigureAwait(false);
+        var applied = await ApplyAsync(plans, results, snapshot.Placement, cancellationToken).ConfigureAwait(false);
         if (batch.FailurePolicy == ImportFailurePolicy.AllOrNothing && results.Values.Any(r => r.Outcome == ImportRowOutcome.Error))
         {
             return NotApplied(batch, results, plans.Where(p => results[p.RowNumber].Outcome != ImportRowOutcome.Error).ToList());
@@ -65,11 +67,18 @@ public sealed class EmployeeImportRowHandler(
         return new ImportBatchResult(Ordered(batch, results), Applied: true);
     }
 
-    private async Task<bool> ApplyAsync(List<EmployeeImportPlan> plans, Dictionary<int, ImportRowResult> results, CancellationToken ct)
+    /// <remarks>
+    /// Unit/manager changes go through the career timeline like every other write path (new employee: initial Hire
+    /// record; existing: amend a record starting today or open a new one effective today). Their CareerChanged /
+    /// ManagerChanged events land in the Employee outbox and are only persisted by the SaveChanges below, so a batch
+    /// that is not applied publishes nothing.
+    /// </remarks>
+    private async Task<bool> ApplyAsync(List<EmployeeImportPlan> plans, Dictionary<int, ImportRowResult> results, OrgPlacement placement, CancellationToken ct)
     {
         var updateIds = plans.Where(p => p.Existing is not null && p.HasChanges).Select(p => p.Existing!.Id).ToList();
         var tracked = (await employees.ListByIdsAsync(updateIds, ct).ConfigureAwait(false)).ToDictionary(e => e.Id);
         var managerMap = new Dictionary<Guid, Guid?>(await employees.GetManagerMapAsync(ct).ConfigureAwait(false));
+        var context = career.BuildContext(placement, managerMap);
         var anyChange = false;
 
         foreach (var plan in plans)
@@ -84,6 +93,7 @@ public sealed class EmployeeImportRowHandler(
                 }
 
                 employees.Add(created.Value);
+                career.PublishInitial(created.Value, created.Value.EnsureInitialCareerRecord(placement.ChainFor(plan.OrgUnitId), context.Today));
                 managerMap[plan.NewId] = plan.ManagerId;
                 results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Inserted, plan.NationalId, plan.NewId, []);
                 anyChange = true;
@@ -96,18 +106,7 @@ public sealed class EmployeeImportRowHandler(
                 continue;
             }
 
-            if (plan.SetManager && plan.ManagerId != employee.ManagerEmployeeId)
-            {
-                var assigned = employee.AssignManager(plan.ManagerId, managerMap);
-                if (assigned.IsFailure)
-                {
-                    results[plan.RowNumber] = Failed(plan, assigned.Error.Code);
-                    continue;
-                }
-
-                managerMap[employee.Id] = plan.ManagerId;
-            }
-
+            career.Materialize(employee, placement);
             var updated = employee.UpdateInfo(plan.Info);
             if (updated.IsFailure)
             {
@@ -115,9 +114,31 @@ public sealed class EmployeeImportRowHandler(
                 continue;
             }
 
-            if (plan.SetOrgUnit)
+            var orgUnitChanged = plan.SetOrgUnit && plan.OrgUnitId != employee.OrgUnitId;
+            var managerChanged = plan.SetManager && plan.ManagerId != employee.ManagerEmployeeId;
+            if (orgUnitChanged || managerChanged)
             {
-                employee.AssignOrgUnit(plan.OrgUnitId);
+                var latest = employee.CareerTimeline.LastOrDefault();
+                var moved = employee.ApplyPlacement(
+                    new PlacementRequest(
+                        orgUnitChanged || latest is null ? placement.ChainFor(plan.SetOrgUnit ? plan.OrgUnitId : employee.OrgUnitId) : latest.AssignmentInputs(),
+                        managerChanged ? plan.ManagerId : employee.ManagerEmployeeId,
+                        latest is null ? employee.EmploymentType : latest.EmploymentType,
+                        managerChanged && !orgUnitChanged ? CareerChangeType.ManagerChange : CareerChangeType.Other),
+                    context);
+                if (moved.IsFailure)
+                {
+                    results[plan.RowNumber] = Failed(plan, moved.Error.Code);
+                    continue;
+                }
+
+                career.Publish(employee, moved.Value);
+                managerMap[employee.Id] = employee.ManagerEmployeeId;
+            }
+            else
+            {
+                // A Draft that just received its first hire date gets its initial record now.
+                career.Materialize(employee, placement);
             }
 
             results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Updated, plan.NationalId, employee.Id, []);
@@ -189,7 +210,10 @@ public sealed class EmployeeImportSnapshot
         ParentOf = units.ToDictionary(u => u.Id, u => u.ParentId);
         VisibleEmployeeIds = visibleEmployeeIds;
         AccessibleOrgUnitIds = accessibleOrgUnitIds;
+        Placement = new OrgPlacement(types, units);
     }
+
+    public OrgPlacement Placement { get; }
 
     public IReadOnlyDictionary<string, EmployeeRow> ByNationalId { get; }
 
@@ -315,15 +339,14 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
 
         var info = existing is null
             ? new EmployeeInfo(firstName!, lastName!, nationalId, workEmail, personalEmail, workPhone, hireDate, birthDate)
-            : new EmployeeInfo(
-                existing.FirstName,
-                existing.LastName,
-                existing.NationalId,
-                workEmail ?? existing.WorkEmail,
-                personalEmail ?? existing.PersonalEmail,
-                workPhone ?? existing.WorkPhone,
-                hireDate ?? existing.HireDate,
-                birthDate ?? existing.BirthDate);
+            : ExistingInfo(existing) with
+            {
+                WorkEmail = workEmail ?? existing.WorkEmail,
+                PersonalEmail = personalEmail ?? existing.PersonalEmail,
+                WorkPhone = workPhone ?? existing.WorkPhone,
+                HireDate = hireDate ?? existing.HireDate,
+                BirthDate = birthDate ?? existing.BirthDate,
+            };
 
         var domainCheck = EmployeeEntity.Validate(info);
         if (domainCheck.IsFailure)
@@ -334,7 +357,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var setManager = managerId is not null;
         var newId = existing?.Id ?? Guid.CreateVersion7();
         var hasChanges = existing is null ||
-            info != new EmployeeInfo(existing.FirstName, existing.LastName, existing.NationalId, existing.WorkEmail, existing.PersonalEmail, existing.WorkPhone, existing.HireDate, existing.BirthDate) ||
+            info != ExistingInfo(existing) ||
             (setOrgUnit && orgUnitId != existing.OrgUnitId) ||
             (setManager && managerId != existing.ManagerEmployeeId);
 
@@ -349,6 +372,15 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
             existing?.Id,
             []);
     }
+
+    /// <summary>
+    /// The stored values of every field the template has no column for, so an update row cannot wipe them.
+    /// LeaveAccrualStartDate stays null (= keep, or follow a corrected hire date while it still equals the old one).
+    /// </summary>
+    private static EmployeeInfo ExistingInfo(EmployeeRow e) => new(
+        e.FirstName, e.LastName, e.NationalId, e.WorkEmail, e.PersonalEmail, e.WorkPhone, e.HireDate, e.BirthDate,
+        e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
+        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType);
 
     private Guid? ResolveManager(ImportRow row, EmployeeRow? existing, List<ImportRowError> errors)
     {

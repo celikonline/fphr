@@ -20,7 +20,7 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
         }
 
         var ids = employeeIds.ToList();
-        var rows = await context.Employees.AsNoTracking()
+        var rows = await context.Employees.AsNoTracking().IgnoreAutoIncludes()
             .Where(e => e.TenantId == tenantId && ids.Contains(e.Id))
             .ToListAsync(ct);
 

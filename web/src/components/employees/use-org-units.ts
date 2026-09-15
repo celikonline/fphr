@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listOrgUnitOptions, type EmployeeOrgUnitOption } from "@/services/employees.service";
+import { listOrgLevelOptions, listOrgUnitOptions, type EmployeeOrgUnitOption } from "@/services/employees.service";
 
 export interface OrgUnitTreeOption extends EmployeeOrgUnitOption {
   depth: number;
@@ -40,4 +40,19 @@ export function useOrgUnits() {
     walk(null, 0);
     return { options: ordered, nameById, isLoading: query.isLoading };
   }, [query.data, query.isLoading]);
+}
+
+/** Active hierarchy levels in SortOrder (Şirket first) for the per-level career selects; empty without `organization` read access. */
+export function useOrgLevels() {
+  const query = useQuery({
+    queryKey: ["employees", "org-level-options"],
+    queryFn: listOrgLevelOptions,
+    retry: false,
+    staleTime: 5 * 60_000,
+  });
+
+  return useMemo(
+    () => ({ levels: [...(query.data ?? [])].sort((a, b) => a.sortOrder - b.sortOrder), isLoading: query.isLoading }),
+    [query.data, query.isLoading],
+  );
 }

@@ -89,8 +89,12 @@ public sealed class GetEmployeeHandler(EmployeeDetailBuilder builder, IEmployeeR
 }
 
 /// <summary>Builds <see cref="EmployeeDetailDto"/> (manager name + Identity account info); masks sensitive fields per employee.sensitive.view.</summary>
-public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadStore store, IUserAccountLookup accounts, EmployeeSensitiveAccess sensitiveAccess)
+public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadStore store, IUserAccountLookup accounts, EmployeeSensitiveAccess sensitiveAccess, TimeProvider clock)
 {
+    /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
+    public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
+        BuildAsync(EmployeeRow.From(employee, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)), ct);
+
     public async Task<EmployeeDetailDto> BuildAsync(EmployeeRow e, CancellationToken ct)
     {
         string? managerName = null;
@@ -143,7 +147,9 @@ public sealed class EmployeeDetailBuilder(ITenantContext tenant, IEmployeeReadSt
             e.PostalCode,
             e.ContractType,
             e.EmploymentType,
-            e.SuspensionReason?.ToString());
+            e.SuspensionReason?.ToString(),
+            e.LeaveAccrualStartDate,
+            e.PositionStartDate);
     }
 }
 

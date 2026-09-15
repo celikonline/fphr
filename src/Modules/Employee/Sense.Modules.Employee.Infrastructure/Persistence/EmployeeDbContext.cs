@@ -23,6 +23,9 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
 internal static class EmployeeTables
 {
     public const string Employees = "employees";
+    public const string CareerRecords = "career_records";
+    public const string CareerOrgAssignments = "career_org_assignments";
+    public const string CareerRecordIdColumn = "CareerRecordId";
 
     public const int StatusLength = 30;
 }
@@ -70,6 +73,44 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
 
         b.HasIndex(x => new { x.TenantId, x.NationalId }).IsUnique().HasFilter("national_id IS NOT NULL");
 
+        // Career history is part of the aggregate: always loaded with it (read-side list queries opt out with IgnoreAutoIncludes).
+        b.HasMany(x => x.CareerRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+        b.Navigation(x => x.CareerRecords).AutoInclude();
+
+        b.Ignore(x => x.CareerTimeline);
+        b.Ignore(x => x.HasCareerData);
         b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class CareerRecordConfiguration : IEntityTypeConfiguration<CareerRecord>
+{
+    public void Configure(EntityTypeBuilder<CareerRecord> b)
+    {
+        b.ToTable(EmployeeTables.CareerRecords);
+        b.HasKey(x => x.Id);
+
+        // Client-generated (v7 / employee id for the initial record): without this a record added to a tracked employee is saved as an UPDATE.
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.ChangeType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.EmploymentType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength);
+        b.Property(x => x.Note).HasMaxLength(EmployeeLimits.CareerNoteMaxLength);
+
+        b.HasIndex(x => new { x.EmployeeId, x.ValidFrom });
+        b.HasIndex(x => x.ManagerEmployeeId);
+        b.Ignore(x => x.IsOpen);
+
+        b.OwnsMany(x => x.Assignments, a =>
+        {
+            a.ToTable(EmployeeTables.CareerOrgAssignments);
+            a.WithOwner().HasForeignKey(EmployeeTables.CareerRecordIdColumn);
+
+            // One unit per level per record; a level's unit is moved in place, never removed and re-added in one save.
+            a.HasKey(EmployeeTables.CareerRecordIdColumn, nameof(EmployeeOrgAssignment.OrgUnitTypeId));
+            a.Property(x => x.OrgUnitTypeId).ValueGeneratedNever();
+            a.HasIndex(x => x.OrgUnitId);
+        });
+
+        b.Navigation(x => x.Assignments).AutoInclude();
     }
 }

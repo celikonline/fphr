@@ -21,6 +21,27 @@ public static class EmployeeDomainErrors
     public const string PostalCodeTooLong = "employee.postal_code_too_long";
     public const string SuspendInvalidStatus = "employee.suspend_invalid_status";
     public const string ReactivateNotSuspended = "employee.reactivate_not_suspended";
+
+    public const string CareerRecordNotFound = "employee.career_record_not_found";
+
+    /// <summary>A new/edited record must start after the previous record's ValidFrom.</summary>
+    public const string CareerValidFromInvalid = "employee.career_valid_from_invalid";
+
+    /// <summary>PositionStartDate &gt;= HireDate (11.3.03).</summary>
+    public const string CareerBeforeHireDate = "employee.career_before_hire_date";
+
+    /// <summary>Two assignments for the same hierarchy level in one record.</summary>
+    public const string CareerDuplicateLevel = "employee.career_duplicate_level";
+
+    public const string CareerAssignmentInvalid = "employee.career_assignment_invalid";
+
+    /// <summary>Only the latest record may move its start date or be deleted.</summary>
+    public const string CareerNotLatest = "employee.career_not_latest";
+
+    /// <summary>The only career record cannot be deleted (edit it instead).</summary>
+    public const string CareerLastRecord = "employee.career_last_record";
+
+    public const string CareerNoteTooLong = "employee.career_note_too_long";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -37,4 +58,5 @@ public static class EmployeeLimits
     public const int AddressLineMaxLength = 250;
     public const int CityMaxLength = 100;
     public const int PostalCodeMaxLength = 20;
+    public const int CareerNoteMaxLength = 500;
 }

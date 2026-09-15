@@ -54,7 +54,8 @@ public sealed record EmployeeInfo(
     string? City = null,
     string? PostalCode = null,
     ContractType? ContractType = null,
-    EmploymentType? EmploymentType = null);
+    EmploymentType? EmploymentType = null,
+    DateOnly? LeaveAccrualStartDate = null);
 
 /// <summary>
 /// Employee record (Faz 0: identity/contact fields + org unit + manager hierarchy; Faz 1a adds personal/employment
@@ -66,6 +67,8 @@ public sealed record EmployeeInfo(
 /// </summary>
 public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    private readonly List<CareerRecord> _careerRecords = [];
+
     private Employee()
     {
     }
@@ -98,6 +101,12 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     public string? WorkPhone { get; private set; }
 
     public DateOnly? HireDate { get; private set; }
+
+    /// <summary>
+    /// "İzne esas hak ediş tarihi" (11.3.03): the date leave entitlement accrues from. Defaults to
+    /// <see cref="HireDate"/> the first time a hire date is set, but may be earlier (group transfer, rehire).
+    /// </summary>
+    public DateOnly? LeaveAccrualStartDate { get; private set; }
 
     public DateOnly? BirthDate { get; private set; }
 
@@ -144,8 +153,17 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Cross-module reference to Organization.OrgUnit; nullable (an employee may not be assigned to a unit yet).</summary>
     public Guid? OrgUnitId { get; private set; }
 
-    /// <summary>Direct manager (another employee of the same tenant); never self, never cyclic.</summary>
+    /// <summary>Direct manager (another employee of the same tenant); never self, never cyclic. Denormalized from the career record in effect today.</summary>
     public Guid? ManagerEmployeeId { get; private set; }
+
+    /// <summary>Career periods of this employee (EF navigation; use <see cref="CareerTimeline"/> for the ordered view).</summary>
+    public IReadOnlyCollection<CareerRecord> CareerRecords => _careerRecords.AsReadOnly();
+
+    /// <summary>Career records ordered by ValidFrom (oldest first); the last one is the open record.</summary>
+    public IReadOnlyList<CareerRecord> CareerTimeline => _careerRecords.OrderBy(r => r.ValidFrom).ThenBy(r => r.Id).ToList();
+
+    /// <summary>True once the employee has anything worth a career record (a unit, a manager or a hire date).</summary>
+    public bool HasCareerData => OrgUnitId is not null || ManagerEmployeeId is not null || HireDate is not null;
 
     public static Result<Employee> Create(Guid tenantId, EmployeeInfo info, Guid? userId = null, Guid? orgUnitId = null, Guid? managerEmployeeId = null, Guid? id = null)
     {
@@ -175,14 +193,326 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     public Result<bool> UpdateInfo(EmployeeInfo info)
     {
         var wasHired = Status == EmployeeStatus.Active;
+        var previousHireDate = HireDate;
+
+        var hireDateCheck = CheckHireDateAgainstCareer(info.HireDate, previousHireDate);
+        if (hireDateCheck.IsFailure)
+        {
+            return hireDateCheck.Error;
+        }
+
         var applied = Apply(info);
         if (applied.IsFailure)
         {
             return applied.Error;
         }
 
+        RealignInitialRecord(previousHireDate);
         Raise(new EmployeeUpdated(Id, TenantId));
         return Result.Success(!wasHired && Status == EmployeeStatus.Active);
+    }
+
+    // ------------------------------------------------------------------ career history
+
+    /// <summary>
+    /// The record in effect on <paramref name="today"/>: the latest one that has started. When every record is still
+    /// in the future (a hire dated ahead of today) the first one is used, so a pre-hire employee already shows the
+    /// position they were created with instead of losing their unit/manager.
+    /// </summary>
+    public CareerRecord? CurrentCareerRecord(DateOnly today)
+    {
+        var ordered = CareerTimeline;
+        if (ordered.Count == 0)
+        {
+            return null;
+        }
+
+        CareerRecord? current = null;
+        foreach (var record in ordered.Where(r => r.ValidFrom <= today))
+        {
+            current = record;
+        }
+
+        return current ?? ordered[0];
+    }
+
+    /// <summary>"Pozisyon başlama tarihi": ValidFrom of the record in effect today (derived, never stored).</summary>
+    public DateOnly? PositionStartDate(DateOnly today) =>
+        CurrentCareerRecord(today)?.ValidFrom ?? (HasCareerData ? ImplicitCareerStart(today) : null);
+
+    /// <summary>ValidFrom the (not yet materialized) initial record of a pre-career-history employee gets: its hire date, else the day the record was created.</summary>
+    public DateOnly ImplicitCareerStart(DateOnly fallback) =>
+        HireDate ?? (CreatedAt == default ? fallback : DateOnly.FromDateTime(CreatedAt));
+
+    /// <summary>
+    /// Writes the initial "Hire" record from the current denormalized values when the employee has none yet - both for
+    /// a brand new employee and for a record created before career history existed (its id is the employee id, so the
+    /// implicit record shown by the read side keeps its identity once materialized). Returns null when nothing was created.
+    /// </summary>
+    public CareerRecord? EnsureInitialCareerRecord(IReadOnlyList<OrgAssignmentInput> assignments, DateOnly fallbackStart)
+    {
+        if (_careerRecords.Count > 0 || !HasCareerData)
+        {
+            return null;
+        }
+
+        var record = new CareerRecord(
+            Id,
+            TenantId,
+            Id,
+            new CareerRecordData(ImplicitCareerStart(fallbackStart), CareerChangeType.Hire, EmploymentType, ManagerEmployeeId, null, assignments));
+        _careerRecords.Add(record);
+        return record;
+    }
+
+    /// <summary>Adds a career period ("Pozisyon ekle"); closes the previous open record at ValidFrom - 1.</summary>
+    public Result<CareerOutcome> AddCareerRecord(CareerRecordData data, CareerContext context)
+    {
+        var validated = CareerRecord.Validate(data);
+        if (validated.IsFailure)
+        {
+            return validated.Error;
+        }
+
+        var managerCheck = CheckManager(data.ManagerEmployeeId, context);
+        if (managerCheck.IsFailure)
+        {
+            return managerCheck.Error;
+        }
+
+        var ordered = CareerTimeline;
+        var previous = ordered.Count > 0 ? ordered[^1] : null;
+        if (previous is not null && data.ValidFrom <= previous.ValidFrom)
+        {
+            return Error.Rule(EmployeeDomainErrors.CareerValidFromInvalid);
+        }
+
+        if (previous is null && HireDate is { } hireDate && data.ValidFrom < hireDate)
+        {
+            return Error.Rule(EmployeeDomainErrors.CareerBeforeHireDate);
+        }
+
+        previous?.Close(data.ValidFrom.AddDays(-1));
+        var record = new CareerRecord(Guid.CreateVersion7(), TenantId, Id, data);
+        _careerRecords.Add(record);
+        SyncFromCareer(context);
+
+        var transition = previous?.ManagerEmployeeId != data.ManagerEmployeeId
+            ? new ManagerTransition(previous?.ManagerEmployeeId, data.ManagerEmployeeId, data.ValidFrom)
+            : null;
+        return new CareerOutcome(record, Changed: true, transition);
+    }
+
+    /// <summary>Edits a career record; only the latest record may move its ValidFrom.</summary>
+    public Result<CareerOutcome> UpdateCareerRecord(Guid recordId, CareerRecordData data, CareerContext context)
+    {
+        var validated = CareerRecord.Validate(data);
+        if (validated.IsFailure)
+        {
+            return validated.Error;
+        }
+
+        var managerCheck = CheckManager(data.ManagerEmployeeId, context);
+        if (managerCheck.IsFailure)
+        {
+            return managerCheck.Error;
+        }
+
+        var ordered = CareerTimeline;
+        var index = IndexOf(ordered, recordId);
+        if (index < 0)
+        {
+            return Error.NotFound(EmployeeDomainErrors.CareerRecordNotFound);
+        }
+
+        var record = ordered[index];
+        var previous = index > 0 ? ordered[index - 1] : null;
+        if (data.ValidFrom != record.ValidFrom)
+        {
+            if (index != ordered.Count - 1)
+            {
+                return Error.Rule(EmployeeDomainErrors.CareerNotLatest);
+            }
+
+            if (previous is not null && data.ValidFrom <= previous.ValidFrom)
+            {
+                return Error.Rule(EmployeeDomainErrors.CareerValidFromInvalid);
+            }
+
+            if (previous is null && HireDate is { } hireDate && data.ValidFrom < hireDate)
+            {
+                return Error.Rule(EmployeeDomainErrors.CareerBeforeHireDate);
+            }
+        }
+
+        var oldManager = record.ManagerEmployeeId;
+        var oldValidFrom = record.ValidFrom;
+        var changed = record.Apply(data);
+        previous?.Close(record.ValidFrom.AddDays(-1));
+        SyncFromCareer(context);
+
+        ManagerTransition? transition = null;
+        if (oldManager != record.ManagerEmployeeId)
+        {
+            transition = new ManagerTransition(oldManager, record.ManagerEmployeeId, record.ValidFrom);
+        }
+        else if (oldValidFrom != record.ValidFrom && previous?.ManagerEmployeeId != record.ManagerEmployeeId)
+        {
+            // Same manager, different start date: the timeline's change point moved.
+            transition = new ManagerTransition(previous?.ManagerEmployeeId, record.ManagerEmployeeId, record.ValidFrom);
+        }
+
+        return new CareerOutcome(record, changed, transition);
+    }
+
+    /// <summary>Deletes the latest career record and reopens the previous one; the only record of an employee cannot be deleted (edit it instead).</summary>
+    public Result<CareerOutcome> DeleteCareerRecord(Guid recordId, CareerContext context)
+    {
+        var ordered = CareerTimeline;
+        var index = IndexOf(ordered, recordId);
+        if (index < 0)
+        {
+            return Error.NotFound(EmployeeDomainErrors.CareerRecordNotFound);
+        }
+
+        if (index != ordered.Count - 1)
+        {
+            return Error.Rule(EmployeeDomainErrors.CareerNotLatest);
+        }
+
+        if (ordered.Count == 1)
+        {
+            return Error.Rule(EmployeeDomainErrors.CareerLastRecord);
+        }
+
+        var record = ordered[index];
+        var previous = ordered[index - 1];
+        _careerRecords.Remove(record);
+        previous.Reopen(record.ValidTo);
+        SyncFromCareer(context);
+
+        var transition = record.ManagerEmployeeId != previous.ManagerEmployeeId
+            ? new ManagerTransition(record.ManagerEmployeeId, previous.ManagerEmployeeId, record.ValidFrom)
+            : null;
+        return new CareerOutcome(previous, Changed: true, transition);
+    }
+
+    /// <summary>
+    /// Placement change coming from a non-career write path (PUT /employees/{id}, bulk assign-manager, import):
+    /// amends the latest record when it starts today or later, otherwise opens a new record effective today, so the
+    /// history and the denormalized fields can never diverge.
+    /// </summary>
+    public Result<CareerOutcome> ApplyPlacement(PlacementRequest request, CareerContext context)
+    {
+        var ordered = CareerTimeline;
+        var latest = ordered.Count > 0 ? ordered[^1] : null;
+        if (latest is null)
+        {
+            return AddCareerRecord(
+                new CareerRecordData(HireDate ?? context.Today, CareerChangeType.Hire, request.EmploymentType, request.ManagerEmployeeId, null, request.Assignments),
+                context);
+        }
+
+        if (latest.ManagerEmployeeId == request.ManagerEmployeeId &&
+            latest.EmploymentType == request.EmploymentType &&
+            latest.HasSameAssignments(request.Assignments))
+        {
+            return new CareerOutcome(latest, Changed: false);
+        }
+
+        return latest.ValidFrom >= context.Today
+            ? UpdateCareerRecord(
+                latest.Id,
+                new CareerRecordData(latest.ValidFrom, latest.ChangeType, request.EmploymentType, request.ManagerEmployeeId, latest.Note, request.Assignments),
+                context)
+            : AddCareerRecord(
+                new CareerRecordData(context.Today, request.ChangeType, request.EmploymentType, request.ManagerEmployeeId, null, request.Assignments),
+                context);
+    }
+
+    /// <summary>Denormalizes the record in effect today onto the employee (unit = deepest level, manager, employment type).</summary>
+    private void SyncFromCareer(CareerContext context)
+    {
+        if (CurrentCareerRecord(context.Today) is not { } current)
+        {
+            return;
+        }
+
+        AssignOrgUnit(current.DeepestOrgUnitId(context.LevelOrder));
+
+        if (ManagerEmployeeId != current.ManagerEmployeeId)
+        {
+            ManagerEmployeeId = current.ManagerEmployeeId;
+            Raise(new EmployeeManagerChanged(Id, TenantId, current.ManagerEmployeeId));
+        }
+
+        EmploymentType = current.EmploymentType;
+    }
+
+    private Result CheckManager(Guid? managerEmployeeId, CareerContext context)
+    {
+        if (managerEmployeeId is not { } managerId)
+        {
+            return Result.Success();
+        }
+
+        if (managerId == Id)
+        {
+            return Error.Rule(EmployeeDomainErrors.ManagerSelf);
+        }
+
+        return ManagerHierarchy.WouldCreateCycle(Id, managerId, context.ManagerOf)
+            ? Error.Rule(EmployeeDomainErrors.ManagerCycle)
+            : Result.Success();
+    }
+
+    /// <summary>PositionStartDate &gt;= HireDate (11.3.03): a hire date after the first record is only accepted when that record can follow it.</summary>
+    private Result CheckHireDateAgainstCareer(DateOnly? newHireDate, DateOnly? oldHireDate)
+    {
+        var ordered = CareerTimeline;
+        if (ordered.Count == 0 || newHireDate is not { } hireDate || hireDate <= ordered[0].ValidFrom)
+        {
+            return Result.Success();
+        }
+
+        return CanRealignInitialRecord(ordered, hireDate, oldHireDate)
+            ? Result.Success()
+            : Error.Rule(EmployeeDomainErrors.CareerBeforeHireDate);
+    }
+
+    /// <summary>Keeps an untouched initial Hire record on the hire date when that date is corrected.</summary>
+    private void RealignInitialRecord(DateOnly? oldHireDate)
+    {
+        var ordered = CareerTimeline;
+        if (ordered.Count == 0 || HireDate is not { } hireDate || hireDate == ordered[0].ValidFrom)
+        {
+            return;
+        }
+
+        if (CanRealignInitialRecord(ordered, hireDate, oldHireDate))
+        {
+            ordered[0].SetValidFrom(hireDate);
+        }
+    }
+
+    private static bool CanRealignInitialRecord(IReadOnlyList<CareerRecord> ordered, DateOnly hireDate, DateOnly? oldHireDate)
+    {
+        var first = ordered[0];
+        var untouched = first.ChangeType == CareerChangeType.Hire && (oldHireDate is null || first.ValidFrom == oldHireDate);
+        return untouched && (ordered.Count == 1 || hireDate < ordered[1].ValidFrom);
+    }
+
+    private static int IndexOf(IReadOnlyList<CareerRecord> ordered, Guid recordId)
+    {
+        for (var i = 0; i < ordered.Count; i++)
+        {
+            if (ordered[i].Id == recordId)
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     /// <summary>Assigns (or clears) the direct manager. <paramref name="managerOf"/> maps every employee id of the tenant to its current manager (used to detect cycles).</summary>
@@ -282,7 +612,9 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         WorkEmail = Normalize(info.WorkEmail)?.ToLowerInvariant();
         PersonalEmail = Normalize(info.PersonalEmail)?.ToLowerInvariant();
         WorkPhone = Normalize(info.WorkPhone);
+        var previousHireDate = HireDate;
         HireDate = info.HireDate;
+        LeaveAccrualStartDate = ResolveLeaveAccrualStart(info.LeaveAccrualStartDate, LeaveAccrualStartDate, previousHireDate, HireDate);
         BirthDate = info.BirthDate;
         Gender = info.Gender;
         MaritalStatus = info.MaritalStatus;
@@ -298,7 +630,13 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         City = Normalize(info.City);
         PostalCode = Normalize(info.PostalCode);
         ContractType = info.ContractType;
-        EmploymentType = info.EmploymentType;
+
+        // Once career history exists the employment type belongs to the career record; the placement path
+        // (ApplyPlacement) writes it there and SyncFromCareer copies it back onto the employee.
+        if (_careerRecords.Count == 0)
+        {
+            EmploymentType = info.EmploymentType;
+        }
 
         // Draft -> Active the first time a hire date is set; later statuses (Suspended/Terminated) are not
         // reopened by a hire date edit alone.
@@ -381,6 +719,27 @@ public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     }
 
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    /// <summary>
+    /// "İzne esas hak ediş tarihi": an explicit value always wins; otherwise it defaults to the hire date the first
+    /// time one is set and follows a later hire-date correction only while it still equals the old hire date (a value
+    /// deliberately moved earlier - group transfer, rehire - is kept). A termination-date upper bound comes with the
+    /// termination package (E4), which owns that field.
+    /// </summary>
+    private static DateOnly? ResolveLeaveAccrualStart(DateOnly? requested, DateOnly? current, DateOnly? oldHireDate, DateOnly? newHireDate)
+    {
+        if (requested is not null)
+        {
+            return requested;
+        }
+
+        if (current is null)
+        {
+            return newHireDate;
+        }
+
+        return oldHireDate is not null && current == oldHireDate && newHireDate is not null ? newHireDate : current;
+    }
 }
 
 /// <summary>Manager hierarchy rules shared by single and bulk manager assignment.</summary>
