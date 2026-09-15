@@ -91,6 +91,9 @@ public interface IEmployeeReadStore
     /// <summary>Untracked employee with its career records - the career read side reuses the aggregate's own timeline rules (current record, implicit initial record).</summary>
     Task<Domain.Employees.Employee?> GetWithCareerAsync(Guid id, CancellationToken ct);
 
+    /// <summary>Untracked employee with its salary records and bank accounts (the payment reads reuse the aggregate's current-salary / ordering rules).</summary>
+    Task<Domain.Employees.Employee?> GetWithPaymentsAsync(Guid id, CancellationToken ct);
+
     Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct);
 }
 

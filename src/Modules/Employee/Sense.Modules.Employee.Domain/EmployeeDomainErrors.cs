@@ -42,6 +42,48 @@ public static class EmployeeDomainErrors
     public const string CareerLastRecord = "employee.career_last_record";
 
     public const string CareerNoteTooLong = "employee.career_note_too_long";
+
+    public const string SalaryRecordNotFound = "employee.salary_record_not_found";
+
+    /// <summary>One salary record per effective date per employee.</summary>
+    public const string SalaryEffectiveDateDuplicate = "employee.salary_effective_date_duplicate";
+
+    /// <summary>"Maaş bloğu bütünlüğü": nothing of the block is saved without an effective date.</summary>
+    public const string SalaryEffectiveDateRequired = "employee.salary_effective_date_required";
+
+    /// <summary>"Maaş bloğu bütünlüğü": nothing of the block is saved without an amount.</summary>
+    public const string SalaryAmountRequired = "employee.salary_amount_required";
+
+    /// <summary>Amount must be &gt; 0, at most 2 decimals and below <see cref="EmployeeLimits.MoneyMax"/>.</summary>
+    public const string SalaryAmountInvalid = "employee.salary_amount_invalid";
+
+    /// <summary>Allowances must be &gt;= 0, at most 2 decimals and below <see cref="EmployeeLimits.MoneyMax"/>.</summary>
+    public const string SalaryAllowanceInvalid = "employee.salary_allowance_invalid";
+
+    public const string SalaryTypeRequired = "employee.salary_type_required";
+    public const string SalaryPayFrequencyRequired = "employee.salary_pay_frequency_required";
+    public const string SalaryNoteTooLong = "employee.salary_note_too_long";
+
+    /// <summary>Currency must be an active ISO 4217 code (3 uppercase letters).</summary>
+    public const string CurrencyInvalid = "employee.currency_invalid";
+
+    public const string CurrencyRequired = "employee.currency_required";
+
+    public const string BankAccountNotFound = "employee.bank_account_not_found";
+    public const string IbanRequired = "employee.iban_required";
+
+    /// <summary>Not a well-formed IBAN (length/characters/mod-97 checksum).</summary>
+    public const string IbanInvalid = "employee.iban_invalid";
+
+    /// <summary>A valid IBAN of a country bank accounts do not accept yet (TR only for now).</summary>
+    public const string IbanCountryUnsupported = "employee.iban_country_unsupported";
+
+    /// <summary>The employee already has an account with this IBAN.</summary>
+    public const string IbanDuplicate = "employee.iban_duplicate";
+
+    public const string BankAccountTypeRequired = "employee.bank_account_type_required";
+    public const string BankNameTooLong = "employee.bank_name_too_long";
+    public const string BankAccountNoteTooLong = "employee.bank_account_note_too_long";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -59,4 +101,19 @@ public static class EmployeeLimits
     public const int CityMaxLength = 100;
     public const int PostalCodeMaxLength = 20;
     public const int CareerNoteMaxLength = 500;
+    public const int SalaryNoteMaxLength = 500;
+    public const int BankNameMaxLength = 100;
+    public const int BankAccountNoteMaxLength = 500;
+
+    /// <summary>Money columns are numeric(18,2): kuruş precision, amounts strictly below this bound.</summary>
+    public const decimal MoneyMax = 1_000_000_000_000m;
+
+    public const int MoneyPrecision = 18;
+    public const int MoneyScale = 2;
+
+    /// <summary>AES-GCM ciphertext of a normalized IBAN (base64 of nonce + tag + at most 34 bytes).</summary>
+    public const int ProtectedIbanMaxLength = 128;
+
+    /// <summary>"TR** **** **** **** **** **12 34": at most 34 characters plus group separators.</summary>
+    public const int MaskedIbanMaxLength = 42;
 }

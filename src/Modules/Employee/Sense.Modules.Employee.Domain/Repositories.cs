@@ -14,6 +14,9 @@ public interface IEmployeeRepository
 
     Task<Result<EmployeeEntity>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Tracked employee with its salary records and bank accounts loaded (not auto-included anywhere else).</summary>
+    Task<Result<EmployeeEntity>> GetWithPaymentsAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default);

@@ -77,7 +77,23 @@ public sealed class IbanTests
         iban.BankCode.ShouldBe("00061");
         iban.Formatted.ShouldBe("TR33 0006 1005 1978 6457 8413 26");
         iban.Masked.ShouldBe("TR33******************1326");
+        iban.MaskedFormatted.ShouldBe("TR** **** **** **** **** **13 26");
     }
+
+    [Theory]
+    [InlineData("TR130006200000001234567890", true)]
+    [InlineData("TR19000620000000123456789A", false)]
+    [InlineData("TR13 0006 2000 0000 1234 5678 9", false)]
+    public void TurkishIban_Is26DigitsAfterCountryCode(string value, bool expected) => Iban.IsValid(value).ShouldBe(expected);
+
+    [Theory]
+    [InlineData("TRY", true)]
+    [InlineData("EUR", true)]
+    [InlineData("try", false)]
+    [InlineData("TL", false)]
+    [InlineData("XYZ", false)]
+    [InlineData(null, false)]
+    public void Currencies_IsKnown_MatchesActiveIso4217Codes(string? code, bool expected) => Currencies.IsKnown(code).ShouldBe(expected);
 }
 
 public sealed class DateRangeTests

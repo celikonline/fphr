@@ -6,6 +6,18 @@ namespace Sense.Shared.Kernel.ValueObjects;
 /// <summary>IBAN (ISO 13616, mod-97). Türkiye IBAN'ı 26 karakter, TR ile başlar.</summary>
 public sealed class Iban : ValueObject
 {
+    public const int MinLength = 15;
+    public const int MaxLength = 34;
+    private const int GroupSize = 4;
+    private const int VisibleTailLength = 4;
+    private const char MaskChar = '*';
+
+    /// <summary>Ülkeye özgü sabit uzunluklar (ISO 13616 kaydı); listede olmayan ülke yalnız genel 15–34 kuralına tabidir.</summary>
+    private static readonly Dictionary<string, int> CountryLengths = new(StringComparer.Ordinal) { ["TR"] = 26 };
+
+    /// <summary>BBAN'ı yalnız rakamlardan oluşan ülkeler (TR: 5 banka + 1 rezerv + 16 hesap hanesi).</summary>
+    private static readonly HashSet<string> NumericBbanCountries = new(StringComparer.Ordinal) { "TR" };
+
     private Iban(string value) => Value = value;
 
     /// <summary>Boşluksuz, büyük harf normalize değer.</summary>
@@ -29,7 +41,7 @@ public sealed class Iban : ValueObject
         }
 
         var s = Normalize(value);
-        if (s.Length is < 15 or > 34 || !s.All(char.IsAsciiLetterOrDigit))
+        if (s.Length is < MinLength or > MaxLength || !s.All(char.IsAsciiLetterOrDigit))
         {
             return false;
         }
@@ -39,7 +51,13 @@ public sealed class Iban : ValueObject
             return false;
         }
 
-        if (s.StartsWith("TR", StringComparison.Ordinal) && s.Length != 26)
+        var country = s[..2];
+        if (CountryLengths.TryGetValue(country, out var length) && s.Length != length)
+        {
+            return false;
+        }
+
+        if (NumericBbanCountries.Contains(country) && !s.Skip(4).All(char.IsAsciiDigit))
         {
             return false;
         }
@@ -67,11 +85,21 @@ public sealed class Iban : ValueObject
     }
 
     /// <summary>TR12 3456 7890 1234 5678 9012 34 biçimi.</summary>
-    public string Formatted => string.Join(' ', Enumerable.Range(0, (Value.Length + 3) / 4).Select(i => Value.Substring(i * 4, Math.Min(4, Value.Length - (i * 4)))));
+    public string Formatted => Group(Value);
 
     public string Masked => string.Concat(Value.AsSpan(0, 4), new string('*', Value.Length - 8), Value.AsSpan(Value.Length - 4));
 
+    /// <summary>Ülke kodu ve son 4 hane dışındaki her şey gizli, 4'lü gruplu: "TR** **** **** **** **** **12 34" (kontrol haneleri de gizlenir).</summary>
+    public string MaskedFormatted => Group(string.Concat(
+        Value.AsSpan(0, 2),
+        new string(MaskChar, Value.Length - 2 - VisibleTailLength),
+        Value.AsSpan(Value.Length - VisibleTailLength)));
+
     public override string ToString() => Value;
+
+    private static string Group(string value) =>
+        string.Join(' ', Enumerable.Range(0, (value.Length + GroupSize - 1) / GroupSize)
+            .Select(i => value.Substring(i * GroupSize, Math.Min(GroupSize, value.Length - (i * GroupSize)))));
 
     protected override IEnumerable<object?> GetEqualityComponents()
     {

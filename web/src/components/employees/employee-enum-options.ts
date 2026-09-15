@@ -14,6 +14,7 @@ import type {
   MaritalStatus,
   MilitaryStatus,
 } from "@/services/employees.service";
+import type { BankAccountType, PayFrequency, SalaryType } from "@/services/employee-payments.service";
 
 export const GENDER_OPTIONS: Gender[] = ["unspecified", "male", "female", "other"];
 export const MARITAL_STATUS_OPTIONS: MaritalStatus[] = ["unspecified", "single", "married", "divorced"];
@@ -56,3 +57,6 @@ export const CAREER_CHANGE_TYPE_OPTIONS: CareerChangeType[] = [
   "rehire",
   "other",
 ];
+export const SALARY_TYPE_OPTIONS: SalaryType[] = ["gross", "net"];
+export const PAY_FREQUENCY_OPTIONS: PayFrequency[] = ["monthly", "daily", "yearly", "weekly", "hourly"];
+export const BANK_ACCOUNT_TYPE_OPTIONS: BankAccountType[] = ["demandDeposit", "timeDeposit", "cheque", "other"];

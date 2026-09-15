@@ -15,10 +15,16 @@ public static class EmployeePermissions
     public const string DirectoryViewKey = "employee.directory.view";
     public const string OrgChartViewKey = "employee.orgchart.view";
     public const string SalaryViewKey = "employee.salary.view";
+
+    /// <summary>Create/update/delete salary records (on top of <see cref="SalaryViewKey"/>).</summary>
+    public const string SalaryEditKey = "employee.salary.edit";
+
+    /// <summary>Create/update/delete bank accounts and pick the primary one; reading them needs only employees.read (IBAN masked without sensitive.view).</summary>
+    public const string BankAccountsEditKey = "employee.bank_accounts.edit";
     public const string MyViewKey = "employee.my.view";
     public const string EmployeesImportKey = "employee.employees.import";
 
-    /// <summary>Unmasked TCKN and health/disability fields (DisabilityDegree, BloodType, MilitaryStatus); everyone else gets masked/null.</summary>
+    /// <summary>Unmasked TCKN, IBAN and health/disability fields (DisabilityDegree, BloodType, MilitaryStatus); everyone else gets masked/null.</summary>
     public const string SensitiveViewKey = "employee.sensitive.view";
 
     /// <summary>Read employee records (list/detail), filtered by data scope.</summary>
@@ -45,9 +51,17 @@ public static class EmployeePermissions
     public static readonly Permission OrgChartView = new(
         OrgChartViewKey, Module, "View Org Chart", Group, "View the organization chart");
 
-    /// <summary>Salary and payment information (no consumer yet; granted via unit authorization).</summary>
+    /// <summary>Salary history (card "Ödemeler" tab); unit managers get it only via the unit authorization's salary switch.</summary>
     public static readonly Permission SalaryView = new(
         SalaryViewKey, Module, "View Salary", Group, "View salary and payment information");
+
+    /// <summary>Maintain salary history.</summary>
+    public static readonly Permission SalaryEdit = new(
+        SalaryEditKey, Module, "Edit Salary", Group, "Add, edit and delete salary records");
+
+    /// <summary>Maintain bank accounts.</summary>
+    public static readonly Permission BankAccountsEdit = new(
+        BankAccountsEditKey, Module, "Edit Bank Accounts", Group, "Add, edit and delete bank accounts and choose the primary account");
 
     /// <summary>Own employee card (self-service; matches the "*.my.*" pattern of self-service roles).</summary>
     public static readonly Permission MyView = new(
@@ -57,11 +71,11 @@ public static class EmployeePermissions
     public static readonly Permission EmployeesImport = new(
         EmployeesImportKey, Module, "Import Employees", Group, "Insert or update employee records from an import file");
 
-    /// <summary>Unmasked TCKN and health/disability fields.</summary>
+    /// <summary>Unmasked TCKN, IBAN and health/disability fields.</summary>
     public static readonly Permission SensitiveView = new(
-        SensitiveViewKey, Module, "View Sensitive Fields", Group, "View unmasked national id and health/disability fields");
+        SensitiveViewKey, Module, "View Sensitive Fields", Group, "View unmasked national id, IBAN and health/disability fields");
 
     /// <summary>All Employee module permissions.</summary>
     public static IEnumerable<Permission> All =>
-        [EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, MyView, EmployeesImport, SensitiveView];
+        [EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit, BankAccountsEdit, MyView, EmployeesImport, SensitiveView];
 }

@@ -65,7 +65,7 @@ public sealed record EmployeeInfo(
 /// <see cref="ManagerEmployeeId"/> is same-module but likewise FK-less so the hierarchy check stays a domain rule
 /// (<see cref="ManagerHierarchy"/>).
 /// </summary>
-public sealed class Employee : TenantAggregateRoot<Guid>, IAuditLogged
+public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 {
     private readonly List<CareerRecord> _careerRecords = [];
 

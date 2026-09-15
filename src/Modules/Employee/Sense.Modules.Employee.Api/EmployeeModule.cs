@@ -5,8 +5,10 @@ using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.Import;
+using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Import;
@@ -51,6 +53,12 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<OrgPlacementLoader>();
         services.AddScoped<CareerService>();
         services.AddScoped<CareerReader>();
+
+        // Salary history + bank accounts (E3): IBANs are stored as AES-GCM ciphertext via the shared IEncryptionProvider
+        services.AddScoped<IIbanProtector, EncryptedIbanProtector>();
+        services.AddScoped<PaymentsService>();
+        services.AddScoped<BankAccountWriter>();
+        services.AddScoped<SelfEmployeeResolver>();
 
         // Data import template "employee.master" (collected by the DataTransfer module)
         services.AddScoped<IImportTemplate, EmployeeMasterImportTemplate>();

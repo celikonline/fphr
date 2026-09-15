@@ -189,6 +189,25 @@
   <data name="employee.career_not_latest" xml:space="preserve"><value>Yalnızca en son kariyer kaydının başlangıç tarihi değiştirilebilir veya kaydı silinebilir.</value></data>
   <data name="employee.career_last_record" xml:space="preserve"><value>Çalışanın tek kariyer kaydı silinemez; kaydı düzenleyin.</value></data>
   <data name="employee.career_note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
+  <data name="employee.salary_record_not_found" xml:space="preserve"><value>Maaş kaydı bulunamadı.</value></data>
+  <data name="employee.salary_effective_date_duplicate" xml:space="preserve"><value>Bu geçerlilik tarihiyle zaten bir maaş kaydı var.</value></data>
+  <data name="employee.salary_effective_date_required" xml:space="preserve"><value>Maaş geçerlilik tarihi zorunludur.</value></data>
+  <data name="employee.salary_amount_required" xml:space="preserve"><value>Maaş tutarı zorunludur.</value></data>
+  <data name="employee.salary_amount_invalid" xml:space="preserve"><value>Maaş tutarı sıfırdan büyük, en fazla iki ondalıklı geçerli bir sayı olmalıdır.</value></data>
+  <data name="employee.salary_allowance_invalid" xml:space="preserve"><value>Yol ve yemek yardımı sıfır veya pozitif, en fazla iki ondalıklı bir sayı olmalıdır.</value></data>
+  <data name="employee.salary_type_required" xml:space="preserve"><value>Maaş türü (net/brüt) zorunludur.</value></data>
+  <data name="employee.salary_pay_frequency_required" xml:space="preserve"><value>Ödeme düzeni zorunludur.</value></data>
+  <data name="employee.salary_note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
+  <data name="employee.currency_required" xml:space="preserve"><value>Para birimi zorunludur.</value></data>
+  <data name="employee.currency_invalid" xml:space="preserve"><value>Para birimi geçerli bir ISO 4217 kodu olmalıdır (ör. TRY, EUR, USD).</value></data>
+  <data name="employee.bank_account_not_found" xml:space="preserve"><value>Banka hesabı bulunamadı.</value></data>
+  <data name="employee.iban_required" xml:space="preserve"><value>IBAN zorunludur.</value></data>
+  <data name="employee.iban_invalid" xml:space="preserve"><value>IBAN geçersiz; uzunluğu ve kontrol hanelerini kontrol edin.</value></data>
+  <data name="employee.iban_country_unsupported" xml:space="preserve"><value>Şimdilik yalnızca TR ile başlayan IBAN'lar kabul edilir.</value></data>
+  <data name="employee.iban_duplicate" xml:space="preserve"><value>Bu IBAN çalışanın başka bir hesabında zaten kayıtlı.</value></data>
+  <data name="employee.bank_account_type_required" xml:space="preserve"><value>Banka hesap tipi zorunludur.</value></data>
+  <data name="employee.bank_name_too_long" xml:space="preserve"><value>Banka adı en fazla 100 karakter olabilir.</value></data>
+  <data name="employee.bank_account_note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="employee.sensitive.view" xml:space="preserve"><value>Hassas alanları görüntüleme</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>Çalışanları görüntüleme</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Çalışan ekleme</value></data>
@@ -197,6 +216,8 @@
   <data name="employee.directory.view" xml:space="preserve"><value>Çalışan rehberini görüntüleme</value></data>
   <data name="employee.orgchart.view" xml:space="preserve"><value>Organizasyon şemasını görüntüleme</value></data>
   <data name="employee.salary.view" xml:space="preserve"><value>Maaş ve ödeme bilgilerini görüntüleme</value></data>
+  <data name="employee.salary.edit" xml:space="preserve"><value>Maaş bilgilerini düzenleme</value></data>
+  <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Banka hesaplarını düzenleme</value></data>
 
   <!-- Organizasyon -->
   <data name="organization.unit_type.not_found" xml:space="preserve"><value>Seviye bulunamadı.</value></data>

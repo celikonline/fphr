@@ -69,7 +69,7 @@ public static class SystemRoleDefinitions
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
-            ["payroll.*", "attendance.timesheets.*", "attendance.*.view", "leave.*.view", "employee.*.view", "employee.salary.*", "expense.adjustments.*",
+            ["payroll.*", "attendance.timesheets.*", "attendance.*.view", "leave.*.view", "employee.*.view", "employee.salary.*", "employee.bank_accounts.*", "expense.adjustments.*",
              "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService],
             []),
 

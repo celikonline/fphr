@@ -11,6 +11,23 @@ public static class Currencies
     public const string EUR = "EUR";
     public const string GBP = "GBP";
     public const int CodeLength = 3;
+
+    /// <summary>Active ISO 4217 currency codes (funds/precious-metal/testing codes excluded).</summary>
+    private static readonly HashSet<string> Iso4217 = new(StringComparer.Ordinal)
+    {
+        "AED", "AFN", "ALL", "AMD", "ANG", "AOA", "ARS", "AUD", "AWG", "AZN", "BAM", "BBD", "BDT", "BGN", "BHD", "BIF", "BMD", "BND", "BOB",
+        "BRL", "BSD", "BTN", "BWP", "BYN", "BZD", "CAD", "CDF", "CHF", "CLP", "CNY", "COP", "CRC", "CUP", "CVE", "CZK", "DJF", "DKK", "DOP",
+        "DZD", "EGP", "ERN", "ETB", "EUR", "FJD", "FKP", "GBP", "GEL", "GHS", "GIP", "GMD", "GNF", "GTQ", "GYD", "HKD", "HNL", "HTG", "HUF",
+        "IDR", "ILS", "INR", "IQD", "IRR", "ISK", "JMD", "JOD", "JPY", "KES", "KGS", "KHR", "KMF", "KPW", "KRW", "KWD", "KYD", "KZT", "LAK",
+        "LBP", "LKR", "LRD", "LSL", "LYD", "MAD", "MDL", "MGA", "MKD", "MMK", "MNT", "MOP", "MRU", "MUR", "MVR", "MWK", "MXN", "MYR", "MZN",
+        "NAD", "NGN", "NIO", "NOK", "NPR", "NZD", "OMR", "PAB", "PEN", "PGK", "PHP", "PKR", "PLN", "PYG", "QAR", "RON", "RSD", "RUB", "RWF",
+        "SAR", "SBD", "SCR", "SDG", "SEK", "SGD", "SHP", "SLE", "SOS", "SRD", "SSP", "STN", "SVC", "SYP", "SZL", "THB", "TJS", "TMT", "TND",
+        "TOP", "TRY", "TTD", "TWD", "TZS", "UAH", "UGX", "USD", "UYU", "UZS", "VES", "VND", "VUV", "WST", "XAF", "XCD", "XOF", "XPF", "YER",
+        "ZAR", "ZMW", "ZWG",
+    };
+
+    /// <summary>True for an active ISO 4217 code, exact (uppercase) match only.</summary>
+    public static bool IsKnown(string? code) => code is { Length: CodeLength } && Iso4217.Contains(code);
 }
 
 /// <summary>Para tutarı. Ara hesaplar <see cref="StoragePrecision"/> hane, çıktı <see cref="DisplayPrecision"/> hane HALF_UP (kuruş).</summary>

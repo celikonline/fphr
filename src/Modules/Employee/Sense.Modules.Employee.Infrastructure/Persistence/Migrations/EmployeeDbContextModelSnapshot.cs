@@ -23,6 +23,86 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.BankAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AccountType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("account_type");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bank_name");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Currency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_primary");
+
+                    b.Property<string>("MaskedIban")
+                        .IsRequired()
+                        .HasMaxLength(42)
+                        .HasColumnType("character varying(42)")
+                        .HasColumnName("masked_iban");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("ProtectedIban")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("protected_iban");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_bank_accounts");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_bank_accounts_employee_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_bank_accounts_tenant_id");
+
+                    b.ToTable("bank_accounts", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CareerRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -308,6 +388,98 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("employees", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency")
+                        .IsFixedLength();
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_from");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<decimal?>("MealAllowance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("meal_allowance");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<string>("PayFrequency")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("pay_frequency");
+
+                    b.Property<string>("SalaryType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("salary_type");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("TransportAllowance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("transport_allowance");
+
+                    b.HasKey("Id")
+                        .HasName("pk_salary_records");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_salary_records_tenant_id");
+
+                    b.HasIndex("EmployeeId", "EffectiveFrom")
+                        .IsUnique()
+                        .HasDatabaseName("ix_salary_records_employee_id_effective_from");
+
+                    b.ToTable("salary_records", "employee");
+                });
+
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>
                 {
                     b.Property<Guid>("MessageId")
@@ -431,6 +603,16 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.BankAccount", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("BankAccounts")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_bank_accounts_employees_employee_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CareerRecord", b =>
                 {
                     b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
@@ -470,9 +652,23 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Navigation("Assignments");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.SalaryRecord", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("SalaryRecords")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_salary_records_employees_employee_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.Employee", b =>
                 {
+                    b.Navigation("BankAccounts");
+
                     b.Navigation("CareerRecords");
+
+                    b.Navigation("SalaryRecords");
                 });
 #pragma warning restore 612, 618
         }

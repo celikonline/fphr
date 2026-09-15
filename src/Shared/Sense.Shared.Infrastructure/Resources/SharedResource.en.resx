@@ -180,6 +180,25 @@
   <data name="employee.career_not_latest" xml:space="preserve"><value>Only the latest career record can change its start date or be deleted.</value></data>
   <data name="employee.career_last_record" xml:space="preserve"><value>An employee's only career record cannot be deleted; edit it instead.</value></data>
   <data name="employee.career_note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
+  <data name="employee.salary_record_not_found" xml:space="preserve"><value>Salary record not found.</value></data>
+  <data name="employee.salary_effective_date_duplicate" xml:space="preserve"><value>A salary record with this effective date already exists.</value></data>
+  <data name="employee.salary_effective_date_required" xml:space="preserve"><value>The salary effective date is required.</value></data>
+  <data name="employee.salary_amount_required" xml:space="preserve"><value>The salary amount is required.</value></data>
+  <data name="employee.salary_amount_invalid" xml:space="preserve"><value>The salary amount must be a number greater than zero with at most two decimals.</value></data>
+  <data name="employee.salary_allowance_invalid" xml:space="preserve"><value>Transport and meal allowances must be zero or positive numbers with at most two decimals.</value></data>
+  <data name="employee.salary_type_required" xml:space="preserve"><value>The salary type (net/gross) is required.</value></data>
+  <data name="employee.salary_pay_frequency_required" xml:space="preserve"><value>The pay frequency is required.</value></data>
+  <data name="employee.salary_note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
+  <data name="employee.currency_required" xml:space="preserve"><value>The currency is required.</value></data>
+  <data name="employee.currency_invalid" xml:space="preserve"><value>The currency must be a valid ISO 4217 code (e.g. TRY, EUR, USD).</value></data>
+  <data name="employee.bank_account_not_found" xml:space="preserve"><value>Bank account not found.</value></data>
+  <data name="employee.iban_required" xml:space="preserve"><value>The IBAN is required.</value></data>
+  <data name="employee.iban_invalid" xml:space="preserve"><value>The IBAN is invalid; check its length and check digits.</value></data>
+  <data name="employee.iban_country_unsupported" xml:space="preserve"><value>Only IBANs starting with TR are accepted for now.</value></data>
+  <data name="employee.iban_duplicate" xml:space="preserve"><value>This IBAN is already registered on another account of the employee.</value></data>
+  <data name="employee.bank_account_type_required" xml:space="preserve"><value>The bank account type is required.</value></data>
+  <data name="employee.bank_name_too_long" xml:space="preserve"><value>The bank name can be at most 100 characters.</value></data>
+  <data name="employee.bank_account_note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="employee.sensitive.view" xml:space="preserve"><value>View sensitive fields</value></data>
   <data name="employee.employees.read" xml:space="preserve"><value>View employees</value></data>
   <data name="employee.employees.create" xml:space="preserve"><value>Add employees</value></data>
@@ -188,6 +207,8 @@
   <data name="employee.directory.view" xml:space="preserve"><value>View the employee directory</value></data>
   <data name="employee.orgchart.view" xml:space="preserve"><value>View the organization chart</value></data>
   <data name="employee.salary.view" xml:space="preserve"><value>View salary and payment information</value></data>
+  <data name="employee.salary.edit" xml:space="preserve"><value>Edit salary information</value></data>
+  <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Edit bank accounts</value></data>
 
   <!-- Organization -->
   <data name="organization.unit_type.not_found" xml:space="preserve"><value>Level not found.</value></data>
