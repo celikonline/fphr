@@ -359,10 +359,15 @@ export default function AppLayout() {
       <div className="flex min-h-0 flex-1">
         {/* Sidebar - collapses to an icon rail below md, or when toggled */}
         <aside className={`hidden shrink-0 flex-col md:flex ${sidebarOpen ? "w-64" : "w-16"} ${classes.sidebar}`}>
-          <div className={`flex h-16 items-center ${sidebarOpen ? "px-4" : "justify-center px-2"} ${classes.brandRow}`}>
+          <div className={`flex min-h-16 flex-col justify-center ${sidebarOpen ? "px-4" : "items-center px-2"} ${classes.brandRow}`}>
             <Anchor component={Link} to="/app" size="lg" fw={700} underline="never">
               {sidebarOpen ? "SenseİK" : "S"}
             </Anchor>
+            {sidebarOpen && (
+              <Text size="xs" c="dimmed" truncate>
+                {tenant?.name ?? userTenantName ?? "SenseİK"}
+              </Text>
+            )}
           </div>
           <NavList collapsed={!sidebarOpen} />
         </aside>
@@ -392,11 +397,8 @@ export default function AppLayout() {
                   <MenuIcon size={20} />
                 </ActionIcon>
               </Tooltip>
-              <div className="hidden min-w-0 flex-col sm:flex">
+              <div className="hidden min-w-0 sm:flex">
                 <HeaderBreadcrumbs />
-                <Text size="xs" c="dimmed" truncate>
-                  {tenant?.name ?? userTenantName ?? "SenseİK"}
-                </Text>
               </div>
             </div>
 
