@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -332,7 +333,7 @@ function AddEntryDialog({ calendar, onClose }: { calendar: HolidayCalendar; onCl
         >
           <div>
             <Label htmlFor="entry-date">{t("structure:calendars.date")}</Label>
-            <Input id="entry-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DatePicker id="entry-date" value={date} onChange={setDate} />
             {submitted && dateMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
           </div>
           <div>

@@ -23,3 +23,5 @@ export * from "./popover";
 export * from "./sheet";
 export * from "./radio-group";
 export * from "./tooltip";
+export * from "./calendar";
+export * from "./date-picker";

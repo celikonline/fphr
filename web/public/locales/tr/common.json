@@ -41,6 +41,8 @@
   "of": "/",
   "rowsPerPage": "Sayfa başına satır",
   "required": "Bu alan zorunludur",
+  "pickDate": "Tarih seçin",
+  "clear": "Temizle",
   "close": "Kapat",
   "back": "Geri",
   "yes": "Evet",

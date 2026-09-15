@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -340,7 +341,7 @@ function SalaryRecordDialog({ employeeId, records, editing, onClose, onSaved }: 
                 {t("employees:payments.salary.effectiveFrom")}
                 <span className="text-destructive"> *</span>
               </Label>
-              <Input id="salary-effectiveFrom" type="date" value={effectiveFrom} disabled={busy} onChange={(e) => setEffectiveFrom(e.target.value)} />
+              <DatePicker id="salary-effectiveFrom" value={effectiveFrom} disabled={busy} onChange={setEffectiveFrom} />
             </div>
             <div>
               <Label htmlFor="salary-amount">
