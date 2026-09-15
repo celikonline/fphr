@@ -4,6 +4,7 @@ using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Kernel.ValueObjects;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
 using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
@@ -26,6 +27,8 @@ internal static class EmployeeTables
     public const string CareerRecords = "career_records";
     public const string CareerOrgAssignments = "career_org_assignments";
     public const string CareerRecordIdColumn = "CareerRecordId";
+    public const string SalaryRecords = "salary_records";
+    public const string BankAccounts = "bank_accounts";
 
     public const int StatusLength = 30;
 }
@@ -77,7 +80,13 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasMany(x => x.CareerRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         b.Navigation(x => x.CareerRecords).AutoInclude();
 
+        // Salary history and bank accounts: explicitly included by the payment use cases only (never auto-included).
+        b.HasMany(x => x.SalaryRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(x => x.BankAccounts).WithOne().HasForeignKey(a => a.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+
         b.Ignore(x => x.CareerTimeline);
+        b.Ignore(x => x.SalaryHistory);
+        b.Ignore(x => x.OrderedBankAccounts);
         b.Ignore(x => x.HasCareerData);
         b.Ignore(x => x.DomainEvents);
     }
@@ -112,5 +121,45 @@ public sealed class CareerRecordConfiguration : IEntityTypeConfiguration<CareerR
         });
 
         b.Navigation(x => x.Assignments).AutoInclude();
+    }
+}
+
+public sealed class SalaryRecordConfiguration : IEntityTypeConfiguration<SalaryRecord>
+{
+    public void Configure(EntityTypeBuilder<SalaryRecord> b)
+    {
+        b.ToTable(EmployeeTables.SalaryRecords);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Amount).HasPrecision(EmployeeLimits.MoneyPrecision, EmployeeLimits.MoneyScale);
+        b.Property(x => x.TransportAllowance).HasPrecision(EmployeeLimits.MoneyPrecision, EmployeeLimits.MoneyScale);
+        b.Property(x => x.MealAllowance).HasPrecision(EmployeeLimits.MoneyPrecision, EmployeeLimits.MoneyScale);
+        b.Property(x => x.Currency).HasMaxLength(Currencies.CodeLength).IsFixedLength().IsRequired();
+        b.Property(x => x.SalaryType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.PayFrequency).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.Source).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.Note).HasMaxLength(EmployeeLimits.SalaryNoteMaxLength);
+
+        b.HasIndex(x => new { x.EmployeeId, x.EffectiveFrom }).IsUnique();
+    }
+}
+
+public sealed class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
+{
+    public void Configure(EntityTypeBuilder<BankAccount> b)
+    {
+        b.ToTable(EmployeeTables.BankAccounts);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.ProtectedIban).HasMaxLength(EmployeeLimits.ProtectedIbanMaxLength).IsRequired();
+        b.Property(x => x.MaskedIban).HasMaxLength(EmployeeLimits.MaskedIbanMaxLength).IsRequired();
+        b.Property(x => x.AccountType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.BankName).HasMaxLength(EmployeeLimits.BankNameMaxLength);
+        b.Property(x => x.Currency).HasMaxLength(Currencies.CodeLength).IsFixedLength();
+        b.Property(x => x.Note).HasMaxLength(EmployeeLimits.BankAccountNoteMaxLength);
+
+        b.HasIndex(x => x.EmployeeId);
     }
 }

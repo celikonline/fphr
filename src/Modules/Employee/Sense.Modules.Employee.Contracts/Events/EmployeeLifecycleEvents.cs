@@ -72,3 +72,29 @@ public sealed record CareerChanged(
     Guid CareerRecordId,
     CareerChangeType ChangeType,
     DateOnly ValidFrom) : IntegrationEvent(TenantId);
+
+/// <summary>
+/// Raised when a salary record is added, edited (not for a no-op edit) or deleted - Payroll marks open periods dirty
+/// from <paramref name="EffectiveFrom"/> on (11.3.07). <paramref name="SalaryRecordId"/> is the affected record (on delete,
+/// the removed one). <paramref name="EffectiveFrom"/> is the earliest date whose effective salary changed: the record's
+/// date, or the older of the old/new dates when an edit moved it. Consumers read the current values through the
+/// Employee module rather than from the event (amounts are sensitive and deliberately not carried).
+/// </summary>
+public sealed record SalaryChanged(
+    Guid TenantId,
+    Guid EmployeeId,
+    Guid SalaryRecordId,
+    DateOnly EffectiveFrom) : IntegrationEvent(TenantId);
+
+/// <summary>Section names carried by <see cref="EmployeeProfileChanged"/>.</summary>
+public static class EmployeeProfileSections
+{
+    /// <summary>Bank accounts (added/edited/deleted/primary changed).</summary>
+    public const string Bank = "bank";
+}
+
+/// <summary>
+/// Raised when a section of the employee profile changes (<see cref="EmployeeProfileSections"/>); today only
+/// <see cref="EmployeeProfileSections.Bank"/>. Carries no field values (IBANs are sensitive).
+/// </summary>
+public sealed record EmployeeProfileChanged(Guid TenantId, Guid EmployeeId, string Section) : IntegrationEvent(TenantId);

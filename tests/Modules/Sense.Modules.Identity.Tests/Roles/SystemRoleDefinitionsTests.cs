@@ -13,7 +13,8 @@ public sealed class SystemRoleDefinitionsTests
         .. new[]
         {
             "employee.employees.read", "employee.employees.create", "employee.employees.update", "employee.employees.bulk_update",
-            "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "organization.holidays.view", "organization.units.read",
+            "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "employee.salary.edit", "employee.bank_accounts.edit",
+            "employee.sensitive.view", "organization.holidays.view", "organization.units.read",
             "organization.approval_assignments.manage",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
@@ -46,6 +47,20 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldContain("employee.directory.view");
         keys.ShouldContain("employee.orgchart.view");
         keys.ShouldNotContain("employee.salary.view");
+    }
+
+    [Fact]
+    public void SalaryEditAndBankAccounts_GoToHrAndPayroll_ButSalaryNeverToHRSpecialistOrManager()
+    {
+        Resolve(SystemRoleCodes.HR).ShouldContain("employee.salary.edit");
+        Resolve(SystemRoleCodes.HR).ShouldContain("employee.bank_accounts.edit");
+        Resolve(SystemRoleCodes.PayrollSpecialist).ShouldContain("employee.salary.edit");
+        Resolve(SystemRoleCodes.PayrollSpecialist).ShouldContain("employee.bank_accounts.edit");
+        Resolve(SystemRoleCodes.HRSpecialist).ShouldNotContain("employee.salary.edit");
+        Resolve(SystemRoleCodes.HRSpecialist).ShouldContain("employee.bank_accounts.edit");
+        Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.salary.edit");
+        Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.bank_accounts.edit");
+        Resolve(SystemRoleCodes.Auditor).ShouldNotContain("employee.sensitive.view");
     }
 
     [Fact]

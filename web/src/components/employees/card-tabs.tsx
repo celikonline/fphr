@@ -8,6 +8,7 @@ import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { CareerSection } from "./career-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
+import { PaymentsSection } from "./payments-section";
 
 export interface EmployeeCardTabProps {
   employee: EmployeeDetail;
@@ -17,8 +18,8 @@ export interface EmployeeCardTab {
   /** URL segment: /app/employees/:id/:tab */
   key: string;
   labelKey: string;
-  /** Hidden unless the user has this permission. */
-  permission?: string;
+  /** Hidden unless the user has this permission (an array: any of them). */
+  permission?: string | string[];
   /** Hidden unless this tenant access setting is effective for the user. */
   accessSetting?: AccessSettingKey;
   /** Roadmap phase badge ("Faz 1b") for a tab whose module is not built yet. */
@@ -62,9 +63,9 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   {
     key: "payments",
     labelKey: "employees:card.tabs.payments",
-    permission: "employee.salary.view",
-    phase: "1a",
-    component: tabPlaceholder("payments", "1a"),
+    // Salary needs employee.salary.view, bank accounts employee.employees.read; the own card (employee.my.view) shows both.
+    permission: ["employee.salary.view", "employee.employees.read", "employee.my.view"],
+    component: PaymentsSection,
   },
   { key: "leave", labelKey: "employees:card.tabs.leave", phase: "1b", component: tabPlaceholder("leave", "1b") },
   { key: "overtime", labelKey: "employees:card.tabs.overtime", phase: "1b", component: tabPlaceholder("overtime", "1b") },
@@ -77,8 +78,8 @@ export function useVisibleEmployeeCardTabs(): EmployeeCardTab[] {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const isAccessSettingEnabled = useAuthStore((state) => state.isAccessSettingEnabled);
 
-  return EMPLOYEE_CARD_TABS.filter(
-    (tab) =>
-      (!tab.permission || hasPermission(tab.permission)) && (!tab.accessSetting || isAccessSettingEnabled(tab.accessSetting)),
-  );
+  const allowed = (permission: EmployeeCardTab["permission"]) =>
+    !permission || (Array.isArray(permission) ? permission.some((key) => hasPermission(key)) : hasPermission(permission));
+
+  return EMPLOYEE_CARD_TABS.filter((tab) => allowed(tab.permission) && (!tab.accessSetting || isAccessSettingEnabled(tab.accessSetting)));
 }

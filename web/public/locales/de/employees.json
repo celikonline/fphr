@@ -167,6 +167,23 @@
       "businessTransfer": "[DE] Business transfer",
       "rehire": "[DE] Rehire",
       "other": "[DE] Other"
+    },
+    "salaryType": {
+      "gross": "[DE] Gross",
+      "net": "[DE] Net"
+    },
+    "payFrequency": {
+      "monthly": "[DE] Monthly",
+      "daily": "[DE] Daily",
+      "yearly": "[DE] Yearly",
+      "weekly": "[DE] Weekly",
+      "hourly": "[DE] Hourly"
+    },
+    "bankAccountType": {
+      "demandDeposit": "[DE] Demand deposit",
+      "timeDeposit": "[DE] Time deposit",
+      "cheque": "[DE] Cheque",
+      "other": "[DE] Other"
     }
   },
   "validation": {
@@ -275,7 +292,6 @@
       "account": "[DE] Hesap"
     },
     "tabNotes": {
-      "payments": "[DE] Maaş ve ödeme bilgileri Faz 1a'da bu sekmeye gelecek.",
       "leave": "[DE] İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
       "overtime": "[DE] Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
       "other": "[DE] Zimmetler, eğitimler ve dosyalar sonraki fazlarda bu sekmeye eklenecek."
@@ -325,6 +341,68 @@
       "validFromRequired": "[DE] Position start date is required.",
       "validFromAfterPrevious": "[DE] The date must be after the previous record's start ({{date}}).",
       "validFromBeforeHire": "[DE] The date cannot be before the hire date ({{date}})."
+    }
+  },
+  "payments": {
+    "noAccess": "[DE] You are not allowed to view this employee's payment information.",
+    "salary": {
+      "currentTitle": "[DE] Current salary",
+      "historyTitle": "[DE] Salary history",
+      "add": "[DE] Add salary",
+      "edit": "[DE] Edit salary",
+      "dialogDescription": "[DE] A new salary becomes the current one from its effective date; earlier records stay in the history.",
+      "empty": "[DE] No salary records yet.",
+      "noCurrent": "[DE] No salary is in effect today; all records are future-dated.",
+      "effectiveFrom": "[DE] Effective date",
+      "amount": "[DE] Salary",
+      "currency": "[DE] Currency",
+      "salaryType": "[DE] Salary type",
+      "payFrequency": "[DE] Pay frequency",
+      "transportAllowance": "[DE] Transport allowance",
+      "mealAllowance": "[DE] Meal allowance",
+      "note": "[DE] Note",
+      "current": "[DE] Current",
+      "upcoming": "[DE] Upcoming",
+      "integrityHint": "[DE] Currency, salary type, pay frequency and allowances are not saved without an effective date and an amount.",
+      "saved": "[DE] Salary record saved.",
+      "deleted": "[DE] Salary record deleted.",
+      "deleteTitle": "[DE] Delete salary record?",
+      "deleteDescription": "[DE] The salary record of {{amount}} effective {{date}} will be deleted.",
+      "validation": {
+        "effectiveFromRequired": "[DE] The effective date is required.",
+        "amountRequired": "[DE] The salary amount is required.",
+        "amountInvalid": "[DE] The salary amount must be a number greater than zero with at most two decimals.",
+        "allowanceInvalid": "[DE] Transport and meal allowances must be zero or positive numbers with at most two decimals.",
+        "duplicateDate": "[DE] A salary record effective {{date}} already exists."
+      }
+    },
+    "bank": {
+      "title": "[DE] Bank accounts",
+      "add": "[DE] Add account",
+      "edit": "[DE] Edit account",
+      "dialogDescription": "[DE] Type the IBAN with or without spaces; its check digits are verified as you type.",
+      "empty": "[DE] No bank accounts yet.",
+      "iban": "[DE] IBAN",
+      "accountType": "[DE] Account type",
+      "bankName": "[DE] Bank name",
+      "currency": "[DE] Currency",
+      "note": "[DE] Note",
+      "primary": "[DE] Primary",
+      "makePrimary": "[DE] Make primary",
+      "setAsPrimary": "[DE] Mark as the primary account",
+      "ibanMaskedHint": "[DE] You are not allowed to see the full IBAN. Type a new IBAN to replace it; leave it blank to keep the current one.",
+      "ibanValid": "[DE] IBAN is valid",
+      "saved": "[DE] Bank account saved.",
+      "deleted": "[DE] Bank account deleted.",
+      "primaryChanged": "[DE] Primary account updated.",
+      "deleteTitle": "[DE] Delete bank account?",
+      "deleteDescription": "[DE] The account will be deleted permanently.",
+      "deletePrimaryDescription": "[DE] This is the primary account. If deleted, the oldest remaining account becomes primary.",
+      "validation": {
+        "required": "[DE] The IBAN is required.",
+        "invalid": "[DE] The IBAN is invalid; check its length (TR + 24 digits) and check digits.",
+        "countryUnsupported": "[DE] Only IBANs starting with TR are accepted for now."
+      }
     }
   }
 }

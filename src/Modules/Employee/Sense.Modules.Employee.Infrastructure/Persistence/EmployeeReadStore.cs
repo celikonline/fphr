@@ -58,6 +58,13 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
     public async Task<EmployeeEntity?> GetWithCareerAsync(Guid id, CancellationToken ct) =>
         await db.Employees.AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
 
+    public async Task<EmployeeEntity?> GetWithPaymentsAsync(Guid id, CancellationToken ct) =>
+        await db.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Include(e => e.SalaryRecords)
+            .Include(e => e.BankAccounts)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
+
     private DateOnly Today => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)
