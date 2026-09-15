@@ -6,6 +6,9 @@
   "inDays_one": "In {{count}} day",
   "inDays_other": "In {{count}} days",
   "noWidgets": "There is nothing to show on your home page.",
+  "daysSuffix": "d",
+  "viewAll": "View all",
+  "refresh": "Refresh",
   "holidays": {
     "title": "Public holidays",
     "empty": "No public holidays in the next {{days}} days."
@@ -25,6 +28,7 @@
   "orgInfo": {
     "title": "My employee card",
     "manager": "Manager",
+    "unknownManager": "Unknown",
     "hireDate": "Hire date"
   },
   "leaveInfo": {

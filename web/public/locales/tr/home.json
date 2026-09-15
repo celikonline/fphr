@@ -6,6 +6,9 @@
   "inDays_one": "{{count}} gün sonra",
   "inDays_other": "{{count}} gün sonra",
   "noWidgets": "Ana sayfanızda gösterilecek bir bilgi yok.",
+  "daysSuffix": "g",
+  "viewAll": "Tümünü Gör",
+  "refresh": "Yenile",
   "holidays": {
     "title": "Resmi tatiller",
     "empty": "Önümüzdeki {{days}} gün içinde resmi tatil yok."
@@ -25,6 +28,7 @@
   "orgInfo": {
     "title": "Personel kartım",
     "manager": "Yöneticim",
+    "unknownManager": "Bilinmiyor",
     "hireDate": "İşe başlama tarihi"
   },
   "leaveInfo": {

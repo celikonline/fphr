@@ -2,18 +2,18 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Avatar, Badge, Button, Card, Divider, Group, Progress, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { ActionIcon, Anchor, Avatar, Badge, Box, Card, Divider, Group, Progress, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
-import { Building2, CalendarCheck, CalendarHeart, CalendarRange, Cake, IdCard, Palmtree, UserCircle } from "lucide-react";
+import { CalendarHeart, CalendarRange, Cake, Check, Clock, Plane, PieChart, RefreshCw, Users, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { initials } from "@/components/employees/employee-badges";
 import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
-import { Field, LeaveStatusBadge, useDays, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
+import { useDays, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyCareer, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays } from "@/services/home.service";
-import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests } from "@/services/leave.service";
+import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly, toDateOnly } from "@/lib/dates";
 
@@ -30,14 +30,31 @@ function retryUnlessClientError(failureCount: number, error: unknown): boolean {
   return failureCount < 1;
 }
 
+/** First letter of the first and last word of a full name (colleague rows only have a display name, not first/last). */
+function nameInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/);
+  return `${parts[0]?.charAt(0) ?? ""}${parts[parts.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr") || "?";
+}
+
+function WidgetIcon({ icon }: { icon: ReactNode }) {
+  return (
+    <span
+      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+      style={{ backgroundColor: "var(--mantine-primary-color-light)" }}
+    >
+      {icon}
+    </span>
+  );
+}
+
 function WidgetCard({ title, icon, badge, children }: { title: string; icon: ReactNode; badge?: ReactNode; children: ReactNode }) {
   return (
     <Card withBorder padding="lg">
       <Group justify="space-between" gap="sm" mb="sm" wrap="nowrap">
-        <Title order={5} className="flex items-center gap-2">
-          {icon}
-          {title}
-        </Title>
+        <Group gap="sm" wrap="nowrap">
+          <WidgetIcon icon={icon} />
+          <Title order={5}>{title}</Title>
+        </Group>
         {badge}
       </Group>
       <div className="flex-1">{children}</div>
@@ -63,36 +80,13 @@ function WidgetSkeleton() {
   );
 }
 
-function DayBadge({ inDays }: { inDays: number }) {
+function ViewAllLink({ to }: { to: string }) {
   const { t } = useTranslation(["home"]);
   return (
-    <Badge variant="light" color={inDays <= 0 ? "green" : "gray"} className="shrink-0">
-      {inDays <= 0 ? t("home:today") : t("home:inDays", { count: inDays })}
-    </Badge>
+    <Anchor component={Link} to={to} size="sm" ta="right" className="block">
+      {t("home:viewAll")}
+    </Anchor>
   );
-}
-
-function WidgetRow({ title, subtitle, inDays, divided }: { title: string; subtitle: string; inDays: number; divided: boolean }) {
-  return (
-    <li>
-      {divided && <Divider />}
-      <Group justify="space-between" gap="sm" wrap="nowrap" py="xs">
-        <div className="min-w-0">
-          <Text size="sm" fw={500} truncate>
-            {title}
-          </Text>
-          <Text size="xs" c="dimmed">
-            {subtitle}
-          </Text>
-        </div>
-        <DayBadge inDays={inDays} />
-      </Group>
-    </li>
-  );
-}
-
-function WidgetList({ children }: { children: ReactNode }) {
-  return <ul>{children}</ul>;
 }
 
 function HolidaysWidget() {
@@ -104,7 +98,7 @@ function HolidaysWidget() {
   });
 
   return (
-    <WidgetCard title={t("home:holidays.title")} icon={<CalendarHeart size={20} color={ICON_COLOR} />}>
+    <WidgetCard title={t("home:holidays.title")} icon={<CalendarHeart size={18} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -114,17 +108,27 @@ function HolidaysWidget() {
       ) : !data || data.length === 0 ? (
         <WidgetMessage>{t("home:holidays.empty", { days: HOLIDAY_DAYS })}</WidgetMessage>
       ) : (
-        <WidgetList>
+        <ul>
           {data.map((holiday, index) => (
-            <WidgetRow
-              key={`${holiday.holidayCalendarId}-${holiday.date}-${holiday.name}`}
-              title={holiday.name}
-              subtitle={formatDateOnly(holiday.date, i18n.language, { dateStyle: "full" })}
-              inDays={daysUntil(holiday.date)}
-              divided={index > 0}
-            />
+            <li key={`${holiday.holidayCalendarId}-${holiday.date}-${holiday.name}`}>
+              {index > 0 && <Divider />}
+              <Group justify="space-between" gap="sm" wrap="nowrap" py="xs">
+                <Text size="sm" fw={500} truncate>
+                  {holiday.name}
+                </Text>
+                <Group gap={6} wrap="nowrap" className="shrink-0">
+                  <Text size="xs" c="dimmed">
+                    {daysUntil(holiday.date)}
+                    {t("home:daysSuffix")}
+                  </Text>
+                  <Text size="xs" fw={500}>
+                    {formatDateOnly(holiday.date, i18n.language, { day: "numeric", month: "short", year: "numeric" })}
+                  </Text>
+                </Group>
+              </Group>
+            </li>
           ))}
-        </WidgetList>
+        </ul>
       )}
     </WidgetCard>
   );
@@ -139,7 +143,7 @@ function BirthdaysWidget() {
   });
 
   return (
-    <WidgetCard title={t("home:birthdays.title")} icon={<Cake size={20} color={ICON_COLOR} />}>
+    <WidgetCard title={t("home:birthdays.title")} icon={<Cake size={18} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -149,25 +153,34 @@ function BirthdaysWidget() {
       ) : !data || data.length === 0 ? (
         <WidgetMessage>{t("home:birthdays.empty", { days: BIRTHDAY_DAYS })}</WidgetMessage>
       ) : (
-        <WidgetList>
+        <ul>
           {data.map((birthday, index) => (
-            <WidgetRow
-              key={birthday.id}
-              title={birthday.displayName}
-              subtitle={formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "long" })}
-              inDays={daysUntil(birthday.nextBirthday)}
-              divided={index > 0}
-            />
+            <li key={birthday.id}>
+              {index > 0 && <Divider />}
+              <Group justify="space-between" gap="sm" wrap="nowrap" py="xs">
+                <Group gap="sm" wrap="nowrap" className="min-w-0">
+                  <Avatar size={28} radius="xl">
+                    {nameInitials(birthday.displayName)}
+                  </Avatar>
+                  <Anchor component={Link} to="/app/employees" size="sm" fw={500} truncate underline="hover">
+                    {birthday.displayName}
+                  </Anchor>
+                </Group>
+                <Text size="xs" fw={500} className="shrink-0">
+                  {formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "short" })}
+                </Text>
+              </Group>
+            </li>
           ))}
-        </WidgetList>
+        </ul>
       )}
     </WidgetCard>
   );
 }
 
-/** Own employee card ("Home.ShowOrgInfo"): name, ünvan/departman (career assignments), manager, hire date. */
+/** Own employee card ("Home.ShowOrgInfo"): name, ünvan/departman (career assignments), manager, hire date. Headerless, like the reference dashboard's personnel card. */
 function OrgInfoWidget() {
-  const { t, i18n } = useTranslation(["home"]);
+  const { t, i18n } = useTranslation(["home", "navigation"]);
   const { data: employee, isLoading, error } = useQuery({
     queryKey: ["home", "org-info"],
     queryFn: getMyEmployee,
@@ -191,46 +204,90 @@ function OrgInfoWidget() {
   const department = levelUnitName("Department");
 
   return (
-    <WidgetCard title={t("home:orgInfo.title")} icon={<IdCard size={20} color={ICON_COLOR} />}>
+    <Card withBorder padding="lg">
       {isLoading ? (
         <WidgetSkeleton />
       ) : error || !employee ? (
         <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
       ) : (
         <Stack gap="md">
-          <Group gap="md" wrap="nowrap">
-            <Avatar size={56} radius="xl">
-              {initials(employee.firstName, employee.lastName)}
-            </Avatar>
-            <div className="min-w-0">
-              <Text fw={600} truncate>
+          <Group justify="space-between" gap="md" wrap="nowrap" align="flex-start">
+            <div className="min-w-0 flex-1">
+              <Text fw={700} size="lg" truncate>
                 {employee.displayName}
               </Text>
-              {(title || department) && (
+              {title && (
                 <Text size="sm" c="dimmed" truncate>
-                  {[title, department].filter(Boolean).join(" · ")}
+                  {title}
+                </Text>
+              )}
+              {department && (
+                <Text size="sm" c="dimmed" truncate>
+                  {department}
                 </Text>
               )}
             </div>
+            <Avatar size={64} radius="md">
+              {initials(employee.firstName, employee.lastName)}
+            </Avatar>
           </Group>
-          <dl className="grid gap-4 sm:grid-cols-2">
-            <Field label={t("home:orgInfo.manager")}>{employee.managerDisplayName ?? "—"}</Field>
-            <Field label={t("home:orgInfo.hireDate")}>
-              {employee.hireDate ? formatDateOnly(employee.hireDate, i18n.language) : "—"}
-            </Field>
-          </dl>
+          <Stack gap={6}>
+            <Group justify="space-between" gap="sm">
+              <Text size="sm" c="dimmed">
+                {t("home:orgInfo.manager")}
+              </Text>
+              {employee.managerEmployeeId ? (
+                <Anchor component={Link} to={`/app/employees/${employee.managerEmployeeId}`} size="sm" fw={500} underline="hover">
+                  {employee.managerDisplayName ?? t("home:orgInfo.unknownManager")}
+                </Anchor>
+              ) : (
+                <Text size="sm" fw={500}>
+                  —
+                </Text>
+              )}
+            </Group>
+            <Group justify="space-between" gap="sm">
+              <Text size="sm" c="dimmed">
+                {t("home:orgInfo.hireDate")}
+              </Text>
+              <Text size="sm" fw={500}>
+                {employee.hireDate ? formatDateOnly(employee.hireDate, i18n.language) : "—"}
+              </Text>
+            </Group>
+          </Stack>
+          <ViewAllLink to="/app/account" />
         </Stack>
       )}
-    </WidgetCard>
+    </Card>
   );
 }
 
-/** Own leave balances (per type, with a used/entitled progress bar) plus the last 4 own requests. */
+const STATUS_ICON: Record<LeaveRequestStatus, { icon: ReactNode; color: string }> = {
+  approved: { icon: <Check size={12} />, color: "green" },
+  pending: { icon: <Clock size={12} />, color: "gray" },
+  rejected: { icon: <X size={12} />, color: "red" },
+  withdrawn: { icon: <X size={12} />, color: "gray" },
+  cancelled: { icon: <X size={12} />, color: "gray" },
+};
+
+function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
+  const { icon, color } = STATUS_ICON[status];
+  return (
+    <span
+      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-white"
+      style={{ backgroundColor: `var(--mantine-color-${color}-6)` }}
+    >
+      {icon}
+    </span>
+  );
+}
+
+/** Own leave balances (per type, with a 3-way progress bar: available/future/used) plus the last 4 own requests. */
 function LeaveInfoWidget() {
   const { t, i18n } = useTranslation(["home", "leave"]);
   const days = useDays();
   const leaveName = useLeaveName();
-  const { data: balances, isLoading, error } = useQuery({
+  const { data: balances, isLoading, error, refetch, isFetching } = useQuery({
     queryKey: ["home", "leave-balances"],
     queryFn: getMyLeaveBalances,
     retry: retryUnlessClientError,
@@ -251,7 +308,15 @@ function LeaveInfoWidget() {
   );
 
   return (
-    <WidgetCard title={t("home:leaveInfo.title")} icon={<CalendarCheck size={20} color={ICON_COLOR} />}>
+    <WidgetCard
+      title={t("home:leaveInfo.title")}
+      icon={<Plane size={18} color={ICON_COLOR} />}
+      badge={
+        <ActionIcon variant="subtle" color="gray" onClick={() => refetch()} loading={isFetching} aria-label={t("home:refresh")}>
+          <RefreshCw size={16} />
+        </ActionIcon>
+      }
+    >
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -262,68 +327,68 @@ function LeaveInfoWidget() {
         <Stack gap="lg">
           {balances.balances.map((item) => {
             const b = item.balance;
-            const entitled = b.totalUsed + b.currentBalance;
-            const usedPct = entitled <= 0 ? 0 : Math.min(100, (b.totalUsed / entitled) * 100);
+            const pool = b.availableBalance + b.futureApprovedInPeriod + b.totalUsed;
+            const pct = (value: number) => (pool <= 0 ? 0 : Math.max(0, Math.min(100, (value / pool) * 100)));
             return (
               <Stack key={b.leaveTypeId} gap="xs">
-                <Group justify="space-between" align="baseline" gap="xs">
-                  <Text size="sm" c="dimmed">
-                    {leaveName(item.leaveTypeName)}
-                  </Text>
-                  <Text size="xl" fw={700}>
-                    {days(b.availableBalance)}{" "}
-                    <Text span size="sm" fw={400} c="dimmed">
-                      {t("leave:days")}
-                    </Text>
-                  </Text>
-                </Group>
+                <Text size="sm" c="dimmed">
+                  {leaveName(item.leaveTypeName)}
+                </Text>
                 <Text size="xs" c="dimmed">
                   {t("home:leaveInfo.availableUntil", { date: formatDateOnly(b.currentPeriodTo, i18n.language) })}
                 </Text>
-                <Progress
-                  value={usedPct}
-                  size="sm"
-                  color={b.currentBalance < 0 ? "red" : undefined}
-                  aria-label={`${t("home:leaveInfo.used")}: ${days(b.totalUsed)} / ${days(entitled)} ${t("leave:days")}`}
-                />
+                <Text size="xl" fw={700} c="green.7">
+                  {days(b.availableBalance)}{" "}
+                  <Text span size="sm" fw={500} c="green.7">
+                    {t("leave:days")}
+                  </Text>
+                </Text>
+                <Progress.Root size="md">
+                  <Progress.Section value={pct(b.availableBalance)} color="green" />
+                  <Progress.Section value={pct(b.futureApprovedInPeriod)} color="orange" />
+                  <Progress.Section value={pct(b.totalUsed)} color="red" />
+                </Progress.Root>
                 <Group gap="lg">
-                  <Text size="xs" c="dimmed">
-                    {t("home:leaveInfo.future")}: {days(b.futureApprovedInPeriod)}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t("home:leaveInfo.used")}: {days(b.totalUsed)}
-                  </Text>
+                  <Group gap={6} wrap="nowrap">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--mantine-color-orange-6)" }} />
+                    <Text size="xs" c="dimmed">
+                      {t("home:leaveInfo.future")} {days(b.futureApprovedInPeriod)}
+                    </Text>
+                  </Group>
+                  <Group gap={6} wrap="nowrap">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--mantine-color-red-6)" }} />
+                    <Text size="xs" c="dimmed">
+                      {t("home:leaveInfo.used")} {days(b.totalUsed)}
+                    </Text>
+                  </Group>
                 </Group>
               </Stack>
             );
           })}
 
-          {showRecentRequests && <Divider label={t("home:leaveInfo.recentTitle")} labelPosition="left" />}
-          {!showRecentRequests ? null : recentRequests.length === 0 ? (
-            <Text size="sm" c="dimmed">
-              {t("leave:requests.empty")}
-            </Text>
-          ) : (
+          {showRecentRequests && recentRequests.length > 0 && (
             <Stack gap={0}>
               {recentRequests.map((request, index) => (
                 <div key={request.id}>
                   {index > 0 && <Divider />}
                   <Group justify="space-between" gap="sm" py="xs" wrap="nowrap">
-                    <div className="min-w-0">
+                    <Group gap="sm" wrap="nowrap" className="min-w-0">
+                      <LeaveStatusIcon status={request.status} />
                       <Text size="sm" fw={500} truncate>
                         {typeName(request)}
                       </Text>
-                      <Text size="xs" c="dimmed">
-                        {formatDateOnly(request.startDate, i18n.language)} – {formatDateOnly(request.endDate, i18n.language)} ·{" "}
-                        {days(request.calculatedDays)} {t("leave:days")}
-                      </Text>
-                    </div>
-                    <LeaveStatusBadge status={request.status} />
+                    </Group>
+                    <Text size="xs" c="dimmed" className="shrink-0 whitespace-nowrap">
+                      {days(request.calculatedDays)}
+                      {t("home:daysSuffix")} {formatDateOnly(request.startDate, i18n.language, { day: "numeric", month: "short" })}
+                    </Text>
                   </Group>
                 </div>
               ))}
             </Stack>
           )}
+
+          <ViewAllLink to="/app/leave" />
         </Stack>
       )}
     </WidgetCard>
@@ -333,6 +398,7 @@ function LeaveInfoWidget() {
 /** Colleagues' upcoming/pending leave in the next `UPCOMING_LEAVE_DAYS` days. */
 function UpcomingLeavesWidget() {
   const { t, i18n } = useTranslation(["home"]);
+  const days = useDays();
   // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
   const [{ from, to }] = useState(() => {
     const today = new Date();
@@ -347,7 +413,7 @@ function UpcomingLeavesWidget() {
   const entries = useMemo(() => [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)), [data]);
 
   return (
-    <WidgetCard title={t("home:leaves.title")} icon={<Palmtree size={20} color={ICON_COLOR} />}>
+    <WidgetCard title={t("home:leaves.title")} icon={<Plane size={18} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -357,23 +423,44 @@ function UpcomingLeavesWidget() {
       ) : entries.length === 0 ? (
         <WidgetMessage>{t("home:leaves.empty", { days: UPCOMING_LEAVE_DAYS })}</WidgetMessage>
       ) : (
-        <WidgetList>
-          {entries.slice(0, 6).map((entry, index) => (
-            <WidgetRow
-              key={entry.requestId}
-              title={entry.employeeName}
-              subtitle={`${formatDateOnly(entry.startDate, i18n.language)} – ${formatDateOnly(entry.endDate, i18n.language)}`}
-              inDays={daysUntil(entry.startDate)}
-              divided={index > 0}
-            />
-          ))}
-        </WidgetList>
+        <Stack gap={0}>
+          <ul>
+            {entries.slice(0, 6).map((entry, index) => {
+              const inDays = daysUntil(entry.startDate);
+              return (
+                <li key={entry.requestId}>
+                  {index > 0 && <Divider />}
+                  <Group justify="space-between" gap="sm" wrap="nowrap" py="xs">
+                    <Group gap="sm" wrap="nowrap" className="min-w-0">
+                      <Avatar size={28} radius="xl">
+                        {nameInitials(entry.employeeName)}
+                      </Avatar>
+                      <Text size="sm" fw={500} truncate>
+                        {entry.employeeName}
+                      </Text>
+                    </Group>
+                    <Group gap={6} wrap="nowrap" className="shrink-0">
+                      <Text size="xs" c="dimmed">
+                        {days(entry.calculatedDays)}
+                        {t("home:daysSuffix")}
+                      </Text>
+                      <Text size="xs" fw={500}>
+                        {inDays <= 0 ? t("home:today") : formatDateOnly(entry.startDate, i18n.language, { day: "numeric", month: "short" })}
+                      </Text>
+                    </Group>
+                  </Group>
+                </li>
+              );
+            })}
+          </ul>
+          <ViewAllLink to="/app/leave/calendar" />
+        </Stack>
       )}
     </WidgetCard>
   );
 }
 
-/** Active headcount per department, from the new `department-distribution` endpoint. */
+/** Active headcount per department, from the `department-distribution` endpoint; center label shows the largest department. */
 function DepartmentDistributionWidget() {
   const { t } = useTranslation(["home"]);
   const { data, isLoading, error } = useQuery({
@@ -393,9 +480,10 @@ function DepartmentDistributionWidget() {
     [data, t],
   );
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
+  const largest = chartData[0];
 
   return (
-    <WidgetCard title={t("home:departmentDistribution.title")} icon={<Building2 size={20} color={ICON_COLOR} />}>
+    <WidgetCard title={t("home:departmentDistribution.title")} icon={<PieChart size={18} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -404,23 +492,23 @@ function DepartmentDistributionWidget() {
         <WidgetMessage>{t("home:departmentDistribution.empty")}</WidgetMessage>
       ) : (
         <Stack align="center" gap="md">
-          <DonutChart data={chartData} chartLabel={String(total)} size={160} thickness={22} />
-          <SimpleGrid cols={2} spacing="xs" className="w-full">
-            {chartData.map((item) => (
-              <Group key={item.key} gap="xs" wrap="nowrap">
-                <span
-                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: `var(--mantine-color-${item.color}-6)` }}
-                />
-                <Text size="xs" c="dimmed" truncate>
-                  {item.name}
-                </Text>
-                <Text size="xs" fw={600} className="ml-auto">
-                  {item.value}
-                </Text>
-              </Group>
-            ))}
-          </SimpleGrid>
+          <Box pos="relative" w={160} h={160}>
+            <DonutChart data={chartData} size={160} thickness={22} withTooltip={false} />
+            <Stack gap={0} align="center" justify="center" pos="absolute" top={0} left={0} right={0} bottom={0}>
+              <Text size="xs" c="dimmed" truncate maw={110} ta="center">
+                {largest?.name}
+              </Text>
+              <Text size="xl" fw={700}>
+                {largest?.value}
+              </Text>
+            </Stack>
+          </Box>
+          <Group gap={6} className="w-full">
+            <Users size={16} color="var(--mantine-color-dimmed)" />
+            <Text size="sm" fw={600}>
+              {total}
+            </Text>
+          </Group>
         </Stack>
       )}
     </WidgetCard>
@@ -445,7 +533,7 @@ function PlannedWidget({ title, icon, phase, description }: { title: string; ico
 }
 
 export default function HomePage() {
-  const { t } = useTranslation(["home", "navigation"]);
+  const { t, i18n } = useTranslation(["home", "navigation"]);
   const user = useAuthStore((state) => state.user);
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
@@ -467,35 +555,39 @@ export default function HomePage() {
     (showLeaves && canViewLeaveCalendar) ||
     showEvents;
 
+  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
+  const [today] = useState(() => new Date());
+  const todayLabel = new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "long", year: "numeric" }).format(today);
+  const weekdayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(today);
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <Group justify="space-between" align="flex-start" gap="sm">
-        <div>
-          <Title order={2}>{t("home:greeting", { name: user?.firstName || user?.name || "" })}</Title>
-          <Text c="dimmed">{t("home:subtitle")}</Text>
-        </div>
-        <Button component={Link} to="/app/account" variant="default" leftSection={<UserCircle size={16} />}>
-          {t("navigation:nav.account")}
-        </Button>
-      </Group>
+      <div>
+        <Text size="sm" c="dimmed">
+          {t("home:greeting", { name: user?.firstName || user?.name || "" })}
+        </Text>
+        <Title order={2}>
+          {t("home:today")} {todayLabel}, {weekdayLabel}
+        </Title>
+      </div>
 
       {hasAnyWidget ? (
-        <SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="md">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {showOrgInfo && <OrgInfoWidget />}
-          {canViewHolidays && <HolidaysWidget />}
-          {showBirthdays && canViewDirectory && <BirthdaysWidget />}
           {canViewLeaveBalances && <LeaveInfoWidget />}
           {showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget />}
           {canViewDirectory && <DepartmentDistributionWidget />}
+          {showBirthdays && canViewDirectory && <BirthdaysWidget />}
+          {canViewHolidays && <HolidaysWidget />}
           {showEvents && (
             <PlannedWidget
               title={t("home:events.title")}
-              icon={<CalendarRange size={20} color={ICON_COLOR} />}
+              icon={<CalendarRange size={18} color={ICON_COLOR} />}
               phase={4}
               description={t("home:events.planned")}
             />
           )}
-        </SimpleGrid>
+        </div>
       ) : (
         <Card withBorder padding="lg">
           <WidgetMessage>{t("home:noWidgets")}</WidgetMessage>
