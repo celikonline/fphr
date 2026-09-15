@@ -11,4 +11,12 @@ public static class LeaveErrors
     public const string TypeNotFound = "leave.type.not_found";
     public const string InvalidRange = "leave.errors.invalid_range";
     public const string OverridePayableNotAllowed = "leave.errors.overtime_override_payable_not_allowed";
+    public const string ResubmissionSourceInvalid = "leave.errors.resubmission_source_invalid";
+    public const string CalendarRangeTooLarge = "leave.errors.calendar_range_too_large";
+}
+
+/// <summary>Non-blocking warning codes (localized in SharedResource.resx; the API returns code + message).</summary>
+public static class LeaveWarnings
+{
+    public const string UsageTypeMissingInRuleSet = "leave.warnings.usage_type_missing_in_rule_set";
 }

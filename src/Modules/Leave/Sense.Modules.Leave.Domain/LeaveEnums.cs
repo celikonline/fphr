@@ -74,7 +74,7 @@ public enum SeniorityComparison
     GreaterThan = 1,
 }
 
-/// <summary>Append-only ledger row kinds (11.3.5 "LeaveLedgerEntryType"; Expiry/Reversal/StatutoryTopUp/SettlementClose come with later slices).</summary>
+/// <summary>Append-only ledger row kinds (11.3.5 "LeaveLedgerEntryType"; Expiry/StatutoryTopUp/SettlementClose come with later slices).</summary>
 public enum LeaveLedgerEntryType
 {
     OpeningBalance = 0,
@@ -83,6 +83,9 @@ public enum LeaveLedgerEntryType
     Usage = 3,
     Adjustment = 4,
     ExtraGrant = 5,
+
+    /// <summary>Restores the days of a cancelled approved leave (positive, dated like the Usage row it offsets).</summary>
+    Reversal = 6,
 }
 
 public enum LeaveLedgerSource

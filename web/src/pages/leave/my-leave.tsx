@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, ListChecks, ListOrdered, Pencil, Undo2 } from "lucide-react";
+import { CalendarDays, Eye, ListChecks, ListOrdered, Pencil, RotateCcw, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,11 +10,13 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { LeaveRequestDialog, type LeaveRequestTypeOption } from "@/components/leave/leave-request-dialog";
+import { LeaveRequestDetailSheet } from "@/components/leave/leave-request-detail";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import {
   getMyLeaveBalances,
+  getMyLeaveRequest,
   getMyLeaveRequests,
   getMyRequestableLeaveTypes,
   previewMyLeaveRequest,
@@ -40,8 +42,11 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const queryClient = useQueryClient();
   const leaveName = useLeaveName();
   const [ledgerOpen, setLedgerOpen] = useState(false);
-  const [dialog, setDialog] = useState<{ mode: "add" } | { mode: "edit"; request: LeaveRequest } | null>(null);
+  const [dialog, setDialog] = useState<
+    { mode: "add" } | { mode: "edit"; request: LeaveRequest } | { mode: "resubmit"; request: LeaveRequest } | null
+  >(null);
   const [withdrawing, setWithdrawing] = useState<LeaveRequest | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const balancesQuery = useQuery({
     queryKey: [...MY_LEAVE_KEY, "balances"],
@@ -124,36 +129,75 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
               <LeaveRequestsTable
                 requests={requestsQuery.data ?? []}
                 typeName={typeName}
-                actions={(request) =>
-                  request.status === "pending" ? (
-                    <div className="flex justify-end gap-1">
-                      <Button type="button" variant="ghost" size="icon" title={t("leave:my.edit")} onClick={() => setDialog({ mode: "edit", request })}>
-                        <Pencil className="h-4 w-4" />
+                onOpen={(request) => setDetailId(request.id)}
+                actions={(request) => (
+                  <div className="flex justify-end gap-1">
+                    <Button type="button" variant="ghost" size="icon" title={t("leave:detail.open")} onClick={() => setDetailId(request.id)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {request.status === "pending" && (
+                      <>
+                        <Button type="button" variant="ghost" size="icon" title={t("leave:my.edit")} onClick={() => setDialog({ mode: "edit", request })}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button type="button" variant="ghost" size="icon" title={t("leave:my.withdraw")} onClick={() => setWithdrawing(request)}>
+                          <Undo2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    {request.status === "rejected" && (
+                      <Button type="button" variant="ghost" size="icon" title={t("leave:my.resubmit")} onClick={() => setDialog({ mode: "resubmit", request })}>
+                        <RotateCcw className="h-4 w-4" />
                       </Button>
-                      <Button type="button" variant="ghost" size="icon" title={t("leave:my.withdraw")} onClick={() => setWithdrawing(request)}>
-                        <Undo2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : null
-                }
+                    )}
+                  </div>
+                )}
               />
             )}
           </CardContent>
         </Card>
       )}
 
+      {detailId && (
+        <LeaveRequestDetailSheet
+          requestId={detailId}
+          scope="me"
+          load={getMyLeaveRequest}
+          typeName={typeName}
+          onClose={() => setDetailId(null)}
+          footer={(detail) =>
+            detail.status === "rejected" ? (
+              <Button
+                type="button"
+                onClick={() => {
+                  setDetailId(null);
+                  setDialog({ mode: "resubmit", request: detail });
+                }}
+              >
+                {t("leave:my.resubmit")}
+              </Button>
+            ) : null
+          }
+        />
+      )}
+
       {dialog && (
         <LeaveRequestDialog
-          key={dialog.mode === "edit" ? dialog.request.id : "add"}
+          key={dialog.mode === "add" ? "add" : `${dialog.mode}-${dialog.request.id}`}
           editing={dialog.mode === "edit" ? dialog.request : null}
+          prefill={dialog.mode === "resubmit" ? dialog.request : null}
           types={requestableTypes}
-          title={dialog.mode === "edit" ? t("leave:form.editTitle") : t("leave:form.newTitle")}
-          description={t("leave:form.dialogDescription")}
+          title={dialog.mode === "edit" ? t("leave:form.editTitle") : dialog.mode === "resubmit" ? t("leave:form.resubmitTitle") : t("leave:form.newTitle")}
+          description={dialog.mode === "resubmit" ? t("leave:form.resubmitDescription") : t("leave:form.dialogDescription")}
           submitLabel={dialog.mode === "edit" ? t("common:save") : t("leave:form.submit")}
           typesHint={typesQuery.isError ? t("leave:form.typesLimited") : undefined}
           previewScope="me"
           preview={previewMyLeaveRequest}
-          save={(input) => (dialog.mode === "edit" ? updatePendingLeaveRequest(dialog.request.id, input) : submitLeaveRequest(input))}
+          save={(input) =>
+            dialog.mode === "edit"
+              ? updatePendingLeaveRequest(dialog.request.id, input)
+              : submitLeaveRequest(dialog.mode === "resubmit" ? { ...input, previousRequestId: dialog.request.id } : input)
+          }
           onClose={() => setDialog(null)}
           onSaved={() => {
             const message = dialog.mode === "edit" ? t("leave:my.updated") : t("leave:my.submitted");

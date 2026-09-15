@@ -11,6 +11,8 @@ public interface ILeaveRuleSetRepository
 {
     void Add(LeaveRuleSet ruleSet);
 
+    void Remove(LeaveRuleSet ruleSet);
+
     Task<Result<LeaveRuleSet>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<LeaveRuleSet?> FindDefaultAsync(CancellationToken cancellationToken = default);
@@ -49,6 +51,10 @@ public interface ILeaveRequestRepository
 
     /// <summary>Total days of the employee's pending requests of one type (reservations not yet in the ledger).</summary>
     Task<decimal> SumPendingDaysAsync(Guid employeeId, Guid leaveTypeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Pending/approved requests intersecting [from, to]; <paramref name="employeeIds"/> null = every employee of the tenant.</summary>
+    Task<IReadOnlyList<LeaveRequest>> ListActiveInRangeAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
 }
 
 public interface IOvertimeRequestRepository

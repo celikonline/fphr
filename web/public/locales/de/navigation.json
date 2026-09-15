@@ -10,6 +10,8 @@
     "employees": "[DE] Employees",
     "leaves": "[DE] Leave",
     "calendar": "[DE] Calendar",
+    "overtimes": "Überstunden",
+    "leaveRules": "Urlaubsregeln",
     "requests": "[DE] Requests",
     "apps": "[DE] Apps",
     "toggleSidebar": "[DE] Toggle sidebar",

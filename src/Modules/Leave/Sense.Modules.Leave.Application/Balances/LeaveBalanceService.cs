@@ -31,10 +31,14 @@ public sealed class LeaveBalanceService(
         return seeded;
     }
 
-    /// <summary>Regenerates Accrual/CarryOver rows of every PerYear type in the profile's rule set up to today.</summary>
-    public async Task RecalculateAsync(EmployeeLeaveProfile profile, LeaveRuleSet ruleSet, CancellationToken cancellationToken)
+    /// <summary>
+    /// Regenerates Accrual/CarryOver rows of every PerYear type in the profile's rule set up to today. <paramref name="unsavedEntries"/>:
+    /// rows added in the current unit of work (not yet visible to the ledger query) that must count as preserved input.
+    /// </summary>
+    public async Task RecalculateAsync(
+        EmployeeLeaveProfile profile, LeaveRuleSet ruleSet, CancellationToken cancellationToken, IReadOnlyCollection<LeaveLedgerEntry>? unsavedEntries = null)
     {
-        var existing = await ledger.ListAsync(profile.EmployeeId, null, cancellationToken);
+        var existing = (await ledger.ListAsync(profile.EmployeeId, null, cancellationToken)).Concat(unsavedEntries ?? []).ToList();
         var statutoryValues = await legislation.ListAsync(
             [LegislationParameterKeys.AnnualTier1Days, LegislationParameterKeys.AnnualTier2AfterYears, LegislationParameterKeys.AnnualTier2Days,
              LegislationParameterKeys.AnnualTier3AfterYears, LegislationParameterKeys.AnnualTier3Days, LegislationParameterKeys.AnnualYoungAgeMax,

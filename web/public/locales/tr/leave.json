@@ -56,7 +56,8 @@
     "carryOver": "Devir",
     "usage": "Kullanım",
     "adjustment": "Düzeltme",
-    "extraGrant": "Ekstra izin"
+    "extraGrant": "Ekstra izin",
+    "reversal": "İptal iadesi"
   },
   "ledgerSource": {
     "system": "Sistem",
@@ -104,7 +105,8 @@
     "nextPeriodApproved": "Sonraki dönem onaylanmış izinler",
     "carriedOver": "Güncel döneme devreden",
     "extraGrants": "Ekstra izinler",
-    "nextAccrualDate": "Sonraki izin hak ediş tarihi"
+    "nextAccrualDate": "Sonraki izin hak ediş tarihi",
+    "ruleSet": "İzin kural seti"
   },
   "ledger": {
     "title": "İzin defteri",
@@ -140,7 +142,8 @@
     "withdrawDescription": "{{type}} ({{start}} – {{end}}) talebi geri çekilecek ve onay süreci iptal edilecek.",
     "withdrawn": "Talep geri çekildi.",
     "submitted": "İzin talebiniz gönderildi.",
-    "updated": "İzin talebiniz güncellendi."
+    "updated": "İzin talebiniz güncellendi.",
+    "resubmit": "Düzenleyip yeniden gönder"
   },
   "form": {
     "newTitle": "İzin talebi",
@@ -168,7 +171,9 @@
     "bypassHint": "Açıksa izin hemen onaylanır ve bakiyeden düşülür; kapalıysa normal onay süreci başlar.",
     "onBehalfTitle": "İzin ekle",
     "onBehalfDescription": "Çalışan adına izin kaydı oluşturur.",
-    "onBehalfSaved": "İzin kaydı oluşturuldu."
+    "onBehalfSaved": "İzin kaydı oluşturuldu.",
+    "resubmitTitle": "Talebi yeniden gönder",
+    "resubmitDescription": "Reddedilen talebin bilgileri dolduruldu. Düzenleyip gönderdiğinizde yeni bir talep olarak onaya gider."
   },
   "ruleSets": {
     "title": "İzin kuralları",
@@ -203,7 +208,189 @@
     "disabled": "Devre dışı",
     "visible": "Görünür",
     "hidden": "Gizli",
-    "nameRequired": "Ad zorunludur."
+    "nameRequired": "Ad zorunludur.",
+    "rename": "Yeniden adlandır",
+    "renameTitle": "Kural setini yeniden adlandır",
+    "renameDescription": "\"{{name}}\" kural setinin yeni adını girin.",
+    "renamed": "Kural setinin adı güncellendi.",
+    "makeDefault": "Varsayılan yap",
+    "defaultSet": "Varsayılan kural seti güncellendi. Yeni çalışanlar bu kurala atanır.",
+    "deleteTitle": "Kural seti silinsin mi?",
+    "deleteDescription": "\"{{name}}\" kural seti ve izin türleri silinecek. Bu işlem geri alınamaz.",
+    "deleted": "Kural seti silindi.",
+    "deleteBlockedDefault": "Varsayılan kural seti silinemez. Önce başka bir kural setini varsayılan yapın.",
+    "deleteBlockedEmployees": "Bu kural setine atanmış {{count}} çalışan var. Silmeden önce çalışanları başka bir kurala atayın.",
+    "assign": "Çalışanlara ata",
+    "assignTitle": "Kural setini çalışanlara ata",
+    "assignDescription": "Seçilen çalışanlar \"{{name}}\" kural setine taşınır ve bakiyeleri yeni kurala göre yeniden hesaplanır.",
+    "assignNoSelection": "En az bir çalışan seçin.",
+    "assignSubmit": "Ata ({{count}})",
+    "assignRemove": "{{name}} seçimini kaldır",
+    "assignedResult": "{{count}} çalışan kural setine atandı.",
+    "assignWarnings": "{{count}} uyarı"
+  },
+  "ruleSetChange": {
+    "action": "Kural setini değiştir",
+    "title": "Kural setini değiştir",
+    "description": "{{name}} için geçerli izin kural setini seçin.",
+    "hint": "Bakiyeler yeni kurala göre yeniden hesaplanır; kullanım ve düzeltme kayıtları korunur.",
+    "done": "Kural seti değiştirildi."
+  },
+  "detail": {
+    "title": "İzin talebi",
+    "description": "Talep ayrıntıları",
+    "open": "Ayrıntılar",
+    "revision": "Revizyon",
+    "submittedAt": "Gönderim zamanı",
+    "decidedAt": "Karar zamanı",
+    "resubmissionOf": "Bu talep, reddedilen bir talebin yeniden gönderimidir.",
+    "cancelledAt": "İptal edildi: {{at}}"
+  },
+  "approval": {
+    "title": "Onay süreci",
+    "none": "Bu talep için onay süreci yok.",
+    "step": "{{number}}. adım",
+    "role": "Rol: {{role}}",
+    "unassigned": "Onaylayıcı gösterilmiyor",
+    "required": "Zorunlu",
+    "optional": "İsteğe bağlı",
+    "status": {
+      "pending": "Onay bekliyor",
+      "inProgress": "Devam ediyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "cancelled": "İptal edildi"
+    },
+    "stepStatus": {
+      "pending": "Bekliyor",
+      "waiting": "Sırada",
+      "notStarted": "Başlamadı",
+      "approved": "Onayladı",
+      "rejected": "Reddetti",
+      "skipped": "Atlandı",
+      "cancelled": "İptal edildi"
+    }
+  },
+  "cancel": {
+    "action": "İptal et",
+    "title": "İzin iptal edilsin mi?",
+    "descriptionPending": "{{type}} ({{start}} – {{end}}) talebi iptal edilecek ve onay süreci sonlandırılacak.",
+    "descriptionApproved": "Onaylanmış {{type}} ({{start}} – {{end}}) izni iptal edilecek; kullanılan gün bakiyeye iade edilir.",
+    "reason": "İptal gerekçesi",
+    "reasonRequired": "İptal gerekçesi zorunludur.",
+    "confirm": "İzni iptal et",
+    "done": "İzin iptal edildi."
+  },
+  "calendar": {
+    "title": "İzin takvimi",
+    "subtitle": "Onaylanmış ve onay bekleyen izinler.",
+    "previous": "Önceki ay",
+    "next": "Sonraki ay",
+    "today": "Bugün",
+    "employee": "Çalışan",
+    "empty": "Bu dönemde izin kaydı yok.",
+    "masked": "İzinli"
+  },
+  "overtime": {
+    "myTitle": "Fazla mesailerim",
+    "mySubtitle": "Fazla mesai talepleriniz ve onay durumları.",
+    "newRequest": "+ Fazla mesai talebi",
+    "newTitle": "Fazla mesai talebi",
+    "newDescription": "Planlı çalışma saatlerinizle çakışan süre ödenecek süreden düşülür.",
+    "submitted": "Fazla mesai talebiniz gönderildi.",
+    "savedWithWarnings": "Kayıt oluşturuldu (ödenecek süre: {{payable}}). Lütfen aşağıdaki uyarıları kontrol edin:",
+    "withdrawTitle": "Fazla mesai talebi geri çekilsin mi?",
+    "withdrawDescription": "{{date}} {{time}} fazla mesai talebi geri çekilecek ve onay süreci iptal edilecek.",
+    "withdrawn": "Fazla mesai talebi geri çekildi.",
+    "noAccess": "Fazla mesai kayıtlarını görüntüleme yetkiniz yok.",
+    "cardTitle": "Fazla mesailer",
+    "empty": "Fazla mesai kaydı yok.",
+    "addOnBehalf": "Fazla mesai ekle",
+    "onBehalfDescription": "{{name}} adına fazla mesai kaydı oluşturur; onay süreci yine işler.",
+    "onBehalfSaved": "Fazla mesai kaydı oluşturuldu.",
+    "workDate": "Tarih",
+    "startTime": "Başlangıç saati",
+    "duration": "Süre",
+    "durationHint": "Bir kayıt en fazla 24 saat olabilir.",
+    "hoursUnit": "saat",
+    "minutesUnit": "dakika",
+    "payable": "Ödenecek süre",
+    "overlapHint": "Planlı çalışma saatiyle çakışan {{value}} düşüldü.",
+    "dayKind": "Gün türü",
+    "dayKinds": {
+      "workday": "İş günü",
+      "weeklyRest": "Hafta tatili",
+      "publicHoliday": "Resmi tatil"
+    },
+    "sources": {
+      "manual": "Talep",
+      "attendance": "Puantaj",
+      "admin": "Yönetici",
+      "import": "İçe aktarım"
+    },
+    "converted": "İzne dönüştürüldü",
+    "hoursMinutes": "{{h}} sa {{m}} dk",
+    "hoursOnly": "{{h}} sa",
+    "minutesOnly": "{{m}} dk",
+    "warnings": {
+      "overtime_consent_missing": "Çalışanın yazılı fazla çalışma onayı kayıtlı değil.",
+      "overtime_night_consent_missing": "Kayıt gece saatlerine denk geliyor ancak çalışanın gece fazla çalışma onayı yok.",
+      "overtime_overlaps_schedule": "Talebin bir kısmı planlı çalışma saatleri içinde; o kısım ödenecek süreden düşüldü.",
+      "overtime_annual_limit_exceeded": "Bu kayıtla yıllık fazla mesai toplamı yasal sınırı aşıyor."
+    },
+    "validation": {
+      "dateRequired": "Tarih zorunludur.",
+      "timeRequired": "Başlangıç saati zorunludur.",
+      "duration": "Süre 1 dakika ile {{max}} saat arasında olmalıdır.",
+      "rate": "Çarpan {{min}} ile {{max}} arasında olmalıdır."
+    },
+    "convert": "İzne dönüştür",
+    "convertTitle": "Fazla mesaiyi izne dönüştür",
+    "convertDescription": "{{date}} {{time}} · süre {{duration}}, ödenecek süre {{payable}}. Sonuç izin bakiyesine ekstra izin olarak eklenir.",
+    "convertPreview": "Bakiyeye eklenecek süre: {{minutes}}",
+    "convertedDone": "Fazla mesai izne dönüştürüldü.",
+    "basis": "Esas alınan süre",
+    "basisOptions": {
+      "payable": "Ödenecek süre",
+      "full": "Tam süre"
+    },
+    "rate": "Çarpan",
+    "defaultType": "Varsayılan (yıllık izin)",
+    "note": "Not",
+    "conversionsTitle": "İzne dönüşümler",
+    "conversionsEmpty": "Dönüşüm kaydı yok.",
+    "convertedAt": "Dönüşüm zamanı",
+    "basisMinutes": "Esas süre",
+    "resultMinutes": "Eklenen süre",
+    "resultDays": "Eklenen gün",
+    "conversionStatus": {
+      "posted": "İşlendi",
+      "reversed": "Geri alındı"
+    },
+    "consentsTitle": "Fazla çalışma onayları",
+    "consentsEmpty": "Kayıtlı fazla çalışma onayı yok.",
+    "recordConsent": "Onay kaydet",
+    "recordConsentDescription": "Çalışanın yazılı fazla çalışma onayını kaydedin. Onayın süresi dolmaz; çalışan yazılı bildirimle geri alabilir.",
+    "consentRecorded": "Fazla çalışma onayı kaydedildi.",
+    "givenAt": "Onay tarihi",
+    "consentSource": "Kaynak",
+    "consentSources": {
+      "employmentContract": "İş sözleşmesi",
+      "standaloneForm": "Ayrı onay formu"
+    },
+    "coversNightWork": "Gece çalışmasını kapsar",
+    "coversNightWorkHint": "Gece saatlerine denk gelen fazla mesai için ayrıca gece çalışması onayı gerekir.",
+    "revocationNoticeAt": "Geri alma bildirimi",
+    "revocationEffectiveAt": "Geri almanın geçerlilik tarihi",
+    "consentStates": {
+      "inEffect": "Geçerli",
+      "revocationScheduled": "Geri alma bildirildi",
+      "revoked": "Geri alındı"
+    },
+    "revokeConsent": "Geri al",
+    "revokeTitle": "Fazla çalışma onayı geri alınsın mı?",
+    "revokeDescription": "{{date}} tarihli onay için çalışanın yazılı geri alma bildirim tarihini girin. Geri alma, bildirim süresi dolduktan sonra geçerli olur.",
+    "consentRevoked": "Geri alma kaydedildi; {{date}} tarihinden itibaren geçerli."
   },
   "actions": {
     "menu": "İşlemler",

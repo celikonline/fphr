@@ -31,6 +31,8 @@ import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
 import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
+import LeaveCalendarPage from "@/pages/leave/leave-calendar";
+import MyOvertimesPage from "@/pages/leave/my-overtimes";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -78,8 +80,8 @@ export default function App() {
           <Route path="employees/org-chart" element={<OrgChartPage />} />
           <Route path="employees/:id/:tab?" element={<EmployeeCardPage />} />
 
-          <Route path="leaves" element={<ComingSoonPage titleKey="nav.leaves" phase={1} />} />
-          <Route path="calendar" element={<ComingSoonPage titleKey="nav.calendar" phase={1} />} />
+          <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
+          <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
           <Route path="requests" element={<ComingSoonPage titleKey="nav.requests" phase={1} />} />
           <Route path="reports" element={<ComingSoonPage titleKey="nav.reports" phase={4} />} />
           <Route path="support" element={<ComingSoonPage titleKey="nav.support" phase={4} />} />
@@ -88,6 +90,8 @@ export default function App() {
           <Route path="inbox" element={<WorkflowInboxPage />} />
           <Route path="notifications/settings" element={<NotificationPreferencesPage />} />
           <Route path="leave" element={<MyLeavePage />} />
+          <Route path="leave/calendar" element={<LeaveCalendarPage />} />
+          <Route path="leave/overtimes" element={<MyOvertimesPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

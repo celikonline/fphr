@@ -56,7 +56,8 @@
     "carryOver": "Carry-over",
     "usage": "Usage",
     "adjustment": "Adjustment",
-    "extraGrant": "Extra leave"
+    "extraGrant": "Extra leave",
+    "reversal": "Cancellation refund"
   },
   "ledgerSource": {
     "system": "System",
@@ -104,7 +105,8 @@
     "nextPeriodApproved": "Approved leave in next period",
     "carriedOver": "Carried over into period",
     "extraGrants": "Extra leave",
-    "nextAccrualDate": "Next accrual date"
+    "nextAccrualDate": "Next accrual date",
+    "ruleSet": "Leave rule set"
   },
   "ledger": {
     "title": "Leave ledger",
@@ -140,7 +142,8 @@
     "withdrawDescription": "The {{type}} request ({{start}} – {{end}}) will be withdrawn and its approval cancelled.",
     "withdrawn": "Request withdrawn.",
     "submitted": "Your leave request was submitted.",
-    "updated": "Your leave request was updated."
+    "updated": "Your leave request was updated.",
+    "resubmit": "Edit and resubmit"
   },
   "form": {
     "newTitle": "Leave request",
@@ -168,7 +171,9 @@
     "bypassHint": "When on, the leave is approved at once and deducted from the balance; when off, the normal approval process starts.",
     "onBehalfTitle": "Add leave",
     "onBehalfDescription": "Creates a leave record on behalf of the employee.",
-    "onBehalfSaved": "Leave record created."
+    "onBehalfSaved": "Leave record created.",
+    "resubmitTitle": "Resubmit request",
+    "resubmitDescription": "The rejected request is prefilled. Submitting sends it for approval as a new request."
   },
   "ruleSets": {
     "title": "Leave policies",
@@ -203,7 +208,189 @@
     "disabled": "Disabled",
     "visible": "Visible",
     "hidden": "Hidden",
-    "nameRequired": "Name is required."
+    "nameRequired": "Name is required.",
+    "rename": "Rename",
+    "renameTitle": "Rename rule set",
+    "renameDescription": "Enter a new name for \"{{name}}\".",
+    "renamed": "Rule set renamed.",
+    "makeDefault": "Make default",
+    "defaultSet": "Default rule set updated. New employees are assigned to it.",
+    "deleteTitle": "Delete rule set?",
+    "deleteDescription": "\"{{name}}\" and its leave types will be deleted. This cannot be undone.",
+    "deleted": "Rule set deleted.",
+    "deleteBlockedDefault": "The default rule set cannot be deleted. Make another rule set the default first.",
+    "deleteBlockedEmployees": "{{count}} employees are assigned to this rule set. Move them to another rule set first.",
+    "assign": "Assign to employees",
+    "assignTitle": "Assign rule set to employees",
+    "assignDescription": "The selected employees move to \"{{name}}\" and their balances are recalculated with the new rules.",
+    "assignNoSelection": "Select at least one employee.",
+    "assignSubmit": "Assign ({{count}})",
+    "assignRemove": "Remove {{name}}",
+    "assignedResult": "{{count}} employees assigned to the rule set.",
+    "assignWarnings": "{{count}} warnings"
+  },
+  "ruleSetChange": {
+    "action": "Change rule set",
+    "title": "Change rule set",
+    "description": "Select the leave rule set for {{name}}.",
+    "hint": "Balances are recalculated with the new rules; usage and adjustment entries are kept.",
+    "done": "Rule set changed."
+  },
+  "detail": {
+    "title": "Leave request",
+    "description": "Request details",
+    "open": "Details",
+    "revision": "Revision",
+    "submittedAt": "Submitted at",
+    "decidedAt": "Decided at",
+    "resubmissionOf": "This request is a resubmission of a rejected request.",
+    "cancelledAt": "Cancelled: {{at}}"
+  },
+  "approval": {
+    "title": "Approval",
+    "none": "This request has no approval process.",
+    "step": "Step {{number}}",
+    "role": "Role: {{role}}",
+    "unassigned": "Approver hidden",
+    "required": "Required",
+    "optional": "Optional",
+    "status": {
+      "pending": "Awaiting approval",
+      "inProgress": "In progress",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "stepStatus": {
+      "pending": "Pending",
+      "waiting": "Queued",
+      "notStarted": "Not started",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "skipped": "Skipped",
+      "cancelled": "Cancelled"
+    }
+  },
+  "cancel": {
+    "action": "Cancel leave",
+    "title": "Cancel leave?",
+    "descriptionPending": "The {{type}} request ({{start}} – {{end}}) will be cancelled and its approval ended.",
+    "descriptionApproved": "The approved {{type}} leave ({{start}} – {{end}}) will be cancelled and the used days returned to the balance.",
+    "reason": "Cancellation reason",
+    "reasonRequired": "A cancellation reason is required.",
+    "confirm": "Cancel leave",
+    "done": "Leave cancelled."
+  },
+  "calendar": {
+    "title": "Leave calendar",
+    "subtitle": "Approved and pending leave.",
+    "previous": "Previous month",
+    "next": "Next month",
+    "today": "Today",
+    "employee": "Employee",
+    "empty": "No leave in this period.",
+    "masked": "On leave"
+  },
+  "overtime": {
+    "myTitle": "My overtime",
+    "mySubtitle": "Your overtime requests and their approval status.",
+    "newRequest": "+ Overtime request",
+    "newTitle": "Overtime request",
+    "newDescription": "Any part that overlaps your planned work schedule is deducted from the payable time.",
+    "submitted": "Your overtime request was submitted.",
+    "savedWithWarnings": "Record created (payable time: {{payable}}). Please review the warnings below:",
+    "withdrawTitle": "Withdraw overtime request?",
+    "withdrawDescription": "The overtime request of {{date}} {{time}} will be withdrawn and its approval cancelled.",
+    "withdrawn": "Overtime request withdrawn.",
+    "noAccess": "You don't have permission to view overtime records.",
+    "cardTitle": "Overtime",
+    "empty": "No overtime records.",
+    "addOnBehalf": "Add overtime",
+    "onBehalfDescription": "Creates an overtime record for {{name}}; the approval process still runs.",
+    "onBehalfSaved": "Overtime record created.",
+    "workDate": "Date",
+    "startTime": "Start time",
+    "duration": "Duration",
+    "durationHint": "A single record can be at most 24 hours.",
+    "hoursUnit": "hours",
+    "minutesUnit": "minutes",
+    "payable": "Payable time",
+    "overlapHint": "{{value}} overlapping the planned schedule was deducted.",
+    "dayKind": "Day type",
+    "dayKinds": {
+      "workday": "Workday",
+      "weeklyRest": "Weekly rest day",
+      "publicHoliday": "Public holiday"
+    },
+    "sources": {
+      "manual": "Request",
+      "attendance": "Timesheet",
+      "admin": "Manager",
+      "import": "Import"
+    },
+    "converted": "Converted to leave",
+    "hoursMinutes": "{{h}} h {{m}} min",
+    "hoursOnly": "{{h}} h",
+    "minutesOnly": "{{m}} min",
+    "warnings": {
+      "overtime_consent_missing": "No written overtime consent is on file for the employee.",
+      "overtime_night_consent_missing": "The record falls into night hours but the employee has no night work consent.",
+      "overtime_overlaps_schedule": "Part of the request falls inside the planned work schedule; that part was deducted from the payable time.",
+      "overtime_annual_limit_exceeded": "With this record the annual overtime total exceeds the legal limit."
+    },
+    "validation": {
+      "dateRequired": "The date is required.",
+      "timeRequired": "The start time is required.",
+      "duration": "Duration must be between 1 minute and {{max}} hours.",
+      "rate": "The rate must be between {{min}} and {{max}}."
+    },
+    "convert": "Convert to leave",
+    "convertTitle": "Convert overtime to leave",
+    "convertDescription": "{{date}} {{time}} · duration {{duration}}, payable {{payable}}. The result is added to the leave balance as extra leave.",
+    "convertPreview": "Time added to the balance: {{minutes}}",
+    "convertedDone": "Overtime converted to leave.",
+    "basis": "Time basis",
+    "basisOptions": {
+      "payable": "Payable time",
+      "full": "Full duration"
+    },
+    "rate": "Rate",
+    "defaultType": "Default (annual leave)",
+    "note": "Note",
+    "conversionsTitle": "Leave conversions",
+    "conversionsEmpty": "No conversions.",
+    "convertedAt": "Converted at",
+    "basisMinutes": "Basis",
+    "resultMinutes": "Added time",
+    "resultDays": "Added days",
+    "conversionStatus": {
+      "posted": "Posted",
+      "reversed": "Reversed"
+    },
+    "consentsTitle": "Overtime consents",
+    "consentsEmpty": "No overtime consent on file.",
+    "recordConsent": "Record consent",
+    "recordConsentDescription": "Record the employee's written overtime consent. It does not expire; the employee can revoke it with written notice.",
+    "consentRecorded": "Overtime consent recorded.",
+    "givenAt": "Consent date",
+    "consentSource": "Source",
+    "consentSources": {
+      "employmentContract": "Employment contract",
+      "standaloneForm": "Separate consent form"
+    },
+    "coversNightWork": "Covers night work",
+    "coversNightWorkHint": "Overtime during night hours needs a consent that also covers night work.",
+    "revocationNoticeAt": "Revocation notice",
+    "revocationEffectiveAt": "Revocation effective",
+    "consentStates": {
+      "inEffect": "In effect",
+      "revocationScheduled": "Revocation noticed",
+      "revoked": "Revoked"
+    },
+    "revokeConsent": "Revoke",
+    "revokeTitle": "Revoke overtime consent?",
+    "revokeDescription": "Enter the date of the employee's written revocation notice for the consent of {{date}}. It takes effect after the notice period.",
+    "consentRevoked": "Revocation recorded; effective from {{date}}."
   },
   "actions": {
     "menu": "Actions",

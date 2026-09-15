@@ -14,6 +14,8 @@ public sealed class LeaveRuleSetRepository(LeaveDbContext context) : ILeaveRuleS
 {
     public void Add(LeaveRuleSet ruleSet) => context.RuleSets.Add(ruleSet);
 
+    public void Remove(LeaveRuleSet ruleSet) => context.RuleSets.Remove(ruleSet);
+
     public async Task<Result<LeaveRuleSet>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var set = await context.RuleSets.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
@@ -101,6 +103,20 @@ public sealed class LeaveRequestRepository(LeaveDbContext context) : ILeaveReque
         await context.Requests
             .Where(r => r.EmployeeId == employeeId && r.LeaveTypeId == leaveTypeId && r.Status == LeaveRequestStatus.Pending)
             .SumAsync(r => r.CalculatedDays, cancellationToken);
+
+    public async Task<IReadOnlyList<LeaveRequest>> ListActiveInRangeAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default)
+    {
+        var query = context.Requests.AsNoTracking()
+            .Where(r => (r.Status == LeaveRequestStatus.Pending || r.Status == LeaveRequestStatus.Approved) && r.StartDate <= to && from <= r.EndDate);
+        if (employeeIds is not null)
+        {
+            var ids = employeeIds.ToList();
+            query = query.Where(r => ids.Contains(r.EmployeeId));
+        }
+
+        return await query.OrderBy(r => r.StartDate).ToListAsync(cancellationToken);
+    }
 }
 
 public sealed class OvertimeRequestRepository(LeaveDbContext context) : IOvertimeRequestRepository

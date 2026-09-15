@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ListChecks, ListOrdered, MoreVertical } from "lucide-react";
+import { Ban, Eye, ListChecks, ListOrdered, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -19,18 +19,23 @@ import {
   adjustLeaveBalance,
   createLeaveRequestOnBehalf,
   getEmployeeLeaveBalances,
+  getEmployeeLeaveRequest,
   getEmployeeLeaveRequests,
   getLeaveRuleSet,
   getMyLeaveBalances,
+  getMyLeaveRequest,
   getMyLeaveRequests,
   previewEmployeeLeaveRequest,
   recalculateLeaveBalances,
   type LeaveAdjustmentInput,
+  type LeaveRequest,
 } from "@/services/leave.service";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
 import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "./leave-shared";
 import { LeaveRequestDialog, type LeaveRequestTypeOption } from "./leave-request-dialog";
+import { CancelLeaveRequestDialog, LeaveRequestDetailSheet } from "./leave-request-detail";
+import { ChangeEmployeeRuleSetDialog } from "./employee-rule-set-dialog";
 
 export const LEAVE_CARD_TAB_PERMISSIONS = ["leave.balances.read", "leave.requests.read", "leave.my.balances", "leave.my.requests"];
 
@@ -55,6 +60,11 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   const canAddLeave = usePermission("leave.requests.create_on_behalf");
   const canBypassApproval = usePermission("leave.requests.bypass_approval");
   const [addOpen, setAddOpen] = useState(false);
+  const canAssignRuleSet = usePermission("leave.rule_sets.assign");
+  const canCancel = usePermission("leave.requests.cancel_approved");
+  const [ruleSetOpen, setRuleSetOpen] = useState(false);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState<LeaveRequest | null>(null);
   const queryClient = useQueryClient();
 
   const balancesMode = canReadBalances ? "employee" : isOwn && canMyBalances ? "me" : null;
@@ -126,6 +136,11 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
     return <p className="text-sm text-muted-foreground">{t("leave:noAccess")}</p>;
   }
 
+  // Cancelling is an employee-scoped action: only offered through the scoped requests list.
+  const cancellable = (request: LeaveRequest) =>
+    requestsMode === "employee" && canCancel && (request.status === "pending" || request.status === "approved");
+  const canChangeRuleSet = balancesMode === "employee" && canAssignRuleSet && !!ruleSetId;
+
   return (
     <div className="space-y-6">
       {balancesMode !== null && (
@@ -133,6 +148,18 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           data={balancesQuery.data}
           isLoading={balancesQuery.isLoading}
           emptyMessage={balancesQuery.isError ? getApiErrorMessage(balancesQuery.error, t("leave:summary.unavailable")) : undefined}
+          ruleSet={
+            ruleSetQuery.data || canChangeRuleSet ? (
+              <span className="flex flex-wrap items-center gap-2">
+                <span>{ruleSetQuery.data ? leaveName(ruleSetQuery.data.name) : "—"}</span>
+                {canChangeRuleSet && (
+                  <Button type="button" size="sm" variant="link" className="h-auto p-0" onClick={() => setRuleSetOpen(true)}>
+                    {t("leave:ruleSetChange.action")}
+                  </Button>
+                )}
+              </span>
+            ) : undefined
+          }
           action={
             balancesQuery.data ? (
               <div className="flex items-center gap-2">
@@ -175,10 +202,82 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
             ) : requestsQuery.isError ? (
               <p className="text-sm text-destructive">{getApiErrorMessage(requestsQuery.error, t("leave:genericError"))}</p>
             ) : (
-              <LeaveRequestsTable requests={requestsQuery.data ?? []} typeName={typeName} />
+              <LeaveRequestsTable
+                requests={requestsQuery.data ?? []}
+                typeName={typeName}
+                onOpen={(request) => setDetailId(request.id)}
+                actions={(request) => (
+                  <div className="flex justify-end gap-1">
+                    <Button type="button" variant="ghost" size="icon" title={t("leave:detail.open")} onClick={() => setDetailId(request.id)}>
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    {cancellable(request) && (
+                      <Button type="button" variant="ghost" size="icon" title={t("leave:cancel.action")} onClick={() => setCancelling(request)}>
+                        <Ban className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                )}
+              />
             )}
           </CardContent>
         </Card>
+      )}
+
+      {detailId && requestsMode !== null && (
+        <LeaveRequestDetailSheet
+          requestId={detailId}
+          scope={requestsMode === "me" ? "me" : employee.id}
+          load={(id) => (requestsMode === "me" ? getMyLeaveRequest(id) : getEmployeeLeaveRequest(employee.id, id))}
+          typeName={typeName}
+          onClose={() => setDetailId(null)}
+          footer={(detail) =>
+            cancellable(detail) ? (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  setDetailId(null);
+                  setCancelling(detail);
+                }}
+              >
+                {t("leave:cancel.action")}
+              </Button>
+            ) : null
+          }
+        />
+      )}
+
+      {cancelling && (
+        <CancelLeaveRequestDialog
+          employeeId={employee.id}
+          request={cancelling}
+          typeName={typeName}
+          onClose={() => setCancelling(null)}
+          onCancelled={() => {
+            setCancelling(null);
+            toast({ variant: "success", title: t("common:success"), description: t("leave:cancel.done") });
+            void queryClient.invalidateQueries({ queryKey: ["leave"] });
+          }}
+        />
+      )}
+
+      {ruleSetOpen && ruleSetId && (
+        <ChangeEmployeeRuleSetDialog
+          employeeId={employee.id}
+          employeeName={employee.displayName}
+          currentRuleSetId={ruleSetId}
+          onClose={() => setRuleSetOpen(false)}
+          onChanged={(result) => {
+            setRuleSetOpen(false);
+            toast({
+              variant: "success",
+              title: t("common:success"),
+              description: [t("leave:ruleSetChange.done"), ...result.warnings.map((warning) => warning.message)].join(" "),
+            });
+            void queryClient.invalidateQueries({ queryKey: ["leave"] });
+          }}
+        />
       )}
 
       {ledgerOpen && (

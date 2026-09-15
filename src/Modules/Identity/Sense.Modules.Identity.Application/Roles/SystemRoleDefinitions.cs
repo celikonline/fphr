@@ -81,7 +81,7 @@ public static class SystemRoleDefinitions
             ["leave.requests.view", "leave.requests.approve", "leave.calendar.view", "leave.balances.view", "workflow.inbox.*", "attendance.*.view",
              "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
              "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
-             .. PermissionPatterns.SelfService, "leave.balances.read"],
+             .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,

@@ -795,6 +795,19 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(9,4)")
                         .HasColumnName("calculated_days");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("cancellation_reason");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cancelled_by_user_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -837,6 +850,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
+
+                    b.Property<Guid?>("PreviousRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("previous_request_id");
 
                     b.Property<int>("RevisionNo")
                         .HasColumnType("integer")
@@ -887,6 +904,9 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "EmployeeId", "StartDate")
                         .HasDatabaseName("ix_leave_requests_tenant_id_employee_id_start_date");
+
+                    b.HasIndex("TenantId", "StartDate", "EndDate")
+                        .HasDatabaseName("ix_leave_requests_tenant_id_start_date_end_date");
 
                     b.ToTable("leave_requests", "leave");
                 });

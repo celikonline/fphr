@@ -23,6 +23,10 @@ public static class LeaveDomainErrors
     public const string RequestApprovalMismatch = "leave.request.approval_mismatch";
     public const string RequestInvalidRange = "leave.errors.invalid_range";
     public const string RequestZeroDays = "leave.errors.zero_days";
+    public const string RequestNotCancellable = "leave.errors.request_not_cancellable";
+    public const string RequestCancellationReasonRequired = "leave.errors.cancellation_reason_required";
+    public const string RuleSetIsDefault = "leave.errors.rule_set_is_default";
+    public const string RuleSetHasEmployees = "leave.errors.rule_set_has_employees";
     public const string OvertimeNotFound = "leave.overtime.not_found";
     public const string OvertimeNotPending = "leave.overtime.not_pending";
     public const string OvertimeInvalidDuration = "leave.errors.overtime_invalid_duration";
@@ -42,6 +46,8 @@ public static class LeaveLimits
     public const int NameMaxLength = 200;
     public const int DescriptionMaxLength = 2000;
     public const int ReasonMaxLength = 1000;
+    public const int CancellationReasonMaxLength = 500;
+    public const int CalendarMaxRangeDays = 93;
     public const int MaxDays = 365;
     public const int MaxWaitingPeriodMonths = 24;
     public const int IdempotencyKeyMaxLength = 200;

@@ -56,7 +56,8 @@
     "carryOver": "[DE] Carry-over",
     "usage": "[DE] Usage",
     "adjustment": "[DE] Adjustment",
-    "extraGrant": "[DE] Extra leave"
+    "extraGrant": "[DE] Extra leave",
+    "reversal": "Rückbuchung bei Stornierung"
   },
   "ledgerSource": {
     "system": "[DE] System",
@@ -104,7 +105,8 @@
     "nextPeriodApproved": "[DE] Approved leave in next period",
     "carriedOver": "[DE] Carried over into period",
     "extraGrants": "[DE] Extra leave",
-    "nextAccrualDate": "[DE] Next accrual date"
+    "nextAccrualDate": "[DE] Next accrual date",
+    "ruleSet": "Urlaubsregelsatz"
   },
   "ledger": {
     "title": "[DE] Leave ledger",
@@ -140,7 +142,8 @@
     "withdrawDescription": "[DE] The {{type}} request ({{start}} – {{end}}) will be withdrawn and its approval cancelled.",
     "withdrawn": "[DE] Request withdrawn.",
     "submitted": "[DE] Your leave request was submitted.",
-    "updated": "[DE] Your leave request was updated."
+    "updated": "[DE] Your leave request was updated.",
+    "resubmit": "Bearbeiten und erneut senden"
   },
   "form": {
     "newTitle": "[DE] Leave request",
@@ -168,7 +171,9 @@
     "bypassHint": "Wenn aktiv, wird der Urlaub sofort genehmigt und vom Saldo abgezogen; sonst startet der normale Genehmigungsprozess.",
     "onBehalfTitle": "Urlaub hinzufügen",
     "onBehalfDescription": "Erstellt einen Urlaubseintrag für den Mitarbeiter.",
-    "onBehalfSaved": "Urlaubseintrag erstellt."
+    "onBehalfSaved": "Urlaubseintrag erstellt.",
+    "resubmitTitle": "Antrag erneut senden",
+    "resubmitDescription": "Die Daten des abgelehnten Antrags sind vorausgefüllt. Beim Senden geht er als neuer Antrag in die Genehmigung."
   },
   "ruleSets": {
     "title": "[DE] Leave policies",
@@ -203,7 +208,189 @@
     "disabled": "[DE] Disabled",
     "visible": "[DE] Visible",
     "hidden": "[DE] Hidden",
-    "nameRequired": "[DE] Name is required."
+    "nameRequired": "[DE] Name is required.",
+    "rename": "Umbenennen",
+    "renameTitle": "Regelsatz umbenennen",
+    "renameDescription": "Geben Sie einen neuen Namen für \"{{name}}\" ein.",
+    "renamed": "Regelsatz umbenannt.",
+    "makeDefault": "Als Standard festlegen",
+    "defaultSet": "Standardregelsatz aktualisiert. Neue Mitarbeitende werden ihm zugeordnet.",
+    "deleteTitle": "Regelsatz löschen?",
+    "deleteDescription": "\"{{name}}\" wird mit seinen Urlaubsarten gelöscht. Das kann nicht rückgängig gemacht werden.",
+    "deleted": "Regelsatz gelöscht.",
+    "deleteBlockedDefault": "Der Standardregelsatz kann nicht gelöscht werden. Legen Sie zuerst einen anderen Regelsatz als Standard fest.",
+    "deleteBlockedEmployees": "Diesem Regelsatz sind {{count}} Mitarbeitende zugeordnet. Ordnen Sie sie zuerst einem anderen Regelsatz zu.",
+    "assign": "Mitarbeitenden zuordnen",
+    "assignTitle": "Regelsatz Mitarbeitenden zuordnen",
+    "assignDescription": "Die ausgewählten Mitarbeitenden wechseln zu \"{{name}}\"; ihre Salden werden nach den neuen Regeln neu berechnet.",
+    "assignNoSelection": "Wählen Sie mindestens eine Person aus.",
+    "assignSubmit": "Zuordnen ({{count}})",
+    "assignRemove": "{{name}} entfernen",
+    "assignedResult": "{{count}} Mitarbeitende dem Regelsatz zugeordnet.",
+    "assignWarnings": "{{count}} Hinweise"
+  },
+  "ruleSetChange": {
+    "action": "Regelsatz ändern",
+    "title": "Regelsatz ändern",
+    "description": "Wählen Sie den Urlaubsregelsatz für {{name}}.",
+    "hint": "Salden werden nach den neuen Regeln neu berechnet; Verbrauch und Korrekturen bleiben erhalten.",
+    "done": "Regelsatz geändert."
+  },
+  "detail": {
+    "title": "Urlaubsantrag",
+    "description": "Antragsdetails",
+    "open": "Details",
+    "revision": "Revision",
+    "submittedAt": "Eingereicht am",
+    "decidedAt": "Entschieden am",
+    "resubmissionOf": "Dieser Antrag ist die erneute Einreichung eines abgelehnten Antrags.",
+    "cancelledAt": "Storniert: {{at}}"
+  },
+  "approval": {
+    "title": "Genehmigung",
+    "none": "Für diesen Antrag gibt es keinen Genehmigungsprozess.",
+    "step": "Schritt {{number}}",
+    "role": "Rolle: {{role}}",
+    "unassigned": "Genehmigende Person ausgeblendet",
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "status": {
+      "pending": "Wartet auf Genehmigung",
+      "inProgress": "In Bearbeitung",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "cancelled": "Storniert"
+    },
+    "stepStatus": {
+      "pending": "Offen",
+      "waiting": "In Warteschlange",
+      "notStarted": "Nicht begonnen",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "skipped": "Übersprungen",
+      "cancelled": "Storniert"
+    }
+  },
+  "cancel": {
+    "action": "Stornieren",
+    "title": "Urlaub stornieren?",
+    "descriptionPending": "Der Antrag {{type}} ({{start}} – {{end}}) wird storniert und die Genehmigung beendet.",
+    "descriptionApproved": "Der genehmigte Urlaub {{type}} ({{start}} – {{end}}) wird storniert; die verbrauchten Tage werden dem Saldo gutgeschrieben.",
+    "reason": "Stornierungsgrund",
+    "reasonRequired": "Ein Stornierungsgrund ist erforderlich.",
+    "confirm": "Urlaub stornieren",
+    "done": "Urlaub storniert."
+  },
+  "calendar": {
+    "title": "Urlaubskalender",
+    "subtitle": "Genehmigte und offene Urlaube.",
+    "previous": "Vorheriger Monat",
+    "next": "Nächster Monat",
+    "today": "Heute",
+    "employee": "Mitarbeitende",
+    "empty": "In diesem Zeitraum gibt es keine Urlaube.",
+    "masked": "Im Urlaub"
+  },
+  "overtime": {
+    "myTitle": "Meine Überstunden",
+    "mySubtitle": "Ihre Überstundenanträge und deren Genehmigungsstand.",
+    "newRequest": "+ Überstundenantrag",
+    "newTitle": "Überstundenantrag",
+    "newDescription": "Der Teil, der sich mit Ihrem Dienstplan überschneidet, wird von der vergütungsfähigen Zeit abgezogen.",
+    "submitted": "Ihr Überstundenantrag wurde gesendet.",
+    "savedWithWarnings": "Eintrag erstellt (vergütungsfähige Zeit: {{payable}}). Bitte prüfen Sie die folgenden Hinweise:",
+    "withdrawTitle": "Überstundenantrag zurückziehen?",
+    "withdrawDescription": "Der Überstundenantrag vom {{date}} {{time}} wird zurückgezogen und die Genehmigung abgebrochen.",
+    "withdrawn": "Überstundenantrag zurückgezogen.",
+    "noAccess": "Sie haben keine Berechtigung, Überstunden einzusehen.",
+    "cardTitle": "Überstunden",
+    "empty": "Keine Überstunden erfasst.",
+    "addOnBehalf": "Überstunden erfassen",
+    "onBehalfDescription": "Erstellt einen Überstundeneintrag für {{name}}; die Genehmigung läuft weiterhin.",
+    "onBehalfSaved": "Überstundeneintrag erstellt.",
+    "workDate": "Datum",
+    "startTime": "Startzeit",
+    "duration": "Dauer",
+    "durationHint": "Ein Eintrag darf höchstens 24 Stunden umfassen.",
+    "hoursUnit": "Stunden",
+    "minutesUnit": "Minuten",
+    "payable": "Vergütungsfähig",
+    "overlapHint": "{{value}} Überschneidung mit dem Dienstplan wurde abgezogen.",
+    "dayKind": "Tagesart",
+    "dayKinds": {
+      "workday": "Arbeitstag",
+      "weeklyRest": "Wochenruhetag",
+      "publicHoliday": "Feiertag"
+    },
+    "sources": {
+      "manual": "Antrag",
+      "attendance": "Zeiterfassung",
+      "admin": "Führungskraft",
+      "import": "Import"
+    },
+    "converted": "In Urlaub umgewandelt",
+    "hoursMinutes": "{{h}} Std. {{m}} Min.",
+    "hoursOnly": "{{h}} Std.",
+    "minutesOnly": "{{m}} Min.",
+    "warnings": {
+      "overtime_consent_missing": "Für die Person liegt keine schriftliche Überstundenzustimmung vor.",
+      "overtime_night_consent_missing": "Der Eintrag fällt in die Nachtzeit, es liegt aber keine Zustimmung für Nachtarbeit vor.",
+      "overtime_overlaps_schedule": "Ein Teil des Antrags liegt im Dienstplan; dieser Teil wurde von der vergütungsfähigen Zeit abgezogen.",
+      "overtime_annual_limit_exceeded": "Mit diesem Eintrag überschreiten die Jahresüberstunden die gesetzliche Grenze."
+    },
+    "validation": {
+      "dateRequired": "Das Datum ist erforderlich.",
+      "timeRequired": "Die Startzeit ist erforderlich.",
+      "duration": "Die Dauer muss zwischen 1 Minute und {{max}} Stunden liegen.",
+      "rate": "Der Faktor muss zwischen {{min}} und {{max}} liegen."
+    },
+    "convert": "In Urlaub umwandeln",
+    "convertTitle": "Überstunden in Urlaub umwandeln",
+    "convertDescription": "{{date}} {{time}} · Dauer {{duration}}, vergütungsfähig {{payable}}. Das Ergebnis wird dem Urlaubssaldo als Extraurlaub gutgeschrieben.",
+    "convertPreview": "Dem Saldo gutgeschriebene Zeit: {{minutes}}",
+    "convertedDone": "Überstunden in Urlaub umgewandelt.",
+    "basis": "Berechnungsgrundlage",
+    "basisOptions": {
+      "payable": "Vergütungsfähige Zeit",
+      "full": "Gesamte Dauer"
+    },
+    "rate": "Faktor",
+    "defaultType": "Standard (Jahresurlaub)",
+    "note": "Notiz",
+    "conversionsTitle": "Umwandlungen in Urlaub",
+    "conversionsEmpty": "Keine Umwandlungen.",
+    "convertedAt": "Umgewandelt am",
+    "basisMinutes": "Grundlage",
+    "resultMinutes": "Gutgeschriebene Zeit",
+    "resultDays": "Gutgeschriebene Tage",
+    "conversionStatus": {
+      "posted": "Gebucht",
+      "reversed": "Storniert"
+    },
+    "consentsTitle": "Überstundenzustimmungen",
+    "consentsEmpty": "Keine Überstundenzustimmung erfasst.",
+    "recordConsent": "Zustimmung erfassen",
+    "recordConsentDescription": "Erfassen Sie die schriftliche Überstundenzustimmung. Sie läuft nicht ab; die Person kann sie schriftlich widerrufen.",
+    "consentRecorded": "Überstundenzustimmung erfasst.",
+    "givenAt": "Datum der Zustimmung",
+    "consentSource": "Quelle",
+    "consentSources": {
+      "employmentContract": "Arbeitsvertrag",
+      "standaloneForm": "Separates Formular"
+    },
+    "coversNightWork": "Umfasst Nachtarbeit",
+    "coversNightWorkHint": "Überstunden in der Nachtzeit brauchen eine Zustimmung, die Nachtarbeit einschließt.",
+    "revocationNoticeAt": "Widerrufsmitteilung",
+    "revocationEffectiveAt": "Widerruf wirksam ab",
+    "consentStates": {
+      "inEffect": "Gültig",
+      "revocationScheduled": "Widerruf angekündigt",
+      "revoked": "Widerrufen"
+    },
+    "revokeConsent": "Widerrufen",
+    "revokeTitle": "Überstundenzustimmung widerrufen?",
+    "revokeDescription": "Geben Sie das Datum der schriftlichen Widerrufsmitteilung zur Zustimmung vom {{date}} ein. Der Widerruf wird nach Ablauf der Frist wirksam.",
+    "consentRevoked": "Widerruf erfasst; wirksam ab {{date}}."
   },
   "actions": {
     "menu": "[DE] Actions",

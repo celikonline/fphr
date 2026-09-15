@@ -1,5 +1,7 @@
 using FluentValidation;
+using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -86,6 +88,194 @@ public sealed class CloneLeaveRuleSetHandler(ILeaveRuleSetRepository ruleSets) :
 
         ruleSets.Add(clone.Value);
         return clone.Value.Id;
+    }
+}
+
+[RequiresPermission("leave.rule_sets.manage")]
+public sealed record RenameLeaveRuleSetCommand(Guid RuleSetId, string Name) : ICommand;
+
+public sealed class RenameLeaveRuleSetValidator : AbstractValidator<RenameLeaveRuleSetCommand>
+{
+    public RenameLeaveRuleSetValidator() => RuleFor(x => x.Name).NotEmpty().MaximumLength(LeaveLimits.NameMaxLength);
+}
+
+public sealed class RenameLeaveRuleSetHandler(ILeaveRuleSetRepository ruleSets) : ICommandHandler<RenameLeaveRuleSetCommand>
+{
+    public async Task<Result> Handle(RenameLeaveRuleSetCommand command, CancellationToken cancellationToken)
+    {
+        var set = await ruleSets.GetByIdAsync(command.RuleSetId, cancellationToken);
+        return set.IsFailure ? set.Error : set.Value.Rename(command.Name);
+    }
+}
+
+/// <summary>"Varsayılan yap": exactly one default rule set per tenant afterwards (new employees get it).</summary>
+[RequiresPermission("leave.rule_sets.manage")]
+public sealed record SetDefaultLeaveRuleSetCommand(Guid RuleSetId) : ICommand;
+
+public sealed class SetDefaultLeaveRuleSetHandler(ILeaveRuleSetRepository ruleSets) : ICommandHandler<SetDefaultLeaveRuleSetCommand>
+{
+    public async Task<Result> Handle(SetDefaultLeaveRuleSetCommand command, CancellationToken cancellationToken)
+    {
+        var set = await ruleSets.GetByIdAsync(command.RuleSetId, cancellationToken);
+        if (set.IsFailure)
+        {
+            return set.Error;
+        }
+
+        set.Value.MakeDefault(await ruleSets.ListAsync(cancellationToken));
+        return Result.Success();
+    }
+}
+
+/// <summary>Deletes a rule set (with its types); not the default one and not while employees are assigned to it.</summary>
+[RequiresPermission("leave.rule_sets.manage")]
+public sealed record DeleteLeaveRuleSetCommand(Guid RuleSetId) : ICommand;
+
+public sealed class DeleteLeaveRuleSetHandler(ILeaveRuleSetRepository ruleSets) : ICommandHandler<DeleteLeaveRuleSetCommand>
+{
+    public async Task<Result> Handle(DeleteLeaveRuleSetCommand command, CancellationToken cancellationToken)
+    {
+        var set = await ruleSets.GetByIdAsync(command.RuleSetId, cancellationToken);
+        if (set.IsFailure)
+        {
+            return set.Error;
+        }
+
+        var deletable = set.Value.EnsureDeletable(await ruleSets.CountAssignedEmployeesAsync(set.Value.Id, cancellationToken));
+        if (deletable.IsFailure)
+        {
+            return deletable;
+        }
+
+        ruleSets.Remove(set.Value);
+        return Result.Success();
+    }
+}
+
+/// <summary>One non-blocking assignment warning; <see cref="LeaveTypeName"/> is the stored name (resource key for seeded types).</summary>
+public sealed record LeaveRuleSetAssignmentWarning(Guid EmployeeId, string Code, string LeaveTypeName);
+
+public sealed record LeaveRuleSetAssignmentResult(int AssignedCount, IReadOnlyList<LeaveRuleSetAssignmentWarning> Warnings);
+
+/// <summary>
+/// Assigns a rule set to employees: the leave profile switches sets, preserved ledger rows (Usage/Reversal/ExtraGrant/Adjustment/
+/// OpeningBalance) and open requests move to the counterpart type (same Code) of the new set, the old set's Accrual/CarryOver
+/// rows are dropped and balances are regenerated from LeaveAccrualStartDate. Usage of a type without a counterpart stays on
+/// the old type and is reported as a warning. Already-assigned employees count as assigned (idempotent).
+/// </summary>
+[RequiresPermission("leave.rule_sets.assign")]
+public sealed record AssignLeaveRuleSetCommand(Guid RuleSetId, IReadOnlyList<Guid> EmployeeIds) : ICommand<LeaveRuleSetAssignmentResult>;
+
+public sealed class AssignLeaveRuleSetValidator : AbstractValidator<AssignLeaveRuleSetCommand>
+{
+    public const int MaxEmployees = 1000;
+
+    public AssignLeaveRuleSetValidator()
+    {
+        RuleFor(x => x.EmployeeIds).NotEmpty();
+        RuleFor(x => x.EmployeeIds.Count).LessThanOrEqualTo(MaxEmployees).When(x => x.EmployeeIds is not null);
+    }
+}
+
+public sealed class AssignLeaveRuleSetHandler(
+    ILeaveRuleSetRepository ruleSets,
+    IEmployeeLeaveProfileRepository profiles,
+    ILeaveLedgerRepository ledger,
+    ILeaveRequestRepository requests,
+    IDataScopeService dataScope,
+    Balances.LeaveBalanceService balances)
+    : ICommandHandler<AssignLeaveRuleSetCommand, LeaveRuleSetAssignmentResult>
+{
+    public async Task<Result<LeaveRuleSetAssignmentResult>> Handle(AssignLeaveRuleSetCommand command, CancellationToken cancellationToken)
+    {
+        var target = await ruleSets.GetByIdAsync(command.RuleSetId, cancellationToken);
+        if (target.IsFailure)
+        {
+            return target.Error;
+        }
+
+        var employeeIds = command.EmployeeIds.Distinct().ToList();
+        var loadedProfiles = new List<EmployeeLeaveProfile>(employeeIds.Count);
+        foreach (var employeeId in employeeIds)
+        {
+            if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.RuleSetsAssign.Key, employeeId, cancellationToken))
+            {
+                return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+            }
+
+            var profile = await profiles.FindByEmployeeIdAsync(employeeId, cancellationToken);
+            if (profile is null)
+            {
+                return Error.NotFound(LeaveErrors.ProfileNotFound);
+            }
+
+            loadedProfiles.Add(profile);
+        }
+
+        var sets = new Dictionary<Guid, LeaveRuleSet?> { [target.Value.Id] = target.Value };
+        var warnings = new List<LeaveRuleSetAssignmentWarning>();
+        foreach (var profile in loadedProfiles)
+        {
+            if (profile.RuleSetId == target.Value.Id)
+            {
+                continue;
+            }
+
+            if (!sets.TryGetValue(profile.RuleSetId, out var previous))
+            {
+                var loaded = await ruleSets.GetByIdAsync(profile.RuleSetId, cancellationToken);
+                previous = loaded.IsSuccess ? loaded.Value : null;
+                sets[profile.RuleSetId] = previous;
+            }
+
+            if (previous is not null)
+            {
+                warnings.AddRange(await MoveToRuleSetAsync(profile.EmployeeId, previous, target.Value, cancellationToken));
+            }
+
+            profile.AssignRuleSet(target.Value.Id);
+            await balances.RecalculateAsync(profile, target.Value, cancellationToken);
+        }
+
+        return new LeaveRuleSetAssignmentResult(loadedProfiles.Count, warnings);
+    }
+
+    private async Task<IReadOnlyList<LeaveRuleSetAssignmentWarning>> MoveToRuleSetAsync(
+        Guid employeeId, LeaveRuleSet previous, LeaveRuleSet target, CancellationToken cancellationToken)
+    {
+        var warnings = new List<LeaveRuleSetAssignmentWarning>();
+        var entries = await ledger.ListAsync(employeeId, null, cancellationToken);
+        foreach (var type in previous.Types)
+        {
+            var rows = entries.Where(e => e.LeaveTypeId == type.Id).ToList();
+            ledger.RemoveRange(rows.Where(r => r.IsGenerated));
+            var counterpart = target.FindCounterpart(type);
+            if (counterpart is not null)
+            {
+                foreach (var row in rows.Where(r => !r.IsGenerated))
+                {
+                    row.MoveToLeaveType(counterpart.Id);
+                }
+            }
+            else if (rows.Where(r => r.Type is LeaveLedgerEntryType.Usage or LeaveLedgerEntryType.Reversal).Sum(r => r.Amount) < 0m)
+            {
+                warnings.Add(new LeaveRuleSetAssignmentWarning(employeeId, LeaveWarnings.UsageTypeMissingInRuleSet, type.Name));
+            }
+        }
+
+        var typeMap = previous.Types
+            .Select(t => (Old: t.Id, New: target.FindCounterpart(t)?.Id))
+            .Where(m => m.New is not null)
+            .ToDictionary(m => m.Old, m => m.New!.Value);
+        foreach (var request in await requests.ListByEmployeeAsync(employeeId, cancellationToken))
+        {
+            if (request.IsActive && typeMap.TryGetValue(request.LeaveTypeId, out var newTypeId))
+            {
+                request.MoveToLeaveType(newTypeId);
+            }
+        }
+
+        return warnings;
     }
 }
 

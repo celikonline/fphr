@@ -59,6 +59,34 @@ public sealed class LeaveRuleSet : TenantAggregateRoot<Guid>, IAuditLogged
 
     public void SetDefault(bool isDefault) => IsDefault = isDefault;
 
+    /// <summary>"Varsayılan yap": this set becomes the only default among <paramref name="tenantSets"/> (which should include it).</summary>
+    public void MakeDefault(IEnumerable<LeaveRuleSet> tenantSets)
+    {
+        foreach (var other in tenantSets.Where(s => s.Id != Id))
+        {
+            other.SetDefault(false);
+        }
+
+        IsDefault = true;
+    }
+
+    /// <summary>Delete guard: the default set and sets still assigned to employees cannot be deleted.</summary>
+    public Result EnsureDeletable(int assignedEmployeeCount)
+    {
+        if (IsDefault)
+        {
+            return Error.Conflict(LeaveDomainErrors.RuleSetIsDefault);
+        }
+
+        return assignedEmployeeCount > 0 ? Error.Conflict(LeaveDomainErrors.RuleSetHasEmployees) : Result.Success();
+    }
+
+    /// <summary>The type of this set that corresponds to <paramref name="type"/> of another set: same Code, or for Custom types the same name.</summary>
+    public LeaveType? FindCounterpart(LeaveType type) =>
+        type.Code == LeaveTypeCode.Custom
+            ? _types.FirstOrDefault(t => t.Code == LeaveTypeCode.Custom && string.Equals(t.Name, type.Name, StringComparison.OrdinalIgnoreCase))
+            : _types.FirstOrDefault(t => t.Code == type.Code);
+
     public void SetUnpaidLeaveShiftsAccrual(bool value) => UnpaidLeaveShiftsAccrual = value;
 
     public Result<LeaveType> AddType(LeaveTypeSettings settings)

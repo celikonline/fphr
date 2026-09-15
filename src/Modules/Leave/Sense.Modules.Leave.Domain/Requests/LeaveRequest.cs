@@ -24,7 +24,7 @@ public enum LeaveRequestSource
 /// <summary>
 /// Leave request lifecycle (11.3.5 "Durum makineleri"): Pending → Approved (Workflow ApprovalCompleted) | Rejected
 /// (ApprovalRejected) | Withdrawn (requester). Pending → Pending on edit (<see cref="RevisionNo"/>++, a new approval
-/// request replaces the old one). Rejected/Withdrawn/Cancelled are terminal.
+/// request replaces the old one). Pending/Approved → Cancelled (authorized user, <see cref="Cancel"/>). Rejected/Withdrawn/Cancelled are terminal.
 /// </summary>
 public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 {
@@ -73,16 +73,51 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public DateTime? DecidedAt { get; private set; }
 
+    /// <summary>The rejected request this one re-submits (<see cref="LeaveRequestSource.Resubmission"/>); the rejected record stays unchanged.</summary>
+    public Guid? PreviousRequestId { get; private set; }
+
+    public DateTime? CancelledAt { get; private set; }
+
+    public string? CancellationReason { get; private set; }
+
+    public Guid? CancelledByUserId { get; private set; }
+
     public bool IsActive => Status is LeaveRequestStatus.Pending or LeaveRequestStatus.Approved;
 
     public static Result<LeaveRequest> Submit(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, LeaveTypeCode code, DateOnly start, DateOnly end, decimal days, string? description,
-        LeaveRequestSource source, DateTime submittedAt, string? ip, string? userAgent)
+        LeaveRequestSource source, DateTime submittedAt, string? ip, string? userAgent, Guid? previousRequestId = null)
     {
-        var request = new LeaveRequest(tenantId, employeeId, source, submittedAt, ip, userAgent);
+        var request = new LeaveRequest(tenantId, employeeId, source, submittedAt, ip, userAgent) { PreviousRequestId = previousRequestId };
         var applied = request.ApplyDetails(leaveTypeId, code, start, end, days, description);
         return applied.IsFailure ? applied.Error : request;
     }
+
+    /// <summary>
+    /// Decision #16: an approved leave is never edited - an authorized user cancels it (any dates) and a new request is opened.
+    /// Pending requests can be cancelled too (the caller cancels the Workflow approval). Rejected/Withdrawn/Cancelled cannot.
+    /// </summary>
+    public Result Cancel(string reason, Guid? userId, DateTime at)
+    {
+        if (Status is not (LeaveRequestStatus.Pending or LeaveRequestStatus.Approved))
+        {
+            return Error.Conflict(LeaveDomainErrors.RequestNotCancellable);
+        }
+
+        if (string.IsNullOrWhiteSpace(reason) || reason.Length > LeaveLimits.CancellationReasonMaxLength)
+        {
+            return Error.Validation(LeaveDomainErrors.RequestCancellationReasonRequired);
+        }
+
+        Status = LeaveRequestStatus.Cancelled;
+        CancelledAt = at;
+        CancellationReason = reason.Trim();
+        CancelledByUserId = userId;
+        return Result.Success();
+    }
+
+    /// <summary>Rule set reassignment: an open request follows its type's counterpart (same Code) in the employee's new rule set.</summary>
+    public void MoveToLeaveType(Guid leaveTypeId) => LeaveTypeId = leaveTypeId;
 
     public void AttachApproval(Guid approvalRequestId) => ApprovalRequestId = approvalRequestId;
 

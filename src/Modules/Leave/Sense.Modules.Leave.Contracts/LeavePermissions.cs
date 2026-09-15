@@ -70,8 +70,19 @@ public static class LeavePermissions
     public static readonly Permission RequestsBypassApproval = new(
         "leave.requests.bypass_approval", Module, "Approve Leave Without Workflow", Group, "Record leave added for employees as approved without the approval process");
 
+    /// <summary>Decision #16: approved leave is cancelled (never edited) by an authorized user; also cancels pending requests.</summary>
+    public static readonly Permission RequestsCancelApproved = new(
+        "leave.requests.cancel_approved", Module, "Cancel Leave Requests", Group, "Cancel employees' approved or pending leave requests");
+
+    /// <summary>İzin takvimi menu; "*.my.*" reaches every base role (visibility further limited by Calendar access settings).</summary>
+    public static readonly Permission MyCalendar = new(
+        "leave.my.calendar", Module, "View Leave Calendar", Group, "Open the leave calendar (own leave, or everyone's when the tenant allows it)");
+
+    public static readonly Permission CalendarRead = new(
+        "leave.calendar.read", Module, "Read Team Leave Calendar", Group, "See the leave of employees in the caller's data scope on the calendar");
+
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
-         RequestsCreateOnBehalf, RequestsBypassApproval];
+         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead];
 }

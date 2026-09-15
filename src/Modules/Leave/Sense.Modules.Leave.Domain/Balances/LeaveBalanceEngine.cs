@@ -181,11 +181,15 @@ public static class LeaveBalanceEngine
         }
     }
 
-    /// <summary>Official "İzin Özeti" projection: usage counts by leave START date (≤ today → used, later → future approved).</summary>
+    /// <summary>
+    /// Official "İzin Özeti" projection: usage counts by leave START date (≤ today → used, later → future approved).
+    /// Reversal rows (cancelled approved leave) are netted against usage.
+    /// </summary>
     public static LeaveBalance Project(LeaveType type, DateOnly accrualStart, DateOnly today, IReadOnlyCollection<LeaveLedgerEntry> entries)
     {
         var period = PeriodContaining(type.AccrualBasis, accrualStart, today < accrualStart ? accrualStart : today);
-        static decimal Used(IEnumerable<LeaveLedgerEntry> rows) => -rows.Where(e => e.Type == LeaveLedgerEntryType.Usage).Sum(e => e.Amount);
+        static bool IsUsage(LeaveLedgerEntry e) => e.Type is LeaveLedgerEntryType.Usage or LeaveLedgerEntryType.Reversal;
+        static decimal Used(IEnumerable<LeaveLedgerEntry> rows) => -rows.Where(IsUsage).Sum(e => e.Amount);
 
         var inPeriod = entries.Where(e => period.Contains(e.EffectiveDate)).ToList();
         var pastInPeriod = inPeriod.Where(e => e.EffectiveDate <= today).ToList();
@@ -193,7 +197,7 @@ public static class LeaveBalanceEngine
         var accruedInPeriod = inPeriod.Where(e => e.Type == LeaveLedgerEntryType.Accrual && e.EffectiveDate <= today).Sum(e => e.Amount);
         var currentPeriodUsed = Used(pastInPeriod);
         var futureApproved = Used(inPeriod.Where(e => e.EffectiveDate > today));
-        var currentBalance = pastInPeriod.Where(e => e.Type != LeaveLedgerEntryType.Usage).Sum(e => e.Amount) - currentPeriodUsed;
+        var currentBalance = pastInPeriod.Where(e => !IsUsage(e)).Sum(e => e.Amount) - currentPeriodUsed;
 
         var negativeLimit = type.NegativeBalance switch
         {

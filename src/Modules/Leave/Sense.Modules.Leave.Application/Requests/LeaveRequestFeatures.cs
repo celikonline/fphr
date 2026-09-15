@@ -33,15 +33,18 @@ public static class LeaveRequestErrors
 public sealed record LeaveRequestDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
-    string? LeaveTypeName = null);
+    string? LeaveTypeName = null, Guid? PreviousRequestId = null, DateTime? CancelledAt = null, string? CancellationReason = null);
 
 internal static class LeaveRequestMapper
 {
     public static LeaveRequestDto ToDto(LeaveRequest r, string? typeName = null) =>
         new(r.Id, r.EmployeeId, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.StartDate, r.EndDate, r.CalculatedDays, r.Description, r.Status, r.Source,
-            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName);
+            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName, r.PreviousRequestId, r.CancelledAt, r.CancellationReason);
 
-    /// <summary>Maps requests with the leave type name (stored name; seeded types carry a resource key the API localizes) from the employee's rule set.</summary>
+    /// <summary>
+    /// Maps requests with the leave type name (stored name; seeded types carry a resource key the API localizes) from the employee's
+    /// rule set, falling back to the tenant's other sets for requests of a type the employee no longer has (rule set reassigned).
+    /// </summary>
     public static async Task<IReadOnlyList<LeaveRequestDto>> ToDtosAsync(
         Guid employeeId, IReadOnlyList<LeaveRequest> requests, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, CancellationToken ct)
     {
@@ -51,6 +54,14 @@ internal static class LeaveRequestMapper
             foreach (var type in set.Value.Types)
             {
                 names[type.Id] = type.Name;
+            }
+        }
+
+        if (requests.Any(r => !names.ContainsKey(r.LeaveTypeId)))
+        {
+            foreach (var type in (await ruleSets.ListAsync(ct)).SelectMany(s => s.Types))
+            {
+                names.TryAdd(type.Id, type.Name);
             }
         }
 
@@ -147,9 +158,13 @@ public sealed class LeaveRequestRules(
     }
 }
 
-/// <summary>Self-service leave request: validate, persist as Pending and start the Workflow "Leave" approval.</summary>
+/// <summary>
+/// Self-service leave request: validate, persist as Pending and start the Workflow "Leave" approval. With
+/// <see cref="PreviousRequestId"/> it re-submits the caller's own rejected request (Source = Resubmission); the rejected record stays.
+/// </summary>
 [RequiresPermission("leave.my.requests")]
-public sealed record SubmitLeaveRequestCommand(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description) : ICommand<Guid>;
+public sealed record SubmitLeaveRequestCommand(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null)
+    : ICommand<Guid>;
 
 public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveRequestCommand>
 {
@@ -167,6 +182,15 @@ public sealed class SubmitLeaveRequestHandler(
             return Error.NotFound(LeaveErrors.NoEmployeeForUser);
         }
 
+        if (command.PreviousRequestId is { } previousId)
+        {
+            var previous = await requests.FindByIdAsync(previousId, cancellationToken);
+            if (previous is null || previous.EmployeeId != employeeId || previous.Status != LeaveRequestStatus.Rejected)
+            {
+                return Error.Conflict(LeaveErrors.ResubmissionSourceInvalid);
+            }
+        }
+
         var valid = await rules.ValidateAsync(tenant.TenantId, employeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken);
         if (valid.IsFailure)
         {
@@ -175,7 +199,8 @@ public sealed class SubmitLeaveRequestHandler(
 
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, employeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
-            command.Description, LeaveRequestSource.SelfService, clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null);
+            command.Description, command.PreviousRequestId is null ? LeaveRequestSource.SelfService : LeaveRequestSource.Resubmission,
+            clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null, command.PreviousRequestId);
         if (submitted.IsFailure)
         {
             return submitted.Error;

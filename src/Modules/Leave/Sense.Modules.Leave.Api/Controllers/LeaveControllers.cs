@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Leave.Application.Balances;
+using Sense.Modules.Leave.Application.Calendar;
 using Sense.Modules.Leave.Application.Overtime;
 using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
@@ -15,9 +16,20 @@ namespace Sense.Modules.Leave.Api.Controllers;
 
 public sealed record CloneLeaveRuleSetRequest(string Name);
 
+public sealed record RenameLeaveRuleSetRequest(string Name);
+
+public sealed record AssignLeaveRuleSetRequest(IReadOnlyList<Guid> EmployeeIds);
+
+public sealed record LeaveRuleSetAssignmentWarningResponse(Guid EmployeeId, string Code, string Message);
+
+public sealed record LeaveRuleSetAssignmentResponse(int AssignedCount, IReadOnlyList<LeaveRuleSetAssignmentWarningResponse> Warnings);
+
 public sealed record SetLeaveTypeDisabledRequest(bool Disabled);
 
-public sealed record LeaveRequestBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description);
+/// <summary>Self-service submit/edit body; <c>PreviousRequestId</c> (submit only) re-submits the caller's rejected request.</summary>
+public sealed record LeaveRequestBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null);
+
+public sealed record CancelLeaveRequestBody(string Reason);
 
 public sealed record LeaveRequestOnBehalfBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval);
 
@@ -46,6 +58,27 @@ public sealed class LeaveRuleSetsController : ApiControllerBase
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Clone(Guid id, [FromBody] CloneLeaveRuleSetRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new CloneLeaveRuleSetCommand(id, request.Name), ct));
+
+    [HttpPut(ApiRoutes.IdParam + "/name")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Rename(Guid id, [FromBody] RenameLeaveRuleSetRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RenameLeaveRuleSetCommand(id, request.Name), ct));
+
+    [HttpPost(ApiRoutes.IdParam + "/set-default")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetDefault(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetDefaultLeaveRuleSetCommand(id), ct));
+
+    [HttpDelete(ApiRoutes.IdParam)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteLeaveRuleSetCommand(id), ct));
+
+    /// <summary>Assigns the rule set to employees and recalculates their balances; warnings are non-blocking.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/assign")]
+    [ProducesResponseType<LeaveRuleSetAssignmentResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Assign(Guid id, [FromBody] AssignLeaveRuleSetRequest request, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Send(new AssignLeaveRuleSetCommand(id, request.EmployeeIds ?? []), ct)).Localize(localizer));
 
     [HttpPost(ApiRoutes.IdParam + "/types")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
@@ -77,6 +110,27 @@ internal static class LeaveTextLocalizer
             ? result
             : Result.Success<IReadOnlyList<RequestableLeaveTypeDto>>(result.Value.Select(t => t with { Name = localizer.MessageOrText(t.Name) }).ToList());
 
+    public static Result<LeaveRequestDetailDto> Localize(this Result<LeaveRequestDetailDto> result, IErrorLocalizer localizer) =>
+        result.IsFailure || result.Value.LeaveTypeName is null
+            ? result
+            : result.Value with { LeaveTypeName = localizer.MessageOrText(result.Value.LeaveTypeName) };
+
+    public static Result<IReadOnlyList<LeaveCalendarEntryDto>> Localize(this Result<IReadOnlyList<LeaveCalendarEntryDto>> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result
+            : Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>(
+                result.Value.Select(e => e with { LeaveTypeName = e.LeaveTypeName is null ? null : localizer.MessageOrText(e.LeaveTypeName) }).ToList());
+
+    public static Result<LeaveRuleSetAssignmentResponse> Localize(this Result<LeaveRuleSetAssignmentResult> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result.Error
+            : new LeaveRuleSetAssignmentResponse(
+                result.Value.AssignedCount,
+                result.Value.Warnings
+                    .Select(w => new LeaveRuleSetAssignmentWarningResponse(
+                        w.EmployeeId, w.Code, localizer.Message(Error.Validation(w.Code, ("leaveType", localizer.MessageOrText(w.LeaveTypeName))))))
+                    .ToList());
+
     /// <summary>Warnings stay codes (web can branch on them) but the message is localized alongside.</summary>
     public static Result<LeaveRequestPreviewResponse> Localize(this Result<LeaveRequestPreviewDto> result, IErrorLocalizer localizer) =>
         result.IsFailure
@@ -105,6 +159,17 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<LeaveRequestDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Requests(Guid employeeId, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
         FromResult((await Dispatcher.Query(new ListEmployeeLeaveRequestsQuery(employeeId), ct)).Localize(localizer));
+
+    [HttpGet("requests/" + ApiRoutes.IdParam)]
+    [ProducesResponseType<LeaveRequestDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RequestDetail(Guid employeeId, Guid id, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new GetEmployeeLeaveRequestQuery(employeeId, id), ct)).Localize(localizer));
+
+    /// <summary>Cancels a pending or approved leave (decision #16: approved leave is cancelled, never edited).</summary>
+    [HttpPost("requests/" + ApiRoutes.IdParam + "/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Cancel(Guid employeeId, Guid id, [FromBody] CancelLeaveRequestBody request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CancelLeaveRequestCommand(employeeId, id, request.Reason), ct));
 
     /// <summary>İşlemler → İzin Ekle.</summary>
     [HttpPost("requests")]
@@ -161,6 +226,11 @@ public sealed class MyLeaveController : ApiControllerBase
     public async Task<IActionResult> Requests([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
         FromResult((await Dispatcher.Query(new ListMyLeaveRequestsQuery(), ct)).Localize(localizer));
 
+    [HttpGet("requests/" + ApiRoutes.IdParam)]
+    [ProducesResponseType<LeaveRequestDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RequestDetail(Guid id, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new GetMyLeaveRequestQuery(id), ct)).Localize(localizer));
+
     [HttpGet("requests/preview")]
     [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Preview(
@@ -171,7 +241,8 @@ public sealed class MyLeaveController : ApiControllerBase
     [HttpPost("requests")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Submit([FromBody] LeaveRequestBody request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new SubmitLeaveRequestCommand(request.LeaveTypeId, request.StartDate, request.EndDate, request.Description), ct));
+        FromResult(await Dispatcher.Send(
+            new SubmitLeaveRequestCommand(request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId), ct));
 
     [HttpPut("requests/" + ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -182,6 +253,19 @@ public sealed class MyLeaveController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Withdraw(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new WithdrawLeaveRequestCommand(id), ct));
+}
+
+/// <summary>İzin takvimi: pending/approved leave of the employees the caller may see.</summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route("api/v{version:apiVersion}/leave/calendar")]
+[Authorize]
+public sealed class LeaveCalendarController : ApiControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<LeaveCalendarEntryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(
+        [FromQuery] DateOnly from, [FromQuery] DateOnly to, [FromQuery] Guid? orgUnitId, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new GetLeaveCalendarQuery(from, to, orgUnitId), ct)).Localize(localizer));
 }
 
 public sealed record OvertimeRequestBody(DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description);

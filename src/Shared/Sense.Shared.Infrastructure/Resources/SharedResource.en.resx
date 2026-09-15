@@ -526,4 +526,14 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="leave.requests.create_on_behalf" xml:space="preserve"><value>Add leave for employees</value></data>
   <data name="leave.requests.bypass_approval" xml:space="preserve"><value>Approve leave without the approval process</value></data>
   <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>You are not allowed to record leave without the approval process.</value></data>
+  <data name="leave.requests.cancel_approved" xml:space="preserve"><value>Cancel leave requests</value></data>
+  <data name="leave.my.calendar" xml:space="preserve"><value>View the leave calendar</value></data>
+  <data name="leave.calendar.read" xml:space="preserve"><value>View the team leave calendar</value></data>
+  <data name="leave.errors.request_not_cancellable" xml:space="preserve"><value>Only pending or approved leave requests can be cancelled.</value></data>
+  <data name="leave.errors.cancellation_reason_required" xml:space="preserve"><value>A cancellation reason is required (at most 500 characters).</value></data>
+  <data name="leave.errors.rule_set_is_default" xml:space="preserve"><value>The default leave rule set cannot be deleted.</value></data>
+  <data name="leave.errors.rule_set_has_employees" xml:space="preserve"><value>A leave rule set assigned to employees cannot be deleted.</value></data>
+  <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Only your own rejected leave request can be resubmitted.</value></data>
+  <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>The calendar range can be at most {max} days.</value></data>
+  <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
 </root>

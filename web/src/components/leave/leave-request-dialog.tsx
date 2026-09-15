@@ -23,6 +23,8 @@ export interface LeaveRequestTypeOption {
 
 interface LeaveRequestDialogProps {
   editing: LeaveRequest | null;
+  /** Prefills the form from an existing request without editing it (resubmitting a rejected request). */
+  prefill?: LeaveRequest | null;
   types: LeaveRequestTypeOption[];
   title: string;
   description: string;
@@ -52,6 +54,7 @@ function useDebounced<T>(value: T, delayMs: number): T {
 /** "+ Talep" / "İzin Ekle": leave type, dates, description, live day count preview and (on behalf) the bypass-approval switch. */
 export function LeaveRequestDialog({
   editing,
+  prefill = null,
   types,
   title,
   description: dialogDescription,
@@ -66,21 +69,22 @@ export function LeaveRequestDialog({
 }: LeaveRequestDialogProps) {
   const { t } = useTranslation(["leave", "common"]);
   const days = useDays();
-  const [leaveTypeId, setLeaveTypeId] = useState(editing?.leaveTypeId ?? (types.length === 1 ? types[0].id : ""));
-  const [startDate, setStartDate] = useState(editing?.startDate ?? "");
-  const [endDate, setEndDate] = useState(editing?.endDate ?? "");
-  const [description, setDescription] = useState(editing?.description ?? "");
+  const source = editing ?? prefill;
+  const [leaveTypeId, setLeaveTypeId] = useState(source?.leaveTypeId ?? (types.length === 1 ? types[0].id : ""));
+  const [startDate, setStartDate] = useState(source?.startDate ?? "");
+  const [endDate, setEndDate] = useState(source?.endDate ?? "");
+  const [description, setDescription] = useState(source?.description ?? "");
   const [bypassApproval, setBypassApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // A pending request's type may be missing from the list (e.g. no longer self-service); keep it selectable.
   const options =
-    editing && !types.some((type) => type.id === editing.leaveTypeId)
+    source && !types.some((type) => type.id === source.leaveTypeId)
       ? [
           ...types,
           {
-            id: editing.leaveTypeId,
-            name: editing.leaveTypeName ?? t(`leave:code.${editing.leaveTypeCode}`),
+            id: source.leaveTypeId,
+            name: source.leaveTypeName ?? t(`leave:code.${source.leaveTypeCode}`),
             description: null,
             requiresDescription: false,
             perRequestMaxDays: null,

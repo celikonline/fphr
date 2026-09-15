@@ -10,6 +10,8 @@
     "employees": "Employees",
     "leaves": "Leave",
     "calendar": "Calendar",
+    "overtimes": "Overtime",
+    "leaveRules": "Leave policies",
     "requests": "Requests",
     "apps": "Apps",
     "toggleSidebar": "Toggle sidebar",

@@ -26,6 +26,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<ILeaveDayCalculator, LeaveDayCalculator>();
         services.AddScoped<LeaveRequestRules>();
         services.AddScoped<OvertimeRequestRules>();
+        services.AddScoped<LeaveRequestDetailBuilder>();
         return services;
     }
 

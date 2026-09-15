@@ -73,7 +73,7 @@ export function LeaveStatusBadge({ status }: { status: LeaveRequestStatus }) {
   return <Badge variant={STATUS_VARIANT[status]}>{t(`leave:status.${status}`)}</Badge>;
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
       <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -88,11 +88,14 @@ export function LeaveBalanceSummary({
   isLoading,
   emptyMessage,
   action,
+  ruleSet,
 }: {
   data: EmployeeLeaveBalances | undefined;
   isLoading: boolean;
   emptyMessage?: string;
   action?: ReactNode;
+  /** Rule set field (name plus an optional change action), shown next to the hire dates. */
+  ruleSet?: ReactNode;
 }) {
   const { t, i18n } = useTranslation(["leave"]);
   const leaveName = useLeaveName();
@@ -118,6 +121,7 @@ export function LeaveBalanceSummary({
             <dl className="grid gap-4 sm:grid-cols-3">
               <Field label={t("leave:summary.hireDate")}>{date(data.hireDate)}</Field>
               <Field label={t("leave:summary.accrualStartDate")}>{date(data.leaveAccrualStartDate)}</Field>
+              {ruleSet && <Field label={t("leave:summary.ruleSet")}>{ruleSet}</Field>}
             </dl>
             {data.balances.length === 0 ? (
               <p className="text-sm text-muted-foreground">{t("leave:summary.noBalances")}</p>
@@ -255,15 +259,20 @@ export function LeaveLedgerDialog({
   );
 }
 
-/** Requests list (Tür, Başlangıç, Bitiş, Gün, Durum, Kaynak, Açıklama); `actions` renders a trailing cell per row. */
+/**
+ * Requests list (Tür, Başlangıç, Bitiş, Gün, Durum, Kaynak, Açıklama); `actions` renders a trailing cell per row and
+ * `onOpen` makes rows open the request detail.
+ */
 export function LeaveRequestsTable({
   requests,
   typeName,
   actions,
+  onOpen,
 }: {
   requests: LeaveRequest[];
   typeName: (request: LeaveRequest) => string;
   actions?: (request: LeaveRequest) => ReactNode;
+  onOpen?: (request: LeaveRequest) => void;
 }) {
   const { t, i18n } = useTranslation(["leave"]);
   const days = useDays();
@@ -289,19 +298,43 @@ export function LeaveRequestsTable({
       </TableHeader>
       <TableBody>
         {sorted.map((request) => (
-          <TableRow key={request.id}>
-            <TableCell className="font-medium">{typeName(request)}</TableCell>
+          <TableRow
+            key={request.id}
+            className={onOpen ? "cursor-pointer" : undefined}
+            onClick={onOpen ? () => onOpen(request) : undefined}
+          >
+            <TableCell className="font-medium">
+              {onOpen ? (
+                <button
+                  type="button"
+                  className="text-left hover:underline"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onOpen(request);
+                  }}
+                >
+                  {typeName(request)}
+                </button>
+              ) : (
+                typeName(request)
+              )}
+            </TableCell>
             <TableCell className="whitespace-nowrap">{formatDateOnly(request.startDate, i18n.language)}</TableCell>
             <TableCell className="whitespace-nowrap">{formatDateOnly(request.endDate, i18n.language)}</TableCell>
             <TableCell className="text-right">{days(request.calculatedDays)}</TableCell>
             <TableCell>
               <LeaveStatusBadge status={request.status} />
+              {request.status === "cancelled" && request.cancellationReason && (
+                <p className="mt-1 max-w-[12rem] truncate text-xs text-muted-foreground" title={request.cancellationReason}>
+                  {request.cancellationReason}
+                </p>
+              )}
             </TableCell>
             <TableCell>{t(`leave:requestSource.${request.source}`)}</TableCell>
             <TableCell className="max-w-[16rem] truncate" title={request.description ?? undefined}>
               {request.description ?? "—"}
             </TableCell>
-            {actions && <TableCell>{actions(request)}</TableCell>}
+            {actions && <TableCell onClick={(event) => event.stopPropagation()}>{actions(request)}</TableCell>}
           </TableRow>
         ))}
       </TableBody>

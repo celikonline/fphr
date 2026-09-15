@@ -184,8 +184,12 @@ public sealed class LeaveRequestConfiguration : IEntityTypeConfiguration<LeaveRe
         b.Property(x => x.CalculatedDays).HasPrecision(LeaveTables.DaysPrecision, LeaveTables.DaysScale);
         b.Property(x => x.Description).HasMaxLength(LeaveLimits.DescriptionMaxLength);
         b.Property(x => x.SubmittedIpAddress).HasMaxLength(LeaveTables.IpAddressLength);
+        b.Property(x => x.CancellationReason).HasMaxLength(LeaveLimits.CancellationReasonMaxLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.StartDate });
         b.HasIndex(x => new { x.TenantId, x.ApprovalRequestId });
+
+        // Leave calendar: active requests overlapping a date window.
+        b.HasIndex(x => new { x.TenantId, x.StartDate, x.EndDate });
         b.Ignore(x => x.IsActive);
         b.Ignore(x => x.DomainEvents);
     }
