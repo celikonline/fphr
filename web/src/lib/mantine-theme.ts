@@ -1,4 +1,4 @@
-import { createTheme, type CSSVariablesResolver, type MantineColorsTuple } from "@mantine/core";
+import { createTheme, type MantineColorsTuple } from "@mantine/core";
 
 /** App primary blue (the `--primary` token, hsl(217 91% 60%) = #3b82f6 at index 5). */
 const brandBlue: MantineColorsTuple = [
@@ -28,32 +28,29 @@ const algosenseGreen: MantineColorsTuple = [
   "#063c24",
 ];
 
+/**
+ * Neutral near-black dark scheme (Mantine reads text from dark-0, dimmed from dark-2, borders from dark-4,
+ * inputs/cards from dark-6 and the page body from dark-7), close to the app's previous dark look.
+ */
+const neutralDark: MantineColorsTuple = [
+  "#e5e5e5",
+  "#c4c4c4",
+  "#a3a3a3",
+  "#737373",
+  "#2e2e2e",
+  "#242424",
+  "#171717",
+  "#0a0a0a",
+  "#050505",
+  "#000000",
+];
+
 export const mantineTheme = createTheme({
   primaryColor: "brandBlue",
   primaryShade: { light: 6, dark: 5 },
-  colors: { brandBlue, algosenseGreen },
+  colors: { brandBlue, algosenseGreen, dark: neutralDark },
   fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif',
   headings: { fontFamily: '"Inter", ui-sans-serif, system-ui, sans-serif' },
   defaultRadius: "md",
   cursorType: "pointer",
-});
-
-/**
- * Points Mantine's surface/text/border variables at the app tokens in `styles/index.css`, so Mantine
- * components and the remaining Tailwind markup share one palette in both color schemes.
- */
-export const mantineCssVariablesResolver: CSSVariablesResolver = () => ({
-  variables: {},
-  light: {
-    "--mantine-color-body": "var(--background)",
-    "--mantine-color-text": "var(--foreground)",
-    "--mantine-color-dimmed": "var(--muted-foreground)",
-    "--mantine-color-default-border": "var(--border)",
-  },
-  dark: {
-    "--mantine-color-body": "var(--background)",
-    "--mantine-color-text": "var(--foreground)",
-    "--mantine-color-dimmed": "var(--muted-foreground)",
-    "--mantine-color-default-border": "var(--border)",
-  },
 });
