@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Download, ScrollText, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -160,11 +161,11 @@ export default function AuditLogPage() {
           </div>
           <div>
             <Label htmlFor="audit-from">{t("audit:from")}</Label>
-            <Input id="audit-from" type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DatePicker id="audit-from" value={from} max={to || undefined} clearable onChange={setFrom} />
           </div>
           <div>
             <Label htmlFor="audit-to">{t("audit:to")}</Label>
-            <Input id="audit-to" type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DatePicker id="audit-to" value={to} min={from || undefined} clearable onChange={setTo} />
           </div>
           {hasFilters && (
             <Button type="button" variant="ghost" size="sm" onClick={clearFilters}>

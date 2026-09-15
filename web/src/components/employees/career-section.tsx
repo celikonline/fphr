@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -399,13 +399,7 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
                 {t("employees:fields.positionStartDate")}
                 <span className="text-destructive"> *</span>
               </Label>
-              <Input
-                id="career-validFrom"
-                type="date"
-                value={validFrom}
-                disabled={mutation.isPending || !isLatest}
-                onChange={(e) => setValidFrom(e.target.value)}
-              />
+              <DatePicker id="career-validFrom" value={validFrom} disabled={mutation.isPending || !isLatest} onChange={setValidFrom} />
               <p className="mt-1 text-xs text-muted-foreground">
                 {isLatest ? t("employees:career.validFromHint") : t("employees:career.validFromLocked")}
               </p>

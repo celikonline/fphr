@@ -41,6 +41,8 @@
   "of": "of",
   "rowsPerPage": "Rows per page",
   "required": "This field is required",
+  "pickDate": "Pick a date",
+  "clear": "Clear",
   "close": "Close",
   "back": "Back",
   "yes": "Yes",

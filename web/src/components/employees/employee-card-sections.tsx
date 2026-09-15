@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -262,12 +263,12 @@ export function GeneralSection({ employee }: SectionProps) {
             </div>
             <div>
               <Label htmlFor="card-general-leaveAccrualStartDate">{t("employees:fields.leaveAccrualStartDate")}</Label>
-              <Input
+              <DatePicker
                 id="card-general-leaveAccrualStartDate"
-                type="date"
                 value={leaveAccrualStartDate}
                 disabled={mutation.isPending}
-                onChange={(e) => setLeaveAccrualStartDate(e.target.value)}
+                clearable
+                onChange={setLeaveAccrualStartDate}
               />
               <p className="mt-1 text-xs text-muted-foreground">{t("employees:card.leaveAccrualStartDateHint")}</p>
             </div>
