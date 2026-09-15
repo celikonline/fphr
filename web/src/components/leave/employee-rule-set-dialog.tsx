@@ -1,11 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button, Group, Modal, Select, Skeleton, Stack, Text } from "@mantine/core";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { assignLeaveRuleSet, listLeaveRuleSets, type LeaveRuleSetAssignmentResult } from "@/services/leave.service";
 import { useLeaveName } from "./leave-shared";
@@ -48,47 +44,51 @@ export function ChangeEmployeeRuleSetDialog({ employeeId, employeeName, currentR
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:ruleSetChange.title")}</DialogTitle>
-          <DialogDescription>{t("leave:ruleSetChange.description", { name: employeeName })}</DialogDescription>
-        </DialogHeader>
+    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSetChange.title")}>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {t("leave:ruleSetChange.description", { name: employeeName })}
+        </Text>
         {setsQuery.isLoading ? (
-          <Skeleton className="h-10 w-full" />
+          <Skeleton h={40} />
         ) : setsQuery.isError ? (
-          <p className="text-sm text-destructive">{getApiErrorMessage(setsQuery.error, t("leave:genericError"))}</p>
+          <Text size="sm" c="red">
+            {getApiErrorMessage(setsQuery.error, t("leave:genericError"))}
+          </Text>
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            <div>
-              <Label htmlFor="employee-rule-set">{t("leave:summary.ruleSet")}</Label>
-              <Select value={ruleSetId} onValueChange={setRuleSetId} disabled={busy}>
-                <SelectTrigger id="employee-rule-set">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(setsQuery.data ?? []).map((set) => (
-                    <SelectItem key={set.id} value={set.id}>
-                      {leaveName(set.name)}
-                      {set.isDefault ? ` (${t("leave:ruleSets.default")})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">{t("leave:ruleSetChange.hint")}</p>
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-                {t("common:cancel")}
-              </Button>
-              <Button type="submit" disabled={busy}>
-                {busy ? t("common:saving") : t("common:save")}
-              </Button>
-            </DialogFooter>
+          <form onSubmit={submit}>
+            <Stack gap="md">
+              <Select
+                id="employee-rule-set"
+                label={t("leave:summary.ruleSet")}
+                description={t("leave:ruleSetChange.hint")}
+                inputWrapperOrder={["label", "input", "description", "error"]}
+                value={ruleSetId}
+                onChange={(value) => value && setRuleSetId(value)}
+                allowDeselect={false}
+                disabled={busy}
+                data={(setsQuery.data ?? []).map((set) => ({
+                  value: set.id,
+                  label: `${leaveName(set.name)}${set.isDefault ? ` (${t("leave:ruleSets.default")})` : ""}`,
+                }))}
+              />
+              {error && (
+                <Text size="sm" c="red" role="alert">
+                  {error}
+                </Text>
+              )}
+              <Group justify="flex-end" gap="xs">
+                <Button type="button" variant="default" onClick={onClose} disabled={busy}>
+                  {t("common:cancel")}
+                </Button>
+                <Button type="submit" loading={busy}>
+                  {busy ? t("common:saving") : t("common:save")}
+                </Button>
+              </Group>
+            </Stack>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </Stack>
+    </Modal>
   );
 }

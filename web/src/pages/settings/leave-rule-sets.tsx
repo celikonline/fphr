@@ -2,24 +2,34 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Copy, Pencil, ScrollText, Search, Star, Trash2, UserPlus, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  CloseButton,
+  Group,
+  List,
+  Modal,
+  NavLink,
+  Paper,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { AlertTriangle, Copy, Pencil, ScrollText, Search, Star, Trash2, UserPlus } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { useDays, useLeaveName } from "@/components/leave/leave-shared";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { cn } from "@/lib/utils";
 import { listEmployees } from "@/services/employees.service";
 import {
   assignLeaveRuleSet,
@@ -98,114 +108,131 @@ function LeaveRuleSets() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <ScrollText className="h-6 w-6" /> {t("leave:ruleSets.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("leave:ruleSets.subtitle")}</p>
+        <Title order={1} size="h2" className="flex items-center gap-2">
+          <ScrollText size={24} /> {t("leave:ruleSets.title")}
+        </Title>
+        <Text c="dimmed">{t("leave:ruleSets.subtitle")}</Text>
       </div>
 
       {query.isLoading ? (
         <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-64 w-full" />
+          <Skeleton h={256} />
+          <Skeleton h={256} />
         </div>
       ) : query.isError ? (
-        <p className="text-sm text-destructive">{getApiErrorMessage(query.error, t("leave:genericError"))}</p>
+        <Text size="sm" c="red">
+          {getApiErrorMessage(query.error, t("leave:genericError"))}
+        </Text>
       ) : sets.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("leave:ruleSets.empty")}</p>
+        <Text size="sm" c="dimmed">
+          {t("leave:ruleSets.empty")}
+        </Text>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-          <Card className="h-fit">
-            <CardContent className="space-y-1 p-2">
+          <Card withBorder padding="xs" className="h-fit">
+            <Stack gap={4}>
               {sets.map((set) => {
                 const inactive = set.types.filter((type) => type.settings.isDisabled).length;
                 return (
-                  <button
+                  <NavLink
                     key={set.id}
+                    component="button"
                     type="button"
+                    active={selected?.id === set.id}
+                    variant="light"
                     onClick={() => setSelectedId(set.id)}
-                    className={cn(
-                      "w-full rounded-md border-l-4 px-3 py-2 text-left text-sm hover:bg-muted",
-                      set.isDefault ? "border-l-primary" : "border-l-transparent",
-                      selected?.id === set.id && "bg-muted",
-                    )}
-                  >
-                    <div className="flex flex-wrap items-center gap-1.5 font-medium">
-                      {leaveName(set.name)}
-                      {set.isDefault && <Badge>{t("leave:ruleSets.default")}</Badge>}
-                      {set.isSystemSeed && <Badge variant="outline">{t("leave:ruleSets.systemSeed")}</Badge>}
-                    </div>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {t("leave:ruleSets.typeCount", { active: set.types.length - inactive, inactive })} ·{" "}
-                      {t("leave:ruleSets.assignedCount", { count: set.assignedEmployeeCount })}
-                    </p>
-                  </button>
+                    style={{
+                      borderRadius: "var(--mantine-radius-md)",
+                      borderInlineStart: `4px solid ${set.isDefault ? "var(--mantine-primary-color-filled)" : "transparent"}`,
+                    }}
+                    label={
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <Text span size="sm" fw={500}>
+                          {leaveName(set.name)}
+                        </Text>
+                        {set.isDefault && <Badge size="sm">{t("leave:ruleSets.default")}</Badge>}
+                        {set.isSystemSeed && (
+                          <Badge size="sm" variant="outline" color="gray">
+                            {t("leave:ruleSets.systemSeed")}
+                          </Badge>
+                        )}
+                      </span>
+                    }
+                    description={`${t("leave:ruleSets.typeCount", { active: set.types.length - inactive, inactive })} · ${t("leave:ruleSets.assignedCount", { count: set.assignedEmployeeCount })}`}
+                  />
                 );
               })}
-            </CardContent>
+            </Stack>
           </Card>
 
           {selected && (
-            <Card>
-              <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 space-y-0 pb-3">
-                <CardTitle className="text-lg">
+            <Card withBorder padding="lg">
+              <Group justify="space-between" gap="xs" mb="md">
+                <Title order={4}>
                   {leaveName(selected.name)} — {t("leave:ruleSets.typesTitle")}
-                </CardTitle>
+                </Title>
                 {(canManage || canAssign) && (
-                  <div className="flex flex-wrap items-center gap-2">
+                  <Group gap="xs">
                     {canAssign && (
-                      <Button type="button" size="sm" variant="outline" onClick={() => setAssigning(selected)}>
-                        <UserPlus className="mr-2 h-4 w-4" /> {t("leave:ruleSets.assign")}
+                      <Button type="button" size="sm" variant="default" leftSection={<UserPlus size={16} />} onClick={() => setAssigning(selected)}>
+                        {t("leave:ruleSets.assign")}
                       </Button>
                     )}
                     {canManage && (
                       <>
-                        <Button type="button" size="sm" variant="outline" onClick={() => setRenaming(selected)}>
-                          <Pencil className="mr-2 h-4 w-4" /> {t("leave:ruleSets.rename")}
+                        <Button type="button" size="sm" variant="default" leftSection={<Pencil size={16} />} onClick={() => setRenaming(selected)}>
+                          {t("leave:ruleSets.rename")}
                         </Button>
                         {!selected.isDefault && (
                           <Button
                             type="button"
                             size="sm"
-                            variant="outline"
+                            variant="default"
+                            leftSection={<Star size={16} />}
                             disabled={setDefaultMutation.isPending}
                             onClick={() => setDefaultMutation.mutate(selected)}
                           >
-                            <Star className="mr-2 h-4 w-4" /> {t("leave:ruleSets.makeDefault")}
+                            {t("leave:ruleSets.makeDefault")}
                           </Button>
                         )}
-                        <Button type="button" size="sm" variant="outline" onClick={() => setCloning(selected)}>
-                          <Copy className="mr-2 h-4 w-4" /> {t("leave:ruleSets.clone")}
+                        <Button type="button" size="sm" variant="default" leftSection={<Copy size={16} />} onClick={() => setCloning(selected)}>
+                          {t("leave:ruleSets.clone")}
                         </Button>
                         {deleteBlockedReason ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              {/* Disabled buttons swallow pointer events; the wrapper carries the tooltip. */}
-                              <span tabIndex={0} aria-label={deleteBlockedReason}>
-                                <Button type="button" size="sm" variant="outline" disabled className="pointer-events-none">
-                                  <Trash2 className="mr-2 h-4 w-4" /> {t("common:delete")}
-                                </Button>
-                              </span>
-                            </TooltipTrigger>
-                            <TooltipContent>{deleteBlockedReason}</TooltipContent>
+                          <Tooltip label={deleteBlockedReason} multiline maw={280}>
+                            {/* Disabled buttons swallow pointer events; the wrapper carries the tooltip. */}
+                            <span tabIndex={0} aria-label={deleteBlockedReason}>
+                              <Button type="button" size="sm" variant="default" leftSection={<Trash2 size={16} />} disabled style={{ pointerEvents: "none" }}>
+                                {t("common:delete")}
+                              </Button>
+                            </span>
                           </Tooltip>
                         ) : (
-                          <Button type="button" size="sm" variant="outline" className="text-destructive" onClick={() => setDeleting(selected)}>
-                            <Trash2 className="mr-2 h-4 w-4" /> {t("common:delete")}
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="default"
+                            c="red"
+                            leftSection={<Trash2 size={16} />}
+                            onClick={() => setDeleting(selected)}
+                          >
+                            {t("common:delete")}
                           </Button>
                         )}
                       </>
                     )}
-                  </div>
+                  </Group>
                 )}
-              </CardHeader>
-              <CardContent className="overflow-x-auto">
+              </Group>
+              <div className="overflow-x-auto">
                 {selected.types.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">{t("leave:ruleSets.noTypes")}</p>
+                  <Text size="sm" c="dimmed">
+                    {t("leave:ruleSets.noTypes")}
+                  </Text>
                 ) : (
                   <LeaveTypesTable set={selected} />
                 )}
-              </CardContent>
+              </div>
             </Card>
           )}
         </div>
@@ -263,38 +290,37 @@ function RenameRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:ruleSets.renameTitle")}</DialogTitle>
-          <DialogDescription>{t("leave:ruleSets.renameDescription", { name: leaveName(set.name) })}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label htmlFor="rule-set-rename">
-              {t("leave:ruleSets.name")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Input
-              id="rule-set-rename"
-              value={name}
-              maxLength={NAME_MAX_LENGTH}
-              disabled={mutation.isPending}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.renameTitle")}>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("leave:ruleSets.renameDescription", { name: leaveName(set.name) })}
+          </Text>
+          <TextInput
+            id="rule-set-rename"
+            label={t("leave:ruleSets.name")}
+            withAsterisk
+            value={name}
+            maxLength={NAME_MAX_LENGTH}
+            disabled={mutation.isPending}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="xs">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" loading={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -349,102 +375,135 @@ function AssignRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("leave:ruleSets.assignTitle")}</DialogTitle>
-          <DialogDescription>{t("leave:ruleSets.assignDescription", { name: leaveName(set.name) })}</DialogDescription>
-        </DialogHeader>
+    <Modal opened onClose={onClose} size="32rem" title={t("leave:ruleSets.assignTitle")}>
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {t("leave:ruleSets.assignDescription", { name: leaveName(set.name) })}
+        </Text>
         {result ? (
-          <div className="space-y-4">
-            <p className="text-sm font-medium">{t("leave:ruleSets.assignedResult", { count: result.assignedCount })}</p>
+          <Stack gap="md">
+            <Text size="sm" fw={500}>
+              {t("leave:ruleSets.assignedResult", { count: result.assignedCount })}
+            </Text>
             {result.warnings.length > 0 && (
-              <div className="space-y-2 rounded-md border border-amber-500/50 bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-                <p className="font-medium">{t("leave:ruleSets.assignWarnings", { count: result.warnings.length })}</p>
-                <ul className="list-disc space-y-1 pl-5">
+              <Alert
+                color="yellow"
+                variant="light"
+                icon={<AlertTriangle size={16} />}
+                title={t("leave:ruleSets.assignWarnings", { count: result.warnings.length })}
+              >
+                <List size="sm" spacing={4}>
                   {result.warnings.map((warning) => (
-                    <li key={`${warning.employeeId}-${warning.code}`}>
-                      <span className="font-medium">{selected.get(warning.employeeId) ?? warning.employeeId}</span>: {warning.message}
-                    </li>
+                    <List.Item key={`${warning.employeeId}-${warning.code}`}>
+                      <Text span inherit fw={500}>
+                        {selected.get(warning.employeeId) ?? warning.employeeId}
+                      </Text>
+                      : {warning.message}
+                    </List.Item>
                   ))}
-                </ul>
-              </div>
+                </List>
+              </Alert>
             )}
-            <DialogFooter>
+            <Group justify="flex-end">
               <Button type="button" onClick={onClose}>
                 {t("common:close")}
               </Button>
-            </DialogFooter>
-          </div>
+            </Group>
+          </Stack>
         ) : (
-          <form onSubmit={submit} className="space-y-4">
-            {chips.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {chips.map(([id, name]) => (
-                  <Badge key={id} variant="secondary" className="gap-1 pr-1">
-                    {name}
-                    <button
-                      type="button"
-                      className="rounded-full p-0.5 hover:bg-background/60"
-                      aria-label={t("leave:ruleSets.assignRemove", { name })}
-                      onClick={() => toggle(id, name, false)}
+          <form onSubmit={submit}>
+            <Stack gap="md">
+              {chips.length > 0 && (
+                <Group gap={6}>
+                  {chips.map(([id, name]) => (
+                    <Badge
+                      key={id}
+                      variant="light"
+                      tt="none"
+                      pr={3}
+                      rightSection={
+                        <CloseButton
+                          size="xs"
+                          radius="xl"
+                          variant="transparent"
+                          aria-label={t("leave:ruleSets.assignRemove", { name })}
+                          onClick={() => toggle(id, name, false)}
+                        />
+                      }
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                className="pl-8"
+                      {name}
+                    </Badge>
+                  ))}
+                </Group>
+              )}
+              <TextInput
+                leftSection={<Search size={16} />}
                 placeholder={t("employees:picker.search")}
+                aria-label={t("employees:picker.search")}
                 value={search}
                 disabled={busy}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearch(e.currentTarget.value)}
               />
-            </div>
-            <div className="max-h-72 overflow-y-auto rounded-md border">
-              {employeesQuery.isLoading ? (
-                <Skeleton className="m-2 h-24" />
-              ) : employeesQuery.isError ? (
-                <p className="p-3 text-sm text-destructive">{getApiErrorMessage(employeesQuery.error, t("leave:genericError"))}</p>
-              ) : (employeesQuery.data?.items ?? []).length === 0 ? (
-                <p className="p-3 text-sm text-muted-foreground">{t("employees:picker.empty")}</p>
-              ) : (
-                (employeesQuery.data?.items ?? []).map((employee) => {
-                  const checkboxId = `assign-${employee.id}`;
-                  return (
-                    <label key={employee.id} htmlFor={checkboxId} className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm hover:bg-accent">
-                      <Checkbox
-                        id={checkboxId}
-                        checked={selected.has(employee.id)}
-                        disabled={busy}
-                        onCheckedChange={(checked) => toggle(employee.id, employee.displayName, checked === true)}
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate">{employee.displayName}</span>
-                        {employee.workEmail && <span className="block truncate text-xs text-muted-foreground">{employee.workEmail}</span>}
-                      </span>
-                    </label>
-                  );
-                })
+              <Paper withBorder>
+                <ScrollArea.Autosize mah={288}>
+                  {employeesQuery.isLoading ? (
+                    <Skeleton h={96} m="xs" w="auto" />
+                  ) : employeesQuery.isError ? (
+                    <Text size="sm" c="red" p="sm">
+                      {getApiErrorMessage(employeesQuery.error, t("leave:genericError"))}
+                    </Text>
+                  ) : (employeesQuery.data?.items ?? []).length === 0 ? (
+                    <Text size="sm" c="dimmed" p="sm">
+                      {t("employees:picker.empty")}
+                    </Text>
+                  ) : (
+                    <Stack gap={0} py={4}>
+                      {(employeesQuery.data?.items ?? []).map((employee) => (
+                        <Checkbox
+                          key={employee.id}
+                          id={`assign-${employee.id}`}
+                          px="sm"
+                          py={8}
+                          checked={selected.has(employee.id)}
+                          disabled={busy}
+                          onChange={(e) => toggle(employee.id, employee.displayName, e.currentTarget.checked)}
+                          styles={{ body: { alignItems: "center" }, labelWrapper: { minWidth: 0, flex: 1 } }}
+                          label={
+                            <>
+                              <Text span size="sm" display="block" truncate="end">
+                                {employee.displayName}
+                              </Text>
+                              {employee.workEmail && (
+                                <Text span size="xs" c="dimmed" display="block" truncate="end">
+                                  {employee.workEmail}
+                                </Text>
+                              )}
+                            </>
+                          }
+                        />
+                      ))}
+                    </Stack>
+                  )}
+                </ScrollArea.Autosize>
+              </Paper>
+              {error && (
+                <Text size="sm" c="red" role="alert">
+                  {error}
+                </Text>
               )}
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-                {t("common:cancel")}
-              </Button>
-              <Button type="submit" disabled={busy || selected.size === 0}>
-                {busy ? t("common:saving") : t("leave:ruleSets.assignSubmit", { count: selected.size })}
-              </Button>
-            </DialogFooter>
+              <Group justify="flex-end" gap="xs">
+                <Button type="button" variant="default" onClick={onClose} disabled={busy}>
+                  {t("common:cancel")}
+                </Button>
+                <Button type="submit" loading={busy} disabled={selected.size === 0}>
+                  {busy ? t("common:saving") : t("leave:ruleSets.assignSubmit", { count: selected.size })}
+                </Button>
+              </Group>
+            </Stack>
           </form>
         )}
-      </DialogContent>
-    </Dialog>
+      </Stack>
+    </Modal>
   );
 }
 
@@ -463,7 +522,9 @@ function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
 
   // Disabled types render muted; DataTable rows take no class, so every cell carries it.
   const text = (row: LeaveTypeRow, value: string) => (
-    <span className={row.settings.isDisabled ? "text-muted-foreground" : undefined}>{value}</span>
+    <Text span inherit c={row.settings.isDisabled ? "dimmed" : undefined}>
+      {value}
+    </Text>
   );
   const accrualText = ({ settings }: LeaveTypeRow) =>
     settings.limitType === "perYear" ? t(`leave:accrualFrequency.${settings.accrualFrequency}`) : "—";
@@ -489,12 +550,16 @@ function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
       accessorFn: (row) => leaveName(row.settings.name),
       enableHiding: false,
       header: t("leave:ruleSets.col.name"),
-      meta: { label: t("leave:ruleSets.col.name"), cellClassName: "font-medium" },
+      meta: { label: t("leave:ruleSets.col.name") },
       cell: ({ row }) => (
-        <div className={row.original.settings.isDisabled ? "text-muted-foreground" : undefined}>
-          {leaveName(row.original.settings.name)}
+        <div>
+          <Text span inherit fw={500} c={row.original.settings.isDisabled ? "dimmed" : undefined}>
+            {leaveName(row.original.settings.name)}
+          </Text>
           {row.original.settings.description && (
-            <p className="mt-0.5 text-xs font-normal text-muted-foreground">{row.original.settings.description}</p>
+            <Text size="xs" c="dimmed" mt={2}>
+              {row.original.settings.description}
+            </Text>
           )}
         </div>
       ),
@@ -514,7 +579,7 @@ function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
       header: t("leave:ruleSets.col.status"),
       meta: { label: t("leave:ruleSets.col.status") },
       cell: ({ row }) => (
-        <Badge variant={row.original.settings.isDisabled ? "outline" : "success"}>
+        <Badge variant={row.original.settings.isDisabled ? "outline" : "filled"} color={row.original.settings.isDisabled ? "gray" : "green"}>
           {row.original.settings.isDisabled ? t("leave:ruleSets.disabled") : t("leave:ruleSets.active")}
         </Badge>
       ),
@@ -529,12 +594,12 @@ function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
   });
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-end">
+    <Stack gap="xs">
+      <Group justify="flex-end">
         <DataTableViewOptions table={table} className="h-9 px-3" />
-      </div>
+      </Group>
       <DataTable table={table} />
-    </div>
+    </Stack>
   );
 }
 
@@ -563,37 +628,36 @@ function CloneRuleSetDialog({ source, onClose, onCloned }: { source: LeaveRuleSe
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:ruleSets.cloneTitle")}</DialogTitle>
-          <DialogDescription>{t("leave:ruleSets.cloneDescription", { name: leaveName(source.name) })}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label htmlFor="rule-set-name">
-              {t("leave:ruleSets.name")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Input
-              id="rule-set-name"
-              value={name}
-              maxLength={NAME_MAX_LENGTH}
-              disabled={mutation.isPending}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.cloneTitle")}>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("leave:ruleSets.cloneDescription", { name: leaveName(source.name) })}
+          </Text>
+          <TextInput
+            id="rule-set-name"
+            label={t("leave:ruleSets.name")}
+            withAsterisk
+            value={name}
+            maxLength={NAME_MAX_LENGTH}
+            disabled={mutation.isPending}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="xs">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" disabled={mutation.isPending}>
+            <Button type="submit" loading={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("leave:ruleSets.clone")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }

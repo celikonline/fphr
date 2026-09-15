@@ -1,18 +1,10 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { Alert, Badge, Button, Divider, Drawer, Group, Modal, Paper, Skeleton, Stack, Text, Textarea } from "@mantine/core";
 import { CheckCircle2, Circle, CircleDot, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Sheet, SheetBody, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
-import { cn } from "@/lib/utils";
 import { cancelLeaveRequest, type LeaveApprovalStep, type LeaveRequest, type LeaveRequestDetail } from "@/services/leave.service";
 import { Field, LeaveStatusBadge, useDays } from "./leave-shared";
 
@@ -38,70 +30,92 @@ export function LeaveRequestDetailSheet({ requestId, scope, load, typeName, foot
   const date = (value: string) => formatDateOnly(value, i18n.language);
 
   return (
-    <Sheet open onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-full sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>{detail ? typeName(detail) : t("leave:detail.title")}</SheetTitle>
-          <SheetDescription>{detail ? detail.employeeName : t("leave:detail.description")}</SheetDescription>
-        </SheetHeader>
-        <SheetBody className="space-y-6">
-          {query.isLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : query.isError || !detail ? (
-            <p className="text-sm text-destructive">{getApiErrorMessage(query.error, t("leave:genericError"))}</p>
-          ) : (
-            <>
-              <dl className="grid grid-cols-2 gap-4">
-                <Field label={t("leave:requests.status")}>
-                  <LeaveStatusBadge status={detail.status} />
-                </Field>
-                <Field label={t("leave:requests.days")}>
-                  {days(detail.calculatedDays)} {t("leave:days")}
-                </Field>
-                <Field label={t("leave:requests.startDate")}>{date(detail.startDate)}</Field>
-                <Field label={t("leave:requests.endDate")}>{date(detail.endDate)}</Field>
-                <Field label={t("leave:requests.source")}>{t(`leave:requestSource.${detail.source}`)}</Field>
-                <Field label={t("leave:detail.revision")}>{detail.revisionNo}</Field>
-                <Field label={t("leave:detail.submittedAt")}>{formatDateTime(detail.submittedAt, i18n.language)}</Field>
-                <Field label={t("leave:detail.decidedAt")}>{formatDateTime(detail.decidedAt, i18n.language)}</Field>
-              </dl>
-              <dl className="grid gap-4">
-                <Field label={t("leave:requests.description")}>
-                  <span className="whitespace-pre-wrap">{detail.description || "—"}</span>
-                </Field>
-                {detail.previousRequestId && (
-                  <p className="text-xs text-muted-foreground">{t("leave:detail.resubmissionOf")}</p>
-                )}
-              </dl>
-              {(detail.status === "cancelled" || detail.cancelledAt) && (
-                <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
-                  <p className="font-medium">
-                    {t("leave:detail.cancelledAt", { at: formatDateTime(detail.cancelledAt, i18n.language) })}
-                  </p>
-                  {detail.cancellationReason && <p className="mt-1 whitespace-pre-wrap text-muted-foreground">{detail.cancellationReason}</p>}
-                </div>
+    <Drawer
+      opened
+      onClose={onClose}
+      position="right"
+      size="32rem"
+      title={
+        <Text component="span" fw={600} size="lg">
+          {detail ? typeName(detail) : t("leave:detail.title")}
+        </Text>
+      }
+      styles={{ body: { paddingBottom: 0 } }}
+    >
+      <Stack gap="lg">
+        <Text size="sm" c="dimmed" mt={-8}>
+          {detail ? detail.employeeName : t("leave:detail.description")}
+        </Text>
+        {query.isLoading ? (
+          <Skeleton h={256} />
+        ) : query.isError || !detail ? (
+          <Text size="sm" c="red">
+            {getApiErrorMessage(query.error, t("leave:genericError"))}
+          </Text>
+        ) : (
+          <>
+            <dl className="grid grid-cols-2 gap-4">
+              <Field label={t("leave:requests.status")}>
+                <LeaveStatusBadge status={detail.status} />
+              </Field>
+              <Field label={t("leave:requests.days")}>
+                {days(detail.calculatedDays)} {t("leave:days")}
+              </Field>
+              <Field label={t("leave:requests.startDate")}>{date(detail.startDate)}</Field>
+              <Field label={t("leave:requests.endDate")}>{date(detail.endDate)}</Field>
+              <Field label={t("leave:requests.source")}>{t(`leave:requestSource.${detail.source}`)}</Field>
+              <Field label={t("leave:detail.revision")}>{detail.revisionNo}</Field>
+              <Field label={t("leave:detail.submittedAt")}>{formatDateTime(detail.submittedAt, i18n.language)}</Field>
+              <Field label={t("leave:detail.decidedAt")}>{formatDateTime(detail.decidedAt, i18n.language)}</Field>
+            </dl>
+            <dl className="grid gap-4">
+              <Field label={t("leave:requests.description")}>
+                <Text span inherit style={{ whiteSpace: "pre-wrap" }}>
+                  {detail.description || "—"}
+                </Text>
+              </Field>
+              {detail.previousRequestId && (
+                <Text size="xs" c="dimmed">
+                  {t("leave:detail.resubmissionOf")}
+                </Text>
               )}
-              <Separator />
-              <ApprovalChain detail={detail} />
-            </>
-          )}
-        </SheetBody>
-        <SheetFooter>
+            </dl>
+            {(detail.status === "cancelled" || detail.cancelledAt) && (
+              <Alert color="red" variant="light" title={t("leave:detail.cancelledAt", { at: formatDateTime(detail.cancelledAt, i18n.language) })}>
+                {detail.cancellationReason && (
+                  <Text size="sm" c="dimmed" style={{ whiteSpace: "pre-wrap" }}>
+                    {detail.cancellationReason}
+                  </Text>
+                )}
+              </Alert>
+            )}
+            <Divider />
+            <ApprovalChain detail={detail} />
+          </>
+        )}
+        <Group
+          justify="flex-end"
+          gap="xs"
+          py="md"
+          className="sticky bottom-0"
+          bg="var(--mantine-color-body)"
+          style={{ borderTop: "1px solid var(--mantine-color-default-border)" }}
+        >
           {detail && footer?.(detail)}
-          <Button type="button" variant="outline" onClick={onClose}>
+          <Button type="button" variant="default" onClick={onClose}>
             {t("common:close")}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </Group>
+      </Stack>
+    </Drawer>
   );
 }
 
 function StepIcon({ step, current }: { step: LeaveApprovalStep; current: boolean }) {
-  if (step.status === "approved") return <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
-  if (step.status === "rejected") return <XCircle className="h-5 w-5 text-destructive" />;
-  if (current) return <CircleDot className="h-5 w-5 text-primary" />;
-  return <Circle className="h-5 w-5 text-muted-foreground" />;
+  if (step.status === "approved") return <CheckCircle2 size={20} color="var(--mantine-color-green-6)" />;
+  if (step.status === "rejected") return <XCircle size={20} color="var(--mantine-color-red-6)" />;
+  if (current) return <CircleDot size={20} color="var(--mantine-primary-color-filled)" />;
+  return <Circle size={20} color="var(--mantine-color-dimmed)" />;
 }
 
 function ApprovalChain({ detail }: { detail: LeaveRequestDetail }) {
@@ -109,15 +123,23 @@ function ApprovalChain({ detail }: { detail: LeaveRequestDetail }) {
   const approval = detail.approval;
 
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold">{t("leave:approval.title")}</h3>
-        {approval && <Badge variant="outline">{t(`leave:approval.status.${approval.status}`, { defaultValue: approval.status })}</Badge>}
-      </div>
+    <section className="flex flex-col gap-3">
+      <Group justify="space-between" gap="xs">
+        <Text component="h3" size="sm" fw={600}>
+          {t("leave:approval.title")}
+        </Text>
+        {approval && (
+          <Badge variant="outline" color="gray">
+            {t(`leave:approval.status.${approval.status}`, { defaultValue: approval.status })}
+          </Badge>
+        )}
+      </Group>
       {!approval || approval.steps.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("leave:approval.none")}</p>
+        <Text size="sm" c="dimmed">
+          {t("leave:approval.none")}
+        </Text>
       ) : (
-        <ol className="space-y-2">
+        <ol className="flex flex-col gap-2">
           {[...approval.steps]
             .sort((a, b) => a.stepNumber - b.stepNumber)
             .map((step) => {
@@ -125,22 +147,28 @@ function ApprovalChain({ detail }: { detail: LeaveRequestDetail }) {
               const approver =
                 step.approverName ?? (step.fallbackRoleCode ? t("leave:approval.role", { role: step.fallbackRoleCode }) : t("leave:approval.unassigned"));
               return (
-                <li
+                <Paper
                   key={step.stepNumber}
-                  className={cn("flex items-start gap-3 rounded-md border p-3", current && "border-primary bg-primary/5")}
+                  component="li"
+                  withBorder
+                  p="sm"
+                  bg={current ? "var(--mantine-primary-color-light)" : undefined}
+                  style={current ? { borderColor: "var(--mantine-primary-color-filled)" } : undefined}
                 >
-                  <StepIcon step={step} current={current} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">
-                      {t("leave:approval.step", { number: step.stepNumber })} · {approver}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t(`leave:approval.stepStatus.${step.status}`, { defaultValue: step.status })}
-                      {" · "}
-                      {step.isRequired ? t("leave:approval.required") : t("leave:approval.optional")}
-                    </p>
-                  </div>
-                </li>
+                  <Group align="flex-start" gap="sm" wrap="nowrap">
+                    <StepIcon step={step} current={current} />
+                    <div className="min-w-0 flex-1">
+                      <Text size="sm" fw={500}>
+                        {t("leave:approval.step", { number: step.stepNumber })} · {approver}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {t(`leave:approval.stepStatus.${step.status}`, { defaultValue: step.status })}
+                        {" · "}
+                        {step.isRequired ? t("leave:approval.required") : t("leave:approval.optional")}
+                      </Text>
+                    </div>
+                  </Group>
+                </Paper>
               );
             })}
         </ol>
@@ -178,43 +206,42 @@ export function CancelLeaveRequestDialog({ employeeId, request, typeName, onClos
   const busy = mutation.isPending;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t("leave:cancel.title")}</DialogTitle>
-          <DialogDescription>
+    <Modal opened onClose={onClose} size="28rem" title={t("leave:cancel.title")}>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
             {t(request.status === "approved" ? "leave:cancel.descriptionApproved" : "leave:cancel.descriptionPending", {
               type: typeName(request),
               start: formatDateOnly(request.startDate, i18n.language),
               end: formatDateOnly(request.endDate, i18n.language),
             })}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <Label htmlFor="cancel-reason">
-              {t("leave:cancel.reason")}
-              <span className="text-destructive"> *</span>
-            </Label>
-            <Textarea
-              id="cancel-reason"
-              value={reason}
-              maxLength={CANCEL_REASON_MAX_LENGTH}
-              disabled={busy}
-              onChange={(e) => setReason(e.target.value)}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
+          </Text>
+          <Textarea
+            id="cancel-reason"
+            label={t("leave:cancel.reason")}
+            withAsterisk
+            value={reason}
+            maxLength={CANCEL_REASON_MAX_LENGTH}
+            disabled={busy}
+            autosize
+            minRows={3}
+            onChange={(e) => setReason(e.currentTarget.value)}
+          />
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="xs">
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" variant="destructive" disabled={busy}>
+            <Button type="submit" color="red" loading={busy}>
               {busy ? t("common:saving") : t("leave:cancel.confirm")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
