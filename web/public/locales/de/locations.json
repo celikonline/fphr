@@ -1,0 +1,21 @@
+{
+  "title": "[DE] Locations",
+  "subtitle": "[DE] Manage your company's physical offices and locations.",
+  "addLocation": "[DE] Add Location",
+  "editLocation": "[DE] Edit location",
+  "deleteLocation": "[DE] Delete location",
+  "dialogCreateTitle": "[DE] New Location",
+  "dialogEditTitle": "[DE] Edit Location",
+  "name": "[DE] Name",
+  "address": "[DE] Address",
+  "timeZone": "[DE] Time Zone",
+  "orgUnit": "[DE] Organization Unit",
+  "noneOrgUnit": "[DE] None",
+  "searchPlaceholder": "[DE] Search locations...",
+  "createSuccess": "[DE] Location created.",
+  "updateSuccess": "[DE] Location updated.",
+  "deleteSuccess": "[DE] Location deleted.",
+  "genericError": "[DE] Something went wrong.",
+  "empty": "[DE] No locations yet.",
+  "deleteConfirmDescription": "[DE] Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+}

@@ -1,0 +1,25 @@
+{
+  "title": "[DE] Audit Log",
+  "subtitle": "[DE] Review user and system activity across the tenant.",
+  "timestamp": "[DE] Timestamp",
+  "actor": "[DE] Actor",
+  "action": "[DE] Action",
+  "resource": "[DE] Resource",
+  "details": "[DE] Details",
+  "allActors": "[DE] All actors",
+  "allActions": "[DE] All actions",
+  "from": "[DE] From",
+  "to": "[DE] To",
+  "searchPlaceholder": "[DE] Search details...",
+  "exportCsv": "[DE] Export CSV",
+  "empty": "[DE] No events found.",
+  "clearFilters": "[DE] Clear filters",
+  "actionTypes": {
+    "create": "[DE] Create",
+    "update": "[DE] Update",
+    "delete": "[DE] Delete",
+    "login": "[DE] Login",
+    "invite": "[DE] Invite",
+    "role_change": "[DE] Role change"
+  }
+}

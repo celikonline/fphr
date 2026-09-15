@@ -137,6 +137,7 @@ function LanguageSwitcher() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => i18n.changeLanguage("tr")}>Türkçe</DropdownMenuItem>
         <DropdownMenuItem onClick={() => i18n.changeLanguage("en")}>English</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => i18n.changeLanguage("de")}>Deutsch</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
