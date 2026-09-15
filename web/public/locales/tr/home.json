@@ -1,5 +1,5 @@
 {
-  "greeting": "Merhaba, {{name}}",
+  "greeting": "Merhaba {{name}}!",
   "subtitle": "Şirketinizde yaklaşan önemli günler.",
   "unavailable": "Bu bilgi şu anda gösterilemiyor.",
   "today": "Bugün",

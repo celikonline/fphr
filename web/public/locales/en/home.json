@@ -1,5 +1,5 @@
 {
-  "greeting": "Hello, {{name}}",
+  "greeting": "Hello {{name}}!",
   "subtitle": "Upcoming important days at your company.",
   "unavailable": "This information can't be shown right now.",
   "today": "Today",
