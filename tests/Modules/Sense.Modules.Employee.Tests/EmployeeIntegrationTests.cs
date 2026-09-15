@@ -230,7 +230,7 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
-    public async Task DepartmentDistribution_GroupsActiveEmployeesByDepartmentLevelAncestorAndExcludesTerminated()
+    public async Task DepartmentDistribution_GroupsActiveEmployeesByDepartmentLevelAncestorAndExcludesOtherStatuses()
     {
         var tenantId = Guid.NewGuid();
         SetUser(tenantId, platformAdmin: true);
@@ -243,6 +243,9 @@ public sealed class EmployeeIntegrationTests : TestFixture
         var dev = await CreateAsync("Deniz", "Geliştirici", orgUnitId: units.Emea, managerId: cto.Id);
         var gone = await CreateAsync("Eski", "Çalışan", orgUnitId: units.Emea);
         await SetStatusAsync(gone.Id, EmployeeStatus.Terminated);
+        var suspended = await CreateAsync("Askı", "Daki", orgUnitId: units.Sales);
+        await SetStatusAsync(suspended.Id, EmployeeStatus.Suspended);
+        await CreateAsync("Taslak", "Aday", orgUnitId: units.Sales, asDraft: true);
 
         var result = (await ExecuteQueryAsync(new GetDepartmentDistributionQuery())).Value;
 
