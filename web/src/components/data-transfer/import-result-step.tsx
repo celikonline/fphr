@@ -2,12 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle, CheckCircle2, Download, Loader2, Upload, XCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
@@ -20,6 +20,7 @@ import {
   listImportJobRows,
   saveDownloadedFile,
   type ImportJob,
+  type ImportJobRow,
   type ImportRowOutcome,
   type ImportTemplate,
   type RowError,
@@ -29,7 +30,7 @@ import { useApiLanguage } from "./use-api-language";
 import WizardSteps from "./wizard-steps";
 
 const ALL = "all";
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 interface ImportResultStepProps {
   job: ImportJob;
@@ -48,16 +49,24 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
   const canDownloadResult = usePermission(DataTransferPermissions.ResultDownload);
   const [outcome, setOutcome] = useState<string>(ALL);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
+  // Rows are server-paged in row-number order (the API has no sort parameter), so columns are not sortable.
   const rowsQuery = useQuery({
-    queryKey: ["datatransfer", "import-job-rows", job.id, outcome, page],
+    queryKey: ["datatransfer", "import-job-rows", job.id, outcome, page, pageSize],
     queryFn: () =>
       listImportJobRows(job.id, {
         outcome: outcome === ALL ? undefined : (outcome as ImportRowOutcome),
         page,
-        pageSize: PAGE_SIZE,
+        pageSize,
       }),
+    placeholderData: (previous) => previous,
   });
+
+  function changePageSize(size: number) {
+    setPageSize(size);
+    setPage(1);
+  }
 
   const downloadMutation = useMutation({
     mutationFn: () => downloadImportJobResult(job.id, resultFileName(job.fileName, t("dataTransfer:result.fileSuffix")), lang),
@@ -76,6 +85,53 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
   };
 
   const errorText = (error: RowError) => error.message || t(`dataTransfer:errorCodes.${error.code}`, error.code);
+
+  const columns: ColumnDef<ImportJobRow>[] = [
+    {
+      id: "rowNumber",
+      enableSorting: false,
+      header: t("dataTransfer:result.rowNumber"),
+      meta: { headerClassName: "w-24 pl-6", cellClassName: "pl-6 tabular-nums" },
+      cell: ({ row }) => row.original.rowNumber,
+    },
+    {
+      id: "matchKey",
+      enableSorting: false,
+      header: t("dataTransfer:result.matchKey"),
+      cell: ({ row }) => row.original.matchKey ?? "—",
+    },
+    {
+      id: "outcome",
+      enableSorting: false,
+      header: t("dataTransfer:result.outcome"),
+      cell: ({ row }) => <RowOutcomeBadge outcome={row.original.outcome} />,
+    },
+    {
+      id: "errors",
+      enableSorting: false,
+      header: t("dataTransfer:result.errorDescription"),
+      meta: { headerClassName: "pr-6", cellClassName: "pr-6" },
+      cell: ({ row }) =>
+        row.original.errors.length === 0 ? (
+          <span className="text-muted-foreground">—</span>
+        ) : (
+          <ul className="space-y-0.5 text-sm">
+            {row.original.errors.map((error, i) => (
+              <li key={i}>
+                {columnLabel(error.column) && <span className="font-medium">{columnLabel(error.column)}: </span>}
+                {errorText(error)}
+              </li>
+            ))}
+          </ul>
+        ),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: rowsQuery.data?.items ?? [],
+    getRowId: (row) => String(row.rowNumber),
+  });
 
   const counters = [
     { key: "total", value: job.totalRows, className: "" },
@@ -161,56 +217,24 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
           </Tabs>
         </CardHeader>
         <CardContent className="p-0">
-          {rowsQuery.isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : rowsQuery.isError ? (
+          {rowsQuery.isError ? (
             <p className="p-6 text-center text-sm text-destructive">{t("dataTransfer:result.rowsLoadError")}</p>
-          ) : !rowsQuery.data || rowsQuery.data.items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("dataTransfer:result.rowsEmpty")}</p>
           ) : (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-24 pl-6">{t("dataTransfer:result.rowNumber")}</TableHead>
-                    <TableHead>{t("dataTransfer:result.matchKey")}</TableHead>
-                    <TableHead>{t("dataTransfer:result.outcome")}</TableHead>
-                    <TableHead className="pr-6">{t("dataTransfer:result.errorDescription")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rowsQuery.data.items.map((row) => (
-                    <TableRow key={row.rowNumber}>
-                      <TableCell className="pl-6 tabular-nums">{row.rowNumber}</TableCell>
-                      <TableCell>{row.matchKey ?? "—"}</TableCell>
-                      <TableCell>
-                        <RowOutcomeBadge outcome={row.outcome} />
-                      </TableCell>
-                      <TableCell className="pr-6">
-                        {row.errors.length === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <ul className="space-y-0.5 text-sm">
-                            {row.errors.map((error, i) => (
-                              <li key={i}>
-                                {columnLabel(error.column) && (
-                                  <span className="font-medium">{columnLabel(error.column)}: </span>
-                                )}
-                                {errorText(error)}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <PaginationFooter result={rowsQuery.data} onPageChange={setPage} />
+              <DataTable
+                table={table}
+                isLoading={rowsQuery.isLoading}
+                isFetching={rowsQuery.isFetching}
+                emptyMessage={t("dataTransfer:result.rowsEmpty")}
+              />
+              {rowsQuery.data && (
+                <PaginationFooter
+                  result={rowsQuery.data}
+                  onPageChange={setPage}
+                  pageSize={pageSize}
+                  onPageSizeChange={changePageSize}
+                />
+              )}
             </>
           )}
         </CardContent>
