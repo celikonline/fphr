@@ -1,26 +1,30 @@
 import { useTranslation } from "react-i18next";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@mantine/core";
 import type { ImportJobStatus, ImportRowOutcome } from "@/services/data-transfer.service";
 
-const STATUS_VARIANT: Record<ImportJobStatus, BadgeProps["variant"]> = {
-  Uploaded: "secondary",
-  Mapped: "outline",
-  Completed: "success",
-  CompletedWithErrors: "default",
-  Failed: "destructive",
+type BadgeLook = Pick<BadgeProps, "variant" | "color">;
+
+const OUTLINE: BadgeLook = { variant: "outline", color: "gray" };
+
+const STATUS_LOOK: Record<ImportJobStatus, BadgeLook> = {
+  Uploaded: { variant: "light", color: "gray" },
+  Mapped: OUTLINE,
+  Completed: { variant: "light", color: "green" },
+  CompletedWithErrors: { variant: "filled" },
+  Failed: { variant: "filled", color: "red" },
 };
 
-const OUTCOME_VARIANT: Record<ImportRowOutcome, BadgeProps["variant"]> = {
-  Inserted: "success",
-  Updated: "default",
-  Skipped: "secondary",
-  Error: "destructive",
+const OUTCOME_LOOK: Record<ImportRowOutcome, BadgeLook> = {
+  Inserted: { variant: "light", color: "green" },
+  Updated: { variant: "filled" },
+  Skipped: { variant: "light", color: "gray" },
+  Error: { variant: "filled", color: "red" },
 };
 
 export function JobStatusBadge({ status }: { status: string }) {
   const { t } = useTranslation(["dataTransfer"]);
   return (
-    <Badge variant={STATUS_VARIANT[status as ImportJobStatus] ?? "outline"} className="whitespace-nowrap">
+    <Badge {...(STATUS_LOOK[status as ImportJobStatus] ?? OUTLINE)} className="shrink-0">
       {t(`dataTransfer:status.${status}`, status)}
     </Badge>
   );
@@ -29,7 +33,7 @@ export function JobStatusBadge({ status }: { status: string }) {
 export function RowOutcomeBadge({ outcome }: { outcome: string }) {
   const { t } = useTranslation(["dataTransfer"]);
   return (
-    <Badge variant={OUTCOME_VARIANT[outcome as ImportRowOutcome] ?? "outline"} className="whitespace-nowrap">
+    <Badge {...(OUTCOME_LOOK[outcome as ImportRowOutcome] ?? OUTLINE)} className="shrink-0">
       {t(`dataTransfer:outcome.${outcome}`, outcome)}
     </Badge>
   );

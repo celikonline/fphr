@@ -2,20 +2,18 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import { Badge, Button, Card, Divider, Group, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { CalendarHeart, CalendarRange, Cake, Palmtree, UserCircle } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { getUpcomingBirthdays, getUpcomingHolidays } from "@/services/home.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly } from "@/lib/dates";
 
 const HOLIDAY_DAYS = 90;
 const BIRTHDAY_DAYS = 30;
+const ICON_COLOR = "var(--mantine-primary-color-filled)";
 
 /** 403/404 are expected (permission, access setting or module not deployed) - don't retry them. */
 function retryUnlessClientError(failureCount: number, error: unknown): boolean {
@@ -26,31 +24,67 @@ function retryUnlessClientError(failureCount: number, error: unknown): boolean {
 
 function WidgetCard({ title, icon, badge, children }: { title: string; icon: ReactNode; badge?: ReactNode; children: ReactNode }) {
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
+    <Card withBorder padding="lg">
+      <Group justify="space-between" gap="sm" mb="sm" wrap="nowrap">
+        <Title order={5} className="flex items-center gap-2">
           {icon}
           {title}
-        </CardTitle>
+        </Title>
         {badge}
-      </CardHeader>
-      <CardContent className="flex-1">{children}</CardContent>
+      </Group>
+      <div className="flex-1">{children}</div>
     </Card>
   );
 }
 
 function WidgetMessage({ children }: { children: ReactNode }) {
-  return <p className="py-4 text-center text-sm text-muted-foreground">{children}</p>;
+  return (
+    <Text size="sm" c="dimmed" ta="center" py="md">
+      {children}
+    </Text>
+  );
 }
 
 function WidgetSkeleton() {
   return (
-    <div className="space-y-2">
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-3/4" />
-    </div>
+    <Stack gap="xs">
+      <Skeleton h={24} />
+      <Skeleton h={24} />
+      <Skeleton h={24} w="75%" />
+    </Stack>
   );
+}
+
+function DayBadge({ inDays }: { inDays: number }) {
+  const { t } = useTranslation(["home"]);
+  return (
+    <Badge variant="light" color={inDays <= 0 ? "green" : "gray"} className="shrink-0">
+      {inDays <= 0 ? t("home:today") : t("home:inDays", { count: inDays })}
+    </Badge>
+  );
+}
+
+function WidgetRow({ title, subtitle, inDays, divided }: { title: string; subtitle: string; inDays: number; divided: boolean }) {
+  return (
+    <li>
+      {divided && <Divider />}
+      <Group justify="space-between" gap="sm" wrap="nowrap" py="xs">
+        <div className="min-w-0">
+          <Text size="sm" fw={500} truncate>
+            {title}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {subtitle}
+          </Text>
+        </div>
+        <DayBadge inDays={inDays} />
+      </Group>
+    </li>
+  );
+}
+
+function WidgetList({ children }: { children: ReactNode }) {
+  return <ul>{children}</ul>;
 }
 
 function HolidaysWidget() {
@@ -62,7 +96,7 @@ function HolidaysWidget() {
   });
 
   return (
-    <WidgetCard title={t("home:holidays.title")} icon={<CalendarHeart className="h-5 w-5 text-primary" />}>
+    <WidgetCard title={t("home:holidays.title")} icon={<CalendarHeart size={20} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -72,24 +106,17 @@ function HolidaysWidget() {
       ) : !data || data.length === 0 ? (
         <WidgetMessage>{t("home:holidays.empty", { days: HOLIDAY_DAYS })}</WidgetMessage>
       ) : (
-        <ul className="divide-y divide-border">
-          {data.map((holiday) => {
-            const inDays = daysUntil(holiday.date);
-            return (
-              <li key={`${holiday.holidayCalendarId}-${holiday.date}-${holiday.name}`} className="flex items-center justify-between gap-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{holiday.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDateOnly(holiday.date, i18n.language, { dateStyle: "full" })}
-                  </p>
-                </div>
-                <Badge variant={inDays <= 0 ? "success" : "secondary"} className="shrink-0">
-                  {inDays <= 0 ? t("home:today") : t("home:inDays", { count: inDays })}
-                </Badge>
-              </li>
-            );
-          })}
-        </ul>
+        <WidgetList>
+          {data.map((holiday, index) => (
+            <WidgetRow
+              key={`${holiday.holidayCalendarId}-${holiday.date}-${holiday.name}`}
+              title={holiday.name}
+              subtitle={formatDateOnly(holiday.date, i18n.language, { dateStyle: "full" })}
+              inDays={daysUntil(holiday.date)}
+              divided={index > 0}
+            />
+          ))}
+        </WidgetList>
       )}
     </WidgetCard>
   );
@@ -104,7 +131,7 @@ function BirthdaysWidget() {
   });
 
   return (
-    <WidgetCard title={t("home:birthdays.title")} icon={<Cake className="h-5 w-5 text-primary" />}>
+    <WidgetCard title={t("home:birthdays.title")} icon={<Cake size={20} color={ICON_COLOR} />}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error ? (
@@ -114,24 +141,17 @@ function BirthdaysWidget() {
       ) : !data || data.length === 0 ? (
         <WidgetMessage>{t("home:birthdays.empty", { days: BIRTHDAY_DAYS })}</WidgetMessage>
       ) : (
-        <ul className="divide-y divide-border">
-          {data.map((birthday) => {
-            const inDays = daysUntil(birthday.nextBirthday);
-            return (
-              <li key={birthday.id} className="flex items-center justify-between gap-3 py-2">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium">{birthday.displayName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "long" })}
-                  </p>
-                </div>
-                <Badge variant={inDays <= 0 ? "success" : "secondary"} className="shrink-0">
-                  {inDays <= 0 ? t("home:today") : t("home:inDays", { count: inDays })}
-                </Badge>
-              </li>
-            );
-          })}
-        </ul>
+        <WidgetList>
+          {data.map((birthday, index) => (
+            <WidgetRow
+              key={birthday.id}
+              title={birthday.displayName}
+              subtitle={formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "long" })}
+              inDays={daysUntil(birthday.nextBirthday)}
+              divided={index > 0}
+            />
+          ))}
+        </WidgetList>
       )}
     </WidgetCard>
   );
@@ -140,7 +160,15 @@ function BirthdaysWidget() {
 function PlannedWidget({ title, icon, phase, description }: { title: string; icon: ReactNode; phase: number; description: string }) {
   const { t } = useTranslation(["navigation"]);
   return (
-    <WidgetCard title={title} icon={icon} badge={<Badge variant="outline">{t("navigation:phase", { phase })}</Badge>}>
+    <WidgetCard
+      title={title}
+      icon={icon}
+      badge={
+        <Badge variant="outline" color="gray" className="shrink-0">
+          {t("navigation:phase", { phase })}
+        </Badge>
+      }
+    >
       <WidgetMessage>{description}</WidgetMessage>
     </WidgetCard>
   );
@@ -159,26 +187,24 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="text-2xl font-bold">{t("home:greeting", { name: user?.firstName || user?.name || "" })}</h1>
-          <p className="text-muted-foreground">{t("home:subtitle")}</p>
+          <Title order={2}>{t("home:greeting", { name: user?.firstName || user?.name || "" })}</Title>
+          <Text c="dimmed">{t("home:subtitle")}</Text>
         </div>
-        <Button asChild variant="outline">
-          <Link to="/app/account">
-            <UserCircle className="mr-2 h-4 w-4" /> {t("navigation:nav.account")}
-          </Link>
+        <Button component={Link} to="/app/account" variant="default" leftSection={<UserCircle size={16} />}>
+          {t("navigation:nav.account")}
         </Button>
-      </div>
+      </Group>
 
       {hasAnyWidget ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
           {canViewHolidays && <HolidaysWidget />}
           {showBirthdays && canViewDirectory && <BirthdaysWidget />}
           {showLeaves && (
             <PlannedWidget
               title={t("home:leaves.title")}
-              icon={<Palmtree className="h-5 w-5 text-primary" />}
+              icon={<Palmtree size={20} color={ICON_COLOR} />}
               phase={1}
               description={t("home:leaves.planned")}
             />
@@ -186,17 +212,15 @@ export default function HomePage() {
           {showEvents && (
             <PlannedWidget
               title={t("home:events.title")}
-              icon={<CalendarRange className="h-5 w-5 text-primary" />}
+              icon={<CalendarRange size={20} color={ICON_COLOR} />}
               phase={4}
               description={t("home:events.planned")}
             />
           )}
-        </div>
+        </SimpleGrid>
       ) : (
-        <Card>
-          <CardContent className="p-6">
-            <WidgetMessage>{t("home:noWidgets")}</WidgetMessage>
-          </CardContent>
+        <Card withBorder padding="lg">
+          <WidgetMessage>{t("home:noWidgets")}</WidgetMessage>
         </Card>
       )}
     </div>

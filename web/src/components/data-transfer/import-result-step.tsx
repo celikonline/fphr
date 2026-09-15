@@ -3,12 +3,22 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { AlertTriangle, CheckCircle2, Download, Loader2, Upload, XCircle } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Alert,
+  Button,
+  Card,
+  ColorSwatch,
+  Group,
+  RingProgress,
+  SimpleGrid,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+  type MantineColor,
+} from "@mantine/core";
+import { AlertTriangle, CheckCircle2, Download, Upload, XCircle } from "lucide-react";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -113,14 +123,20 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
       meta: { headerClassName: "pr-6", cellClassName: "pr-6" },
       cell: ({ row }) =>
         row.original.errors.length === 0 ? (
-          <span className="text-muted-foreground">—</span>
+          <Text span c="dimmed" inherit>
+            —
+          </Text>
         ) : (
-          <ul className="space-y-0.5 text-sm">
+          <ul className="space-y-0.5">
             {row.original.errors.map((error, i) => (
-              <li key={i}>
-                {columnLabel(error.column) && <span className="font-medium">{columnLabel(error.column)}: </span>}
+              <Text component="li" key={i} size="sm">
+                {columnLabel(error.column) && (
+                  <Text span fw={500} inherit>
+                    {columnLabel(error.column)}:{" "}
+                  </Text>
+                )}
                 {errorText(error)}
-              </li>
+              </Text>
             ))}
           </ul>
         ),
@@ -133,111 +149,157 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
     getRowId: (row) => String(row.rowNumber),
   });
 
-  const counters = [
-    { key: "total", value: job.totalRows, className: "" },
-    { key: "inserted", value: job.insertedCount, className: "text-emerald-600" },
-    { key: "updated", value: job.updatedCount, className: "text-primary" },
-    { key: "skipped", value: job.skippedCount, className: "text-muted-foreground" },
-    { key: "errors", value: job.errorCount, className: job.errorCount > 0 ? "text-destructive" : "" },
+  // Ring shares are relative to the processed rows; the total never falls below their sum.
+  const processed = job.insertedCount + job.updatedCount + job.skippedCount + job.errorCount;
+  const ringBase = Math.max(job.totalRows, processed, 1);
+  const counters: { key: string; value: number; color: MantineColor }[] = [
+    { key: "inserted", value: job.insertedCount, color: "green" },
+    { key: "updated", value: job.updatedCount, color: "brandBlue" },
+    { key: "skipped", value: job.skippedCount, color: "gray" },
+    { key: "errors", value: job.errorCount, color: "red" },
   ];
+  const ringSections = counters
+    .filter((counter) => counter.value > 0)
+    .map((counter) => ({
+      value: (counter.value / ringBase) * 100,
+      color: counter.color,
+      tooltip: `${t(`dataTransfer:counts.${counter.key}`)}: ${counter.value}`,
+    }));
 
   return (
     <div className="space-y-6">
       <WizardSteps active={["result"]} />
 
       {job.status === "Completed" ? (
-        <Alert variant="success">
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertTitle>{t("dataTransfer:result.completed")}</AlertTitle>
-        </Alert>
+        <Alert variant="light" color="green" icon={<CheckCircle2 size={16} />} title={t("dataTransfer:result.completed")} />
       ) : job.status === "CompletedWithErrors" ? (
-        <Alert variant="warning">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>{t("dataTransfer:result.rowsWithErrors", { count: job.errorCount })}</AlertTitle>
-          <AlertDescription>{t("dataTransfer:result.completedWithErrorsHint")}</AlertDescription>
+        <Alert
+          variant="light"
+          color="yellow"
+          icon={<AlertTriangle size={16} />}
+          title={t("dataTransfer:result.rowsWithErrors", { count: job.errorCount })}
+        >
+          {t("dataTransfer:result.completedWithErrorsHint")}
         </Alert>
       ) : (
-        <Alert variant="destructive">
-          <XCircle className="h-4 w-4" />
-          <AlertTitle>{t("dataTransfer:result.failed")}</AlertTitle>
-          <AlertDescription>
-            {job.errorCount > 0 && `${t("dataTransfer:result.rowsWithErrors", { count: job.errorCount })} `}
-            {job.failurePolicy === "AllOrNothing"
-              ? t("dataTransfer:result.failedAllOrNothingHint")
-              : t("dataTransfer:result.failedHint")}
-          </AlertDescription>
+        <Alert variant="light" color="red" icon={<XCircle size={16} />} title={t("dataTransfer:result.failed")}>
+          {job.errorCount > 0 && `${t("dataTransfer:result.rowsWithErrors", { count: job.errorCount })} `}
+          {job.failurePolicy === "AllOrNothing"
+            ? t("dataTransfer:result.failedAllOrNothingHint")
+            : t("dataTransfer:result.failedHint")}
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {counters.map((counter) => (
-          <Card key={counter.key}>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">{t(`dataTransfer:counts.${counter.key}`)}</p>
-              <p className={`text-2xl font-semibold tabular-nums ${counter.className}`}>{counter.value}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card withBorder padding="lg">
+        <div className="flex flex-col items-center gap-6 sm:flex-row">
+          <RingProgress
+            size={140}
+            thickness={14}
+            sectionGap={ringSections.length > 1 ? 2 : 0}
+            label={
+              <Stack gap={0} align="center">
+                <Text size="xl" fw={700} className="tabular-nums">
+                  {job.totalRows}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t("dataTransfer:counts.total")}
+                </Text>
+              </Stack>
+            }
+            sections={ringSections}
+          />
+          <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md" className="w-full">
+            {counters.map((counter) => (
+              <Stack key={counter.key} gap={2}>
+                <Group gap={6} wrap="nowrap">
+                  <ColorSwatch
+                    aria-hidden
+                    size={10}
+                    withShadow={false}
+                    color={`var(--mantine-color-${counter.color}-filled)`}
+                  />
+                  <Text size="xs" c="dimmed">
+                    {t(`dataTransfer:counts.${counter.key}`)}
+                  </Text>
+                </Group>
+                <Text
+                  size="xl"
+                  fw={600}
+                  className="tabular-nums"
+                  c={counter.key === "errors" && counter.value > 0 ? "red" : undefined}
+                >
+                  {counter.value}
+                </Text>
+              </Stack>
+            ))}
+          </SimpleGrid>
+        </div>
+      </Card>
 
-      <div className="flex flex-wrap gap-2">
+      <Group gap="xs">
         {canDownloadResult && (
-          <Button type="button" onClick={() => downloadMutation.mutate()} disabled={downloadMutation.isPending}>
-            {downloadMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
+          <Button
+            type="button"
+            leftSection={<Download size={16} />}
+            loading={downloadMutation.isPending}
+            onClick={() => downloadMutation.mutate()}
+          >
             {t("dataTransfer:result.download")}
           </Button>
         )}
-        <Button type="button" variant="outline" onClick={() => navigate("/app/settings/data-transfer")}>
-          <Upload className="mr-2 h-4 w-4" /> {t("dataTransfer:result.newUpload")}
+        <Button
+          type="button"
+          variant="default"
+          leftSection={<Upload size={16} />}
+          onClick={() => navigate("/app/settings/data-transfer")}
+        >
+          {t("dataTransfer:result.newUpload")}
         </Button>
-      </div>
+      </Group>
 
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 space-y-0">
-          <CardTitle className="text-lg">{t("dataTransfer:result.rowsTitle")}</CardTitle>
+      <Card withBorder padding={0}>
+        <Group justify="space-between" gap="sm" p="lg">
+          <Title order={4}>{t("dataTransfer:result.rowsTitle")}</Title>
           <Tabs
+            variant="pills"
             value={outcome}
-            onValueChange={(value) => {
-              setOutcome(value);
+            onChange={(value) => {
+              setOutcome(value ?? ALL);
               setPage(1);
             }}
           >
-            <TabsList className="h-auto flex-wrap">
-              <TabsTrigger value={ALL}>{t("dataTransfer:outcomeFilter.all")}</TabsTrigger>
+            <Tabs.List>
+              <Tabs.Tab value={ALL}>{t("dataTransfer:outcomeFilter.all")}</Tabs.Tab>
               {IMPORT_ROW_OUTCOMES.map((value) => (
-                <TabsTrigger key={value} value={value}>
+                <Tabs.Tab key={value} value={value}>
                   {t(`dataTransfer:outcomeFilter.${value}`)}
-                </TabsTrigger>
+                </Tabs.Tab>
               ))}
-            </TabsList>
+            </Tabs.List>
           </Tabs>
-        </CardHeader>
-        <CardContent className="p-0">
-          {rowsQuery.isError ? (
-            <p className="p-6 text-center text-sm text-destructive">{t("dataTransfer:result.rowsLoadError")}</p>
-          ) : (
-            <>
-              <DataTable
-                table={table}
-                isLoading={rowsQuery.isLoading}
-                isFetching={rowsQuery.isFetching}
-                emptyMessage={t("dataTransfer:result.rowsEmpty")}
+        </Group>
+        {rowsQuery.isError ? (
+          <Text size="sm" c="red" ta="center" p="lg">
+            {t("dataTransfer:result.rowsLoadError")}
+          </Text>
+        ) : (
+          <>
+            <DataTable
+              table={table}
+              isLoading={rowsQuery.isLoading}
+              isFetching={rowsQuery.isFetching}
+              emptyMessage={t("dataTransfer:result.rowsEmpty")}
+            />
+            {rowsQuery.data && (
+              <PaginationFooter
+                result={rowsQuery.data}
+                onPageChange={setPage}
+                pageSize={pageSize}
+                onPageSizeChange={changePageSize}
               />
-              {rowsQuery.data && (
-                <PaginationFooter
-                  result={rowsQuery.data}
-                  onPageChange={setPage}
-                  pageSize={pageSize}
-                  onPageSizeChange={changePageSize}
-                />
-              )}
-            </>
-          )}
-        </CardContent>
+            )}
+          </>
+        )}
       </Card>
     </div>
   );

@@ -2,10 +2,8 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, KeyRound, Loader2, Upload } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge, Button, Card, Group, Stack, Text, Title } from "@mantine/core";
+import { Download, FileSpreadsheet, KeyRound, Upload } from "lucide-react";
 import { FileDropzone, type FileDropzoneHandle } from "@/components/ui/file-dropzone";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -62,38 +60,56 @@ export default function TemplateCard({ template }: TemplateCardProps) {
   });
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileSpreadsheet className="h-5 w-5 text-primary" /> {template.name}
-        </CardTitle>
-        {template.description && <CardDescription>{template.description}</CardDescription>}
-      </CardHeader>
-      <CardContent className="flex-1 space-y-4">
+    <Card withBorder padding="lg" className="flex flex-col">
+      <Stack gap={4}>
+        <Title order={4} className="flex items-center gap-2">
+          <FileSpreadsheet size={20} color="var(--mantine-primary-color-filled)" /> {template.name}
+        </Title>
+        {template.description && (
+          <Text size="sm" c="dimmed">
+            {template.description}
+          </Text>
+        )}
+      </Stack>
+
+      <Stack gap="md" mt="md" className="flex-1">
         <div>
-          <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">{t("dataTransfer:templates.columns")}</p>
-          <div className="flex flex-wrap gap-1.5">
+          <Text size="xs" fw={500} tt="uppercase" c="dimmed" mb="xs">
+            {t("dataTransfer:templates.columns")}
+          </Text>
+          <Group gap={6}>
             {template.columns.map((column) => (
               <Badge
                 key={column.key}
-                variant={isBlockingColumn(column) ? "secondary" : "outline"}
-                className="gap-1 font-normal"
+                variant={isBlockingColumn(column) ? "light" : "outline"}
+                color="gray"
+                fw={400}
+                tt="none"
                 title={column.isMatchKey ? t("dataTransfer:templates.matchKey") : undefined}
+                leftSection={column.isMatchKey ? <KeyRound size={12} /> : undefined}
+                rightSection={
+                  isBlockingColumn(column) ? (
+                    <Text span c="red" inherit>
+                      *
+                    </Text>
+                  ) : undefined
+                }
               >
-                {column.isMatchKey && <KeyRound className="h-3 w-3" />}
                 {column.header}
-                {isBlockingColumn(column) && <span className="text-destructive">*</span>}
               </Badge>
             ))}
-          </div>
-          <p className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-            <span>
-              <span className="text-destructive">*</span> {t("dataTransfer:templates.requiredLegend")}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <KeyRound className="h-3 w-3" /> {t("dataTransfer:templates.matchKeyLegend")}
-            </span>
-          </p>
+          </Group>
+          <Group gap="md" mt="xs">
+            <Text size="xs" c="dimmed">
+              <Text span c="red" inherit>
+                *
+              </Text>{" "}
+              {t("dataTransfer:templates.requiredLegend")}
+            </Text>
+            <Text size="xs" c="dimmed" className="inline-flex items-center gap-1">
+              <KeyRound size={12} /> {t("dataTransfer:templates.matchKeyLegend")}
+            </Text>
+          </Group>
         </div>
 
         {canRun && (
@@ -115,29 +131,33 @@ export default function TemplateCard({ template }: TemplateCardProps) {
             }
           />
         )}
-      </CardContent>
-      <CardFooter className="flex flex-wrap gap-2">
-        {canDownload && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => downloadMutation.mutate()}
-            disabled={downloadMutation.isPending}
-          >
-            {downloadMutation.isPending ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            {t("dataTransfer:templates.download")}
-          </Button>
-        )}
-        {canRun && (
-          <Button type="button" onClick={() => dropzoneRef.current?.open()} disabled={uploadMutation.isPending}>
-            <Upload className="mr-2 h-4 w-4" /> {t("dataTransfer:templates.upload")}
-          </Button>
-        )}
-      </CardFooter>
+      </Stack>
+
+      {(canDownload || canRun) && (
+        <Group gap="xs" mt="lg">
+          {canDownload && (
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<Download size={16} />}
+              loading={downloadMutation.isPending}
+              onClick={() => downloadMutation.mutate()}
+            >
+              {t("dataTransfer:templates.download")}
+            </Button>
+          )}
+          {canRun && (
+            <Button
+              type="button"
+              leftSection={<Upload size={16} />}
+              onClick={() => dropzoneRef.current?.open()}
+              disabled={uploadMutation.isPending}
+            >
+              {t("dataTransfer:templates.upload")}
+            </Button>
+          )}
+        </Group>
+      )}
     </Card>
   );
 }

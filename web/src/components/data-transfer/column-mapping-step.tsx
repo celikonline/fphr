@@ -1,20 +1,26 @@
 import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, KeyRound, Loader2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  List,
+  Loader,
+  Radio,
+  Select,
+  Stack,
+  Switch,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
+import { AlertTriangle, CheckCircle2, KeyRound } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus, getApiProblem, type ApiProblem } from "@/lib/api-error";
-import { cn } from "@/lib/utils";
 import {
   DataTransferPermissions,
   isBlockingColumn,
@@ -144,12 +150,16 @@ export default function ColumnMappingStep({ job, template }: ColumnMappingStepPr
     return (
       <div className="space-y-6">
         <WizardSteps active={["run"]} />
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-12 text-center">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-lg font-medium">{t("dataTransfer:run.running")}</p>
-            <p className="text-sm text-muted-foreground">{t("dataTransfer:run.runningHint")}</p>
-          </CardContent>
+        <Card withBorder padding="xl">
+          <Stack align="center" gap="sm" py="xl" ta="center">
+            <Loader size="lg" />
+            <Text size="lg" fw={500}>
+              {t("dataTransfer:run.running")}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {t("dataTransfer:run.runningHint")}
+            </Text>
+          </Stack>
         </Card>
       </div>
     );
@@ -161,188 +171,196 @@ export default function ColumnMappingStep({ job, template }: ColumnMappingStepPr
     <div className="space-y-6">
       <WizardSteps active={["mapping", "options"]} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("dataTransfer:mapping.title")}</CardTitle>
-          <CardDescription>
+      <Card withBorder padding={0}>
+        <Stack gap={4} p="lg">
+          <Title order={4}>{t("dataTransfer:mapping.title")}</Title>
+          <Text size="sm" c="dimmed">
             {t("dataTransfer:mapping.subtitle", { mapped: mappedCount, total: job.sourceColumns.length })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4 p-0 pb-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">{t("dataTransfer:mapping.sourceColumn")}</TableHead>
-                <TableHead>{t("dataTransfer:mapping.samples")}</TableHead>
-                <TableHead className="w-72">{t("dataTransfer:mapping.target")}</TableHead>
-                <TableHead className="w-28 pr-6" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          </Text>
+        </Stack>
+        <Table.ScrollContainer minWidth={640}>
+          <Table verticalSpacing="sm" horizontalSpacing="lg">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>{t("dataTransfer:mapping.sourceColumn")}</Table.Th>
+                <Table.Th>{t("dataTransfer:mapping.samples")}</Table.Th>
+                <Table.Th w={288}>{t("dataTransfer:mapping.target")}</Table.Th>
+                <Table.Th w={112} />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
               {job.sourceColumns.map((source) => {
                 const target = mapping[source.index] ?? null;
                 const autoMatched = source.autoMatched && target !== null && target === source.suggestedTargetKey;
                 return (
-                  <TableRow key={source.index}>
-                    <TableCell className="pl-6 font-medium">
+                  <Table.Tr key={source.index}>
+                    <Table.Td fw={500}>
                       {source.header || t("dataTransfer:mapping.untitledColumn", { index: source.index + 1 })}
-                    </TableCell>
-                    <TableCell className="max-w-[18rem]">
+                    </Table.Td>
+                    <Table.Td maw={288}>
                       {source.samples.length === 0 ? (
-                        <span className="text-muted-foreground">—</span>
+                        <Text span c="dimmed" inherit>
+                          —
+                        </Text>
                       ) : (
-                        <div className="flex flex-col text-xs text-muted-foreground">
+                        <Stack gap={0}>
                           {source.samples.slice(0, 3).map((sample, i) => (
-                            <span key={i} className="truncate" title={sample}>
+                            <Text key={i} size="xs" c="dimmed" truncate title={sample}>
                               {sample || "—"}
-                            </span>
+                            </Text>
                           ))}
-                        </div>
+                        </Stack>
                       )}
-                    </TableCell>
-                    <TableCell>
+                    </Table.Td>
+                    <Table.Td>
                       <Select
+                        aria-label={t("dataTransfer:mapping.target")}
                         value={target ?? IGNORE}
-                        onValueChange={(value) => setTarget(source.index, value)}
+                        onChange={(value) => setTarget(source.index, value ?? IGNORE)}
+                        allowDeselect={false}
                         disabled={isBusy || !canRun}
-                      >
-                        <SelectTrigger
-                          aria-label={t("dataTransfer:mapping.target")}
-                          className={cn(target === null && "text-muted-foreground")}
-                        >
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={IGNORE}>{t("dataTransfer:mapping.ignore")}</SelectItem>
-                          {template.columns.map((column) => {
+                        styles={target === null ? { input: { color: "var(--mantine-color-dimmed)" } } : undefined}
+                        data={[
+                          { value: IGNORE, label: t("dataTransfer:mapping.ignore") },
+                          ...template.columns.map((column) => {
                             const takenBy = usedTargets.get(column.key);
                             const taken = takenBy !== undefined && takenBy !== source.index;
-                            return (
-                              <SelectItem key={column.key} value={column.key} disabled={taken}>
-                                {column.header}
-                                {isBlockingColumn(column) ? " *" : ""}
-                                {taken ? ` (${t("dataTransfer:mapping.alreadyMapped")})` : ""}
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell className="pr-6">
+                            const required = isBlockingColumn(column) ? " *" : "";
+                            const takenLabel = taken ? ` (${t("dataTransfer:mapping.alreadyMapped")})` : "";
+                            return { value: column.key, label: `${column.header}${required}${takenLabel}`, disabled: taken };
+                          }),
+                        ]}
+                      />
+                    </Table.Td>
+                    <Table.Td>
                       {autoMatched ? (
-                        <Badge variant="success" className="gap-1 whitespace-nowrap">
-                          <CheckCircle2 className="h-3 w-3" /> {t("dataTransfer:mapping.autoMatched")}
+                        <Badge variant="light" color="green" leftSection={<CheckCircle2 size={12} />}>
+                          {t("dataTransfer:mapping.autoMatched")}
                         </Badge>
                       ) : target === null ? (
-                        <Badge variant="outline" className="whitespace-nowrap font-normal text-muted-foreground">
+                        <Badge variant="outline" color="gray" fw={400}>
                           {t("dataTransfer:mapping.ignored")}
                         </Badge>
                       ) : null}
-                    </TableCell>
-                  </TableRow>
+                    </Table.Td>
+                  </Table.Tr>
                 );
               })}
-            </TableBody>
+            </Table.Tbody>
           </Table>
+        </Table.ScrollContainer>
 
-          <div className="space-y-3 px-6">
-            {missingBlocking.length > 0 ? (
-              <Alert variant="warning">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{t("dataTransfer:mapping.missingRequiredTitle")}</AlertTitle>
-                <AlertDescription>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {missingBlocking.map((column) => (
-                      <Badge key={column.key} variant="outline" className="gap-1">
-                        {column.isMatchKey && <KeyRound className="h-3 w-3" />}
-                        {column.header}
-                      </Badge>
-                    ))}
-                  </div>
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Alert variant="success">
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertDescription>{t("dataTransfer:mapping.allRequiredMapped")}</AlertDescription>
-              </Alert>
-            )}
-            {missingOnInsert.length > 0 && (
-              <p className="text-sm text-muted-foreground">
-                {t("dataTransfer:mapping.onInsertHint", { columns: missingOnInsert.map((c) => c.header).join(", ") })}
-              </p>
-            )}
-            {serverMissing && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{t("dataTransfer:errorCodes.IMPORT_UNMAPPED_REQUIRED")}</AlertTitle>
-                <AlertDescription>{serverMissing.map(headerFor).join(", ")}</AlertDescription>
-              </Alert>
-            )}
-          </div>
-        </CardContent>
+        <Stack gap="sm" p="lg">
+          {missingBlocking.length > 0 ? (
+            <Alert
+              variant="light"
+              color="yellow"
+              icon={<AlertTriangle size={16} />}
+              title={t("dataTransfer:mapping.missingRequiredTitle")}
+            >
+              <Group gap={6} mt={4}>
+                {missingBlocking.map((column) => (
+                  <Badge
+                    key={column.key}
+                    variant="outline"
+                    color="gray"
+                    tt="none"
+                    leftSection={column.isMatchKey ? <KeyRound size={12} /> : undefined}
+                  >
+                    {column.header}
+                  </Badge>
+                ))}
+              </Group>
+            </Alert>
+          ) : (
+            <Alert variant="light" color="green" icon={<CheckCircle2 size={16} />}>
+              {t("dataTransfer:mapping.allRequiredMapped")}
+            </Alert>
+          )}
+          {missingOnInsert.length > 0 && (
+            <Text size="sm" c="dimmed">
+              {t("dataTransfer:mapping.onInsertHint", { columns: missingOnInsert.map((c) => c.header).join(", ") })}
+            </Text>
+          )}
+          {serverMissing && (
+            <Alert
+              variant="light"
+              color="red"
+              icon={<AlertTriangle size={16} />}
+              title={t("dataTransfer:errorCodes.IMPORT_UNMAPPED_REQUIRED")}
+            >
+              {serverMissing.map(headerFor).join(", ")}
+            </Alert>
+          )}
+        </Stack>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">{t("dataTransfer:options.title")}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex items-start gap-3">
+      <Card withBorder padding="lg">
+        <Title order={4} mb="lg">
+          {t("dataTransfer:options.title")}
+        </Title>
+        <Stack gap="xl">
+          <Group align="flex-start" gap="sm" wrap="nowrap">
             <Switch
               id="dt-update-only"
               checked={mode === "UpdateOnly"}
-              onCheckedChange={(checked) => setMode(checked ? "UpdateOnly" : "Upsert")}
+              onChange={(event) => setMode(event.currentTarget.checked ? "UpdateOnly" : "Upsert")}
               disabled={isBusy || !canRun || !supportsUpdateOnly}
             />
-            <div className="space-y-1">
-              <Label htmlFor="dt-update-only" className="font-medium">
+            <Stack gap={4}>
+              <Text component="label" htmlFor="dt-update-only" size="sm" fw={500}>
                 {t("dataTransfer:options.updateOnly")}
-              </Label>
-              <ul className="list-disc space-y-0.5 pl-4 text-sm text-muted-foreground">
-                <li>{t("dataTransfer:options.updateOnlyHelp.updates")}</li>
-                <li>{t("dataTransfer:options.updateOnlyHelp.noInsert")}</li>
-                <li>{t("dataTransfer:options.updateOnlyHelp.noMatchError")}</li>
-                <li>{t("dataTransfer:options.updateOnlyHelp.mappedOnly")}</li>
-              </ul>
+              </Text>
+              <List size="sm" c="dimmed" spacing={2}>
+                <List.Item>{t("dataTransfer:options.updateOnlyHelp.updates")}</List.Item>
+                <List.Item>{t("dataTransfer:options.updateOnlyHelp.noInsert")}</List.Item>
+                <List.Item>{t("dataTransfer:options.updateOnlyHelp.noMatchError")}</List.Item>
+                <List.Item>{t("dataTransfer:options.updateOnlyHelp.mappedOnly")}</List.Item>
+              </List>
               {!supportsUpdateOnly && (
-                <p className="text-xs text-muted-foreground">{t("dataTransfer:options.updateOnlyUnsupported")}</p>
+                <Text size="xs" c="dimmed">
+                  {t("dataTransfer:options.updateOnlyUnsupported")}
+                </Text>
               )}
-            </div>
-          </div>
+            </Stack>
+          </Group>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium">{t("dataTransfer:options.failurePolicy")}</p>
-            <RadioGroup
-              value={failurePolicy}
-              onValueChange={(value) => setFailurePolicy(value as ImportFailurePolicy)}
-              disabled={isBusy || !canRun}
-            >
+          <Radio.Group
+            label={t("dataTransfer:options.failurePolicy")}
+            value={failurePolicy}
+            onChange={(value) => setFailurePolicy(value as ImportFailurePolicy)}
+            disabled={isBusy || !canRun}
+          >
+            <Stack gap="sm" mt="xs">
               {(["SkipInvalidRows", "AllOrNothing"] as const).map((policy) => (
-                <div key={policy} className="flex items-start gap-2">
-                  <RadioGroupItem id={`dt-policy-${policy}`} value={policy} className="mt-0.5" />
-                  <div>
-                    <Label htmlFor={`dt-policy-${policy}`}>{t(`dataTransfer:failurePolicy.${policy}`)}</Label>
-                    <p className="text-xs text-muted-foreground">{t(`dataTransfer:failurePolicy.${policy}Help`)}</p>
-                  </div>
-                </div>
+                <Radio
+                  key={policy}
+                  id={`dt-policy-${policy}`}
+                  value={policy}
+                  label={t(`dataTransfer:failurePolicy.${policy}`)}
+                  description={t(`dataTransfer:failurePolicy.${policy}Help`)}
+                />
               ))}
-            </RadioGroup>
-          </div>
-        </CardContent>
+            </Stack>
+          </Radio.Group>
+        </Stack>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-end gap-3">
-        {!canRun && <p className="text-sm text-muted-foreground">{t("dataTransfer:run.noPermission")}</p>}
+      <Group justify="flex-end" gap="sm">
+        {!canRun && (
+          <Text size="sm" c="dimmed">
+            {t("dataTransfer:run.noPermission")}
+          </Text>
+        )}
         <Button
           type="button"
           onClick={() => runMutation.mutate()}
           disabled={isBusy || !canRun || missingBlocking.length > 0}
+          leftSection={isBusy ? <Loader size={14} /> : undefined}
         >
-          {isBusy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {phase === "saving" ? t("common:saving") : t("dataTransfer:mapping.saveAndContinue")}
         </Button>
-      </div>
+      </Group>
     </div>
   );
 }

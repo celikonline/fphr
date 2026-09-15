@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Link, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Button, Card, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { ArrowLeft, FileSpreadsheet } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import ColumnMappingStep from "@/components/data-transfer/column-mapping-step";
@@ -49,47 +47,52 @@ function DataTransferJob() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="space-y-3">
-        <Button asChild variant="ghost" size="sm" className="-ml-3">
-          <Link to="/app/settings/data-transfer?tab=history">
-            <ArrowLeft className="mr-2 h-4 w-4" /> {t("dataTransfer:job.back")}
-          </Link>
+      <Stack gap="sm" align="flex-start">
+        <Button
+          component={Link}
+          to="/app/settings/data-transfer?tab=history"
+          variant="subtle"
+          size="sm"
+          ml={-12}
+          leftSection={<ArrowLeft size={16} />}
+        >
+          {t("dataTransfer:job.back")}
         </Button>
         {job && (
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <Group justify="space-between" align="flex-start" gap="sm" w="100%">
             <div>
-              <h1 className="flex items-center gap-2 text-2xl font-bold">
-                <FileSpreadsheet className="h-6 w-6" /> {job.fileName}
-              </h1>
-              <p className="text-muted-foreground">
+              <Title order={2} className="flex items-center gap-2">
+                <FileSpreadsheet size={24} /> {job.fileName}
+              </Title>
+              <Text c="dimmed">
                 {template?.name ?? job.templateCode} · {t("dataTransfer:job.uploadedAt")}{" "}
                 {formatDateTime(job.createdAt, i18n.language)}
                 {job.totalRows > 0 && ` · ${t("dataTransfer:job.rowCount", { count: job.totalRows })}`}
-              </p>
+              </Text>
             </div>
             <JobStatusBadge status={job.status} />
-          </div>
+          </Group>
         )}
-      </div>
+      </Stack>
 
       {jobQuery.isLoading || (!isFinished && templatesQuery.isLoading) ? (
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-64 w-full" />
-        </div>
+        <Stack gap="sm">
+          <Skeleton h={40} />
+          <Skeleton h={256} />
+        </Stack>
       ) : jobQuery.isError || !job ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-muted-foreground">
+        <Card withBorder padding="lg">
+          <Text size="sm" c="dimmed" ta="center">
             {getApiErrorStatus(jobQuery.error) === 404 ? t("dataTransfer:job.notFound") : t("dataTransfer:job.loadError")}
-          </CardContent>
+          </Text>
         </Card>
       ) : isFinished ? (
         <ImportResultStep job={job} template={template} />
       ) : !template ? (
-        <Card>
-          <CardContent className="p-6 text-center text-sm text-destructive">
+        <Card withBorder padding="lg">
+          <Text size="sm" c="red" ta="center">
             {t("dataTransfer:job.templateUnavailable", { code: job.templateCode })}
-          </CardContent>
+          </Text>
         </Card>
       ) : (
         <ColumnMappingStep job={job} template={template} />
