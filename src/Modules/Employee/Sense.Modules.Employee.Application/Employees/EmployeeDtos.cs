@@ -71,7 +71,12 @@ public sealed record EmployeeDetailDto(
 /// Result of the termination wizard's submit step: the updated card plus the advisory job-security warning (never
 /// gates the termination - see JobSecurityEvaluator).
 /// </summary>
-public sealed record TerminateEmployeeResultDto(EmployeeDetailDto Employee, bool JobSecurityInScope, bool JobSecurityWarning, string? JobSecurityWarningMessage);
+public sealed record TerminateEmployeeResultDto(
+    EmployeeDetailDto Employee,
+    bool JobSecurityInScope,
+    bool JobSecurityWarning,
+    string? JobSecurityWarningMessage,
+    CollectiveDismissalEvaluation? CollectiveDismissal = null);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

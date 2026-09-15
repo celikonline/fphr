@@ -174,6 +174,70 @@ public sealed class TerminationIntegrationTests : TestFixture
         representative.Value.JobSecurityWarning.ShouldBeFalse();
     }
 
+    /// <summary>
+    /// Collective dismissal ("Toplu işten çıkarma eşik uyarısı", 4857 md.29): the tier table is stubbed down to
+    /// "2+ employees -> 2 dismissals" so a handful of employees is enough, and only md.18 dismissals count - a
+    /// resignation in the same window does not move the counter.
+    /// </summary>
+    [Fact]
+    public async Task CollectiveDismissal_CountsOnlyArt18DismissalsInTheWindow()
+    {
+        StubLegislationThresholds(minHeadcount: 1m, minSeniorityMonths: 3m);
+        StubCollectiveDismissalTiers("""[{"minHeadcount":2,"maxHeadcount":null,"count":2,"percent":null}]""");
+
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var hireDate = today.AddYears(-2);
+
+        var reasons = (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value;
+        var employerTermination = reasons.Single(r => r.DefaultTerminationType == TerminationType.ValidCause_Art18);
+        var resignation = reasons.Single(r => r.Code == "Resignation");
+
+        var ids = new List<Guid>();
+        for (var i = 0; i < 4; i++)
+        {
+            ids.Add((await ExecuteCommandAsync(new CreateEmployeeCommand($"Toplu{i}", "Çıkış", null, null, null, null, hireDate, null, null, null))).Value.Id);
+        }
+
+        // Nothing dismissed yet: in scope (headcount 4 >= 2) but below the threshold.
+        var initial = (await ExecuteQueryAsync(new GetCollectiveDismissalStatusQuery())).Value;
+        initial.InScope.ShouldBeTrue();
+        initial.Threshold.ShouldBe(2);
+        initial.DismissalsInWindow.ShouldBe(0);
+        initial.ShowWarning.ShouldBeFalse();
+        initial.WindowStart.ShouldBe(today.AddDays(-29));
+
+        // A resignation is excluded from the count by the statute.
+        (await ExecuteCommandAsync(new TerminateEmployeeCommand(ids[0], today, resignation.Id))).Value
+            .CollectiveDismissal!.DismissalsInWindow.ShouldBe(0);
+
+        // First md.18 dismissal: counted, still below the threshold of 2.
+        var first = (await ExecuteCommandAsync(new TerminateEmployeeCommand(ids[1], today, employerTermination.Id))).Value;
+        first.CollectiveDismissal!.DismissalsInWindow.ShouldBe(1);
+        first.CollectiveDismissal.ShowWarning.ShouldBeFalse();
+
+        // Second one reaches the threshold and surfaces the notification duty.
+        var second = (await ExecuteCommandAsync(new TerminateEmployeeCommand(ids[2], today, employerTermination.Id))).Value;
+        second.CollectiveDismissal!.DismissalsInWindow.ShouldBe(2);
+        second.CollectiveDismissal.ShowWarning.ShouldBeTrue();
+        second.CollectiveDismissal.NoticeDays.ShouldBe(30);
+        second.CollectiveDismissal.WarningMessage.ShouldNotBeNullOrWhiteSpace();
+
+        // A dismissal dated outside the window does not count towards it.
+        var older = today.AddDays(-45);
+        (await ExecuteCommandAsync(new TerminateEmployeeCommand(ids[3], older, employerTermination.Id))).Value
+            .CollectiveDismissal!.DismissalsInWindow.ShouldBe(1, "only the pending one falls in its own window");
+
+        var afterwards = (await ExecuteQueryAsync(new GetCollectiveDismissalStatusQuery())).Value;
+        afterwards.DismissalsInWindow.ShouldBe(2, "the 45-day-old dismissal is outside today's window");
+    }
+
+    private void StubCollectiveDismissalTiers(string json) =>
+        _legislation.FindAsync(LegislationParameterKeys.CollectiveDismissalThresholds, Arg.Any<DateOnly>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new LegislationParameterValue(
+                LegislationParameterKeys.CollectiveDismissalThresholds, "TR", null, json, new DateOnly(2000, 1, 1), null, "test"));
+
     private void StubLegislationThresholds(decimal minHeadcount, decimal minSeniorityMonths)
     {
         _legislation.FindAsync(LegislationParameterKeys.JobSecurityMinHeadcount, Arg.Any<DateOnly>(), Arg.Any<string>(), Arg.Any<CancellationToken>())

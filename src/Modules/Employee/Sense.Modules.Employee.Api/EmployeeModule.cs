@@ -62,6 +62,7 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
         services.AddScoped<TerminationReasonProvisioningService>();
         services.AddScoped<JobSecurityEvaluator>();
+        services.AddScoped<CollectiveDismissalEvaluator>();
 
         // Employment periods + rehire (E5a): merged seniority for leave, severance and the job-security check.
         services.AddScoped<EmploymentHistoryReader>();

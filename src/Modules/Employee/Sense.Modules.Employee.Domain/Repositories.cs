@@ -1,4 +1,5 @@
 using Sense.Modules.Employee.Domain.CustomFields;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee": a using-alias literally named "Employee" does not win
@@ -41,6 +42,10 @@ public interface IEmployeeRepository
     /// (JobSecurityEvaluator; no iş kolu/business-line grouping exists yet, see its own TODO).
     /// </summary>
     Task<int> CountActiveAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Terminated employees whose termination date falls in [from, to] and whose termination type is one of <paramref name="types"/> (collective dismissal window count).</summary>
+    Task<int> CountTerminationsAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<TerminationType> types, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Custom field definition repository (tenant admin catalog; see <see cref="CustomFieldDefinition"/> for why it is never hard-deleted).</summary>

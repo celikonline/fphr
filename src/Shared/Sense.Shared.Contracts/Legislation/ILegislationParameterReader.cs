@@ -112,4 +112,11 @@ public static class LegislationParameterKeys
     // (ADR 0008: single owner table leave.legislation_parameters) - Employee only reads them through this reader.
     public const string JobSecurityMinHeadcount = "JobSecurity.MinHeadcount";
     public const string JobSecurityMinSeniorityMonths = "JobSecurity.MinSeniorityMonths";
+
+    // Collective dismissal notification duty (4857 md.29, Faz 1a E5a). No seed rows yet: CollectiveDismissalEvaluator
+    // falls back to the statutory defaults, and seeding these belongs with the next Leave migration (single owner table).
+    public const string CollectiveDismissalThresholds = "CollectiveDismissal.Thresholds";
+    public const string CollectiveDismissalNoticeDays = "CollectiveDismissal.NoticeDays";
+    public const string CollectiveDismissalRehirePriorityMonths = "CollectiveDismissal.RehirePriorityMonths";
+    public const string CollectiveDismissalTempWorkerBanMonths = "CollectiveDismissal.TempWorkerBanMonths";
 }

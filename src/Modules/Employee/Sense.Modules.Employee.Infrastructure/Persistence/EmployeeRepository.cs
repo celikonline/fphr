@@ -73,6 +73,17 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
 
     public async Task<int> CountActiveAsync(CancellationToken cancellationToken = default) =>
         await context.Employees.CountAsync(e => e.Status == EmployeeStatus.Active, cancellationToken);
+
+    public async Task<int> CountTerminationsAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<TerminationType> types, CancellationToken cancellationToken = default) =>
+        await context.Employees.IgnoreAutoIncludes().CountAsync(
+            e => e.Status == EmployeeStatus.Terminated
+                && e.TerminationDate != null
+                && e.TerminationDate >= from
+                && e.TerminationDate <= to
+                && e.TerminationType != null
+                && types.Contains(e.TerminationType.Value),
+            cancellationToken);
 }
 
 /// <summary>Saves the Employee DbContext directly (SaveChanges is atomic: all pending changes or none).</summary>

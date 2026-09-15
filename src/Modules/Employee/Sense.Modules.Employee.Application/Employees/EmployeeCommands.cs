@@ -461,6 +461,7 @@ public sealed class TerminateEmployeeHandler(
     ITerminationReasonRepository reasons,
     TerminationReasonProvisioningService reasonProvisioning,
     JobSecurityEvaluator jobSecurity,
+    CollectiveDismissalEvaluator collectiveDismissal,
     IIntegrationEventOutbox outbox,
     EmployeeDetailBuilder details) : ICommandHandler<TerminateEmployeeCommand, TerminateEmployeeResultDto>
 {
@@ -491,6 +492,9 @@ public sealed class TerminateEmployeeHandler(
 
         var evaluation = await jobSecurity.EvaluateAsync(employee, terminationType, cancellationToken);
 
+        // Counted before the write so the stored dismissals exclude this one; the pending type is added on top.
+        var collective = await collectiveDismissal.EvaluateAsync(command.TerminationDate, terminationType, cancellationToken);
+
         var terminated = employee.Terminate(
             command.TerminationDate, reason.Id, terminationType, sgkExitCode, command.SeverancePaid, command.LeaveSettledAtExit);
         if (terminated.IsFailure)
@@ -502,7 +506,7 @@ public sealed class TerminateEmployeeHandler(
             tenant.TenantId, employee.Id, ToContractType(terminationType), reason.Code, sgkExitCode) { ActorUserId = currentUser.UserId });
 
         var dto = await details.BuildAsync(employee, cancellationToken);
-        return new TerminateEmployeeResultDto(dto, evaluation.InScope, evaluation.ShowWarning, evaluation.WarningMessage);
+        return new TerminateEmployeeResultDto(dto, evaluation.InScope, evaluation.ShowWarning, evaluation.WarningMessage, collective);
     }
 
     private static Contracts.Events.TerminationType ToContractType(Domain.Employees.TerminationType type) => type switch

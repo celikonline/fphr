@@ -227,6 +227,15 @@ public sealed class EmployeesController : ApiControllerBase
                 request.LeaveSettledAtExit),
             ct));
 
+    /// <summary>
+    /// Collective-dismissal status of the rolling 30-day window ("Toplu işten çıkarma eşik uyarısı"): what the wizard
+    /// shows before a termination is submitted. Advisory - it never blocks a termination.
+    /// </summary>
+    [HttpGet("collective-dismissal-status")]
+    [ProducesResponseType<CollectiveDismissalEvaluation>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CollectiveDismissalStatus([FromQuery] DateOnly? asOf, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetCollectiveDismissalStatusQuery(asOf), ct));
+
     /// <summary>Employment periods and merged seniority of an employee ("Çalışma dönemleri ve kıdem birleştirme").</summary>
     [HttpGet(ApiRoutes.IdParam + "/employment-periods")]
     [ProducesResponseType<EmploymentHistoryDto>(StatusCodes.Status200OK)]
