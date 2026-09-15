@@ -220,7 +220,7 @@
   <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Banka hesaplarını düzenleme</value></data>
   <data name="employee.customfield.manage" xml:space="preserve"><value>Özel alan tanımlarını yönetme</value></data>
   <data name="employee.customfield.view" xml:space="preserve"><value>Özel alan tanımlarını görüntüleme</value></data>
-  <data name="employee.profile.self.edit" xml:space="preserve"><value>Kendi profilini düzenleme</value></data>
+  <data name="employee.self.edit" xml:space="preserve"><value>Kendi profilini düzenleme</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Özel alan tanımı bulunamadı.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>Özel alan anahtarı zorunludur.</value></data>
   <data name="employee.custom_field.key_too_long" xml:space="preserve"><value>Özel alan anahtarı en fazla 100 karakter olabilir.</value></data>
@@ -567,4 +567,58 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Yalnız kendi reddedilmiş izin talebinizi yeniden gönderebilirsiniz.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
+  <data name="attendance.workschedule.view" xml:space="preserve"><value>Çalışma takvimlerini görüntüleme</value></data>
+  <data name="attendance.workschedule.manage" xml:space="preserve"><value>Çalışma takvimlerini yönetme</value></data>
+  <data name="attendance.workschedule.assign" xml:space="preserve"><value>Çalışma takvimi atama</value></data>
+  <data name="attendance.my.workschedule" xml:space="preserve"><value>Kendi çalışma takvimimi görüntüleme</value></data>
+  <data name="attendance.work_schedule.not_found" xml:space="preserve"><value>Çalışma takvimi bulunamadı.</value></data>
+  <data name="attendance.work_schedule.name_required" xml:space="preserve"><value>Çalışma takvimi adı zorunludur.</value></data>
+  <data name="attendance.work_schedule.days_count_invalid" xml:space="preserve"><value>Çalışma takvimi haftanın 7 gününü de içermelidir.</value></data>
+  <data name="attendance.work_schedule.day_range_invalid" xml:space="preserve"><value>Çalışma günü için başlangıç/bitiş saati eksik veya bitiş başlangıçtan önce.</value></data>
+  <data name="attendance.work_schedule.day_break_invalid" xml:space="preserve"><value>Mola saatleri çalışma saatleri içinde ve tutarlı olmalıdır.</value></data>
+  <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>Varsayılan çalışma takvimi silinemez.</value></data>
+  <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>Çalışanlara atanmış bir çalışma takvimi silinemez.</value></data>
+  <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>Bu çalışma takvimi pasif durumda.</value></data>
+  <data name="attendance.employee.not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
+  <data name="attendance.employee.not_in_scope" xml:space="preserve"><value>Bu çalışana erişim yetkiniz yok.</value></data>
+  <data name="attendance.work_schedule.default.name" xml:space="preserve"><value>Genel çalışma tablosu</value></data>
+
+  <!-- Analytics: şirket geneli iş gücü KPI'ları (Faz 7 #99) -->
+  <data name="analytics.kpi.view" xml:space="preserve"><value>İş gücü KPI'larını görüntüleme</value></data>
+
+  <!-- Payroll (Faz 3 P0): hesap turnusolu, bordro parametresi, dönem yeniden hesabı -->
+  <data name="payroll.trace.view" xml:space="preserve"><value>Hesap turnusolunu görüntüleme</value></data>
+  <data name="payroll.profile.manage" xml:space="preserve"><value>Bordro parametrelerini yönetme</value></data>
+  <data name="payroll.period.recalculate" xml:space="preserve"><value>Bordro dönemini yeniden hesaplama</value></data>
+  <data name="payroll.period.not_found" xml:space="preserve"><value>Bordro dönemi bulunamadı.</value></data>
+  <data name="payroll.period.not_open" xml:space="preserve"><value>Bordro dönemi açık değil.</value></data>
+  <data name="payroll.payslip.not_found" xml:space="preserve"><value>Bordro satırı bulunamadı.</value></data>
+  <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Dönem ayı 1-12 aralığında olmalıdır.</value></data>
+  <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Brüt tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Çalışılan gün sayısı sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>Bu yemek ödemesi varyantı henüz desteklenmiyor.</value></data>
+
+  <!-- Recruitment (Faz 6 R0): ilan/aday/başvuru çekirdeği -->
+  <data name="recruitment.postings.read" xml:space="preserve"><value>İlanları görüntüleme</value></data>
+  <data name="recruitment.postings.create" xml:space="preserve"><value>İlan oluşturma</value></data>
+  <data name="recruitment.postings.update" xml:space="preserve"><value>İlanı düzenleme</value></data>
+  <data name="recruitment.postings.archive" xml:space="preserve"><value>İlanı arşivleme</value></data>
+  <data name="recruitment.candidates.read" xml:space="preserve"><value>Adayları görüntüleme</value></data>
+  <data name="recruitment.candidates.manage" xml:space="preserve"><value>Aday bilgilerini yönetme</value></data>
+  <data name="recruitment.applications.read" xml:space="preserve"><value>Başvuruları görüntüleme</value></data>
+  <data name="recruitment.applications.manage" xml:space="preserve"><value>Başvuru ekleme veya aşama değiştirme</value></data>
+  <data name="recruitment.posting.not_found" xml:space="preserve"><value>İlan bulunamadı.</value></data>
+  <data name="recruitment.posting.org_unit_invalid" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
+  <data name="recruitment.posting.location_invalid" xml:space="preserve"><value>Seçilen lokasyon bulunamadı veya pasif.</value></data>
+  <data name="recruitment.posting.owner_invalid" xml:space="preserve"><value>İlan sahibi olarak seçilen kullanıcı bulunamadı.</value></data>
+  <data name="recruitment.posting.hiring_manager_invalid" xml:space="preserve"><value>İşe alım müdürü olarak seçilen kullanıcı bulunamadı.</value></data>
+  <data name="recruitment.posting.title_required" xml:space="preserve"><value>İlan başlığı zorunludur.</value></data>
+  <data name="recruitment.posting.not_openable" xml:space="preserve"><value>İlan bu durumdan yayınlanamaz.</value></data>
+  <data name="recruitment.posting.not_closeable" xml:space="preserve"><value>Yalnızca yayındaki ilan kapatılabilir.</value></data>
+  <data name="recruitment.posting.already_archived" xml:space="preserve"><value>İlan zaten arşivlenmiş.</value></data>
+  <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Aday bulunamadı.</value></data>
+  <data name="recruitment.candidate.name_required" xml:space="preserve"><value>Adayın adı ve soyadı zorunludur.</value></data>
+  <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
+  <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
+  <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>
 </root>

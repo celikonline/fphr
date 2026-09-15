@@ -211,7 +211,7 @@
   <data name="employee.bank_accounts.edit" xml:space="preserve"><value>Edit bank accounts</value></data>
   <data name="employee.customfield.manage" xml:space="preserve"><value>Manage custom field definitions</value></data>
   <data name="employee.customfield.view" xml:space="preserve"><value>View custom field definitions</value></data>
-  <data name="employee.profile.self.edit" xml:space="preserve"><value>Edit own profile</value></data>
+  <data name="employee.self.edit" xml:space="preserve"><value>Edit own profile</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Custom field definition not found.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>The custom field key is required.</value></data>
   <data name="employee.custom_field.key_too_long" xml:space="preserve"><value>The custom field key can be at most 100 characters.</value></data>
@@ -558,4 +558,58 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Only your own rejected leave request can be resubmitted.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>The calendar range can be at most {max} days.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
+  <data name="attendance.workschedule.view" xml:space="preserve"><value>View work schedules</value></data>
+  <data name="attendance.workschedule.manage" xml:space="preserve"><value>Manage work schedules</value></data>
+  <data name="attendance.workschedule.assign" xml:space="preserve"><value>Assign work schedules</value></data>
+  <data name="attendance.my.workschedule" xml:space="preserve"><value>View my own work schedule</value></data>
+  <data name="attendance.work_schedule.not_found" xml:space="preserve"><value>Work schedule not found.</value></data>
+  <data name="attendance.work_schedule.name_required" xml:space="preserve"><value>Work schedule name is required.</value></data>
+  <data name="attendance.work_schedule.days_count_invalid" xml:space="preserve"><value>A work schedule must cover all 7 days of the week.</value></data>
+  <data name="attendance.work_schedule.day_range_invalid" xml:space="preserve"><value>A working day needs a start/end time, and end must be after start.</value></data>
+  <data name="attendance.work_schedule.day_break_invalid" xml:space="preserve"><value>The break must be inside the working hours and internally consistent.</value></data>
+  <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>The default work schedule cannot be deleted.</value></data>
+  <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>A work schedule assigned to employees cannot be deleted.</value></data>
+  <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>This work schedule is inactive.</value></data>
+  <data name="attendance.employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="attendance.employee.not_in_scope" xml:space="preserve"><value>You do not have access to this employee.</value></data>
+  <data name="attendance.work_schedule.default.name" xml:space="preserve"><value>General work schedule</value></data>
+
+  <!-- Analytics: company-wide workforce KPIs (Faz 7 #99) -->
+  <data name="analytics.kpi.view" xml:space="preserve"><value>View workforce KPIs</value></data>
+
+  <!-- Payroll (Faz 3 P0): calculation trace, payroll profile, period recalculation -->
+  <data name="payroll.trace.view" xml:space="preserve"><value>View the calculation trace</value></data>
+  <data name="payroll.profile.manage" xml:space="preserve"><value>Manage payroll profiles</value></data>
+  <data name="payroll.period.recalculate" xml:space="preserve"><value>Recalculate a payroll period</value></data>
+  <data name="payroll.period.not_found" xml:space="preserve"><value>Payroll period not found.</value></data>
+  <data name="payroll.period.not_open" xml:space="preserve"><value>The payroll period is not open.</value></data>
+  <data name="payroll.payslip.not_found" xml:space="preserve"><value>Payslip not found.</value></data>
+  <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Period month must be between 1 and 12.</value></data>
+  <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Gross amount must be greater than zero.</value></data>
+  <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Worked days must be greater than zero.</value></data>
+  <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>This meal benefit variant is not supported yet.</value></data>
+
+  <!-- Recruitment (Faz 6 R0): job posting/candidate/application core -->
+  <data name="recruitment.postings.read" xml:space="preserve"><value>View Job Postings</value></data>
+  <data name="recruitment.postings.create" xml:space="preserve"><value>Create Job Posting</value></data>
+  <data name="recruitment.postings.update" xml:space="preserve"><value>Update Job Posting</value></data>
+  <data name="recruitment.postings.archive" xml:space="preserve"><value>Archive Job Posting</value></data>
+  <data name="recruitment.candidates.read" xml:space="preserve"><value>View Candidates</value></data>
+  <data name="recruitment.candidates.manage" xml:space="preserve"><value>Manage Candidates</value></data>
+  <data name="recruitment.applications.read" xml:space="preserve"><value>View Applications</value></data>
+  <data name="recruitment.applications.manage" xml:space="preserve"><value>Add or move an application</value></data>
+  <data name="recruitment.posting.not_found" xml:space="preserve"><value>Job posting not found.</value></data>
+  <data name="recruitment.posting.org_unit_invalid" xml:space="preserve"><value>The selected org unit was not found or is inactive.</value></data>
+  <data name="recruitment.posting.location_invalid" xml:space="preserve"><value>The selected location was not found or is inactive.</value></data>
+  <data name="recruitment.posting.owner_invalid" xml:space="preserve"><value>The selected posting owner was not found.</value></data>
+  <data name="recruitment.posting.hiring_manager_invalid" xml:space="preserve"><value>The selected hiring manager was not found.</value></data>
+  <data name="recruitment.posting.title_required" xml:space="preserve"><value>A job posting title is required.</value></data>
+  <data name="recruitment.posting.not_openable" xml:space="preserve"><value>This posting cannot be published from its current status.</value></data>
+  <data name="recruitment.posting.not_closeable" xml:space="preserve"><value>Only an open posting can be closed.</value></data>
+  <data name="recruitment.posting.already_archived" xml:space="preserve"><value>This posting is already archived.</value></data>
+  <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Candidate not found.</value></data>
+  <data name="recruitment.candidate.name_required" xml:space="preserve"><value>The candidate's first and last name are required.</value></data>
+  <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
+  <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
+  <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
 </root>
