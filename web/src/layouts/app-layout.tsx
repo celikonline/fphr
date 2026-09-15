@@ -43,7 +43,7 @@ import {
   type NavItem,
 } from "@/config/navigation";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { avatarUrl } from "@/components/employees/employee-badges";
+import { avatarColor } from "@/components/employees/employee-badges";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -296,7 +296,7 @@ function UserMenu() {
       <Menu.Target>
         <UnstyledButton aria-label={t("navigation:nav.account")} p={4} pr={8} bdrs="md" className={classes.userButton}>
           <Group gap="xs" wrap="nowrap">
-            <Avatar size={32} radius="xl" src={user?.id ? avatarUrl(user.id) : undefined}>
+            <Avatar size={32} radius="xl" color={user?.id ? avatarColor(user.id) : undefined}>
               {initials}
             </Avatar>
             <Text size="sm" fw={500} truncate className="hidden max-w-[10rem] sm:block">
