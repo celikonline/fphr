@@ -49,13 +49,20 @@ public sealed record EmployeeRow(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    SuspensionReason? SuspensionReason = null)
+    SuspensionReason? SuspensionReason = null,
+    DateOnly? LeaveAccrualStartDate = null,
+    DateOnly? PositionStartDate = null)
 {
-    public static EmployeeRow From(Domain.Employees.Employee e) => new(
+    /// <summary>
+    /// <paramref name="today"/> resolves the derived PositionStartDate (ValidFrom of the career record in effect
+    /// today); pass null where career records were not loaded (grid/list projections don't show it).
+    /// </summary>
+    public static EmployeeRow From(Domain.Employees.Employee e, DateOnly? today = null) => new(
         e.Id, e.FirstName, e.LastName, e.DisplayName, e.NationalId, e.WorkEmail, e.PersonalEmail, e.WorkPhone,
         e.HireDate, e.BirthDate, e.Status, e.OrgUnitId, e.ManagerEmployeeId, e.UserId,
         e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
-        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType, e.SuspensionReason);
+        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType, e.SuspensionReason,
+        e.LeaveAccrualStartDate, today is { } date ? e.PositionStartDate(date) : null);
 }
 
 /// <summary>Grid sort field names accepted by the employee list (?sort=).</summary>
@@ -80,6 +87,9 @@ public interface IEmployeeReadStore
     Task<EmployeeRow?> GetAsync(Guid id, CancellationToken ct);
 
     Task<EmployeeRow?> GetByUserIdAsync(Guid userId, CancellationToken ct);
+
+    /// <summary>Untracked employee with its career records - the career read side reuses the aggregate's own timeline rules (current record, implicit initial record).</summary>
+    Task<Domain.Employees.Employee?> GetWithCareerAsync(Guid id, CancellationToken ct);
 
     Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct);
 }

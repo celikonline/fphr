@@ -8,8 +8,11 @@ using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
 namespace Sense.Modules.Employee.Infrastructure.Persistence;
 
-/// <summary>Read side: grid-standard (whitelisted sort/filter) EF queries over employees.</summary>
-public sealed class EmployeeReadStore(EmployeeDbContext db) : IEmployeeReadStore
+/// <summary>
+/// Read side: grid-standard (whitelisted sort/filter) EF queries over employees. Career records are auto-included on
+/// the aggregate; list/grid queries opt out (IgnoreAutoIncludes) and only single-card reads load them.
+/// </summary>
+public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) : IEmployeeReadStore
 {
     private const char LikeWildcard = '%';
     private const char LikeEscape = '\\';
@@ -28,7 +31,7 @@ public sealed class EmployeeReadStore(EmployeeDbContext db) : IEmployeeReadStore
             .ApplySort(paging.SortClauses, Fields, e => e.DisplayName, defaultDescending: false);
 
         var page = await query.ToPagedResultAsync(paging, ct).ConfigureAwait(false);
-        return page.Map(EmployeeRow.From);
+        return page.Map(e => EmployeeRow.From(e));
     }
 
     public async Task<IReadOnlyList<Guid>> ListIdsAsync(EmployeeCriteria criteria, CancellationToken ct) =>
@@ -37,20 +40,25 @@ public sealed class EmployeeReadStore(EmployeeDbContext db) : IEmployeeReadStore
     public async Task<IReadOnlyList<EmployeeRow>> ListAllAsync(EmployeeCriteria criteria, CancellationToken ct)
     {
         var list = await Apply(criteria).ToListAsync(ct).ConfigureAwait(false);
-        return list.Select(EmployeeRow.From).ToList();
+        return list.Select(e => EmployeeRow.From(e)).ToList();
     }
 
     public async Task<EmployeeRow?> GetAsync(Guid id, CancellationToken ct)
     {
-        var entity = await db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
-        return entity is null ? null : EmployeeRow.From(entity);
+        var entity = await db.Employees.AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
+        return entity is null ? null : EmployeeRow.From(entity, Today);
     }
 
     public async Task<EmployeeRow?> GetByUserIdAsync(Guid userId, CancellationToken ct)
     {
-        var entity = await db.Employees.AsNoTracking().FirstOrDefaultAsync(e => e.UserId == userId, ct).ConfigureAwait(false);
-        return entity is null ? null : EmployeeRow.From(entity);
+        var entity = await db.Employees.AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(e => e.UserId == userId, ct).ConfigureAwait(false);
+        return entity is null ? null : EmployeeRow.From(entity, Today);
     }
+
+    public async Task<EmployeeEntity?> GetWithCareerAsync(Guid id, CancellationToken ct) =>
+        await db.Employees.AsNoTracking().AsSplitQuery().FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
+
+    private DateOnly Today => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     public async Task<IReadOnlyDictionary<Guid, string>> GetDisplayNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken ct)
     {
@@ -60,14 +68,14 @@ public sealed class EmployeeReadStore(EmployeeDbContext db) : IEmployeeReadStore
         }
 
         var list = ids.ToList();
-        return await db.Employees.AsNoTracking()
+        return await db.Employees.AsNoTracking().IgnoreAutoIncludes()
             .Where(e => list.Contains(e.Id))
             .ToDictionaryAsync(e => e.Id, e => e.DisplayName, ct).ConfigureAwait(false);
     }
 
     private IQueryable<EmployeeEntity> Apply(EmployeeCriteria c)
     {
-        var query = db.Employees.AsNoTracking();
+        var query = db.Employees.AsNoTracking().IgnoreAutoIncludes();
 
         if (c.Ids is not null)
         {

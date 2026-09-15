@@ -84,7 +84,9 @@
     "homePhone": "[DE] Home phone",
     "addressLine": "[DE] Address",
     "city": "[DE] City",
-    "postalCode": "[DE] Postal code"
+    "postalCode": "[DE] Postal code",
+    "leaveAccrualStartDate": "[DE] Leave accrual start date",
+    "positionStartDate": "[DE] Position start date"
   },
   "enum": {
     "notSet": "[DE] Not set",
@@ -153,6 +155,18 @@
       "seasonal": "[DE] Seasonal",
       "agencyWorker": "[DE] Agency worker",
       "subcontractor": "[DE] Subcontractor"
+    },
+    "careerChangeType": {
+      "hire": "[DE] Hire",
+      "promotion": "[DE] Promotion",
+      "lateralMove": "[DE] Lateral move",
+      "demotion": "[DE] Demotion",
+      "titleChange": "[DE] Title change",
+      "managerChange": "[DE] Manager change",
+      "groupTransfer": "[DE] Group transfer",
+      "businessTransfer": "[DE] Business transfer",
+      "rehire": "[DE] Rehire",
+      "other": "[DE] Other"
     }
   },
   "validation": {
@@ -269,7 +283,8 @@
     "noAccountHint": "[DE] This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "[DE] Only an account owner can grant or revoke the account owner role.",
     "accessTypeSaved": "[DE] Access type updated.",
-    "sensitiveHidden": "[DE] You don't have permission to view military status, disability degree or blood type."
+    "sensitiveHidden": "[DE] You don't have permission to view military status, disability degree or blood type.",
+    "leaveAccrualStartDateHint": "[DE] Enter the actual date; the system grants the first entitlement one year later."
   },
   "invite": {
     "send": "[DE] Send invitation",
@@ -285,5 +300,31 @@
       "alreadyactive": "[DE] Account is already active"
     },
     "sentTo": "[DE] Sent to: {{email}}"
+  },
+  "career": {
+    "currentTitle": "[DE] Current position",
+    "historyTitle": "[DE] Career history",
+    "addPosition": "[DE] Add position",
+    "editPosition": "[DE] Edit position",
+    "dialogDescription": "[DE] Pick a unit for each level, the manager, employment type and the date the position starts. Adding a position closes the previous one the day before.",
+    "empty": "[DE] No career record yet.",
+    "noLevels": "[DE] Hierarchy levels could not be loaded; viewing the company structure requires organization read access.",
+    "changeType": "[DE] Change type",
+    "note": "[DE] Note",
+    "ongoing": "[DE] Ongoing",
+    "current": "[DE] Current",
+    "period": "{{from}} – {{to}}",
+    "noUnitSelected": "[DE] Not selected",
+    "validFromHint": "[DE] The previous record is closed the day before this date.",
+    "validFromLocked": "[DE] Only the latest record can change its start date.",
+    "saved": "[DE] Career record saved.",
+    "deleted": "[DE] Career record deleted.",
+    "deleteTitle": "[DE] Delete career record?",
+    "deleteDescription": "[DE] The record is deleted and the previous position becomes current again.",
+    "validation": {
+      "validFromRequired": "[DE] Position start date is required.",
+      "validFromAfterPrevious": "[DE] The date must be after the previous record's start ({{date}}).",
+      "validFromBeforeHire": "[DE] The date cannot be before the hire date ({{date}})."
+    }
   }
 }

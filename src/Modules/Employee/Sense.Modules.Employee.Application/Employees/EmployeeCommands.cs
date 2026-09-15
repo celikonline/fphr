@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Contracts;
 // Not "using Sense.Modules.Employee.Contracts.Events" - it declares its own SuspensionReason (Contracts stays
 // independent of Domain, per architecture rule), which would collide with Domain.Employees.SuspensionReason below;
@@ -45,12 +46,13 @@ public sealed record CreateEmployeeCommand(
     string? City = null,
     string? PostalCode = null,
     ContractType? ContractType = null,
-    EmploymentType? EmploymentType = null) : ICommand<EmployeeDetailDto>
+    EmploymentType? EmploymentType = null,
+    DateOnly? LeaveAccrualStartDate = null) : ICommand<EmployeeDetailDto>
 {
     public EmployeeInfo ToInfo() => new(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
-        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType);
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate);
 }
 
 /// <summary>Updates an employee record (same body as create); out-of-scope targets return 404 (IScopedRequest).</summary>
@@ -81,14 +83,15 @@ public sealed record UpdateEmployeeCommand(
     string? City = null,
     string? PostalCode = null,
     ContractType? ContractType = null,
-    EmploymentType? EmploymentType = null) : ICommand<EmployeeDetailDto>, IScopedRequest
+    EmploymentType? EmploymentType = null,
+    DateOnly? LeaveAccrualStartDate = null) : ICommand<EmployeeDetailDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => Id;
 
     public EmployeeInfo ToInfo() => new(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
-        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType);
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate);
 }
 
 /// <summary>Shared field rules for create/update (mirrors the domain checks so the client gets per-field 400s).</summary>
@@ -207,6 +210,7 @@ public sealed class CreateEmployeeHandler(
     EmployeeReferenceValidator references,
     EmployeeSensitiveAccess sensitiveAccess,
     IIntegrationEventOutbox outbox,
+    CareerService career,
     EmployeeDetailBuilder details) : ICommandHandler<CreateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(CreateEmployeeCommand command, CancellationToken cancellationToken)
@@ -232,12 +236,19 @@ public sealed class CreateEmployeeHandler(
         var employee = result.Value;
         employees.Add(employee);
 
-        if (employee.Status == EmployeeStatus.Active && employee.HireDate is { } hireDate)
+        // Initial "Hire" career record (ValidFrom = HireDate ?? today) when there is anything to place.
+        if (employee.HasCareerData)
         {
-            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, hireDate) { ActorUserId = currentUser.UserId });
+            var placement = await career.LoadPlacementAsync(cancellationToken);
+            career.PublishInitial(employee, employee.EnsureInitialCareerRecord(placement.ChainFor(command.OrgUnitId), career.Today));
         }
 
-        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+        if (employee.Status == EmployeeStatus.Active && employee.HireDate is { } hireDate)
+        {
+            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate) { ActorUserId = currentUser.UserId });
+        }
+
+        return await details.BuildAsync(employee, cancellationToken);
     }
 }
 
@@ -248,6 +259,7 @@ public sealed class UpdateEmployeeHandler(
     EmployeeReferenceValidator references,
     EmployeeSensitiveAccess sensitiveAccess,
     IIntegrationEventOutbox outbox,
+    CareerService career,
     EmployeeDetailBuilder details) : ICommandHandler<UpdateEmployeeCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(UpdateEmployeeCommand command, CancellationToken cancellationToken)
@@ -271,14 +283,17 @@ public sealed class UpdateEmployeeHandler(
             return checkedRefs.Error;
         }
 
-        if (command.ManagerEmployeeId != employee.ManagerEmployeeId)
+        var orgUnitChanged = command.OrgUnitId != employee.OrgUnitId;
+        var managerChanged = command.ManagerEmployeeId != employee.ManagerEmployeeId;
+        var placementChanged = orgUnitChanged || managerChanged || command.EmploymentType != employee.EmploymentType;
+
+        // Unit/manager/employment type now live on the career timeline: materialize the initial record first (so a
+        // hire-date correction can realign it), then route the change through the aggregate's career rules.
+        OrgPlacement? placement = null;
+        if (placementChanged || info.HireDate != employee.HireDate)
         {
-            var managerMap = await employees.GetManagerMapAsync(cancellationToken);
-            var assigned = employee.AssignManager(command.ManagerEmployeeId, managerMap);
-            if (assigned.IsFailure)
-            {
-                return assigned.Error;
-            }
+            placement = await career.LoadPlacementAsync(cancellationToken);
+            career.Materialize(employee, placement);
         }
 
         var updated = employee.UpdateInfo(info);
@@ -287,14 +302,34 @@ public sealed class UpdateEmployeeHandler(
             return updated.Error;
         }
 
-        employee.AssignOrgUnit(command.OrgUnitId);
+        if (placement is not null && !placementChanged)
+        {
+            // A Draft that just received its first hire date gets its initial record now (a placement change below
+            // creates it itself, with the new values).
+            career.Materialize(employee, placement);
+        }
+
+        if (placementChanged && placement is not null)
+        {
+            var latest = employee.CareerTimeline.LastOrDefault();
+            var assignments = orgUnitChanged || latest is null ? placement.ChainFor(command.OrgUnitId) : latest.AssignmentInputs();
+            var changeType = managerChanged && !orgUnitChanged ? CareerChangeType.ManagerChange : CareerChangeType.Other;
+            var context = await career.BuildContextAsync(placement, cancellationToken);
+            var moved = employee.ApplyPlacement(new PlacementRequest(assignments, command.ManagerEmployeeId, command.EmploymentType, changeType), context);
+            if (moved.IsFailure)
+            {
+                return moved.Error;
+            }
+
+            career.Publish(employee, moved.Value);
+        }
 
         if (updated.Value && employee.HireDate is { } hireDate)
         {
-            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, hireDate) { ActorUserId = currentUser.UserId });
+            outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate) { ActorUserId = currentUser.UserId });
         }
 
-        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+        return await details.BuildAsync(employee, cancellationToken);
     }
 }
 
@@ -334,7 +369,7 @@ public sealed class SuspendEmployeeHandler(
         }
 
         outbox.Enqueue(new Contracts.Events.EmployeeSuspended(tenant.TenantId, employee.Id, ToContractReason(command.Reason)) { ActorUserId = currentUser.UserId });
-        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+        return await details.BuildAsync(employee, cancellationToken);
     }
 
     private static Contracts.Events.SuspensionReason ToContractReason(SuspensionReason reason) => reason switch
@@ -384,7 +419,7 @@ public sealed class ReactivateEmployeeHandler(
         }
 
         outbox.Enqueue(new Contracts.Events.EmployeeReactivated(tenant.TenantId, employee.Id) { ActorUserId = currentUser.UserId });
-        return await details.BuildAsync(EmployeeRow.From(employee), cancellationToken);
+        return await details.BuildAsync(employee, cancellationToken);
     }
 }
 
@@ -404,7 +439,8 @@ public sealed class BulkAssignManagerValidator : AbstractValidator<BulkAssignMan
 public sealed class BulkAssignManagerHandler(
     ITenantContext tenant,
     IEmployeeRepository employees,
-    EmployeeSelectionResolver resolver) : ICommandHandler<BulkAssignManagerCommand, BulkOperationResult>
+    EmployeeSelectionResolver resolver,
+    CareerService career) : ICommandHandler<BulkAssignManagerCommand, BulkOperationResult>
 {
     public async Task<Result<BulkOperationResult>> Handle(BulkAssignManagerCommand command, CancellationToken cancellationToken)
     {
@@ -426,6 +462,8 @@ public sealed class BulkAssignManagerHandler(
 
         var loaded = (await employees.ListByIdsAsync(resolved, cancellationToken)).ToDictionary(e => e.Id);
         var managerMap = new Dictionary<Guid, Guid?>(await employees.GetManagerMapAsync(cancellationToken));
+        var placement = await career.LoadPlacementAsync(cancellationToken);
+        var context = career.BuildContext(placement, managerMap);
 
         var items = new List<BulkItemResult>(requested.Count);
         foreach (var id in requested)
@@ -442,14 +480,24 @@ public sealed class BulkAssignManagerHandler(
                 continue;
             }
 
-            var assigned = employee.AssignManager(managerId, managerMap);
+            // Same career rule as a single edit: amend a record starting today, otherwise a ManagerChange record effective today.
+            career.Materialize(employee, placement);
+            var latest = employee.CareerTimeline.LastOrDefault();
+            var assigned = employee.ApplyPlacement(
+                new PlacementRequest(
+                    latest?.AssignmentInputs() ?? placement.ChainFor(employee.OrgUnitId),
+                    managerId,
+                    latest is null ? employee.EmploymentType : latest.EmploymentType,
+                    CareerChangeType.ManagerChange),
+                context);
             if (assigned.IsFailure)
             {
                 items.Add(new BulkItemResult(id, BulkItemOutcome.Failed, assigned.Error.Code));
                 continue;
             }
 
-            managerMap[id] = managerId;
+            career.Publish(employee, assigned.Value);
+            managerMap[id] = employee.ManagerEmployeeId;
             items.Add(new BulkItemResult(id, BulkItemOutcome.Succeeded, null));
         }
 

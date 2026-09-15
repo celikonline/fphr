@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
@@ -36,7 +37,17 @@ public sealed record EmployeeRequest(
     string? City = null,
     string? PostalCode = null,
     ContractType? ContractType = null,
-    EmploymentType? EmploymentType = null);
+    EmploymentType? EmploymentType = null,
+    DateOnly? LeaveAccrualStartDate = null);
+
+/// <summary>"Pozisyon ekle" / edit body for a career record (changeType/employmentType as camelCase enum strings).</summary>
+public sealed record CareerRecordRequest(
+    DateOnly ValidFrom,
+    CareerChangeType ChangeType,
+    EmploymentType? EmploymentType,
+    Guid? ManagerEmployeeId,
+    string? Note,
+    IReadOnlyList<OrgAssignmentDto>? Assignments);
 
 /// <summary>Suspend body.</summary>
 public sealed record SuspendEmployeeRequest(SuspensionReason Reason);
@@ -77,6 +88,12 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> Me(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyEmployeeQuery(), ct));
 
+    /// <summary>The caller's own career timeline (read-only).</summary>
+    [HttpGet("me/career")]
+    [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyCareer(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyCareerQuery(), ct));
+
     /// <summary>Employee card (404 when missing or outside the caller's data scope).</summary>
     [HttpGet(ApiRoutes.IdParam)]
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
@@ -92,7 +109,7 @@ public sealed class EmployeesController : ApiControllerBase
                 request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
-                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType),
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate),
             ct));
 
     /// <summary>Updates an employee record.</summary>
@@ -104,8 +121,36 @@ public sealed class EmployeesController : ApiControllerBase
                 request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
-                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType),
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate),
             ct));
+
+    /// <summary>Career timeline, newest first (an employee without stored history shows its current values as one implicit Hire record).</summary>
+    [HttpGet(ApiRoutes.IdParam + "/career")]
+    [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Career(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeCareerQuery(id), ct));
+
+    /// <summary>"Pozisyon ekle": adds a career record (closes the previous one); returns the updated timeline.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/career")]
+    [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddCareerRecord(Guid id, [FromBody] CareerRecordRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new AddCareerRecordCommand(id, request.ValidFrom, request.ChangeType, request.EmploymentType, request.ManagerEmployeeId, request.Note, request.Assignments ?? []),
+            ct));
+
+    /// <summary>Edits a career record (only the latest may change its start date); returns the updated timeline.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/career/{recordId:guid}")]
+    [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateCareerRecord(Guid id, Guid recordId, [FromBody] CareerRecordRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new UpdateCareerRecordCommand(id, recordId, request.ValidFrom, request.ChangeType, request.EmploymentType, request.ManagerEmployeeId, request.Note, request.Assignments ?? []),
+            ct));
+
+    /// <summary>Deletes the latest career record and reopens the previous one; returns the updated timeline.</summary>
+    [HttpDelete(ApiRoutes.IdParam + "/career/{recordId:guid}")]
+    [ProducesResponseType<IReadOnlyList<CareerRecordDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteCareerRecord(Guid id, Guid recordId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteCareerRecordCommand(id, recordId), ct));
 
     /// <summary>Suspends an Active employee (askıya alma).</summary>
     [HttpPost(ApiRoutes.IdParam + "/suspend")]

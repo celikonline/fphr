@@ -84,7 +84,9 @@
     "homePhone": "Ev telefonu",
     "addressLine": "Adres",
     "city": "Şehir",
-    "postalCode": "Posta kodu"
+    "postalCode": "Posta kodu",
+    "leaveAccrualStartDate": "İzne esas hak ediş tarihi",
+    "positionStartDate": "Pozisyon başlama tarihi"
   },
   "enum": {
     "notSet": "Belirtilmemiş",
@@ -153,6 +155,18 @@
       "seasonal": "Mevsimlik",
       "agencyWorker": "Geçici iş ilişkisi (Büro)",
       "subcontractor": "Alt işveren"
+    },
+    "careerChangeType": {
+      "hire": "İşe giriş",
+      "promotion": "Terfi",
+      "lateralMove": "Yatay geçiş",
+      "demotion": "Görev düşürme",
+      "titleChange": "Ünvan değişikliği",
+      "managerChange": "Yönetici değişikliği",
+      "groupTransfer": "Grup içi transfer",
+      "businessTransfer": "İşyeri devri",
+      "rehire": "Yeniden işe giriş",
+      "other": "Diğer"
     }
   },
   "validation": {
@@ -269,7 +283,8 @@
     "noAccountHint": "Bu çalışanın henüz kullanıcı hesabı yok. Üç nokta menüsünden davetiye göndererek hesap oluşturabilirsiniz.",
     "accessTypeHint": "Hesap sahibi rolünü yalnızca bir hesap sahibi verebilir veya kaldırabilir.",
     "accessTypeSaved": "Erişim türü güncellendi.",
-    "sensitiveHidden": "Askerlik durumu, engellilik derecesi ve kan grubu alanları için görüntüleme yetkiniz yok."
+    "sensitiveHidden": "Askerlik durumu, engellilik derecesi ve kan grubu alanları için görüntüleme yetkiniz yok.",
+    "leaveAccrualStartDateHint": "Gerçek tarih yazılır; ilk hak ediş sistemce 1 yıl sonra verilir"
   },
   "invite": {
     "send": "Davetiye gönder",
@@ -285,5 +300,31 @@
       "alreadyactive": "Hesap zaten aktif"
     },
     "sentTo": "Gönderilen adres: {{email}}"
+  },
+  "career": {
+    "currentTitle": "Mevcut pozisyon",
+    "historyTitle": "Kariyer geçmişi",
+    "addPosition": "Pozisyon ekle",
+    "editPosition": "Pozisyonu düzenle",
+    "dialogDescription": "Her seviye için birimi, yöneticiyi, çalışma şeklini ve pozisyon başlama tarihini seçin. Yeni pozisyon, önceki kaydı bir gün önce kapatır.",
+    "empty": "Henüz kariyer kaydı yok.",
+    "noLevels": "Hiyerarşi seviyeleri yüklenemedi; şirket yapısını görüntüleme yetkisi gerekir.",
+    "changeType": "Değişiklik türü",
+    "note": "Not",
+    "ongoing": "Devam ediyor",
+    "current": "Güncel",
+    "period": "{{from}} – {{to}}",
+    "noUnitSelected": "Seçilmedi",
+    "validFromHint": "Önceki kayıt bu tarihten bir gün önce kapanır.",
+    "validFromLocked": "Yalnızca en son kaydın başlangıç tarihi değiştirilebilir.",
+    "saved": "Kariyer kaydı kaydedildi.",
+    "deleted": "Kariyer kaydı silindi.",
+    "deleteTitle": "Kariyer kaydı silinsin mi?",
+    "deleteDescription": "Kayıt silinir ve bir önceki pozisyon yeniden güncel olur.",
+    "validation": {
+      "validFromRequired": "Pozisyon başlama tarihi zorunludur.",
+      "validFromAfterPrevious": "Tarih, önceki kaydın başlangıcından ({{date}}) sonra olmalıdır.",
+      "validFromBeforeHire": "Tarih, işe başlama tarihinden ({{date}}) önce olamaz."
+    }
   }
 }

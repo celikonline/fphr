@@ -23,6 +23,79 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CareerRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("change_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("EmploymentType")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("employment_type");
+
+                    b.Property<Guid?>("ManagerEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("manager_employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to");
+
+                    b.HasKey("Id")
+                        .HasName("pk_career_records");
+
+                    b.HasIndex("ManagerEmployeeId")
+                        .HasDatabaseName("ix_career_records_manager_employee_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_career_records_tenant_id");
+
+                    b.HasIndex("EmployeeId", "ValidFrom")
+                        .HasDatabaseName("ix_career_records_employee_id_valid_from");
+
+                    b.ToTable("career_records", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.Employee", b =>
                 {
                     b.Property<Guid>("Id")
@@ -120,6 +193,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("last_name");
+
+                    b.Property<DateOnly?>("LeaveAccrualStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("leave_accrual_start_date");
 
                     b.Property<Guid?>("ManagerEmployeeId")
                         .HasColumnType("uuid")
@@ -352,6 +429,50 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.CareerRecord", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("CareerRecords")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_career_records_employees_employee_id");
+
+                    b.OwnsMany("Sense.Modules.Employee.Domain.Employees.EmployeeOrgAssignment", "Assignments", b1 =>
+                        {
+                            b1.Property<Guid>("CareerRecordId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("career_record_id");
+
+                            b1.Property<Guid>("OrgUnitTypeId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("org_unit_type_id");
+
+                            b1.Property<Guid>("OrgUnitId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("org_unit_id");
+
+                            b1.HasKey("CareerRecordId", "OrgUnitTypeId")
+                                .HasName("pk_career_org_assignments");
+
+                            b1.HasIndex("OrgUnitId")
+                                .HasDatabaseName("ix_career_org_assignments_org_unit_id");
+
+                            b1.ToTable("career_org_assignments", "employee");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CareerRecordId")
+                                .HasConstraintName("fk_career_org_assignments_career_records_career_record_id");
+                        });
+
+                    b.Navigation("Assignments");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.Employee", b =>
+                {
+                    b.Navigation("CareerRecords");
                 });
 #pragma warning restore 612, 618
         }

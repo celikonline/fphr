@@ -84,7 +84,9 @@
     "homePhone": "Home phone",
     "addressLine": "Address",
     "city": "City",
-    "postalCode": "Postal code"
+    "postalCode": "Postal code",
+    "leaveAccrualStartDate": "Leave accrual start date",
+    "positionStartDate": "Position start date"
   },
   "enum": {
     "notSet": "Not set",
@@ -153,6 +155,18 @@
       "seasonal": "Seasonal",
       "agencyWorker": "Agency worker",
       "subcontractor": "Subcontractor"
+    },
+    "careerChangeType": {
+      "hire": "Hire",
+      "promotion": "Promotion",
+      "lateralMove": "Lateral move",
+      "demotion": "Demotion",
+      "titleChange": "Title change",
+      "managerChange": "Manager change",
+      "groupTransfer": "Group transfer",
+      "businessTransfer": "Business transfer",
+      "rehire": "Rehire",
+      "other": "Other"
     }
   },
   "validation": {
@@ -269,7 +283,8 @@
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
     "accessTypeSaved": "Access type updated.",
-    "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type."
+    "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type.",
+    "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later."
   },
   "invite": {
     "send": "Send invitation",
@@ -285,5 +300,31 @@
       "alreadyactive": "Account is already active"
     },
     "sentTo": "Sent to: {{email}}"
+  },
+  "career": {
+    "currentTitle": "Current position",
+    "historyTitle": "Career history",
+    "addPosition": "Add position",
+    "editPosition": "Edit position",
+    "dialogDescription": "Pick a unit for each level, the manager, employment type and the date the position starts. Adding a position closes the previous one the day before.",
+    "empty": "No career record yet.",
+    "noLevels": "Hierarchy levels could not be loaded; viewing the company structure requires organization read access.",
+    "changeType": "Change type",
+    "note": "Note",
+    "ongoing": "Ongoing",
+    "current": "Current",
+    "period": "{{from}} – {{to}}",
+    "noUnitSelected": "Not selected",
+    "validFromHint": "The previous record is closed the day before this date.",
+    "validFromLocked": "Only the latest record can change its start date.",
+    "saved": "Career record saved.",
+    "deleted": "Career record deleted.",
+    "deleteTitle": "Delete career record?",
+    "deleteDescription": "The record is deleted and the previous position becomes current again.",
+    "validation": {
+      "validFromRequired": "Position start date is required.",
+      "validFromAfterPrevious": "The date must be after the previous record's start ({{date}}).",
+      "validFromBeforeHire": "The date cannot be before the hire date ({{date}})."
+    }
   }
 }

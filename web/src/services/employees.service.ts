@@ -94,6 +94,10 @@ export interface EmployeeDetail {
   contractType: ContractType | null;
   employmentType: EmploymentType | null;
   suspensionReason: SuspensionReason | null;
+  /** "İzne esas hak ediş tarihi" (defaults to hireDate; may be earlier). */
+  leaveAccrualStartDate: string | null;
+  /** Derived: validFrom of the career record in effect today. */
+  positionStartDate: string | null;
 }
 
 /**
@@ -127,6 +131,8 @@ export interface EmployeeInput {
   postalCode?: string | null;
   contractType?: ContractType | null;
   employmentType?: EmploymentType | null;
+  /** Omitted/null keeps the stored value (or defaults it to hireDate the first time one is set). */
+  leaveAccrualStartDate?: string | null;
 }
 
 export interface DirectoryEntry {
@@ -246,6 +252,7 @@ export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<Emplo
     postalCode: detail.postalCode,
     contractType: detail.contractType,
     employmentType: detail.employmentType,
+    leaveAccrualStartDate: detail.leaveAccrualStartDate ?? null,
     ...overrides,
   };
 }
@@ -253,6 +260,7 @@ export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<Emplo
 /** Minimal flat org unit (`OrgUnitDto` from `GET /v1/organization/units`) used to label/select units on employee screens. */
 export interface EmployeeOrgUnitOption {
   id: string;
+  typeId: string;
   parentId: string | null;
   name: string;
   sortOrder: number;
@@ -260,5 +268,87 @@ export interface EmployeeOrgUnitOption {
 
 export async function listOrgUnitOptions(): Promise<EmployeeOrgUnitOption[]> {
   const { data } = await apiClient.get<EmployeeOrgUnitOption[]>("/v1/organization/units");
+  return data;
+}
+
+/** Active hierarchy level (`OrgUnitTypeDto` from `GET /v1/organization/unit-types?activeOnly=true`). */
+export interface EmployeeOrgLevelOption {
+  id: string;
+  code: string;
+  name: string;
+  sortOrder: number;
+}
+
+export async function listOrgLevelOptions(): Promise<EmployeeOrgLevelOption[]> {
+  const { data } = await apiClient.get<EmployeeOrgLevelOption[]>("/v1/organization/unit-types", { params: { activeOnly: true } });
+  return data;
+}
+
+// ---------------------------------------------------------------- Career history (Kariyer)
+
+/** Mirrors `CareerChangeType` (camelCase enum JSON). */
+export type CareerChangeType =
+  | "hire"
+  | "promotion"
+  | "lateralMove"
+  | "demotion"
+  | "titleChange"
+  | "managerChange"
+  | "groupTransfer"
+  | "businessTransfer"
+  | "rehire"
+  | "other";
+
+export interface OrgAssignment {
+  orgUnitTypeId: string;
+  orgUnitId: string;
+}
+
+/** `CareerRecordDto`; the API returns the timeline newest first. */
+export interface CareerRecord {
+  id: string;
+  validFrom: string;
+  validTo: string | null;
+  changeType: CareerChangeType;
+  employmentType: EmploymentType | null;
+  managerEmployeeId: string | null;
+  managerDisplayName: string | null;
+  note: string | null;
+  assignments: OrgAssignment[];
+  isCurrent: boolean;
+}
+
+/** `CareerRecordRequest` body ("Pozisyon ekle" / edit). */
+export interface CareerRecordInput {
+  validFrom: string;
+  changeType: CareerChangeType;
+  employmentType: EmploymentType | null;
+  managerEmployeeId: string | null;
+  note: string | null;
+  assignments: OrgAssignment[];
+}
+
+export async function getEmployeeCareer(employeeId: string): Promise<CareerRecord[]> {
+  const { data } = await apiClient.get<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career`);
+  return data;
+}
+
+export async function getMyCareer(): Promise<CareerRecord[]> {
+  const { data } = await apiClient.get<CareerRecord[]>(`${EMPLOYEES_BASE}/me/career`);
+  return data;
+}
+
+export async function addCareerRecord(employeeId: string, input: CareerRecordInput): Promise<CareerRecord[]> {
+  const { data } = await apiClient.post<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career`, input);
+  return data;
+}
+
+export async function updateCareerRecord(employeeId: string, recordId: string, input: CareerRecordInput): Promise<CareerRecord[]> {
+  const { data } = await apiClient.put<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`, input);
+  return data;
+}
+
+export async function deleteCareerRecord(employeeId: string, recordId: string): Promise<CareerRecord[]> {
+  const { data } = await apiClient.delete<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`);
   return data;
 }

@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Employee.Application;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Contracts;
@@ -45,6 +46,11 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<EmployeeReferenceValidator>();
         services.AddScoped<EmployeeSensitiveAccess>();
         services.AddScoped<IEmployeeUnitOfWork, EmployeeUnitOfWork>();
+
+        // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
+        services.AddScoped<OrgPlacementLoader>();
+        services.AddScoped<CareerService>();
+        services.AddScoped<CareerReader>();
 
         // Data import template "employee.master" (collected by the DataTransfer module)
         services.AddScoped<IImportTemplate, EmployeeMasterImportTemplate>();

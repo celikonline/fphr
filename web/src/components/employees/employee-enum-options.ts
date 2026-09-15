@@ -4,6 +4,7 @@
  */
 import type {
   BloodType,
+  CareerChangeType,
   ContractType,
   DisabilityDegree,
   EducationStatus,
@@ -42,4 +43,16 @@ export const EMPLOYMENT_TYPE_OPTIONS: EmploymentType[] = [
   "seasonal",
   "agencyWorker",
   "subcontractor",
+];
+export const CAREER_CHANGE_TYPE_OPTIONS: CareerChangeType[] = [
+  "hire",
+  "promotion",
+  "lateralMove",
+  "demotion",
+  "titleChange",
+  "managerChange",
+  "groupTransfer",
+  "businessTransfer",
+  "rehire",
+  "other",
 ];

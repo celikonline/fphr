@@ -10,6 +10,7 @@ using Sense.Modules.DataTransfer.Domain.ImportJobs;
 using Sense.Modules.DataTransfer.Infrastructure.Persistence;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Api;
@@ -20,6 +21,7 @@ using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Context;
+using Sense.Shared.Infrastructure.Persistence.Outbox;
 using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
@@ -101,6 +103,17 @@ public sealed class DataTransferIntegrationTests : TestFixture
         (aliRow.DisplayName, aliRow.HireDate, aliRow.OrgUnitId).ShouldBe(("Ali Kaya", new DateOnly(2020, 1, 15), org.AcmeRnd));
         employees.ShouldContain(e => e.NationalId == denizId);
         employees.Count.ShouldBe(4);
+
+        // Import goes through career history like every other write path (E2): initial Hire records with the resolved
+        // per-level placement, and CareerChanged/ManagerChanged in the Employee outbox.
+        var ayseCareer = ayse.CareerTimeline.ShouldHaveSingleItem();
+        (ayseCareer.ValidFrom, ayseCareer.ChangeType, ayseCareer.ManagerEmployeeId).ShouldBe((new DateOnly(2024, 3, 1), CareerChangeType.Hire, (Guid?)zeynep.Id));
+        ayseCareer.Assignments.Select(a => a.OrgUnitId).ShouldBe([org.AcmeSales, org.Acme], ignoreOrder: true);
+        var aliCareer = aliRow.CareerTimeline.ShouldHaveSingleItem();
+        (aliCareer.ValidFrom, aliCareer.ChangeType).ShouldBe((new DateOnly(2020, 1, 15), CareerChangeType.Hire));
+        var outbox = await ServiceProvider!.GetRequiredService<EmployeeDbContext>().OutboxMessages.AsNoTracking().Where(m => m.TenantId == tenantId).Select(m => m.Type).ToListAsync();
+        outbox.Count(t => t == EventTypeRegistry.NameOf(typeof(Sense.Modules.Employee.Contracts.Events.CareerChanged))).ShouldBe(2);
+        outbox.Count(t => t == EventTypeRegistry.NameOf(typeof(Sense.Modules.Employee.Contracts.Events.ManagerChanged))).ShouldBe(1);
 
         var errors = (await ExecuteQueryAsync(new ListImportJobRowsQuery(job.Id, "Error", new PagedQuery { PageSize = 50 }))).Value;
         errors.TotalCount.ShouldBe(4);

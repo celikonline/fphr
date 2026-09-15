@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
-import { AccountSection, CareerSection, GeneralSection, PersonalSection } from "./employee-card-sections";
+import { CareerSection } from "./career-section";
+import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 
 export interface EmployeeCardTabProps {
   employee: EmployeeDetail;
