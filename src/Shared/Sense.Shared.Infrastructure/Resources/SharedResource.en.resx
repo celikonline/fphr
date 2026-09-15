@@ -612,4 +612,9 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
+  <data name="attendance.timesheet.view" xml:space="preserve"><value>View timesheets</value></data>
+  <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
+  <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
+  <data name="attendance.day.not_found" xml:space="preserve"><value>Attendance day not found.</value></data>
+  <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
 </root>

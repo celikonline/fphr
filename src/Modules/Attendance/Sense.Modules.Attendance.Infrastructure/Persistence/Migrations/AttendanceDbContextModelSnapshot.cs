@@ -23,6 +23,105 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.AttendanceDays.AttendanceDay", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Anomalies")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("anomalies");
+
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("break_minutes");
+
+                    b.Property<TimeOnly?>("CheckIn")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("check_in");
+
+                    b.Property<TimeOnly?>("CheckOut")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("check_out");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("OverrideReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("override_reason");
+
+                    b.Property<int?>("OverrideWorkedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("override_worked_minutes");
+
+                    b.Property<TimeOnly?>("PlannedEnd")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("planned_end");
+
+                    b.Property<int>("PlannedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("planned_minutes");
+
+                    b.Property<TimeOnly?>("PlannedStart")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("planned_start");
+
+                    b.Property<string>("ResolutionState")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("resolution_state");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("WorkedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("worked_minutes");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attendance_days");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_attendance_days_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "Date")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attendance_days_tenant_id_employee_id_date");
+
+                    b.ToTable("attendance_days", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.WorkSchedules.EmployeeWorkScheduleAssignment", b =>
                 {
                     b.Property<Guid>("Id")

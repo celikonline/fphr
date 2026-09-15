@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
@@ -140,5 +141,65 @@ public sealed class AttendanceIntegrationTests : TestFixture
 
         var saturday = monday.AddDays(5);
         (await readService.IsWorkingDayAsync(employeeId, saturday, TestContext.Current.CancellationToken)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AttendanceDay_PersistedAndReloaded_RoundTripsMultiFlagAnomalies()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid dayId;
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            // 09:00 girişte 30dk geç, 19:00 çıkışta geç -> LateArrival + LateLeave + Overwork birlikte.
+            var day = AttendanceDay.Record(
+                tenantId, employeeId, new DateOnly(2026, 9, 21), new TimeOnly(9, 30), new TimeOnly(19, 0),
+                new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 8 * 60, breakMinutes: 0, AttendanceDaySource.Manual);
+            db.AttendanceDays.Add(day);
+            await db.SaveChangesAsync();
+            dayId = day.Id;
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var repo = read.ServiceProvider.GetRequiredService<IAttendanceDayRepository>();
+        var loaded = (await repo.GetByIdAsync(dayId, TestContext.Current.CancellationToken)).Value;
+        loaded.Anomalies.HasFlag(AttendanceAnomaly.LateArrival).ShouldBeTrue();
+        loaded.Anomalies.HasFlag(AttendanceAnomaly.LateLeave).ShouldBeTrue();
+        loaded.Anomalies.HasFlag(AttendanceAnomaly.Overwork).ShouldBeTrue();
+        loaded.ResolutionState.ShouldBe(AttendanceResolutionState.Unresolved);
+
+        var listed = await repo.ListForEmployeeAsync(employeeId, new DateOnly(2026, 9, 21), new DateOnly(2026, 9, 21), TestContext.Current.CancellationToken);
+        listed.ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task AttendanceDay_ReRecordingSameEmployeeAndDate_OverwritesExistingRow()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var date = new DateOnly(2026, 9, 21);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using var scope = ServiceProvider!.CreateScope();
+        var days = scope.ServiceProvider.GetRequiredService<IAttendanceDayRepository>();
+        var db = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+
+        var first = AttendanceDay.Record(tenantId, employeeId, date, null, null, new TimeOnly(9, 0), new TimeOnly(17, 0), 8 * 60, 0, AttendanceDaySource.Manual);
+        days.Add(first);
+        await db.SaveChangesAsync();
+        first.Anomalies.ShouldBe(AttendanceAnomaly.NoData);
+
+        var existing = await days.FindByEmployeeAndDateAsync(employeeId, date, TestContext.Current.CancellationToken);
+        existing.ShouldNotBeNull();
+        existing.UpdateRecord(new TimeOnly(9, 0), new TimeOnly(17, 0), new TimeOnly(9, 0), new TimeOnly(17, 0), 8 * 60, 0, AttendanceDaySource.Import);
+        await db.SaveChangesAsync();
+
+        var all = await days.ListForEmployeeAsync(employeeId, date, date, TestContext.Current.CancellationToken);
+        all.ShouldHaveSingleItem();
+        all[0].Anomalies.ShouldBe(AttendanceAnomaly.None);
+        all[0].Source.ShouldBe(AttendanceDaySource.Import);
     }
 }

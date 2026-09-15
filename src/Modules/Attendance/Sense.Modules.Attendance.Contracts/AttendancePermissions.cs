@@ -25,6 +25,17 @@ public static class AttendancePermissions
     public static readonly Permission MyWorkSchedule = new(
         "attendance.my.workschedule", Module, "View My Work Schedule", Group, "View the caller's own work schedule");
 
+    public static readonly Permission TimesheetView = new(
+        "attendance.timesheet.view", Module, "View Timesheets", Group, "View employees' recorded attendance days");
+
+    /// <summary>"Çalışılan saat" manual record/correction (11.3.6); PDKS import (package A2b) reuses the same write path.</summary>
+    public static readonly Permission TimesheetEdit = new(
+        "attendance.timesheet.edit", Module, "Edit Timesheets", Group, "Record and correct employees' check-in/check-out times");
+
+    /// <summary>"Puantajım"; "*.my.*" reaches every base role.</summary>
+    public static readonly Permission MyTimesheet = new(
+        "attendance.my.timesheet", Module, "View My Timesheet", Group, "View the caller's own recorded attendance days");
+
     public static IEnumerable<Permission> All =>
-        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule];
+        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet];
 }

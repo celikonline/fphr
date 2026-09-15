@@ -12,6 +12,8 @@ public static class AttendanceDomainErrors
     public const string ScheduleHasEmployees = "attendance.errors.schedule_has_employees";
     public const string ScheduleInactive = "attendance.errors.schedule_inactive";
     public const string AssignmentEffectiveDateInPast = "attendance.assignment.effective_date_in_past";
+    public const string DayNotFound = "attendance.day.not_found";
+    public const string DayCheckOutBeforeCheckIn = "attendance.day.check_out_before_check_in";
 }
 
 /// <summary>Domain limits.</summary>

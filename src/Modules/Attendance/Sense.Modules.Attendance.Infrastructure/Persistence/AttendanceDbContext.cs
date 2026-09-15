@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -19,12 +20,16 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<WorkSchedule> WorkSchedules => Set<WorkSchedule>();
 
     public DbSet<EmployeeWorkScheduleAssignment> WorkScheduleAssignments => Set<EmployeeWorkScheduleAssignment>();
+
+    public DbSet<AttendanceDay> AttendanceDays => Set<AttendanceDay>();
 }
 
 internal static class AttendanceTables
 {
     public const string WorkSchedules = "work_schedules";
     public const string WorkScheduleAssignments = "employee_work_schedule_assignments";
+    public const string AttendanceDays = "attendance_days";
+    public const int OverrideReasonMaxLength = 1000;
 }
 
 public sealed class WorkScheduleConfiguration : IEntityTypeConfiguration<WorkSchedule>
@@ -58,6 +63,22 @@ public sealed class EmployeeWorkScheduleAssignmentConfiguration : IEntityTypeCon
         b.Property(x => x.Source).HasConversion<string>();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.EffectiveFrom }).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.WorkScheduleId });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class AttendanceDayConfiguration : IEntityTypeConfiguration<AttendanceDay>
+{
+    public void Configure(EntityTypeBuilder<AttendanceDay> b)
+    {
+        b.ToTable(AttendanceTables.AttendanceDays);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Anomalies).HasConversion<string>();
+        b.Property(x => x.ResolutionState).HasConversion<string>();
+        b.Property(x => x.Source).HasConversion<string>();
+        b.Property(x => x.OverrideReason).HasMaxLength(AttendanceTables.OverrideReasonMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

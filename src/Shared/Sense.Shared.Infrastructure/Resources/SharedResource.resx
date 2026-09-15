@@ -621,4 +621,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>
+  <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
+  <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
+  <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
+  <data name="attendance.day.not_found" xml:space="preserve"><value>Puantaj kaydı bulunamadı.</value></data>
+  <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
 </root>

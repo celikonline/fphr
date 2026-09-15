@@ -1,3 +1,4 @@
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
 
@@ -29,4 +30,15 @@ public interface IEmployeeWorkScheduleAssignmentRepository
 
     /// <summary>Every assignment of the employee that could be effective at some point in [from, to] (the one just before <paramref name="from"/> included).</summary>
     Task<IReadOnlyList<EmployeeWorkScheduleAssignment>> ListCoveringRangeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface IAttendanceDayRepository
+{
+    void Add(AttendanceDay day);
+
+    Task<Result<AttendanceDay>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<AttendanceDay?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AttendanceDay>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }

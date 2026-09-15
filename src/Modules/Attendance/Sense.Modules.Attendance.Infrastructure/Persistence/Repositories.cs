@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
 
@@ -77,4 +78,24 @@ public sealed class EmployeeWorkScheduleAssignmentRepository(AttendanceDbContext
         var lastBeforeRange = all.LastOrDefault(a => a.EffectiveFrom <= from);
         return all.Where(a => a.EffectiveFrom >= from || a == lastBeforeRange).ToList();
     }
+}
+
+public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAttendanceDayRepository
+{
+    public void Add(AttendanceDay day) => context.AttendanceDays.Add(day);
+
+    public async Task<Result<AttendanceDay>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var day = await context.AttendanceDays.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return day is null ? Error.NotFound(AttendanceDomainErrors.DayNotFound) : day;
+    }
+
+    public async Task<AttendanceDay?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default) =>
+        await context.AttendanceDays.FirstOrDefaultAsync(d => d.EmployeeId == employeeId && d.Date == date, cancellationToken);
+
+    public async Task<IReadOnlyList<AttendanceDay>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.AttendanceDays
+            .Where(d => d.EmployeeId == employeeId && d.Date >= from && d.Date <= to)
+            .OrderBy(d => d.Date)
+            .ToListAsync(cancellationToken);
 }
