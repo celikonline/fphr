@@ -11,10 +11,6 @@ namespace Sense.Modules.Organization.Contracts;
 /// see Sense.Modules.Organization.Api.OrganizationModule and Sense.Modules.Organization.Infrastructure
 /// .Persistence.OrganizationDbContext.SchemaName). These are deliberately different strings per the
 /// design doc's own note - do not "fix" one to match the other without re-checking that doc.
-/// Known gap: Identity's SystemRoleDefinitions.cs (src/Modules/Identity/.../Roles/SystemRoleDefinitions.cs)
-/// currently grants roles like HR/Manager/Timekeeper/Auditor a wildcard "org.*", which will NOT match
-/// these "organization.*" keys (the wildcard-matching regex requires a literal "org." prefix). That
-/// file is Identity's, out of scope for this item - reconciling the wildcard is left to a follow-up.
 /// </summary>
 public static class OrganizationPermissions
 {

@@ -57,38 +57,38 @@ public static class SystemRoleDefinitions
         new(SystemRoleCodes.Admin, DataScope.Company, [PermissionPatterns.All], ["billing.*"]),
 
         new(SystemRoleCodes.HR, DataScope.Company,
-            ["identity.users.*", "identity.roles.view", "identity.audit.view", "org.*", "employee.*", "leave.*", "workflow.*", "attendance.*",
+            ["identity.users.*", "identity.roles.view", "identity.audit.view", "organization.*", "employee.*", "leave.*", "workflow.*", "attendance.*",
              "assets.*", "expense.*", "training.*", "documents.*", "announcements.*", "performance.*", "compensation.*", "recruitment.*",
              "analytics.*", "reports.*", "notifications.*", "payroll.payslips.view", "payroll.periods.view", "ai.*", .. PermissionPatterns.SelfService],
             ["identity.users.impersonate", "identity.security.manage", "identity.api_keys.manage", "payroll.periods.lock", "billing.*"]),
 
         new(SystemRoleCodes.HRSpecialist, DataScope.Company,
-            ["org.*.view", "employee.*", "leave.*", "workflow.*", "attendance.*", "assets.*", "expense.*.view", "training.*", "documents.*",
+            ["organization.*.view", "employee.*", "leave.*", "workflow.*", "attendance.*", "assets.*", "expense.*.view", "training.*", "documents.*",
              "announcements.*", "recruitment.*", "reports.*", .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
             ["payroll.*", "attendance.timesheets.*", "attendance.*.view", "leave.*.view", "employee.*.view", "employee.salary.*", "expense.adjustments.*",
-             "expense.bank_payments.*", "reports.*", "org.*.view", "documents.*.view", .. PermissionPatterns.SelfService],
+             "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService],
             []),
 
         new(SystemRoleCodes.Finance, DataScope.Company,
-            ["expense.*", "compensation.budgets.view", "billing.*", "reports.expense.*", "reports.*.view", "employee.*.view", "org.*.view", .. PermissionPatterns.SelfService],
+            ["expense.*", "compensation.budgets.view", "billing.*", "reports.expense.*", "reports.*.view", "employee.*.view", "organization.*.view", .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Manager, DataScope.Team,
             ["leave.requests.view", "leave.requests.approve", "leave.calendar.view", "leave.balances.view", "workflow.inbox.*", "attendance.*.view",
-             "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "org.*.view", "performance.team.*",
+             "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
              "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
              .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
-            ["attendance.*", "leave.*.view", "employee.*.view", "org.*.view", "reports.attendance.*", .. PermissionPatterns.SelfService],
+            ["attendance.*", "leave.*.view", "employee.*.view", "organization.*.view", "reports.attendance.*", .. PermissionPatterns.SelfService],
             ["attendance.timesheets.lock", "attendance.timesheets.unlock", "attendance.settings.*", .. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Recruiter, DataScope.Company,
-            ["recruitment.*", "employee.create", "employee.*.view", "org.*.view", "reports.recruitment.*", "documents.*.view", .. PermissionPatterns.SelfService],
+            ["recruitment.*", "employee.create", "employee.*.view", "organization.*.view", "reports.recruitment.*", "documents.*.view", .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Interviewer, DataScope.Custom,
@@ -102,7 +102,7 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.ExternalAccountant, DataScope.Company,
             ["payroll.*.view", "payroll.*.export", "payroll.declarations.*", "attendance.timesheets.view", "attendance.timesheets.export",
-             "employee.*.view", "org.*.view", "reports.payroll.*", "reports.attendance.*", "expense.bank_payments.view"],
+             "employee.*.view", "organization.*.view", "reports.payroll.*", "reports.attendance.*", "expense.bank_payments.view"],
             [.. PermissionPatterns.Sensitive, .. PermissionPatterns.Writes]),
 
         new(SystemRoleCodes.ITAdmin, DataScope.Company,
