@@ -10,37 +10,38 @@
   "viewAll": "Tümünü Gör",
   "refresh": "Yenile",
   "holidays": {
-    "title": "Resmi tatiller",
+    "title": "Resmi Tatiller",
     "empty": "Önümüzdeki {{days}} gün içinde resmi tatil yok."
   },
   "birthdays": {
-    "title": "Yaklaşan doğum günleri",
+    "title": "Yaklaşan Doğum Günleri",
     "empty": "Önümüzdeki {{days}} gün içinde doğum günü yok."
   },
   "leaves": {
-    "title": "Yaklaşan izinler",
+    "title": "Yaklaşan İzinler",
     "empty": "Önümüzdeki {{days}} gün içinde izinli olacak çalışan yok."
   },
   "events": {
-    "title": "Etkinlik takvimi",
+    "title": "Etkinlik Takvimi",
     "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."
   },
   "orgInfo": {
-    "title": "Personel kartım",
+    "title": "Personel Kartım",
     "manager": "Yöneticim",
     "unknownManager": "Bilinmiyor",
-    "hireDate": "İşe başlama tarihi"
+    "hireDate": "İşe Başlama Tarihi",
+    "account": "Hesabım"
   },
   "leaveInfo": {
-    "title": "İzin bilgilerim",
+    "title": "İzin Bilgilerim",
     "empty": "Görüntülenecek izin bakiyesi yok.",
     "availableUntil": "{{date}} tarihine kadar mevcut",
-    "future": "İleri tarihli",
+    "future": "İleri Tarihli",
     "used": "Kullanılan",
-    "recentTitle": "Son taleplerim"
+    "recentTitle": "Son Taleplerim"
   },
   "departmentDistribution": {
-    "title": "Çalışan dağılımı",
+    "title": "Çalışan Dağılımı",
     "empty": "Görüntülenecek çalışan yok.",
     "unassigned": "Departmansız"
   }
