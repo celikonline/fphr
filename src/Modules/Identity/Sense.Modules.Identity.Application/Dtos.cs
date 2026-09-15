@@ -77,3 +77,18 @@ public sealed record MeDto(
 
 /// <summary>Kiracıya bağlı, izin dışı özellik ayarları; ön yüz menü/widget filtrelemesi için tek yanıtta taşınır.</summary>
 public sealed record FeaturesDto(Tenants.AccessSettingsDto Access);
+
+/// <summary>Birim ağacı satır menüsü "Birim yetkilendirme" listesindeki tek bir grant (bkz. UnitAuthorizations.UnitAuthorizationCommands).</summary>
+public sealed record UnitAuthorizationDto(
+    Guid Id,
+    Guid OrgUnitId,
+    Guid UserId,
+    bool CanViewSalaryAndPayments,
+    bool CanViewUnitReports,
+    Guid GrantedByUserId,
+    DateTime GrantedAt,
+    bool IsActive)
+{
+    public static UnitAuthorizationDto From(Domain.UnitAuthorizations.UnitAuthorization a) => new(
+        a.Id, a.OrgUnitId, a.UserId, a.CanViewSalaryAndPayments, a.CanViewUnitReports, a.GrantedByUserId, a.GrantedAt, a.IsActive);
+}

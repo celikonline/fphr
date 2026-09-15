@@ -115,6 +115,12 @@ public static class IdentityErrors
     public const string ImpersonationForbidden = "impersonation.forbidden";
     public const string ImpersonationReasonRequired = "impersonation.reason_required";
 
+    /// <summary>Organization.Contracts.IOrgUnitLookup ile doğrulanamayan OrgUnitId (Birim yetkilendirme grant'i).</summary>
+    public const string OrgUnitNotFound = "identity.org_unit_not_found";
+    public const string UnitAuthorizationNotFound = "unit_authorization.not_found";
+    public const string UnitAuthorizationAlreadyRevoked = "unit_authorization.already_revoked";
+    public const string UnitAuthorizationNoGrantsSelected = "unit_authorization.no_grants_selected";
+
     /// <summary>Mesaj parametre adları.</summary>
     public static class Args
     {

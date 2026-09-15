@@ -20,6 +20,7 @@ public static class IdentityRoutes
     public const string Me = ApiRoutes.VersionedBase + "/identity/me";
     public const string Impersonation = ApiRoutes.VersionedBase + "/identity/impersonation";
     public const string Settings = ApiRoutes.VersionedBase + "/identity/settings";
+    public const string UnitAuthorizations = ApiRoutes.VersionedBase + "/identity/unit-authorizations";
 }
 
 public sealed record LoginRequest(string Email, string Password, string? TenantSlug);

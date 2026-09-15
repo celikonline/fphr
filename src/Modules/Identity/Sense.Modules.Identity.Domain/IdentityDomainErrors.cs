@@ -25,6 +25,9 @@ public static class IdentityDomainErrors
     public const string ImpersonationExpired = "impersonation.expired";
     public const string ImpersonationNotRevocable = "impersonation.not_revocable";
 
+    public const string UnitAuthorizationAlreadyRevoked = "unit_authorization.already_revoked";
+    public const string UnitAuthorizationNoGrantsSelected = "unit_authorization.no_grants_selected";
+
     public static class Args
     {
         public const string Minutes = "minutes";

@@ -5,6 +5,7 @@ using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Domain.Tokens;
+using Sense.Modules.Identity.Domain.UnitAuthorizations;
 using Sense.Modules.Identity.Domain.Users;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -28,6 +29,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     public DbSet<ImpersonationGrant> ImpersonationGrants => Set<ImpersonationGrant>();
+
+    public DbSet<UnitAuthorization> UnitAuthorizations => Set<UnitAuthorization>();
 }
 
 internal static class IdentityTables
@@ -41,6 +44,7 @@ internal static class IdentityTables
     public const string Invitations = "invitations";
     public const string RefreshTokens = "refresh_tokens";
     public const string ImpersonationGrants = "impersonation_grants";
+    public const string UnitAuthorizations = "unit_authorizations";
 
     public const int EmailLength = 254;
     public const int SlugLength = 40;
@@ -186,6 +190,19 @@ public sealed class ImpersonationGrantConfiguration : IEntityTypeConfiguration<I
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(IdentityTables.CodeLength);
         b.HasIndex(x => x.PlatformUserId);
         b.HasIndex(x => x.Status);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class UnitAuthorizationConfiguration : IEntityTypeConfiguration<UnitAuthorization>
+{
+    public void Configure(EntityTypeBuilder<UnitAuthorization> b)
+    {
+        b.ToTable(IdentityTables.UnitAuthorizations);
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.TenantId, x.OrgUnitId, x.UserId }).IsUnique().HasFilter("is_active");
+        b.HasIndex(x => x.UserId);
+        b.HasIndex(x => x.OrgUnitId);
         b.Ignore(x => x.DomainEvents);
     }
 }
