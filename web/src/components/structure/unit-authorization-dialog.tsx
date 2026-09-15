@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -130,7 +131,7 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
               {t("structure:authorization.empty")}
             </p>
           ) : (
-            <div className="max-h-72 overflow-y-auto rounded-md border">
+            <ScrollArea className="max-h-72 rounded-md border [&>[data-radix-scroll-area-viewport]]:max-h-72 [&>[data-radix-scroll-area-viewport]>div]:block!">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -194,7 +195,7 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </ScrollArea>
           )}
 
           {canManage && editor && (
