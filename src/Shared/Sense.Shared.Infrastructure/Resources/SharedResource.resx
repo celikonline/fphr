@@ -444,4 +444,61 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>Onay bağlantısı geçersiz.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>Onay bağlantısının süresi dolmuş.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>Onay bağlantısı daha önce kullanılmış.</value></data>
+  <data name="leave.rule_sets.read" xml:space="preserve"><value>İzin kurallarını görüntüleme</value></data>
+  <data name="leave.rule_sets.manage" xml:space="preserve"><value>İzin kurallarını yönetme</value></data>
+  <data name="leave.rule_sets.assign" xml:space="preserve"><value>İzin kuralı atama</value></data>
+  <data name="leave.types.manage" xml:space="preserve"><value>İzin türlerini yönetme</value></data>
+  <data name="leave.balances.read" xml:space="preserve"><value>İzin bakiyelerini görüntüleme</value></data>
+  <data name="leave.balances.adjust" xml:space="preserve"><value>İzin bakiyesi düzeltme</value></data>
+  <data name="leave.balances.recalculate" xml:space="preserve"><value>İzin bakiyelerini yeniden hesaplama</value></data>
+  <data name="leave.extra_grants.manage" xml:space="preserve"><value>Ekstra izin verme</value></data>
+  <data name="leave.my.balances" xml:space="preserve"><value>Kendi izin bakiyelerimi görüntüleme</value></data>
+  <data name="leave.rule_set.not_found" xml:space="preserve"><value>İzin kuralı bulunamadı.</value></data>
+  <data name="leave.rule_set.name_required" xml:space="preserve"><value>İzin kuralı adı zorunludur.</value></data>
+  <data name="leave.type.not_found" xml:space="preserve"><value>İzin türü bulunamadı.</value></data>
+  <data name="leave.type.name_required" xml:space="preserve"><value>İzin türü adı zorunludur.</value></data>
+  <data name="leave.type.code_duplicate" xml:space="preserve"><value>Bu kural setinde aynı kodlu bir izin türü zaten var.</value></data>
+  <data name="leave.type.per_request_max_days_invalid" xml:space="preserve"><value>Talep başına gün sayısı 0,5 ile 365 arasında olmalıdır.</value></data>
+  <data name="leave.type.annual_days_invalid" xml:space="preserve"><value>Yıllık gün sayısı 0'dan büyük ve en fazla 365 olmalıdır.</value></data>
+  <data name="leave.type.negative_balance_limit_invalid" xml:space="preserve"><value>Eksi bakiye limiti 0,5 ile yıllık gün sayısı arasında olmalıdır.</value></data>
+  <data name="leave.type.carry_over_limit_invalid" xml:space="preserve"><value>Devir limiti 0'dan büyük olmalıdır.</value></data>
+  <data name="leave.type.consecutive_days_invalid" xml:space="preserve"><value>En az gün sayısı en çok gün sayısından büyük olamaz.</value></data>
+  <data name="leave.type.waiting_period_invalid" xml:space="preserve"><value>Bekleme süresi 0 ile 24 ay arasında olmalıdır.</value></data>
+  <data name="leave.type.seniority_tiers_only_annual" xml:space="preserve"><value>Kıdem kademeleri yalnız yıllık izin türünde tanımlanabilir.</value></data>
+  <data name="leave.type.no_balance" xml:space="preserve"><value>Bu izin türü bakiye tutmaz (yalnız yıl içinde limitli türler).</value></data>
+  <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Gün sayısı sıfır olamaz.</value></data>
+  <data name="leave.ledger.reason_required" xml:space="preserve"><value>Gerekçe zorunludur.</value></data>
+  <data name="leave.profile.not_found" xml:space="preserve"><value>Çalışanın izin profili bulunamadı.</value></data>
+  <data name="leave.employee.not_in_scope" xml:space="preserve"><value>Bu çalışanın izin bilgilerine erişim yetkiniz yok.</value></data>
+  <data name="leave.employee.not_linked" xml:space="preserve"><value>Kullanıcınız bir çalışan kaydına bağlı değil.</value></data>
+  <data name="leave.errors.invalid_range" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="leave.rule_set.seed.turkish_labour_law" xml:space="preserve"><value>Örnek Türk İş Kanunu kuralı</value></data>
+  <data name="leave.type.annual" xml:space="preserve"><value>Yıllık izin</value></data>
+  <data name="leave.type.excuse" xml:space="preserve"><value>Mazeret izni</value></data>
+  <data name="leave.type.sick" xml:space="preserve"><value>Hastalık izni</value></data>
+  <data name="leave.type.job_search" xml:space="preserve"><value>Yeni iş arama izni</value></data>
+  <data name="leave.type.marriage" xml:space="preserve"><value>Evlilik izni</value></data>
+  <data name="leave.type.bereavement" xml:space="preserve"><value>Ölüm izni</value></data>
+  <data name="leave.type.paternity" xml:space="preserve"><value>Babalık izni</value></data>
+  <data name="leave.type.maternity" xml:space="preserve"><value>Doğum izni</value></data>
+  <data name="leave.type.postnatal_unpaid" xml:space="preserve"><value>Doğum sonrası ücretsiz izin</value></data>
+  <data name="leave.type.paid_military_service" xml:space="preserve"><value>Bedelli askerlik izni</value></data>
+  <data name="leave.type.unpaid" xml:space="preserve"><value>Ücretsiz izin</value></data>
+  <data name="leave.type.foster_care" xml:space="preserve"><value>Koruyucu aile izni</value></data>
+  <data name="leave.type.template.remote_work" xml:space="preserve"><value>Uzaktan Çalışma</value></data>
+  <data name="leave.type.template.birthday" xml:space="preserve"><value>Doğum günü izni</value></data>
+  <data name="leave.requests.read" xml:space="preserve"><value>İzin taleplerini görüntüleme</value></data>
+  <data name="leave.my.requests" xml:space="preserve"><value>Kendi izin taleplerimi yönetme</value></data>
+  <data name="leave.request.not_found" xml:space="preserve"><value>İzin talebi bulunamadı.</value></data>
+  <data name="leave.request.not_pending" xml:space="preserve"><value>İzin talebi artık bekleme durumunda değil.</value></data>
+  <data name="leave.request.approval_mismatch" xml:space="preserve"><value>Onay kararı talebin güncel sürümüne ait değil.</value></data>
+  <data name="leave.request.not_owner" xml:space="preserve"><value>Bu işlemi yalnız talep sahibi yapabilir.</value></data>
+  <data name="leave.errors.zero_days" xml:space="preserve"><value>Seçilen tarihlerde izinden düşülecek gün yok.</value></data>
+  <data name="leave.errors.type_not_available" xml:space="preserve"><value>Bu izin türü talep edilemez.</value></data>
+  <data name="leave.errors.overlap" xml:space="preserve"><value>Bu tarihlerde bekleyen veya onaylı başka bir izniniz var.</value></data>
+  <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>Bu izin türünde bir talepte en fazla {max} gün alınabilir.</value></data>
+  <data name="leave.errors.below_min_days" xml:space="preserve"><value>Bu izin türünde en az {min} gün talep edilmelidir.</value></data>
+  <data name="leave.errors.above_max_days" xml:space="preserve"><value>Bu izin türünde en fazla {max} gün talep edilebilir.</value></data>
+  <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>İzin bakiyesi yetersiz (kullanılabilir: {available} gün).</value></data>
+  <data name="leave.errors.description_required" xml:space="preserve"><value>Bu izin türünde açıklama zorunludur.</value></data>
 </root>

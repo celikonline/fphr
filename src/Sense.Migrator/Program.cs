@@ -9,6 +9,7 @@ using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
+using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -20,6 +21,7 @@ builder.Services.AddModuleDbContext<EmployeeDbContext>(builder.Configuration, Em
 builder.Services.AddModuleDbContext<DocumentsDbContext>(builder.Configuration, DocumentsDbContext.SchemaName);
 builder.Services.AddModuleDbContext<DataTransferDbContext>(builder.Configuration, DataTransferDbContext.SchemaName);
 builder.Services.AddModuleDbContext<WorkflowDbContext>(builder.Configuration, WorkflowDbContext.SchemaName);
+builder.Services.AddModuleDbContext<LeaveDbContext>(builder.Configuration, LeaveDbContext.SchemaName);
 
 using var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(MigratorConstants.LoggerName);
