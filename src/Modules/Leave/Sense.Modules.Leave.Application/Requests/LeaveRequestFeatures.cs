@@ -27,17 +27,35 @@ public static class LeaveRequestErrors
     public const string InsufficientBalance = "leave.errors.insufficient_balance";
     public const string DescriptionRequired = "leave.errors.description_required";
     public const string NotOwner = "leave.request.not_owner";
+    public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
 }
 
 public sealed record LeaveRequestDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
-    string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt);
+    string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
+    string? LeaveTypeName = null);
 
 internal static class LeaveRequestMapper
 {
-    public static LeaveRequestDto ToDto(LeaveRequest r) =>
+    public static LeaveRequestDto ToDto(LeaveRequest r, string? typeName = null) =>
         new(r.Id, r.EmployeeId, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.StartDate, r.EndDate, r.CalculatedDays, r.Description, r.Status, r.Source,
-            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt);
+            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName);
+
+    /// <summary>Maps requests with the leave type name (stored name; seeded types carry a resource key the API localizes) from the employee's rule set.</summary>
+    public static async Task<IReadOnlyList<LeaveRequestDto>> ToDtosAsync(
+        Guid employeeId, IReadOnlyList<LeaveRequest> requests, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, CancellationToken ct)
+    {
+        var names = new Dictionary<Guid, string>();
+        if (requests.Count > 0 && await profiles.FindByEmployeeIdAsync(employeeId, ct) is { } profile && await ruleSets.GetByIdAsync(profile.RuleSetId, ct) is { IsSuccess: true } set)
+        {
+            foreach (var type in set.Value.Types)
+            {
+                names[type.Id] = type.Name;
+            }
+        }
+
+        return requests.Select(r => ToDto(r, names.GetValueOrDefault(r.LeaveTypeId))).ToList();
+    }
 }
 
 /// <summary>Validation shared by submit and edit (11.3.5 "Talep doğrulama" steps 2, 4, 6, 7, 9, 11, 12).</summary>
@@ -50,7 +68,8 @@ public sealed class LeaveRequestRules(
     LeaveBalanceService balances)
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
-        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct)
+        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
+        bool requireSelfService = true)
     {
         if (end < start)
         {
@@ -70,7 +89,7 @@ public sealed class LeaveRequestRules(
         }
 
         var type = set.Value.Types.FirstOrDefault(t => t.Id == leaveTypeId);
-        if (type is null || type.IsDisabled || !type.AllowSelfServiceRequest)
+        if (type is null || type.IsDisabled || (requireSelfService && !type.AllowSelfServiceRequest))
         {
             return Error.Validation(LeaveRequestErrors.TypeNotAvailable);
         }
@@ -265,7 +284,9 @@ public sealed class WithdrawLeaveRequestHandler(ICurrentUser currentUser, ILeave
 [RequiresPermission("leave.my.requests")]
 public sealed record ListMyLeaveRequestsQuery : IQuery<IReadOnlyList<LeaveRequestDto>>;
 
-public sealed class ListMyLeaveRequestsHandler(ICurrentUser currentUser, ILeaveRequestRepository requests) : IQueryHandler<ListMyLeaveRequestsQuery, IReadOnlyList<LeaveRequestDto>>
+public sealed class ListMyLeaveRequestsHandler(
+    ICurrentUser currentUser, ILeaveRequestRepository requests, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets)
+    : IQueryHandler<ListMyLeaveRequestsQuery, IReadOnlyList<LeaveRequestDto>>
 {
     public async Task<Result<IReadOnlyList<LeaveRequestDto>>> Handle(ListMyLeaveRequestsQuery query, CancellationToken cancellationToken)
     {
@@ -274,7 +295,7 @@ public sealed class ListMyLeaveRequestsHandler(ICurrentUser currentUser, ILeaveR
             return Error.NotFound(LeaveErrors.NoEmployeeForUser);
         }
 
-        IReadOnlyList<LeaveRequestDto> list = (await requests.ListByEmployeeAsync(employeeId, cancellationToken)).Select(LeaveRequestMapper.ToDto).ToList();
+        var list = await LeaveRequestMapper.ToDtosAsync(employeeId, await requests.ListByEmployeeAsync(employeeId, cancellationToken), profiles, ruleSets, cancellationToken);
         return Result.Success(list);
     }
 }
@@ -282,7 +303,8 @@ public sealed class ListMyLeaveRequestsHandler(ICurrentUser currentUser, ILeaveR
 [RequiresPermission("leave.requests.read")]
 public sealed record ListEmployeeLeaveRequestsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<LeaveRequestDto>>;
 
-public sealed class ListEmployeeLeaveRequestsHandler(ILeaveRequestRepository requests, IDataScopeService dataScope)
+public sealed class ListEmployeeLeaveRequestsHandler(
+    ILeaveRequestRepository requests, IDataScopeService dataScope, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets)
     : IQueryHandler<ListEmployeeLeaveRequestsQuery, IReadOnlyList<LeaveRequestDto>>
 {
     public async Task<Result<IReadOnlyList<LeaveRequestDto>>> Handle(ListEmployeeLeaveRequestsQuery query, CancellationToken cancellationToken)
@@ -292,8 +314,191 @@ public sealed class ListEmployeeLeaveRequestsHandler(ILeaveRequestRepository req
             return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
         }
 
-        IReadOnlyList<LeaveRequestDto> list = (await requests.ListByEmployeeAsync(query.EmployeeId, cancellationToken)).Select(LeaveRequestMapper.ToDto).ToList();
+        var list = await LeaveRequestMapper.ToDtosAsync(
+            query.EmployeeId, await requests.ListByEmployeeAsync(query.EmployeeId, cancellationToken), profiles, ruleSets, cancellationToken);
         return Result.Success(list);
+    }
+}
+
+public sealed record RequestableLeaveTypeDto(
+    Guid Id, LeaveTypeCode Code, string Name, string? Description, LeaveUnit Unit, bool IsPaid, bool HasBalance, decimal? PerRequestMaxDays,
+    bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays);
+
+/// <summary>"+ Talep": active, self-service types of the caller's rule set (name as stored; the API localizes resource keys).</summary>
+[RequiresPermission("leave.my.requests")]
+public sealed record ListMyRequestableLeaveTypesQuery : IQuery<IReadOnlyList<RequestableLeaveTypeDto>>;
+
+public sealed class ListMyRequestableLeaveTypesHandler(
+    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope)
+    : IQueryHandler<ListMyRequestableLeaveTypesQuery, IReadOnlyList<RequestableLeaveTypeDto>>
+{
+    public async Task<Result<IReadOnlyList<RequestableLeaveTypeDto>>> Handle(ListMyRequestableLeaveTypesQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(LeaveErrors.NoEmployeeForUser);
+        }
+
+        var loaded = await new EmployeeLeaveContext(profiles, ruleSets, dataScope).LoadAsync(employeeId, null, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        IReadOnlyList<RequestableLeaveTypeDto> types = loaded.Value.RuleSet.Types
+            .Where(t => !t.IsDisabled && t.AllowSelfServiceRequest)
+            .OrderBy(t => t.SortOrder)
+            .Select(t => new RequestableLeaveTypeDto(
+                t.Id, t.Code, t.Name, t.Description, t.Unit, t.IsPaid, t.HasBalance, t.LimitType == LeaveLimitType.PerRequest ? t.PerRequestMaxDays : null,
+                t.RequiresDescription, t.RequiresDocument, t.CountsNonWorkingDays))
+            .ToList();
+        return Result.Success(types);
+    }
+}
+
+/// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing.</summary>
+public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings);
+
+internal static class LeaveRequestPreview
+{
+    public static async Task<Result<LeaveRequestPreviewDto>> BuildAsync(
+        LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, ILeaveDayCalculator dayCalculator,
+        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct)
+    {
+        if (end < start)
+        {
+            return Error.Validation(LeaveDomainErrors.RequestInvalidRange);
+        }
+
+        var profile = await profiles.FindByEmployeeIdAsync(employeeId, ct);
+        if (profile is null)
+        {
+            return Error.NotFound(LeaveErrors.ProfileNotFound);
+        }
+
+        var set = await ruleSets.GetByIdAsync(profile.RuleSetId, ct);
+        if (set.IsFailure)
+        {
+            return set.Error;
+        }
+
+        var type = set.Value.Types.FirstOrDefault(t => t.Id == leaveTypeId);
+        if (type is null || type.IsDisabled || (requireSelfService && !type.AllowSelfServiceRequest))
+        {
+            return Error.Validation(LeaveRequestErrors.TypeNotAvailable);
+        }
+
+        var count = await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct);
+        // Description is not part of the preview; pass a placeholder so "description required" does not show up as a warning.
+        var valid = await rules.ValidateAsync(tenantId, employeeId, leaveTypeId, start, end, "-", editedRequestId, ct, requireSelfService);
+        IReadOnlyList<Error> warnings = valid.IsFailure ? [valid.Error] : [];
+        return new LeaveRequestPreviewDto(count.Days, count.WeeklyRestDays, count.PublicHolidayDays, warnings);
+    }
+}
+
+[RequiresPermission("leave.my.requests")]
+public sealed record PreviewMyLeaveRequestQuery(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, Guid? EditedRequestId) : IQuery<LeaveRequestPreviewDto>;
+
+public sealed class PreviewMyLeaveRequestHandler(
+    ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
+    ILeaveDayCalculator dayCalculator)
+    : IQueryHandler<PreviewMyLeaveRequestQuery, LeaveRequestPreviewDto>
+{
+    public async Task<Result<LeaveRequestPreviewDto>> Handle(PreviewMyLeaveRequestQuery query, CancellationToken cancellationToken) =>
+        currentUser.EmployeeId is not { } employeeId
+            ? Error.NotFound(LeaveErrors.NoEmployeeForUser)
+            : await LeaveRequestPreview.BuildAsync(
+                rules, profiles, ruleSets, dayCalculator, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
+                cancellationToken);
+}
+
+[RequiresPermission("leave.requests.create_on_behalf")]
+public sealed record PreviewEmployeeLeaveRequestQuery(Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate) : IQuery<LeaveRequestPreviewDto>;
+
+public sealed class PreviewEmployeeLeaveRequestHandler(
+    ITenantContext tenant, IDataScopeService dataScope, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
+    ILeaveDayCalculator dayCalculator)
+    : IQueryHandler<PreviewEmployeeLeaveRequestQuery, LeaveRequestPreviewDto>
+{
+    public async Task<Result<LeaveRequestPreviewDto>> Handle(PreviewEmployeeLeaveRequestQuery query, CancellationToken cancellationToken) =>
+        !await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsCreateOnBehalf.Key, query.EmployeeId, cancellationToken)
+            ? Error.Forbidden(LeaveErrors.EmployeeNotInScope)
+            : await LeaveRequestPreview.BuildAsync(
+                rules, profiles, ruleSets, dayCalculator, tenant.TenantId, query.EmployeeId, query.LeaveTypeId, query.StartDate, query.EndDate, null, false,
+                cancellationToken);
+}
+
+/// <summary>
+/// İşlemler → İzin Ekle: a manager/HR adds leave for an employee in scope (Source = OnBehalf). With <c>BypassApproval</c>
+/// ("Onay sürecine dahil edilmeden onaylansın", needs leave.requests.bypass_approval) it is Approved at once and the Usage row
+/// is posted; otherwise the Workflow "Leave" approval starts as for self-service.
+/// </summary>
+[RequiresPermission("leave.requests.create_on_behalf")]
+public sealed record CreateLeaveRequestOnBehalfCommand(Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval)
+    : ICommand<Guid>;
+
+public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
+{
+    public CreateLeaveRequestOnBehalfValidator() => RuleFor(x => x.Description).MaximumLength(LeaveLimits.DescriptionMaxLength);
+}
+
+public sealed class CreateLeaveRequestOnBehalfHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, LeaveRequestRules rules, ILeaveRequestRepository requests,
+    ILeaveLedgerRepository ledger, IWorkflowService workflow, TimeProvider clock)
+    : ICommandHandler<CreateLeaveRequestOnBehalfCommand, Guid>
+{
+    public async Task<Result<Guid>> Handle(CreateLeaveRequestOnBehalfCommand command, CancellationToken cancellationToken)
+    {
+        if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsCreateOnBehalf.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        if (command.BypassApproval && !await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsBypassApproval.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveRequestErrors.BypassNotAllowed);
+        }
+
+        var valid = await rules.ValidateAsync(
+            tenant.TenantId, command.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken, requireSelfService: false);
+        if (valid.IsFailure)
+        {
+            return valid.Error;
+        }
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        var submitted = LeaveRequest.Submit(
+            tenant.TenantId, command.EmployeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
+            command.Description, LeaveRequestSource.OnBehalf, now, currentUser.IpAddress, null);
+        if (submitted.IsFailure)
+        {
+            return submitted.Error;
+        }
+
+        var request = submitted.Value;
+        if (command.BypassApproval)
+        {
+            var approved = request.ApproveWithoutWorkflow(now);
+            if (approved.IsFailure)
+            {
+                return approved.Error;
+            }
+
+            ledger.AddRange([LeaveLedgerEntry.Usage(request.TenantId, request.EmployeeId, request.LeaveTypeId, request.CalculatedDays, request.StartDate, LeaveLedgerSource.Request, request.Id)]);
+        }
+        else
+        {
+            var approval = await workflow.StartAsync(ApprovalRequestTypes.Leave, request.Id, command.EmployeeId, null, currentUser.IpAddress, null, cancellationToken);
+            if (approval.IsFailure)
+            {
+                return approval.Error;
+            }
+
+            request.AttachApproval(approval.Value);
+        }
+
+        requests.Add(request);
+        return request.Id;
     }
 }
 

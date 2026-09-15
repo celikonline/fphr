@@ -161,7 +161,14 @@
       "datesRequired": "[DE] Start and end dates are required.",
       "range": "[DE] End date cannot be before the start date.",
       "descriptionRequired": "[DE] A description is required for this leave type."
-    }
+    },
+    "previewLoading": "Tage werden berechnet…",
+    "previewDays": "Berechnete Tage: {{days}} ({{rest}} Ruhetage und {{holidays}} Feiertage abgezogen)",
+    "bypassApproval": "Ohne Genehmigungsprozess genehmigen",
+    "bypassHint": "Wenn aktiv, wird der Urlaub sofort genehmigt und vom Saldo abgezogen; sonst startet der normale Genehmigungsprozess.",
+    "onBehalfTitle": "Urlaub hinzufügen",
+    "onBehalfDescription": "Erstellt einen Urlaubseintrag für den Mitarbeiter.",
+    "onBehalfSaved": "Urlaubseintrag erstellt."
   },
   "ruleSets": {
     "title": "[DE] Leave policies",
@@ -216,6 +223,7 @@
       "daysInvalid": "[DE] Days must be a non-zero number.",
       "dateRequired": "[DE] Effective date is required.",
       "reasonRequired": "[DE] Reason is required."
-    }
+    },
+    "addLeave": "Urlaub hinzufügen"
   }
 }

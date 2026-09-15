@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import {
   getEmployeeLeaveLedger,
+  getMyLeaveLedger,
   type EmployeeLeaveBalances,
   type LeaveBalanceItem,
   type LeaveRequest,
@@ -53,7 +54,8 @@ export function useLeaveTypeNames(balances: EmployeeLeaveBalances | undefined, r
     return map;
   }, [balances, ruleSet, leaveName]);
   return useCallback(
-    (request: Pick<LeaveRequest, "leaveTypeId" | "leaveTypeCode">) => names.get(request.leaveTypeId) ?? t(`leave:code.${request.leaveTypeCode}`),
+    (request: Pick<LeaveRequest, "leaveTypeId" | "leaveTypeCode" | "leaveTypeName">) =>
+      request.leaveTypeName ?? names.get(request.leaveTypeId) ?? t(`leave:code.${request.leaveTypeCode}`),
     [names, t],
   );
 }
@@ -158,13 +160,15 @@ export function LeaveBalanceSummary({
   );
 }
 
-/** "Detaylar": the employee's leave ledger ("İzin defteri"), optionally filtered by type. */
+/** "Detaylar": the employee's leave ledger ("İzin defteri"), optionally filtered by type; `own` reads `/leave/me/ledger`. */
 export function LeaveLedgerDialog({
   employeeId,
+  own = false,
   typeOptions,
   onClose,
 }: {
   employeeId: string;
+  own?: boolean;
   typeOptions: { id: string; name: string }[];
   onClose: () => void;
 }) {
@@ -173,8 +177,8 @@ export function LeaveLedgerDialog({
   const [typeId, setTypeId] = useState(ALL_TYPES);
   const filter = typeId === ALL_TYPES ? undefined : typeId;
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["leave", "ledger", employeeId, filter ?? null],
-    queryFn: () => getEmployeeLeaveLedger(employeeId, filter),
+    queryKey: ["leave", "ledger", own ? "me" : employeeId, filter ?? null],
+    queryFn: () => (own ? getMyLeaveLedger(filter) : getEmployeeLeaveLedger(employeeId, filter)),
   });
   const nameOf = (id: string) => typeOptions.find((o) => o.id === id)?.name ?? "—";
 

@@ -43,6 +43,13 @@ internal sealed class EmployeeLeaveContext(
     }
 }
 
+internal static class LedgerMapper
+{
+    public static IReadOnlyList<LeaveLedgerEntryDto> ToDtos(IEnumerable<LeaveLedgerEntry> rows) =>
+        rows.Select(e => new LeaveLedgerEntryDto(e.Id, e.LeaveTypeId, e.Type, e.Amount, e.EffectiveDate, e.Source, e.SourceRefId, e.Reason, e.CreatedAt, e.CreatedUserId))
+            .ToList();
+}
+
 internal static class BalanceMapper
 {
     public static EmployeeLeaveBalancesDto ToDto(EmployeeLeaveProfile profile, LeaveRuleSet set, IReadOnlyList<LeaveBalance> balances) =>
@@ -116,10 +123,26 @@ public sealed class ListLeaveLedgerHandler(ILeaveLedgerRepository ledger, IDataS
         }
 
         var rows = await ledger.ListAsync(query.EmployeeId, query.LeaveTypeId, cancellationToken);
-        IReadOnlyList<LeaveLedgerEntryDto> dtos = rows
-            .Select(e => new LeaveLedgerEntryDto(e.Id, e.LeaveTypeId, e.Type, e.Amount, e.EffectiveDate, e.Source, e.SourceRefId, e.Reason, e.CreatedAt, e.CreatedUserId))
-            .ToList();
-        return Result.Success(dtos);
+        return Result.Success(LedgerMapper.ToDtos(rows));
+    }
+}
+
+/// <summary>Self-service: the caller's own ledger rows ("Detaylar" on my leave card).</summary>
+[RequiresPermission("leave.my.balances")]
+public sealed record ListMyLeaveLedgerQuery(Guid? LeaveTypeId) : IQuery<IReadOnlyList<LeaveLedgerEntryDto>>;
+
+public sealed class ListMyLeaveLedgerHandler(ICurrentUser currentUser, ILeaveLedgerRepository ledger)
+    : IQueryHandler<ListMyLeaveLedgerQuery, IReadOnlyList<LeaveLedgerEntryDto>>
+{
+    public async Task<Result<IReadOnlyList<LeaveLedgerEntryDto>>> Handle(ListMyLeaveLedgerQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(LeaveErrors.NoEmployeeForUser);
+        }
+
+        var rows = await ledger.ListAsync(employeeId, query.LeaveTypeId, cancellationToken);
+        return Result.Success(LedgerMapper.ToDtos(rows));
     }
 }
 

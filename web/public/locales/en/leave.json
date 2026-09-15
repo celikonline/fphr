@@ -161,7 +161,14 @@
       "datesRequired": "Start and end dates are required.",
       "range": "End date cannot be before the start date.",
       "descriptionRequired": "A description is required for this leave type."
-    }
+    },
+    "previewLoading": "Calculating days…",
+    "previewDays": "Calculated days: {{days}} ({{rest}} weekly rest and {{holidays}} public holiday days excluded)",
+    "bypassApproval": "Approve without the approval process",
+    "bypassHint": "When on, the leave is approved at once and deducted from the balance; when off, the normal approval process starts.",
+    "onBehalfTitle": "Add leave",
+    "onBehalfDescription": "Creates a leave record on behalf of the employee.",
+    "onBehalfSaved": "Leave record created."
   },
   "ruleSets": {
     "title": "Leave policies",
@@ -216,6 +223,7 @@
       "daysInvalid": "Days must be a non-zero number.",
       "dateRequired": "Effective date is required.",
       "reasonRequired": "Reason is required."
-    }
+    },
+    "addLeave": "Add leave"
   }
 }

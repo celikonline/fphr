@@ -99,6 +99,38 @@ export interface LeaveRequest {
   revisionNo: number;
   submittedAt: string;
   decidedAt?: string | null;
+  /** Type name from the employee's rule set, already localized by the API; missing when the type is no longer in it. */
+  leaveTypeName?: string | null;
+}
+
+/** `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types, `name` localized by the API. */
+export interface RequestableLeaveType {
+  id: string;
+  code: LeaveTypeCode;
+  name: string;
+  description?: string | null;
+  unit: LeaveUnit;
+  isPaid: boolean;
+  hasBalance: boolean;
+  perRequestMaxDays?: number | null;
+  requiresDescription: boolean;
+  requiresDocument: boolean;
+  countsNonWorkingDays: boolean;
+}
+
+/** `LeaveRequestPreviewResponse`: day count of a draft; rule violations come back as localized warnings. */
+export interface LeaveRequestPreview {
+  days: number;
+  weeklyRestDays: number;
+  publicHolidayDays: number;
+  warnings: { code: string; message: string }[];
+}
+
+export interface LeaveRequestPreviewInput {
+  leaveTypeId: string;
+  start: string;
+  end: string;
+  editedRequestId?: string;
 }
 
 /** `LeaveTypeSettings` (only the fields the web reads are typed strictly). */
@@ -199,6 +231,36 @@ export async function getMyLeaveBalances(): Promise<EmployeeLeaveBalances> {
 
 export async function getMyLeaveRequests(): Promise<LeaveRequest[]> {
   const { data } = await apiClient.get<LeaveRequest[]>(`${LEAVE_BASE}/me/requests`);
+  return data;
+}
+
+export async function getMyRequestableLeaveTypes(): Promise<RequestableLeaveType[]> {
+  const { data } = await apiClient.get<RequestableLeaveType[]>(`${LEAVE_BASE}/me/leave-types`);
+  return data;
+}
+
+export async function previewMyLeaveRequest(input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
+  const { data } = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/me/requests/preview`, { params: input });
+  return data;
+}
+
+export async function previewEmployeeLeaveRequest(employeeId: string, input: LeaveRequestPreviewInput): Promise<LeaveRequestPreview> {
+  const { data } = await apiClient.get<LeaveRequestPreview>(`${LEAVE_BASE}/employees/${employeeId}/requests/preview`, { params: input });
+  return data;
+}
+
+export async function getMyLeaveLedger(leaveTypeId?: string): Promise<LeaveLedgerEntry[]> {
+  const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/me/ledger`, { params: leaveTypeId ? { leaveTypeId } : undefined });
+  return data;
+}
+
+/** `LeaveRequestOnBehalfBody` (İşlemler → İzin Ekle); `bypassApproval` needs leave.requests.bypass_approval. */
+export interface LeaveRequestOnBehalfInput extends LeaveRequestInput {
+  bypassApproval: boolean;
+}
+
+export async function createLeaveRequestOnBehalf(employeeId: string, input: LeaveRequestOnBehalfInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/employees/${employeeId}/requests`, input);
   return data;
 }
 

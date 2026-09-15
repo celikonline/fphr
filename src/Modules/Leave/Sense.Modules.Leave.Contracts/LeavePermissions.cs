@@ -64,7 +64,14 @@ public static class LeavePermissions
     public static readonly Permission OvertimeConsentsManage = new(
         "leave.overtime_consents.manage", Module, "Manage Overtime Consents", Group, "Record, view and revoke employees' written overtime consents");
 
+    public static readonly Permission RequestsCreateOnBehalf = new(
+        "leave.requests.create_on_behalf", Module, "Add Leave For Employees", Group, "Create leave requests on behalf of employees (İşlemler → İzin Ekle)");
+
+    public static readonly Permission RequestsBypassApproval = new(
+        "leave.requests.bypass_approval", Module, "Approve Leave Without Workflow", Group, "Record leave added for employees as approved without the approval process");
+
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
-         RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage];
+         RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
+         RequestsCreateOnBehalf, RequestsBypassApproval];
 }

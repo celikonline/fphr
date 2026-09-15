@@ -7,7 +7,9 @@ using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
 using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.RuleSets;
+using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Controllers;
+using Sense.Shared.Web.Localization;
 
 namespace Sense.Modules.Leave.Api.Controllers;
 
@@ -16,6 +18,8 @@ public sealed record CloneLeaveRuleSetRequest(string Name);
 public sealed record SetLeaveTypeDisabledRequest(bool Disabled);
 
 public sealed record LeaveRequestBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description);
+
+public sealed record LeaveRequestOnBehalfBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval);
 
 public sealed record AdjustLeaveBalanceRequest(Guid LeaveTypeId, decimal Days, DateOnly EffectiveDate, string Reason);
 
@@ -59,6 +63,33 @@ public sealed class LeaveRuleSetsController : ApiControllerBase
         FromResult(await Dispatcher.Send(new SetLeaveTypeDisabledCommand(id, typeId, request.Disabled), ct));
 }
 
+/// <summary>Seeded rule sets/types store resource keys as names ("leave.type.annual"); the API returns them translated.</summary>
+internal static class LeaveTextLocalizer
+{
+    public static Result<IReadOnlyList<LeaveRequestDto>> Localize(this Result<IReadOnlyList<LeaveRequestDto>> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result
+            : Result.Success<IReadOnlyList<LeaveRequestDto>>(
+                result.Value.Select(r => r with { LeaveTypeName = r.LeaveTypeName is null ? null : localizer.MessageOrText(r.LeaveTypeName) }).ToList());
+
+    public static Result<IReadOnlyList<RequestableLeaveTypeDto>> Localize(this Result<IReadOnlyList<RequestableLeaveTypeDto>> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result
+            : Result.Success<IReadOnlyList<RequestableLeaveTypeDto>>(result.Value.Select(t => t with { Name = localizer.MessageOrText(t.Name) }).ToList());
+
+    /// <summary>Warnings stay codes (web can branch on them) but the message is localized alongside.</summary>
+    public static Result<LeaveRequestPreviewResponse> Localize(this Result<LeaveRequestPreviewDto> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result.Error
+            : new LeaveRequestPreviewResponse(
+                result.Value.Days, result.Value.WeeklyRestDays, result.Value.PublicHolidayDays,
+                result.Value.Warnings.Select(error => new LeavePreviewWarning(error.Code, localizer.Message(error))).ToList());
+}
+
+public sealed record LeavePreviewWarning(string Code, string Message);
+
+public sealed record LeaveRequestPreviewResponse(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<LeavePreviewWarning> Warnings);
+
 /// <summary>Employee leave balances and ledger (çalışan kartı → İzin).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/leave/employees/{employeeId:guid}")]
@@ -72,8 +103,21 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
 
     [HttpGet("requests")]
     [ProducesResponseType<IReadOnlyList<LeaveRequestDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Requests(Guid employeeId, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListEmployeeLeaveRequestsQuery(employeeId), ct));
+    public async Task<IActionResult> Requests(Guid employeeId, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new ListEmployeeLeaveRequestsQuery(employeeId), ct)).Localize(localizer));
+
+    /// <summary>İşlemler → İzin Ekle.</summary>
+    [HttpPost("requests")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateOnBehalf(Guid employeeId, [FromBody] LeaveRequestOnBehalfBody request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new CreateLeaveRequestOnBehalfCommand(employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval), ct));
+
+    [HttpGet("requests/preview")]
+    [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Preview(
+        Guid employeeId, [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new PreviewEmployeeLeaveRequestQuery(employeeId, leaveTypeId, start, end), ct)).Localize(localizer));
 
     [HttpGet("ledger")]
     [ProducesResponseType<IReadOnlyList<LeaveLedgerEntryDto>>(StatusCodes.Status200OK)]
@@ -102,10 +146,27 @@ public sealed class MyLeaveController : ApiControllerBase
     public async Task<IActionResult> Balances(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyLeaveBalancesQuery(), ct));
 
+    [HttpGet("ledger")]
+    [ProducesResponseType<IReadOnlyList<LeaveLedgerEntryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Ledger([FromQuery] Guid? leaveTypeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListMyLeaveLedgerQuery(leaveTypeId), ct));
+
+    [HttpGet("leave-types")]
+    [ProducesResponseType<IReadOnlyList<RequestableLeaveTypeDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LeaveTypes([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new ListMyRequestableLeaveTypesQuery(), ct)).Localize(localizer));
+
     [HttpGet("requests")]
     [ProducesResponseType<IReadOnlyList<LeaveRequestDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Requests(CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListMyLeaveRequestsQuery(), ct));
+    public async Task<IActionResult> Requests([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new ListMyLeaveRequestsQuery(), ct)).Localize(localizer));
+
+    [HttpGet("requests/preview")]
+    [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Preview(
+        [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromQuery] Guid? editedRequestId, [FromServices] IErrorLocalizer localizer,
+        CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new PreviewMyLeaveRequestQuery(leaveTypeId, start, end, editedRequestId), ct)).Localize(localizer));
 
     [HttpPost("requests")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
