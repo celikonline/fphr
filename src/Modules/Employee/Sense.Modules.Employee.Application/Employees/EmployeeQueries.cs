@@ -100,9 +100,19 @@ public sealed class EmployeeDetailBuilder(
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
-        BuildAsync(EmployeeRow.From(employee, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)), ct);
+        BuildAsync(EmployeeRow.From(employee, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)), customFieldValuesOverride: null, ct);
 
-    public async Task<EmployeeDetailDto> BuildAsync(EmployeeRow e, CancellationToken ct)
+    /// <summary>
+    /// From a tracked aggregate whose custom field values were just written in this same command (self-service profile
+    /// edit): <paramref name="customFieldValues"/> must come from <see cref="CustomFieldValueReader.BuildFromAggregateAsync"/>
+    /// on that same aggregate - a plain read-store lookup would still see the pre-commit (stale) row.
+    /// </summary>
+    public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, IReadOnlyList<CustomFieldValueDto> customFieldValues, CancellationToken ct) =>
+        BuildAsync(EmployeeRow.From(employee, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)), customFieldValues, ct);
+
+    public Task<EmployeeDetailDto> BuildAsync(EmployeeRow e, CancellationToken ct) => BuildAsync(e, customFieldValuesOverride: null, ct);
+
+    private async Task<EmployeeDetailDto> BuildAsync(EmployeeRow e, IReadOnlyList<CustomFieldValueDto>? customFieldValuesOverride, CancellationToken ct)
     {
         string? managerName = null;
         if (e.ManagerEmployeeId is { } managerId)
@@ -119,7 +129,7 @@ public sealed class EmployeeDetailBuilder(
         }
 
         var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
-        var customFieldValues = await customFields.BuildAsync(e, ct).ConfigureAwait(false);
+        var customFieldValues = customFieldValuesOverride ?? await customFields.BuildAsync(e, ct).ConfigureAwait(false);
 
         return new EmployeeDetailDto(
             e.Id,

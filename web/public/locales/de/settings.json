@@ -93,5 +93,77 @@
     "loadError": "[DE] Support access requests could not be loaded.",
     "empty": "[DE] No support access requests.",
     "senseStaff": "[DE] Sense support team"
+  },
+  "customFields": {
+    "title": "[DE] Custom fields",
+    "subtitle": "[DE] Manage the custom field definitions shown on employee cards.",
+    "add": "[DE] Add custom field",
+    "addTitle": "[DE] Add custom field",
+    "editTitle": "[DE] Edit custom field",
+    "showInactive": "[DE] Show inactive fields too",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "saved": "[DE] Custom field saved.",
+    "statusSaved": "[DE] Custom field status updated.",
+    "empty": "[DE] No custom fields defined yet.",
+    "columns": {
+      "key": "[DE] Key",
+      "name": "[DE] Name",
+      "dataType": "[DE] Data type",
+      "section": "[DE] Section",
+      "flags": "[DE] Flags",
+      "sortOrder": "[DE] Order",
+      "status": "[DE] Status"
+    },
+    "flags": {
+      "required": "[DE] Required",
+      "employeeEditable": "[DE] Employee editable",
+      "requiresApproval": "[DE] Requires approval",
+      "sensitive": "[DE] Sensitive",
+      "notReportable": "[DE] Not reportable"
+    },
+    "dataType": {
+      "text": "[DE] Text",
+      "number": "[DE] Number",
+      "date": "[DE] Date",
+      "boolean": "[DE] Yes/No",
+      "singleSelect": "[DE] Single select",
+      "multiSelect": "[DE] Multi select"
+    },
+    "section": {
+      "personal": "[DE] Personal",
+      "career": "[DE] Career",
+      "other": "[DE] Other"
+    },
+    "fields": {
+      "key": "[DE] Key",
+      "keyHint": "[DE] Lowercase letters, digits and underscores; must start with a letter. Cannot be changed after creation.",
+      "keyImmutable": "[DE] The key cannot be changed after creation.",
+      "keyInvalid": "[DE] The key must start with a lowercase letter and contain only lowercase letters, digits and underscores.",
+      "name": "[DE] Name",
+      "dataType": "[DE] Data type",
+      "dataTypeImmutable": "[DE] The data type cannot be changed after creation.",
+      "section": "[DE] Section",
+      "options": "[DE] Options",
+      "optionsHint": "[DE] Type a value and press Enter to add an option.",
+      "optionsPlaceholder": "[DE] Add an option...",
+      "optionsRequired": "[DE] Select-type fields require at least one option.",
+      "sortOrder": "[DE] Order",
+      "isRequired": "[DE] Required field",
+      "isEmployeeEditable": "[DE] Employee can edit from their own card",
+      "isEmployeeEditableHint": "[DE] When on, the employee may edit this field from their own card (self-service).",
+      "employeeEditRequiresApproval": "[DE] Employee edit requires approval",
+      "employeeEditRequiresApprovalHint": "[DE] For now the change is applied directly; an approval flow will be added in a later package.",
+      "isSensitive": "[DE] Sensitive field",
+      "isSensitiveHint": "[DE] Only callers with 'View sensitive fields' can see/change the value.",
+      "isReportable": "[DE] Reportable"
+    },
+    "errors": {
+      "generic": "[DE] The action could not be completed. Please try again.",
+      "loadFailed": "[DE] Custom field definitions could not be loaded.",
+      "keyTaken": "[DE] This key is already used by another custom field definition."
+    }
   }
 }

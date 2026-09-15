@@ -38,6 +38,7 @@
     "expenses": "[DE] Expenses & advances",
     "performance": "[DE] Performance",
     "recruitment": "[DE] Recruitment",
+    "recruitmentCandidates": "[DE] Candidates",
     "analytics": "[DE] Analytics",
     "workflowInbox": "[DE] Approval inbox"
   },
@@ -52,6 +53,8 @@
     "companyProfile": "[DE] Company profile",
     "companyProfileDesc": "[DE] Company details, working hours and logo",
     "approvalFlows": "[DE] Approval flows",
+    "customFields": "[DE] Custom fields",
+    "customFieldsDesc": "[DE] Custom field definitions shown on employee cards",
     "approvalFlowsDesc": "[DE] Approval steps per request type",
     "rules": "[DE] Rules",
     "workCalendars": "[DE] Work calendars",

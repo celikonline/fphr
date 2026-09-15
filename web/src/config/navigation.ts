@@ -15,6 +15,7 @@ import {
   Inbox,
   KeyRound,
   LifeBuoy,
+  ListChecks,
   MapPin,
   Network,
   Palmtree,
@@ -62,6 +63,7 @@ export const SETTINGS_PERMISSIONS = {
   supportAccess: ["identity.impersonation.approve"],
   dataTransfer: ["datatransfer.import.view"],
   workflowPolicies: ["workflow.policies.read"],
+  customFields: ["employee.customfield.view"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -208,6 +210,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/approval-flows",
         icon: Workflow,
         permissions: SETTINGS_PERMISSIONS.workflowPolicies,
+      },
+      {
+        key: "customFields",
+        labelKey: "settings.customFields",
+        descriptionKey: "settings.customFieldsDesc",
+        path: "/app/settings/company/custom-fields",
+        icon: ListChecks,
+        permissions: SETTINGS_PERMISSIONS.customFields,
       },
     ],
   },

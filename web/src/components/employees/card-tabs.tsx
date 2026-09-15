@@ -6,6 +6,7 @@ import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { CareerSection } from "./career-section";
+import { CustomFieldsSection } from "./custom-fields-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
 import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
@@ -60,6 +61,7 @@ function tabPlaceholder(key: string, phase?: string) {
 export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   { key: "general", labelKey: "employees:card.tabs.general", component: GeneralSection },
   { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalSection },
+  { key: "customFields", labelKey: "employees:card.tabs.customFields", component: CustomFieldsSection },
   { key: "career", labelKey: "employees:card.tabs.career", component: CareerSection },
   {
     key: "payments",

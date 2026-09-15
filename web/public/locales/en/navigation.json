@@ -38,6 +38,7 @@
     "expenses": "Expenses & advances",
     "performance": "Performance",
     "recruitment": "Recruitment",
+    "recruitmentCandidates": "Candidates",
     "analytics": "Analytics",
     "workflowInbox": "Approval inbox"
   },
@@ -52,6 +53,8 @@
     "companyProfile": "Company profile",
     "companyProfileDesc": "Company details, working hours and logo",
     "approvalFlows": "Approval flows",
+    "customFields": "Custom fields",
+    "customFieldsDesc": "Custom field definitions shown on employee cards",
     "approvalFlowsDesc": "Approval steps per request type",
     "rules": "Rules",
     "workCalendars": "Work calendars",

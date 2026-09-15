@@ -7,6 +7,8 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
+// Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
+using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
 namespace Sense.Modules.Employee.Application.Employees;
 
@@ -52,7 +54,7 @@ public static class CustomFieldValueCoercion
             CustomFieldDataType.Boolean => CoerceBoolean(trimmed),
             CustomFieldDataType.SingleSelect => CoerceSingleSelect(trimmed, definition.Options),
             CustomFieldDataType.MultiSelect => CoerceMultiSelect(trimmed, definition.Options, definition.IsRequired),
-            _ => Error.Validation(EmployeeDomainErrors.CustomFieldValueInvalid),
+            _ => Error.Validation(CustomFieldDomainErrors.ValueInvalid),
         };
     }
 
@@ -134,17 +136,8 @@ public sealed class CustomFieldValueReader(
     ICurrentUser currentUser,
     IPermissionService permissions)
 {
-    /// <summary>By employee id only (no EmployeeRow at hand, e.g. the HR custom-field write path) - isOwnCard is resolved as false; a caller with employee.employees.update still always sees non-sensitive values via the canManage check.</summary>
-    public Task<IReadOnlyList<CustomFieldValueDto>> BuildAsync(Guid employeeId, CancellationToken ct) =>
-        BuildAsync(employeeId, isOwnCard: false, ct);
-
-    public Task<IReadOnlyList<CustomFieldValueDto>> BuildAsync(EmployeeRow row, CancellationToken ct)
-    {
-        var isOwnCard = row.UserId is { } userId && currentUser.UserId == userId;
-        return BuildAsync(row.Id, isOwnCard, ct);
-    }
-
-    private async Task<IReadOnlyList<CustomFieldValueDto>> BuildAsync(Guid employeeId, bool isOwnCard, CancellationToken ct)
+    /// <summary>Genuine read (employee card queries): loads stored values from the read store. Safe here because nothing in the same request already changed them.</summary>
+    public async Task<IReadOnlyList<CustomFieldValueDto>> BuildAsync(EmployeeRow row, CancellationToken ct)
     {
         var defs = await definitions.ListActiveAsync(ct).ConfigureAwait(false);
         if (defs.Count == 0)
@@ -152,6 +145,7 @@ public sealed class CustomFieldValueReader(
             return [];
         }
 
+        var isOwnCard = row.UserId is { } userId && currentUser.UserId == userId;
         var canManage = currentUser.UserId is { } managerUserId &&
                         await permissions.HasAsync(managerUserId, EmployeePermissions.EmployeesUpdateKey, ct).ConfigureAwait(false);
         var canView = isOwnCard || canManage ||
@@ -161,13 +155,37 @@ public sealed class CustomFieldValueReader(
             return [];
         }
 
-        var values = await store.GetCustomFieldValuesAsync(employeeId, ct).ConfigureAwait(false);
-        var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
+        var values = await store.GetCustomFieldValuesAsync(row.Id, ct).ConfigureAwait(false);
+        return await ProjectAsync(defs, id => values.GetValueOrDefault(id), ct).ConfigureAwait(false);
+    }
 
+    /// <summary>
+    /// Write-handler response (HR and self-service custom field writes): reads the just-applied values straight off
+    /// the tracked aggregate's in-memory collection instead of the read store, which would still see the pre-commit
+    /// (stale) row - the unit-of-work only flushes to PostgreSQL after the handler returns. The caller of either write
+    /// path already holds employee.employees.update or is editing their own record, so no separate visibility gate
+    /// is needed here (unlike <see cref="BuildAsync(EmployeeRow, CancellationToken)"/>); the sensitive mask still applies.
+    /// </summary>
+    public async Task<IReadOnlyList<CustomFieldValueDto>> BuildFromAggregateAsync(EmployeeEntity employee, CancellationToken ct)
+    {
+        var defs = await definitions.ListActiveAsync(ct).ConfigureAwait(false);
+        if (defs.Count == 0)
+        {
+            return [];
+        }
+
+        var values = employee.CustomFieldValues.ToDictionary(v => v.DefinitionId, v => v.Value);
+        return await ProjectAsync(defs, id => values.GetValueOrDefault(id), ct).ConfigureAwait(false);
+    }
+
+    private async Task<IReadOnlyList<CustomFieldValueDto>> ProjectAsync(
+        IReadOnlyList<CustomFieldDefinition> defs, Func<Guid, string?> valueOf, CancellationToken ct)
+    {
+        var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
         return defs
             .Select(d => new CustomFieldValueDto(
                 d.Id, d.Key, d.Name, d.DataType, d.Section, d.Options, d.IsRequired, d.IsEmployeeEditable, d.IsSensitive,
-                d.IsSensitive && !canViewSensitive ? null : values.GetValueOrDefault(d.Id)))
+                d.IsSensitive && !canViewSensitive ? null : valueOf(d.Id)))
             .ToList();
     }
 }

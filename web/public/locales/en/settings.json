@@ -93,5 +93,77 @@
     "loadError": "Support access requests could not be loaded.",
     "empty": "No support access requests.",
     "senseStaff": "Sense support team"
+  },
+  "customFields": {
+    "title": "Custom fields",
+    "subtitle": "Manage the custom field definitions shown on employee cards.",
+    "add": "Add custom field",
+    "addTitle": "Add custom field",
+    "editTitle": "Edit custom field",
+    "showInactive": "Show inactive fields too",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "saved": "Custom field saved.",
+    "statusSaved": "Custom field status updated.",
+    "empty": "No custom fields defined yet.",
+    "columns": {
+      "key": "Key",
+      "name": "Name",
+      "dataType": "Data type",
+      "section": "Section",
+      "flags": "Flags",
+      "sortOrder": "Order",
+      "status": "Status"
+    },
+    "flags": {
+      "required": "Required",
+      "employeeEditable": "Employee editable",
+      "requiresApproval": "Requires approval",
+      "sensitive": "Sensitive",
+      "notReportable": "Not reportable"
+    },
+    "dataType": {
+      "text": "Text",
+      "number": "Number",
+      "date": "Date",
+      "boolean": "Yes/No",
+      "singleSelect": "Single select",
+      "multiSelect": "Multi select"
+    },
+    "section": {
+      "personal": "Personal",
+      "career": "Career",
+      "other": "Other"
+    },
+    "fields": {
+      "key": "Key",
+      "keyHint": "Lowercase letters, digits and underscores; must start with a letter. Cannot be changed after creation.",
+      "keyImmutable": "The key cannot be changed after creation.",
+      "keyInvalid": "The key must start with a lowercase letter and contain only lowercase letters, digits and underscores.",
+      "name": "Name",
+      "dataType": "Data type",
+      "dataTypeImmutable": "The data type cannot be changed after creation.",
+      "section": "Section",
+      "options": "Options",
+      "optionsHint": "Type a value and press Enter to add an option.",
+      "optionsPlaceholder": "Add an option...",
+      "optionsRequired": "Select-type fields require at least one option.",
+      "sortOrder": "Order",
+      "isRequired": "Required field",
+      "isEmployeeEditable": "Employee can edit from their own card",
+      "isEmployeeEditableHint": "When on, the employee may edit this field from their own card (self-service).",
+      "employeeEditRequiresApproval": "Employee edit requires approval",
+      "employeeEditRequiresApprovalHint": "For now the change is applied directly; an approval flow will be added in a later package.",
+      "isSensitive": "Sensitive field",
+      "isSensitiveHint": "Only callers with 'View sensitive fields' can see/change the value.",
+      "isReportable": "Reportable"
+    },
+    "errors": {
+      "generic": "The action could not be completed. Please try again.",
+      "loadFailed": "Custom field definitions could not be loaded.",
+      "keyTaken": "This key is already used by another custom field definition."
+    }
   }
 }

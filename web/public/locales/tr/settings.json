@@ -93,5 +93,77 @@
     "loadError": "Destek erişim talepleri yüklenemedi.",
     "empty": "Destek erişim talebi yok.",
     "senseStaff": "Sense destek ekibi"
+  },
+  "customFields": {
+    "title": "Özel alanlar",
+    "subtitle": "Çalışan kartlarına eklenen özel alan tanımlarını yönetin.",
+    "add": "Özel alan ekle",
+    "addTitle": "Özel alan ekle",
+    "editTitle": "Özel alanı düzenle",
+    "showInactive": "Pasif alanları da göster",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "saved": "Özel alan kaydedildi.",
+    "statusSaved": "Özel alan durumu güncellendi.",
+    "empty": "Henüz özel alan tanımı yok.",
+    "columns": {
+      "key": "Anahtar",
+      "name": "Ad",
+      "dataType": "Veri türü",
+      "section": "Bölüm",
+      "flags": "Özellikler",
+      "sortOrder": "Sıra",
+      "status": "Durum"
+    },
+    "flags": {
+      "required": "Zorunlu",
+      "employeeEditable": "Çalışan düzenleyebilir",
+      "requiresApproval": "Onay gerektirir",
+      "sensitive": "Hassas",
+      "notReportable": "Raporlanmaz"
+    },
+    "dataType": {
+      "text": "Metin",
+      "number": "Sayı",
+      "date": "Tarih",
+      "boolean": "Evet/Hayır",
+      "singleSelect": "Tekli seçim",
+      "multiSelect": "Çoklu seçim"
+    },
+    "section": {
+      "personal": "Kişisel",
+      "career": "Kariyer",
+      "other": "Diğer"
+    },
+    "fields": {
+      "key": "Anahtar",
+      "keyHint": "Küçük harf, rakam ve alt çizgi; harfle başlamalı. Oluşturulduktan sonra değiştirilemez.",
+      "keyImmutable": "Anahtar oluşturulduktan sonra değiştirilemez.",
+      "keyInvalid": "Anahtar küçük harfle başlamalı ve yalnızca küçük harf, rakam, alt çizgi içermelidir.",
+      "name": "Ad",
+      "dataType": "Veri türü",
+      "dataTypeImmutable": "Veri türü oluşturulduktan sonra değiştirilemez.",
+      "section": "Bölüm",
+      "options": "Seçenekler",
+      "optionsHint": "Yazıp Enter'a basarak seçenek ekleyin.",
+      "optionsPlaceholder": "Seçenek ekle...",
+      "optionsRequired": "Seçim türü alanlar için en az bir seçenek gereklidir.",
+      "sortOrder": "Sıra",
+      "isRequired": "Zorunlu alan",
+      "isEmployeeEditable": "Çalışan kendi kartından düzenleyebilir",
+      "isEmployeeEditableHint": "Açıksa çalışan bu alanı kendi kartından (self-servis) düzenleyebilir.",
+      "employeeEditRequiresApproval": "Çalışan düzenlemesi onay gerektirir",
+      "employeeEditRequiresApprovalHint": "Şu an için değişiklik doğrudan uygulanır; onay akışı sonraki bir pakette eklenecek.",
+      "isSensitive": "Hassas alan",
+      "isSensitiveHint": "Yalnızca 'Hassas alanları görüntüleme' yetkisi olanlar değeri görebilir/değiştirebilir.",
+      "isReportable": "Raporlanabilir"
+    },
+    "errors": {
+      "generic": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
+      "loadFailed": "Özel alan tanımları yüklenemedi.",
+      "keyTaken": "Bu anahtar başka bir özel alan tanımında zaten kullanılıyor."
+    }
   }
 }

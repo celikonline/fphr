@@ -279,11 +279,13 @@
       "general": "[DE] General",
       "personal": "[DE] Personal details",
       "career": "[DE] Career",
+      "customFields": "[DE] Custom fields",
       "account": "[DE] Account"
     },
     "tabs": {
       "general": "[DE] Genel",
       "personal": "[DE] Kişisel bilgiler",
+      "customFields": "[DE] Custom fields",
       "career": "[DE] Kariyer",
       "payments": "[DE] Ödemeler",
       "leave": "[DE] İzinler",
@@ -403,6 +405,19 @@
         "invalid": "[DE] The IBAN is invalid; check its length (TR + 24 digits) and check digits.",
         "countryUnsupported": "[DE] Only IBANs starting with TR are accepted for now."
       }
+    }
+  },
+  "customFields": {
+    "empty": "[DE] No custom fields defined.",
+    "notSet": "[DE] Not set",
+    "contactFields": "[DE] Contact details",
+    "editTitle": "[DE] Edit custom fields",
+    "editMine": "[DE] Edit my info",
+    "editMineTitle": "[DE] Edit my info",
+    "section": {
+      "personal": "[DE] Personal",
+      "career": "[DE] Career",
+      "other": "[DE] Other"
     }
   }
 }

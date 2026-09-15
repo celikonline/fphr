@@ -38,6 +38,7 @@
     "expenses": "Harcama ve avans",
     "performance": "Performans",
     "recruitment": "İşe alım",
+    "recruitmentCandidates": "Adaylar",
     "analytics": "Analitik",
     "workflowInbox": "Onay kutusu"
   },
@@ -53,6 +54,8 @@
     "companyProfileDesc": "Şirket bilgileri, çalışma saatleri ve logo",
     "approvalFlows": "Onay süreçleri",
     "approvalFlowsDesc": "Talep türlerine göre onay adımları",
+    "customFields": "Özel alanlar",
+    "customFieldsDesc": "Çalışan kartlarına eklenen özel alan tanımları",
     "rules": "Kurallar",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",

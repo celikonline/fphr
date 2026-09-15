@@ -36,9 +36,10 @@ public static class EmployeePermissions
     /// <summary>
     /// Self-service edit of one's own contact/address fields and employee-editable custom field values
     /// ("Self-servis düzenleme", 11.3.03). Contains ".self." so the wildcard role wiring (PermissionPatterns.SelfService)
-    /// grants it automatically.
+    /// grants it automatically. Exactly module.resource.action (3 segments) per the architecture rule
+    /// (Sense.Tests.Architecture.OnionArchitectureTests.PermissionKeys_FollowNamingConvention).
     /// </summary>
-    public const string ProfileSelfEditKey = "employee.profile.self.edit";
+    public const string ProfileSelfEditKey = "employee.self.edit";
 
     /// <summary>Read employee records (list/detail), filtered by data scope.</summary>
     public static readonly Permission EmployeesRead = new(

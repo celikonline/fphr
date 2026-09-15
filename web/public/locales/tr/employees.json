@@ -279,11 +279,13 @@
       "general": "Genel",
       "personal": "Kişisel bilgiler",
       "career": "Kariyer",
+      "customFields": "Özel alanlar",
       "account": "Hesap"
     },
     "tabs": {
       "general": "Genel",
       "personal": "Kişisel bilgiler",
+      "customFields": "Özel alanlar",
       "career": "Kariyer",
       "payments": "Ödemeler",
       "leave": "İzinler",
@@ -403,6 +405,19 @@
         "invalid": "IBAN geçersiz; uzunluğu (TR + 24 hane) ve kontrol hanelerini kontrol edin.",
         "countryUnsupported": "Şimdilik yalnızca TR ile başlayan IBAN'lar kabul edilir."
       }
+    }
+  },
+  "customFields": {
+    "empty": "Tanımlı özel alan yok.",
+    "notSet": "Belirtilmemiş",
+    "contactFields": "İletişim bilgileri",
+    "editTitle": "Özel alanları düzenle",
+    "editMine": "Bilgilerimi düzenle",
+    "editMineTitle": "Bilgilerimi düzenle",
+    "section": {
+      "personal": "Kişisel",
+      "career": "Kariyer",
+      "other": "Diğer"
     }
   }
 }

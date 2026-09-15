@@ -4,6 +4,7 @@
  */
 import { apiClient } from "@senseik/api-client";
 import type { BulkOperationResult, EmployeeFilter, EmployeeSelection, PagedQueryParams, PagedResult } from "@/types";
+import type { CustomFieldDataType, CustomFieldSection } from "@/services/custom-fields.service";
 
 const EMPLOYEES_BASE = "/v1/employees";
 
@@ -58,6 +59,24 @@ export interface EmployeeListItem {
   hireDate: string | null;
 }
 
+/**
+ * A custom field's definition joined with this employee's stored value ("Özel alanlar", E4). `value` is null when
+ * unset, or when it is sensitive and the caller lacks employee.sensitive.view (the definition itself is still shown).
+ * A definition the caller cannot see at all (AccountShowCustomFields off, non-owner/non-updater) is omitted entirely.
+ */
+export interface CustomFieldValue {
+  definitionId: string;
+  key: string;
+  name: string;
+  dataType: CustomFieldDataType;
+  section: CustomFieldSection;
+  options: string[];
+  isRequired: boolean;
+  isEmployeeEditable: boolean;
+  isSensitive: boolean;
+  value: string | null;
+}
+
 /** Sensitive fields (nationalId when unmasked, militaryStatus, disabilityDegree, bloodType) are null/masked without employee.sensitive.view. */
 export interface EmployeeDetail {
   id: string;
@@ -98,6 +117,8 @@ export interface EmployeeDetail {
   leaveAccrualStartDate: string | null;
   /** Derived: validFrom of the career record in effect today. */
   positionStartDate: string | null;
+  /** Custom field values visible to the caller (see `CustomFieldValue`); empty when none are defined or none are visible. */
+  customFields: CustomFieldValue[] | null;
 }
 
 /**
@@ -362,5 +383,32 @@ export async function updateCareerRecord(employeeId: string, recordId: string, i
 
 export async function deleteCareerRecord(employeeId: string, recordId: string): Promise<CareerRecord[]> {
   const { data } = await apiClient.delete<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`);
+  return data;
+}
+
+// ---------------------------------------------------------------- Custom field values (Özel alanlar, E4)
+
+/**
+ * HR/admin write path: only the entries present in `values` change (definitionId -> raw value; null clears it). Any
+ * active definition may be set - a sensitive one without employee.sensitive.view is silently preserved server-side.
+ */
+export async function setEmployeeCustomFields(employeeId: string, values: Record<string, string | null>): Promise<CustomFieldValue[]> {
+  const { data } = await apiClient.put<CustomFieldValue[]>(`${EMPLOYEES_BASE}/${employeeId}/custom-fields`, { values });
+  return data;
+}
+
+/** Self-service profile edit body ("Self-servis düzenleme"); `customFieldValues` may only touch IsEmployeeEditable definitions. */
+export interface UpdateMyProfileInput {
+  personalEmail: string | null;
+  mobilePhone: string | null;
+  homePhone: string | null;
+  addressLine: string | null;
+  city: string | null;
+  postalCode: string | null;
+  customFieldValues: Record<string, string | null> | null;
+}
+
+export async function updateMyProfile(input: UpdateMyProfileInput): Promise<EmployeeDetail> {
+  const { data } = await apiClient.put<EmployeeDetail>(`${EMPLOYEES_BASE}/me/profile`, input);
   return data;
 }

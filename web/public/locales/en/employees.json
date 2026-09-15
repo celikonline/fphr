@@ -279,11 +279,13 @@
       "general": "General",
       "personal": "Personal details",
       "career": "Career",
+      "customFields": "Custom fields",
       "account": "Account"
     },
     "tabs": {
       "general": "General",
       "personal": "Personal details",
+      "customFields": "Custom fields",
       "career": "Career",
       "payments": "Payments",
       "leave": "Leave",
@@ -403,6 +405,19 @@
         "invalid": "The IBAN is invalid; check its length (TR + 24 digits) and check digits.",
         "countryUnsupported": "Only IBANs starting with TR are accepted for now."
       }
+    }
+  },
+  "customFields": {
+    "empty": "No custom fields defined.",
+    "notSet": "Not set",
+    "contactFields": "Contact details",
+    "editTitle": "Edit custom fields",
+    "editMine": "Edit my info",
+    "editMineTitle": "Edit my info",
+    "section": {
+      "personal": "Personal",
+      "career": "Career",
+      "other": "Other"
     }
   }
 }

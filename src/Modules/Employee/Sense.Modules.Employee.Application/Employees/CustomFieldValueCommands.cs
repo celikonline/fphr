@@ -81,6 +81,6 @@ public sealed class SetEmployeeCustomFieldsHandler(
             });
         }
 
-        return await reader.BuildAsync(employee.Id, cancellationToken);
+        return Result.Success(await reader.BuildFromAggregateAsync(employee, cancellationToken));
     }
 }

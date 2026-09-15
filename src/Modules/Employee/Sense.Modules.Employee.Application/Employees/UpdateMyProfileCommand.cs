@@ -51,7 +51,9 @@ public sealed class UpdateMyProfileHandler(
     SelfEmployeeResolver self,
     IEmployeeRepository employees,
     ICustomFieldDefinitionRepository definitions,
+    EmployeeSensitiveAccess sensitiveAccess,
     IIntegrationEventOutbox outbox,
+    CustomFieldValueReader customFields,
     EmployeeDetailBuilder details) : ICommandHandler<UpdateMyProfileCommand, EmployeeDetailDto>
 {
     public async Task<Result<EmployeeDetailDto>> Handle(UpdateMyProfileCommand command, CancellationToken cancellationToken)
@@ -80,12 +82,21 @@ public sealed class UpdateMyProfileHandler(
         if (command.CustomFieldValues is { Count: > 0 } requested)
         {
             var defs = (await definitions.ListActiveAsync(cancellationToken)).ToDictionary(d => d.Id);
+            var canViewSensitive = await sensitiveAccess.CanViewAsync(cancellationToken);
             var toApply = new Dictionary<Guid, string?>();
             foreach (var (definitionId, rawValue) in requested)
             {
                 if (!defs.TryGetValue(definitionId, out var definition) || !definition.IsEmployeeEditable)
                 {
                     return Error.Forbidden(EmployeeErrors.CustomFieldNotEmployeeEditable);
+                }
+
+                // A field that is both employee-editable and sensitive still needs employee.sensitive.view: the
+                // employee cannot see (and therefore cannot knowingly set) a value they are not allowed to view,
+                // same precedent as the HR path (SetEmployeeCustomFieldsHandler) and TCKN's PreserveSensitiveFields.
+                if (definition.IsSensitive && !canViewSensitive)
+                {
+                    continue;
                 }
 
                 var coerced = CustomFieldValueCoercion.Coerce(definition, rawValue);
@@ -108,6 +119,7 @@ public sealed class UpdateMyProfileHandler(
             });
         }
 
-        return await details.BuildAsync(employee, cancellationToken);
+        var customFieldValues = await customFields.BuildFromAggregateAsync(employee, cancellationToken);
+        return await details.BuildAsync(employee, customFieldValues, cancellationToken);
     }
 }
