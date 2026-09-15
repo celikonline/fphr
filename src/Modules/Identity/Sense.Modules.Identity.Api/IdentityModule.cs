@@ -71,6 +71,9 @@ public sealed class IdentityModule : IModule
 
         // Cross-module read contract consumed by Workflow (yönetici/politika bulunamayan taleplerin rol kuyruğu)
         services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
+
+        // Cross-module read contract consumed by Notifications (alıcı e-postası/dili)
+        services.AddScoped<IUserProfileLookup, UserProfileLookup>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();
