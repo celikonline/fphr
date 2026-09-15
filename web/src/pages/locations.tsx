@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -72,9 +72,12 @@ export default function LocationsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
+  // Back to the first page whenever the debounced search changes (adjusted during render, not in an effect).
+  const [prevDebouncedSearch, setPrevDebouncedSearch] = useState(debouncedSearch);
+  if (prevDebouncedSearch !== debouncedSearch) {
+    setPrevDebouncedSearch(debouncedSearch);
     setPage(1);
-  }, [debouncedSearch]);
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["locations", page, debouncedSearch],
@@ -88,13 +91,14 @@ export default function LocationsPage() {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: "", type: "office", countryCode: "TR", address: "" },
   });
+  const selectedType = useWatch({ control, name: "type" });
 
   function openCreate() {
     reset({ name: "", type: "office", countryCode: "TR", address: "" });
@@ -264,7 +268,7 @@ export default function LocationsPage() {
             </div>
             <div>
               <Label htmlFor="loc-type">{t("locations:type")}</Label>
-              <Select value={watch("type")} onValueChange={(value) => setValue("type", value as LocationType)}>
+              <Select value={selectedType}onValueChange={(value) => setValue("type", value as LocationType)}>
                 <SelectTrigger id="loc-type">
                   <SelectValue />
                 </SelectTrigger>

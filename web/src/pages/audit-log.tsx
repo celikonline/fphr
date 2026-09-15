@@ -46,9 +46,13 @@ export default function AuditLogPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
+  // Back to the first page whenever the effective filters change (adjusted during render, not in an effect).
+  const filterKey = JSON.stringify([debouncedSearch, actor, action, from, to]);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (prevFilterKey !== filterKey) {
+    setPrevFilterKey(filterKey);
     setPage(1);
-  }, [debouncedSearch, actor, action, from, to]);
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ["audit-events", page, debouncedSearch, actor, action, from, to],

@@ -103,10 +103,14 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
+  // New filters start from page 1 with an empty selection (adjusted during render, not in an effect).
+  const filterKey = JSON.stringify([debouncedSearch, statusFilter, roleFilter]);
+  const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
+  if (prevFilterKey !== filterKey) {
+    setPrevFilterKey(filterKey);
     setPage(1);
     setSelected(new Set());
-  }, [debouncedSearch, statusFilter, roleFilter]);
+  }
 
   const { data: allUsers, isLoading } = useQuery({
     queryKey: ["users-all"],
@@ -527,9 +531,8 @@ function RolesTab({ t }: { t: TFn }) {
   const { data: permissionGroups } = useQuery({ queryKey: ["permission-groups"], queryFn: listPermissionGroups });
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!selectedRoleId && roles && roles.length > 0) setSelectedRoleId(roles[0].id);
-  }, [roles, selectedRoleId]);
+  // Default to the first role once roles load (guarded adjustment during render, not in an effect).
+  if (!selectedRoleId && roles && roles.length > 0) setSelectedRoleId(roles[0].id);
 
   const permissionMap = useMemo(() => {
     const map = new Map<string, { displayName: string; group: string }>();

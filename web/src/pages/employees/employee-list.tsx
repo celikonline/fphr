@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,7 +64,6 @@ function EmployeeGrid() {
   const [sort, setSort] = useState<{ field: EmployeeSortField; desc: boolean }>({ field: "displayName", desc: false });
   const [selection, setSelection] = useState<SelectionState>(EMPTY_SELECTION);
   const [createOpen, setCreateOpen] = useState(false);
-  const namesRef = useRef(new Map<string, string>());
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -83,10 +82,13 @@ function EmployeeGrid() {
     [debouncedSearch, orgUnitId, includeSubUnits, status, account]
   );
 
-  useEffect(() => {
+  // A new filter starts from page 1 with an empty selection (adjusted during render, not in an effect).
+  const [prevFilter, setPrevFilter] = useState(filter);
+  if (prevFilter !== filter) {
+    setPrevFilter(filter);
     setPage(1);
     setSelection(EMPTY_SELECTION);
-  }, [filter]);
+  }
 
   const sortParam = `${sort.desc ? "-" : ""}${sort.field}`;
 
@@ -109,9 +111,19 @@ function EmployeeGrid() {
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
 
-  useEffect(() => {
-    for (const item of data?.items ?? []) namesRef.current.set(item.id, item.displayName);
-  }, [data]);
+  // Names of every employee seen so far (across pages), so bulk results can label rows from earlier pages.
+  const [nameById, setNameById] = useState<ReadonlyMap<string, string>>(() => new Map());
+  const [namesSource, setNamesSource] = useState<typeof data>(undefined);
+  if (namesSource !== data) {
+    setNamesSource(data);
+    if (data && data.items.length > 0) {
+      setNameById((prev) => {
+        const next = new Map(prev);
+        for (const item of data.items) next.set(item.id, item.displayName);
+        return next;
+      });
+    }
+  }
 
   const isSelected = (id: string) => (selection.mode === "ids" ? selection.ids.has(id) : !selection.excluded.has(id));
   const selectedOnPage = items.filter((item) => isSelected(item.id)).length;
@@ -255,7 +267,7 @@ function EmployeeGrid() {
           <BulkActionsMenu
             selection={apiSelection}
             selectedCount={selectedCount}
-            nameById={namesRef.current}
+            nameById={nameById}
             onCompleted={onBulkCompleted}
           />
           <span className="text-sm text-muted-foreground">

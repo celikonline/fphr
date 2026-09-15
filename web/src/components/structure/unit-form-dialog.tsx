@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -74,10 +74,11 @@ export default function UnitFormDialog({
   const [submitted, setSubmitted] = useState(false);
   const [calendarTouched, setCalendarTouched] = useState(false);
 
-  // Calendars may load after the dialog opens; apply the default once unless the user picked one.
-  useEffect(() => {
-    if (isCompanyCreate && !calendarTouched && defaultCalendarId) setCalendarId(defaultCalendarId);
-  }, [isCompanyCreate, calendarTouched, defaultCalendarId]);
+  // Calendars may load after the dialog opens; apply the default unless the user picked one.
+  // Adjusted during render (guarded, so it settles in one extra pass) instead of in an effect.
+  if (isCompanyCreate && !calendarTouched && defaultCalendarId && calendarId !== defaultCalendarId) {
+    setCalendarId(defaultCalendarId);
+  }
 
   const onManagerSearchError = useCallback((error: unknown) => {
     if (getApiErrorStatus(error) === 403) setManagerHidden(true);
@@ -102,13 +103,14 @@ export default function UnitFormDialog({
   );
 
   // Keep an assigned-but-now-inactive location selectable so editing never silently clears it.
+  const unitLocationId = unit?.locationId;
   const locationOptions = useMemo(() => {
     const list = locations ?? [];
-    if (unit?.locationId && !list.some((l) => l.id === unit.locationId)) {
-      return [...list, { id: unit.locationId, name: t("structure:units.unknownLocation") } as Location];
+    if (unitLocationId && !list.some((l) => l.id === unitLocationId)) {
+      return [...list, { id: unitLocationId, name: t("structure:units.unknownLocation") } as Location];
     }
     return list;
-  }, [locations, unit?.locationId, t]);
+  }, [locations, unitLocationId, t]);
 
   const mutation = useMutation({
     mutationFn: async () => {
