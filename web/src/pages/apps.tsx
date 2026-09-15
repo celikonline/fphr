@@ -4,6 +4,7 @@ import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { AppWindow } from "lucide-react";
 import { APP_LAUNCHER_ITEMS } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
+import classes from "./apps.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
@@ -14,7 +15,7 @@ export default function AppsPage() {
   const activeApps = useVisibleItems(ACTIVE_APPS);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <Stack gap="lg" className="mx-auto max-w-5xl p-6 md:p-10">
       <div>
         <Title order={1} fz={24}>
           <Group gap="xs" component="span">
@@ -35,7 +36,7 @@ export default function AppsPage() {
               withBorder
               padding="lg"
               h="100%"
-              className="transition-colors hover:border-primary"
+              className={classes.appCard}
             >
               <Stack align="center" gap="sm" ta="center">
                 <Icon size={32} color="var(--mantine-primary-color-filled)" />
@@ -63,6 +64,6 @@ export default function AppsPage() {
           );
         })}
       </div>
-    </div>
+    </Stack>
   );
 }

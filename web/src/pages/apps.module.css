@@ -1,0 +1,7 @@
+.appCard {
+  transition: border-color 150ms ease;
+
+  @mixin hover {
+    border-color: var(--mantine-primary-color-filled);
+  }
+}
