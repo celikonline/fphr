@@ -536,4 +536,40 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Only your own rejected leave request can be resubmitted.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>The calendar range can be at most {max} days.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
+
+  <!-- Performance: review cycles, participants/assignments, scoring (Faz 5 core) -->
+  <data name="performance.cycle.view" xml:space="preserve"><value>View review cycles</value></data>
+  <data name="performance.cycle.create" xml:space="preserve"><value>Create review cycle</value></data>
+  <data name="performance.cycle.update" xml:space="preserve"><value>Edit review cycle</value></data>
+  <data name="performance.cycle.publish" xml:space="preserve"><value>Publish review cycle</value></data>
+  <data name="performance.cycle.force_complete" xml:space="preserve"><value>Force-complete review cycle</value></data>
+  <data name="performance.participant.manage" xml:space="preserve"><value>Manage review participants</value></data>
+  <data name="performance.form.fill" xml:space="preserve"><value>Fill evaluation form</value></data>
+  <data name="performance.my.assignments" xml:space="preserve"><value>View my assigned forms</value></data>
+
+  <data name="performance.cycle.not_found" xml:space="preserve"><value>Review cycle not found.</value></data>
+  <data name="performance.cycle.name_required" xml:space="preserve"><value>A review cycle name is required.</value></data>
+  <data name="performance.cycle.period_invalid" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="performance.cycle.not_draft" xml:space="preserve"><value>This action is only available while the cycle is Draft.</value></data>
+  <data name="performance.cycle.not_published" xml:space="preserve"><value>This action is only available once the cycle is Published.</value></data>
+  <data name="performance.cycle.goal_kind_not_yet_supported" xml:space="preserve"><value>The "Competency + Goal" kind is not supported yet.</value></data>
+  <data name="performance.competency.required" xml:space="preserve"><value>At least one competency must be added.</value></data>
+  <data name="performance.competency.name_required" xml:space="preserve"><value>A competency name is required.</value></data>
+  <data name="performance.question.required" xml:space="preserve"><value>Each competency must have at least one question.</value></data>
+  <data name="performance.question.text_required" xml:space="preserve"><value>Question text is required.</value></data>
+  <data name="performance.relation_config.invalid" xml:space="preserve"><value>The evaluator category configuration is invalid.</value></data>
+  <data name="performance.relation_config.disabled" xml:space="preserve"><value>This category is disabled; no evaluators can be added.</value></data>
+  <data name="performance.min_evaluators.exceeds_max" xml:space="preserve"><value>There can be at most {max} people.</value></data>
+  <data name="performance.participant.required" xml:space="preserve"><value>At least one participant must be added.</value></data>
+  <data name="performance.participant.already_added" xml:space="preserve"><value>This employee has already been added as a participant.</value></data>
+  <data name="performance.participant.limit_exceeded" xml:space="preserve"><value>A cycle can have at most {MaxParticipants} participants.</value></data>
+  <data name="performance.participant.self_evaluator_must_be_participant" xml:space="preserve"><value>No one but the participant can be added to the "Self" category.</value></data>
+  <data name="performance.participant.evaluator_not_active" xml:space="preserve"><value>The employee selected as an evaluator was not found or is inactive.</value></data>
+  <data name="performance.assignment.not_found" xml:space="preserve"><value>Review assignment not found.</value></data>
+  <data name="performance.assignment.not_pending" xml:space="preserve"><value>This assignment can no longer be filled in.</value></data>
+  <data name="performance.assignment.assignee_mismatch" xml:space="preserve"><value>You are not authorized to fill in this form.</value></data>
+  <data name="performance.response.answers_incomplete" xml:space="preserve"><value>All questions must be answered.</value></data>
+  <data name="performance.response.comment_required" xml:space="preserve"><value>A comment is required for the question "{Text}".</value></data>
+  <data name="performance.response.unknown_question" xml:space="preserve"><value>Unknown question: {QuestionId}.</value></data>
+  <data name="performance.force_complete.no_eligible" xml:space="preserve"><value>No report could be generated because no employee met the configured minimums.</value></data>
 </root>

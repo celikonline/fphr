@@ -15,6 +15,9 @@ using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Modules.Performance.Contracts;
+using Sense.Modules.Performance.Domain;
+using Sense.Modules.Performance.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
@@ -101,6 +104,17 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 builder.Services.AddLeaveBalanceRecalculationJob();
+
+// Performance writes ReviewCyclePublished/ReviewParticipantCompleted to its own outbox (Publish/ForceComplete/
+// SubmitReviewResponse handlers) - no cross-module consumer yet (see plan deviation, Notifications wiring is a
+// follow-up), but the outbox still needs polling so messages don't pile up unprocessed.
+builder.Services.AddModuleDbContext<PerformanceDbContext>(builder.Configuration, PerformanceDbContext.SchemaName);
+builder.Services.AddModuleHandlers(
+    PerformanceDbContext.SchemaName,
+    typeof(PerformancePermissions).Assembly,
+    typeof(PerformanceDbContext).Assembly,
+    typeof(IReviewCycleRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PerformanceDbContext>>();
 
 await builder.Build().RunAsync();
 

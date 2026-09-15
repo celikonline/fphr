@@ -545,4 +545,40 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Yalnız kendi reddedilmiş izin talebinizi yeniden gönderebilirsiniz.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
+
+  <!-- Performance: değerlendirme dönemleri, katılımcılar/atamalar, puanlama (Faz 5 çekirdeği) -->
+  <data name="performance.cycle.view" xml:space="preserve"><value>Değerlendirme dönemlerini görüntüleme</value></data>
+  <data name="performance.cycle.create" xml:space="preserve"><value>Değerlendirme dönemi oluşturma</value></data>
+  <data name="performance.cycle.update" xml:space="preserve"><value>Değerlendirme dönemini düzenleme</value></data>
+  <data name="performance.cycle.publish" xml:space="preserve"><value>Değerlendirmeyi yayınlama</value></data>
+  <data name="performance.cycle.force_complete" xml:space="preserve"><value>Değerlendirmeyi tamamlama</value></data>
+  <data name="performance.participant.manage" xml:space="preserve"><value>Değerlendirme katılımcılarını yönetme</value></data>
+  <data name="performance.form.fill" xml:space="preserve"><value>Değerlendirme formu doldurma</value></data>
+  <data name="performance.my.assignments" xml:space="preserve"><value>Bana atanan formları görüntüleme</value></data>
+
+  <data name="performance.cycle.not_found" xml:space="preserve"><value>Değerlendirme dönemi bulunamadı.</value></data>
+  <data name="performance.cycle.name_required" xml:space="preserve"><value>Değerlendirme adı zorunludur.</value></data>
+  <data name="performance.cycle.period_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="performance.cycle.not_draft" xml:space="preserve"><value>Bu işlem yalnız taslak durumdaki dönemlerde yapılabilir.</value></data>
+  <data name="performance.cycle.not_published" xml:space="preserve"><value>Bu işlem yalnız yayınlanmış dönemlerde yapılabilir.</value></data>
+  <data name="performance.cycle.goal_kind_not_yet_supported" xml:space="preserve"><value>"Yetkinlik + Hedef" türü henüz desteklenmiyor.</value></data>
+  <data name="performance.competency.required" xml:space="preserve"><value>En az bir yetkinlik eklenmelidir.</value></data>
+  <data name="performance.competency.name_required" xml:space="preserve"><value>Yetkinlik adı zorunludur.</value></data>
+  <data name="performance.question.required" xml:space="preserve"><value>Her yetkinlik için en az bir soru eklenmelidir.</value></data>
+  <data name="performance.question.text_required" xml:space="preserve"><value>Soru metni zorunludur.</value></data>
+  <data name="performance.relation_config.invalid" xml:space="preserve"><value>Değerlendirici kategorisi ayarları geçersiz.</value></data>
+  <data name="performance.relation_config.disabled" xml:space="preserve"><value>Bu kategori pasif; değerlendirici eklenemez.</value></data>
+  <data name="performance.min_evaluators.exceeds_max" xml:space="preserve"><value>En fazla {max} kişi olabilir.</value></data>
+  <data name="performance.participant.required" xml:space="preserve"><value>En az bir katılımcı eklenmelidir.</value></data>
+  <data name="performance.participant.already_added" xml:space="preserve"><value>Bu çalışan zaten katılımcı olarak eklenmiş.</value></data>
+  <data name="performance.participant.limit_exceeded" xml:space="preserve"><value>Bir dönemde en fazla {MaxParticipants} katılımcı olabilir.</value></data>
+  <data name="performance.participant.self_evaluator_must_be_participant" xml:space="preserve"><value>"Kendisi" kategorisine katılımcı dışında kişi eklenemez.</value></data>
+  <data name="performance.participant.evaluator_not_active" xml:space="preserve"><value>Değerlendirici olarak seçilen çalışan bulunamadı veya pasif.</value></data>
+  <data name="performance.assignment.not_found" xml:space="preserve"><value>Değerlendirme ataması bulunamadı.</value></data>
+  <data name="performance.assignment.not_pending" xml:space="preserve"><value>Bu atama artık doldurulamaz.</value></data>
+  <data name="performance.assignment.assignee_mismatch" xml:space="preserve"><value>Bu formu doldurma yetkiniz yok.</value></data>
+  <data name="performance.response.answers_incomplete" xml:space="preserve"><value>Tüm sorular cevaplanmalıdır.</value></data>
+  <data name="performance.response.comment_required" xml:space="preserve"><value>"{Text}" sorusu için yorum zorunludur.</value></data>
+  <data name="performance.response.unknown_question" xml:space="preserve"><value>Bilinmeyen soru: {QuestionId}.</value></data>
+  <data name="performance.force_complete.no_eligible" xml:space="preserve"><value>Belirlenen minimum değerlere uygun çalışan bulunamadığı için herhangi bir rapor oluşturulamadı.</value></data>
 </root>

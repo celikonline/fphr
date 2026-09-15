@@ -14,6 +14,7 @@
     <ProjectReference Include="../Modules/Workflow/Sense.Modules.Workflow.Infrastructure/Sense.Modules.Workflow.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Notifications/Sense.Modules.Notifications.Infrastructure/Sense.Modules.Notifications.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Performance/Sense.Modules.Performance.Infrastructure/Sense.Modules.Performance.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

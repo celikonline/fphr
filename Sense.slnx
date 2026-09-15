@@ -63,6 +63,7 @@
     <Project Path="tests/Modules/Sense.Modules.Workflow.Tests/Sense.Modules.Workflow.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Notifications.Tests/Sense.Modules.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Performance.Tests/Sense.Modules.Performance.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
@@ -84,5 +85,12 @@
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
     <Project Path="src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Performance/">
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Api/Sense.Modules.Performance.Api.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Application/Sense.Modules.Performance.Application.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Contracts/Sense.Modules.Performance.Contracts.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Domain/Sense.Modules.Performance.Domain.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Infrastructure/Sense.Modules.Performance.Infrastructure.csproj" />
   </Folder>
 </Solution>

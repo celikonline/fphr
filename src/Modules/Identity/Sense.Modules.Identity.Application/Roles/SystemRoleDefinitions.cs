@@ -80,8 +80,8 @@ public static class SystemRoleDefinitions
         new(SystemRoleCodes.Manager, DataScope.Team,
             ["leave.requests.view", "leave.requests.approve", "leave.calendar.view", "leave.balances.view", "workflow.inbox.*", "attendance.*.view",
              "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
-             "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
-             .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read"],
+             "performance.goals.*", "performance.form.fill", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*",
+             "documents.*.view", .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
@@ -112,7 +112,7 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.Employee, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
-             "announcements.feed.*", "documents.company.view", "ai.assistant.use"],
+             "announcements.feed.*", "documents.company.view", "ai.assistant.use", "performance.form.fill"],
             []),
 
         new(SystemRoleCodes.Intern, DataScope.Self,
