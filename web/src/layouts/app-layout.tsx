@@ -2,7 +2,6 @@ import { Fragment } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
-  ChevronRight,
   Globe,
   LayoutGrid,
   LogOut,
@@ -28,6 +27,15 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
   DropdownMenu,
@@ -110,32 +118,51 @@ function Breadcrumbs() {
   const { t } = useTranslation(["navigation"]);
   const location = useLocation();
   const crumbs = resolveBreadcrumbs(location.pathname);
+  const items = [
+    { path: "/app", label: t("nav.home"), link: true },
+    ...crumbs.map((crumb) => ({ path: crumb.path, label: t(crumb.labelKey), link: crumb.link })),
+  ];
+  // Below md, keep the first and last two crumbs and fold the middle ones into an ellipsis.
+  const collapsible = items.length > 3;
+  const isMiddle = (index: number) => collapsible && index > 0 && index < items.length - 2;
+  const middleLabel = items
+    .filter((_, index) => isMiddle(index))
+    .map((item) => item.label)
+    .join(" / ");
 
   return (
-    <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      {crumbs.length === 0 ? (
-        <span className="font-medium text-foreground">{t("nav.home")}</span>
-      ) : (
-        <Link to="/app" className="hover:text-foreground">
-          {t("nav.home")}
-        </Link>
-      )}
-      {crumbs.map((crumb, index) => {
-        const isLast = index === crumbs.length - 1;
-        return (
-          <Fragment key={crumb.path}>
-            <ChevronRight className="h-3.5 w-3.5" />
-            {isLast || !crumb.link ? (
-              <span className={cn(isLast && "font-medium text-foreground")}>{t(crumb.labelKey)}</span>
-            ) : (
-              <Link to={crumb.path} className="hover:text-foreground">
-                {t(crumb.labelKey)}
-              </Link>
-            )}
-          </Fragment>
-        );
-      })}
-    </nav>
+    <Breadcrumb>
+      <BreadcrumbList className="flex-nowrap">
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          const middleClass = isMiddle(index) ? "hidden md:inline-flex" : undefined;
+          return (
+            <Fragment key={item.path}>
+              {index > 0 && <BreadcrumbSeparator className={middleClass} />}
+              {collapsible && index === 1 && (
+                <>
+                  <BreadcrumbItem className="md:hidden">
+                    <BreadcrumbEllipsis label={middleLabel} title={middleLabel} />
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="md:hidden" />
+                </>
+              )}
+              <BreadcrumbItem className={middleClass}>
+                {isLast ? (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : item.link ? (
+                  <BreadcrumbLink asChild>
+                    <Link to={item.path}>{item.label}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <span>{item.label}</span>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }
 
