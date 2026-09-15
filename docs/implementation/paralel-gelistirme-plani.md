@@ -133,12 +133,26 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 
 | Kalem | Durum | Dal / PR | Not |
 |---|---|---|---|
-| §2 ön koşullar (PC-A) | ❌ Başlanmadı | — | |
+| §2 ön koşullar (PC-A) | 🟡 Kısmi | `a/parallel-prereqs` | Commit + push, Faz 0 takip tablosu, Documents → `Sense.slnx`, kök `CLAUDE.md`, `paralel-baslangic` etiketi yapıldı; mantıksal commit'lere bölme yapılmadı (tek commit `eb82c17`); CI durumu bu makineden doğrulanamadı (`gh` yok) |
 | §3 PC-B kurulumu + baz doğrulama | ❌ Başlanmadı | — | |
 | B1 Workflow çekirdeği | ❌ Başlanmadı | — | |
 | B2 Notifications | ❌ Başlanmadı | — | |
 | B3 `LegislationParameter` ADR | ❌ Başlanmadı | — | |
 | B3 Leave backend motoru | ❌ Başlanmadı | — | |
+
+PC-A hattı (kalem ayrıntısı [faz1a-durum-takibi.md](../analysis/kolayik-video/faz1a-durum-takibi.md)):
+
+| Kalem | Durum | Dal | Not |
+|---|---|---|---|
+| E0 senkronizasyon slotları (S1 birim onay süreci, S2 kart sekmeleri) | ❌ Başlanmadı | — | |
+| E1 özlük alanları + durum modeli + kart bölümleri | ❌ Başlanmadı | — | |
+| E2 kariyer geçmişi | ❌ Başlanmadı | — | |
+| E3 maaş + banka | ❌ Başlanmadı | — | |
+| E4 özel alanlar + self-servis | ❌ Başlanmadı | — | |
+| E5a işten ayrılış + iş güvencesi + çalışma dönemleri | ❌ Başlanmadı | — | |
+| E5b sendika + alt işveren + sözleşme belgesi | ❌ Başlanmadı | — | |
+| E6 özlük aktarım şablonu | ❌ Başlanmadı | — | |
+| E7 grid filtreleri + ana sayfa | ❌ Başlanmadı | — | |
 
 ## 11. Riskler
 

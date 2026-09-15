@@ -12,6 +12,13 @@
     <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Domain/Sense.Modules.DataTransfer.Domain.csproj" />
     <Project Path="src/Modules/DataTransfer/Sense.Modules.DataTransfer.Infrastructure/Sense.Modules.DataTransfer.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Documents/">
+    <Project Path="src/Modules/Documents/Sense.Modules.Documents.Api/Sense.Modules.Documents.Api.csproj" />
+    <Project Path="src/Modules/Documents/Sense.Modules.Documents.Application/Sense.Modules.Documents.Application.csproj" />
+    <Project Path="src/Modules/Documents/Sense.Modules.Documents.Contracts/Sense.Modules.Documents.Contracts.csproj" />
+    <Project Path="src/Modules/Documents/Sense.Modules.Documents.Domain/Sense.Modules.Documents.Domain.csproj" />
+    <Project Path="src/Modules/Documents/Sense.Modules.Documents.Infrastructure/Sense.Modules.Documents.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Employee/">
     <Project Path="src/Modules/Employee/Sense.Modules.Employee.Api/Sense.Modules.Employee.Api.csproj" />
     <Project Path="src/Modules/Employee/Sense.Modules.Employee.Application/Sense.Modules.Employee.Application.csproj" />
