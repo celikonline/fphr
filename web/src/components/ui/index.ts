@@ -27,3 +27,4 @@ export * from "./calendar";
 export * from "./date-picker";
 export * from "./data-table";
 export * from "./file-dropzone";
+export * from "./time-picker";
