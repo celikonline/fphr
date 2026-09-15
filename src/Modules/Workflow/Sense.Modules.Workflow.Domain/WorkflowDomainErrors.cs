@@ -1,0 +1,41 @@
+namespace Sense.Modules.Workflow.Domain;
+
+/// <summary>Domain error codes for Workflow module.</summary>
+public static class WorkflowDomainErrors
+{
+    public const string PolicyNotFound = "workflow.policy.not_found";
+    public const string PolicyNameRequired = "workflow.policy.name_required";
+    public const string PolicyRequestTypeRequired = "workflow.policy.request_type_required";
+    public const string PolicyRequestTypeInvalid = "workflow.policy.request_type_invalid";
+    public const string PolicyStepsRequired = "workflow.policy.steps_required";
+    public const string PolicyMaxStepsExceeded = "workflow.policy.max_steps_exceeded";
+    public const string PolicyStepsNotContiguous = "workflow.policy.steps_not_contiguous";
+    public const string PolicyStepApproverRequired = "workflow.policy.step_approver_required";
+    public const string PolicyAlreadyInactive = "workflow.policy.already_inactive";
+
+    public const string RequestNotFound = "workflow.request.not_found";
+    public const string RequestNotPending = "workflow.request.not_pending";
+    public const string RequestNoSteps = "workflow.request.no_steps";
+    public const string RequestRequesterRequired = "workflow.request.requester_required";
+
+    public const string TaskNotFound = "workflow.task.not_found";
+    public const string TaskNotCurrent = "workflow.task.not_current";
+    public const string TaskNotPending = "workflow.task.not_pending";
+    public const string TaskAssigneeMismatch = "workflow.task.assignee_mismatch";
+
+    public const string TokenNotFound = "workflow.token.not_found";
+    public const string TokenExpired = "workflow.token.expired";
+    public const string TokenAlreadyUsed = "workflow.token.already_used";
+}
+
+/// <summary>Domain constants and length limits.</summary>
+public static class WorkflowLimits
+{
+    public const int NameMaxLength = 200;
+    public const int RequestTypeMaxLength = 50;
+    public const int MaxSteps = 6;
+    public const int CommentMaxLength = 1000;
+    public const int IpAddressMaxLength = 64;
+    public const int UserAgentMaxLength = 500;
+    public const int RoleCodeMaxLength = 50;
+}
