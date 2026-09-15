@@ -2,19 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ActionIcon, Avatar, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
 import { ArrowLeft, Lock, Mail, MoreVertical, SearchX } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -51,8 +40,8 @@ export default function EmployeeCardPage() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-5xl space-y-4 p-6 md:p-10">
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-64 w-full" />
+        <Skeleton h={80} />
+        <Skeleton h={256} />
       </div>
     );
   }
@@ -61,25 +50,24 @@ export default function EmployeeCardPage() {
     const status = getApiErrorStatus(error);
     const forbidden = status === 403;
     const notFound = status === 404 || (!error && !employee);
+    const iconColor = "var(--mantine-color-dimmed)";
     return (
       <div className="mx-auto max-w-3xl p-6 md:p-10">
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 p-10 text-center">
-            {forbidden ? <Lock className="h-8 w-8 text-muted-foreground" /> : <SearchX className="h-8 w-8 text-muted-foreground" />}
-            <p className="font-medium">
-              {forbidden ? t("common:noAccessTitle") : notFound ? t("employees:card.notFoundTitle") : t("common:error")}
-            </p>
-            <p className="text-sm text-muted-foreground">
+        <Card withBorder padding="xl">
+          <Stack align="center" gap="sm" ta="center">
+            {forbidden ? <Lock size={32} color={iconColor} /> : <SearchX size={32} color={iconColor} />}
+            <Text fw={500}>{forbidden ? t("common:noAccessTitle") : notFound ? t("employees:card.notFoundTitle") : t("common:error")}</Text>
+            <Text size="sm" c="dimmed">
               {forbidden
                 ? t("common:noAccessDescription")
                 : notFound
                   ? t("employees:card.notFoundDescription")
                   : getApiErrorMessage(error, t("employees:genericError"))}
-            </p>
-            <Button asChild variant="outline">
-              <Link to="/app/employees">{t("employees:card.backToList")}</Link>
+            </Text>
+            <Button component={Link} to="/app/employees" variant="default">
+              {t("employees:card.backToList")}
             </Button>
-          </CardContent>
+          </Stack>
         </Card>
       </div>
     );
@@ -94,20 +82,25 @@ export default function EmployeeCardPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
-      <Button asChild variant="ghost" size="sm" className="-ml-3">
-        <Link to="/app/employees">
-          <ArrowLeft className="mr-2 h-4 w-4" /> {t("employees:card.backToList")}
-        </Link>
+      <Button
+        component={Link}
+        to="/app/employees"
+        variant="subtle"
+        size="sm"
+        className="-ml-3"
+        leftSection={<ArrowLeft size={16} />}
+      >
+        {t("employees:card.backToList")}
       </Button>
       <CardHeaderBlock key={`header-${employee.id}`} employee={employee} />
-      <Tabs value={active.key} onValueChange={(value) => navigate(`/app/employees/${id}/${value}`)}>
-        <TabsList className="flex h-auto w-full flex-wrap justify-start">
+      <Tabs value={active.key} onChange={(value) => value && navigate(`/app/employees/${id}/${value}`)}>
+        <Tabs.List>
           {tabs.map((candidate) => (
-            <TabsTrigger key={candidate.key} value={candidate.key}>
+            <Tabs.Tab key={candidate.key} value={candidate.key}>
               {t(candidate.labelKey)}
-            </TabsTrigger>
+            </Tabs.Tab>
           ))}
-        </TabsList>
+        </Tabs.List>
       </Tabs>
       <ActiveTab key={`${active.key}-${employee.id}-${employee.accessType ?? ""}`} employee={employee} />
     </div>
@@ -148,36 +141,48 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
   const unitName = employee.orgUnitId ? nameById.get(employee.orgUnitId) : undefined;
 
   return (
-    <Card>
-      <CardContent className="flex flex-wrap items-center gap-4 p-6">
-        <Avatar className="h-16 w-16">
-          <AvatarFallback className="text-lg">{initials(employee.firstName, employee.lastName)}</AvatarFallback>
+    <Card withBorder padding="lg">
+      <Group gap="md" wrap="nowrap">
+        <Avatar size={64} radius="xl">
+          {initials(employee.firstName, employee.lastName)}
         </Avatar>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-2xl font-bold">{employee.displayName}</h1>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {unitName && <span>{unitName}</span>}
+          <Title order={1} size="h2" lineClamp={1}>
+            {employee.displayName}
+          </Title>
+          <Group gap="xs" mt={4}>
+            {unitName && (
+              <Text size="sm" c="dimmed">
+                {unitName}
+              </Text>
+            )}
             <EmployeeStatusBadge status={employee.status} />
             <AccountStatusBadge status={employee.accountStatus} />
-          </div>
+          </Group>
         </div>
         {showInvite && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" title={t("common:actions")}>
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuLabel>{t("common:actions")}</DropdownMenuLabel>
-              <DropdownMenuItem disabled={!targetEmail} onSelect={() => setConfirmOpen(true)}>
-                <Mail className="mr-2 h-4 w-4" /> {inviteLabel}
-              </DropdownMenuItem>
-              {!targetEmail && <p className="px-2 pb-2 text-xs text-muted-foreground">{t("employees:invite.emailRequiredHint")}</p>}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Menu position="bottom-end" width={256}>
+            <Tooltip label={t("common:actions")}>
+              <Menu.Target>
+                <ActionIcon type="button" variant="subtle" color="gray" size="lg" aria-label={t("common:actions")}>
+                  <MoreVertical size={20} />
+                </ActionIcon>
+              </Menu.Target>
+            </Tooltip>
+            <Menu.Dropdown>
+              <Menu.Label>{t("common:actions")}</Menu.Label>
+              <Menu.Item disabled={!targetEmail} onClick={() => setConfirmOpen(true)} leftSection={<Mail size={16} />}>
+                {inviteLabel}
+              </Menu.Item>
+              {!targetEmail && (
+                <Text size="xs" c="dimmed" px="sm" pb="xs">
+                  {t("employees:invite.emailRequiredHint")}
+                </Text>
+              )}
+            </Menu.Dropdown>
+          </Menu>
         )}
-      </CardContent>
+      </Group>
 
       <ConfirmDialog
         open={confirmOpen}
