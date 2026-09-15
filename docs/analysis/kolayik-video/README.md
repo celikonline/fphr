@@ -11,12 +11,13 @@ Bu dizin, Kolay İK ürünü YouTube eğitim videolarından (89 video, 8 bölüm
 
 ## Güvenilirlik Etiketleri
 
-Her bulguda kaynağı belirtmek için dört etiket kullanılır:
+Her bulguda kaynağı belirtmek için beş etiket kullanılır:
 
 - **[Ekranda]**: Kolay İK ürün eğitim videolarında doğrudan gösterildi
 - **[Müşteri]**: Müşteri sohbeti veya podcast beyanı; pratik uygulamadan türetilmiş
 - **[Mevzuat]**: İş hukuku (4857, TİS, vb.) veya yasal metinlerden türetilmiş
 - **[Aday]**: SenseİK tasarımı için aday özellik; transkriptte doğrudan bulunmuyor veya doğrulanması gerekiyor
+- **[Web]**: destek.kolayik.com makalesi, kolayik.com blog/ürün sayfası, App Store sürüm notu veya mevzuat yayını (video dışı; ilk kullanım 11.3.5 eki)
 
 ## Dizin Yapısı
 
@@ -29,6 +30,7 @@ docs/analysis/kolayik-video/
 ├── 11.3.03-ozluk.md
 ├── 11.3.04-onay-surecleri.md
 ├── 11.3.05-izin-ve-fazla-mesai.md
+├── 11.3.5-izin-fm-zenginlestirme-eki.md (izin & FM web araştırması eki, [Web] etiketli)
 ├── 11.3.06-pdks-puantaj-vardir-takvim.md
 ├── 11.3.07-bordro.md
 ├── 11.3.08-harcama-avans-odemeler-zimmet.md
