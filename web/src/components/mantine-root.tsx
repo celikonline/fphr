@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import "dayjs/locale/de";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { mantineCssVariablesResolver, mantineTheme } from "@/lib/mantine-theme";
+import { mantineTheme } from "@/lib/mantine-theme";
 import { useUIStore } from "@/store/ui.store";
 
 dayjs.extend(customParseFormat);
@@ -22,7 +22,7 @@ export function MantineRoot({ children }: { children: ReactNode }) {
   const locale = (i18n.resolvedLanguage ?? i18n.language ?? "tr").split("-")[0];
 
   return (
-    <MantineProvider theme={mantineTheme} cssVariablesResolver={mantineCssVariablesResolver} forceColorScheme={colorScheme}>
+    <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
       <DatesProvider settings={{ locale, firstDayOfWeek: 1, weekendDays: [0, 6] }}>
         <Notifications position="top-right" limit={3} />
         {children}

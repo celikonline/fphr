@@ -1,4 +1,8 @@
-/* Mantine sits above Tailwind's preflight (base) and below utilities, so layout utilities still win. */
+/*
+ * Mantine owns colors, typography and component styling (theme: src/lib/mantine-theme.ts).
+ * Tailwind is kept for layout utilities only. Its preflight (base) sits below Mantine and its
+ * utilities above, so layout classes still win over component defaults.
+ */
 @layer theme, base, mantine, components, utilities;
 
 @import "@mantine/core/styles.layer.css";
@@ -8,103 +12,3 @@
 @import "@mantine/charts/styles.layer.css";
 
 @import "tailwindcss";
-
-@plugin "@tailwindcss/forms";
-@plugin "@tailwindcss/typography";
-
-@custom-variant dark (&:is(.dark *));
-
-@theme inline {
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-brand: var(--brand);
-  --color-brand-strong: var(--brand-strong);
-  --color-brand-foreground: var(--brand-foreground);
-  --color-petrol: var(--petrol);
-  --color-petrol-foreground: var(--petrol-foreground);
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-}
-
-:root {
-  --radius: 0.5rem;
-
-  --background: hsl(0 0% 100%);
-  --foreground: hsl(0 0% 3.6%);
-  --card: hsl(0 0% 100%);
-  --card-foreground: hsl(0 0% 3.6%);
-  --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(0 0% 3.6%);
-  --muted: hsl(0 0% 96.1%);
-  --muted-foreground: hsl(0 0% 45.1%);
-  --accent: hsl(0 0% 9%);
-  --accent-foreground: hsl(0 0% 100%);
-  --destructive: hsl(0 84.2% 60.2%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(0 0% 89.8%);
-  --input: hsl(0 0% 89.8%);
-  --ring: hsl(0 0% 3.6%);
-  --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(210 40% 98%);
-  --secondary: hsl(217 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
-
-  /* Algosense brand (marketing surfaces, e.g. login) — not the app's primary action color */
-  --brand: hsl(152 77% 39%); /* #17AE67 */
-  --brand-strong: hsl(152 83% 30%); /* #0F8A52 */
-  --brand-foreground: hsl(0 0% 100%);
-  --petrol: hsl(167 48% 14%); /* #12332C */
-  --petrol-foreground: hsl(0 0% 100%);
-}
-
-.dark {
-  --background: hsl(0 0% 3.6%);
-  --foreground: hsl(0 0% 98%);
-  --card: hsl(0 0% 3.6%);
-  --card-foreground: hsl(0 0% 98%);
-  --popover: hsl(0 0% 3.6%);
-  --popover-foreground: hsl(0 0% 98%);
-  --muted: hsl(0 0% 14.9%);
-  --muted-foreground: hsl(0 0% 63.9%);
-  --accent: hsl(0 0% 98%);
-  --accent-foreground: hsl(0 0% 9%);
-  --destructive: hsl(0 62.8% 30.6%);
-  --destructive-foreground: hsl(0 0% 98%);
-  --border: hsl(0 0% 14.9%);
-  --input: hsl(0 0% 14.9%);
-  --ring: hsl(217 91% 60%);
-  --primary: hsl(217 91% 60%);
-  --primary-foreground: hsl(210 40% 98%);
-  --secondary: hsl(217 32.6% 17.5%);
-  --secondary-foreground: hsl(210 40% 98%);
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
