@@ -2,13 +2,8 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button, Card, Group, Input, NumberInput, Paper, Radio, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -60,9 +55,10 @@ interface SectionProps {
   employee: EmployeeDetail;
 }
 
-/** A Select for a nullable enum field, with a "not set" option (Radix Select rejects an empty string value). */
+/** A Select for a nullable enum field, with a visible "not set" option (kept as a sentinel value so it stays pickable). */
 function NullableEnumSelect<T extends string>({
   id,
+  label,
   value,
   onChange,
   options,
@@ -71,6 +67,7 @@ function NullableEnumSelect<T extends string>({
   disabled,
 }: {
   id: string;
+  label: string;
   value: T | null;
   onChange: (value: T | null) => void;
   options: readonly T[];
@@ -80,25 +77,25 @@ function NullableEnumSelect<T extends string>({
 }) {
   const { t } = useTranslation(["employees"]);
   return (
-    <Select value={value ?? EMPTY_ENUM_VALUE} onValueChange={(v) => onChange(v === EMPTY_ENUM_VALUE ? null : (v as T))} disabled={disabled}>
-      <SelectTrigger id={id}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={EMPTY_ENUM_VALUE}>{emptyLabel}</SelectItem>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {t(`employees:enum.${i18nEnum}.${option}`)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Select
+      id={id}
+      label={label}
+      data={[
+        { value: EMPTY_ENUM_VALUE, label: emptyLabel },
+        ...options.map((option) => ({ value: option, label: t(`employees:enum.${i18nEnum}.${option}`) })),
+      ]}
+      value={value ?? EMPTY_ENUM_VALUE}
+      onChange={(v) => onChange(v === null || v === EMPTY_ENUM_VALUE ? null : (v as T))}
+      allowDeselect={false}
+      disabled={disabled}
+    />
   );
 }
 
 /** A Select for a non-nullable enum field that always has a value (e.g. "unspecified"). */
 function EnumSelect<T extends string>({
   id,
+  label,
   value,
   onChange,
   options,
@@ -106,6 +103,7 @@ function EnumSelect<T extends string>({
   disabled,
 }: {
   id: string;
+  label: string;
   value: T;
   onChange: (value: T) => void;
   options: readonly T[];
@@ -114,18 +112,15 @@ function EnumSelect<T extends string>({
 }) {
   const { t } = useTranslation(["employees"]);
   return (
-    <Select value={value} onValueChange={(v) => onChange(v as T)} disabled={disabled}>
-      <SelectTrigger id={id}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        {options.map((option) => (
-          <SelectItem key={option} value={option}>
-            {t(`employees:enum.${i18nEnum}.${option}`)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <Select
+      id={id}
+      label={label}
+      data={options.map((option) => ({ value: option, label: t(`employees:enum.${i18nEnum}.${option}`) }))}
+      value={value}
+      onChange={(v) => v !== null && onChange(v as T)}
+      allowDeselect={false}
+      disabled={disabled}
+    />
   );
 }
 
@@ -149,12 +144,12 @@ function useEmployeeUpdate(employee: EmployeeDetail, onSaved: () => void, onErro
 
 function SectionCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
+    <Card withBorder padding="lg">
+      <Group justify="space-between" wrap="nowrap" mb="md">
+        <Title order={4}>{title}</Title>
         {action}
-      </CardHeader>
-      <CardContent>{children}</CardContent>
+      </Group>
+      {children}
     </Card>
   );
 }
@@ -162,8 +157,12 @@ function SectionCard({ title, action, children }: { title: string; action?: Reac
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 text-sm">{children}</dd>
+      <Text component="dt" size="xs" c="dimmed">
+        {label}
+      </Text>
+      <Text component="dd" size="sm" mt={2}>
+        {children}
+      </Text>
     </div>
   );
 }
@@ -171,8 +170,8 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 function EditButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation(["common"]);
   return (
-    <Button type="button" variant="ghost" size="sm" onClick={onClick}>
-      <Pencil className="mr-2 h-4 w-4" /> {t("common:edit")}
+    <Button type="button" variant="subtle" size="sm" leftSection={<Pencil size={16} />} onClick={onClick}>
+      {t("common:edit")}
     </Button>
   );
 }
@@ -180,14 +179,14 @@ function EditButton({ onClick }: { onClick: () => void }) {
 function EditFooter({ saving, onCancel }: { saving: boolean; onCancel: () => void }) {
   const { t } = useTranslation(["common"]);
   return (
-    <div className="flex justify-end gap-2">
-      <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+    <Group justify="flex-end" gap="sm">
+      <Button type="button" variant="default" onClick={onCancel} disabled={saving}>
         {t("common:cancel")}
       </Button>
       <Button type="submit" disabled={saving}>
         {saving ? t("common:saving") : t("common:save")}
       </Button>
-    </div>
+    </Group>
   );
 }
 
@@ -227,20 +226,20 @@ export function GeneralSection({ employee }: SectionProps) {
   return (
     <SectionCard title={t("employees:card.sections.general")} action={canUpdate && !editing ? <EditButton onClick={startEdit} /> : undefined}>
       {editing ? (
-        <form onSubmit={submit} className="space-y-4">
-          <EmployeeGeneralFields
-            idPrefix="card-general"
-            values={values}
-            errors={errors}
-            disabled={mutation.isPending}
-            disabledFields={disabledFields}
-            onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="card-general-contractType">{t("employees:fields.contractType")}</Label>
+        <form onSubmit={submit}>
+          <Stack gap="md">
+            <EmployeeGeneralFields
+              idPrefix="card-general"
+              values={values}
+              errors={errors}
+              disabled={mutation.isPending}
+              disabledFields={disabledFields}
+              onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
+            />
+            <div className="grid gap-4 sm:grid-cols-2">
               <NullableEnumSelect
                 id="card-general-contractType"
+                label={t("employees:fields.contractType")}
                 value={contractType}
                 onChange={setContractType}
                 options={CONTRACT_TYPE_OPTIONS}
@@ -248,11 +247,9 @@ export function GeneralSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-general-employmentType">{t("employees:fields.employmentType")}</Label>
               <NullableEnumSelect
                 id="card-general-employmentType"
+                label={t("employees:fields.employmentType")}
                 value={employmentType}
                 onChange={setEmploymentType}
                 options={EMPLOYMENT_TYPE_OPTIONS}
@@ -260,20 +257,23 @@ export function GeneralSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-general-leaveAccrualStartDate">{t("employees:fields.leaveAccrualStartDate")}</Label>
-              <DatePicker
+              <Input.Wrapper
                 id="card-general-leaveAccrualStartDate"
-                value={leaveAccrualStartDate}
-                disabled={mutation.isPending}
-                clearable
-                onChange={setLeaveAccrualStartDate}
-              />
-              <p className="mt-1 text-xs text-muted-foreground">{t("employees:card.leaveAccrualStartDateHint")}</p>
+                label={t("employees:fields.leaveAccrualStartDate")}
+                description={t("employees:card.leaveAccrualStartDateHint")}
+                inputWrapperOrder={["label", "input", "description"]}
+              >
+                <DatePicker
+                  id="card-general-leaveAccrualStartDate"
+                  value={leaveAccrualStartDate}
+                  disabled={mutation.isPending}
+                  clearable
+                  onChange={setLeaveAccrualStartDate}
+                />
+              </Input.Wrapper>
             </div>
-          </div>
-          <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
+            <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
+          </Stack>
         </form>
       ) : (
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -375,43 +375,47 @@ export function PersonalSection({ employee }: SectionProps) {
   return (
     <SectionCard title={t("employees:card.sections.personal")} action={canUpdate && !editing ? <EditButton onClick={startEdit} /> : undefined}>
       {!canViewSensitive && (
-        <p className="mb-4 text-xs text-muted-foreground">{t("employees:card.sensitiveHidden")}</p>
+        <Text size="xs" c="dimmed" mb="md">
+          {t("employees:card.sensitiveHidden")}
+        </Text>
       )}
       {editing ? (
-        <form onSubmit={submit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="card-personal-gender">{t("employees:fields.gender")}</Label>
-              <EnumSelect id="card-personal-gender" value={gender} onChange={setGender} options={GENDER_OPTIONS} i18nEnum="gender" disabled={mutation.isPending} />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-maritalStatus">{t("employees:fields.maritalStatus")}</Label>
+        <form onSubmit={submit}>
+          <Stack gap="md">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <EnumSelect
+                id="card-personal-gender"
+                label={t("employees:fields.gender")}
+                value={gender}
+                onChange={setGender}
+                options={GENDER_OPTIONS}
+                i18nEnum="gender"
+                disabled={mutation.isPending}
+              />
               <EnumSelect
                 id="card-personal-maritalStatus"
+                label={t("employees:fields.maritalStatus")}
                 value={maritalStatus}
                 onChange={setMaritalStatus}
                 options={MARITAL_STATUS_OPTIONS}
                 i18nEnum="maritalStatus"
                 disabled={mutation.isPending}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-childCount">{t("employees:fields.childCount")}</Label>
-              <Input
+              <NumberInput
                 id="card-personal-childCount"
-                type="number"
+                label={t("employees:fields.childCount")}
+                error={childCountError}
                 min={0}
+                allowNegative={false}
+                allowDecimal={false}
                 inputMode="numeric"
                 value={childCount}
                 disabled={mutation.isPending}
-                onChange={(e) => setChildCount(e.target.value)}
+                onChange={(v) => setChildCount(String(v))}
               />
-              {childCountError && <p className="mt-1 text-xs text-destructive">{childCountError}</p>}
-            </div>
-            <div>
-              <Label htmlFor="card-personal-educationStatus">{t("employees:fields.educationStatus")}</Label>
               <NullableEnumSelect
                 id="card-personal-educationStatus"
+                label={t("employees:fields.educationStatus")}
                 value={educationStatus}
                 onChange={setEducationStatus}
                 options={EDUCATION_STATUS_OPTIONS}
@@ -419,11 +423,9 @@ export function PersonalSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-highestEducationLevel">{t("employees:fields.highestEducationLevel")}</Label>
               <NullableEnumSelect
                 id="card-personal-highestEducationLevel"
+                label={t("employees:fields.highestEducationLevel")}
                 value={highestEducationLevel}
                 onChange={setHighestEducationLevel}
                 options={HIGHEST_EDUCATION_LEVEL_OPTIONS}
@@ -431,11 +433,9 @@ export function PersonalSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-militaryStatus">{t("employees:fields.militaryStatus")}</Label>
               <NullableEnumSelect
                 id="card-personal-militaryStatus"
+                label={t("employees:fields.militaryStatus")}
                 value={militaryStatus}
                 onChange={setMilitaryStatus}
                 options={MILITARY_STATUS_OPTIONS}
@@ -443,11 +443,9 @@ export function PersonalSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending || !canViewSensitive}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-disabilityDegree">{t("employees:fields.disabilityDegree")}</Label>
               <NullableEnumSelect
                 id="card-personal-disabilityDegree"
+                label={t("employees:fields.disabilityDegree")}
                 value={disabilityDegree}
                 onChange={setDisabilityDegree}
                 options={DISABILITY_DEGREE_OPTIONS}
@@ -455,11 +453,9 @@ export function PersonalSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending || !canViewSensitive}
               />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-bloodType">{t("employees:fields.bloodType")}</Label>
               <NullableEnumSelect
                 id="card-personal-bloodType"
+                label={t("employees:fields.bloodType")}
                 value={bloodType}
                 onChange={setBloodType}
                 options={BLOOD_TYPE_OPTIONS}
@@ -467,29 +463,46 @@ export function PersonalSection({ employee }: SectionProps) {
                 emptyLabel={t("employees:enum.notSet")}
                 disabled={mutation.isPending || !canViewSensitive}
               />
+              <TextInput
+                id="card-personal-mobilePhone"
+                label={t("employees:fields.mobilePhone")}
+                type="tel"
+                value={mobilePhone}
+                disabled={mutation.isPending}
+                onChange={(e) => setMobilePhone(e.currentTarget.value)}
+              />
+              <TextInput
+                id="card-personal-homePhone"
+                label={t("employees:fields.homePhone")}
+                type="tel"
+                value={homePhone}
+                disabled={mutation.isPending}
+                onChange={(e) => setHomePhone(e.currentTarget.value)}
+              />
+              <TextInput
+                id="card-personal-addressLine"
+                label={t("employees:fields.addressLine")}
+                value={addressLine}
+                disabled={mutation.isPending}
+                onChange={(e) => setAddressLine(e.currentTarget.value)}
+              />
+              <TextInput
+                id="card-personal-city"
+                label={t("employees:fields.city")}
+                value={city}
+                disabled={mutation.isPending}
+                onChange={(e) => setCity(e.currentTarget.value)}
+              />
+              <TextInput
+                id="card-personal-postalCode"
+                label={t("employees:fields.postalCode")}
+                value={postalCode}
+                disabled={mutation.isPending}
+                onChange={(e) => setPostalCode(e.currentTarget.value)}
+              />
             </div>
-            <div>
-              <Label htmlFor="card-personal-mobilePhone">{t("employees:fields.mobilePhone")}</Label>
-              <Input id="card-personal-mobilePhone" type="tel" value={mobilePhone} disabled={mutation.isPending} onChange={(e) => setMobilePhone(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-homePhone">{t("employees:fields.homePhone")}</Label>
-              <Input id="card-personal-homePhone" type="tel" value={homePhone} disabled={mutation.isPending} onChange={(e) => setHomePhone(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-addressLine">{t("employees:fields.addressLine")}</Label>
-              <Input id="card-personal-addressLine" value={addressLine} disabled={mutation.isPending} onChange={(e) => setAddressLine(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-city">{t("employees:fields.city")}</Label>
-              <Input id="card-personal-city" value={city} disabled={mutation.isPending} onChange={(e) => setCity(e.target.value)} />
-            </div>
-            <div>
-              <Label htmlFor="card-personal-postalCode">{t("employees:fields.postalCode")}</Label>
-              <Input id="card-personal-postalCode" value={postalCode} disabled={mutation.isPending} onChange={(e) => setPostalCode(e.target.value)} />
-            </div>
-          </div>
-          <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
+            <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
+          </Stack>
         </form>
       ) : (
         <dl className="grid gap-4 sm:grid-cols-2">
@@ -549,7 +562,7 @@ export function AccountSection({ employee }: SectionProps) {
 
   return (
     <SectionCard title={t("employees:card.sections.account")}>
-      <div className="space-y-5">
+      <Stack gap="lg">
         <dl className="grid gap-4 sm:grid-cols-2">
           <Field label={t("employees:fields.accountStatus")}>
             <AccountStatusBadge status={employee.accountStatus} />
@@ -562,41 +575,41 @@ export function AccountSection({ employee }: SectionProps) {
           )}
         </dl>
 
-        {!employee.userId && <p className="text-sm text-muted-foreground">{t("employees:card.noAccountHint")}</p>}
+        {!employee.userId && (
+          <Text size="sm" c="dimmed">
+            {t("employees:card.noAccountHint")}
+          </Text>
+        )}
 
         {showAccessTypeEditor && (
-          <div className="space-y-3 rounded-md border border-border p-4">
-            <div>
-              <p className="text-sm font-medium">{t("employees:fields.accessType")}</p>
-              <p className="text-xs text-muted-foreground">{t("employees:card.accessTypeHint")}</p>
-            </div>
-            <RadioGroup
-              value={accessType ?? ""}
-              onValueChange={(value) => {
-                setAccessError(null);
-                setAccessType(value as AccessType);
-              }}
-              className="flex flex-wrap gap-4"
-              disabled={mutation.isPending}
-            >
-              {ACCESS_TYPES.map((type) => (
-                <div key={type} className="flex items-center gap-2">
-                  <RadioGroupItem id={`access-${type}`} value={type} />
-                  <Label htmlFor={`access-${type}`} className="font-normal">
-                    {t(`employees:accessType.${type}`)}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {accessError && <p className="text-sm text-destructive">{accessError}</p>}
-            <div className="flex justify-end">
-              <Button type="button" size="sm" disabled={!dirty || mutation.isPending} onClick={() => accessType && mutation.mutate(accessType)}>
-                {mutation.isPending ? t("common:saving") : t("common:save")}
-              </Button>
-            </div>
-          </div>
+          <Paper withBorder p="md">
+            <Stack gap="sm">
+              <Radio.Group
+                label={t("employees:fields.accessType")}
+                description={t("employees:card.accessTypeHint")}
+                error={accessError}
+                value={accessType ?? ""}
+                onChange={(value) => {
+                  setAccessError(null);
+                  setAccessType(value as AccessType);
+                }}
+                disabled={mutation.isPending}
+              >
+                <Group gap="md" mt="xs">
+                  {ACCESS_TYPES.map((type) => (
+                    <Radio key={type} id={`access-${type}`} value={type} label={t(`employees:accessType.${type}`)} />
+                  ))}
+                </Group>
+              </Radio.Group>
+              <Group justify="flex-end">
+                <Button type="button" size="sm" disabled={!dirty || mutation.isPending} onClick={() => accessType && mutation.mutate(accessType)}>
+                  {mutation.isPending ? t("common:saving") : t("common:save")}
+                </Button>
+              </Group>
+            </Stack>
+          </Paper>
         )}
-      </div>
+      </Stack>
     </SectionCard>
   );
 }

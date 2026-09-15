@@ -1,20 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandLoading,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Check, Search } from "lucide-react";
+import { Combobox, Group, InputBase, ScrollArea, Text, useCombobox } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { listEmployees } from "@/services/employees.service";
-import { cn } from "@/lib/utils";
 
 export interface PickedEmployee {
   id: string;
@@ -30,19 +20,39 @@ interface EmployeePickerProps {
   placeholder?: string;
   allowClear?: boolean;
   disabled?: boolean;
+  /** Optional field label/description/error rendered by the Mantine input wrapper. */
+  label?: ReactNode;
+  description?: ReactNode;
+  error?: ReactNode;
+  withAsterisk?: boolean;
 }
 
 /** Searchable single-employee combobox backed by `GET /v1/employees?q` (active employees). */
-export default function EmployeePicker({ id, value, onChange, excludeId, placeholder, allowClear, disabled }: EmployeePickerProps) {
+export default function EmployeePicker({
+  id,
+  value,
+  onChange,
+  excludeId,
+  placeholder,
+  allowClear,
+  disabled,
+  label,
+  description,
+  error,
+  withAsterisk,
+}: EmployeePickerProps) {
   const { t } = useTranslation(["employees"]);
-  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [debounced, setDebounced] = useState("");
+  const [debounced] = useDebouncedValue(search.trim(), 250);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(search.trim()), 250);
-    return () => clearTimeout(timer);
-  }, [search]);
+  const combobox = useCombobox({
+    onDropdownOpen: () => combobox.focusSearchInput(),
+    onDropdownClose: () => {
+      combobox.resetSelectedOption();
+      combobox.focusTarget();
+    },
+  });
+  const open = combobox.dropdownOpened;
 
   const { data, isFetching } = useQuery({
     queryKey: ["employees", "picker", debounced],
@@ -51,66 +61,90 @@ export default function EmployeePicker({ id, value, onChange, excludeId, placeho
   });
 
   const items = (data?.items ?? []).filter((e) => e.id !== excludeId);
+  const resultKey = items.map((e) => e.id).join(",");
+
+  // Like the previous cmdk list: the first result is highlighted so Enter picks it right away.
+  const { selectFirstOption } = combobox;
+  useEffect(() => {
+    if (open) selectFirstOption();
+  }, [open, resultKey, selectFirstOption]);
+
+  const showClear = Boolean(allowClear && value && !disabled);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <div className="flex gap-1">
-        <PopoverTrigger asChild>
-          <Button
-            id={id}
-            type="button"
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            disabled={disabled}
-            className={cn("w-full justify-between font-normal", !value && "text-muted-foreground")}
-          >
-            <span className="truncate">{value?.displayName ?? placeholder ?? t("employees:picker.placeholder")}</span>
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        {allowClear && value && !disabled && (
-          <Button type="button" variant="ghost" size="icon" title={t("employees:picker.clear")} onClick={() => onChange(null)}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-72 p-0" align="start">
-        <Command shouldFilter={false} loop>
-          <CommandInput autoFocus placeholder={t("employees:picker.search")} value={search} onValueChange={setSearch} />
-          <CommandList className="max-h-64">
-            {isFetching && items.length === 0 ? (
-              <CommandLoading>{t("employees:loading")}</CommandLoading>
+    <Combobox
+      store={combobox}
+      withinPortal
+      width="target"
+      position="bottom-start"
+      onOptionSubmit={(employeeId) => {
+        const employee = items.find((e) => e.id === employeeId);
+        if (employee) onChange({ id: employee.id, displayName: employee.displayName });
+        combobox.closeDropdown();
+      }}
+    >
+      <Combobox.Target targetType="button" withExpandedAttribute>
+        <InputBase
+          id={id}
+          component="button"
+          type="button"
+          pointer
+          disabled={disabled}
+          label={label}
+          description={description}
+          error={error}
+          withAsterisk={withAsterisk}
+          rightSection={
+            showClear ? (
+              <Combobox.ClearButton aria-label={t("employees:picker.clear")} title={t("employees:picker.clear")} onClear={() => onChange(null)} />
             ) : (
-              <>
-                <CommandEmpty>{t("employees:picker.empty")}</CommandEmpty>
-                {items.length > 0 && (
-                  <CommandGroup>
-                    {items.map((employee) => (
-                      <CommandItem
-                        key={employee.id}
-                        value={employee.id}
-                        onSelect={() => {
-                          onChange({ id: employee.id, displayName: employee.displayName });
-                          setOpen(false);
-                        }}
-                      >
-                        <Check className={cn("h-4 w-4", value?.id === employee.id ? "opacity-100" : "opacity-0")} />
-                        <span className="min-w-0">
-                          <span className="block truncate">{employee.displayName}</span>
-                          {employee.workEmail && (
-                            <span className="block truncate text-xs text-muted-foreground">{employee.workEmail}</span>
-                          )}
-                        </span>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                )}
-              </>
+              <Combobox.Chevron />
+            )
+          }
+          rightSectionPointerEvents={showClear ? "all" : "none"}
+          onClick={() => combobox.toggleDropdown()}
+        >
+          <Text component="span" size="sm" truncate="end" c={value ? undefined : "dimmed"} className="block">
+            {value?.displayName ?? placeholder ?? t("employees:picker.placeholder")}
+          </Text>
+        </InputBase>
+      </Combobox.Target>
+
+      <Combobox.Dropdown miw={288}>
+        <Combobox.Search
+          value={search}
+          onChange={(event) => setSearch(event.currentTarget.value)}
+          placeholder={t("employees:picker.search")}
+          leftSection={<Search size={14} />}
+        />
+        <Combobox.Options>
+          <ScrollArea.Autosize mah={256} type="scroll">
+            {isFetching && items.length === 0 ? (
+              <Combobox.Empty>{t("employees:loading")}</Combobox.Empty>
+            ) : items.length === 0 ? (
+              <Combobox.Empty>{t("employees:picker.empty")}</Combobox.Empty>
+            ) : (
+              items.map((employee) => (
+                <Combobox.Option key={employee.id} value={employee.id} active={value?.id === employee.id}>
+                  <Group gap="xs" wrap="nowrap">
+                    <Check size={16} style={{ opacity: value?.id === employee.id ? 1 : 0, flexShrink: 0 }} />
+                    <div className="min-w-0">
+                      <Text size="sm" truncate="end">
+                        {employee.displayName}
+                      </Text>
+                      {employee.workEmail && (
+                        <Text size="xs" c="dimmed" truncate="end">
+                          {employee.workEmail}
+                        </Text>
+                      )}
+                    </div>
+                  </Group>
+                </Combobox.Option>
+              ))
             )}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+          </ScrollArea.Autosize>
+        </Combobox.Options>
+      </Combobox.Dropdown>
+    </Combobox>
   );
 }

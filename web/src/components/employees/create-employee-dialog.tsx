@@ -2,9 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { createEmployee } from "@/services/employees.service";
@@ -65,19 +63,20 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) reset();
-        onOpenChange(next);
+    <Modal
+      opened={open}
+      onClose={() => {
+        reset();
+        onOpenChange(false);
       }}
+      title={t("employees:create.title")}
+      size="42rem"
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{t("employees:create.title")}</DialogTitle>
-          <DialogDescription>{t("employees:create.description")}</DialogDescription>
-        </DialogHeader>
-        <form onSubmit={submit} className="space-y-4">
+      <Text size="sm" c="dimmed" mb="md">
+        {t("employees:create.description")}
+      </Text>
+      <form onSubmit={submit}>
+        <Stack gap="md">
           <EmployeeGeneralFields
             idPrefix="new-emp"
             values={values}
@@ -86,19 +85,19 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="new-emp-unit">{t("employees:fields.orgUnit")}</Label>
-              <OrgUnitSelect id="new-emp-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:noUnit")} />
-            </div>
-            <div>
-              <Label htmlFor="new-emp-manager">{t("employees:fields.manager")}</Label>
-              <EmployeePicker id="new-emp-manager" value={manager} onChange={setManager} allowClear />
-            </div>
+            <OrgUnitSelect
+              id="new-emp-unit"
+              label={t("employees:fields.orgUnit")}
+              value={orgUnitId}
+              onChange={setOrgUnitId}
+              emptyLabel={t("employees:noUnit")}
+            />
+            <EmployeePicker id="new-emp-manager" label={t("employees:fields.manager")} value={manager} onChange={setManager} allowClear />
           </div>
-          <DialogFooter>
+          <Group justify="flex-end" gap="sm">
             <Button
               type="button"
-              variant="outline"
+              variant="default"
               onClick={() => {
                 reset();
                 onOpenChange(false);
@@ -110,9 +109,9 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }

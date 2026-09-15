@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { TextInput } from "@mantine/core";
 import { getApiProblem } from "@/lib/api-error";
 import type { EmployeeDetail } from "@/services/employees.service";
 
@@ -124,22 +123,19 @@ export function EmployeeGeneralFields({
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       {fields.map((field) => (
-        <div key={field}>
-          <Label htmlFor={`${idPrefix}-${field}`}>
-            {t(`employees:fields.${field}`)}
-            {REQUIRED.has(field) && <span className="text-destructive"> *</span>}
-          </Label>
-          <Input
-            id={`${idPrefix}-${field}`}
-            type={FIELD_TYPES[field]}
-            inputMode={field === "nationalId" ? "numeric" : undefined}
-            maxLength={field === "nationalId" ? 11 : undefined}
-            value={values[field]}
-            disabled={disabled || disabledFields?.has(field)}
-            onChange={(e) => onChange(field, e.target.value)}
-          />
-          {errors[field] && <p className="mt-1 text-xs text-destructive">{errors[field]}</p>}
-        </div>
+        <TextInput
+          key={field}
+          id={`${idPrefix}-${field}`}
+          label={t(`employees:fields.${field}`)}
+          withAsterisk={REQUIRED.has(field)}
+          error={errors[field]}
+          type={FIELD_TYPES[field]}
+          inputMode={field === "nationalId" ? "numeric" : undefined}
+          maxLength={field === "nationalId" ? 11 : undefined}
+          value={values[field]}
+          disabled={disabled || disabledFields?.has(field)}
+          onChange={(e) => onChange(field, e.currentTarget.value)}
+        />
       ))}
     </div>
   );
