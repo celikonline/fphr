@@ -1,10 +1,13 @@
 name: PR
 
+# PAUSED: automatic triggers are disabled for now; only manual runs (workflow_dispatch)
+# are possible. Restore the commented block below to re-enable.
 on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
+  workflow_dispatch:
+  # pull_request:
+  #   branches: [main]
+  # push:
+  #   branches: [main]
 
 concurrency:
   group: pr-${{ github.ref }}

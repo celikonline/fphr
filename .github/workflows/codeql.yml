@@ -1,14 +1,17 @@
 name: CodeQL
 
+# PAUSED: automatic triggers are disabled for now; only manual runs (workflow_dispatch)
+# are possible. Restore the commented block below to re-enable.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-  schedule:
-    # Weekly scan even if there's no new push, so freshly-disclosed CVEs against
-    # unchanged code still get caught.
-    - cron: "23 3 * * 1"
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+  # schedule:
+  #   # Weekly scan even if there's no new push, so freshly-disclosed CVEs against
+  #   # unchanged code still get caught.
+  #   - cron: "23 3 * * 1"
 
 concurrency:
   group: codeql-${{ github.ref }}
