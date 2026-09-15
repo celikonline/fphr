@@ -28,7 +28,6 @@ i18n
       "users",
       "audit",
       "workflow",
-      "notifications",
     ],
     interpolation: {
       escapeValue: false,

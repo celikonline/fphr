@@ -46,8 +46,7 @@ public sealed class SubmitApprovalRequestHandler(
     IApprovalMailer mailer,
     IEmailDecisionTokenRepository tokenRepository,
     IEmployeeDirectory employeeDirectory,
-    TimeProvider clock,
-    IIntegrationEventOutbox outbox) : ICommandHandler<SubmitApprovalRequestCommand, Guid>
+    TimeProvider clock) : ICommandHandler<SubmitApprovalRequestCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(SubmitApprovalRequestCommand command, CancellationToken cancellationToken)
     {
@@ -100,9 +99,6 @@ public sealed class SubmitApprovalRequestHandler(
 
         var request = submitted.Value;
         requests.Add(request);
-
-        outbox.Enqueue(new ApprovalRequestCreated(tenant.TenantId, request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId));
-        ApprovalDecisionEffects.EnqueueCurrentTaskAssigned(request, tenant.TenantId, outbox);
 
         await ApprovalDecisionEffects.SendCurrentTaskEmailAsync(
             request, tenant.TenantId, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, clock, cancellationToken);
@@ -351,7 +347,6 @@ internal static class ApprovalDecisionEffects
     {
         if (request.Status == ApprovalRequestStatus.Pending)
         {
-            EnqueueCurrentTaskAssigned(request, tenantId, outbox);
             await SendCurrentTaskEmailAsync(request, tenantId, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, clock, cancellationToken);
             return;
         }
@@ -364,18 +359,6 @@ internal static class ApprovalDecisionEffects
         {
             outbox.Enqueue(new ApprovalRejected(tenantId, request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId, decidedStepNumber));
         }
-    }
-
-    /// <summary>Announces the request's current task (in-app notification for the approver; see ApprovalTaskAssigned).</summary>
-    public static void EnqueueCurrentTaskAssigned(ApprovalRequest request, Guid tenantId, IIntegrationEventOutbox outbox)
-    {
-        if (request.CurrentTask is not { } task)
-        {
-            return;
-        }
-
-        outbox.Enqueue(new ApprovalTaskAssigned(
-            tenantId, request.Id, task.Id, request.RequestType, request.RequesterEmployeeId, task.StepNumber, task.ApproverEmployeeId, task.FallbackRoleCode));
     }
 
     /// <summary>Mints and emails a single-use decision token for the request's current task - only when it has a concrete assignee.</summary>

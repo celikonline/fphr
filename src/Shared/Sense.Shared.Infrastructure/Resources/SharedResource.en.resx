@@ -435,14 +435,4 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
-
-  <!-- Notifications: in-app notifications, preferences (Faz 1a B2) -->
-  <data name="notifications.self.view" xml:space="preserve"><value>View my notifications</value></data>
-  <data name="notifications.self.preferences" xml:space="preserve"><value>Manage my notification preferences</value></data>
-  <data name="notifications.not_found" xml:space="preserve"><value>Notification not found.</value></data>
-  <data name="notifications.template_unknown" xml:space="preserve"><value>Unknown notification template: {TemplateKey}.</value></data>
-  <data name="notifications.template_not_configurable" xml:space="preserve"><value>This notification cannot be turned off: {TemplateKey}.</value></data>
-  <data name="notifications.recipient_required" xml:space="preserve"><value>A notification recipient is required.</value></data>
-  <data name="notifications.template_key_invalid" xml:space="preserve"><value>Invalid notification template key.</value></data>
-  <data name="notifications.link_too_long" xml:space="preserve"><value>Notification link is too long.</value></data>
 </root>
