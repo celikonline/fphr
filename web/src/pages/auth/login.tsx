@@ -21,14 +21,11 @@ import { useAuthStore } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import classes from "./login.module.css";
 
-/** Algosense petrol (#12332C), the dark square of the brand mark in both color schemes. */
-const PETROL = "#12332c";
-
 function BrandMark() {
   return (
     <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
-      <rect x="12" y="4" width="24" height="24" rx="6" fill={PETROL} />
-      <rect x="4" y="12" width="24" height="24" rx="6" fill="var(--mantine-color-algosenseGreen-5)" />
+      <rect x="12" y="4" width="24" height="24" rx="6" fill="var(--mantine-color-navy-7)" />
+      <rect x="4" y="12" width="24" height="24" rx="6" fill="var(--mantine-color-brand-6)" />
       <path
         d="M12.5 27.5L21 19M21 19H14.5M21 19V25.5"
         stroke="white"
@@ -144,7 +141,7 @@ export default function LoginPage() {
           <Stack mt={40} gap="md">
             {FEATURES.map(({ icon: Icon, key }) => (
               <Group key={key} gap={14} wrap="nowrap">
-                <ThemeIcon variant="light" color="algosenseGreen" size={40} radius={10}>
+                <ThemeIcon variant="light" size={40} radius={10}>
                   <Icon size={20} />
                 </ThemeIcon>
                 <Text size="sm" fw={500}>
@@ -216,7 +213,6 @@ export default function LoginPage() {
 
           <Group mt="md" justify="space-between" wrap="nowrap">
             <Checkbox
-              color="algosenseGreen.5"
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.currentTarget.checked)}
               label={t("auth:rememberMe")}
@@ -234,7 +230,7 @@ export default function LoginPage() {
             </Text>
           </Group>
 
-          <Button type="submit" mt="lg" h={44} fullWidth color="algosenseGreen.5" disabled={isLoading}>
+          <Button type="submit" mt="lg" h={44} fullWidth disabled={isLoading}>
             {isLoading ? t("auth:loggingIn") : t("auth:login")}
           </Button>
 

@@ -6,9 +6,9 @@
   border-inline-end: 1px solid var(--mantine-color-default-border);
   background-image: linear-gradient(
     to bottom right,
-    light-dark(#eaf8f1, #16463b),
-    light-dark(#f5fbf8, #12332c),
-    light-dark(#ffffff, #0a211c)
+    light-dark(var(--mantine-color-brand-1), var(--mantine-color-navy-8)),
+    light-dark(var(--mantine-color-gray-0), var(--mantine-color-navy-9)),
+    light-dark(var(--mantine-color-white), var(--mantine-color-dark-7))
   );
 }
 

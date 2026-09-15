@@ -154,7 +154,7 @@ export default function ImportResultStep({ job, template }: ImportResultStepProp
   const ringBase = Math.max(job.totalRows, processed, 1);
   const counters: { key: string; value: number; color: MantineColor }[] = [
     { key: "inserted", value: job.insertedCount, color: "green" },
-    { key: "updated", value: job.updatedCount, color: "brandBlue" },
+    { key: "updated", value: job.updatedCount, color: "brand" },
     { key: "skipped", value: job.skippedCount, color: "gray" },
     { key: "errors", value: job.errorCount, color: "red" },
   ];

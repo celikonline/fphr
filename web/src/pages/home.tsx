@@ -22,10 +22,20 @@ const BIRTHDAY_DAYS = 30;
 const UPCOMING_LEAVE_DAYS = 30;
 const LIST_LIMIT = 3;
 const REQUEST_LIMIT = 4;
-const SLATE = "#4a5d82";
+const SLATE = "var(--mantine-color-gray-6)";
 const ACCENT = "var(--mantine-primary-color-filled)";
-/** Categorical palette of the reference dashboard's distribution chart. */
-const CHART_COLORS = ["#5470c6", "#91cc75", "#fac858", "#ee6666", "#73c0de", "#3ba272", "#fc8452", "#9a60b4", "#ea7ccc"];
+/** Categorical palette of the distribution chart, taken from the corporate colors. */
+const CHART_COLORS = [
+  "var(--mantine-color-navy-7)",
+  "var(--mantine-color-brand-6)",
+  "var(--mantine-color-orange-6)",
+  "var(--mantine-color-teal-6)",
+  "var(--mantine-color-red-6)",
+  "var(--mantine-color-cyan-4)",
+  "var(--mantine-color-yellow-6)",
+  "var(--mantine-color-blue-6)",
+  "var(--mantine-color-gold-6)",
+];
 const CARD_STYLE: CSSProperties = {
   borderColor: "var(--mantine-color-default-border)",
   boxShadow: "0 0 0 4px var(--mantine-color-default-hover)",
@@ -274,9 +284,9 @@ function OrgInfoWidget() {
 }
 
 const STATUS_ICON: Record<LeaveRequestStatus, { background: string; color: string; icon: "check" | "x" }> = {
-  pending: { background: "#fdebd7", color: "#f08c2b", icon: "check" },
+  pending: { background: "var(--mantine-color-orange-1)", color: "var(--mantine-color-orange-6)", icon: "check" },
   approved: { background: "#1e8e3e", color: "#ffffff", icon: "check" },
-  rejected: { background: "#f28b82", color: "#ffffff", icon: "x" },
+  rejected: { background: "var(--mantine-color-red-4)", color: "#ffffff", icon: "x" },
   withdrawn: { background: "var(--mantine-color-gray-2)", color: "var(--mantine-color-gray-6)", icon: "x" },
   cancelled: { background: "var(--mantine-color-gray-2)", color: "var(--mantine-color-gray-6)", icon: "x" },
 };
