@@ -1,10 +1,12 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { ArrowRightLeft, Clock, FileSignature, Plus, Repeat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,7 +15,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -47,6 +48,8 @@ const MIN_RATE = 1;
 const MAX_RATE = 3;
 const NOTE_MAX_LENGTH = 1000;
 const DEFAULT_TYPE = "__default__";
+/** Column chooser trigger sized like the surrounding `size="sm"` buttons. */
+const COLUMN_CHOOSER_CLASS = "h-9 px-3";
 
 /** Today as a backend DateOnly in the user's local calendar. */
 const todayDateOnly = () => toDateOnly(new Date());
@@ -196,13 +199,100 @@ function ConversionsCard({
   const minutes = useMinutes();
   const days = useDays();
   const overtimeById = useMemo(() => new Map(overtimes.map((row) => [row.id, row])), [overtimes]);
+  // Newest first until the user sorts by a column.
   const sorted = useMemo(() => [...rows].sort((a, b) => b.convertedAt.localeCompare(a.convertedAt)), [rows]);
+  const typeLabel = (row: OvertimeConversion) => (row.leaveTypeId && typeName(row.leaveTypeId)) || "";
+
+  const columns: ColumnDef<OvertimeConversion>[] = [
+    {
+      id: "convertedAt",
+      accessorKey: "convertedAt",
+      header: t("leave:overtime.convertedAt"),
+      meta: { label: t("leave:overtime.convertedAt"), cellClassName: "whitespace-nowrap text-xs text-muted-foreground" },
+      cell: ({ row }) => formatDateTime(row.original.convertedAt, i18n.language),
+    },
+    {
+      id: "workDate",
+      accessorFn: (row) => {
+        const overtime = overtimeById.get(row.overtimeRequestId);
+        return overtime ? `${overtime.workDate} ${overtime.startTime}` : "";
+      },
+      header: t("leave:overtime.workDate"),
+      meta: { label: t("leave:overtime.workDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => {
+        const overtime = overtimeById.get(row.original.overtimeRequestId);
+        return overtime ? `${formatDateOnly(overtime.workDate, i18n.language)} ${formatTimeOnly(overtime.startTime)}` : "—";
+      },
+    },
+    {
+      id: "basis",
+      accessorFn: (row) => t(`leave:overtime.basisOptions.${row.minutesBasis}`),
+      header: t("leave:overtime.basis"),
+      meta: { label: t("leave:overtime.basis") },
+    },
+    {
+      id: "rate",
+      accessorKey: "rate",
+      header: t("leave:overtime.rate"),
+      meta: { label: t("leave:overtime.rate"), headerClassName: "text-right", cellClassName: "text-right" },
+      cell: ({ row }) => `×${days(row.original.rate)}`,
+    },
+    {
+      id: "basisMinutes",
+      accessorKey: "basisMinutes",
+      header: t("leave:overtime.basisMinutes"),
+      meta: { label: t("leave:overtime.basisMinutes"), headerClassName: "text-right", cellClassName: "whitespace-nowrap text-right" },
+      cell: ({ row }) => minutes(row.original.basisMinutes),
+    },
+    {
+      id: "resultMinutes",
+      accessorKey: "resultMinutes",
+      header: t("leave:overtime.resultMinutes"),
+      meta: { label: t("leave:overtime.resultMinutes"), headerClassName: "text-right", cellClassName: "whitespace-nowrap text-right" },
+      cell: ({ row }) => minutes(row.original.resultMinutes),
+    },
+    {
+      id: "resultDays",
+      accessorKey: "resultDays",
+      header: t("leave:overtime.resultDays"),
+      meta: { label: t("leave:overtime.resultDays"), headerClassName: "text-right", cellClassName: "text-right" },
+      cell: ({ row }) => days(row.original.resultDays),
+    },
+    {
+      id: "leaveType",
+      accessorFn: typeLabel,
+      header: t("leave:ledger.type"),
+      meta: { label: t("leave:ledger.type") },
+      cell: ({ row }) => typeLabel(row.original) || "—",
+    },
+    {
+      id: "status",
+      accessorFn: (row) => t(`leave:overtime.conversionStatus.${row.status}`),
+      header: t("leave:requests.status"),
+      meta: { label: t("leave:requests.status") },
+      cell: ({ row }) => (
+        <Badge variant={row.original.status === "posted" ? "success" : "outline"}>
+          {t(`leave:overtime.conversionStatus.${row.original.status}`)}
+        </Badge>
+      ),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: sorted,
+    getRowId: (row) => row.id,
+    columnVisibilityKey: "senseik.leave.overtimeConversions.columns",
+  });
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-        <Repeat className="h-4 w-4 text-muted-foreground" />
-        <CardTitle className="text-lg">{t("leave:overtime.conversionsTitle")}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-3">
+        <div className="flex items-center gap-2">
+          <Repeat className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="text-lg">{t("leave:overtime.conversionsTitle")}</CardTitle>
+        </div>
+        {!isLoading && !error && sorted.length > 0 && <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />}
       </CardHeader>
       <CardContent className="overflow-x-auto">
         {isLoading ? (
@@ -212,43 +302,7 @@ function ConversionsCard({
         ) : sorted.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("leave:overtime.conversionsEmpty")}</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("leave:overtime.convertedAt")}</TableHead>
-                <TableHead>{t("leave:overtime.workDate")}</TableHead>
-                <TableHead>{t("leave:overtime.basis")}</TableHead>
-                <TableHead className="text-right">{t("leave:overtime.rate")}</TableHead>
-                <TableHead className="text-right">{t("leave:overtime.basisMinutes")}</TableHead>
-                <TableHead className="text-right">{t("leave:overtime.resultMinutes")}</TableHead>
-                <TableHead className="text-right">{t("leave:overtime.resultDays")}</TableHead>
-                <TableHead>{t("leave:ledger.type")}</TableHead>
-                <TableHead>{t("leave:requests.status")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((row) => {
-                const overtime = overtimeById.get(row.overtimeRequestId);
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(row.convertedAt, i18n.language)}</TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {overtime ? `${formatDateOnly(overtime.workDate, i18n.language)} ${formatTimeOnly(overtime.startTime)}` : "—"}
-                    </TableCell>
-                    <TableCell>{t(`leave:overtime.basisOptions.${row.minutesBasis}`)}</TableCell>
-                    <TableCell className="text-right">×{days(row.rate)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right">{minutes(row.basisMinutes)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-right">{minutes(row.resultMinutes)}</TableCell>
-                    <TableCell className="text-right">{days(row.resultDays)}</TableCell>
-                    <TableCell>{(row.leaveTypeId && typeName(row.leaveTypeId)) ?? "—"}</TableCell>
-                    <TableCell>
-                      <Badge variant={row.status === "posted" ? "success" : "outline"}>{t(`leave:overtime.conversionStatus.${row.status}`)}</Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataTable table={table} />
         )}
       </CardContent>
     </Card>
@@ -411,9 +465,83 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
   });
   const today = todayDateOnly();
   const date = (value: string | null | undefined) => (value ? formatDateOnly(value, i18n.language) : "—");
+  // Newest first until the user sorts by a column.
   const sorted = useMemo(() => [...(query.data ?? [])].sort((a, b) => b.givenAt.localeCompare(a.givenAt)), [query.data]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["leave", "overtimes", employeeId, "consents"] });
+
+  const columns: ColumnDef<OvertimeConsent>[] = [
+    {
+      id: "givenAt",
+      accessorKey: "givenAt",
+      enableHiding: false,
+      header: t("leave:overtime.givenAt"),
+      meta: { label: t("leave:overtime.givenAt"), cellClassName: "whitespace-nowrap font-medium" },
+      cell: ({ row }) => date(row.original.givenAt),
+    },
+    {
+      id: "source",
+      accessorFn: (consent) => t(`leave:overtime.consentSources.${consent.source}`),
+      header: t("leave:overtime.consentSource"),
+      meta: { label: t("leave:overtime.consentSource") },
+    },
+    {
+      id: "coversNightWork",
+      accessorFn: (consent) => (consent.coversNightWork ? t("common:yes") : t("common:no")),
+      header: t("leave:overtime.coversNightWork"),
+      meta: { label: t("leave:overtime.coversNightWork") },
+    },
+    {
+      id: "revocationNoticeAt",
+      accessorFn: (consent) => consent.revocationNoticeAt ?? "",
+      header: t("leave:overtime.revocationNoticeAt"),
+      meta: { label: t("leave:overtime.revocationNoticeAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => date(row.original.revocationNoticeAt),
+    },
+    {
+      id: "revocationEffectiveAt",
+      accessorFn: (consent) => consent.revocationEffectiveAt ?? "",
+      header: t("leave:overtime.revocationEffectiveAt"),
+      meta: { label: t("leave:overtime.revocationEffectiveAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => date(row.original.revocationEffectiveAt),
+    },
+    {
+      id: "status",
+      accessorFn: (consent) => t(`leave:overtime.consentStates.${consentState(consent, today)}`),
+      header: t("leave:requests.status"),
+      meta: { label: t("leave:requests.status") },
+      cell: ({ row }) => {
+        const state = consentState(row.original, today);
+        return (
+          <Badge variant={state === "inEffect" ? "success" : state === "revoked" ? "outline" : "secondary"}>
+            {t(`leave:overtime.consentStates.${state}`)}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: "actions",
+      enableSorting: false,
+      enableHiding: false,
+      header: () => null,
+      meta: { headerClassName: "w-0" },
+      cell: ({ row }) =>
+        !row.original.revocationNoticeAt && (
+          <div onClick={(event) => event.stopPropagation()}>
+            <Button type="button" size="sm" variant="ghost" onClick={() => setRevoking(row.original)}>
+              {t("leave:overtime.revokeConsent")}
+            </Button>
+          </div>
+        ),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: sorted,
+    getRowId: (consent) => consent.id,
+    columnVisibilityKey: "senseik.leave.overtimeConsents.columns",
+  });
 
   return (
     <Card>
@@ -422,9 +550,12 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
           <FileSignature className="h-4 w-4 text-muted-foreground" />
           <CardTitle className="text-lg">{t("leave:overtime.consentsTitle")}</CardTitle>
         </div>
-        <Button type="button" size="sm" variant="outline" onClick={() => setRecording(true)}>
-          <Plus className="mr-2 h-4 w-4" /> {t("leave:overtime.recordConsent")}
-        </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {!query.isLoading && !query.isError && sorted.length > 0 && <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />}
+          <Button type="button" size="sm" variant="outline" onClick={() => setRecording(true)}>
+            <Plus className="mr-2 h-4 w-4" /> {t("leave:overtime.recordConsent")}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
         {query.isLoading ? (
@@ -434,45 +565,7 @@ function ConsentsCard({ employeeId }: { employeeId: string }) {
         ) : sorted.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("leave:overtime.consentsEmpty")}</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("leave:overtime.givenAt")}</TableHead>
-                <TableHead>{t("leave:overtime.consentSource")}</TableHead>
-                <TableHead>{t("leave:overtime.coversNightWork")}</TableHead>
-                <TableHead>{t("leave:overtime.revocationNoticeAt")}</TableHead>
-                <TableHead>{t("leave:overtime.revocationEffectiveAt")}</TableHead>
-                <TableHead>{t("leave:requests.status")}</TableHead>
-                <TableHead className="w-0" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sorted.map((consent) => {
-                const state = consentState(consent, today);
-                return (
-                  <TableRow key={consent.id}>
-                    <TableCell className="whitespace-nowrap font-medium">{date(consent.givenAt)}</TableCell>
-                    <TableCell>{t(`leave:overtime.consentSources.${consent.source}`)}</TableCell>
-                    <TableCell>{consent.coversNightWork ? t("common:yes") : t("common:no")}</TableCell>
-                    <TableCell className="whitespace-nowrap">{date(consent.revocationNoticeAt)}</TableCell>
-                    <TableCell className="whitespace-nowrap">{date(consent.revocationEffectiveAt)}</TableCell>
-                    <TableCell>
-                      <Badge variant={state === "inEffect" ? "success" : state === "revoked" ? "outline" : "secondary"}>
-                        {t(`leave:overtime.consentStates.${state}`)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {!consent.revocationNoticeAt && (
-                        <Button type="button" size="sm" variant="ghost" onClick={() => setRevoking(consent)}>
-                          {t("leave:overtime.revokeConsent")}
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataTable table={table} />
         )}
       </CardContent>
 

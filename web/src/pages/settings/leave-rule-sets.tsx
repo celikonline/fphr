@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Copy, Pencil, ScrollText, Search, Star, Trash2, UserPlus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
@@ -453,58 +454,87 @@ function limitText(settings: LeaveTypeSettings, t: (key: string) => string, days
   return amount === null || amount === undefined ? label : `${label} (${days(amount)} ${t("leave:days")})`;
 }
 
+type LeaveTypeRow = LeaveRuleSet["types"][number];
+
 function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
   const { t } = useTranslation(["leave"]);
   const leaveName = useLeaveName();
   const days = useDays();
 
+  // Disabled types render muted; DataTable rows take no class, so every cell carries it.
+  const text = (row: LeaveTypeRow, value: string) => (
+    <span className={row.settings.isDisabled ? "text-muted-foreground" : undefined}>{value}</span>
+  );
+  const accrualText = ({ settings }: LeaveTypeRow) =>
+    settings.limitType === "perYear" ? t(`leave:accrualFrequency.${settings.accrualFrequency}`) : "—";
+  const carryOverText = ({ settings }: LeaveTypeRow) =>
+    settings.limitType === "perYear"
+      ? settings.carryOverMode === "limited" && settings.carryOverMaxDays != null
+        ? `${t("leave:carryOverMode.limited")} (${days(settings.carryOverMaxDays)} ${t("leave:days")})`
+        : t(`leave:carryOverMode.${settings.carryOverMode}`)
+      : "—";
+
+  /** A sortable column whose cell is the (muted when disabled) text of `value`. */
+  const textColumn = (id: string, label: string, value: (row: LeaveTypeRow) => string): ColumnDef<LeaveTypeRow> => ({
+    id,
+    accessorFn: value,
+    header: label,
+    meta: { label },
+    cell: ({ row }) => text(row.original, value(row.original)),
+  });
+
+  const columns: ColumnDef<LeaveTypeRow>[] = [
+    {
+      id: "name",
+      accessorFn: (row) => leaveName(row.settings.name),
+      enableHiding: false,
+      header: t("leave:ruleSets.col.name"),
+      meta: { label: t("leave:ruleSets.col.name"), cellClassName: "font-medium" },
+      cell: ({ row }) => (
+        <div className={row.original.settings.isDisabled ? "text-muted-foreground" : undefined}>
+          {leaveName(row.original.settings.name)}
+          {row.original.settings.description && (
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">{row.original.settings.description}</p>
+          )}
+        </div>
+      ),
+    },
+    textColumn("code", t("leave:ruleSets.col.code"), (row) => t(`leave:code.${row.settings.code}`)),
+    textColumn("paid", t("leave:ruleSets.col.paid"), (row) => (row.settings.isPaid ? t("leave:ruleSets.paid") : t("leave:ruleSets.unpaid"))),
+    textColumn("limit", t("leave:ruleSets.col.limit"), (row) => limitText(row.settings, t, days)),
+    textColumn("accrual", t("leave:ruleSets.col.accrual"), accrualText),
+    textColumn("carryOver", t("leave:ruleSets.col.carryOver"), carryOverText),
+    textColumn("unit", t("leave:ruleSets.col.unit"), (row) => t(`leave:unit.${row.settings.unit}`)),
+    textColumn("calendar", t("leave:ruleSets.col.calendar"), (row) =>
+      row.settings.showTypeNameOnCalendar ? t("leave:ruleSets.visible") : t("leave:ruleSets.hidden"),
+    ),
+    {
+      id: "status",
+      accessorFn: (row) => (row.settings.isDisabled ? t("leave:ruleSets.disabled") : t("leave:ruleSets.active")),
+      header: t("leave:ruleSets.col.status"),
+      meta: { label: t("leave:ruleSets.col.status") },
+      cell: ({ row }) => (
+        <Badge variant={row.original.settings.isDisabled ? "outline" : "success"}>
+          {row.original.settings.isDisabled ? t("leave:ruleSets.disabled") : t("leave:ruleSets.active")}
+        </Badge>
+      ),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: set.types,
+    getRowId: (row) => row.id,
+    columnVisibilityKey: "senseik.leave.ruleSetTypes.columns",
+  });
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("leave:ruleSets.col.name")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.code")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.paid")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.limit")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.accrual")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.carryOver")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.unit")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.calendar")}</TableHead>
-          <TableHead>{t("leave:ruleSets.col.status")}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {set.types.map(({ id, settings }) => {
-          const perYear = settings.limitType === "perYear";
-          return (
-            <TableRow key={id} className={settings.isDisabled ? "text-muted-foreground" : undefined}>
-              <TableCell className="font-medium">
-                {leaveName(settings.name)}
-                {settings.description && <p className="mt-0.5 text-xs font-normal text-muted-foreground">{settings.description}</p>}
-              </TableCell>
-              <TableCell>{t(`leave:code.${settings.code}`)}</TableCell>
-              <TableCell>{settings.isPaid ? t("leave:ruleSets.paid") : t("leave:ruleSets.unpaid")}</TableCell>
-              <TableCell>{limitText(settings, t, days)}</TableCell>
-              <TableCell>{perYear ? t(`leave:accrualFrequency.${settings.accrualFrequency}`) : "—"}</TableCell>
-              <TableCell>
-                {perYear
-                  ? settings.carryOverMode === "limited" && settings.carryOverMaxDays != null
-                    ? `${t("leave:carryOverMode.limited")} (${days(settings.carryOverMaxDays)} ${t("leave:days")})`
-                    : t(`leave:carryOverMode.${settings.carryOverMode}`)
-                  : "—"}
-              </TableCell>
-              <TableCell>{t(`leave:unit.${settings.unit}`)}</TableCell>
-              <TableCell>{settings.showTypeNameOnCalendar ? t("leave:ruleSets.visible") : t("leave:ruleSets.hidden")}</TableCell>
-              <TableCell>
-                <Badge variant={settings.isDisabled ? "outline" : "success"}>
-                  {settings.isDisabled ? t("leave:ruleSets.disabled") : t("leave:ruleSets.active")}
-                </Badge>
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <div className="space-y-2">
+      <div className="flex justify-end">
+        <DataTableViewOptions table={table} className="h-9 px-3" />
+      </div>
+      <DataTable table={table} />
+    </div>
   );
 }
 

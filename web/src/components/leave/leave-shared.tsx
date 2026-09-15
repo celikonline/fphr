@@ -1,26 +1,33 @@
 import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { CalendarRange, ListOrdered } from "lucide-react";
 import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import {
   getEmployeeLeaveLedger,
   getMyLeaveLedger,
   type EmployeeLeaveBalances,
   type LeaveBalanceItem,
+  type LeaveLedgerEntry,
   type LeaveRequest,
   type LeaveRequestStatus,
   type LeaveRuleSet,
 } from "@/services/leave.service";
 
 const ALL_TYPES = "__all__";
+const PAGE_SIZE = 20;
+const REQUESTS_COLUMNS_KEY = "senseik.leave.requests.columns";
+const LEDGER_COLUMNS_KEY = "senseik.leave.ledger.columns";
+/** Column chooser trigger sized like the surrounding `size="sm"` buttons. */
+const COLUMN_CHOOSER_CLASS = "h-9 px-3";
 
 /**
  * Seeded rule sets and types store a resource key as their name ("leave.type.annual"); the API returns it as is, so
@@ -186,6 +193,69 @@ export function LeaveLedgerDialog({
   });
   const nameOf = (id: string) => typeOptions.find((o) => o.id === id)?.name ?? "—";
 
+  const columns: ColumnDef<LeaveLedgerEntry>[] = [
+    {
+      id: "effectiveDate",
+      accessorKey: "effectiveDate",
+      header: t("leave:ledger.effectiveDate"),
+      meta: { label: t("leave:ledger.effectiveDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => formatDateOnly(row.original.effectiveDate, i18n.language),
+    },
+    {
+      id: "leaveType",
+      accessorFn: (row) => nameOf(row.leaveTypeId),
+      header: t("leave:ledger.type"),
+      meta: { label: t("leave:ledger.type") },
+    },
+    {
+      id: "entryType",
+      accessorFn: (row) => t(`leave:ledgerType.${row.type}`),
+      header: t("leave:ledger.entryType"),
+      meta: { label: t("leave:ledger.entryType") },
+    },
+    {
+      id: "amount",
+      accessorKey: "amount",
+      header: t("leave:ledger.amount"),
+      meta: { label: t("leave:ledger.amount"), headerClassName: "text-right", cellClassName: "text-right" },
+      cell: ({ row }) => (
+        <span className={row.original.amount < 0 ? "text-destructive" : undefined}>
+          {row.original.amount > 0 ? "+" : ""}
+          {days(row.original.amount)}
+        </span>
+      ),
+    },
+    {
+      id: "source",
+      accessorFn: (row) => t(`leave:ledgerSource.${row.source}`),
+      header: t("leave:ledger.source"),
+      meta: { label: t("leave:ledger.source") },
+    },
+    {
+      id: "reason",
+      accessorFn: (row) => row.reason ?? "",
+      enableSorting: false,
+      header: t("leave:ledger.reason"),
+      meta: { label: t("leave:ledger.reason"), cellClassName: "max-w-[16rem] truncate" },
+      cell: ({ row }) => <span title={row.original.reason ?? undefined}>{row.original.reason ?? "—"}</span>,
+    },
+    {
+      id: "recordedAt",
+      accessorKey: "recordedAt",
+      header: t("leave:ledger.recordedAt"),
+      meta: { label: t("leave:ledger.recordedAt"), cellClassName: "whitespace-nowrap text-xs text-muted-foreground" },
+      cell: ({ row }) => formatDateTime(row.original.recordedAt, i18n.language),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: rows,
+    getRowId: (row) => row.id,
+    columnVisibilityKey: LEDGER_COLUMNS_KEY,
+    pageSize: PAGE_SIZE,
+  });
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
@@ -195,21 +265,26 @@ export function LeaveLedgerDialog({
           </DialogTitle>
           <DialogDescription>{t("leave:ledger.description")}</DialogDescription>
         </DialogHeader>
-        {typeOptions.length > 1 && (
-          <div className="max-w-xs">
-            <Select value={typeId} onValueChange={setTypeId}>
-              <SelectTrigger aria-label={t("leave:ledger.type")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_TYPES}>{t("leave:ledger.allTypes")}</SelectItem>
-                {typeOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        {(typeOptions.length > 1 || rows.length > 0) && (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            {typeOptions.length > 1 && (
+              <div className="w-full max-w-xs">
+                <Select value={typeId} onValueChange={setTypeId}>
+                  <SelectTrigger aria-label={t("leave:ledger.type")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_TYPES}>{t("leave:ledger.allTypes")}</SelectItem>
+                    {typeOptions.map((option) => (
+                      <SelectItem key={option.id} value={option.id}>
+                        {option.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {rows.length > 0 && <DataTableViewOptions table={table} className={`ml-auto ${COLUMN_CHOOSER_CLASS}`} />}
           </div>
         )}
         {isLoading ? (
@@ -217,37 +292,7 @@ export function LeaveLedgerDialog({
         ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("leave:ledger.empty")}</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("leave:ledger.effectiveDate")}</TableHead>
-                <TableHead>{t("leave:ledger.type")}</TableHead>
-                <TableHead>{t("leave:ledger.entryType")}</TableHead>
-                <TableHead className="text-right">{t("leave:ledger.amount")}</TableHead>
-                <TableHead>{t("leave:ledger.source")}</TableHead>
-                <TableHead>{t("leave:ledger.reason")}</TableHead>
-                <TableHead>{t("leave:ledger.recordedAt")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="whitespace-nowrap">{formatDateOnly(row.effectiveDate, i18n.language)}</TableCell>
-                  <TableCell>{nameOf(row.leaveTypeId)}</TableCell>
-                  <TableCell>{t(`leave:ledgerType.${row.type}`)}</TableCell>
-                  <TableCell className={row.amount < 0 ? "text-right text-destructive" : "text-right"}>
-                    {row.amount > 0 ? "+" : ""}
-                    {days(row.amount)}
-                  </TableCell>
-                  <TableCell>{t(`leave:ledgerSource.${row.source}`)}</TableCell>
-                  <TableCell className="max-w-[16rem] truncate" title={row.reason ?? undefined}>
-                    {row.reason ?? "—"}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{formatDateTime(row.recordedAt, i18n.language)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable table={table} />
         )}
         <div className="flex justify-end">
           <Button type="button" variant="outline" onClick={onClose}>
@@ -276,68 +321,115 @@ export function LeaveRequestsTable({
 }) {
   const { t, i18n } = useTranslation(["leave"]);
   const days = useDays();
+  // Newest first until the user sorts by a column.
   const sorted = useMemo(() => [...requests].sort((a, b) => b.startDate.localeCompare(a.startDate)), [requests]);
+
+  const columns: ColumnDef<LeaveRequest>[] = [
+    {
+      id: "leaveType",
+      accessorFn: (request) => typeName(request),
+      enableHiding: false,
+      header: t("leave:requests.type"),
+      meta: { label: t("leave:requests.type"), cellClassName: "font-medium" },
+      cell: ({ row }) =>
+        onOpen ? (
+          <button
+            type="button"
+            className="text-left hover:underline"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpen(row.original);
+            }}
+          >
+            {typeName(row.original)}
+          </button>
+        ) : (
+          typeName(row.original)
+        ),
+    },
+    {
+      id: "startDate",
+      accessorKey: "startDate",
+      header: t("leave:requests.startDate"),
+      meta: { label: t("leave:requests.startDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => formatDateOnly(row.original.startDate, i18n.language),
+    },
+    {
+      id: "endDate",
+      accessorKey: "endDate",
+      header: t("leave:requests.endDate"),
+      meta: { label: t("leave:requests.endDate"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => formatDateOnly(row.original.endDate, i18n.language),
+    },
+    {
+      id: "days",
+      accessorKey: "calculatedDays",
+      header: t("leave:requests.days"),
+      meta: { label: t("leave:requests.days"), headerClassName: "text-right", cellClassName: "text-right" },
+      cell: ({ row }) => days(row.original.calculatedDays),
+    },
+    {
+      id: "status",
+      accessorFn: (request) => t(`leave:status.${request.status}`),
+      header: t("leave:requests.status"),
+      meta: { label: t("leave:requests.status") },
+      cell: ({ row }) => (
+        <>
+          <LeaveStatusBadge status={row.original.status} />
+          {row.original.status === "cancelled" && row.original.cancellationReason && (
+            <p className="mt-1 max-w-[12rem] truncate text-xs text-muted-foreground" title={row.original.cancellationReason}>
+              {row.original.cancellationReason}
+            </p>
+          )}
+        </>
+      ),
+    },
+    {
+      id: "source",
+      accessorFn: (request) => t(`leave:requestSource.${request.source}`),
+      header: t("leave:requests.source"),
+      meta: { label: t("leave:requests.source") },
+    },
+    {
+      id: "description",
+      accessorFn: (request) => request.description ?? "",
+      enableSorting: false,
+      header: t("leave:requests.description"),
+      meta: { label: t("leave:requests.description"), cellClassName: "max-w-[16rem] truncate" },
+      cell: ({ row }) => <span title={row.original.description ?? undefined}>{row.original.description ?? "—"}</span>,
+    },
+    ...(actions
+      ? [
+          {
+            id: "actions",
+            enableSorting: false,
+            enableHiding: false,
+            header: () => null,
+            meta: { headerClassName: "w-0" },
+            cell: ({ row }) => <div onClick={(event) => event.stopPropagation()}>{actions(row.original)}</div>,
+          } satisfies ColumnDef<LeaveRequest>,
+        ]
+      : []),
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: sorted,
+    getRowId: (request) => request.id,
+    columnVisibilityKey: REQUESTS_COLUMNS_KEY,
+    pageSize: PAGE_SIZE,
+  });
 
   if (sorted.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("leave:requests.empty")}</p>;
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{t("leave:requests.type")}</TableHead>
-          <TableHead>{t("leave:requests.startDate")}</TableHead>
-          <TableHead>{t("leave:requests.endDate")}</TableHead>
-          <TableHead className="text-right">{t("leave:requests.days")}</TableHead>
-          <TableHead>{t("leave:requests.status")}</TableHead>
-          <TableHead>{t("leave:requests.source")}</TableHead>
-          <TableHead>{t("leave:requests.description")}</TableHead>
-          {actions && <TableHead className="w-0" />}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {sorted.map((request) => (
-          <TableRow
-            key={request.id}
-            className={onOpen ? "cursor-pointer" : undefined}
-            onClick={onOpen ? () => onOpen(request) : undefined}
-          >
-            <TableCell className="font-medium">
-              {onOpen ? (
-                <button
-                  type="button"
-                  className="text-left hover:underline"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onOpen(request);
-                  }}
-                >
-                  {typeName(request)}
-                </button>
-              ) : (
-                typeName(request)
-              )}
-            </TableCell>
-            <TableCell className="whitespace-nowrap">{formatDateOnly(request.startDate, i18n.language)}</TableCell>
-            <TableCell className="whitespace-nowrap">{formatDateOnly(request.endDate, i18n.language)}</TableCell>
-            <TableCell className="text-right">{days(request.calculatedDays)}</TableCell>
-            <TableCell>
-              <LeaveStatusBadge status={request.status} />
-              {request.status === "cancelled" && request.cancellationReason && (
-                <p className="mt-1 max-w-[12rem] truncate text-xs text-muted-foreground" title={request.cancellationReason}>
-                  {request.cancellationReason}
-                </p>
-              )}
-            </TableCell>
-            <TableCell>{t(`leave:requestSource.${request.source}`)}</TableCell>
-            <TableCell className="max-w-[16rem] truncate" title={request.description ?? undefined}>
-              {request.description ?? "—"}
-            </TableCell>
-            {actions && <TableCell onClick={(event) => event.stopPropagation()}>{actions(request)}</TableCell>}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="space-y-2">
+      <div className="flex justify-end">
+        <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />
+      </div>
+      <DataTable table={table} onRowClick={onOpen} />
+    </div>
   );
 }
