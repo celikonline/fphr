@@ -1,11 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button, Group, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
 import SearchPicker, { type PickerOption } from "@/components/structure/search-picker";
 import ApprovalPoliciesSection, { useUnitApprovalPolicies } from "@/components/structure/approval-policies-section";
 import { structureErrorMessage } from "@/components/structure/errors";
@@ -27,6 +23,8 @@ import {
 } from "@/services/structure.service";
 
 const NONE = "__none__";
+/** Hints render under the field, as before the Mantine migration. */
+const HINT_BELOW: ("label" | "input" | "description" | "error")[] = ["label", "input", "description", "error"];
 
 interface UnitFormDialogProps {
   level: OrgUnitType;
@@ -168,128 +166,130 @@ export default function UnitFormDialog({
   const nameMissing = name.trim().length === 0;
 
   return (
-    <Dialog open onOpenChange={(open) => !open && !mutation.isPending && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>
-            {isCreate
-              ? t("structure:units.createTitle", { level: level.name })
-              : t("structure:units.editTitle", { level: level.name })}
-          </DialogTitle>
-          {isCompanyCreate && <DialogDescription>{t("structure:companies.createDescription")}</DialogDescription>}
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setSubmitted(true);
-            if (!nameMissing) mutation.mutate();
-          }}
-        >
-          <div>
-            <Label htmlFor="unit-name">{t("structure:units.name")}</Label>
-            <Input id="unit-name" autoFocus maxLength={200} value={name} onChange={(e) => setName(e.target.value)} />
-            {submitted && nameMissing && <p className="mt-1 text-xs text-destructive">{t("common:required")}</p>}
-          </div>
+    <Modal
+      opened
+      size="lg"
+      onClose={() => !mutation.isPending && onClose()}
+      title={
+        isCreate
+          ? t("structure:units.createTitle", { level: level.name })
+          : t("structure:units.editTitle", { level: level.name })
+      }
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setSubmitted(true);
+          if (!nameMissing) mutation.mutate();
+        }}
+      >
+        <Stack gap="md">
+          {isCompanyCreate && (
+            <Text size="sm" c="dimmed">
+              {t("structure:companies.createDescription")}
+            </Text>
+          )}
+
+          <TextInput
+            id="unit-name"
+            data-autofocus
+            maxLength={200}
+            label={t("structure:units.name")}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+            error={submitted && nameMissing ? t("common:required") : undefined}
+          />
 
           {isCompanyLevel && (isCompanyCreate || company) && (
-            <div>
-              <Label htmlFor="unit-calendar">{t("structure:companies.holidayCalendar")}</Label>
-              <Select
-                value={calendarId}
-                onValueChange={(value) => {
-                  setCalendarTouched(true);
-                  setCalendarId(value);
-                }}
-                disabled={!calendars || (!isCompanyCreate && !canAssignCalendar)}
-              >
-                <SelectTrigger id="unit-calendar">
-                  <SelectValue placeholder={t("structure:companies.selectCalendar")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("structure:companies.noCalendar")}</SelectItem>
-                  {(calendars ?? []).map((calendar) => (
-                    <SelectItem key={calendar.id} value={calendar.id}>
-                      {calendar.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">{t("structure:companies.holidayCalendarHint")}</p>
-            </div>
+            <Select
+              id="unit-calendar"
+              label={t("structure:companies.holidayCalendar")}
+              description={t("structure:companies.holidayCalendarHint")}
+              inputWrapperOrder={HINT_BELOW}
+              placeholder={t("structure:companies.selectCalendar")}
+              data={[
+                { value: NONE, label: t("structure:companies.noCalendar") },
+                ...(calendars ?? []).map((calendar) => ({ value: calendar.id, label: calendar.name })),
+              ]}
+              value={calendarId}
+              allowDeselect={false}
+              onChange={(value) => {
+                if (value === null) return;
+                setCalendarTouched(true);
+                setCalendarId(value);
+              }}
+              disabled={!calendars || (!isCompanyCreate && !canAssignCalendar)}
+            />
           )}
 
           {!isCompanyLevel && (
-            <div>
-              <Label htmlFor="unit-parent">{t("structure:units.parent")}</Label>
-              <Select value={parentId} onValueChange={setParentId}>
-                <SelectTrigger id="unit-parent">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("structure:units.noParent")}</SelectItem>
-                  {parentOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {option.name} · {typeById.get(option.typeId)?.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">{t("structure:units.parentHint")}</p>
-            </div>
+            <Select
+              id="unit-parent"
+              label={t("structure:units.parent")}
+              description={t("structure:units.parentHint")}
+              inputWrapperOrder={HINT_BELOW}
+              searchable
+              nothingFoundMessage={t("common:noResults")}
+              data={[
+                { value: NONE, label: t("structure:units.noParent") },
+                ...parentOptions.map((option) => ({
+                  value: option.id,
+                  label: `${option.name} · ${typeById.get(option.typeId)?.name ?? ""}`,
+                })),
+              ]}
+              value={parentId}
+              allowDeselect={false}
+              onChange={(value) => value !== null && setParentId(value)}
+            />
           )}
 
           {!isCompanyCreate && !managerHidden && (
-            <div>
-              <Label htmlFor="unit-manager">{t("structure:units.manager")}</Label>
-              <SearchPicker
-                id="unit-manager"
-                queryKey={["structure", "employee-search"]}
-                search={async (q) =>
-                  (await searchEmployees(q)).map((e) => ({ id: e.id, label: e.displayName, description: e.workEmail }))
-                }
-                value={manager}
-                onChange={setManager}
-                placeholder={t("structure:units.selectManager")}
-                onError={onManagerSearchError}
-              />
-            </div>
+            <SearchPicker
+              id="unit-manager"
+              label={t("structure:units.manager")}
+              queryKey={["structure", "employee-search"]}
+              search={async (q) =>
+                (await searchEmployees(q)).map((e) => ({ id: e.id, label: e.displayName, description: e.workEmail }))
+              }
+              value={manager}
+              onChange={setManager}
+              placeholder={t("structure:units.selectManager")}
+              onError={onManagerSearchError}
+            />
           )}
 
           {!isCompanyCreate && locations && (
-            <div>
-              <Label htmlFor="unit-location">{t("structure:units.location")}</Label>
-              <Select value={locationId} onValueChange={setLocationId}>
-                <SelectTrigger id="unit-location">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>{t("structure:units.noLocation")}</SelectItem>
-                  {locationOptions.map((location) => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="mt-1 text-xs text-muted-foreground">{t("structure:units.locationHint")}</p>
-            </div>
+            <Select
+              id="unit-location"
+              label={t("structure:units.location")}
+              description={t("structure:units.locationHint")}
+              inputWrapperOrder={HINT_BELOW}
+              searchable
+              nothingFoundMessage={t("common:noResults")}
+              data={[
+                { value: NONE, label: t("structure:units.noLocation") },
+                ...locationOptions.map((location) => ({ value: location.id, label: location.name })),
+              ]}
+              value={locationId}
+              allowDeselect={false}
+              onChange={(value) => value !== null && setLocationId(value)}
+            />
           )}
 
           {unit && (
             <ApprovalPoliciesSection state={approvalPolicies} units={units} disabled={mutation.isPending} />
           )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }

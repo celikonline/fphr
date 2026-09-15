@@ -2,22 +2,25 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Layers, Lock, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ActionIcon,
+  Button,
+  Card,
+  Divider,
+  Group,
+  Menu,
+  Modal,
+  NavLink,
+  Radio,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Tooltip,
+} from "@mantine/core";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { toast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
 import { structureErrorMessage } from "@/components/structure/errors";
 import {
   COMPANY_TYPE_CODE,
@@ -94,91 +97,121 @@ export default function LevelsPanel({ types, selectedTypeId, onSelect, canManage
   const isCompany = (level: OrgUnitType) => level.code === COMPANY_TYPE_CODE;
 
   return (
-    <Card className="h-fit">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <Layers className="h-4 w-4" /> {t("structure:levels.title")}
-        </CardTitle>
-        <p className="text-xs text-muted-foreground">{t("structure:levels.subtitle")}</p>
-      </CardHeader>
-      <CardContent className="px-3 pb-4">
-        <ol className="space-y-0">
-          {active.map((level, index) => {
-            const selected = level.id === selectedTypeId;
-            const locked = isCompany(level);
-            // Company is pinned first: it can't move and nothing can move above it.
-            const canMoveUp = !locked && index > 1;
-            const canMoveDown = !locked && index < active.length - 1;
-            return (
-              <li key={level.id}>
-                <div
-                  className={cn(
-                    "group flex items-center gap-2 rounded-md border px-3 py-2 transition-colors",
-                    selected ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted",
-                  )}
-                >
-                  <button
-                    type="button"
-                    className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                    onClick={() => onSelect(level.id)}
-                  >
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                      {index + 1}
-                    </span>
-                    <span className={cn("truncate text-sm", selected && "font-semibold")}>{level.name}</span>
-                    {locked && <Lock className="h-3 w-3 shrink-0 text-muted-foreground" aria-label={t("structure:levels.system")} />}
-                    <span className="ml-auto shrink-0 text-xs text-muted-foreground">{unitCounts[level.id] ?? 0}</span>
-                  </button>
-                  {canManage && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" title={t("common:actions")}>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setRenameTarget(level)}>
-                          <Pencil className="mr-2 h-4 w-4" /> {t("structure:levels.rename")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled={!canMoveUp || reorderMutation.isPending} onSelect={() => move(level, -1)}>
-                          <ArrowUp className="mr-2 h-4 w-4" /> {t("structure:levels.moveUp")}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem disabled={!canMoveDown || reorderMutation.isPending} onSelect={() => move(level, 1)}>
-                          <ArrowDown className="mr-2 h-4 w-4" /> {t("structure:levels.moveDown")}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          disabled={locked}
-                          className="text-destructive focus:text-destructive"
-                          onSelect={() => setDeleteTarget(level)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" /> {t("common:delete")}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
+    <Card withBorder h="fit-content">
+      <Group gap="xs">
+        <Layers size={16} />
+        <Text fw={600}>{t("structure:levels.title")}</Text>
+      </Group>
+      <Text size="xs" c="dimmed" mb="sm">
+        {t("structure:levels.subtitle")}
+      </Text>
+      <Stack component="ol" gap={0}>
+        {active.map((level, index) => {
+          const selected = level.id === selectedTypeId;
+          const locked = isCompany(level);
+          // Company is pinned first: it can't move and nothing can move above it.
+          const canMoveUp = !locked && index > 1;
+          const canMoveDown = !locked && index < active.length - 1;
+          return (
+            <li key={level.id}>
+              <Group gap={4} wrap="nowrap">
+                <NavLink
+                  component="button"
+                  type="button"
+                  active={selected}
+                  onClick={() => onSelect(level.id)}
+                  style={{ flex: 1, minWidth: 0, borderRadius: "var(--mantine-radius-md)" }}
+                  leftSection={
+                    <ThemeIcon size={24} radius="xl" variant="light" color="gray">
+                      <Text size="xs" fw={500}>
+                        {index + 1}
+                      </Text>
+                    </ThemeIcon>
+                  }
+                  label={
+                    <Group gap={6} wrap="nowrap">
+                      <Text size="sm" fw={selected ? 600 : 400} truncate="end">
+                        {level.name}
+                      </Text>
+                      {locked && (
+                        <Lock
+                          size={12}
+                          style={{ flexShrink: 0, color: "var(--mantine-color-dimmed)" }}
+                          aria-label={t("structure:levels.system")}
+                        />
+                      )}
+                    </Group>
+                  }
+                  rightSection={
+                    <Text size="xs" c="dimmed">
+                      {unitCounts[level.id] ?? 0}
+                    </Text>
+                  }
+                />
                 {canManage && (
-                  <div className="flex items-center gap-2 py-0.5 pl-6">
-                    <span className="h-px flex-1 bg-border" />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-6 rounded-full"
-                      title={t("structure:levels.addAfter", { name: level.name })}
-                      onClick={() => setAddState({ insertAfter: level })}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
+                  <Menu position="bottom-end">
+                    <Tooltip label={t("common:actions")}>
+                      <Menu.Target>
+                        <ActionIcon variant="subtle" color="gray" aria-label={t("common:actions")}>
+                          <MoreHorizontal size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                    </Tooltip>
+                    <Menu.Dropdown>
+                      <Menu.Item leftSection={<Pencil size={16} />} onClick={() => setRenameTarget(level)}>
+                        {t("structure:levels.rename")}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<ArrowUp size={16} />}
+                        disabled={!canMoveUp || reorderMutation.isPending}
+                        onClick={() => move(level, -1)}
+                      >
+                        {t("structure:levels.moveUp")}
+                      </Menu.Item>
+                      <Menu.Item
+                        leftSection={<ArrowDown size={16} />}
+                        disabled={!canMoveDown || reorderMutation.isPending}
+                        onClick={() => move(level, 1)}
+                      >
+                        {t("structure:levels.moveDown")}
+                      </Menu.Item>
+                      <Menu.Divider />
+                      <Menu.Item
+                        color="red"
+                        leftSection={<Trash2 size={16} />}
+                        disabled={locked}
+                        onClick={() => setDeleteTarget(level)}
+                      >
+                        {t("common:delete")}
+                      </Menu.Item>
+                    </Menu.Dropdown>
+                  </Menu>
                 )}
-              </li>
-            );
-          })}
-        </ol>
-      </CardContent>
+              </Group>
+              {canManage && (
+                <Divider
+                  ml="lg"
+                  my={2}
+                  labelPosition="center"
+                  label={
+                    <Tooltip label={t("structure:levels.addAfter", { name: level.name })}>
+                      <ActionIcon
+                        variant="default"
+                        radius="xl"
+                        size={24}
+                        aria-label={t("structure:levels.addAfter", { name: level.name })}
+                        onClick={() => setAddState({ insertAfter: level })}
+                      >
+                        <Plus size={12} />
+                      </ActionIcon>
+                    </Tooltip>
+                  }
+                />
+              )}
+            </li>
+          );
+        })}
+      </Stack>
 
       {addState && (
         <AddLevelDialog
@@ -241,77 +274,69 @@ function AddLevelDialog({
   const valid = mode === "new" ? name.trim().length > 0 : activateId !== "";
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("structure:levels.addTitle")}</DialogTitle>
-          <DialogDescription>{t("structure:levels.addDescription", { name: insertAfter.name })}</DialogDescription>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (valid) mutation.mutate();
-          }}
-        >
+    <Modal opened onClose={onClose} title={t("structure:levels.addTitle")}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valid) mutation.mutate();
+        }}
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("structure:levels.addDescription", { name: insertAfter.name })}
+          </Text>
+
           {inactive.length > 0 && (
-            <RadioGroup value={mode} onValueChange={(v) => setMode(v as "new" | "activate")} className="gap-2">
-              <div className="flex items-center gap-2">
-                <RadioGroupItem id="level-mode-activate" value="activate" />
-                <Label htmlFor="level-mode-activate" className="font-normal">
-                  {t("structure:levels.modeActivate")}
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem id="level-mode-new" value="new" />
-                <Label htmlFor="level-mode-new" className="font-normal">
-                  {t("structure:levels.modeNew")}
-                </Label>
-              </div>
-            </RadioGroup>
+            <Radio.Group value={mode} onChange={(v) => setMode(v as "new" | "activate")}>
+              <Stack gap="xs">
+                <Radio id="level-mode-activate" value="activate" label={t("structure:levels.modeActivate")} />
+                <Radio id="level-mode-new" value="new" label={t("structure:levels.modeNew")} />
+              </Stack>
+            </Radio.Group>
           )}
 
           {mode === "activate" ? (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {inactive.map((level) => (
-                <button
-                  key={level.id}
-                  type="button"
-                  onClick={() => setActivateId(level.id)}
-                  className={cn(
-                    "rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                    activateId === level.id ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted",
-                  )}
-                >
-                  {level.name}
-                </button>
-              ))}
-            </div>
+            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+              {inactive.map((level) => {
+                const picked = activateId === level.id;
+                return (
+                  <Button
+                    key={level.id}
+                    type="button"
+                    variant={picked ? "light" : "default"}
+                    justify="flex-start"
+                    fw={picked ? 500 : 400}
+                    aria-pressed={picked}
+                    onClick={() => setActivateId(level.id)}
+                  >
+                    {level.name}
+                  </Button>
+                );
+              })}
+            </SimpleGrid>
           ) : (
-            <div>
-              <Label htmlFor="level-name">{t("structure:levels.name")}</Label>
-              <Input
-                id="level-name"
-                autoFocus
-                maxLength={200}
-                placeholder={t("structure:levels.namePlaceholder")}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
+            <TextInput
+              id="level-name"
+              data-autofocus
+              maxLength={200}
+              label={t("structure:levels.name")}
+              placeholder={t("structure:levels.namePlaceholder")}
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+            />
           )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={!valid || mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 
@@ -331,32 +356,32 @@ function RenameLevelDialog({ level, onClose, onDone }: { level: OrgUnitType; onC
   });
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("structure:levels.renameTitle")}</DialogTitle>
-        </DialogHeader>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (name.trim()) mutation.mutate();
-          }}
-        >
-          <div>
-            <Label htmlFor="level-rename">{t("structure:levels.name")}</Label>
-            <Input id="level-rename" autoFocus maxLength={200} value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={mutation.isPending}>
+    <Modal opened onClose={onClose} title={t("structure:levels.renameTitle")}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (name.trim()) mutation.mutate();
+        }}
+      >
+        <Stack gap="md">
+          <TextInput
+            id="level-rename"
+            data-autofocus
+            maxLength={200}
+            label={t("structure:levels.name")}
+            value={name}
+            onChange={(e) => setName(e.currentTarget.value)}
+          />
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
               {t("common:cancel")}
             </Button>
             <Button type="submit" disabled={!name.trim() || mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
