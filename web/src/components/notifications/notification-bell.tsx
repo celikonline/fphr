@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,7 +101,7 @@ function NotificationBellMenu() {
           )}
         </div>
         <DropdownMenuSeparator className="m-0" />
-        <div className="max-h-96 overflow-y-auto">
+        <ScrollArea className="max-h-96 [&>[data-radix-scroll-area-viewport]]:max-h-96 [&>[data-radix-scroll-area-viewport]>div]:block!">
           {listQuery.isError ? (
             <p className="p-4 text-sm text-destructive">{t("notifications:bell.loadError")}</p>
           ) : listQuery.isLoading ? (
@@ -123,7 +124,7 @@ function NotificationBellMenu() {
               </DropdownMenuItem>
             ))
           )}
-        </div>
+        </ScrollArea>
         <DropdownMenuSeparator className="m-0" />
         <DropdownMenuItem asChild className="rounded-none px-3 py-2">
           <Link to={NOTIFICATION_SETTINGS_PATH}>
