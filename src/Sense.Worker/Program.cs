@@ -6,6 +6,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Persistence;
+using Sense.Modules.Notifications.Infrastructure;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
@@ -63,6 +64,23 @@ builder.Services.AddModuleHandlers(
     typeof(WorkflowDbContext).Assembly,
     typeof(IApprovalPolicyRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<WorkflowDbContext>>();
+
+// Notifications consumes Workflow's ApprovalRequestCreated/ApprovalTaskAssigned/ApprovalCompleted/ApprovalRejected and needs
+// Employee.Contracts.IEmployeeDirectory to resolve requester user id/e-mail. Only GetContactsAsync is used here, which
+// doesn't touch the selection resolver (whose data-scope chain the Worker doesn't host).
+builder.Services.AddNotificationsInfrastructure(builder.Configuration);
+builder.Services.AddScoped<IEmployeeDirectory>(sp =>
+    new Sense.Modules.Employee.Infrastructure.Lookups.EmployeeDirectory(sp.GetRequiredService<EmployeeDbContext>(), null!));
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Notifications.Infrastructure.Persistence.NotificationsDbContext>>();
+
+// Notifications created here reach browsers through the API's SignalR Redis backplane (same channel prefix as
+// Sense.Shared.Web's AddSignalR). Without Redis no IHubContext is registered and the push is skipped (clients poll).
+var signalRRedis = builder.Configuration.GetConnectionString(ConnectionStringNames.Redis);
+if (!string.IsNullOrWhiteSpace(signalRRedis))
+{
+    builder.Services.AddSignalR().AddStackExchangeRedis(signalRRedis, options =>
+        options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("senseik-signalr-"));
+}
 
 await builder.Build().RunAsync();
 

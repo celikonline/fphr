@@ -27,6 +27,7 @@ import DataTransferPage from "@/pages/settings/data-transfer";
 import DataTransferJobPage from "@/pages/settings/data-transfer-job";
 import ApprovalFlowsPage from "@/pages/settings/approval-flows";
 import WorkflowInboxPage from "@/pages/inbox";
+import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
@@ -83,6 +84,7 @@ export default function App() {
           <Route path="apps" element={<AppsPage />} />
           <Route path="account" element={<AccountPage />} />
           <Route path="inbox" element={<WorkflowInboxPage />} />
+          <Route path="notifications/preferences" element={<NotificationPreferencesPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

@@ -1,0 +1,38 @@
+{
+  "bell": {
+    "label": "Notifications",
+    "title": "Notifications",
+    "empty": "You have no new notifications.",
+    "markAllRead": "Mark all as read",
+    "preferences": "Notification preferences",
+    "loadError": "Notifications could not be loaded."
+  },
+  "templates": {
+    "request.created": { "title": "Your request was created", "body": "Your {{RequestType}} request was created and sent for approval." },
+    "approval.task_assigned": { "title": "Your approval is needed", "body": "A {{RequestType}} request from {{RequesterName}} is waiting for your approval." },
+    "request.approved": { "title": "Your request was approved", "body": "Your {{RequestType}} request was approved." },
+    "request.rejected": { "title": "Your request was rejected", "body": "Your {{RequestType}} request was rejected." }
+  },
+  "preferences": {
+    "title": "Notification preferences",
+    "subtitle": "Choose when you receive e-mail and in-app notifications.",
+    "notification": "Notification",
+    "email": "E-mail",
+    "inApp": "In-app",
+    "mandatory": "Cannot be turned off",
+    "save": "Save",
+    "saved": "Your notification preferences were saved.",
+    "loadError": "Notification preferences could not be loaded."
+  },
+  "category": {
+    "general": "General",
+    "account": "Account",
+    "request": "Requests",
+    "approval": "Approvals",
+    "schedule": "Shifts",
+    "asset": "Assets",
+    "report": "Reports",
+    "recruitment": "Recruitment",
+    "security": "Security"
+  }
+}

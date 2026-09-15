@@ -28,6 +28,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -350,6 +351,7 @@ export default function AppLayout() {
 
             <div className="flex items-center gap-1">
               <AppsLauncher />
+              <NotificationBell />
               <LanguageSwitcher />
               <ThemeToggle />
               <UserMenu />

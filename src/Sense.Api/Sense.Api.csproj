@@ -13,6 +13,7 @@
     <ProjectReference Include="../Modules/Documents/Sense.Modules.Documents.Api/Sense.Modules.Documents.Api.csproj" />
     <ProjectReference Include="../Modules/DataTransfer/Sense.Modules.DataTransfer.Api/Sense.Modules.DataTransfer.Api.csproj" />
     <ProjectReference Include="../Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
+    <ProjectReference Include="../Modules/Notifications/Sense.Modules.Notifications.Api/Sense.Modules.Notifications.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>
