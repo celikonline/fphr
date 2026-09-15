@@ -1,0 +1,221 @@
+{
+  "days": "[DE] days",
+  "noAccess": "[DE] You don't have permission to view leave information.",
+  "genericError": "[DE] Something went wrong.",
+  "names": {
+    "rule_set_seed_turkish_labour_law": "[DE] Sample Turkish Labour Law rule set",
+    "type_annual": "[DE] Annual leave",
+    "type_excuse": "[DE] Excuse leave",
+    "type_sick": "[DE] Sick leave",
+    "type_job_search": "[DE] Job search leave",
+    "type_marriage": "[DE] Marriage leave",
+    "type_bereavement": "[DE] Bereavement leave",
+    "type_paternity": "[DE] Paternity leave",
+    "type_maternity": "[DE] Maternity leave",
+    "type_postnatal_unpaid": "[DE] Postnatal unpaid leave",
+    "type_paid_military_service": "[DE] Paid military service leave",
+    "type_unpaid": "[DE] Unpaid leave",
+    "type_foster_care": "[DE] Foster care leave",
+    "type_template_remote_work": "[DE] Remote Work",
+    "type_template_birthday": "[DE] Birthday leave"
+  },
+  "code": {
+    "custom": "[DE] Custom leave",
+    "annual": "[DE] Annual leave",
+    "excuse": "[DE] Excuse leave",
+    "sick": "[DE] Sick leave",
+    "jobSearch": "[DE] Job search leave",
+    "marriage": "[DE] Marriage leave",
+    "bereavement": "[DE] Bereavement leave",
+    "paternity": "[DE] Paternity leave",
+    "maternity": "[DE] Maternity leave",
+    "postnatalUnpaid": "[DE] Postnatal unpaid leave",
+    "paidMilitaryService": "[DE] Paid military service leave",
+    "unpaid": "[DE] Unpaid leave",
+    "fosterCare": "[DE] Foster care leave",
+    "remoteWork": "[DE] Remote Work",
+    "birthday": "[DE] Birthday leave"
+  },
+  "status": {
+    "pending": "[DE] Pending",
+    "approved": "[DE] Approved",
+    "rejected": "[DE] Rejected",
+    "withdrawn": "[DE] Withdrawn",
+    "cancelled": "[DE] Cancelled"
+  },
+  "requestSource": {
+    "selfService": "[DE] Request",
+    "onBehalf": "[DE] Manager",
+    "import": "[DE] Import",
+    "attendance": "[DE] Timesheet",
+    "resubmission": "[DE] Resubmission"
+  },
+  "ledgerType": {
+    "openingBalance": "[DE] Opening balance",
+    "accrual": "[DE] Accrual",
+    "carryOver": "[DE] Carry-over",
+    "usage": "[DE] Usage",
+    "adjustment": "[DE] Adjustment",
+    "extraGrant": "[DE] Extra leave"
+  },
+  "ledgerSource": {
+    "system": "[DE] System",
+    "manual": "[DE] Manual",
+    "import": "[DE] Import",
+    "request": "[DE] Request",
+    "overtimeConversion": "[DE] Overtime conversion"
+  },
+  "limitType": {
+    "unlimited": "[DE] Unlimited",
+    "perRequest": "[DE] Limited per request",
+    "perYear": "[DE] Limited per year"
+  },
+  "accrualFrequency": {
+    "yearly": "[DE] Yearly",
+    "monthly": "[DE] Monthly",
+    "daily": "[DE] Daily"
+  },
+  "carryOverMode": {
+    "reset": "[DE] Reset",
+    "unlimited": "[DE] Unlimited carry-over",
+    "limited": "[DE] Limited carry-over"
+  },
+  "unit": {
+    "fullDay": "[DE] Full day",
+    "halfDay": "[DE] Half day",
+    "hourly": "[DE] Hourly"
+  },
+  "summary": {
+    "title": "[DE] Summary",
+    "details": "[DE] Details",
+    "unavailable": "[DE] No leave balance found.",
+    "noBalances": "[DE] No leave type with a yearly balance.",
+    "hireDate": "[DE] Hire date",
+    "accrualStartDate": "[DE] Leave accrual start date",
+    "available": "[DE] Available",
+    "currentPeriod": "[DE] Current accrual period",
+    "totalAccrued": "[DE] Total accrued",
+    "totalUsed": "[DE] Total used",
+    "futureApprovedInPeriod": "[DE] Future approved leave in period",
+    "currentBalance": "[DE] Current balance",
+    "availableBalance": "[DE] Available leave balance",
+    "lastPeriodAccrued": "[DE] Accrued in last period",
+    "currentPeriodUsed": "[DE] Used in period",
+    "nextPeriodApproved": "[DE] Approved leave in next period",
+    "carriedOver": "[DE] Carried over into period",
+    "extraGrants": "[DE] Extra leave",
+    "nextAccrualDate": "[DE] Next accrual date"
+  },
+  "ledger": {
+    "title": "[DE] Leave ledger",
+    "description": "[DE] Accrual, carry-over, usage and adjustment entries.",
+    "allTypes": "[DE] All types",
+    "empty": "[DE] No entries.",
+    "effectiveDate": "[DE] Date",
+    "type": "[DE] Leave type",
+    "entryType": "[DE] Entry type",
+    "amount": "[DE] Days",
+    "source": "[DE] Source",
+    "reason": "[DE] Note",
+    "recordedAt": "[DE] Recorded at"
+  },
+  "requests": {
+    "title": "[DE] Leave requests",
+    "empty": "[DE] No leave requests.",
+    "type": "[DE] Type",
+    "startDate": "[DE] Start",
+    "endDate": "[DE] End",
+    "days": "[DE] Days",
+    "status": "[DE] Status",
+    "source": "[DE] Source",
+    "description": "[DE] Description"
+  },
+  "my": {
+    "title": "[DE] My leave",
+    "subtitle": "[DE] Your leave balances and requests.",
+    "newRequest": "[DE] + Request",
+    "edit": "[DE] Edit",
+    "withdraw": "[DE] Withdraw",
+    "withdrawTitle": "[DE] Withdraw request?",
+    "withdrawDescription": "[DE] The {{type}} request ({{start}} – {{end}}) will be withdrawn and its approval cancelled.",
+    "withdrawn": "[DE] Request withdrawn.",
+    "submitted": "[DE] Your leave request was submitted.",
+    "updated": "[DE] Your leave request was updated."
+  },
+  "form": {
+    "newTitle": "[DE] Leave request",
+    "editTitle": "[DE] Edit leave request",
+    "dialogDescription": "[DE] Days are calculated from the work schedule and public holidays.",
+    "type": "[DE] Leave type",
+    "startDate": "[DE] Start",
+    "endDate": "[DE] End",
+    "description": "[DE] Description",
+    "submit": "[DE] Submit",
+    "noTypes": "[DE] No requestable leave type found.",
+    "available": "[DE] Available balance: {{days}} days",
+    "perRequestMax": "[DE] At most {{days}} days per request.",
+    "calculatedDays": "[DE] Calculated days: {{days}}",
+    "typesLimited": "[DE] Only leave types with a balance are listed.",
+    "validation": {
+      "typeRequired": "[DE] Select a leave type.",
+      "datesRequired": "[DE] Start and end dates are required.",
+      "range": "[DE] End date cannot be before the start date.",
+      "descriptionRequired": "[DE] A description is required for this leave type."
+    }
+  },
+  "ruleSets": {
+    "title": "[DE] Leave policies",
+    "subtitle": "[DE] Rule sets and leave types.",
+    "default": "[DE] Default",
+    "systemSeed": "[DE] System",
+    "typeCount": "[DE] {{active}} active / {{inactive}} disabled types",
+    "assignedCount": "[DE] {{count}} employees",
+    "clone": "[DE] Copy and edit",
+    "cloneTitle": "[DE] Copy rule set",
+    "cloneDescription": "[DE] \"{{name}}\" is copied with its types under a new name.",
+    "name": "[DE] Name",
+    "copySuffix": "[DE] (copy)",
+    "cloned": "[DE] Rule set copied.",
+    "empty": "[DE] No rule sets.",
+    "typesTitle": "[DE] Leave types",
+    "noTypes": "[DE] This rule set has no types.",
+    "col": {
+      "name": "[DE] Type name",
+      "code": "[DE] Code",
+      "paid": "[DE] Pay",
+      "limit": "[DE] Limit",
+      "accrual": "[DE] Accrual frequency",
+      "carryOver": "[DE] Carry-over",
+      "unit": "[DE] Unit",
+      "calendar": "[DE] Type name on calendar",
+      "status": "[DE] Status"
+    },
+    "paid": "[DE] Paid",
+    "unpaid": "[DE] Unpaid",
+    "active": "[DE] Active",
+    "disabled": "[DE] Disabled",
+    "visible": "[DE] Visible",
+    "hidden": "[DE] Hidden",
+    "nameRequired": "[DE] Name is required."
+  },
+  "actions": {
+    "menu": "[DE] Actions",
+    "adjust": "[DE] Balance adjustment",
+    "recalculate": "[DE] Recalculate balance",
+    "recalculateTitle": "[DE] Recalculate balance?",
+    "recalculateDescription": "[DE] Accrual and carry-over entries are regenerated from the current rules; usage, adjustment and extra leave entries are kept.",
+    "recalculated": "[DE] Balance recalculated.",
+    "adjusted": "[DE] Balance adjustment saved.",
+    "adjustDescription": "[DE] A positive value adds to the balance, a negative value deducts. The entry is written to the leave ledger.",
+    "type": "[DE] Leave type",
+    "days": "[DE] Days (±)",
+    "effectiveDate": "[DE] Effective date",
+    "reason": "[DE] Reason",
+    "validation": {
+      "typeRequired": "[DE] Select a leave type.",
+      "daysInvalid": "[DE] Days must be a non-zero number.",
+      "dateRequired": "[DE] Effective date is required.",
+      "reasonRequired": "[DE] Reason is required."
+    }
+  }
+}
