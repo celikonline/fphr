@@ -22,6 +22,9 @@ public static class IdentityPermissions
     public const string AuditLogView = "identity.audit.view";
     public const string AuditSensitiveView = "identity.audit.sensitive_view";
 
+    /// <summary>Yalnız kiracı tarafı Owner/Admin (Owner/Admin joker "*" izin setine dahildir; diğer rollere verilmez).</summary>
+    public const string ImpersonationApprove = "identity.impersonation.approve";
+
     public static class Groups
     {
         public const string Users = "identity.group.users";
@@ -29,6 +32,7 @@ public static class IdentityPermissions
         public const string Account = "identity.group.account";
         public const string Security = "identity.group.security";
         public const string Audit = "identity.group.audit";
+        public const string Impersonation = "identity.group.impersonation";
     }
 
     public static readonly IReadOnlyList<Permission> All =
@@ -47,5 +51,6 @@ public static class IdentityPermissions
         new(ApiKeysManage, Module, ApiKeysManage, Groups.Security),
         new(AuditLogView, Module, AuditLogView, Groups.Audit),
         new(AuditSensitiveView, Module, AuditSensitiveView, Groups.Audit),
+        new(ImpersonationApprove, Module, ImpersonationApprove, Groups.Impersonation),
     ];
 }

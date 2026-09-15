@@ -14,6 +14,8 @@ public sealed record UpdateUserRequest(string FirstName, string LastName, string
 
 public sealed record SetRolesRequest(IReadOnlyList<Guid> RoleIds);
 
+public sealed record SetAccessTypeRequest(string AccessType);
+
 public sealed record SetStatusRequest(bool Enabled);
 
 public sealed record PermissionOverrideRequest(string Permission, bool? Allow);
@@ -51,6 +53,12 @@ public sealed class UsersController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> SetRoles(Guid id, [FromBody] SetRolesRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new SetUserRolesCommand(id, request.RoleIds), ct));
+
+    /// <summary>Erişim türü hızlı seçici: Employee/Owner/Admin sistem rollerinden yalnız biri kalır (diğer roller korunur).</summary>
+    [HttpPut(ApiRoutes.IdParam + "/access-type")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetAccessType(Guid id, [FromBody] SetAccessTypeRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetUserAccessTypeCommand(id, request.AccessType), ct));
 
     [HttpPut(ApiRoutes.IdParam + "/status")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

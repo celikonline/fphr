@@ -23,6 +23,9 @@ public sealed class IdentityOptions
 
     public int TrustedDeviceDays { get; set; } = IdentityDefaults.TrustedDeviceDays;
 
+    /// <summary>Onaylanan impersonation grantının kullanılabilir kalma süresi (saat).</summary>
+    public int ImpersonationWindowHours { get; set; } = IdentityDefaults.ImpersonationWindowHours;
+
     public string DefaultLanguage { get; set; } = IdentityDefaults.DefaultLanguage;
 
     public string DefaultLocale { get; set; } = IdentityDefaults.DefaultLocale;
@@ -45,6 +48,7 @@ public static class IdentityDefaults
     public const int RefreshTokenDays = 30;
     public const int MfaTokenMinutes = 5;
     public const int TrustedDeviceDays = 30;
+    public const int ImpersonationWindowHours = 4;
     public const string DefaultLanguage = "tr";
     public const string DefaultLocale = "tr-TR";
     public const string DefaultTimeZone = "Europe/Istanbul";
@@ -99,6 +103,17 @@ public static class IdentityErrors
     public const string InvitationAlreadyAccepted = "invitation.already_accepted";
     public const string InvitationExpired = "invitation.expired";
     public const string InvitationUserActive = "invitation.user_active";
+
+    public const string AccessTypeInvalid = "user.access_type_invalid";
+
+    public const string ImpersonationNotFound = "impersonation.not_found";
+    public const string ImpersonationNotPending = "impersonation.not_pending";
+    public const string ImpersonationNotApproved = "impersonation.not_approved";
+    public const string ImpersonationExpired = "impersonation.expired";
+    public const string ImpersonationNotRevocable = "impersonation.not_revocable";
+    public const string ImpersonationRequiresPlatformStaff = "impersonation.requires_platform_staff";
+    public const string ImpersonationForbidden = "impersonation.forbidden";
+    public const string ImpersonationReasonRequired = "impersonation.reason_required";
 
     /// <summary>Mesaj parametre adları.</summary>
     public static class Args

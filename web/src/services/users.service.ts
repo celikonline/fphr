@@ -13,6 +13,9 @@ import type { PagedResult, PagedQueryParams } from "@/types";
 
 export type UserStatus = "invited" | "active" | "locked" | "disabled";
 export type DataScope = "self" | "team" | "department" | "location" | "company" | "custom";
+/** Item 2 (Faz 0): Employee/Owner/Admin quick-select, mapped 1:1 to the matching system role codes. */
+export type AccessType = "Employee" | "Owner" | "Admin";
+const ACCESS_TYPE_CODES: ReadonlySet<string> = new Set<AccessType>(["Employee", "Owner", "Admin"]);
 
 export interface RoleRef {
   id: string;
@@ -76,6 +79,20 @@ export async function listUsers(query: PagedQueryParams = {}): Promise<PagedResu
 
 export async function setUserRoles(userId: string, roleIds: string[]): Promise<void> {
   await apiClient.put(`${USERS_BASE}/${userId}/roles`, { roleIds });
+}
+
+/**
+ * Derives the Employee/Owner/Admin "access type" from a user's role codes (thin client-side projection -
+ * the backend keeps the three roles mutually exclusive via `PUT .../access-type`). Returns null when none
+ * of the three access-type roles is assigned (e.g. a role-less invited user).
+ */
+export function deriveAccessType(roles: RoleRef[]): AccessType | null {
+  const match = roles.find((r) => ACCESS_TYPE_CODES.has(r.code));
+  return (match?.code as AccessType | undefined) ?? null;
+}
+
+export async function setUserAccessType(userId: string, accessType: AccessType): Promise<void> {
+  await apiClient.put(`${USERS_BASE}/${userId}/access-type`, { accessType });
 }
 
 export async function setUserStatus(userId: string, enabled: boolean): Promise<void> {

@@ -47,6 +47,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IImpersonationGrantRepository, ImpersonationGrantRepository>();
         services.AddScoped<IIdentityReadStore, IdentityReadStore>();
 
         services.AddScoped<PermissionService>();

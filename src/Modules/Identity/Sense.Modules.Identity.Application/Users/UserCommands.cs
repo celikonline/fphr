@@ -155,6 +155,71 @@ public sealed class SetUserRolesHandler(IUserRepository users, IRoleRepository r
     }
 }
 
+/// <summary>
+/// Erişim türü hızlı seçici (çalışan kartı / Kullanıcılar ekranı): Employee/Owner/Admin sistem rollerinden yalnız
+/// biri kalır, kullanıcının sahip olduğu diğer roller (HR.Manager vb.) korunur. Ayrı bir izin yerine mevcut
+/// UsersManage kullanılır (bu modülde kullanıcı CRUD/rol ataması zaten tek bir "manage" izniyle korunuyor).
+/// </summary>
+[RequiresPermission(IdentityPermissions.UsersManage)]
+public sealed record SetUserAccessTypeCommand(Guid UserId, string AccessType) : ICommand;
+
+public sealed class SetUserAccessTypeValidator : AbstractValidator<SetUserAccessTypeCommand>
+{
+    public SetUserAccessTypeValidator()
+    {
+        RuleFor(x => x.AccessType)
+            .Must(v => v is SystemRoleCodes.Employee or SystemRoleCodes.Owner or SystemRoleCodes.Admin)
+            .WithMessage(IdentityErrors.AccessTypeInvalid);
+    }
+}
+
+public sealed class SetUserAccessTypeHandler(IUserRepository users, IRoleRepository roles, IPermissionCacheInvalidator cache)
+    : ICommandHandler<SetUserAccessTypeCommand>
+{
+    private static readonly string[] AccessTypeCodes = [SystemRoleCodes.Employee, SystemRoleCodes.Owner, SystemRoleCodes.Admin];
+
+    public async Task<Result> Handle(SetUserAccessTypeCommand command, CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(command.UserId, cancellationToken).ConfigureAwait(false);
+        if (user is null)
+        {
+            return Error.NotFound(IdentityErrors.UserNotFound);
+        }
+
+        var accessTypeRoles = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
+        foreach (var code in AccessTypeCodes)
+        {
+            var role = await roles.GetByCodeAsync(code, cancellationToken).ConfigureAwait(false);
+            if (role is not null)
+            {
+                accessTypeRoles[code] = role;
+            }
+        }
+
+        if (!accessTypeRoles.TryGetValue(command.AccessType, out var targetRole))
+        {
+            return Error.NotFound(IdentityErrors.RoleNotFound);
+        }
+
+        var currentlyOwner = accessTypeRoles.TryGetValue(SystemRoleCodes.Owner, out var ownerRole) && user.HasRole(ownerRole.Id);
+        if (currentlyOwner && !string.Equals(command.AccessType, SystemRoleCodes.Owner, StringComparison.OrdinalIgnoreCase))
+        {
+            var owners = await users.CountActiveOwnersAsync(cancellationToken).ConfigureAwait(false);
+            if (owners <= 1)
+            {
+                return Error.Rule(IdentityErrors.UserLastOwner);
+            }
+        }
+
+        var accessTypeRoleIds = accessTypeRoles.Values.Select(r => r.Id).ToHashSet();
+        var newRoleIds = user.Roles.Select(r => r.RoleId).Where(id => !accessTypeRoleIds.Contains(id)).Append(targetRole.Id).ToList();
+
+        user.SetRoles(newRoleIds);
+        await cache.InvalidateUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+}
+
 [RequiresPermission(IdentityPermissions.UsersManage)]
 public sealed record SetUserPermissionOverrideCommand(Guid UserId, string Permission, bool? Allow) : ICommand;
 
@@ -229,6 +294,28 @@ public sealed class SetUserStatusHandler(IUserRepository users, IRoleRepository 
         }
 
         await cache.InvalidateUserAsync(user.Id, cancellationToken).ConfigureAwait(false);
+        return Result.Success();
+    }
+}
+
+/// <summary>
+/// Platform (Sense ekibi) bayrağını işaretler/kaldırır. Yalnız bu bayrağa sahip kullanıcılar impersonation
+/// isteği/oturumu açabilir (identity.users.impersonate izniyle birlikte); bayrağın kendisi izin vermez.
+/// </summary>
+[RequiresPermission(IdentityPermissions.UsersManage)]
+public sealed record SetPlatformStaffCommand(Guid UserId, bool IsPlatformStaff) : ICommand;
+
+public sealed class SetPlatformStaffHandler(IUserRepository users) : ICommandHandler<SetPlatformStaffCommand>
+{
+    public async Task<Result> Handle(SetPlatformStaffCommand command, CancellationToken cancellationToken)
+    {
+        var user = await users.GetByIdAsync(command.UserId, cancellationToken).ConfigureAwait(false);
+        if (user is null)
+        {
+            return Error.NotFound(IdentityErrors.UserNotFound);
+        }
+
+        user.SetPlatformStaff(command.IsPlatformStaff);
         return Result.Success();
     }
 }

@@ -1,3 +1,4 @@
+using Sense.Modules.Identity.Domain.Impersonation;
 using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
@@ -74,4 +75,11 @@ public interface IRefreshTokenRepository
     Task<IReadOnlyList<RefreshToken>> GetActiveByUserAsync(Guid userId, DateTime nowUtc, CancellationToken ct);
 
     void Add(RefreshToken token);
+}
+
+public interface IImpersonationGrantRepository
+{
+    Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct);
+
+    void Add(ImpersonationGrant grant);
 }

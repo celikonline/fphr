@@ -24,7 +24,20 @@ public sealed record AccessToken(string Token, DateTime ExpiresAtUtc);
 /// <summary>JWT üretimi (RS256).</summary>
 public interface ITokenService
 {
-    AccessToken IssueAccessToken(User user, Guid tenantId, string tenantSlug, IReadOnlyCollection<string> roleCodes, int permissionVersion);
+    /// <summary>
+    /// <paramref name="impersonatorUserId"/> verilirse token'a `act` claim'i ve (bypass ile geniş erişim için)
+    /// `platform_admin` claim'i eklenir; <paramref name="maxExpiresAtUtc"/> verilirse token süresi bununla sınırlanır
+    /// (ör. onaylı impersonation grantının ExpiresAt'i) — oturum, standart JWT doğrulaması sayesinde her istekte
+    /// otomatik olarak sona erer.
+    /// </summary>
+    AccessToken IssueAccessToken(
+        User user,
+        Guid tenantId,
+        string tenantSlug,
+        IReadOnlyCollection<string> roleCodes,
+        int permissionVersion,
+        Guid? impersonatorUserId = null,
+        DateTime? maxExpiresAtUtc = null);
 
     TimeSpan RefreshTokenLifetime { get; }
 }

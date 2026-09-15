@@ -27,10 +27,21 @@ public sealed class JwtTokenService(RsaSecurityKey key, IOptions<JwtIssuerOption
 
     public TimeSpan RefreshTokenLifetime => TimeSpan.FromDays(identity.Value.RefreshTokenDays);
 
-    public AccessToken IssueAccessToken(User user, Guid tenantId, string tenantSlug, IReadOnlyCollection<string> roleCodes, int permissionVersion)
+    public AccessToken IssueAccessToken(
+        User user,
+        Guid tenantId,
+        string tenantSlug,
+        IReadOnlyCollection<string> roleCodes,
+        int permissionVersion,
+        Guid? impersonatorUserId = null,
+        DateTime? maxExpiresAtUtc = null)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var expires = now.AddMinutes(identity.Value.AccessTokenMinutes);
+        if (maxExpiresAtUtc is { } cap && cap < expires)
+        {
+            expires = cap;
+        }
 
         var claims = new List<Claim>
         {
@@ -51,6 +62,14 @@ public sealed class JwtTokenService(RsaSecurityKey key, IOptions<JwtIssuerOption
         }
 
         claims.AddRange(roleCodes.Select(r => new Claim(ClaimNames.Roles, r)));
+
+        if (impersonatorUserId is { } impersonator)
+        {
+            // Impersonation oturumu: gerçek aktör `act` claim'inde izlenir; hedef kiracıda ayrı bir rol/izin kaydı
+            // olmadığından erişim, mevcut platform_admin bypass mekanizması (AuthorizationBehaviour) ile sağlanır.
+            claims.Add(new Claim(ClaimNames.Impersonator, impersonator.ToString()));
+            claims.Add(new Claim(ClaimNames.PlatformAdmin, ClaimNames.TrueValue));
+        }
 
         var token = new JwtSecurityToken(
             issuer: jwt.Value.Issuer,

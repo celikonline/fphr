@@ -61,6 +61,15 @@ public sealed record LoginResultDto(string Status, AuthTokensDto? Tokens, IReadO
     public static LoginResultDto MfaRequired(string mfaToken) => new(LoginStatuses.MfaRequired, null, null, mfaToken);
 }
 
+public sealed record ImpersonationGrantDto(
+    Guid Id, Guid TenantId, Guid PlatformUserId, Guid? ApprovedByUserId, string Reason, string Status,
+    DateTime RequestedAt, DateTime? ExpiresAt, DateTime? UsedAt, DateTime? RevokedAt);
+
+public sealed record ImpersonationSessionDto(string AccessToken, DateTime AccessTokenExpiresAt)
+{
+    public string TokenType => AuthTokenTypes.Bearer;
+}
+
 public sealed record MeDto(
     Guid UserId, string Email, string FirstName, string LastName, Guid? EmployeeId, string PreferredLanguage, bool MfaEnabled,
     TenantDto Tenant, IReadOnlyList<RoleRefDto> Roles, IReadOnlyList<string> Permissions, IReadOnlyDictionary<string, DataScope> Scopes);

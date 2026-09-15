@@ -18,6 +18,13 @@ public static class IdentityDomainErrors
     public const string InvitationAlreadyAccepted = "invitation.already_accepted";
     public const string InvitationExpired = "invitation.expired";
 
+    public const string AccessTypeInvalid = "user.access_type_invalid";
+
+    public const string ImpersonationNotPending = "impersonation.not_pending";
+    public const string ImpersonationNotApproved = "impersonation.not_approved";
+    public const string ImpersonationExpired = "impersonation.expired";
+    public const string ImpersonationNotRevocable = "impersonation.not_revocable";
+
     public static class Args
     {
         public const string Minutes = "minutes";

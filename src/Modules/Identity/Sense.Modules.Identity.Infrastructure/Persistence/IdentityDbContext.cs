@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sense.Modules.Identity.Domain.Impersonation;
 using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
@@ -25,6 +26,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
     public DbSet<Invitation> Invitations => Set<Invitation>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    public DbSet<ImpersonationGrant> ImpersonationGrants => Set<ImpersonationGrant>();
 }
 
 internal static class IdentityTables
@@ -37,6 +40,7 @@ internal static class IdentityTables
     public const string RolePermissions = "role_permissions";
     public const string Invitations = "invitations";
     public const string RefreshTokens = "refresh_tokens";
+    public const string ImpersonationGrants = "impersonation_grants";
 
     public const int EmailLength = 254;
     public const int SlugLength = 40;
@@ -163,5 +167,19 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
         b.Property(x => x.ReplacedByTokenHash).HasMaxLength(IdentityTables.HashLength);
         b.Property(x => x.DeviceInfo).HasMaxLength(Domain.IdentityLimits.DeviceInfoMaxLength);
         b.Property(x => x.IpAddress).HasMaxLength(IdentityTables.CodeLength);
+    }
+}
+
+public sealed class ImpersonationGrantConfiguration : IEntityTypeConfiguration<ImpersonationGrant>
+{
+    public void Configure(EntityTypeBuilder<ImpersonationGrant> b)
+    {
+        b.ToTable(IdentityTables.ImpersonationGrants);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Reason).HasMaxLength(Domain.IdentityLimits.ReasonMaxLength).IsRequired();
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(IdentityTables.CodeLength);
+        b.HasIndex(x => x.PlatformUserId);
+        b.HasIndex(x => x.Status);
+        b.Ignore(x => x.DomainEvents);
     }
 }

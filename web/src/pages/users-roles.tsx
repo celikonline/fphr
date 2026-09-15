@@ -30,11 +30,14 @@ import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
 import {
   bulkAssignRole,
+  deriveAccessType,
   listPermissionGroups,
   listRoles,
   listUsers,
+  setUserAccessType,
   setUserRoles,
   setUserStatus,
+  type AccessType,
   type UserListItem,
   type UserStatus,
 } from "@/services/users.service";
@@ -93,6 +96,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkRoleId, setBulkRoleId] = useState<string>("");
   const [rolesDialogUser, setRolesDialogUser] = useState<UserListItem | null>(null);
+  const [accessTypeDialogUser, setAccessTypeDialogUser] = useState<UserListItem | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -152,6 +156,16 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("users:rolesUpdateSuccess") });
       setRolesDialogUser(null);
+    },
+    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+  });
+
+  const accessTypeMutation = useMutation({
+    mutationFn: ({ id, accessType }: { id: string; accessType: AccessType }) => setUserAccessType(id, accessType),
+    onSuccess: () => {
+      invalidate();
+      toast({ variant: "success", title: t("common:success"), description: t("users:accessTypeUpdateSuccess") });
+      setAccessTypeDialogUser(null);
     },
     onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
   });
@@ -288,6 +302,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                     <TableHead>{t("users:name")}</TableHead>
                     <TableHead>{t("users:email")}</TableHead>
                     <TableHead>{t("users:statusFilter")}</TableHead>
+                    <TableHead>{t("users:accessType")}</TableHead>
                     <TableHead>{t("users:roles")}</TableHead>
                     <TableHead>{t("users:mfa")}</TableHead>
                     <TableHead>{t("users:lastLogin")}</TableHead>
@@ -312,6 +327,16 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>
                         <Badge variant={STATUS_BADGE[user.status]}>{t(`users:status.${user.status}`)}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {(() => {
+                          const accessType = deriveAccessType(user.roles);
+                          return (
+                            <Badge variant="outline">
+                              {accessType ? t(`users:accessType.${accessType.toLowerCase()}`) : t("users:accessType.none")}
+                            </Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -340,6 +365,9 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setAccessTypeDialogUser(user)}>
+                                {t("users:editAccessType")}
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => setRolesDialogUser(user)}>
                                 {t("users:editRoles")}
                               </DropdownMenuItem>
@@ -374,7 +402,66 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
           t={t}
         />
       )}
+
+      {accessTypeDialogUser && (
+        <EditAccessTypeDialog
+          user={accessTypeDialogUser}
+          onClose={() => setAccessTypeDialogUser(null)}
+          onSave={(accessType) => accessTypeMutation.mutate({ id: accessTypeDialogUser.id, accessType })}
+          isSaving={accessTypeMutation.isPending}
+          t={t}
+        />
+      )}
     </div>
+  );
+}
+
+const ACCESS_TYPES: AccessType[] = ["Employee", "Owner", "Admin"];
+
+function EditAccessTypeDialog({
+  user,
+  onClose,
+  onSave,
+  isSaving,
+  t,
+}: {
+  user: UserListItem;
+  onClose: () => void;
+  onSave: (accessType: AccessType) => void;
+  isSaving: boolean;
+  t: TFn;
+}) {
+  const [selected, setSelected] = useState<AccessType>(deriveAccessType(user.roles) ?? "Employee");
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("users:dialogEditAccessTypeTitle", { name: `${user.firstName} ${user.lastName}` })}</DialogTitle>
+        </DialogHeader>
+        <p className="text-sm text-muted-foreground">{t("users:accessTypeHint")}</p>
+        <Select value={selected} onValueChange={(v) => setSelected(v as AccessType)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ACCESS_TYPES.map((type) => (
+              <SelectItem key={type} value={type}>
+                {t(`users:accessType.${type.toLowerCase()}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            {t("common:cancel")}
+          </Button>
+          <Button type="button" onClick={() => onSave(selected)} disabled={isSaving}>
+            {isSaving ? t("common:saving") : t("common:save")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

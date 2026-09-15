@@ -73,6 +73,9 @@ public sealed class User : TenantAggregateRoot<Guid>, ISoftDelete, IAuditLogged,
 
     public string PreferredLanguage { get; private set; } = string.Empty;
 
+    /// <summary>Sense (platform) ekibi hesabı; kiracı verisine varsayılan erişimi yoktur, yalnız onaylı ImpersonationGrant ile geçici oturum açar.</summary>
+    public bool IsPlatformStaff { get; private set; }
+
     public bool IsDeleted { get; set; }
 
     public DateTime? DeletedAt { get; set; }
@@ -195,6 +198,9 @@ public sealed class User : TenantAggregateRoot<Guid>, ISoftDelete, IAuditLogged,
     }
 
     public void UnlinkEmployee() => EmployeeId = null;
+
+    /// <summary>Platform (Sense ekibi) bayrağı: yalnız impersonation isteği/oturumu açma yetkisinin ön koşuludur, izin vermez.</summary>
+    public void SetPlatformStaff(bool isPlatformStaff) => IsPlatformStaff = isPlatformStaff;
 
     public void Disable()
     {

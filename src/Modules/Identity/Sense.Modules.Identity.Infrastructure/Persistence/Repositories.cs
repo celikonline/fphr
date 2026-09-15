@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Identity.Domain;
+using Sense.Modules.Identity.Domain.Impersonation;
 using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
@@ -112,4 +113,11 @@ public sealed class RefreshTokenRepository(IdentityDbContext db) : IRefreshToken
         await db.RefreshTokens.Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > nowUtc).ToListAsync(ct).ConfigureAwait(false);
 
     public void Add(RefreshToken token) => db.RefreshTokens.Add(token);
+}
+
+public sealed class ImpersonationGrantRepository(IdentityDbContext db) : IImpersonationGrantRepository
+{
+    public Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct) => db.ImpersonationGrants.FirstOrDefaultAsync(g => g.Id == id, ct);
+
+    public void Add(ImpersonationGrant grant) => db.ImpersonationGrants.Add(grant);
 }
