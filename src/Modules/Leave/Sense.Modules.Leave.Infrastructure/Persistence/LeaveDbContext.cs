@@ -59,6 +59,13 @@ internal static class LeaveTables
     public const int CountryLength = 2;
     public const int DaysPrecision = 9;
     public const int DaysScale = 4;
+
+    /// <summary>
+    /// legislation_parameters.decimal_value scale: widened from the (18,4) module default to 6 so Payroll rates like
+    /// Payroll.StampTax.Rate (0.00759, "binde 7,59") don't get truncated (ADR 0008; faz3-durum-takibi.md P0).
+    /// </summary>
+    public const int ParameterValuePrecision = 18;
+    public const int ParameterValueScale = 6;
     public static readonly DateTime SeedCreatedAt = new(2026, 9, 15, 0, 0, 0, DateTimeKind.Utc);
 }
 
@@ -152,6 +159,7 @@ public sealed class LegislationParameterConfiguration : IEntityTypeConfiguration
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.Key).HasMaxLength(LeaveTables.KeyLength).IsRequired();
         b.Property(x => x.Country).HasMaxLength(LeaveTables.CountryLength).IsRequired();
+        b.Property(x => x.DecimalValue).HasPrecision(LeaveTables.ParameterValuePrecision, LeaveTables.ParameterValueScale);
         b.Property(x => x.ValueJson).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.Property(x => x.Source).HasMaxLength(LeaveLimits.ReasonMaxLength).IsRequired();
         b.HasIndex(x => new { x.Country, x.Key, x.EffectiveFrom }).IsUnique();

@@ -64,6 +64,7 @@
     <Project Path="tests/Modules/Sense.Modules.Notifications.Tests/Sense.Modules.Notifications.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Attendance.Tests/Sense.Modules.Attendance.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Payroll.Tests/Sense.Modules.Payroll.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
@@ -93,5 +94,12 @@
     <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
     <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Domain/Sense.Modules.Attendance.Domain.csproj" />
     <Project Path="src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Sense.Modules.Attendance.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Payroll/">
+    <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Api/Sense.Modules.Payroll.Api.csproj" />
+    <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Application/Sense.Modules.Payroll.Application.csproj" />
+    <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Contracts/Sense.Modules.Payroll.Contracts.csproj" />
+    <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Domain/Sense.Modules.Payroll.Domain.csproj" />
+    <Project Path="src/Modules/Payroll/Sense.Modules.Payroll.Infrastructure/Sense.Modules.Payroll.Infrastructure.csproj" />
   </Folder>
 </Solution>

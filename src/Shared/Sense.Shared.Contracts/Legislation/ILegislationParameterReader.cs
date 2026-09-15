@@ -91,6 +91,23 @@ public static class LegislationParameterKeys
     public const string OvertimeCompTimeExpiryMonths = "Overtime.CompTimeExpiryMonths";
     public const string OvertimeConsentRevocationNoticeDays = "Overtime.ConsentRevocationNoticeDays";
 
+    // Payroll (Faz 3 P1, 11.3.07-bordro.md "Hesap turnusolu"). Values seeded via a Leave migration (ADR 0008: single
+    // owner table leave.legislation_parameters) - Payroll only reads them through ILegislationParameterReader.
+    public const string PayrollIncomeTaxBrackets = "Payroll.IncomeTax.Brackets";
+    public const string PayrollSgkFloor = "Payroll.Sgk.Floor";
+    public const string PayrollSgkCeiling = "Payroll.Sgk.Ceiling";
+    public const string PayrollSgkEmployeeRate = "Payroll.Sgk.EmployeeRate";
+    public const string PayrollUnemploymentEmployeeRate = "Payroll.Unemployment.EmployeeRate";
+    public const string PayrollSgkEmployerRate = "Payroll.Sgk.EmployerRate";
+    public const string PayrollUnemploymentEmployerRate = "Payroll.Unemployment.EmployerRate";
+
+    /// <summary>5-point SGK employer incentive rate (5510 md.81); seeded for future use, not applied by the P1 calculator (TODO P2+).</summary>
+    public const string PayrollSgkEmployerDiscountRate = "Payroll.Sgk.EmployerDiscountRate";
+    public const string PayrollStampTaxRate = "Payroll.StampTax.Rate";
+    public const string PayrollMinimumWageGross = "Payroll.MinimumWage.Gross";
+    public const string PayrollMealIncomeTaxDailyExemption = "Payroll.Meal.IncomeTax.DailyExemption";
+    public const string PayrollMealSgkDailyExemptionRate = "Payroll.Meal.Sgk.DailyExemptionRate";
+
     // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"). Seeded via a Leave migration
     // (ADR 0008: single owner table leave.legislation_parameters) - Employee only reads them through this reader.
     public const string JobSecurityMinHeadcount = "JobSecurity.MinHeadcount";

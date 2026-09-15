@@ -15,6 +15,7 @@ public static class LegislationParameterSeed
     private static readonly DateOnly Law7578 = new(2026, 5, 1);
     private static readonly DateOnly Before7578 = new(2026, 4, 30);
     private static readonly DateOnly Regulation2017 = new(2017, 8, 25);
+    private static readonly DateOnly Payroll2026 = new(2026, 1, 1);
 
     private const string Md53 = "4857 s. İş Kanunu md.53 (RG 10.06.2003/25134)";
     private const string EkMd2 = "4857 s. İş Kanunu Ek md.2 (6663 s.K., RG 10.02.2016/29620)";
@@ -22,6 +23,13 @@ public static class LegislationParameterSeed
     private const string Md74 = "4857 s. İş Kanunu md.74 (RG 10.06.2003/25134)";
     private const string Md74By7578 = "4857 s. İş Kanunu md.74, 7578 s.K. ile değişik (RG 01.05.2026/33240)";
     private const string Md41 = "4857 s. İş Kanunu md.41 (RG 10.06.2003/25134)";
+
+    /// <summary>
+    /// Payroll (Faz 3 P1, 11.3.07-bordro.md): draft 2026 rates/brackets, explicitly unverified - "taslak, mali
+    /// müşavirle doğrulanmalı" per the spec's own caveat on every payroll rate. Structurally correct and
+    /// parameter-driven (nothing hardcoded in Sense.Modules.Payroll code); replace via a new dated row, never in place.
+    /// </summary>
+    private const string PayrollDraft2026 = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)";
 
     public static IReadOnlyList<LegislationParameter> All { get; } =
     [
@@ -50,6 +58,22 @@ public static class LegislationParameterSeed
         P(23, "Overtime.CompTimeExpiryMonths", 6m, Law4857, null, Md41 + " - serbest zaman 6 ay içinde kullanılır"),
         P(24, "Overtime.ConsentRevocationNoticeDays", 30m, Regulation2017, null, "Fazla Çalışma Yönetmeliği md.9 (RG 25.08.2017/30165) - onay 30 gün önceden yazılı bildirimle geri alınır"),
 
+        // Payroll (Faz 3 P1) - see PayrollDraft2026 doc comment above.
+        P(25, "Payroll.MinimumWage.Gross", 30000.00m, Payroll2026, null, PayrollDraft2026 + " - aylık brüt asgari ücret"),
+        P(26, "Payroll.Sgk.Floor", 30000.00m, Payroll2026, null, PayrollDraft2026 + " - SGK prim matrahı alt sınırı (asgari ücrete eşit)"),
+        P(27, "Payroll.Sgk.Ceiling", 225000.00m, Payroll2026, null, PayrollDraft2026 + " - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı)"),
+        P(28, "Payroll.Sgk.EmployeeRate", 0.14m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işçi hissesi (malullük/yaşlılık/ölüm + genel sağlık) %14"),
+        P(29, "Payroll.Unemployment.EmployeeRate", 0.01m, Payroll2026, null, "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işçi payı %1"),
+        P(30, "Payroll.Sgk.EmployerRate", 0.205m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işveren hissesi (indirimsiz) %20,5"),
+        P(31, "Payroll.Unemployment.EmployerRate", 0.02m, Payroll2026, null, "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işveren payı %2"),
+        P(32, "Payroll.Sgk.EmployerDiscountRate", 0.05m, Payroll2026, null, "5510 s. Kanun md.81 - 5 puanlık SGK işveren teşviki oranı (uygunluk hesabı henüz uygulanmıyor, TODO P2+)"),
+        P(33, "Payroll.StampTax.Rate", 0.00759m, Payroll2026, null, "488 s. Damga Vergisi Kanunu (1) sayılı tablo IV/1-b - ücretlerde binde 7,59"),
+        P(34, "Payroll.Meal.IncomeTax.DailyExemption", 240.00m, Payroll2026, null, PayrollDraft2026 + " - nakit/yalnız yemek kartı günlük gelir vergisi istisnası"),
+        P(35, "Payroll.Meal.Sgk.DailyExemptionRate", 0.2365m, Payroll2026, null, PayrollDraft2026 + " - SGK Genelgesi yaklaşımı: günlük brüt asgari ücretin %23,65'i SGK'dan istisna"),
+        PJson(36, "Payroll.IncomeTax.Brackets", Payroll2026, null,
+            """[{"upperBound":158000,"rate":0.15},{"upperBound":330000,"rate":0.20},{"upperBound":1200000,"rate":0.27},{"upperBound":4300000,"rate":0.35},{"upperBound":null,"rate":0.40}]""",
+            PayrollDraft2026 + " - GVK md.103 kümülatif gelir vergisi tarifesi (%15/20/27/35/40)"),
+
         // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"): approximated with total
         // active tenant headcount (no iş kolu/business-line grouping in the codebase yet - see JobSecurityEvaluator).
         P(37, "JobSecurity.MinHeadcount", 30m, Law4857, null, "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: 30 ve üzeri işçi çalıştıran işyeri (yaklaşık, iş kolu gruplaması hariç)"),
@@ -58,4 +82,7 @@ public static class LegislationParameterSeed
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>
         new(new Guid($"00000008-0000-0000-0000-{n:D12}"), key, Country, value, null, from, to, source);
+
+    private static LegislationParameter PJson(int n, string key, DateOnly from, DateOnly? to, string json, string source) =>
+        new(new Guid($"00000008-0000-0000-0000-{n:D12}"), key, Country, null, json, from, to, source);
 }

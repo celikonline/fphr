@@ -16,6 +16,7 @@
     <ProjectReference Include="../Modules/Notifications/Sense.Modules.Notifications.Api/Sense.Modules.Notifications.Api.csproj" />
     <ProjectReference Include="../Modules/Leave/Sense.Modules.Leave.Api/Sense.Modules.Leave.Api.csproj" />
     <ProjectReference Include="../Modules/Attendance/Sense.Modules.Attendance.Api/Sense.Modules.Attendance.Api.csproj" />
+    <ProjectReference Include="../Modules/Payroll/Sense.Modules.Payroll.Api/Sense.Modules.Payroll.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

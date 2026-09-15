@@ -98,11 +98,11 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.Auditor, DataScope.Company,
             ["identity.audit.view", "identity.users.view", "identity.roles.view", "identity.tenant.view", .. PermissionPatterns.ReadOnly, "reports.*",
-             "documents.consents.*.view", "integrations.*.view", "integrations.webhooks.deliveries", .. PermissionPatterns.SelfService],
+             "documents.consents.*.view", "integrations.*.view", "integrations.webhooks.deliveries", "payroll.trace.view", .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive, .. PermissionPatterns.Writes]),
 
         new(SystemRoleCodes.ExternalAccountant, DataScope.Company,
-            ["payroll.*.view", "payroll.*.export", "payroll.declarations.*", "attendance.timesheets.view", "attendance.timesheets.export",
+            ["payroll.*.view", "payroll.*.export", "payroll.declarations.*", "payroll.trace.view", "attendance.timesheets.view", "attendance.timesheets.export",
              "employee.*.view", "organization.*.view", "reports.payroll.*", "reports.attendance.*", "expense.bank_payments.view"],
             [.. PermissionPatterns.Sensitive, .. PermissionPatterns.Writes]),
 

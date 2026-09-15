@@ -130,8 +130,8 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnName("created_user_id");
 
                     b.Property<decimal?>("DecimalValue")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("numeric(18,4)")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
                         .HasColumnName("decimal_value");
 
                     b.Property<DateOnly>("EffectiveFrom")
@@ -418,6 +418,126 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             EffectiveFrom = new DateOnly(2017, 8, 25),
                             Key = "Overtime.ConsentRevocationNoticeDays",
                             Source = "Fazla Çalışma Yönetmeliği md.9 (RG 25.08.2017/30165) - onay 30 gün önceden yazılı bildirimle geri alınır"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000025"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 30000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.MinimumWage.Gross",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - aylık brüt asgari ücret"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000026"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 30000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.Floor",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK prim matrahı alt sınırı (asgari ücrete eşit)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000027"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 225000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.Ceiling",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000028"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.14m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.EmployeeRate",
+                            Source = "5510 s. Kanun md.81 - SGK işçi hissesi (malullük/yaşlılık/ölüm + genel sağlık) %14"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000029"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.01m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Unemployment.EmployeeRate",
+                            Source = "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işçi payı %1"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000030"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.205m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.EmployerRate",
+                            Source = "5510 s. Kanun md.81 - SGK işveren hissesi (indirimsiz) %20,5"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000031"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.02m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Unemployment.EmployerRate",
+                            Source = "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işveren payı %2"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000032"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.05m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Sgk.EmployerDiscountRate",
+                            Source = "5510 s. Kanun md.81 - 5 puanlık SGK işveren teşviki oranı (uygunluk hesabı henüz uygulanmıyor, TODO P2+)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000033"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.00759m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.StampTax.Rate",
+                            Source = "488 s. Damga Vergisi Kanunu (1) sayılı tablo IV/1-b - ücretlerde binde 7,59"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000034"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 240.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Meal.IncomeTax.DailyExemption",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - nakit/yalnız yemek kartı günlük gelir vergisi istisnası"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000035"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0.2365m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Meal.Sgk.DailyExemptionRate",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK Genelgesi yaklaşımı: günlük brüt asgari ücretin %23,65'i SGK'dan istisna"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000036"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.IncomeTax.Brackets",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - GVK md.103 kümülatif gelir vergisi tarifesi (%15/20/27/35/40)",
+                            ValueJson = "[{\"upperBound\":158000,\"rate\":0.15},{\"upperBound\":330000,\"rate\":0.20},{\"upperBound\":1200000,\"rate\":0.27},{\"upperBound\":4300000,\"rate\":0.35},{\"upperBound\":null,\"rate\":0.40}]"
                         });
                 });
 

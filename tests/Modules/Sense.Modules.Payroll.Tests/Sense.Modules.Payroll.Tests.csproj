@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Payroll/Sense.Modules.Payroll.Api/Sense.Modules.Payroll.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Payroll/Sense.Modules.Payroll.Application/Sense.Modules.Payroll.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Payroll/Sense.Modules.Payroll.Domain/Sense.Modules.Payroll.Domain.csproj" />
+    <ProjectReference Include="../../../src/Modules/Payroll/Sense.Modules.Payroll.Infrastructure/Sense.Modules.Payroll.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+</Project>

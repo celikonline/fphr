@@ -16,6 +16,8 @@ using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Payroll.Infrastructure;
+using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
@@ -120,6 +122,18 @@ builder.Services.AddModuleHandlers(
     typeof(AttendanceDbContext).Assembly,
     typeof(Sense.Modules.Attendance.Domain.IWorkScheduleRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AttendanceDbContext>>();
+
+// Payroll (Faz 3 P0/P1): calculation-engine golden set only this slice, no cross-module event consumers yet
+// (the "Değişti" dirty-flag mechanism that listens to Attendance/Leave/Employee events is P3), so just DbContext +
+// handler scanning + its own outbox poller, mirroring the Documents/Organization blocks above.
+builder.Services.AddModuleDbContext<PayrollDbContext>(builder.Configuration, PayrollDbContext.SchemaName);
+builder.Services.AddPayrollServices(builder.Configuration);
+builder.Services.AddModuleHandlers(
+    PayrollDbContext.SchemaName,
+    typeof(Sense.Modules.Payroll.Contracts.PayrollPermissions).Assembly,
+    typeof(PayrollDbContext).Assembly,
+    typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PayrollDbContext>>();
 
 await builder.Build().RunAsync();
 
