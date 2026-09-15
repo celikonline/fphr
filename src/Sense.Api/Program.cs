@@ -1,7 +1,9 @@
 using Hangfire;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 using Sense.Api;
 using Sense.Api.Hubs;
+using Sense.Api.SeedData;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Web.DependencyInjection;
 using Sense.Shared.Web.Middleware;
@@ -27,6 +29,7 @@ try
     builder.Services.AddFileStorage(builder.Configuration);
     builder.Services.AddSenseAuthentication(builder.Configuration);
     builder.Services.AddHangfireServices(builder.Configuration);
+    builder.Services.AddDataSeeding();
 
     var app = builder.Build();
 
@@ -53,6 +56,15 @@ try
         IgnoreAntiforgeryToken = true,
         DashboardTitle = "Sense.İK Background Jobs"
     });
+
+    // Seed data if enabled
+    var seedingOptions = app.Services.GetRequiredService<IOptions<SeedingOptions>>().Value;
+    if (seedingOptions.Enabled)
+    {
+        using var scope = app.Services.CreateScope();
+        var seeder = scope.ServiceProvider.GetRequiredService<DataSeeder>();
+        await seeder.SeedAsync(seedingOptions.Profile);
+    }
 
     app.Run();
 }

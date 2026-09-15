@@ -1,0 +1,89 @@
+# Seed Data
+
+This directory contains deterministic seed data generation for development and testing environments.
+
+## Profiles
+
+### Minimal Profile
+- **Tenant**: "Pilot Company" (TenantId: `a1b2c3d4-e5f6-4a5b-9c8d-7e6f5a4b3c2d`)
+- **User**: 1 admin user (admin@senseik.dev)
+- **Roles**: System.Admin
+- **Purpose**: Quick setup for basic functionality testing
+- **Generation Time**: < 100ms
+
+### Demo Profile
+- **Tenant**: "Demo HR Company" (TenantId: `b2c3d4e5-f6a7-5b6c-ad9e-8f7a6b5c4d3e`)
+- **Users**: 50 employees with realistic Turkish names
+- **Roles**: All 17 system roles (Admin, HR, Finance, Manager, Employee, etc.)
+- **Documents**: 3-5 sample documents per tenant
+- **Purpose**: Full-featured UI and workflow testing
+- **Generation Time**: < 500ms
+
+## Configuration
+
+Enable seeding in `appsettings.json` or `appsettings.Development.json`:
+
+```json
+{
+  "Seeding": {
+    "Enabled": true,
+    "Profile": "Demo"
+  }
+}
+```
+
+**Default settings:**
+- Production: Disabled
+- Development: Enabled with Demo profile
+
+## How Seeding Works
+
+1. **On Startup**: If `Seeding.Enabled` is true, the application will check for existing seed data
+2. **Idempotency**: If seed data is already present (detected by checking for "Pilot Company" or "Demo HR Company" tenants), seeding is skipped
+3. **Deterministic**: Uses `Random(seed: 42)` for reproducible data generation
+
+## Data Reset
+
+To reset seed data and re-seed:
+
+1. Delete the tenant entries from the database:
+   ```sql
+   DELETE FROM identity.tenants WHERE id = 'a1b2c3d4-e5f6-4a5b-9c8d-7e6f5a4b3c2d'; -- Minimal
+   DELETE FROM identity.tenants WHERE id = 'b2c3d4e5-f6a7-5b6c-ad9e-8f7a6b5c4d3e'; -- Demo
+   ```
+
+2. Restart the application with seeding enabled
+
+## Privacy & Security Notes
+
+All seed data is **fictional**:
+- Employee names are randomly generated from Turkish name lists
+- Email addresses follow the pattern: `firstname.lastname@democompany.com`
+- Passwords are dummy hashes (should not be used in production)
+- No real personal data is used
+
+## Deterministic Output
+
+Each seed profile produces identical data across runs:
+- Turkish first names: 58 names
+- Turkish last names: 59 names  
+- Email pattern: Always `firstname.lastname@democompany.com`
+- Employment dates: Calculated relative to "today"
+- Role assignments: Deterministic based on `Random(42)`
+
+## Implementation Structure
+
+- `SeedProfile.cs`: Enum defining available profiles
+- `SeedingOptions.cs`: Configuration options (Enabled, Profile)
+- `DataSeeder.cs`: Main orchestrator for seeding
+- `SeedDataConstants.cs`: Hard-coded constants and name lists
+- `SeedingServiceCollectionExtensions.cs`: DI registration
+
+## Future Extensions
+
+For phases 2+:
+- Add Employee module entities (employment history, qualifications)
+- Add Organization module entities (org units, hierarchies)
+- Add Leave balances and allocations
+- Add Department-specific role assignments
+- Add Document templates and samples
