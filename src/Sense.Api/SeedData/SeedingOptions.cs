@@ -6,7 +6,7 @@ public class SeedingOptions
     public const string Section = "Seeding";
 
     /// <summary>Whether to enable automatic seeding on application startup.</summary>
-    public bool Enabled { get; set; } = false;
+    public bool Enabled { get; set; }
 
     /// <summary>Which seed profile to use (Minimal or Demo).</summary>
     public SeedProfile Profile { get; set; } = SeedProfile.Minimal;

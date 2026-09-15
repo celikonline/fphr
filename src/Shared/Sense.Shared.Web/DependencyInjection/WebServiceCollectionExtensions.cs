@@ -11,8 +11,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Sense.Api.Hubs;
-using Sense.Api.SeedData;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Notifications;
@@ -37,9 +35,6 @@ public static class WebServiceCollectionExtensions
     public static IServiceCollection AddSenseWeb(this IServiceCollection services, IConfiguration configuration, IReadOnlyList<IModule> modules)
     {
         services.AddSenseCore(configuration);
-
-        // Register seeding options
-        services.AddOptions<SeedingOptions>().Bind(configuration.GetSection(SeedingOptions.Section)).ValidateOnStart();
 
         var localization = configuration.GetSection(ConfigurationSections.Localization).Get<LocalizationOptions>() ?? new LocalizationOptions();
         services.AddLocalization(o => o.ResourcesPath = localization.ResourcesPath);
@@ -113,7 +108,7 @@ public static class WebServiceCollectionExtensions
             services.AddSignalR()
                 .AddStackExchangeRedis(redisConnection, options =>
                 {
-                    options.Configuration.ChannelPrefix = "senseik-signalr-";
+                    options.Configuration.ChannelPrefix = StackExchange.Redis.RedisChannel.Literal("senseik-signalr-");
                 });
         }
         else

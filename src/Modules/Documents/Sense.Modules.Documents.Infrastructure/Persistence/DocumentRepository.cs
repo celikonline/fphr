@@ -1,13 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.Documents;
-using Sense.Shared.Contracts.Context;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Infrastructure.Persistence;
 
 /// <summary>Document repository implementation with tenant isolation.</summary>
-public sealed class DocumentRepository(DocumentsDbContext context, ITenantContext tenantContext) : IDocumentRepository
+public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRepository
 {
     public void Add(Document document)
     {

@@ -23,9 +23,8 @@
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Respawn" />
-    <PackageReference Include="Verify.Xunit" />
+    <PackageReference Include="Verify.XunitV3" />
     <PackageReference Include="Hangfire.InMemory" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
   </ItemGroup>
 
 </Project>

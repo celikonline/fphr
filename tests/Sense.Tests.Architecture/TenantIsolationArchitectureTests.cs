@@ -31,7 +31,7 @@ public sealed class TenantIsolationArchitectureTests
 
         var result = Types.InAssemblies(applicationAssemblies)
             .That().HaveNameEndingWith("QueryHandler")
-            .Should().Implement(typeof(System.Collections.IEnumerable)) // Placeholder check
+            .Should().ImplementInterface(typeof(System.Collections.IEnumerable)) // Placeholder check
             .GetResult();
 
         // Actual tenant isolation is verified by:
@@ -73,7 +73,7 @@ public sealed class TenantIsolationArchitectureTests
 
         // Types.InAssemblies doesn't have a direct way to check all entities in a module,
         // so this is a placeholder. Real validation happens when OnModelCreating tries to apply the filter.
-        var tenantsInterfaceType = typeof(Sense.Shared.Contracts.Persistence.ITenantEntity);
+        var tenantsInterfaceType = typeof(Sense.Shared.Kernel.Domain.ITenantEntity);
 
         // Just ensure the interface exists and is accessible
         tenantsInterfaceType.ShouldNotBeNull();

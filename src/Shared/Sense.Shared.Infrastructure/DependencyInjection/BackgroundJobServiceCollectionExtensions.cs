@@ -30,16 +30,16 @@ public static class BackgroundJobServiceCollectionExtensions
         // Configure Hangfire with PostgreSQL storage
         services.AddHangfire((sp, config) =>
         {
-            config.UsePostgreSqlStorage(connectionString, new PostgreSqlStorageOptions
-            {
-                SchemaName = "hangfire",
-                QueuePollInterval = TimeSpan.FromSeconds(PollingIntervalSeconds),
-                PrepareSchemaIfNecessary = true,
-                DistributedLockTimeout = TimeSpan.FromSeconds(30),
-                TransactionIsolationLevel = System.Transactions.IsolationLevel.ReadCommitted,
-                CommandBatchSize = 5,
-                UseNativeDatabaseTransactions = true,
-            });
+            config.UsePostgreSqlStorage(
+                opts => opts.UseNpgsqlConnection(connectionString),
+                new PostgreSqlStorageOptions
+                {
+                    SchemaName = "hangfire",
+                    QueuePollInterval = TimeSpan.FromSeconds(PollingIntervalSeconds),
+                    PrepareSchemaIfNecessary = true,
+                    DistributedLockTimeout = TimeSpan.FromSeconds(30),
+                    UseNativeDatabaseTransactions = true,
+                });
 
             config.UseRecommendedSerializerSettings();
         });

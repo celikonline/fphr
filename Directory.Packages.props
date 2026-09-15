@@ -51,6 +51,7 @@
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.*" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.*" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.20.*" />
+    <PackageVersion Include="Hangfire.InMemory" Version="1.*" />
     <PackageVersion Include="StackExchange.Redis" Version="2.*" />
     <PackageVersion Include="AWSSDK.S3" Version="4.*" />
     <PackageVersion Include="QuestPDF" Version="2025.*" />
@@ -100,7 +101,7 @@
     <PackageVersion Include="Testcontainers.Redis" Version="4.*" />
     <PackageVersion Include="Respawn" Version="6.*" />
     <PackageVersion Include="NetArchTest.Rules" Version="1.*" />
-    <PackageVersion Include="Verify.Xunit" Version="30.*" />
+    <PackageVersion Include="Verify.XunitV3" Version="30.*" />
     <PackageVersion Include="coverlet.collector" Version="6.*" />
   </ItemGroup>
 </Project>

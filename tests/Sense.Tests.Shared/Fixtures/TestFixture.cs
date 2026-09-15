@@ -13,6 +13,7 @@ using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Messaging;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
+using Sense.Shared.Kernel.Results;
 using Testcontainers.PostgreSql;
 using Xunit;
 
@@ -43,10 +44,9 @@ public abstract class TestFixture : IAsyncLifetime
     }
 
     /// <summary>Initialize the test container and services.</summary>
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
-        _postgresContainer = new PostgreSqlBuilder()
-            .WithImage("postgres:17-alpine")
+        _postgresContainer = new PostgreSqlBuilder("postgres:17-alpine")
             .WithDatabase("test_db")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -100,7 +100,7 @@ public abstract class TestFixture : IAsyncLifetime
     }
 
     /// <summary>Clean up resources.</summary>
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_postgresContainer != null)
         {

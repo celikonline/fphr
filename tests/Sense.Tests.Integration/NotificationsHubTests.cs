@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Sense.Api.Hubs;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Notifications;
@@ -14,7 +16,7 @@ namespace Sense.Tests.Integration;
 /// Integration tests for NotificationsHub.
 /// Tests connection lifecycle and group management.
 /// </summary>
-public class NotificationsHubTests
+public sealed class NotificationsHubTests : IDisposable
 {
     private NotificationsHub _hub = null!;
     private MockHubCallerClients _clients = null!;
@@ -49,6 +51,11 @@ public class NotificationsHubTests
         };
     }
 
+    public void Dispose()
+    {
+        _hub.Dispose();
+    }
+
     [Fact]
     public void GetTenantGroupName_ShouldReturnCorrectFormat()
     {
@@ -65,7 +72,7 @@ public class NotificationsHubTests
     /// <summary>
     /// Mock implementation of HubCallerClients for testing.
     /// </summary>
-    private class MockHubCallerClients : IHubCallerClients
+    private sealed class MockHubCallerClients : IHubCallerClients
     {
         public IClientProxy All => new MockClientProxy();
 
@@ -73,27 +80,29 @@ public class NotificationsHubTests
 
         public IClientProxy Others => new MockClientProxy();
 
-        public IClientProxy AllExcept(params string[] excludedConnectionIds) => new MockClientProxy();
+        public IClientProxy AllExcept(IReadOnlyList<string> excludedConnectionIds) => new MockClientProxy();
 
         public IClientProxy Client(string connectionId) => new MockClientProxy();
 
-        public IClientProxy Clients(IList<string> connectionIds) => new MockClientProxy();
+        public IClientProxy Clients(IReadOnlyList<string> connectionIds) => new MockClientProxy();
 
         public IClientProxy Group(string groupName) => new MockClientProxy();
 
-        public IClientProxy GroupExcept(string groupName, params string[] excludedConnectionIds) => new MockClientProxy();
+        public IClientProxy GroupExcept(string groupName, IReadOnlyList<string> excludedConnectionIds) => new MockClientProxy();
 
-        public IClientProxy Groups(IList<string> groupNames) => new MockClientProxy();
+        public IClientProxy Groups(IReadOnlyList<string> groupNames) => new MockClientProxy();
+
+        public IClientProxy OthersInGroup(string groupName) => new MockClientProxy();
 
         public IClientProxy User(string userId) => new MockClientProxy();
 
-        public IClientProxy Users(IList<string> userIds) => new MockClientProxy();
+        public IClientProxy Users(IReadOnlyList<string> userIds) => new MockClientProxy();
     }
 
     /// <summary>
     /// Mock implementation of ClientProxy for testing.
     /// </summary>
-    private class MockClientProxy : IClientProxy
+    private sealed class MockClientProxy : IClientProxy
     {
         public Task SendCoreAsync(string method, object?[] args, CancellationToken cancellationToken = default)
         {
@@ -104,53 +113,36 @@ public class NotificationsHubTests
     /// <summary>
     /// Mock implementation of HubCallerContext for testing.
     /// </summary>
-    private class MockHubCallerContext : HubCallerContext
+    private sealed class MockHubCallerContext : HubCallerContext
     {
         public MockHubCallerContext()
-            : base(new MockConnectionContext())
         {
+            ConnectionId = Guid.NewGuid().ToString();
+            User = new ClaimsPrincipal(
+                new ClaimsIdentity(
+                    new[] { new Claim("tenant", Guid.NewGuid().ToString()) },
+                    "test"));
         }
 
-        private class MockConnectionContext : ConnectionContext
-        {
-            public MockConnectionContext()
-            {
-                ConnectionId = Guid.NewGuid().ToString();
-                User = new System.Security.Claims.ClaimsPrincipal(
-                    new System.Security.Claims.ClaimsIdentity(
-                        new[]
-                        {
-                            new System.Security.Claims.Claim("tenant", Guid.NewGuid().ToString())
-                        },
-                        "test"));
-            }
+        public override string ConnectionId { get; }
 
-            public override string ConnectionId { get; }
+        public override string? UserIdentifier => null;
 
-            public override IFeatureCollection Features => new DefaultHttpContext().Features;
+        public override ClaimsPrincipal User { get; }
 
-            public override IDictionary<object, object?> Items => new Dictionary<object, object?>();
+        public override IDictionary<object, object?> Items { get; } = new Dictionary<object, object?>();
 
-            public override System.Net.IPAddress? RemoteIpAddress { get => null; set { } }
+        public override IFeatureCollection Features { get; } = new DefaultHttpContext().Features;
 
-            public override int? RemotePort { get => null; set { } }
+        public override CancellationToken ConnectionAborted => CancellationToken.None;
 
-            public override System.Net.IPAddress? LocalIpAddress { get => null; set { } }
-
-            public override int? LocalPort { get => null; set { } }
-
-            public override ClaimsPrincipal? User { get; set; }
-
-            public override CancellationToken ConnectionClosed { get; set; }
-
-            public override void Abort() { }
-        }
+        public override void Abort() { }
     }
 
     /// <summary>
     /// Mock implementation of GroupManager for testing.
     /// </summary>
-    private class MockGroupManager : IGroupManager
+    private sealed class MockGroupManager : IGroupManager
     {
         public Task AddToGroupAsync(string connectionId, string groupName, CancellationToken cancellationToken = default)
         {

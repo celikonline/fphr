@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sense.Modules.Identity.Application;
 using Sense.Modules.Documents.Domain.Documents;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Identity.Application.Roles;

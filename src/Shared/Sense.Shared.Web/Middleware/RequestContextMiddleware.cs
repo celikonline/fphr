@@ -1,4 +1,5 @@
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Observability;
 

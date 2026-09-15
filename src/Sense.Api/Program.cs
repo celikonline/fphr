@@ -41,6 +41,7 @@ try
     builder.Services.AddSenseAuthentication(builder.Configuration);
     builder.Services.AddHangfireServices(builder.Configuration);
     builder.Services.AddDataSeeding();
+    builder.Services.AddOptions<SeedingOptions>().Bind(builder.Configuration.GetSection(SeedingOptions.Section)).ValidateOnStart();
     builder.Services.AddSenseObservability(builder.Configuration, builder.Environment);
     builder.Services.AddSenseHealthChecks(builder.Configuration);
 

@@ -19,7 +19,7 @@ public sealed class TokenBuilder
     private Guid? _employeeId;
     private string _email = "test@example.com";
     private string _displayName = "Test User";
-    private bool _isPlatformAdmin = false;
+    private bool _isPlatformAdmin;
     private Guid? _impersonatorId;
     private Guid? _apiKeyId;
     private readonly List<string> _roles = new();
@@ -124,17 +124,17 @@ public sealed class TokenBuilder
 
         if (_employeeId.HasValue)
         {
-            claims.Add(new("employee_id", _employeeId.ToString()));
+            claims.Add(new("employee_id", _employeeId.Value.ToString()));
         }
 
         if (_impersonatorId.HasValue)
         {
-            claims.Add(new("impersonator_user_id", _impersonatorId.ToString()));
+            claims.Add(new("impersonator_user_id", _impersonatorId.Value.ToString()));
         }
 
         if (_apiKeyId.HasValue)
         {
-            claims.Add(new("api_key_id", _apiKeyId.ToString()));
+            claims.Add(new("api_key_id", _apiKeyId.Value.ToString()));
         }
 
         foreach (var role in _roles)

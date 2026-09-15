@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Sense.Shared.Contracts.Context;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
 using Xunit;

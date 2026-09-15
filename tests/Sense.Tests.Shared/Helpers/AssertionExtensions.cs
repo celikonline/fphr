@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
+using Sense.Shared.Kernel.Results;
 using Shouldly;
 
 namespace Sense.Tests.Shared.Helpers;
@@ -64,10 +66,10 @@ public static class AssertionExtensions
             message ?? $"Expected failure result but got success: {result.Value}");
     }
 
-    /// <summary>Assert that a result has a specific error type.</summary>
-    public static void ShouldHaveErrorType<T>(this Result<T> result, string expectedErrorType)
+    /// <summary>Assert that a result has a specific error code.</summary>
+    public static void ShouldHaveErrorType<T>(this Result<T> result, string expectedErrorCode)
     {
         result.IsFailure.ShouldBeTrue("Result should be a failure.");
-        result.Error?.Type.ShouldBe(expectedErrorType);
+        result.Error?.Code.ShouldBe(expectedErrorCode);
     }
 }

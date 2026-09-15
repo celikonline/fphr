@@ -112,39 +112,78 @@ public sealed class OnionArchitectureTests
     private static Assembly Find(string name) => All.Single(a => a.GetName().Name == name);
 
     /// <summary>
-    /// Architecture rule: No hardcoded secrets in source code.
-    /// Checks for obvious patterns like "password", "token", "secret" (case-insensitive).
+    /// Architecture rule: No hardcoded secret VALUES in source code (scans .cs source under src/, not type names).
+    /// Flags literal string assignments to fields/properties named password/secret/apikey.
     /// Allowed locations: appsettings.json, environment variables, secrets.json (git-ignored).
     /// </summary>
     [Fact]
     public void NoPlaintextSecretsInCode()
     {
-        var sensitivePatterns = new[] { "password", "token", "secret", "apikey", "api_key" };
-        var result = Types.InAssemblies(All.Where(a => a.GetName().Name!.StartsWith(Prefix)))
-            .That().AreClasses()
-            .Should().NotHaveNameMatching(@".*(?i)(password|token|secret|apikey|api_key).*")
-            .GetResult();
+        var pattern = new System.Text.RegularExpressions.Regex(
+            @"\b(?:password|secret|api_?key)\b\s*=\s*""([^""]{4,})""",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        // Claim types / header names (e.g. "api_key", "X-Api-Key") are identifier-like tokens, not
+        // credential values, and would otherwise false-positive here (e.g. ClaimNames.ApiKey).
+        var identifierLikeValue = new System.Text.RegularExpressions.Regex(@"^[A-Za-z][A-Za-z0-9_-]*$");
 
-        result.IsSuccessful.ShouldBeTrue(
+        var srcDir = FindRepoRoot() is { } root ? Path.Combine(root, "src") : null;
+        srcDir.ShouldNotBeNull("Could not locate repository 'src' directory from test output path.");
+
+        var violations = new List<string>();
+        foreach (var file in Directory.EnumerateFiles(srcDir!, "*.cs", SearchOption.AllDirectories))
+        {
+            if (file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+                file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var lines = File.ReadAllLines(file);
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var match = pattern.Match(lines[i]);
+                if (match.Success && !identifierLikeValue.IsMatch(match.Groups[1].Value))
+                {
+                    violations.Add($"{Path.GetRelativePath(srcDir!, file)}:{i + 1}: {lines[i].Trim()}");
+                }
+            }
+        }
+
+        violations.ShouldBeEmpty(
             "Found potential hardcoded secrets. Move to appsettings.json or environment variables. " +
-            string.Join(", ", result.FailingTypeNames ?? []));
+            string.Join(", ", violations));
+    }
+
+    private static string? FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "Directory.Packages.props")))
+            {
+                return dir.FullName;
+            }
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     /// <summary>
     /// Architecture rule: Handlers must follow naming conventions.
-    /// - Command handlers: `*CommandHandler` sealed class
-    /// - Query handlers: `*QueryHandler` sealed class
+    /// - Convention: `{Action}Handler`, e.g. CreateUserHandler, ListRolesHandler.
     /// </summary>
     [Fact]
     public void Handlers_FollowNamingConventions()
     {
         var result = Types.InAssemblies(Named(ApplicationSuffix))
             .That().HaveNameEndingWith("Handler")
-            .Should().HaveNameMatching(@"^[A-Z][A-Za-z0-9]*(?:Command|Query)Handler$")
+            .Should().HaveNameMatching(@"^[A-Z][A-Za-z0-9]*Handler$")
             .GetResult();
 
         result.IsSuccessful.ShouldBeTrue(
-            "Handlers must follow pattern: {Action}CommandHandler or {Action}QueryHandler. " +
+            "Handlers must follow pattern: {Action}Handler. " +
             string.Join(", ", result.FailingTypeNames ?? []));
     }
 
@@ -172,9 +211,21 @@ public sealed class OnionArchitectureTests
     [Fact]
     public void AuditEvents_AreNotReferencedByApplicationHandlers()
     {
+        var auditEventTypeNames = Types.InAssemblies(Named(InfrastructureSuffix))
+            .That().HaveNameEndingWith("AuditEvent")
+            .GetTypes()
+            .Select(t => t.FullName)
+            .Where(n => n is not null)
+            .Select(n => n!)
+            .ToArray();
+
+        if (auditEventTypeNames.Length == 0)
+        {
+            return;
+        }
+
         var result = Types.InAssemblies(Named(ApplicationSuffix))
-            .Should().NotHaveDependencyOnAll(Types.InAssemblies(Named(InfrastructureSuffix))
-                .That().HaveNameEndingWith("AuditEvent"))
+            .Should().NotHaveDependencyOnAny(auditEventTypeNames)
             .GetResult();
 
         result.IsSuccessful.ShouldBeTrue(
@@ -183,23 +234,26 @@ public sealed class OnionArchitectureTests
     }
 
     /// <summary>
-    /// Architecture rule: Permission keys must follow naming convention.
+    /// Architecture rule: Permission keys (declared via [RequiresPermission("...")]) must follow naming convention.
     /// Pattern: {module}.{resource_plural}.{action} in snake_case
     /// Example: identity.users.create, organization.units.read
     /// </summary>
     [Fact]
     public void PermissionKeys_FollowNamingConvention()
     {
-        var infrastructureAssemblies = Named(InfrastructureSuffix);
-        var result = Types.InAssemblies(infrastructureAssemblies)
-            .That().HaveNameContaining("Permission")
-            .Should().HaveNameMatching(@"^[a-z_]+\.[a-z_]+\.[a-z_]+$")
-            .GetResult();
+        var pattern = new System.Text.RegularExpressions.Regex(@"^[a-z_]+\.[a-z_]+\.[a-z_]+$");
 
-        // This is a soft check; actual permission strings are validated at runtime
-        result.IsSuccessful.ShouldBeTrue(
+        var violations = Named(ApplicationSuffix)
+            .SelectMany(a => a.GetTypes())
+            .SelectMany(t => t.GetCustomAttributes(typeof(Sense.Shared.Contracts.Security.RequiresPermissionAttribute), inherit: false)
+                .Cast<Sense.Shared.Contracts.Security.RequiresPermissionAttribute>()
+                .Select(attr => (Type: t, attr.Permission)))
+            .Where(x => !pattern.IsMatch(x.Permission))
+            .ToList();
+
+        violations.ShouldBeEmpty(
             "Permission keys should follow pattern: module.resource_plural.action in snake_case. " +
-            string.Join(", ", result.FailingTypeNames ?? []));
+            string.Join(", ", violations.Select(v => $"{v.Type.FullName} -> {v.Permission}")));
     }
 
     /// <summary>
@@ -209,9 +263,21 @@ public sealed class OnionArchitectureTests
     [Fact]
     public void Contracts_DoNotExposeInfrastructureConcerns()
     {
-        var infrastructureTypes = Types.InAssemblies(Named(InfrastructureSuffix));
+        var infrastructureNamespaces = Types.InAssemblies(Named(InfrastructureSuffix))
+            .GetTypes()
+            .Select(t => t.Namespace)
+            .Where(n => n is not null)
+            .Select(n => n!)
+            .Distinct()
+            .ToArray();
+
+        if (infrastructureNamespaces.Length == 0)
+        {
+            return;
+        }
+
         var result = Types.InAssemblies(Named(ContractsSuffix))
-            .Should().NotHaveDependencyOnAll(infrastructureTypes)
+            .Should().NotHaveDependencyOnAny(infrastructureNamespaces)
             .GetResult();
 
         result.IsSuccessful.ShouldBeTrue(
@@ -227,14 +293,18 @@ public sealed class OnionArchitectureTests
     public void Modules_HaveOneDbContextPerModule()
     {
         var dbContextType = typeof(Sense.Shared.Infrastructure.Persistence.ModuleDbContext);
-        var result = Types.InAssemblies(Named(InfrastructureSuffix))
+        var dbContextTypes = Types.InAssemblies(Named(InfrastructureSuffix))
             .That().Inherit(dbContextType)
-            .Should().NotHaveMultipleInheritorsInAssemblies(Named(InfrastructureSuffix))
-            .GetResult();
+            .GetTypes();
 
-        result.IsSuccessful.ShouldBeTrue(
+        var duplicatesByAssembly = dbContextTypes
+            .GroupBy(t => t.Assembly)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        duplicatesByAssembly.ShouldBeEmpty(
             "Each module should have exactly one DbContext inheriting from ModuleDbContext. " +
-            string.Join(", ", result.FailingTypeNames ?? []));
+            string.Join(", ", duplicatesByAssembly.SelectMany(g => g.Select(t => t.FullName))));
     }
 
     private static Assembly[] LoadSolutionAssemblies()

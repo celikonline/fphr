@@ -115,8 +115,8 @@ public sealed class TenantDbFactory
         });
 
         // Extract connection string from options
-        var extension = options.Extensions.FirstOrDefault(e => e is Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.NpgsqlOptionsExtension);
-        return (extension as Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.NpgsqlOptionsExtension)
+        var extension = options.Extensions.FirstOrDefault(e => e is Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.NpgsqlOptionsExtension);
+        return (extension as Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure.Internal.NpgsqlOptionsExtension)
             ?.ConnectionString ?? throw new InvalidOperationException("Could not determine connection string.");
     }
 

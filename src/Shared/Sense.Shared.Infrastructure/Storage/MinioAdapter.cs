@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
+using Minio.DataModel.Args;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Storage;
 using Sense.Shared.Infrastructure.Observability;
@@ -84,12 +85,12 @@ public sealed class MinioAdapter : IFileStorage
             }
 
             // Generate presigned upload URL
-            var presignedArgs = new PresignedGetObjectArgs()
+            var presignedArgs = new PresignedPutObjectArgs()
                 .WithBucket(isolatedBucket)
                 .WithObject(key)
                 .WithExpiry(_options.UploadExpirationMinutes * 60); // Convert to seconds
 
-            var uploadUrl = await _client.PresignedPutObjectAsync(presignedArgs, cancellationToken);
+            var uploadUrl = await _client.PresignedPutObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(_options.UploadExpirationMinutes);
             var requestId = Guid.CreateVersion7().ToString("N");
 
@@ -205,7 +206,7 @@ public sealed class MinioAdapter : IFileStorage
                 .WithObject(key)
                 .WithExpiry(expirationMinutes * 60); // Convert to seconds
 
-            var downloadUrl = await _client.PresignedGetObjectAsync(presignedArgs, cancellationToken);
+            var downloadUrl = await _client.PresignedGetObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
             _logger.LogInformation(

@@ -22,7 +22,7 @@ public class BackgroundJobServiceTests : IAsyncLifetime
     private IRecurringJobManager _recurringJobManager = null!;
     private IServiceProvider _serviceProvider = null!;
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         var services = new ServiceCollection();
 
@@ -122,9 +122,9 @@ public class BackgroundJobServiceTests : IAsyncLifetime
         Assert.True(true);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        _serviceProvider?.Dispose();
+        (_serviceProvider as IDisposable)?.Dispose();
         JobStorage.Current = null;
         await Task.CompletedTask;
     }
@@ -132,7 +132,7 @@ public class BackgroundJobServiceTests : IAsyncLifetime
     /// <summary>
     /// Mock notification service for testing.
     /// </summary>
-    private class MockNotificationService : INotificationService
+    private sealed class MockNotificationService : INotificationService
     {
         public Task SendToTenantAsync(Guid tenantId, NotificationDto notification)
         {

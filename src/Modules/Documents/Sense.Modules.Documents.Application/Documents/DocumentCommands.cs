@@ -27,7 +27,7 @@ public sealed class InitiateUploadValidator : AbstractValidator<InitiateUploadCo
         RuleFor(x => x.FileSizeBytes)
             .GreaterThan(0)
             .LessThanOrEqualTo(DocumentsLimits.MaxFileSize);
-        RuleFor(x => x.BucketName).Empty().Or().MaximumLength(50);
+        RuleFor(x => x.BucketName).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.BucketName));
     }
 }
 
