@@ -98,6 +98,9 @@ export interface EmployeeDetail {
   leaveAccrualStartDate: string | null;
   /** Derived: validFrom of the career record in effect today. */
   positionStartDate: string | null;
+  /** Resolved from the employee's org placement; missing when not assigned. */
+  departmentName?: string | null;
+  titleName?: string | null;
 }
 
 /**
