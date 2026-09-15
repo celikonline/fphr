@@ -1,10 +1,8 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, Eye, ListChecks, ListOrdered, Pencil, RotateCcw, Undo2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ActionIcon, Button, Card, Group, Skeleton, Text, Title, Tooltip } from "@mantine/core";
+import { CalendarDays, Eye, ListChecks, ListOrdered, Pencil, RotateCcw, Undo2, type LucideIcon } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -85,19 +83,19 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <Group justify="space-between" align="flex-start" gap="sm">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold">
+          <Title order={1} size="h2" className="flex items-center gap-2">
             <CalendarDays className="h-6 w-6" /> {t("leave:my.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("leave:my.subtitle")}</p>
+          </Title>
+          <Text c="dimmed">{t("leave:my.subtitle")}</Text>
         </div>
         {canRequests && (
           <Button type="button" onClick={() => setDialog({ mode: "add" })}>
             {t("leave:my.newRequest")}
           </Button>
         )}
-      </div>
+      </Group>
 
       {canBalances && (
         <LeaveBalanceSummary
@@ -106,8 +104,8 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           emptyMessage={balancesQuery.isError ? getApiErrorMessage(balancesQuery.error, t("leave:summary.unavailable")) : undefined}
           action={
             balancesQuery.data ? (
-              <Button type="button" size="sm" variant="outline" onClick={() => setLedgerOpen(true)}>
-                <ListOrdered className="mr-2 h-4 w-4" /> {t("leave:summary.details")}
+              <Button type="button" size="sm" variant="default" leftSection={<ListOrdered className="h-4 w-4" />} onClick={() => setLedgerOpen(true)}>
+                {t("leave:summary.details")}
               </Button>
             ) : undefined
           }
@@ -115,46 +113,40 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
       )}
 
       {canRequests && (
-        <Card>
-          <CardHeader className="flex flex-row items-center gap-2 space-y-0 pb-3">
-            <ListChecks className="h-4 w-4 text-muted-foreground" />
-            <CardTitle className="text-lg">{t("leave:requests.title")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {requestsQuery.isLoading ? (
-              <Skeleton className="h-32 w-full" />
-            ) : requestsQuery.isError ? (
-              <p className="text-sm text-destructive">{getApiErrorMessage(requestsQuery.error, t("leave:genericError"))}</p>
-            ) : (
-              <LeaveRequestsTable
-                requests={requestsQuery.data ?? []}
-                typeName={typeName}
-                onOpen={(request) => setDetailId(request.id)}
-                actions={(request) => (
-                  <div className="flex justify-end gap-1">
-                    <Button type="button" variant="ghost" size="icon" title={t("leave:detail.open")} onClick={() => setDetailId(request.id)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {request.status === "pending" && (
-                      <>
-                        <Button type="button" variant="ghost" size="icon" title={t("leave:my.edit")} onClick={() => setDialog({ mode: "edit", request })}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button type="button" variant="ghost" size="icon" title={t("leave:my.withdraw")} onClick={() => setWithdrawing(request)}>
-                          <Undo2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
-                    {request.status === "rejected" && (
-                      <Button type="button" variant="ghost" size="icon" title={t("leave:my.resubmit")} onClick={() => setDialog({ mode: "resubmit", request })}>
-                        <RotateCcw className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              />
-            )}
-          </CardContent>
+        <Card withBorder padding="lg">
+          <Group gap="xs" mb="md" wrap="nowrap">
+            <ListChecks className="h-4 w-4" color="var(--mantine-color-dimmed)" />
+            <Title order={2} size="h4">
+              {t("leave:requests.title")}
+            </Title>
+          </Group>
+          {requestsQuery.isLoading ? (
+            <Skeleton h={128} />
+          ) : requestsQuery.isError ? (
+            <Text size="sm" c="red">
+              {getApiErrorMessage(requestsQuery.error, t("leave:genericError"))}
+            </Text>
+          ) : (
+            <LeaveRequestsTable
+              requests={requestsQuery.data ?? []}
+              typeName={typeName}
+              onOpen={(request) => setDetailId(request.id)}
+              actions={(request) => (
+                <Group justify="flex-end" gap={4} wrap="nowrap">
+                  <RowAction icon={Eye} label={t("leave:detail.open")} onClick={() => setDetailId(request.id)} />
+                  {request.status === "pending" && (
+                    <>
+                      <RowAction icon={Pencil} label={t("leave:my.edit")} onClick={() => setDialog({ mode: "edit", request })} />
+                      <RowAction icon={Undo2} label={t("leave:my.withdraw")} onClick={() => setWithdrawing(request)} />
+                    </>
+                  )}
+                  {request.status === "rejected" && (
+                    <RowAction icon={RotateCcw} label={t("leave:my.resubmit")} onClick={() => setDialog({ mode: "resubmit", request })} />
+                  )}
+                </Group>
+              )}
+            />
+          )}
         </Card>
       )}
 
@@ -224,6 +216,17 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
         onConfirm={() => withdrawing && withdrawMutation.mutate(withdrawing)}
       />
     </div>
+  );
+}
+
+/** Icon-only row action with a tooltip; the label doubles as the accessible name. */
+function RowAction({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
+  return (
+    <Tooltip label={label}>
+      <ActionIcon type="button" variant="subtle" color="gray" size="lg" aria-label={label} onClick={onClick}>
+        <Icon className="h-4 w-4" />
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
