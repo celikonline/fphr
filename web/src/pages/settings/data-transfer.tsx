@@ -1,10 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import { Card, SimpleGrid, Skeleton, Stack, Tabs, Text, Title } from "@mantine/core";
 import { ArrowLeftRight } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import ImportHistory from "@/components/data-transfer/import-history";
@@ -34,56 +32,59 @@ function DataTransferCenter() {
     queryFn: () => listImportTemplates(lang),
   });
 
-  function onTabChange(value: string) {
+  function onTabChange(value: string | null) {
+    if (!value) return;
     setSearchParams(value === "import" ? {} : { tab: value }, { replace: true });
   }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <ArrowLeftRight className="h-6 w-6" /> {t("dataTransfer:title")}
-        </h1>
-        <p className="text-muted-foreground">{t("dataTransfer:subtitle")}</p>
+        <Title order={2} className="flex items-center gap-2">
+          <ArrowLeftRight size={24} /> {t("dataTransfer:title")}
+        </Title>
+        <Text c="dimmed">{t("dataTransfer:subtitle")}</Text>
       </div>
 
-      <Tabs value={tab} onValueChange={onTabChange}>
-        <TabsList>
-          <TabsTrigger value="import">{t("dataTransfer:tabs.import")}</TabsTrigger>
-          <TabsTrigger value="history">{t("dataTransfer:tabs.history")}</TabsTrigger>
-        </TabsList>
+      <Tabs value={tab} onChange={onTabChange}>
+        <Tabs.List>
+          <Tabs.Tab value="import">{t("dataTransfer:tabs.import")}</Tabs.Tab>
+          <Tabs.Tab value="history">{t("dataTransfer:tabs.history")}</Tabs.Tab>
+        </Tabs.List>
 
-        <TabsContent value="import" className="space-y-6 pt-4">
-          <ImportRules />
-          {templatesQuery.isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
-            </div>
-          ) : templatesQuery.isError ? (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-destructive">
-                {t("dataTransfer:templates.loadError")}
-              </CardContent>
-            </Card>
-          ) : !templatesQuery.data || templatesQuery.data.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center text-sm text-muted-foreground">
-                {t("dataTransfer:templates.empty")}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {templatesQuery.data.map((template) => (
-                <TemplateCard key={template.code} template={template} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+        <Tabs.Panel value="import" pt="md">
+          <Stack gap="lg">
+            <ImportRules />
+            {templatesQuery.isLoading ? (
+              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                <Skeleton h={256} />
+                <Skeleton h={256} />
+              </SimpleGrid>
+            ) : templatesQuery.isError ? (
+              <Card withBorder padding="lg">
+                <Text size="sm" c="red" ta="center">
+                  {t("dataTransfer:templates.loadError")}
+                </Text>
+              </Card>
+            ) : !templatesQuery.data || templatesQuery.data.length === 0 ? (
+              <Card withBorder padding="lg">
+                <Text size="sm" c="dimmed" ta="center">
+                  {t("dataTransfer:templates.empty")}
+                </Text>
+              </Card>
+            ) : (
+              <SimpleGrid cols={{ base: 1, md: 2 }} spacing="md">
+                {templatesQuery.data.map((template) => (
+                  <TemplateCard key={template.code} template={template} />
+                ))}
+              </SimpleGrid>
+            )}
+          </Stack>
+        </Tabs.Panel>
 
-        <TabsContent value="history" className="pt-4">
+        <Tabs.Panel value="history" pt="md">
           <ImportHistory templates={templatesQuery.data} />
-        </TabsContent>
+        </Tabs.Panel>
       </Tabs>
     </div>
   );

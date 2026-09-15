@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Badge, Button, Card, Group, Skeleton, Stack, Switch, Table, Text, Title } from "@mantine/core";
 import { BellRing } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -72,79 +67,93 @@ function NotificationPreferences() {
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          <BellRing className="h-6 w-6" /> {t("notifications:preferences.title")}
-        </h1>
-        <p className="text-muted-foreground">{t("notifications:preferences.subtitle")}</p>
+        <Title order={2} className="flex items-center gap-2">
+          <BellRing size={24} /> {t("notifications:preferences.title")}
+        </Title>
+        <Text c="dimmed">{t("notifications:preferences.subtitle")}</Text>
       </div>
 
-      <Card>
-        <CardContent className="overflow-x-auto p-0">
-          {query.isLoading ? (
-            <div className="space-y-2 p-4">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : query.isError ? (
-            <p className="p-4 text-sm text-destructive">{t("notifications:preferences.loadError")}</p>
-          ) : rows.length === 0 ? (
-            <p className="p-4 text-sm text-muted-foreground">{t("notifications:preferences.empty")}</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t("notifications:preferences.notification")}</TableHead>
+      <Card withBorder padding={0}>
+        {query.isLoading ? (
+          <Stack gap="xs" p="md">
+            {Array.from({ length: 4 }, (_, i) => (
+              <Skeleton key={i} h={40} />
+            ))}
+          </Stack>
+        ) : query.isError ? (
+          <Text size="sm" c="red" p="md">
+            {t("notifications:preferences.loadError")}
+          </Text>
+        ) : rows.length === 0 ? (
+          <Text size="sm" c="dimmed" p="md">
+            {t("notifications:preferences.empty")}
+          </Text>
+        ) : (
+          <Table.ScrollContainer minWidth={480}>
+            <Table verticalSpacing="sm" horizontalSpacing="md">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>{t("notifications:preferences.notification")}</Table.Th>
                   {CHANNELS.map(({ channel, labelKey }) => (
-                    <TableHead key={channel} className="w-28 text-center">
+                    <Table.Th key={channel} w={112} ta="center">
                       {t(labelKey)}
-                    </TableHead>
+                    </Table.Th>
                   ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
                 {rows.map((row) => (
-                  <TableRow key={row.templateKey}>
-                    <TableCell>
-                      <div className="font-medium">
+                  <Table.Tr key={row.templateKey}>
+                    <Table.Td>
+                      <Text size="sm" fw={500}>
                         {t(`notifications:template.${row.templateKey}`, { defaultValue: row.templateKey })}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        {t(`notifications:category.${row.category}`, { defaultValue: row.category })}
-                        {row.isMandatory && <Badge variant="secondary">{t("notifications:preferences.mandatory")}</Badge>}
-                      </div>
-                    </TableCell>
+                      </Text>
+                      <Group gap="xs">
+                        <Text size="xs" c="dimmed">
+                          {t(`notifications:category.${row.category}`, { defaultValue: row.category })}
+                        </Text>
+                        {row.isMandatory && (
+                          <Badge variant="light" color="gray" size="sm">
+                            {t("notifications:preferences.mandatory")}
+                          </Badge>
+                        )}
+                      </Group>
+                    </Table.Td>
                     {CHANNELS.map(({ channel, labelKey }) => {
                       const setting = row.channels.find((c) => c.channel === channel);
                       return (
-                        <TableCell key={channel} className="text-center">
+                        <Table.Td key={channel}>
                           {setting ? (
-                            <Switch
-                              checked={isEnabled(row, channel, setting.enabled)}
-                              disabled={!canManage || setting.locked || row.isMandatory}
-                              onCheckedChange={(value) => toggle(row, channel, value)}
-                              aria-label={t(labelKey)}
-                            />
+                            <Group justify="center">
+                              <Switch
+                                checked={isEnabled(row, channel, setting.enabled)}
+                                disabled={!canManage || setting.locked || row.isMandatory}
+                                onChange={(event) => toggle(row, channel, event.currentTarget.checked)}
+                                aria-label={t(labelKey)}
+                              />
+                            </Group>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <Text span c="dimmed" display="block" ta="center">
+                              -
+                            </Text>
                           )}
-                        </TableCell>
+                        </Table.Td>
                       );
                     })}
-                  </TableRow>
+                  </Table.Tr>
                 ))}
-              </TableBody>
+              </Table.Tbody>
             </Table>
-          )}
-        </CardContent>
+          </Table.ScrollContainer>
+        )}
       </Card>
 
       {canManage && (
-        <div className="flex justify-end">
+        <Group justify="flex-end">
           <Button onClick={() => save.mutate()} disabled={changes.length === 0 || save.isPending}>
             {t("notifications:preferences.save")}
           </Button>
-        </div>
+        </Group>
       )}
     </div>
   );

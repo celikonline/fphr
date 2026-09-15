@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Card, CardContent } from "@/components/ui/card";
+import { Anchor, Card, Text } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import PaginationFooter from "@/components/pagination-footer";
 import { formatDateTime } from "@/lib/dates";
@@ -59,9 +59,16 @@ export default function ImportHistory({ templates }: ImportHistoryProps) {
       meta: { label: t("dataTransfer:history.template"), cellClassName: "font-medium" },
       cell: ({ row }) => (
         // A real link keeps the job reachable from the keyboard; the row click covers the mouse.
-        <Link to={jobPath(row.original.id)} className="hover:underline" onClick={(e) => e.stopPropagation()}>
+        <Anchor
+          component={Link}
+          to={jobPath(row.original.id)}
+          c="inherit"
+          fw={500}
+          size="sm"
+          onClick={(e) => e.stopPropagation()}
+        >
           {templateName(row.original.templateCode)}
-        </Link>
+        </Anchor>
       ),
     },
     {
@@ -99,7 +106,9 @@ export default function ImportHistory({ templates }: ImportHistoryProps) {
       meta: { label: t("dataTransfer:counts.errors"), headerClassName: "text-right", cellClassName: "text-right tabular-nums" },
       cell: ({ row }) =>
         row.original.errorCount > 0 ? (
-          <span className="text-destructive">{row.original.errorCount}</span>
+          <Text span c="red" inherit>
+            {row.original.errorCount}
+          </Text>
         ) : (
           row.original.errorCount
         ),
@@ -129,10 +138,10 @@ export default function ImportHistory({ templates }: ImportHistoryProps) {
 
   if (isError) {
     return (
-      <Card>
-        <CardContent className="p-0">
-          <p className="p-6 text-center text-sm text-destructive">{t("dataTransfer:history.loadError")}</p>
-        </CardContent>
+      <Card withBorder padding="lg">
+        <Text size="sm" c="red" ta="center">
+          {t("dataTransfer:history.loadError")}
+        </Text>
       </Card>
     );
   }
@@ -142,19 +151,17 @@ export default function ImportHistory({ templates }: ImportHistoryProps) {
       <div className="flex justify-end">
         <DataTableViewOptions table={table} />
       </div>
-      <Card>
-        <CardContent className="p-0">
-          <DataTable
-            table={table}
-            isLoading={isLoading}
-            isFetching={isFetching}
-            emptyMessage={t("dataTransfer:history.empty")}
-            onRowClick={(job) => navigate(jobPath(job.id))}
-          />
-          {data && (
-            <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />
-          )}
-        </CardContent>
+      <Card withBorder padding={0}>
+        <DataTable
+          table={table}
+          isLoading={isLoading}
+          isFetching={isFetching}
+          emptyMessage={t("dataTransfer:history.empty")}
+          onRowClick={(job) => navigate(jobPath(job.id))}
+        />
+        {data && (
+          <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />
+        )}
       </Card>
     </div>
   );
