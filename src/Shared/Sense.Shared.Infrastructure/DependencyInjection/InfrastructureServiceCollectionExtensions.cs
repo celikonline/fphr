@@ -60,6 +60,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(TracingBehaviour<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(ValidationBehaviour<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(AuthorizationBehaviour<,>)));
+        services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(AccessSettingsAuthorizationBehaviour<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(UnitOfWorkBehaviour<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Scoped(typeof(IPipelineBehaviour<,>), typeof(CachingBehaviour<,>)));
 

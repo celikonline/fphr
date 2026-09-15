@@ -83,3 +83,22 @@ public sealed class RequiresModuleAttribute(string moduleCode) : Attribute
 {
     public string ModuleCode { get; } = moduleCode;
 }
+
+/// <summary>
+/// Kiracının "Erişim ayarları" (TenantSettings.Access.*) anahtarlarını çözer (Identity modülü uygular; Faz 0 madde 1).
+/// <see cref="IPermissionService"/> ile aynı desen: izinler "yapabilir mi", erişim ayarları "kiracı bu özelliği
+/// açık mı tuttu" sorusunu yanıtlar. Anahtar kataloğu tüketen modülün Contracts projesindedir (ör. Identity.Contracts
+/// AccessSettingKeys); bu arayüz ve <see cref="RequiresAccessSettingAttribute"/> modülden bağımsızdır.
+/// </summary>
+public interface IAccessSettingsService
+{
+    /// <summary>Anahtar tanınmıyorsa veya kiracı bağlamı yoksa <c>true</c> döner (güvenli varsayılan: kısıtlama yok — bunlar görünürlük anahtarlarıdır, yetki değil).</summary>
+    Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Handler'ın belirli bir "Erişim ayarı" açık olmadıkça çalışmamasını bildirir; AccessSettingsAuthorizationBehaviour denetler.</summary>
+[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
+public sealed class RequiresAccessSettingAttribute(string key) : Attribute
+{
+    public string Key { get; } = key;
+}

@@ -43,6 +43,12 @@ public abstract class TestFixture : IAsyncLifetime
     {
     }
 
+    /// <summary>
+    /// Override to run one-time async setup once the container/ServiceProvider are ready (e.g. module DbContext
+    /// migrations for a test that registers a real module via <see cref="ConfigureServices"/>).
+    /// </summary>
+    protected virtual Task OnDatabaseReadyAsync() => Task.CompletedTask;
+
     /// <summary>Initialize the test container and services.</summary>
     public async ValueTask InitializeAsync()
     {
@@ -54,14 +60,6 @@ public abstract class TestFixture : IAsyncLifetime
 
         await _postgresContainer.StartAsync();
         var connectionString = _postgresContainer.GetConnectionString();
-
-        // Setup respawner for database cleanup between tests
-        var options = new RespawnerOptions
-        {
-            DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents" },
-        };
-        _respawner = await Respawner.CreateAsync(connectionString, options);
 
         // Build service collection with shared infrastructure
         var services = new ServiceCollection();
@@ -86,6 +84,9 @@ public abstract class TestFixture : IAsyncLifetime
         services.AddSingleton(TimeProvider.System);
         Clock = TimeProvider.System;
 
+        // LoggingBehaviour (pipeline) requires ILogger<> to be resolvable for every request type.
+        services.AddLogging();
+
         // Register core infrastructure
         services.AddSenseCore(config);
 
@@ -97,6 +98,33 @@ public abstract class TestFixture : IAsyncLifetime
         TenantContextSetter = ServiceProvider.GetRequiredService<ITenantContextSetter>();
         TenantContextAccessor = ServiceProvider.GetRequiredService<ITenantContext>();
         CurrentUser = ServiceProvider.GetRequiredService<ICurrentUser>();
+
+        // Runs pending module migrations (if a test's ConfigureServices registered a real module DbContext);
+        // must happen before the respawner is created, otherwise there are no tables yet to track/reset.
+        await OnDatabaseReadyAsync();
+
+        // Setup respawner for database cleanup between tests. The string-based CreateAsync overload only
+        // infers DbAdapter.SqlServer; Postgres requires the DbConnection overload explicitly (Respawn 6.x).
+        // A fixture that never registers a module (no tables at all) leaves _respawner null; ResetDatabaseAsync
+        // then no-ops instead of throwing "No tables found".
+        var options = new RespawnerOptions
+        {
+            DbAdapter = DbAdapter.Postgres,
+            SchemasToInclude = new[] { "public", "identity", "org", "employee", "leave", "documents" },
+        };
+
+        await using (var respawnerConnection = new Npgsql.NpgsqlConnection(connectionString))
+        {
+            await respawnerConnection.OpenAsync();
+            try
+            {
+                _respawner = await Respawner.CreateAsync(respawnerConnection, options);
+            }
+            catch (InvalidOperationException)
+            {
+                _respawner = null;
+            }
+        }
     }
 
     /// <summary>Clean up resources.</summary>
@@ -111,12 +139,17 @@ public abstract class TestFixture : IAsyncLifetime
         (ServiceProvider as IAsyncDisposable)?.DisposeAsync().AsTask().GetAwaiter().GetResult();
     }
 
-    /// <summary>Reset database between tests.</summary>
+    /// <summary>Reset database between tests. No-ops if no module ever registered a table (nothing to reset).</summary>
     public async Task ResetDatabaseAsync()
     {
-        if (_respawner == null || _postgresContainer == null)
+        if (_postgresContainer == null)
         {
             throw new InvalidOperationException("Test fixture not initialized.");
+        }
+
+        if (_respawner == null)
+        {
+            return;
         }
 
         var connectionString = _postgresContainer.GetConnectionString();

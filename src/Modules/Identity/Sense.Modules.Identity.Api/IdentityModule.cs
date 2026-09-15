@@ -53,6 +53,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IDataScopeService, DataScopeService>();
+        services.AddScoped<IAccessSettingsService, AccessSettingsService>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();

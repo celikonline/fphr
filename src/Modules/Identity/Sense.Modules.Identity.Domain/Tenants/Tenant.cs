@@ -46,6 +46,15 @@ public sealed class Tenant : AggregateRoot<Guid>
     /// <summary>Kiracı ayarları (jsonb): 2FA politikası, parola politikası, oturum süresi vb.</summary>
     public string SettingsJson { get; private set; } = IdentityLimits.EmptyJsonObject;
 
+    /// <summary>
+    /// Erişim ayarları sayfası (jsonb, ayrı kolon): ana sayfa/hesap/takvim görünürlük anahtarları.
+    /// KASITLI: <see cref="TenantAccessSettings.Default"/> paylaşılan tekil örneğini burada ATAMA — birden fazla
+    /// Tenant aynı CLR referansını "owned" varlık olarak paylaşırsa EF Core change tracker'ı karışır
+    /// (aynı anda birden çok kiracıya sahip aynı nesne, farklı TenantId gölge anahtarıyla izlenmeye çalışılır).
+    /// Her örnek kendi (değer olarak eşit ama referans olarak farklı) kaydını alır.
+    /// </summary>
+    public TenantAccessSettings AccessSettings { get; private set; } = new();
+
     public DateTime? SuspendedAt { get; private set; }
 
     public string? SuspendReason { get; private set; }
@@ -92,6 +101,9 @@ public sealed class Tenant : AggregateRoot<Guid>
     }
 
     public void UpdateSettings(string settingsJson) => SettingsJson = Guard.NotEmpty(settingsJson);
+
+    /// <summary>Erişim ayarları sayfası "Kaydet" eylemi: 11 anahtar birlikte, anında etkili biçimde değiştirilir.</summary>
+    public void UpdateAccessSettings(TenantAccessSettings settings) => AccessSettings = settings;
 
     public Result Activate()
     {
