@@ -1,5 +1,4 @@
 using FluentValidation;
-using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Contracts.Events;
@@ -41,11 +40,7 @@ public sealed class SubmitApprovalRequestHandler(
     IApprovalRequestRepository requests,
     IApprovalPolicyRepository policies,
     IApproverResolver resolver,
-    IEmailTokenGenerator tokenGenerator,
-    IWorkflowFrontendLinks frontendLinks,
-    IApprovalMailer mailer,
-    IEmailDecisionTokenRepository tokenRepository,
-    IEmployeeDirectory employeeDirectory,
+    IIntegrationEventOutbox outbox,
     TimeProvider clock) : ICommandHandler<SubmitApprovalRequestCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(SubmitApprovalRequestCommand command, CancellationToken cancellationToken)
@@ -100,8 +95,8 @@ public sealed class SubmitApprovalRequestHandler(
         var request = submitted.Value;
         requests.Add(request);
 
-        await ApprovalDecisionEffects.SendCurrentTaskEmailAsync(
-            request, tenant.TenantId, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, clock, cancellationToken);
+        outbox.Enqueue(new ApprovalRequested(tenant.TenantId, request.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId));
+        ApprovalDecisionEffects.EnqueueCurrentTaskAssigned(request, tenant.TenantId, outbox);
 
         return request.Id;
     }
@@ -153,11 +148,6 @@ public sealed class DecideApprovalTaskHandler(
     ITenantContext tenant,
     IApprovalRequestRepository requests,
     IRoleAssignmentLookup roleAssignments,
-    IEmailTokenGenerator tokenGenerator,
-    IWorkflowFrontendLinks frontendLinks,
-    IApprovalMailer mailer,
-    IEmailDecisionTokenRepository tokenRepository,
-    IEmployeeDirectory employeeDirectory,
     IIntegrationEventOutbox outbox,
     TimeProvider clock) : ICommandHandler<DecideApprovalTaskCommand>
 {
@@ -188,8 +178,7 @@ public sealed class DecideApprovalTaskHandler(
             return decided.Error;
         }
 
-        await ApprovalDecisionEffects.ApplyPostDecideEffectsAsync(
-            request, tenant.TenantId, task.StepNumber, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, outbox, clock, cancellationToken);
+        ApprovalDecisionEffects.ApplyPostDecideEffects(request, tenant.TenantId, task.StepNumber, outbox);
 
         return Result.Success();
     }
@@ -213,11 +202,6 @@ public sealed class OverrideDecideApprovalTaskValidator : AbstractValidator<Over
 public sealed class OverrideDecideApprovalTaskHandler(
     ITenantContext tenant,
     IApprovalRequestRepository requests,
-    IEmailTokenGenerator tokenGenerator,
-    IWorkflowFrontendLinks frontendLinks,
-    IApprovalMailer mailer,
-    IEmailDecisionTokenRepository tokenRepository,
-    IEmployeeDirectory employeeDirectory,
     IIntegrationEventOutbox outbox,
     TimeProvider clock) : ICommandHandler<OverrideDecideApprovalTaskCommand>
 {
@@ -240,8 +224,7 @@ public sealed class OverrideDecideApprovalTaskHandler(
             return decided.Error;
         }
 
-        await ApprovalDecisionEffects.ApplyPostDecideEffectsAsync(
-            request, tenant.TenantId, task.StepNumber, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, outbox, clock, cancellationToken);
+        ApprovalDecisionEffects.ApplyPostDecideEffects(request, tenant.TenantId, task.StepNumber, outbox);
 
         return Result.Success();
     }
@@ -263,9 +246,6 @@ public sealed class DecideByEmailTokenHandler(
     IEmailDecisionTokenRepository tokenRepository,
     IApprovalRequestRepository requests,
     IEmailTokenGenerator tokenGenerator,
-    IWorkflowFrontendLinks frontendLinks,
-    IApprovalMailer mailer,
-    IEmployeeDirectory employeeDirectory,
     IIntegrationEventOutbox outbox,
     TimeProvider clock) : ICommandHandler<DecideByEmailTokenCommand>
 {
@@ -316,8 +296,7 @@ public sealed class DecideByEmailTokenHandler(
             return decided.Error;
         }
 
-        await ApprovalDecisionEffects.ApplyPostDecideEffectsAsync(
-            request, request.TenantId, task.StepNumber, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, outbox, clock, cancellationToken);
+        ApprovalDecisionEffects.ApplyPostDecideEffects(request, request.TenantId, task.StepNumber, outbox);
 
         return Result.Success();
     }
@@ -325,29 +304,18 @@ public sealed class DecideByEmailTokenHandler(
 
 /// <summary>
 /// Post-decision effects shared by DecideApprovalTaskCommand, OverrideDecideApprovalTaskCommand and
-/// DecideByEmailTokenCommand (and, for the first task, SubmitApprovalRequestCommand): mint+email a decision token
-/// for whichever task is now current, or - once the request reaches a terminal state - enqueue the integration event.
+/// DecideByEmailTokenCommand (and, for the first task, SubmitApprovalRequestCommand): enqueue ApprovalTaskAssigned for
+/// whichever task is now current, or - once the request reaches a terminal state - ApprovalCompleted/ApprovalRejected.
+/// Notifications consumes these (e-mail + in-app); the decision token is minted at e-mail send time through
+/// IApprovalDecisionLinkIssuer, not here.
 /// </summary>
 internal static class ApprovalDecisionEffects
 {
-    private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(7);
-
-    public static async Task ApplyPostDecideEffectsAsync(
-        ApprovalRequest request,
-        Guid tenantId,
-        int decidedStepNumber,
-        IEmailTokenGenerator tokenGenerator,
-        IWorkflowFrontendLinks frontendLinks,
-        IApprovalMailer mailer,
-        IEmailDecisionTokenRepository tokenRepository,
-        IEmployeeDirectory employeeDirectory,
-        IIntegrationEventOutbox outbox,
-        TimeProvider clock,
-        CancellationToken cancellationToken)
+    public static void ApplyPostDecideEffects(ApprovalRequest request, Guid tenantId, int decidedStepNumber, IIntegrationEventOutbox outbox)
     {
         if (request.Status == ApprovalRequestStatus.Pending)
         {
-            await SendCurrentTaskEmailAsync(request, tenantId, tokenGenerator, frontendLinks, mailer, tokenRepository, employeeDirectory, clock, cancellationToken);
+            EnqueueCurrentTaskAssigned(request, tenantId, outbox);
             return;
         }
 
@@ -361,36 +329,15 @@ internal static class ApprovalDecisionEffects
         }
     }
 
-    /// <summary>Mints and emails a single-use decision token for the request's current task - only when it has a concrete assignee.</summary>
-    public static async Task SendCurrentTaskEmailAsync(
-        ApprovalRequest request,
-        Guid tenantId,
-        IEmailTokenGenerator tokenGenerator,
-        IWorkflowFrontendLinks frontendLinks,
-        IApprovalMailer mailer,
-        IEmailDecisionTokenRepository tokenRepository,
-        IEmployeeDirectory employeeDirectory,
-        TimeProvider clock,
-        CancellationToken cancellationToken)
+    public static void EnqueueCurrentTaskAssigned(ApprovalRequest request, Guid tenantId, IIntegrationEventOutbox outbox)
     {
-        if (request.CurrentTask?.ApproverEmployeeId is not { } approverEmployeeId)
+        if (request.CurrentTask is not { } task)
         {
             return;
         }
 
-        var contacts = await employeeDirectory.GetContactsAsync(tenantId, [approverEmployeeId], cancellationToken);
-        var contact = contacts.FirstOrDefault();
-        var email = contact?.WorkEmail ?? contact?.PersonalEmail;
-        if (contact is null || string.IsNullOrWhiteSpace(email))
-        {
-            return;
-        }
-
-        var rawToken = tokenGenerator.NewToken();
-        var expiresAt = clock.GetUtcNow().UtcDateTime.Add(TokenLifetime);
-        tokenRepository.Add(new EmailDecisionToken(request.CurrentTask.Id, tenantId, tokenGenerator.Hash(rawToken), expiresAt));
-
-        var approverName = $"{contact.FirstName} {contact.LastName}".Trim();
-        await mailer.SendDecisionRequestAsync(email, approverName, request.RequestType, frontendLinks.DecisionLink(rawToken), expiresAt, cancellationToken);
+        outbox.Enqueue(new ApprovalTaskAssigned(
+            tenantId, request.Id, task.Id, request.RequestType, request.SubjectId, request.RequesterEmployeeId,
+            task.StepNumber, task.ApproverEmployeeId, task.FallbackRoleCode));
     }
 }

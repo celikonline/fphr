@@ -17,17 +17,6 @@ public interface IWorkflowFrontendLinks
     string DecisionLink(string rawToken);
 }
 
-/// <summary>
-/// Sends the "you have a pending approval" email carrying the single-use decision link. B1 uses a minimal inline
-/// TR-only body via Sense.Shared.Contracts.Notifications.IEmailSender - real per-tenant/localized templating is
-/// B2 Notifications' job (see plan §9 kapsam dışı).
-/// </summary>
-public interface IApprovalMailer
-{
-    Task SendDecisionRequestAsync(
-        string toEmail, string toName, string requestType, string decisionUrl, DateTime expiresAtUtc, CancellationToken ct);
-}
-
 /// <summary>Result of resolving who should decide a newly-submitted request, and where that resolution came from (for the request's snapshot fields).</summary>
 public sealed record ApproverResolution(
     IReadOnlyList<ApprovalTaskSeed> Steps, Guid? PolicyId, string? PolicyName, Guid? ResolvedFromOrgUnitId, bool ResolvedByInheritance);
