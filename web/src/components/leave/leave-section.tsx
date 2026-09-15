@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -413,7 +414,7 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
                 {t("leave:actions.effectiveDate")}
                 <span className="text-destructive"> *</span>
               </Label>
-              <Input id="adjust-date" type="date" value={effectiveDate} disabled={busy} onChange={(e) => setEffectiveDate(e.target.value)} />
+              <DatePicker id="adjust-date" value={effectiveDate} disabled={busy} onChange={setEffectiveDate} />
             </div>
           </div>
           <div>

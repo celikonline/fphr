@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
@@ -210,7 +211,7 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
                   {t("leave:overtime.startTime")}
                   <span className="text-destructive"> *</span>
                 </Label>
-                <Input id="overtime-start" type="time" step={60} value={startTime} disabled={busy} onChange={(e) => setStartTime(e.target.value.slice(0, 5))} />
+                <TimePicker id="overtime-start" value={startTime} minuteStep={5} disabled={busy} onChange={setStartTime} />
               </div>
             </div>
             <div>
