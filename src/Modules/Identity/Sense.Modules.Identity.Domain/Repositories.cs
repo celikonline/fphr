@@ -3,6 +3,7 @@ using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Domain.Tokens;
+using Sense.Modules.Identity.Domain.UnitAuthorizations;
 using Sense.Modules.Identity.Domain.Users;
 
 namespace Sense.Modules.Identity.Domain;
@@ -82,4 +83,20 @@ public interface IImpersonationGrantRepository
     Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct);
 
     void Add(ImpersonationGrant grant);
+}
+
+public interface IUnitAuthorizationRepository
+{
+    Task<UnitAuthorization?> GetByIdAsync(Guid id, CancellationToken ct);
+
+    /// <summary>(OrgUnit, User) çifti için mevcut aktif grant (varsa) - Grant komutunun upsert semantiği için.</summary>
+    Task<UnitAuthorization?> GetActiveAsync(Guid orgUnitId, Guid userId, CancellationToken ct);
+
+    /// <summary>Bir birimin üç nokta menüsü "Birim yetkilendirme" listesi.</summary>
+    Task<IReadOnlyList<UnitAuthorization>> ListActiveByOrgUnitAsync(Guid orgUnitId, CancellationToken ct);
+
+    /// <summary>Bir kullanıcının aktif olduğu tüm birimler - ileride IDataScopeService/IEmployeeScopeLookup tarzı bir tüketici için (bkz. UnitAuthorization doc).</summary>
+    Task<IReadOnlyList<UnitAuthorization>> ListActiveByUserAsync(Guid userId, CancellationToken ct);
+
+    void Add(UnitAuthorization grant);
 }

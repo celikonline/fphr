@@ -412,6 +412,85 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("refresh_tokens", "identity");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Identity.Domain.UnitAuthorizations.UnitAuthorization", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("CanViewSalaryAndPayments")
+                        .HasColumnType("boolean")
+                        .HasColumnName("can_view_salary_and_payments");
+
+                    b.Property<bool>("CanViewUnitReports")
+                        .HasColumnType("boolean")
+                        .HasColumnName("can_view_unit_reports");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime>("GrantedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("granted_at");
+
+                    b.Property<Guid>("GrantedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("granted_by_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("OrgUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_unit_id");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_unit_authorizations");
+
+                    b.HasIndex("OrgUnitId")
+                        .HasDatabaseName("ix_unit_authorizations_org_unit_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_unit_authorizations_tenant_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_unit_authorizations_user_id");
+
+                    b.HasIndex("TenantId", "OrgUnitId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_unit_authorizations_tenant_id_org_unit_id_user_id")
+                        .HasFilter("is_active");
+
+                    b.ToTable("unit_authorizations", "identity");
+                });
+
             modelBuilder.Entity("Sense.Modules.Identity.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")

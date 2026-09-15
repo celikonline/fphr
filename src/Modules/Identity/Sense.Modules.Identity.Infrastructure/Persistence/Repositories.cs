@@ -5,6 +5,7 @@ using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Domain.Tokens;
+using Sense.Modules.Identity.Domain.UnitAuthorizations;
 using Sense.Modules.Identity.Domain.Users;
 
 namespace Sense.Modules.Identity.Infrastructure.Persistence;
@@ -120,4 +121,22 @@ public sealed class ImpersonationGrantRepository(IdentityDbContext db) : IImpers
     public Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct) => db.ImpersonationGrants.FirstOrDefaultAsync(g => g.Id == id, ct);
 
     public void Add(ImpersonationGrant grant) => db.ImpersonationGrants.Add(grant);
+}
+
+public sealed class UnitAuthorizationRepository(IdentityDbContext db) : IUnitAuthorizationRepository
+{
+    public Task<UnitAuthorization?> GetByIdAsync(Guid id, CancellationToken ct) =>
+        db.UnitAuthorizations.FirstOrDefaultAsync(a => a.Id == id, ct);
+
+    public Task<UnitAuthorization?> GetActiveAsync(Guid orgUnitId, Guid userId, CancellationToken ct) =>
+        db.UnitAuthorizations.FirstOrDefaultAsync(a => a.OrgUnitId == orgUnitId && a.UserId == userId && a.IsActive, ct);
+
+    public async Task<IReadOnlyList<UnitAuthorization>> ListActiveByOrgUnitAsync(Guid orgUnitId, CancellationToken ct) =>
+        await db.UnitAuthorizations.Where(a => a.OrgUnitId == orgUnitId && a.IsActive)
+            .OrderBy(a => a.GrantedAt).ToListAsync(ct).ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<UnitAuthorization>> ListActiveByUserAsync(Guid userId, CancellationToken ct) =>
+        await db.UnitAuthorizations.Where(a => a.UserId == userId && a.IsActive).ToListAsync(ct).ConfigureAwait(false);
+
+    public void Add(UnitAuthorization grant) => db.UnitAuthorizations.Add(grant);
 }

@@ -7,6 +7,9 @@
 
   <ItemGroup>
     <ProjectReference Include="../../../src/Modules/Identity/Sense.Modules.Identity.Application/Sense.Modules.Identity.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
