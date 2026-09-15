@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TimePicker } from "@/components/ui/time-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "@/hooks/use-toast";
@@ -228,11 +229,19 @@ export default function CompanyProfilePage() {
             <div className="grid grid-cols-2 gap-4 sm:max-w-xs">
               <div>
                 <Label htmlFor="operatingHoursStart">{t("company:operatingHoursStart")}</Label>
-                <Input id="operatingHoursStart" type="time" disabled={!canManage} {...register("operatingHoursStart")} />
+                <Controller
+                  control={control}
+                  name="operatingHoursStart"
+                  render={({ field }) => <TimePicker id="operatingHoursStart" disabled={!canManage} {...field} />}
+                />
               </div>
               <div>
                 <Label htmlFor="operatingHoursEnd">{t("company:operatingHoursEnd")}</Label>
-                <Input id="operatingHoursEnd" type="time" disabled={!canManage} {...register("operatingHoursEnd")} />
+                <Controller
+                  control={control}
+                  name="operatingHoursEnd"
+                  render={({ field }) => <TimePicker id="operatingHoursEnd" disabled={!canManage} {...field} />}
+                />
               </div>
             </div>
 
