@@ -15,8 +15,6 @@ export * from "./alert";
 export * from "./avatar";
 export * from "./skeleton";
 export * from "./separator";
-export * from "./toast";
-export * from "./toaster";
 export * from "./switch";
 export * from "./textarea";
 export * from "./popover";
