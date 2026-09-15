@@ -10,30 +10,30 @@
   "viewAll": "View all",
   "refresh": "Refresh",
   "holidays": {
-    "title": "Public holidays",
+    "title": "Public Holidays",
     "empty": "No public holidays in the next {{days}} days."
   },
   "birthdays": {
-    "title": "Upcoming birthdays",
+    "title": "Upcoming Birthdays",
     "empty": "No birthdays in the next {{days}} days."
   },
   "leaves": {
-    "title": "Upcoming leave",
+    "title": "Upcoming Leave",
     "empty": "No one is on leave in the next {{days}} days."
   },
   "events": {
-    "title": "Event calendar",
+    "title": "Event Calendar",
     "planned": "The event calendar arrives in Phase 4; meetings and events will be listed here."
   },
   "orgInfo": {
-    "title": "My employee card",
+    "title": "My Employee Card",
     "manager": "Manager",
     "unknownManager": "Unknown",
     "hireDate": "Hire date",
     "account": "My account"
   },
   "leaveInfo": {
-    "title": "My leave",
+    "title": "My Leave",
     "empty": "There is no leave balance to show.",
     "availableUntil": "Available until {{date}}",
     "future": "Future",
@@ -41,7 +41,7 @@
     "recentTitle": "Recent requests"
   },
   "departmentDistribution": {
-    "title": "Employee distribution",
+    "title": "Employee Distribution",
     "empty": "There are no employees to show.",
     "unassigned": "Unassigned"
   }

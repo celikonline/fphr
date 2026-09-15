@@ -96,7 +96,8 @@ public sealed class EmployeeDetailBuilder(
     IUserAccountLookup accounts,
     EmployeeSensitiveAccess sensitiveAccess,
     CustomFieldValueReader customFields,
-    TimeProvider clock)
+    TimeProvider clock,
+    OrgPlacementLoader placementLoader)
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
@@ -130,6 +131,18 @@ public sealed class EmployeeDetailBuilder(
 
         var canViewSensitive = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
         var customFieldValues = customFieldValuesOverride ?? await customFields.BuildAsync(e, ct).ConfigureAwait(false);
+
+        // Title/department names come from the org placement chain so the card shows them to callers without
+        // organization.units.read ("Department"/"Title" = Organization.Domain.OrgUnitTypeCodes, compared via Contracts).
+        string? departmentName = null;
+        string? titleName = null;
+        if (e.OrgUnitId is not null)
+        {
+            var placement = await placementLoader.LoadAsync(ct).ConfigureAwait(false);
+            var chain = placement.ChainFor(e.OrgUnitId);
+            departmentName = LevelName(placement, chain, "Department");
+            titleName = LevelName(placement, chain, "Title");
+        }
 
         return new EmployeeDetailDto(
             e.Id,
@@ -168,11 +181,20 @@ public sealed class EmployeeDetailBuilder(
             e.SuspensionReason?.ToString(),
             e.LeaveAccrualStartDate,
             e.PositionStartDate,
+            departmentName,
+            titleName,
             customFieldValues,
             e.TerminationDate,
             e.TerminationReasonId,
             e.TerminationType,
             e.SgkExitCode);
+    }
+
+    private static string? LevelName(OrgPlacement placement, IReadOnlyList<OrgAssignmentInput> chain, string levelCode)
+    {
+        var level = placement.Types.FirstOrDefault(t => t.Code == levelCode);
+        var assignment = level is null ? null : chain.FirstOrDefault(a => a.OrgUnitTypeId == level.Id);
+        return assignment is null ? null : placement.UnitsById.GetValueOrDefault(assignment.OrgUnitId)?.Name;
     }
 }
 

@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -204,6 +205,7 @@ export default function AppLayout() {
             <Brand />
             <div className="flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6">
               <Greeting />
+              <NotificationBell />
               <AppsLauncher />
             </div>
           </header>

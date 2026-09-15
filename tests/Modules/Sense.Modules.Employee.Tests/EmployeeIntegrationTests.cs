@@ -256,6 +256,40 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task Detail_ResolvesDepartmentAndTitleNamesFromOrgPlacement()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var units = await SeedOrgUnitsAsync(tenantId);
+
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        var titleType = await db.OrgUnitTypes.AsNoTracking().SingleAsync(t => t.TenantId == tenantId && t.Code == OrgUnitTypeCodes.Title, TestContext.Current.CancellationToken);
+        var titleUnit = OrgUnit.Create(tenantId, titleType.Id, units.Emea, "Satış Uzmanı").Value;
+        db.OrgUnits.Add(titleUnit);
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Deepest assignment on a Title unit: both the Title and its Department ancestor are named.
+        var titled = await CreateAsync("Ünal", "Unvanlı", orgUnitId: titleUnit.Id);
+        (titled.DepartmentName, titled.TitleName).ShouldBe(("Sales EMEA", "Satış Uzmanı"));
+        var titledDetail = (await ExecuteQueryAsync(new GetEmployeeQuery(titled.Id))).Value;
+        (titledDetail.DepartmentName, titledDetail.TitleName).ShouldBe(("Sales EMEA", "Satış Uzmanı"));
+
+        // Placed directly on a Department: no Title level in the chain.
+        var departmentOnly = await CreateAsync("Deniz", "Departman", orgUnitId: units.Sales);
+        var departmentDetail = (await ExecuteQueryAsync(new GetEmployeeQuery(departmentOnly.Id))).Value;
+        departmentDetail.DepartmentName.ShouldBe("Sales");
+        departmentDetail.TitleName.ShouldBeNull();
+
+        // Company-level or unassigned employees get neither.
+        var unassigned = (await ExecuteQueryAsync(new GetEmployeeQuery((await CreateAsync("Boş", "Birim")).Id))).Value;
+        unassigned.DepartmentName.ShouldBeNull();
+        unassigned.TitleName.ShouldBeNull();
+        var atRoot = (await ExecuteQueryAsync(new GetEmployeeQuery((await CreateAsync("Kök", "Birim", orgUnitId: units.Root)).Id))).Value;
+        atRoot.DepartmentName.ShouldBeNull();
+        atRoot.TitleName.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task CrossModuleContracts_ResolveScopeSelectionsContactsAndUnits()
     {
         var tenantId = Guid.NewGuid();

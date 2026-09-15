@@ -26,7 +26,7 @@
     "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."
   },
   "orgInfo": {
-    "title": "Personel kartım",
+    "title": "Personel Kartım",
     "manager": "Yöneticim",
     "unknownManager": "Bilinmiyor",
     "hireDate": "İşe Başlama Tarihi",
@@ -38,7 +38,7 @@
     "availableUntil": "{{date}} tarihine kadar mevcut",
     "future": "İleri Tarihli",
     "used": "Kullanılan",
-    "recentTitle": "Son taleplerim"
+    "recentTitle": "Son Taleplerim"
   },
   "departmentDistribution": {
     "title": "Çalışan Dağılımı",

@@ -40,7 +40,31 @@ public static class SeedDataConstants
         "Guray", "Gurbuz", "Gurhan", "Gurtekin", "Gurucu", "Guzel", "Guzelbey", "Guzey"
     ];
 
+    /// <summary>
+    /// Demo departments (Department level under Headquarters) and the Title-level units ("Ünvan") created under each:
+    /// the unit manager gets <see cref="DemoDepartment.ManagerTitle"/>, other Manager-role employees
+    /// <see cref="DemoDepartment.LeadTitle"/>, interns <see cref="DemoInternTitle"/>, everyone else cycles through
+    /// <see cref="DemoDepartment.Titles"/>.
+    /// </summary>
+    public static readonly DemoDepartment[] DemoDepartments =
+    [
+        new("Sales", "Satış Müdürü", "Bölge Satış Yöneticisi", ["Satış Temsilcisi", "Kıdemli Satış Temsilcisi", "Satış Destek Uzmanı"]),
+        new("Engineering", "Yazılım Geliştirme Müdürü", "Takım Lideri", ["Yazılım Mühendisi", "Kıdemli Yazılım Mühendisi", "Test Mühendisi"]),
+        new("HR", "İnsan Kaynakları Müdürü", "İK İş Ortağı", ["İK Uzmanı", "İşe Alım Uzmanı"]),
+        new("Finance", "Finans Müdürü", "Finans Yöneticisi", ["Finans Uzmanı", "Muhasebe Uzmanı"]),
+    ];
+
+    public const string DemoInternTitle = "Stajyer";
+
+    /// <summary>Title-level units under Headquarters for the executives placed there (Owner/Admin/HR roles).</summary>
+    public const string DemoOwnerTitle = "Genel Müdür";
+    public const string DemoAdminTitle = "Bilgi Sistemleri Yöneticisi";
+    public const string DemoHrTitle = "İnsan Kaynakları Direktörü";
+
     // System roles that should be seeded (already defined in SystemRoleCodes)
     // - Owner, Admin, HR, HRSpecialist, PayrollSpecialist, Finance, Manager, Timekeeper,
     //   Recruiter, Interviewer, Auditor, ExternalAccountant, ITAdmin, Employee, Intern, Contractor, ApiIntegration
 }
+
+/// <summary>One demo department and its job titles (see <see cref="SeedDataConstants.DemoDepartments"/>).</summary>
+public sealed record DemoDepartment(string Name, string ManagerTitle, string LeadTitle, IReadOnlyList<string> Titles);

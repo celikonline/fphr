@@ -8,9 +8,8 @@ import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { avatarColor, initials } from "@/components/employees/employee-badges";
-import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
-import { getDepartmentDistribution, getMyCareer, getMyEmployee } from "@/services/employees.service";
+import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
 import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
 import { getApiErrorStatus } from "@/lib/api-error";
@@ -36,9 +35,10 @@ const CHART_COLORS = [
   "var(--mantine-color-blue-6)",
   "var(--mantine-color-gold-6)",
 ];
+/** Thin border plus a soft outer ring: the reference cards read as a double border. */
 const CARD_STYLE: CSSProperties = {
   borderColor: "var(--mantine-color-default-border)",
-  boxShadow: "0 0 0 4px var(--mantine-color-default-hover)",
+  boxShadow: "0 0 0 4px var(--mantine-color-gray-light)",
 };
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 
@@ -86,7 +86,7 @@ function WidgetCard({
           >
             {icon}
           </span>
-          <Text fz={17} fw={500} truncate>
+          <Text fz={17} fw={450} truncate>
             {title}
           </Text>
         </Group>
@@ -147,7 +147,7 @@ function FooterLink({ to, label }: { to: string; label: string }) {
   );
 }
 
-/** Divided rows; `indent` starts the divider after a leading icon column, as in the reference. */
+/** Divided rows; `indent` starts the divider after a leading icon column, as in the reference. The first row sits closer to the header. */
 function RowList<T>({
   items,
   rowKey,
@@ -164,7 +164,7 @@ function RowList<T>({
       {items.map((item, index) => (
         <li key={rowKey(item)}>
           {index > 0 && <Divider ml={indent} />}
-          <Group justify="space-between" gap="sm" wrap="nowrap" py={10}>
+          <Group justify="space-between" gap="sm" wrap="nowrap" pt={index === 0 ? 2 : 10} pb={10}>
             {render(item)}
           </Group>
         </li>
@@ -198,7 +198,7 @@ function Amount({ days, date }: { days?: string; date: string }) {
   );
 }
 
-/** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (career assignments), manager, hire date. */
+/** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (resolved by the API from the org placement), manager, hire date. */
 function OrgInfoWidget() {
   const { t, i18n } = useTranslation(["home"]);
   const canReadEmployees = usePermission("employee.employees.read");
@@ -207,22 +207,8 @@ function OrgInfoWidget() {
     queryFn: getMyEmployee,
     retry: retryUnlessClientError,
   });
-  const { data: career } = useQuery({
-    queryKey: ["home", "org-info", "career"],
-    queryFn: getMyCareer,
-    enabled: Boolean(employee),
-  });
-  const { levels } = useOrgLevels();
-  const { nameById } = useOrgUnits();
-
-  const current = career?.find((record) => record.isCurrent) ?? null;
-  const levelUnitName = (code: string) => {
-    const level = levels.find((l) => l.code === code);
-    const assignment = level ? current?.assignments.find((a) => a.orgUnitTypeId === level.id) : undefined;
-    return assignment ? nameById.get(assignment.orgUnitId) : undefined;
-  };
-  const title = levelUnitName("Title");
-  const department = levelUnitName("Department");
+  const title = employee?.titleName ?? undefined;
+  const department = employee?.departmentName ?? undefined;
 
   const row = (label: string, value: ReactNode) => (
     <>
@@ -260,7 +246,7 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28} color={avatarColor(employee.id)}>
+            <Avatar size={88} radius="md" fz={28} color={avatarColor(employee.id)} styles={{ placeholder: { fontWeight: 500 } }}>
               {initials(employee.firstName, employee.lastName)}
             </Avatar>
           </Group>
@@ -309,7 +295,7 @@ function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
 function LegendDot({ color, label, value }: { color: string; label: string; value: string }) {
   return (
     <Group gap={8} wrap="nowrap">
-      <ColorSwatch color={color} size={6} withShadow={false} />
+      <ColorSwatch color={color} size={8} withShadow={false} />
       <Text size="sm">
         {label}{" "}
         <Text span inherit fw={500}>

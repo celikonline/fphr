@@ -21,7 +21,7 @@ public sealed record EmployeeListItemDto(
     UserAccountStatus AccountStatus,
     DateOnly? HireDate);
 
-/// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
+/// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). DepartmentName/TitleName are resolved from the org placement chain (Department/Title levels) so callers without organization.units.read still see them. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(
     Guid Id,
     string FirstName,
@@ -59,6 +59,8 @@ public sealed record EmployeeDetailDto(
     string? SuspensionReason,
     DateOnly? LeaveAccrualStartDate = null,
     DateOnly? PositionStartDate = null,
+    string? DepartmentName = null,
+    string? TitleName = null,
     IReadOnlyList<CustomFieldValueDto>? CustomFields = null,
     DateOnly? TerminationDate = null,
     Guid? TerminationReasonId = null,
