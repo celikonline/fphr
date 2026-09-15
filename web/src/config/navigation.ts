@@ -34,6 +34,9 @@ import {
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
+/** Corporate palette keys from mantine-theme.ts usable for per-item icon accents. */
+export type CorporateColorKey = "brand" | "navy" | "blue" | "cyan" | "teal" | "orange" | "gold" | "steel";
+
 export interface NavItem {
   key: string;
   /** i18n key in the "navigation" namespace. */
@@ -48,6 +51,13 @@ export interface NavItem {
   phase?: number;
   /** Match the path exactly for active highlighting (e.g. the /app home link). */
   end?: boolean;
+  /** Corporate accent color for the icon; falls back to the primary brand color when unset. */
+  iconColor?: CorporateColorKey;
+}
+
+/** CSS var for a NavItem's icon accent, for use as the lucide icon's `color` prop or a styles override. */
+export function navIconColor(item: NavItem): string {
+  return item.iconColor ? `var(--mantine-color-${item.iconColor}-6)` : "var(--mantine-primary-color-filled)";
 }
 
 /** Settings hub card permissions, reused so the "Ayarlar" menu entry shows whenever any card would. */
@@ -70,13 +80,14 @@ const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMIS
 
 /** Single left sidebar, in Kolay İK order (11.3.13). */
 export const NAV_ITEMS: NavItem[] = [
-  { key: "home", labelKey: "nav.home", path: "/app", icon: Home, end: true },
+  { key: "home", labelKey: "nav.home", path: "/app", icon: Home, end: true, iconColor: "navy" },
   {
     key: "employees",
     labelKey: "nav.employees",
     path: "/app/employees",
     icon: Users,
     permissions: ["employee.employees.read", "employee.directory.view"],
+    iconColor: "blue",
   },
   {
     key: "leaves",
@@ -85,6 +96,7 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Palmtree,
     permissions: ["leave.my.balances", "leave.my.requests"],
     end: true,
+    iconColor: "teal",
   },
   {
     key: "calendar",
@@ -93,24 +105,40 @@ export const NAV_ITEMS: NavItem[] = [
     icon: CalendarDays,
     permissions: ["leave.my.calendar"],
     accessSetting: "showCalendarMenu",
+    iconColor: "cyan",
   },
-  { key: "overtimes", labelKey: "nav.overtimes", path: "/app/leave/overtimes", icon: Clock, permissions: ["leave.my.overtimes"] },
+  {
+    key: "overtimes",
+    labelKey: "nav.overtimes",
+    path: "/app/leave/overtimes",
+    icon: Clock,
+    permissions: ["leave.my.overtimes"],
+    iconColor: "orange",
+  },
   {
     key: "leaveRules",
     labelKey: "nav.leaveRules",
     path: "/app/settings/leave/rule-sets",
     icon: ScrollText,
     permissions: ["leave.rule_sets.read"],
+    iconColor: "steel",
   },
-  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, phase: 1 },
-  { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow },
-  { key: "reports", labelKey: "nav.reports", path: "/app/reports", icon: BarChart3, phase: 4 },
-  { key: "settings", labelKey: "nav.settings", path: "/app/settings", icon: Settings, permissions: ANY_SETTINGS_PERMISSION },
+  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, phase: 1, iconColor: "gold" },
+  { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow, iconColor: "navy" },
+  { key: "reports", labelKey: "nav.reports", path: "/app/reports", icon: BarChart3, phase: 4, iconColor: "blue" },
+  {
+    key: "settings",
+    labelKey: "nav.settings",
+    path: "/app/settings",
+    icon: Settings,
+    permissions: ANY_SETTINGS_PERMISSION,
+    iconColor: "steel",
+  },
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
-  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle },
-  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, phase: 4 },
+  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
+  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, phase: 4, iconColor: "orange" },
 ];
 
 /** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
@@ -122,6 +150,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: GitBranch,
     permissions: ["employee.orgchart.view"],
     accessSetting: "showOrgChart",
+    iconColor: "navy",
   },
   {
     key: "dataTransfer",
@@ -129,6 +158,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/settings/data-transfer",
     icon: FileSpreadsheet,
     permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
+    iconColor: "blue",
   },
   {
     key: "workflowInbox",
@@ -136,8 +166,16 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/inbox",
     icon: Inbox,
     permissions: ["workflow.inbox.view"],
+    iconColor: "teal",
   },
-  { key: "overtime", labelKey: "apps.overtime", path: "/app/leave/overtimes", icon: Clock, permissions: ["leave.my.overtimes"] },
+  {
+    key: "overtime",
+    labelKey: "apps.overtime",
+    path: "/app/leave/overtimes",
+    icon: Clock,
+    permissions: ["leave.my.overtimes"],
+    iconColor: "orange",
+  },
   { key: "timesheet", labelKey: "apps.timesheet", path: "/app/apps", icon: CalendarClock, phase: 2 },
   { key: "shifts", labelKey: "apps.shifts", path: "/app/apps", icon: CalendarRange, phase: 2 },
   { key: "payroll", labelKey: "apps.payroll", path: "/app/apps", icon: Wallet, phase: 3 },
@@ -149,6 +187,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/recruitment/postings",
     icon: UserPlus,
     permissions: ["recruitment.postings.read"],
+    iconColor: "gold",
   },
   {
     key: "recruitmentCandidates",
@@ -156,6 +195,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/recruitment/candidates",
     icon: Users,
     permissions: ["recruitment.candidates.read"],
+    iconColor: "gold",
   },
   { key: "analytics", labelKey: "apps.analytics", path: "/app/apps", icon: PieChart, phase: 7 },
 ];
@@ -321,48 +361,3 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     ],
   },
 ];
-
-export interface BreadcrumbRoute {
-  /** Route pattern; `:param` segments match any value. */
-  path: string;
-  labelKey: string;
-  /** false for grouping segments that have no page of their own. */
-  link?: boolean;
-}
-
-/** Labels for every routed path prefix under /app (the home crumb is always rendered first). */
-export const BREADCRUMB_ROUTES: BreadcrumbRoute[] = [
-  ...NAV_ITEMS.filter((item) => item.path !== "/app").map((item) => ({ path: item.path, labelKey: item.labelKey })),
-  ...NAV_FOOTER_ITEMS.map((item) => ({ path: item.path, labelKey: item.labelKey })),
-  { path: "/app/employees/org-chart", labelKey: "nav.orgChart" },
-  { path: "/app/employees/:id", labelKey: "nav.employeeCard" },
-  { path: "/app/settings/company", labelKey: "settings.company", link: false },
-  { path: "/app/settings/system", labelKey: "settings.system", link: false },
-  { path: "/app/settings/data-transfer/jobs", labelKey: "settings.importJobs", link: false },
-  { path: "/app/settings/data-transfer/jobs/:id", labelKey: "settings.importJob" },
-  ...SETTINGS_SECTIONS.flatMap((section) => [
-    ...(section.path ? [{ path: section.path, labelKey: section.labelKey }] : []),
-    ...section.links.map((link) => ({ path: link.path, labelKey: link.labelKey })),
-  ]),
-];
-
-/** Resolves breadcrumbs for a pathname: one entry per matching prefix (literal routes win over `:param`). */
-export function resolveBreadcrumbs(pathname: string): { path: string; labelKey: string; link: boolean }[] {
-  const segments = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
-  const crumbs: { path: string; labelKey: string; link: boolean }[] = [];
-  for (let i = 2; i <= segments.length; i++) {
-    const prefix = segments.slice(0, i);
-    const path = `/${prefix.join("/")}`;
-    const literal = BREADCRUMB_ROUTES.find((route) => route.path === path);
-    const route =
-      literal ??
-      BREADCRUMB_ROUTES.find((candidate) => {
-        const parts = candidate.path.split("/").filter(Boolean);
-        return parts.length === prefix.length && parts.every((part, idx) => part.startsWith(":") || part === prefix[idx]);
-      });
-    if (route) {
-      crumbs.push({ path, labelKey: route.labelKey, link: route.link !== false });
-    }
-  }
-  return crumbs;
-}

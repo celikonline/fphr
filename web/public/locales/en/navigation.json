@@ -14,13 +14,10 @@
     "leaveRules": "Leave policies",
     "requests": "Requests",
     "apps": "Apps",
-    "toggleSidebar": "Toggle sidebar",
     "reports": "Reports",
     "settings": "Settings",
-    "account": "My account",
-    "support": "Support",
-    "orgChart": "Org chart",
-    "employeeCard": "Employee profile"
+    "account": "My profile",
+    "support": "Support"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
@@ -74,8 +71,6 @@
     "billingDesc": "Subscription and invoice details",
     "dataTransferSection": "Data transfer",
     "dataTransfer": "Data transfer center",
-    "dataTransferDesc": "Bulk data import with Excel templates",
-    "importJobs": "Import jobs",
-    "importJob": "Import job"
+    "dataTransferDesc": "Bulk data import with Excel templates"
   }
 }

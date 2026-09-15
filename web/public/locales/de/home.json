@@ -29,7 +29,8 @@
     "title": "[DE] My employee card",
     "manager": "[DE] Manager",
     "unknownManager": "[DE] Unknown",
-    "hireDate": "[DE] Hire date"
+    "hireDate": "[DE] Hire date",
+    "account": "[DE] My account"
   },
   "leaveInfo": {
     "title": "[DE] My leave",

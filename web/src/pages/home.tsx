@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
 import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
-import { useAuthStore } from "@/store/auth.store";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { avatarColor, initials } from "@/components/employees/employee-badges";
@@ -58,7 +57,7 @@ function nameInitials(displayName: string): string {
 
 function WidgetFrame({ children }: { children: ReactNode }) {
   return (
-    <Card withBorder radius="sm" padding="lg" style={CARD_STYLE}>
+    <Card withBorder radius="md" padding="lg" style={CARD_STYLE}>
       {children}
     </Card>
   );
@@ -201,7 +200,7 @@ function Amount({ days, date }: { days?: string; date: string }) {
 
 /** Own employee card ("Home.ShowOrgInfo"): headerless, name + ünvan/departman (career assignments), manager, hire date. */
 function OrgInfoWidget() {
-  const { t, i18n } = useTranslation(["home", "navigation"]);
+  const { t, i18n } = useTranslation(["home"]);
   const canReadEmployees = usePermission("employee.employees.read");
   const { data: employee, isLoading, error } = useQuery({
     queryKey: ["home", "org-info"],
@@ -277,7 +276,7 @@ function OrgInfoWidget() {
             t("home:orgInfo.hireDate"),
             <Text size="sm">{employee.hireDate ? formatDateOnly(employee.hireDate, i18n.language, SHORT_DATE) : "—"}</Text>,
           )}
-          <FooterLink to="/app/account" label={t("navigation:nav.account")} />
+          <FooterLink to="/app/account" label={t("home:orgInfo.account")} />
         </>
       )}
     </WidgetFrame>
@@ -362,7 +361,7 @@ function LeaveInfoWidget() {
         <Text size="sm" c="dimmed">
           {t("home:leaveInfo.availableUntil", { date: formatDateOnly(b.currentPeriodTo, i18n.language, SHORT_DATE) })}
         </Text>
-        <Text fz={30} fw={400} c="green.8" mt="sm" lh={1.3}>
+        <Text fz={28} fw={500} c="green.8" mt="sm" lh={1.3}>
           {days(b.availableBalance)} {t("leave:days")}
         </Text>
         <Progress.Root size={6} mt="sm" radius="xl">
@@ -680,8 +679,7 @@ function PlannedWidget({ title, icon, phase, description }: { title: string; ico
 }
 
 export default function HomePage() {
-  const { t, i18n } = useTranslation(["home", "navigation"]);
-  const user = useAuthStore((state) => state.user);
+  const { t } = useTranslation(["home", "navigation"]);
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
   const canViewLeaveBalances = usePermission("leave.my.balances");
@@ -693,11 +691,6 @@ export default function HomePage() {
   const showBirthdays = useAccessSetting("showUpcomingBirthdays");
   const showLeaves = useAccessSetting("showUpcomingLeaves");
   const showEvents = useAccessSetting("showEventCalendar");
-
-  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
-  const [today] = useState(() => new Date());
-  const dateLabel = new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "long", year: "numeric" }).format(today);
-  const weekdayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(today);
 
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
   const columns: ReactNode[][] = [
@@ -720,23 +713,11 @@ export default function HomePage() {
   const hasAnyWidget = columns.some((column) => column.length > 0);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-8">
-      <div>
-        <Text size="sm" c="dimmed">
-          {t("home:greeting", { name: user?.firstName || user?.name || "" })}
-        </Text>
-        <Text fz={22} lh={1.3}>
-          <Text span inherit c="dimmed">
-            {t("home:today")}
-          </Text>{" "}
-          {dateLabel}, {weekdayLabel}
-        </Text>
-      </div>
-
+    <div className="mx-auto max-w-6xl p-5 md:p-7">
       {hasAnyWidget ? (
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
           {columns.map((column, index) => (
-            <div key={index} className="flex flex-col gap-6">
+            <div key={index} className="flex flex-col gap-5">
               {column}
             </div>
           ))}

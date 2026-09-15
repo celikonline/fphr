@@ -1,39 +1,12 @@
-import { Link, NavLink as RouterNavLink, Outlet, useLocation } from "react-router";
+import { Link, NavLink as RouterNavLink, Outlet } from "react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActionIcon,
-  Alert,
-  Anchor,
-  Badge,
-  Box,
-  Breadcrumbs,
-  Group,
-  Menu,
-  NavLink,
-  Stack,
-  Text,
-  Tooltip,
-  Button,
-} from "@mantine/core";
-import {
-  ChevronRight,
-  LayoutGrid,
-  Menu as MenuIcon,
-  MoreHorizontal,
-  ShieldAlert,
-} from "lucide-react";
+import { ActionIcon, Alert, Badge, Box, Button, Group, Menu, NavLink, Stack, Text, Tooltip } from "@mantine/core";
+import { Grip, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
-import { useUIStore } from "@/store/ui.store";
-import { useTenantStore } from "@/store/tenant.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
-import {
-  APP_LAUNCHER_ITEMS,
-  NAV_FOOTER_ITEMS,
-  NAV_ITEMS,
-  resolveBreadcrumbs,
-  type NavItem,
-} from "@/config/navigation";
+import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -72,10 +45,11 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
       component={RouterNavLink}
       to={item.path}
       end={item.end}
-      variant="filled"
+      variant="light"
       aria-label={collapsed ? label : undefined}
       mod={{ collapsed }}
       classNames={NAV_LINK_CLASS_NAMES}
+      styles={{ section: { color: navIconColor(item) } }}
       leftSection={<Icon size={20} />}
       label={collapsed ? undefined : label}
       noWrap
@@ -98,91 +72,20 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
   );
 }
 
-type Crumb = { path: string; label: string; link: boolean };
-
-function crumbNode(item: Crumb, isLast: boolean) {
-  if (isLast) {
-    return (
-      <Text key={item.path} size="sm" fw={600} lh={1.5} aria-current="page" truncate>
-        {item.label}
-      </Text>
-    );
-  }
-  if (item.link) {
-    return (
-      <Anchor key={item.path} component={Link} to={item.path} size="sm" c="dimmed" underline="hover">
-        {item.label}
-      </Anchor>
-    );
-  }
-  return (
-    <Text key={item.path} size="sm" c="dimmed">
-      {item.label}
-    </Text>
-  );
-}
-
-function HeaderBreadcrumbs() {
-  const { t } = useTranslation(["navigation"]);
-  const location = useLocation();
-  const crumbs = resolveBreadcrumbs(location.pathname);
-  const items: Crumb[] = [
-    { path: "/app", label: t("nav.home"), link: true },
-    ...crumbs.map((crumb) => ({ path: crumb.path, label: t(crumb.labelKey), link: crumb.link })),
-  ];
-  const separator = <ChevronRight size={14} color="var(--mantine-color-dimmed)" aria-hidden="true" />;
-  const full = (
-    <Breadcrumbs separator={separator} separatorMargin={6} className="flex-nowrap">
-      {items.map((item, index) => crumbNode(item, index === items.length - 1))}
-    </Breadcrumbs>
-  );
-
-  // Below md, keep the first and last two crumbs and fold the middle ones into an ellipsis.
-  if (items.length <= 3) return full;
-
-  const middleLabel = items
-    .slice(1, -2)
-    .map((item) => item.label)
-    .join(" / ");
-  const tail = items.slice(-2);
-
-  return (
-    <>
-      <div className="hidden md:block">{full}</div>
-      <div className="md:hidden">
-        <Breadcrumbs separator={separator} separatorMargin={6} className="flex-nowrap">
-          {crumbNode(items[0], false)}
-          <Text key="ellipsis" span c="dimmed" title={middleLabel} aria-label={middleLabel} className="flex items-center">
-            <MoreHorizontal size={16} aria-hidden="true" />
-          </Text>
-          {tail.map((item, index) => crumbNode(item, index === tail.length - 1))}
-        </Breadcrumbs>
-      </div>
-    </>
-  );
-}
-
-function HeaderIconMenuTarget({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <Tooltip label={label}>
-      <Menu.Target>
-        <ActionIcon variant="subtle" color="gray" size="lg" aria-label={label}>
-          {children}
-        </ActionIcon>
-      </Menu.Target>
-    </Tooltip>
-  );
-}
-
+/** The filled square launcher at the end of the top bar (Kolay İK reference layout). */
 function AppsLauncher() {
   const { t } = useTranslation(["navigation"]);
   const allowed = useVisibleItems(ACTIVE_APPS);
 
   return (
     <Menu position="bottom-end" width={320}>
-      <HeaderIconMenuTarget label={t("navigation:nav.apps")}>
-        <LayoutGrid size={16} />
-      </HeaderIconMenuTarget>
+      <Tooltip label={t("navigation:nav.apps")}>
+        <Menu.Target>
+          <ActionIcon variant="filled" size={40} radius="md" aria-label={t("navigation:nav.apps")}>
+            <Grip size={20} />
+          </ActionIcon>
+        </Menu.Target>
+      </Tooltip>
       <Menu.Dropdown p="xs">
         <Menu.Label>{t("navigation:nav.apps")}</Menu.Label>
         <Menu.Divider />
@@ -192,7 +95,7 @@ function AppsLauncher() {
             return (
               <Menu.Item key={item.key} component={Link} to={item.path} p="xs">
                 <Stack gap={4} align="center" ta="center">
-                  <Icon size={20} color="var(--mantine-primary-color-filled)" />
+                  <Icon size={20} color={navIconColor(item)} />
                   <Text size="xs" lh={1.2}>
                     {t(item.labelKey)}
                   </Text>
@@ -228,7 +131,6 @@ function AppsLauncher() {
   );
 }
 
-
 /** Persistent warning while the session runs under a support-access (impersonation) grant. */
 function ImpersonationBanner() {
   const { t } = useTranslation(["common"]);
@@ -249,73 +151,78 @@ function ImpersonationBanner() {
   );
 }
 
+/** Wordmark heading the sidebar column, sharing its width and background (Kolay İK reference layout). */
+function Brand() {
+  return (
+    <Link to="/app" className={`flex w-14 shrink-0 items-center justify-center md:w-52 md:justify-start md:px-5 ${classes.brand}`}>
+      <Text fz={22} fw={700} lh={1} className="hidden md:block">
+        SenseİK
+      </Text>
+      <Text fz={22} fw={700} lh={1} className="md:hidden">
+        S
+      </Text>
+    </Link>
+  );
+}
+
+/** Greeting at the start of the top bar: name, then today's date (Kolay İK reference layout). */
+function Greeting() {
+  const { t, i18n } = useTranslation(["home"]);
+  const user = useAuthStore((state) => state.user);
+
+  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
+  const [today] = useState(() => new Date());
+  const dateLabel = new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "long", year: "numeric" }).format(today);
+  const weekdayLabel = new Intl.DateTimeFormat(i18n.language, { weekday: "long" }).format(today);
+
+  return (
+    <div className="hidden min-w-0 flex-1 sm:block">
+      <Text size="sm" c="dimmed" truncate>
+        {t("home:greeting", { name: user?.firstName || user?.name || "" })}
+      </Text>
+      <Text fz={20} fw={500} lh={1.3} truncate>
+        <Text span inherit fw={400} c="dimmed">
+          {t("home:today")}
+        </Text>{" "}
+        {dateLabel}, {weekdayLabel}
+      </Text>
+    </div>
+  );
+}
+
 /**
- * Main application shell: single left sidebar (Kolay İK order) + header (breadcrumbs, apps launcher) + content.
+ * Main application shell, framed as a rounded panel on the page: top bar (wordmark over the sidebar
+ * column, greeting, apps launcher) + single left sidebar (Kolay İK order) + content.
  */
 export default function AppLayout() {
-  const { t } = useTranslation(["navigation"]);
-  const sidebarOpen = useUIStore((state) => state.sidebarOpen);
-  const toggleSidebar = useUIStore((state) => state.toggleSidebar);
-  const tenant = useTenantStore((state) => state.currentTenant);
-  const userTenantName = useAuthStore((state) => state.user?.tenant?.name);
-
   return (
     <Box className="flex h-screen flex-col" bg="var(--mantine-color-body)" c="var(--mantine-color-text)">
       <ImpersonationBanner />
-      <div className="flex min-h-0 flex-1">
-        {/* Sidebar - collapses to an icon rail below md, or when toggled */}
-        <aside className={`hidden shrink-0 flex-col md:flex ${sidebarOpen ? "w-64" : "w-16"} ${classes.sidebar}`}>
-          <div className={`flex min-h-16 flex-col justify-center ${sidebarOpen ? "px-4" : "items-center px-2"} ${classes.brandRow}`}>
-            <Anchor component={Link} to="/app" size="lg" fw={700} underline="never">
-              {sidebarOpen ? "SenseİK" : "S"}
-            </Anchor>
-            {sidebarOpen && (
-              <Text size="xs" c="dimmed" truncate>
-                {tenant?.name ?? userTenantName ?? "SenseİK"}
-              </Text>
-            )}
-          </div>
-          <NavList collapsed={!sidebarOpen} />
-        </aside>
-
-        {/* Mobile icon rail - always icon-only, no store dependency */}
-        <aside className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
-          <div className={`flex h-16 items-center justify-center ${classes.brandRow}`}>
-            <Text span size="lg" fw={700} c="var(--mantine-primary-color-filled)">
-              S
-            </Text>
-          </div>
-          <NavList collapsed />
-        </aside>
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <header className={`flex h-16 shrink-0 items-center justify-between px-4 md:px-6 ${classes.header}`}>
-            <div className="flex min-w-0 items-center gap-3">
-              <Tooltip label={t("navigation:nav.toggleSidebar")}>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  onClick={toggleSidebar}
-                  aria-label={t("navigation:nav.toggleSidebar")}
-                  className="hidden md:inline-flex"
-                >
-                  <MenuIcon size={20} />
-                </ActionIcon>
-              </Tooltip>
-              <div className="hidden min-w-0 sm:flex">
-                <HeaderBreadcrumbs />
-              </div>
-            </div>
-
-            <Group gap={4} wrap="nowrap">
+      <div className="flex min-h-0 flex-1 p-2 md:p-4">
+        <div className={`flex min-h-0 flex-1 flex-col ${classes.portal}`}>
+          <header className={`flex h-18 shrink-0 items-stretch ${classes.header}`}>
+            <Brand />
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6">
+              <Greeting />
               <AppsLauncher />
-            </Group>
+            </div>
           </header>
 
-          <main className="flex-1 overflow-auto">
-            <Outlet />
-          </main>
+          <div className="flex min-h-0 flex-1">
+            {/* Sidebar - full labels from md up */}
+            <aside className={`hidden w-52 shrink-0 flex-col md:flex ${classes.sidebar}`}>
+              <NavList collapsed={false} />
+            </aside>
+
+            {/* Mobile icon rail - always icon-only */}
+            <aside className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
+              <NavList collapsed />
+            </aside>
+
+            <main className="min-w-0 flex-1 overflow-auto">
+              <Outlet />
+            </main>
+          </div>
         </div>
       </div>
     </Box>

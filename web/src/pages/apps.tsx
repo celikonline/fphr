@@ -2,7 +2,7 @@ import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { AppWindow } from "lucide-react";
-import { APP_LAUNCHER_ITEMS } from "@/config/navigation";
+import { APP_LAUNCHER_ITEMS, navIconColor } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import classes from "./apps.module.css";
 
@@ -39,7 +39,7 @@ export default function AppsPage() {
               className={classes.appCard}
             >
               <Stack align="center" gap="sm" ta="center">
-                <Icon size={32} color="var(--mantine-primary-color-filled)" />
+                <Icon size={32} color={navIconColor(item)} />
                 <Text size="sm" fw={500}>
                   {t(item.labelKey)}
                 </Text>

@@ -1,20 +1,24 @@
-.sidebar {
+/* The whole shell sits in a rounded, bordered frame on the page (Kolay İK reference layout). */
+.portal {
   background-color: var(--mantine-color-body);
-  border-inline-end: 1px solid var(--mantine-color-default-border);
-  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-lg);
+  box-shadow: var(--mantine-shadow-md);
+  overflow: hidden;
 }
 
-.brandRow {
+.brand,
+.sidebar {
+  background-color: light-dark(var(--mantine-color-steel-0), var(--mantine-color-dark-6));
+  border-inline-end: 1px solid var(--mantine-color-default-border);
+}
+
+.header {
   border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
 .footerNav {
   border-top: 1px solid var(--mantine-color-default-border);
-}
-
-.header {
-  background-color: var(--mantine-color-body);
-  border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
 .navLink {
@@ -37,10 +41,7 @@
   display: none;
 }
 
-.userButton {
-  transition: background-color 150ms ease;
-
-  @mixin hover {
-    background-color: var(--mantine-color-default-hover);
-  }
+/* The active item's icon takes the primary color instead of its assigned corporate accent. */
+.navLink[aria-current="page"] .navSection {
+  color: var(--mantine-primary-color-light-color) !important;
 }

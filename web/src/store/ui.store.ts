@@ -13,8 +13,6 @@ interface Notification {
 interface UIStore {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  sidebarOpen: boolean;
-  toggleSidebar: () => void;
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, "id">) => void;
   removeNotification: (id: string) => void;
@@ -25,8 +23,6 @@ export const useUIStore = create<UIStore>()(
     (set) => ({
       theme: "system",
       setTheme: (theme) => set({ theme }),
-      sidebarOpen: true,
-      toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
       notifications: [],
       addNotification: (notification) =>
         set((state) => ({
@@ -45,7 +41,7 @@ export const useUIStore = create<UIStore>()(
     }),
     {
       name: "ui-store",
-      partialize: (state) => ({ theme: state.theme, sidebarOpen: state.sidebarOpen }),
+      partialize: (state) => ({ theme: state.theme }),
     }
   )
 );

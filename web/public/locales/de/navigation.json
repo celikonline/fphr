@@ -14,13 +14,10 @@
     "leaveRules": "Urlaubsregeln",
     "requests": "[DE] Requests",
     "apps": "[DE] Apps",
-    "toggleSidebar": "[DE] Toggle sidebar",
     "reports": "[DE] Reports",
     "settings": "[DE] Settings",
-    "account": "[DE] My account",
-    "support": "[DE] Support",
-    "orgChart": "[DE] Org chart",
-    "employeeCard": "[DE] Employee profile"
+    "account": "[DE] My profile",
+    "support": "[DE] Support"
   },
   "phase": "[DE] Phase {{phase}}",
   "comingSoon": {
@@ -74,8 +71,6 @@
     "billingDesc": "[DE] Subscription and invoice details",
     "dataTransferSection": "[DE] Data transfer",
     "dataTransfer": "[DE] Data transfer center",
-    "dataTransferDesc": "[DE] Bulk data import with Excel templates",
-    "importJobs": "[DE] Import jobs",
-    "importJob": "[DE] Import job"
+    "dataTransferDesc": "[DE] Bulk data import with Excel templates"
   }
 }

@@ -14,13 +14,10 @@
     "leaveRules": "İzin kuralları",
     "requests": "Talep",
     "apps": "Uygulamalar",
-    "toggleSidebar": "Menüyü daralt/genişlet",
     "reports": "Raporlar",
     "settings": "Ayarlar",
-    "account": "Kendi hesabım",
-    "support": "Destek",
-    "orgChart": "Organizasyon şeması",
-    "employeeCard": "Çalışan kartı"
+    "account": "Profilim",
+    "support": "Destek"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
@@ -74,8 +71,6 @@
     "billingDesc": "Abonelik ve fatura bilgileri",
     "dataTransferSection": "Veri aktar",
     "dataTransfer": "Veri aktarım merkezi",
-    "dataTransferDesc": "Excel şablonlarıyla toplu veri aktarımı",
-    "importJobs": "Aktarım işleri",
-    "importJob": "Aktarım işi"
+    "dataTransferDesc": "Excel şablonlarıyla toplu veri aktarımı"
   }
 }
