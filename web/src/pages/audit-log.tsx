@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { Download, ScrollText, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationFooter from "@/components/pagination-footer";
 import {
@@ -18,9 +18,14 @@ import {
   listAuditActors,
   listAuditEvents,
   type AuditActionType,
+  type AuditEvent,
 } from "@/services/audit.service";
 
 const ALL_VALUE = "__all__";
+const DEFAULT_PAGE_SIZE = 20;
+const COLUMN_VISIBILITY_KEY = "senseik.audit.grid.columns";
+/** The audit service only sorts by timestamp. */
+const SORT_FIELD = "occurredAt";
 
 const ACTION_BADGE: Record<AuditActionType, "default" | "secondary" | "destructive" | "outline" | "success"> = {
   create: "success",
@@ -35,6 +40,8 @@ export default function AuditLogPage() {
   const { t, i18n } = useTranslation(["audit", "common"]);
 
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sortDesc, setSortDesc] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [actor, setActor] = useState(ALL_VALUE);
@@ -55,18 +62,22 @@ export default function AuditLogPage() {
     setPage(1);
   }
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["audit-events", page, debouncedSearch, actor, action, from, to],
+  const sortParam = `${sortDesc ? "-" : ""}${SORT_FIELD}`;
+
+  const { data, isLoading, isFetching } = useQuery({
+    queryKey: ["audit-events", page, pageSize, sortParam, debouncedSearch, actor, action, from, to],
     queryFn: () =>
       listAuditEvents({
         page,
-        pageSize: 15,
+        pageSize,
+        sort: sortParam,
         q: debouncedSearch || undefined,
         actor: actor === ALL_VALUE ? undefined : actor,
         action: action === ALL_VALUE ? undefined : (action as AuditActionType),
         from: from ? new Date(from).toISOString() : undefined,
         to: to ? new Date(`${to}T23:59:59.999`).toISOString() : undefined,
       }),
+    placeholderData: (previous) => previous,
   });
 
   const actors = listAuditActors();
@@ -97,6 +108,71 @@ export default function AuditLogPage() {
   function formatTimestamp(value: string) {
     return new Date(value).toLocaleString(i18n.language === "tr" ? "tr-TR" : "en-US");
   }
+
+  function changeSorting(next: SortingState) {
+    const [first] = next;
+    if (!first) return;
+    setSortDesc(first.desc);
+    setPage(1);
+  }
+
+  function changePageSize(size: number) {
+    setPageSize(size);
+    setPage(1);
+  }
+
+  const columns: ColumnDef<AuditEvent>[] = [
+    {
+      id: SORT_FIELD,
+      accessorKey: "occurredAt",
+      header: t("audit:timestamp"),
+      meta: { label: t("audit:timestamp"), cellClassName: "whitespace-nowrap text-muted-foreground" },
+      cell: ({ row }) => formatTimestamp(row.original.occurredAt),
+    },
+    {
+      id: "actor",
+      accessorKey: "actor",
+      enableSorting: false,
+      header: t("audit:actor"),
+      meta: { label: t("audit:actor") },
+    },
+    {
+      id: "action",
+      enableSorting: false,
+      header: t("audit:action"),
+      meta: { label: t("audit:action") },
+      cell: ({ row }) => (
+        <Badge variant={ACTION_BADGE[row.original.action]}>{t(`audit:actionTypes.${row.original.action}`)}</Badge>
+      ),
+    },
+    {
+      id: "resource",
+      accessorKey: "resource",
+      enableSorting: false,
+      header: t("audit:resource"),
+      meta: { label: t("audit:resource") },
+    },
+    {
+      id: "details",
+      enableSorting: false,
+      header: t("audit:details"),
+      meta: { label: t("audit:details"), cellClassName: "max-w-md text-muted-foreground" },
+      cell: ({ row }) => (
+        <div className="truncate" title={row.original.details}>
+          {row.original.details}
+        </div>
+      ),
+    },
+  ];
+
+  const table = useDataTable({
+    columns,
+    data: data?.items ?? [],
+    getRowId: (event) => event.id,
+    sorting: [{ id: SORT_FIELD, desc: sortDesc }],
+    onSortingChange: changeSorting,
+    columnVisibilityKey: COLUMN_VISIBILITY_KEY,
+  });
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
@@ -172,52 +248,14 @@ export default function AuditLogPage() {
               <X className="mr-1 h-4 w-4" /> {t("audit:clearFilters")}
             </Button>
           )}
+          <DataTableViewOptions table={table} className="ml-auto" />
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-8 w-full" />
-            </div>
-          ) : !data || data.items.length === 0 ? (
-            <p className="p-6 text-center text-sm text-muted-foreground">{t("audit:empty")}</p>
-          ) : (
-            <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t("audit:timestamp")}</TableHead>
-                    <TableHead>{t("audit:actor")}</TableHead>
-                    <TableHead>{t("audit:action")}</TableHead>
-                    <TableHead>{t("audit:resource")}</TableHead>
-                    <TableHead>{t("audit:details")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.items.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell className="whitespace-nowrap text-muted-foreground">
-                        {formatTimestamp(event.occurredAt)}
-                      </TableCell>
-                      <TableCell>{event.actor}</TableCell>
-                      <TableCell>
-                        <Badge variant={ACTION_BADGE[event.action]}>{t(`audit:actionTypes.${event.action}`)}</Badge>
-                      </TableCell>
-                      <TableCell>{event.resource}</TableCell>
-                      <TableCell className="max-w-md truncate text-muted-foreground" title={event.details}>
-                        {event.details}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              <PaginationFooter result={data} onPageChange={setPage} />
-            </>
-          )}
+          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />
+          {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
         </CardContent>
       </Card>
     </div>
