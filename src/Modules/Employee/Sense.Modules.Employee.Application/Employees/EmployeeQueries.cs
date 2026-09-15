@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Contracts;
@@ -280,6 +281,38 @@ public sealed class GetUpcomingBirthdaysHandler(IEmployeeReadStore store, TimePr
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var rows = await store.ListAllAsync(new EmployeeCriteria(ActiveOnly: true), cancellationToken);
         return Result.Success(BirthdayCalculator.Upcoming(rows, today, query.Days));
+    }
+}
+
+/// <summary>
+/// Headcount of active employees per Department-level org unit ("Çalışan Dağılımı" ana sayfa widget'ı). Company-wide
+/// like the directory. Employee.OrgUnitId is always the deepest assignment (usually "Title"), so this walks each
+/// employee's ancestor chain to find the Department-level unit, the same way the career screen splits Title/Department.
+/// </summary>
+[RequiresPermission(EmployeePermissions.DirectoryViewKey)]
+public sealed record GetDepartmentDistributionQuery : IQuery<IReadOnlyList<DepartmentDistributionItemDto>>;
+
+public sealed class GetDepartmentDistributionHandler(IEmployeeReadStore store, OrgPlacementLoader placementLoader)
+    : IQueryHandler<GetDepartmentDistributionQuery, IReadOnlyList<DepartmentDistributionItemDto>>
+{
+    public async Task<Result<IReadOnlyList<DepartmentDistributionItemDto>>> Handle(GetDepartmentDistributionQuery query, CancellationToken cancellationToken)
+    {
+        var rows = await store.ListAllAsync(new EmployeeCriteria(ActiveOnly: true), cancellationToken);
+        var placement = await placementLoader.LoadAsync(cancellationToken);
+
+        // "Department" = Organization.Domain.OrgUnitTypeCodes.Department (Şirket > Şube > Departman > Ünvan sabit sistem
+        // kodu); Employee.Application, Modules_TalkOnlyThroughContracts kuralı gereği Organization.Domain'e değil bu
+        // Contracts DTO'sundaki Code alanına bakıyor.
+        var departmentLevel = placement.Types.FirstOrDefault(t => t.Code == "Department");
+
+        var groups = rows
+            .Select(r => departmentLevel is null ? null : placement.ChainFor(r.OrgUnitId).FirstOrDefault(a => a.OrgUnitTypeId == departmentLevel.Id))
+            .GroupBy(a => a?.OrgUnitId)
+            .Select(g => new DepartmentDistributionItemDto(g.Key, g.Key is { } id ? placement.UnitsById.GetValueOrDefault(id)?.Name : null, g.Count()))
+            .OrderByDescending(d => d.Count)
+            .ToList();
+
+        return Result.Success<IReadOnlyList<DepartmentDistributionItemDto>>(groups);
     }
 }
 
