@@ -12,13 +12,18 @@ using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Modules.Integrations.Infrastructure;
+using Sense.Modules.Integrations.Infrastructure.Persistence;
 using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure.Delivery;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Infrastructure;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Modules.Expense.Infrastructure;
+using Sense.Modules.Expense.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
@@ -95,6 +100,8 @@ if (!string.IsNullOrWhiteSpace(redisConnection))
 builder.Services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
 builder.Services.AddScoped<IUserProfileLookup, UserProfileLookup>();
 builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
+// Documents' EmployeeHired handler materializes requirements through this Employee read contract.
+builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
@@ -136,16 +143,46 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PayrollDbContext>>();
 
-// Recruitment (R0): no cross-module event consumers yet - JobPostingPublished/JobApplicationStageChanged have no
-// subscriber until a later Recruitment package (Notifications) is built. Registered anyway so EventTypeRegistry
-// knows these event types and the outbox drains instead of accumulating unpublishable rows.
+// Recruitment: JobPostingPublished/JobApplicationStageChanged still have no subscriber (a later Recruitment package)
+// but drain anyway so EventTypeRegistry knows the types. R1 adds requisition approval consumption: Workflow's
+// ApprovalCompleted/ApprovalRejected for RequestType="Requisition" (see Organization.Contracts.ApprovalRequestTypes)
+// flip the linked JobRequisition to Approved/Rejected, which unlocks/blocks publishing its JobPosting.
 builder.Services.AddModuleDbContext<RecruitmentDbContext>(builder.Configuration, RecruitmentDbContext.SchemaName);
+builder.Services.AddScoped<Sense.Modules.Recruitment.Domain.IJobRequisitionRepository, Sense.Modules.Recruitment.Infrastructure.Persistence.JobRequisitionRepository>();
+builder.Services.AddRecruitmentCoreServices();
+builder.Services.AddRecruitmentIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     RecruitmentDbContext.SchemaName,
     typeof(Sense.Modules.Recruitment.Contracts.RecruitmentPermissions).Assembly,
     typeof(RecruitmentDbContext).Assembly,
     typeof(Sense.Modules.Recruitment.Domain.IJobPostingRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<RecruitmentDbContext>>();
+
+// Expense: consumes Workflow's ApprovalCompleted/ApprovalRejected for RequestType "ExpenseClaim"/"Advance"
+// (ExpenseClaimApprovalCompletedHandler/RejectedHandler, AdvanceApprovalCompletedHandler/RejectedHandler in
+// Sense.Modules.Expense.Application), and writes its own ClaimSubmitted/Approved/Rejected + AdvanceRequestSubmitted/
+// Approved/Rejected events back to its own outbox - no consumer yet (Notifications templates are a later package),
+// but drained anyway so EventTypeRegistry knows the types (see the note at the top of this file).
+builder.Services.AddModuleDbContext<ExpenseDbContext>(builder.Configuration, ExpenseDbContext.SchemaName);
+builder.Services.AddExpenseCoreServices();
+builder.Services.AddModuleHandlers(
+    ExpenseDbContext.SchemaName,
+    typeof(Sense.Modules.Expense.Contracts.ExpensePermissions).Assembly,
+    typeof(ExpenseDbContext).Assembly,
+    typeof(Sense.Modules.Expense.Domain.IExpenseClaimRepository).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<ExpenseDbContext>>();
+
+// Integrations (Faz 8 #61): consumes Employee's employee.* lifecycle events and turns them into outbound webhook
+// deliveries for tenants with an active subscription (see faz8-durum-takibi.md). Writes nothing to its own outbox
+// yet, so no OutboxPollingService - just DbContext + handler scanning so EmployeeLifecycleWebhookHandlers resolves.
+builder.Services.AddModuleDbContext<IntegrationsDbContext>(builder.Configuration, IntegrationsDbContext.SchemaName);
+builder.Services.AddIntegrationsServices();
+builder.Services.AddModuleHandlers(
+    IntegrationsDbContext.SchemaName,
+    typeof(Sense.Modules.Integrations.Application.Webhooks.WebhookDispatchService).Assembly,
+    typeof(IntegrationsDbContext).Assembly,
+    typeof(Sense.Modules.Integrations.Domain.IWebhookSubscriptionRepository).Assembly,
+    typeof(Sense.Modules.Integrations.Contracts.IntegrationsPermissions).Assembly);
 
 await builder.Build().RunAsync();
 

@@ -751,4 +751,36 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="integrations.webhook.url_invalid" xml:space="preserve"><value>Adres geçerli bir HTTPS URL'si olmalıdır.</value></data>
   <data name="integrations.webhook.event_types_required" xml:space="preserve"><value>En az bir event türü seçilmelidir.</value></data>
   <data name="integrations.webhook.event_type_unknown" xml:space="preserve"><value>Bilinmeyen event türü.</value></data>
+
+  <!-- Expense (Faz 4 #62-64): harcama talebi + avans + ödemeler özeti çekirdeği -->
+  <data name="expense.my.claims.create" xml:space="preserve"><value>Kendi harcama talebini oluşturma</value></data>
+  <data name="expense.my.claims.view" xml:space="preserve"><value>Kendi harcama taleplerini görüntüleme</value></data>
+  <data name="expense.claims.view" xml:space="preserve"><value>Harcama taleplerini görüntüleme</value></data>
+  <data name="expense.claims.approve" xml:space="preserve"><value>Harcama taleplerine onaycı olarak görünme</value></data>
+  <data name="expense.my.advances.create" xml:space="preserve"><value>Kendi avans talebini oluşturma</value></data>
+  <data name="expense.my.advances.view" xml:space="preserve"><value>Kendi avans taleplerini görüntüleme</value></data>
+  <data name="expense.advances.view" xml:space="preserve"><value>Avans taleplerini görüntüleme</value></data>
+  <data name="expense.my.payments.view" xml:space="preserve"><value>Kendi ödemeler özetini görüntüleme</value></data>
+  <data name="expense.categories.view" xml:space="preserve"><value>Harcama kategorilerini görüntüleme</value></data>
+  <data name="expense.categories.manage" xml:space="preserve"><value>Harcama kategorilerini yönetme</value></data>
+  <data name="expense.category.not_found" xml:space="preserve"><value>Harcama kategorisi bulunamadı.</value></data>
+  <data name="expense.category.code_required" xml:space="preserve"><value>Kategori kodu zorunludur.</value></data>
+  <data name="expense.category.already_inactive" xml:space="preserve"><value>Kategori zaten pasif.</value></data>
+  <data name="expense.claim.not_found" xml:space="preserve"><value>Harcama talebi bulunamadı.</value></data>
+  <data name="expense.claim.not_draft" xml:space="preserve"><value>Bu işlem yalnızca taslak talepte yapılabilir.</value></data>
+  <data name="expense.claim.not_submitted" xml:space="preserve"><value>Talep, onay bekleme durumunda değil.</value></data>
+  <data name="expense.claim.no_items" xml:space="preserve"><value>Talep en az bir fiş içermelidir.</value></data>
+  <data name="expense.claim.not_approved" xml:space="preserve"><value>Talep onaylanmadan ödendi olarak işaretlenemez.</value></data>
+  <data name="expense.item.not_found" xml:space="preserve"><value>Fiş bulunamadı.</value></data>
+  <data name="expense.item.amount_invalid" xml:space="preserve"><value>Tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="expense.item.tax_rate_invalid" xml:space="preserve"><value>Vergi oranı 0 ile 100 arasında olmalıdır.</value></data>
+  <data name="expense.item.currency_required" xml:space="preserve"><value>Geçerli bir para birimi kodu girin (ör. TRY).</value></data>
+  <data name="expense.advance.not_found" xml:space="preserve"><value>Avans talebi bulunamadı.</value></data>
+  <data name="expense.advance.not_submitted" xml:space="preserve"><value>Avans talebi, onay bekleme durumunda değil.</value></data>
+  <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Taksit sayısı geçersiz.</value></data>
+  <data name="expense.advance.already_paid" xml:space="preserve"><value>Avans onaylanmadan ödendi olarak işaretlenemez.</value></data>
+  <data name="expense.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="expense.not_owner" xml:space="preserve"><value>Bu talep size ait değil.</value></data>
+  <data name="expense.category.inactive" xml:space="preserve"><value>Bu kategori pasif durumda.</value></data>
 </root>

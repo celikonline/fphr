@@ -17,6 +17,8 @@
     <ProjectReference Include="../Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Sense.Modules.Attendance.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Payroll/Sense.Modules.Payroll.Infrastructure/Sense.Modules.Payroll.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Recruitment/Sense.Modules.Recruitment.Infrastructure/Sense.Modules.Recruitment.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Expense/Sense.Modules.Expense.Infrastructure/Sense.Modules.Expense.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Integrations/Sense.Modules.Integrations.Infrastructure/Sense.Modules.Integrations.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

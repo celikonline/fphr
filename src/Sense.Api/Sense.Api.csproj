@@ -19,6 +19,8 @@
     <ProjectReference Include="../Modules/Attendance/Sense.Modules.Attendance.Api/Sense.Modules.Attendance.Api.csproj" />
     <ProjectReference Include="../Modules/Payroll/Sense.Modules.Payroll.Api/Sense.Modules.Payroll.Api.csproj" />
     <ProjectReference Include="../Modules/Recruitment/Sense.Modules.Recruitment.Api/Sense.Modules.Recruitment.Api.csproj" />
+    <ProjectReference Include="../Modules/Expense/Sense.Modules.Expense.Api/Sense.Modules.Expense.Api.csproj" />
+    <ProjectReference Include="../Modules/Integrations/Sense.Modules.Integrations.Api/Sense.Modules.Integrations.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

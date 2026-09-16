@@ -47,6 +47,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 | `web/src/pages/employees/*`, `settings/*`, `config/navigation.ts`, layout | Sahip | — |
 | `web/src/pages/leave/*`, `requests/*`, `approvals/*`, `notifications/*` | — | Sahip |
 | `src/Modules/Recruitment`, `web/src/pages/recruitment/*` | Sahip (2026-09-16, kullanıcı kararıyla Faz 6'ya erken geçildi — bkz. `faz6-durum-takibi.md`) | — |
+| `src/Modules/Expense`, `web/src/pages/expense/*` (henüz yok) | Sahip (2026-09-16, kullanıcı kararıyla Faz 5 Performance yerine seçildi — Performance başka bir oturumun kilitli `worktree-performance-core` dalında zaten işleniyordu; bkz. `faz4-durum-takibi.md` Ex0) | — |
 | `web/public/locales/*/<namespace>.json` | Kendi namespace'leri | Kendi namespace'leri (`leave.json`, `workflow.json`, `notifications.json`) — ayrı dosya olduğu için çakışmaz |
 | `tests/Modules/Sense.Modules.<M>.Tests` | Kendi modülleri | Kendi modülleri |
 
@@ -88,7 +89,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 | **Leave** | 1b | Employee, Organization (tatil takvimi, `WorkCalendar`), Workflow, Notifications, DataTransfer (#7/#8), toplu işlem (#9) | 🟡 Backend motoru evet; import, toplu atama ve menü Faz 0 sonrası |
 | Attendance | 2 | Leave (`TimesheetTreatment`), `WorkCalendar` | 🟡 Başladı — A1 (çalışma takvimi + atama) bitti; Leave artık kendi Pzt–Cum yer tutucusu yerine `Attendance.Contracts.IWorkScheduleReadService` kullanıyor |
 | Payroll | 3 | `LegislationParameter`, Attendance, Leave, FM dönüşümü | 🟡 Hesap motoru + golden set saf domain olarak mümkün (en uzun ve riskli faz); ancak kapasite varsa |
-| Expense | 4 | Workflow, Documents | ❌ Workflow'dan sonra |
+| Expense | 4 | Workflow, Documents | 🟡 Ex0 bitti (2026-09-16, kullanıcı kararıyla erken başlatıldı — bkz. `faz4-durum-takibi.md`); yalnız çekirdek (harcama talebi + avans + ödemeler özeti), Documents'a fiili bağımlılık henüz yok (dosya yükleme entegre edilmedi) |
 | Assets, Announcements (+Support), Training | 4 | Employee, Documents | Teknik olarak mümkün, öncelik düşük |
 | Performance, Compensation (+Benefits adayı) | 5 | Employee, Organization, Payroll (Compensation) | ❌ |
 | Recruitment (ATS) | 6 | Identity rolleri, `Location`/`OrgUnit` | ✅ R0 bitti (2026-09-16, kullanıcı kararıyla erken başlatıldı — bkz. `faz6-durum-takibi.md`); R1+ (requisition+onay, form builder, kariyer sitesi, raporlar) sırayla devam edecek |
