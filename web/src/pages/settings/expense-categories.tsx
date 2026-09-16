@@ -2,17 +2,19 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Receipt, Plus } from "lucide-react";
-import { Badge, Button, Card, Group, Modal, NumberInput, Stack, Switch, Text, TextInput, Title } from "@mantine/core";
+import { Receipt, Plus, Pencil } from "lucide-react";
+import { ActionIcon, Badge, Button, Card, Group, Modal, NumberInput, Stack, Switch, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatMoney } from "@/lib/money";
 import {
   createExpenseCategory,
   listExpenseCategories,
   setExpenseCategoryActive,
+  updateExpenseCategory,
   type ExpenseCategory,
 } from "@/services/expense.service";
 
@@ -29,7 +31,7 @@ export default function ExpenseCategoriesPage() {
 }
 
 function ExpenseCategoriesAdmin() {
-  const { t } = useTranslation(["expense", "common"]);
+  const { t, i18n } = useTranslation(["expense", "common"]);
   const canManage = usePermission("expense.categories.manage");
   const queryClient = useQueryClient();
 
@@ -41,6 +43,7 @@ function ExpenseCategoriesAdmin() {
   const categories = useMemo(() => categoriesQuery.data ?? [], [categoriesQuery.data]);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<ExpenseCategory | null>(null);
 
   const toggleActiveMutation = useMutation({
     mutationFn: (category: ExpenseCategory) => setExpenseCategoryActive(category.id, !category.isActive),
@@ -78,6 +81,16 @@ function ExpenseCategoriesAdmin() {
       cell: ({ row }) => (row.original.defaultTaxRate === null ? "—" : `%${row.original.defaultTaxRate}`),
     },
     {
+      id: "maxAmount",
+      accessorKey: "maxAmount",
+      header: t("expense:categoriesAdmin.columns.maxAmount"),
+      meta: { label: t("expense:categoriesAdmin.columns.maxAmount"), headerClassName: "w-40" },
+      cell: ({ row }) =>
+        row.original.maxAmount === null || row.original.maxAmount === undefined
+          ? "—"
+          : formatMoney(row.original.maxAmount, "TRY", i18n.language),
+    },
+    {
       id: "status",
       accessorKey: "isActive",
       header: t("expense:categoriesAdmin.columns.status"),
@@ -96,6 +109,11 @@ function ExpenseCategoriesAdmin() {
       cell: ({ row }) =>
         canManage && (
           <Group gap="xs" justify="flex-end" wrap="nowrap">
+            <Tooltip label={t("common:edit")}>
+              <ActionIcon type="button" variant="subtle" aria-label={t("common:edit")} onClick={() => setEditTarget(row.original)}>
+                <Pencil size={16} />
+              </ActionIcon>
+            </Tooltip>
             <Button
               type="button"
               size="xs"
@@ -147,6 +165,7 @@ function ExpenseCategoriesAdmin() {
       </Card>
 
       {dialogOpen && <CategoryDialog onClose={() => setDialogOpen(false)} />}
+      {editTarget && <EditCategoryDialog category={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
   );
 }
@@ -158,6 +177,7 @@ function CategoryDialog({ onClose }: { onClose: () => void }) {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [defaultTaxRate, setDefaultTaxRate] = useState<string | number>("");
+  const [maxAmount, setMaxAmount] = useState<string | number>("");
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -166,6 +186,7 @@ function CategoryDialog({ onClose }: { onClose: () => void }) {
         code: code.trim(),
         nameKey: name.trim(),
         defaultTaxRate: defaultTaxRate === "" ? null : Number(defaultTaxRate),
+        maxAmount: maxAmount === "" ? null : Number(maxAmount),
       }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
@@ -216,6 +237,91 @@ function CategoryDialog({ onClose }: { onClose: () => void }) {
             value={defaultTaxRate}
             onChange={setDefaultTaxRate}
             disabled={mutation.isPending}
+          />
+          <NumberInput
+            id="category-max-amount"
+            label={t("expense:categoriesAdmin.columns.maxAmount")}
+            description={t("expense:categoriesAdmin.maxAmountHint")}
+            suffix=" ₺"
+            min={0}
+            decimalScale={2}
+            value={maxAmount}
+            onChange={setMaxAmount}
+            disabled={mutation.isPending}
+            inputWrapperOrder={["label", "input", "description"]}
+          />
+          {error && (
+            <Text size="sm" c="red">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
+              {t("common:cancel")}
+            </Button>
+            <Button type="submit" loading={mutation.isPending}>
+              {t("common:save")}
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
+  );
+}
+
+function EditCategoryDialog({ category, onClose }: { category: ExpenseCategory; onClose: () => void }) {
+  const { t } = useTranslation(["expense", "common"]);
+  const queryClient = useQueryClient();
+
+  const [name, setName] = useState(category.nameKey);
+  const [maxAmount, setMaxAmount] = useState<string | number>(category.maxAmount ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateExpenseCategory(category.id, {
+        name: name.trim(),
+        maxAmount: maxAmount === "" ? null : Number(maxAmount),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
+      toast({ variant: "success", title: t("common:success"), description: t("expense:categoriesAdmin.saved") });
+      onClose();
+    },
+    onError: (err) => setError(getApiErrorMessage(err, t("expense:categoriesAdmin.errors.generic"))),
+  });
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!name.trim()) return setError(t("expense:categoriesAdmin.errors.nameRequired"));
+    setError(null);
+    mutation.mutate();
+  }
+
+  return (
+    <Modal opened onClose={onClose} title={t("expense:categoriesAdmin.editTitle")} size="32rem">
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <TextInput
+            id="edit-category-name"
+            label={t("expense:categoriesAdmin.columns.name")}
+            withAsterisk
+            value={name}
+            maxLength={200}
+            onChange={(event) => setName(event.currentTarget.value)}
+            disabled={mutation.isPending}
+          />
+          <NumberInput
+            id="edit-category-max-amount"
+            label={t("expense:categoriesAdmin.columns.maxAmount")}
+            description={t("expense:categoriesAdmin.maxAmountHint")}
+            suffix=" ₺"
+            min={0}
+            decimalScale={2}
+            value={maxAmount}
+            onChange={setMaxAmount}
+            disabled={mutation.isPending}
+            inputWrapperOrder={["label", "input", "description"]}
           />
           {error && (
             <Text size="sm" c="red">

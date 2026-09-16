@@ -134,6 +134,9 @@ function ApplicationForm({ applySlug }: { applySlug: string }) {
         lastName: values.lastName,
         email: values.email,
         phone: values.phone || null,
+        // Faz 1'in IConsentRecorder'ı gelene kadar aydınlatma metni versiyonu başvuruyla taşınır (bkz. TALIMAT tur 3).
+        privacyNoticeVersion: t("recruitment:career.privacyNoticeVersion"),
+        kvkkAccepted: values.consent,
       }),
     onError: (err) => {
       if (getApiProblem(err)?.code === "recruitment.application.already_exists") {

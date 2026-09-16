@@ -6,9 +6,13 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Expense.Api.Controllers;
 
-public sealed record CreateExpenseCategoryRequest(string Code, string NameKey, decimal? DefaultTaxRate);
+public sealed record CreateExpenseCategoryRequest(string Code, string NameKey, decimal? DefaultTaxRate, decimal? MaxAmount = null);
 
 public sealed record SetExpenseCategoryActiveRequest(bool IsActive);
+
+/// <summary>S-9 sözleşmesi: "name" alanı domain'in NameKey'ine eşlenir (POST'un NameKey adıyla tutarsız görünse de
+/// tur 3 TALIMAT'ının dondurduğu şekil budur).</summary>
+public sealed record UpdateExpenseCategoryRequest(string Name, decimal? MaxAmount);
 
 /// <summary>Expense category catalog (seeded per tenant: "expense.category.travel"/"expense.category.food").</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -24,7 +28,12 @@ public sealed class ExpenseCategoriesController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateExpenseCategoryRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateExpenseCategoryCommand(request.Code, request.NameKey, request.DefaultTaxRate), ct));
+        FromResult(await Dispatcher.Send(new CreateExpenseCategoryCommand(request.Code, request.NameKey, request.DefaultTaxRate, request.MaxAmount), ct));
+
+    [HttpPut(ApiRoutes.IdParam)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateExpenseCategoryRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateExpenseCategoryCommand(id, request.Name, request.MaxAmount), ct));
 
     [HttpPut(ApiRoutes.IdParam + "/active")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

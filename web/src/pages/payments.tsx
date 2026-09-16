@@ -346,7 +346,16 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
                 {(claim?.items ?? []).map((item) => (
                   <Group key={item.id} justify="space-between" wrap="nowrap">
                     <div>
-                      <Text size="sm">{item.description || categoryName((categoriesQuery.data ?? []).find((c) => c.id === item.categoryId) ?? { id: "", code: "", nameKey: "", defaultTaxRate: null, isActive: true })}</Text>
+                      <Group gap="xs" wrap="nowrap">
+                        <Text size="sm">{item.description || categoryName((categoriesQuery.data ?? []).find((c) => c.id === item.categoryId) ?? { id: "", code: "", nameKey: "", defaultTaxRate: null, isActive: true })}</Text>
+                        {item.exceedsCategoryLimit && (
+                          <Tooltip label={t("expense:item.exceedsLimitTooltip")}>
+                            <Badge color="orange" variant="light" size="sm">
+                              {t("expense:item.exceedsLimit")}
+                            </Badge>
+                          </Tooltip>
+                        )}
+                      </Group>
                       <Text size="xs" c="dimmed">
                         {item.receiptDate}
                       </Text>

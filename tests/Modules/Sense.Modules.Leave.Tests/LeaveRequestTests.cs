@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Requests;
@@ -194,6 +195,11 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
         services.AddSingleton(holidays);
+
+        // PreviewMyLeaveRequestHandler's teamOverlap lookup (faz-05 tur 3, S-7); unconfigured GetOrgUnitIdAsync
+        // returns null (NSubstitute default for Task<Guid?>) so TeamOverlap stays null - existing tests don't assert it.
+        services.AddSingleton(Substitute.For<IEmployeeLookup>());
+        services.AddSingleton(Substitute.For<IEmployeeDirectory>());
     }
 
     protected override async Task OnDatabaseReadyAsync()

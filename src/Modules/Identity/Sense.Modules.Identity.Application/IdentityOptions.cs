@@ -76,6 +76,14 @@ public static class IdentityErrors
     public const string MfaRequired = "auth.mfa_required";
     public const string MfaInvalid = "auth.mfa_invalid";
 
+    /// <summary>Enrollment/verify/disable/mfa-complete uçları (Faz 3, Tur 3 sözleşmesi) — yukarıdaki `auth.mfa_*`
+    /// çiftinden ayrı: o ikisi Faz 0'dan kalan, hiçbir uçtan üretilmeyen ölü kod.</summary>
+    public const string MfaAlreadyEnabled = "identity.mfa.already_enabled";
+
+    public const string MfaInvalidCode = "identity.mfa.invalid_code";
+
+    public const string MfaTokenExpired = "identity.mfa.token_expired";
+
     public const string TenantInvalidSlug = "tenant.invalid_slug";
     public const string TenantSlugTaken = "tenant.slug_taken";
     public const string TenantNotFound = "tenant.not_found";

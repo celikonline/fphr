@@ -160,6 +160,34 @@
       "nameRequired": "Ad zorunludur."
     }
   },
+  "costCenters": {
+    "title": "Maliyet merkezleri",
+    "subtitle": "Bütçe ve raporlama için kullanılan maliyet merkezi kataloğunu yönetin.",
+    "add": "Maliyet merkezi ekle",
+    "editTitle": "Maliyet merkezini düzenle",
+    "showInactive": "Pasif maliyet merkezlerini de göster",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "empty": "Kayıtlı maliyet merkezi yok.",
+    "saved": "Maliyet merkezi kaydedildi.",
+    "statusSaved": "Maliyet merkezi durumu güncellendi.",
+    "codeHint": "Raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
+    "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+    "columns": {
+      "name": "Ad",
+      "code": "Kod",
+      "status": "Durum"
+    },
+    "errors": {
+      "generic": "Maliyet merkezi kaydedilemedi.",
+      "loadFailed": "Maliyet merkezleri yüklenemedi.",
+      "codeTaken": "Bu kod ile zaten bir maliyet merkezi var.",
+      "codeRequired": "Kod zorunludur.",
+      "nameRequired": "Ad zorunludur."
+    }
+  },
   "customFields": {
     "title": "Özel alanlar",
     "subtitle": "Çalışan kartlarına eklenen özel alan tanımlarını yönetin.",

@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Table, Text, Textarea, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { Inbox as InboxIcon } from "lucide-react";
+import { ApprovalCard } from "@/components/ui/approval-card";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -46,76 +47,63 @@ function WorkflowInbox() {
         <Text c="dimmed">{t("workflow:inbox.subtitle")}</Text>
       </div>
 
-      <Card withBorder padding={0}>
-        {inboxQuery.isLoading ? (
-          <Stack gap="xs" p="md">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} h={32} />
-            ))}
-          </Stack>
-        ) : inboxQuery.isError ? (
-          <Text size="sm" c="red" ta="center" p="lg">
+      {inboxQuery.isLoading ? (
+        <Stack gap="xs">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} h={84} />
+          ))}
+        </Stack>
+      ) : inboxQuery.isError ? (
+        <Card withBorder padding="lg">
+          <Text size="sm" c="red" ta="center">
             {getApiErrorMessage(inboxQuery.error, t("common:errorGeneric"))}
           </Text>
-        ) : items.length === 0 ? (
-          <Text size="sm" c="dimmed" ta="center" p="xl">
+        </Card>
+      ) : items.length === 0 ? (
+        <Card withBorder padding="xl">
+          <Text size="sm" c="dimmed" ta="center">
             {t("workflow:inbox.empty")}
           </Text>
-        ) : (
-          <Table.ScrollContainer minWidth={720}>
-            <Table verticalSpacing="sm" horizontalSpacing="md" highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("workflow:inbox.requestType", { defaultValue: "Talep türü" })}</Table.Th>
-                  <Table.Th>{t("workflow:inbox.subject", { defaultValue: "Kayıt" })}</Table.Th>
-                  <Table.Th>{t("workflow:inbox.requester")}</Table.Th>
-                  <Table.Th>{t("workflow:inbox.stepColumn", { defaultValue: "Adım" })}</Table.Th>
-                  <Table.Th />
-                  <Table.Th ta="right">{t("common:actions")}</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {items.map((task) => (
-                  <Table.Tr key={task.taskId}>
-                    <Table.Td fw={500}>{t(`workflow:requestType.${task.requestType}`)}</Table.Td>
-                    <Table.Td maw={320}>
-                      <Text ff="monospace" size="xs" truncate>
-                        {task.subjectId}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>{task.requesterName ?? "—"}</Table.Td>
-                    <Table.Td>{t("workflow:inbox.step", { number: task.stepNumber })}</Table.Td>
-                    <Table.Td>
-                      {task.isFallbackRoleTask && (
-                        <Badge variant="outline" color="gray">
-                          {t("workflow:inbox.fallbackRole")}
-                        </Badge>
-                      )}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group justify="flex-end" gap="xs" wrap="nowrap">
-                        <Button type="button" size="xs" onClick={() => setDecideTarget({ task, override: false })}>
-                          {t("workflow:inbox.decide")}
-                        </Button>
-                        {canOverride && (
-                          <Button
-                            type="button"
-                            size="xs"
-                            variant="default"
-                            onClick={() => setDecideTarget({ task, override: true })}
-                          >
-                            {t("workflow:inbox.overrideDecide")}
-                          </Button>
-                        )}
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
-        )}
-      </Card>
+        </Card>
+      ) : (
+        <Stack gap="sm">
+          {items.map((task) => (
+            <ApprovalCard
+              key={task.taskId}
+              title={t(`workflow:requestType.${task.requestType}`)}
+              subtitle={task.subjectId}
+              badges={
+                task.isFallbackRoleTask && (
+                  <Badge variant="outline" color="gray">
+                    {t("workflow:inbox.fallbackRole")}
+                  </Badge>
+                )
+              }
+              fields={[
+                { label: t("workflow:inbox.requester"), value: task.requesterName ?? "—" },
+                { label: t("workflow:inbox.stepColumn", { defaultValue: "Adım" }), value: t("workflow:inbox.step", { number: task.stepNumber }) },
+              ]}
+              actions={
+                <>
+                  <Button type="button" size="xs" onClick={() => setDecideTarget({ task, override: false })}>
+                    {t("workflow:inbox.decide")}
+                  </Button>
+                  {canOverride && (
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="default"
+                      onClick={() => setDecideTarget({ task, override: true })}
+                    >
+                      {t("workflow:inbox.overrideDecide")}
+                    </Button>
+                  )}
+                </>
+              }
+            />
+          ))}
+        </Stack>
+      )}
 
       {decideTarget && (
         <DecideDialog

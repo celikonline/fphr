@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
@@ -432,8 +433,18 @@ public sealed class ListMyRequestableLeaveTypesHandler(
     }
 }
 
+/// <summary>Employee card → Devamsızlık kapsamı dışı: one peer (same org unit) with active leave overlapping the previewed dates.</summary>
+public sealed record TeamOverlapEmployeeDto(Guid EmployeeId, string Name, DateOnly StartDate, DateOnly EndDate);
+
+/// <summary>
+/// "Ekip çakışma bilgisi" (faz-05 tur 3, S-7): non-blocking - the caller's own submit is never rejected because of
+/// this, it is informational only ("takımınızdan N kişi bu tarihlerde izinli"). Only computed for the self-service
+/// preview (<see cref="PreviewMyLeaveRequestQuery"/>); on-behalf preview leaves it null.
+/// </summary>
+public sealed record TeamOverlapDto(int Count, IReadOnlyList<TeamOverlapEmployeeDto> Employees);
+
 /// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing.</summary>
-public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings);
+public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null);
 
 internal static class LeaveRequestPreview
 {
@@ -489,15 +500,63 @@ public sealed record PreviewMyLeaveRequestQuery(
 
 public sealed class PreviewMyLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
-    ILeaveDayCalculator dayCalculator)
+    ILeaveDayCalculator dayCalculator, IEmployeeLookup employeeLookup, IEmployeeDirectory employees, ILeaveRequestRepository requests)
     : IQueryHandler<PreviewMyLeaveRequestQuery, LeaveRequestPreviewDto>
 {
-    public async Task<Result<LeaveRequestPreviewDto>> Handle(PreviewMyLeaveRequestQuery query, CancellationToken cancellationToken) =>
-        currentUser.EmployeeId is not { } employeeId
-            ? Error.NotFound(LeaveErrors.NoEmployeeForUser)
-            : await LeaveRequestPreview.BuildAsync(
-                rules, profiles, ruleSets, dayCalculator, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
-                cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
+    /// <summary>Display cap only - <c>Count</c> still reports the true total overlap.</summary>
+    private const int TeamOverlapMaxEmployees = 20;
+
+    public async Task<Result<LeaveRequestPreviewDto>> Handle(PreviewMyLeaveRequestQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(LeaveErrors.NoEmployeeForUser);
+        }
+
+        var preview = await LeaveRequestPreview.BuildAsync(
+            rules, profiles, ruleSets, dayCalculator, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
+            cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
+        if (preview.IsFailure)
+        {
+            return preview;
+        }
+
+        var overlap = await BuildTeamOverlapAsync(employeeId, query.StartDate, query.EndDate, cancellationToken);
+        return preview.Value with { TeamOverlap = overlap };
+    }
+
+    /// <summary>Same org unit, active (Pending/Approved) leave overlapping [start, end], excluding the caller.</summary>
+    private async Task<TeamOverlapDto?> BuildTeamOverlapAsync(Guid employeeId, DateOnly start, DateOnly end, CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return null;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != employeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return new TeamOverlapDto(0, []);
+        }
+
+        var overlapping = await requests.ListActiveInRangeAsync(start, end, peers, cancellationToken);
+        if (overlapping.Count == 0)
+        {
+            return new TeamOverlapDto(0, []);
+        }
+
+        var names = (await employees.GetContactsAsync(tenant.TenantId, overlapping.Select(r => r.EmployeeId).Distinct().ToList(), cancellationToken))
+            .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+        var shown = overlapping
+            .OrderBy(r => r.StartDate)
+            .Take(TeamOverlapMaxEmployees)
+            .Select(r => new TeamOverlapEmployeeDto(r.EmployeeId, names.GetValueOrDefault(r.EmployeeId, string.Empty), r.StartDate, r.EndDate))
+            .ToList();
+        return new TeamOverlapDto(overlapping.Count, shown);
+    }
 }
 
 [RequiresPermission("leave.requests.create_on_behalf")]

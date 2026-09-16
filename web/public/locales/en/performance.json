@@ -1,0 +1,46 @@
+{
+  "genericError": "Something went wrong.",
+  "status": {
+    "open": "Open",
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "archived": "Archived"
+  },
+  "my": {
+    "title": "My goals",
+    "subtitle": "View this period's goals and update your progress.",
+    "addGoal": "Add goal",
+    "empty": "You don't have any goals yet.",
+    "created": "Goal added.",
+    "targetDate": "Target date: {{date}}",
+    "progressLabel": "Progress: {{progress}}%",
+    "updateProgress": "Update progress",
+    "progressUpdated": "Progress updated."
+  },
+  "form": {
+    "newTitle": "New goal",
+    "title": "Title",
+    "description": "Description",
+    "targetDate": "Target date",
+    "reviewCycle": "Review cycle",
+    "reviewCycleNone": "No cycle selected",
+    "submit": "Add"
+  },
+  "team": {
+    "title": "Team goals",
+    "subtitle": "View the goals of the employees on your team.",
+    "empty": "No goals recorded for your team.",
+    "col": {
+      "employee": "Employee",
+      "title": "Title",
+      "targetDate": "Target date",
+      "progress": "Progress",
+      "status": "Status"
+    },
+    "cancel": "Cancel",
+    "cancelConfirmTitle": "Cancel goal",
+    "cancelConfirmDescription": "Are you sure you want to cancel \"{{title}}\"?",
+    "cancelled": "Goal cancelled."
+  }
+}

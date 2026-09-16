@@ -82,6 +82,9 @@
   <data name="user.password_mismatch" xml:space="preserve"><value>The current password is incorrect.</value></data>
   <data name="password_reset.not_found" xml:space="preserve"><value>This reset link is invalid.</value></data>
   <data name="password_reset.expired" xml:space="preserve"><value>This reset link has expired or was already used.</value></data>
+  <data name="identity.mfa.already_enabled" xml:space="preserve"><value>Two-factor authentication is already enabled.</value></data>
+  <data name="identity.mfa.invalid_code" xml:space="preserve"><value>The verification code is invalid.</value></data>
+  <data name="identity.mfa.token_expired" xml:space="preserve"><value>The sign-in request has expired; please log in again.</value></data>
 
   <data name="role.invalid_code" xml:space="preserve"><value>The role code may only contain letters, digits, '_' and '-' (max 50 characters).</value></data>
   <data name="role.system_code" xml:space="preserve"><value>This code is reserved for a system role.</value></data>
@@ -642,6 +645,15 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Only your own rejected leave request can be resubmitted.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>The calendar range can be at most {max} days.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
+  <data name="leave.absences.view" xml:space="preserve"><value>View absence records</value></data>
+  <data name="leave.absences.manage" xml:space="preserve"><value>Manage absence records</value></data>
+  <data name="leave.absence.not_found" xml:space="preserve"><value>Absence record not found.</value></data>
+  <data name="leave.absence.note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
+  <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Hours must be between 0 and 24.</value></data>
+  <data name="leave.absence.hours_only_for_late" xml:space="preserve"><value>Hours can only be entered for the "late" kind.</value></data>
+  <data name="leave.absence.reversal_reason_required" xml:space="preserve"><value>A reversal reason is required (at most 500 characters).</value></data>
+  <data name="leave.absence.already_reversed" xml:space="preserve"><value>This absence record has already been reversed.</value></data>
+  <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>A reversal record cannot itself be reversed.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>View work schedules</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Manage work schedules</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Assign work schedules</value></data>
@@ -856,6 +868,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.category.not_found" xml:space="preserve"><value>Expense category not found.</value></data>
   <data name="expense.category.code_required" xml:space="preserve"><value>A category code is required.</value></data>
   <data name="expense.category.already_inactive" xml:space="preserve"><value>Category is already inactive.</value></data>
+  <data name="expense.category.name_key_required" xml:space="preserve"><value>Category name is required.</value></data>
+  <data name="expense.category.system_immutable" xml:space="preserve"><value>A system category's name cannot be changed.</value></data>
   <data name="expense.claim.not_found" xml:space="preserve"><value>Expense claim not found.</value></data>
   <data name="expense.claim.not_draft" xml:space="preserve"><value>This action is only available on a Draft claim.</value></data>
   <data name="expense.claim.not_submitted" xml:space="preserve"><value>The claim is not pending approval.</value></data>

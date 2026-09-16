@@ -88,7 +88,8 @@
     "anonymize": "Anonimleştir (KVKK)",
     "anonymizeDescription": "Bu adayın adı, e-postası ve telefonu geri alınamaz şekilde silinecek; başvuru geçmişi kaydı kalır ama artık bu kişiyi tanımlamaz.",
     "anonymizeSuccess": "Aday verisi anonimleştirildi.",
-    "anonymized": "Anonimleştirildi"
+    "anonymized": "Anonimleştirildi",
+    "anonymizedRowHint": "Bu adayın verileri KVKK kapsamında anonimleştirildi; düzenlenemez veya aşaması taşınamaz."
   },
   "applications": {
     "title": "Başvurular",
@@ -214,7 +215,16 @@
     "alreadyApplied": "Bu ilana bu e-posta ile zaten başvurdunuz.",
     "otherOpenPositions": "Diğer açık pozisyonlar",
     "noOtherPositions": "Şu anda başka açık pozisyon yok.",
-    "backToPosting": "İlana dön"
+    "backToPosting": "İlana dön",
+    "privacyNoticeVersion": "2026-09",
+    "list": {
+      "title": "Açık Pozisyonlar",
+      "subtitle": "Şirketimizdeki güncel açık pozisyonları aşağıda bulabilirsiniz.",
+      "empty": "Şu an açık pozisyon yok.",
+      "loadError": "İlanlar yüklenirken bir sorun oluştu.",
+      "viewPosting": "İlanı görüntüle ve başvur",
+      "locationUnspecified": "Lokasyon belirtilmedi"
+    }
   },
   "genericError": "Bir şeyler ters gitti."
 }

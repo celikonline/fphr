@@ -1,0 +1,18 @@
+{
+  "genericError": "[DE] Payroll data could not be loaded.",
+  "periods": {
+    "title": "[DE] Payroll Periods",
+    "subtitle": "[DE] Opened payroll periods and their status.",
+    "empty": "[DE] No payroll period has been opened yet.",
+    "columns": {
+      "period": "[DE] Period",
+      "status": "[DE] Status"
+    },
+    "status": {
+      "open": "[DE] Open",
+      "approved": "[DE] Approved",
+      "paid": "[DE] Paid",
+      "locked": "[DE] Locked"
+    }
+  }
+}

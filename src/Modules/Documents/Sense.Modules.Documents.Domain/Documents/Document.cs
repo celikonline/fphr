@@ -78,6 +78,11 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Storage bucket name (e.g., "documents", "attachments").</summary>
     public string BucketName { get; private set; } = "documents";
 
+    /// <summary>Validity/expiry date of the document content itself (e.g. driver's license, residence permit, health
+    /// report) - distinct from <c>EmployeeDocumentRequirement</c>'s DueDate (which tracks "when must this be
+    /// uploaded by", not "until when is the uploaded document valid"). Nullable: most documents have no expiry.</summary>
+    public DateOnly? ExpiryDate { get; private set; }
+
     /// <summary>Creates a new document aggregate with Pending status.</summary>
     public static Result<Document> Create(
         Guid tenantId,
@@ -131,6 +136,10 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
         Raise(new DocumentUploadConfirmed(Id, TenantId, eTag, actualSize));
     }
 
+    /// <summary>Sets or clears the document's validity/expiry date. A past date is accepted - an already-expired
+    /// document can still be uploaded and will show up in the expiring/expired report immediately.</summary>
+    public void SetExpiryDate(DateOnly? expiryDate) => ExpiryDate = expiryDate;
+
     /// <summary>Marks document as deleted.</summary>
     public void Delete(Guid deletedBy)
     {
@@ -169,3 +178,14 @@ public sealed record DocumentDeleted(
     string FileKey,
     string BucketName,
     Guid DeletedBy) : DomainEvent;
+
+/// <summary>Filter for the "expiring documents" report (<c>GET /api/v1/documents/expiring</c>): which side of the
+/// expiry window a document falls on.</summary>
+public enum DocumentExpiryState
+{
+    /// <summary>ExpiryDate is today or in the future, within the requested window.</summary>
+    Expiring = 0,
+
+    /// <summary>ExpiryDate is in the past.</summary>
+    Expired = 1,
+}

@@ -4,21 +4,24 @@
  * Screen 6 (Item 20): Timestamp / Actor / Action / Resource / Details, with date-range,
  * actor and action-type filters, pagination and CSV export.
  *
- * TODO(item-20-backend): There is no human-facing audit log table or endpoint yet. What exists
- * (Items 15/16) is `AuditTenantInterceptor` (stamps CreatedAt/ModifiedDate/*UserId on IAuditable
- * entities) and the `outbox_messages` table (Sense.Shared.Infrastructure/Persistence/Outbox) which
- * captures domain events with `ActorUserId`/`Type`/`Payload`/`OccurredAt` for at-least-once dispatch -
- * it's a processing queue, not a queryable audit trail, and rows are pruned once processed. A real
- * implementation would project outbox events (or a dedicated append-only AuditLog table) behind
- * something like `GET /v1/identity/audit-log?from&to&actor&action&page&pageSize`, gated by the
- * already-defined `identity.audit.view` / `identity.audit.sensitive_view` permissions
- * (see IdentityPermissions.cs). This service mocks that endpoint against an in-memory seed so the
- * screen is fully usable end-to-end; swap `listAuditEvents`/`exportAuditEventsCsv` for real
- * `apiClient` calls once the backend exists.
+ * Wired to the real backend endpoint (Faz 1 BE twin, sözleşme S-1 in status/faz-01/TALIMAT.md /
+ * status/PANO.md, "hizalı" with this file's previous mock shape):
+ *   GET /v1/identity/audit-log?from&to&actor&action&page&pageSize -> PagedResult<AuditLogEntryDto>
+ * Gated by `identity.audit.view`; `details` comes back masked from the server when the caller lacks
+ * `identity.audit.sensitive_view` (see IdentityPermissions.cs) - nothing to do here, we just render
+ * whatever string the server sends.
+ *
+ * Two gaps versus the mock this replaces, both flagged in rapor-fe-20260916-1613.md for the BE twin/PO:
+ * 1. The documented query string has no free-text `q` param and no `sort` param. Both are still sent
+ *    (harmless if the backend ignores unknown query keys) so the search box and the timestamp column's
+ *    sort toggle keep working the moment the backend adds support; until then they may be no-ops against
+ *    a real API (the endpoint isn't in main yet as of this turn, so this could not be verified live).
+ * 2. There is no actors-lookup endpoint in the contract (`actor` is `string`, not a closed enum), so
+ *    `pages/audit-log.tsx` no longer offers a dropdown of known actors - see that file for the resulting
+ *    (unavoidable) small filter-control change.
  */
-import { mockDelay } from "@/services/mock/local-store";
-import { paginate, type ClientPageQuery } from "@/services/mock/paginate";
-import type { PagedResult } from "@/types";
+import { apiClient } from "@senseik/api-client";
+import type { PagedResult, PagedQueryParams } from "@/types";
 
 export type AuditActionType = "create" | "update" | "delete" | "login" | "invite" | "role_change";
 
@@ -28,75 +31,49 @@ export interface AuditEvent {
   actor: string;
   action: AuditActionType;
   resource: string;
+  /** Present on the real DTO (`AuditLogEntryDto.resourceId`); the grid doesn't render it (yet). */
+  resourceId?: string;
   details: string;
 }
 
-const ACTORS = ["ozgur.celik@algosense.com.tr", "ayse.yilmaz@algosense.com.tr", "mehmet.kaya@algosense.com.tr", "system"];
+const AUDIT_LOG_BASE = "/v1/identity/audit-log";
+
 const ACTIONS: AuditActionType[] = ["create", "update", "delete", "login", "invite", "role_change"];
-const RESOURCES = ["User", "Role", "OrgUnit", "Location", "Position", "CompanyProfile", "Document"];
 
-function seedEvents(): AuditEvent[] {
-  const events: AuditEvent[] = [];
-  const now = Date.now();
-  for (let i = 0; i < 137; i += 1) {
-    const action = ACTIONS[i % ACTIONS.length];
-    const resource = RESOURCES[i % RESOURCES.length];
-    const actor = ACTORS[i % ACTORS.length];
-    events.push({
-      id: `evt-${i}`,
-      occurredAt: new Date(now - i * 45 * 60 * 1000).toISOString(),
-      actor,
-      action,
-      resource,
-      details: `${actor} performed ${action} on ${resource} #${1000 + i}`,
-    });
-  }
-  return events;
-}
-
-let cachedEvents: AuditEvent[] | null = null;
-function allEvents(): AuditEvent[] {
-  if (!cachedEvents) cachedEvents = seedEvents();
-  return cachedEvents;
-}
-
-export interface ListAuditEventsQuery extends ClientPageQuery {
+export interface AuditLogFilters {
   actor?: string;
   action?: AuditActionType;
   from?: string;
   to?: string;
 }
 
+export interface ListAuditEventsQuery extends AuditLogFilters, PagedQueryParams {}
+
 export async function listAuditEvents(query: ListAuditEventsQuery = {}): Promise<PagedResult<AuditEvent>> {
-  await mockDelay();
-  let events = allEvents();
-
-  if (query.actor) events = events.filter((e) => e.actor === query.actor);
-  if (query.action) events = events.filter((e) => e.action === query.action);
-  if (query.from) events = events.filter((e) => e.occurredAt >= query.from!);
-  if (query.to) events = events.filter((e) => e.occurredAt <= query.to!);
-
-  return paginate(
-    events,
-    { ...query, sort: query.sort ?? "-occurredAt" },
-    (e) => `${e.actor} ${e.action} ${e.resource} ${e.details}`,
-    (e) => ({ occurredAt: e.occurredAt })
-  );
+  const { data } = await apiClient.get<PagedResult<AuditEvent>>(AUDIT_LOG_BASE, { params: query });
+  return data;
 }
 
-export function listAuditActors(): string[] {
-  return ACTORS;
-}
-
+/** The action taxonomy is a fixed backend enum (see BE sözleşme), not something to fetch. */
 export function listAuditActionTypes(): AuditActionType[] {
   return ACTIONS;
 }
 
-/** Builds a CSV blob from the (already filtered) events currently shown on screen. */
-export function exportAuditEventsToCsv(events: AuditEvent[]): Blob {
-  const header = "Timestamp,Actor,Action,Resource,Details";
-  const rows = events.map(
-    (e) => `${e.occurredAt},${e.actor},${e.action},${e.resource},"${e.details.replace(/"/g, '""')}"`
-  );
-  return new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
+const EXPORT_PAGE_SIZE = 100;
+const EXPORT_MAX_PAGES = 50;
+
+/**
+ * Walks every page matching the given filters (pageSize=100, up to 50 pages = 5000 rows) and builds
+ * a CSV blob - the full filtered result set, not just the page currently rendered on screen.
+ */
+export async function exportAuditEventsCsv(filters: AuditLogFilters = {}): Promise<Blob> {
+  const rows = ["Timestamp,Actor,Action,Resource,Details"];
+  for (let page = 1; page <= EXPORT_MAX_PAGES; page += 1) {
+    const result = await listAuditEvents({ ...filters, page, pageSize: EXPORT_PAGE_SIZE });
+    for (const e of result.items) {
+      rows.push(`${e.occurredAt},${e.actor},${e.action},${e.resource},"${e.details.replace(/"/g, '""')}"`);
+    }
+    if (!result.hasNext || result.items.length === 0) break;
+  }
+  return new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
 }

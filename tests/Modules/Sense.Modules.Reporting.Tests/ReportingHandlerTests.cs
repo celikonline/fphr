@@ -137,6 +137,59 @@ public sealed class ReportingHandlerTests
     }
 
     [Fact]
+    public async Task GetReportExecutionFileHandler_WhenNotOwner_FailsForbiddenWithoutLeakingContent()
+    {
+        // Tenant/user izolasyonu: repository tenant filtresinden geçmiş olsa bile (aynı tenant, başka
+        // kullanıcı) execution'ın bytes'ı döndürülmemeli - bkz. ReportExecutionRepository.GetByIdAsync'in
+        // XML doc'u: "Query is automatically filtered by tenant via global filter" - burada ek bir
+        // kullanıcı sahiplik kontrolü olmadan tenant filtresi tek başına yeterli değil.
+        var execution = ReportExecution.Create(TenantId, "documents.missingDocuments", null, Guid.NewGuid(), DateTime.UtcNow).Value;
+        execution.Start(DateTime.UtcNow);
+        execution.Complete("report.csv", "text/csv", [1, 2, 3], DateTime.UtcNow);
+        var executions = Substitute.For<IReportExecutionRepository>();
+        executions.GetByIdAsync(execution.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(execution));
+        var handler = new GetReportExecutionFileHandler(executions, CurrentUser());
+
+        var result = await handler.Handle(new GetReportExecutionFileQuery(execution.Id), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.NotOwner);
+    }
+
+    [Fact]
+    public async Task GetReportExecutionFileHandler_WhenNotYetSucceeded_FailsNotReady()
+    {
+        var execution = ReportExecution.Create(TenantId, "documents.missingDocuments", null, UserId, DateTime.UtcNow).Value;
+        execution.Start(DateTime.UtcNow); // still Running, no ResultContent yet
+        var executions = Substitute.For<IReportExecutionRepository>();
+        executions.GetByIdAsync(execution.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(execution));
+        var handler = new GetReportExecutionFileHandler(executions, CurrentUser());
+
+        var result = await handler.Handle(new GetReportExecutionFileQuery(execution.Id), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ReportNotReady);
+    }
+
+    [Fact]
+    public async Task GetReportExecutionFileHandler_WhenOwnerAndSucceeded_ReturnsFile()
+    {
+        var execution = ReportExecution.Create(TenantId, "documents.missingDocuments", null, UserId, DateTime.UtcNow).Value;
+        execution.Start(DateTime.UtcNow);
+        execution.Complete("report.csv", "text/csv", [1, 2, 3], DateTime.UtcNow);
+        var executions = Substitute.For<IReportExecutionRepository>();
+        executions.GetByIdAsync(execution.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(execution));
+        var handler = new GetReportExecutionFileHandler(executions, CurrentUser());
+
+        var result = await handler.Handle(new GetReportExecutionFileQuery(execution.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.FileName.ShouldBe("report.csv");
+        result.Value.ContentType.ShouldBe("text/csv");
+        result.Value.Content.ShouldBe(new byte[] { 1, 2, 3 });
+    }
+
+    [Fact]
     public async Task ListMyReportExecutionsHandler_ReturnsRequesterOwnHistoryPaged()
     {
         var execution = ReportExecution.Create(TenantId, "documents.missingDocuments", null, UserId, DateTime.UtcNow).Value;

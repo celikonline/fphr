@@ -54,4 +54,19 @@ public interface IEmployeeDocumentRequirementRepository
 
     Task<(IReadOnlyList<EmployeeDocumentRequirement> Items, int Total)> ListReportAsync(
         DocumentRequirementStatus? status, int skip, int take, CancellationToken cancellationToken = default);
+
+    /// <summary>Paged report of Uploaded requirements whose linked <see cref="Document"/> has a non-null ExpiryDate,
+    /// filtered by expiry window (<c>GET /api/v1/documents/expiring</c>). <paramref name="today"/>/<paramref name="withinDays"/>
+    /// define the "expiring soon" window; <paramref name="state"/> null = both expiring and already-expired.</summary>
+    Task<(IReadOnlyList<ExpiringDocumentRow> Items, int Total)> ListExpiringAsync(
+        DateOnly today, int withinDays, DocumentExpiryState? state, int skip, int take, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Join row for <see cref="IEmployeeDocumentRequirementRepository.ListExpiringAsync"/>: an Uploaded requirement
+/// plus its linked Document's ExpiryDate.</summary>
+public sealed record ExpiringDocumentRow(
+    Guid RequirementId,
+    Guid DocumentId,
+    Guid EmployeeId,
+    Guid DocumentTypeId,
+    DateOnly ExpiryDate);

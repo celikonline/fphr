@@ -77,3 +77,26 @@ public interface IFrontendLinks
 
     string Login(string tenantSlug);
 }
+
+/// <summary>TOTP (RFC 6238) secret üretimi, otpauth:// URI ve kod doğrulama. Infrastructure: BCL `HMACSHA1`, ek paket yok.</summary>
+public interface ITotpService
+{
+    /// <summary>20 byte'lık rastgele secret, Base32 kodlu (kullanıcıya/QR'a gösterilir, şifreli olarak saklanır).</summary>
+    string GenerateSecret();
+
+    /// <summary>Authenticator uygulamaları için `otpauth://totp/...` URI'si (QR'sız da kopyalanabilir).</summary>
+    string BuildOtpAuthUri(string secretBase32, string accountLabel, string issuer);
+
+    /// <summary>30 sn adım, ±1 pencere (saat kaymasına tolerans).</summary>
+    bool ValidateCode(string secretBase32, string code);
+}
+
+/// <summary>Login sonrası "MFA gerekli" durumunda verilen kısa ömürlü, durumsuz `mfaToken`. Sunucuda tablo tutmaz:
+/// kullanıcı+kiracı kimliği imzalı/şifreli olarak taşınır (Infrastructure: ASP.NET Core DataProtection, 5 dk).</summary>
+public interface IMfaChallengeTokenProtector
+{
+    string Protect(Guid userId, Guid tenantId);
+
+    /// <summary>Süresi dolmuş veya bozulmuş token için false döner (ayrım yapılmaz — ikisi de kullanıcı için "yeniden giriş yap" demektir).</summary>
+    bool TryUnprotect(string token, out Guid userId, out Guid tenantId);
+}

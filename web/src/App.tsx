@@ -30,13 +30,18 @@ import DataTransferJobPage from "@/pages/settings/data-transfer-job";
 import ApprovalFlowsPage from "@/pages/settings/approval-flows";
 import CustomFieldsPage from "@/pages/settings/custom-fields";
 import TerminationReasonsPage from "@/pages/settings/termination-reasons";
+import CostCentersPage from "@/pages/settings/cost-centers";
 import SubcontractorsPage from "@/pages/settings/subcontractors";
 import DocumentTypesPage from "@/pages/settings/document-types";
 import MissingDocumentsReportPage from "@/pages/settings/missing-documents-report";
+import AssetCategoriesPage from "@/pages/settings/asset-categories";
+import ExpenseCategoriesPage from "@/pages/settings/expense-categories";
+import PayrollPeriodsPage from "@/pages/payroll/periods";
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
 import CareerJobPostingPage from "@/pages/public/career/job-posting";
+import CareerPostingsListPage from "@/pages/public/career/postings";
 import RequestsPage from "@/pages/requests";
 import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
@@ -53,7 +58,10 @@ import PaymentsPage from "@/pages/payments";
 import ExpensePaymentsAdminPage from "@/pages/expense-payments-admin";
 import MyTimesheetPage from "@/pages/attendance/my-timesheet";
 import MyShiftsPage from "@/pages/attendance/my-shifts";
+import TeamTimesheetPage from "@/pages/attendance/team-timesheet";
 import WorkSchedulesPage from "@/pages/settings/work-schedules";
+import MyGoalsPage from "@/pages/performance/my-goals";
+import TeamGoalsPage from "@/pages/performance/team-goals";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -77,6 +85,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/approve/:token" element={<ApproveTokenPage />} />
+        <Route path="/kariyer" element={<CareerPostingsListPage />} />
         <Route path="/kariyer/:applySlug" element={<CareerJobPostingPage />} />
 
         {/* Protected Routes: single app shell (sidebar + header) */}
@@ -109,8 +118,13 @@ export default function App() {
           <Route path="leave/overtimes" element={<MyOvertimesPage />} />
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
+          <Route path="payroll/periods" element={<PayrollPeriodsPage />} />
           <Route path="attendance/timesheet" element={<MyTimesheetPage />} />
           <Route path="attendance/shifts" element={<MyShiftsPage />} />
+          <Route path="attendance/team-timesheet" element={<TeamTimesheetPage />} />
+
+          <Route path="performance/goals" element={<MyGoalsPage />} />
+          <Route path="performance/team-goals" element={<TeamGoalsPage />} />
 
           <Route path="recruitment/postings" element={<JobPostingsPage />} />
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />
@@ -127,9 +141,12 @@ export default function App() {
           <Route path="settings/company/approval-flows" element={<ApprovalFlowsPage />} />
           <Route path="settings/company/custom-fields" element={<CustomFieldsPage />} />
           <Route path="settings/company/termination-reasons" element={<TerminationReasonsPage />} />
+          <Route path="settings/company/cost-centers" element={<CostCentersPage />} />
           <Route path="settings/company/subcontractors" element={<SubcontractorsPage />} />
           <Route path="settings/company/document-types" element={<DocumentTypesPage />} />
           <Route path="settings/company/missing-documents" element={<MissingDocumentsReportPage />} />
+          <Route path="settings/company/asset-categories" element={<AssetCategoriesPage />} />
+          <Route path="settings/company/expense-categories" element={<ExpenseCategoriesPage />} />
           <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
           <Route
             path="settings/rules/*"

@@ -220,8 +220,17 @@
       "typeRequired": "[DE] Select a leave type.",
       "datesRequired": "[DE] Start and end dates are required.",
       "range": "[DE] End date cannot be before the start date.",
-      "descriptionRequired": "[DE] A description is required for this leave type."
+      "descriptionRequired": "[DE] A description is required for this leave type.",
+      "timeRequired": "[DE] Enter a start and end time; the end time must be after the start time.",
+      "halfDayRequired": "[DE] Select morning or afternoon."
     },
+    "sameDayHint": "[DE] Same day",
+    "halfDayPeriod": "[DE] Half of the day",
+    "halfDayMorning": "[DE] Morning",
+    "halfDayAfternoon": "[DE] Afternoon",
+    "hourlyStart": "[DE] Start time",
+    "hourlyEnd": "[DE] End time",
+    "teamOverlap": "[DE] {{count}} more people from the same unit are on leave or have requested leave on these dates.",
     "previewLoading": "Tage werden berechnet…",
     "previewDays": "Berechnete Tage: {{days}} ({{rest}} Ruhetage und {{holidays}} Feiertage abgezogen)",
     "bypassApproval": "Ohne Genehmigungsprozess genehmigen",

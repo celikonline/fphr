@@ -100,8 +100,10 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           requiresDescription: type.settings.requiresDescription,
           perRequestMaxDays: type.settings.perRequestMaxDays ?? null,
           availableBalance: available.get(type.id) ?? null,
+          unit: type.settings.unit,
         }));
     }
+    // Rule set not readable (leave.rule_sets.read missing): balance types only, unit unknown → FullDay-only form.
     return (balancesQuery.data?.balances ?? []).map((item) => ({
       id: item.balance.leaveTypeId,
       name: leaveName(item.leaveTypeName),

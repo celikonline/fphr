@@ -159,6 +159,22 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 **Doğrulama:** `EmployeeProfileChangedDocumentRequirementHandlerTests.cs` (yeni, NSubstitute — bu test projesinin mevcut deseni, `[Collection("PostgreSQL")]`'e henüz geçirilmedi, bkz. D1'in "Eksik / Not" kısmı): koşul artık eşleşmiyorsa otomatik muafiyet, koşul hâlâ eşleşiyorsa dokunulmaması, `Uploaded`/elle `Waived` satırların korunması, handler'ın materialization + save çağırması. Sandbox bu turda da `dotnet`/`docker`/`git pull`'u onaysız engelledi (bkz. rapor) — değişiklikler elle satır satır gözden geçirildi, mevcut `AssetEventDocumentRequirementHandlersTests.cs` deseniyle birebir; NSubstitute'ın yapılandırılmamış `Task<IReadOnlyList<T>>` üyeleri için `null` döndürdüğü fark edildi ve `AutoWaiveStaleConditionalRequirementsAsync`'e `?? []` savunması eklendi (aksi halde mevcut testler `NullReferenceException` ile kırılırdı).
 
+## D6 — Belge geçerlilik tarihi (expiry) + hatırlatma job'ı + zimmet↔çıkış denetim kaydı (backend)
+
+**Bağlam:** hrteam paralel takım tur 3 (BE/FE ilk kez ayrı ajanlarla yürütülüyor, bu bölüm yalnız BE). Sözleşme S-6 (`status/PANO.md`).
+
+**Kapsam:**
+- `Document.ExpiryDate` (`DateOnly?`) + `SetExpiryDate` — belgenin kendi geçerlilik tarihi (ehliyet, oturma izni, sağlık raporu), `EmployeeDocumentRequirement.DueDate`'ten (yükleme son tarihi) ayrı bir kavram. `confirm-upload`/`me/{id}/confirm-upload` artık opsiyonel `expiryDate` alıyor (geçmiş tarih kabul edilir).
+- `GET /api/v1/documents/expiring?withinDays=&state=expiring|expired&page=&pageSize=` → `PagedResult<ExpiringDocumentDto>` — Uploaded requirement ⋈ Document.ExpiryDate join'i (`IEmployeeDocumentRequirementRepository.ListExpiringAsync`), izin `documents.requirements.view` (mevcut raporla aynı).
+- Assets: `EmployeeTerminated` (Employee.Contracts) tüketicisi `EmployeeTerminatedAssetAuditHandler` — çalışanın hâlâ açık (iade edilmemiş) her zimmeti için `AssetUnreturnedAtTermination` olayını kendi outbox'ına yazıyor (çıkışı engellemiyor, As1'in "yalnız uyarı" ilkesiyle tutarlı, ayrıca kalıcı bir olay kaydı ekliyor — As1'de bu yoktu).
+- Hatırlatma job'ı: Faz 1'in `IScheduledJobHandler` (ADR-0004) bu turda main'e girdi → `DocumentExpiryReminderJobHandler` (`JobType.DocumentExpiryReminder`, `DocumentsModule.AddModule`'da kayıtlı — Hangfire Sense.Api'de host edildiği için `AddDocumentsIntegrationEventHandlers`'dan farklı bir DI kayıt noktası) tenant başına süresi dolan/dolmak üzere sayısını hesaplayıp `DocumentExpiryReminderDue` olayını Documents'ın kendi outbox'ına yazıyor.
+
+**Kasıtlı eksik / devam eden boşluk:**
+- `ExpiryDate` kolonu için migration üretilmedi (ADR-0005, `status/faz-04/MIGRATION-ISTEGI.md`'ye istek bırakıldı) — kod (entity+config+query) hazır ama migration main'e girene kadar PO tarafından push'a alınmayacak.
+- `DocumentExpiryReminderDue`/`AssetUnreturnedAtTermination` olaylarının **hiçbir tüketicisi yok** — gerçek bildirim teslimatı (Notifications inbox/e-posta) için Notifications modülünde izin-bazlı HR/yönetici alıcı çözümü yapan yeni bir consumer gerekiyor (bugünkü `NotificationRecipientResolver` yalnız açık `employeeId` listesiyle çalışıyor). Job'un fiilen tetiklenmesi için de `Sense.Shared.Infrastructure/BackgroundJobs/BackgroundJobSeeding.cs`'e tenant başına bir cron seed girdisi gerekiyor. İkisi de Faz 4 Backend'in dosya sınırı dışında (Notifications/Shared), PO'ya iletildi.
+
+**Doğrulama:** Sandbox bu turda da `dotnet`/`docker run`'ı onaysız engelledi (R-12, 3. tur üst üste) — build/test çalıştırılamadı, değişiklikler elle satır satır gözden geçirildi. 8 yeni NSubstitute testi (`DocumentExpiryHandlerTests`, `DocumentExpiryReminderJobHandlerTests`, `EmployeeTerminatedAssetAuditHandlerTests`) mevcut modül deseniyle (Testcontainers yok, D1'in bilinen boşluğu) yazıldı.
+
 ## Değişiklik geçmişi
 
 - 2026-09-16: Dosya oluşturuldu; D1 (Documents belge tipi taksonomisi + koşullu gereksinim değerlendirici, backend) tamamlandı.
@@ -170,3 +186,4 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - 2026-09-16: As1 (offboarding ↔ zimmet: `IAssetLookup.CountOpenAssetsAsync` + `TerminateEmployeeHandler`'da engelleyici olmayan uyarı, web çıkış diyaloğunda gösterim) eklendi.
 - 2026-09-16: D5 (`EmployeeProfileChanged` tüketicisi + append-only "kaybolma" boşluğunun Conditional/Missing satırlar için otomatik-muafiyetle kısmen kapatılması, TB-9) eklendi.
 - 2026-09-16: Ex1 (hrteam Faz 7 tur 1: ödeme yürütme — `MarkPaid` uçları + HR/Finance ödeme iş listesi web ekranı) eklendi.
+- 2026-09-16: D6 (hrteam tur 3, backend: `Document.ExpiryDate` + `GET documents/expiring` (S-6) + Assets `EmployeeTerminated` → `AssetUnreturnedAtTermination` denetim kaydı + `DocumentExpiryReminderJobHandler` (ADR-0004)) eklendi.

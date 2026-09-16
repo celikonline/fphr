@@ -7,6 +7,7 @@ using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Infrastructure.Lookups;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
 using Sense.Modules.Employee.Contracts.Events;
@@ -41,6 +42,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<ICompensatoryWorkLedgerRepository, CompensatoryWorkLedgerRepository>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
+        services.AddScoped<IAttendanceMonthlySummaryReader, AttendanceMonthlySummaryReader>();
         return services;
     }
 

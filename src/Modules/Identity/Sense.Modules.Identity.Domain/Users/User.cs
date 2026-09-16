@@ -233,6 +233,10 @@ public sealed class User : TenantAggregateRoot<Guid>, ISoftDelete, IAuditLogged,
         }
     }
 
+    /// <summary>Enrollment 1. adım: secret şifrelenip yazılır ama <see cref="MfaEnabled"/> henüz açılmaz — kullanıcı
+    /// kodu doğrulayana kadar (<see cref="EnableMfa"/>) devre dışı kalır.</summary>
+    public void BeginMfaEnrollment(string totpSecretEncrypted) => TotpSecretEncrypted = Guard.NotEmpty(totpSecretEncrypted);
+
     public void EnableMfa(string totpSecretEncrypted)
     {
         TotpSecretEncrypted = Guard.NotEmpty(totpSecretEncrypted);

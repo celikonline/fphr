@@ -85,6 +85,22 @@ export interface DateRangeQuery {
   to: string;
 }
 
+/** `TeamWeekDayDto` (ekip haftalık ızgarası hücresi); `anomalies` is a flag array here, unlike `AttendanceDay.anomalies`. */
+export interface TeamWeekDay {
+  date: string;
+  attendanceDayId?: string | null;
+  workedMinutes: number;
+  status: AttendanceResolutionState;
+  anomalies: AttendanceAnomalyFlag[];
+}
+
+/** `TeamWeekRowDto` (S-8): one employee's Monday–Sunday row for the manager's weekly grid. */
+export interface TeamWeekRow {
+  employeeId: string;
+  employeeName: string;
+  days: TeamWeekDay[];
+}
+
 // ---------------------------------------------------------------- Puantaj / Timesheet
 
 export async function getMyAttendanceDays(query: DateRangeQuery): Promise<AttendanceDay[]> {
@@ -141,6 +157,14 @@ export async function resolveWithLeaveRequest(attendanceDayId: string, input: { 
 /** Çipleri elle temizle (öneri uygulamadan). */
 export async function ignoreAnomaly(attendanceDayId: string): Promise<string> {
   const { data } = await apiClient.post<string>(`${ATTENDANCE_BASE}/timesheet/days/${attendanceDayId}/resolve/ignore`);
+  return data;
+}
+
+/** Ekip haftalık puantaj ızgarası (attendance.timesheet.view + veri kapsamı; `orgUnitId` opsiyonel daraltma). */
+export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | null): Promise<TeamWeekRow[]> {
+  const { data } = await apiClient.get<TeamWeekRow[]>(`${ATTENDANCE_BASE}/timesheet/team`, {
+    params: { weekStart, orgUnitId: orgUnitId || undefined },
+  });
   return data;
 }
 

@@ -81,8 +81,15 @@ public static class LeavePermissions
     public static readonly Permission CalendarRead = new(
         "leave.calendar.read", Module, "Read Team Leave Calendar", Group, "See the leave of employees in the caller's data scope on the calendar");
 
+    /// <summary>Employee card → Devamsızlık: unexcused/excused/late records İK enters by hand.</summary>
+    public static readonly Permission AbsencesView = new(
+        "leave.absences.view", Module, "Read Absence Records", Group, "View employees' unexcused/excused/late absence records");
+
+    public static readonly Permission AbsencesManage = new(
+        "leave.absences.manage", Module, "Manage Absence Records", Group, "Record and reverse employees' absence records");
+
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
-         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead];
+         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead, AbsencesView, AbsencesManage];
 }

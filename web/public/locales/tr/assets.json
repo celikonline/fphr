@@ -22,6 +22,27 @@
       "nameAndCategoryRequired": "Yeni zimmet için ad ve kategori zorunludur."
     }
   },
+  "categories": {
+    "title": "Zimmet kategorileri",
+    "subtitle": "Ekipman kategori kataloğunu yönetin.",
+    "add": "Kategori ekle",
+    "editTitle": "Kategoriyi düzenle",
+    "empty": "Kayıtlı kategori yok.",
+    "saved": "Kategori kaydedildi.",
+    "codeHint": "Aktarım ve raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
+    "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+    "columns": {
+      "name": "Ad",
+      "code": "Kod"
+    },
+    "errors": {
+      "generic": "Kategori kaydedilemedi.",
+      "loadFailed": "Kategoriler yüklenemedi.",
+      "codeTaken": "Bu kod ile zaten bir kategori var.",
+      "codeRequired": "Kod zorunludur.",
+      "nameRequired": "Ad zorunludur."
+    }
+  },
   "enum": {
     "status": {
       "unassigned": "Boşta",

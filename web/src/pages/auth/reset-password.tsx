@@ -55,7 +55,9 @@ export default function ResetPasswordPage() {
         setExpired(true);
         return;
       }
-      setSubmitError(getApiErrorMessage(error, t("auth:resetPasswordPage.error")));
+      // `[EnableRateLimiting("public-anonymous-write")]` (ADR-0003) rejects with a bare 429, no ProblemDetails body.
+      const fallback = status === 429 ? t("auth:resetPasswordPage.tooManyRequests") : t("auth:resetPasswordPage.error");
+      setSubmitError(getApiErrorMessage(error, fallback));
     },
   });
 

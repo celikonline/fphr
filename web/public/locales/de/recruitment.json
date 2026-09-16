@@ -88,7 +88,8 @@
     "anonymize": "[DE] Anonymize (GDPR/KVKK)",
     "anonymizeDescription": "[DE] This candidate's name, e-mail and phone will be irreversibly erased; their application history stays, but no longer identifies this person.",
     "anonymizeSuccess": "[DE] Candidate data has been anonymized.",
-    "anonymized": "[DE] Anonymized"
+    "anonymized": "[DE] Anonymized",
+    "anonymizedRowHint": "[DE] This candidate's data was anonymized under data protection rules; it can no longer be edited or moved to another stage."
   },
   "applications": {
     "title": "[DE] Applications",
@@ -214,7 +215,16 @@
     "alreadyApplied": "[DE] You have already applied to this posting with this email.",
     "otherOpenPositions": "[DE] Other open positions",
     "noOtherPositions": "[DE] There are no other open positions right now.",
-    "backToPosting": "[DE] Back to posting"
+    "backToPosting": "[DE] Back to posting",
+    "privacyNoticeVersion": "2026-09",
+    "list": {
+      "title": "[DE] Open Positions",
+      "subtitle": "[DE] Browse our company's current open positions below.",
+      "empty": "[DE] There are no open positions right now.",
+      "loadError": "[DE] There was a problem loading the postings.",
+      "viewPosting": "[DE] View posting and apply",
+      "locationUnspecified": "[DE] Location unspecified"
+    }
   },
   "genericError": "[DE] Something went wrong."
 }

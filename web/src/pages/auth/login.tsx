@@ -10,6 +10,7 @@ import {
   Menu,
   Modal,
   PasswordInput,
+  PinInput,
   Stack,
   Text,
   TextInput,
@@ -19,17 +20,20 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import {
+  ArrowLeft,
   ArrowRight,
   Building2,
   Palmtree,
   Eye,
   EyeOff,
   Moon,
+  ShieldCheck,
   Sun,
   Monitor,
   Wallet,
   Target,
 } from "lucide-react";
+import { getApiProblem } from "@/lib/api-error";
 import { useAuthStore, type TenantChoice } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import classes from "./login.module.css";
@@ -114,6 +118,7 @@ export default function LoginPage() {
   const { t } = useTranslation(["auth"]);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
+  const completeMfaLogin = useAuthStore((state) => state.completeMfaLogin);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -121,6 +126,9 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [tenantChoices, setTenantChoices] = useState<TenantChoice[] | null>(null);
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState("");
+  const [mfaError, setMfaError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,6 +139,10 @@ export default function LoginPage() {
       const result = await login(email, password);
       if (result.status === "select_tenant") {
         setTenantChoices(result.tenants);
+        return;
+      }
+      if (result.status === "mfa_required") {
+        setMfaToken(result.mfaToken);
         return;
       }
       navigate("/app", { replace: true });
@@ -146,8 +158,12 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password, tenant.slug);
+      const result = await login(email, password, tenant.slug);
       setTenantChoices(null);
+      if (result.status === "mfa_required") {
+        setMfaToken(result.mfaToken);
+        return;
+      }
       navigate("/app", { replace: true });
     } catch (err) {
       setTenantChoices(null);
@@ -155,6 +171,37 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /** `identity.mfa.token_expired` (S-5): the challenge itself expired — send the user back to email/password. */
+  const handleMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mfaToken) return;
+    setIsLoading(true);
+    setMfaError("");
+
+    try {
+      await completeMfaLogin(mfaToken, mfaCode);
+      navigate("/app", { replace: true });
+    } catch (err) {
+      const problem = getApiProblem(err instanceof Error ? err.cause : undefined);
+      if (problem?.code === "identity.mfa.token_expired") {
+        setMfaToken(null);
+        setMfaCode("");
+        setError(t("auth:mfa.tokenExpired"));
+      } else {
+        setMfaCode("");
+        setMfaError(err instanceof Error ? err.message : t("auth:mfa.invalidCode"));
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBackToLogin = () => {
+    setMfaToken(null);
+    setMfaCode("");
+    setMfaError("");
   };
 
   return (
@@ -229,6 +276,69 @@ export default function LoginPage() {
 
       {/* Form panel */}
       <main className={`flex flex-1 items-center justify-center px-6 py-16 ${classes.formPanel}`}>
+        {mfaToken !== null ? (
+          <form className={`w-full max-w-sm ${classes.reveal}`} style={revealDelay(120)} onSubmit={handleMfaSubmit} noValidate>
+            <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
+              <BrandMark />
+              <Text fz={20} fw={800} lts={-0.4}>
+                SenseİK
+              </Text>
+            </Group>
+
+            <div className={classes.accentBar} />
+            <ThemeIcon variant="light" color="brand" size={44} radius="md" mt="md">
+              <ShieldCheck size={22} />
+            </ThemeIcon>
+            <Title order={2} mt="md" fz={30} fw={800} lh={1.2} lts={-0.6}>
+              {t("auth:mfa.title")}
+            </Title>
+            <Text mt={8} size="sm" c="dimmed">
+              {t("auth:mfa.subtitle")}
+            </Text>
+
+            {mfaError && (
+              <Alert mt="lg" color="red" variant="light">
+                <Text size="sm" fw={500} c="red">
+                  {mfaError}
+                </Text>
+              </Alert>
+            )}
+
+            <Stack mt="xl" gap={4}>
+              <Text component="label" size="sm" fw={500}>
+                {t("auth:mfa.codeLabel")}
+              </Text>
+              <PinInput
+                length={6}
+                type="number"
+                size="md"
+                value={mfaCode}
+                onChange={setMfaCode}
+                disabled={isLoading}
+                autoFocus
+                oneTimeCode
+                ariaLabel={t("auth:mfa.codeLabel")}
+              />
+            </Stack>
+
+            <Button
+              type="submit"
+              mt="xl"
+              h={48}
+              fullWidth
+              variant="gradient"
+              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              disabled={isLoading || mfaCode.length < 6}
+              className={classes.submit}
+            >
+              {isLoading ? t("auth:mfa.submitting") : t("auth:mfa.submit")}
+            </Button>
+
+            <Button mt="md" fullWidth variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={handleBackToLogin} disabled={isLoading}>
+              {t("auth:mfa.back")}
+            </Button>
+          </form>
+        ) : (
         <form className={`w-full max-w-sm ${classes.reveal}`} style={revealDelay(120)} onSubmit={handleSubmit} noValidate>
           <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
             <BrandMark />
@@ -324,6 +434,7 @@ export default function LoginPage() {
             {t("auth:demoCredentials")}
           </Text>
         </form>
+        )}
       </main>
 
       <Modal

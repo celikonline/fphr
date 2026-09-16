@@ -28,3 +28,13 @@ public sealed record MissingDocumentReportItemDto(
     DocumentTypeStage Stage,
     DocumentRequirementStatus Status,
     DateOnly? DueDate);
+
+/// <summary>Row for <c>GET /api/v1/documents/expiring</c> (S-6 - shared with Faz 4 FE this turn).</summary>
+public sealed record ExpiringDocumentDto(
+    Guid DocumentId,
+    Guid EmployeeId,
+    string EmployeeName,
+    Guid DocumentTypeId,
+    string DocumentTypeName,
+    DateOnly ExpiryDate,
+    int DaysLeft);

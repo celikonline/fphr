@@ -60,6 +60,9 @@
     "upload": "Upload",
     "uploaded": "Document uploaded.",
     "saved": "Saved.",
+    "uploadDialogTitle": "Upload {{name}}",
+    "expiryDate": "Expiry date",
+    "expiryDateHint": "Enter it if the document has a validity date (driving license, residence permit, health report, etc.); leave blank if it never expires.",
     "errors": {
       "generic": "The action could not be completed.",
       "loadFailed": "Document requirements could not be loaded.",
@@ -73,12 +76,25 @@
     "allStatuses": "All statuses",
     "exportCsv": "Export CSV",
     "empty": "No records found.",
+    "emptyExpiring": "No documents are expiring or expired.",
+    "tabs": {
+      "missing": "Missing documents",
+      "expiring": "Expiring/expired"
+    },
+    "expiryState": {
+      "expiring": "Expiring soon (30 days)",
+      "expired": "Expired"
+    },
+    "daysRemaining": "{{count}} day(s) left",
+    "daysOverdue": "{{count}} day(s) overdue",
     "columns": {
       "employee": "Employee",
       "documentType": "Document type",
       "stage": "Stage",
       "status": "Status",
-      "dueDate": "Due date"
+      "dueDate": "Due date",
+      "expiryDate": "Expiry date",
+      "daysLeft": "Days left"
     }
   },
   "enum": {

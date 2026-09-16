@@ -33,6 +33,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
     public DbSet<ImpersonationGrant> ImpersonationGrants => Set<ImpersonationGrant>();
 
     public DbSet<UnitAuthorization> UnitAuthorizations => Set<UnitAuthorization>();
+
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 }
 
 internal static class IdentityTables

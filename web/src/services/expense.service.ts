@@ -21,6 +21,8 @@ export interface ExpenseItem {
   currency: string;
   receiptFileId: string | null;
   description: string | null;
+  /** S-9 (Faz 7 tur 3): true when `amount` exceeds the category's `maxAmount`; a warning, not a submit blocker. Absent on older API responses. */
+  exceedsCategoryLimit?: boolean;
 }
 
 export interface ExpenseClaim {
@@ -157,6 +159,8 @@ export interface ExpenseCategory {
   nameKey: string;
   defaultTaxRate: number | null;
   isActive: boolean;
+  /** S-9 (Faz 7 tur 3): optional per-item cap; `null`/absent = no limit. Absent on older API responses. */
+  maxAmount?: number | null;
 }
 
 export async function listExpenseCategories(includeInactive = false): Promise<ExpenseCategory[]> {
@@ -168,6 +172,7 @@ export interface CreateExpenseCategoryInput {
   code: string;
   nameKey: string;
   defaultTaxRate?: number | null;
+  maxAmount?: number | null;
 }
 
 /** HR/Finance (`expense.categories.manage`) adds a new category to the tenant's catalog. */
@@ -176,6 +181,7 @@ export async function createExpenseCategory(input: CreateExpenseCategoryInput): 
     code: input.code,
     nameKey: input.nameKey,
     defaultTaxRate: input.defaultTaxRate ?? null,
+    maxAmount: input.maxAmount ?? null,
   });
   return data;
 }
@@ -183,4 +189,20 @@ export async function createExpenseCategory(input: CreateExpenseCategoryInput): 
 /** HR/Finance (`expense.categories.manage`) activates or deactivates a category. */
 export async function setExpenseCategoryActive(categoryId: string, isActive: boolean): Promise<void> {
   await apiClient.put(`${EXPENSE_BASE}/categories/${categoryId}/active`, { isActive });
+}
+
+export interface UpdateExpenseCategoryInput {
+  name: string;
+  maxAmount?: number | null;
+}
+
+/**
+ * HR/Finance (`expense.categories.manage`) renames a category and/or sets its limit (S-9 `PUT /categories/{id}`).
+ * System-seeded categories reject a name change with 409 `expense.category.system_immutable` (server-localized message).
+ */
+export async function updateExpenseCategory(categoryId: string, input: UpdateExpenseCategoryInput): Promise<void> {
+  await apiClient.put(`${EXPENSE_BASE}/categories/${categoryId}`, {
+    name: input.name,
+    maxAmount: input.maxAmount ?? null,
+  });
 }

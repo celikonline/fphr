@@ -1,0 +1,46 @@
+{
+  "genericError": "[DE] Something went wrong.",
+  "status": {
+    "open": "[DE] Open",
+    "inProgress": "[DE] In progress",
+    "completed": "[DE] Completed",
+    "cancelled": "[DE] Cancelled",
+    "archived": "[DE] Archived"
+  },
+  "my": {
+    "title": "[DE] My goals",
+    "subtitle": "[DE] View this period's goals and update your progress.",
+    "addGoal": "[DE] Add goal",
+    "empty": "[DE] You don't have any goals yet.",
+    "created": "[DE] Goal added.",
+    "targetDate": "[DE] Target date: {{date}}",
+    "progressLabel": "[DE] Progress: {{progress}}%",
+    "updateProgress": "[DE] Update progress",
+    "progressUpdated": "[DE] Progress updated."
+  },
+  "form": {
+    "newTitle": "[DE] New goal",
+    "title": "[DE] Title",
+    "description": "[DE] Description",
+    "targetDate": "[DE] Target date",
+    "reviewCycle": "[DE] Review cycle",
+    "reviewCycleNone": "[DE] No cycle selected",
+    "submit": "[DE] Add"
+  },
+  "team": {
+    "title": "[DE] Team goals",
+    "subtitle": "[DE] View the goals of the employees on your team.",
+    "empty": "[DE] No goals recorded for your team.",
+    "col": {
+      "employee": "[DE] Employee",
+      "title": "[DE] Title",
+      "targetDate": "[DE] Target date",
+      "progress": "[DE] Progress",
+      "status": "[DE] Status"
+    },
+    "cancel": "[DE] Cancel",
+    "cancelConfirmTitle": "[DE] Cancel goal",
+    "cancelConfirmDescription": "[DE] Are you sure you want to cancel \"{{title}}\"?",
+    "cancelled": "[DE] Goal cancelled."
+  }
+}

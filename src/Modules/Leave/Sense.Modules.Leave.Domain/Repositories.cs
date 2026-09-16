@@ -1,3 +1,4 @@
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
@@ -83,4 +84,17 @@ public interface IOvertimeConversionRepository
     void Add(OvertimeConversion conversion);
 
     Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+public interface IAbsenceRecordRepository
+{
+    void Add(AbsenceRecord record);
+
+    Task<AbsenceRecord?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every row (originals and reversals) of the employee dated inside [from, to]; the caller decides what to show.</summary>
+    Task<IReadOnlyList<AbsenceRecord>> ListAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Whether a reversal row already points at <paramref name="originalId"/> (an original can be reversed only once).</summary>
+    Task<bool> ExistsReversalAsync(Guid originalId, CancellationToken cancellationToken = default);
 }

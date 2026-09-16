@@ -40,4 +40,8 @@ public static class DocumentsLimits
     public const int DocumentTypeCodeMaxLength = 100;
     public const int DocumentTypeNameMaxLength = 255;
     public const int WaivedReasonMaxLength = 500;
+
+    /// <summary>Default "expiring soon" window (days) for <c>GET /api/v1/documents/expiring</c> when the caller
+    /// omits or sends a non-positive <c>withinDays</c>.</summary>
+    public const int DefaultExpiryReportWindowDays = 30;
 }

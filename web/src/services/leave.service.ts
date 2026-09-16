@@ -32,6 +32,8 @@ export type AccrualTiming = "endOfPeriod" | "startOfPeriod";
 export type AccrualBasis = "hireDate" | "calendarYear";
 export type CarryOverMode = "reset" | "unlimited" | "limited";
 export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
+/** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
+export type LeaveHalfDayPeriod = "morning" | "afternoon";
 export type LeaveLedgerEntryType = "openingBalance" | "accrual" | "carryOver" | "usage" | "adjustment" | "extraGrant" | "reversal";
 export type LeaveLedgerSource = "system" | "manual" | "import" | "request" | "overtimeConversion";
 export type LeaveRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";
@@ -106,6 +108,11 @@ export interface LeaveRequest {
   previousRequestId?: string | null;
   cancelledAt?: string | null;
   cancellationReason?: string | null;
+  /** Set for `LeaveUnit.Hourly` requests ("HH:mm:ss"); null for FullDay/HalfDay. */
+  startTime?: string | null;
+  endTime?: string | null;
+  /** Set for `LeaveUnit.HalfDay` requests; null for FullDay/Hourly. */
+  halfDayPeriod?: LeaveHalfDayPeriod | null;
 }
 
 /** `LeaveRequestDetailDto` approval step: the approver name is resolved by the API; a role step without a person has `fallbackRoleCode`. */
@@ -179,6 +186,11 @@ export interface LeaveRequestPreview {
   weeklyRestDays: number;
   publicHolidayDays: number;
   warnings: { code: string; message: string }[];
+  /** Non-blocking info: other approved/pending leaves in the same org unit over these dates (S-7); absent on older API builds. */
+  teamOverlap?: {
+    count: number;
+    employees: { employeeId: string; name: string; startDate: string; endDate: string }[];
+  } | null;
 }
 
 export interface LeaveRequestPreviewInput {
@@ -186,6 +198,11 @@ export interface LeaveRequestPreviewInput {
   start: string;
   end: string;
   editedRequestId?: string;
+  /** Hourly request draft ("HH:mm:ss"). */
+  startTime?: string;
+  endTime?: string;
+  /** HalfDay request draft. */
+  halfDayPeriod?: LeaveHalfDayPeriod;
 }
 
 /** "Kıdem kademesi": completed service years compared with `afterYears` add `extraDays` (cumulative); Annual type only. */
@@ -252,6 +269,11 @@ export interface LeaveRequestInput {
   startDate: string;
   endDate: string;
   description: string | null;
+  /** Hourly request ("HH:mm:ss"); omit for FullDay/HalfDay. */
+  startTime?: string;
+  endTime?: string;
+  /** HalfDay request; omit for FullDay/Hourly. */
+  halfDayPeriod?: LeaveHalfDayPeriod;
 }
 
 export async function listLeaveRuleSets(): Promise<LeaveRuleSet[]> {
@@ -426,6 +448,49 @@ export async function getLeaveCalendar(query: LeaveCalendarQuery): Promise<Leave
 export async function getTeamLeaveRequests(): Promise<LeaveCalendarEntry[]> {
   const { data } = await apiClient.get<LeaveCalendarEntry[]>(`${LEAVE_BASE}/team/requests`);
   return data;
+}
+
+// ---------------------------------------------------------------- Absence ("Devamsızlık"; S-7, leave.absences.{view,manage})
+
+export type AbsenceKind = "unexcused" | "excused" | "late";
+
+/** `AbsenceDto`: an append-only "mazeretsiz/mazeretli devamsızlık" record; a corrective entry sets `reversesId` and the original gets `isReversed`. */
+export interface Absence {
+  id: string;
+  date: string;
+  kind: AbsenceKind;
+  hours?: number | null;
+  note?: string | null;
+  recordedBy: string;
+  recordedAt: string;
+  reversesId?: string | null;
+  isReversed: boolean;
+}
+
+export interface AbsenceInput {
+  date: string;
+  kind: AbsenceKind;
+  /** Only meaningful for `kind: "late"`. */
+  hours?: number | null;
+  note?: string | null;
+}
+
+/** leave.absences.view */
+export async function listAbsences(employeeId: string, from: string, to: string): Promise<Absence[]> {
+  const { data } = await apiClient.get<Absence[]>(`${LEAVE_BASE}/employees/${employeeId}/absences`, { params: { from, to } });
+  return data;
+}
+
+/** leave.absences.manage */
+export async function addAbsence(employeeId: string, input: AbsenceInput): Promise<string> {
+  const { data } = await apiClient.post<{ id: string }>(`${LEAVE_BASE}/employees/${employeeId}/absences`, input);
+  return data.id;
+}
+
+/** Corrects a record with a reversal entry (append-only, no delete); 409 leave.absence.already_reversed. */
+export async function reverseAbsence(employeeId: string, id: string, reason: string): Promise<string> {
+  const { data } = await apiClient.post<{ id: string }>(`${LEAVE_BASE}/employees/${employeeId}/absences/${id}/reverse`, { reason });
+  return data.id;
 }
 
 // ---------------------------------------------------------------- Overtime ("Fazla mesai")

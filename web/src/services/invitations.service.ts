@@ -24,7 +24,17 @@ export interface AcceptInvitationInput {
   token: string;
   password: string;
   privacyNoticeAccepted: boolean;
+  /**
+   * Version of the privacy notice text the user accepted. Faz 1's `IConsentRecorder` (S-3, tur 3) will persist
+   * this once wired up server-side; until then `AcceptInvitationCommand` only carries it through. Required by
+   * the validator whenever `privacyNoticeAccepted` is true (it always is — the checkbox is a hard requirement),
+   * so this must always be sent.
+   */
+  privacyNoticeVersion: string;
 }
+
+/** Bumped whenever the privacy notice text shown on the invite-accept screen changes. */
+export const PRIVACY_NOTICE_VERSION = "1.0";
 
 export type EmployeeInvitationOutcome = "Sent" | "Resent" | "AlreadyActive";
 

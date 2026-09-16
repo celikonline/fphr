@@ -22,4 +22,7 @@ public enum JobType
 
     /// <summary>Generate daily audit summary.</summary>
     DailyAuditSummary = 6,
+
+    /// <summary>Faz 4: remind about documents expiring soon or already expired (Documents module).</summary>
+    DocumentExpiryReminder = 7,
 }

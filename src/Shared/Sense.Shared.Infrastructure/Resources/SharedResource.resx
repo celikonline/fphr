@@ -87,6 +87,9 @@
   <data name="user.password_mismatch" xml:space="preserve"><value>Mevcut parola hatalı.</value></data>
   <data name="password_reset.not_found" xml:space="preserve"><value>Sıfırlama bağlantısı geçersiz.</value></data>
   <data name="password_reset.expired" xml:space="preserve"><value>Sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış.</value></data>
+  <data name="identity.mfa.already_enabled" xml:space="preserve"><value>İki adımlı doğrulama zaten açık.</value></data>
+  <data name="identity.mfa.invalid_code" xml:space="preserve"><value>Doğrulama kodu geçersiz.</value></data>
+  <data name="identity.mfa.token_expired" xml:space="preserve"><value>Oturum açma isteğinin süresi doldu; lütfen tekrar giriş yapın.</value></data>
 
   <!-- Rol -->
   <data name="role.invalid_code" xml:space="preserve"><value>Rol kodu yalnızca harf, rakam, '_' ve '-' içerebilir (en fazla 50 karakter).</value></data>
@@ -651,6 +654,15 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.resubmission_source_invalid" xml:space="preserve"><value>Yalnız kendi reddedilmiş izin talebinizi yeniden gönderebilirsiniz.</value></data>
   <data name="leave.errors.calendar_range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
+  <data name="leave.absences.view" xml:space="preserve"><value>Devamsızlık kayıtlarını görüntüleme</value></data>
+  <data name="leave.absences.manage" xml:space="preserve"><value>Devamsızlık kayıtlarını yönetme</value></data>
+  <data name="leave.absence.not_found" xml:space="preserve"><value>Devamsızlık kaydı bulunamadı.</value></data>
+  <data name="leave.absence.note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
+  <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Saat 0 ile 24 arasında olmalıdır.</value></data>
+  <data name="leave.absence.hours_only_for_late" xml:space="preserve"><value>Saat yalnız "geç kalma" türünde girilebilir.</value></data>
+  <data name="leave.absence.reversal_reason_required" xml:space="preserve"><value>Ters kayıt gerekçesi zorunludur (en fazla 500 karakter).</value></data>
+  <data name="leave.absence.already_reversed" xml:space="preserve"><value>Bu devamsızlık kaydı zaten ters çevrilmiş.</value></data>
+  <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>Bir ters kayıt tekrar ters çevrilemez.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>Çalışma takvimlerini görüntüleme</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Çalışma takvimlerini yönetme</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Çalışma takvimi atama</value></data>
@@ -865,6 +877,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.category.not_found" xml:space="preserve"><value>Harcama kategorisi bulunamadı.</value></data>
   <data name="expense.category.code_required" xml:space="preserve"><value>Kategori kodu zorunludur.</value></data>
   <data name="expense.category.already_inactive" xml:space="preserve"><value>Kategori zaten pasif.</value></data>
+  <data name="expense.category.name_key_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
+  <data name="expense.category.system_immutable" xml:space="preserve"><value>Sistem kategorisinin adı değiştirilemez.</value></data>
   <data name="expense.claim.not_found" xml:space="preserve"><value>Harcama talebi bulunamadı.</value></data>
   <data name="expense.claim.not_draft" xml:space="preserve"><value>Bu işlem yalnızca taslak talepte yapılabilir.</value></data>
   <data name="expense.claim.not_submitted" xml:space="preserve"><value>Talep, onay bekleme durumunda değil.</value></data>

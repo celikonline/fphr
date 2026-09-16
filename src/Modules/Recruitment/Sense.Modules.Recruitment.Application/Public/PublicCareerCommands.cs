@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
@@ -12,11 +13,14 @@ namespace Sense.Modules.Recruitment.Application.Public;
 /// Submits a candidate's self-service application from the public career site (R3, roadmap "Kariyer sayfası ve
 /// başvuru formu"). Deliberately no <c>[RequiresPermission]</c> - this is the ATS's one anonymous write.
 /// Tenant is resolved from the posting (see <see cref="IJobPostingRepository.GetPublicByApplySlugAsync"/>),
-/// never from the request; the KVKK consent/aydınlatma metni acceptance itself is Faz 1's ConsentRecord (not yet
-/// wired here - see BLOKER.md if still outstanding when this ships to web).
+/// never from the request. <c>PrivacyNoticeVersion</c>/<c>KvkkAccepted</c> are the aydınlatma metni onayı (Faz 9
+/// tur 3 TALIMAT madde 2): validated here and logged, but **not persisted to a new column** - Faz 1's
+/// <c>IConsentRecorder</c>/<c>ConsentRecord</c> (S-3, `identity.consent_records`) is the real sahibi; once that
+/// port lands in Identity.Contracts this handler should call it instead of only logging. No migration this slice.
 /// </summary>
 public sealed record SubmitCareerApplicationCommand(
-    string ApplySlug, string FirstName, string LastName, string Email, string? Phone) : ICommand<Guid>;
+    string ApplySlug, string FirstName, string LastName, string Email, string? Phone,
+    string PrivacyNoticeVersion, bool KvkkAccepted) : ICommand<Guid>;
 
 public sealed class SubmitCareerApplicationValidator : AbstractValidator<SubmitCareerApplicationCommand>
 {
@@ -27,12 +31,14 @@ public sealed class SubmitCareerApplicationValidator : AbstractValidator<SubmitC
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(RecruitmentLimits.EmailMaxLength);
         RuleFor(x => x.Phone).MaximumLength(RecruitmentLimits.PhoneMaxLength);
+        RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().MaximumLength(RecruitmentLimits.PrivacyNoticeVersionMaxLength);
+        RuleFor(x => x.KvkkAccepted).Equal(true);
     }
 }
 
 public sealed class SubmitCareerApplicationHandler(
     IJobPostingRepository postings, ICandidateRepository candidates, IJobApplicationRepository applications,
-    ITenantContextSetter tenantSetter)
+    ITenantContextSetter tenantSetter, ILogger<SubmitCareerApplicationHandler> logger)
     : ICommandHandler<SubmitCareerApplicationCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(SubmitCareerApplicationCommand command, CancellationToken cancellationToken)
@@ -75,6 +81,14 @@ public sealed class SubmitCareerApplicationHandler(
 
         var application = JobApplication.Create(posting.Value.TenantId, posting.Value.Id, candidateId);
         applications.Add(application);
+
+        // KVKK aydınlatma metni onayı: doğrulandı (validator) ama Faz 1'in IConsentRecorder'ı henüz yok, bu yüzden
+        // kalıcı bir consent kaydı/kolonu YOK - yalnızca denetim izi için logluyoruz. TALIMAT madde 2.
+        logger.LogInformation(
+            "Kariyer sitesi başvurusu: adayId={CandidateId}, başvuruId={ApplicationId}, ilanId={JobPostingId}, " +
+            "aydınlatmaMetniVersiyonu={PrivacyNoticeVersion}, kvkkOnaylandı={KvkkAccepted}",
+            candidateId, application.Id, posting.Value.Id, command.PrivacyNoticeVersion, command.KvkkAccepted);
+
         return application.Id;
     }
 }

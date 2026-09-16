@@ -11,7 +11,8 @@ public sealed record InitiateUploadResponse(
 public sealed record ConfirmUploadResponse(
     Guid DocumentId,
     string Title,
-    DateTime UploadedAt);
+    DateTime UploadedAt,
+    DateOnly? ExpiryDate = null);
 
 /// <summary>Document detail DTO with presigned download URL.</summary>
 public sealed record DocumentDetailDto(

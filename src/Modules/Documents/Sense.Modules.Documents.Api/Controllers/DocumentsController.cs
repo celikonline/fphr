@@ -2,6 +2,8 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Documents.Application.Documents;
+using Sense.Modules.Documents.Application.DocumentTypes;
+using Sense.Modules.Documents.Domain.Documents;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Web.Controllers;
 
@@ -14,10 +16,12 @@ public sealed record InitiateUploadRequest(
     long FileSizeBytes,
     string? BucketName = "documents");
 
-/// <summary>Request to confirm a file upload with ETag.</summary>
+/// <summary>Request to confirm a file upload with ETag. <paramref name="ExpiryDate"/> is optional - the document's
+/// own validity/expiry date (e.g. driver's license, residence permit, health report), not the upload deadline.</summary>
 public sealed record ConfirmUploadRequest(
     string ETag,
-    long ActualFileSizeBytes);
+    long ActualFileSizeBytes,
+    DateOnly? ExpiryDate = null);
 
 /// <summary>File document management: upload, download, delete with presigned URLs.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -54,7 +58,7 @@ public sealed class DocumentsController : ApiControllerBase
     public async Task<IActionResult> ConfirmUpload(Guid id, [FromBody] ConfirmUploadRequest request, CancellationToken ct)
     {
         var result = await Dispatcher.Send(
-            new ConfirmUploadCommand(id, request.ETag, request.ActualFileSizeBytes),
+            new ConfirmUploadCommand(id, request.ETag, request.ActualFileSizeBytes, request.ExpiryDate),
             ct);
         return FromResult(result);
     }
@@ -76,7 +80,7 @@ public sealed class DocumentsController : ApiControllerBase
     public async Task<IActionResult> ConfirmMyUpload(Guid id, [FromBody] ConfirmUploadRequest request, CancellationToken ct)
     {
         var result = await Dispatcher.Send(
-            new ConfirmMyUploadCommand(id, request.ETag, request.ActualFileSizeBytes),
+            new ConfirmMyUploadCommand(id, request.ETag, request.ActualFileSizeBytes, request.ExpiryDate),
             ct);
         return FromResult(result);
     }
@@ -86,4 +90,14 @@ public sealed class DocumentsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new DeleteDocumentCommand(id), ct));
+
+    /// <summary>Paged report of documents that are expiring soon or already expired (S-6).</summary>
+    [HttpGet("expiring")]
+    [ProducesResponseType<PagedResult<ExpiringDocumentDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Expiring(
+        [FromQuery] int withinDays,
+        [FromQuery] DocumentExpiryState? state,
+        [FromQuery] PagedQuery paging,
+        CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetExpiringDocumentsQuery(withinDays, state, paging), ct));
 }

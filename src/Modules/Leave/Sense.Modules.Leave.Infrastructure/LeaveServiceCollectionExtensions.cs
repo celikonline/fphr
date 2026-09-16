@@ -51,6 +51,8 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IOvertimeRequestRepository, OvertimeRequestRepository>();
         services.AddScoped<IOvertimeConsentRepository, OvertimeConsentRepository>();
         services.AddScoped<IOvertimeConversionRepository, OvertimeConversionRepository>();
+        services.AddScoped<IAbsenceRecordRepository, AbsenceRecordRepository>();
+        services.AddScoped<IAbsenceReader, AbsenceReader>();
         return services;
     }
 

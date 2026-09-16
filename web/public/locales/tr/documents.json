@@ -60,6 +60,9 @@
     "upload": "Yükle",
     "uploaded": "Belge yüklendi.",
     "saved": "Kaydedildi.",
+    "uploadDialogTitle": "{{name}} belgesini yükle",
+    "expiryDate": "Geçerlilik tarihi",
+    "expiryDateHint": "Belgenin süresi varsa (ehliyet, oturma izni, sağlık raporu vb.) giriniz; süresizse boş bırakın.",
     "errors": {
       "generic": "İşlem gerçekleştirilemedi.",
       "loadFailed": "Belge gereksinimleri yüklenemedi.",
@@ -73,12 +76,25 @@
     "allStatuses": "Tüm durumlar",
     "exportCsv": "CSV olarak indir",
     "empty": "Kayıt bulunamadı.",
+    "emptyExpiring": "Süresi dolan veya dolmak üzere olan belge yok.",
+    "tabs": {
+      "missing": "Eksik belgeler",
+      "expiring": "Süresi dolan/dolmak üzere"
+    },
+    "expiryState": {
+      "expiring": "Süresi dolmak üzere (30 gün)",
+      "expired": "Süresi dolmuş"
+    },
+    "daysRemaining": "{{count}} gün kaldı",
+    "daysOverdue": "{{count}} gün gecikti",
     "columns": {
       "employee": "Çalışan",
       "documentType": "Belge tipi",
       "stage": "Aşama",
       "status": "Durum",
-      "dueDate": "Son tarih"
+      "dueDate": "Son tarih",
+      "expiryDate": "Geçerlilik tarihi",
+      "daysLeft": "Kalan gün"
     }
   },
   "enum": {

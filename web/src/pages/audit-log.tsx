@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { Download, ScrollText, Search, X } from "lucide-react";
+import { Download, ScrollText } from "lucide-react";
 import { Badge, Button, Card, Group, Input, Select, Text, TextInput, Title, type BadgeProps } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FilterBar } from "@/components/ui/filter-bar";
 import PaginationFooter from "@/components/pagination-footer";
+import { toast } from "@/hooks/use-toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import {
-  exportAuditEventsToCsv,
+  exportAuditEventsCsv,
   listAuditActionTypes,
-  listAuditActors,
   listAuditEvents,
   type AuditActionType,
   type AuditEvent,
@@ -39,7 +41,10 @@ export default function AuditLogPage() {
   const [sortDesc, setSortDesc] = useState(true);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [actor, setActor] = useState(ALL_VALUE);
+  // Backend contract (S-1) has no actors-lookup endpoint - `actor` is a free-text filter, debounced
+  // like search, rather than a Select sourced from a static/mock list.
+  const [actor, setActor] = useState("");
+  const [debouncedActor, setDebouncedActor] = useState("");
   const [action, setAction] = useState(ALL_VALUE);
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
@@ -49,8 +54,13 @@ export default function AuditLogPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedActor(actor), 300);
+    return () => clearTimeout(timer);
+  }, [actor]);
+
   // Back to the first page whenever the effective filters change (adjusted during render, not in an effect).
-  const filterKey = JSON.stringify([debouncedSearch, actor, action, from, to]);
+  const filterKey = JSON.stringify([debouncedSearch, debouncedActor, action, from, to]);
   const [prevFilterKey, setPrevFilterKey] = useState(filterKey);
   if (prevFilterKey !== filterKey) {
     setPrevFilterKey(filterKey);
@@ -59,45 +69,60 @@ export default function AuditLogPage() {
 
   const sortParam = `${sortDesc ? "-" : ""}${SORT_FIELD}`;
 
+  const activeFilters = {
+    actor: debouncedActor || undefined,
+    action: action === ALL_VALUE ? undefined : (action as AuditActionType),
+    from: from ? new Date(from).toISOString() : undefined,
+    to: to ? new Date(`${to}T23:59:59.999`).toISOString() : undefined,
+  };
+
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["audit-events", page, pageSize, sortParam, debouncedSearch, actor, action, from, to],
+    queryKey: ["audit-events", page, pageSize, sortParam, debouncedSearch, activeFilters],
     queryFn: () =>
       listAuditEvents({
         page,
         pageSize,
         sort: sortParam,
         q: debouncedSearch || undefined,
-        actor: actor === ALL_VALUE ? undefined : actor,
-        action: action === ALL_VALUE ? undefined : (action as AuditActionType),
-        from: from ? new Date(from).toISOString() : undefined,
-        to: to ? new Date(`${to}T23:59:59.999`).toISOString() : undefined,
+        ...activeFilters,
       }),
     placeholderData: (previous) => previous,
   });
 
-  const actors = listAuditActors();
   const actionTypes = listAuditActionTypes();
-  const hasFilters = actor !== ALL_VALUE || action !== ALL_VALUE || from !== "" || to !== "" || search !== "";
+  const hasFilters = actor !== "" || action !== ALL_VALUE || from !== "" || to !== "" || search !== "";
 
   function clearFilters() {
     setSearch("");
-    setActor(ALL_VALUE);
+    setActor("");
     setAction(ALL_VALUE);
     setFrom("");
     setTo("");
   }
 
+  const exportMutation = useMutation({
+    mutationFn: () => exportAuditEventsCsv(activeFilters),
+    onSuccess: (blob) => {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    },
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("common:errorGeneric")),
+      }),
+  });
+
   function handleExport() {
-    if (!data || data.items.length === 0) return;
-    const blob = exportAuditEventsToCsv(data.items);
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    if (!data || data.totalCount === 0) return;
+    exportMutation.mutate();
   }
 
   function formatTimestamp(value: string) {
@@ -187,62 +212,45 @@ export default function AuditLogPage() {
           variant="default"
           leftSection={<Download className="h-4 w-4" />}
           onClick={handleExport}
-          disabled={!data || data.items.length === 0}
+          loading={exportMutation.isPending}
+          disabled={!data || data.totalCount === 0}
         >
           {t("audit:exportCsv")}
         </Button>
       </Group>
 
-      <Card withBorder padding="md">
-        <Group align="flex-end" gap="sm">
-          <TextInput
-            id="audit-search"
-            className="min-w-[14rem] flex-1"
-            label={t("common:search")}
-            leftSection={<Search className="h-4 w-4" />}
-            placeholder={t("audit:searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-          />
-          <Select
-            className="w-56"
-            label={t("audit:actor")}
-            value={actor}
-            onChange={(value) => setActor(value ?? ALL_VALUE)}
-            allowDeselect={false}
-            data={[{ value: ALL_VALUE, label: t("audit:allActors") }, ...actors.map((a) => ({ value: a, label: a }))]}
-          />
-          <Select
-            className="w-48"
-            label={t("audit:action")}
-            value={action}
-            onChange={(value) => setAction(value ?? ALL_VALUE)}
-            allowDeselect={false}
-            data={[
-              { value: ALL_VALUE, label: t("audit:allActions") },
-              ...actionTypes.map((a) => ({ value: a, label: t(`audit:actionTypes.${a}`) })),
-            ]}
-          />
-          <Input.Wrapper id="audit-from" label={t("audit:from")}>
-            <DatePicker id="audit-from" value={from} max={to || undefined} clearable onChange={setFrom} />
-          </Input.Wrapper>
-          <Input.Wrapper id="audit-to" label={t("audit:to")}>
-            <DatePicker id="audit-to" value={to} min={from || undefined} clearable onChange={setTo} />
-          </Input.Wrapper>
-          {hasFilters && (
-            <Button
-              type="button"
-              variant="subtle"
-              size="sm"
-              leftSection={<X className="h-4 w-4" />}
-              onClick={clearFilters}
-            >
-              {t("audit:clearFilters")}
-            </Button>
-          )}
-          <DataTableViewOptions table={table} className="ml-auto" />
-        </Group>
-      </Card>
+      <FilterBar
+        search={{ id: "audit-search", value: search, onChange: setSearch, placeholder: t("audit:searchPlaceholder") }}
+        hasActiveFilters={hasFilters}
+        onClearFilters={clearFilters}
+        trailing={<DataTableViewOptions table={table} className="ml-auto" />}
+      >
+        <TextInput
+          id="audit-actor"
+          className="w-56"
+          label={t("audit:actor")}
+          placeholder={t("audit:actorPlaceholder")}
+          value={actor}
+          onChange={(e) => setActor(e.currentTarget.value)}
+        />
+        <Select
+          className="w-48"
+          label={t("audit:action")}
+          value={action}
+          onChange={(value) => setAction(value ?? ALL_VALUE)}
+          allowDeselect={false}
+          data={[
+            { value: ALL_VALUE, label: t("audit:allActions") },
+            ...actionTypes.map((a) => ({ value: a, label: t(`audit:actionTypes.${a}`) })),
+          ]}
+        />
+        <Input.Wrapper id="audit-from" label={t("audit:from")}>
+          <DatePicker id="audit-from" value={from} max={to || undefined} clearable onChange={setFrom} />
+        </Input.Wrapper>
+        <Input.Wrapper id="audit-to" label={t("audit:to")}>
+          <DatePicker id="audit-to" value={to} min={from || undefined} clearable onChange={setTo} />
+        </Input.Wrapper>
+      </FilterBar>
 
       <Card withBorder padding={0}>
         <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />

@@ -60,6 +60,9 @@ public static class RecruitmentLimits
     public const int ApplySlugLength = 22;
     public const int FormAnswerMaxLength = 4_000;
 
+    /// <summary>Career-site application's aydınlatma metni version tag (e.g. "2026-09"), Faz 9 tur 3 TALIMAT madde 2.</summary>
+    public const int PrivacyNoticeVersionMaxLength = 20;
+
     /// <summary>
     /// KVKK data retention window for a candidate's personal data (Faz 9 "KVKK uyumlu aday verisi saklama ve imha").
     /// After this many months from <c>CreatedAt</c> a candidate not hired is eligible for anonymization; see

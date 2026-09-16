@@ -7,6 +7,7 @@
   "resource": "Kaynak",
   "details": "Detaylar",
   "allActors": "Tüm kullanıcılar",
+  "actorPlaceholder": "kullanici@sirket.com",
   "allActions": "Tüm işlemler",
   "from": "Başlangıç",
   "to": "Bitiş",

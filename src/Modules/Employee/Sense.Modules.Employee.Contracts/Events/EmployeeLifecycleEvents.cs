@@ -136,10 +136,13 @@ public static class EmployeeProfileSections
 
     /// <summary>Union memberships (added/edited/deleted); no values are carried - union data is special-category.</summary>
     public const string Union = "union";
+
+    /// <summary>Core record edit (PUT /employees/{id}) that changed a field other modules care about (today: BirthDate, DisabilityDegree).</summary>
+    public const string Core = "core";
 }
 
 /// <summary>
-/// Raised when a section of the employee profile changes (<see cref="EmployeeProfileSections"/>); today only
-/// <see cref="EmployeeProfileSections.Bank"/>. Carries no field values (IBANs are sensitive).
+/// Raised when a section of the employee profile changes (<see cref="EmployeeProfileSections"/>). Carries no field
+/// values - consumers re-read the current values through the Employee module rather than from the event.
 /// </summary>
 public sealed record EmployeeProfileChanged(Guid TenantId, Guid EmployeeId, string Section) : IntegrationEvent(TenantId);

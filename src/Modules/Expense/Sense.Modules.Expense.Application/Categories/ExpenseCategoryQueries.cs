@@ -26,5 +26,5 @@ public sealed class ListExpenseCategoriesHandler(
     }
 
     internal static ExpenseCategoryDto ToDto(ExpenseCategory category) =>
-        new(category.Id, category.Code, category.NameKey, category.DefaultTaxRate, category.IsActive);
+        new(category.Id, category.Code, category.NameKey, category.DefaultTaxRate, category.IsActive, category.MaxAmount);
 }

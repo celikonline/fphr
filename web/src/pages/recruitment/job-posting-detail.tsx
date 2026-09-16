@@ -21,6 +21,7 @@ import {
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -264,18 +265,36 @@ function JobPostingDetail() {
               {applicationsQuery.data.map((application) => {
                 const candidate = candidateById.get(application.candidateId);
                 const isTerminal = application.stage === "hired" || application.stage === "rejected";
+                const isAnonymized = candidate?.isAnonymized ?? false;
                 return (
-                  <Table.Tr key={application.id}>
-                    <Table.Td>{candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}</Table.Td>
+                  <Table.Tr key={application.id} opacity={isAnonymized ? 0.6 : 1}>
+                    <Table.Td>
+                      <Group gap={6} wrap="nowrap">
+                        <Text>{candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}</Text>
+                        {isAnonymized && (
+                          <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+                            <Badge size="sm" color="gray" variant="light">
+                              {t("recruitment:candidates.anonymized")}
+                            </Badge>
+                          </Tooltip>
+                        )}
+                      </Group>
+                    </Table.Td>
                     <Table.Td>{formatDateTime(application.appliedAt, i18n.language)}</Table.Td>
                     <Table.Td className="max-w-[220px]">
-                      <Select
-                        data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
-                        value={application.stage}
-                        disabled={!canManageApplications || isTerminal}
-                        allowDeselect={false}
-                        onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
-                      />
+                      {isAnonymized ? (
+                        <Text size="sm" c="dimmed">
+                          {t(`recruitment:applications.stages.${application.stage}`)}
+                        </Text>
+                      ) : (
+                        <Select
+                          data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
+                          value={application.stage}
+                          disabled={!canManageApplications || isTerminal}
+                          allowDeselect={false}
+                          onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
+                        />
+                      )}
                     </Table.Td>
                     {canSubmitForms && (
                       <Table.Td>

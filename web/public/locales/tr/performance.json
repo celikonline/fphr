@@ -1,0 +1,46 @@
+{
+  "genericError": "İşlem sırasında bir hata oluştu.",
+  "status": {
+    "open": "Açık",
+    "inProgress": "Devam ediyor",
+    "completed": "Tamamlandı",
+    "cancelled": "İptal edildi",
+    "archived": "Arşivlendi"
+  },
+  "my": {
+    "title": "Hedeflerim",
+    "subtitle": "Bu dönemki hedeflerinizi görün ve ilerlemenizi güncelleyin.",
+    "addGoal": "Hedef ekle",
+    "empty": "Henüz bir hedefiniz yok.",
+    "created": "Hedef eklendi.",
+    "targetDate": "Hedef tarih: {{date}}",
+    "progressLabel": "İlerleme: %{{progress}}",
+    "updateProgress": "İlerlemeyi güncelle",
+    "progressUpdated": "İlerleme güncellendi."
+  },
+  "form": {
+    "newTitle": "Yeni hedef",
+    "title": "Başlık",
+    "description": "Açıklama",
+    "targetDate": "Hedef tarih",
+    "reviewCycle": "Değerlendirme dönemi",
+    "reviewCycleNone": "Dönem seçilmedi",
+    "submit": "Ekle"
+  },
+  "team": {
+    "title": "Ekip hedefleri",
+    "subtitle": "Ekibinizdeki çalışanların hedeflerini görüntüleyin.",
+    "empty": "Ekibinizde kayıtlı hedef yok.",
+    "col": {
+      "employee": "Çalışan",
+      "title": "Başlık",
+      "targetDate": "Hedef tarih",
+      "progress": "İlerleme",
+      "status": "Durum"
+    },
+    "cancel": "İptal et",
+    "cancelConfirmTitle": "Hedefi iptal et",
+    "cancelConfirmDescription": "\"{{title}}\" hedefini iptal etmek istediğinize emin misiniz?",
+    "cancelled": "Hedef iptal edildi."
+  }
+}

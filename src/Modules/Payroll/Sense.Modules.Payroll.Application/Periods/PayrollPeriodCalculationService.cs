@@ -1,5 +1,6 @@
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
+using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -32,7 +33,8 @@ public sealed class PayrollPeriodCalculationService(
     IEmployeeSalaryLookup salaryLookup,
     ILegislationParameterReader legislationReader,
     ITenantContext tenant,
-    TimeProvider clock)
+    TimeProvider clock,
+    IWorkedTimeReader workedTimeReader)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -98,9 +100,14 @@ public sealed class PayrollPeriodCalculationService(
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) is deferred to P4+/P8: every
         // period is calculated as if it were the employee's first month of the year. TODO documented in
         // faz3-durum-takibi.md P3 entry.
+        // TB-7 Attendance köprüsü (roadmap #23): null (no adapter wired yet, or Attendance has no data for this
+        // employee/period) keeps today's full-month assumption; once IWorkedTimeReader has a real Attendance-backed
+        // implementation, WorkedDays reflects actual attendance instead.
+        var workedTime = await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
+        var workedDays = workedTime?.WorkedDays ?? calendarDays;
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: salary.Amount,
-            WorkedDays: calendarDays,
+            WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
             MealVariant: profile.MealBenefitVariant,
             MealDailyAmount: profile.MealDailyAmount,

@@ -289,6 +289,8 @@ public sealed class UpdateEmployeeHandler(
         var orgUnitChanged = command.OrgUnitId != employee.OrgUnitId;
         var managerChanged = command.ManagerEmployeeId != employee.ManagerEmployeeId;
         var placementChanged = orgUnitChanged || managerChanged || command.EmploymentType != employee.EmploymentType;
+        var previousBirthDate = employee.BirthDate;
+        var previousDisabilityDegree = employee.DisabilityDegree;
 
         // Unit/manager/employment type now live on the career timeline: materialize the initial record first (so a
         // hire-date correction can realign it), then route the change through the aggregate's career rules.
@@ -330,6 +332,14 @@ public sealed class UpdateEmployeeHandler(
         if (updated.Value && employee.HireDate is { } hireDate)
         {
             outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate) { ActorUserId = currentUser.UserId });
+        }
+
+        if (employee.BirthDate != previousBirthDate || employee.DisabilityDegree != previousDisabilityDegree)
+        {
+            outbox.Enqueue(new Contracts.Events.EmployeeProfileChanged(tenant.TenantId, employee.Id, Contracts.Events.EmployeeProfileSections.Core)
+            {
+                ActorUserId = currentUser.UserId,
+            });
         }
 
         return await details.BuildAsync(employee, cancellationToken);

@@ -6,7 +6,9 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Infrastructure.Adapters;
 using Sense.Modules.Payroll.Infrastructure.Jobs;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Events;
@@ -29,6 +31,10 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         services.AddScoped<IPayslipDirtyFlagRepository, PayslipDirtyFlagRepository>();
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();
+
+        // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
+        // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
+        services.AddScoped<IWorkedTimeReader, AttendanceWorkedTimeReaderAdapter>();
 
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();

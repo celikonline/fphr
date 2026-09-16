@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Alert, Button, Card, Center, Stack, Text, TextInput, Title } from "@mantine/core";
 import { ArrowLeft, MailCheck } from "lucide-react";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { forgotPassword } from "@/services/password-reset.service";
 import classes from "./auth-card.module.css";
 
@@ -32,7 +32,11 @@ export default function ForgotPasswordPage() {
 
   const mutation = useMutation({
     mutationFn: (values: FormValues) => forgotPassword(values.email),
-    onError: (error) => setSubmitError(getApiErrorMessage(error, t("auth:forgotPasswordPage.error"))),
+    onError: (error) => {
+      // `[EnableRateLimiting("public-anonymous-write")]` (ADR-0003) rejects with a bare 429, no ProblemDetails body.
+      const fallback = getApiErrorStatus(error) === 429 ? t("auth:forgotPasswordPage.tooManyRequests") : t("auth:forgotPasswordPage.error");
+      setSubmitError(getApiErrorMessage(error, fallback));
+    },
   });
 
   return (

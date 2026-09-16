@@ -1,11 +1,14 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Alert, Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Users } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
-import type { LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput } from "@/services/leave.service";
+import type { LeaveHalfDayPeriod, LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput, LeaveUnit } from "@/services/leave.service";
 import { useDays } from "./leave-shared";
+import { formatTimeOnly } from "./overtime-shared";
 
 export interface LeaveRequestTypeOption {
   id: string;
@@ -14,6 +17,8 @@ export interface LeaveRequestTypeOption {
   requiresDescription: boolean;
   perRequestMaxDays: number | null;
   availableBalance: number | null;
+  /** Drives the partial-day fields below; defaults to `fullDay` when the caller cannot look it up (e.g. balance-only fallback). */
+  unit?: LeaveUnit;
 }
 
 interface LeaveRequestDialogProps {
@@ -69,6 +74,9 @@ export function LeaveRequestDialog({
   const [startDate, setStartDate] = useState(source?.startDate ?? "");
   const [endDate, setEndDate] = useState(source?.endDate ?? "");
   const [description, setDescription] = useState(source?.description ?? "");
+  const [startTime, setStartTime] = useState(source?.startTime ? formatTimeOnly(source.startTime) : "");
+  const [endTime, setEndTime] = useState(source?.endTime ? formatTimeOnly(source.endTime) : "");
+  const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod | "">(source?.halfDayPeriod ?? "");
   const [bypassApproval, setBypassApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,18 +92,44 @@ export function LeaveRequestDialog({
             requiresDescription: false,
             perRequestMaxDays: null,
             availableBalance: null,
+            unit: "fullDay" as LeaveUnit,
           },
         ]
       : types;
   const selected = options.find((type) => type.id === leaveTypeId) ?? null;
+  const unit: LeaveUnit = selected?.unit ?? "fullDay";
 
-  const [draftTypeId, draftStart, draftEnd] = useDebounced(`${leaveTypeId}|${startDate}|${endDate}`, 300).split("|");
-  const draft = { leaveTypeId: draftTypeId, startDate: draftStart, endDate: draftEnd };
+  // Hourly/HalfDay are single-day requests (backend rejects start != end for them); keep the end date mirrored.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mirrors a controlled sibling field, not derivable render-time state
+    if (unit !== "fullDay" && endDate !== startDate) setEndDate(startDate);
+  }, [unit, startDate, endDate]);
+
+  const [draftTypeId, draftStart, draftEnd, draftStartTime, draftEndTime, draftHalfDayPeriod] = useDebounced(
+    `${leaveTypeId}|${startDate}|${endDate}|${startTime}|${endTime}|${halfDayPeriod}`,
+    300,
+  ).split("|");
+  const draft = {
+    leaveTypeId: draftTypeId,
+    startDate: draftStart,
+    endDate: draftEnd,
+    startTime: draftStartTime,
+    endTime: draftEndTime,
+    halfDayPeriod: draftHalfDayPeriod as LeaveHalfDayPeriod | "",
+  };
   const canPreview = !!draft.leaveTypeId && !!draft.startDate && !!draft.endDate && draft.endDate >= draft.startDate;
   const previewQuery = useQuery({
     queryKey: ["leave", "preview", previewScope, draft, editing?.id ?? null],
     queryFn: () =>
-      preview({ leaveTypeId: draft.leaveTypeId, start: draft.startDate, end: draft.endDate, editedRequestId: editing?.id }),
+      preview({
+        leaveTypeId: draft.leaveTypeId,
+        start: draft.startDate,
+        end: draft.endDate,
+        editedRequestId: editing?.id,
+        startTime: unit === "hourly" && draft.startTime ? `${draft.startTime}:00` : undefined,
+        endTime: unit === "hourly" && draft.endTime ? `${draft.endTime}:00` : undefined,
+        halfDayPeriod: unit === "halfDay" && draft.halfDayPeriod ? draft.halfDayPeriod : undefined,
+      }),
     enabled: canPreview,
     retry: false,
   });
@@ -111,9 +145,19 @@ export function LeaveRequestDialog({
     if (!leaveTypeId) return setError(t("leave:form.validation.typeRequired"));
     if (!startDate || !endDate) return setError(t("leave:form.validation.datesRequired"));
     if (endDate < startDate) return setError(t("leave:form.validation.range"));
+    if (unit === "hourly" && (!startTime || !endTime || endTime <= startTime)) return setError(t("leave:form.validation.timeRequired"));
+    if (unit === "halfDay" && !halfDayPeriod) return setError(t("leave:form.validation.halfDayRequired"));
     if (selected?.requiresDescription && !description.trim()) return setError(t("leave:form.validation.descriptionRequired"));
     setError(null);
-    mutation.mutate({ leaveTypeId, startDate, endDate, description: description.trim() || null });
+    mutation.mutate({
+      leaveTypeId,
+      startDate,
+      endDate: unit === "fullDay" ? endDate : startDate,
+      description: description.trim() || null,
+      startTime: unit === "hourly" ? `${startTime}:00` : undefined,
+      endTime: unit === "hourly" ? `${endTime}:00` : undefined,
+      halfDayPeriod: unit === "halfDay" ? (halfDayPeriod as LeaveHalfDayPeriod) : undefined,
+    });
   }
 
   const busy = mutation.isPending;
@@ -169,10 +213,44 @@ export function LeaveRequestDialog({
                 <Input.Wrapper id="leave-start" label={t("leave:form.startDate")} withAsterisk>
                   <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={setStartDate} />
                 </Input.Wrapper>
-                <Input.Wrapper id="leave-end" label={t("leave:form.endDate")} withAsterisk>
-                  <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
-                </Input.Wrapper>
+                {unit === "fullDay" ? (
+                  <Input.Wrapper id="leave-end" label={t("leave:form.endDate")} withAsterisk>
+                    <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
+                  </Input.Wrapper>
+                ) : (
+                  <Input.Wrapper label={t("leave:form.endDate")}>
+                    <Text size="sm" c="dimmed" mt={8}>
+                      {t("leave:form.sameDayHint")}
+                    </Text>
+                  </Input.Wrapper>
+                )}
               </div>
+              {unit === "halfDay" && (
+                <Select
+                  id="leave-half-day-period"
+                  label={t("leave:form.halfDayPeriod")}
+                  withAsterisk
+                  placeholder={t("leave:form.halfDayPeriod")}
+                  value={halfDayPeriod || null}
+                  onChange={(value) => setHalfDayPeriod((value as LeaveHalfDayPeriod) ?? "")}
+                  allowDeselect={false}
+                  disabled={busy}
+                  data={[
+                    { value: "morning", label: t("leave:form.halfDayMorning") },
+                    { value: "afternoon", label: t("leave:form.halfDayAfternoon") },
+                  ]}
+                />
+              )}
+              {unit === "hourly" && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input.Wrapper id="leave-hour-start" label={t("leave:form.hourlyStart")} withAsterisk>
+                    <TimePicker id="leave-hour-start" value={startTime} disabled={busy} onChange={setStartTime} />
+                  </Input.Wrapper>
+                  <Input.Wrapper id="leave-hour-end" label={t("leave:form.hourlyEnd")} withAsterisk>
+                    <TimePicker id="leave-hour-end" value={endTime} disabled={busy} onChange={setEndTime} />
+                  </Input.Wrapper>
+                </div>
+              )}
               {canPreview && (
                 <Paper withBorder p="sm" bg="var(--mantine-color-default-hover)" aria-live="polite">
                   {previewQuery.isFetching && !previewQuery.data ? (
@@ -200,6 +278,16 @@ export function LeaveRequestDialog({
                     </>
                   ) : null}
                 </Paper>
+              )}
+              {canPreview && previewQuery.data?.teamOverlap && previewQuery.data.teamOverlap.count > 0 && (
+                <Alert color="blue" variant="light" icon={<Users size={16} />}>
+                  <Text size="sm">{t("leave:form.teamOverlap", { count: previewQuery.data.teamOverlap.count })}</Text>
+                  {previewQuery.data.teamOverlap.employees.length > 0 && (
+                    <Text size="xs" c="dimmed" mt={4}>
+                      {previewQuery.data.teamOverlap.employees.map((employee) => employee.name).join(", ")}
+                    </Text>
+                  )}
+                </Alert>
               )}
               <Textarea
                 id="leave-description"

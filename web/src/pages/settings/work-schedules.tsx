@@ -1,17 +1,35 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Badge, Button, Checkbox, Group, Modal, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
-import { CalendarClock, Pencil, Plus, Star, Trash2 } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Checkbox,
+  CloseButton,
+  Group,
+  Modal,
+  Paper,
+  ScrollArea,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { CalendarClock, Pencil, Plus, Search, Star, Trash2, UserPlus } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
+import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { listEmployees } from "@/services/employees.service";
 import {
+  assignWorkSchedule,
   createWorkSchedule,
   deleteWorkSchedule,
   renameWorkSchedule,
@@ -62,6 +80,7 @@ export default function WorkSchedulesPage() {
 function WorkSchedules() {
   const { t } = useTranslation(["attendance", "common"]);
   const canManage = usePermission("attendance.workschedule.manage");
+  const canAssign = usePermission("attendance.workschedule.assign");
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: SCHEDULES_KEY, queryFn: () => listWorkSchedules(true) });
   const schedules = [...(query.data ?? [])].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.name.localeCompare(b.name));
@@ -69,6 +88,7 @@ function WorkSchedules() {
   const [creating, setCreating] = useState(false);
   const [renaming, setRenaming] = useState<WorkSchedule | null>(null);
   const [editingDays, setEditingDays] = useState<WorkSchedule | null>(null);
+  const [assigning, setAssigning] = useState<WorkSchedule | null>(null);
   const [deleting, setDeleting] = useState<WorkSchedule | null>(null);
 
   const onError = (error: unknown) =>
@@ -152,7 +172,7 @@ function WorkSchedules() {
       meta: { label: t("attendance:workSchedules.col.assigned") },
       cell: ({ row }) => row.original.assignedEmployeeCount,
     },
-    ...(canManage
+    ...(canManage || canAssign
       ? [
           {
             id: "actions",
@@ -168,13 +188,22 @@ function WorkSchedules() {
                   : null;
               return (
                 <Group gap="xs" justify="flex-end" wrap="nowrap">
-                  <Button type="button" size="xs" variant="subtle" leftSection={<Pencil size={14} />} onClick={() => setEditingDays(schedule)}>
-                    {t("attendance:workSchedules.editDays")}
-                  </Button>
-                  <Button type="button" size="xs" variant="subtle" onClick={() => setRenaming(schedule)}>
-                    {t("common:edit")}
-                  </Button>
-                  {!schedule.isDefault && (
+                  {canAssign && (
+                    <Button type="button" size="xs" variant="subtle" leftSection={<UserPlus size={14} />} onClick={() => setAssigning(schedule)}>
+                      {t("attendance:workSchedules.assign")}
+                    </Button>
+                  )}
+                  {canManage && (
+                    <>
+                      <Button type="button" size="xs" variant="subtle" leftSection={<Pencil size={14} />} onClick={() => setEditingDays(schedule)}>
+                        {t("attendance:workSchedules.editDays")}
+                      </Button>
+                      <Button type="button" size="xs" variant="subtle" onClick={() => setRenaming(schedule)}>
+                        {t("common:edit")}
+                      </Button>
+                    </>
+                  )}
+                  {canManage && !schedule.isDefault && (
                     <Button
                       type="button"
                       size="xs"
@@ -186,29 +215,32 @@ function WorkSchedules() {
                       {t("attendance:workSchedules.makeDefault")}
                     </Button>
                   )}
-                  <Button
-                    type="button"
-                    size="xs"
-                    variant="subtle"
-                    color={schedule.isActive ? "gray" : "teal"}
-                    loading={setActiveMutation.isPending && setActiveMutation.variables?.id === schedule.id}
-                    onClick={() => setActiveMutation.mutate(schedule)}
-                  >
-                    {schedule.isActive ? t("attendance:workSchedules.deactivate") : t("attendance:workSchedules.activate")}
-                  </Button>
-                  {deleteBlocked ? (
-                    <Tooltip label={deleteBlocked} multiline maw={260}>
-                      <span tabIndex={0} aria-label={deleteBlocked}>
-                        <Button type="button" size="xs" variant="subtle" color="red" disabled style={{ pointerEvents: "none" }} leftSection={<Trash2 size={14} />}>
-                          {t("common:delete")}
-                        </Button>
-                      </span>
-                    </Tooltip>
-                  ) : (
-                    <Button type="button" size="xs" variant="subtle" color="red" leftSection={<Trash2 size={14} />} onClick={() => setDeleting(schedule)}>
-                      {t("common:delete")}
+                  {canManage && (
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="subtle"
+                      color={schedule.isActive ? "gray" : "teal"}
+                      loading={setActiveMutation.isPending && setActiveMutation.variables?.id === schedule.id}
+                      onClick={() => setActiveMutation.mutate(schedule)}
+                    >
+                      {schedule.isActive ? t("attendance:workSchedules.deactivate") : t("attendance:workSchedules.activate")}
                     </Button>
                   )}
+                  {canManage &&
+                    (deleteBlocked ? (
+                      <Tooltip label={deleteBlocked} multiline maw={260}>
+                        <span tabIndex={0} aria-label={deleteBlocked}>
+                          <Button type="button" size="xs" variant="subtle" color="red" disabled style={{ pointerEvents: "none" }} leftSection={<Trash2 size={14} />}>
+                            {t("common:delete")}
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      <Button type="button" size="xs" variant="subtle" color="red" leftSection={<Trash2 size={14} />} onClick={() => setDeleting(schedule)}>
+                        {t("common:delete")}
+                      </Button>
+                    ))}
                 </Group>
               );
             },
@@ -258,6 +290,7 @@ function WorkSchedules() {
       {creating && <ScheduleFormDialog mode="create" onClose={() => setCreating(false)} />}
       {renaming && <RenameDialog schedule={renaming} onClose={() => setRenaming(null)} />}
       {editingDays && <ScheduleFormDialog mode="edit" schedule={editingDays} onClose={() => setEditingDays(null)} />}
+      {assigning && <AssignWorkScheduleDialog schedule={assigning} onClose={() => setAssigning(null)} />}
 
       <ConfirmDialog
         open={Boolean(deleting)}
@@ -454,6 +487,166 @@ function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edi
             </Button>
             <Button type="submit" loading={mutation.isPending}>
               {mutation.isPending ? t("common:saving") : t("common:save")}
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
+  );
+}
+
+function todayDateOnly(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
+ * "Çalışanlara ata" (attendance.workschedule.assign): searchable employee multi-select + effective-from date.
+ * Unlike the leave rule-set assign flow this is all-or-nothing (no per-employee warnings) — a scope/not-found
+ * failure for any selected employee rejects the whole request (`AssignWorkScheduleHandler`).
+ */
+function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedule; onClose: () => void }) {
+  const { t } = useTranslation(["attendance", "common", "employees"]);
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [selected, setSelected] = useState<Map<string, string>>(new Map());
+  const [effectiveFrom, setEffectiveFrom] = useState(todayDateOnly());
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const employeesQuery = useQuery({
+    queryKey: ["employees", "work-schedule-assign", debounced],
+    queryFn: () => listEmployees({ page: 1, pageSize: 20, q: debounced || undefined, status: "Active", sort: "displayName" }),
+    retry: false,
+  });
+
+  const mutation = useMutation({
+    mutationFn: () => assignWorkSchedule(schedule.id, [...selected.keys()], effectiveFrom),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: SCHEDULES_KEY });
+      toast({ variant: "success", title: t("common:success"), description: t("attendance:workSchedules.assigned", { count: selected.size }) });
+      onClose();
+    },
+    onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
+  });
+
+  const toggle = (id: string, name: string, checked: boolean) =>
+    setSelected((current) => {
+      const next = new Map(current);
+      if (checked) next.set(id, name);
+      else next.delete(id);
+      return next;
+    });
+
+  const chips = useMemo(() => [...selected.entries()], [selected]);
+  const busy = mutation.isPending;
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (selected.size === 0) return setError(t("attendance:workSchedules.assignNoSelection"));
+    if (!effectiveFrom) return setError(t("attendance:workSchedules.assignEffectiveFromRequired"));
+    setError(null);
+    mutation.mutate();
+  }
+
+  return (
+    <Modal opened onClose={onClose} size="32rem" title={t("attendance:workSchedules.assignTitle")}>
+      <form onSubmit={submit}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("attendance:workSchedules.assignDescription", { name: schedule.name })}
+          </Text>
+          <DatePicker id="work-schedule-assign-effective-from" value={effectiveFrom} disabled={busy} onChange={setEffectiveFrom} />
+          {chips.length > 0 && (
+            <Group gap={6}>
+              {chips.map(([id, name]) => (
+                <Badge
+                  key={id}
+                  variant="light"
+                  tt="none"
+                  pr={3}
+                  rightSection={
+                    <CloseButton
+                      size="xs"
+                      radius="xl"
+                      variant="transparent"
+                      aria-label={t("attendance:workSchedules.assignRemove", { name })}
+                      onClick={() => toggle(id, name, false)}
+                    />
+                  }
+                >
+                  {name}
+                </Badge>
+              ))}
+            </Group>
+          )}
+          <TextInput
+            leftSection={<Search size={16} />}
+            placeholder={t("employees:picker.search")}
+            aria-label={t("employees:picker.search")}
+            value={search}
+            disabled={busy}
+            onChange={(e) => setSearch(e.currentTarget.value)}
+          />
+          <Paper withBorder>
+            <ScrollArea.Autosize mah={288}>
+              {employeesQuery.isLoading ? (
+                <Skeleton h={96} m="xs" w="auto" />
+              ) : employeesQuery.isError ? (
+                <Text size="sm" c="red" p="sm">
+                  {getApiErrorMessage(employeesQuery.error, t("attendance:genericError"))}
+                </Text>
+              ) : (employeesQuery.data?.items ?? []).length === 0 ? (
+                <Text size="sm" c="dimmed" p="sm">
+                  {t("employees:picker.empty")}
+                </Text>
+              ) : (
+                <Stack gap={0} py={4}>
+                  {(employeesQuery.data?.items ?? []).map((employee) => (
+                    <Checkbox
+                      key={employee.id}
+                      id={`work-schedule-assign-${employee.id}`}
+                      px="sm"
+                      py={8}
+                      checked={selected.has(employee.id)}
+                      disabled={busy}
+                      onChange={(e) => toggle(employee.id, employee.displayName, e.currentTarget.checked)}
+                      styles={{ body: { alignItems: "center" }, labelWrapper: { minWidth: 0, flex: 1 } }}
+                      label={
+                        <>
+                          <Text span size="sm" display="block" truncate="end">
+                            {employee.displayName}
+                          </Text>
+                          {employee.workEmail && (
+                            <Text span size="xs" c="dimmed" display="block" truncate="end">
+                              {employee.workEmail}
+                            </Text>
+                          )}
+                        </>
+                      }
+                    />
+                  ))}
+                </Stack>
+              )}
+            </ScrollArea.Autosize>
+          </Paper>
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="xs">
+            <Button type="button" variant="default" onClick={onClose} disabled={busy}>
+              {t("common:cancel")}
+            </Button>
+            <Button type="submit" loading={busy} disabled={selected.size === 0}>
+              {busy ? t("common:saving") : t("attendance:workSchedules.assignSubmit", { count: selected.size })}
             </Button>
           </Group>
         </Stack>

@@ -1,5 +1,6 @@
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Balances;
 using Sense.Modules.Leave.Domain.Calendar;
 using Sense.Modules.Leave.Domain.Ledger;
@@ -406,5 +407,114 @@ public sealed class LegislationParameterTests
         after.PaternityDays.ShouldBe(10m);
         after.MaternityPostBirthWeeks.ShouldBe(16m);
         after.Annual.ShouldBe(StatutoryAnnualLeave.Turkey2026);
+    }
+}
+
+public sealed class AbsenceRecordTests
+{
+    private static readonly Guid TenantId = Guid.NewGuid();
+    private static readonly Guid EmployeeId = Guid.NewGuid();
+    private static readonly Guid RecordedByUserId = Guid.NewGuid();
+    private static readonly DateOnly Date = new(2026, 9, 15);
+
+    [Fact]
+    public void Record_Unexcused_Succeeds()
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Unexcused, null, "İşe gelmedi, haber vermedi", RecordedByUserId);
+
+        record.IsSuccess.ShouldBeTrue();
+        record.Value.Kind.ShouldBe(AbsenceKind.Unexcused);
+        record.Value.Hours.ShouldBeNull();
+        record.Value.ReversesId.ShouldBeNull();
+        record.Value.IsReversal.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Record_Late_WithHours_Succeeds()
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Late, 1.5m, null, RecordedByUserId);
+
+        record.IsSuccess.ShouldBeTrue();
+        record.Value.Hours.ShouldBe(1.5m);
+    }
+
+    [Fact]
+    public void Record_HoursOnNonLateKind_Fails()
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Excused, 2m, null, RecordedByUserId);
+
+        record.IsFailure.ShouldBeTrue();
+        record.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceHoursOnlyForLate);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    [InlineData(25)]
+    public void Record_HoursOutOfRange_Fails(decimal hours)
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Late, hours, null, RecordedByUserId);
+
+        record.IsFailure.ShouldBeTrue();
+        record.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceHoursInvalid);
+    }
+
+    [Fact]
+    public void Record_NoteTooLong_Fails()
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Unexcused, null, new string('a', LeaveLimits.AbsenceNoteMaxLength + 1), RecordedByUserId);
+
+        record.IsFailure.ShouldBeTrue();
+        record.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceNoteTooLong);
+    }
+
+    [Fact]
+    public void Reverse_Valid_ProducesLinkedRecordWithoutHours()
+    {
+        var original = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Late, 1m, null, RecordedByUserId).Value;
+
+        var reversal = AbsenceRecord.Reverse(original, "Yanlış tarihe girildi", RecordedByUserId, alreadyReversed: false);
+
+        reversal.IsSuccess.ShouldBeTrue();
+        reversal.Value.ReversesId.ShouldBe(original.Id);
+        reversal.Value.IsReversal.ShouldBeTrue();
+        reversal.Value.Hours.ShouldBeNull();
+        reversal.Value.EmployeeId.ShouldBe(original.EmployeeId);
+        reversal.Value.Date.ShouldBe(original.Date);
+        reversal.Value.Kind.ShouldBe(original.Kind);
+    }
+
+    [Fact]
+    public void Reverse_AlreadyReversed_Fails()
+    {
+        var original = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Unexcused, null, null, RecordedByUserId).Value;
+
+        var reversal = AbsenceRecord.Reverse(original, "Tekrar deneme", RecordedByUserId, alreadyReversed: true);
+
+        reversal.IsFailure.ShouldBeTrue();
+        reversal.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceAlreadyReversed);
+    }
+
+    [Fact]
+    public void Reverse_ARecordThatIsItselfAReversal_Fails()
+    {
+        var original = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Unexcused, null, null, RecordedByUserId).Value;
+        var reversal = AbsenceRecord.Reverse(original, "Düzeltme", RecordedByUserId, alreadyReversed: false).Value;
+
+        var doubleReversal = AbsenceRecord.Reverse(reversal, "Tekrar düzeltme", RecordedByUserId, alreadyReversed: false);
+
+        doubleReversal.IsFailure.ShouldBeTrue();
+        doubleReversal.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceReversalNotReversible);
+    }
+
+    [Fact]
+    public void Reverse_EmptyReason_Fails()
+    {
+        var original = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Unexcused, null, null, RecordedByUserId).Value;
+
+        var reversal = AbsenceRecord.Reverse(original, "  ", RecordedByUserId, alreadyReversed: false);
+
+        reversal.IsFailure.ShouldBeTrue();
+        reversal.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceReversalReasonRequired);
     }
 }

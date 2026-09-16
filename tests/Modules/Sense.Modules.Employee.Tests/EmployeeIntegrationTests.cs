@@ -19,10 +19,12 @@ using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.Context;
+using Sense.Shared.Infrastructure.Persistence.Outbox;
 using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
 using Xunit;
+using ContractEvents = Sense.Modules.Employee.Contracts.Events;
 
 namespace Sense.Modules.Employee.Tests;
 
@@ -373,6 +375,51 @@ public sealed class EmployeeIntegrationTests : TestFixture
         await linker.LinkUserAsync(tenantId, outsider.Id, userId);
         var reloaded = await ServiceProvider!.GetRequiredService<EmployeeDbContext>().Employees.AsNoTracking().SingleAsync(e => e.Id == outsider.Id);
         reloaded.UserId.ShouldBe(userId);
+    }
+
+    /// <summary>
+    /// UpdateEmployeeCommand publishes EmployeeProfileChanged("core") only when BirthDate or DisabilityDegree actually
+    /// change - other modules (e.g. Payroll for disability-based tax relief) react to this, so a no-op update or an
+    /// edit that only touches unrelated fields (name) must not enqueue a spurious event.
+    /// </summary>
+    [Fact]
+    public async Task Update_PublishesProfileChangedCore_OnlyWhenBirthDateOrDisabilityDegreeChanges()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var ayse = await CreateAsync("Ayşe", "Demir", birthDate: new DateOnly(1990, 4, 2));
+
+        // Same values, only the name changes: no "core" event.
+        var renamed = await ExecuteCommandAsync(new UpdateEmployeeCommand(
+            ayse.Id, "Ayşe Nur", "Demir", ayse.NationalId, ayse.WorkEmail, null, null, ayse.HireDate, ayse.BirthDate, null, null));
+        renamed.IsSuccess.ShouldBeTrue();
+        (await CountAsync<ContractEvents.EmployeeProfileChanged>(tenantId, ContractEvents.EmployeeProfileSections.Core)).ShouldBe(0);
+
+        // BirthDate changes: one "core" event.
+        var birthDateChanged = await ExecuteCommandAsync(new UpdateEmployeeCommand(
+            ayse.Id, "Ayşe Nur", "Demir", ayse.NationalId, ayse.WorkEmail, null, null, ayse.HireDate, new DateOnly(1991, 5, 3), null, null));
+        birthDateChanged.IsSuccess.ShouldBeTrue();
+        (await CountAsync<ContractEvents.EmployeeProfileChanged>(tenantId, ContractEvents.EmployeeProfileSections.Core)).ShouldBe(1);
+
+        // DisabilityDegree changes: a second "core" event.
+        var disabilityChanged = await ExecuteCommandAsync(new UpdateEmployeeCommand(
+            ayse.Id, "Ayşe Nur", "Demir", ayse.NationalId, ayse.WorkEmail, null, null, ayse.HireDate, new DateOnly(1991, 5, 3), null, null,
+            DisabilityDegree: DisabilityDegree.First));
+        disabilityChanged.IsSuccess.ShouldBeTrue();
+        (await CountAsync<ContractEvents.EmployeeProfileChanged>(tenantId, ContractEvents.EmployeeProfileSections.Core)).ShouldBe(2);
+    }
+
+    /// <summary>Counts outbox rows of <typeparamref name="TEvent"/> whose JSON payload carries the given section
+    /// (filtered client-side: jsonb pattern matching isn't reliably provider-translatable, and the payload set here
+    /// is small).</summary>
+    private async Task<int> CountAsync<TEvent>(Guid tenantId, string section)
+    {
+        var type = EventTypeRegistry.NameOf(typeof(TEvent));
+        var payloads = await ServiceProvider!.GetRequiredService<EmployeeDbContext>().OutboxMessages.AsNoTracking()
+            .Where(m => m.TenantId == tenantId && m.Type == type)
+            .Select(m => m.Payload)
+            .ToListAsync();
+        return payloads.Count(p => p.Contains($"\"{section}\"", StringComparison.Ordinal));
     }
 
     private sealed record OrgUnits(Guid Root, Guid Sales, Guid Emea, Guid Closed);

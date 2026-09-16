@@ -91,6 +91,14 @@
     "deleteDescription": "Are you sure you want to delete \"{{name}}\"?",
     "deleteBlockedDefault": "The default work schedule cannot be deleted.",
     "deleteBlockedEmployees": "Cannot delete while assigned to {{count}} employee(s).",
+    "assign": "Assign",
+    "assignTitle": "Assign to employees",
+    "assignDescription": "Selected employees get the \"{{name}}\" work schedule; past attendance records are not recalculated.",
+    "assignNoSelection": "Select at least one employee.",
+    "assignEffectiveFromRequired": "Effective-from date is required.",
+    "assignSubmit": "Assign ({{count}})",
+    "assignRemove": "Remove {{name}}",
+    "assigned": "Work schedule assigned to {{count}} employee(s).",
     "col": {
       "name": "Name",
       "days": "Working days",
@@ -98,5 +106,36 @@
       "assigned": "Assigned employees"
     },
     "workingDayCount": "{{count}} days"
+  },
+  "teamTimesheet": {
+    "title": "Team timesheet",
+    "subtitle": "Weekly timesheet grid for the employees you're authorized to view.",
+    "allUnits": "All units",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "employee": "Employee",
+    "empty": "No employees to show for this week.",
+    "planned": "Planned",
+    "status": "Status",
+    "suggestions": "Suggestions",
+    "resolved": "Record updated.",
+    "workedMinutes": "Worked minutes",
+    "reason": "Reason",
+    "durationMinutes": "Duration (min)",
+    "description": "Description",
+    "startTime": "Start time",
+    "leaveType": "Leave type",
+    "action": {
+      "setWorkedHours": "Worked hours",
+      "addOvertime": "Add overtime",
+      "createLeaveRequest": "Leave request",
+      "ignore": "Ignore"
+    },
+    "validation": {
+      "minutesRequired": "Enter the worked minutes.",
+      "startTimeRequired": "Enter the start time.",
+      "durationRequired": "Enter the duration.",
+      "leaveTypeRequired": "Select a leave type."
+    }
   }
 }

@@ -462,8 +462,14 @@ public sealed class GetInvitationPreviewHandler(IInvitationRepository invitation
     }
 }
 
-/// <summary>Anonim: daveti kabul et, parola belirle, KVKK onayı kaydet, hesabı etkinleştir.</summary>
-public sealed record AcceptInvitationCommand(string Token, string Password, bool PrivacyNoticeAccepted, string? DeviceInfo, string? IpAddress) : ICommand<AuthTokensDto>;
+/// <summary>
+/// Anonim: daveti kabul et, parola belirle, KVKK onayı kaydet, hesabı etkinleştir.
+/// <paramref name="PrivacyNoticeVersion"/>: kullanıcının onayladığı aydınlatma metni sürümü — Faz 1'in
+/// <c>IConsentRecorder</c> sözleşmesi (S-3, Tur 3) netleşince kalıcı kayda bağlanacak; bu turda yalnız taşınır,
+/// henüz hiçbir yere yazılmaz (bkz. TALIMAT Tur 3 Backend #7).
+/// </summary>
+public sealed record AcceptInvitationCommand(string Token, string Password, bool PrivacyNoticeAccepted, string? PrivacyNoticeVersion, string? DeviceInfo, string? IpAddress)
+    : ICommand<AuthTokensDto>;
 
 public sealed class AcceptInvitationValidator : AbstractValidator<AcceptInvitationCommand>
 {
@@ -472,6 +478,7 @@ public sealed class AcceptInvitationValidator : AbstractValidator<AcceptInvitati
         RuleFor(x => x.Token).NotEmpty();
         RuleFor(x => x.Password).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
         RuleFor(x => x.PrivacyNoticeAccepted).Equal(true);
+        RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().When(x => x.PrivacyNoticeAccepted);
     }
 }
 

@@ -98,6 +98,20 @@ export interface EmployeeDocumentRequirement {
   waivedReason: string | null;
 }
 
+/** `state` segment of the expiring-documents report (S-6 sözleşmesi, Faz 4 tur 3): fixed 30-day window for "expiring". */
+export type DocumentExpiryState = "expiring" | "expired";
+
+export interface ExpiringDocumentItem {
+  documentId: string;
+  employeeId: string;
+  employeeName: string;
+  documentTypeId: string;
+  documentTypeName: string;
+  expiryDate: string;
+  /** Negative when already expired. */
+  daysLeft: number;
+}
+
 export interface MissingDocumentReportItem {
   requirementId: string;
   employeeId: string;
@@ -143,6 +157,14 @@ export async function getMissingDocumentReport(
   params: PagedQueryParams & { status?: DocumentRequirementStatus } = {},
 ): Promise<PagedResult<MissingDocumentReportItem>> {
   const { data } = await apiClient.get<PagedResult<MissingDocumentReportItem>>(`${DOCUMENTS_BASE}/requirements/report`, { params });
+  return data;
+}
+
+/** `GET documents/expiring` (S-6 sözleşmesi): documents whose own validity date is inside `withinDays` (default 30) or already past. */
+export async function getExpiringDocuments(
+  params: PagedQueryParams & { withinDays?: number; state?: DocumentExpiryState } = {},
+): Promise<PagedResult<ExpiringDocumentItem>> {
+  const { data } = await apiClient.get<PagedResult<ExpiringDocumentItem>>(`${DOCUMENTS_BASE}/expiring`, { params });
   return data;
 }
 
@@ -194,8 +216,15 @@ interface InitiateUploadResult {
  * storage -> confirm) and returns the new Document's real id.
  * `scope: "hr"` (default) requires `documents.files.create`; `"me"` requires `documents.my.files.create`
  * and uploads for the caller's own use (e.g. to satisfy their own requirement via `linkMyDocumentToRequirement`).
+ * `expiryDate` (backend `DateOnly` "yyyy-MM-dd", optional) records the document's own validity date (ehliyet,
+ * oturma izni, İSG sertifikası, ...) - distinct from the requirement's `dueDate` (S-6 sözleşmesi, Faz 4 tur 3).
  */
-export async function uploadDocumentFile(file: File, bucketName = "documents", scope: "hr" | "me" = "hr"): Promise<string> {
+export async function uploadDocumentFile(
+  file: File,
+  bucketName = "documents",
+  scope: "hr" | "me" = "hr",
+  expiryDate?: string | null,
+): Promise<string> {
   const base = scope === "me" ? `${DOCUMENTS_BASE}/me` : DOCUMENTS_BASE;
   const contentType = file.type || "application/octet-stream";
   const { data: initiated } = await apiClient.post<InitiateUploadResult>(`${base}/initiate-upload`, {
@@ -212,6 +241,7 @@ export async function uploadDocumentFile(file: File, bucketName = "documents", s
   await apiClient.post(`${base}/${initiated.documentId}/confirm-upload`, {
     eTag: etag,
     actualFileSizeBytes: file.size,
+    expiryDate: expiryDate || null,
   });
 
   return initiated.documentId;

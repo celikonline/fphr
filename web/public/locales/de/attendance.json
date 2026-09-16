@@ -91,6 +91,14 @@
     "deleteDescription": "[DE] Are you sure you want to delete \"{{name}}\"?",
     "deleteBlockedDefault": "[DE] The default work schedule cannot be deleted.",
     "deleteBlockedEmployees": "[DE] Cannot delete while assigned to {{count}} employee(s).",
+    "assign": "[DE] Assign",
+    "assignTitle": "[DE] Assign to employees",
+    "assignDescription": "[DE] Selected employees get the \"{{name}}\" work schedule; past attendance records are not recalculated.",
+    "assignNoSelection": "[DE] Select at least one employee.",
+    "assignEffectiveFromRequired": "[DE] Effective-from date is required.",
+    "assignSubmit": "[DE] Assign ({{count}})",
+    "assignRemove": "[DE] Remove {{name}}",
+    "assigned": "[DE] Work schedule assigned to {{count}} employee(s).",
     "col": {
       "name": "[DE] Name",
       "days": "[DE] Working days",
@@ -98,5 +106,36 @@
       "assigned": "[DE] Assigned employees"
     },
     "workingDayCount": "[DE] {{count}} days"
+  },
+  "teamTimesheet": {
+    "title": "[DE] Team timesheet",
+    "subtitle": "[DE] Weekly timesheet grid for the employees you're authorized to view.",
+    "allUnits": "[DE] All units",
+    "previousWeek": "[DE] Previous week",
+    "nextWeek": "[DE] Next week",
+    "employee": "[DE] Employee",
+    "empty": "[DE] No employees to show for this week.",
+    "planned": "[DE] Planned",
+    "status": "[DE] Status",
+    "suggestions": "[DE] Suggestions",
+    "resolved": "[DE] Record updated.",
+    "workedMinutes": "[DE] Worked minutes",
+    "reason": "[DE] Reason",
+    "durationMinutes": "[DE] Duration (min)",
+    "description": "[DE] Description",
+    "startTime": "[DE] Start time",
+    "leaveType": "[DE] Leave type",
+    "action": {
+      "setWorkedHours": "[DE] Worked hours",
+      "addOvertime": "[DE] Add overtime",
+      "createLeaveRequest": "[DE] Leave request",
+      "ignore": "[DE] Ignore"
+    },
+    "validation": {
+      "minutesRequired": "[DE] Enter the worked minutes.",
+      "startTimeRequired": "[DE] Enter the start time.",
+      "durationRequired": "[DE] Enter the duration.",
+      "leaveTypeRequired": "[DE] Select a leave type."
+    }
   }
 }

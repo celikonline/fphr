@@ -13,6 +13,7 @@ public static class LeaveErrors
     public const string OverridePayableNotAllowed = "leave.errors.overtime_override_payable_not_allowed";
     public const string ResubmissionSourceInvalid = "leave.errors.resubmission_source_invalid";
     public const string CalendarRangeTooLarge = "leave.errors.calendar_range_too_large";
+    public const string AbsenceNotFound = "leave.absence.not_found";
 }
 
 /// <summary>Non-blocking warning codes (localized in SharedResource.resx; the API returns code + message).</summary>

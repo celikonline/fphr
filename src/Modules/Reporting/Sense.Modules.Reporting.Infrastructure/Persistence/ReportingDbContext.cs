@@ -37,6 +37,7 @@ public sealed class ReportExecutionConfiguration : IEntityTypeConfiguration<Repo
         b.HasKey(x => x.Id);
 
         b.Property(x => x.ReportKey).HasMaxLength(ReportingTables.ReportKeyLength).IsRequired();
+        b.Property(x => x.ParametersJson).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(ReportingTables.StatusLength).IsRequired();
         b.Property(x => x.ResultFileName).HasMaxLength(ReportingTables.FileNameLength);
         b.Property(x => x.ResultContentType).HasMaxLength(ReportingTables.ContentTypeLength);

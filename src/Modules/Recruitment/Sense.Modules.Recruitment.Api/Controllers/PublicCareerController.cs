@@ -7,8 +7,13 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
 
-/// <summary>Request to submit a public career-site application.</summary>
-public sealed record SubmitCareerApplicationRequest(string FirstName, string LastName, string Email, string? Phone);
+/// <summary>
+/// Request to submit a public career-site application. <c>PrivacyNoticeVersion</c>/<c>KvkkAccepted</c> are the
+/// aydınlatma metni acceptance (Faz 9 tur 3 TALIMAT madde 2) - validated and logged only for now, see
+/// <see cref="Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationHandler"/>.
+/// </summary>
+public sealed record SubmitCareerApplicationRequest(
+    string FirstName, string LastName, string Email, string? Phone, string PrivacyNoticeVersion, bool KvkkAccepted);
 
 /// <summary>
 /// Public career site (Kolay İK ATS "Kariyer sayfası", R3): unauthenticated postings list/detail + application
@@ -46,5 +51,8 @@ public sealed class PublicCareerController : ApiControllerBase
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Apply(string applySlug, [FromBody] SubmitCareerApplicationRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
-            new SubmitCareerApplicationCommand(applySlug, request.FirstName, request.LastName, request.Email, request.Phone), ct));
+            new SubmitCareerApplicationCommand(
+                applySlug, request.FirstName, request.LastName, request.Email, request.Phone,
+                request.PrivacyNoticeVersion, request.KvkkAccepted),
+            ct));
 }

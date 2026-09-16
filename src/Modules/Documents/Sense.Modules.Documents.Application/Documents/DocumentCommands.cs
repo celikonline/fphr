@@ -72,12 +72,14 @@ public sealed class InitiateMyUploadHandler(
         UploadCore.InitiateAsync(fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
 }
 
-/// <summary>Confirms an upload and validates the ETag (content hash).</summary>
+/// <summary>Confirms an upload and validates the ETag (content hash). <paramref name="ExpiryDate"/> is optional
+/// (e.g. driver's license, residence permit, health report); a past date is accepted.</summary>
 [RequiresPermission("documents.files.create")]
 public sealed record ConfirmUploadCommand(
     Guid DocumentId,
     string ETag,
-    long ActualFileSizeBytes) : ICommand<ConfirmUploadResponse>;
+    long ActualFileSizeBytes,
+    DateOnly? ExpiryDate = null) : ICommand<ConfirmUploadResponse>;
 
 public sealed class ConfirmUploadValidator : AbstractValidator<ConfirmUploadCommand>
 {
@@ -95,7 +97,7 @@ public sealed class ConfirmUploadHandler(
     IDocumentRepository documents) : ICommandHandler<ConfirmUploadCommand, ConfirmUploadResponse>
 {
     public Task<Result<ConfirmUploadResponse>> Handle(ConfirmUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, cancellationToken);
+        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
 }
 
 /// <summary>Self-service: confirms an upload initiated via <see cref="InitiateMyUploadCommand"/>.</summary>
@@ -103,7 +105,8 @@ public sealed class ConfirmUploadHandler(
 public sealed record ConfirmMyUploadCommand(
     Guid DocumentId,
     string ETag,
-    long ActualFileSizeBytes) : ICommand<ConfirmUploadResponse>;
+    long ActualFileSizeBytes,
+    DateOnly? ExpiryDate = null) : ICommand<ConfirmUploadResponse>;
 
 public sealed class ConfirmMyUploadValidator : AbstractValidator<ConfirmMyUploadCommand>
 {
@@ -121,7 +124,7 @@ public sealed class ConfirmMyUploadHandler(
     IDocumentRepository documents) : ICommandHandler<ConfirmMyUploadCommand, ConfirmUploadResponse>
 {
     public Task<Result<ConfirmUploadResponse>> Handle(ConfirmMyUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, cancellationToken);
+        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
 }
 
 /// <summary>Shared by the HR and self-service upload commands; the raw upload isn't employee-scoped (see documents.my.files.create's remark).</summary>
@@ -187,6 +190,7 @@ internal static class UploadCore
         Guid documentId,
         string eTag,
         long actualFileSizeBytes,
+        DateOnly? expiryDate,
         CancellationToken cancellationToken)
     {
         var doc = await documents.GetByIdAsync(documentId, cancellationToken);
@@ -207,11 +211,16 @@ internal static class UploadCore
 
             // Update document state
             doc.Value.ConfirmUpload(eTag, actualFileSizeBytes);
+            if (expiryDate is not null)
+            {
+                doc.Value.SetExpiryDate(expiryDate);
+            }
 
             return new ConfirmUploadResponse(
                 doc.Value.Id,
                 doc.Value.Title,
-                doc.Value.UploadedAt);
+                doc.Value.UploadedAt,
+                doc.Value.ExpiryDate);
         }
         catch (InvalidOperationException)
         {

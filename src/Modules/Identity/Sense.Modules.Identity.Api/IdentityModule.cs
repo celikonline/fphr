@@ -1,8 +1,10 @@
 using System.Reflection;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sense.Modules.Identity.Application;
+using Sense.Modules.Identity.Application.AuditLog;
 using Sense.Modules.Identity.Application.Invitations;
 using Sense.Modules.Identity.Application.Users;
 using Sense.Modules.Identity.Contracts;
@@ -52,6 +54,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IImpersonationGrantRepository, ImpersonationGrantRepository>();
         services.AddScoped<IUnitAuthorizationRepository, UnitAuthorizationRepository>();
         services.AddScoped<IIdentityReadStore, IdentityReadStore>();
+        services.AddScoped<IAuditLogReadStore, AuditLogReadStore>();
 
         services.AddScoped<PermissionService>();
         services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());
@@ -82,6 +85,12 @@ public sealed class IdentityModule : IModule
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IIdentityMailer, IdentityMailer>();
         services.AddSingleton<IFrontendLinks, FrontendLinks>();
+
+        // MFA (Faz 3 Tur 3): TOTP BCL ile (yeni paket yok); mfaToken durumsuz — DataProtection zaten shared framework'te,
+        // ek NuGet gerekmiyor. AddDataProtection() birden fazla modülden çağrılsa da güvenli (idempotent).
+        services.AddDataProtection();
+        services.AddSingleton<ITotpService, TotpService>();
+        services.AddSingleton<IMfaChallengeTokenProtector, MfaChallengeTokenProtector>();
 
         var emailProvider = configuration.GetSection(ConfigurationSections.Email).Get<EmailOptions>()?.Provider ?? EmailProviders.Smtp;
         if (string.Equals(emailProvider, EmailProviders.None, StringComparison.OrdinalIgnoreCase))

@@ -48,6 +48,12 @@ public sealed class TimesheetController : ApiControllerBase
     public async Task<IActionResult> MySummary([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyTimesheetSummaryQuery(from, to), ct));
 
+    /// <summary>Ekip haftalık puantaj ızgarası (11.3.6): yönetici, veri kapsamındaki çalışanların bir haftasını görür (isteğe bağlı birim filtresi).</summary>
+    [HttpGet("team")]
+    [ProducesResponseType<IReadOnlyList<TeamWeekRowDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Team([FromQuery] DateOnly weekStart, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetTeamWeekQuery(weekStart, orgUnitId), ct));
+
     /// <summary>Hücre çekmecesindeki hareketler (11.3.6): bir günün uyuşmazlık çözüm geçmişi.</summary>
     [HttpGet("days/{attendanceDayId:guid}/resolutions")]
     [ProducesResponseType<IReadOnlyList<AnomalyResolutionDto>>(StatusCodes.Status200OK)]

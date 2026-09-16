@@ -202,4 +202,50 @@ public sealed class AttendanceIntegrationTests : TestFixture
         all[0].Anomalies.ShouldBe(AttendanceAnomaly.None);
         all[0].Source.ShouldBe(AttendanceDaySource.Import);
     }
+
+    /// <summary>Attendance.Contracts port Faz 7 (Payroll) consumes (S-8): worked/missing days and hours aggregated over a calendar month.</summary>
+    [Fact]
+    public async Task MonthlySummaryReader_AggregatesWorkedAndMissingDays_AndSkipsEmployeesWithNoRecords()
+    {
+        var tenantId = Guid.NewGuid();
+        var withRecords = Guid.NewGuid();
+        var withoutRecords = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        var workingDaysInMonth = Enumerable.Range(1, DateTime.DaysInMonth(2026, 9))
+            .Select(d => new DateOnly(2026, 9, d))
+            .Count(d => d.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday));
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            var assignmentService = write.ServiceProvider.GetRequiredService<Application.WorkSchedules.WorkScheduleAssignmentService>();
+            await assignmentService.EnsureDefaultScheduleAsync(tenantId, TestContext.Current.CancellationToken);
+
+            // Normal day: 09:00-18:00 planlanmış (480dk net), tam zamanında.
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, withRecords, new DateOnly(2026, 9, 1), new TimeOnly(9, 0), new TimeOnly(18, 0),
+                new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 480, breakMinutes: 60, AttendanceDaySource.Manual));
+            // Fazla mesai: 09:00-20:00 (600dk net) -> 120dk (2s) fazla.
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, withRecords, new DateOnly(2026, 9, 2), new TimeOnly(9, 0), new TimeOnly(20, 0),
+                new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 480, breakMinutes: 60, AttendanceDaySource.Manual));
+
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IAttendanceMonthlySummaryReader>();
+        var result = await reader.GetAsync(tenantId, 2026, 9, [withRecords, withoutRecords], TestContext.Current.CancellationToken);
+
+        result.Count.ShouldBe(1); // withoutRecords hiç kayıt bırakmadı - "veri yok" olarak listede yer almaz.
+        var summary = result.Single();
+        summary.EmployeeId.ShouldBe(withRecords);
+        summary.WorkedDays.ShouldBe(2m);
+        summary.WorkedHours.ShouldBe(18m); // (480dk + 600dk) / 60
+        summary.OvertimeHours.ShouldBe(2m); // yalnız 2. gün 120dk fazla
+
+        summary.MissingDays.ShouldBe((decimal)(workingDaysInMonth - 2));
+        summary.IsPeriodLocked.ShouldBeFalse();
+    }
 }

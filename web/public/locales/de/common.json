@@ -33,6 +33,7 @@
   "actions": "[DE] Actions",
   "search": "[DE] Search",
   "filter": "[DE] Filter",
+  "clearFilters": "[DE] Clear filters",
   "export": "[DE] Export",
   "noResults": "[DE] No results found",
   "confirmDeleteTitle": "[DE] Are you sure?",
@@ -58,5 +59,8 @@
     "end": "[DE] End session"
   },
   "noAccessTitle": "[DE] You don't have access to this page",
-  "noAccessDescription": "[DE] Contact your company administrator for the required permission."
+  "noAccessDescription": "[DE] Contact your company administrator for the required permission.",
+  "errors": {
+    "rateLimited": "[DE] Too many requests. Please try again in {{seconds}} seconds."
+  }
 }

@@ -4,11 +4,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Alert, Button, Checkbox, Group, Input, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
 import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
-import { usePermission } from "@/components/permission-guard";
+import { OpenAssetsWarning } from "@/components/assets/open-assets-warning";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
-import { getEmployeeAssets } from "@/services/assets.service";
 import {
   getCollectiveDismissalStatus,
   getEmploymentPeriods,
@@ -175,15 +174,6 @@ function TerminateDialog({ employee, onClose, onDone }: StepProps) {
     enabled: Boolean(terminationDate),
   });
 
-  // Offboarding <-> zimmet (roadmap): advisory only - shown so HR sees it up front, but never blocks the wizard.
-  const canViewAssets = usePermission("assets.assets.view");
-  const { data: assets = [] } = useQuery({
-    queryKey: ["assets", "employee-assets", employee.id],
-    queryFn: () => getEmployeeAssets(employee.id),
-    enabled: canViewAssets,
-  });
-  const openAssetCount = assets.filter((asset) => asset.status === "assigned").length;
-
   /** Picking a reason pre-fills the type and SGK code; both stay editable afterwards. */
   function chooseReason(value: string | null) {
     setReasonId(value);
@@ -246,11 +236,7 @@ function TerminateDialog({ employee, onClose, onDone }: StepProps) {
               {collective.warningMessage}
             </Alert>
           )}
-          {openAssetCount > 0 && (
-            <Alert color="orange" icon={<AlertTriangle size={16} />} title={t("employees:lifecycle.terminate.openAssetsTitle")}>
-              {t("employees:lifecycle.terminate.openAssetsWarning", { count: openAssetCount })}
-            </Alert>
-          )}
+          <OpenAssetsWarning employeeId={employee.id} />
           <div className="grid gap-4 sm:grid-cols-2">
             <Input.Wrapper id="terminate-date" label={t("employees:lifecycle.terminate.date")} withAsterisk>
               <DatePicker id="terminate-date" value={terminationDate} onChange={setTerminationDate} disabled={mutation.isPending} />

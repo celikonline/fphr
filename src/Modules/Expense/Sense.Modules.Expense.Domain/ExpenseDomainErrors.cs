@@ -6,6 +6,7 @@ public static class ExpenseDomainErrors
     public const string CategoryNotFound = "expense.category.not_found";
     public const string CategoryCodeRequired = "expense.category.code_required";
     public const string CategoryAlreadyInactive = "expense.category.already_inactive";
+    public const string CategoryNameKeyRequired = "expense.category.name_key_required";
 
     public const string ClaimNotFound = "expense.claim.not_found";
     public const string ClaimNotDraft = "expense.claim.not_draft";

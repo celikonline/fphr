@@ -256,8 +256,10 @@ function buildRequestableTypes(balances: EmployeeLeaveBalances | undefined, type
       requiresDescription: type.requiresDescription,
       perRequestMaxDays: type.perRequestMaxDays ?? null,
       availableBalance: available.get(type.id) ?? null,
+      unit: type.unit,
     }));
   }
+  // Balance-only fallback (leave-types call failed): unit unknown, so the form stays FullDay-only.
   return (balances?.balances ?? []).map((item) => ({
     id: item.balance.leaveTypeId,
     name: item.leaveTypeName,

@@ -33,6 +33,7 @@
   "actions": "İşlemler",
   "search": "Ara",
   "filter": "Filtrele",
+  "clearFilters": "Filtreleri temizle",
   "export": "Dışa Aktar",
   "noResults": "Sonuç bulunamadı",
   "confirmDeleteTitle": "Emin misiniz?",
@@ -58,5 +59,8 @@
     "end": "Oturumu sonlandır"
   },
   "noAccessTitle": "Bu sayfaya erişiminiz yok",
-  "noAccessDescription": "Gerekli yetki için şirket yöneticinizle iletişime geçin."
+  "noAccessDescription": "Gerekli yetki için şirket yöneticinizle iletişime geçin.",
+  "errors": {
+    "rateLimited": "Çok fazla istek gönderildi. Lütfen {{seconds}} saniye sonra tekrar deneyin."
+  }
 }

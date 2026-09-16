@@ -1,12 +1,13 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Input, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { RefreshCw, Upload } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { DatePicker } from "@/components/ui/date-picker";
 import type { EmployeeCardTabProps } from "@/components/employees/card-tabs";
 import {
   clearWaiveDocumentRequirement,
@@ -42,6 +43,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   const [waiving, setWaiving] = useState<EmployeeDocumentRequirement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTarget, setUploadTarget] = useState<EmployeeDocumentRequirement | null>(null);
+  const [pendingUpload, setPendingUpload] = useState<{ requirement: EmployeeDocumentRequirement; file: File } | null>(null);
 
   const queryKey = ["documents", "employee-requirements", employee.id, canViewAny] as const;
   const { data: requirements = [], isLoading, isError } = useQuery({
@@ -68,8 +70,16 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   });
 
   const uploadMutation = useMutation({
-    mutationFn: async ({ requirement, file }: { requirement: EmployeeDocumentRequirement; file: File }) => {
-      const documentId = await uploadDocumentFile(file, "documents", uploadMode === "me" ? "me" : "hr");
+    mutationFn: async ({
+      requirement,
+      file,
+      expiryDate,
+    }: {
+      requirement: EmployeeDocumentRequirement;
+      file: File;
+      expiryDate?: string | null;
+    }) => {
+      const documentId = await uploadDocumentFile(file, "documents", uploadMode === "me" ? "me" : "hr", expiryDate);
       return uploadMode === "me" ? linkMyDocumentToRequirement(requirement.id, documentId) : linkDocumentToRequirement(requirement.id, documentId);
     },
     onSuccess: () => {
@@ -78,7 +88,10 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
     },
     onError: (error) =>
       toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("documents:requirements.errors.uploadFailed")) }),
-    onSettled: () => setUploadTarget(null),
+    onSettled: () => {
+      setUploadTarget(null);
+      setPendingUpload(null);
+    },
   });
 
   function pickFileFor(requirement: EmployeeDocumentRequirement) {
@@ -89,7 +102,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   function fileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (file && uploadTarget) uploadMutation.mutate({ requirement: uploadTarget, file });
+    if (file && uploadTarget) setPendingUpload({ requirement: uploadTarget, file });
   }
 
   if (isLoading) return <Skeleton h={200} />;
@@ -182,7 +195,57 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
 
       {uploadMode && <input ref={fileInputRef} type="file" className="hidden" onChange={fileSelected} />}
       {waiving && <WaiveDialog requirement={waiving} queryKey={queryKey} onClose={() => setWaiving(null)} />}
+      {pendingUpload && (
+        <UploadExpiryDialog
+          pending={pendingUpload}
+          isSubmitting={uploadMutation.isPending}
+          onCancel={() => setPendingUpload(null)}
+          onConfirm={(expiryDate) => uploadMutation.mutate({ ...pendingUpload, expiryDate })}
+        />
+      )}
     </Card>
+  );
+}
+
+/** Optional validity date captured right before the confirm-upload call (S-6 sözleşmesi: license, residence permit, health report, etc.). */
+function UploadExpiryDialog({
+  pending,
+  isSubmitting,
+  onCancel,
+  onConfirm,
+}: {
+  pending: { requirement: EmployeeDocumentRequirement; file: File };
+  isSubmitting: boolean;
+  onCancel: () => void;
+  onConfirm: (expiryDate: string | null) => void;
+}) {
+  const { t } = useTranslation(["documents", "common"]);
+  const [expiryDate, setExpiryDate] = useState("");
+
+  return (
+    <Modal opened onClose={onCancel} title={t("documents:requirements.uploadDialogTitle", { name: pending.requirement.documentTypeName })} size="28rem">
+      <Stack gap="md">
+        <Text size="sm" c="dimmed">
+          {pending.file.name}
+        </Text>
+        <Input.Wrapper
+          id="upload-expiry-date"
+          label={t("documents:requirements.expiryDate")}
+          description={t("documents:requirements.expiryDateHint")}
+          inputWrapperOrder={["label", "input", "description"]}
+        >
+          <DatePicker id="upload-expiry-date" value={expiryDate} onChange={setExpiryDate} clearable disabled={isSubmitting} />
+        </Input.Wrapper>
+        <Group justify="flex-end" gap="sm">
+          <Button type="button" variant="default" onClick={onCancel} disabled={isSubmitting}>
+            {t("common:cancel")}
+          </Button>
+          <Button type="button" loading={isSubmitting} onClick={() => onConfirm(expiryDate || null)}>
+            {t("documents:requirements.upload")}
+          </Button>
+        </Group>
+      </Stack>
+    </Modal>
   );
 }
 

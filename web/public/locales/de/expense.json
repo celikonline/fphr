@@ -42,7 +42,9 @@
     "categoryPlaceholder": "[DE] Select a category",
     "amount": "[DE] Amount",
     "taxRate": "[DE] Tax rate",
-    "description": "[DE] Receipt description"
+    "description": "[DE] Receipt description",
+    "exceedsLimit": "[DE] Over limit",
+    "exceedsLimitTooltip": "[DE] This receipt's amount exceeds its category's maximum."
   },
   "advance": {
     "newButton": "[DE] + Advance",
@@ -86,6 +88,8 @@
     "subtitle": "[DE] Manage the expense category catalog employees pick from when adding receipts.",
     "add": "[DE] Add category",
     "addTitle": "[DE] Add category",
+    "editTitle": "[DE] Edit category",
+    "maxAmountHint": "[DE] Highest amount a receipt in this category may have; leave blank for no limit.",
     "showInactive": "[DE] Show inactive categories too",
     "active": "[DE] Active",
     "inactive": "[DE] Inactive",
@@ -99,6 +103,7 @@
       "name": "[DE] Name",
       "code": "[DE] Code",
       "defaultTaxRate": "[DE] Default VAT rate",
+      "maxAmount": "[DE] Limit (₺)",
       "status": "[DE] Status"
     },
     "errors": {

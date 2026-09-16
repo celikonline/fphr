@@ -5,6 +5,7 @@ using Sense.Modules.Identity.Domain.Tokens;
 using Sense.Modules.Identity.Domain.Users;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Identity.Application.Auth;
@@ -33,6 +34,7 @@ public sealed class LoginHandler(
     ISecretGenerator secrets,
     ITokenService tokens,
     ITenantContextSetter tenantSetter,
+    IMfaChallengeTokenProtector mfaChallenge,
     IOptions<IdentityOptions> options,
     TimeProvider clock) : ICommandHandler<LoginCommand, LoginResultDto>
 {
@@ -96,8 +98,86 @@ public sealed class LoginHandler(
 
         if (user.MfaEnabled)
         {
-            // MFA akışı Faz 0 sonraki adımda tamamlanır; şimdilik durum bildirilir.
-            return LoginResultDto.MfaRequired(secrets.NewToken());
+            // Token verilmeden durur: mfaToken durumsuz (DataProtection, imzalı, 5 dk) — tamamlama CompleteMfaLoginHandler'da.
+            return LoginResultDto.MfaRequired(mfaChallenge.Protect(user.Id, tenantEntity.Id));
+        }
+
+        user.RecordSuccessfulLogin(now);
+
+        var roleCodes = (await roles.GetByIdsAsync(user.Roles.Select(r => r.RoleId), cancellationToken).ConfigureAwait(false))
+            .Select(r => r.Code).ToList();
+
+        var access = tokens.IssueAccessToken(user, tenantEntity.Id, tenantEntity.Slug, roleCodes, permissionVersion: 0);
+        var rawRefresh = secrets.NewToken();
+        var refresh = RefreshToken.Issue(tenantEntity.Id, user.Id, null, secrets.Hash(rawRefresh), now, tokens.RefreshTokenLifetime, command.DeviceInfo, command.IpAddress);
+        refreshTokens.Add(refresh);
+
+        return LoginResultDto.Success(new AuthTokensDto(access.Token, access.ExpiresAtUtc, rawRefresh, refresh.ExpiresAt));
+    }
+}
+
+/// <summary>Login'in `mfaRequired` (Status=<see cref="LoginStatuses.MfaRequired"/>) yanıtından sonraki adım: `mfaToken` + TOTP
+/// kodu ile oturum tamamlanır. Hatalı kod, normal parola akışıyla aynı `RecordFailedAccess`/lockout sayacına dahildir.</summary>
+public sealed record CompleteMfaLoginCommand(string MfaToken, string Code, string? DeviceInfo, string? IpAddress) : ICommand<LoginResultDto>;
+
+public sealed class CompleteMfaLoginValidator : AbstractValidator<CompleteMfaLoginCommand>
+{
+    public CompleteMfaLoginValidator()
+    {
+        RuleFor(x => x.MfaToken).NotEmpty();
+        RuleFor(x => x.Code).NotEmpty();
+    }
+}
+
+public sealed class CompleteMfaLoginHandler(
+    IUserRepository users,
+    ITenantRepository tenants,
+    IRoleRepository roles,
+    IRefreshTokenRepository refreshTokens,
+    ISecretGenerator secrets,
+    ITokenService tokens,
+    ITenantContextSetter tenantSetter,
+    IMfaChallengeTokenProtector mfaChallenge,
+    ITotpService totp,
+    IEncryptionProvider encryption,
+    IOptions<IdentityOptions> options,
+    TimeProvider clock) : ICommandHandler<CompleteMfaLoginCommand, LoginResultDto>
+{
+    // Login.cs'in başarılı-giriş kuyruğuyla (token üretimi) kasıtlı olarak neredeyse aynı: LoginHandler'ı bu akışa
+    // uyacak şekilde parçalamak (ör. ortak bir "IssueSession" yardımcı metodu) bu turun kapsamı dışında bir refactor —
+    // küçük tekrar, mevcut davranışı bozma riskini almaktan daha ucuz.
+    public async Task<Result<LoginResultDto>> Handle(CompleteMfaLoginCommand command, CancellationToken cancellationToken)
+    {
+        if (!mfaChallenge.TryUnprotect(command.MfaToken, out var userId, out var tenantId))
+        {
+            return Error.Unauthorized(IdentityErrors.MfaTokenExpired);
+        }
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        var tenantEntity = await tenants.GetByIdAsync(tenantId, cancellationToken).ConfigureAwait(false);
+        if (tenantEntity is null || !tenantEntity.IsWritable)
+        {
+            return Error.Unauthorized(IdentityErrors.TenantInactive);
+        }
+
+        using var scope = tenantSetter.BeginScope(tenantEntity.Id, tenantEntity.Slug);
+
+        var user = await users.GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (user is null || !user.MfaEnabled || user.TotpSecretEncrypted is null)
+        {
+            return Error.Unauthorized(IdentityErrors.MfaTokenExpired);
+        }
+
+        var canSignIn = user.CanSignIn(now);
+        if (canSignIn.IsFailure)
+        {
+            return canSignIn.Error;
+        }
+
+        if (!totp.ValidateCode(encryption.Decrypt(user.TotpSecretEncrypted), command.Code))
+        {
+            user.RecordFailedAccess(now, new LockoutPolicy(options.Value.MaxFailedAccessAttempts, TimeSpan.FromMinutes(options.Value.LockoutMinutes)));
+            return Error.Unauthorized(IdentityErrors.MfaInvalidCode);
         }
 
         user.RecordSuccessfulLogin(now);

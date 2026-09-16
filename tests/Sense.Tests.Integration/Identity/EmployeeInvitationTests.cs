@@ -69,7 +69,7 @@ public sealed class EmployeeInvitationTests : IdentityStackTestBase
         (await ExecuteQueryAsync(new GetInvitationPreviewQuery(TokenOf(secondUrl.Url)))).Value.IsUsable.ShouldBeTrue();
 
         // Accepting activates the account; another invite is then reported as already active.
-        (await ExecuteCommandAsync(new AcceptInvitationCommand(TokenOf(secondUrl.Url), "Password-12345", true, null, null))).IsSuccess.ShouldBeTrue();
+        (await ExecuteCommandAsync(new AcceptInvitationCommand(TokenOf(secondUrl.Url), "Password-12345", true, "2026-1", null, null))).IsSuccess.ShouldBeTrue();
         ActAs(tenantId, ownerId);
         (await ExecuteCommandAsync(new InviteEmployeeCommand(both))).Value.Outcome.ShouldBe(EmployeeInvitationOutcomes.AlreadyActive);
     }

@@ -1,6 +1,8 @@
+using System.Text.Json;
 using NSubstitute;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -74,7 +76,16 @@ public sealed class PayrollPeriodCalculationServiceTests
     private static PayrollPeriodCalculationService BuildService(
         out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
-        out IEmployeeSalaryLookup salaryLookup)
+        out IEmployeeSalaryLookup salaryLookup) =>
+        BuildService(out payslips, out traces, out profiles, out dirtyFlags, out salaryLookup, out _);
+
+    /// <summary>Overload exposing the IWorkedTimeReader fake (TB-7 port, tur 3): default NSubstitute behaviour
+    /// (GetAsync returns null for any Arg) already reproduces "no data" without any .Returns() setup, which is why
+    /// every other test in this file keeps using the 5-out overload above unchanged.</summary>
+    private static PayrollPeriodCalculationService BuildService(
+        out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
+        out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -85,11 +96,12 @@ public sealed class PayrollPeriodCalculationServiceTests
         dirtyFlags.FindActiveAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<PayslipDirtyFlag?>(null));
         salaryLookup = Substitute.For<IEmployeeSalaryLookup>();
+        workedTimeReader = Substitute.For<IWorkedTimeReader>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        return new PayrollPeriodCalculationService(payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System);
+        return new PayrollPeriodCalculationService(payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System, workedTimeReader);
     }
 
     [Fact]
@@ -152,5 +164,46 @@ public sealed class PayrollPeriodCalculationServiceTests
 
         activeFlag.IsActive.ShouldBeFalse();
         activeFlag.ClearedByRunId.ShouldBe(summary.RunId);
+    }
+
+    /// <summary>TB-7 port (tur 3 TALIMAT madde 2): no IWorkedTimeReader data (default NSubstitute behaviour - GetAsync
+    /// returns null for any Arg without an explicit .Returns()) must reproduce exactly the pre-port behaviour, the
+    /// DAYS trace step's workedDays = the calendar month's day count.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_FallsBackToFullCalendarMonth_WhenWorkedTimeReaderHasNoData()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedDaysStepOutput(traces).ShouldBe(31); // March 2026
+    }
+
+    /// <summary>TB-7 port: a fake with data (WorkedDays=18) overrides the full-month assumption - the DAYS trace step
+    /// records the attendance-provided figure instead of CalendarDaysInMonth.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_UsesWorkedTimeReaderWorkedDays_WhenDataIsAvailable()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedDaysStepOutput(traces).ShouldBe(18);
+    }
+
+    private static decimal CapturedDaysStepOutput(IPayslipCalculationTraceRepository traces)
+    {
+        PayslipCalculationTrace? captured = null;
+        traces.Received(1).Add(Arg.Do<PayslipCalculationTrace>(t => captured = t));
+        var steps = JsonSerializer.Deserialize<List<TraceStep>>(captured!.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        return steps.Single(s => s.Code == PayrollTraceStepCodes.Days).Output;
     }
 }

@@ -33,10 +33,15 @@ interface LoginResult {
     refreshToken: string;
   };
   tenants?: TenantChoice[];
+  /** Present when `status === "mfa_required"`; pass back to `auth/mfa/complete` with the TOTP code (S-5, tur 3). */
+  mfaToken?: string;
 }
 
-/** Outcome of `login()`: either the session is established, or the caller must let the user pick a tenant and retry. */
-export type LoginOutcome = { status: "ok" } | { status: "select_tenant"; tenants: TenantChoice[] };
+/** Outcome of `login()`/`completeMfaLogin()`: session established, tenant pick required, or MFA code required. */
+export type LoginOutcome =
+  | { status: "ok" }
+  | { status: "select_tenant"; tenants: TenantChoice[] }
+  | { status: "mfa_required"; mfaToken: string };
 
 // Base paths mirror `IdentityRoutes` in AuthController.cs.
 const AUTH_BASE = "/v1/identity/auth";
@@ -89,6 +94,27 @@ function toFeatures(me: MeResponse): MeFeatures {
   };
 }
 
+/**
+ * Shared by `login()` (status "ok") and `completeMfaLogin()` (status "ok" after the TOTP step): stores the
+ * tokens, loads `/me`, and populates the store. Both call sites already validated `tokens` is present.
+ */
+async function establishSession(
+  set: (partial: Partial<AuthStore>) => void,
+  tokens: { accessToken: string; refreshToken: string }
+): Promise<void> {
+  // api-client attaches this key as the Bearer token, so /me (and every other service) is authenticated.
+  localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, tokens.accessToken);
+  const me = await getMe();
+
+  set({
+    token: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    user: toUser(me),
+    features: toFeatures(me),
+    isLoading: false,
+  });
+}
+
 interface AuthStore {
   user: User | null;
   token: string | null;
@@ -98,6 +124,8 @@ interface AuthStore {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string, tenantSlug?: string) => Promise<LoginOutcome>;
+  /** Second step of a login that returned `mfa_required`: TOTP code + the `mfaToken` from that response. */
+  completeMfaLogin: (mfaToken: string, code: string) => Promise<LoginOutcome>;
   logout: () => void;
   /** Re-reads /identity/me (permissions, access settings) - call after changing anything that affects the caller. */
   refreshMe: () => Promise<void>;
@@ -129,22 +157,33 @@ export const useAuthStore = create<AuthStore>()(
             return { status: "select_tenant", tenants: data.tenants ?? [] };
           }
 
-          // MFA needs its own screen, which doesn't exist yet.
+          if (data.status === "mfa_required") {
+            set({ isLoading: false });
+            return { status: "mfa_required", mfaToken: data.mfaToken ?? "" };
+          }
+
           if (data.status !== "ok" || !data.tokens) {
             throw new Error(`Login requires an unsupported step: ${data.status}`);
           }
 
-          // api-client attaches this key as the Bearer token, so /me (and every other service) is authenticated.
-          localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, data.tokens.accessToken);
-          const me = await getMe();
+          await establishSession(set, data.tokens);
+          return { status: "ok" };
+        } catch (error) {
+          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+          const message = toErrorMessage(error);
+          set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
+          throw new Error(message, { cause: error });
+        }
+      },
 
-          set({
-            token: data.tokens.accessToken,
-            refreshToken: data.tokens.refreshToken,
-            user: toUser(me),
-            features: toFeatures(me),
-            isLoading: false,
-          });
+      completeMfaLogin: async (mfaToken: string, code: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/mfa/complete`, { mfaToken, code });
+          if (data.status !== "ok" || !data.tokens) {
+            throw new Error(`MFA completion requires an unsupported step: ${data.status}`);
+          }
+          await establishSession(set, data.tokens);
           return { status: "ok" };
         } catch (error) {
           localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);

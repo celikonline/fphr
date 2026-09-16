@@ -61,6 +61,9 @@ public sealed record LoginResultDto(string Status, AuthTokensDto? Tokens, IReadO
     public static LoginResultDto MfaRequired(string mfaToken) => new(LoginStatuses.MfaRequired, null, null, mfaToken);
 }
 
+/// <summary>MFA kaydı başlatma yanıtı: secret (gruplanmış metin olarak gösterilebilir) ve authenticator uygulaması için otpauth:// URI'si.</summary>
+public sealed record MfaEnrollmentDto(string Secret, string OtpAuthUri);
+
 /// <summary>Destek erişimi (impersonation) grant satırı. Status: Pending|Approved|Active|Expired|Revoked (süresi dolan grant Expired görünür).</summary>
 public sealed record ImpersonationGrantDto(
     Guid Id, Guid PlatformUserId, string? PlatformUserEmail, string Reason, string Status, DateTime RequestedAt, DateTime? ApprovedAt,
@@ -106,6 +109,13 @@ public sealed record UnitAuthorizationCandidateDto(Guid UserId, string FullName,
 
 /// <summary>Kullanıcı özet satırı (liste zenginleştirme).</summary>
 public sealed record UserSummaryDto(Guid UserId, string FullName, string Email, Guid? EmployeeId);
+
+/// <summary>
+/// TB-2 (S-1 sözleşmesi, FE ile dondurulmuş): denetim izi satırı. <c>Action</c> sabit string'lerden
+/// biridir (create|update|delete|login|invite|role_change). <c>Details</c>, çağıranın
+/// <c>identity.audit.sensitive_view</c> izni yoksa API katmanında maskelenmiş döner.
+/// </summary>
+public sealed record AuditLogEntryDto(Guid Id, DateTimeOffset OccurredAt, string Actor, string Action, string Resource, string? ResourceId, string Details);
 
 /// <summary>Çalışana davet sonucu. Outcome: Sent|Resent|AlreadyActive; EmailSource: Work|Personal|Account.</summary>
 public sealed record EmployeeInvitationResultDto(Guid EmployeeId, string Outcome, string? SentToEmail, string? EmailSource);

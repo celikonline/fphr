@@ -160,6 +160,34 @@
       "nameRequired": "[DE] The name is required."
     }
   },
+  "costCenters": {
+    "title": "[DE] Cost centers",
+    "subtitle": "[DE] Manage the cost center catalog used for budgeting and reporting.",
+    "add": "[DE] Add cost center",
+    "editTitle": "[DE] Edit cost center",
+    "showInactive": "[DE] Show inactive cost centers",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "empty": "[DE] No cost centers recorded.",
+    "saved": "[DE] The cost center is saved.",
+    "statusSaved": "[DE] The cost center's status is updated.",
+    "codeHint": "[DE] The stable code reports match on; it cannot be changed later.",
+    "codeLocked": "[DE] The code cannot be changed after creation.",
+    "columns": {
+      "name": "[DE] Name",
+      "code": "[DE] Code",
+      "status": "[DE] Status"
+    },
+    "errors": {
+      "generic": "[DE] The cost center could not be saved.",
+      "loadFailed": "[DE] The cost centers could not be loaded.",
+      "codeTaken": "[DE] A cost center with this code already exists.",
+      "codeRequired": "[DE] The code is required.",
+      "nameRequired": "[DE] The name is required."
+    }
+  },
   "customFields": {
     "title": "[DE] Custom fields",
     "subtitle": "[DE] Manage the custom field definitions shown on employee cards.",

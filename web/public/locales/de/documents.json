@@ -60,6 +60,9 @@
     "upload": "[DE] Upload",
     "uploaded": "[DE] Document uploaded.",
     "saved": "[DE] Saved.",
+    "uploadDialogTitle": "[DE] Upload {{name}}",
+    "expiryDate": "[DE] Expiry date",
+    "expiryDateHint": "[DE] Enter it if the document has a validity date (driving license, residence permit, health report, etc.); leave blank if it never expires.",
     "errors": {
       "generic": "[DE] The action could not be completed.",
       "loadFailed": "[DE] Document requirements could not be loaded.",
@@ -73,12 +76,25 @@
     "allStatuses": "[DE] All statuses",
     "exportCsv": "[DE] Export CSV",
     "empty": "[DE] No records found.",
+    "emptyExpiring": "[DE] No documents are expiring or expired.",
+    "tabs": {
+      "missing": "[DE] Missing documents",
+      "expiring": "[DE] Expiring/expired"
+    },
+    "expiryState": {
+      "expiring": "[DE] Expiring soon (30 days)",
+      "expired": "[DE] Expired"
+    },
+    "daysRemaining": "[DE] {{count}} day(s) left",
+    "daysOverdue": "[DE] {{count}} day(s) overdue",
     "columns": {
       "employee": "[DE] Employee",
       "documentType": "[DE] Document type",
       "stage": "[DE] Stage",
       "status": "[DE] Status",
-      "dueDate": "[DE] Due date"
+      "dueDate": "[DE] Due date",
+      "expiryDate": "[DE] Expiry date",
+      "daysLeft": "[DE] Days left"
     }
   },
   "enum": {

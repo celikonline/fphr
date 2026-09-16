@@ -22,6 +22,27 @@
       "nameAndCategoryRequired": "[DE] A name and category are required for a new asset."
     }
   },
+  "categories": {
+    "title": "[DE] Asset categories",
+    "subtitle": "[DE] Manage the equipment category catalog.",
+    "add": "[DE] Add category",
+    "editTitle": "[DE] Edit category",
+    "empty": "[DE] No categories recorded.",
+    "saved": "[DE] Category saved.",
+    "codeHint": "[DE] Fixed code used in import/export and reports; cannot be changed later.",
+    "codeLocked": "[DE] The code cannot be changed after creation.",
+    "columns": {
+      "name": "[DE] Name",
+      "code": "[DE] Code"
+    },
+    "errors": {
+      "generic": "[DE] The category could not be saved.",
+      "loadFailed": "[DE] Categories could not be loaded.",
+      "codeTaken": "[DE] A category with this code already exists.",
+      "codeRequired": "[DE] Code is required.",
+      "nameRequired": "[DE] Name is required."
+    }
+  },
   "enum": {
     "status": {
       "unassigned": "[DE] Unassigned",

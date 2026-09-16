@@ -44,6 +44,9 @@ public interface IAttendanceDayRepository
     Task<AttendanceDay?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AttendanceDay>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Ekip haftalık ızgarası (11.3.6): every recorded day in [from, to] across a set of employees, in one query.</summary>
+    Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
 
 public interface IAnomalyResolutionRepository

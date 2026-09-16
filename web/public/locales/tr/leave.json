@@ -220,8 +220,17 @@
       "typeRequired": "İzin türü seçin.",
       "datesRequired": "Başlangıç ve bitiş tarihi zorunludur.",
       "range": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
-      "descriptionRequired": "Bu izin türünde açıklama zorunludur."
+      "descriptionRequired": "Bu izin türünde açıklama zorunludur.",
+      "timeRequired": "Başlangıç ve bitiş saatini girin; bitiş saati başlangıçtan sonra olmalıdır.",
+      "halfDayRequired": "Sabah veya öğleden sonra seçin."
     },
+    "sameDayHint": "Aynı gün içinde",
+    "halfDayPeriod": "Günün yarısı",
+    "halfDayMorning": "Sabah",
+    "halfDayAfternoon": "Öğleden sonra",
+    "hourlyStart": "Başlangıç saati",
+    "hourlyEnd": "Bitiş saati",
+    "teamOverlap": "Bu tarihlerde aynı birimden {{count}} kişi daha izinli veya izin talebinde.",
     "previewLoading": "Gün sayısı hesaplanıyor…",
     "previewDays": "Hesaplanan gün: {{days}} (hafta tatili {{rest}}, resmi tatil {{holidays}} gün düşüldü)",
     "bypassApproval": "Onay sürecine dahil edilmeden onaylansın",

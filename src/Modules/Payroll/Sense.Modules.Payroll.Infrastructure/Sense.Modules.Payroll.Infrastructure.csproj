@@ -11,6 +11,8 @@
     <ProjectReference Include="../Sense.Modules.Payroll.Application/Sense.Modules.Payroll.Application.csproj" />
     <!-- ChangeDetectionJob (P3) reads IEmployeeSalaryLookup directly (Infrastructure-layer background job, not a command handler). -->
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <!-- Contract-first consumption of Attendance's monthly summary read port (TB-7, S-8); see AttendanceWorkedTimeReaderAdapter (mirrors Leave.Infrastructure's WorkScheduleReaderAdapter). -->
+    <ProjectReference Include="../../Attendance/Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
   </ItemGroup>
 

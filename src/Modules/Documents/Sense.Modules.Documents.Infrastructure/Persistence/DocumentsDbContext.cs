@@ -46,6 +46,9 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         // Tenant isolation index
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => new { x.TenantId, x.FileKey }).IsUnique();
+        // "expiring documents" report (GET /api/v1/documents/expiring) - AddDocumentExpiry migration, see
+        // status/faz-04/MIGRATION-ISTEGI.md.
+        b.HasIndex(x => new { x.TenantId, x.ExpiryDate });
 
         // Properties
         b.Property(x => x.Title).HasMaxLength(DocumentsTables.TitleLength).IsRequired();
@@ -59,6 +62,7 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         b.Property(x => x.DeletedAt);
         b.Property(x => x.DeletedBy);
         b.Property(x => x.BucketName).HasMaxLength(DocumentsTables.BucketNameLength).IsRequired();
+        b.Property(x => x.ExpiryDate);
 
         // Ignore domain events (handled by outbox processor)
         b.Ignore(x => x.DomainEvents);

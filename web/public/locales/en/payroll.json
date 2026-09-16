@@ -1,0 +1,18 @@
+{
+  "genericError": "Payroll data could not be loaded.",
+  "periods": {
+    "title": "Payroll Periods",
+    "subtitle": "Opened payroll periods and their status.",
+    "empty": "No payroll period has been opened yet.",
+    "columns": {
+      "period": "Period",
+      "status": "Status"
+    },
+    "status": {
+      "open": "Open",
+      "approved": "Approved",
+      "paid": "Paid",
+      "locked": "Locked"
+    }
+  }
+}

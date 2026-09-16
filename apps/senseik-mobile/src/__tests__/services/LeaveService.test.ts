@@ -89,4 +89,27 @@ describe("LeaveService", () => {
       expect(apiClient.post).toHaveBeenCalledWith("/api/v1/leave/me/requests/request-1/withdraw");
     });
   });
+
+  describe("error mapping", () => {
+    it("propagates the API error when a leave request submission fails (e.g. balance/validation rejection)", async () => {
+      const apiError = { response: { status: 400, data: { error: { message: "Yetersiz bakiye" } } } };
+      (apiClient.post as jest.Mock).mockRejectedValue(apiError);
+
+      await expect(
+        leaveService.submitLeaveRequest({
+          leaveTypeId: "type-1",
+          startDate: "2026-10-01",
+          endDate: "2026-10-03",
+          description: null
+        })
+      ).rejects.toEqual(apiError);
+    });
+
+    it("propagates the API error when fetching balances fails (e.g. no employee record)", async () => {
+      const apiError = { response: { status: 404, data: { error: { message: "Çalışan bulunamadı" } } } };
+      (apiClient.get as jest.Mock).mockRejectedValue(apiError);
+
+      await expect(leaveService.getMyBalances()).rejects.toEqual(apiError);
+    });
+  });
 });

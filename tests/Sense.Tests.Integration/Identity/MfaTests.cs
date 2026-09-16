@@ -1,0 +1,202 @@
+using System.Security.Cryptography;
+using Sense.Modules.Identity.Application;
+using Sense.Modules.Identity.Application.Auth;
+using Sense.Modules.Identity.Domain.Roles;
+using Sense.Shared.Kernel.Results;
+using Shouldly;
+using Xunit;
+
+namespace Sense.Tests.Integration.Identity;
+
+/// <summary>
+/// Faz 3, Tur 3: MFA (TOTP) self-servis — kayıt (enroll → verify), login tamamlama (mfaRequired → complete),
+/// kapatma (disable) ve hatalı kod / süresi dolmuş mfaToken kenar durumları. Algoritmanın kendisi (RFC 6238 test
+/// vektörleri) <c>Sense.Modules.Identity.Tests/Security/TotpServiceTests.cs</c>'de (birim, DB'siz) doğrulanır; burada
+/// yalnız uçtan uca akış (handler'lar + gerçek Postgres + AuthorizationBehaviour) test edilir.
+/// </summary>
+[Collection("PostgreSQL")]
+public sealed class MfaTests : IdentityStackTestBase
+{
+    [Fact]
+    public async Task Enroll_Verify_EnablesMfa_AndLoginRequiresMfa_ThenCompleteSucceeds()
+    {
+        var tenantId = await SeedTenantAsync("mfa-flow");
+        var email = "kerem@acme.test";
+        var userId = await SeedUserAsync(tenantId, email, SystemRoleCodes.Employee);
+
+        ActAs(tenantId, userId);
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        enroll.Secret.ShouldNotBeNullOrWhiteSpace();
+        enroll.OtpAuthUri.ShouldContain("otpauth://totp/");
+
+        (await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)))).IsSuccess.ShouldBeTrue();
+
+        (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeTrue();
+
+        // Yeni bir "istemci" giriş dener: parola doğru ama MFA açık → token verilmeden mfaToken döner.
+        var login = (await ExecuteCommandAsync(new LoginCommand(email, "Password-12345", "mfa-flow", null, null))).Value;
+        login.Status.ShouldBe(LoginStatuses.MfaRequired);
+        login.MfaToken.ShouldNotBeNullOrWhiteSpace();
+        login.Tokens.ShouldBeNull();
+
+        var complete = await ExecuteCommandAsync(new CompleteMfaLoginCommand(login.MfaToken!, CodeFor(enroll.Secret), null, null));
+        complete.IsSuccess.ShouldBeTrue(complete.IsFailure ? complete.Error.Code : null);
+        complete.Value.Status.ShouldBe(LoginStatuses.Ok);
+        complete.Value.Tokens.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task VerifyMfaEnrollment_WrongCode_ReturnsInvalidCode_AndDoesNotEnable()
+    {
+        var tenantId = await SeedTenantAsync("mfa-verify-wrong");
+        var userId = await SeedUserAsync(tenantId, "aylin@acme.test", SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        await ExecuteCommandAsync(new EnrollMfaCommand());
+
+        ShouldFailWith(await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand("000000")), IdentityErrors.MfaInvalidCode, ErrorType.Validation);
+        (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task EnrollMfa_WhenAlreadyEnabled_ReturnsConflict()
+    {
+        var tenantId = await SeedTenantAsync("mfa-already-on");
+        var userId = await SeedUserAsync(tenantId, "burak@acme.test", SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+
+        ShouldFailWith(await ExecuteCommandAsync(new EnrollMfaCommand()), IdentityErrors.MfaAlreadyEnabled, ErrorType.Conflict);
+    }
+
+    [Fact]
+    public async Task CompleteMfaLogin_WrongCode_RecordsFailedAccess_AndEventuallyLocksOut()
+    {
+        var tenantId = await SeedTenantAsync("mfa-lockout");
+        var email = "deniz@acme.test";
+        var userId = await SeedUserAsync(tenantId, email, SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+
+        var login = (await ExecuteCommandAsync(new LoginCommand(email, "Password-12345", "mfa-lockout", null, null))).Value;
+
+        // MaxFailedAccessAttempts (varsayılan 5) kadar hatalı kod, aynı akışta parola hatası gibi lockout'u tetikler.
+        for (var i = 0; i < IdentityDefaults.MaxFailedAccessAttempts - 1; i++)
+        {
+            ShouldFailWith(
+                await ExecuteCommandAsync(new CompleteMfaLoginCommand(login.MfaToken!, "000000", null, null)),
+                IdentityErrors.MfaInvalidCode, ErrorType.Unauthorized);
+        }
+
+        ShouldFailWith(
+            await ExecuteCommandAsync(new CompleteMfaLoginCommand(login.MfaToken!, "000000", null, null)),
+            IdentityErrors.MfaInvalidCode, ErrorType.Unauthorized);
+
+        // Kilitlendikten sonra doğru kod bile CanSignIn'de (locked_out) durur.
+        ShouldFailWith(
+            await ExecuteCommandAsync(new CompleteMfaLoginCommand(login.MfaToken!, CodeFor(enroll.Secret), null, null)),
+            IdentityErrors.LockedOut, ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task CompleteMfaLogin_ExpiredMfaToken_Fails()
+    {
+        var tenantId = await SeedTenantAsync("mfa-token-expired");
+        var email = "sena@acme.test";
+        var userId = await SeedUserAsync(tenantId, email, SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+
+        var login = (await ExecuteCommandAsync(new LoginCommand(email, "Password-12345", "mfa-token-expired", null, null))).Value;
+
+        Time.Advance(TimeSpan.FromMinutes(IdentityDefaults.MfaTokenMinutes + 1));
+
+        ShouldFailWith(
+            await ExecuteCommandAsync(new CompleteMfaLoginCommand(login.MfaToken!, CodeFor(enroll.Secret), null, null)),
+            IdentityErrors.MfaTokenExpired, ErrorType.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DisableMfa_WithValidCode_DisablesAndLoginNoLongerRequiresMfa()
+    {
+        var tenantId = await SeedTenantAsync("mfa-disable");
+        var email = "ela@acme.test";
+        var userId = await SeedUserAsync(tenantId, email, SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+
+        (await ExecuteCommandAsync(new DisableMfaCommand(CodeFor(enroll.Secret)))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeFalse();
+
+        var login = (await ExecuteCommandAsync(new LoginCommand(email, "Password-12345", "mfa-disable", null, null))).Value;
+        login.Status.ShouldBe(LoginStatuses.Ok);
+    }
+
+    [Fact]
+    public async Task DisableMfa_WrongCode_Fails_AndMfaStaysEnabled()
+    {
+        var tenantId = await SeedTenantAsync("mfa-disable-wrong");
+        var userId = await SeedUserAsync(tenantId, "tolga@acme.test", SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+
+        ShouldFailWith(await ExecuteCommandAsync(new DisableMfaCommand("000000")), IdentityErrors.MfaInvalidCode, ErrorType.Validation);
+        (await ExecuteQueryAsync(new GetMeQuery())).Value.MfaEnabled.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// RFC 6238'i (30 sn adım, HMAC-SHA1, 6 hane) test kliyentinin yerine getirir — üretim <c>TotpService</c> ile
+    /// bit bit aynı algoritma, ayrı bir implementasyon (o sınıfın Base32/ComputeCode'u `internal`, test projesine görünmez).
+    /// Testin kendi `Time` (MutableTimeProvider) saatine göre kod üretir.
+    /// </summary>
+    private string CodeFor(string secretBase32)
+    {
+        var counter = Time.GetUtcNow().ToUnixTimeSeconds() / 30;
+        var key = Base32Decode(secretBase32);
+        var counterBytes = BitConverter.GetBytes(counter);
+        if (BitConverter.IsLittleEndian)
+        {
+            Array.Reverse(counterBytes);
+        }
+
+        var hash = HMACSHA1.HashData(key, counterBytes);
+        var offset = hash[^1] & 0x0F;
+        var binary = ((hash[offset] & 0x7F) << 24) | ((hash[offset + 1] & 0xFF) << 16) | ((hash[offset + 2] & 0xFF) << 8) | (hash[offset + 3] & 0xFF);
+        return (binary % 1_000_000).ToString(System.Globalization.CultureInfo.InvariantCulture).PadLeft(6, '0');
+    }
+
+    private static byte[] Base32Decode(string base32)
+    {
+        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        var bytes = new List<byte>(base32.Length * 5 / 8);
+        int buffer = 0, bitsInBuffer = 0;
+        foreach (var c in base32.TrimEnd('=').ToUpperInvariant())
+        {
+            var index = alphabet.IndexOf(c);
+            if (index < 0)
+            {
+                continue;
+            }
+
+            buffer = (buffer << 5) | index;
+            bitsInBuffer += 5;
+            if (bitsInBuffer >= 8)
+            {
+                bitsInBuffer -= 8;
+                bytes.Add((byte)((buffer >> bitsInBuffer) & 0xFF));
+            }
+        }
+
+        return [.. bytes];
+    }
+}

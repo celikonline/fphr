@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Legislation;
 using Sense.Modules.Leave.Domain.Overtime;
@@ -38,6 +39,9 @@ public sealed class LeaveDbContext(DbContextOptions<LeaveDbContext> options, ITe
     public DbSet<OvertimeConsent> OvertimeConsents => Set<OvertimeConsent>();
 
     public DbSet<OvertimeConversion> OvertimeConversions => Set<OvertimeConversion>();
+
+    /// <summary>Not yet migrated (ADR-0005: Leave's one open migration slot is HalfDayAndHourlyLeave) - pending model change until the next request.</summary>
+    public DbSet<AbsenceRecord> AbsenceRecords => Set<AbsenceRecord>();
 }
 
 internal static class LeaveTables
@@ -51,6 +55,7 @@ internal static class LeaveTables
     public const string OvertimeRequests = "overtime_requests";
     public const string OvertimeConsents = "overtime_consents";
     public const string OvertimeConversions = "overtime_conversions";
+    public const string AbsenceRecords = "absence_records";
     public const int RatePrecision = 5;
     public const int RateScale = 2;
     public const int IpAddressLength = 64;
@@ -255,6 +260,23 @@ public sealed class OvertimeConversionConfiguration : IEntityTypeConfiguration<O
 
         // One active (posted) conversion per overtime request (11.3.5).
         b.HasIndex(x => x.OvertimeRequestId).IsUnique().HasFilter("status = 'Posted'");
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+/// <summary>Not yet migrated (bkz. DbSet<see cref="LeaveDbContext.AbsenceRecords"/> yorumu, ADR-0005) - mapping is written ahead of the migration.</summary>
+public sealed class AbsenceRecordConfiguration : IEntityTypeConfiguration<AbsenceRecord>
+{
+    public void Configure(EntityTypeBuilder<AbsenceRecord> b)
+    {
+        b.ToTable(LeaveTables.AbsenceRecords);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.Hours).HasPrecision(LeaveTables.DaysPrecision, LeaveTables.DaysScale);
+        b.Property(x => x.Note).HasMaxLength(LeaveLimits.AbsenceNoteMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date });
+        b.Ignore(x => x.IsReversal);
         b.Ignore(x => x.DomainEvents);
     }
 }

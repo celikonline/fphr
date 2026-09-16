@@ -156,11 +156,11 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         detail.Value.ApplySlug.ShouldBe(applySlug);
 
         var first = await ExecuteCommandAsync(
-            new SubmitCareerApplicationCommand(applySlug, "Elif", "Kara", "elif.kara@example.com", "+905551112233"));
+            new SubmitCareerApplicationCommand(applySlug, "Elif", "Kara", "elif.kara@example.com", "+905551112233", "2026-09", true));
         first.IsSuccess.ShouldBeTrue();
 
         var duplicate = await ExecuteCommandAsync(
-            new SubmitCareerApplicationCommand(applySlug, "Elif", "Kara", "elif.kara@example.com", null));
+            new SubmitCareerApplicationCommand(applySlug, "Elif", "Kara", "elif.kara@example.com", null, "2026-09", true));
         duplicate.IsFailure.ShouldBeTrue();
         duplicate.Error.Code.ShouldBe(RecruitmentDomainErrors.ApplicationAlreadyExists);
 
@@ -235,6 +235,62 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         related.IsSuccess.ShouldBeTrue();
         related.Value.Count.ShouldBe(1);
         related.Value[0].ApplySlug.ShouldBe(siblingSlug);
+    }
+
+    /// <summary>
+    /// Faz 9 tur 3 TALIMAT madde 1 (public uç tenant sızıntı testi): A kiracısının başvurusu B kiracısının aynı
+    /// e-postalı adayıyla/başvurusuyla karışmaz - <see cref="ICandidateRepository.FindByEmailAsync"/> ambient
+    /// tenant scope'a göre filtrelendiği için (bkz. <see cref="SubmitCareerApplicationHandler"/>), aynı e-posta iki
+    /// farklı kiracıda iki ayrı Candidate satırı üretir ve "zaten başvurdunuz" hatası yalnızca kendi kiracısı
+    /// içinde tetiklenir.
+    /// </summary>
+    [Fact]
+    public async Task PublicCareerFlow_SameEmail_DifferentTenants_DoesNotLeakOrBlockAcrossTenants()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var postingA = await CreatePublishedPostingAsync(tenantA, "Tenant A İlanı");
+        var postingB = await CreatePublishedPostingAsync(tenantB, "Tenant B İlanı");
+        var slugA = await GetApplySlugAsync(postingA);
+        var slugB = await GetApplySlugAsync(postingB);
+
+        const string sharedEmail = "paylasilan@example.com";
+
+        var applyA = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(slugA, "Ayşe", "Demir", sharedEmail, null, "2026-09", true));
+        applyA.IsSuccess.ShouldBeTrue();
+
+        // Same e-mail, other tenant's posting - must succeed independently, not "already applied".
+        var applyB = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(slugB, "Ayşe", "Demir", sharedEmail, null, "2026-09", true));
+        applyB.IsSuccess.ShouldBeTrue();
+
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+
+        using (TenantContextSetter!.BeginScope(tenantA))
+        {
+            var candidatesInA = await db.Candidates.Where(c => c.Email == sharedEmail).ToListAsync();
+            candidatesInA.Count.ShouldBe(1);
+            candidatesInA[0].TenantId.ShouldBe(tenantA);
+        }
+
+        using (TenantContextSetter!.BeginScope(tenantB))
+        {
+            var candidatesInB = await db.Candidates.Where(c => c.Email == sharedEmail).ToListAsync();
+            candidatesInB.Count.ShouldBe(1);
+            candidatesInB[0].TenantId.ShouldBe(tenantB);
+        }
+    }
+
+    /// <summary>Yayında olmayan (Draft/Closed/Archived) bir ilanın slug'ı başka bir kiracının yayındaki ilanına asla eşleşmez - her slug tekil.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_Apply_UnknownSlug_ReturnsNotFound_NoTenantHintLeaked()
+    {
+        var apply = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand("olmayan-slug-xyz", "Test", "Kullanıcı", "test@example.com", null, "2026-09", true));
+        apply.IsFailure.ShouldBeTrue();
+        apply.Error.Code.ShouldBe(RecruitmentDomainErrors.PostingNotFound);
     }
 
     private async Task<Guid> CreatePublishedPostingAsync(Guid tenantId, string title = "Backend Geliştirici")

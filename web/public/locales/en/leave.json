@@ -220,8 +220,17 @@
       "typeRequired": "Select a leave type.",
       "datesRequired": "Start and end dates are required.",
       "range": "End date cannot be before the start date.",
-      "descriptionRequired": "A description is required for this leave type."
+      "descriptionRequired": "A description is required for this leave type.",
+      "timeRequired": "Enter a start and end time; the end time must be after the start time.",
+      "halfDayRequired": "Select morning or afternoon."
     },
+    "sameDayHint": "Same day",
+    "halfDayPeriod": "Half of the day",
+    "halfDayMorning": "Morning",
+    "halfDayAfternoon": "Afternoon",
+    "hourlyStart": "Start time",
+    "hourlyEnd": "End time",
+    "teamOverlap": "{{count}} more people from the same unit are on leave or have requested leave on these dates.",
     "previewLoading": "Calculating days…",
     "previewDays": "Calculated days: {{days}} ({{rest}} weekly rest and {{holidays}} public holiday days excluded)",
     "bypassApproval": "Approve without the approval process",

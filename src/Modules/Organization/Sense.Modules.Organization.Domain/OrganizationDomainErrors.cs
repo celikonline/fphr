@@ -40,6 +40,14 @@ public static class OrganizationDomainErrors
     public const string LocationTypeInvalid = "organization.location.type_invalid";
     public const string LocationCountryCodeInvalid = "organization.location.country_code_invalid";
     public const string LocationAlreadyInactive = "organization.location.already_inactive";
+
+    public const string CostCenterNotFound = "organization.cost_center.not_found";
+    public const string CostCenterCodeRequired = "organization.cost_center.code_required";
+    public const string CostCenterCodeTooLong = "organization.cost_center.code_too_long";
+    public const string CostCenterNameRequired = "organization.cost_center.name_required";
+    public const string CostCenterCodeTaken = "organization.cost_center.code_taken";
+    public const string CostCenterAlreadyActive = "organization.cost_center.already_active";
+    public const string CostCenterAlreadyInactive = "organization.cost_center.already_inactive";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -70,4 +78,7 @@ public static class OrganizationLimits
     public const int WorkingDaysCsvMaxLength = 40;
 
     public const int LogoUrlMaxLength = 1000;
+
+    /// <summary>Cost center code (Faz 2, S-4); short and immutable once created (referenced by Payroll/Analytics later).</summary>
+    public const int CostCenterCodeMaxLength = 30;
 }

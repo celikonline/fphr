@@ -7,6 +7,7 @@ using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure;
@@ -157,5 +158,48 @@ public sealed class LeaveIntegrationTests : TestFixture
         loaded.Types.Count.ShouldBe(LeaveRuleSetSeed.Types(StatutoryLeaveDurations.Turkey2026).Count());
         loaded.Types.Single(t => t.Code == LeaveTypeCode.Annual).SeniorityTiers.Select(t => t.ExtraDays).ShouldBe([6m, 6m]);
         (await repo.FindDefaultAsync())!.Id.ShouldNotBe(cloneId);
+    }
+
+    /// <summary>
+    /// Absence (11.3.5 kapsamı dışı, tur 3 iş emri): leave.absence_records is not migrated yet (ADR-0005 - Leave's
+    /// one open migration slot this turn is HalfDayAndHourlyLeave; Absence's migration is the next request, see
+    /// status/faz-05/MIGRATION-ISTEGI.md). Domain rules are covered DB-free by AbsenceRecordTests; this documents the
+    /// intended round-trip and unskips once `dotnet ef database update` includes the absence_records table.
+    /// </summary>
+    [Fact(Skip = "leave.absence_records not migrated yet (ADR-0005 - Absence migration is queued after HalfDayAndHourlyLeave)")]
+    public async Task AbsenceRecord_RecordedThenReversed_RoundTripsAndReversalIsNotReReversible()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var recordedByUserId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        Guid originalId;
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var repo = write.ServiceProvider.GetRequiredService<IAbsenceRecordRepository>();
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var original = AbsenceRecord.Record(
+                tenantId, employeeId, new DateOnly(2026, 9, 15), AbsenceKind.Unexcused, null, "Haber vermeden gelmedi", recordedByUserId);
+            original.IsSuccess.ShouldBeTrue();
+            repo.Add(original.Value);
+            await db.SaveChangesAsync();
+            originalId = original.Value.Id;
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var readRepo = read.ServiceProvider.GetRequiredService<IAbsenceRecordRepository>();
+        var readDb = read.ServiceProvider.GetRequiredService<LeaveDbContext>();
+        var original2 = await readRepo.FindByIdAsync(originalId);
+        (await readRepo.ExistsReversalAsync(originalId)).ShouldBeFalse();
+
+        var reversal = AbsenceRecord.Reverse(original2!, "Yanlış girildi", recordedByUserId, alreadyReversed: false);
+        reversal.IsSuccess.ShouldBeTrue();
+        readRepo.Add(reversal.Value);
+        await readDb.SaveChangesAsync();
+
+        (await readRepo.ExistsReversalAsync(originalId)).ShouldBeTrue();
+        var reReverse = AbsenceRecord.Reverse(reversal.Value, "Tekrar", recordedByUserId, alreadyReversed: false);
+        reReverse.IsFailure.ShouldBeTrue();
     }
 }

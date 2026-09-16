@@ -48,6 +48,9 @@ public sealed class ExpenseCategoryConfiguration : IEntityTypeConfiguration<Expe
         b.Property(x => x.Code).HasMaxLength(ExpenseTables.CodeLength).IsRequired();
         b.Property(x => x.NameKey).HasMaxLength(ExpenseTables.NameKeyLength).IsRequired();
         b.Property(x => x.DefaultTaxRate).HasPrecision(5, 2);
+        // ADR-0005: model-only for now, see status/faz-07/MIGRATION-ISTEGI.md (AddExpenseCategoryLimit) - column
+        // does not exist in the DB until that migration is generated and applied.
+        b.Property(x => x.MaxAmount).HasPrecision(18, 2);
 
         b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
 

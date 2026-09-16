@@ -101,6 +101,20 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
             .Where(d => d.EmployeeId == employeeId && d.Date >= from && d.Date <= to)
             .OrderBy(d => d.Date)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<AttendanceDay>> ListForEmployeesAsync(
+        IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.AttendanceDays
+            .Where(d => employeeIds.Contains(d.EmployeeId) && d.Date >= from && d.Date <= to)
+            .OrderBy(d => d.Date).ThenBy(d => d.EmployeeId)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public sealed class AnomalyResolutionRepository(AttendanceDbContext context) : IAnomalyResolutionRepository

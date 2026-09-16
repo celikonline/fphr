@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
@@ -155,4 +157,44 @@ public sealed class OvertimeConversionRepository(LeaveDbContext context) : IOver
 
     public async Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.OvertimeConversions.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.ConvertedAt).ToListAsync(cancellationToken);
+}
+
+public sealed class AbsenceRecordRepository(LeaveDbContext context) : IAbsenceRecordRepository
+{
+    public void Add(AbsenceRecord record) => context.AbsenceRecords.Add(record);
+
+    public async Task<AbsenceRecord?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.AbsenceRecords.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<AbsenceRecord>> ListAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.AbsenceRecords.Where(a => a.EmployeeId == employeeId && a.Date >= from && a.Date <= to).ToListAsync(cancellationToken);
+
+    public Task<bool> ExistsReversalAsync(Guid originalId, CancellationToken cancellationToken = default) =>
+        context.AbsenceRecords.AnyAsync(a => a.ReversesId == originalId, cancellationToken);
+}
+
+/// <summary>
+/// Leave.Contracts.IAbsenceReader: narrow cross-module read of absence records (Payroll/Faz 7 will consume this to
+/// treat absences as missing days; not wired to any consumer yet - "Payroll'u bağlama" per faz-05 tur 3 instruction).
+/// Excludes reversal rows and originals a reversal has already offset, so the caller only sees currently-active absences.
+/// </summary>
+public sealed class AbsenceReader(LeaveDbContext context) : IAbsenceReader
+{
+    public async Task<IReadOnlyList<AbsenceRecordSummary>> ListAsync(
+        Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        var reversedIds = await context.AbsenceRecords.AsNoTracking()
+            .Where(a => a.TenantId == tenantId && a.ReversesId != null)
+            .Select(a => a.ReversesId!.Value)
+            .ToListAsync(cancellationToken);
+
+        var rows = await context.AbsenceRecords.AsNoTracking()
+            .Where(a => a.TenantId == tenantId && a.EmployeeId == employeeId && a.Date >= from && a.Date <= to && a.ReversesId == null)
+            .OrderBy(a => a.Date)
+            .ToListAsync(cancellationToken);
+
+        // Enum.ToString() is not SQL-translatable (Kind is HasConversion<string> in the DB, not in CLR), so the
+        // originals-vs-reversed filter and the Kind → string projection both happen client-side after materializing.
+        return rows.Where(a => !reversedIds.Contains(a.Id)).Select(a => new AbsenceRecordSummary(a.Date, a.Kind.ToString(), a.Hours)).ToList();
+    }
 }

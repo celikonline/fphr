@@ -1,0 +1,18 @@
+{
+  "genericError": "Bordro bilgisi yüklenemedi.",
+  "periods": {
+    "title": "Bordro Dönemleri",
+    "subtitle": "Açılan bordro dönemleri ve durumları.",
+    "empty": "Henüz açılmış bir bordro dönemi yok.",
+    "columns": {
+      "period": "Dönem",
+      "status": "Durum"
+    },
+    "status": {
+      "open": "Açık",
+      "approved": "Onaylandı",
+      "paid": "Ödendi",
+      "locked": "Kilitli"
+    }
+  }
+}

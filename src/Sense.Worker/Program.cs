@@ -202,10 +202,12 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<ExpenseDbCon
 
 // Assets (zimmet, roadmap #65): writes AssetAssigned/AssetReturned to its own outbox; Documents consumes both
 // (AssetEventDocumentRequirementHandlers, registered in AddDocumentsIntegrationEventHandlers above) to
-// materialize/keep the AssetHandoverForm conditional requirement in sync. Assets itself consumes no other module's
-// events in this pass, so AddAssetsCoreServices is the only registration call (no matching event-handlers half).
+// materialize/keep the AssetHandoverForm conditional requirement in sync. Assets itself also consumes Employee's
+// EmployeeTerminated (faz4 offboarding↔zimmet: EmployeeTerminatedAssetAuditHandler writes an
+// AssetUnreturnedAtTermination audit trail entry per still-open asset, non-blocking) via AddAssetsIntegrationEventHandlers.
 builder.Services.AddModuleDbContext<AssetsDbContext>(builder.Configuration, AssetsDbContext.SchemaName);
 builder.Services.AddAssetsCoreServices();
+builder.Services.AddAssetsIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     AssetsDbContext.SchemaName,
     typeof(Sense.Modules.Assets.Application.AssetsErrors).Assembly,

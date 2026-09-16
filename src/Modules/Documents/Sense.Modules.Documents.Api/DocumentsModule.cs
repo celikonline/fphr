@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Infrastructure;
+using Sense.Modules.Documents.Infrastructure.BackgroundJobs;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -38,5 +40,9 @@ public sealed class DocumentsModule : IModule
 
         // Document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();
+
+        // ADR-0004: Hangfire (BackgroundJobExecutor) runs in Sense.Api, so scheduled-job handlers are registered
+        // here, not in AddDocumentsIntegrationEventHandlers (Sense.Worker-only, for outbox event consumers).
+        services.AddScoped<IScheduledJobHandler, DocumentExpiryReminderJobHandler>();
     }
 }

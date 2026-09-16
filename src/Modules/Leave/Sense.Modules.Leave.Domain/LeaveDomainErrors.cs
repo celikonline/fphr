@@ -40,6 +40,12 @@ public static class LeaveDomainErrors
     public const string OvertimeConsentNotFound = "leave.overtime_consent.not_found";
     public const string OvertimeConsentAlreadyRevoked = "leave.overtime_consent.already_revoked";
     public const string OvertimeConsentInvalidRevocation = "leave.overtime_consent.invalid_revocation";
+    public const string AbsenceNoteTooLong = "leave.absence.note_too_long";
+    public const string AbsenceHoursInvalid = "leave.absence.hours_invalid";
+    public const string AbsenceHoursOnlyForLate = "leave.absence.hours_only_for_late";
+    public const string AbsenceReversalReasonRequired = "leave.absence.reversal_reason_required";
+    public const string AbsenceAlreadyReversed = "leave.absence.already_reversed";
+    public const string AbsenceReversalNotReversible = "leave.absence.reversal_not_reversible";
 }
 
 /// <summary>Domain limits.</summary>
@@ -53,4 +59,5 @@ public static class LeaveLimits
     public const int MaxDays = 365;
     public const int MaxWaitingPeriodMonths = 24;
     public const int IdempotencyKeyMaxLength = 200;
+    public const int AbsenceNoteMaxLength = 500;
 }

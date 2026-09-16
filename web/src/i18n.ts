@@ -38,6 +38,8 @@ i18n
       "requests",
       "expense",
       "reports",
+      "performance",
+      "payroll",
     ],
     interpolation: {
       escapeValue: false,

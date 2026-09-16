@@ -401,11 +401,26 @@ export interface PublicJobPostingSummary {
   publishedAt: string | null;
 }
 
+/**
+ * `GET public/postings?tenant=` list item (S-10, tur 3 sözleşmesi). Ayrı tip: bu uç `location`/`employmentType`'ı
+ * opsiyonel döner (`related` ucundaki `PublicJobPostingSummary`'den farklı sözleşme).
+ */
+export interface PublicJobPostingListItem {
+  applySlug: string;
+  title: string;
+  location?: string | null;
+  employmentType?: RecruitmentEmploymentType | null;
+  publishedAt: string | null;
+}
+
 export interface SubmitCareerApplicationInput {
   firstName: string;
   lastName: string;
   email: string;
   phone?: string | null;
+  /** Aydınlatma metni versiyonu (bkz. `recruitment:career.privacyNoticeVersion`), Faz 1'in `IConsentRecorder`'ı gelene kadar başvuru ile birlikte taşınır. */
+  privacyNoticeVersion: string;
+  kvkkAccepted: boolean;
 }
 
 export async function getPublicJobPosting(applySlug: string): Promise<PublicJobPosting> {
@@ -415,6 +430,14 @@ export async function getPublicJobPosting(applySlug: string): Promise<PublicJobP
 
 export async function listRelatedPublicJobPostings(applySlug: string): Promise<PublicJobPostingSummary[]> {
   const { data } = await apiClient.get<PublicJobPostingSummary[]>(`${RECRUITMENT_BASE}/public/postings/${applySlug}/related`);
+  return data;
+}
+
+/** Bir kiracının yayında olan tüm ilanları (S-10). Kiracı slug'ı bulunamazsa BE boş dizi döner (404 değil). */
+export async function listPublicJobPostingsByTenant(tenantSlug: string): Promise<PublicJobPostingListItem[]> {
+  const { data } = await apiClient.get<PublicJobPostingListItem[]>(`${RECRUITMENT_BASE}/public/postings`, {
+    params: { tenant: tenantSlug },
+  });
   return data;
 }
 

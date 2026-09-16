@@ -23,9 +23,10 @@ export interface ReportExecution {
   reportKey: string;
   status: ReportExecutionStatus;
   requestedAt: string;
-  completedAt: string | null;
-  resultFileName: string | null;
-  errorMessage: string | null;
+  /** Omitted by the API (WhenWritingNull) until the execution finishes - treat missing as null. */
+  completedAt?: string | null;
+  resultFileName?: string | null;
+  errorMessage?: string | null;
 }
 
 export interface DownloadedReportFile {

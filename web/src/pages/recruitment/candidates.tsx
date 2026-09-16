@@ -201,16 +201,18 @@ function Candidates() {
             </Table.Thead>
             <Table.Tbody>
               {data.map((candidate) => (
-                <Table.Tr key={candidate.id}>
+                <Table.Tr key={candidate.id} opacity={candidate.isAnonymized ? 0.6 : 1}>
                   <Table.Td>
                     <Group gap={6} wrap="nowrap">
                       <Text fw={500}>
                         {candidate.firstName} {candidate.lastName}
                       </Text>
                       {candidate.isAnonymized && (
-                        <Badge size="sm" color="gray" variant="light">
-                          {t("recruitment:candidates.anonymized")}
-                        </Badge>
+                        <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+                          <Badge size="sm" color="gray" variant="light">
+                            {t("recruitment:candidates.anonymized")}
+                          </Badge>
+                        </Tooltip>
                       )}
                     </Group>
                   </Table.Td>
@@ -240,21 +242,20 @@ function Candidates() {
                             <TagsIcon size={16} />
                           </ActionIcon>
                         </Tooltip>
-                        <Tooltip label={t("recruitment:candidates.editCandidate")}>
-                          <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)} disabled={candidate.isAnonymized}>
-                            <Pencil size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label={t("recruitment:candidates.anonymize")}>
-                          <ActionIcon
-                            variant="subtle"
-                            color="red"
-                            onClick={() => setAnonymizeTarget(candidate)}
-                            disabled={candidate.isAnonymized}
-                          >
-                            <ShieldOff size={16} />
-                          </ActionIcon>
-                        </Tooltip>
+                        {!candidate.isAnonymized && (
+                          <>
+                            <Tooltip label={t("recruitment:candidates.editCandidate")}>
+                              <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)}>
+                                <Pencil size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                            <Tooltip label={t("recruitment:candidates.anonymize")}>
+                              <ActionIcon variant="subtle" color="red" onClick={() => setAnonymizeTarget(candidate)}>
+                                <ShieldOff size={16} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </>
+                        )}
                       </Group>
                     </Table.Td>
                   )}

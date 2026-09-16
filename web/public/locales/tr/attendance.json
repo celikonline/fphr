@@ -91,6 +91,14 @@
     "deleteDescription": "\"{{name}}\" takvimini silmek istediğinize emin misiniz?",
     "deleteBlockedDefault": "Varsayılan çalışma takvimi silinemez.",
     "deleteBlockedEmployees": "{{count}} çalışana atanmışken silinemez.",
+    "assign": "Ata",
+    "assignTitle": "Çalışanlara ata",
+    "assignDescription": "Seçilen çalışanlara \"{{name}}\" çalışma takvimi atanır; geçmiş puantaj kayıtları yeniden hesaplanmaz.",
+    "assignNoSelection": "En az bir çalışan seçin.",
+    "assignEffectiveFromRequired": "Geçerlilik başlangıç tarihi zorunludur.",
+    "assignSubmit": "Ata ({{count}})",
+    "assignRemove": "{{name}} seçimini kaldır",
+    "assigned": "Çalışma takvimi {{count}} çalışana atandı.",
     "col": {
       "name": "Ad",
       "days": "Çalışma günleri",
@@ -98,5 +106,36 @@
       "assigned": "Atanan çalışan"
     },
     "workingDayCount": "{{count}} gün"
+  },
+  "teamTimesheet": {
+    "title": "Ekip puantajı",
+    "subtitle": "Yetkili olduğunuz çalışanların haftalık puantaj ızgarası.",
+    "allUnits": "Tüm birimler",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "employee": "Çalışan",
+    "empty": "Bu haftada görüntüleyebileceğiniz çalışan yok.",
+    "planned": "Planlanan",
+    "status": "Durum",
+    "suggestions": "Öneriler",
+    "resolved": "Kayıt güncellendi.",
+    "workedMinutes": "Çalışılan süre (dk)",
+    "reason": "Açıklama",
+    "durationMinutes": "Süre (dk)",
+    "description": "Açıklama",
+    "startTime": "Başlangıç saati",
+    "leaveType": "İzin türü",
+    "action": {
+      "setWorkedHours": "Çalışılan saat",
+      "addOvertime": "Fazla mesai ekle",
+      "createLeaveRequest": "İzin talebi",
+      "ignore": "Yok say"
+    },
+    "validation": {
+      "minutesRequired": "Çalışılan süreyi girin.",
+      "startTimeRequired": "Başlangıç saatini girin.",
+      "durationRequired": "Süreyi girin.",
+      "leaveTypeRequired": "İzin türü seçin."
+    }
   }
 }

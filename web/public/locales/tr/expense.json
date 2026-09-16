@@ -42,7 +42,9 @@
     "categoryPlaceholder": "Kategori seçin",
     "amount": "Tutar",
     "taxRate": "Vergi oranı",
-    "description": "Fiş açıklaması"
+    "description": "Fiş açıklaması",
+    "exceedsLimit": "Limit aşıldı",
+    "exceedsLimitTooltip": "Bu fişin tutarı, kategorisi için tanımlı üst limiti aşıyor."
   },
   "advance": {
     "newButton": "+ Avans",
@@ -86,6 +88,8 @@
     "subtitle": "Çalışanların fiş eklerken seçtiği harcama kategori kataloğunu yönetin.",
     "add": "Kategori ekle",
     "addTitle": "Kategori ekle",
+    "editTitle": "Kategoriyi düzenle",
+    "maxAmountHint": "Bu kategorideki bir fişin aşabileceği üst sınır; boş bırakılırsa limit uygulanmaz.",
     "showInactive": "Pasif kategorileri de göster",
     "active": "Aktif",
     "inactive": "Pasif",
@@ -99,6 +103,7 @@
       "name": "Ad",
       "code": "Kod",
       "defaultTaxRate": "Varsayılan KDV oranı",
+      "maxAmount": "Üst limit (₺)",
       "status": "Durum"
     },
     "errors": {
