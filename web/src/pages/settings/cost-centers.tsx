@@ -159,7 +159,13 @@ function CostCenterDialog({ target, onClose }: { target: CostCenter | "new"; onC
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () => (editing ? renameCostCenter(editing.id, name.trim()) : createCostCenter({ code: code.trim(), name: name.trim() })),
+    mutationFn: async () => {
+      if (editing) {
+        await renameCostCenter(editing.id, name.trim());
+      } else {
+        await createCostCenter({ code: code.trim(), name: name.trim() });
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: COST_CENTERS_QUERY_KEY });
       toast({ variant: "success", title: t("common:success"), description: t("settings:costCenters.saved") });

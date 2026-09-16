@@ -115,8 +115,13 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      editing ? updateAssetCategory(editing.id, name.trim()) : createAssetCategory(code.trim(), name.trim()),
+    mutationFn: async () => {
+      if (editing) {
+        await updateAssetCategory(editing.id, name.trim());
+      } else {
+        await createAssetCategory(code.trim(), name.trim());
+      }
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
       toast({ variant: "success", title: t("common:success"), description: t("assets:categories.saved") });

@@ -373,10 +373,13 @@ function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edi
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      mode === "create"
-        ? createWorkSchedule({ name: name.trim(), days, includeSaturdayWhenFullWeek: includeSaturday })
-        : updateWorkScheduleDays(schedule!.id, { days, includeSaturdayWhenFullWeek: includeSaturday }),
+    mutationFn: async () => {
+      if (mode === "create") {
+        await createWorkSchedule({ name: name.trim(), days, includeSaturdayWhenFullWeek: includeSaturday });
+      } else {
+        await updateWorkScheduleDays(schedule!.id, { days, includeSaturdayWhenFullWeek: includeSaturday });
+      }
+    },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: SCHEDULES_KEY });
       toast({

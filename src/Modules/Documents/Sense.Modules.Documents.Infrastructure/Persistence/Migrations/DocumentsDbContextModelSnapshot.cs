@@ -243,6 +243,10 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("e_tag");
 
+                    b.Property<DateOnly?>("ExpiryDate")
+                        .HasColumnType("date")
+                        .HasColumnName("expiry_date");
+
                     b.Property<string>("FileKey")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -290,6 +294,9 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_documents_tenant_id");
+
+                    b.HasIndex("TenantId", "ExpiryDate")
+                        .HasDatabaseName("ix_documents_tenant_id_expiry_date");
 
                     b.HasIndex("TenantId", "FileKey")
                         .IsUnique()

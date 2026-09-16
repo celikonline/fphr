@@ -49,6 +49,10 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      workbox: {
+        // Default 2 MiB no longer covers the main bundle; bump with headroom for growth.
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      },
     }),
   ],
   resolve: {

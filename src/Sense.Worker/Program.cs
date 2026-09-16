@@ -172,17 +172,18 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<RecruitmentD
 
 // Performance (faz-08 R0): consumes Employee's EmployeeTerminated to archive (freeze, not delete/cancel) the
 // terminated employee's open goals - see Sense.Modules.Performance.Application.Employees.EmployeeTerminatedHandler.
-// Application assembly passed directly (Payroll's EmployeeHiredHandler pattern) rather than Recruitment's separate
-// AddXIntegrationEventHandlers extension, since there's only the one handler so far.
+// Registered explicitly (not the whole Application assembly) so API-only handler dependencies (IReviewCycleRepository,
+// IDataScopeService, etc.) stay out, mirroring Leave/Attendance/Documents/Payroll above.
 builder.Services.AddModuleDbContext<Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext>(
     builder.Configuration, Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext.SchemaName);
 builder.Services.AddPerformanceCoreServices();
+builder.Services.AddScoped<Sense.Modules.Performance.Domain.IGoalRepository, Sense.Modules.Performance.Infrastructure.Persistence.GoalRepository>();
+builder.Services.AddScoped<Sense.Shared.Contracts.Events.IIntegrationEventHandler<Sense.Modules.Employee.Contracts.Events.EmployeeTerminated>, Sense.Modules.Performance.Application.Employees.EmployeeTerminatedHandler>();
 builder.Services.AddModuleHandlers(
     Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext.SchemaName,
     typeof(Sense.Modules.Performance.Contracts.PerformancePermissions).Assembly,
     typeof(Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext).Assembly,
-    typeof(Sense.Modules.Performance.Domain.IGoalRepository).Assembly,
-    typeof(Sense.Modules.Performance.Application.Employees.EmployeeTerminatedHandler).Assembly);
+    typeof(Sense.Modules.Performance.Domain.IGoalRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext>>();
 
 // Expense: consumes Workflow's ApprovalCompleted/ApprovalRejected for RequestType "ExpenseClaim"/"Advance"
