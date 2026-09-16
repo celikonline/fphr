@@ -14,6 +14,10 @@ public static class AttendanceDomainErrors
     public const string AssignmentEffectiveDateInPast = "attendance.assignment.effective_date_in_past";
     public const string DayNotFound = "attendance.day.not_found";
     public const string DayCheckOutBeforeCheckIn = "attendance.day.check_out_before_check_in";
+    public const string NoAnomalyToResolve = "attendance.day.no_anomaly_to_resolve";
+    public const string DayAlreadyResolved = "attendance.day.already_resolved";
+    public const string OverrideMinutesInvalid = "attendance.day.override_minutes_invalid";
+    public const string AnomalyActionNotAllowed = "attendance.day.anomaly_action_not_allowed";
 }
 
 /// <summary>Domain limits.</summary>

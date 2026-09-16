@@ -76,6 +76,71 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         return Result.Success();
     }
 
+    /// <summary>
+    /// "Çalışılan saat" resolution (11.3.6 Az çalışma → Çalışılan saat): overrides <see cref="WorkedMinutes"/> for
+    /// reporting and resolves the day without touching CheckIn/CheckOut. Also used as the manual-correction action
+    /// for missing/unplanned-data anomalies that have no Overwork/Underwork flag.
+    /// </summary>
+    public Result ResolveWithOverride(int overrideWorkedMinutes, string? reason)
+    {
+        var guard = EnsureResolvable();
+        if (guard.IsFailure)
+        {
+            return guard;
+        }
+
+        if (overrideWorkedMinutes < 0)
+        {
+            return Error.Validation(AttendanceDomainErrors.OverrideMinutesInvalid);
+        }
+
+        OverrideWorkedMinutes = overrideWorkedMinutes;
+        OverrideReason = reason;
+        ResolutionState = AttendanceResolutionState.Resolved;
+        return Result.Success();
+    }
+
+    /// <summary>AddOvertime/CreateLeaveRequest resolution: the anomaly is addressed by a Leave-module record the caller links via <see cref="AnomalyResolution"/>, not by changing this day's own numbers.</summary>
+    public Result MarkResolvedByLinkedEntity()
+    {
+        var guard = EnsureResolvable();
+        if (guard.IsFailure)
+        {
+            return guard;
+        }
+
+        ResolutionState = AttendanceResolutionState.Resolved;
+        return Result.Success();
+    }
+
+    /// <summary>Dismisses a flagged day without an override or a linked Leave record (manual "no action needed" call).</summary>
+    public Result Ignore()
+    {
+        var guard = EnsureResolvable();
+        if (guard.IsFailure)
+        {
+            return guard;
+        }
+
+        ResolutionState = AttendanceResolutionState.Ignored;
+        return Result.Success();
+    }
+
+    private Result EnsureResolvable()
+    {
+        if (Anomalies == AttendanceAnomaly.None)
+        {
+            return Error.Validation(AttendanceDomainErrors.NoAnomalyToResolve);
+        }
+
+        if (ResolutionState != AttendanceResolutionState.Unresolved)
+        {
+            return Error.Validation(AttendanceDomainErrors.DayAlreadyResolved);
+        }
+
+        return Result.Success();
+    }
+
     private void Recompute(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes)
     {
         CheckIn = checkIn;
@@ -84,6 +149,11 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         PlannedEnd = plannedEnd;
         PlannedMinutes = plannedMinutes;
         BreakMinutes = breakMinutes;
+
+        // A re-record/re-import overwrites the day's own facts (class doc: "aynı çalışan+gün tekrar yüklenirse üzerine
+        // yazar"), so any prior manual resolution is superseded along with it - new data means a fresh evaluation.
+        OverrideWorkedMinutes = null;
+        OverrideReason = null;
 
         WorkedMinutes = checkIn is not null && checkOut is not null
             ? Math.Max((int)(checkOut.Value.ToTimeSpan() - checkIn.Value.ToTimeSpan()).TotalMinutes - breakMinutes, 0)

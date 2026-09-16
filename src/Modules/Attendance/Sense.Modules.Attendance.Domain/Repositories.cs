@@ -42,3 +42,10 @@ public interface IAttendanceDayRepository
 
     Task<IReadOnlyList<AttendanceDay>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
+
+public interface IAnomalyResolutionRepository
+{
+    void Add(AnomalyResolution resolution);
+
+    Task<IReadOnlyList<AnomalyResolution>> ListForDayAsync(Guid attendanceDayId, CancellationToken cancellationToken = default);
+}

@@ -22,6 +22,8 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<EmployeeWorkScheduleAssignment> WorkScheduleAssignments => Set<EmployeeWorkScheduleAssignment>();
 
     public DbSet<AttendanceDay> AttendanceDays => Set<AttendanceDay>();
+
+    public DbSet<AnomalyResolution> AnomalyResolutions => Set<AnomalyResolution>();
 }
 
 internal static class AttendanceTables
@@ -29,7 +31,9 @@ internal static class AttendanceTables
     public const string WorkSchedules = "work_schedules";
     public const string WorkScheduleAssignments = "employee_work_schedule_assignments";
     public const string AttendanceDays = "attendance_days";
+    public const string AnomalyResolutions = "anomaly_resolutions";
     public const int OverrideReasonMaxLength = 1000;
+    public const int LinkedEntityTypeMaxLength = 50;
 }
 
 public sealed class WorkScheduleConfiguration : IEntityTypeConfiguration<WorkSchedule>
@@ -79,6 +83,21 @@ public sealed class AttendanceDayConfiguration : IEntityTypeConfiguration<Attend
         b.Property(x => x.Source).HasConversion<string>();
         b.Property(x => x.OverrideReason).HasMaxLength(AttendanceTables.OverrideReasonMaxLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class AnomalyResolutionConfiguration : IEntityTypeConfiguration<AnomalyResolution>
+{
+    public void Configure(EntityTypeBuilder<AnomalyResolution> b)
+    {
+        b.ToTable(AttendanceTables.AnomalyResolutions);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Anomaly).HasConversion<string>();
+        b.Property(x => x.Action).HasConversion<string>();
+        b.Property(x => x.LinkedEntityType).HasMaxLength(AttendanceTables.LinkedEntityTypeMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.AttendanceDayId });
         b.Ignore(x => x.DomainEvents);
     }
 }

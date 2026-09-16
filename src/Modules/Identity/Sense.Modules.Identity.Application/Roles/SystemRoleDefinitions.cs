@@ -54,7 +54,10 @@ public static class SystemRoleDefinitions
     [
         new(SystemRoleCodes.Owner, DataScope.Company, [PermissionPatterns.All], []),
 
-        new(SystemRoleCodes.Admin, DataScope.Company, [PermissionPatterns.All], ["billing.*"]),
+        // Faz 8 #103 ("Ayarlar > Ödeme bilgileri" / billing): the source transcript has admins reaching billing
+        // while owners cannot, the opposite of Owner-only billing access. Decision (11.3.01-kimlik-ve-erisim.md #8):
+        // keep Owner's billing.* access, but stop excluding it from Admin too — both types get it now.
+        new(SystemRoleCodes.Admin, DataScope.Company, [PermissionPatterns.All], []),
 
         new(SystemRoleCodes.HR, DataScope.Company,
             ["identity.users.*", "identity.roles.view", "identity.audit.view", "organization.*", "employee.*", "leave.*", "workflow.*", "attendance.*",
@@ -81,7 +84,11 @@ public static class SystemRoleDefinitions
             ["leave.requests.view", "leave.requests.approve", "leave.calendar.view", "leave.balances.view", "workflow.inbox.*", "attendance.*.view",
              "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
              "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
-             .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read"],
+             .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read",
+             // Package A3: 11.3.06 spec names the resolve permission "attendance.timesheet.resolve" (matching the
+             // module's other attendance.timesheet.* keys), not the "attendance.corrections.approve" placeholder
+             // above that was never wired to an actual permission - appended rather than replacing it (hot file).
+             "attendance.timesheet.resolve"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,

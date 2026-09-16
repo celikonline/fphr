@@ -733,4 +733,13 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="documents.requirements.view" xml:space="preserve"><value>View personnel document requirements</value></data>
   <data name="documents.requirements.manage" xml:space="preserve"><value>Manage personnel document requirements</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>View own personnel document requirements</value></data>
+
+  <!-- Integrations (Faz 8 #61): external payroll webhook -->
+  <data name="integrations.webhooks.manage" xml:space="preserve"><value>Manage webhook subscriptions</value></data>
+  <data name="integrations.webhooks.view" xml:space="preserve"><value>View webhook subscriptions</value></data>
+  <data name="integrations.webhooks.deliveries" xml:space="preserve"><value>View the webhook delivery log</value></data>
+  <data name="integrations.webhook.not_found" xml:space="preserve"><value>Webhook subscription not found.</value></data>
+  <data name="integrations.webhook.url_invalid" xml:space="preserve"><value>The URL must be a valid HTTPS address.</value></data>
+  <data name="integrations.webhook.event_types_required" xml:space="preserve"><value>At least one event type must be selected.</value></data>
+  <data name="integrations.webhook.event_type_unknown" xml:space="preserve"><value>Unknown event type.</value></data>
 </root>

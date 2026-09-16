@@ -42,6 +42,20 @@ public static class AttendancePermissions
     public static readonly Permission TimesheetImport = new(
         TimesheetImportKey, Module, "Import Timesheets (PDKS)", Group, "Import check-in/check-out times from a PDKS Excel file");
 
+    /// <summary>
+    /// "Öneri" resolution (package A3, 11.3.6 "Roller ve yetkiler" - spec text names it attendance.timesheet.resolve):
+    /// apply Fazla mesai ekle / Çalışılan saat / İzin talebi / Ignore to a flagged day. Reaching Leave for the
+    /// overtime/leave-request actions additionally needs the caller's own Leave permissions (leave.requests.create_on_behalf,
+    /// leave.requests.bypass_approval, leave.overtimes.create_on_behalf) - this key alone only unlocks Çalışılan saat/Ignore.
+    /// SystemRoleDefinitions.cs's Manager entry already anticipated an "attendance.corrections.approve" key for this same
+    /// purpose that was never wired up; it is left untouched and this key is appended to Manager's include list instead,
+    /// to match the literal permission name the 11.3.06 spec uses for every other attendance.timesheet.* key.
+    /// </summary>
+    public const string TimesheetResolveKey = "attendance.timesheet.resolve";
+
+    public static readonly Permission TimesheetResolve = new(
+        TimesheetResolveKey, Module, "Resolve Timesheet Anomalies", Group, "Apply a suggested resolution (overtime, worked hours, leave request, ignore) to a flagged attendance day");
+
     public static IEnumerable<Permission> All =>
-        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport];
+        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve];
 }

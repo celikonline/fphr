@@ -11,13 +11,17 @@ namespace Sense.Modules.Attendance.Application.AttendanceDays;
 
 public sealed record AttendanceDayDto(
     Guid Id, Guid EmployeeId, DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut, TimeOnly? PlannedStart, TimeOnly? PlannedEnd,
-    int PlannedMinutes, int WorkedMinutes, AttendanceAnomaly Anomalies, AttendanceResolutionState ResolutionState, AttendanceDaySource Source);
+    int PlannedMinutes, int WorkedMinutes, AttendanceAnomaly Anomalies, AttendanceResolutionState ResolutionState, AttendanceDaySource Source,
+    IReadOnlyList<AnomalyResolutionAction> AllowedActions);
 
 internal static class AttendanceDayMapper
 {
     public static AttendanceDayDto ToDto(AttendanceDay day) =>
         new(day.Id, day.EmployeeId, day.Date, day.CheckIn, day.CheckOut, day.PlannedStart, day.PlannedEnd,
-            day.PlannedMinutes, day.OverrideWorkedMinutes ?? day.WorkedMinutes, day.Anomalies, day.ResolutionState, day.Source);
+            day.PlannedMinutes, day.OverrideWorkedMinutes ?? day.WorkedMinutes, day.Anomalies, day.ResolutionState, day.Source,
+            day.ResolutionState == AttendanceResolutionState.Unresolved
+                ? AnomalyResolutionAdvisor.AllowedActions(day.Anomalies).ToList()
+                : []);
 }
 
 /// <summary>

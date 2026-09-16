@@ -742,4 +742,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="documents.requirements.view" xml:space="preserve"><value>Özlük belge gereksinimlerini görüntüleme</value></data>
   <data name="documents.requirements.manage" xml:space="preserve"><value>Özlük belge gereksinimlerini yönetme</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>Kendi özlük belge gereksinimlerini görüntüleme</value></data>
+
+  <!-- Integrations (Faz 8 #61): dış bordro webhook -->
+  <data name="integrations.webhooks.manage" xml:space="preserve"><value>Webhook abonelikleri yönetme</value></data>
+  <data name="integrations.webhooks.view" xml:space="preserve"><value>Webhook aboneliklerini görüntüleme</value></data>
+  <data name="integrations.webhooks.deliveries" xml:space="preserve"><value>Webhook teslimat kaydını görüntüleme</value></data>
+  <data name="integrations.webhook.not_found" xml:space="preserve"><value>Webhook aboneliği bulunamadı.</value></data>
+  <data name="integrations.webhook.url_invalid" xml:space="preserve"><value>Adres geçerli bir HTTPS URL'si olmalıdır.</value></data>
+  <data name="integrations.webhook.event_types_required" xml:space="preserve"><value>En az bir event türü seçilmelidir.</value></data>
+  <data name="integrations.webhook.event_type_unknown" xml:space="preserve"><value>Bilinmeyen event türü.</value></data>
 </root>

@@ -31,6 +31,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
         services.AddScoped<IEmployeeWorkScheduleAssignmentRepository, EmployeeWorkScheduleAssignmentRepository>();
         services.AddScoped<IAttendanceDayRepository, AttendanceDayRepository>();
+        services.AddScoped<IAnomalyResolutionRepository, AnomalyResolutionRepository>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         return services;

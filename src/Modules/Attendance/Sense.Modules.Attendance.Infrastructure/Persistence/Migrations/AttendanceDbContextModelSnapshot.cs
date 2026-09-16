@@ -23,6 +23,75 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.AttendanceDays.AnomalyResolution", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Anomaly")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("anomaly");
+
+                    b.Property<Guid>("AttendanceDayId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attendance_day_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid?>("LinkedEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("linked_entity_id");
+
+                    b.Property<string>("LinkedEntityType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("linked_entity_type");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateTime>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("resolved_by_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_anomaly_resolutions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_anomaly_resolutions_tenant_id");
+
+                    b.HasIndex("TenantId", "AttendanceDayId")
+                        .HasDatabaseName("ix_anomaly_resolutions_tenant_id_attendance_day_id");
+
+                    b.ToTable("anomaly_resolutions", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.AttendanceDays.AttendanceDay", b =>
                 {
                     b.Property<Guid>("Id")

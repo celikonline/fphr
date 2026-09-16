@@ -99,3 +99,14 @@ public sealed class AttendanceDayRepository(AttendanceDbContext context) : IAtte
             .OrderBy(d => d.Date)
             .ToListAsync(cancellationToken);
 }
+
+public sealed class AnomalyResolutionRepository(AttendanceDbContext context) : IAnomalyResolutionRepository
+{
+    public void Add(AnomalyResolution resolution) => context.AnomalyResolutions.Add(resolution);
+
+    public async Task<IReadOnlyList<AnomalyResolution>> ListForDayAsync(Guid attendanceDayId, CancellationToken cancellationToken = default) =>
+        await context.AnomalyResolutions
+            .Where(r => r.AttendanceDayId == attendanceDayId)
+            .OrderBy(r => r.ResolvedAt)
+            .ToListAsync(cancellationToken);
+}

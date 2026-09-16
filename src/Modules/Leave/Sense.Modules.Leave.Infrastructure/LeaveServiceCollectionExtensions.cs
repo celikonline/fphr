@@ -7,6 +7,7 @@ using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Application.Employees;
 using Sense.Modules.Leave.Application.Overtime;
 using Sense.Modules.Leave.Application.Requests;
+using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Calendar;
 using Sense.Modules.Leave.Domain.Overtime;
@@ -14,6 +15,8 @@ using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Legislation;
+using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Leave.Infrastructure;
 
@@ -28,6 +31,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<LeaveRequestRules>();
         services.AddScoped<OvertimeRequestRules>();
         services.AddScoped<LeaveRequestDetailBuilder>();
+        services.AddScoped<ILeaveCommandService, LeaveCommandService>();
         return services;
     }
 
@@ -96,5 +100,47 @@ public sealed class WorkScheduleReaderAdapter(IWorkScheduleReadService schedules
         }
 
         return intervals;
+    }
+
+    public async Task<Func<DateOnly, bool>> GetIncludeSaturdayWhenFullWeekPredicateAsync(Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        // Only Saturdays are ever asked about (LeaveDayCounter.ApplySaturdayRule), so only they are resolved here.
+        var flagBySaturday = new Dictionary<DateOnly, bool>();
+        for (var day = from; day <= to; day = day.AddDays(1))
+        {
+            if (day.DayOfWeek != DayOfWeek.Saturday)
+            {
+                continue;
+            }
+
+            var scheduleDay = await schedules.GetForDateAsync(employeeId, day, cancellationToken);
+            flagBySaturday[day] = scheduleDay.IncludeSaturdayWhenFullWeek;
+        }
+
+        return date => flagBySaturday.GetValueOrDefault(date);
+    }
+}
+
+/// <summary>
+/// Implements Leave.Contracts.ILeaveCommandService by delegating to IDispatcher, so Attendance's anomaly-resolution
+/// commands run through Leave's own on-behalf commands (CreateLeaveRequestOnBehalfCommand/CreateOvertimeRequestOnBehalfCommand) -
+/// same pipeline (permission check, validation, UnitOfWork) as İşlemler → İzin Ekle / Fazla mesai ekle.
+/// </summary>
+public sealed class LeaveCommandService(IDispatcher dispatcher) : ILeaveCommandService
+{
+    public async Task<Result<Guid>> CreateApprovedLeaveAsync(
+        Guid employeeId, Guid leaveTypeId, DateOnly startDate, DateOnly endDate, string? description, CancellationToken cancellationToken = default)
+    {
+        var result = await dispatcher.Send(
+            new CreateLeaveRequestOnBehalfCommand(employeeId, leaveTypeId, startDate, endDate, description, BypassApproval: true), cancellationToken);
+        return result.IsFailure ? result.Error : result.Value.Id;
+    }
+
+    public async Task<Result<Guid>> CreateOvertimeRequestAsync(
+        Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, string? description, CancellationToken cancellationToken = default)
+    {
+        var result = await dispatcher.Send(
+            new CreateOvertimeRequestOnBehalfCommand(employeeId, workDate, startTime, durationMinutes, description), cancellationToken);
+        return result.IsFailure ? result.Error : result.Value.Id;
     }
 }

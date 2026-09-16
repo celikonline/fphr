@@ -8,6 +8,12 @@ namespace Sense.Modules.Attendance.Api.Controllers;
 
 public sealed record RecordAttendanceRequest(DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut);
 
+public sealed record SetWorkedHoursRequest(int WorkedMinutes, string? Reason);
+
+public sealed record AddOvertimeFromAnomalyRequest(TimeOnly StartTime, int DurationMinutes, string? Description);
+
+public sealed record CreateLeaveRequestFromAnomalyRequest(Guid LeaveTypeId, string? Description);
+
 /// <summary>Puantaj (11.3.6): haftalık ızgara verisi + "Çalışılan saat" manuel kaydı/düzeltmesi.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/attendance/timesheet")]
@@ -29,4 +35,34 @@ public sealed class TimesheetController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<AttendanceDayDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyAttendanceDaysQuery(from, to), ct));
+
+    /// <summary>Hücre çekmecesindeki hareketler (11.3.6): bir günün uyuşmazlık çözüm geçmişi.</summary>
+    [HttpGet("days/{attendanceDayId:guid}/resolutions")]
+    [ProducesResponseType<IReadOnlyList<AnomalyResolutionDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListResolutions(Guid attendanceDayId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListAnomalyResolutionsQuery(attendanceDayId), ct));
+
+    /// <summary>"Çalışılan saat" önerisi.</summary>
+    [HttpPost("days/{attendanceDayId:guid}/resolve/worked-hours")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetWorkedHours(Guid attendanceDayId, [FromBody] SetWorkedHoursRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetWorkedHoursCommand(attendanceDayId, request.WorkedMinutes, request.Reason), ct));
+
+    /// <summary>"Fazla mesai ekle" önerisi.</summary>
+    [HttpPost("days/{attendanceDayId:guid}/resolve/overtime")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddOvertime(Guid attendanceDayId, [FromBody] AddOvertimeFromAnomalyRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AddOvertimeFromAnomalyCommand(attendanceDayId, request.StartTime, request.DurationMinutes, request.Description), ct));
+
+    /// <summary>"İzin talebi" önerisi.</summary>
+    [HttpPost("days/{attendanceDayId:guid}/resolve/leave-request")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateLeaveRequest(Guid attendanceDayId, [FromBody] CreateLeaveRequestFromAnomalyRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CreateLeaveRequestFromAnomalyCommand(attendanceDayId, request.LeaveTypeId, request.Description), ct));
+
+    /// <summary>Çipleri elle temizle (öneri uygulamadan).</summary>
+    [HttpPost("days/{attendanceDayId:guid}/resolve/ignore")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Ignore(Guid attendanceDayId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new IgnoreAttendanceAnomalyCommand(attendanceDayId), ct));
 }

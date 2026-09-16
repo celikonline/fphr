@@ -36,7 +36,7 @@ public enum AttendanceAnomaly
     UnplannedWork = 1 << 8,
 }
 
-/// <summary>How an anomaly was handled (11.3.6 "Çözüm etkisi"); resolution actions themselves land in package A3.</summary>
+/// <summary>How an anomaly was handled (11.3.6 "Çözüm etkisi"); resolution actions land in package A3.</summary>
 public enum AttendanceResolutionState
 {
     Unresolved = 0,
@@ -50,4 +50,54 @@ public enum AttendanceDaySource
     Manual = 0,
     Import = 1,
     Device = 2,
+}
+
+/// <summary>
+/// Öneri butonları (11.3.6 "Öneri kuralı"): "Fazla mesai ekle" (AddOvertime), "Çalışılan saat" (SetWorkedHours),
+/// "İzin talebi" (CreateLeaveRequest) and the escape hatch to dismiss a flagged day without either (Ignore).
+/// </summary>
+public enum AnomalyResolutionAction
+{
+    AddOvertime = 0,
+    SetWorkedHours = 1,
+    CreateLeaveRequest = 2,
+    Ignore = 3,
+}
+
+/// <summary>
+/// Anomaly → allowed action set (11.3.6: "Fazla çalışma → yalnız Fazla mesai ekle aktif... Az çalışma → Çalışılan
+/// saat veya İzin talebi"). Ignore is always offered as a manual override; missing/unplanned-data anomalies with
+/// neither Overwork nor Underwork only allow a manual correction (Çalışılan saat).
+/// </summary>
+public static class AnomalyResolutionAdvisor
+{
+    public static IReadOnlySet<AnomalyResolutionAction> AllowedActions(AttendanceAnomaly anomalies)
+    {
+        if (anomalies == AttendanceAnomaly.None)
+        {
+            return new HashSet<AnomalyResolutionAction>();
+        }
+
+        var actions = new HashSet<AnomalyResolutionAction> { AnomalyResolutionAction.Ignore };
+
+        if ((anomalies & (AttendanceAnomaly.Overwork | AttendanceAnomaly.LateLeave)) != 0)
+        {
+            actions.Add(AnomalyResolutionAction.AddOvertime);
+        }
+
+        if ((anomalies & AttendanceAnomaly.Underwork) != 0)
+        {
+            actions.Add(AnomalyResolutionAction.SetWorkedHours);
+            actions.Add(AnomalyResolutionAction.CreateLeaveRequest);
+        }
+
+        if ((anomalies & (AttendanceAnomaly.NoData | AttendanceAnomaly.MissingCheckIn | AttendanceAnomaly.MissingCheckOut | AttendanceAnomaly.UnplannedWork)) != 0)
+        {
+            actions.Add(AnomalyResolutionAction.SetWorkedHours);
+        }
+
+        return actions;
+    }
+
+    public static bool IsAllowed(AttendanceAnomaly anomalies, AnomalyResolutionAction action) => AllowedActions(anomalies).Contains(action);
 }

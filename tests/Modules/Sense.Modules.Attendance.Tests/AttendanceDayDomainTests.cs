@@ -127,4 +127,101 @@ public sealed class AttendanceDayDomainTests
         day.Anomalies.ShouldBe(AttendanceAnomaly.None);
         day.Source.ShouldBe(AttendanceDaySource.Import);
     }
+
+    [Fact]
+    public void ResolveWithOverride_UnderworkDay_SetsOverrideAndResolves()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(16, 0));
+
+        var result = day.ResolveWithOverride(PlannedMinutes, "Elle düzeltildi");
+
+        result.IsSuccess.ShouldBeTrue();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Resolved);
+        day.OverrideWorkedMinutes.ShouldBe(PlannedMinutes);
+        day.OverrideReason.ShouldBe("Elle düzeltildi");
+    }
+
+    [Fact]
+    public void ResolveWithOverride_NegativeMinutes_Fails()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(16, 0));
+
+        var result = day.ResolveWithOverride(-1, null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(Sense.Modules.Attendance.Domain.AttendanceDomainErrors.OverrideMinutesInvalid);
+    }
+
+    [Fact]
+    public void ResolveWithOverride_DayWithNoAnomalies_Fails()
+    {
+        var day = RecordWorkingDay(PlannedStart, PlannedEnd);
+
+        var result = day.ResolveWithOverride(PlannedMinutes, null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(Sense.Modules.Attendance.Domain.AttendanceDomainErrors.NoAnomalyToResolve);
+    }
+
+    [Fact]
+    public void ResolveWithOverride_AlreadyResolvedDay_Fails()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(16, 0));
+        day.ResolveWithOverride(PlannedMinutes, null);
+
+        var result = day.ResolveWithOverride(PlannedMinutes, null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(Sense.Modules.Attendance.Domain.AttendanceDomainErrors.DayAlreadyResolved);
+    }
+
+    [Fact]
+    public void MarkResolvedByLinkedEntity_FlaggedDay_Resolves()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(19, 0));
+
+        var result = day.MarkResolvedByLinkedEntity();
+
+        result.IsSuccess.ShouldBeTrue();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Resolved);
+        day.OverrideWorkedMinutes.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Ignore_FlaggedDay_SetsIgnoredState()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(19, 0));
+
+        var result = day.Ignore();
+
+        result.IsSuccess.ShouldBeTrue();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Ignored);
+    }
+
+    [Fact]
+    public void UpdateRecord_AfterResolution_ClearsOverride()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(16, 0));
+        day.ResolveWithOverride(PlannedMinutes, "Elle düzeltildi");
+
+        day.UpdateRecord(PlannedStart, PlannedEnd, PlannedStart, PlannedEnd, PlannedMinutes, 0, AttendanceDaySource.Import);
+
+        day.OverrideWorkedMinutes.ShouldBeNull();
+        day.OverrideReason.ShouldBeNull();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Resolved);
+    }
+
+    [Theory]
+    [InlineData(AttendanceAnomaly.Overwork, AnomalyResolutionAction.AddOvertime, true)]
+    [InlineData(AttendanceAnomaly.LateLeave, AnomalyResolutionAction.AddOvertime, true)]
+    [InlineData(AttendanceAnomaly.Underwork, AnomalyResolutionAction.SetWorkedHours, true)]
+    [InlineData(AttendanceAnomaly.Underwork, AnomalyResolutionAction.CreateLeaveRequest, true)]
+    [InlineData(AttendanceAnomaly.Underwork, AnomalyResolutionAction.AddOvertime, false)]
+    [InlineData(AttendanceAnomaly.Overwork, AnomalyResolutionAction.CreateLeaveRequest, false)]
+    [InlineData(AttendanceAnomaly.NoData, AnomalyResolutionAction.SetWorkedHours, true)]
+    [InlineData(AttendanceAnomaly.NoData, AnomalyResolutionAction.AddOvertime, false)]
+    [InlineData(AttendanceAnomaly.LateArrival, AnomalyResolutionAction.Ignore, true)]
+    [InlineData(AttendanceAnomaly.None, AnomalyResolutionAction.Ignore, false)]
+    public void AnomalyResolutionAdvisor_AllowsExpectedActions(AttendanceAnomaly anomaly, AnomalyResolutionAction action, bool expected) =>
+        AnomalyResolutionAdvisor.IsAllowed(anomaly, action).ShouldBe(expected);
 }
