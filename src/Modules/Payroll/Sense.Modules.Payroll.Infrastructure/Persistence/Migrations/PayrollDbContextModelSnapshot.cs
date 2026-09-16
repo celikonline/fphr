@@ -165,6 +165,137 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.ToTable("payslip_calculation_traces", "payroll");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Payslips.PayslipDirtyFlag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("ClearedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cleared_at");
+
+                    b.Property<Guid?>("ClearedByRunId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("cleared_by_run_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("detected_at");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("PayrollPeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payroll_period_id");
+
+                    b.Property<string>("Reasons")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("reasons");
+
+                    b.Property<Guid?>("SourceEventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_event_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payslip_dirty_flags");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_payslip_dirty_flags_tenant_id");
+
+                    b.HasIndex("TenantId", "PayrollPeriodId", "EmployeeId", "ClearedAt")
+                        .HasDatabaseName("ix_payslip_dirty_flags_tenant_id_payroll_period_id_employee_id");
+
+                    b.ToTable("payslip_dirty_flags", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Periods.ChangeDetectionRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int>("DirtyCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("dirty_count");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("PeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("period_id");
+
+                    b.Property<int>("ScannedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("scanned_count");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("trigger");
+
+                    b.HasKey("Id")
+                        .HasName("pk_change_detection_runs");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_change_detection_runs_tenant_id");
+
+                    b.HasIndex("TenantId", "PeriodId", "StartedAt")
+                        .HasDatabaseName("ix_change_detection_runs_tenant_id_period_id_started_at");
+
+                    b.ToTable("change_detection_runs", "payroll");
+                });
+
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.Periods.PayrollPeriod", b =>
                 {
                     b.Property<Guid>("Id")

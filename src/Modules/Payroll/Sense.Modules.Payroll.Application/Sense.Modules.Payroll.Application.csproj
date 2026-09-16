@@ -6,6 +6,11 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Payroll.Domain/Sense.Modules.Payroll.Domain.csproj" />
     <ProjectReference Include="../Sense.Modules.Payroll.Contracts/Sense.Modules.Payroll.Contracts.csproj" />
+    <!-- Cross-module read contracts only, per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <!-- P3 "Değişti" mechanism: consumes Leave.Contracts.Events.LeaveCancelled (the only Leave.Leave* event that exists today). -->
+    <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

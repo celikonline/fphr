@@ -104,5 +104,8 @@ public sealed class EmployeeModule : IModule
 
         // Cross-module contract consumed by Analytics (workforce KPIs)
         services.AddScoped<IEmployeeAnalyticsQueries, EmployeeAnalyticsQueries>();
+
+        // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
+        services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();
     }
 }

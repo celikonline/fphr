@@ -28,6 +28,12 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
             .Select(e => e.Id)
             .ToListAsync(ct);
     }
+
+    public async Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsAsync(Guid tenantId, CancellationToken ct = default) =>
+        await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.Status == EmployeeStatus.Active)
+            .Select(e => e.Id)
+            .ToListAsync(ct);
 }
 
 /// <summary>Implements Employee.Contracts.IEmployeeContactLookup (EmployeeDbContext only).</summary>

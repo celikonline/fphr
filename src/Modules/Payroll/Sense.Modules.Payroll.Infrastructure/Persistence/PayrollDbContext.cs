@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
@@ -25,6 +27,10 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
     public DbSet<PayslipCalculationTrace> CalculationTraces => Set<PayslipCalculationTrace>();
 
     public DbSet<EmployeePayrollProfile> EmployeePayrollProfiles => Set<EmployeePayrollProfile>();
+
+    public DbSet<PayslipDirtyFlag> DirtyFlags => Set<PayslipDirtyFlag>();
+
+    public DbSet<ChangeDetectionRun> ChangeDetectionRuns => Set<ChangeDetectionRun>();
 }
 
 internal static class PayrollTables
@@ -33,8 +39,11 @@ internal static class PayrollTables
     public const string Payslips = "payslips";
     public const string CalculationTraces = "payslip_calculation_traces";
     public const string EmployeePayrollProfiles = "employee_payroll_profiles";
+    public const string DirtyFlags = "payslip_dirty_flags";
+    public const string ChangeDetectionRuns = "change_detection_runs";
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
+    public const int ReasonCodeLength = 40;
 }
 
 public sealed class PayrollPeriodConfiguration : IEntityTypeConfiguration<PayrollPeriod>
@@ -93,5 +102,47 @@ public sealed class EmployeePayrollProfileConfiguration : IEntityTypeConfigurati
         b.Property(x => x.Notes).HasMaxLength(PayrollLimits.NotesMaxLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFrom });
         b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class PayslipDirtyFlagConfiguration : IEntityTypeConfiguration<PayslipDirtyFlag>
+{
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private static readonly ValueComparer<IReadOnlyList<string>> ReasonsComparer = new(
+        (a, b) => (a ?? Array.Empty<string>()).SequenceEqual(b ?? Array.Empty<string>()),
+        v => v.Aggregate(0, (hash, s) => HashCode.Combine(hash, s)),
+        v => v.ToList());
+
+    public void Configure(EntityTypeBuilder<PayslipDirtyFlag> b)
+    {
+        b.ToTable(PayrollTables.DirtyFlags);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Reasons)
+            .HasConversion(
+                v => JsonSerializer.Serialize(v, JsonOptions),
+                v => JsonSerializer.Deserialize<List<string>>(v, JsonOptions) ?? new List<string>())
+            .Metadata.SetValueComparer(ReasonsComparer);
+        b.Property(x => x.Reasons).HasColumnName("reasons").HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
+
+        // Partial-unique-index style constraint (one active flag per period/employee) is enforced in the Application
+        // layer (PayslipDirtyFlagService merges into the existing active flag) rather than a filtered DB index, to
+        // keep multiple cleared (historical) flags per (period, employee) - EF Core has no portable filtered-index API.
+        b.HasIndex(x => new { x.TenantId, x.PayrollPeriodId, x.EmployeeId, x.ClearedAt });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class ChangeDetectionRunConfiguration : IEntityTypeConfiguration<ChangeDetectionRun>
+{
+    public void Configure(EntityTypeBuilder<ChangeDetectionRun> b)
+    {
+        b.ToTable(PayrollTables.ChangeDetectionRuns);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Trigger).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.HasIndex(x => new { x.TenantId, x.PeriodId, x.StartedAt });
     }
 }

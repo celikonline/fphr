@@ -35,6 +35,11 @@ public interface IEmployeeDirectory
 
     /// <summary>Active (not Inactive) employees assigned directly to one of the given units (callers expand subtrees themselves).</summary>
     Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken ct = default);
+
+    /// <summary>Every <c>EmployeeStatus.Active</c> employee id for the tenant, no org-unit/permission-scope filtering
+    /// (system-level enumeration for the Payroll period run, 11.3.07 P3 - Draft/Suspended/Terminated employees are
+    /// excluded, unlike <see cref="ListActiveEmployeeIdsInOrgUnitsAsync"/>'s broader "not Terminated").</summary>
+    Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsAsync(Guid tenantId, CancellationToken ct = default);
 }
 
 /// <summary>

@@ -13,9 +13,11 @@ using Sense.Shared.Infrastructure.DependencyInjection;
 namespace Sense.Modules.Payroll.Api;
 
 /// <summary>
-/// Payroll module composition root (Faz 3 P0-P2): calculation engine, payroll periods/payslips and the
-/// EmployeePayrollProfile CRUD handlers - no API endpoints yet (screens are P8), so this registers
-/// DbContext + repositories + permissions for other modules/tests to call the handlers directly.
+/// Payroll module composition root (Faz 3 P0-P3): calculation engine, payroll periods/payslips, the
+/// EmployeePayrollProfile CRUD handlers, EmployeePayrollProfilesController (P2), and (P3) PayrollPeriodsController
+/// (open/run/recalculate-dirty/dirty-flags) - profile and period management are API-only, the web screens themselves
+/// are still P8. RecalculateAllPayslipsHandler depends on Employee's IEmployeeDirectory/IEmployeeSalaryLookup, which
+/// this host (Sense.Api) gets from EmployeeModule.AddModule being registered alongside this one (ModuleCatalog).
 /// </summary>
 public sealed class PayrollModule : IModule
 {

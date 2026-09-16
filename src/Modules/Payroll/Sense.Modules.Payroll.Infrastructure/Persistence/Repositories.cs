@@ -15,6 +15,15 @@ public sealed class PayrollPeriodRepository(PayrollDbContext context) : IPayroll
 
     public async Task<PayrollPeriod?> FindByYearMonthAsync(int year, int month, CancellationToken cancellationToken = default) =>
         await context.Periods.FirstOrDefaultAsync(p => p.Year == year && p.Month == month, cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollPeriod>> ListOpenAsync(CancellationToken cancellationToken = default) =>
+        await context.Periods.Where(p => p.Status == PayrollPeriodStatus.Open).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollPeriod>> ListOpenCoveringOrAfterAsync(DateOnly effectiveFrom, CancellationToken cancellationToken = default) =>
+        await context.Periods
+            .Where(p => p.Status == PayrollPeriodStatus.Open
+                && (p.Year > effectiveFrom.Year || (p.Year == effectiveFrom.Year && p.Month >= effectiveFrom.Month)))
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class PayslipRepository(PayrollDbContext context) : IPayslipRepository
@@ -26,6 +35,26 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
 
     public async Task<Payslip?> FindByEmployeeAndPeriodAsync(Guid employeeId, Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PayrollPeriodId == payrollPeriodId, cancellationToken);
+
+    public async Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
+        await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
+}
+
+public sealed class PayslipDirtyFlagRepository(PayrollDbContext context) : IPayslipDirtyFlagRepository
+{
+    public void Add(PayslipDirtyFlag flag) => context.DirtyFlags.Add(flag);
+
+    public async Task<PayslipDirtyFlag?> FindActiveAsync(Guid payrollPeriodId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.DirtyFlags.FirstOrDefaultAsync(
+            f => f.PayrollPeriodId == payrollPeriodId && f.EmployeeId == employeeId && f.ClearedAt == null, cancellationToken);
+
+    public async Task<IReadOnlyList<PayslipDirtyFlag>> ListActiveByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
+        await context.DirtyFlags.Where(f => f.PayrollPeriodId == payrollPeriodId && f.ClearedAt == null).ToListAsync(cancellationToken);
+}
+
+public sealed class ChangeDetectionRunRepository(PayrollDbContext context) : IChangeDetectionRunRepository
+{
+    public void Add(ChangeDetectionRun run) => context.ChangeDetectionRuns.Add(run);
 }
 
 public sealed class PayslipCalculationTraceRepository(PayrollDbContext context) : IPayslipCalculationTraceRepository

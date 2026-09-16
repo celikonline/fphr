@@ -6,6 +6,9 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string PeriodAlreadyOpen = "payroll.errors.period_already_open";
+    public const string PeriodNotApproved = "payroll.errors.period_not_approved";
+    public const string PeriodNotPaid = "payroll.errors.period_not_paid";
     public const string PayslipNotFound = "payroll.payslip.not_found";
     public const string GrossAmountInvalid = "payroll.errors.gross_amount_invalid";
     public const string WorkedDaysInvalid = "payroll.errors.worked_days_invalid";

@@ -1,6 +1,8 @@
 using FluentValidation;
+using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Profiles;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -74,7 +76,9 @@ public sealed class CreateEmployeePayrollProfileValidator : AbstractValidator<Cr
     public CreateEmployeePayrollProfileValidator() => RuleFor(x => x.EmployeeId).NotEmpty();
 }
 
-public sealed class CreateEmployeePayrollProfileHandler(ITenantContext tenant, IEmployeePayrollProfileRepository profiles)
+/// <summary>A profile create/update flags the employee dirty in every Open period covering (or after) the profile's
+/// ValidFrom (11.3.07 akış §1 "değişiklik yeni sürüm → açık dönem bayraklanır"), via <see cref="PayslipDirtyFlagService"/>.</summary>
+public sealed class CreateEmployeePayrollProfileHandler(ITenantContext tenant, IEmployeePayrollProfileRepository profiles, PayslipDirtyFlagService flagging)
     : ICommandHandler<CreateEmployeePayrollProfileCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateEmployeePayrollProfileCommand command, CancellationToken cancellationToken)
@@ -92,6 +96,7 @@ public sealed class CreateEmployeePayrollProfileHandler(ITenantContext tenant, I
         }
 
         profiles.Add(created.Value);
+        await flagging.FlagAsync(tenant.TenantId, command.EmployeeId, command.Data.ValidFrom, PayslipDirtyFlagReasons.ProfileChanged, sourceEventId: null, cancellationToken);
         return created.Value.Id;
     }
 }
@@ -99,7 +104,8 @@ public sealed class CreateEmployeePayrollProfileHandler(ITenantContext tenant, I
 [RequiresPermission("payroll.profile.manage")]
 public sealed record UpdateEmployeePayrollProfileCommand(Guid ProfileId, EmployeePayrollProfileData Data) : ICommand;
 
-public sealed class UpdateEmployeePayrollProfileHandler(IEmployeePayrollProfileRepository profiles) : ICommandHandler<UpdateEmployeePayrollProfileCommand>
+public sealed class UpdateEmployeePayrollProfileHandler(ITenantContext tenant, IEmployeePayrollProfileRepository profiles, PayslipDirtyFlagService flagging)
+    : ICommandHandler<UpdateEmployeePayrollProfileCommand>
 {
     public async Task<Result> Handle(UpdateEmployeePayrollProfileCommand command, CancellationToken cancellationToken)
     {
@@ -114,7 +120,18 @@ public sealed class UpdateEmployeePayrollProfileHandler(IEmployeePayrollProfileR
             return Error.Conflict(PayrollDomainErrors.ProfileOverlap);
         }
 
-        return profile.Update(command.Data);
+        var updated = profile.Update(command.Data);
+        if (updated.IsFailure)
+        {
+            return updated.Error;
+        }
+
+        if (updated.Value)
+        {
+            await flagging.FlagAsync(tenant.TenantId, profile.EmployeeId, command.Data.ValidFrom, PayslipDirtyFlagReasons.ProfileChanged, sourceEventId: null, cancellationToken);
+        }
+
+        return Result.Success();
     }
 }
 

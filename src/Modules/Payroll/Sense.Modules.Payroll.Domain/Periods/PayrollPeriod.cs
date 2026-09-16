@@ -38,4 +38,43 @@ public sealed class PayrollPeriod : TenantAggregateRoot<Guid>
 
         return new PayrollPeriod(Guid.NewGuid(), tenantId, year, month);
     }
+
+    /// <summary>
+    /// Minimal forward-only status transitions (Open → Approved → Paid → Locked, akış §4/§5 "Yayın ve tebliğ"/"Kilit
+    /// ve çıktı") - just enough to make "Approved+ dönemde yeniden hesap reddedilir" (P3 §4) testable and to give P4+
+    /// a real Status to build the Submit/MarkPaid/Lock workflow (approval gate, Workflow integration, permissions) on
+    /// top of, rather than adding a full lifecycle here. No business rule is enforced beyond monotonic order.
+    /// </summary>
+    public Result Approve()
+    {
+        if (Status != PayrollPeriodStatus.Open)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
+        }
+
+        Status = PayrollPeriodStatus.Approved;
+        return Result.Success();
+    }
+
+    public Result MarkPaid()
+    {
+        if (Status != PayrollPeriodStatus.Approved)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodNotApproved);
+        }
+
+        Status = PayrollPeriodStatus.Paid;
+        return Result.Success();
+    }
+
+    public Result Lock()
+    {
+        if (Status != PayrollPeriodStatus.Paid)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodNotPaid);
+        }
+
+        Status = PayrollPeriodStatus.Locked;
+        return Result.Success();
+    }
 }
