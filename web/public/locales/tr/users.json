@@ -26,6 +26,20 @@
   "dialogEditRolesTitle": "{{name}} için rolleri düzenle",
   "rolesUpdateSuccess": "Kullanıcı rolleri güncellendi.",
   "statusUpdateSuccess": "Kullanıcı durumu güncellendi.",
+  "deactivateConfirmTitle": "Kullanıcıyı devre dışı bırak",
+  "deactivateConfirmMessage": "{{name}} devre dışı bırakılacak ve sisteme giriş yapamayacak. Devam etmek istiyor musunuz?",
+  "activateConfirmTitle": "Kullanıcıyı etkinleştir",
+  "activateConfirmMessage": "{{name}} yeniden etkinleştirilecek. Devam etmek istiyor musunuz?",
+  "mfaReset": {
+    "action": "MFA sıfırla",
+    "confirmTitle": "İki adımlı doğrulamayı sıfırla",
+    "confirmMessage": "{{name}} için iki adımlı doğrulama kaydı silinecek; kullanıcı bir sonraki girişte doğrulama uygulamasını yeniden kurmak zorunda kalacak. Devam etmek istiyor musunuz?",
+    "success": "İki adımlı doğrulama sıfırlandı.",
+    "errors": {
+      "selfForbidden": "Kendi hesabınızın MFA'sını buradan sıfırlayamazsınız; bunun için hesap ayarlarınızdaki güvenlik bölümünü kullanın.",
+      "generic": "MFA sıfırlanamadı. Lütfen tekrar deneyin."
+    }
+  },
   "accessType": "Erişim türü",
   "editAccessType": "Erişim türünü değiştir",
   "dialogEditAccessTypeTitle": "{{name}} için erişim türü",

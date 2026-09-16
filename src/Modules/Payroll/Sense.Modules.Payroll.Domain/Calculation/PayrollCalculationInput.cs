@@ -15,6 +15,13 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// <param name="MealDailyAmount">Meal benefit paid per worked day; ignored (treated as 0) unless <paramref name="MealVariant"/> requires one (Cash/MealCardOnly/MealAndMarketCard).</param>
 /// <param name="PriorCumulativeGvBase">Sum of GV_BASE from earlier months in the same calendar year (0 for a first-month/single-month case).</param>
 /// <param name="AsOfDate">Reference date for resolving which LegislationParameter row applies (ADR 0008); normally the period's month.</param>
+/// <param name="ExpenseReimbursement">
+/// TB-7 Expense köprüsü (faz-07 tur 1 madde 3, S-13 <c>IApprovedExpensePayoutReader</c>): sum of the employee's
+/// Approved-and-not-yet-paid <c>ExpenseClaim</c> totals for this period's month. Tax-free by definition (an expense
+/// reimbursement, not pay) - it is added straight to NET and never touches SGK_BASE/GV_BASE/INCOME_TAX/STAMP_TAX,
+/// unlike the meal benefit's SGK/GV-excess handling. Defaults to 0 so existing callers/golden-set tests are
+/// unaffected until a caller wires <c>IExpensePayoutReader</c>.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -22,4 +29,5 @@ public sealed record PayrollCalculationInput(
     MealBenefitVariant MealVariant,
     decimal MealDailyAmount,
     decimal PriorCumulativeGvBase,
-    DateOnly AsOfDate);
+    DateOnly AsOfDate,
+    decimal ExpenseReimbursement = 0m);

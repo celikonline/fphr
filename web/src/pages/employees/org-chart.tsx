@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -150,6 +150,12 @@ export default function OrgChartPage() {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [zoomIndex, setZoomIndex] = useState(ZOOM_STEPS.indexOf(1));
   const treeRef = useRef<HTMLUListElement>(null);
+  /** Node DOM ref by id, so a search match can be scrolled into the scrollable chart area. */
+  const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const registerNode = (id: string, el: HTMLDivElement | null) => {
+    if (el) nodeRefs.current.set(id, el);
+    else nodeRefs.current.delete(id);
+  };
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["employees", "org-chart"],
@@ -175,6 +181,14 @@ export default function OrgChartPage() {
 
   const needle = normalize(search.trim());
   const found = useMemo(() => (needle ? searchTree(roots, needle) : null), [roots, needle]);
+
+  // A fresh search re-opens the matching branch (via forcedOpen) and scrolls the first match into view.
+  useEffect(() => {
+    if (!found || found.matches.size === 0) return;
+    const [firstMatchId] = found.matches;
+    const el = firstMatchId ? nodeRefs.current.get(firstMatchId) : undefined;
+    el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  }, [found]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -213,6 +227,7 @@ export default function OrgChartPage() {
       matches={found?.matches}
       onToggle={toggle}
       canOpenCard={canReadEmployees}
+      registerNode={registerNode}
     />
   ));
 
@@ -369,6 +384,7 @@ interface OrgChartItemProps {
   matches?: ReadonlySet<string>;
   onToggle: (id: string) => void;
   canOpenCard: boolean;
+  registerNode: (id: string, el: HTMLDivElement | null) => void;
 }
 
 function OrgChartItem({
@@ -378,6 +394,7 @@ function OrgChartItem({
   matches,
   onToggle,
   canOpenCard,
+  registerNode,
 }: OrgChartItemProps) {
   const { t } = useTranslation(["employees"]);
   const hasChildren = node.children.length > 0;
@@ -393,6 +410,7 @@ function OrgChartItem({
       aria-label={node.displayName}
     >
       <div
+        ref={(el) => registerNode(node.id, el)}
         className={classes.node}
         data-match={isMatch || undefined}
         data-dimmed={(matches !== undefined && !isMatch) || undefined}
@@ -449,6 +467,7 @@ function OrgChartItem({
               matches={matches}
               onToggle={onToggle}
               canOpenCard={canOpenCard}
+              registerNode={registerNode}
             />
           ))}
         </ul>

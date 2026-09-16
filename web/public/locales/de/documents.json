@@ -70,6 +70,10 @@
       "uploadFailed": "[DE] The document could not be uploaded."
     }
   },
+  "expiry": {
+    "expiredBadge": "[DE] Expired: {{date}}",
+    "expiringBadge": "[DE] Expiring: {{date}}"
+  },
   "report": {
     "title": "[DE] Missing document report",
     "subtitle": "[DE] View missing, uploaded and waived personnel documents across the tenant.",

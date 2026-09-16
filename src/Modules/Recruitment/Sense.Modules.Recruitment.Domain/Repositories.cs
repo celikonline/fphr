@@ -28,6 +28,12 @@ public interface IJobPostingRepository
 
     /// <summary>Other Open postings of the same tenant (R3 "diğer açık pozisyonlar"), excluding one posting id.</summary>
     Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Public career site's posting list for one tenant (S-10, Faz 9 gün açılışı TALIMAT'ı): Open status AND not
+    /// past its <see cref="JobPosting.ClosingDate"/> (null = no closing date, never expires on its own).
+    /// </summary>
+    Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Candidate aggregate repository.</summary>

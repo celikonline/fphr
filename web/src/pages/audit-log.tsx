@@ -2,14 +2,31 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
+import { useMediaQuery } from "@mantine/hooks";
 import { Download, ScrollText } from "lucide-react";
-import { Badge, Button, Card, Group, Input, Select, Text, TextInput, Title, type BadgeProps } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Input,
+  Select,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+  type BadgeProps,
+} from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FilterBar } from "@/components/ui/filter-bar";
 import PaginationFooter from "@/components/pagination-footer";
+import NoAccess from "@/components/no-access";
+import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import {
   exportAuditEventsCsv,
   listAuditActionTypes,
@@ -35,6 +52,9 @@ const ACTION_BADGE: Record<AuditActionType, Pick<BadgeProps, "variant" | "color"
 
 export default function AuditLogPage() {
   const { t, i18n } = useTranslation(["audit", "common"]);
+  const canViewSensitive = usePermission("identity.audit.sensitive_view");
+  // Narrow phones (Faz 1 tur 1 FE md.3): a card list reads better than a horizontally-scrolled table.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -76,7 +96,7 @@ export default function AuditLogPage() {
     to: to ? new Date(`${to}T23:59:59.999`).toISOString() : undefined,
   };
 
-  const { data, isLoading, isFetching } = useQuery({
+  const { data, isLoading, isFetching, error } = useQuery({
     queryKey: ["audit-events", page, pageSize, sortParam, debouncedSearch, activeFilters],
     queryFn: () =>
       listAuditEvents({
@@ -87,6 +107,8 @@ export default function AuditLogPage() {
         ...activeFilters,
       }),
     placeholderData: (previous) => previous,
+    // 403 (missing `identity.audit.view`) is expected for some roles - don't retry it, show <NoAccess>.
+    retry: (count, err) => getApiErrorStatus(err) !== 403 && count < 1,
   });
 
   const actionTypes = listAuditActionTypes();
@@ -181,11 +203,7 @@ export default function AuditLogPage() {
       enableSorting: false,
       header: t("audit:details"),
       meta: { label: t("audit:details"), cellClassName: "max-w-md" },
-      cell: ({ row }) => (
-        <Text size="sm" c="dimmed" truncate="end" title={row.original.details}>
-          {row.original.details}
-        </Text>
-      ),
+      cell: ({ row }) => <AuditDetailsCell event={row.original} canViewSensitive={canViewSensitive} t={t} />,
     },
   ];
 
@@ -197,6 +215,8 @@ export default function AuditLogPage() {
     onSortingChange: changeSorting,
     columnVisibilityKey: COLUMN_VISIBILITY_KEY,
   });
+
+  if (getApiErrorStatus(error) === 403) return <NoAccess />;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
@@ -252,10 +272,97 @@ export default function AuditLogPage() {
         </Input.Wrapper>
       </FilterBar>
 
-      <Card withBorder padding={0}>
-        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />
-        {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
-      </Card>
+      {isMobile ? (
+        <AuditLogMobileList
+          items={data?.items ?? []}
+          isLoading={isLoading}
+          canViewSensitive={canViewSensitive}
+          formatTimestamp={formatTimestamp}
+        />
+      ) : (
+        <Card withBorder padding={0}>
+          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("audit:empty")} />
+        </Card>
+      )}
+      {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
     </div>
+  );
+}
+
+/** Details cell: masked placeholder + "no permission" tooltip when the caller lacks `identity.audit.sensitive_view`. */
+function AuditDetailsCell({
+  event,
+  canViewSensitive,
+  t,
+}: {
+  event: AuditEvent;
+  canViewSensitive: boolean;
+  t: (key: string) => string;
+}) {
+  if (!canViewSensitive) {
+    return (
+      <Tooltip label={t("audit:sensitiveHidden")}>
+        <Text size="sm" c="dimmed" truncate="end">
+          {t("audit:sensitiveMasked")}
+        </Text>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Text size="sm" c="dimmed" truncate="end" title={event.details}>
+      {event.details}
+    </Text>
+  );
+}
+
+/** ≤390px card list mirroring the desktop table's columns (Faz 1 tur 1 FE md.3). */
+function AuditLogMobileList({
+  items,
+  isLoading,
+  canViewSensitive,
+  formatTimestamp,
+}: {
+  items: AuditEvent[];
+  isLoading: boolean;
+  canViewSensitive: boolean;
+  formatTimestamp: (value: string) => string;
+}) {
+  const { t } = useTranslation(["audit", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (items.length === 0) {
+    return (
+      <Card withBorder padding="lg">
+        <Text size="sm" c="dimmed" ta="center">
+          {t("audit:empty")}
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {items.map((event) => (
+        <Card key={event.id} withBorder padding="md">
+          <Stack gap={4}>
+            <Group justify="space-between" align="center" wrap="wrap">
+              <Text size="xs" c="dimmed">
+                {formatTimestamp(event.occurredAt)}
+              </Text>
+              <Badge {...ACTION_BADGE[event.action]}>{t(`audit:actionTypes.${event.action}`)}</Badge>
+            </Group>
+            <Text size="sm" fw={500}>
+              {event.actor}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {event.resource}
+            </Text>
+            <AuditDetailsCell event={event} canViewSensitive={canViewSensitive} t={t} />
+          </Stack>
+        </Card>
+      ))}
+    </Stack>
   );
 }

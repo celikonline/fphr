@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
@@ -8,6 +8,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Briefcase, CheckCircle2, Clock } from "lucide-react";
 import {
   Alert,
+  Anchor,
   Badge,
   Button,
   Card,
@@ -17,6 +18,7 @@ import {
   Divider,
   Group,
   Loader,
+  Modal,
   Stack,
   Text,
   TextInput,
@@ -99,6 +101,35 @@ function RelatedPostings({ items }: { items: PublicJobPostingSummary[] }) {
   );
 }
 
+/**
+ * TALIMAT tur 1 FE madde 2: KVKK onay kutusunun yanında aydınlatma metnini gösteren modal.
+ * Metin `recruitment:career.privacyNotice.body` anahtarından, versiyon `recruitment:career.privacyNoticeVersion`'dan.
+ */
+function PrivacyNoticeLink() {
+  const { t } = useTranslation(["recruitment"]);
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <Anchor component="button" type="button" size="sm" onClick={() => setOpened(true)}>
+        {t("recruitment:career.privacyNotice.readLink")}
+      </Anchor>
+      <Modal opened={opened} onClose={() => setOpened(false)} title={t("recruitment:career.privacyNotice.title")}>
+        <Stack gap="sm">
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {t("recruitment:career.privacyNotice.body")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t("recruitment:career.privacyNoticeVersion")}
+          </Text>
+          <Button variant="default" onClick={() => setOpened(false)}>
+            {t("recruitment:career.privacyNotice.close")}
+          </Button>
+        </Stack>
+      </Modal>
+    </>
+  );
+}
+
 function SuccessCard() {
   const { t } = useTranslation(["recruitment"]);
   return (
@@ -117,6 +148,7 @@ function SuccessCard() {
 function ApplicationForm({ applySlug }: { applySlug: string }) {
   const { t } = useTranslation(["recruitment", "common"]);
   const [alreadyApplied, setAlreadyApplied] = useState(false);
+  const [privacyNoticeOutdated, setPrivacyNoticeOutdated] = useState(false);
   const {
     register,
     handleSubmit,
@@ -139,8 +171,11 @@ function ApplicationForm({ applySlug }: { applySlug: string }) {
         kvkkAccepted: values.consent,
       }),
     onError: (err) => {
-      if (getApiProblem(err)?.code === "recruitment.application.already_exists") {
+      const code = getApiProblem(err)?.code;
+      if (code === "recruitment.application.already_exists") {
         setAlreadyApplied(true);
+      } else if (code === "recruitment.application.privacy_notice_outdated") {
+        setPrivacyNoticeOutdated(true);
       }
     },
   });
@@ -158,7 +193,12 @@ function ApplicationForm({ applySlug }: { applySlug: string }) {
               {t("recruitment:career.alreadyApplied")}
             </Alert>
           )}
-          {mutation.isError && !alreadyApplied && (
+          {privacyNoticeOutdated && (
+            <Alert color="yellow" variant="light">
+              {t("recruitment:career.privacyNoticeOutdated")}
+            </Alert>
+          )}
+          {mutation.isError && !alreadyApplied && !privacyNoticeOutdated && (
             <Alert color="red" variant="light">
               {t("recruitment:genericError")}
             </Alert>
@@ -205,6 +245,7 @@ function ApplicationForm({ applySlug }: { applySlug: string }) {
               />
             )}
           />
+          <PrivacyNoticeLink />
 
           <Button type="submit" loading={mutation.isPending} fullWidth>
             {mutation.isPending ? t("recruitment:career.submitting") : t("recruitment:career.submit")}
@@ -230,6 +271,15 @@ export default function CareerJobPostingPage() {
     queryFn: () => listRelatedPublicJobPostings(applySlug),
     enabled: postingQuery.isSuccess,
   });
+
+  useEffect(() => {
+    if (postingQuery.data?.title) {
+      document.title = `${postingQuery.data.title} · ${t("recruitment:career.list.pageTitleSuffix")}`;
+    }
+    return () => {
+      document.title = "SenseİK - İK Platformu";
+    };
+  }, [postingQuery.data?.title, t]);
 
   if (!applySlug || postingQuery.isError) return <NotFoundCard />;
 

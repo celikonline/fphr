@@ -100,6 +100,16 @@ export async function setUserStatus(userId: string, enabled: boolean): Promise<v
 }
 
 /**
+ * Admin MFA reset (S-12, gün açılışı tur 1 sözleşmesi): clears the user's TOTP enrollment so they can set up
+ * MFA again from scratch. `identity.users.manage`-gated on this screen (same as the rest of the action menu).
+ * Errors: 409 `identity.mfa.self_reset_forbidden` (can't reset your own MFA this way — use the security card
+ * instead), 404 for a different tenant's user.
+ */
+export async function resetUserMfa(userId: string): Promise<void> {
+  await apiClient.post(`${USERS_BASE}/${userId}/mfa/reset`);
+}
+
+/**
  * Bulk-assigns one role to many users at once (Item 20 requirement). There is no dedicated bulk
  * endpoint on the backend, so this merges the role into each user's existing role set and issues
  * one `PUT .../roles` call per user - acceptable for the ~50-user demo dataset this screen targets.

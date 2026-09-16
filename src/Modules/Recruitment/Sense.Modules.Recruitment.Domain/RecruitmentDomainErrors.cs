@@ -20,6 +20,12 @@ public static class RecruitmentDomainErrors
     public const string ApplicationAlreadyTerminal = "recruitment.application.already_terminal";
     public const string ApplicationAlreadyExists = "recruitment.application.already_exists";
 
+    /// <summary>
+    /// Career-site apply body's <c>privacyNoticeVersion</c> isn't the product-wide current aydınlatma metni version
+    /// (<see cref="RecruitmentLimits.KnownPrivacyNoticeVersion"/>) - PO kararı, Faz 9 gün açılışı TALIMAT'ı.
+    /// </summary>
+    public const string ApplicationPrivacyNoticeOutdated = "recruitment.application.privacy_notice_outdated";
+
     public const string RequisitionNotFound = "recruitment.requisition.not_found";
     public const string RequisitionTitleRequired = "recruitment.requisition.title_required";
     public const string RequisitionHeadcountInvalid = "recruitment.requisition.headcount_invalid";
@@ -62,6 +68,13 @@ public static class RecruitmentLimits
 
     /// <summary>Career-site application's aydınlatma metni version tag (e.g. "2026-09"), Faz 9 tur 3 TALIMAT madde 2.</summary>
     public const int PrivacyNoticeVersionMaxLength = 20;
+
+    /// <summary>
+    /// Product-wide current aydınlatma metni version (PO kararı, Faz 9 gün açılışı TALIMAT'ı 2026-09-16: "Aydınlatma
+    /// metni versiyonu ürün genelinde '2026-09'"). A career-site apply carrying any other value fails with
+    /// <see cref="RecruitmentDomainErrors.ApplicationPrivacyNoticeOutdated"/> - the candidate saw a stale page.
+    /// </summary>
+    public const string KnownPrivacyNoticeVersion = "2026-09";
 
     /// <summary>
     /// KVKK data retention window for a candidate's personal data (Faz 9 "KVKK uyumlu aday verisi saklama ve imha").

@@ -32,6 +32,7 @@ namespace Sense.Modules.Employee.Tests;
 /// SalaryChanged / EmployeeProfileChanged("bank") events through the outbox.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class PaymentsIntegrationTests : TestFixture
 {
     private const string IbanA = PaymentsDomainTests.IbanA;

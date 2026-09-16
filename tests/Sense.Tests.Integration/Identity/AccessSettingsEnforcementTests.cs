@@ -11,6 +11,7 @@ namespace Sense.Tests.Integration.Identity;
 
 /// <summary>Faz 0 item 1: access settings restrict plain employees only; Owner/Admin/HR bypass; directory phone masking; /me effective features.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class AccessSettingsEnforcementTests : IdentityStackTestBase
 {
     [Fact]

@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ActionIcon,
+  Alert,
   Badge,
   Button,
   Card,
@@ -24,13 +25,14 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { CreditCard, Plus, Receipt, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, CreditCard, Plus, Receipt, Trash2, Wallet } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import {
   addExpenseItem,
   createAdvanceRequest,
@@ -260,6 +262,11 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
 
   const claim: ExpenseClaim | undefined = claimQuery.data;
   const canAddItem = categoryId !== "" && itemAmount !== "" && Number(itemAmount) > 0;
+  const selectedCategory = (categoriesQuery.data ?? []).find((category) => category.id === categoryId);
+  const selectedCategoryMaxAmount = selectedCategory?.maxAmount;
+  // Gönderim öncesi uyarı (TALIMAT tur 1, madde 3): kategori limiti aşılsa da fiş eklemeyi engellemez.
+  const exceedsSelectedCategoryLimit =
+    selectedCategoryMaxAmount != null && itemAmount !== "" && Number(itemAmount) > selectedCategoryMaxAmount;
 
   return (
     <Modal opened onClose={onClose} title={t("expense:claim.dialogTitle")} size="lg">
@@ -324,6 +331,11 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
                   value={itemDescription}
                   onChange={(event) => setItemDescription(event.currentTarget.value)}
                 />
+                {exceedsSelectedCategoryLimit && selectedCategoryMaxAmount != null && (
+                  <Alert color="orange" icon={<AlertTriangle className="h-4 w-4" />} py="xs">
+                    {t("expense:item.limitWarning", { limit: formatMoney(selectedCategoryMaxAmount, "TRY", i18n.language) })}
+                  </Alert>
+                )}
                 <Group justify="flex-end">
                   <Button
                     type="button"

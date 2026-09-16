@@ -34,6 +34,7 @@ namespace Sense.Modules.Employee.Tests;
 /// data scope set per test, account lookup in memory).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class EmployeeIntegrationTests : TestFixture
 {
     private readonly FakeDataScope _scope = new();

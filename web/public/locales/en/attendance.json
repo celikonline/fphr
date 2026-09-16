@@ -137,5 +137,39 @@
       "durationRequired": "Enter the duration.",
       "leaveTypeRequired": "Select a leave type."
     }
+  },
+  "deviceLogImport": {
+    "title": "Import PDKS device log",
+    "subtitle": "Upload the CSV exported from a turnstile/card/fingerprint device; check-in/check-out records are applied to the timesheet.",
+    "formatHint": "First row is the header: employeeCode;timestamp;direction;deviceId — employeeCode is the employee's national ID number; semicolon or comma separated, UTF-8.",
+    "downloadSample": "Download sample CSV",
+    "dropzoneTitle": "Drop the CSV file here, or click to choose",
+    "dropzoneHint": "Up to 5 MB",
+    "uploading": "Uploading…",
+    "fileTooLarge": "The file exceeds the 5 MB limit.",
+    "invalidType": "You can only upload a CSV file.",
+    "resultSummary": "{{imported}} record(s) imported, {{skipped}} skipped.",
+    "imported": "Imported",
+    "skipped": "Skipped",
+    "errorsHint": "Skipped rows were not applied at all; fix the reasons below and re-upload just those rows.",
+    "col": {
+      "line": "Line",
+      "reason": "Reason",
+      "value": "Value"
+    },
+    "errorCodes": {
+      "attendance": {
+        "device_log": {
+          "invalid_timestamp": "Invalid timestamp (expected ISO 8601, e.g. 2026-09-16T08:03:00).",
+          "invalid_direction": "Invalid direction; must be \"in\" or \"out\".",
+          "missing_employee_code": "National ID number is missing.",
+          "unknown_employee": "No active employee matches this national ID number.",
+          "duplicate_timestamp": "A record with the same employee and timestamp already appeared earlier in the file.",
+          "check_out_before_check_in": "Check-out time cannot be before check-in.",
+          "file_required": "No file was selected.",
+          "file_too_large": "The file exceeds the 5 MB limit."
+        }
+      }
+    }
   }
 }

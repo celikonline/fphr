@@ -217,13 +217,21 @@
     "noOtherPositions": "There are no other open positions right now.",
     "backToPosting": "Back to posting",
     "privacyNoticeVersion": "2026-09",
+    "privacyNoticeOutdated": "The privacy notice was updated, please refresh the page and try again.",
+    "privacyNotice": {
+      "readLink": "Read the privacy notice",
+      "title": "Privacy Notice for Job Applicants",
+      "body": "The first name, last name, email, phone and (if provided) CV information you share as part of this application are processed for recruitment purposes in accordance with applicable data protection law. Your data is retained securely for the legal retention period after the posting closes or the process ends unsuccessfully, and is anonymized or deleted afterwards. You may contact us to exercise your rights to access, correct, delete or object to the processing of your personal data.",
+      "close": "Close"
+    },
     "list": {
       "title": "Open Positions",
       "subtitle": "Browse our company's current open positions below.",
       "empty": "There are no open positions right now.",
       "loadError": "There was a problem loading the postings.",
       "viewPosting": "View posting and apply",
-      "locationUnspecified": "Location unspecified"
+      "locationUnspecified": "Location unspecified",
+      "pageTitleSuffix": "Careers"
     }
   },
   "genericError": "Something went wrong."

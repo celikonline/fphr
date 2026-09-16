@@ -168,6 +168,30 @@ export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | n
   return data;
 }
 
+/** Bir satırın içe alınamama nedeni (S-11); `code` `attendance.device_log.*` biçiminde, FE'de yerelleştirilir. */
+export interface DeviceLogImportError {
+  line: number;
+  code: string;
+  value?: string | null;
+}
+
+/** `DeviceLogImportResultDto` (S-11): satır bazında atlama, tüm dosya reddedilmez. */
+export interface DeviceLogImportResult {
+  imported: number;
+  skipped: number;
+  errors: DeviceLogImportError[];
+}
+
+/** PDKS cihaz kaydı CSV içe aktarımı (attendance.timesheet.import); multipart tek dosya alanı "file". */
+export async function importDeviceLogs(file: File): Promise<DeviceLogImportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await apiClient.post<DeviceLogImportResult>(`${ATTENDANCE_BASE}/device-logs/import`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+}
+
 // ---------------------------------------------------------------- Vardiya / Shifts
 
 export type ShiftAssignmentStatus = "draft" | "published";

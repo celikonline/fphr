@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,7 +43,11 @@ public sealed class IdentityModule : IModule
         services.AddOptions<FrontendOptions>().Bind(configuration.GetSection(ConfigurationSections.Frontend));
         services.AddOptions<EmailOptions>().Bind(configuration.GetSection(ConfigurationSections.Email));
 
-        services.AddModuleDbContext<IdentityDbContext>(configuration, IdentityDbContext.SchemaName);
+        // TB-2/S-1 tur 1: Identity'ye özel audit-log yazıcı - yalnız bu DbContext'e bağlanır (bkz. IdentityAuditLogInterceptor).
+        services.AddScoped<IdentityAuditLogInterceptor>();
+        services.AddModuleDbContext<IdentityDbContext>(
+            configuration, IdentityDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<IdentityAuditLogInterceptor>()));
         services.AddModuleHandlers(IdentityDbContext.SchemaName, typeof(IdentityPermissions).Assembly, typeof(IdentityDbContext).Assembly);
 
         services.AddScoped<ITenantRepository, TenantRepository>();
@@ -78,6 +83,9 @@ public sealed class IdentityModule : IModule
 
         // Cross-module read contract consumed by Notifications (alıcı e-postası/dili)
         services.AddScoped<IUserProfileLookup, UserProfileLookup>();
+
+        // Cross-module read contract consumed by Career (Faz 9): slug → tenantId, pasif kiracı için null (ADR-0007)
+        services.AddScoped<ITenantSlugLookup, TenantSlugLookup>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();

@@ -34,5 +34,8 @@
     "account": "Konto",
     "request": "Anträge",
     "approval": "Genehmigungen"
+  },
+  "types": {
+    "documentExpiryReminder": "Dokument läuft bald ab"
   }
 }

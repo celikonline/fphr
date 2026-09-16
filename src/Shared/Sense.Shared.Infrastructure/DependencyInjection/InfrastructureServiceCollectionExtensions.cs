@@ -127,7 +127,14 @@ public static class InfrastructureServiceCollectionExtensions
     }
 
     /// <summary>Modül DbContext'i: Npgsql + snake_case + interceptor; şema başına migration geçmişi.</summary>
-    public static IServiceCollection AddModuleDbContext<TContext>(this IServiceCollection services, IConfiguration configuration, string schema)
+    /// <param name="configureAdditional">
+    /// Faz 1 tur 1: modüle özel ek yapılandırma (ör. yalnız o modülün DbContext'ine bağlanan ekstra bir
+    /// SaveChangesInterceptor - bkz. IdentityModule'ün IdentityAuditLogInterceptor'ı). Additive - varsayılan null,
+    /// mevcut çağıranların hiçbiri etkilenmez. <see cref="AuditTenantInterceptor"/>'dan SONRA çalışır.
+    /// </param>
+    public static IServiceCollection AddModuleDbContext<TContext>(
+        this IServiceCollection services, IConfiguration configuration, string schema,
+        Action<IServiceProvider, DbContextOptionsBuilder>? configureAdditional = null)
         where TContext : ModuleDbContext
     {
         var connectionString = configuration.GetConnectionString(ConnectionStringNames.Database)
@@ -142,6 +149,7 @@ public static class InfrastructureServiceCollectionExtensions
             });
             options.UseSnakeCaseNamingConvention();
             options.AddInterceptors(sp.GetRequiredService<AuditTenantInterceptor>());
+            configureAdditional?.Invoke(sp, options);
         });
 
         services.AddScoped<IModuleUnitOfWork>(sp => sp.GetRequiredService<TContext>());

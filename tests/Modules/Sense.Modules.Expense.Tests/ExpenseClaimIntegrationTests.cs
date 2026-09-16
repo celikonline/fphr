@@ -18,6 +18,7 @@ namespace Sense.Modules.Expense.Tests;
 /// class of EF Added-vs-Modified pitfall documented on Workflow's ApprovalTaskConfiguration.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class ExpenseClaimIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

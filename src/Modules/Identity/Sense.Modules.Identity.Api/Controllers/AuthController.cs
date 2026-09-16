@@ -104,6 +104,11 @@ public sealed class MeController : ApiControllerBase
     [ProducesResponseType<MeDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetMeQuery(), ct));
 
+    /// <summary>Güvenlik ekranı: MFA açık mı, yarım kalmış kayıt var mı.</summary>
+    [HttpGet("mfa")]
+    [ProducesResponseType<MfaStatusDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMfaStatus(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetMfaStatusQuery(), ct));
+
     /// <summary>MFA kaydı 1. adım: secret üretilir ve şifreli yazılır, ama etkinleşmez (bkz. <see cref="EnrollMfaCommand"/>). MFA zaten açıksa 409.</summary>
     [HttpPost("mfa/enroll")]
     [ProducesResponseType<MfaEnrollmentDto>(StatusCodes.Status200OK)]
@@ -115,7 +120,7 @@ public sealed class MeController : ApiControllerBase
     public async Task<IActionResult> VerifyMfa([FromBody] MfaCodeRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new VerifyMfaEnrollmentCommand(request.Code), ct));
 
-    /// <summary>Self-servis MFA kapatma (kod ile onay). Yönetici sıfırlaması için ayrı bir uç var (Users → reset-mfa).</summary>
+    /// <summary>Self-servis MFA kapatma (kod ile onay). Yönetici sıfırlaması için ayrı bir uç var (Users → mfa/reset).</summary>
     [HttpPost("mfa/disable")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DisableMfa([FromBody] MfaCodeRequest request, CancellationToken ct) =>

@@ -46,8 +46,11 @@ public sealed class DocumentExpiryReminderJobHandlerTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NothingExpiringOrExpired_DoesNotEnqueue()
+    public async Task ExecuteAsync_OnlyDocumentsWithoutExpiryDate_DoesNotEnqueue()
     {
+        // "Süresiz" belgeler (ExpiryDate == null) repository sorgusunun WHERE koşulunda zaten elenir (bkz.
+        // ListExpiringAsync'in EF implementasyonu) - handler seviyesinde bunun karşılığı Total=0 dönmesidir, yani
+        // fake repo burada "tenant'ın tüm belgeleri süresiz" senaryosunu da kapsar.
         var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
         requirements
             .ListExpiringAsync(Arg.Any<DateOnly>(), DocumentsLimits.DefaultExpiryReportWindowDays, Arg.Any<DocumentExpiryState?>(), 0, 1, Arg.Any<CancellationToken>())
@@ -80,5 +83,39 @@ public sealed class DocumentExpiryReminderJobHandlerTests
 
         outbox.Received(1).Enqueue(Arg.Is<DocumentExpiryReminderDue>(e => e.TenantId == TenantId && e.ExpiringCount == 3 && e.ExpiredCount == 2));
         await unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>
+    /// Fake zaman: <see cref="DocumentExpiryReminderJobHandler"/> "bugün"ü <c>clock.GetUtcNow()</c>'dan türetir
+    /// (<c>TimeProvider.System</c> değil) - "30 gün içinde dolacak" penceresinin doğru ankraja (gerçek saat değil,
+    /// enjekte edilen saat) oturduğunu kanıtlamak için ikisi de aynı sabit tarihi görmeli.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_UsesInjectedClockDate_ForBothExpiringAndExpiredQueries()
+    {
+        var fixedNow = new DateTimeOffset(2026, 3, 1, 9, 0, 0, TimeSpan.Zero);
+        var expectedToday = DateOnly.FromDateTime(fixedNow.UtcDateTime);
+        var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
+        requirements
+            .ListExpiringAsync(expectedToday, DocumentsLimits.DefaultExpiryReportWindowDays, DocumentExpiryState.Expiring, 0, 1, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<(IReadOnlyList<ExpiringDocumentRow> Items, int Total)>(([], 1)));
+        requirements
+            .ListExpiringAsync(expectedToday, DocumentsLimits.DefaultExpiryReportWindowDays, DocumentExpiryState.Expired, 0, 1, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<(IReadOnlyList<ExpiringDocumentRow> Items, int Total)>(([], 0)));
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
+        var handler = new DocumentExpiryReminderJobHandler(requirements, outbox, unitOfWork, new FixedTimeProvider(fixedNow));
+
+        await handler.ExecuteAsync(new ScheduledJobContext(TenantId, null, DateTimeOffset.UtcNow), CancellationToken.None);
+
+        await requirements.Received(1).ListExpiringAsync(expectedToday, DocumentsLimits.DefaultExpiryReportWindowDays, DocumentExpiryState.Expiring, 0, 1, Arg.Any<CancellationToken>());
+        await requirements.Received(1).ListExpiringAsync(expectedToday, DocumentsLimits.DefaultExpiryReportWindowDays, DocumentExpiryState.Expired, 0, 1, Arg.Any<CancellationToken>());
+        outbox.Received(1).Enqueue(Arg.Is<DocumentExpiryReminderDue>(e => e.TenantId == TenantId && e.ExpiringCount == 1 && e.ExpiredCount == 0));
+    }
+
+    /// <summary>Test-only fake clock (mirrors <c>Sense.Modules.Identity.Tests.Security.TotpServiceTests.FixedTimeProvider</c> - no FakeTimeProvider package reference in this test project).</summary>
+    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 }

@@ -26,6 +26,8 @@
   "filters": {
     "orgUnit": "[DE] Unit",
     "allUnits": "[DE] All units",
+    "level": "[DE] Unit level",
+    "allLevels": "[DE] All levels",
     "includeSubUnits": "[DE] Include sub-units",
     "status": "[DE] Status",
     "all": "[DE] All",

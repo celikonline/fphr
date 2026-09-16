@@ -30,6 +30,7 @@ namespace Sense.Modules.Workflow.Tests;
 /// already used for ApprovalPolicyStep.StepNumber); no workaround needed here anymore.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class ApprovalRequestIntegrationTests : TestFixture
 {
     private static readonly TimeSpan DateTolerance = TimeSpan.FromMilliseconds(5);

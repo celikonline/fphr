@@ -3,6 +3,9 @@
  * `POST /v1/identity/me/mfa/enroll` (auth) -> { secret, otpAuthUri }; `MfaEnabled` stays false until verified.
  * `POST /v1/identity/me/mfa/verify` { code } -> 204, enables MFA.
  * `POST /v1/identity/me/mfa/disable` { code } -> 204.
+ * `GET /v1/identity/me/mfa` -> { enabled, pendingEnrollment } (S-12, gün açılışı tur 1): security screen's
+ * source of truth on load, in particular `pendingEnrollment` (secret written but never verified) which
+ * `/identity/me` doesn't expose.
  * Login-time completion (`auth/mfa/complete`) lives in `auth.store.ts` next to `login()` since it shares the
  * same "establish session" logic.
  */
@@ -13,6 +16,17 @@ export interface MfaEnrollment {
   secret: string;
   /** `MfaEnrollmentDto.OtpAuthUri` -> camelCase `otpAuthUri` (System.Text.Json CamelCase only lowercases the leading char). */
   otpAuthUri: string;
+}
+
+export interface MfaStatus {
+  enabled: boolean;
+  /** Secret was generated (`enroll` called) but never verified — the enroll dialog can be reopened to resume. */
+  pendingEnrollment: boolean;
+}
+
+export async function getMfaStatus(): Promise<MfaStatus> {
+  const { data } = await apiClient.get<MfaStatus>(`${ME_PATH}/mfa`);
+  return data;
 }
 
 export async function enrollMfa(): Promise<MfaEnrollment> {

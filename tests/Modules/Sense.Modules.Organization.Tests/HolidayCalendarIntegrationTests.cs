@@ -23,6 +23,7 @@ namespace Sense.Modules.Organization.Tests;
 /// layer rather than Dispatcher.Send(...) (see that test's doc comment for why).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class HolidayCalendarIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

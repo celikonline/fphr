@@ -447,6 +447,26 @@ public sealed class AbsenceRecordTests
         record.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceHoursOnlyForLate);
     }
 
+    [Fact]
+    public void Record_LateWithoutHours_Fails()
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, AbsenceKind.Late, null, null, RecordedByUserId);
+
+        record.IsFailure.ShouldBeTrue();
+        record.Error.Code.ShouldBe(LeaveDomainErrors.AbsenceHoursRequiredForLate);
+    }
+
+    [Theory]
+    [InlineData(AbsenceKind.Unexcused)]
+    [InlineData(AbsenceKind.Excused)]
+    public void Record_NonLateWithoutHours_Succeeds(AbsenceKind kind)
+    {
+        var record = AbsenceRecord.Record(TenantId, EmployeeId, Date, kind, null, null, RecordedByUserId);
+
+        record.IsSuccess.ShouldBeTrue();
+        record.Value.Hours.ShouldBeNull();
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]

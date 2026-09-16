@@ -26,6 +26,20 @@
   "dialogEditRolesTitle": "[DE] Edit roles for {{name}}",
   "rolesUpdateSuccess": "[DE] User roles updated.",
   "statusUpdateSuccess": "[DE] User status updated.",
+  "deactivateConfirmTitle": "[DE] Deactivate user",
+  "deactivateConfirmMessage": "[DE] {{name}} will be deactivated and won't be able to sign in. Continue?",
+  "activateConfirmTitle": "[DE] Activate user",
+  "activateConfirmMessage": "[DE] {{name}} will be reactivated. Continue?",
+  "mfaReset": {
+    "action": "[DE] Reset MFA",
+    "confirmTitle": "[DE] Reset two-factor authentication",
+    "confirmMessage": "[DE] {{name}}'s two-factor authentication will be cleared; they'll need to set up their authenticator app again on their next sign-in. Continue?",
+    "success": "[DE] Two-factor authentication has been reset.",
+    "errors": {
+      "selfForbidden": "[DE] You can't reset your own MFA from here; use the security section in your account settings instead.",
+      "generic": "[DE] Couldn't reset MFA. Please try again."
+    }
+  },
   "accessType": "[DE] Access type",
   "editAccessType": "[DE] Change access type",
   "dialogEditAccessTypeTitle": "[DE] Access type for {{name}}",

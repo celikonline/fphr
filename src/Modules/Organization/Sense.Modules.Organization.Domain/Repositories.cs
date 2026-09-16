@@ -1,5 +1,6 @@
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.CostCenters;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
@@ -54,6 +55,31 @@ public interface ILocationRepository
     Task<IReadOnlyList<Location>> ListAllAsync(bool activeOnly = true, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid locationId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// CostCenter aggregate repository (roadmap Faz 2 item #2, S-4). <b>No Infrastructure implementation
+/// yet</b> - this interface (and the Application-layer handlers that depend on it) is written ahead of
+/// the EF config/migration so the command/query surface is ready the moment the migration lands
+/// (see MIGRATION-ISTEGI.md). Placed in Domain rather than Application to match every other repository
+/// in this file (TALIMAT tur 1 said "(Application)" in passing; kept the established convention instead -
+/// flagged in the turn's report for PO to correct if the parenthetical was deliberate).
+/// </summary>
+public interface ICostCenterRepository
+{
+    void Add(CostCenter costCenter);
+
+    Task<Result<CostCenter>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CostCenter>> ListAllAsync(bool activeOnly = true, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Exact (case-sensitive) match against <paramref name="code"/>. Application-layer callers normalize
+    /// to trimmed uppercase before calling (e.g. the create handler) because <see cref="CostCenter.Create"/>
+    /// stores <c>Code</c> uppercased - do not add case-insensitive comparison here, it would just hide a
+    /// caller bug instead of matching the stored value.
+    /// </summary>
+    Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Company aggregate repository.</summary>

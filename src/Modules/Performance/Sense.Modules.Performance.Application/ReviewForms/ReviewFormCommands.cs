@@ -62,7 +62,14 @@ public sealed class CreateReviewFormHandler(ITenantContext tenant, IReviewCycleR
 [RequiresPermission("performance.reviews.manage")]
 public sealed record PublishReviewFormCommand(Guid ReviewFormId) : ICommand;
 
-public sealed class PublishReviewFormHandler(IReviewFormRepository forms) : ICommandHandler<PublishReviewFormCommand>
+/// <summary>
+/// 4857 md.18 fesih delili gerekçesi: bir dönem kapatıldıktan (<see cref="ReviewCycle.Close"/>, terminal) sonra o
+/// döneme bağlı hiçbir form artık yayınlanamaz - bu, formun kendi Draft/Published durumundan bağımsız bir kilittir
+/// (<see cref="ReviewForm.Publish"/> yalnızca formun kendi durumuna bakar, dönemi bilmez). Kontrol burada, Application
+/// katmanında yapılır çünkü ReviewForm ve ReviewCycle ayrı aggregate'lerdir (bkz. CreateReviewFormHandler'daki
+/// eşdeğer create-time kontrol, <see cref="PerformanceErrors.FormCycleClosed"/>).
+/// </summary>
+public sealed class PublishReviewFormHandler(IReviewFormRepository forms, IReviewCycleRepository cycles) : ICommandHandler<PublishReviewFormCommand>
 {
     public async Task<Result> Handle(PublishReviewFormCommand command, CancellationToken cancellationToken)
     {
@@ -70,6 +77,12 @@ public sealed class PublishReviewFormHandler(IReviewFormRepository forms) : ICom
         if (existing.IsFailure)
         {
             return existing.Error;
+        }
+
+        var cycle = await cycles.GetByIdAsync(existing.Value.ReviewCycleId, cancellationToken);
+        if (cycle.IsSuccess && cycle.Value.Status == ReviewCycleStatus.Closed)
+        {
+            return Error.Rule(PerformanceErrors.ReviewImmutable);
         }
 
         var result = existing.Value.Publish();

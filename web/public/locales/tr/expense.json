@@ -44,7 +44,8 @@
     "taxRate": "Vergi oranı",
     "description": "Fiş açıklaması",
     "exceedsLimit": "Limit aşıldı",
-    "exceedsLimitTooltip": "Bu fişin tutarı, kategorisi için tanımlı üst limiti aşıyor."
+    "exceedsLimitTooltip": "Bu fişin tutarı, kategorisi için tanımlı üst limiti aşıyor.",
+    "limitWarning": "Bu tutar, seçili kategori için tanımlı {{limit}} üst limitini aşıyor. Yine de fişi ekleyebilirsiniz."
   },
   "advance": {
     "newButton": "+ Avans",

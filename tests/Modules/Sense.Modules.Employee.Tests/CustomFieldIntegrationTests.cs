@@ -29,6 +29,7 @@ namespace Sense.Modules.Employee.Tests;
 /// self-service path (own record only, only IsEmployeeEditable definitions), and card visibility gating.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class CustomFieldIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

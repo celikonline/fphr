@@ -2,6 +2,10 @@
   "days": "gün",
   "noAccess": "İzin bilgilerini görüntüleme yetkiniz yok.",
   "genericError": "İşlem sırasında bir hata oluştu.",
+  "tabs": {
+    "leave": "İzinler",
+    "absences": "Devamsızlık"
+  },
   "names": {
     "rule_set_seed_turkish_labour_law": "Örnek Türk İş Kanunu kuralı",
     "type_annual": "Yıllık izin",
@@ -312,7 +316,15 @@
     "submittedAt": "Gönderim zamanı",
     "decidedAt": "Karar zamanı",
     "resubmissionOf": "Bu talep, reddedilen bir talebin yeniden gönderimidir.",
-    "cancelledAt": "İptal edildi: {{at}}"
+    "cancelledAt": "İptal edildi: {{at}}",
+    "halfDayPeriod": "Gün dilimi",
+    "timeRange": "Saat aralığı"
+  },
+  "request": {
+    "halfDayPeriod": {
+      "morning": "Sabah",
+      "afternoon": "Öğleden sonra"
+    }
   },
   "approval": {
     "title": "Onay süreci",
@@ -480,5 +492,37 @@
       "reasonRequired": "Gerekçe zorunludur."
     },
     "addLeave": "İzin Ekle"
+  },
+  "absences": {
+    "title": "Devamsızlık",
+    "noAccess": "Devamsızlık kayıtlarını görüntüleme yetkiniz yok.",
+    "empty": "Bu yıl için devamsızlık kaydı yok.",
+    "add": "Devamsızlık ekle",
+    "addTitle": "Devamsızlık ekle",
+    "added": "Devamsızlık kaydı eklendi.",
+    "date": "Tarih",
+    "kindLabel": "Tür",
+    "kind": {
+      "unexcused": "Mazeretsiz",
+      "excused": "Mazeretli",
+      "late": "Geç kalma"
+    },
+    "hours": "Saat",
+    "note": "Not",
+    "recordedBy": "Kaydeden",
+    "status": "Durum",
+    "reversed": "Ters kayıt yapıldı",
+    "reversal": "Ters kayıt",
+    "reverse": "Ters kayıt",
+    "reverseTitle": "Devamsızlık kaydı ters çevrilsin mi?",
+    "reverseDescription": "{{date}} tarihli \"{{kind}}\" kaydı için düzeltme (ters kayıt) girilecek; orijinal kayıt silinmez, üstü çizili gösterilir.",
+    "reverseReason": "Ters kayıt gerekçesi",
+    "reverseConfirm": "Ters kayıt oluştur",
+    "reversedDone": "Ters kayıt oluşturuldu.",
+    "validation": {
+      "dateRequired": "Tarih zorunludur.",
+      "hoursInvalid": "Geç kalma süresi 0 ile 24 saat arasında olmalıdır.",
+      "reasonRequired": "Gerekçe zorunludur."
+    }
   }
 }

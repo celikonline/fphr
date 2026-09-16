@@ -31,6 +31,7 @@ namespace Sense.Modules.Employee.Tests;
 /// employee.sensitive.view masking/write-preservation on the personal/health fields.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class EmployeeLifecycleIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

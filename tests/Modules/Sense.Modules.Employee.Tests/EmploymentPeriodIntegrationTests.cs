@@ -31,6 +31,7 @@ namespace Sense.Modules.Employee.Tests;
 /// carries the counted leave seniority over and publishes EmployeeRehired through the outbox.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class EmploymentPeriodIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

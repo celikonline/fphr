@@ -14,5 +14,16 @@
       "paid": "[DE] Paid",
       "locked": "[DE] Locked"
     }
+  },
+  "periodDetail": {
+    "loadError": "[DE] Period not found or you don't have access.",
+    "exportError": "[DE] The payroll summary could not be downloaded.",
+    "exportButton": "[DE] Download Excel",
+    "empty": "[DE] This period has no payslip lines yet.",
+    "columns": {
+      "employee": "[DE] Employee",
+      "gross": "[DE] Gross",
+      "net": "[DE] Net"
+    }
   }
 }

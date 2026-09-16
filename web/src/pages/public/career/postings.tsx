@@ -1,8 +1,9 @@
+import { useEffect } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { Briefcase, MapPin } from "lucide-react";
-import { Badge, Card, Center, Container, Group, Loader, Stack, Text, Title } from "@mantine/core";
+import { Badge, Card, Container, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { formatDateOnly } from "@/lib/dates";
 import { listPublicJobPostingsByTenant, type PublicJobPostingListItem } from "@/services/recruitment.service";
 import classes from "./job-posting.module.css";
@@ -73,6 +74,13 @@ export default function CareerPostingsListPage() {
     enabled: !!tenant,
   });
 
+  useEffect(() => {
+    document.title = `${t("recruitment:career.list.title")} · ${t("recruitment:career.list.pageTitleSuffix")}`;
+    return () => {
+      document.title = "SenseİK - İK Platformu";
+    };
+  }, [t]);
+
   return (
     <Shell>
       <Stack gap="lg">
@@ -88,9 +96,11 @@ export default function CareerPostingsListPage() {
 
         {!tenant || postingsQuery.isLoading ? (
           tenant ? (
-            <Center mih={160}>
-              <Loader />
-            </Center>
+            <Stack gap="sm">
+              {Array.from({ length: 3 }, (_, i) => (
+                <Skeleton key={i} h={92} radius="md" />
+              ))}
+            </Stack>
           ) : (
             <Card withBorder padding="lg" radius="md">
               <Text size="sm" c="dimmed">

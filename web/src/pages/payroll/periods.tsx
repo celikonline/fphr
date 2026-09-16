@@ -1,9 +1,10 @@
 import { useMemo } from "react";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Wallet } from "lucide-react";
-import { Badge, Card, Text, Title } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -35,15 +36,19 @@ function PayrollPeriodsList() {
   const periodsQuery = useQuery({ queryKey: PERIODS_QUERY_KEY, queryFn: listPayrollPeriods });
   const periods = useMemo(() => periodsQuery.data ?? [], [periodsQuery.data]);
 
+  const periodLabel = (period: PayrollPeriod) =>
+    new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long" }).format(new Date(period.year, period.month - 1, 1));
+
   const columns: ColumnDef<PayrollPeriod>[] = [
     {
       id: "period",
       header: t("payroll:periods.columns.period"),
       meta: { label: t("payroll:periods.columns.period") },
-      cell: ({ row }) =>
-        new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long" }).format(
-          new Date(row.original.year, row.original.month - 1, 1),
-        ),
+      cell: ({ row }) => (
+        <Link to={`/app/payroll/periods/${row.original.id}`} className="font-medium hover:underline">
+          {periodLabel(row.original)}
+        </Link>
+      ),
     },
     {
       id: "status",
@@ -75,7 +80,40 @@ function PayrollPeriodsList() {
             {getApiErrorMessage(periodsQuery.error, t("payroll:genericError"))}
           </Text>
         ) : (
-          <DataTable table={table} isLoading={periodsQuery.isLoading} emptyMessage={t("payroll:periods.empty")} />
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <DataTable table={table} isLoading={periodsQuery.isLoading} emptyMessage={t("payroll:periods.empty")} />
+            </div>
+
+            {/* Dar ekran (≤390px dahil): kart listesi */}
+            <div className="md:hidden">
+              {periodsQuery.isLoading ? (
+                <Text size="sm" c="dimmed">
+                  {t("common:loading")}
+                </Text>
+              ) : periods.length === 0 ? (
+                <Text size="sm" c="dimmed" ta="center" p="lg">
+                  {t("payroll:periods.empty")}
+                </Text>
+              ) : (
+                <Stack gap="sm">
+                  {periods.map((period) => (
+                    <Card key={period.id} component={Link} to={`/app/payroll/periods/${period.id}`} withBorder padding="sm" radius="md">
+                      <Group justify="space-between">
+                        <Text fw={500} size="sm">
+                          {periodLabel(period)}
+                        </Text>
+                        <Badge color={STATUS_COLOR[period.status] ?? "gray"} variant="light">
+                          {t(`payroll:periods.status.${period.status}`, { defaultValue: period.status })}
+                        </Badge>
+                      </Group>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </div>
+          </>
         )}
       </Card>
     </div>

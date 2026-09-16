@@ -32,6 +32,20 @@ public static class BackgroundJobSeeding
             Description = "Generate weekly report for management",
             Payload = "{\"reportType\": \"weekly\", \"include\": [\"attendance\", \"payroll\"]}"
         };
+
+        // Faz 1 tur 1: per-tenant daily reminder for documents nearing/past their expiry date
+        // (Documents.Infrastructure.BackgroundJobs.DocumentExpiryReminderJobHandler). 06:00 Europe/Istanbul is the
+        // intended wall-clock time; IBackgroundJobService.RecurringAsync has no TimeZoneInfo parameter yet (no seed
+        // consumer wires GetDefaultSeeds() into RecurringAsync today - see this method's doc comment - so there is
+        // nothing to point a time zone at in this slice), so the cron string alone assumes the host's default zone.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "DocumentExpiryReminder",
+            JobType = JobType.DocumentExpiryReminder,
+            CronExpression = "0 6 * * *", // 06:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Remind about documents expiring soon or already expired",
+            Payload = "{}"
+        };
     }
 }
 

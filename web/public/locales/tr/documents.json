@@ -70,6 +70,10 @@
       "uploadFailed": "Belge yüklenemedi."
     }
   },
+  "expiry": {
+    "expiredBadge": "Süresi doldu: {{date}}",
+    "expiringBadge": "Süresi doluyor: {{date}}"
+  },
   "report": {
     "title": "Eksik belge raporu",
     "subtitle": "Kiracı genelinde eksik, yüklenmiş ve muaf tutulmuş özlük belgelerini görüntüleyin.",

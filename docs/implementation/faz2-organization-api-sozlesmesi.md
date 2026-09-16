@@ -1,9 +1,9 @@
-# Faz 2 — Organization/Employee API sözleşmesi (Şirket profili, TB-10)
+# Faz 2 — Organization/Employee API sözleşmesi (Şirket profili TB-10 + Maliyet merkezleri S-4)
 
-Bu doküman Faz 2 kapsamında eklenen **şirket profili** uçlarını belgeler. Var olan
-`GET/POST /organization/companies` ve `PUT /organization/companies/{id}/holiday-calendar`
-uçları (Faz 0'dan beri var, 3 çağıranı değişmedi) burada tekrar edilmez; bkz.
-`Sense.Modules.Organization.Api.Controllers.CompaniesController`.
+Bu doküman Faz 2 kapsamında eklenen **şirket profili** (TB-10) ve **maliyet merkezi katalogu** (S-4,
+roadmap item #2) uçlarını belgeler. Var olan `GET/POST /organization/companies` ve
+`PUT /organization/companies/{id}/holiday-calendar` uçları (Faz 0'dan beri var, 3 çağıranı değişmedi)
+burada tekrar edilmez; bkz. `Sense.Modules.Organization.Api.Controllers.CompaniesController`.
 
 ## Kapsam ve tasarım kararı
 
@@ -69,11 +69,60 @@ karıştırılmamalıdır — ikisi de aynı `Company` aggregate'ini farklı alt
 
 ## Migration
 
-`20260916140500_AddCompanyProfileFields` — `Company` tablosuna yeni nullable kolonlar ekler,
-geriye dönük kırıcı değildir. **Not (tur 2):** bu migration araç erişimi olmadığı için elle yazıldı
-(bkz. ADR-0001, `senseik-takim/kararlar/`); araç erişimi açılınca `dotnet ef migrations add` çıktısıyla
-değiştirilmesi planlanıyor — üretim projeleri derleniyor olması migration SQL'inin doğruluğunu
-kanıtlamaz.
+`20260916140500_AddCompanyProfileFields` — main'de (`caafaf0`), `Company` tablosuna yeni nullable
+kolonlar ekler, geriye dönük kırıcı değildir. Bu turda migration + Designer + model snapshot,
+`CompanyConfiguration`'daki (`OrganizationDbContext.cs`) `HasMaxLength`/`HasColumnType` değerleriyle
+karşılaştırıldı — **sapma yok** (address 500, city 100, country 100, registration_number 50,
+tax_number 50, working_days 40, logo_url 1000, operating_hours_* time without time zone,
+logo_document_id uuid nullable).
+
+## Maliyet merkezleri (S-4, roadmap Faz 2 item #2)
+
+**Durum (bu tur):** Domain aggregate (`CostCenter`, tur 3) + Application katmanı (komut/sorgu
+handler'ları, bu tur) + `CostCentersController` (bu tur) yazıldı; **EF config/migration/DI kaydı henüz
+yok** (`status/faz-02/MIGRATION-ISTEGI.md`, ADR-0005/0008 — modül başına tek açık istek, EF dondurma).
+Uç şekli aşağıda **donmuştur**, FE bu sözleşmeyle geliştirir; DB'ye bağlanınca (repository impl + DI)
+davranış değişmez, yalnız 500 yerine gerçek veri döner.
+
+### `GET /api/v{version}/organization/cost-centers?includeInactive=false`
+- Yetki: `organization.cost_centers.view`
+- Yanıt: `CostCenterDto[]` (paging yok — düz liste, `code`'a göre sıralı)
+- `includeInactive` varsayılan `false` (yalnız aktifler).
+
+### `POST /api/v{version}/organization/cost-centers`
+- Yetki: `organization.cost_centers.manage`
+- Gövde: `{ code: string, name: string }`
+- Yanıt: `{ id: string (guid) }` — **tam DTO değil**, yalnız oluşturulan kaydın id'si.
+- 409 `organization.cost_center.code_taken`: kod tenant içinde zaten kullanılıyor.
+- `code` oluşturma sonrası **değişmez** (rename ucu yalnız `name` alır).
+
+### `PUT /api/v{version}/organization/cost-centers/{id}`
+- Yetki: `organization.cost_centers.manage`
+- Gövde: `{ name: string }` (yalnız ad; `code` bu uçtan değiştirilemez)
+- Yanıt: 204
+- 404 `organization.cost_center.not_found`.
+
+### `PUT /api/v{version}/organization/cost-centers/{id}/active`
+- Yetki: `organization.cost_centers.manage`
+- Gövde: `{ isActive: bool }`
+- Yanıt: 204
+- 404 `organization.cost_center.not_found`; zaten istenen durumdaysa 422 (`organization.cost_center.already_active`/`already_inactive`) — idempotent bir no-op **değil**, domain kuralı (bkz. `CostCenter.SetActive`, tur 3 testleri).
+
+### DTO: `CostCenterDto`
+```
+{
+  id: string (guid)
+  code: string
+  name: string
+  isActive: bool
+}
+```
+
+### İzinler
+`organization.cost_centers.view` / `organization.cost_centers.manage` — `organization.*` (Owner/Admin/HR)
+ve `organization.*.view` (HRSpecialist/Manager/Timekeeper/Finance/Recruiter/PayrollSpecialist/
+ExternalAccountant/Auditor'ın zaten sahip olduğu joker) bu iki anahtarı **otomatik** kapsıyor —
+`SystemRoleDefinitions.cs`'e ayrı ekleme gerekmedi (yalnız-ekleme kısıtı zaten korunmuş oldu).
 
 ## Web
 
@@ -82,6 +131,8 @@ gerçek `apiClient` çağrıları; eski localStorage mock'u kaldırıldı. `web/
 sayfa yapısı değişmedi (talimat şartı) — servis katmanı arkadan değişti.
 
 ## Bilinen açık işler (bu fazın kapsamı dışında bırakıldı, not düşüldü)
-- Migration'ın tooling ile yeniden üretilmesi (araç erişimi bekliyor).
 - Logo için kalıcı görüntüleme URL'i (Documents.Contracts lookup).
 - Çoklu şirket (`JointEmploymentGroupCode`) senaryosunda `PrimaryCompanyResolver`'ın genişletilmesi.
+- Maliyet merkezleri: EF config + `AddCostCenters` migration + `ICostCenterRepository`/`ICostCenterLookup`
+  Infrastructure impl'i + DI kaydı bekliyor (`status/faz-02/MIGRATION-ISTEGI.md`); uçlar derleniyor ama
+  DI çözümlenemediği için bu istek işlenene kadar 500 döner.

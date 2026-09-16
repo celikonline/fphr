@@ -26,6 +26,8 @@
   "filters": {
     "orgUnit": "Birim",
     "allUnits": "Tüm birimler",
+    "level": "Birim seviyesi",
+    "allLevels": "Tüm seviyeler",
     "includeSubUnits": "Alt birimler dahil",
     "status": "Durum",
     "all": "Tümü",

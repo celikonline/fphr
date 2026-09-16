@@ -1,9 +1,11 @@
 # Faz 8 — Performance API sözleşmesi (Hedef/OKR + değerlendirme dönemi, R0 iskeleti)
 
-Bu doküman FE ikizinin `performance.service.ts` ve `pages/performance/*` için ihtiyaç duyduğu 6
-ucu, koddaki **mevcut** şekliyle belgeler (kod değiştirilmedi — uyumsuzluk görülürse burada değil,
-raporda not düşülür). Kaynak: `Sense.Modules.Performance.Api.Controllers.{GoalsController,
-ReviewCyclesController}`, `Sense.Modules.Performance.Application.{Goals,ReviewCycles}`.
+Bu doküman FE ikizinin `performance.service.ts` ve `pages/performance/*` için ihtiyaç duyduğu 14
+ucu, koddaki **mevcut** şekliyle belgeler (§1-6 tur 3'ten, §7-14 tur 4'te eklendi; kod §1-6 için
+değiştirilmedi, §14'ün `performance.review.immutable` hatası tur 4'te eklenen gerçek bir kod
+değişikliğini yansıtıyor — bkz. "Değiştirilemezlik" bölümü). Kaynak:
+`Sense.Modules.Performance.Api.Controllers.{GoalsController, ReviewCyclesController,
+ReviewFormsController}`, `Sense.Modules.Performance.Application.{Goals,ReviewCycles,ReviewForms}`.
 
 Genel JSON kuralı (proje geneli): camelCase alan adları, enum'lar camelCase string
 (`JsonStringEnumConverter(CamelCase)`), `null` alanlar yanıttan **düşürülür** (`WhenWritingNull`) —
@@ -49,6 +51,60 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 - **Yanıt:** `ReviewCycleDto[]`
 - Draft dönemler hariç (henüz duyurulmamış); Active + Closed dönemler döner.
 
+## 7. `GET /api/v1/performance/review-cycles`
+- **Yetki:** `performance.reviews.view`
+- **Sorgu:** `?status=` (opsiyonel, `draft`/`active`/`closed` — case-insensitive `Enum.Parse`, camelCase FE değeri de kabul edilir)
+- **Yanıt:** `ReviewCycleDto[]` — tüm dönemler (Draft dahil), İK/yönetici tarafı.
+
+## 8. `GET /api/v1/performance/review-cycles/{id}`
+- **Yetki:** `performance.reviews.view`
+- **Yanıt:** `ReviewCycleDto`
+- Hata: `performance.cycle.not_found` (404).
+
+## 9. `POST /api/v1/performance/review-cycles`
+- **Yetki:** `performance.reviews.manage`
+- **Gövde:** `{ name: string, startDate: "yyyy-MM-dd", endDate: "yyyy-MM-dd" }`
+- **Yanıt:** `200 { id: string (guid) }`
+- Hatalar: `performance.cycle.name_required` (400), `performance.cycle.invalid_date_range` (400, `endDate <= startDate`).
+- Yeni dönem her zaman `Draft` durumunda oluşur.
+
+## 10. `POST /api/v1/performance/review-cycles/{id}/activate`
+- **Yetki:** `performance.reviews.manage`
+- **Yanıt:** `204 No Content`
+- Hata: `performance.cycle.not_activatable` (409, dönem zaten Draft değilse).
+- `Draft -> Active`.
+
+## 11. `POST /api/v1/performance/review-cycles/{id}/close`
+- **Yetki:** `performance.reviews.approve` (**`.manage` değil** — kapatma daha yüksek yetki ister, terminal ve geri alınamaz)
+- **Yanıt:** `204 No Content`
+- Hatalar: `performance.cycle.already_closed` (409), `performance.cycle.not_closable` (409, dönem Active değilse).
+- `Active -> Closed`, terminal; bkz. §"Değiştirilemezlik" — kapandıktan sonra döneme bağlı hiçbir form yayınlanamaz.
+
+## 12. `GET /api/v1/performance/review-forms`
+- **Yetki:** `performance.reviews.view`
+- **Sorgu:** `?reviewCycleId=` (zorunlu, guid)
+- **Yanıt:** `ReviewFormDto[]` — sorular `order` alanına göre sıralı döner.
+
+## 13. `POST /api/v1/performance/review-forms`
+- **Yetki:** `performance.reviews.manage`
+- **Gövde:** `{ reviewCycleId: string (guid), title: string, questions: [{ text: string, weight: number }] }`
+- **Yanıt:** `200 { id: string (guid) }`
+- Hatalar: `performance.cycle.not_found` (404, `reviewCycleId` geçersiz), `performance.form.cycle_closed` (409, dönem
+  Closed), `performance.form.title_required` (400), `performance.form.questions_required` (400, boş dizi),
+  `performance.form.question_text_required` (400), `performance.form.weights_must_sum_to_100` (400, `weight`
+  toplamı ≠ 100).
+- Yeni form her zaman `Draft` durumunda, sorularıyla birlikte tek istekte oluşur (soru ekleme/çıkarma ayrı ucu yok —
+  yeniden oluşturmak gerekir, form henüz Published değilken).
+
+## 14. `POST /api/v1/performance/review-forms/{id}/publish`
+- **Yetki:** `performance.reviews.manage`
+- **Yanıt:** `204 No Content`
+- Hatalar: `performance.form.not_found` (404), `performance.form.questions_required` (400, hiç soru yoksa),
+  `performance.form.not_publishable` (409, form zaten Published), **`performance.review.immutable`** (409, formun
+  bağlı olduğu dönem Closed — form kendisi hâlâ Draft'ta kalsa bile; bkz. `PublishReviewFormHandler`).
+- `Draft -> Published`, formun soru/ağırlık yapısı için terminal (yeni soru gerekiyorsa yeni form oluşturulur,
+  bu form güncellenmez — `performance.form.not_editable`).
+
 ---
 
 ## DTO'lar
@@ -68,8 +124,8 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 }
 ```
 `archived` durumu kullanıcı tarafından tetiklenmez — yalnız `EmployeeTerminated` integration event'i
-tüketildiğinde otomatik geçilir (bkz. §7); FE'nin bu durumu "düzenlenemez, salt-okunur" göstermesi
-yeterli, ayrı bir aksiyon sunmaz.
+tüketildiğinde otomatik geçilir (bkz. aşağıdaki "Değiştirilemezlik ve çıkış senaryosu" bölümü); FE'nin
+bu durumu "düzenlenemez, salt-okunur" göstermesi yeterli, ayrı bir aksiyon sunmaz.
 
 ### `ReviewCycleDto`
 ```
@@ -79,6 +135,27 @@ yeterli, ayrı bir aksiyon sunmaz.
   startDate: string   // "yyyy-MM-dd"
   endDate: string     // "yyyy-MM-dd"
   status: "draft" | "active" | "closed"
+}
+```
+
+### `ReviewFormDto`
+```
+{
+  id: string (guid)
+  reviewCycleId: string (guid)
+  title: string
+  status: "draft" | "published"
+  questions: ReviewFormQuestionDto[]   // her zaman order'a göre sıralı
+}
+```
+
+### `ReviewFormQuestionDto`
+```
+{
+  id: string (guid)
+  text: string
+  weight: number   // int, 0-100; formun tüm sorularının toplamı 100'dür
+  order: number    // int, 0'dan başlar
 }
 ```
 
@@ -92,25 +169,40 @@ yeterli, ayrı bir aksiyon sunmaz.
 | `GET goals/team` | `performance.team.goals` | — |
 | `POST goals/{id}/cancel` | `performance.goals.manage` | `performance.goal.not_cancellable` |
 | `GET review-cycles/me` | `performance.my.reviews` | — |
+| `GET review-cycles` | `performance.reviews.view` | — |
+| `GET review-cycles/{id}` | `performance.reviews.view` | `performance.cycle.not_found` |
+| `POST review-cycles` | `performance.reviews.manage` | `performance.cycle.name_required`, `performance.cycle.invalid_date_range` |
+| `POST review-cycles/{id}/activate` | `performance.reviews.manage` | `performance.cycle.not_activatable` |
+| `POST review-cycles/{id}/close` | `performance.reviews.approve` | `performance.cycle.already_closed`, `performance.cycle.not_closable` |
+| `GET review-forms` | `performance.reviews.view` | — |
+| `POST review-forms` | `performance.reviews.manage` | `performance.cycle.not_found`, `performance.form.cycle_closed`, `performance.form.title_required`, `performance.form.questions_required`, `performance.form.question_text_required`, `performance.form.weights_must_sum_to_100` |
+| `POST review-forms/{id}/publish` | `performance.reviews.manage` | `performance.form.not_found`, `performance.form.questions_required`, `performance.form.not_publishable`, `performance.review.immutable` |
 
 Diğer (bu turda FE'nin kullanmadığı ama modülde var olan) uçlar: `GET/POST goals` ve
 `GET goals/employee/{id}` (`performance.goals.manage`/`performance.goals.view`),
-`POST goals/{id}/progress` (`performance.goals.manage`), `review-cycles` CRUD + `activate`/`close`
-(`performance.reviews.{view,manage,approve}`), `review-forms/*` (aynı üçlü). Hata metinleri
-`SharedResource{,.en}.resx`'te `performance.*` anahtarlarıyla lokalize edilir.
+`POST goals/{id}/progress` (`performance.goals.manage`). Hata metinleri `SharedResource{,.en}.resx`'te
+`performance.*` anahtarlarıyla lokalize edilir.
 
-## Değiştirilemezlik ve çıkış senaryosu (kod kararı, tur 1'den — değişmedi)
+## Değiştirilemezlik ve çıkış senaryosu
 
 - Kapanmış bir `ReviewCycle` bir daha `Active`'e dönmez (`CycleAlreadyClosed`/`CycleNotClosable`);
   360/1:1/yetkinlik gibi ileride eklenecek bireysel değerlendirme kayıtları da bu terminal duruma
   bağlanacak (4857 md.18 fesih delili + KVKK).
+- **(Tur 4)** Dönem kapandıktan sonra o döneme bağlı hiçbir form artık yayınlanamaz —
+  `POST review-forms/{id}/publish` `performance.review.immutable` (409) döner; bu, formun kendi
+  Draft/Published durumundan **bağımsız** bir kilittir (form hâlâ Draft'ta kalıp dönem kapansa bile
+  publish reddedilir). Kontrol `PublishReviewFormHandler`'da, Application katmanında yapılır (ReviewForm
+  ve ReviewCycle ayrı aggregate, birbirine FK ile bağlı değil). Yayınlanmış bir formun kendisi zaten
+  `performance.form.not_editable` ile değiştirilemez (`SetQuestions`, domain seviyesinde).
 - `EmployeeTerminated` integration event'i tüketildiğinde (`EmployeeTerminatedHandler`) çalışanın açık
   (Open/InProgress) hedefleri **silinmez/iptal edilmez, `Archived`'e donar** — denetim izini korumak
   için. Idempotent: outbox yeniden teslimatında ikinci `Archive()` çağrısı no-op'tur.
 
 ## Bilinen açık işler / sınır dışı
-- **Migration henüz yok** — `status/faz-08/MIGRATION-ISTEGI.md` (ADR-0005); migration girmeden bu
-  uçlar gerçek bir veritabanına karşı 500/"no such table" verir, yalnız kod + mimari testler yeşildir.
+- **Migration henüz yok** — `status/faz-08/MIGRATION-ISTEGI.md` (ADR-0005, üst karar ADR-0011: main'de
+  migration'sız EF modelleri "ileri düzelt"); migration girmeden bu uçlar gerçek bir veritabanına karşı
+  500/"no such table" verir, yalnız kod + mimari testler yeşildir. Tur 4'te `PerformanceDbContext`
+  konfigürasyonları (tablo/kolon/index) koda karşı yeniden teyit edildi, şema **değişmedi**.
 - **360 derece geri bildirim, 1:1 notu, yetkinlik matrisi, eğitim, anket/eNPS, duyuru/takdir:** bu R0
   iskeletinin kapsamı dışında — K-5 (Survey/eNPS modül sınırı) hâlâ PO kararı bekliyor.
 - `employeeName` yalnızca `goals/team`'de doldurulur; `goals/me` ve `goals/employee/{id}` yanıtlarında

@@ -34,3 +34,28 @@ export async function getWorkforceKpis(params: WorkforceKpiParams = {}): Promise
   const { data } = await apiClient.get<KpiResult[]>(`${ANALYTICS_BASE}/kpis/workforce`, { params });
   return data;
 }
+
+/** `byLeaveType` breakdown row (S-15 sözleşmesi, faz-10 BE). */
+export interface LeaveUsageByType {
+  leaveTypeName: string;
+  usedDays: number;
+}
+
+/** `GET /v1/analytics/kpis/leave-usage` (S-15): year is mandatory, `orgUnitId` scopes to a unit manager's own unit. */
+export interface LeaveUsageKpi {
+  totalEntitledDays: number;
+  usedDays: number;
+  usageRate: number;
+  byLeaveType: LeaveUsageByType[];
+}
+
+export interface LeaveUsageKpiParams {
+  year: number;
+  orgUnitId?: string;
+}
+
+/** Not deployed in every environment yet (faz-10 R0) - callers should hide the widget on a 404. */
+export async function getLeaveUsageKpi(params: LeaveUsageKpiParams): Promise<LeaveUsageKpi> {
+  const { data } = await apiClient.get<LeaveUsageKpi>(`${ANALYTICS_BASE}/kpis/leave-usage`, { params });
+  return data;
+}

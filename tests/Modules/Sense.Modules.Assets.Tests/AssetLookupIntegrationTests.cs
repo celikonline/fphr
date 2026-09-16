@@ -19,6 +19,7 @@ namespace Sense.Modules.Assets.Tests;
 /// to materialize/keep the AssetHandoverForm conditional requirement in sync (roadmap #65).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class AssetLookupIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

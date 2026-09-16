@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { BarChart3, Download, FileText, X } from "lucide-react";
 import { Badge, Button, Card, Group, Input, Select, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import { getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
+import { getLeaveUsageKpi, getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
 import {
   downloadReportExecution,
   getReportCatalog,
   listReportExecutions,
   requestReport,
   saveDownloadedReportFile,
+  type DownloadedReportFile,
   type ReportExecution,
   type ReportExecutionStatus,
 } from "@/services/reports.service";
@@ -41,6 +43,12 @@ function formatKpiValue(kpi: KpiResult, locale: string): string {
 
 function formatShare(value: number, locale: string): string {
   return new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+}
+
+/** S-15 isn't deployed everywhere yet (faz-10 R0) - a 404 means "hide the card", not "show an error". */
+function retryUnlessNotFound(failureCount: number, error: unknown): boolean {
+  if (getApiErrorStatus(error) === 404) return false;
+  return failureCount < 1;
 }
 
 const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
@@ -177,12 +185,67 @@ function WorkforceKpis() {
             </Text>
           </Card>
         )}
+        <LeaveUsageKpiCard />
       </SimpleGrid>
 
       <Card withBorder padding={0}>
         <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("reports:breakdown.empty")} />
       </Card>
     </Stack>
+  );
+}
+
+/** İzin kullanım KPI'ı (S-15, faz-10 R0): backend ucu her ortamda yok - 404 gelirse kartı hiç göstermeyiz. */
+function LeaveUsageKpiCard() {
+  const { t, i18n } = useTranslation(["reports"]);
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const year = new Date().getFullYear();
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["analytics", "leave-usage-kpi", year],
+    queryFn: () => getLeaveUsageKpi({ year }),
+    retry: retryUnlessNotFound,
+  });
+
+  if (getApiErrorStatus(error) === 404) return null;
+
+  return (
+    <Card withBorder padding="lg">
+      <Text size="xs" c="dimmed">
+        {t("reports:kpi.leaveUsage.label")}
+      </Text>
+      {isLoading ? (
+        <Skeleton h={28} mt={8} w="40%" />
+      ) : !data ? (
+        <Text c="dimmed" size="sm" mt={8}>
+          {t("reports:empty")}
+        </Text>
+      ) : (
+        <>
+          <Text size="xl" fw={700}>
+            {new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(data.usageRate)}
+          </Text>
+          <Text size="xs" c="dimmed" mt={4}>
+            {t("reports:kpi.leaveUsage.detail", {
+              used: new Intl.NumberFormat(locale).format(data.usedDays),
+              total: new Intl.NumberFormat(locale).format(data.totalEntitledDays),
+            })}
+          </Text>
+          {data.byLeaveType.length > 0 && (
+            <Stack gap={2} mt="sm">
+              {data.byLeaveType.map((row) => (
+                <Group key={row.leaveTypeName} justify="space-between" gap="xs" wrap="nowrap">
+                  <Text size="xs" c="dimmed" truncate>
+                    {row.leaveTypeName}
+                  </Text>
+                  <Text size="xs">{new Intl.NumberFormat(locale).format(row.usedDays)}</Text>
+                </Group>
+              ))}
+            </Stack>
+          )}
+        </>
+      )}
+    </Card>
   );
 }
 
@@ -198,6 +261,8 @@ function ReportCatalogAndHistory() {
   const queryClient = useQueryClient();
   const [reportKey, setReportKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  // Narrow phones (faz-10 FE md.4): a card list reads better than a horizontally-scrolled table (missing-documents-report.tsx emsali).
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const { data: catalog, isLoading: catalogLoading } = useQuery({
     queryKey: ["reports", "catalog"],
@@ -335,13 +400,83 @@ function ReportCatalogAndHistory() {
       )}
 
       {canViewHistory && (
-        <Card withBorder padding={0}>
-          <DataTable table={table} isLoading={executionsLoading} isFetching={executionsFetching} emptyMessage={t("reports:history.empty")} />
-          {executions && (
-            <PaginationFooter result={executions} onPageChange={setPage} />
+        <>
+          {isMobile ? (
+            <ReportExecutionsMobileList
+              items={executions?.items ?? []}
+              isLoading={executionsLoading}
+              downloadMutation={downloadMutation}
+            />
+          ) : (
+            <Card withBorder padding={0}>
+              <DataTable table={table} isLoading={executionsLoading} isFetching={executionsFetching} emptyMessage={t("reports:history.empty")} />
+            </Card>
           )}
-        </Card>
+          {executions && <PaginationFooter result={executions} onPageChange={setPage} />}
+        </>
       )}
+    </Stack>
+  );
+}
+
+/** ≤390px kart listesi, masaüstü tablosunun aynı kolonlarını taşır (faz-10 FE md.4). */
+function ReportExecutionsMobileList({
+  items,
+  isLoading,
+  downloadMutation,
+}: {
+  items: ReportExecution[];
+  isLoading: boolean;
+  downloadMutation: UseMutationResult<DownloadedReportFile, Error, ReportExecution>;
+}) {
+  const { t, i18n } = useTranslation(["reports", "common"]);
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (items.length === 0) {
+    return (
+      <Card withBorder padding="lg">
+        <Text size="sm" c="dimmed" ta="center">
+          {t("reports:history.empty")}
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {items.map((item) => (
+        <Card key={item.id} withBorder padding="md">
+          <Stack gap={4}>
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Text size="sm" fw={500} truncate>
+                {t(`reports:catalog.${item.reportKey}.label`, { defaultValue: item.reportKey })}
+              </Text>
+              <Badge variant="filled" color={EXECUTION_STATUS_COLOR[item.status]}>
+                {t(`reports:history.status.${item.status}`)}
+              </Badge>
+            </Group>
+            <Group justify="space-between" align="center" wrap="wrap" mt={4}>
+              <Text size="xs" c="dimmed">
+                {formatDateTime(item.requestedAt, locale)}
+              </Text>
+              {item.status === "succeeded" && (
+                <Button
+                  type="button"
+                  variant="subtle"
+                  size="xs"
+                  leftSection={<Download size={14} />}
+                  loading={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
+                  onClick={() => downloadMutation.mutate(item)}
+                >
+                  {t("reports:history.download")}
+                </Button>
+              )}
+            </Group>
+          </Stack>
+        </Card>
+      ))}
     </Stack>
   );
 }

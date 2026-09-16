@@ -18,6 +18,7 @@ namespace Sense.Tests.Integration.Identity;
 /// unrevoked grant. The session principal is built from the issued JWT exactly like RequestContextMiddleware does.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class PlatformImpersonationTests : IdentityStackTestBase
 {
     [Fact]

@@ -24,6 +24,7 @@ namespace Sense.Modules.Employee.Tests;
 /// will read. Deactivated companies stay linkable to nobody new but keep their existing employees.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class SubcontractorIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

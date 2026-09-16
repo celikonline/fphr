@@ -25,4 +25,7 @@ public enum JobType
 
     /// <summary>Faz 4: remind about documents expiring soon or already expired (Documents module).</summary>
     DocumentExpiryReminder = 7,
+
+    /// <summary>Faz 9: KVKK retention sweep - anonymize candidates whose retention window elapsed (Recruitment module).</summary>
+    CandidateRetentionSweep = 8,
 }

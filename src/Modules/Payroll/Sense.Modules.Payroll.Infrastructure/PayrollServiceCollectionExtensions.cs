@@ -36,6 +36,10 @@ public static class PayrollServiceCollectionExtensions
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
         services.AddScoped<IWorkedTimeReader, AttendanceWorkedTimeReaderAdapter>();
 
+        // TB-7 Expense köprüsü (roadmap #23, S-13, faz-07 tur 1 madde 3): approved-but-unpaid expense reimbursement
+        // added as a tax-free NET addition; ExpensePayoutReaderAdapter mirrors AttendanceWorkedTimeReaderAdapter.
+        services.AddScoped<IExpensePayoutReader, ExpensePayoutReaderAdapter>();
+
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();
         services.AddScoped<PayslipDirtyFlagService>();

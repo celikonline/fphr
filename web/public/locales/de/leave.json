@@ -2,6 +2,10 @@
   "days": "[DE] days",
   "noAccess": "[DE] You don't have permission to view leave information.",
   "genericError": "[DE] Something went wrong.",
+  "tabs": {
+    "leave": "[DE] Leave",
+    "absences": "[DE] Absences"
+  },
   "names": {
     "rule_set_seed_turkish_labour_law": "[DE] Sample Turkish Labour Law rule set",
     "type_annual": "[DE] Annual leave",
@@ -312,7 +316,15 @@
     "submittedAt": "Eingereicht am",
     "decidedAt": "Entschieden am",
     "resubmissionOf": "Dieser Antrag ist die erneute Einreichung eines abgelehnten Antrags.",
-    "cancelledAt": "Storniert: {{at}}"
+    "cancelledAt": "Storniert: {{at}}",
+    "halfDayPeriod": "[DE] Half-day period",
+    "timeRange": "[DE] Time range"
+  },
+  "request": {
+    "halfDayPeriod": {
+      "morning": "[DE] Morning",
+      "afternoon": "[DE] Afternoon"
+    }
   },
   "approval": {
     "title": "Genehmigung",
@@ -480,5 +492,37 @@
       "reasonRequired": "[DE] Reason is required."
     },
     "addLeave": "Urlaub hinzufügen"
+  },
+  "absences": {
+    "title": "[DE] Absences",
+    "noAccess": "[DE] You don't have permission to view absence records.",
+    "empty": "[DE] No absence records for this year.",
+    "add": "[DE] Add absence",
+    "addTitle": "[DE] Add absence",
+    "added": "[DE] Absence record added.",
+    "date": "[DE] Date",
+    "kindLabel": "[DE] Type",
+    "kind": {
+      "unexcused": "[DE] Unexcused",
+      "excused": "[DE] Excused",
+      "late": "[DE] Late arrival"
+    },
+    "hours": "[DE] Hours",
+    "note": "[DE] Note",
+    "recordedBy": "[DE] Recorded by",
+    "status": "[DE] Status",
+    "reversed": "[DE] Reversed",
+    "reversal": "[DE] Reversal",
+    "reverse": "[DE] Reverse",
+    "reverseTitle": "[DE] Reverse this absence record?",
+    "reverseDescription": "[DE] A correction (reversal) will be recorded for the \"{{kind}}\" entry on {{date}}; the original record stays, shown struck through.",
+    "reverseReason": "[DE] Reversal reason",
+    "reverseConfirm": "[DE] Create reversal",
+    "reversedDone": "[DE] Reversal recorded.",
+    "validation": {
+      "dateRequired": "[DE] Date is required.",
+      "hoursInvalid": "[DE] Late hours must be between 0 and 24.",
+      "reasonRequired": "[DE] Reason is required."
+    }
   }
 }

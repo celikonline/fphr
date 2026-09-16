@@ -104,6 +104,11 @@ public sealed class AbsenceRecord : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(LeaveDomainErrors.AbsenceHoursOnlyForLate);
         }
 
+        if (kind == AbsenceKind.Late && hours is null)
+        {
+            return Error.Validation(LeaveDomainErrors.AbsenceHoursRequiredForLate);
+        }
+
         return Result.Success();
     }
 

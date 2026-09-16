@@ -12,6 +12,7 @@ namespace Sense.Tests.Integration.Identity;
 /// için de aynı başarı yanıtı), token tek kullanımlıktır ve süresi dolar, başarılı sıfırlama açık oturumları kapatır.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class PasswordResetTests : IdentityStackTestBase
 {
     [Fact]

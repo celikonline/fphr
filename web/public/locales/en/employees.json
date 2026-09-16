@@ -26,6 +26,8 @@
   "filters": {
     "orgUnit": "Unit",
     "allUnits": "All units",
+    "level": "Unit level",
+    "allLevels": "All levels",
     "includeSubUnits": "Include sub-units",
     "status": "Status",
     "all": "All",

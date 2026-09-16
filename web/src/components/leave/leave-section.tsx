@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Anchor, Button, Card, Group, Input, Menu, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, Button, Card, Group, Input, Menu, Modal, NumberInput, Select, Skeleton, Stack, Tabs, Text, Textarea, Title, Tooltip } from "@mantine/core";
 import { Ban, Eye, ListChecks, ListOrdered, MoreVertical } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import ConfirmDialog from "@/components/confirm-dialog";
@@ -29,6 +29,7 @@ import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveNam
 import { LeaveRequestDialog, type LeaveRequestTypeOption } from "./leave-request-dialog";
 import { CancelLeaveRequestDialog, LeaveRequestDetailSheet } from "./leave-request-detail";
 import { ChangeEmployeeRuleSetDialog } from "./employee-rule-set-dialog";
+import { AbsencesPanel } from "./absences-panel";
 
 export const LEAVE_CARD_TAB_PERMISSIONS = ["leave.balances.read", "leave.requests.read", "leave.my.balances", "leave.my.requests"];
 
@@ -55,6 +56,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   const [addOpen, setAddOpen] = useState(false);
   const canAssignRuleSet = usePermission("leave.rule_sets.assign");
   const canCancel = usePermission("leave.requests.cancel_approved");
+  const canViewAbsences = usePermission("leave.absences.view");
   const [ruleSetOpen, setRuleSetOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<LeaveRequest | null>(null);
@@ -127,7 +129,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
     },
   });
 
-  if (balancesMode === null && requestsMode === null) {
+  if (balancesMode === null && requestsMode === null && !canViewAbsences) {
     return (
       <Text size="sm" c="dimmed">
         {t("leave:noAccess")}
@@ -140,8 +142,8 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
     requestsMode === "employee" && canCancel && (request.status === "pending" || request.status === "approved");
   const canChangeRuleSet = balancesMode === "employee" && canAssignRuleSet && !!ruleSetId;
 
-  return (
-    <Stack gap="lg">
+  const leavePanel = (
+    <>
       {balancesMode !== null && (
         <LeaveBalanceSummary
           data={balancesQuery.data}
@@ -223,6 +225,27 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
             />
           )}
         </Card>
+      )}
+    </>
+  );
+
+  return (
+    <Stack gap="lg">
+      {canViewAbsences ? (
+        <Tabs defaultValue="leave" keepMounted={false}>
+          <Tabs.List>
+            <Tabs.Tab value="leave">{t("leave:tabs.leave")}</Tabs.Tab>
+            <Tabs.Tab value="absences">{t("leave:tabs.absences")}</Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="leave" pt="md">
+            <Stack gap="lg">{leavePanel}</Stack>
+          </Tabs.Panel>
+          <Tabs.Panel value="absences" pt="md">
+            <AbsencesPanel employeeId={employee.id} />
+          </Tabs.Panel>
+        </Tabs>
+      ) : (
+        leavePanel
       )}
 
       {detailId && requestsMode !== null && (

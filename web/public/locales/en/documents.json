@@ -70,6 +70,10 @@
       "uploadFailed": "The document could not be uploaded."
     }
   },
+  "expiry": {
+    "expiredBadge": "Expired: {{date}}",
+    "expiringBadge": "Expiring: {{date}}"
+  },
   "report": {
     "title": "Missing document report",
     "subtitle": "View missing, uploaded and waived personnel documents across the tenant.",

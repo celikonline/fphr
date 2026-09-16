@@ -96,6 +96,13 @@ export interface EmployeeDocumentRequirement {
   dueDate: string | null;
   documentId: string | null;
   waivedReason: string | null;
+  /**
+   * The linked document's own validity date (distinct from `dueDate`, the requirement's submission deadline).
+   * `EmployeeDocumentRequirementDto` does not send this field yet (Faz 4 tur 1 FE-BE sözleşme notu, bkz. rapor) -
+   * it is `undefined` at runtime until the backend adds it, so `ExpiryBadge` renders nothing today; typed here so
+   * the UI picks the value up automatically the moment the field starts arriving.
+   */
+  expiryDate?: string | null;
 }
 
 /** `state` segment of the expiring-documents report (S-6 sözleşmesi, Faz 4 tur 3): fixed 30-day window for "expiring". */

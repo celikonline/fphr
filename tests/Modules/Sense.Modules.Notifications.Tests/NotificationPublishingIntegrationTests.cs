@@ -27,6 +27,7 @@ namespace Sense.Modules.Notifications.Tests;
 /// the processor renders and sends (decision link minted just-in-time), and failures back off / skip as designed.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class NotificationPublishingIntegrationTests : TestFixture
 {
     private const string BaseUrl = "https://app.senseik.test";

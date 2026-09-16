@@ -180,13 +180,15 @@ public static class PayrollCalculator
             "kesinti kalemi yok (avans/icra/nafaka/sendika/BES - P3/P5 kapsamına bırakıldı)",
             0m, []));
 
-        // NET
-        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition);
+        // NET (masraf iadesi vergisiz eklenir - TB-7 Expense köprüsü, S-13; SGK/GV/damga matrahlarına hiç girmez)
+        var expenseReimbursement = input.ExpenseReimbursement;
+        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Net, "payroll.trace.step.net",
             Map(("gross", gross), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee),
-                ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption), ("mealNetAddition", mealNetAddition)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç)",
+                ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption),
+                ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement)),
+            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz)",
             net, []));
 
         // EMPLOYER_SGK

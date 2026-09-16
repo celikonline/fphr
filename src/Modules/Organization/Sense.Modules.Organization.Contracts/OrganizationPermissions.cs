@@ -81,16 +81,27 @@ public static class OrganizationPermissions
     public static readonly Permission ApprovalAssignmentsManage = new(
         ApprovalAssignmentsManageKey, Module, "Manage Unit Approval Policies", Group, "Assign or clear the approval policy of each request type on an organization unit");
 
+    /// <summary>View the cost center catalog (S-4, roadmap Faz 2 item #2).</summary>
+    public static readonly Permission CostCentersView = new(
+        CostCentersViewKey, Module, "View Cost Centers", Group, "View the cost center catalog");
+
+    /// <summary>Create, rename, and activate/deactivate cost centers (S-4).</summary>
+    public static readonly Permission CostCentersManage = new(
+        CostCentersManageKey, Module, "Manage Cost Centers", Group, "Create, rename, and activate or deactivate cost centers");
+
     public const string UnitTypesManageKey = "organization.unit_types.manage";
     public const string CompaniesCreateKey = "organization.companies.create";
     public const string CompanyProfileManageKey = "organization.company_profile.manage";
     public const string HolidaysViewKey = "organization.holidays.view";
     public const string ApprovalAssignmentsManageKey = "organization.approval_assignments.manage";
+    public const string CostCentersViewKey = "organization.cost_centers.view";
+    public const string CostCentersManageKey = "organization.cost_centers.manage";
 
     /// <summary>All Organization module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete,
          HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate,
          LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete,
-         UnitTypesManage, CompaniesCreate, CompanyProfileManage, HolidaysView, ApprovalAssignmentsManage];
+         UnitTypesManage, CompaniesCreate, CompanyProfileManage, HolidaysView, ApprovalAssignmentsManage,
+         CostCentersView, CostCentersManage];
 }

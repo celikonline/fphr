@@ -24,6 +24,9 @@ public sealed class PayrollPeriodRepository(PayrollDbContext context) : IPayroll
             .Where(p => p.Status == PayrollPeriodStatus.Open
                 && (p.Year > effectiveFrom.Year || (p.Year == effectiveFrom.Year && p.Month >= effectiveFrom.Month)))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollPeriod>> ListAllAsync(CancellationToken cancellationToken = default) =>
+        await context.Periods.OrderByDescending(p => p.Year).ThenByDescending(p => p.Month).ToListAsync(cancellationToken);
 }
 
 public sealed class PayslipRepository(PayrollDbContext context) : IPayslipRepository

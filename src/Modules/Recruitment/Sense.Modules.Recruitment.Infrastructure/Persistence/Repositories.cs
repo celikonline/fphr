@@ -48,6 +48,14 @@ public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPos
             .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open && p.Id != excludePostingId)
             .OrderByDescending(p => p.PublishedAt)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, CancellationToken cancellationToken = default) =>
+        await context.JobPostings
+            .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
+            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open
+                && (p.ClosingDate == null || p.ClosingDate >= asOf))
+            .OrderByDescending(p => p.PublishedAt)
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed Candidate repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

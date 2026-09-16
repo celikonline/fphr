@@ -199,6 +199,17 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--mantine-color-brand-6) 22%, transparent);
 }
 
+/*
+ * MFA code entry (item 4, gün açılışı tur 1): the 6 cells default to a fixed gap, which overflows the
+ * `max-w-sm` form on narrow phones (~360-390px, e.g. common Android/iPhone SE widths) once the surrounding
+ * `px-6` padding is subtracted. Spreading the fixed-size cells across the full width lets the gaps shrink
+ * instead, so the row never needs horizontal scroll down to ~300px of usable width.
+ */
+.mfaCode {
+  width: 100%;
+  justify-content: space-between;
+}
+
 .submit {
   box-shadow: 0 12px 28px -12px color-mix(in srgb, var(--mantine-color-brand-6) 75%, transparent);
   transition:

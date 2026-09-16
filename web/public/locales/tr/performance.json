@@ -12,6 +12,7 @@
     "subtitle": "Bu dönemki hedeflerinizi görün ve ilerlemenizi güncelleyin.",
     "addGoal": "Hedef ekle",
     "empty": "Henüz bir hedefiniz yok.",
+    "emptyCta": "İlk hedefini ekle",
     "created": "Hedef eklendi.",
     "targetDate": "Hedef tarih: {{date}}",
     "progressLabel": "İlerleme: %{{progress}}",
@@ -42,5 +43,16 @@
     "cancelConfirmTitle": "Hedefi iptal et",
     "cancelConfirmDescription": "\"{{title}}\" hedefini iptal etmek istediğinize emin misiniz?",
     "cancelled": "Hedef iptal edildi."
+  },
+  "reviewCycles": {
+    "title": "Değerlendirme döngülerim",
+    "subtitle": "İçinde bulunduğunuz değerlendirme dönemlerini görüntüleyin.",
+    "empty": "Şu anda size tanımlı bir değerlendirme dönemi yok.",
+    "dateRange": "{{start}} – {{end}}",
+    "status": {
+      "draft": "Taslak",
+      "active": "Devam ediyor",
+      "closed": "Kapandı"
+    }
   }
 }

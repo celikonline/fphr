@@ -26,15 +26,18 @@ import {
   type BadgeProps,
 } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
+import { getApiProblem } from "@/lib/api-error";
 import {
   bulkAssignRole,
   deriveAccessType,
   listPermissionGroups,
   listRoles,
   listUsers,
+  resetUserMfa,
   setUserAccessType,
   setUserRoles,
   setUserStatus,
@@ -114,6 +117,8 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
   const [bulkRoleId, setBulkRoleId] = useState<string>("");
   const [rolesDialogUser, setRolesDialogUser] = useState<UserListItem | null>(null);
   const [accessTypeDialogUser, setAccessTypeDialogUser] = useState<UserListItem | null>(null);
+  const [statusDialogUser, setStatusDialogUser] = useState<UserListItem | null>(null);
+  const [mfaResetDialogUser, setMfaResetDialogUser] = useState<UserListItem | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 300);
@@ -199,6 +204,22 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       setAccessTypeDialogUser(null);
     },
     onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+  });
+
+  /** `identity.mfa.self_reset_forbidden` (S-12): the signed-in admin appears in their own list and tried to
+   * reset their own MFA from here — the security card (self-service disable) is the right place for that. */
+  const mfaResetMutation = useMutation({
+    mutationFn: (id: string) => resetUserMfa(id),
+    onSuccess: () => {
+      invalidate();
+      toast({ variant: "success", title: t("common:success"), description: t("users:mfaReset.success") });
+    },
+    onError: (err: unknown) => {
+      const code = getApiProblem(err)?.code;
+      const description =
+        code === "identity.mfa.self_reset_forbidden" ? t("users:mfaReset.errors.selfForbidden") : t("users:mfaReset.errors.generic");
+      toast({ variant: "destructive", title: t("common:error"), description });
+    },
   });
 
   const bulkMutation = useMutation({
@@ -395,11 +416,12 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                     <Menu.Dropdown>
                       <Menu.Item onClick={() => setAccessTypeDialogUser(user)}>{t("users:editAccessType")}</Menu.Item>
                       <Menu.Item onClick={() => setRolesDialogUser(user)}>{t("users:editRoles")}</Menu.Item>
-                      <Menu.Item
-                        onClick={() => statusMutation.mutate({ id: user.id, enabled: user.status === "disabled" })}
-                      >
+                      <Menu.Item onClick={() => setStatusDialogUser(user)}>
                         {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
                       </Menu.Item>
+                      {user.mfaEnabled && (
+                        <Menu.Item onClick={() => setMfaResetDialogUser(user)}>{t("users:mfaReset.action")}</Menu.Item>
+                      )}
                     </Menu.Dropdown>
                   </Menu>
                 </div>
@@ -513,6 +535,40 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
           onSave={(accessType) => accessTypeMutation.mutate({ id: accessTypeDialogUser.id, accessType })}
           isSaving={accessTypeMutation.isPending}
           t={t}
+        />
+      )}
+
+      {statusDialogUser && (
+        <ConfirmModal
+          opened
+          onClose={() => setStatusDialogUser(null)}
+          title={
+            statusDialogUser.status === "disabled" ? t("users:activateConfirmTitle") : t("users:deactivateConfirmTitle")
+          }
+          message={
+            statusDialogUser.status === "disabled"
+              ? t("users:activateConfirmMessage", { name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}` })
+              : t("users:deactivateConfirmMessage", { name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}` })
+          }
+          confirmLabel={statusDialogUser.status === "disabled" ? t("users:activate") : t("users:deactivate")}
+          danger={statusDialogUser.status !== "disabled"}
+          onConfirm={() =>
+            statusMutation.mutateAsync({ id: statusDialogUser.id, enabled: statusDialogUser.status === "disabled" })
+          }
+        />
+      )}
+
+      {mfaResetDialogUser && (
+        <ConfirmModal
+          opened
+          onClose={() => setMfaResetDialogUser(null)}
+          title={t("users:mfaReset.confirmTitle")}
+          message={t("users:mfaReset.confirmMessage", {
+            name: `${mfaResetDialogUser.firstName} ${mfaResetDialogUser.lastName}`,
+          })}
+          confirmLabel={t("users:mfaReset.action")}
+          danger
+          onConfirm={() => mfaResetMutation.mutateAsync(mfaResetDialogUser.id)}
         />
       )}
     </div>

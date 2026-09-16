@@ -43,6 +43,7 @@ public static class LeaveDomainErrors
     public const string AbsenceNoteTooLong = "leave.absence.note_too_long";
     public const string AbsenceHoursInvalid = "leave.absence.hours_invalid";
     public const string AbsenceHoursOnlyForLate = "leave.absence.hours_only_for_late";
+    public const string AbsenceHoursRequiredForLate = "leave.absence.hours_required_for_late";
     public const string AbsenceReversalReasonRequired = "leave.absence.reversal_reason_required";
     public const string AbsenceAlreadyReversed = "leave.absence.already_reversed";
     public const string AbsenceReversalNotReversible = "leave.absence.reversal_not_reversible";

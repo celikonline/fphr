@@ -37,6 +37,7 @@ namespace Sense.Modules.DataTransfer.Tests;
 /// with the real Organization and Employee modules ("employee.master" template). Identity is replaced by test doubles.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class DataTransferIntegrationTests : TestFixture
 {
     private const string Template = "employee.master";

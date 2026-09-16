@@ -13,5 +13,12 @@ public sealed record PublicJobPostingDto(
     DateOnly? ClosingDate,
     DateTime? PublishedAt);
 
-/// <summary>One row in a company's "diğer açık pozisyonlar" (other open positions) list.</summary>
-public sealed record PublicJobPostingSummaryDto(string ApplySlug, string Title, string EmploymentType, DateTime? PublishedAt);
+/// <summary>
+/// One row in a company's "diğer açık pozisyonlar" (other open positions) list, or in the tenant-wide public
+/// posting list (S-10, <c>GET recruitment/public/postings?tenant=</c>). <c>Location</c> is always null for now:
+/// <see cref="Sense.Modules.Organization.Contracts.ILocationLookup"/> only exposes
+/// <c>ExistsActiveAsync</c> (a boolean), not a display name, so there's no cross-module port yet to resolve
+/// <see cref="Sense.Modules.Recruitment.Domain.JobPostings.JobPosting.LocationId"/> to a string - revisit once
+/// Organization.Contracts grows a name-returning lookup.
+/// </summary>
+public sealed record PublicJobPostingSummaryDto(string ApplySlug, string Title, string? Location, string EmploymentType, DateTime? PublishedAt);

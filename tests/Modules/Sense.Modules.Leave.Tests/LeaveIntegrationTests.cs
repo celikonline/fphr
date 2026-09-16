@@ -26,6 +26,7 @@ namespace Sense.Modules.Leave.Tests;
 /// IEventBus the way Sense.Worker's OutboxProcessor delivers it (handler resolved from DI, tenant scope set by the bus).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class LeaveIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

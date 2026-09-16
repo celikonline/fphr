@@ -2,11 +2,13 @@ using NSubstitute;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Shifts;
 using Sense.Modules.Attendance.Contracts;
+using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Shouldly;
 using Xunit;
@@ -142,20 +144,28 @@ public sealed class AssignShiftHandlerTests
 
 public sealed class PublishShiftAssignmentsHandlerTests
 {
+    private readonly Guid _tenantId = Guid.NewGuid();
     private readonly IShiftAssignmentRepository _shifts = Substitute.For<IShiftAssignmentRepository>();
     private readonly IShiftPlanLockRepository _locks = Substitute.For<IShiftPlanLockRepository>();
+    private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
+    private readonly IEmployeeLookup _employeeLookup = Substitute.For<IEmployeeLookup>();
+    private readonly IIntegrationEventOutbox _outbox = Substitute.For<IIntegrationEventOutbox>();
 
-    public PublishShiftAssignmentsHandlerTests() =>
+    public PublishShiftAssignmentsHandlerTests()
+    {
         _locks.FindByPeriodAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns((ShiftPlanLock?)null);
+        _tenant.TenantId.Returns(_tenantId);
+    }
+
+    private PublishShiftAssignmentsHandler CreateHandler() => new(_shifts, _locks, TimeProvider.System, _tenant, _employeeLookup, _outbox);
 
     [Fact]
     public async Task Handle_DraftAssignment_Publishes()
     {
         var assignment = ShiftAssignment.Create(Guid.NewGuid(), Guid.NewGuid(), new DateOnly(2026, 9, 21), new TimeOnly(9, 0), new TimeOnly(17, 0), 0, false, null).Value;
         _shifts.GetByIdAsync(assignment.Id, Arg.Any<CancellationToken>()).Returns(assignment);
-        var handler = new PublishShiftAssignmentsHandler(_shifts, _locks, TimeProvider.System);
 
-        var result = await handler.Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
+        var result = await CreateHandler().Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
         assignment.Status.ShouldBe(ShiftAssignmentStatus.Published);
@@ -169,12 +179,43 @@ public sealed class PublishShiftAssignmentsHandlerTests
         _shifts.GetByIdAsync(assignment.Id, Arg.Any<CancellationToken>()).Returns(assignment);
         _locks.FindByPeriodAsync(date, Arg.Any<CancellationToken>())
             .Returns(ShiftPlanLock.Lock(Guid.NewGuid(), date, DateTime.UtcNow, Guid.NewGuid(), ShiftPlanLockSource.Manual));
-        var handler = new PublishShiftAssignmentsHandler(_shifts, _locks, TimeProvider.System);
 
-        var result = await handler.Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
+        var result = await CreateHandler().Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(AttendanceDomainErrors.ShiftPeriodLocked);
         assignment.Status.ShouldBe(ShiftAssignmentStatus.Draft);
+        _outbox.DidNotReceive().Enqueue(Arg.Any<ShiftPlanPublished>());
+    }
+
+    [Fact]
+    public async Task Handle_EmployeeHasOrgUnit_RaisesShiftPlanPublished()
+    {
+        var employeeId = Guid.NewGuid();
+        var orgUnitId = Guid.NewGuid();
+        var date = new DateOnly(2026, 9, 21); // Monday
+        var assignment = ShiftAssignment.Create(Guid.NewGuid(), employeeId, date, new TimeOnly(9, 0), new TimeOnly(17, 0), 0, false, null).Value;
+        _shifts.GetByIdAsync(assignment.Id, Arg.Any<CancellationToken>()).Returns(assignment);
+        _employeeLookup.GetOrgUnitIdAsync(_tenantId, employeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+
+        var result = await CreateHandler().Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _outbox.Received(1).Enqueue(Arg.Is<ShiftPlanPublished>(
+            e => e.TenantId == _tenantId && e.OrgUnitId == orgUnitId && e.WeekStart == date && e.EmployeeIds.SequenceEqual(new[] { employeeId })));
+    }
+
+    [Fact]
+    public async Task Handle_EmployeeHasNoOrgUnit_DoesNotRaiseEvent()
+    {
+        var employeeId = Guid.NewGuid();
+        var assignment = ShiftAssignment.Create(Guid.NewGuid(), employeeId, new DateOnly(2026, 9, 21), new TimeOnly(9, 0), new TimeOnly(17, 0), 0, false, null).Value;
+        _shifts.GetByIdAsync(assignment.Id, Arg.Any<CancellationToken>()).Returns(assignment);
+        _employeeLookup.GetOrgUnitIdAsync(_tenantId, employeeId, Arg.Any<CancellationToken>()).Returns((Guid?)null);
+
+        var result = await CreateHandler().Handle(new PublishShiftAssignmentsCommand([assignment.Id]), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _outbox.DidNotReceive().Enqueue(Arg.Any<ShiftPlanPublished>());
     }
 }

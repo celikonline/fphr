@@ -21,6 +21,7 @@ namespace Sense.Modules.Identity.Tests.UnitAuthorizations;
 /// (permission checks, IOrgUnitLookup validation included) is not yet possible.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class UnitAuthorizationIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

@@ -29,12 +29,13 @@ export interface AcceptInvitationInput {
    * this once wired up server-side; until then `AcceptInvitationCommand` only carries it through. Required by
    * the validator whenever `privacyNoticeAccepted` is true (it always is — the checkbox is a hard requirement),
    * so this must always be sent.
+   *
+   * The value itself is product-wide fixed (PANO "KVKK versiyonu" kararı, gün açılışı 2026-09-16: `"2026-09"`
+   * across every module, same value Faz 9 uses) and lives in i18n (`auth:privacy.noticeVersion`) instead of a
+   * TS constant, since it travels with the localized notice text it stamps.
    */
   privacyNoticeVersion: string;
 }
-
-/** Bumped whenever the privacy notice text shown on the invite-accept screen changes. */
-export const PRIVACY_NOTICE_VERSION = "1.0";
 
 export type EmployeeInvitationOutcome = "Sent" | "Resent" | "AlreadyActive";
 

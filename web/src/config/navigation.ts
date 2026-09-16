@@ -37,6 +37,7 @@ import {
   Stamp,
   FileStack,
   FileWarning,
+  Upload,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -225,6 +226,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
+    key: "deviceLogImport",
+    labelKey: "apps.deviceLogImport",
+    path: "/app/attendance/device-logs/import",
+    icon: Upload,
+    permissions: ["attendance.timesheet.import"],
+    iconColor: "orange",
+  },
+  {
     key: "payroll",
     labelKey: "apps.payroll",
     path: "/app/payroll/periods",
@@ -249,6 +258,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "blue",
   },
   { key: "performance", labelKey: "apps.performance", path: "/app/performance/goals", icon: Target, permissions: ["performance.my.goals"], iconColor: "gold" },
+  {
+    key: "performanceReviewCycles",
+    labelKey: "apps.performanceReviewCycles",
+    path: "/app/performance/review-cycles",
+    icon: CalendarRange,
+    permissions: ["performance.my.reviews"],
+    iconColor: "gold",
+  },
   {
     key: "recruitment",
     labelKey: "apps.recruitment",

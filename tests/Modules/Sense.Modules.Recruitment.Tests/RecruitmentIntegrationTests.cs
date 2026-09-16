@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Recruitment.Application;
 using Sense.Modules.Recruitment.Application.Applications;
 using Sense.Modules.Recruitment.Application.Candidates;
@@ -27,10 +28,14 @@ namespace Sense.Modules.Recruitment.Tests;
 /// mistakes (the R-1/TB-5 class of bug: a handler ctor asking for a repository nobody registered) show up here, not
 /// only at Api startup. Postings are built directly via the domain factory (not <c>CreateJobPostingCommand</c>),
 /// which needs Organization/Identity's IOrgUnitLookup/ILocationLookup/IUserAccountLookup - out of scope for a
-/// Recruitment-only fixture; publishing/applying/moving-stage don't need those ports. Each test uses a fresh tenant
-/// id - no ResetDatabaseAsync (the "recruitment" schema isn't in TestFixture's Respawn list yet).
+/// Recruitment-only fixture; publishing/applying/moving-stage don't need those ports. The one exception is
+/// <see cref="ITenantSlugLookup"/> (S-10, <c>ListPublicJobPostingsByTenantSlugQuery</c>): standing up Identity's
+/// whole stack just to resolve a slug isn't worth it, so <see cref="FakeTenantSlugLookup"/> (a real port
+/// implementation, just an in-memory one - not a mock of Recruitment's own code) is registered instead. Each test
+/// uses a fresh tenant id - no ResetDatabaseAsync (the "recruitment" schema isn't in TestFixture's Respawn list yet).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class RecruitmentIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)
@@ -61,6 +66,9 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         services.AddScoped<IRecruitmentFormResponseRepository, RecruitmentFormResponseRepository>();
         services.AddScoped<IAutomationRuleRepository, AutomationRuleRepository>();
         services.AddRecruitmentCoreServices();
+
+        services.AddSingleton<FakeTenantSlugLookup>();
+        services.AddSingleton<ITenantSlugLookup>(sp => sp.GetRequiredService<FakeTenantSlugLookup>());
     }
 
     /// <summary>
@@ -173,6 +181,25 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task PublicCareerFlow_SubmitApplication_OutdatedPrivacyNoticeVersion_IsRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var result = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Elif", "Kara", "elif.kara@example.com", null, "2025-01", true));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(RecruitmentDomainErrors.ApplicationPrivacyNoticeOutdated);
+
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        using var readTenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        (await db.Candidates.AnyAsync(c => c.Email == "elif.kara@example.com")).ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task PublicCareerFlow_DraftPosting_IsNotPubliclyVisible()
     {
         var tenantId = Guid.NewGuid();
@@ -191,6 +218,51 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(applySlug));
         detail.IsFailure.ShouldBeTrue();
         detail.Error.Code.ShouldBe(RecruitmentDomainErrors.PostingNotFound);
+    }
+
+    [Fact]
+    public async Task PublicPostingsList_UnknownSlug_ReturnsEmptyList()
+    {
+        var result = await ExecuteQueryAsync(new ListPublicJobPostingsByTenantSlugQuery("boyle-bir-kiraci-yok"));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task PublicPostingsList_TenantASlug_DoesNotReturnTenantBPosting()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var slugLookup = ServiceProvider!.GetRequiredService<FakeTenantSlugLookup>();
+        slugLookup.Map("kiraci-a", tenantA);
+        slugLookup.Map("kiraci-b", tenantB);
+
+        await CreatePublishedPostingAsync(tenantA, "A Şirketi İlanı");
+        await CreatePublishedPostingAsync(tenantB, "B Şirketi İlanı");
+
+        var listA = await ExecuteQueryAsync(new ListPublicJobPostingsByTenantSlugQuery("kiraci-a"));
+        listA.IsSuccess.ShouldBeTrue();
+        listA.Value.Count.ShouldBe(1);
+        listA.Value[0].Title.ShouldBe("A Şirketi İlanı");
+    }
+
+    [Fact]
+    public async Task PublicPostingsList_ClosedOrExpiredPosting_IsExcluded()
+    {
+        var tenantId = Guid.NewGuid();
+        var slugLookup = ServiceProvider!.GetRequiredService<FakeTenantSlugLookup>();
+        slugLookup.Map("kiraci-durum-testi", tenantId);
+
+        var openPostingId = await CreatePublishedPostingAsync(tenantId, "Açık İlan");
+        await CreateClosedPostingAsync(tenantId, "Kapanmış İlan");
+        await CreateExpiredPostingAsync(tenantId, "Süresi Dolmuş İlan");
+
+        var list = await ExecuteQueryAsync(new ListPublicJobPostingsByTenantSlugQuery("kiraci-durum-testi"));
+
+        list.IsSuccess.ShouldBeTrue();
+        list.Value.Count.ShouldBe(1);
+        list.Value[0].ApplySlug.ShouldBe(await GetApplySlugAsync(openPostingId));
     }
 
     [Fact]
@@ -309,6 +381,31 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         return postingId;
     }
 
+    private async Task<Guid> CreateClosedPostingAsync(Guid tenantId, string title)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var posting = JobPosting.Create(tenantId, title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", Guid.NewGuid(), null).Value;
+        posting.Publish();
+        posting.Close();
+        db.JobPostings.Add(posting);
+        await db.SaveChangesAsync();
+        return posting.Id;
+    }
+
+    private async Task<Guid> CreateExpiredPostingAsync(Guid tenantId, string title)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var posting = JobPosting.Create(tenantId, title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", Guid.NewGuid(), null).Value;
+        posting.Publish();
+        var yesterday = DateOnly.FromDateTime(Clock!.GetUtcNow().UtcDateTime).AddDays(-1);
+        posting.Update(title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", null, null, yesterday);
+        db.JobPostings.Add(posting);
+        await db.SaveChangesAsync();
+        return posting.Id;
+    }
+
     private async Task<string> GetApplySlugAsync(Guid postingId)
     {
         await using var scope = ServiceProvider!.CreateAsyncScope();
@@ -317,4 +414,20 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     private sealed record FormFieldSnapshot(Guid Id);
+
+    /// <summary>
+    /// In-memory <see cref="ITenantSlugLookup"/> for this fixture (see class doc comment): tests call
+    /// <see cref="Map"/> to declare which slug resolves to which tenant id before dispatching
+    /// <c>ListPublicJobPostingsByTenantSlugQuery</c>. An unmapped slug behaves exactly like the real
+    /// implementation's "unknown/suspended tenant" case - <c>null</c>, not an exception.
+    /// </summary>
+    private sealed class FakeTenantSlugLookup : ITenantSlugLookup
+    {
+        private readonly Dictionary<string, Guid> _bySlug = [];
+
+        public void Map(string slug, Guid tenantId) => _bySlug[slug] = tenantId;
+
+        public Task<Guid?> FindTenantIdAsync(string slug, CancellationToken cancellationToken) =>
+            Task.FromResult(_bySlug.TryGetValue(slug, out var tenantId) ? tenantId : (Guid?)null);
+    }
 }

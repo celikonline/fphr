@@ -30,6 +30,7 @@ namespace Sense.Modules.Organization.Tests;
 /// built (schema, migrations, tenant isolation, cross-module Guid references) actually round-trips.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class OrgUnitIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

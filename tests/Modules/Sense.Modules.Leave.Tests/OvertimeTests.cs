@@ -126,6 +126,7 @@ public sealed class OvertimeDomainTests
 
 /// <summary>Overtime submit → Workflow "Overtime" approval (substituted) → ApprovalCompleted via IEventBus → conversion posts an ExtraGrant row.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class OvertimeIntegrationTests : TestFixture
 {
     private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();

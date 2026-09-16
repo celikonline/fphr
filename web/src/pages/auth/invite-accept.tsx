@@ -10,7 +10,7 @@ import { AlertTriangle, MailCheck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import { PRIVACY_NOTICE_VERSION, acceptInvitation, getInvitationPreview } from "@/services/invitations.service";
+import { acceptInvitation, getInvitationPreview } from "@/services/invitations.service";
 import classes from "./invite-accept.module.css";
 
 /** Mirrors IdentityDefaults.MinPasswordLength; the server validates the configured value. */
@@ -89,7 +89,7 @@ export default function InviteAcceptPage() {
         token,
         password: values.password,
         privacyNoticeAccepted: values.privacyNoticeAccepted,
-        privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+        privacyNoticeVersion: t("auth:privacy.noticeVersion"),
       }),
     onSuccess: () => {
       toast({ variant: "success", title: t("common:success"), description: t("auth:invite.acceptSuccess") });

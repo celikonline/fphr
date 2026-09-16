@@ -2,6 +2,10 @@
   "days": "days",
   "noAccess": "You don't have permission to view leave information.",
   "genericError": "Something went wrong.",
+  "tabs": {
+    "leave": "Leave",
+    "absences": "Absences"
+  },
   "names": {
     "rule_set_seed_turkish_labour_law": "Sample Turkish Labour Law rule set",
     "type_annual": "Annual leave",
@@ -312,7 +316,15 @@
     "submittedAt": "Submitted at",
     "decidedAt": "Decided at",
     "resubmissionOf": "This request is a resubmission of a rejected request.",
-    "cancelledAt": "Cancelled: {{at}}"
+    "cancelledAt": "Cancelled: {{at}}",
+    "halfDayPeriod": "Half-day period",
+    "timeRange": "Time range"
+  },
+  "request": {
+    "halfDayPeriod": {
+      "morning": "Morning",
+      "afternoon": "Afternoon"
+    }
   },
   "approval": {
     "title": "Approval",
@@ -480,5 +492,37 @@
       "reasonRequired": "Reason is required."
     },
     "addLeave": "Add leave"
+  },
+  "absences": {
+    "title": "Absences",
+    "noAccess": "You don't have permission to view absence records.",
+    "empty": "No absence records for this year.",
+    "add": "Add absence",
+    "addTitle": "Add absence",
+    "added": "Absence record added.",
+    "date": "Date",
+    "kindLabel": "Type",
+    "kind": {
+      "unexcused": "Unexcused",
+      "excused": "Excused",
+      "late": "Late arrival"
+    },
+    "hours": "Hours",
+    "note": "Note",
+    "recordedBy": "Recorded by",
+    "status": "Status",
+    "reversed": "Reversed",
+    "reversal": "Reversal",
+    "reverse": "Reverse",
+    "reverseTitle": "Reverse this absence record?",
+    "reverseDescription": "A correction (reversal) will be recorded for the \"{{kind}}\" entry on {{date}}; the original record stays, shown struck through.",
+    "reverseReason": "Reversal reason",
+    "reverseConfirm": "Create reversal",
+    "reversedDone": "Reversal recorded.",
+    "validation": {
+      "dateRequired": "Date is required.",
+      "hoursInvalid": "Late hours must be between 0 and 24.",
+      "reasonRequired": "Reason is required."
+    }
   }
 }

@@ -32,6 +32,7 @@ namespace Sense.Modules.Organization.Tests;
 /// against real PostgreSQL, with the real Employee module behind IEmployeeLookup. Identity is substituted (permissions granted).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class OrganizationStructureIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

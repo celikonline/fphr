@@ -20,6 +20,7 @@ namespace Sense.Modules.Organization.Tests;
 /// Dispatcher.Send(...), since TestFixture's tenant/user helpers don't yet persist real Identity rows.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class LocationIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

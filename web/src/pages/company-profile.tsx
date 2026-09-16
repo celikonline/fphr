@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Info } from "lucide-react";
 import { Alert, Avatar, Button, Card, Chip, Group, Input, Skeleton, Text, TextInput, Title } from "@mantine/core";
-import { FileDropzone } from "@/components/ui/file-dropzone";
+import { FileDropzone, type FileRejectReason } from "@/components/ui/file-dropzone";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
@@ -127,6 +127,11 @@ export default function CompanyProfilePage() {
     },
   });
 
+  function handleLogoReject(reason: FileRejectReason) {
+    const description = reason === "size" ? t("company:logoRejectedSize") : t("company:logoRejectedType");
+    toast({ variant: "destructive", title: t("common:error"), description });
+  }
+
   if (isLoading || !profile) {
     return (
       <div className="space-y-4 p-6 md:p-10">
@@ -170,7 +175,7 @@ export default function CompanyProfilePage() {
             hint={t("company:logoDropHint")}
             busyLabel={t("company:uploadingLogo")}
             onFile={(file) => logoMutation.mutate(file)}
-            onReject={() => toast({ variant: "destructive", title: t("common:error"), description: t("company:logoRejected") })}
+            onReject={handleLogoReject}
           />
         </div>
       </Card>

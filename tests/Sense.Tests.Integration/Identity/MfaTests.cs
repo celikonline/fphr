@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Auth;
+using Sense.Modules.Identity.Application.Users;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
@@ -15,6 +16,7 @@ namespace Sense.Tests.Integration.Identity;
 /// yalnız uçtan uca akış (handler'lar + gerçek Postgres + AuthorizationBehaviour) test edilir.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class MfaTests : IdentityStackTestBase
 {
     [Fact]
@@ -138,6 +140,63 @@ public sealed class MfaTests : IdentityStackTestBase
 
         var login = (await ExecuteCommandAsync(new LoginCommand(email, "Password-12345", "mfa-disable", null, null))).Value;
         login.Status.ShouldBe(LoginStatuses.Ok);
+    }
+
+    [Fact]
+    public async Task GetMfaStatus_ReflectsPendingEnrollmentThenEnabled()
+    {
+        var tenantId = await SeedTenantAsync("mfa-status");
+        var userId = await SeedUserAsync(tenantId, "gulsah@acme.test", SystemRoleCodes.Employee);
+        ActAs(tenantId, userId);
+
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false));
+
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, true));
+
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(true, false));
+    }
+
+    [Fact]
+    public async Task ResetUserMfa_ByAdmin_ClearsSecretAndDisablesMfa()
+    {
+        var tenantId = await SeedTenantAsync("mfa-admin-reset");
+        var adminId = await SeedUserAsync(tenantId, "yonetici@acme.test", SystemRoleCodes.Admin);
+        var targetId = await SeedUserAsync(tenantId, "hedef@acme.test", SystemRoleCodes.Employee);
+
+        ActAs(tenantId, targetId);
+        var enroll = (await ExecuteCommandAsync(new EnrollMfaCommand())).Value;
+        await ExecuteCommandAsync(new VerifyMfaEnrollmentCommand(CodeFor(enroll.Secret)));
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.Enabled.ShouldBeTrue();
+
+        ActAs(tenantId, adminId);
+        (await ExecuteCommandAsync(new ResetUserMfaCommand(targetId))).IsSuccess.ShouldBeTrue();
+
+        ActAs(tenantId, targetId);
+        (await ExecuteQueryAsync(new GetMfaStatusQuery())).Value.ShouldBe(new MfaStatusDto(false, false));
+    }
+
+    [Fact]
+    public async Task ResetUserMfa_OwnAccount_ReturnsConflict()
+    {
+        var tenantId = await SeedTenantAsync("mfa-admin-self-reset");
+        var adminId = await SeedUserAsync(tenantId, "kendi@acme.test", SystemRoleCodes.Admin);
+        ActAs(tenantId, adminId);
+
+        ShouldFailWith(await ExecuteCommandAsync(new ResetUserMfaCommand(adminId)), IdentityErrors.MfaSelfResetForbidden, ErrorType.Conflict);
+    }
+
+    [Fact]
+    public async Task ResetUserMfa_DifferentTenantUser_ReturnsNotFound()
+    {
+        var tenantAId = await SeedTenantAsync("mfa-admin-reset-tenant-a");
+        var tenantBId = await SeedTenantAsync("mfa-admin-reset-tenant-b");
+        var adminId = await SeedUserAsync(tenantAId, "yonetici-a@acme.test", SystemRoleCodes.Admin);
+        var otherTenantUserId = await SeedUserAsync(tenantBId, "kullanici-b@acme.test", SystemRoleCodes.Employee);
+
+        ActAs(tenantAId, adminId);
+        ShouldFailWith(await ExecuteCommandAsync(new ResetUserMfaCommand(otherTenantUserId)), IdentityErrors.UserNotFound, ErrorType.NotFound);
     }
 
     [Fact]

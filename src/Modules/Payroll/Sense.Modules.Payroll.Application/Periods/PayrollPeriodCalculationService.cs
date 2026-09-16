@@ -34,7 +34,8 @@ public sealed class PayrollPeriodCalculationService(
     ILegislationParameterReader legislationReader,
     ITenantContext tenant,
     TimeProvider clock,
-    IWorkedTimeReader workedTimeReader)
+    IWorkedTimeReader workedTimeReader,
+    IExpensePayoutReader expensePayoutReader)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -105,6 +106,11 @@ public sealed class PayrollPeriodCalculationService(
         // implementation, WorkedDays reflects actual attendance instead.
         var workedTime = await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
         var workedDays = workedTime?.WorkedDays ?? calendarDays;
+
+        // TB-7 Expense köprüsü (roadmap #23, faz-07 tur 1 madde 3): port boş/null dönerse 0 - bugünkü davranış sürer.
+        var expensePayout = await expensePayoutReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
+        var expenseReimbursement = expensePayout?.ApprovedExpenseTotal ?? 0m;
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: salary.Amount,
             WorkedDays: workedDays,
@@ -112,7 +118,8 @@ public sealed class PayrollPeriodCalculationService(
             MealVariant: profile.MealBenefitVariant,
             MealDailyAmount: profile.MealDailyAmount,
             PriorCumulativeGvBase: 0m,
-            AsOfDate: periodStart);
+            AsOfDate: periodStart,
+            ExpenseReimbursement: expenseReimbursement);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
 

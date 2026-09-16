@@ -176,6 +176,7 @@ public sealed class LeaveRequestStateTests
 
 /// <summary>Submit → Workflow start (substituted IWorkflowService) → ApprovalCompleted/ApprovalRejected through IEventBus, on real PostgreSQL.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class LeaveRequestIntegrationTests : TestFixture
 {
     private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();
@@ -315,6 +316,87 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var ledger = await ActivatorUtilities.CreateInstance<Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerHandler>(verify.ServiceProvider, _currentUser)
             .Handle(new Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerQuery(annualId), CancellationToken.None);
         ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value.Id);
+    }
+
+    /// <summary>S-7 teamOverlap: same org unit + active (Pending/Approved) only; rejected/cancelled/different-unit peers are excluded.</summary>
+    [Fact]
+    public async Task Preview_TeamOverlap_CountsSameUnitActiveOnly()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        var orgUnitId = Guid.NewGuid();
+        var peerApproved = Guid.NewGuid();
+        var peerPending = Guid.NewGuid();
+        var peerRejected = Guid.NewGuid();
+        var peerCancelled = Guid.NewGuid();
+        var peerOtherUnit = Guid.NewGuid(); // exists but not returned by ListActiveEmployeeIdsInOrgUnitsAsync below - simulates "different unit".
+
+        var employeeLookup = ServiceProvider.GetRequiredService<IEmployeeLookup>();
+        employeeLookup.GetOrgUnitIdAsync(tenantId, employeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        var directory = ServiceProvider.GetRequiredService<IEmployeeDirectory>();
+        directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(orgUnitId)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { peerApproved, peerPending, peerRejected, peerCancelled });
+        directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact>
+            {
+                new(peerApproved, "Ayşe", "Approved", null, null, null, "Active"),
+                new(peerPending, "Bora", "Pending", null, null, null, "Active"),
+            });
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        var window = (Start: monday, End: monday.AddDays(4));
+
+        LeaveRequest MakePeerRequest(Guid peerId) =>
+            LeaveRequest.Submit(tenantId, peerId, Guid.NewGuid(), LeaveTypeCode.Annual, window.Start, window.End, 5m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            var approved = MakePeerRequest(peerApproved);
+            var approvalId1 = Guid.NewGuid();
+            approved.AttachApproval(approvalId1);
+            approved.Approve(approvalId1, DateTime.UtcNow);
+            db.Requests.Add(approved);
+
+            db.Requests.Add(MakePeerRequest(peerPending)); // stays Pending
+
+            var rejected = MakePeerRequest(peerRejected);
+            var approvalId2 = Guid.NewGuid();
+            rejected.AttachApproval(approvalId2);
+            rejected.Reject(approvalId2, DateTime.UtcNow);
+            db.Requests.Add(rejected);
+
+            var cancelled = MakePeerRequest(peerCancelled);
+            cancelled.Cancel("Vazgeçildi", peerCancelled, DateTime.UtcNow);
+            db.Requests.Add(cancelled);
+
+            db.Requests.Add(MakePeerRequest(peerOtherUnit)); // Pending but not in the mocked peers list.
+
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, window.Start, window.End, null), CancellationToken.None);
+
+        preview.IsSuccess.ShouldBeTrue(preview.IsFailure ? preview.Error.Code : null);
+        preview.Value.TeamOverlap.ShouldNotBeNull();
+        preview.Value.TeamOverlap!.Count.ShouldBe(2);
+        preview.Value.TeamOverlap.Employees.Select(e => e.EmployeeId).ShouldBe([peerApproved, peerPending], ignoreOrder: true);
     }
 
     [Fact]

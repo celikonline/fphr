@@ -12,6 +12,7 @@
     "subtitle": "View this period's goals and update your progress.",
     "addGoal": "Add goal",
     "empty": "You don't have any goals yet.",
+    "emptyCta": "Add your first goal",
     "created": "Goal added.",
     "targetDate": "Target date: {{date}}",
     "progressLabel": "Progress: {{progress}}%",
@@ -42,5 +43,16 @@
     "cancelConfirmTitle": "Cancel goal",
     "cancelConfirmDescription": "Are you sure you want to cancel \"{{title}}\"?",
     "cancelled": "Goal cancelled."
+  },
+  "reviewCycles": {
+    "title": "My review cycles",
+    "subtitle": "View the review cycles you are part of.",
+    "empty": "You don't have any review cycles assigned right now.",
+    "dateRange": "{{start}} – {{end}}",
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "closed": "Closed"
+    }
   }
 }

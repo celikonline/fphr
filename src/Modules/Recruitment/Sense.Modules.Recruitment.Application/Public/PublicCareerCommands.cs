@@ -14,7 +14,9 @@ namespace Sense.Modules.Recruitment.Application.Public;
 /// başvuru formu"). Deliberately no <c>[RequiresPermission]</c> - this is the ATS's one anonymous write.
 /// Tenant is resolved from the posting (see <see cref="IJobPostingRepository.GetPublicByApplySlugAsync"/>),
 /// never from the request. <c>PrivacyNoticeVersion</c>/<c>KvkkAccepted</c> are the aydınlatma metni onayı (Faz 9
-/// tur 3 TALIMAT madde 2): validated here and logged, but **not persisted to a new column** - Faz 1's
+/// tur 3 TALIMAT madde 2): validated here (including a hard match against
+/// <see cref="RecruitmentLimits.KnownPrivacyNoticeVersion"/>, gün açılışı TALIMAT'ı) and logged, but **not
+/// persisted to a new column** - Faz 1's
 /// <c>IConsentRecorder</c>/<c>ConsentRecord</c> (S-3, `identity.consent_records`) is the real sahibi; once that
 /// port lands in Identity.Contracts this handler should call it instead of only logging. No migration this slice.
 /// </summary>
@@ -43,6 +45,13 @@ public sealed class SubmitCareerApplicationHandler(
 {
     public async Task<Result<Guid>> Handle(SubmitCareerApplicationCommand command, CancellationToken cancellationToken)
     {
+        // PO kararı (Faz 9 gün açılışı TALIMAT'ı, 2026-09-16): aydınlatma metni versiyonu ürün genelinde tek bir
+        // güncel değer taşır - eski bir sayfadan/önbellekten gönderilen bir başka değer 400'dür, sessizce kabul edilmez.
+        if (command.PrivacyNoticeVersion != RecruitmentLimits.KnownPrivacyNoticeVersion)
+        {
+            return Error.Validation(RecruitmentDomainErrors.ApplicationPrivacyNoticeOutdated);
+        }
+
         var posting = await postings.GetPublicByApplySlugAsync(command.ApplySlug, cancellationToken);
         if (posting.IsFailure)
         {

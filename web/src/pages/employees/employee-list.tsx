@@ -37,7 +37,7 @@ import EmployeeCardGrid from "@/components/employees/employee-card-grid";
 import { CONTRACT_TYPE_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "@/components/employees/employee-enum-options";
 import EmployeeDirectory from "@/components/employees/employee-directory";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
-import { useOrgUnits } from "@/components/employees/use-org-units";
+import { useOrgLevels, useOrgUnits } from "@/components/employees/use-org-units";
 
 const DEFAULT_PAGE_SIZE = 20;
 const COLUMN_VISIBILITY_KEY = "senseik.employees.grid.columns";
@@ -80,7 +80,9 @@ function EmployeeGrid() {
   const canBulk = useAnyPermission(BULK_PERMISSIONS);
   const hasOrgChartPermission = usePermission("employee.orgchart.view");
   const orgChartEnabled = useAccessSetting("showOrgChart");
-  const { nameById: unitNames } = useOrgUnits();
+  const { nameById: unitNames, options: unitOptions } = useOrgUnits();
+  const { levels } = useOrgLevels();
+  const unitLevelById = useMemo(() => new Map(unitOptions.map((unit) => [unit.id, unit.typeId])), [unitOptions]);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -88,6 +90,11 @@ function EmployeeGrid() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [includeSubUnits, setIncludeSubUnits] = useState(true);
+  /** Org unit hierarchy level (birim seviyesi, e.g. "Departman"): client-side only, narrows the
+   * fetched page's rows by the unit's type - not sent to the server and not part of EmployeeFilter
+   * (that DTO mirrors the BE contract 11 modules depend on, see HAFIZA-fe.md). "Select all matching"
+   * bulk actions therefore ignore this filter, same as sorting/paging within a level do not apply. */
+  const [levelId, setLevelId] = useState<string | null>(null);
   const [status, setStatus] = useState(ALL);
   const [account, setAccount] = useState(ALL);
   const [employmentType, setEmploymentType] = useState(ALL);
@@ -158,6 +165,10 @@ function EmployeeGrid() {
 
   const items = data?.items ?? [];
   const totalCount = data?.totalCount ?? 0;
+  const displayItems = useMemo(
+    () => (levelId ? items.filter((item) => item.orgUnitId && unitLevelById.get(item.orgUnitId) === levelId) : items),
+    [items, levelId, unitLevelById]
+  );
 
   // Names of every employee seen so far (across pages), so bulk results can label rows from earlier pages.
   const [nameById, setNameById] = useState<ReadonlyMap<string, string>>(() => new Map());
@@ -174,8 +185,8 @@ function EmployeeGrid() {
   }
 
   const isSelected = (id: string) => (selection.mode === "ids" ? selection.ids.has(id) : !selection.excluded.has(id));
-  const selectedOnPage = items.filter((item) => isSelected(item.id)).length;
-  const pageFullySelected = items.length > 0 && selectedOnPage === items.length;
+  const selectedOnPage = displayItems.filter((item) => isSelected(item.id)).length;
+  const pageFullySelected = displayItems.length > 0 && selectedOnPage === displayItems.length;
   const selectedCount = selection.mode === "ids" ? selection.ids.size : Math.max(0, totalCount - selection.excluded.size);
 
   const apiSelection: EmployeeSelection | null =
@@ -204,11 +215,11 @@ function EmployeeGrid() {
     setSelection((prev) => {
       if (prev.mode === "ids") {
         const ids = new Set(prev.ids);
-        items.forEach((item) => (checked ? ids.add(item.id) : ids.delete(item.id)));
+        displayItems.forEach((item) => (checked ? ids.add(item.id) : ids.delete(item.id)));
         return { mode: "ids", ids };
       }
       const excluded = new Set(prev.excluded);
-      items.forEach((item) => (checked ? excluded.delete(item.id) : excluded.add(item.id)));
+      displayItems.forEach((item) => (checked ? excluded.delete(item.id) : excluded.add(item.id)));
       return { mode: "all", excluded };
     });
   }
@@ -329,7 +340,7 @@ function EmployeeGrid() {
 
   const table = useDataTable({
     columns,
-    data: items,
+    data: displayItems,
     getRowId: (employee) => employee.id,
     sorting: [{ id: sort.field, desc: sort.desc }],
     onSortingChange: changeSorting,
@@ -343,7 +354,14 @@ function EmployeeGrid() {
   }
 
   const hasActiveFilters =
-    filter.q || filter.orgUnitId || filter.status || filter.hasUserAccount !== null || filter.employmentType || filter.contractType || filter.missingInfo;
+    filter.q ||
+    filter.orgUnitId ||
+    filter.status ||
+    filter.hasUserAccount !== null ||
+    filter.employmentType ||
+    filter.contractType ||
+    filter.missingInfo ||
+    levelId;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
@@ -385,6 +403,18 @@ function EmployeeGrid() {
           </Input.Label>
           <OrgUnitSelect id="emp-filter-unit" value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("employees:filters.allUnits")} />
         </div>
+        {levels.length > 0 && (
+          <Select
+            id="emp-filter-level"
+            w={176}
+            label={t("employees:filters.level")}
+            styles={FILTER_LABEL_STYLES}
+            value={levelId ?? ALL}
+            onChange={(value) => setLevelId(value === ALL ? null : value)}
+            allowDeselect={false}
+            data={[{ value: ALL, label: t("employees:filters.allLevels") }, ...levels.map((level) => ({ value: level.id, label: level.name }))]}
+          />
+        )}
         {orgUnitId && (
           <div className="flex h-9 items-center">
             <Switch
@@ -490,7 +520,7 @@ function EmployeeGrid() {
 
       {canBulk && (
         <Group gap="sm">
-          {viewMode === "grid" && items.length > 0 && (
+          {viewMode === "grid" && displayItems.length > 0 && (
             <Checkbox
               aria-label={t("employees:bulk.selectPage")}
               checked={pageFullySelected}
@@ -543,7 +573,7 @@ function EmployeeGrid() {
       <Card withBorder padding={0}>
         {viewMode === "grid" ? (
           <EmployeeCardGrid
-            items={items}
+            items={displayItems}
             isLoading={isLoading}
             isFetching={isFetching}
             emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}

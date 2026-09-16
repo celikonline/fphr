@@ -18,6 +18,9 @@ public interface IPayrollPeriodRepository
     /// <summary>Open periods whose calendar month is on or after <paramref name="effectiveFrom"/>'s month (the "Değişti"
     /// mechanism only flags periods that already exist; a period opened later picks up current data on its first run).</summary>
     Task<IReadOnlyList<PayrollPeriod>> ListOpenCoveringOrAfterAsync(DateOnly effectiveFrom, CancellationToken cancellationToken = default);
+
+    /// <summary>Every period the tenant has ever opened, newest first (faz-07 tur 1: "Dönem listesi" read-only screen).</summary>
+    Task<IReadOnlyList<PayrollPeriod>> ListAllAsync(CancellationToken cancellationToken = default);
 }
 
 public interface IPayslipRepository

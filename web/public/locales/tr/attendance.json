@@ -137,5 +137,39 @@
       "durationRequired": "Süreyi girin.",
       "leaveTypeRequired": "İzin türü seçin."
     }
+  },
+  "deviceLogImport": {
+    "title": "PDKS cihaz kaydı içe aktar",
+    "subtitle": "Turnike/kart/parmak izi cihazından alınan CSV dosyasını yükleyin; giriş-çıkış kayıtları puantaja işlenir.",
+    "formatHint": "İlk satır başlık: employeeCode;timestamp;direction;deviceId — employeeCode çalışanın TC kimlik numarasıdır; noktalı virgül veya virgülle ayrılabilir, UTF-8.",
+    "downloadSample": "Örnek CSV indir",
+    "dropzoneTitle": "CSV dosyasını sürükleyin ya da seçmek için tıklayın",
+    "dropzoneHint": "En fazla 5 MB",
+    "uploading": "Yükleniyor…",
+    "fileTooLarge": "Dosya 5 MB sınırını aşıyor.",
+    "invalidType": "Yalnızca CSV dosyası yükleyebilirsiniz.",
+    "resultSummary": "{{imported}} kayıt içe alındı, {{skipped}} kayıt atlandı.",
+    "imported": "İçe alınan",
+    "skipped": "Atlanan",
+    "errorsHint": "Atlanan satırlar dosyaya hiç işlenmedi; aşağıdaki nedenleri düzeltip yalnız o satırları yeniden yükleyebilirsiniz.",
+    "col": {
+      "line": "Satır",
+      "reason": "Neden",
+      "value": "Değer"
+    },
+    "errorCodes": {
+      "attendance": {
+        "device_log": {
+          "invalid_timestamp": "Geçersiz zaman damgası (ISO 8601 bekleniyor, örn. 2026-09-16T08:03:00).",
+          "invalid_direction": "Geçersiz yön; \"in\" veya \"out\" olmalı.",
+          "missing_employee_code": "TC kimlik numarası eksik.",
+          "unknown_employee": "Bu TC kimlik numarasıyla eşleşen aktif bir çalışan bulunamadı.",
+          "duplicate_timestamp": "Aynı çalışan ve zaman damgasıyla bir kayıt dosyada daha önce geçti.",
+          "check_out_before_check_in": "Çıkış saati girişten önce olamaz.",
+          "file_required": "Dosya seçilmedi.",
+          "file_too_large": "Dosya 5 MB sınırını aşıyor."
+        }
+      }
+    }
   }
 }

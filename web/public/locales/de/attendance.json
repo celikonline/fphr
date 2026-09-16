@@ -137,5 +137,39 @@
       "durationRequired": "[DE] Enter the duration.",
       "leaveTypeRequired": "[DE] Select a leave type."
     }
+  },
+  "deviceLogImport": {
+    "title": "[DE] Import PDKS device log",
+    "subtitle": "[DE] Upload the CSV exported from a turnstile/card/fingerprint device; check-in/check-out records are applied to the timesheet.",
+    "formatHint": "[DE] First row is the header: employeeCode;timestamp;direction;deviceId — employeeCode is the employee's national ID number; semicolon or comma separated, UTF-8.",
+    "downloadSample": "[DE] Download sample CSV",
+    "dropzoneTitle": "[DE] Drop the CSV file here, or click to choose",
+    "dropzoneHint": "[DE] Up to 5 MB",
+    "uploading": "[DE] Uploading…",
+    "fileTooLarge": "[DE] The file exceeds the 5 MB limit.",
+    "invalidType": "[DE] You can only upload a CSV file.",
+    "resultSummary": "[DE] {{imported}} record(s) imported, {{skipped}} skipped.",
+    "imported": "[DE] Imported",
+    "skipped": "[DE] Skipped",
+    "errorsHint": "[DE] Skipped rows were not applied at all; fix the reasons below and re-upload just those rows.",
+    "col": {
+      "line": "[DE] Line",
+      "reason": "[DE] Reason",
+      "value": "[DE] Value"
+    },
+    "errorCodes": {
+      "attendance": {
+        "device_log": {
+          "invalid_timestamp": "[DE] Invalid timestamp (expected ISO 8601, e.g. 2026-09-16T08:03:00).",
+          "invalid_direction": "[DE] Invalid direction; must be \"in\" or \"out\".",
+          "missing_employee_code": "[DE] National ID number is missing.",
+          "unknown_employee": "[DE] No active employee matches this national ID number.",
+          "duplicate_timestamp": "[DE] A record with the same employee and timestamp already appeared earlier in the file.",
+          "check_out_before_check_in": "[DE] Check-out time cannot be before check-in.",
+          "file_required": "[DE] No file was selected.",
+          "file_too_large": "[DE] The file exceeds the 5 MB limit."
+        }
+      }
+    }
   }
 }

@@ -17,6 +17,7 @@ namespace Sense.Tests.Integration.Identity;
 
 /// <summary>Faz 0 item 10: employee invitations (single + bulk) create/link Employee-role users and pick the work e-mail first.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class EmployeeInvitationTests : IdentityStackTestBase
 {
     [Fact]

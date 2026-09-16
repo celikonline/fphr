@@ -22,6 +22,7 @@ namespace Sense.Modules.Attendance.Tests;
 /// the way Sense.Worker's OutboxProcessor delivers it (handler resolved from DI, tenant scope set by the bus).
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class AttendanceIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

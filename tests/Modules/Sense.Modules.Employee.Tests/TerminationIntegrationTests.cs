@@ -35,6 +35,7 @@ namespace Sense.Modules.Employee.Tests;
 /// module - the seed values it stands in for are documented at each call site.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class TerminationIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

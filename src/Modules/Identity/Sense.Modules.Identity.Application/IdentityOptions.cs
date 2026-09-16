@@ -84,6 +84,9 @@ public static class IdentityErrors
 
     public const string MfaTokenExpired = "identity.mfa.token_expired";
 
+    /// <summary>Yönetici MFA sıfırlama ucu (Faz 3 Tur 1, S-12): kullanıcı kendi hesabını bu uçtan sıfırlayamaz.</summary>
+    public const string MfaSelfResetForbidden = "identity.mfa.self_reset_forbidden";
+
     public const string TenantInvalidSlug = "tenant.invalid_slug";
     public const string TenantSlugTaken = "tenant.slug_taken";
     public const string TenantNotFound = "tenant.not_found";

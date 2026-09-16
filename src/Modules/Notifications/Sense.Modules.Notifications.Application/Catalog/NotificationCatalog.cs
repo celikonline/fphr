@@ -7,6 +7,9 @@ public enum NotificationCategory
     Account,
     Request,
     Approval,
+
+    /// <summary>Periodic digest-style reminders (e.g. documents nearing/past expiry), not tied to a single request.</summary>
+    Reminder,
 }
 
 /// <summary>
@@ -29,6 +32,7 @@ public sealed record NotificationTemplateDefinition(
 public static class NotificationCatalog
 {
     private static readonly string[] EmailAndInApp = [NotificationChannels.Email, NotificationChannels.InApp];
+    private static readonly string[] InAppOnly = [NotificationChannels.InApp];
 
     public static IReadOnlyList<NotificationTemplateDefinition> All { get; } =
     [
@@ -36,6 +40,7 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.RequestApproved, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.DocumentExpiryReminder, NotificationCategory.Reminder, InAppOnly, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>

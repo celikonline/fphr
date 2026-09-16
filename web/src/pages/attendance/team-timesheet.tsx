@@ -11,6 +11,7 @@ import {
   Input,
   NumberInput,
   Select,
+  SegmentedControl,
   Skeleton,
   Stack,
   Table,
@@ -18,6 +19,7 @@ import {
   Textarea,
   Title,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import { CalendarPlus, ChevronLeft, ChevronRight, Clock, EyeOff, Pencil, Users } from "lucide-react";
 import NoAccess from "@/components/no-access";
@@ -86,6 +88,11 @@ function TeamTimesheet() {
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedCell | null>(null);
+  // Mobile (dar viewport, ≤~576px): 7 kolonlu ızgara yerine gün seçici + çalışan kart listesi (bkz. TeamDayCard).
+  const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
+    const day = new Date().getDay(); // 0 = Pazar
+    return day === 0 ? 6 : day - 1; // Pazartesi-ilk index
+  });
 
   const weekStartIso = toDateOnly(weekStart);
   const query = useQuery({
@@ -95,6 +102,7 @@ function TeamTimesheet() {
 
   const weekDates = useMemo(() => WEEK_DAYS_MONDAY_FIRST.map((_, i) => toDateOnly(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i))), [weekStart]);
   const weekEnd = weekDates[weekDates.length - 1];
+  const selectedDate = weekDates[selectedDayIndex];
 
   const rows = [...(query.data ?? [])].sort((a, b) => a.employeeName.localeCompare(b.employeeName));
 
@@ -156,25 +164,58 @@ function TeamTimesheet() {
           {t("attendance:teamTimesheet.empty")}
         </Text>
       ) : (
-        <div className="overflow-x-auto">
-          <Table withTableBorder withColumnBorders verticalSpacing="xs" miw={800}>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("attendance:teamTimesheet.employee")}</Table.Th>
-                {weekDates.map((date) => (
-                  <Table.Th key={date} ta="center">
-                    {formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" })}
-                  </Table.Th>
+        <>
+          {/* Dar viewport (≤~576px): 7 kolonlu ızgara sığmaz; gün seçici + tek günlük çalışan kart listesi. */}
+          <Stack gap="sm" hiddenFrom="xs">
+            <SegmentedControl
+              fullWidth
+              value={String(selectedDayIndex)}
+              onChange={(value) => setSelectedDayIndex(Number(value))}
+              data={weekDates.map((date, i) => ({
+                value: String(i),
+                label: formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" }),
+              }))}
+            />
+            <Stack gap="xs">
+              {rows.map((row) => {
+                const day = row.days.find((d) => d.date === selectedDate);
+                if (!day) return null;
+                return (
+                  <TeamDayCard
+                    key={row.employeeId}
+                    employeeName={row.employeeName}
+                    day={day}
+                    onClick={
+                      day.attendanceDayId
+                        ? () => setSelected({ employeeId: row.employeeId, employeeName: row.employeeName, date: day.date, attendanceDayId: day.attendanceDayId! })
+                        : undefined
+                    }
+                  />
+                );
+              })}
+            </Stack>
+          </Stack>
+
+          <div className="overflow-x-auto">
+            <Table withTableBorder withColumnBorders verticalSpacing="xs" miw={800} visibleFrom="xs">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>{t("attendance:teamTimesheet.employee")}</Table.Th>
+                  {weekDates.map((date) => (
+                    <Table.Th key={date} ta="center">
+                      {formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" })}
+                    </Table.Th>
+                  ))}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {rows.map((row) => (
+                  <TeamWeekTableRow key={row.employeeId} row={row} onSelectDay={setSelected} />
                 ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {rows.map((row) => (
-                <TeamWeekTableRow key={row.employeeId} row={row} onSelectDay={setSelected} />
-              ))}
-            </Table.Tbody>
-          </Table>
-        </div>
+              </Table.Tbody>
+            </Table>
+          </div>
+        </>
       )}
 
       {selected && (
@@ -229,6 +270,47 @@ function TeamWeekCell({ day, onClick, label: t }: { day: TeamWeekDay; onClick?: 
         </Tooltip>
       )}
     </button>
+  );
+}
+
+/** Mobil gün seçici kart satırı (bkz. `TeamWeekCell`'in masaüstü karşılığı): tek çalışan × tek gün. */
+function TeamDayCard({ employeeName, day, onClick }: { employeeName: string; day: TeamWeekDay; onClick?: () => void }) {
+  const { t } = useTranslation(["attendance"]);
+  const flags = day.anomalies;
+  const hours = Math.floor(day.workedMinutes / 60);
+  const rest = day.workedMinutes % 60;
+  const duration = day.workedMinutes <= 0 ? "—" : rest === 0 ? t("attendance:duration.hoursOnly", { h: hours }) : t("attendance:duration.hoursMinutes", { h: hours, m: rest });
+  const badgeColor = day.status === "ignored" ? "gray" : flags.length > 0 ? "red" : "green";
+
+  return (
+    <UnstyledButton
+      onClick={onClick}
+      disabled={!onClick}
+      className="w-full rounded-md border p-3 text-left disabled:cursor-default"
+      style={{
+        borderColor: "var(--mantine-color-default-border)",
+        background: "var(--mantine-color-body)",
+        cursor: onClick ? "pointer" : "default",
+      }}
+    >
+      <Group justify="space-between" wrap="nowrap">
+        <Text fw={500} truncate>
+          {employeeName || "—"}
+        </Text>
+        <Text size="sm" c={day.workedMinutes <= 0 ? "dimmed" : undefined} style={{ whiteSpace: "nowrap" }}>
+          {duration}
+        </Text>
+      </Group>
+      {flags.length > 0 && (
+        <Group gap={4} wrap="wrap" mt={6}>
+          {flags.map((flag) => (
+            <Badge key={flag} size="xs" color={badgeColor} variant="light">
+              {t(`attendance:anomaly.${flag}`)}
+            </Badge>
+          ))}
+        </Group>
+      )}
+    </UnstyledButton>
   );
 }
 

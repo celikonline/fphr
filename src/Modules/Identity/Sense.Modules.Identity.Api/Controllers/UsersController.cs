@@ -70,7 +70,8 @@ public sealed class UsersController : ApiControllerBase
     public async Task<IActionResult> SetPermissionOverride(Guid id, [FromBody] PermissionOverrideRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new SetUserPermissionOverrideCommand(id, request.Permission, request.Allow), ct));
 
-    [HttpPost(ApiRoutes.IdParam + "/reset-mfa")]
+    /// <summary>Yönetici MFA sıfırlama (S-12): izin identity.users.manage; kendi hesabına 409, farklı kiracı kullanıcısına 404.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/mfa/reset")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ResetMfa(Guid id, CancellationToken ct) => FromResult(await Dispatcher.Send(new ResetUserMfaCommand(id), ct));
 

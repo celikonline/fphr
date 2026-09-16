@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Domain.Invitations;
@@ -342,13 +343,21 @@ public sealed class SetPlatformStaffHandler(IUserRepository users) : ICommandHan
     }
 }
 
-[RequiresPermission(IdentityPermissions.UsersResetMfa)]
+/// <summary>Yönetici MFA sıfırlama (Faz 3 Tur 1, S-12): secret temizlenir + MfaEnabled=false. Kendi hesabına 409
+/// (<see cref="IdentityErrors.MfaSelfResetForbidden"/>); farklı kiracı kullanıcısı normal tenant filtresiyle 404
+/// olur (<see cref="IUserRepository.GetByIdAsync"/> zaten kiracı bağlamına göre filtreler).</summary>
+[RequiresPermission(IdentityPermissions.UsersManage)]
 public sealed record ResetUserMfaCommand(Guid UserId) : ICommand;
 
-public sealed class ResetUserMfaHandler(IUserRepository users) : ICommandHandler<ResetUserMfaCommand>
+public sealed class ResetUserMfaHandler(IUserRepository users, ICurrentUser currentUser) : ICommandHandler<ResetUserMfaCommand>
 {
     public async Task<Result> Handle(ResetUserMfaCommand command, CancellationToken cancellationToken)
     {
+        if (currentUser.UserId == command.UserId)
+        {
+            return Error.Conflict(IdentityErrors.MfaSelfResetForbidden);
+        }
+
         var user = await users.GetByIdAsync(command.UserId, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
@@ -464,9 +473,11 @@ public sealed class GetInvitationPreviewHandler(IInvitationRepository invitation
 
 /// <summary>
 /// Anonim: daveti kabul et, parola belirle, KVKK onayı kaydet, hesabı etkinleştir.
-/// <paramref name="PrivacyNoticeVersion"/>: kullanıcının onayladığı aydınlatma metni sürümü — Faz 1'in
-/// <c>IConsentRecorder</c> sözleşmesi (S-3, Tur 3) netleşince kalıcı kayda bağlanacak; bu turda yalnız taşınır,
-/// henüz hiçbir yere yazılmaz (bkz. TALIMAT Tur 3 Backend #7).
+/// <paramref name="PrivacyNoticeVersion"/>: kullanıcının onayladığı aydınlatma metni sürümü (ürün genelinde tek
+/// sabit, bugün <c>"2026-09"</c>) — <see cref="PrivacyNoticeAccepted"/> true iken zorunlu, en fazla 20 karakter.
+/// Faz 1'in <c>IConsentRecorder</c> sözleşmesi (S-3) veritabanı dilimiyle bağlanana kadar yalnız log +
+/// <see cref="Sense.Modules.Identity.Domain.Invitations.InvitationAccepted"/> olay yüküne taşınır, kalıcı rıza
+/// kaydına henüz yazılmaz (TALIMAT Faz 3 Tur 1 Backend #4).
 /// </summary>
 public sealed record AcceptInvitationCommand(string Token, string Password, bool PrivacyNoticeAccepted, string? PrivacyNoticeVersion, string? DeviceInfo, string? IpAddress)
     : ICommand<AuthTokensDto>;
@@ -478,7 +489,7 @@ public sealed class AcceptInvitationValidator : AbstractValidator<AcceptInvitati
         RuleFor(x => x.Token).NotEmpty();
         RuleFor(x => x.Password).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
         RuleFor(x => x.PrivacyNoticeAccepted).Equal(true);
-        RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().When(x => x.PrivacyNoticeAccepted);
+        RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().MaximumLength(20).When(x => x.PrivacyNoticeAccepted);
     }
 }
 
@@ -492,7 +503,8 @@ public sealed class AcceptInvitationHandler(
     ISecretGenerator secrets,
     ITokenService tokens,
     ITenantContextSetter tenantSetter,
-    TimeProvider clock) : ICommandHandler<AcceptInvitationCommand, AuthTokensDto>
+    TimeProvider clock,
+    ILogger<AcceptInvitationHandler> logger) : ICommandHandler<AcceptInvitationCommand, AuthTokensDto>
 {
     public async Task<Result<AuthTokensDto>> Handle(AcceptInvitationCommand command, CancellationToken cancellationToken)
     {
@@ -505,11 +517,17 @@ public sealed class AcceptInvitationHandler(
 
         using var scope = tenantSetter.BeginScope(invitation.TenantId);
 
-        var accepted = invitation.Accept(now);
+        var accepted = invitation.Accept(now, command.PrivacyNoticeVersion);
         if (accepted.IsFailure)
         {
             return accepted.Error;
         }
+
+        // Kalıcı rıza kaydı Faz 1'in IConsentRecorder implementasyonu bağlanınca (bkz. sınıf üstü açıklama); bu
+        // turda yalnız denetlenebilirlik için log + InvitationAccepted olay yükü (Domain/Invitations/Invitation.cs).
+        logger.LogInformation(
+            "KVKK aydınlatma metni onayı: kullanıcı {UserId}, kiracı {TenantId}, metin sürümü {PrivacyNoticeVersion}.",
+            invitation.UserId, invitation.TenantId, command.PrivacyNoticeVersion);
 
         var user = await users.GetByIdAsync(invitation.UserId, cancellationToken).ConfigureAwait(false);
         var tenant = await tenants.GetByIdAsync(invitation.TenantId, cancellationToken).ConfigureAwait(false);

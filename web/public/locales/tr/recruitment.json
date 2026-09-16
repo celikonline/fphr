@@ -217,13 +217,21 @@
     "noOtherPositions": "Şu anda başka açık pozisyon yok.",
     "backToPosting": "İlana dön",
     "privacyNoticeVersion": "2026-09",
+    "privacyNoticeOutdated": "Aydınlatma metni güncellendi, lütfen sayfayı yenileyip tekrar deneyin.",
+    "privacyNotice": {
+      "readLink": "Aydınlatma metnini oku",
+      "title": "Aday Adayları için Aydınlatma Metni",
+      "body": "Bu başvuru kapsamında paylaştığınız ad, soyad, e-posta, telefon ve varsa özgeçmiş bilgileriniz; işe alım sürecinin yürütülmesi amacıyla, 6698 sayılı Kişisel Verilerin Korunması Kanunu'na uygun şekilde işlenir. Verileriniz, ilan kapatıldıktan veya olumsuz sonuçlanan süreçlerden itibaren yasal saklama süresi boyunca güvenli şekilde saklanır, süre sonunda anonimleştirilir veya silinir. Kişisel verilerinize erişim, düzeltme, silme ve işlemeye itiraz haklarınız için şirketimizle iletişime geçebilirsiniz.",
+      "close": "Kapat"
+    },
     "list": {
       "title": "Açık Pozisyonlar",
       "subtitle": "Şirketimizdeki güncel açık pozisyonları aşağıda bulabilirsiniz.",
       "empty": "Şu an açık pozisyon yok.",
       "loadError": "İlanlar yüklenirken bir sorun oluştu.",
       "viewPosting": "İlanı görüntüle ve başvur",
-      "locationUnspecified": "Lokasyon belirtilmedi"
+      "locationUnspecified": "Lokasyon belirtilmedi",
+      "pageTitleSuffix": "Kariyer"
     }
   },
   "genericError": "Bir şeyler ters gitti."

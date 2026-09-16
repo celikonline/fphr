@@ -34,6 +34,7 @@ namespace Sense.Modules.Employee.Tests;
 /// lazy materialization for employees that predate career history, and ManagerChanged/CareerChanged through the outbox.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class CareerIntegrationTests : TestFixture
 {
     private static readonly DateOnly HireDate = new(2024, 1, 1);

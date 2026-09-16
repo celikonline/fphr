@@ -10,15 +10,29 @@ namespace Sense.Modules.Payroll.Api.Controllers;
 public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 
 /// <summary>
-/// AD Bordro > Dönemler (11.3.07 P3): open a tenant-month period, run/recalculate its payslips, and list the
-/// "Değişenler" (active dirty flags) for the future filter screen (P8, web is out of scope here). All actions require
-/// payroll.period.recalculate (enforced on the commands/queries themselves via [RequiresPermission]).
+/// AD Bordro > Dönemler (11.3.07 P3): open a tenant-month period, run/recalculate its payslips, list/export it, and
+/// list the "Değişenler" (active dirty flags) for the future filter screen (P8, web is out of scope for that one).
+/// Write actions and dirty-flags (open/run/recalculate-dirty/dirty-flags) require payroll.period.recalculate; the
+/// read-only list/get/export actions require payroll.trace.view instead - both enforced on the commands/queries
+/// themselves via [RequiresPermission].
 /// </summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/payroll/periods")]
 [Authorize]
 public sealed class PayrollPeriodsController : ApiControllerBase
 {
+    /// <summary>Every period the tenant has opened, newest first (read-only "Dönem listesi" screen).</summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<PayrollPeriodDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListPayrollPeriodsQuery(), ct));
+
+    /// <summary>One period's header + its payslip lines (read-only "Dönem detayı" screen). 404 on another tenant's/unknown period.</summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<PayrollPeriodDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetPayrollPeriodQuery(id), ct));
+
     /// <summary>Opens a new period ("Dönem aç", akış §2).</summary>
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
@@ -42,4 +56,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<PayslipDirtyFlagDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> DirtyFlags(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListDirtyFlagsQuery(id), ct));
+
+    /// <summary>Downloads the period's payroll summary workbook (K-7: Excel özet, SGK/banka dosyası ilk sürüm dışı).</summary>
+    [HttpGet("{id:guid}/export")]
+    public async Task<IActionResult> Export(Guid id, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new ExportPayrollPeriodQuery(id), ct);
+        return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
+    }
 }

@@ -7,6 +7,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import { cancelLeaveRequest, type LeaveApprovalStep, type LeaveRequest, type LeaveRequestDetail } from "@/services/leave.service";
 import { Field, LeaveStatusBadge, useDays } from "./leave-shared";
+import { formatTimeOnly } from "./overtime-shared";
 
 const CANCEL_REASON_MAX_LENGTH = 500;
 
@@ -63,6 +64,14 @@ export function LeaveRequestDetailSheet({ requestId, scope, load, typeName, foot
               </Field>
               <Field label={t("leave:requests.startDate")}>{date(detail.startDate)}</Field>
               <Field label={t("leave:requests.endDate")}>{date(detail.endDate)}</Field>
+              {detail.halfDayPeriod && (
+                <Field label={t("leave:detail.halfDayPeriod")}>{t(`leave:request.halfDayPeriod.${detail.halfDayPeriod}`)}</Field>
+              )}
+              {detail.startTime && detail.endTime && (
+                <Field label={t("leave:detail.timeRange")}>
+                  {formatTimeOnly(detail.startTime)}–{formatTimeOnly(detail.endTime)}
+                </Field>
+              )}
               <Field label={t("leave:requests.source")}>{t(`leave:requestSource.${detail.source}`)}</Field>
               <Field label={t("leave:detail.revision")}>{detail.revisionNo}</Field>
               <Field label={t("leave:detail.submittedAt")}>{formatDateTime(detail.submittedAt, i18n.language)}</Field>

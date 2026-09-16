@@ -24,6 +24,7 @@ namespace Sense.Modules.Employee.Tests;
 /// has at most one open membership, and the dates are validated against the membership start.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class UnionMembershipIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

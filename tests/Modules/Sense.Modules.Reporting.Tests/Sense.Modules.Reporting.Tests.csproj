@@ -6,9 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Api/Sense.Modules.Reporting.Api.csproj" />
     <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Application/Sense.Modules.Reporting.Application.csproj" />
     <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Domain/Sense.Modules.Reporting.Domain.csproj" />
+    <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Infrastructure/Sense.Modules.Reporting.Infrastructure.csproj" />
     <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
     <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
   </ItemGroup>

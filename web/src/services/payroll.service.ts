@@ -1,8 +1,16 @@
 /**
- * Payroll module (Faz 7 tur 3, read-only web slice): mirrors `PayrollPeriodsController.cs`
- * (`api/v1/payroll/periods`). Period open/run/recalculate-dirty stay backend-only for this slice - the web page
- * only lists periods and their status; see `pages/payroll/periods.tsx`.
+ * Payroll module (Faz 7 tur 3-4, read-only web slice): mirrors `PayrollPeriodsController.cs`
+ * (`api/v1/payroll/periods`). Period open/run/recalculate-dirty stay backend-only for this slice - the web pages
+ * only list periods/payslip lines and their status; see `pages/payroll/periods.tsx` and `period-detail.tsx`.
+ *
+ * Contract-first note (Faz 7 tur 1, `payroll` sözleşmesi): `GET /periods` (tur 3) and `GET /periods/{id}`
+ * (tur 1, this file) aren't in the backend's TALIMAT task list yet - only the `/export` xlsx endpoint (BE madde 4)
+ * is. Shapes below are our best guess from the `Payslip` domain entity (`GrossAmount`/`NetAmount`, no stored
+ * SGK/tax/stamp-duty breakdown - those only exist inside the calculation trace's `StepsJson`, which is why the
+ * on-screen table only shows gross/net while the Excel export can show the full breakdown) and
+ * `IEmployeeDirectory.GetContactsAsync` (First/LastName, no employee number) - see HAFIZA-fe.md tur 1.
  */
+import axios from "axios";
 import { apiClient } from "@senseik/api-client";
 
 const PAYROLL_BASE = "/v1/payroll";
@@ -16,8 +24,85 @@ export interface PayrollPeriod {
   status: PayrollPeriodStatus;
 }
 
+/** One employee's payslip line within a period (gross/net only - see the contract-first note above). */
+export interface PayslipLine {
+  employeeId: string;
+  employeeName: string;
+  grossAmount: number;
+  netAmount: number;
+}
+
+export interface PayrollPeriodDetail extends PayrollPeriod {
+  payslips: PayslipLine[];
+}
+
+export interface DownloadedPayrollFile {
+  blob: Blob;
+  fileName: string;
+}
+
 /** Tenant-wide payroll period list (`payroll.period.recalculate`, the module's only gate today - no separate view key yet). */
 export async function listPayrollPeriods(): Promise<PayrollPeriod[]> {
   const { data } = await apiClient.get<PayrollPeriod[]>(`${PAYROLL_BASE}/periods`);
   return data;
+}
+
+/** One period's header + its payslip lines (dönem detayı, salt okunur). 404 on another tenant's/unknown period. */
+export async function getPayrollPeriod(id: string): Promise<PayrollPeriodDetail> {
+  const { data } = await apiClient.get<PayrollPeriodDetail>(`${PAYROLL_BASE}/periods/${id}`);
+  return data;
+}
+
+/** Downloads the period's payroll summary workbook (BE madde 4, `IReportExporter`); server file name via Content-Disposition, else fallbackName. */
+export async function downloadPayrollPeriodExport(id: string, fallbackName: string): Promise<DownloadedPayrollFile> {
+  try {
+    const response = await apiClient.get<Blob>(`${PAYROLL_BASE}/periods/${id}/export`, { responseType: "blob" });
+    const disposition = response.headers["content-disposition"];
+    return {
+      blob: response.data,
+      fileName: parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ?? fallbackName,
+    };
+  } catch (error) {
+    throw await unwrapBlobError(error);
+  }
+}
+
+/** Saves a downloaded blob through a temporary object URL + anchor (mirrors reports.service.ts/data-transfer.service.ts). */
+export function saveDownloadedPayrollFile({ blob, fileName }: DownloadedPayrollFile): void {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function parseContentDispositionFileName(header: string | undefined): string | undefined {
+  if (!header) return undefined;
+  const encoded = /filename\*\s*=\s*(?:UTF-8|utf-8)''([^;]+)/.exec(header);
+  if (encoded) {
+    try {
+      return decodeURIComponent(encoded[1].trim().replace(/^"|"$/g, ""));
+    } catch {
+      // fall through to the plain filename parameter
+    }
+  }
+  const plain = /filename\s*=\s*("([^"]*)"|[^;]+)/.exec(header);
+  const value = plain ? (plain[2] ?? plain[1]).trim() : undefined;
+  return value || undefined;
+}
+
+/** A blob request's ProblemDetails body arrives as a Blob; parse it back to JSON for error helpers. */
+async function unwrapBlobError(error: unknown): Promise<unknown> {
+  if (axios.isAxiosError(error) && error.response?.data instanceof Blob) {
+    try {
+      const text = await error.response.data.text();
+      error.response.data = text ? JSON.parse(text) : undefined;
+    } catch {
+      error.response.data = undefined;
+    }
+  }
+  return error;
 }

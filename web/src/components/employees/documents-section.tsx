@@ -8,6 +8,7 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ExpiryBadge } from "@/components/documents/expiry-badge";
 import type { EmployeeCardTabProps } from "@/components/employees/card-tabs";
 import {
   clearWaiveDocumentRequirement,
@@ -148,6 +149,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
                   <Badge variant="filled" color={STATUS_COLOR[requirement.status]}>
                     {t(`documents:enum.status.${requirement.status}`)}
                   </Badge>
+                  <ExpiryBadge expiryDate={requirement.expiryDate} />
                 </Group>
                 <Text size="xs" c="dimmed">
                   {requirement.dueDate && `${t("documents:requirements.dueDate")}: ${date(requirement.dueDate)}`}

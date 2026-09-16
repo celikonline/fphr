@@ -1,3 +1,4 @@
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Shared.Contracts.Messaging;
@@ -43,8 +44,45 @@ public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository po
 
         var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = related
-            .Select(p => new PublicJobPostingSummaryDto(p.ApplySlug, p.Title, p.EmploymentType.ToString(), p.PublishedAt))
+            .Select(ToSummaryDto)
             .ToList();
+        return Result.Success(dtos);
+    }
+
+    internal static PublicJobPostingSummaryDto ToSummaryDto(JobPosting p) =>
+        new(p.ApplySlug, p.Title, null, p.EmploymentType.ToString(), p.PublishedAt);
+}
+
+/// <summary>
+/// Public career site's posting list for one tenant (S-10, Faz 9 gün açılışı TALIMAT'ı madde 2): resolves the
+/// tenant from a public-facing slug (never a raw tenant id) via Identity's <see cref="ITenantSlugLookup"/>, then
+/// lists that tenant's Open, not-yet-expired postings. Deliberately returns an **empty list**, never 404, when the
+/// slug doesn't resolve - a 404 would let a caller enumerate which tenant slugs exist (tenant sızıntısı).
+/// </summary>
+public sealed record ListPublicJobPostingsByTenantSlugQuery(string? TenantSlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
+
+public sealed class ListPublicJobPostingsByTenantSlugHandler(
+    ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, TimeProvider timeProvider)
+    : IQueryHandler<ListPublicJobPostingsByTenantSlugQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
+{
+    public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
+        ListPublicJobPostingsByTenantSlugQuery query, CancellationToken cancellationToken)
+    {
+        IReadOnlyList<PublicJobPostingSummaryDto> empty = [];
+        if (string.IsNullOrWhiteSpace(query.TenantSlug))
+        {
+            return Result.Success(empty);
+        }
+
+        var tenantId = await tenantSlugLookup.FindTenantIdAsync(query.TenantSlug, cancellationToken);
+        if (tenantId is null)
+        {
+            return Result.Success(empty);
+        }
+
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var open = await postings.ListPublicByTenantAsync(tenantId.Value, today, cancellationToken);
+        IReadOnlyList<PublicJobPostingSummaryDto> dtos = open.Select(ListRelatedPublicJobPostingsHandler.ToSummaryDto).ToList();
         return Result.Success(dtos);
     }
 }

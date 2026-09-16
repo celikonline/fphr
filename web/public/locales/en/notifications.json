@@ -34,5 +34,8 @@
     "account": "Account",
     "request": "Requests",
     "approval": "Approvals"
+  },
+  "types": {
+    "documentExpiryReminder": "Document expiring soon"
   }
 }

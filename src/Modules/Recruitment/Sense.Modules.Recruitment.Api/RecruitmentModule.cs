@@ -5,7 +5,9 @@ using Sense.Modules.Recruitment.Application;
 using Sense.Modules.Recruitment.Contracts;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Infrastructure;
+using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -50,5 +52,9 @@ public sealed class RecruitmentModule : IModule
         // RequisitionApprovalCompletedHandler/RejectedHandler (Scrutor-scanned above) need IRecruitmentUnitOfWork even
         // though only Sense.Worker ever dispatches them - registered here too so DI validation passes at Api startup.
         services.AddRecruitmentCoreServices();
+
+        // ADR-0004: Hangfire (BackgroundJobExecutor) runs in Sense.Api, so scheduled-job handlers are registered
+        // here (mirrors DocumentsModule.AddModule), not in an integration-event-handlers extension.
+        services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
     }
 }

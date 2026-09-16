@@ -16,6 +16,7 @@ namespace Sense.Modules.Identity.Tests.Users;
 
 /// <summary>IUserAccountLookup against real PostgreSQL: status mapping, access type precedence, last invitation time.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class UserAccountLookupIntegrationTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

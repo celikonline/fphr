@@ -44,7 +44,8 @@
     "taxRate": "Tax rate",
     "description": "Receipt description",
     "exceedsLimit": "Over limit",
-    "exceedsLimitTooltip": "This receipt's amount exceeds its category's maximum."
+    "exceedsLimitTooltip": "This receipt's amount exceeds its category's maximum.",
+    "limitWarning": "This amount exceeds the selected category's {{limit}} limit. You can still add the receipt."
   },
   "advance": {
     "newButton": "+ Advance",

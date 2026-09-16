@@ -16,6 +16,7 @@ namespace Sense.Tests.Integration.Identity;
 
 /// <summary>Faz 0 item 3: an Employee-role user authorized on a unit manages that unit's subtree only.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class UnitAuthorizationScopeTests : IdentityStackTestBase
 {
     [Fact]

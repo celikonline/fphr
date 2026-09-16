@@ -19,6 +19,7 @@ namespace Sense.Modules.Employee.Tests;
 /// prerequisite, roadmap #36/#99) and gender headcount, all tenant-scoped.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class EmployeeAnalyticsQueriesTests : TestFixture
 {
     protected override void ConfigureServices(IServiceCollection services)

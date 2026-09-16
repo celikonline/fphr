@@ -64,6 +64,10 @@ public sealed record LoginResultDto(string Status, AuthTokensDto? Tokens, IReadO
 /// <summary>MFA kaydı başlatma yanıtı: secret (gruplanmış metin olarak gösterilebilir) ve authenticator uygulaması için otpauth:// URI'si.</summary>
 public sealed record MfaEnrollmentDto(string Secret, string OtpAuthUri);
 
+/// <summary>Güvenlik ekranı MFA durumu (S-12). <paramref name="PendingEnrollment"/>: secret yazılmış ama kod henüz doğrulanmamış
+/// (<see cref="Sense.Modules.Identity.Domain.Users.User.TotpSecretEncrypted"/> dolu, <see cref="Sense.Modules.Identity.Domain.Users.User.MfaEnabled"/> false).</summary>
+public sealed record MfaStatusDto(bool Enabled, bool PendingEnrollment);
+
 /// <summary>Destek erişimi (impersonation) grant satırı. Status: Pending|Approved|Active|Expired|Revoked (süresi dolan grant Expired görünür).</summary>
 public sealed record ImpersonationGrantDto(
     Guid Id, Guid PlatformUserId, string? PlatformUserEmail, string Reason, string Status, DateTime RequestedAt, DateTime? ApprovedAt,

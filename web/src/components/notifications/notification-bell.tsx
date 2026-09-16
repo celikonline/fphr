@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button, Group, Menu, ScrollArea, Stack, Text, Tooltip, type MenuProps } from "@mantine/core";
-import { Settings2 } from "lucide-react";
+import { FileClock, Settings2, type LucideIcon } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import {
   NOTIFICATIONS_QUERY_KEY,
@@ -18,6 +18,11 @@ import {
 
 const UNREAD_POLL_MS = 45_000;
 const PAGE_SIZE = 10;
+
+/** Icon shown next to the title for template keys that need one (i18n label: `notifications:types.*`). */
+const TEMPLATE_ICONS: Partial<Record<string, { icon: LucideIcon; labelKey: string }>> = {
+  "documents.expiry_reminder": { icon: FileClock, labelKey: "notifications:types.documentExpiryReminder" },
+};
 
 interface NotificationsMenuProps {
   position: MenuProps["position"];
@@ -107,28 +112,38 @@ function NotificationsDropdown({ position, renderTarget, tooltip }: Notification
               {t("notifications:bell.empty")}
             </Text>
           ) : (
-            items.map((item) => (
-              <Menu.Item
-                key={item.id}
-                onClick={() => openItem(item)}
-                bdrs={0}
-                px="sm"
-                py="xs"
-                bg={item.readAt ? undefined : "var(--mantine-primary-color-light)"}
-              >
-                <Stack gap={2} align="flex-start">
-                  <Text size="sm" fw={item.readAt ? 400 : 600}>
-                    {item.title}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {item.body}
-                  </Text>
-                  <Text fz={11} c="dimmed">
-                    {dateFormat.format(new Date(item.createdAt))}
-                  </Text>
-                </Stack>
-              </Menu.Item>
-            ))
+            items.map((item) => {
+              const typeIcon = TEMPLATE_ICONS[item.templateKey];
+              return (
+                <Menu.Item
+                  key={item.id}
+                  onClick={() => openItem(item)}
+                  bdrs={0}
+                  px="sm"
+                  py="xs"
+                  bg={item.readAt ? undefined : "var(--mantine-primary-color-light)"}
+                >
+                  <Stack gap={2} align="flex-start">
+                    <Group gap={6} wrap="nowrap">
+                      {typeIcon && (
+                        <Tooltip label={t(typeIcon.labelKey)}>
+                          <typeIcon.icon size={14} aria-label={t(typeIcon.labelKey)} />
+                        </Tooltip>
+                      )}
+                      <Text size="sm" fw={item.readAt ? 400 : 600}>
+                        {item.title}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      {item.body}
+                    </Text>
+                    <Text fz={11} c="dimmed">
+                      {dateFormat.format(new Date(item.createdAt))}
+                    </Text>
+                  </Stack>
+                </Menu.Item>
+              );
+            })
           )}
         </ScrollArea.Autosize>
         <Menu.Divider m={0} />

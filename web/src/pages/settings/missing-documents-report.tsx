@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Download, FileWarning } from "lucide-react";
-import { Badge, Button, Card, Group, SegmentedControl, Select, Tabs, Text, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, SegmentedControl, Select, Skeleton, Stack, Tabs, Text, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
@@ -38,6 +39,9 @@ export default function MissingDocumentsReportPage() {
 
 function MissingDocumentsReport() {
   const { t } = useTranslation(["documents", "common"]);
+  // Deep link from the notification bell (`documents.expiry_reminder` -> this report's expiring tab).
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") === "expiring" ? "expiring" : "missing";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
@@ -48,7 +52,7 @@ function MissingDocumentsReport() {
         <Text c="dimmed">{t("documents:report.subtitle")}</Text>
       </div>
 
-      <Tabs defaultValue="missing">
+      <Tabs defaultValue={initialTab}>
         <Tabs.List>
           <Tabs.Tab value="missing">{t("documents:report.tabs.missing")}</Tabs.Tab>
           <Tabs.Tab value="expiring">{t("documents:report.tabs.expiring")}</Tabs.Tab>
@@ -198,6 +202,8 @@ function ExpiringDocumentsPanel() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [expiryState, setExpiryState] = useState<DocumentExpiryState>("expiring");
+  // Narrow phones (S-6 mobil, Faz 4 tur 1 FE md.3): a card list reads better than a horizontally-scrolled table.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: ["documents", "expiring-report", page, pageSize, expiryState],
@@ -272,10 +278,66 @@ function ExpiringDocumentsPanel() {
         />
       </Card>
 
-      <Card withBorder padding={0}>
-        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("documents:report.emptyExpiring")} />
-        {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
-      </Card>
+      {isMobile ? (
+        <ExpiringDocumentsMobileList items={data?.items ?? []} isLoading={isLoading} expiryState={expiryState} />
+      ) : (
+        <Card withBorder padding={0}>
+          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("documents:report.emptyExpiring")} />
+        </Card>
+      )}
+      {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
     </div>
+  );
+}
+
+/** ≤390px card list mirroring the desktop table's columns (S-6 mobil, Faz 4 tur 1 FE md.3). */
+function ExpiringDocumentsMobileList({
+  items,
+  isLoading,
+  expiryState,
+}: {
+  items: ExpiringDocumentItem[];
+  isLoading: boolean;
+  expiryState: DocumentExpiryState;
+}) {
+  const { t, i18n } = useTranslation(["documents", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (items.length === 0) {
+    return (
+      <Card withBorder padding="lg">
+        <Text size="sm" c="dimmed" ta="center">
+          {t("documents:report.emptyExpiring")}
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {items.map((item) => (
+        <Card key={item.documentId} withBorder padding="md">
+          <Stack gap={4}>
+            <Text component={Link} to={`/app/employees/${item.employeeId}/documents`} size="sm" fw={500} className="hover:underline">
+              {item.employeeName}
+            </Text>
+            <Text size="sm" c="dimmed">
+              {item.documentTypeName}
+            </Text>
+            <Group justify="space-between" align="center" wrap="wrap" mt={4}>
+              <Text size="xs" c="dimmed">
+                {formatDateOnly(item.expiryDate, i18n.language)}
+              </Text>
+              <Badge variant="filled" color={EXPIRY_STATE_COLOR[expiryState]}>
+                {item.daysLeft < 0
+                  ? t("documents:report.daysOverdue", { count: Math.abs(item.daysLeft) })
+                  : t("documents:report.daysRemaining", { count: item.daysLeft })}
+              </Badge>
+            </Group>
+          </Stack>
+        </Card>
+      ))}
+    </Stack>
   );
 }

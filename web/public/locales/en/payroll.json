@@ -14,5 +14,16 @@
       "paid": "Paid",
       "locked": "Locked"
     }
+  },
+  "periodDetail": {
+    "loadError": "Period not found or you don't have access.",
+    "exportError": "The payroll summary could not be downloaded.",
+    "exportButton": "Download Excel",
+    "empty": "This period has no payslip lines yet.",
+    "columns": {
+      "employee": "Employee",
+      "gross": "Gross",
+      "net": "Net"
+    }
   }
 }

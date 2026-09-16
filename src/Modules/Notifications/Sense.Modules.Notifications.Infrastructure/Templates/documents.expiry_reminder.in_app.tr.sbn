@@ -1,0 +1,2 @@
+{{- subject = "Belge süresi hatırlatması" -}}
+{{ expiring_count }} belgenin süresi yakında doluyor, {{ expired_count }} belgenin süresi doldu.

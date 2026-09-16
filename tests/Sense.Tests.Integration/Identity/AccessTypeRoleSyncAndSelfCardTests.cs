@@ -18,6 +18,7 @@ namespace Sense.Tests.Integration.Identity;
 
 /// <summary>Faz 0 item 2 (access type rules), system role permission sync for existing tenants, and the employee self card.</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class AccessTypeRoleSyncAndSelfCardTests : IdentityStackTestBase
 {
     [Fact]

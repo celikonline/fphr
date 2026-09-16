@@ -14,3 +14,13 @@ public sealed record WorkScheduleAssigned(Guid TenantId, Guid EmployeeId, Guid W
 /// </summary>
 public sealed record TimesheetWeekCompleted(Guid TenantId, Guid EmployeeId, DateOnly WeekStart)
     : IntegrationEvent(TenantId);
+
+/// <summary>
+/// A batch of draft shift assignments for one org unit's one calendar week (Monday-Sunday) was published
+/// (TALIMAT faz-06 tur "S-16"/"vardiya yayın olayı"). Raised by <c>PublishShiftAssignmentsHandler</c> once per
+/// distinct (OrgUnit, WeekStart) group found among the published assignments' employees - a single publish call
+/// spanning several units/weeks raises several events. No consumer yet (Faz 1 Notifications wires one up in a
+/// later turn); employees with no org unit assigned are not represented by any event.
+/// </summary>
+public sealed record ShiftPlanPublished(Guid TenantId, Guid OrgUnitId, DateOnly WeekStart, IReadOnlyList<Guid> EmployeeIds)
+    : IntegrationEvent(TenantId);

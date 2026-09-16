@@ -76,8 +76,40 @@ public static class ConsentType
 - İkisi de implementasyon main'e girene kadar bu servisi DI'a **kaydetmeye çalışmaz** (kendi
   modülünde sahte/geçici bir `IConsentRecorder` implementasyonu yazmaz — sözleşme tek sahiplidir).
 
+## Tur 1 güncellemesi: `ConsentRecord` domain sınıfı + iş kuralı implementasyonu (EF hariç)
+
+`src/Modules/Identity/Sense.Modules.Identity.Application/Privacy/ConsentRecorder.cs`: `ConsentRecord` sınıfı
+(append-only, `SupersededAt` ile "artık aktif değil" işaretlenir) ve `IConsentRecorder`'ı implement eden
+`ConsentRecorder` servisi — iş kuralı: `RecordAsync` önce aynı (TenantId, SubjectType, SubjectId, ConsentType)
+için aktif bir kayıt var mı bakar (`IConsentRecordRepository.FindActiveAsync`), varsa yeni kaydın `AcceptedAt`
+anıyla supersede eder, sonra yeni kaydı ekler. `IConsentRecordRepository` bu turda **implementasyonsuz** bir port
+(Identity.Domain değil, Identity.Application'da durur — Shared.Contracts.Privacy tiplerine bağımlı olduğu için,
+bkz. dosyanın başındaki yorum) — EF/migration gelmeden `ConsentRecorder` IdentityModule'de **kayıtlı değildir**,
+bilinçli bir karar (DI çözümlemesi implementasyon tamamlanana kadar başarısız olmalı, bkz. yukarısı).
+3 birim test: `tests/Modules/Sense.Modules.Identity.Tests/Privacy/ConsentRecorderTests.cs` (NSubstitute ile
+`IConsentRecordRepository`/`IUnitOfWork` sahte, gerçek DB yok).
+
+## Beklenen `identity.consent_records` kolonları (EF/migration henüz yok — `AddAuditLog` main'e girdikten sonra ayrı bir `MIGRATION-ISTEGI.md` girdisi olacak)
+
+| Kolon | Tip | Null | Not |
+|---|---|---|---|
+| `id` | `uuid` | hayır | PK |
+| `tenant_id` | `uuid` | hayır | `ModuleDbContext` tenant filtresi + otomatik index |
+| `subject_type` | `smallint` | hayır | `ConsentSubjectType` enum (1=User, 2=Employee, 3=Candidate) |
+| `subject_id` | `uuid` | hayır | FK yok (modüller arası bağımlılık yalnız `*.Contracts`) |
+| `consent_type` | `varchar(50)` | hayır | `ConsentType` sabitlerinden biri (serbest metin, bkz. yukarısı) |
+| `notice_version` | `varchar(20)` | hayır | ör. `"2026-09"` |
+| `accepted_at` | `timestamp with time zone` | hayır | |
+| `ip_address` | `varchar(45)` | evet | IPv6 için yeterli uzunluk; job/migrasyon kaynaklı kayıtlarda null |
+| `superseded_at` | `timestamp with time zone` | evet | null = hâlâ aktif |
+
+**İndeksler:** `(tenant_id, subject_type, subject_id, consent_type)` — `FindActiveAsync`'in birincil erişim yolu
+(pratikte `WHERE ... AND superseded_at IS NULL` ile daraltılacak, kısmi index bir seçenek).
+
 ## Açık iş (sonraki Faz 1 turu)
 
-- `identity.consent_records` EF entity + config + migration (`MIGRATION-ISTEGI.md`'ye ADR-0005'e göre eklenecek).
-- `ConsentRecorder : IConsentRecorder` implementasyonu (Identity.Infrastructure).
+- `identity.consent_records` EF entity + config + migration (`MIGRATION-ISTEGI.md`'ye ADR-0005'e göre eklenecek,
+  yukarıdaki kolon listesiyle).
+- `IConsentRecordRepository : ...` EF implementasyonu (Identity.Infrastructure) + `ConsentRecorder`'ın
+  IdentityModule'de DI kaydı.
 - Rıza geri alma modelinin netleştirilmesi (bu belge güncellenecek).

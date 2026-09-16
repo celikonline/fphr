@@ -84,7 +84,11 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
 
     public bool IsUsable(DateTime nowUtc) => Status == InvitationStatus.Pending && ExpiresAt > nowUtc;
 
-    public Result Accept(DateTime nowUtc)
+    /// <param name="privacyNoticeVersion">
+    /// KVKK aydınlatma metni sürümü (ör. "2026-09") — Faz 1'in <c>IConsentRecorder</c> sözleşmesi (S-3) netleşene
+    /// kadar yalnız olay yüküne taşınır, henüz kalıcı bir rıza kaydına yazılmaz (TALIMAT Faz 3 Tur 1 Backend #4).
+    /// </param>
+    public Result Accept(DateTime nowUtc, string? privacyNoticeVersion = null)
     {
         if (Status == InvitationStatus.Accepted)
         {
@@ -98,7 +102,7 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
 
         Status = InvitationStatus.Accepted;
         AcceptedAt = nowUtc;
-        Raise(new InvitationAccepted(Id, TenantId, UserId));
+        Raise(new InvitationAccepted(Id, TenantId, UserId, privacyNoticeVersion));
         return Result.Success();
     }
 
@@ -136,4 +140,5 @@ public sealed class Invitation : TenantAggregateRoot<Guid>
 
 public sealed record InvitationCreated(Guid InvitationId, Guid TenantId, Guid UserId, string Email) : DomainEvent;
 
-public sealed record InvitationAccepted(Guid InvitationId, Guid TenantId, Guid UserId) : DomainEvent;
+/// <param name="PrivacyNoticeVersion">Bkz. <see cref="Invitation.Accept"/> — yalnız ekleme, kalıcı rıza kaydı sonraki turda.</param>
+public sealed record InvitationAccepted(Guid InvitationId, Guid TenantId, Guid UserId, string? PrivacyNoticeVersion = null) : DomainEvent;

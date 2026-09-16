@@ -14,5 +14,16 @@
       "paid": "Ödendi",
       "locked": "Kilitli"
     }
+  },
+  "periodDetail": {
+    "loadError": "Dönem bulunamadı veya görüntüleme yetkiniz yok.",
+    "exportError": "Bordro özeti indirilemedi.",
+    "exportButton": "Excel indir",
+    "empty": "Bu dönemde henüz bordro satırı yok.",
+    "columns": {
+      "employee": "Çalışan",
+      "gross": "Brüt",
+      "net": "Net"
+    }
   }
 }

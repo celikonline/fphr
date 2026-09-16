@@ -25,6 +25,7 @@
   "errorGeneric": "Something went wrong. Please try again.",
   "success": "Success",
   "cancel": "Cancel",
+  "confirm": "Confirm",
   "save": "Save",
   "saving": "Saving...",
   "create": "Create",

@@ -34,6 +34,10 @@
     },
     "GENDER_RATIO_BY_UNIT": {
       "label": "Gender Ratio by Unit"
+    },
+    "leaveUsage": {
+      "label": "Leave Usage Rate",
+      "detail": "{{used}} / {{total}} days used"
     }
   },
   "catalog": {

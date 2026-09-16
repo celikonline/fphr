@@ -85,7 +85,16 @@ public sealed class PayrollPeriodCalculationServiceTests
     private static PayrollPeriodCalculationService BuildService(
         out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
-        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader)
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader) =>
+        BuildService(out payslips, out traces, out profiles, out dirtyFlags, out salaryLookup, out workedTimeReader, out _);
+
+    /// <summary>Overload additionally exposing the IExpensePayoutReader fake (TB-7 Expense köprüsü, faz-07 tur 1
+    /// madde 3): default NSubstitute behaviour (GetAsync returns null) reproduces "no reimbursement this month"
+    /// without any .Returns() setup, so every other test in this file is unaffected.</summary>
+    private static PayrollPeriodCalculationService BuildService(
+        out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
+        out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader, out IExpensePayoutReader expensePayoutReader)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -97,11 +106,13 @@ public sealed class PayrollPeriodCalculationServiceTests
             .Returns(Task.FromResult<PayslipDirtyFlag?>(null));
         salaryLookup = Substitute.For<IEmployeeSalaryLookup>();
         workedTimeReader = Substitute.For<IWorkedTimeReader>();
+        expensePayoutReader = Substitute.For<IExpensePayoutReader>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        return new PayrollPeriodCalculationService(payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System, workedTimeReader);
+        return new PayrollPeriodCalculationService(
+            payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System, workedTimeReader, expensePayoutReader);
     }
 
     [Fact]
@@ -199,11 +210,54 @@ public sealed class PayrollPeriodCalculationServiceTests
         CapturedDaysStepOutput(traces).ShouldBe(18);
     }
 
+    /// <summary>TB-7 Expense köprüsü (faz-07 tur 1 madde 3): no IExpensePayoutReader data (default NSubstitute
+    /// behaviour) must reproduce exactly the pre-port behaviour - NET's expenseReimbursement input stays 0.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_AddsNoReimbursement_WhenExpensePayoutReaderHasNoData()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out _);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedNetStepExpenseReimbursementInput(traces).ShouldBe("0");
+    }
+
+    /// <summary>TB-7 Expense köprüsü: a fake with an approved-this-month reimbursement (2,500) is added straight to
+    /// NET's expenseReimbursement input - it is tax-free and never touches SGK/GV/damga matrahları.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_AddsApprovedExpenseTotalToNet_WhenExpensePayoutReaderHasData()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var expensePayoutReader);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        expensePayoutReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ExpensePayoutFigures?>(new ExpensePayoutFigures(ApprovedExpenseTotal: 2_500m, OpenAdvanceBalance: 1_000m)));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedNetStepExpenseReimbursementInput(traces).ShouldBe("2500");
+    }
+
     private static decimal CapturedDaysStepOutput(IPayslipCalculationTraceRepository traces)
+    {
+        var steps = CapturedSteps(traces);
+        return steps.Single(s => s.Code == PayrollTraceStepCodes.Days).Output;
+    }
+
+    private static string CapturedNetStepExpenseReimbursementInput(IPayslipCalculationTraceRepository traces)
+    {
+        var steps = CapturedSteps(traces);
+        return steps.Single(s => s.Code == PayrollTraceStepCodes.Net).Inputs["expenseReimbursement"];
+    }
+
+    private static List<TraceStep> CapturedSteps(IPayslipCalculationTraceRepository traces)
     {
         PayslipCalculationTrace? captured = null;
         traces.Received(1).Add(Arg.Do<PayslipCalculationTrace>(t => captured = t));
-        var steps = JsonSerializer.Deserialize<List<TraceStep>>(captured!.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
-        return steps.Single(s => s.Code == PayrollTraceStepCodes.Days).Output;
+        return JsonSerializer.Deserialize<List<TraceStep>>(captured!.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
     }
 }

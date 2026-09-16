@@ -90,6 +90,7 @@
   <data name="identity.mfa.already_enabled" xml:space="preserve"><value>İki adımlı doğrulama zaten açık.</value></data>
   <data name="identity.mfa.invalid_code" xml:space="preserve"><value>Doğrulama kodu geçersiz.</value></data>
   <data name="identity.mfa.token_expired" xml:space="preserve"><value>Oturum açma isteğinin süresi doldu; lütfen tekrar giriş yapın.</value></data>
+  <data name="identity.mfa.self_reset_forbidden" xml:space="preserve"><value>Kendi hesabınızın iki adımlı doğrulamasını bu ekrandan sıfırlayamazsınız; "Güvenlik" sayfasından kapatabilirsiniz.</value></data>
 
   <!-- Rol -->
   <data name="role.invalid_code" xml:space="preserve"><value>Rol kodu yalnızca harf, rakam, '_' ve '-' içerebilir (en fazla 50 karakter).</value></data>
@@ -303,6 +304,15 @@
   <data name="organization.approval_assignment.duplicate_request_type" xml:space="preserve"><value>Aynı talep türü birden fazla kez gönderilemez.</value></data>
   <data name="organization.approval_assignment.policy_id_required" xml:space="preserve"><value>Onay süreci seçilmelidir.</value></data>
   <data name="organization.approval_assignment.org_unit_inactive" xml:space="preserve"><value>Pasif bir birime onay süreci atanamaz.</value></data>
+  <data name="organization.cost_center.not_found" xml:space="preserve"><value>Maliyet merkezi bulunamadı.</value></data>
+  <data name="organization.cost_center.code_required" xml:space="preserve"><value>Maliyet merkezi kodu zorunludur.</value></data>
+  <data name="organization.cost_center.code_too_long" xml:space="preserve"><value>Maliyet merkezi kodu en fazla 30 karakter olabilir.</value></data>
+  <data name="organization.cost_center.name_required" xml:space="preserve"><value>Maliyet merkezi adı zorunludur.</value></data>
+  <data name="organization.cost_center.code_taken" xml:space="preserve"><value>Bu maliyet merkezi kodu zaten kullanılıyor.</value></data>
+  <data name="organization.cost_center.already_active" xml:space="preserve"><value>Bu maliyet merkezi zaten aktif.</value></data>
+  <data name="organization.cost_center.already_inactive" xml:space="preserve"><value>Bu maliyet merkezi zaten pasif.</value></data>
+  <data name="organization.cost_centers.view" xml:space="preserve"><value>Maliyet merkezlerini görüntüleme</value></data>
+  <data name="organization.cost_centers.manage" xml:space="preserve"><value>Maliyet merkezlerini yönetme</value></data>
 
   <!-- Identity: access settings, unit authorization, invitations, support access (Faz 0 P2) -->
   <data name="identity.access_settings.bypass" xml:space="preserve"><value>Erişim ayarı kısıtlarından etkilenmeme</value></data>
@@ -660,6 +670,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.absence.note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Saat 0 ile 24 arasında olmalıdır.</value></data>
   <data name="leave.absence.hours_only_for_late" xml:space="preserve"><value>Saat yalnız "geç kalma" türünde girilebilir.</value></data>
+  <data name="leave.absence.hours_required_for_late" xml:space="preserve"><value>"Geç kalma" türünde saat girilmesi zorunludur.</value></data>
   <data name="leave.absence.reversal_reason_required" xml:space="preserve"><value>Ters kayıt gerekçesi zorunludur (en fazla 500 karakter).</value></data>
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>Bu devamsızlık kaydı zaten ters çevrilmiş.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>Bir ters kayıt tekrar ters çevrilemez.</value></data>
@@ -774,6 +785,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.automation_rule.already_inactive" xml:space="preserve"><value>Otomasyon kuralı zaten devre dışı.</value></data>
   <data name="recruitment.application.required_form_missing" xml:space="preserve"><value>Bu aşamaya geçmek için önce gerekli formun doldurulması gerekiyor.</value></data>
   <data name="recruitment.application.already_exists" xml:space="preserve"><value>Bu ilana zaten başvurdunuz.</value></data>
+  <data name="recruitment.application.privacy_notice_outdated" xml:space="preserve"><value>Aydınlatma metni güncel değil; lütfen sayfayı yenileyip tekrar deneyin.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
@@ -817,6 +829,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Telafi süresi pozitif olmalıdır.</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
+  <data name="attendance.device_log.invalid_timestamp" xml:space="preserve"><value>Geçersiz zaman damgası: '{value}'. ISO 8601 biçiminde girin (ör. 2026-09-16T08:03:00).</value></data>
+  <data name="attendance.device_log.invalid_direction" xml:space="preserve"><value>Geçersiz yön: '{value}'. "in" veya "out" olmalı.</value></data>
+  <data name="attendance.device_log.missing_employee_code" xml:space="preserve"><value>Çalışan kodu (employeeCode) boş olamaz.</value></data>
+  <data name="attendance.device_log.unknown_employee" xml:space="preserve"><value>'{value}' koduyla eşleşen aktif çalışan bulunamadı.</value></data>
+  <data name="attendance.device_log.duplicate_timestamp" xml:space="preserve"><value>Bu çalışan+zaman damgası dosyada tekrar ediyor, atlandı.</value></data>
+  <data name="attendance.device_log.check_out_before_check_in" xml:space="preserve"><value>Türetilen çıkış saati giriş saatinden önce, gün atlandı.</value></data>
+  <data name="attendance.device_log.file_required" xml:space="preserve"><value>Yüklenecek bir CSV dosyası seçin.</value></data>
+  <data name="attendance.device_log.file_too_large" xml:space="preserve"><value>Dosya boyutu {max} sınırını aşıyor.</value></data>
   <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Puantaj</value></data>
   <data name="import.template.attendance.pdks.description" xml:space="preserve"><value>Turnike/PDKS verilerinden çalışanların giriş-çıkış saatlerini toplu olarak içe aktarın.</value></data>
   <data name="import.template.attendance.pdks.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
@@ -944,6 +964,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.form.not_publishable" xml:space="preserve"><value>Yalnızca taslak formlar yayınlanabilir.</value></data>
   <data name="performance.form.not_editable" xml:space="preserve"><value>Yayınlanmış form düzenlenemez.</value></data>
   <data name="performance.form.cycle_closed" xml:space="preserve"><value>Kapatılmış bir döneme form eklenemez.</value></data>
+  <data name="performance.review.immutable" xml:space="preserve"><value>Kapatılmış bir dönemin formu yayınlanamaz.</value></data>
   <data name="performance.goal.not_found" xml:space="preserve"><value>Hedef bulunamadı.</value></data>
   <data name="performance.goal.title_required" xml:space="preserve"><value>Hedef başlığı zorunludur.</value></data>
   <data name="performance.goal.progress_invalid" xml:space="preserve"><value>İlerleme yüzdesi 0 ile 100 arasında olmalıdır.</value></data>

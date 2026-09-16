@@ -17,14 +17,27 @@ public sealed record SubmitCareerApplicationRequest(
 
 /// <summary>
 /// Public career site (Kolay İK ATS "Kariyer sayfası", R3): unauthenticated postings list/detail + application
-/// submission, keyed by a job posting's permanent <c>ApplySlug</c>. No <see cref="AuthorizeAttribute"/> anywhere in
-/// this controller - the whole surface is intentionally anonymous and intentionally narrow (three actions only).
-/// Never accepts or echoes a tenant id/slug: the posting's slug alone resolves the tenant server-side.
+/// submission, keyed by a job posting's permanent <c>ApplySlug</c> - except <see cref="List"/> (S-10), the one
+/// action keyed by a tenant slug instead, for the top-level <c>/kariyer</c> listing page before any posting is
+/// known. No <see cref="AuthorizeAttribute"/> anywhere in this controller - the whole surface is intentionally
+/// anonymous and intentionally narrow.
 /// </summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/recruitment/public/postings")]
 public sealed class PublicCareerController : ApiControllerBase
 {
+    /// <summary>
+    /// A tenant's Open, not-yet-expired postings (S-10, Faz 9 gün açılışı TALIMAT'ı madde 2), resolved by its
+    /// public-facing <paramref name="tenant"/> slug (never a raw tenant id/claim). Unknown or missing slug: empty
+    /// list, never 404 (no tenant-existence signal to an anonymous caller).
+    /// </summary>
+    [HttpGet]
+    [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous")]
+    [ProducesResponseType<IReadOnlyList<PublicJobPostingSummaryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List([FromQuery] string? tenant, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListPublicJobPostingsByTenantSlugQuery(tenant), ct));
+
     /// <summary>An Open posting's public detail by its apply slug.</summary>
     [HttpGet("{applySlug}")]
     [AllowAnonymous]

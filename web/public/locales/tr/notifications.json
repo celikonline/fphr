@@ -34,5 +34,8 @@
     "account": "Hesap",
     "request": "Talepler",
     "approval": "Onaylar"
+  },
+  "types": {
+    "documentExpiryReminder": "Belge süresi dolmak üzere"
   }
 }

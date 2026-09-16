@@ -19,6 +19,7 @@ namespace Sense.Modules.Workflow.Tests;
 /// while the task is the pending request's current step with a concrete approver.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class ApprovalDecisionLinkIssuerTests : TestFixture
 {
     private const string FrontendBaseUrl = "https://app.senseik.test";

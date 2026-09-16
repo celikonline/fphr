@@ -22,9 +22,47 @@ public static class AddressSources
 public sealed class NotificationRecipientResolver(
     IEmployeeContactLookup contacts,
     IUserProfileLookup userProfiles,
+    IRoleAssignmentLookup roleAssignments,
     IOptions<NotificationsOptions> options)
 {
     private const string TerminatedStatus = "Terminated";
+
+    /// <summary>
+    /// Permission key → system role codes that hold it, as resolved from
+    /// Sense.Modules.Identity.Application.Roles.SystemRoleDefinitions at the time each entry was added.
+    /// Notifications.Application cannot reference Identity.Application/Domain (modules talk only via *.Contracts,
+    /// same constraint as Workflow's DefaultApproverResolver.FallbackApproverRoleCode), and IRoleAssignmentLookup
+    /// (Identity.Contracts) only supports "employee ids in role X", not "employee ids with permission Y" - so this
+    /// map is a hand-kept duplicate of SystemRoleDefinitions' role→permission wildcards for the specific keys
+    /// Notifications needs to fan out to. Keep in sync by hand if SystemRoleDefinitions changes which roles include
+    /// a mapped key. Role code literals mirror Sense.Modules.Identity.Domain.Roles.SystemRoleCodes.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string[]> PermissionRoleCodes = new Dictionary<string, string[]>(StringComparer.Ordinal)
+    {
+        // documents.requirements.view: Owner/Admin ("*"), HR/HRSpecialist ("documents.*"), PayrollSpecialist/Manager/
+        // Recruiter ("documents.*.view").
+        ["documents.requirements.view"] = ["Owner", "Admin", "HR", "HRSpecialist", "PayrollSpecialist", "Manager", "Recruiter"],
+    };
+
+    /// <summary>Owner/Admin always hold every permission (SystemRoleDefinitions' "*" wildcard) - the safe fallback for an unmapped key: no false positives, only possibly incomplete.</summary>
+    private static readonly string[] OwnerAdminOnly = ["Owner", "Admin"];
+
+    /// <summary>Employee ids of every user whose role(s) include <paramref name="permissionKey"/>, tenant-scoped, deduplicated. See <see cref="PermissionRoleCodes"/>'s remarks for the resolution strategy and its limits.</summary>
+    public async Task<IReadOnlyList<Guid>> ResolveByPermissionAsync(Guid tenantId, string permissionKey, CancellationToken ct)
+    {
+        var roleCodes = PermissionRoleCodes.GetValueOrDefault(permissionKey, OwnerAdminOnly);
+
+        var employeeIds = new HashSet<Guid>();
+        foreach (var roleCode in roleCodes)
+        {
+            foreach (var employeeId in await roleAssignments.ListEmployeeIdsInRoleAsync(tenantId, roleCode, ct))
+            {
+                employeeIds.Add(employeeId);
+            }
+        }
+
+        return employeeIds.Count == 0 ? [] : employeeIds.ToArray();
+    }
 
     public async Task<IReadOnlyList<NotificationRecipient>> ResolveAsync(Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken ct)
     {

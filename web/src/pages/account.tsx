@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Alert,
   Anchor,
@@ -26,7 +26,7 @@ import { Check, Copy, LifeBuoy, LogOut, ShieldCheck, ShieldOff, UserCircle } fro
 import { avatarColor } from "@/components/employees/employee-badges";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
-import { disableMfa, enrollMfa, verifyMfaEnrollment, type MfaEnrollment } from "@/services/mfa.service";
+import { disableMfa, enrollMfa, getMfaStatus, verifyMfaEnrollment, type MfaEnrollment } from "@/services/mfa.service";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore, type Theme } from "@/store/ui.store";
 
@@ -219,12 +219,20 @@ function MfaDisableDialog({ onClose, onDisabled, t }: { onClose: () => void; onD
 
 /** Kendi hesabım: profile basics from /identity/me plus client-side language and theme preferences. */
 export default function AccountPage() {
-  const { t, i18n } = useTranslation(["account", "common", "navigation"]);
+  const { t, i18n } = useTranslation(["account", "auth", "common", "navigation"]);
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const refreshMe = useAuthStore((state) => state.refreshMe);
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
+  const queryClient = useQueryClient();
+
+  // S-12 (gün açılışı tur 1): `GET me/mfa` is the security card's source of truth — in particular
+  // `pendingEnrollment`, which `/identity/me` (and thus `user?.mfaEnabled`) doesn't expose. Falls back to the
+  // auth store's snapshot while this query is loading so the card doesn't flash the wrong CTA.
+  const mfaStatusQuery = useQuery({ queryKey: ["mfa-status"], queryFn: getMfaStatus });
+  const mfaEnabled = mfaStatusQuery.data?.enabled ?? user?.mfaEnabled ?? false;
+  const mfaPending = !mfaEnabled && (mfaStatusQuery.data?.pendingEnrollment ?? false);
 
   const [enrollment, setEnrollment] = useState<MfaEnrollment | null>(null);
   const [disableOpen, setDisableOpen] = useState(false);
@@ -234,6 +242,11 @@ export default function AccountPage() {
     onError: (err: unknown) =>
       toast({ variant: "destructive", title: t("common:error"), description: mfaErrorMessage(err, t) }),
   });
+
+  function refreshMfaState() {
+    void refreshMe();
+    void queryClient.invalidateQueries({ queryKey: ["mfa-status"] });
+  }
 
   const initials = (user?.name || user?.email || "?")
     .split(" ")
@@ -340,15 +353,19 @@ export default function AccountPage() {
           <Stack gap={4} maw={420}>
             <Group gap="xs">
               <Text fw={600}>{t("account:mfaSection.title")}</Text>
-              <Badge color={user?.mfaEnabled ? "teal" : "gray"} variant="light" tt="none">
-                {user?.mfaEnabled ? t("account:mfaEnabled") : t("account:mfaDisabled")}
+              <Badge color={mfaEnabled ? "teal" : mfaPending ? "orange" : "gray"} variant="light" tt="none">
+                {mfaEnabled
+                  ? t("account:mfaEnabled")
+                  : mfaPending
+                    ? t("auth:mfa.status.pendingBadge")
+                    : t("account:mfaDisabled")}
               </Badge>
             </Group>
             <Text size="sm" c="dimmed">
-              {t("account:mfaSection.hint")}
+              {mfaPending ? t("auth:mfa.status.pendingHint") : t("account:mfaSection.hint")}
             </Text>
           </Stack>
-          {user?.mfaEnabled ? (
+          {mfaEnabled ? (
             <Button color="red" variant="default" leftSection={<ShieldOff size={16} />} onClick={() => setDisableOpen(true)}>
               {t("account:mfaSection.disableCta")}
             </Button>
@@ -358,7 +375,7 @@ export default function AccountPage() {
               onClick={() => enrollMutation.mutate()}
               loading={enrollMutation.isPending}
             >
-              {t("account:mfaSection.enableCta")}
+              {mfaPending ? t("auth:mfa.status.resumeCta") : t("account:mfaSection.enableCta")}
             </Button>
           )}
         </Group>
@@ -398,7 +415,7 @@ export default function AccountPage() {
           onClose={() => setEnrollment(null)}
           onEnabled={() => {
             setEnrollment(null);
-            void refreshMe();
+            refreshMfaState();
             toast({ variant: "success", title: t("common:success"), description: t("account:mfaSection.enableSuccess") });
           }}
           t={t}
@@ -410,7 +427,7 @@ export default function AccountPage() {
           onClose={() => setDisableOpen(false)}
           onDisabled={() => {
             setDisableOpen(false);
-            void refreshMe();
+            refreshMfaState();
             toast({ variant: "success", title: t("common:success"), description: t("account:mfaSection.disableSuccess") });
           }}
           t={t}

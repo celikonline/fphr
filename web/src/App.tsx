@@ -37,6 +37,7 @@ import MissingDocumentsReportPage from "@/pages/settings/missing-documents-repor
 import AssetCategoriesPage from "@/pages/settings/asset-categories";
 import ExpenseCategoriesPage from "@/pages/settings/expense-categories";
 import PayrollPeriodsPage from "@/pages/payroll/periods";
+import PayrollPeriodDetailPage from "@/pages/payroll/period-detail";
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
@@ -59,9 +60,11 @@ import ExpensePaymentsAdminPage from "@/pages/expense-payments-admin";
 import MyTimesheetPage from "@/pages/attendance/my-timesheet";
 import MyShiftsPage from "@/pages/attendance/my-shifts";
 import TeamTimesheetPage from "@/pages/attendance/team-timesheet";
+import DeviceLogImportPage from "@/pages/attendance/device-log-import";
 import WorkSchedulesPage from "@/pages/settings/work-schedules";
 import MyGoalsPage from "@/pages/performance/my-goals";
 import TeamGoalsPage from "@/pages/performance/team-goals";
+import ReviewCyclesPage from "@/pages/performance/review-cycles";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -119,12 +122,15 @@ export default function App() {
           <Route path="payments" element={<PaymentsPage />} />
           <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
           <Route path="payroll/periods" element={<PayrollPeriodsPage />} />
+          <Route path="payroll/periods/:id" element={<PayrollPeriodDetailPage />} />
           <Route path="attendance/timesheet" element={<MyTimesheetPage />} />
           <Route path="attendance/shifts" element={<MyShiftsPage />} />
           <Route path="attendance/team-timesheet" element={<TeamTimesheetPage />} />
+          <Route path="attendance/device-logs/import" element={<DeviceLogImportPage />} />
 
           <Route path="performance/goals" element={<MyGoalsPage />} />
           <Route path="performance/team-goals" element={<TeamGoalsPage />} />
+          <Route path="performance/review-cycles" element={<ReviewCyclesPage />} />
 
           <Route path="recruitment/postings" element={<JobPostingsPage />} />
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />

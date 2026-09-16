@@ -14,6 +14,8 @@
   "searchPlaceholder": "Search details...",
   "exportCsv": "Export CSV",
   "empty": "No events found.",
+  "sensitiveMasked": "••••••••",
+  "sensitiveHidden": "You don't have permission",
   "clearFilters": "Clear filters",
   "actionTypes": {
     "create": "Create",

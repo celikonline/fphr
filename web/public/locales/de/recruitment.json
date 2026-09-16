@@ -217,13 +217,21 @@
     "noOtherPositions": "[DE] There are no other open positions right now.",
     "backToPosting": "[DE] Back to posting",
     "privacyNoticeVersion": "2026-09",
+    "privacyNoticeOutdated": "[DE] The privacy notice was updated, please refresh the page and try again.",
+    "privacyNotice": {
+      "readLink": "[DE] Read the privacy notice",
+      "title": "[DE] Privacy Notice for Job Applicants",
+      "body": "[DE] The first name, last name, email, phone and (if provided) CV information you share as part of this application are processed for recruitment purposes in accordance with applicable data protection law.",
+      "close": "[DE] Close"
+    },
     "list": {
       "title": "[DE] Open Positions",
       "subtitle": "[DE] Browse our company's current open positions below.",
       "empty": "[DE] There are no open positions right now.",
       "loadError": "[DE] There was a problem loading the postings.",
       "viewPosting": "[DE] View posting and apply",
-      "locationUnspecified": "[DE] Location unspecified"
+      "locationUnspecified": "[DE] Location unspecified",
+      "pageTitleSuffix": "[DE] Careers"
     }
   },
   "genericError": "[DE] Something went wrong."

@@ -1,0 +1,2 @@
+{{- subject = "Document expiry reminder" -}}
+{{ expiring_count }} document(s) expiring soon, {{ expired_count }} already expired.

@@ -1,10 +1,12 @@
 using FluentValidation;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Contracts;
+using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -272,11 +274,14 @@ public sealed class PublishShiftAssignmentsValidator : AbstractValidator<Publish
     public PublishShiftAssignmentsValidator() => RuleFor(x => x.AssignmentIds).NotEmpty();
 }
 
-public sealed class PublishShiftAssignmentsHandler(IShiftAssignmentRepository shifts, IShiftPlanLockRepository locks, TimeProvider clock)
+public sealed class PublishShiftAssignmentsHandler(
+    IShiftAssignmentRepository shifts, IShiftPlanLockRepository locks, TimeProvider clock,
+    ITenantContext tenant, IEmployeeLookup employeeLookup, IIntegrationEventOutbox outbox)
     : ICommandHandler<PublishShiftAssignmentsCommand>
 {
     public async Task<Result> Handle(PublishShiftAssignmentsCommand command, CancellationToken cancellationToken)
     {
+        var published = new List<ShiftAssignment>();
         foreach (var assignmentId in command.AssignmentIds.Distinct())
         {
             var found = await shifts.GetByIdAsync(assignmentId, cancellationToken);
@@ -291,14 +296,60 @@ public sealed class PublishShiftAssignmentsHandler(IShiftAssignmentRepository sh
                 return lockCheck.Error;
             }
 
-            var published = found.Value.Publish(clock.GetUtcNow().UtcDateTime);
-            if (published.IsFailure)
+            var publishResult = found.Value.Publish(clock.GetUtcNow().UtcDateTime);
+            if (publishResult.IsFailure)
             {
-                return published;
+                return publishResult;
             }
+
+            published.Add(found.Value);
         }
 
+        await RaiseShiftPlanPublishedAsync(published, cancellationToken);
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Groups the just-published assignments by (employee's org unit, week) and raises one <see cref="ShiftPlanPublished"/>
+    /// event per group - a single publish call can span several weeks/units. Employees with no org unit are skipped
+    /// (the event has no "unassigned" bucket).
+    /// </summary>
+    private async Task RaiseShiftPlanPublishedAsync(IReadOnlyList<ShiftAssignment> published, CancellationToken cancellationToken)
+    {
+        if (published.Count == 0)
+        {
+            return;
+        }
+
+        var orgUnitCache = new Dictionary<Guid, Guid?>();
+        var groups = new Dictionary<(Guid OrgUnitId, DateOnly WeekStart), HashSet<Guid>>();
+        foreach (var assignment in published)
+        {
+            if (!orgUnitCache.TryGetValue(assignment.EmployeeId, out var orgUnitId))
+            {
+                orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, assignment.EmployeeId, cancellationToken);
+                orgUnitCache[assignment.EmployeeId] = orgUnitId;
+            }
+
+            if (orgUnitId is null)
+            {
+                continue;
+            }
+
+            var key = (orgUnitId.Value, TimesheetWeekEvaluator.MondayOf(assignment.Date));
+            if (!groups.TryGetValue(key, out var employeeIds))
+            {
+                employeeIds = [];
+                groups[key] = employeeIds;
+            }
+
+            employeeIds.Add(assignment.EmployeeId);
+        }
+
+        foreach (var ((orgUnitId, weekStart), employeeIds) in groups)
+        {
+            outbox.Enqueue(new ShiftPlanPublished(tenant.TenantId, orgUnitId, weekStart, employeeIds.ToList()));
+        }
     }
 }
 

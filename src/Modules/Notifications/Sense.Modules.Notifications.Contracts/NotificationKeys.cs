@@ -17,6 +17,9 @@ public static class NotificationTemplateKeys
 
     /// <summary>Requester: "your request was rejected" (Workflow.ApprovalRejected).</summary>
     public const string RequestRejected = "request.rejected";
+
+    /// <summary>Holders of documents.requirements.view: "N documents expiring soon / M already expired" (Documents.DocumentExpiryReminderDue). In-app only.</summary>
+    public const string DocumentExpiryReminder = "documents.expiry_reminder";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>

@@ -123,9 +123,14 @@ function MyGoals() {
         </Text>
       ) : !goalsQuery.data || goalsQuery.data.length === 0 ? (
         <Card withBorder padding="lg">
-          <Text size="sm" c="dimmed" ta="center">
-            {t("performance:my.empty")}
-          </Text>
+          <Stack gap="sm" align="center">
+            <Text size="sm" c="dimmed" ta="center">
+              {t("performance:my.empty")}
+            </Text>
+            <Button type="button" leftSection={<Plus size={16} />} onClick={() => setAddOpen(true)}>
+              {t("performance:my.emptyCta")}
+            </Button>
+          </Stack>
         </Card>
       ) : (
         <Stack gap="md">
@@ -258,6 +263,8 @@ function ProgressDialog({ goal, onClose, onSaved }: { goal: Goal; onClose: () =>
           min={0}
           max={100}
           step={5}
+          size="lg"
+          thumbSize={26}
           marks={[
             { value: 0, label: "0%" },
             { value: 50, label: "50%" },

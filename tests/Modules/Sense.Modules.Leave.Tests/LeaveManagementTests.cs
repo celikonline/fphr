@@ -205,6 +205,7 @@ public sealed class LeaveManagementDomainTests
 
 /// <summary>Cancel, resubmission and rule set management handlers on real PostgreSQL (Workflow/data scope substituted).</summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class LeaveManagementIntegrationTests : TestFixture
 {
     private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();

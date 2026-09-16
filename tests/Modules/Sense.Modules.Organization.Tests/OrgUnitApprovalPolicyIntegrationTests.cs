@@ -29,6 +29,7 @@ namespace Sense.Modules.Organization.Tests;
 /// IOrgApprovalPolicyResolver inheritance, and OrgUnitApprovalPolicyChanged going outbox → OutboxProcessor → IEventBus.
 /// </summary>
 [Collection("PostgreSQL")]
+[Trait("Category", "Integration")]
 public sealed class OrgUnitApprovalPolicyIntegrationTests : TestFixture
 {
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();

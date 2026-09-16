@@ -317,7 +317,9 @@ export default function LoginPage() {
                 disabled={isLoading}
                 autoFocus
                 oneTimeCode
+                inputMode="numeric"
                 ariaLabel={t("auth:mfa.codeLabel")}
+                classNames={{ root: classes.mfaCode }}
               />
             </Stack>
 
