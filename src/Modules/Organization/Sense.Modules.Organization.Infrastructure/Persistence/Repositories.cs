@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.CostCenters;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
@@ -130,6 +131,32 @@ public sealed class CompanyRepository(OrganizationDbContext context) : ICompanyR
 
     public async Task<IReadOnlyList<Company>> ListAsync(CancellationToken cancellationToken = default) =>
         await context.Companies.OrderBy(c => c.Id).ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed CostCenter repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class CostCenterRepository(OrganizationDbContext context) : ICostCenterRepository
+{
+    public void Add(CostCenter costCenter) => context.CostCenters.Add(costCenter);
+
+    public async Task<Result<CostCenter>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var costCenter = await context.CostCenters.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return costCenter is null ? Error.NotFound(OrganizationDomainErrors.CostCenterNotFound) : costCenter;
+    }
+
+    public async Task<IReadOnlyList<CostCenter>> ListAllAsync(bool activeOnly = true, CancellationToken cancellationToken = default)
+    {
+        var query = context.CostCenters.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(c => c.IsActive);
+        }
+
+        return await query.OrderBy(c => c.Code).ToListAsync(cancellationToken);
+    }
+
+    public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default) =>
+        await context.CostCenters.AnyAsync(c => c.Code == code, cancellationToken);
 }
 
 /// <summary>EF Core-backed OrgUnitApprovalPolicyAssignment repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

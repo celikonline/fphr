@@ -9,9 +9,6 @@ public sealed record CostCenterSummary(Guid Id, string Code, string Name, bool I
 /// "başka modüle bağlama") resolve a CostCenterId reference without depending on Organization's Domain or
 /// Infrastructure. Implemented by Sense.Modules.Organization.Infrastructure and registered by
 /// OrganizationModule.AddModule.
-/// <b>Not implemented yet</b> (Infrastructure/Lookups/CostCenterLookup.cs + DI registration land together
-/// with the CostCenter EF config/migration - see MIGRATION-ISTEGI.md for why that's deferred). This
-/// interface exists now purely as the contract-first shape other modules can code against/mock ahead of time.
 /// </summary>
 public interface ICostCenterLookup
 {

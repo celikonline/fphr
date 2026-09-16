@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
+using Sense.Modules.Organization.Domain.CostCenters;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
@@ -37,6 +38,8 @@ public sealed class OrganizationDbContext(DbContextOptions<OrganizationDbContext
     public DbSet<HolidayCalendarEntry> HolidayCalendarEntries => Set<HolidayCalendarEntry>();
 
     public DbSet<Location> Locations => Set<Location>();
+
+    public DbSet<CostCenter> CostCenters => Set<CostCenter>();
 }
 
 internal static class OrganizationTables
@@ -48,6 +51,7 @@ internal static class OrganizationTables
     public const string HolidayCalendars = "holiday_calendars";
     public const string HolidayCalendarEntries = "holiday_calendar_entries";
     public const string Locations = "locations";
+    public const string CostCenters = "cost_centers";
 
     public const int CodeLength = 50;
     public const int NameLength = 200;
@@ -191,6 +195,22 @@ public sealed class HolidayCalendarEntryConfiguration : IEntityTypeConfiguration
         // Same-module, same-schema referential integrity; deliberately no navigation property on the
         // domain entity (see OrgUnitConfiguration's identical note for Type/Parent).
         b.HasOne<HolidayCalendar>().WithMany().HasForeignKey(x => x.HolidayCalendarId).OnDelete(DeleteBehavior.Cascade);
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class CostCenterConfiguration : IEntityTypeConfiguration<CostCenter>
+{
+    public void Configure(EntityTypeBuilder<CostCenter> b)
+    {
+        b.ToTable(OrganizationTables.CostCenters);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Code).HasMaxLength(OrganizationLimits.CostCenterCodeMaxLength).IsRequired();
+        b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
 
         b.Ignore(x => x.DomainEvents);
     }

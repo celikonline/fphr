@@ -51,6 +51,7 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IHolidayCalendarRepository, HolidayCalendarRepository>();
         services.AddScoped<IHolidayCalendarEntryRepository, HolidayCalendarEntryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
+        services.AddScoped<ICostCenterRepository, CostCenterRepository>();
 
         // Cross-module read contracts consumed by other modules (see IOrgUnitLookup / ILocationLookup)
         services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();
@@ -58,6 +59,7 @@ public sealed class OrganizationModule : IModule
         // Cross-module read contract for a tenant's effective holiday calendar (roadmap Faz 0 item #5)
         services.AddScoped<IHolidayCalendarLookup, HolidayCalendarLookup>();
         services.AddScoped<ILocationLookup, LocationLookup>();
+        services.AddScoped<ICostCenterLookup, CostCenterLookup>();
 
         // Unit-based approval policy resolution for Workflow (11.3.02 "Birime onay süreci ataması")
         services.AddScoped<IOrgApprovalPolicyResolver, OrgApprovalPolicyResolver>();

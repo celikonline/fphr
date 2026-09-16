@@ -10,11 +10,6 @@ namespace Sense.Modules.Organization.Domain.CostCenters;
 /// slice). <see cref="Code"/> is set once at creation and never changes - Payroll/Analytics (S-4,
 /// <c>ICostCenterLookup</c>) will key off it, and OrgUnit/Employee assignment (not yet wired - "başka
 /// modüle bağlama" per TALIMAT tur 3) is expected to reference cost centers by <see cref="Id"/>, not code.
-/// <b>EF wiring deliberately not added yet</b> (see MIGRATION-ISTEGI.md, ADR-0005): Organization already
-/// has one open migration request (AddCompanyProfileFields); adding an <c>IEntityTypeConfiguration</c> for
-/// this type now would make <c>ApplyConfigurationsFromAssembly</c> pick it up and break
-/// <c>Database.MigrateAsync()</c> in the module's Testcontainers integration tests (pending model change,
-/// no migration). EF config + migration follow once the open request lands.
 /// </summary>
 public sealed class CostCenter : TenantAggregateRoot<Guid>, IAuditLogged
 {

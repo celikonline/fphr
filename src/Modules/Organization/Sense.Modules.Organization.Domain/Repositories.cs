@@ -58,12 +58,10 @@ public interface ILocationRepository
 }
 
 /// <summary>
-/// CostCenter aggregate repository (roadmap Faz 2 item #2, S-4). <b>No Infrastructure implementation
-/// yet</b> - this interface (and the Application-layer handlers that depend on it) is written ahead of
-/// the EF config/migration so the command/query surface is ready the moment the migration lands
-/// (see MIGRATION-ISTEGI.md). Placed in Domain rather than Application to match every other repository
-/// in this file (TALIMAT tur 1 said "(Application)" in passing; kept the established convention instead -
-/// flagged in the turn's report for PO to correct if the parenthetical was deliberate).
+/// CostCenter aggregate repository (roadmap Faz 2 item #2, S-4). Placed in Domain rather than Application
+/// to match every other repository in this file (TALIMAT tur 1 said "(Application)" in passing; kept the
+/// established convention instead - flagged in the turn's report for PO to correct if the parenthetical
+/// was deliberate).
 /// </summary>
 public interface ICostCenterRepository
 {
