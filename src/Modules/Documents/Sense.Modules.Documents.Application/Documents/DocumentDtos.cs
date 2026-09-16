@@ -2,6 +2,7 @@ namespace Sense.Modules.Documents.Application.Documents;
 
 /// <summary>Response for presigned upload URL request.</summary>
 public sealed record InitiateUploadResponse(
+    Guid DocumentId,
     string PresignedUrl,
     string RequestId,
     DateTime ExpiresAt);

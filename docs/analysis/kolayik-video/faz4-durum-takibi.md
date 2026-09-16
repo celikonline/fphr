@@ -11,7 +11,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 | # | Kalem | Paket | Durum | Kanıt | Eksik / Not |
 |---|---|---|---|---|---|
-| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2 | 🟡 Kısmi | Bkz. aşağıdaki "D1"/"D2" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) var; belge yükleyip gereksinime bağlama ayrı bir kontrat açığına takılı |
+| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2+D3 | 🟡 Kısmi | Bkz. aşağıdaki "D1"/"D2"/"D3" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) + HR'ın belge yükleyip gereksinime bağlaması var; çalışanın kendi belgesini kendi yüklemesi (self-service) yok |
 | 62 | Harcama: çoklu fiş + vergi oranı + mobil OCR | — | ❌ Başlanmadı | — | `Expense` modülü henüz yok |
 | 63 | Avans talebi: para birimi, taksit | — | ❌ Başlanmadı | — | `Expense` modülü henüz yok |
 | 64 | "Kendi hesabım > Ödemeler" birleşik ekran | — | ❌ Başlanmadı | — | Expense'e bağlı |
@@ -54,15 +54,30 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - Yeni i18n namespace'i `documents` (tr/en gerçek çeviri, de `[DE] ...` placeholder deseni) + `navigation.json`/`employees.json`'a ilgili anahtarlar.
 - `SharedResource(.en).resx`'e D1'in belge tipi/gereksinim hata kodları ve 5 izin adı için lokalize metin eklendi (önceden hiçbiri yoktu, hata mesajları kod olarak dönüyordu).
 
-**Kapsam dışı (bilinçli):** Belgeyi doğrudan sekmeden yükleyip gereksinime bağlama (`POST .../requirements/{id}/link`) eklenmedi — bu, mevcut `Document` yükleme akışının bilinen bir kontrat açığına (`initiate-upload` yanıtı yeni `Document.Id`'yi döndürmüyor, bkz. `company.service.ts` içindeki not) takılıyor; ayrı bir pakette ele alınmalı.
-
 **Doğrulama:** `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` (Docker `node:24-alpine`) hatasız; `dotnet build` ile `Sense.Shared.Infrastructure` (resx değişiklikleri) hatasız.
 
 **Eksik / Not:**
-- Belge yükleme + gereksinime bağlama (yukarıdaki kapsam dışı not).
+- ~~Belge yükleme + gereksinime bağlama~~ → D3'te kapatıldı.
 - Rapor sayfasında arama/dışa aktarma yok (Audit Log sayfasındaki gibi); şimdilik yalnız durum filtresi.
+
+## D3 — Documents: `initiate-upload` kontrat açığı + "Dosyalar" sekmesinden yükleyip gereksinime bağlama
+
+**Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
+
+**Kapsam:** D2'nin bilinçli bıraktığı kapsam dışı notu kapatıyor.
+- Kök neden küçüktü: `Document` aggregate'i zaten `initiate-upload` sırasında gerçek bir Id ile oluşturulup commit ediliyordu (`InitiateUploadHandler.Handle`, `Document.Create` → `documents.Add` → `UnitOfWorkBehaviour` transaction içinde `SaveChangesAsync`); sadece `InitiateUploadResponse` DTO'su bu Id'yi hiç döndürmüyordu. Düzeltme: `InitiateUploadResponse`'a `DocumentId` alanı eklendi, handler `doc.Value.Id`'yi dönüyor (`DocumentDtos.cs`, `DocumentCommands.cs`). Persistence zamanlamasında değişiklik yok, mevcut testler (43/43) etkilenmedi.
+- `web/src/services/documents.service.ts`'e paylaşılan `uploadDocumentFile(file, bucketName)` (initiate → presigned URL'e doğrudan PUT → confirm, gerçek `documentId`'yi döndürür) ve `linkDocumentToRequirement(requirementId, documentId)` eklendi.
+- `web/src/services/company.service.ts`'teki `uploadCompanyLogo`, `requestId`'yi `documentId` yerine kullanan eski "best-effort" work-around'dan kurtarılıp paylaşılan `uploadDocumentFile`'a taşındı; artık `confirm-upload` gerçek Id ile güvenilir çalışıyor.
+- Çalışan kartı "Dosyalar" sekmesine (`documents-section.tsx`) her eksik/muaf gereksinim satırı için "Yükle" aksiyonu eklendi (gizli `<input type=file>` + `uploadDocumentFile` + `linkDocumentToRequirement`); `documents.files.create` **ve** `documents.requirements.manage` izinlerinin ikisi de gerekiyor (Link komutu `.manage` istiyor, ham yükleme `.files.create` istiyor — HR Admin/Owner'ın `documents.*` joker izni ikisini de zaten kapsıyor).
+
+**Doğrulama:** `dotnet build` + `dotnet test tests/Modules/Sense.Modules.Documents.Tests` (43/43 yeşil) `InitiateUploadResponse` alan eklemesiyle; web tarafı `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` hatasız.
+
+**Eksik / Not:**
+- Yalnız HR/yönetici tarafı kapatıldı (`documents.requirements.manage` + `documents.files.create` gereken roller). Bir çalışanın **kendi** eksik belgesini kendi "Dosyalarım" ekranından yüklemesi hâlâ yok — `documents.my.*` joker izni `documents.files.create`'i kapsamıyor (segment eşleşmiyor); bu, ayrı bir izin/rol kararı (`SystemRoleDefinitions.cs`) gerektiriyor, kapsam dışı bırakıldı.
+- `initiate-upload`'ın diğer tüketicisi (şirket logosu) de bu düzeltmeden faydalandı ama o ekran ayrı bir bilinen boşluğa (gerçek `CompaniesController` yok, profil localStorage'da tutuluyor) sahip, dokunulmadı.
 
 ## Değişiklik geçmişi
 
 - 2026-09-16: Dosya oluşturuldu; D1 (Documents belge tipi taksonomisi + koşullu gereksinim değerlendirici, backend) tamamlandı.
 - 2026-09-16: D2 (web arayüzü: Belge tipleri ayarları, çalışan kartı Dosyalar sekmesi, Eksik belge raporu) eklendi.
+- 2026-09-16: D3 (initiate-upload kontrat açığı düzeltildi; Dosyalar sekmesinden yükleyip gereksinime bağlama) eklendi.

@@ -57,11 +57,14 @@
     "waive": "Muaf tut",
     "waiveTitle": "{{name}} için muafiyet",
     "clearWaive": "Muafiyeti kaldır",
+    "upload": "Yükle",
+    "uploaded": "Belge yüklendi.",
     "saved": "Kaydedildi.",
     "errors": {
       "generic": "İşlem gerçekleştirilemedi.",
       "loadFailed": "Belge gereksinimleri yüklenemedi.",
-      "reasonRequired": "Muafiyet nedeni zorunludur."
+      "reasonRequired": "Muafiyet nedeni zorunludur.",
+      "uploadFailed": "Belge yüklenemedi."
     }
   },
   "report": {

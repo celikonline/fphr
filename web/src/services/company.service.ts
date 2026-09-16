@@ -11,17 +11,11 @@
  * Swap the two functions below for real `apiClient` calls once that endpoint exists - the shape of
  * `CompanyProfile` was designed to match the task's field list so no page changes should be needed.
  *
- * Logo upload IS wired to the real Documents module (Item 15), which does exist:
- *   POST /v1/documents/initiate-upload -> presigned URL
- *   PUT  <presignedUrl>                -> upload bytes directly to storage
- *   POST /v1/documents/{id}/confirm-upload -> finalize
- * Known gap: `InitiateUploadResponse` does not return the new Document's id (only presignedUrl/
- * requestId/expiresAt), so the confirm step cannot be reliably called yet - see the inline note in
- * `uploadCompanyLogo`. That's a Documents module contract gap (Item 15), not something to patch here.
+ * Logo upload IS wired to the real Documents module (Item 15) via `uploadDocumentFile`
+ * (documents.service.ts): initiate-upload -> PUT bytes directly to storage -> confirm-upload.
  */
-import axios from "axios";
-import { apiClient } from "@senseik/api-client";
 import { mockDelay, readMock, writeMock } from "@/services/mock/local-store";
+import { uploadDocumentFile } from "@/services/documents.service";
 
 export interface OperatingHours {
   start: string; // "09:00"
@@ -80,44 +74,15 @@ export interface UploadLogoResult {
 /**
  * Uploads a new company logo through the real Documents presigned-URL flow and stores the
  * reference on the mock company profile. Falls back to a local object URL for instant preview
- * (and as the only available preview while the Documents confirm-step gap above is unresolved).
+ * if the upload itself fails (the profile screen has no real backend yet, see the file header).
  */
 export async function uploadCompanyLogo(file: File): Promise<UploadLogoResult> {
   const objectUrl = URL.createObjectURL(file);
 
   try {
-    const { data: initiated } = await apiClient.post<{
-      presignedUrl: string;
-      requestId: string;
-      expiresAt: string;
-    }>("/v1/documents/initiate-upload", {
-      fileName: file.name,
-      contentType: file.type || "application/octet-stream",
-      fileSizeBytes: file.size,
-      bucketName: "logos",
-    });
-
-    // Upload bytes directly to storage via the presigned URL (not our API - no auth header, plain axios).
-    const uploadResponse = await axios.put(initiated.presignedUrl, file, {
-      headers: { "Content-Type": file.type || "application/octet-stream" },
-    });
-    const etag = (uploadResponse.headers["etag"] as string | undefined) ?? initiated.requestId;
-
-    // NOTE: `initiated.requestId` is the storage request id, not the Document's id, so this
-    // confirm call is best-effort until the Documents module returns a real documentId
-    // (see the file-level TODO). We swallow a failure here and keep the local preview.
-    try {
-      await apiClient.post(`/v1/documents/${initiated.requestId}/confirm-upload`, {
-        eTag: etag,
-        actualFileSizeBytes: file.size,
-      });
-    } catch {
-      // Expected until the backend contract gap is fixed - logo still "uploads" from the user's
-      // point of view because we keep the object URL below.
-    }
-
-    await updateCompanyProfile({ logoUrl: objectUrl });
-    return { logoUrl: objectUrl };
+    const documentId = await uploadDocumentFile(file, "logos");
+    await updateCompanyProfile({ logoDocumentId: documentId, logoUrl: objectUrl });
+    return { documentId, logoUrl: objectUrl };
   } catch (error) {
     console.error("Logo upload failed, falling back to local preview only:", error);
     await updateCompanyProfile({ logoUrl: objectUrl });

@@ -70,6 +70,7 @@ public sealed class InitiateUploadHandler(
             documents.Add(doc.Value);
 
             return new InitiateUploadResponse(
+                doc.Value.Id,
                 presignedRequest.UploadUrl,
                 presignedRequest.RequestId,
                 presignedRequest.ExpiresAt);

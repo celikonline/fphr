@@ -57,11 +57,14 @@
     "waive": "[DE] Waive",
     "waiveTitle": "[DE] Waive {{name}}",
     "clearWaive": "[DE] Clear waiver",
+    "upload": "[DE] Upload",
+    "uploaded": "[DE] Document uploaded.",
     "saved": "[DE] Saved.",
     "errors": {
       "generic": "[DE] The action could not be completed.",
       "loadFailed": "[DE] Document requirements could not be loaded.",
-      "reasonRequired": "[DE] A waiver reason is required."
+      "reasonRequired": "[DE] A waiver reason is required.",
+      "uploadFailed": "[DE] The document could not be uploaded."
     }
   },
   "report": {
