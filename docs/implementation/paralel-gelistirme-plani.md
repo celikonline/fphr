@@ -89,7 +89,7 @@ Kural: **Bir klasörü yalnız sahibi değiştirir.** Diğer makinenin ihtiyacı
 | Payroll | 3 | `LegislationParameter`, Attendance, Leave, FM dönüşümü | 🟡 Hesap motoru + golden set saf domain olarak mümkün (en uzun ve riskli faz); ancak kapasite varsa |
 | Expense | 4 | Workflow, Documents | ❌ Workflow'dan sonra |
 | Assets, Announcements (+Support), Training | 4 | Employee, Documents | Teknik olarak mümkün, öncelik düşük |
-| Performance | 5 | Employee | 🟡 Çekirdek bitti (2026-09-16, [faz5-durum-takibi.md](../analysis/kolayik-video/faz5-durum-takibi.md)) — kapsam kullanıcı kararıyla daraltıldı: dönem oluşturma/katılımcı/yayınlama/puanlama/ForceComplete tam, hedef akışı + rapor + web yok |
+| Performance | 5 | Employee | 🟡 Backend çekirdek + hedef akışı bitti (2026-09-16, [faz5-durum-takibi.md](../analysis/kolayik-video/faz5-durum-takibi.md)) — kapsam kullanıcı kararıyla daraltıldı: dönem oluşturma/katılımcı/yayınlama/puanlama/ForceComplete/hedef akışı tam, rapor + web yok |
 | Compensation (+Benefits adayı) | 5 | Employee, Organization, Payroll | ❌ |
 | Recruitment (ATS) | 6 | Identity rolleri, `Location`/`OrgUnit` | Teknik olarak bağımsız; yol haritası Faz 5 ile paralel öneriyor — şimdi önerilmez |
 | Analytics, Ai | 7 | Diğer modüllerin verisi | ❌ |
