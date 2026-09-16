@@ -1,6 +1,7 @@
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
+using Sense.Shared.Contracts.Legislation;
 
 namespace Sense.Modules.Documents.Application.DocumentTypes;
 
@@ -15,10 +16,14 @@ public sealed class DocumentRequirementMaterializationService(
     IDocumentTypeDefinitionRepository types,
     IEmployeeDocumentRequirementRepository requirements,
     IEmployeeDocumentEligibilityLookup eligibility,
-    DocumentTypeProvisioningService provisioning)
+    DocumentTypeProvisioningService provisioning,
+    ILegislationParameterReader legislation)
 {
     /// <summary>Grace period (days) added to <c>dueDateBasis</c> for a materialized requirement's DueDate. A tenant-configurable TenantSettings value is a future enhancement, not built in this pass.</summary>
     public const int DefaultGraceDays = 30;
+
+    /// <summary>4857 md.8: two months to hand over the written contract or a working-conditions document. Used when no Contract.WorkingConditionsDocDeadlineDays row is seeded.</summary>
+    public const int DefaultContractDocumentDeadlineDays = 60;
 
     /// <param name="dueDateBasis">
     /// For EmployeeHired, the employee's real HireDate. For the manual reevaluate command there is no cross-module
@@ -62,6 +67,14 @@ public sealed class DocumentRequirementMaterializationService(
         var resolved = DocumentRequirementEvaluator.ResolveAtHire(activeTypes, context);
         var dueDate = dueDateBasis.AddDays(DefaultGraceDays);
 
+        // The written contract has a statutory deadline (4857 md.8) rather than the generic grace period.
+        var contractDeadlineDays = (int)await legislation.GetDecimalOrDefaultAsync(
+            LegislationParameterKeys.ContractWorkingConditionsDocDeadlineDays,
+            dueDateBasis,
+            DefaultContractDocumentDeadlineDays,
+            cancellationToken).ConfigureAwait(false);
+        var contractDueDate = dueDateBasis.AddDays(contractDeadlineDays);
+
         var created = new List<EmployeeDocumentRequirement>();
         foreach (var type in resolved)
         {
@@ -70,7 +83,8 @@ public sealed class DocumentRequirementMaterializationService(
                 continue;
             }
 
-            var materialized = EmployeeDocumentRequirement.Materialize(tenantId, employeeId, type.Id, dueDate);
+            var typeDueDate = type.Code == DocumentTypeSeed.EmploymentContractCode ? contractDueDate : dueDate;
+            var materialized = EmployeeDocumentRequirement.Materialize(tenantId, employeeId, type.Id, typeDueDate);
             if (materialized.IsFailure)
             {
                 continue;

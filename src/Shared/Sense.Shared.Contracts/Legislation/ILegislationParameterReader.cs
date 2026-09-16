@@ -115,6 +115,12 @@ public static class LegislationParameterKeys
 
     // Collective dismissal notification duty (4857 md.29, Faz 1a E5a). No seed rows yet: CollectiveDismissalEvaluator
     // falls back to the statutory defaults, and seeding these belongs with the next Leave migration (single owner table).
+    // Written contract / working-conditions document duty (4857 md.8, Faz 1a E5b): when no written contract exists,
+    // the employer must hand the employee a working-conditions document within the deadline. Same fallback pattern:
+    // DocumentRequirementMaterializationService applies the statutory defaults when no rows are seeded.
+    public const string ContractWrittenRequiredMinMonths = "Contract.WrittenRequiredMinMonths";
+    public const string ContractWorkingConditionsDocDeadlineDays = "Contract.WorkingConditionsDocDeadlineDays";
+
     public const string CollectiveDismissalThresholds = "CollectiveDismissal.Thresholds";
     public const string CollectiveDismissalNoticeDays = "CollectiveDismissal.NoticeDays";
     public const string CollectiveDismissalRehirePriorityMonths = "CollectiveDismissal.RehirePriorityMonths";

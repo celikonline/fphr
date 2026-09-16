@@ -4,6 +4,7 @@ using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Shared.Contracts.Legislation;
 using Shouldly;
 using Xunit;
 
@@ -18,6 +19,15 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
     private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid EmployeeId = Guid.NewGuid();
     private static readonly DateOnly HireDate = new(2026, 9, 1);
+
+    /// <summary>No seeded Contract.* rows: the materialization falls back to the statutory deadline.</summary>
+    private static ILegislationParameterReader Legislation()
+    {
+        var reader = Substitute.For<ILegislationParameterReader>();
+        reader.FindAsync(Arg.Any<string>(), Arg.Any<DateOnly>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<LegislationParameterValue?>(null));
+        return reader;
+    }
 
     private static DocumentTypeDefinition Onboarding(string code) =>
         DocumentTypeDefinition.Create(TenantId, code, code, DocumentTypeStage.Onboarding, true, null, null, 1, false, null, true, 0).Value;
@@ -49,7 +59,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
             .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: true, HasDisability: false)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning);
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning, Legislation());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -80,7 +90,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning);
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning, Legislation());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -88,5 +98,40 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
 
         requirements.Received(1).Add(Arg.Is<EmployeeDocumentRequirement>(r => r.DocumentTypeId == onboarding.Id));
         requirements.DidNotReceive().Add(Arg.Is<EmployeeDocumentRequirement>(r => r.DocumentTypeId == conditional.Id));
+    }
+
+    /// <summary>
+    /// The written contract gets the statutory two-month deadline (4857 md.8) instead of the generic grace period,
+    /// so "sözleşme belgesi yok" surfaces on the right date (Faz 1a #45).
+    /// </summary>
+    [Fact]
+    public async Task Handle_EmploymentContract_UsesTheStatutoryDeadlineInsteadOfTheGracePeriod()
+    {
+        var contract = Onboarding(DocumentTypeSeed.EmploymentContractCode);
+        var otherDocument = Onboarding("NationalIdCopy");
+
+        var types = Substitute.For<IDocumentTypeDefinitionRepository>();
+        types.AnyForTenantAsync(Arg.Any<CancellationToken>()).Returns(true);
+        types.ListAsync(null, true, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<DocumentTypeDefinition>>([contract, otherDocument]));
+
+        var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
+        requirements.FindAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentRequirement?>(null));
+
+        var eligibility = Substitute.For<IEmployeeDocumentEligibilityLookup>();
+        eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
+
+        var materialization = new DocumentRequirementMaterializationService(
+            types, requirements, eligibility, new DocumentTypeProvisioningService(types), Legislation());
+        var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
+        var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
+
+        await handler.Handle(new EmployeeHired(TenantId, EmployeeId, HireDate, HireDate), CancellationToken.None);
+
+        requirements.Received(1).Add(Arg.Is<EmployeeDocumentRequirement>(r =>
+            r.DocumentTypeId == contract.Id
+            && r.DueDate == HireDate.AddDays(DocumentRequirementMaterializationService.DefaultContractDocumentDeadlineDays)));
+        requirements.Received(1).Add(Arg.Is<EmployeeDocumentRequirement>(r =>
+            r.DocumentTypeId == otherDocument.Id
+            && r.DueDate == HireDate.AddDays(DocumentRequirementMaterializationService.DefaultGraceDays)));
     }
 }

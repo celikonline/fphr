@@ -16,6 +16,13 @@ public sealed record DocumentTypeSeedRow(
 /// <summary>System seed list for the personnel document type catalog (11.7 roadmap: "zorunlu ve koşullu özlük belgesi kuralları").</summary>
 public static class DocumentTypeSeed
 {
+    /// <summary>
+    /// The written employment contract (4857 md.8). Its requirement gets the statutory deadline instead of the generic
+    /// grace period: when no written contract exists the employee must receive a working-conditions document within
+    /// Contract.WorkingConditionsDocDeadlineDays of being hired.
+    /// </summary>
+    public const string EmploymentContractCode = "EmploymentContract";
+
     public static IReadOnlyList<DocumentTypeSeedRow> SystemDefinitions() =>
     [
         // Onboarding: required, no condition.
@@ -28,7 +35,7 @@ public static class DocumentTypeSeed
         Row("PassportPhoto", "Vesikalık fotoğraf", DocumentTypeStage.Onboarding, true, null, 70, quantity: 2),
         Row("FamilyStatusDocument", "Aile durumu belgesi", DocumentTypeStage.Onboarding, true, null, 80),
         Row("MilitaryStatusDocument", "Askerlik durum belgesi", DocumentTypeStage.Onboarding, true, null, 90),
-        Row("EmploymentContract", "İş sözleşmesi", DocumentTypeStage.Onboarding, true, null, 100),
+        Row(EmploymentContractCode, "İş sözleşmesi", DocumentTypeStage.Onboarding, true, null, 100),
         Row("SgkHireDeclaration", "SGK işe giriş bildirgesi", DocumentTypeStage.Onboarding, true, null, 110),
 
         // Conditional: required, each with its condition.
