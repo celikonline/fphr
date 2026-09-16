@@ -29,6 +29,14 @@ public static class AttendanceDomainErrors
     public const string ShiftDailyLimitExceeded = "attendance.shift.daily_limit_exceeded";
     public const string ShiftWeeklyHoursExceeded = "attendance.shift.weekly_hours_exceeded";
     public const string ShiftWeeklyDaysExceeded = "attendance.shift.weekly_days_exceeded";
+    public const string ShiftAvailabilityConflict = "attendance.shift.availability_conflict";
+    public const string AvailabilityTimeRangeInvalid = "attendance.availability.time_range_invalid";
+    public const string AvailabilityAlreadyCancelled = "attendance.availability.already_cancelled";
+    public const string AvailabilityNotFound = "attendance.availability.not_found";
+    public const string AvailabilityNotOwner = "attendance.availability.not_owner";
+    public const string CompensatoryLedgerNotFound = "attendance.compensatory.not_found";
+    public const string CompensatoryLedgerNotOpen = "attendance.compensatory.not_open";
+    public const string CompensatoryMinutesInvalid = "attendance.compensatory.minutes_invalid";
 }
 
 /// <summary>Domain limits.</summary>

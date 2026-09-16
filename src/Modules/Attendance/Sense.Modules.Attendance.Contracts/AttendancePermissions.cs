@@ -81,9 +81,27 @@ public static class AttendancePermissions
     public static readonly Permission ShiftUnlock = new(
         "attendance.shift.unlock", Module, "Unlock Shift Plan", Group, "Reopen a locked month's shift plan (audited exception)");
 
+    /// <summary>"Vardiyam"; "*.self.*" reaches every base role.</summary>
+    public static readonly Permission ShiftSelf = new(
+        "attendance.shift.self", Module, "View My Shifts", Group, "View the caller's own shift assignments");
+
+    /// <summary>Package A5. "*.self.*" reaches every base role for self-service submit/cancel.</summary>
+    public static readonly Permission AvailabilitySelf = new(
+        "attendance.availability.self", Module, "Report My Availability", Group, "Submit and cancel the caller's own \"müsait değilim\" entries");
+
+    public static readonly Permission AvailabilityView = new(
+        "attendance.availability.view", Module, "View Employee Availability", Group, "View employees' availability entries when planning shifts");
+
+    public static readonly Permission CompensatoryView = new(
+        "attendance.compensatory.view", Module, "View Compensatory Work Ledger", Group, "View employees' telafi çalışması debt/compensation ledger");
+
+    public static readonly Permission CompensatoryManage = new(
+        "attendance.compensatory.manage", Module, "Record Compensatory Work", Group, "Log compensatory hours worked against an open telafi debt");
+
     public static IEnumerable<Permission> All =>
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
-            ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock,
+            ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
+            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage,
         ];
 }

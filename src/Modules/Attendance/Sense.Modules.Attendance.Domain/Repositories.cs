@@ -1,4 +1,6 @@
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Availability;
+using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -78,4 +80,24 @@ public interface IShiftPlanLockRepository
     void Add(ShiftPlanLock plan);
 
     Task<ShiftPlanLock?> FindByPeriodAsync(DateOnly periodMonth, CancellationToken cancellationToken = default);
+}
+
+public interface IEmployeeAvailabilityRepository
+{
+    void Add(EmployeeAvailability availability);
+
+    Task<Result<EmployeeAvailability>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<EmployeeAvailability>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface ICompensatoryWorkLedgerRepository
+{
+    void Add(CompensatoryWorkLedger ledger);
+
+    Task<Result<CompensatoryWorkLedger>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<CompensatoryWorkLedger?> FindByEmployeeAndWeekAsync(Guid employeeId, DateOnly weekStart, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<CompensatoryWorkLedger>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
