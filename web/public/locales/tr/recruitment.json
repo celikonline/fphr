@@ -80,7 +80,11 @@
     "createSuccess": "Aday eklendi.",
     "updateSuccess": "Aday güncellendi.",
     "empty": "Henüz aday yok.",
-    "editCandidate": "Adayı düzenle"
+    "editCandidate": "Adayı düzenle",
+    "tags": "Etiketler",
+    "editTags": "Etiketleri düzenle",
+    "newTag": "Yeni etiket",
+    "addTag": "Ekle"
   },
   "applications": {
     "title": "Başvurular",

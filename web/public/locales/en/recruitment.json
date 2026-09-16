@@ -80,7 +80,11 @@
     "createSuccess": "Candidate added.",
     "updateSuccess": "Candidate updated.",
     "empty": "No candidates yet.",
-    "editCandidate": "Edit candidate"
+    "editCandidate": "Edit candidate",
+    "tags": "Tags",
+    "editTags": "Edit tags",
+    "newTag": "New tag",
+    "addTag": "Add"
   },
   "applications": {
     "title": "Applications",

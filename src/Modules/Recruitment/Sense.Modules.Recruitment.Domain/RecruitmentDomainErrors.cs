@@ -24,6 +24,27 @@ public static class RecruitmentDomainErrors
     public const string RequisitionNotSubmittable = "recruitment.requisition.not_submittable";
     public const string RequisitionNotPending = "recruitment.requisition.not_pending";
     public const string RequisitionNotCancellable = "recruitment.requisition.not_cancellable";
+
+    public const string TagNotFound = "recruitment.tag.not_found";
+    public const string TagNameRequired = "recruitment.tag.name_required";
+    public const string TagAlreadyInactive = "recruitment.tag.already_inactive";
+
+    public const string FormTemplateNotFound = "recruitment.form_template.not_found";
+    public const string FormTemplateNameRequired = "recruitment.form_template.name_required";
+    public const string FormTemplateFieldsRequired = "recruitment.form_template.fields_required";
+    public const string FormTemplateAlreadyInactive = "recruitment.form_template.already_inactive";
+    public const string FormFieldLabelRequired = "recruitment.form_field.label_required";
+    public const string FormFieldOptionsRequired = "recruitment.form_field.options_required";
+    public const string ScorecardRequiresScoreFields = "recruitment.form_template.scorecard_requires_score_fields";
+    public const string ScorecardWeightsMustSumTo100 = "recruitment.form_template.scorecard_weights_must_sum_to_100";
+
+    public const string FormResponseNotFound = "recruitment.form_response.not_found";
+    public const string FormResponseFieldRequired = "recruitment.form_response.field_required";
+    public const string FormResponseScoreInvalid = "recruitment.form_response.score_invalid";
+
+    public const string AutomationRuleNotFound = "recruitment.automation_rule.not_found";
+    public const string AutomationRuleSameStage = "recruitment.automation_rule.same_stage";
+    public const string AutomationRuleAlreadyInactive = "recruitment.automation_rule.already_inactive";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -36,4 +57,5 @@ public static class RecruitmentLimits
     public const int EmailMaxLength = 254;
     public const int PhoneMaxLength = 30;
     public const int ApplySlugLength = 22;
+    public const int FormAnswerMaxLength = 4_000;
 }

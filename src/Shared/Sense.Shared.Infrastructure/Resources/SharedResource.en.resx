@@ -657,6 +657,8 @@ Your SenseİK account is active. Sign in: {url}</value></data>
 
   <!-- Payroll (Faz 3 P3): period run, "Değişti" mechanism (PayslipDirtyFlag/ChangeDetectionRun) -->
   <data name="payroll.errors.period_already_open" xml:space="preserve"><value>A payroll period is already open for this month.</value></data>
+  <data name="payroll.errors.period_not_approved" xml:space="preserve"><value>The payroll period has not been approved.</value></data>
+  <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>The payroll period has not been paid.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Salary changed</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>

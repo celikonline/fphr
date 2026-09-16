@@ -6,6 +6,7 @@ using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Modules.Recruitment.Domain.JobRequisitions;
+using Sense.Modules.Recruitment.Domain.Tags;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -26,6 +27,8 @@ public sealed class RecruitmentDbContext(DbContextOptions<RecruitmentDbContext> 
     public DbSet<JobApplication> JobApplications => Set<JobApplication>();
 
     public DbSet<JobRequisition> JobRequisitions => Set<JobRequisition>();
+
+    public DbSet<Tag> Tags => Set<Tag>();
 }
 
 internal static class RecruitmentTables
@@ -33,8 +36,10 @@ internal static class RecruitmentTables
     public const string JobPostings = "job_postings";
     public const string JobPostingAccess = "job_posting_access";
     public const string Candidates = "candidates";
+    public const string CandidateTags = "candidate_tags";
     public const string JobApplications = "job_applications";
     public const string JobRequisitions = "job_requisitions";
+    public const string Tags = "tags";
 
     /// <summary>String length for enum-as-string columns (Status, EmploymentType, Stage...).</summary>
     public const int EnumCodeLength = 30;
@@ -106,6 +111,30 @@ public sealed class CandidateConfiguration : IEntityTypeConfiguration<Candidate>
         b.Property(x => x.Source).HasConversion<string>().HasMaxLength(RecruitmentTables.EnumCodeLength).IsRequired();
 
         b.HasIndex(x => new { x.TenantId, x.Email });
+
+        b.OwnsMany(x => x.Tags, a =>
+        {
+            a.ToTable(RecruitmentTables.CandidateTags);
+            a.WithOwner().HasForeignKey(x => x.CandidateId);
+            a.HasKey(x => new { x.CandidateId, x.TagId });
+        });
+
+        b.Navigation(x => x.Tags).AutoInclude();
+
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
+{
+    public void Configure(EntityTypeBuilder<Tag> b)
+    {
+        b.ToTable(RecruitmentTables.Tags);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(RecruitmentLimits.NameMaxLength).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
 
         b.Ignore(x => x.DomainEvents);
     }

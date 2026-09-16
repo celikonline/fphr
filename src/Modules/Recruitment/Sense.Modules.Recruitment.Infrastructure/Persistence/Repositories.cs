@@ -4,6 +4,7 @@ using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Modules.Recruitment.Domain.JobRequisitions;
+using Sense.Modules.Recruitment.Domain.Tags;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Infrastructure.Persistence;
@@ -102,5 +103,31 @@ public sealed class JobRequisitionRepository(RecruitmentDbContext context) : IJo
         }
 
         return await query.OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
+    }
+}
+
+/// <summary>EF Core-backed Tag repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class TagRepository(RecruitmentDbContext context) : ITagRepository
+{
+    public void Add(Tag tag) => context.Tags.Add(tag);
+
+    public async Task<Result<Tag>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var tag = await context.Tags.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        return tag is null ? Error.NotFound(RecruitmentDomainErrors.TagNotFound) : tag;
+    }
+
+    public async Task<bool> NameTakenAsync(Guid tenantId, string name, CancellationToken cancellationToken = default) =>
+        await context.Tags.AnyAsync(t => t.Name == name.Trim(), cancellationToken);
+
+    public async Task<IReadOnlyList<Tag>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default)
+    {
+        var query = context.Tags.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(t => t.IsActive);
+        }
+
+        return await query.OrderBy(t => t.Name).ToListAsync(cancellationToken);
     }
 }

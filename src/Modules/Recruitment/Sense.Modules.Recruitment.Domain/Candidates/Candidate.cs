@@ -22,6 +22,8 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
 {
     private static readonly Regex EmailPattern = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private readonly List<CandidateTagAssignment> _tags = [];
+
     private Candidate()
     {
     }
@@ -45,6 +47,8 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
     public string? Phone { get; private set; }
 
     public CandidateSource Source { get; private set; }
+
+    public IReadOnlyList<CandidateTagAssignment> Tags => _tags.AsReadOnly();
 
     public static Result<Candidate> Create(Guid tenantId, string firstName, string lastName, string email, string? phone, Guid? id = null)
     {
@@ -85,4 +89,32 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
         Phone = string.IsNullOrWhiteSpace(phone) ? null : Guard.MaxLength(phone.Trim(), RecruitmentLimits.PhoneMaxLength);
         return Result.Success();
     }
+
+    /// <summary>Replaces the candidate's tag set (R2, roadmap #89 - manual catalog/assignment only; auto-tagging from application answers is R3).</summary>
+    public void SetTags(IReadOnlyCollection<Guid> tagIds)
+    {
+        _tags.Clear();
+        foreach (var tagId in tagIds.Distinct())
+        {
+            _tags.Add(new CandidateTagAssignment(Id, tagId));
+        }
+    }
+}
+
+/// <summary>One tag assigned to a candidate. Owned collection (see JobPostingAccess precedent) - tenant isolation comes from the owning Candidate.</summary>
+public sealed class CandidateTagAssignment : AuditableRecord
+{
+    private CandidateTagAssignment()
+    {
+    }
+
+    public CandidateTagAssignment(Guid candidateId, Guid tagId)
+    {
+        CandidateId = candidateId;
+        TagId = tagId;
+    }
+
+    public Guid CandidateId { get; private set; }
+
+    public Guid TagId { get; private set; }
 }

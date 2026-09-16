@@ -10,4 +10,6 @@ public static class RecruitmentErrors
 
     public const string NoEmployeeForUser = "recruitment.requisition.no_employee_for_user";
     public const string RequisitionNotApproved = "recruitment.posting.requisition_not_approved";
+
+    public const string TagNameTaken = "recruitment.tag.name_taken";
 }

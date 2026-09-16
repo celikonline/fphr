@@ -666,6 +666,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (Faz 3 P3): dönem hesabı, "Değişti" mekanizması (PayslipDirtyFlag/ChangeDetectionRun) -->
   <data name="payroll.errors.period_already_open" xml:space="preserve"><value>Bu ay için bordro dönemi zaten açık.</value></data>
+  <data name="payroll.errors.period_not_approved" xml:space="preserve"><value>Bordro dönemi onaylanmamış.</value></data>
+  <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>Bordro dönemi ödenmemiş.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Maaş değişti</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Bordro parametresi değişti</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>

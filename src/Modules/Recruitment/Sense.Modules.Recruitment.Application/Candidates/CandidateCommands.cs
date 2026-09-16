@@ -66,3 +66,22 @@ public sealed class UpdateCandidateHandler(ICandidateRepository candidates) : IC
         return updated.IsFailure ? updated.Error : Result.Success();
     }
 }
+
+/// <summary>Replaces a candidate's tag set (R2, roadmap #89).</summary>
+[RequiresPermission("recruitment.candidates.manage")]
+public sealed record SetCandidateTagsCommand(Guid CandidateId, IReadOnlyList<Guid> TagIds) : ICommand;
+
+public sealed class SetCandidateTagsHandler(ICandidateRepository candidates) : ICommandHandler<SetCandidateTagsCommand>
+{
+    public async Task<Result> Handle(SetCandidateTagsCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await candidates.GetByIdAsync(command.CandidateId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        existing.Value.SetTags(command.TagIds);
+        return Result.Success();
+    }
+}

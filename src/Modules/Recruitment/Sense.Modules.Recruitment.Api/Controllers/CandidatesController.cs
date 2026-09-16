@@ -10,6 +10,9 @@ namespace Sense.Modules.Recruitment.Api.Controllers;
 /// <summary>Request to create or update a candidate's contact information.</summary>
 public sealed record CandidateContactRequest(string FirstName, string LastName, string Email, string? Phone);
 
+/// <summary>Request to replace a candidate's tag set.</summary>
+public sealed record SetCandidateTagsRequest(IReadOnlyList<Guid> TagIds);
+
 /// <summary>Candidate management (Kolay İK ATS "Adaylar"). R0: added manually - the career-site apply flow is a later Recruitment package.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/recruitment/candidates")]
@@ -45,4 +48,10 @@ public sealed class CandidatesController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<JobApplicationDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListApplications(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListApplicationsByCandidateQuery(id), ct));
+
+    /// <summary>Replaces a candidate's tag set.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/tags")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> SetTags(Guid id, [FromBody] SetCandidateTagsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetCandidateTagsCommand(id, request.TagIds), ct));
 }

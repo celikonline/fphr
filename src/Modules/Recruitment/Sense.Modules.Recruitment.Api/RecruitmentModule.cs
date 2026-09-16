@@ -43,6 +43,7 @@ public sealed class RecruitmentModule : IModule
         services.AddScoped<ICandidateRepository, CandidateRepository>();
         services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
         services.AddScoped<IJobRequisitionRepository, JobRequisitionRepository>();
+        services.AddScoped<ITagRepository, TagRepository>();
         // RequisitionApprovalCompletedHandler/RejectedHandler (Scrutor-scanned above) need IRecruitmentUnitOfWork even
         // though only Sense.Worker ever dispatches them - registered here too so DI validation passes at Api startup.
         services.AddRecruitmentCoreServices();

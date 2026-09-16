@@ -367,6 +367,56 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                     b.ToTable("job_requisitions", "recruitment");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.Tags.Tag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tags");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_tags_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tags_tenant_id_name");
+
+                    b.ToTable("tags", "recruitment");
+                });
+
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>
                 {
                     b.Property<Guid>("MessageId")
@@ -488,6 +538,48 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "recruitment");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.Candidates.Candidate", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Recruitment.Domain.Candidates.CandidateTagAssignment", "Tags", b1 =>
+                        {
+                            b1.Property<Guid>("CandidateId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("candidate_id");
+
+                            b1.Property<Guid>("TagId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid")
+                                .HasColumnName("tag_id");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("created_at");
+
+                            b1.Property<Guid?>("CreatedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("created_user_id");
+
+                            b1.Property<DateTime?>("ModifiedDate")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("modified_date");
+
+                            b1.Property<Guid?>("ModifiedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("modified_user_id");
+
+                            b1.HasKey("CandidateId", "TagId")
+                                .HasName("pk_candidate_tags");
+
+                            b1.ToTable("candidate_tags", "recruitment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CandidateId")
+                                .HasConstraintName("fk_candidate_tags_candidates_candidate_id");
+                        });
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobPostings.JobPosting", b =>
