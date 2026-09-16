@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -37,7 +37,6 @@ import {
   createExpenseClaim,
   getExpenseClaim,
   listExpenseCategories,
-  listMyAdvanceRequests,
   listMyPayments,
   removeExpenseItem,
   submitExpenseClaim,
@@ -48,7 +47,6 @@ import {
 
 const PAYMENTS_KEY = ["expense", "payments", "me"] as const;
 const CLAIM_KEY = ["expense", "claim"] as const;
-const ADVANCES_KEY = ["expense", "advances", "me"] as const;
 const CATEGORIES_KEY = ["expense", "categories"] as const;
 
 const STATUS_COLOR: Record<string, string> = {
@@ -422,13 +420,12 @@ function AdvanceRequestDialog({ onClose, onSubmitted }: { onClose: () => void; o
   const {
     handleSubmit,
     control,
-    watch,
     formState: { errors },
   } = useForm<AdvanceFormValues>({
     resolver: zodResolver(advanceSchema),
     defaultValues: { amount: 0, requestedDate: today, isInstallmentRequested: false, installmentCount: 1, description: "" },
   });
-  const isInstallmentRequested = watch("isInstallmentRequested");
+  const isInstallmentRequested = useWatch({ control, name: "isInstallmentRequested" });
 
   const createMutation = useMutation({
     mutationFn: (values: AdvanceFormValues) =>
