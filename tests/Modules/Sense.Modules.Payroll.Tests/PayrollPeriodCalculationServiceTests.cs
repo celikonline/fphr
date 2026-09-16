@@ -1,0 +1,156 @@
+using NSubstitute;
+using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Calculation;
+using Sense.Modules.Payroll.Domain.Payslips;
+using Sense.Modules.Payroll.Domain.Periods;
+using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Legislation;
+using Shouldly;
+using Xunit;
+
+namespace Sense.Modules.Payroll.Tests;
+
+/// <summary>
+/// <see cref="PayrollPeriodCalculationService"/> (Faz 3 P3 "Dönem hesabı" / "Değişenleri yeniden hesapla"): repository
+/// and cross-module ports are NSubstitute fakes (mirrors Sense.Modules.Documents.Tests' handler-level tests), no DB -
+/// the orchestration logic (which employees get calculated, dirty-flag clearing) is what's under test, not persistence.
+/// </summary>
+public sealed class PayrollPeriodCalculationServiceTests
+{
+    private static readonly Guid TenantId = Guid.NewGuid();
+    private static readonly Guid SgkWorkplaceCompanyId = Guid.NewGuid();
+    private static readonly DateOnly AsOf = new(2026, 3, 1);
+
+    private static PayrollPeriod OpenPeriod() => PayrollPeriod.Create(TenantId, 2026, 3).Value;
+
+    private static EmployeePayrollProfile Profile(Guid employeeId) => EmployeePayrollProfile.Create(
+        TenantId, employeeId,
+        new EmployeePayrollProfileData(
+            SgkWorkplaceCompanyId, null, new DateOnly(2026, 1, 1), null,
+            WageBasis.Monthly, SgkStatus.Normal, null,
+            MealBenefitVariant.None, 0m, TransportVariant.None, PayrollPaymentMethod.Bank, null,
+            SickDaysReducePay: false, ExternalPayrollCode: null, Notes: null)).Value;
+
+    private static EmployeeCurrentSalary Salary(decimal amount = 50_000m) =>
+        new(amount, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1));
+
+    /// <summary>Legislation reader stub returning the same golden-set values PayrollCalculatorGoldenSetTests uses,
+    /// so PayrollLegislationSnapshotResolver.ResolveAsync succeeds for any key it asks for.</summary>
+    private static ILegislationParameterReader Legislation()
+    {
+        var values = new Dictionary<string, LegislationParameterValue>
+        {
+            [LegislationParameterKeys.PayrollIncomeTaxBrackets] = Json(LegislationParameterKeys.PayrollIncomeTaxBrackets,
+                """[{"upperBound":158000,"rate":0.15},{"upperBound":330000,"rate":0.20},{"upperBound":1200000,"rate":0.27},{"upperBound":4300000,"rate":0.35},{"upperBound":null,"rate":0.40}]"""),
+            [LegislationParameterKeys.PayrollSgkFloor] = Decimal(LegislationParameterKeys.PayrollSgkFloor, 30_000m),
+            [LegislationParameterKeys.PayrollSgkCeiling] = Decimal(LegislationParameterKeys.PayrollSgkCeiling, 225_000m),
+            [LegislationParameterKeys.PayrollSgkEmployeeRate] = Decimal(LegislationParameterKeys.PayrollSgkEmployeeRate, 0.14m),
+            [LegislationParameterKeys.PayrollUnemploymentEmployeeRate] = Decimal(LegislationParameterKeys.PayrollUnemploymentEmployeeRate, 0.01m),
+            [LegislationParameterKeys.PayrollSgkEmployerRate] = Decimal(LegislationParameterKeys.PayrollSgkEmployerRate, 0.205m),
+            [LegislationParameterKeys.PayrollUnemploymentEmployerRate] = Decimal(LegislationParameterKeys.PayrollUnemploymentEmployerRate, 0.02m),
+            [LegislationParameterKeys.PayrollSgkEmployerDiscountRate] = Decimal(LegislationParameterKeys.PayrollSgkEmployerDiscountRate, 0.05m),
+            [LegislationParameterKeys.PayrollStampTaxRate] = Decimal(LegislationParameterKeys.PayrollStampTaxRate, 0.00759m),
+            [LegislationParameterKeys.PayrollMinimumWageGross] = Decimal(LegislationParameterKeys.PayrollMinimumWageGross, 30_000m),
+            [LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption] = Decimal(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, 240m),
+            [LegislationParameterKeys.PayrollMealSgkDailyExemptionRate] = Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, 0.2365m),
+            [LegislationParameterKeys.PayrollMealMarketCardExemptionApplies] = Decimal(LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, 0m),
+        };
+
+        var reader = Substitute.For<ILegislationParameterReader>();
+        reader.FindAsync(Arg.Any<string>(), Arg.Any<DateOnly>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(ci => Task.FromResult(values.GetValueOrDefault((string)ci[0])));
+        return reader;
+    }
+
+    private static LegislationParameterValue Decimal(string key, decimal value) =>
+        new(key, LegislationCountries.Turkey, value, null, new DateOnly(2026, 1, 1), null, "test");
+
+    private static LegislationParameterValue Json(string key, string json) =>
+        new(key, LegislationCountries.Turkey, null, json, new DateOnly(2026, 1, 1), null, "test");
+
+    private static PayrollPeriodCalculationService BuildService(
+        out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
+        out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
+        out IEmployeeSalaryLookup salaryLookup)
+    {
+        payslips = Substitute.For<IPayslipRepository>();
+        payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Payslip?>(null));
+        traces = Substitute.For<IPayslipCalculationTraceRepository>();
+        profiles = Substitute.For<IEmployeePayrollProfileRepository>();
+        dirtyFlags = Substitute.For<IPayslipDirtyFlagRepository>();
+        dirtyFlags.FindActiveAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<PayslipDirtyFlag?>(null));
+        salaryLookup = Substitute.For<IEmployeeSalaryLookup>();
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(TenantId);
+
+        return new PayrollPeriodCalculationService(payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System);
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_ProducesAPayslipForEveryEmployeeWithAProfileAndSalary()
+    {
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeA = Guid.NewGuid();
+        var employeeB = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeA, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeA)));
+        profiles.FindCurrentAsync(employeeB, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeB)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeA, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeB, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(80_000m)));
+
+        var summary = await service.RecalculateAllAsync(OpenPeriod(), [employeeA, employeeB], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(2);
+        summary.SkippedCount.ShouldBe(0);
+        payslips.Received(2).Add(Arg.Any<Payslip>());
+        traces.Received(2).Add(Arg.Any<PayslipCalculationTrace>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_SkipsAnEmployeeWithNoCurrentPayrollProfile()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(null));
+
+        var summary = await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(0);
+        summary.SkippedCount.ShouldBe(1);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+        await salaryLookup.DidNotReceive().GetCurrentSalaryAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RecalculateDirtyAsync_OnlyCalculatesEmployeesWithAnActiveDirtyFlag_AndClearsIt()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out var dirtyFlags, out var salaryLookup);
+        var dirtyEmployee = Guid.NewGuid();
+        var untouchedEmployee = Guid.NewGuid();
+        var period = OpenPeriod();
+
+        var activeFlag = PayslipDirtyFlag.Create(TenantId, period.Id, dirtyEmployee, PayslipDirtyFlagReasons.SalaryChanged, Guid.NewGuid(), DateTime.UtcNow);
+        dirtyFlags.ListActiveByPeriodAsync(period.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<PayslipDirtyFlag>>([activeFlag]));
+        dirtyFlags.FindActiveAsync(period.Id, dirtyEmployee, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayslipDirtyFlag?>(activeFlag));
+
+        profiles.FindCurrentAsync(dirtyEmployee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(dirtyEmployee)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, dirtyEmployee, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+
+        var summary = await service.RecalculateDirtyAsync(period, CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        payslips.Received(1).Add(Arg.Any<Payslip>());
+
+        // The untouched employee is never looked up at all - RecalculateDirtyAsync only iterates flagged ids.
+        await profiles.DidNotReceive().FindCurrentAsync(untouchedEmployee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
+        await salaryLookup.DidNotReceive().GetCurrentSalaryAsync(TenantId, untouchedEmployee, Arg.Any<CancellationToken>());
+
+        activeFlag.IsActive.ShouldBeFalse();
+        activeFlag.ClearedByRunId.ShouldBe(summary.RunId);
+    }
+}
