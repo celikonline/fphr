@@ -59,7 +59,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 **Eksik / Not:**
 - ~~Belge yükleme + gereksinime bağlama~~ → D3'te kapatıldı.
 - ~~Çalışanın kendi belgesini kendi yüklemesi~~ → D4'te kapatıldı.
-- Rapor sayfasında arama/dışa aktarma yok (Audit Log sayfasındaki gibi); şimdilik yalnız durum filtresi.
+- ~~Rapor sayfasında arama/dışa aktarma yok~~ → dışa aktarma (CSV) D4'te eklendi (bkz. altında); arama (çalışan adına göre) hâlâ yok — `GetMissingDocumentReportQuery`/`ListReportAsync` bir `q` parametresi almıyor, çalışan adı Documents şemasında değil (cross-module `IEmployeeContactLookup`'tan geliyor), DB seviyesinde filtre için ayrı bir iş.
 
 ## D3 — Documents: `initiate-upload` kontrat açığı + "Dosyalar" sekmesinden yükleyip gereksinime bağlama
 
@@ -87,6 +87,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - API: `documents/me/initiate-upload`, `documents/me/{id}/confirm-upload`, `documents/me/requirements/{id}/link` (`DocumentsController.cs`, `EmployeeDocumentRequirementsController.cs`).
 - Web: `documents.service.ts`'e `uploadDocumentFile(file, bucketName, scope)` (`scope: "hr" | "me"`) ve `linkMyDocumentToRequirement`; `documents-section.tsx`'te tek bir `uploadMode` ("hr" HR/admin için tüm eksik+muaf satırlarda, "me" düz çalışan için yalnız eksik satırlarda) — aynı "Yükle" aksiyonu artık hem HR hem çalışanın kendi kartında çalışıyor.
 - `SharedResource(.en).resx`'e `documents.my.files.create` izin adı ve `employee_document_requirement.not_owner` hata mesajı eklendi.
+- Ek: Eksik belge raporu sayfasına CSV dışa aktarma eklendi (`exportMissingDocumentReportToCsv`, Audit Log'daki `exportAuditEventsToCsv` ile aynı desen — yalnız o an yüklü sayfayı indirir, "tüm filtrelenmiş kayıtları indir" değil).
 
 **Doğrulama:** `dotnet test tests/Modules/Sense.Modules.Documents.Tests` 46/46 yeşil (3 yeni test: `Link_MarksRequirementUploaded_AndReturnsDto`, `LinkMine_OwnRequirement_MarksUploaded`, `LinkMine_AnotherEmployeesRequirement_Fails_AndLeavesStatusUnchanged` — sahiplik kontrolü + durum değişmiyor); `dotnet build` Documents API hatasız; web `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` hatasız.
 

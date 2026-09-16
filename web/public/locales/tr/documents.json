@@ -71,6 +71,7 @@
     "title": "Eksik belge raporu",
     "subtitle": "Kiracı genelinde eksik, yüklenmiş ve muaf tutulmuş özlük belgelerini görüntüleyin.",
     "allStatuses": "Tüm durumlar",
+    "exportCsv": "CSV olarak indir",
     "empty": "Kayıt bulunamadı.",
     "columns": {
       "employee": "Çalışan",

@@ -3,14 +3,19 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { FileWarning } from "lucide-react";
-import { Badge, Card, Group, Select, Text, Title } from "@mantine/core";
+import { Download, FileWarning } from "lucide-react";
+import { Badge, Button, Card, Group, Select, Text, Title } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
 import { formatDateOnly } from "@/lib/dates";
-import { getMissingDocumentReport, type DocumentRequirementStatus, type MissingDocumentReportItem } from "@/services/documents.service";
+import {
+  exportMissingDocumentReportToCsv,
+  getMissingDocumentReport,
+  type DocumentRequirementStatus,
+  type MissingDocumentReportItem,
+} from "@/services/documents.service";
 
 const ALL_VALUE = "__all__";
 const DEFAULT_PAGE_SIZE = 20;
@@ -51,6 +56,19 @@ function MissingDocumentsReport() {
   }
 
   const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
+
+  function handleExport() {
+    if (!data || data.items.length === 0) return;
+    const blob = exportMissingDocumentReportToCsv(data.items);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `missing-documents-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
 
   const columns: ColumnDef<MissingDocumentReportItem>[] = [
     {
@@ -101,12 +119,23 @@ function MissingDocumentsReport() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <div>
-        <Title order={1} size="h2" className="flex items-center gap-2">
-          <FileWarning size={24} /> {t("documents:report.title")}
-        </Title>
-        <Text c="dimmed">{t("documents:report.subtitle")}</Text>
-      </div>
+      <Group justify="space-between" align="flex-start" gap="sm">
+        <div>
+          <Title order={1} size="h2" className="flex items-center gap-2">
+            <FileWarning size={24} /> {t("documents:report.title")}
+          </Title>
+          <Text c="dimmed">{t("documents:report.subtitle")}</Text>
+        </div>
+        <Button
+          type="button"
+          variant="default"
+          leftSection={<Download size={16} />}
+          onClick={handleExport}
+          disabled={!data || data.items.length === 0}
+        >
+          {t("documents:report.exportCsv")}
+        </Button>
+      </Group>
 
       <Card withBorder padding="md">
         <Group align="flex-end" gap="sm">

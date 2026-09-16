@@ -71,6 +71,7 @@
     "title": "[DE] Missing document report",
     "subtitle": "[DE] View missing, uploaded and waived personnel documents across the tenant.",
     "allStatuses": "[DE] All statuses",
+    "exportCsv": "[DE] Export CSV",
     "empty": "[DE] No records found.",
     "columns": {
       "employee": "[DE] Employee",

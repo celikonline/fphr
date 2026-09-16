@@ -146,6 +146,16 @@ export async function getMissingDocumentReport(
   return data;
 }
 
+/** Exports the currently loaded report rows (this page's, not the full filtered set) to CSV, mirroring audit.service.ts. */
+export function exportMissingDocumentReportToCsv(items: MissingDocumentReportItem[]): Blob {
+  const header = "Employee,DocumentType,Stage,Status,DueDate";
+  const csvField = (value: string) => `"${value.replace(/"/g, '""')}"`;
+  const rows = items.map(
+    (i) => `${csvField(i.employeeName)},${csvField(i.documentTypeName)},${i.stage},${i.status},${i.dueDate ?? ""}`,
+  );
+  return new Blob([[header, ...rows].join("\n")], { type: "text/csv;charset=utf-8;" });
+}
+
 export async function waiveDocumentRequirement(requirementId: string, reason: string): Promise<EmployeeDocumentRequirement> {
   const { data } = await apiClient.post<EmployeeDocumentRequirement>(`${DOCUMENTS_BASE}/requirements/${requirementId}/waive`, { reason });
   return data;
