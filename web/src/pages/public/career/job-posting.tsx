@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Briefcase, CheckCircle2, Clock } from "lucide-react";
+import { Briefcase, CheckCircle2, Clock, MapPin } from "lucide-react";
 import {
   Alert,
   Anchor,
@@ -81,15 +81,23 @@ function RelatedPostings({ items }: { items: PublicJobPostingSummary[] }) {
         <Stack gap={6}>
           {items.map((item) => (
             <Group key={item.applySlug} justify="space-between" wrap="nowrap">
-              <Text
-                component={Link}
-                to={`/kariyer/${item.applySlug}`}
-                size="sm"
-                fw={500}
-                className={classes.relatedLink}
-              >
-                {item.title}
-              </Text>
+              <Stack gap={2}>
+                <Text
+                  component={Link}
+                  to={`/kariyer/${item.applySlug}`}
+                  size="sm"
+                  fw={500}
+                  className={classes.relatedLink}
+                >
+                  {item.title}
+                </Text>
+                {item.location && (
+                  <Group gap={4} c="dimmed">
+                    <MapPin size={12} />
+                    <Text size="xs">{item.location}</Text>
+                  </Group>
+                )}
+              </Stack>
               <Badge variant="light" size="sm">
                 {t(`recruitment:employmentTypes.${item.employmentType}`)}
               </Badge>
@@ -306,6 +314,12 @@ export default function CareerJobPostingPage() {
             </Group>
             <Title order={2}>{posting.title}</Title>
             <Group gap="md" c="dimmed">
+              {posting.location && (
+                <Group gap={4}>
+                  <MapPin size={14} />
+                  <Text size="sm">{posting.location}</Text>
+                </Group>
+              )}
               {posting.closingDate && (
                 <Text size="sm">
                   {t("recruitment:career.closingDate")}: {formatDateOnly(posting.closingDate, i18n.language)}

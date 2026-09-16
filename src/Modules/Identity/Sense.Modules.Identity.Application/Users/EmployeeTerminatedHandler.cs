@@ -14,6 +14,8 @@ namespace Sense.Modules.Identity.Application.Users;
 /// hata üretmez). Koruma: hedef kullanıcı kiracının tek aktif Owner'ıysa devre dışı bırakılmaz (kiracı
 /// kilitlenmesin), yalnız uyarı loglanır - <see cref="UserCommands"/>'taki SetUserStatusHandler/SetUserRolesHandler
 /// ile aynı "son Owner" kuralı.
+/// İlk sürüm: ileri tarihli fesihte de erişim kayıt anında kapanır (PO G-3-09, backlog B-3-03) - <see cref="EmployeeTerminated"/>
+/// olayına Faz 2'nin eklediği olası <c>TerminationDate</c> alanı burada kullanılmaz, olay her zaman anında işlenir.
 /// </summary>
 public sealed class EmployeeTerminatedHandler(
     IUserRepository users,

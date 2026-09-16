@@ -37,15 +37,22 @@ public sealed class ListPayrollPeriodsHandler(IPayrollPeriodRepository periods) 
 
 /// <summary>One employee's gross/net payslip line for the period-detail screen (no stored SGK/tax/stamp-duty
 /// breakdown on <see cref="Payslip"/> itself - see <see cref="ExportPayrollPeriodQuery"/> for the full breakdown,
-/// which reads the calculation trace instead).</summary>
-public sealed record PayslipLineDto(Guid EmployeeId, string EmployeeName, decimal GrossAmount, decimal NetAmount);
+/// which reads the calculation trace instead). <paramref name="WorkedDays"/>/<paramref name="CalendarDaysInMonth"/>
+/// (faz-07 tur 2 madde 6, G-7-11 eki, positional append - existing callers unaffected) come from the persisted
+/// DAYS trace step (<see cref="PayslipTraceSteps.ExtractDays"/>); both null when the payslip has no trace yet.</summary>
+public sealed record PayslipLineDto(Guid EmployeeId, string EmployeeName, decimal GrossAmount, decimal NetAmount, int? WorkedDays = null, int? CalendarDaysInMonth = null);
 
 public sealed record PayrollPeriodDetailDto(Guid Id, int Year, int Month, PayrollPeriodStatus Status, IReadOnlyList<PayslipLineDto> Payslips);
 
 [RequiresPermission("payroll.trace.view")]
 public sealed record GetPayrollPeriodQuery(Guid PeriodId) : IQuery<PayrollPeriodDetailDto>;
 
-public sealed class GetPayrollPeriodHandler(IPayrollPeriodRepository periods, IPayslipRepository payslips, IEmployeeDirectory employeeDirectory, ITenantContext tenant)
+public sealed class GetPayrollPeriodHandler(
+    IPayrollPeriodRepository periods,
+    IPayslipRepository payslips,
+    IPayslipCalculationTraceRepository traces,
+    IEmployeeDirectory employeeDirectory,
+    ITenantContext tenant)
     : IQueryHandler<GetPayrollPeriodQuery, PayrollPeriodDetailDto>
 {
     public async Task<Result<PayrollPeriodDetailDto>> Handle(GetPayrollPeriodQuery query, CancellationToken cancellationToken)
@@ -60,12 +67,15 @@ public sealed class GetPayrollPeriodHandler(IPayrollPeriodRepository periods, IP
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId);
 
-        var lines = periodPayslips.Select(p =>
+        var lines = new List<PayslipLineDto>();
+        foreach (var p in periodPayslips)
         {
             var contact = contacts.GetValueOrDefault(p.EmployeeId);
             var name = contact is null ? p.EmployeeId.ToString() : $"{contact.FirstName} {contact.LastName}".Trim();
-            return new PayslipLineDto(p.EmployeeId, name, p.GrossAmount, p.NetAmount);
-        }).ToList();
+            var trace = await traces.FindLatestByPayslipIdAsync(p.Id, cancellationToken);
+            var (workedDays, calendarDaysInMonth) = PayslipTraceSteps.ExtractDays(trace?.StepsJson);
+            lines.Add(new PayslipLineDto(p.EmployeeId, name, p.GrossAmount, p.NetAmount, workedDays, calendarDaysInMonth));
+        }
 
         return new PayrollPeriodDetailDto(period.Id, period.Year, period.Month, period.Status, lines);
     }
@@ -203,8 +213,6 @@ public sealed class ExportPayrollPeriodHandler(
     ITenantContext tenant,
     IReportExporter exporter) : IQueryHandler<ExportPayrollPeriodQuery, ExportFileResult>
 {
-    private static readonly JsonSerializerOptions StepsJsonOptions = new(JsonSerializerDefaults.Web);
-
     public async Task<Result<ExportFileResult>> Handle(ExportPayrollPeriodQuery query, CancellationToken cancellationToken)
     {
         var period = await periods.FindByIdAsync(query.PeriodId, cancellationToken);
@@ -291,7 +299,7 @@ public sealed class ExportPayrollPeriodHandler(
             return (0m, 0m, 0m, 0m, 0m);
         }
 
-        var steps = JsonSerializer.Deserialize<List<TraceStep>>(stepsJson, StepsJsonOptions) ?? [];
+        var steps = PayslipTraceSteps.Parse(stepsJson);
         var sgkEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.SgkEmployee)?.Output ?? 0m;
         var unempEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.UnempEmployee)?.Output ?? 0m;
         var incomeTax = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.IncomeTax)?.Output ?? 0m;
@@ -305,4 +313,34 @@ public sealed class ExportPayrollPeriodHandler(
 
         return (sgkEmployee, unempEmployee, incomeTax - minWageExemptionGv, stampTax - minWageExemptionDv, expenseReimbursement);
     }
+}
+
+/// <summary>Shared <see cref="PayslipCalculationTrace.StepsJson"/> parsing (faz-07 tur 2 madde 6): both
+/// <see cref="ExportPayrollPeriodHandler"/>'s figure extraction and <see cref="GetPayrollPeriodHandler"/>'s day-count
+/// read from the same blob - kept in one place so the JSON options/step lookup stay in sync.</summary>
+internal static class PayslipTraceSteps
+{
+    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
+
+    public static List<TraceStep> Parse(string? stepsJson) =>
+        string.IsNullOrEmpty(stepsJson) ? [] : JsonSerializer.Deserialize<List<TraceStep>>(stepsJson, Options) ?? [];
+
+    /// <summary>Reads the DAYS step's <c>workedDays</c>/<c>calendarDaysInMonth</c> inputs (both ints, see
+    /// <see cref="PayrollCalculator.Calculate"/>). Null when the payslip has no trace, no DAYS step, or the input is
+    /// missing/unparsable - callers surface that as "unknown", not zero.</summary>
+    public static (int? WorkedDays, int? CalendarDaysInMonth) ExtractDays(string? stepsJson)
+    {
+        var daysStep = Parse(stepsJson).FirstOrDefault(s => s.Code == PayrollTraceStepCodes.Days);
+        if (daysStep is null)
+        {
+            return (null, null);
+        }
+
+        return (ParseInt(daysStep, "workedDays"), ParseInt(daysStep, "calendarDaysInMonth"));
+    }
+
+    private static int? ParseInt(TraceStep step, string key) =>
+        step.Inputs.TryGetValue(key, out var raw) && int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
 }

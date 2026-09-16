@@ -49,7 +49,14 @@
     "cancel": "[DE] Cancel",
     "cancelConfirmTitle": "[DE] Cancel goal",
     "cancelConfirmDescription": "[DE] Are you sure you want to cancel \"{{title}}\"?",
-    "cancelled": "[DE] Goal cancelled."
+    "cancelled": "[DE] Goal cancelled.",
+    "assign": {
+      "action": "[DE] Assign goal",
+      "title": "[DE] Assign goal to employee",
+      "employee": "[DE] Employee",
+      "submit": "[DE] Assign",
+      "assigned": "[DE] Goal assigned."
+    }
   },
   "reviewCycles": {
     "title": "[DE] Review cycles",

@@ -12,6 +12,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { useAuthStore } from "@/store/auth.store";
+import { formatDateOnly } from "@/lib/dates";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import { listUsers } from "@/services/users.service";
 import {
@@ -56,7 +57,7 @@ export default function JobPostingsPage() {
 }
 
 function JobPostings() {
-  const { t } = useTranslation(["recruitment", "common"]);
+  const { t, i18n } = useTranslation(["recruitment", "common"]);
   const queryClient = useQueryClient();
   const currentUserId = useAuthStore((s) => s.user?.id);
   const canCreate = usePermission("recruitment.postings.create");
@@ -152,6 +153,34 @@ function JobPostings() {
     setCreateOpen(true);
   }
 
+  function postingActions(posting: JobPosting) {
+    return (
+      <>
+        {canUpdate && (posting.status === "draft" || posting.status === "onHold" || posting.status === "closed") && (
+          <Tooltip label={t(posting.status === "closed" ? "recruitment:postings.reopen" : "recruitment:postings.publish")}>
+            <ActionIcon variant="subtle" color="green" onClick={() => publishMutation.mutate(posting.id)}>
+              <Play size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {canUpdate && posting.status === "open" && (
+          <Tooltip label={t("recruitment:postings.close")}>
+            <ActionIcon variant="subtle" color="orange" onClick={() => closeMutation.mutate(posting.id)}>
+              <Square size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {canArchive && posting.status !== "archived" && (
+          <Tooltip label={t("recruitment:postings.archive")}>
+            <ActionIcon variant="subtle" color="red" onClick={() => setArchiveTarget(posting)}>
+              <Archive size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
@@ -182,60 +211,76 @@ function JobPostings() {
             {t("recruitment:postings.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:postings.titleField")}</Table.Th>
-                <Table.Th>{t("recruitment:postings.orgUnit")}</Table.Th>
-                <Table.Th>{t("recruitment:postings.employmentType")}</Table.Th>
-                <Table.Th>{t("recruitment:postings.status")}</Table.Th>
-                <Table.Th ta="right">{t("common:actions")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((posting) => (
-                <Table.Tr key={posting.id}>
-                  <Table.Td>
-                    <Link to={`/app/recruitment/postings/${posting.id}`} className="font-medium hover:underline">
-                      {posting.title}
-                    </Link>
-                  </Table.Td>
-                  <Table.Td>{orgUnitNameById.get(posting.orgUnitId) ?? "—"}</Table.Td>
-                  <Table.Td>{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Table.Td>
-                  <Table.Td>
-                    <Badge color={STATUS_COLOR[posting.status]} variant="light">
-                      {t(`recruitment:postings.statuses.${posting.status}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4} justify="flex-end" wrap="nowrap">
-                      {canUpdate && (posting.status === "draft" || posting.status === "onHold" || posting.status === "closed") && (
-                        <Tooltip label={t(posting.status === "closed" ? "recruitment:postings.reopen" : "recruitment:postings.publish")}>
-                          <ActionIcon variant="subtle" color="green" onClick={() => publishMutation.mutate(posting.id)}>
-                            <Play size={16} />
-                          </ActionIcon>
-                        </Tooltip>
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:postings.titleField")}</Table.Th>
+                    <Table.Th>{t("recruitment:postings.orgUnit")}</Table.Th>
+                    <Table.Th>{t("recruitment:postings.employmentType")}</Table.Th>
+                    <Table.Th>{t("recruitment:postings.status")}</Table.Th>
+                    <Table.Th ta="right">{t("common:actions")}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.map((posting) => (
+                    <Table.Tr key={posting.id}>
+                      <Table.Td>
+                        <Link to={`/app/recruitment/postings/${posting.id}`} className="font-medium hover:underline">
+                          {posting.title}
+                        </Link>
+                      </Table.Td>
+                      <Table.Td>{orgUnitNameById.get(posting.orgUnitId) ?? "—"}</Table.Td>
+                      <Table.Td>{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Table.Td>
+                      <Table.Td>
+                        <Badge color={STATUS_COLOR[posting.status]} variant="light">
+                          {t(`recruitment:postings.statuses.${posting.status}`)}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap={4} justify="flex-end" wrap="nowrap">
+                          {postingActions(posting)}
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {data.map((posting) => (
+                  <Card key={posting.id} withBorder padding="sm" radius="md">
+                    <Stack gap={6}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Link to={`/app/recruitment/postings/${posting.id}`} className="font-medium hover:underline">
+                          {posting.title}
+                        </Link>
+                        <Badge color={STATUS_COLOR[posting.status]} variant="light">
+                          {t(`recruitment:postings.statuses.${posting.status}`)}
+                        </Badge>
+                      </Group>
+                      <Text size="xs" c="dimmed">
+                        {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {t(`recruitment:employmentTypes.${posting.employmentType}`)}
+                      </Text>
+                      {posting.closingDate && (
+                        <Text size="xs" c="dimmed">
+                          {t("recruitment:postings.closingDate")}: {formatDateOnly(posting.closingDate, i18n.language)}
+                        </Text>
                       )}
-                      {canUpdate && posting.status === "open" && (
-                        <Tooltip label={t("recruitment:postings.close")}>
-                          <ActionIcon variant="subtle" color="orange" onClick={() => closeMutation.mutate(posting.id)}>
-                            <Square size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                      {canArchive && posting.status !== "archived" && (
-                        <Tooltip label={t("recruitment:postings.archive")}>
-                          <ActionIcon variant="subtle" color="red" onClick={() => setArchiveTarget(posting)}>
-                            <Archive size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+                      <Group gap={4} justify="flex-end" wrap="nowrap">
+                        {postingActions(posting)}
+                      </Group>
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 

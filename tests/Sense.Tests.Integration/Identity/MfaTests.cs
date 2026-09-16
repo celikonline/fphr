@@ -228,7 +228,9 @@ public sealed class MfaTests : IdentityStackTestBase
             Array.Reverse(counterBytes);
         }
 
+#pragma warning disable CA5350 // RFC 6238 TOTP HMAC-SHA1 gerektirir (TotpService ile aynı)
         var hash = HMACSHA1.HashData(key, counterBytes);
+#pragma warning restore CA5350
         var offset = hash[^1] & 0x0F;
         var binary = ((hash[offset] & 0x7F) << 24) | ((hash[offset + 1] & 0xFF) << 16) | ((hash[offset + 2] & 0xFF) << 8) | (hash[offset + 3] & 0xFF);
         return (binary % 1_000_000).ToString(System.Globalization.CultureInfo.InvariantCulture).PadLeft(6, '0');

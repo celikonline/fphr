@@ -23,4 +23,10 @@ public sealed class WorkforceKpisController : ApiControllerBase
     [ProducesResponseType<LeaveUsageKpiDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> LeaveUsage([FromQuery] int? year, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetLeaveUsageKpiQuery(year, orgUnitId), ct));
+
+    /// <summary>S-17 fazla mesai maliyeti KPI'sı (roadmap #99); maaş hassas alan - <c>employee.salary.view</c> de gerekir.</summary>
+    [HttpGet("overtime-cost")]
+    [ProducesResponseType<OvertimeCostKpiDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> OvertimeCost([FromQuery] int year, [FromQuery] int month, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetOvertimeCostKpiQuery(year, month, orgUnitId), ct));
 }

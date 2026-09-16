@@ -171,6 +171,37 @@ function Candidates() {
     setDialog({ open: true, candidate });
   }
 
+  function candidateActions(candidate: Candidate) {
+    return (
+      <>
+        <Tooltip label={t("recruitment:candidates.applications.actionLabel")}>
+          <ActionIcon variant="subtle" color="gray" onClick={() => setApplicationsCandidate(candidate)}>
+            <ClipboardList size={16} />
+          </ActionIcon>
+        </Tooltip>
+        <Tooltip label={t("recruitment:candidates.editTags")}>
+          <ActionIcon variant="subtle" color="gray" onClick={() => openTagEditor(candidate)}>
+            <TagsIcon size={16} />
+          </ActionIcon>
+        </Tooltip>
+        {!candidate.isAnonymized && (
+          <>
+            <Tooltip label={t("recruitment:candidates.editCandidate")}>
+              <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)}>
+                <Pencil size={16} />
+              </ActionIcon>
+            </Tooltip>
+            <Tooltip label={t("recruitment:candidates.anonymize")}>
+              <ActionIcon variant="subtle" color="red" onClick={() => setAnonymizeTarget(candidate)}>
+                <ShieldOff size={16} />
+              </ActionIcon>
+            </Tooltip>
+          </>
+        )}
+      </>
+    );
+  }
+
   function onSubmit(values: FormValues) {
     if (dialog.candidate) {
       updateMutation.mutate({ id: dialog.candidate.id, ...values });
@@ -229,86 +260,110 @@ function Candidates() {
             {t("recruitment:candidates.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:candidates.firstName")}</Table.Th>
-                <Table.Th>{t("recruitment:candidates.email")}</Table.Th>
-                <Table.Th>{t("recruitment:candidates.phone")}</Table.Th>
-                <Table.Th>{t("recruitment:candidates.source")}</Table.Th>
-                <Table.Th>{t("recruitment:candidates.tags")}</Table.Th>
-                {canManage && <Table.Th ta="right">{t("common:actions")}</Table.Th>}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((candidate) => (
-                <Table.Tr key={candidate.id} opacity={candidate.isAnonymized ? 0.6 : 1}>
-                  <Table.Td>
-                    <Group gap={6} wrap="nowrap">
-                      <Text fw={500}>
-                        {candidate.firstName} {candidate.lastName}
-                      </Text>
-                      {candidate.isAnonymized && (
-                        <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:candidates.firstName")}</Table.Th>
+                    <Table.Th>{t("recruitment:candidates.email")}</Table.Th>
+                    <Table.Th>{t("recruitment:candidates.phone")}</Table.Th>
+                    <Table.Th>{t("recruitment:candidates.source")}</Table.Th>
+                    <Table.Th>{t("recruitment:candidates.tags")}</Table.Th>
+                    {canManage && <Table.Th ta="right">{t("common:actions")}</Table.Th>}
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.map((candidate) => (
+                    <Table.Tr key={candidate.id} opacity={candidate.isAnonymized ? 0.6 : 1}>
+                      <Table.Td>
+                        <Group gap={6} wrap="nowrap">
+                          <Text fw={500}>
+                            {candidate.firstName} {candidate.lastName}
+                          </Text>
+                          {candidate.isAnonymized && (
+                            <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+                              <Badge size="sm" color="gray" variant="light">
+                                {t("recruitment:candidates.anonymized")}
+                              </Badge>
+                            </Tooltip>
+                          )}
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>{candidate.email}</Table.Td>
+                      <Table.Td>{candidate.phone ?? "—"}</Table.Td>
+                      <Table.Td>{t(`recruitment:candidates.sources.${candidate.source}`)}</Table.Td>
+                      <Table.Td>
+                        <Group gap={4}>
+                          {candidate.tagIds.length === 0 ? (
+                            <Text size="sm" c="dimmed">
+                              —
+                            </Text>
+                          ) : (
+                            candidate.tagIds.map((tagId) => (
+                              <Badge key={tagId} size="sm" variant="light">
+                                {tagNameById.get(tagId) ?? "…"}
+                              </Badge>
+                            ))
+                          )}
+                        </Group>
+                      </Table.Td>
+                      {canManage && (
+                        <Table.Td>
+                          <Group justify="flex-end" wrap="nowrap">
+                            {candidateActions(candidate)}
+                          </Group>
+                        </Table.Td>
+                      )}
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {data.map((candidate) => (
+                  <Card key={candidate.id} withBorder padding="sm" radius="md" opacity={candidate.isAnonymized ? 0.6 : 1}>
+                    <Stack gap={6}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Text fw={500} size="sm">
+                          {candidate.firstName} {candidate.lastName}
+                        </Text>
+                        {candidate.isAnonymized && (
                           <Badge size="sm" color="gray" variant="light">
                             {t("recruitment:candidates.anonymized")}
                           </Badge>
-                        </Tooltip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                  <Table.Td>{candidate.email}</Table.Td>
-                  <Table.Td>{candidate.phone ?? "—"}</Table.Td>
-                  <Table.Td>{t(`recruitment:candidates.sources.${candidate.source}`)}</Table.Td>
-                  <Table.Td>
-                    <Group gap={4}>
-                      {candidate.tagIds.length === 0 ? (
-                        <Text size="sm" c="dimmed">
-                          —
-                        </Text>
-                      ) : (
-                        candidate.tagIds.map((tagId) => (
-                          <Badge key={tagId} size="sm" variant="light">
-                            {tagNameById.get(tagId) ?? "…"}
-                          </Badge>
-                        ))
-                      )}
-                    </Group>
-                  </Table.Td>
-                  {canManage && (
-                    <Table.Td>
-                      <Group justify="flex-end" wrap="nowrap">
-                        <Tooltip label={t("recruitment:candidates.applications.actionLabel")}>
-                          <ActionIcon variant="subtle" color="gray" onClick={() => setApplicationsCandidate(candidate)}>
-                            <ClipboardList size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label={t("recruitment:candidates.editTags")}>
-                          <ActionIcon variant="subtle" color="gray" onClick={() => openTagEditor(candidate)}>
-                            <TagsIcon size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                        {!candidate.isAnonymized && (
-                          <>
-                            <Tooltip label={t("recruitment:candidates.editCandidate")}>
-                              <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)}>
-                                <Pencil size={16} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={t("recruitment:candidates.anonymize")}>
-                              <ActionIcon variant="subtle" color="red" onClick={() => setAnonymizeTarget(candidate)}>
-                                <ShieldOff size={16} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </>
                         )}
                       </Group>
-                    </Table.Td>
-                  )}
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+                      <Text size="xs" c="dimmed">
+                        {candidate.email} · {candidate.phone ?? "—"}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {t(`recruitment:candidates.sources.${candidate.source}`)}
+                      </Text>
+                      {candidate.tagIds.length > 0 && (
+                        <Group gap={4}>
+                          {candidate.tagIds.map((tagId) => (
+                            <Badge key={tagId} size="sm" variant="light">
+                              {tagNameById.get(tagId) ?? "…"}
+                            </Badge>
+                          ))}
+                        </Group>
+                      )}
+                      {canManage && (
+                        <Group justify="flex-end" wrap="nowrap">
+                          {candidateActions(candidate)}
+                        </Group>
+                      )}
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 

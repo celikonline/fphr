@@ -392,11 +392,15 @@ export interface PublicJobPosting {
   description: string | null;
   closingDate: string | null;
   publishedAt: string | null;
+  /** S-19 (`ILocationLookup`) ile çözülür; ilanın konumu yoksa veya anonim bağlamda ad bulunamazsa null. */
+  location?: string | null;
 }
 
 export interface PublicJobPostingSummary {
   applySlug: string;
   title: string;
+  /** S-19 (`ILocationLookup`) ile çözülür; ilanın konumu yoksa veya anonim bağlamda ad bulunamazsa null. */
+  location?: string | null;
   employmentType: RecruitmentEmploymentType;
   publishedAt: string | null;
 }

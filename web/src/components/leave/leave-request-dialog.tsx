@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { Users } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -69,6 +70,7 @@ export function LeaveRequestDialog({
 }: LeaveRequestDialogProps) {
   const { t } = useTranslation(["leave", "common"]);
   const days = useDays();
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const source = editing ?? prefill;
   const [leaveTypeId, setLeaveTypeId] = useState(source?.leaveTypeId ?? (types.length === 1 ? types[0].id : ""));
   const [startDate, setStartDate] = useState(source?.startDate ?? "");
@@ -163,7 +165,7 @@ export function LeaveRequestDialog({
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="32rem" title={title}>
+    <Modal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {dialogDescription}

@@ -49,9 +49,17 @@ public enum TerminationType
 /// <summary>
 /// Raised when an Active/Suspended employee is terminated; the Identity account is not touched by this event.
 /// <paramref name="ReasonCode"/> is the chosen TerminationReason's stable Code (not its id - consumers outside
-/// Employee never resolve the tenant catalog).
+/// Employee never resolve the tenant catalog). <paramref name="TerminationDate"/> (S-20, appended - positional
+/// callers and pre-existing outbox rows keep working, missing means null) is the effective last-day date; an
+/// offboarding reference-date consumer lands in a later phase.
 /// </summary>
-public sealed record EmployeeTerminated(Guid TenantId, Guid EmployeeId, TerminationType TerminationType, string ReasonCode, string? SgkExitCode) : IntegrationEvent(TenantId);
+public sealed record EmployeeTerminated(
+    Guid TenantId,
+    Guid EmployeeId,
+    TerminationType TerminationType,
+    string ReasonCode,
+    string? SgkExitCode,
+    DateOnly? TerminationDate = null) : IntegrationEvent(TenantId);
 
 /// <summary>
 /// Raised when a terminated employee is re-hired ("Yeniden işe al", 11.3.03 E5a). <paramref name="LeaveAccrualStartDate"/>

@@ -1,8 +1,9 @@
-import { useCallback, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Alert, Badge, Button, Group, Input, Modal, NumberInput, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
+import { Alert, Badge, Button, Card, Group, Input, Modal, NumberInput, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
@@ -14,6 +15,8 @@ import type { OvertimeRequest, OvertimeRequestInput, OvertimeRequestStatus, Over
 /** Backend OvertimeLimits.MaxDurationMinutes (one record is at most a day). */
 export const OVERTIME_MAX_MINUTES = 24 * 60;
 const DESCRIPTION_MAX_LENGTH = 2000;
+/** Narrow phones (S-6 mobil kalıbı, bkz. `leave-shared.tsx`'teki `LeaveRequestsMobileList`): kart listesi. */
+const MOBILE_QUERY = "(max-width: 390px)";
 
 /** Minutes as "2 sa 30 dk". */
 export function useMinutes() {
@@ -64,6 +67,12 @@ export function OvertimeStatusBadge({ status }: { status: OvertimeRequestStatus 
 export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; actions?: (row: OvertimeRequest) => ReactNode }) {
   const { t, i18n } = useTranslation(["leave"]);
   const minutes = useMinutes();
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+  // Same order as the "workDate" column's accessor (date then start time), newest first.
+  const sorted = useMemo(
+    () => [...rows].sort((a, b) => `${b.workDate}T${b.startTime}`.localeCompare(`${a.workDate}T${a.startTime}`)),
+    [rows],
+  );
 
   const columns: ColumnDef<OvertimeRequest>[] = [
     {
@@ -175,12 +184,62 @@ export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; act
     );
   }
 
+  if (isMobile) {
+    return <OvertimesMobileList rows={sorted} actions={actions} />;
+  }
+
   return (
     <Stack gap="xs">
       <Group justify="flex-end">
         <DataTableViewOptions table={table} />
       </Group>
       <DataTable table={table} />
+    </Stack>
+  );
+}
+
+/** ≤390px card list mirroring `OvertimesTable`'s columns (S-6 mobil kalıbı, bkz. `LeaveRequestsMobileList`). */
+function OvertimesMobileList({ rows, actions }: { rows: OvertimeRequest[]; actions?: (row: OvertimeRequest) => ReactNode }) {
+  const { t, i18n } = useTranslation(["leave"]);
+  const minutes = useMinutes();
+
+  return (
+    <Stack gap="sm">
+      {rows.map((row) => (
+        <Card key={row.id} withBorder padding="md">
+          <Stack gap={4}>
+            <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
+              <Text size="sm" fw={500}>
+                {formatDateOnly(row.workDate, i18n.language)}
+              </Text>
+              <div className="flex flex-wrap items-center justify-end gap-1">
+                <OvertimeStatusBadge status={row.status} />
+                {row.conversionId && (
+                  <Badge variant="outline" color="gray">
+                    {t("leave:overtime.converted")}
+                  </Badge>
+                )}
+              </div>
+            </Group>
+            <Text size="xs" c="dimmed">
+              {formatTimeOnly(row.startTime)} · {minutes(row.durationMinutes)} · {t(`leave:overtime.dayKinds.${row.dayKind}`)}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t("leave:overtime.payable")}: {minutes(row.payableMinutes)} · {t(`leave:overtime.sources.${row.source}`)}
+            </Text>
+            {row.description && (
+              <Text size="xs" c="dimmed">
+                {row.description}
+              </Text>
+            )}
+            {actions && (
+              <Group justify="flex-end" gap={4} wrap="nowrap">
+                {actions(row)}
+              </Group>
+            )}
+          </Stack>
+        </Card>
+      ))}
     </Stack>
   );
 }

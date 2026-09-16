@@ -826,6 +826,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.availability.already_cancelled" xml:space="preserve"><value>Bu müsaitlik girişi zaten iptal edilmiş.</value></data>
   <data name="attendance.availability.not_found" xml:space="preserve"><value>Müsaitlik girişi bulunamadı.</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>Bu müsaitlik girişi size ait değil.</value></data>
+  <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Geçmiş bir tarih için müsaitlik bildirilemez.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>

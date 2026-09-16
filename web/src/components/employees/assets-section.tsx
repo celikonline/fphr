@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { PackagePlus, Undo2 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { usePermission } from "@/components/permission-guard";
@@ -47,6 +48,8 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
   const queryClient = useQueryClient();
   const [assigning, setAssigning] = useState(false);
   const [returning, setReturning] = useState<Asset | null>(null);
+  // Narrow phones (Faz 4 tur 2 FE, TALIMAT md.4b): assign/return dialogs take the full screen instead of a cramped modal.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const queryKey = ["assets", "employee-assets", employee.id, canViewAny] as const;
   const { data: assets = [], isLoading, isError } = useQuery({
@@ -78,7 +81,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
 
   return (
     <Card withBorder padding="lg">
-      <Group justify="space-between" wrap="nowrap" mb="md">
+      <Group justify="space-between" wrap="wrap" mb="md">
         <Title order={4}>{t("assets:section.title")}</Title>
         {canManage && (
           <Button type="button" size="sm" leftSection={<PackagePlus size={16} />} onClick={() => setAssigning(true)}>
@@ -133,12 +136,19 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
           employeeId={employee.id}
           categories={categoriesQuery.data ?? []}
           queryKey={queryKey}
+          isMobile={isMobile}
           onClose={() => setAssigning(false)}
         />
       )}
 
       {returning && (
-        <Modal opened onClose={() => setReturning(null)} title={t("assets:section.returnTitle", { name: returning.name })} size="28rem">
+        <Modal
+          opened
+          onClose={() => setReturning(null)}
+          title={t("assets:section.returnTitle", { name: returning.name })}
+          size="28rem"
+          fullScreen={isMobile}
+        >
           <ReturnAssetForm
             busy={returnMutation.isPending}
             onCancel={() => setReturning(null)}
@@ -162,7 +172,12 @@ function ReturnAssetForm({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
   return (
     <form onSubmit={submit}>
       <Stack gap="md">
-        <DatePicker id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
+        <Stack gap={4}>
+          <Text size="sm" fw={500}>
+            {t("assets:section.returnedAt")}
+          </Text>
+          <DatePicker id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
+        </Stack>
         <Group justify="flex-end" gap="sm">
           <Button type="button" variant="default" onClick={onCancel} disabled={busy}>
             {t("common:cancel")}
@@ -180,11 +195,12 @@ interface AssignAssetDialogProps {
   employeeId: string;
   categories: AssetCategory[];
   queryKey: readonly unknown[];
+  isMobile?: boolean;
   onClose: () => void;
 }
 
 /** Assign either an existing unassigned asset (picked from a select) or a quickly-created new one. */
-function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: AssignAssetDialogProps) {
+function AssignAssetDialog({ employeeId, categories, queryKey, isMobile, onClose }: AssignAssetDialogProps) {
   const { t } = useTranslation(["assets", "common"]);
   const queryClient = useQueryClient();
   const [assetId, setAssetId] = useState<string>(NEW_ASSET);
@@ -214,8 +230,11 @@ function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: Assign
     onError: (err) => setError(getApiErrorMessage(err, t("assets:section.errors.generic"))),
   });
 
+  const noCategories = categories.length === 0;
+
   function submit(event: FormEvent) {
     event.preventDefault();
+    if (assetId === NEW_ASSET && noCategories) return;
     if (assetId === NEW_ASSET && (!categoryId || !name.trim())) {
       setError(t("assets:section.errors.nameAndCategoryRequired"));
       return;
@@ -229,7 +248,7 @@ function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: Assign
   const existingOptions = (unassignedQuery.data?.items ?? []).map((asset) => ({ value: asset.id, label: asset.name }));
 
   return (
-    <Modal opened onClose={onClose} title={t("assets:section.assignTitle")} size="32rem">
+    <Modal opened onClose={onClose} title={t("assets:section.assignTitle")} size="32rem" fullScreen={isMobile}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Select
@@ -241,7 +260,12 @@ function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: Assign
             allowDeselect={false}
             disabled={busy}
           />
-          {assetId === NEW_ASSET && (
+          {assetId === NEW_ASSET && noCategories && (
+            <Text size="sm" c="orange">
+              {t("assets:section.noCategories")}
+            </Text>
+          )}
+          {assetId === NEW_ASSET && !noCategories && (
             <>
               <Select
                 id="asset-category"
@@ -281,7 +305,12 @@ function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: Assign
               />
             </>
           )}
-          <DatePicker id="asset-issuedAt" value={issuedAt} disabled={busy} onChange={setIssuedAt} />
+          <Stack gap={4}>
+            <Text size="sm" fw={500}>
+              {t("assets:section.issuedAt")}
+            </Text>
+            <DatePicker id="asset-issuedAt" value={issuedAt} disabled={busy} onChange={setIssuedAt} />
+          </Stack>
           {error && (
             <Text size="sm" c="red">
               {error}
@@ -291,7 +320,7 @@ function AssignAssetDialog({ employeeId, categories, queryKey, onClose }: Assign
             <Button type="button" variant="default" onClick={onClose} disabled={busy}>
               {t("common:cancel")}
             </Button>
-            <Button type="submit" loading={busy}>
+            <Button type="submit" loading={busy} disabled={assetId === NEW_ASSET && noCategories}>
               {t("assets:section.assign")}
             </Button>
           </Group>

@@ -64,8 +64,9 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 
 ## 7. `GET /api/v1/performance/review-cycles`
 - **Yetki:** `performance.reviews.view`
-- **Sorgu:** `?status=` (opsiyonel, `draft`/`active`/`closed` — case-insensitive `Enum.Parse`, camelCase FE değeri de kabul edilir)
+- **Sorgu:** `?status=` (opsiyonel, `draft`/`active`/`closed` — case-insensitive `Enum.TryParse`, camelCase FE değeri de kabul edilir)
 - **Yanıt:** `ReviewCycleDto[]` — tüm dönemler (Draft dahil), İK/yönetici tarafı.
+- Geçersiz `status` (bilinen üç değerden biri değilse) → 400 (standart doğrulama yanıtı, yeni hata kodu yok).
 
 ## 8. `GET /api/v1/performance/review-cycles/{id}`
 - **Yetki:** `performance.reviews.view`

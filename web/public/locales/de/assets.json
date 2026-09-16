@@ -16,6 +16,7 @@
     "empty": "[DE] No assets recorded.",
     "assigned": "[DE] Asset assigned.",
     "returned": "[DE] Asset returned.",
+    "noCategories": "[DE] Add a category under Settings > Asset categories first.",
     "errors": {
       "generic": "[DE] The action could not be completed.",
       "loadFailed": "[DE] Assets could not be loaded.",

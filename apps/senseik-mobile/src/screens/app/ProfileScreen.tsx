@@ -1,11 +1,161 @@
-import React from "react";
-import { View, Text } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { colors } from "@/styles/colors";
+import { spacing } from "@/styles/spacing";
+import { typography } from "@/styles/typography";
+import { profileService, type MyProfile } from "@/services/ProfileService";
+
+function formatDateOnly(value: string): string {
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+interface ProfileField {
+  label: string;
+  value: string;
+}
+
+function buildFields(profile: MyProfile): ProfileField[] {
+  const fields: ProfileField[] = [];
+  if (profile.titleName) fields.push({ label: "Unvan", value: profile.titleName });
+  if (profile.departmentName) fields.push({ label: "Birim", value: profile.departmentName });
+  fields.push({ label: "İşe giriş tarihi", value: profile.hireDate ? formatDateOnly(profile.hireDate) : "—" });
+  fields.push({ label: "İş e-postası", value: profile.workEmail ?? "—" });
+  const phone = profile.mobilePhone ?? profile.workPhone;
+  if (phone) fields.push({ label: "Telefon", value: phone });
+  return fields;
+}
 
 export default function ProfileScreen() {
+  const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  const load = useCallback(async () => {
+    setError(null);
+    setNotFound(false);
+    try {
+      const result = await profileService.getMyProfile();
+      setProfile(result);
+    } catch (err) {
+      const status = (err as { response?: { status?: number } })?.response?.status;
+      if (status === 404) {
+        setNotFound(true);
+      } else {
+        setError("Profil bilgileri yüklenemedi. Lütfen tekrar deneyin.");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    void load().finally(() => setLoading(false));
+  }, [load]);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await load();
+    setRefreshing(false);
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: "center", alignItems: "center" }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold" }}>Profile</Text>
-      <Text style={{ color: "#666", marginTop: 10 }}>Coming soon...</Text>
-    </View>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />}
+    >
+      <Text style={styles.title}>Profilim</Text>
+
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      )}
+
+      {notFound ? (
+        <Text style={styles.emptyText}>Çalışan kaydınız bulunmuyor.</Text>
+      ) : profile ? (
+        <View style={styles.card}>
+          <Text style={styles.name}>{profile.displayName}</Text>
+          {buildFields(profile).map((field) => (
+            <View key={field.label} style={styles.fieldRow}>
+              <Text style={styles.fieldLabel}>{field.label}</Text>
+              <Text style={styles.fieldValue}>{field.value}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
+  content: {
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.background
+  },
+  title: {
+    ...typography.h3,
+    color: colors.text,
+    marginBottom: spacing.lg
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: spacing.lg
+  },
+  name: {
+    ...typography.h4,
+    color: colors.text,
+    marginBottom: spacing.md
+  },
+  fieldRow: {
+    marginTop: spacing.sm
+  },
+  fieldLabel: {
+    ...typography.caption,
+    color: colors.textSecondary
+  },
+  fieldValue: {
+    ...typography.body,
+    color: colors.text,
+    marginTop: 2
+  },
+  emptyText: {
+    ...typography.bodySm,
+    color: colors.textTertiary
+  },
+  errorBanner: {
+    backgroundColor: "#fdecea",
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md
+  },
+  errorText: {
+    ...typography.bodySm,
+    color: colors.error
+  }
+});

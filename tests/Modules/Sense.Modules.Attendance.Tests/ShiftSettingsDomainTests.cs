@@ -10,7 +10,7 @@ namespace Sense.Modules.Attendance.Tests;
 /// defensive (every month has at least 28 days); these cases still exercise the month/year rollover arithmetic
 /// (Şubat/artık yıl, Aralık→Ocak) that the clip depends on.
 /// </summary>
-public sealed class ShiftSettingsDomainTests
+public sealed class ShiftSettingsLockDateTests
 {
     private static ShiftSettings CreateWithAutoLock(bool enabled, int dayOfMonth)
     {

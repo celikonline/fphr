@@ -23,6 +23,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DatePicker } from "@/components/ui/date-picker";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
@@ -162,6 +163,7 @@ export function PaymentsSection({ employee }: { employee: EmployeeDetail }) {
 function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOwnCard: boolean }) {
   const { t, i18n } = useTranslation(["employees", "common"]);
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const editable = usePermission(SALARY_EDIT_PERMISSION) && !isOwnCard;
   const [dialog, setDialog] = useState<{ mode: "add" } | { mode: "edit"; record: SalaryRecord } | null>(null);
   const [deleting, setDeleting] = useState<SalaryRecord | null>(null);
@@ -239,6 +241,17 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
           <Text size="sm" c="dimmed">
             {t("employees:payments.salary.empty")}
           </Text>
+        ) : isMobile ? (
+          <SalaryHistoryMobileList
+            records={records}
+            editable={editable}
+            today={today}
+            date={date}
+            money={money}
+            t={t}
+            onEdit={(record) => setDialog({ mode: "edit", record })}
+            onDelete={setDeleting}
+          />
         ) : (
           <Table.ScrollContainer minWidth={640}>
             <Table verticalSpacing="sm">
@@ -301,6 +314,7 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
           employeeId={employee.id}
           records={records}
           editing={dialog.mode === "edit" ? dialog.record : null}
+          isMobile={Boolean(isMobile)}
           onClose={() => setDialog(null)}
           onSaved={(updated) => {
             setDialog(null);
@@ -324,15 +338,80 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
   );
 }
 
+/** ≤390px kart listesi (Faz 7 tur 2 FE md.5): masaüstü tablonun aynı alanları, kart biçiminde. */
+function SalaryHistoryMobileList({
+  records,
+  editable,
+  today,
+  date,
+  money,
+  t,
+  onEdit,
+  onDelete,
+}: {
+  records: SalaryRecord[];
+  editable: boolean;
+  today: string;
+  date: (value: string) => string;
+  money: (value: number | null | undefined, currency: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  onEdit: (record: SalaryRecord) => void;
+  onDelete: (record: SalaryRecord) => void;
+}) {
+  return (
+    <Stack gap="sm">
+      {records.map((record) => (
+        <Card key={record.id} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Group gap="xs" wrap="wrap">
+              <Text size="sm">{date(record.effectiveFrom)}</Text>
+              {record.isCurrent && <Badge variant="filled">{t("employees:payments.salary.current")}</Badge>}
+              {record.effectiveFrom > today && <Badge variant="light">{t("employees:payments.salary.upcoming")}</Badge>}
+            </Group>
+            {editable && (
+              <Group gap={4} wrap="nowrap">
+                <RowIconButton label={t("common:edit")} icon={<Pencil size={16} />} onClick={() => onEdit(record)} />
+                <RowIconButton label={t("common:delete")} icon={<Trash2 size={16} />} onClick={() => onDelete(record)} />
+              </Group>
+            )}
+          </Group>
+          <Text size="lg" fw={600} mt={6}>
+            {money(record.amount, record.currency)}
+          </Text>
+          <Text size="xs" c="dimmed" mt={2}>
+            {[t(`employees:enum.salaryType.${record.salaryType}`), t(`employees:enum.payFrequency.${record.payFrequency}`)].join(" · ")}
+          </Text>
+          {(record.transportAllowance || record.mealAllowance) && (
+            <Group gap="md" mt={6}>
+              <Text size="xs" c="dimmed">
+                {t("employees:payments.salary.transportAllowance")}: {money(record.transportAllowance, record.currency)}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t("employees:payments.salary.mealAllowance")}: {money(record.mealAllowance, record.currency)}
+              </Text>
+            </Group>
+          )}
+          {record.note && (
+            <Text size="xs" c="dimmed" mt={6}>
+              {record.note}
+            </Text>
+          )}
+        </Card>
+      ))}
+    </Stack>
+  );
+}
+
 interface SalaryRecordDialogProps {
   employeeId: string;
   records: SalaryRecord[];
   editing: SalaryRecord | null;
+  isMobile: boolean;
   onClose: () => void;
   onSaved: (updated: SalaryRecord[]) => void;
 }
 
-function SalaryRecordDialog({ employeeId, records, editing, onClose, onSaved }: SalaryRecordDialogProps) {
+function SalaryRecordDialog({ employeeId, records, editing, isMobile, onClose, onSaved }: SalaryRecordDialogProps) {
   const { t, i18n } = useTranslation(["employees", "common"]);
   // A new record starts from the current one's terms (a raise usually changes only the date and the amount).
   const source = editing ?? records.find((r) => r.isCurrent) ?? records[0] ?? null;
@@ -388,7 +467,13 @@ function SalaryRecordDialog({ employeeId, records, editing, onClose, onSaved }: 
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} title={editing ? t("employees:payments.salary.edit") : t("employees:payments.salary.add")} size="42rem">
+    <Modal
+      opened
+      onClose={onClose}
+      title={editing ? t("employees:payments.salary.edit") : t("employees:payments.salary.add")}
+      size="42rem"
+      fullScreen={isMobile}
+    >
       <Text size="sm" c="dimmed" mb="md">
         {t("employees:payments.salary.dialogDescription")}
       </Text>
@@ -491,6 +576,7 @@ function SalaryRecordDialog({ employeeId, records, editing, onClose, onSaved }: 
 function BankAccountsSection({ employee, isOwnCard }: { employee: EmployeeDetail; isOwnCard: boolean }) {
   const { t } = useTranslation(["employees", "common"]);
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const editable = usePermission(BANK_EDIT_PERMISSION) && !isOwnCard;
   const [dialog, setDialog] = useState<{ mode: "add" } | { mode: "edit"; account: BankAccount } | null>(null);
   const [deleting, setDeleting] = useState<BankAccount | null>(null);
@@ -547,6 +633,16 @@ function BankAccountsSection({ employee, isOwnCard }: { employee: EmployeeDetail
         <Text size="sm" c="dimmed">
           {t("employees:payments.bank.empty")}
         </Text>
+      ) : isMobile ? (
+        <BankAccountsMobileList
+          accounts={accounts}
+          editable={editable}
+          primaryPending={primaryMutation.isPending}
+          t={t}
+          onMakePrimary={(account) => primaryMutation.mutate(account)}
+          onEdit={(account) => setDialog({ mode: "edit", account })}
+          onDelete={setDeleting}
+        />
       ) : (
         <ul>
           {accounts.map((account, index) => (
@@ -599,6 +695,7 @@ function BankAccountsSection({ employee, isOwnCard }: { employee: EmployeeDetail
           employeeId={employee.id}
           hasAccounts={accounts.length > 0}
           editing={dialog.mode === "edit" ? dialog.account : null}
+          isMobile={Boolean(isMobile)}
           onClose={() => setDialog(null)}
           onSaved={(updated) => {
             setDialog(null);
@@ -623,15 +720,80 @@ function BankAccountsSection({ employee, isOwnCard }: { employee: EmployeeDetail
   );
 }
 
+/** ≤390px kart listesi (Faz 7 tur 2 FE md.6): masaüstü listenin aynı alanları, kart biçiminde. */
+function BankAccountsMobileList({
+  accounts,
+  editable,
+  primaryPending,
+  t,
+  onMakePrimary,
+  onEdit,
+  onDelete,
+}: {
+  accounts: BankAccount[];
+  editable: boolean;
+  primaryPending: boolean;
+  t: (key: string, options?: Record<string, unknown>) => string;
+  onMakePrimary: (account: BankAccount) => void;
+  onEdit: (account: BankAccount) => void;
+  onDelete: (account: BankAccount) => void;
+}) {
+  return (
+    <Stack gap="sm">
+      {accounts.map((account) => (
+        <Card key={account.id} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Text size="sm" ff="monospace" className="min-w-0" truncate="end">
+              {account.iban}
+            </Text>
+            {account.isPrimary && (
+              <Badge variant="filled" leftSection={<Star size={12} />}>
+                {t("employees:payments.bank.primary")}
+              </Badge>
+            )}
+          </Group>
+          <Text size="xs" c="dimmed" mt={4}>
+            {[t(`employees:enum.bankAccountType.${account.accountType}`), account.bankName, account.currency].filter(Boolean).join(" · ")}
+          </Text>
+          {account.note && (
+            <Text size="xs" c="dimmed" mt={4}>
+              {account.note}
+            </Text>
+          )}
+          {editable && (
+            <Group gap={4} mt="sm" justify="flex-end" wrap="wrap">
+              {!account.isPrimary && (
+                <Button
+                  type="button"
+                  variant="subtle"
+                  size="sm"
+                  leftSection={<Star size={16} />}
+                  disabled={primaryPending}
+                  onClick={() => onMakePrimary(account)}
+                >
+                  {t("employees:payments.bank.makePrimary")}
+                </Button>
+              )}
+              <RowIconButton label={t("common:edit")} icon={<Pencil size={16} />} onClick={() => onEdit(account)} />
+              <RowIconButton label={t("common:delete")} icon={<Trash2 size={16} />} onClick={() => onDelete(account)} />
+            </Group>
+          )}
+        </Card>
+      ))}
+    </Stack>
+  );
+}
+
 interface BankAccountDialogProps {
   employeeId: string;
   hasAccounts: boolean;
   editing: BankAccount | null;
+  isMobile: boolean;
   onClose: () => void;
   onSaved: (updated: BankAccount[]) => void;
 }
 
-function BankAccountDialog({ employeeId, hasAccounts, editing, onClose, onSaved }: BankAccountDialogProps) {
+function BankAccountDialog({ employeeId, hasAccounts, editing, isMobile, onClose, onSaved }: BankAccountDialogProps) {
   const { t } = useTranslation(["employees", "common"]);
   const maskedOriginal = editing?.isIbanMasked ?? false;
   // A masked IBAN cannot be edited in place: the field starts empty and a blank value keeps the stored IBAN.
@@ -680,7 +842,13 @@ function BankAccountDialog({ employeeId, hasAccounts, editing, onClose, onSaved 
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} title={editing ? t("employees:payments.bank.edit") : t("employees:payments.bank.add")} size="36rem">
+    <Modal
+      opened
+      onClose={onClose}
+      title={editing ? t("employees:payments.bank.edit") : t("employees:payments.bank.add")}
+      size="36rem"
+      fullScreen={isMobile}
+    >
       <Text size="sm" c="dimmed" mb="md">
         {t("employees:payments.bank.dialogDescription")}
       </Text>

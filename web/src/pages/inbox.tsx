@@ -18,6 +18,8 @@ import {
 } from "@/services/workflow.service";
 
 const INBOX_QUERY_KEY = ["workflow", "inbox"] as const;
+/** `InboxTaskDto.submittedAt` is a full timestamp; TR short date only (matches the "onay bekleyenler" widget). */
+const SUBMITTED_DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
 
 export default function WorkflowInboxPage() {
   const canView = usePermission("workflow.inbox.view");
@@ -26,7 +28,7 @@ export default function WorkflowInboxPage() {
 }
 
 function WorkflowInbox() {
-  const { t } = useTranslation(["workflow", "common"]);
+  const { t, i18n } = useTranslation(["workflow", "common"]);
   const canOverride = usePermission("workflow.request.override");
   const queryClient = useQueryClient();
   // ≤390px: decide/override buttons need a ≥40px touch target (Faz 1 tur 1 FE md.4).
@@ -86,6 +88,14 @@ function WorkflowInbox() {
               fields={[
                 { label: t("workflow:inbox.requester"), value: task.requesterName ?? "—" },
                 { label: t("workflow:inbox.stepColumn", { defaultValue: "Adım" }), value: t("workflow:inbox.step", { number: task.stepNumber }) },
+                ...(task.submittedAt
+                  ? [
+                      {
+                        label: t("workflow:myRequests.submittedAt"),
+                        value: new Intl.DateTimeFormat(i18n.language, SUBMITTED_DATE_OPTIONS).format(new Date(task.submittedAt)),
+                      },
+                    ]
+                  : []),
               ]}
               actions={
                 <>

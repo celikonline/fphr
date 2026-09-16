@@ -226,4 +226,75 @@ public sealed class AbsenceIntegrationTests : TestFixture
         scoped.UsedDays.ShouldBe(0m);
         scoped.ByLeaveType.ShouldBeEmpty();
     }
+
+    /// <summary>
+    /// S-18 kenar vakası (a): a CarryOver row is dated inside the year it is carried INTO (LeaveBalanceEngine.Regenerate
+    /// dates CarryOver at the new period's start), so year Y's TotalEntitledDays is that year's own Accrual+CarryOver -
+    /// the previous year's CarryOver row (dated the year before) must not bleed into year Y and vice versa.
+    /// </summary>
+    [Fact]
+    public async Task LeaveUsageReader_GetAnnualUsage_CarryOverFromPriorYear_CountsOnlyInTheYearItLandsIn()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        Guid annualTypeId;
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSet = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(tenantId, StatutoryLeaveDurations.Turkey2026);
+            db.RuleSets.Add(ruleSet);
+            annualTypeId = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+
+            db.LedgerEntries.AddRange(
+                // 2025: 14 accrued + 2 carried over from 2024 -> 16.
+                LeaveLedgerEntry.Accrual(tenantId, employeeId, annualTypeId, 14m, new DateOnly(2025, 1, 1)),
+                LeaveLedgerEntry.CarryOver(tenantId, employeeId, annualTypeId, 2m, new DateOnly(2025, 1, 1)),
+                // 2026: 14 accrued + 3 carried over from 2025 -> 17.
+                LeaveLedgerEntry.Accrual(tenantId, employeeId, annualTypeId, 14m, new DateOnly(2026, 1, 1)),
+                LeaveLedgerEntry.CarryOver(tenantId, employeeId, annualTypeId, 3m, new DateOnly(2026, 1, 1)));
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        var reader = scope.ServiceProvider.GetRequiredService<ILeaveUsageReader>();
+
+        (await reader.GetAnnualUsageAsync(tenantId, 2025, null, CancellationToken.None)).TotalEntitledDays.ShouldBe(16m);
+        (await reader.GetAnnualUsageAsync(tenantId, 2026, null, CancellationToken.None)).TotalEntitledDays.ShouldBe(17m);
+    }
+
+    /// <summary>
+    /// S-18 kenar vakası (b): an approved Annual leave that is then cancelled posts a Reversal row dated the same as the
+    /// Usage row it offsets (LeaveLedgerEntry.Reversal), so both land in the same year and net to zero - UsedDays is
+    /// unaffected and the zeroed type is dropped from ByLeaveType (not listed with UsedDays = 0).
+    /// </summary>
+    [Fact]
+    public async Task LeaveUsageReader_GetAnnualUsage_ReversedLeave_IsNettedOutOfUsedDaysAndByLeaveType()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        Guid annualTypeId;
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSet = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(tenantId, StatutoryLeaveDurations.Turkey2026);
+            db.RuleSets.Add(ruleSet);
+            annualTypeId = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+
+            var usage = LeaveLedgerEntry.Usage(tenantId, employeeId, annualTypeId, 5m, new DateOnly(2026, 6, 1), LeaveLedgerSource.Request, Guid.NewGuid());
+            db.LedgerEntries.Add(usage);
+            db.LedgerEntries.Add(LeaveLedgerEntry.Reversal(usage, "Talep iptal edildi"));
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        var reader = scope.ServiceProvider.GetRequiredService<ILeaveUsageReader>();
+        var summary = await reader.GetAnnualUsageAsync(tenantId, 2026, null, CancellationToken.None);
+
+        summary.UsedDays.ShouldBe(0m);
+        summary.ByLeaveType.ShouldNotContain(u => u.LeaveTypeId == annualTypeId);
+    }
 }

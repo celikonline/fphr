@@ -9,7 +9,13 @@ uygulama: **Leave** (`src/services/LeaveService.ts` + `src/screens/app/LeaveScre
 `workflow.service.ts`'in `/workflow/inbox` uçlarını (başka birinin onayına düşen talepler) tüketiyor
 ve bir "karar" gönderiyor (`decide`, gerekçe zorunlu olduğunda `comment` alanı doluyor); `InboxTaskDto`
 bugün talep tutarı/tarihi taşımıyor (backlog B-10-02, Workflow sözleşmesi genişleyince eklenecek),
-kart bu yüzden yalnız talep sahibi + tür + adım numarasını gösteriyor.
+kart bu yüzden yalnız talep sahibi + tür + adım numarasını gösteriyor. Dördüncü örnek: **Profile**
+(`src/services/ProfileService.ts` + `src/screens/app/ProfileScreen.tsx` +
+`src/__tests__/services/ProfileService.test.ts`) - farkı: **salt okunur** bir kalıp, form/karar yok;
+web `employees.service.ts`'in `GET /employees/me` (`getMyEmployee`) ucunu tüketir ama `EmployeeDetail`
+tipinin tamamını değil, ekranda gösterilen alt kümesini (`MyProfile`) tanımlar — KVKK veri minimizasyonu
+gereği TC kimlik, maaş, adres gibi hassas alanlar tipe bile alınmaz. 404 (çalışan kaydı yok) ayrı bir
+durum olarak ele alınır ("Çalışan kaydınız bulunmuyor"), genel hata bandından farklı gösterilir.
 
 ## Katmanlar
 

@@ -15,24 +15,37 @@ namespace Sense.Modules.Recruitment.Application.Public;
 /// </summary>
 public sealed record GetPublicJobPostingQuery(string ApplySlug) : IQuery<PublicJobPostingDto>;
 
-public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, TimeProvider timeProvider)
+public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
     : IQueryHandler<GetPublicJobPostingQuery, PublicJobPostingDto>
 {
     public async Task<Result<PublicJobPostingDto>> Handle(GetPublicJobPostingQuery query, CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         var found = await postings.GetPublicByApplySlugAsync(query.ApplySlug, today, cancellationToken);
-        return found.IsFailure ? found.Error : ToDto(found.Value);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        var posting = found.Value;
+        string? location = null;
+        if (posting.LocationId is { } locationId)
+        {
+            var names = await locations.GetNamesAsync(posting.TenantId, [locationId], cancellationToken);
+            names.TryGetValue(locationId, out location);
+        }
+
+        return ToDto(posting, location);
     }
 
-    internal static PublicJobPostingDto ToDto(JobPosting posting) =>
-        new(posting.ApplySlug, posting.Title, posting.EmploymentType.ToString(), posting.Description, posting.ClosingDate, posting.PublishedAt);
+    internal static PublicJobPostingDto ToDto(JobPosting posting, string? location = null) =>
+        new(posting.ApplySlug, posting.Title, posting.EmploymentType.ToString(), posting.Description, posting.ClosingDate, posting.PublishedAt, location);
 }
 
 /// <summary>Other Open postings of the same company (R3 "diğer açık pozisyonlar"), reached by anchoring on one posting's slug.</summary>
 public sealed record ListRelatedPublicJobPostingsQuery(string ApplySlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
-public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository postings, TimeProvider timeProvider)
+public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
     : IQueryHandler<ListRelatedPublicJobPostingsQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
@@ -46,14 +59,32 @@ public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository po
         }
 
         var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, today, cancellationToken);
+        var locationNames = await ResolveLocationNamesAsync(anchor.Value.TenantId, related, locations, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = related
-            .Select(ToSummaryDto)
+            .Select(p => ToSummaryDto(p, locationNames))
             .ToList();
         return Result.Success(dtos);
     }
 
-    internal static PublicJobPostingSummaryDto ToSummaryDto(JobPosting p) =>
-        new(p.ApplySlug, p.Title, null, p.EmploymentType.ToString(), p.PublishedAt);
+    /// <summary>Resolves the distinct, non-null <c>LocationId</c>s of a posting batch in a single lookup call (no N+1).</summary>
+    internal static async Task<IReadOnlyDictionary<Guid, string>> ResolveLocationNamesAsync(
+        Guid tenantId, IReadOnlyCollection<JobPosting> postingBatch, ILocationLookup locations, CancellationToken cancellationToken)
+    {
+        var locationIds = postingBatch
+            .Where(p => p.LocationId is not null)
+            .Select(p => p.LocationId!.Value)
+            .Distinct()
+            .ToList();
+        return locationIds.Count == 0
+            ? new Dictionary<Guid, string>()
+            : await locations.GetNamesAsync(tenantId, locationIds, cancellationToken);
+    }
+
+    internal static PublicJobPostingSummaryDto ToSummaryDto(JobPosting p, IReadOnlyDictionary<Guid, string> locationNames)
+    {
+        string? location = p.LocationId is { } locationId && locationNames.TryGetValue(locationId, out var name) ? name : null;
+        return new(p.ApplySlug, p.Title, location, p.EmploymentType.ToString(), p.PublishedAt);
+    }
 }
 
 /// <summary>
@@ -65,7 +96,7 @@ public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository po
 public sealed record ListPublicJobPostingsByTenantSlugQuery(string? TenantSlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
 public sealed class ListPublicJobPostingsByTenantSlugHandler(
-    ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, TimeProvider timeProvider)
+    ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
     : IQueryHandler<ListPublicJobPostingsByTenantSlugQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
@@ -85,7 +116,10 @@ public sealed class ListPublicJobPostingsByTenantSlugHandler(
 
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         var open = await postings.ListPublicByTenantAsync(tenantId.Value, today, cancellationToken);
-        IReadOnlyList<PublicJobPostingSummaryDto> dtos = open.Select(ListRelatedPublicJobPostingsHandler.ToSummaryDto).ToList();
+        var locationNames = await ListRelatedPublicJobPostingsHandler.ResolveLocationNamesAsync(tenantId.Value, open, locations, cancellationToken);
+        IReadOnlyList<PublicJobPostingSummaryDto> dtos = open
+            .Select(p => ListRelatedPublicJobPostingsHandler.ToSummaryDto(p, locationNames))
+            .ToList();
         return Result.Success(dtos);
     }
 }

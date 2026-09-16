@@ -112,7 +112,8 @@ public sealed class ListInboxHandler(
                 var parent = requestsById[t.ApprovalRequestId];
                 return new InboxTaskDto(
                     t.Id, parent.Id, parent.RequestType, parent.SubjectId,
-                    requesterNames.GetValueOrDefault(parent.RequesterEmployeeId), t.StepNumber, t.ApproverEmployeeId is null);
+                    requesterNames.GetValueOrDefault(parent.RequesterEmployeeId), t.StepNumber, t.ApproverEmployeeId is null,
+                    parent.SubmittedAt);
             })
             .ToList();
 

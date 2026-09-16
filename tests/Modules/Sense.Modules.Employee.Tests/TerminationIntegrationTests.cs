@@ -134,10 +134,12 @@ public sealed class TerminationIntegrationTests : TestFixture
         first.TerminationType.ShouldBe(ContractEvents.TerminationType.Resignation);
         first.ReasonCode.ShouldBe("Resignation");
         first.SgkExitCode.ShouldBe("29");
+        first.TerminationDate.ShouldBe(terminationDate, "S-20: published event carries the command's termination date");
 
         var second = _terminated.Received.Single(e => e.EmployeeId == suspendedTarget.Value.Id);
         second.TerminationType.ShouldBe(ContractEvents.TerminationType.EmployerJustCause_Art25);
         second.SgkExitCode.ShouldBe("99");
+        second.TerminationDate.ShouldBe(terminationDate);
     }
 
     /// <summary>

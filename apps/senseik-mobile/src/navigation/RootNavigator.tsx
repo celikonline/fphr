@@ -49,48 +49,48 @@ function MainTabsNavigator() {
         name="Dashboard"
         component={DashboardScreen}
         options={{
-          title: "Dashboard",
-          tabBarLabel: "Home"
+          title: "Anasayfa",
+          tabBarLabel: "Anasayfa"
         }}
       />
       <Tab.Screen
         name="Attendance"
         component={AttendanceScreen}
         options={{
-          title: "Attendance",
-          tabBarLabel: "Attendance"
+          title: "Puantaj",
+          tabBarLabel: "Puantaj"
         }}
       />
       <Tab.Screen
         name="Leave"
         component={LeaveScreen}
         options={{
-          title: "Leave",
-          tabBarLabel: "Leave"
+          title: "İzin",
+          tabBarLabel: "İzin"
         }}
       />
       <Tab.Screen
         name="Payroll"
         component={PayrollScreen}
         options={{
-          title: "Payroll",
-          tabBarLabel: "Payroll"
+          title: "Bordro",
+          tabBarLabel: "Bordro"
         }}
       />
       <Tab.Screen
         name="Approvals"
         component={ApprovalsScreen}
         options={{
-          title: "Approvals",
-          tabBarLabel: "Approvals"
+          title: "Onaylarım",
+          tabBarLabel: "Onaylarım"
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          title: "Profile",
-          tabBarLabel: "Profile"
+          title: "Profil",
+          tabBarLabel: "Profil"
         }}
       />
     </Tab.Navigator>

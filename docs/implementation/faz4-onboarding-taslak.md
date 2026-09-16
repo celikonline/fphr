@@ -126,10 +126,17 @@ bir uzman/hukuk danışmanı tarafından **doğrulanmalı**, burada yalnız yön
 | SGK işe giriş bildirgesi | Onboarding | **-1** (referans = HireDate, bildirge işe başlamadan **önce** SGK'ya ulaşmalı) | 5510 sayılı Kanun md.8 - sigortalılığın işe başlamadan önce bildirilmesi zorunlu | Evet - istisnai haller (aynı gün bildirim vb.) mevzuatta ayrıca düzenleniyor, tek bir sabit ofset her sektöre uymayabilir |
 | SGK işten ayrılış bildirgesi | Offboarding | **+10** (referans = TerminationDate) | 5510 sayılı Kanun - işten ayrılışın 10 gün içinde bildirilmesi | Evet - süre bazı istisnai fesih türlerinde değişebilir |
 | Deneme süresi değerlendirmesi | Onboarding | **+60** (referans = HireDate, 4857 sayılı İş Kanunu md.15 azami 2 ay) | Deneme süresi dolmadan önce yöneticinin değerlendirme yapması için hatırlatma | Evet - toplu iş sözleşmesiyle azami 4 aya çıkabilir (md.15), tenant bazlı ayarlanabilir olması gerekebilir |
+| İSG işe giriş sağlık muayenesi | Onboarding | **-1** (referans = HireDate, muayene işe başlamadan **önce** tamamlanmalı) | 6331 sayılı İş Sağlığı ve Güvenliği Kanunu md.15 - işveren, işçiyi işe başlamadan önce sağlık gözetiminden geçirmekle yükümlü | Evet - tehlike sınıfına göre periyodik muayene aralığı değişir (İSG Yönetmeliği eki), tek şablonun her tehlike sınıfına uyup uymadığı doğrulanmalı |
+| Yazılı çalışma koşulları belgesi | Onboarding | **+60** (referans = HireDate, 4857 sayılı İş Kanunu md.8 en geç iki ay içinde) | İşveren, genel ve özel çalışma koşullarını gösteren yazılı belgeyi en geç iki ay içinde işçiye vermekle yükümlü | Evet - belirli süreli/kısa süreli sözleşmelerde farklı üst sınır uygulanabilir, süre tenant/sözleşme türüne göre değişebilir |
 
 Not: `DueDateOffsetDays` negatifse "referans tarihinden önce" (Kapı A'daki domain kuralı - bkz. `OnboardingTaskTemplate.DueDateOffsetDays`
-XML doc'u), pozitifse "sonra". Yukarıdaki üç örnek de bu tek işaretli-tam-sayı modeliyle ifade edilebiliyor;
+XML doc'u), pozitifse "sonra". Yukarıdaki beş örnek de bu tek işaretli-tam-sayı modeliyle ifade edilebiliyor;
 ayrı bir "before/after" enum'una gerek kalmadı.
+
+**Offboarding referans tarihi notu (G-4-19/S-20):** yukarıdaki SGK işten ayrılış bildirgesi gibi `Stage=Offboarding`
+şablonlarda referans tarihi, Faz 2 BE'nin bu tur `EmployeeTerminated` olayına eklediği `DateOnly? TerminationDate`
+(S-20) olacak - `HireDate` değil. Materialization servisi Kapı B'de bu alanı tükettiğinde ayrım netleşir; Kapı A
+bu event'i henüz tüketmiyor (bkz. HAFIZA/TALIMAT tur 2 notu).
 
 ## Bu turda yapılmayan
 

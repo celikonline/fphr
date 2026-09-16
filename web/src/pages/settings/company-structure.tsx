@@ -333,122 +333,198 @@ function CompanyStructure() {
                     {search ? t("common:noResults") : t("structure:units.empty", { level: selectedType.name })}
                   </Text>
                 ) : (
-                  <Table.ScrollContainer minWidth={640}>
-                    <Table highlightOnHover horizontalSpacing="md">
-                      <Table.Thead>
-                        <Table.Tr>
-                          <Table.Th>{t("structure:units.name")}</Table.Th>
-                          {!isCompanyLevel && <Table.Th>{t("structure:units.parent")}</Table.Th>}
-                          <Table.Th>{t("structure:units.manager")}</Table.Th>
-                          {showLocationColumn && <Table.Th>{t("structure:units.location")}</Table.Th>}
-                          {isCompanyLevel && <Table.Th>{t("structure:companies.holidayCalendar")}</Table.Th>}
-                          {hasRowActions && <Table.Th w={48} />}
-                        </Table.Tr>
-                      </Table.Thead>
-                      <Table.Tbody>
+                  <>
+                    {/* Geniş ekran: tablo */}
+                    <div className="hidden md:block">
+                      <Table.ScrollContainer minWidth={640}>
+                        <Table highlightOnHover horizontalSpacing="md">
+                          <Table.Thead>
+                            <Table.Tr>
+                              <Table.Th>{t("structure:units.name")}</Table.Th>
+                              {!isCompanyLevel && <Table.Th>{t("structure:units.parent")}</Table.Th>}
+                              <Table.Th>{t("structure:units.manager")}</Table.Th>
+                              {showLocationColumn && <Table.Th>{t("structure:units.location")}</Table.Th>}
+                              {isCompanyLevel && <Table.Th>{t("structure:companies.holidayCalendar")}</Table.Th>}
+                              {hasRowActions && <Table.Th w={48} />}
+                            </Table.Tr>
+                          </Table.Thead>
+                          <Table.Tbody>
+                            {levelUnits.map((unit) => {
+                              const parent = unit.parentId ? unitById.get(unit.parentId) : undefined;
+                              const company = companyByUnitId.get(unit.id);
+                              return (
+                                <Table.Tr key={unit.id}>
+                                  <Table.Td fw={500}>{unit.name}</Table.Td>
+                                  {!isCompanyLevel && (
+                                    <Table.Td>
+                                      {parent ? (
+                                        <span>
+                                          {parent.name}
+                                          <Text span size="xs" c="dimmed" ml={4}>
+                                            · {typeById.get(parent.typeId)?.name}
+                                          </Text>
+                                        </span>
+                                      ) : (
+                                        "—"
+                                      )}
+                                    </Table.Td>
+                                  )}
+                                  <Table.Td>
+                                    {unit.managerEmployeeId
+                                      ? (managerNames.get(unit.managerEmployeeId) ??
+                                        t("structure:units.managerAssigned"))
+                                      : "—"}
+                                  </Table.Td>
+                                  {showLocationColumn && <Table.Td>{locationName(unit.locationId)}</Table.Td>}
+                                  {isCompanyLevel && (
+                                    <Table.Td>
+                                      {!company ? (
+                                        "—"
+                                      ) : canAssignCalendar && calendars ? (
+                                        <Select
+                                          size="xs"
+                                          w={240}
+                                          aria-label={t("structure:companies.holidayCalendar")}
+                                          data={[
+                                            { value: NONE, label: t("structure:companies.noCalendar") },
+                                            ...calendars.map((calendar) => ({
+                                              value: calendar.id,
+                                              label: calendar.name,
+                                            })),
+                                          ]}
+                                          value={company.holidayCalendarId ?? NONE}
+                                          allowDeselect={false}
+                                          disabled={calendarMutation.isPending}
+                                          onChange={(value) =>
+                                            value !== null &&
+                                            calendarMutation.mutate({
+                                              companyId: company.id,
+                                              calendarId: value === NONE ? null : value,
+                                            })
+                                          }
+                                        />
+                                      ) : (
+                                        (company.holidayCalendarName ??
+                                        calendars?.find((c) => c.id === company.holidayCalendarId)?.name ??
+                                        (company.holidayCalendarId ? t("structure:companies.calendarAssigned") : "—"))
+                                      )}
+                                    </Table.Td>
+                                  )}
+                                  {hasRowActions && (
+                                    <Table.Td ta="right">
+                                      <UnitActionsMenu
+                                        t={t}
+                                        canUpdateUnit={canUpdateUnit}
+                                        canAuthorize={canAuthorize}
+                                        canDeleteUnit={canDeleteUnit}
+                                        onEdit={() => setForm({ unit })}
+                                        onAuthorize={() => setAuthorizeTarget(unit)}
+                                        onDeactivate={() => setDeactivateTarget(unit)}
+                                      />
+                                    </Table.Td>
+                                  )}
+                                </Table.Tr>
+                              );
+                            })}
+                          </Table.Tbody>
+                        </Table>
+                      </Table.ScrollContainer>
+                    </div>
+
+                    {/* Dar ekran (≤390px dahil): kart listesi */}
+                    <div className="md:hidden">
+                      <Stack gap="sm" p="sm">
                         {levelUnits.map((unit) => {
                           const parent = unit.parentId ? unitById.get(unit.parentId) : undefined;
                           const company = companyByUnitId.get(unit.id);
                           return (
-                            <Table.Tr key={unit.id}>
-                              <Table.Td fw={500}>{unit.name}</Table.Td>
-                              {!isCompanyLevel && (
-                                <Table.Td>
-                                  {parent ? (
-                                    <span>
-                                      {parent.name}
-                                      <Text span size="xs" c="dimmed" ml={4}>
-                                        · {typeById.get(parent.typeId)?.name}
+                            <Card key={unit.id} withBorder padding="sm" radius="md">
+                              <Group justify="space-between" wrap="nowrap" align="flex-start">
+                                <Stack gap={2} className="min-w-0">
+                                  <Text fw={500} size="sm" truncate>
+                                    {unit.name}
+                                  </Text>
+                                  {!isCompanyLevel && (
+                                    <Text size="xs" c="dimmed" truncate>
+                                      {parent
+                                        ? `${parent.name} · ${typeById.get(parent.typeId)?.name ?? ""}`
+                                        : "—"}
+                                    </Text>
+                                  )}
+                                </Stack>
+                                {hasRowActions && (
+                                  <UnitActionsMenu
+                                    t={t}
+                                    canUpdateUnit={canUpdateUnit}
+                                    canAuthorize={canAuthorize}
+                                    canDeleteUnit={canDeleteUnit}
+                                    onEdit={() => setForm({ unit })}
+                                    onAuthorize={() => setAuthorizeTarget(unit)}
+                                    onDeactivate={() => setDeactivateTarget(unit)}
+                                  />
+                                )}
+                              </Group>
+                              <Stack gap={4} mt="xs">
+                                <Text size="xs" c="dimmed">
+                                  {t("structure:units.manager")}:{" "}
+                                  {unit.managerEmployeeId
+                                    ? (managerNames.get(unit.managerEmployeeId) ??
+                                      t("structure:units.managerAssigned"))
+                                    : "—"}
+                                </Text>
+                                {showLocationColumn && (
+                                  <Text size="xs" c="dimmed">
+                                    {t("structure:units.location")}: {locationName(unit.locationId)}
+                                  </Text>
+                                )}
+                                {isCompanyLevel && (
+                                  <Group gap={4} align="center" wrap="wrap">
+                                    <Text size="xs" c="dimmed">
+                                      {t("structure:companies.holidayCalendar")}:
+                                    </Text>
+                                    {!company ? (
+                                      <Text size="xs" c="dimmed">
+                                        —
                                       </Text>
-                                    </span>
-                                  ) : (
-                                    "—"
-                                  )}
-                                </Table.Td>
-                              )}
-                              <Table.Td>
-                                {unit.managerEmployeeId
-                                  ? (managerNames.get(unit.managerEmployeeId) ?? t("structure:units.managerAssigned"))
-                                  : "—"}
-                              </Table.Td>
-                              {showLocationColumn && <Table.Td>{locationName(unit.locationId)}</Table.Td>}
-                              {isCompanyLevel && (
-                                <Table.Td>
-                                  {!company ? (
-                                    "—"
-                                  ) : canAssignCalendar && calendars ? (
-                                    <Select
-                                      size="xs"
-                                      w={240}
-                                      aria-label={t("structure:companies.holidayCalendar")}
-                                      data={[
-                                        { value: NONE, label: t("structure:companies.noCalendar") },
-                                        ...calendars.map((calendar) => ({ value: calendar.id, label: calendar.name })),
-                                      ]}
-                                      value={company.holidayCalendarId ?? NONE}
-                                      allowDeselect={false}
-                                      disabled={calendarMutation.isPending}
-                                      onChange={(value) =>
-                                        value !== null &&
-                                        calendarMutation.mutate({
-                                          companyId: company.id,
-                                          calendarId: value === NONE ? null : value,
-                                        })
-                                      }
-                                    />
-                                  ) : (
-                                    (company.holidayCalendarName ??
-                                    calendars?.find((c) => c.id === company.holidayCalendarId)?.name ??
-                                    (company.holidayCalendarId ? t("structure:companies.calendarAssigned") : "—"))
-                                  )}
-                                </Table.Td>
-                              )}
-                              {hasRowActions && (
-                                <Table.Td ta="right">
-                                  <Menu position="bottom-end">
-                                    <Tooltip label={t("common:actions")}>
-                                      <Menu.Target>
-                                        <ActionIcon variant="subtle" color="gray" aria-label={t("common:actions")}>
-                                          <MoreHorizontal size={16} />
-                                        </ActionIcon>
-                                      </Menu.Target>
-                                    </Tooltip>
-                                    <Menu.Dropdown>
-                                      {canUpdateUnit && (
-                                        <Menu.Item leftSection={<Pencil size={16} />} onClick={() => setForm({ unit })}>
-                                          {t("common:edit")}
-                                        </Menu.Item>
-                                      )}
-                                      {canAuthorize && (
-                                        <Menu.Item
-                                          leftSection={<ShieldCheck size={16} />}
-                                          onClick={() => setAuthorizeTarget(unit)}
-                                        >
-                                          {t("structure:authorization.title")}
-                                        </Menu.Item>
-                                      )}
-                                      {canDeleteUnit && (
-                                        <>
-                                          <Menu.Divider />
-                                          <Menu.Item
-                                            color="red"
-                                            leftSection={<Ban size={16} />}
-                                            onClick={() => setDeactivateTarget(unit)}
-                                          >
-                                            {t("structure:units.deactivate")}
-                                          </Menu.Item>
-                                        </>
-                                      )}
-                                    </Menu.Dropdown>
-                                  </Menu>
-                                </Table.Td>
-                              )}
-                            </Table.Tr>
+                                    ) : canAssignCalendar && calendars ? (
+                                      <Select
+                                        size="xs"
+                                        w={200}
+                                        aria-label={t("structure:companies.holidayCalendar")}
+                                        data={[
+                                          { value: NONE, label: t("structure:companies.noCalendar") },
+                                          ...calendars.map((calendar) => ({
+                                            value: calendar.id,
+                                            label: calendar.name,
+                                          })),
+                                        ]}
+                                        value={company.holidayCalendarId ?? NONE}
+                                        allowDeselect={false}
+                                        disabled={calendarMutation.isPending}
+                                        onChange={(value) =>
+                                          value !== null &&
+                                          calendarMutation.mutate({
+                                            companyId: company.id,
+                                            calendarId: value === NONE ? null : value,
+                                          })
+                                        }
+                                      />
+                                    ) : (
+                                      <Text size="xs">
+                                        {company.holidayCalendarName ??
+                                          calendars?.find((c) => c.id === company.holidayCalendarId)?.name ??
+                                          (company.holidayCalendarId ? t("structure:companies.calendarAssigned") : "—")}
+                                      </Text>
+                                    )}
+                                  </Group>
+                                )}
+                              </Stack>
+                            </Card>
                           );
                         })}
-                      </Table.Tbody>
-                    </Table>
-                  </Table.ScrollContainer>
+                      </Stack>
+                    </div>
+                  </>
                 )}
               </Card.Section>
             </Card>

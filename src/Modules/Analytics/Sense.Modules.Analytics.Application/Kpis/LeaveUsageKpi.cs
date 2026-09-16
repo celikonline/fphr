@@ -1,4 +1,5 @@
 using Sense.Modules.Analytics.Contracts;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -17,15 +18,16 @@ public sealed record LeaveUsageByTypeDto(string LeaveTypeName, decimal UsedDays)
 public sealed record LeaveUsageKpiDto(decimal TotalEntitledDays, decimal UsedDays, decimal UsageRate, IReadOnlyList<LeaveUsageByTypeDto> ByLeaveType);
 
 /// <summary>
-/// S-15 (roadmap #99 "izin kullanım oranı"). <paramref name="OrgUnitId"/> is accepted for shape-symmetry with the
-/// other Analytics KPI endpoints but is not yet applied as a narrowing filter - Employee.Contracts has no
-/// org-unit -&gt; employee-ids lookup today (see rapor-be-20260916-1754); only the caller's own
-/// <see cref="IDataScopeService"/> scope (Team/Department/Location/Company) restricts the result.
+/// S-15 (roadmap #99 "izin kullanım oranı"). <paramref name="OrgUnitId"/> verilirse Employee.Contracts'ın mevcut
+/// <see cref="IEmployeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync"/> portuyla (tur içi ek iş md.8) o birimin
+/// aktif çalışan id listesine daraltılır; kısıtlı kapsamdaki çağıran için kendi <see cref="IDataScopeService"/>
+/// görünürlüğüyle kesişim alınır.
 /// </summary>
 [RequiresPermission("analytics.kpi.view")]
 public sealed record GetLeaveUsageKpiQuery(int? Year = null, Guid? OrgUnitId = null) : IQuery<LeaveUsageKpiDto>;
 
-public sealed class GetLeaveUsageKpiHandler(ITenantContext tenant, ILeaveUsageReader leaveUsage, IDataScopeService dataScope, TimeProvider clock)
+public sealed class GetLeaveUsageKpiHandler(
+    ITenantContext tenant, ILeaveUsageReader leaveUsage, IEmployeeDirectory employeeDirectory, IDataScopeService dataScope, TimeProvider clock)
     : IQueryHandler<GetLeaveUsageKpiQuery, LeaveUsageKpiDto>
 {
     public async Task<Result<LeaveUsageKpiDto>> Handle(GetLeaveUsageKpiQuery query, CancellationToken cancellationToken)
@@ -36,7 +38,14 @@ public sealed class GetLeaveUsageKpiHandler(ITenantContext tenant, ILeaveUsageRe
         // (unrestricted, "her çalışan"), a non-null set narrows to exactly what the caller may see.
         var visibleEmployeeIds = await dataScope.GetVisibleEmployeeIdsAsync(AnalyticsPermissions.KpiView.Key, cancellationToken);
 
-        var summary = await leaveUsage.GetAnnualUsageAsync(tenant.TenantId, year, visibleEmployeeIds, cancellationToken);
+        IReadOnlyCollection<Guid>? employeeIds = visibleEmployeeIds;
+        if (query.OrgUnitId is { } orgUnitId)
+        {
+            var orgUnitEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
+            employeeIds = visibleEmployeeIds is null ? orgUnitEmployeeIds : orgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
+        }
+
+        var summary = await leaveUsage.GetAnnualUsageAsync(tenant.TenantId, year, employeeIds, cancellationToken);
 
         var usageRate = summary.TotalEntitledDays == 0m ? 0m : Math.Round(summary.UsedDays / summary.TotalEntitledDays, 4);
         var byLeaveType = summary.ByLeaveType.Select(t => new LeaveUsageByTypeDto(t.LeaveTypeName, t.UsedDays)).ToList();

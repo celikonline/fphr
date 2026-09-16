@@ -16,6 +16,7 @@
     "empty": "Kayıtlı zimmet yok.",
     "assigned": "Zimmet atandı.",
     "returned": "Zimmet iade alındı.",
+    "noCategories": "Önce Ayarlar > Zimmet kategorilerinden kategori ekleyin.",
     "errors": {
       "generic": "İşlem tamamlanamadı.",
       "loadFailed": "Zimmetler yüklenemedi.",

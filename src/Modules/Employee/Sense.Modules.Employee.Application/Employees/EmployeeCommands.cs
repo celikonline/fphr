@@ -515,7 +515,7 @@ public sealed class TerminateEmployeeHandler(
         }
 
         outbox.Enqueue(new Contracts.Events.EmployeeTerminated(
-            tenant.TenantId, employee.Id, ToContractType(terminationType), reason.Code, sgkExitCode) { ActorUserId = currentUser.UserId });
+            tenant.TenantId, employee.Id, ToContractType(terminationType), reason.Code, sgkExitCode, command.TerminationDate) { ActorUserId = currentUser.UserId });
 
         // Advisory only (roadmap: offboarding <-> zimmet), same non-blocking pattern as the job-security/collective
         // dismissal warnings above: HR sees the open-asset count and can still complete the exit without returning

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Application;
 using Sense.Modules.Recruitment.Application.Applications;
 using Sense.Modules.Recruitment.Application.Candidates;
@@ -29,12 +30,13 @@ namespace Sense.Modules.Recruitment.Tests;
 /// Real PostgreSQL (Testcontainers): registers the module exactly like <c>RecruitmentModule.AddModule</c> so DI graph
 /// mistakes (the R-1/TB-5 class of bug: a handler ctor asking for a repository nobody registered) show up here, not
 /// only at Api startup. Postings are built directly via the domain factory (not <c>CreateJobPostingCommand</c>),
-/// which needs Organization/Identity's IOrgUnitLookup/ILocationLookup/IUserAccountLookup - out of scope for a
-/// Recruitment-only fixture; publishing/applying/moving-stage don't need those ports. The one exception is
-/// <see cref="ITenantSlugLookup"/> (S-10, <c>ListPublicJobPostingsByTenantSlugQuery</c>): standing up Identity's
-/// whole stack just to resolve a slug isn't worth it, so <see cref="FakeTenantSlugLookup"/> (a real port
-/// implementation, just an in-memory one - not a mock of Recruitment's own code) is registered instead. Each test
-/// uses a fresh tenant id - no ResetDatabaseAsync (the "recruitment" schema isn't in TestFixture's Respawn list yet).
+/// which needs Organization/Identity's IOrgUnitLookup/IUserAccountLookup - out of scope for a Recruitment-only
+/// fixture; publishing/applying/moving-stage don't need those ports. Two exceptions: <see cref="ITenantSlugLookup"/>
+/// (S-10, <c>ListPublicJobPostingsByTenantSlugQuery</c>) and <see cref="ILocationLookup"/> (S-19, public posting
+/// <c>Location</c> name resolution) - standing up Identity's/Organization's whole stack just for these reads isn't
+/// worth it, so <see cref="FakeTenantSlugLookup"/>/<see cref="FakeLocationLookup"/> (real port implementations,
+/// just in-memory ones - not mocks of Recruitment's own code) are registered instead. Each test uses a fresh
+/// tenant id - no ResetDatabaseAsync (the "recruitment" schema isn't in TestFixture's Respawn list yet).
 /// </summary>
 [Collection("PostgreSQL")]
 [Trait("Category", "Integration")]
@@ -71,6 +73,12 @@ public sealed class RecruitmentIntegrationTests : TestFixture
 
         services.AddSingleton<FakeTenantSlugLookup>();
         services.AddSingleton<ITenantSlugLookup>(sp => sp.GetRequiredService<FakeTenantSlugLookup>());
+
+        // Tur içi ek iş BE (18:17, S-19 tüketimi): ILocationLookup gerçek Organization.Infrastructure implementasyonu
+        // bu fixture'da kayıtlı değil (yukarıdaki sınıf yorumu) - GetPublicJobPostingHandler/ListRelatedPublicJobPostingsHandler/
+        // ListPublicJobPostingsByTenantSlugHandler artık ctor'da ILocationLookup istiyor, aksi halde DI çözümlemesi patlar.
+        services.AddSingleton<FakeLocationLookup>();
+        services.AddSingleton<ILocationLookup>(sp => sp.GetRequiredService<FakeLocationLookup>());
 
         // Faz 9 gün açılışı TALIMAT'ı madde 1 (job testi): CandidateRetentionSweepJobHandler normalde yalnız
         // RecruitmentModule.AddModule'de (Sense.Api/Hangfire) kayıtlıdır - burada da kaydederek gerçek DB'ye karşı
@@ -317,6 +325,61 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     /// <summary>
+    /// Faz 9 tur 2 "tur içi ek iş" BE madde 6 (S-19 tüketimi): bir ilanın <c>LocationId</c>'si
+    /// <see cref="ILocationLookup"/>'ta biliniyorsa, hem tenant-wide public listede hem detayda hem de
+    /// related listede adı görünür - tek bir <c>GetNamesAsync</c> çağrısıyla (N+1 yok), test yalnız dolaylı
+    /// olarak <see cref="FakeLocationLookup"/> çağrı sayısını ölçmüyor ama toplu listede birden çok ilanın
+    /// aynı çağrıda çözüldüğünü doğruluyor.
+    /// </summary>
+    [Fact]
+    public async Task PublicCareerFlow_PostingWithKnownLocation_ResolvesLocationName_InListDetailAndRelated()
+    {
+        var tenantId = Guid.NewGuid();
+        var locationId = Guid.NewGuid();
+        var locations = ServiceProvider!.GetRequiredService<FakeLocationLookup>();
+        locations.Map(locationId, "İstanbul - Merkez Ofis");
+
+        var slugLookup = ServiceProvider!.GetRequiredService<FakeTenantSlugLookup>();
+        slugLookup.Map("konumlu-kiraci", tenantId);
+
+        var anchorId = await CreatePublishedPostingAsync(tenantId, "Konumlu İlan", locationId);
+        var siblingId = await CreatePublishedPostingAsync(tenantId, "Konumlu Kardeş İlan", locationId);
+        var anchorSlug = await GetApplySlugAsync(anchorId);
+        var siblingSlug = await GetApplySlugAsync(siblingId);
+
+        var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(anchorSlug));
+        detail.IsSuccess.ShouldBeTrue();
+        detail.Value.Location.ShouldBe("İstanbul - Merkez Ofis");
+
+        var related = await ExecuteQueryAsync(new ListRelatedPublicJobPostingsQuery(anchorSlug));
+        related.IsSuccess.ShouldBeTrue();
+        related.Value.Single(p => p.ApplySlug == siblingSlug).Location.ShouldBe("İstanbul - Merkez Ofis");
+
+        var list = await ExecuteQueryAsync(new ListPublicJobPostingsByTenantSlugQuery("konumlu-kiraci"));
+        list.IsSuccess.ShouldBeTrue();
+        list.Value.ShouldAllBe(p => p.Location == "İstanbul - Merkez Ofis");
+    }
+
+    /// <summary>
+    /// Faz 9 tur 2 "tur içi ek iş" BE madde 6: <see cref="ILocationLookup"/>'ta karşılığı olmayan bir
+    /// <c>LocationId</c> (ör. anonim istek bağlamında sözlük boş dönerse) sessizce <c>null</c>'a düşer - hata
+    /// fırlatmaz, konumsuz ilanla aynı davranır.
+    /// </summary>
+    [Fact]
+    public async Task PublicCareerFlow_PostingWithUnresolvedLocation_LocationIsNull()
+    {
+        var tenantId = Guid.NewGuid();
+        var unknownLocationId = Guid.NewGuid();
+
+        var postingId = await CreatePublishedPostingAsync(tenantId, "Konumu Bilinmeyen İlan", unknownLocationId);
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(applySlug));
+        detail.IsSuccess.ShouldBeTrue();
+        detail.Value.Location.ShouldBeNull();
+    }
+
+    /// <summary>
     /// Faz 9 tur 3 TALIMAT madde 1 (public uç tenant sızıntı testi): A kiracısının başvurusu B kiracısının aynı
     /// e-postalı adayıyla/başvurusuyla karışmaz - <see cref="ICandidateRepository.FindByEmailAsync"/> ambient
     /// tenant scope'a göre filtrelendiği için (bkz. <see cref="SubmitCareerApplicationHandler"/>), aynı e-posta iki
@@ -554,13 +617,13 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         }
     }
 
-    private async Task<Guid> CreatePublishedPostingAsync(Guid tenantId, string title = "Backend Geliştirici")
+    private async Task<Guid> CreatePublishedPostingAsync(Guid tenantId, string title = "Backend Geliştirici", Guid? locationId = null)
     {
         Guid postingId;
         await using (var scope = ServiceProvider!.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
-            var posting = JobPosting.Create(tenantId, title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", Guid.NewGuid(), null).Value;
+            var posting = JobPosting.Create(tenantId, title, Guid.NewGuid(), locationId, RecruitmentEmploymentType.FullTime, "Açıklama", Guid.NewGuid(), null).Value;
             posting.Publish();
             db.JobPostings.Add(posting);
             await db.SaveChangesAsync();
@@ -632,5 +695,30 @@ public sealed class RecruitmentIntegrationTests : TestFixture
 
         public Task<Guid?> FindTenantIdAsync(string slug, CancellationToken cancellationToken) =>
             Task.FromResult(_bySlug.TryGetValue(slug, out var tenantId) ? tenantId : (Guid?)null);
+    }
+
+    /// <summary>
+    /// In-memory <see cref="ILocationLookup"/> for this fixture (see class doc comment, S-19 tüketimi): tests call
+    /// <see cref="Map"/> to declare a location's display name before dispatching a public posting query. An id with
+    /// no matching call to <see cref="Map"/> behaves exactly like the real implementation's "no location for this
+    /// tenant" case - simply absent from <see cref="GetNamesAsync"/>'s result, not an exception.
+    /// </summary>
+    private sealed class FakeLocationLookup : ILocationLookup
+    {
+        private readonly Dictionary<Guid, string> _byId = [];
+
+        public void Map(Guid locationId, string name) => _byId[locationId] = name;
+
+        public Task<bool> ExistsActiveAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_byId.ContainsKey(locationId));
+
+        public Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(
+            Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default)
+        {
+            IReadOnlyDictionary<Guid, string> result = locationIds
+                .Where(id => _byId.ContainsKey(id))
+                .ToDictionary(id => id, id => _byId[id]);
+            return Task.FromResult(result);
+        }
     }
 }

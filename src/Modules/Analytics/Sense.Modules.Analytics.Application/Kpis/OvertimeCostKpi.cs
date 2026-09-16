@@ -1,4 +1,10 @@
+using Sense.Modules.Analytics.Contracts;
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Employee.Contracts;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Security;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Analytics.Application.Kpis;
 
@@ -84,5 +90,71 @@ public static class OvertimeCostCalculator
             EmployeePayFrequency.Hourly => salary.Amount,
             _ => null,
         };
+    }
+}
+
+/// <summary>S-17 uç sözleşmesi (tur içi ek iş md.7, 2026-09-16 18:13): <see cref="OvertimeCostResult"/>'a dönem etiketi ekler.</summary>
+public sealed record OvertimeCostKpiDto(int Year, int Month, IReadOnlyList<OvertimeCostTotal> Totals, int EmployeeCount, int ExcludedEmployeeCount);
+
+/// <summary>
+/// S-17 fazla mesai maliyeti ucu (roadmap #99). Ücret hassas alan olduğu için iki izin birden gerekir:
+/// <see cref="AnalyticsPermissions.KpiView"/> (KPI ekranını görme) VE <see cref="EmployeePermissions.SalaryViewKey"/>
+/// (maaş verisine erişim) - <see cref="RequiresPermissionAttribute"/> AllowMultiple ile AND semantiğinde
+/// (bkz. AuthorizationBehaviour), ikisinden biri eksikse 403.
+/// </summary>
+[RequiresPermission("analytics.kpi.view")]
+[RequiresPermission(EmployeePermissions.SalaryViewKey)]
+public sealed record GetOvertimeCostKpiQuery(int Year, int Month, Guid? OrgUnitId = null) : IQuery<OvertimeCostKpiDto>;
+
+public sealed class GetOvertimeCostKpiHandler(
+    ITenantContext tenant,
+    IAttendanceMonthlySummaryReader attendanceSummaries,
+    IEmployeeSalaryLookup salaryLookup,
+    IEmployeeDirectory employeeDirectory,
+    IDataScopeService dataScope)
+    : IQueryHandler<GetOvertimeCostKpiQuery, OvertimeCostKpiDto>
+{
+    public async Task<Result<OvertimeCostKpiDto>> Handle(GetOvertimeCostKpiQuery query, CancellationToken cancellationToken)
+    {
+        // Same IDataScopeService pattern as the workforce/leave-usage KPIs: null = Company scope (unrestricted),
+        // a non-null set narrows to exactly what the caller may see. Employee.Contracts' IEmployeeDirectory already
+        // exposes "every active employee"/"active employees in these units" (added for the Payroll period run,
+        // 11.3.07 P3) - the Company-scope caller reuses it instead of a new port (found while wiring ADR-0014;
+        // superseded, see rapor-be-20260916-1835).
+        var visibleEmployeeIds = await dataScope.GetVisibleEmployeeIdsAsync(AnalyticsPermissions.KpiView.Key, cancellationToken);
+
+        IReadOnlyList<Guid> employeeIds;
+        if (visibleEmployeeIds is null)
+        {
+            employeeIds = query.OrgUnitId is { } orgUnitId
+                ? await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken)
+                : await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
+        }
+        else if (query.OrgUnitId is { } orgUnitId)
+        {
+            var orgUnitEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
+            employeeIds = orgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
+        }
+        else
+        {
+            employeeIds = visibleEmployeeIds.ToList();
+        }
+
+        if (employeeIds.Count == 0)
+        {
+            return Result.Success(new OvertimeCostKpiDto(query.Year, query.Month, [], 0, 0));
+        }
+
+        var summaries = await attendanceSummaries.GetAsync(tenant.TenantId, query.Year, query.Month, employeeIds, cancellationToken);
+
+        var inputs = new List<OvertimeCostInput>(summaries.Count);
+        foreach (var summary in summaries)
+        {
+            var salary = await salaryLookup.GetCurrentSalaryAsync(tenant.TenantId, summary.EmployeeId, cancellationToken);
+            inputs.Add(new OvertimeCostInput(summary.EmployeeId, summary.OvertimeHours, salary));
+        }
+
+        var result = OvertimeCostCalculator.Calculate(inputs);
+        return Result.Success(new OvertimeCostKpiDto(query.Year, query.Month, result.Totals, result.EmployeeCount, result.ExcludedEmployeeCount));
     }
 }

@@ -29,7 +29,7 @@ public sealed class EmployeeAvailabilityFeaturesTests
     [Fact]
     public async Task Submit_ValidRequest_AddsAvailability()
     {
-        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability);
+        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, TimeProvider.System);
 
         var result = await handler.Handle(
             new SubmitMyAvailabilityCommand(new DateOnly(2026, 9, 21), null, null, AvailabilityKind.Unavailable, "not"), TestContext.Current.CancellationToken);
@@ -42,13 +42,46 @@ public sealed class EmployeeAvailabilityFeaturesTests
     public async Task Submit_NoLinkedEmployee_ReturnsNotFound()
     {
         _currentUser.EmployeeId.Returns((Guid?)null);
-        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability);
+        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, TimeProvider.System);
 
         var result = await handler.Handle(
             new SubmitMyAvailabilityCommand(new DateOnly(2026, 9, 21), null, null, AvailabilityKind.Unavailable, null), TestContext.Current.CancellationToken);
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(AttendanceErrors.EmployeeNotFound);
+    }
+
+    [Fact]
+    public async Task Submit_PastDate_ReturnsValidationError()
+    {
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 9, 21, 10, 0, 0, TimeSpan.Zero));
+        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, clock);
+
+        var result = await handler.Handle(
+            new SubmitMyAvailabilityCommand(new DateOnly(2026, 9, 20), null, null, AvailabilityKind.Unavailable, null), TestContext.Current.CancellationToken);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AttendanceErrors.AvailabilityDateInPast);
+        _availability.DidNotReceive().Add(Arg.Any<EmployeeAvailability>());
+    }
+
+    [Fact]
+    public async Task Submit_Today_Succeeds()
+    {
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 9, 21, 10, 0, 0, TimeSpan.Zero));
+        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, clock);
+
+        var result = await handler.Handle(
+            new SubmitMyAvailabilityCommand(new DateOnly(2026, 9, 21), null, null, AvailabilityKind.Unavailable, null), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _availability.Received(1).Add(Arg.Any<EmployeeAvailability>());
+    }
+
+    /// <summary>Test-only fake clock (mirrors <c>Sense.Modules.Documents.Tests.DocumentExpiryReminderJobHandlerTests.FixedTimeProvider</c> - no FakeTimeProvider package reference in this test project).</summary>
+    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
     }
 
     [Fact]

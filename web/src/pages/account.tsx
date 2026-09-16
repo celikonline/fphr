@@ -29,6 +29,7 @@ import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { disableMfa, enrollMfa, getMfaStatus, verifyMfaEnrollment, type MfaEnrollment } from "@/services/mfa.service";
 import { useAuthStore } from "@/store/auth.store";
 import { useUIStore, type Theme } from "@/store/ui.store";
+import classes from "./account.module.css";
 
 type TFn = (key: string, opts?: Record<string, unknown>) => string;
 
@@ -138,6 +139,7 @@ function MfaEnrollDialog({
             disabled={verifyMutation.isPending}
             oneTimeCode
             ariaLabel={t("account:mfaSection.codeLabel")}
+            classNames={{ root: classes.mfaCode }}
           />
         </Stack>
 
@@ -196,6 +198,7 @@ function MfaDisableDialog({ onClose, onDisabled, t }: { onClose: () => void; onD
             disabled={disableMutation.isPending}
             oneTimeCode
             ariaLabel={t("account:mfaSection.codeLabel")}
+            classNames={{ root: classes.mfaCode }}
           />
         </Stack>
 

@@ -105,6 +105,27 @@ function JobRequisitions() {
     setCreateOpen(true);
   }
 
+  function requisitionActions(requisition: JobRequisition) {
+    return (
+      <>
+        {canManage && requisition.status === "draft" && (
+          <Tooltip label={t("recruitment:requisitions.submit")}>
+            <ActionIcon variant="subtle" color="green" onClick={() => submitMutation.mutate(requisition.id)}>
+              <Send size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+        {canManage && (requisition.status === "draft" || requisition.status === "pendingApproval") && (
+          <Tooltip label={t("recruitment:requisitions.cancel")}>
+            <ActionIcon variant="subtle" color="red" onClick={() => cancelMutation.mutate(requisition.id)}>
+              <X size={16} />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
@@ -135,51 +156,69 @@ function JobRequisitions() {
             {t("recruitment:requisitions.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:requisitions.titleField")}</Table.Th>
-                <Table.Th>{t("recruitment:postings.orgUnit")}</Table.Th>
-                <Table.Th>{t("recruitment:requisitions.headcount")}</Table.Th>
-                <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
-                <Table.Th ta="right">{t("common:actions")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((requisition) => (
-                <Table.Tr key={requisition.id}>
-                  <Table.Td>
-                    <Text fw={500}>{requisition.title}</Text>
-                  </Table.Td>
-                  <Table.Td>{orgUnitNameById.get(requisition.orgUnitId) ?? "—"}</Table.Td>
-                  <Table.Td>{requisition.headcountRequested}</Table.Td>
-                  <Table.Td>
-                    <Badge color={STATUS_COLOR[requisition.status]} variant="light">
-                      {t(`recruitment:requisitions.statuses.${requisition.status}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap={4} justify="flex-end" wrap="nowrap">
-                      {canManage && requisition.status === "draft" && (
-                        <Tooltip label={t("recruitment:requisitions.submit")}>
-                          <ActionIcon variant="subtle" color="green" onClick={() => submitMutation.mutate(requisition.id)}>
-                            <Send size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                      {canManage && (requisition.status === "draft" || requisition.status === "pendingApproval") && (
-                        <Tooltip label={t("recruitment:requisitions.cancel")}>
-                          <ActionIcon variant="subtle" color="red" onClick={() => cancelMutation.mutate(requisition.id)}>
-                            <X size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:requisitions.titleField")}</Table.Th>
+                    <Table.Th>{t("recruitment:postings.orgUnit")}</Table.Th>
+                    <Table.Th>{t("recruitment:requisitions.headcount")}</Table.Th>
+                    <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
+                    <Table.Th ta="right">{t("common:actions")}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.map((requisition) => (
+                    <Table.Tr key={requisition.id}>
+                      <Table.Td>
+                        <Text fw={500}>{requisition.title}</Text>
+                      </Table.Td>
+                      <Table.Td>{orgUnitNameById.get(requisition.orgUnitId) ?? "—"}</Table.Td>
+                      <Table.Td>{requisition.headcountRequested}</Table.Td>
+                      <Table.Td>
+                        <Badge color={STATUS_COLOR[requisition.status]} variant="light">
+                          {t(`recruitment:requisitions.statuses.${requisition.status}`)}
+                        </Badge>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap={4} justify="flex-end" wrap="nowrap">
+                          {requisitionActions(requisition)}
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {data.map((requisition) => (
+                  <Card key={requisition.id} withBorder padding="sm" radius="md">
+                    <Stack gap={6}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Text fw={500} size="sm">
+                          {requisition.title}
+                        </Text>
+                        <Badge color={STATUS_COLOR[requisition.status]} variant="light">
+                          {t(`recruitment:requisitions.statuses.${requisition.status}`)}
+                        </Badge>
+                      </Group>
+                      <Text size="xs" c="dimmed">
+                        {orgUnitNameById.get(requisition.orgUnitId) ?? "—"} · {t("recruitment:requisitions.headcount")}: {requisition.headcountRequested}
+                      </Text>
+                      <Group gap={4} justify="flex-end" wrap="nowrap">
+                        {requisitionActions(requisition)}
+                      </Group>
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 

@@ -49,7 +49,14 @@
     "cancel": "İptal et",
     "cancelConfirmTitle": "Hedefi iptal et",
     "cancelConfirmDescription": "\"{{title}}\" hedefini iptal etmek istediğinize emin misiniz?",
-    "cancelled": "Hedef iptal edildi."
+    "cancelled": "Hedef iptal edildi.",
+    "assign": {
+      "action": "Hedef ata",
+      "title": "Çalışana hedef ata",
+      "employee": "Çalışan",
+      "submit": "Ata",
+      "assigned": "Hedef atandı."
+    }
   },
   "reviewCycles": {
     "title": "Değerlendirme döngüleri",

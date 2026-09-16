@@ -1,0 +1,10 @@
+/*
+ * MFA code entry in the enroll/disable dialogs (tur 2 tur-ici ek is md.6): the 6 cells default to a fixed
+ * gap, which overflows the Modal's content width on narrow phones (~360-390px) once the Modal's own margin
+ * and body padding are subtracted. Spreading the fixed-size cells across the full width lets the gaps
+ * shrink instead, matching the fix already applied to the login MFA step (auth/login.module.css .mfaCode).
+ */
+.mfaCode {
+  width: 100%;
+  justify-content: space-between;
+}

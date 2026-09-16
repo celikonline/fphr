@@ -21,7 +21,7 @@ internal static class EmployeeAvailabilityMapper
 [RequiresPermission("attendance.availability.self")]
 public sealed record SubmitMyAvailabilityCommand(DateOnly Date, TimeOnly? Start, TimeOnly? End, AvailabilityKind Kind, string? Note) : ICommand<Guid>;
 
-public sealed class SubmitMyAvailabilityHandler(ITenantContext tenant, ICurrentUser currentUser, IEmployeeAvailabilityRepository availability)
+public sealed class SubmitMyAvailabilityHandler(ITenantContext tenant, ICurrentUser currentUser, IEmployeeAvailabilityRepository availability, TimeProvider clock)
     : ICommandHandler<SubmitMyAvailabilityCommand, Guid>
 {
     public Task<Result<Guid>> Handle(SubmitMyAvailabilityCommand command, CancellationToken cancellationToken)
@@ -29,6 +29,12 @@ public sealed class SubmitMyAvailabilityHandler(ITenantContext tenant, ICurrentU
         if (currentUser.EmployeeId is not { } employeeId)
         {
             return Task.FromResult(Result.Failure<Guid>(Error.NotFound(AttendanceErrors.EmployeeNotFound)));
+        }
+
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        if (command.Date < today)
+        {
+            return Task.FromResult(Result.Failure<Guid>(Error.Validation(AttendanceErrors.AvailabilityDateInPast)));
         }
 
         var created = EmployeeAvailability.Create(tenant.TenantId, employeeId, command.Date, command.Start, command.End, command.Kind, command.Note);

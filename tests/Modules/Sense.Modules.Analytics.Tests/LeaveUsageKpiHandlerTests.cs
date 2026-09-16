@@ -1,6 +1,7 @@
 using NSubstitute;
 using Sense.Modules.Analytics.Application.Kpis;
 using Sense.Modules.Analytics.Contracts;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
@@ -17,6 +18,7 @@ public sealed class LeaveUsageKpiHandlerTests
 {
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly ILeaveUsageReader _leaveUsage = Substitute.For<ILeaveUsageReader>();
+    private readonly IEmployeeDirectory _employeeDirectory = Substitute.For<IEmployeeDirectory>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly ITenantContext _tenant;
 
@@ -26,7 +28,7 @@ public sealed class LeaveUsageKpiHandlerTests
         _tenant.TenantId.Returns(_tenantId);
     }
 
-    private GetLeaveUsageKpiHandler CreateHandler() => new(_tenant, _leaveUsage, _dataScope, TimeProvider.System);
+    private GetLeaveUsageKpiHandler CreateHandler() => new(_tenant, _leaveUsage, _employeeDirectory, _dataScope, TimeProvider.System);
 
     [Fact]
     public async Task Handle_ComputesUsageRate_FromEntitledAndUsedDays()
@@ -75,5 +77,24 @@ public sealed class LeaveUsageKpiHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         await _leaveUsage.Received(1).GetAnnualUsageAsync(_tenantId, 2026, visible, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task Handle_OrgUnitId_NarrowsToUnitEmployeeIds_ViaEmployeeDirectory_ForCompanyScopeCaller()
+    {
+        var orgUnitId = Guid.NewGuid();
+        var unitEmployeeIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
+        _dataScope.GetVisibleEmployeeIdsAsync(AnalyticsPermissions.KpiView.Key, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)null);
+        _employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { orgUnitId })), Arg.Any<CancellationToken>())
+            .Returns(unitEmployeeIds);
+        _leaveUsage.GetAnnualUsageAsync(_tenantId, 2026, Arg.Is<IReadOnlyCollection<Guid>?>(ids => ids != null && ids.SequenceEqual(unitEmployeeIds)), Arg.Any<CancellationToken>())
+            .Returns(new LeaveUsageSummary(8m, 1m, []));
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(new GetLeaveUsageKpiQuery(2026, orgUnitId), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.TotalEntitledDays.ShouldBe(8m);
     }
 }

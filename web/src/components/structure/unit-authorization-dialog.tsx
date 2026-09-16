@@ -18,6 +18,7 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import ConfirmDialog from "@/components/confirm-dialog";
 import SearchPicker, { type PickerOption } from "@/components/structure/search-picker";
 import { structureErrorMessage } from "@/components/structure/errors";
@@ -58,6 +59,7 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
   const { t } = useTranslation(["structure", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("identity.unit_authorizations.manage");
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const queryKey = ["identity", "unit-authorizations", unit.id];
   const { data, isLoading, isError } = useQuery({
@@ -117,6 +119,7 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
       <Modal
         opened
         size="xl"
+        fullScreen={isMobile}
         onClose={() => !saveMutation.isPending && onClose()}
         title={
           <Group gap="xs" wrap="nowrap">
@@ -154,84 +157,146 @@ export default function UnitAuthorizationDialog({ unit, onClose }: UnitAuthoriza
               </Text>
             </Paper>
           ) : (
-            <Paper withBorder>
-              <ScrollArea.Autosize mah={288}>
-                <Table>
-                  <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>{t("structure:authorization.person")}</Table.Th>
-                      <Table.Th>{t("structure:authorization.permissions")}</Table.Th>
-                      {canManage && (
-                        <Table.Th w={96} ta="right">
-                          {t("common:actions")}
-                        </Table.Th>
-                      )}
-                    </Table.Tr>
-                  </Table.Thead>
-                  <Table.Tbody>
-                    {grants.map((grant) => (
-                      <Table.Tr key={grant.id}>
-                        <Table.Td>
-                          <Text size="sm" fw={500}>
-                            {personLabel(grant)}
-                          </Text>
-                          {grant.userEmail && grant.userFullName && (
-                            <Text size="xs" c="dimmed">
-                              {grant.userEmail}
-                            </Text>
-                          )}
-                        </Table.Td>
-                        <Table.Td>
-                          <Group gap={4}>
-                            <Badge variant="outline">{t("structure:authorization.base")}</Badge>
-                            {grant.canViewSalaryAndPayments && (
-                              <Badge variant="light">{t("structure:authorization.salaryShort")}</Badge>
-                            )}
-                            {grant.canViewUnitReports && (
-                              <Badge variant="light">{t("structure:authorization.reportsShort")}</Badge>
-                            )}
-                          </Group>
-                        </Table.Td>
+            <>
+              {/* Geniş ekran: tablo */}
+              <Paper withBorder className="hidden md:block">
+                <ScrollArea.Autosize mah={288}>
+                  <Table>
+                    <Table.Thead>
+                      <Table.Tr>
+                        <Table.Th>{t("structure:authorization.person")}</Table.Th>
+                        <Table.Th>{t("structure:authorization.permissions")}</Table.Th>
                         {canManage && (
-                          <Table.Td>
-                            <Group gap={4} justify="flex-end" wrap="nowrap">
-                              <Tooltip label={t("common:edit")}>
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="gray"
-                                  aria-label={t("common:edit")}
-                                  onClick={() => {
-                                    setSubmitted(false);
-                                    setEditor({
-                                      person: { id: grant.userId, label: personLabel(grant) },
-                                      canViewSalaryAndPayments: grant.canViewSalaryAndPayments,
-                                      canViewUnitReports: grant.canViewUnitReports,
-                                      existing: grant,
-                                    });
-                                  }}
-                                >
-                                  <Pencil size={16} />
-                                </ActionIcon>
-                              </Tooltip>
-                              <Tooltip label={t("structure:authorization.remove")}>
-                                <ActionIcon
-                                  variant="subtle"
-                                  color="red"
-                                  aria-label={t("structure:authorization.remove")}
-                                  onClick={() => setRemoveTarget(grant)}
-                                >
-                                  <Trash2 size={16} />
-                                </ActionIcon>
-                              </Tooltip>
-                            </Group>
-                          </Table.Td>
+                          <Table.Th w={96} ta="right">
+                            {t("common:actions")}
+                          </Table.Th>
                         )}
                       </Table.Tr>
-                    ))}
-                  </Table.Tbody>
-                </Table>
-              </ScrollArea.Autosize>
-            </Paper>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {grants.map((grant) => (
+                        <Table.Tr key={grant.id}>
+                          <Table.Td>
+                            <Text size="sm" fw={500}>
+                              {personLabel(grant)}
+                            </Text>
+                            {grant.userEmail && grant.userFullName && (
+                              <Text size="xs" c="dimmed">
+                                {grant.userEmail}
+                              </Text>
+                            )}
+                          </Table.Td>
+                          <Table.Td>
+                            <Group gap={4}>
+                              <Badge variant="outline">{t("structure:authorization.base")}</Badge>
+                              {grant.canViewSalaryAndPayments && (
+                                <Badge variant="light">{t("structure:authorization.salaryShort")}</Badge>
+                              )}
+                              {grant.canViewUnitReports && (
+                                <Badge variant="light">{t("structure:authorization.reportsShort")}</Badge>
+                              )}
+                            </Group>
+                          </Table.Td>
+                          {canManage && (
+                            <Table.Td>
+                              <Group gap={4} justify="flex-end" wrap="nowrap">
+                                <Tooltip label={t("common:edit")}>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="gray"
+                                    aria-label={t("common:edit")}
+                                    onClick={() => {
+                                      setSubmitted(false);
+                                      setEditor({
+                                        person: { id: grant.userId, label: personLabel(grant) },
+                                        canViewSalaryAndPayments: grant.canViewSalaryAndPayments,
+                                        canViewUnitReports: grant.canViewUnitReports,
+                                        existing: grant,
+                                      });
+                                    }}
+                                  >
+                                    <Pencil size={16} />
+                                  </ActionIcon>
+                                </Tooltip>
+                                <Tooltip label={t("structure:authorization.remove")}>
+                                  <ActionIcon
+                                    variant="subtle"
+                                    color="red"
+                                    aria-label={t("structure:authorization.remove")}
+                                    onClick={() => setRemoveTarget(grant)}
+                                  >
+                                    <Trash2 size={16} />
+                                  </ActionIcon>
+                                </Tooltip>
+                              </Group>
+                            </Table.Td>
+                          )}
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
+                </ScrollArea.Autosize>
+              </Paper>
+
+              {/* Dar ekran (≤390px dahil): kart listesi */}
+              <Stack gap="xs" className="md:hidden">
+                {grants.map((grant) => (
+                  <Paper key={grant.id} withBorder p="sm" radius="md">
+                    <Group justify="space-between" wrap="nowrap" align="flex-start">
+                      <Stack gap={2} className="min-w-0">
+                        <Text size="sm" fw={500} truncate>
+                          {personLabel(grant)}
+                        </Text>
+                        {grant.userEmail && grant.userFullName && (
+                          <Text size="xs" c="dimmed" truncate>
+                            {grant.userEmail}
+                          </Text>
+                        )}
+                      </Stack>
+                      {canManage && (
+                        <Group gap={4} wrap="nowrap">
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            size="lg"
+                            aria-label={t("common:edit")}
+                            onClick={() => {
+                              setSubmitted(false);
+                              setEditor({
+                                person: { id: grant.userId, label: personLabel(grant) },
+                                canViewSalaryAndPayments: grant.canViewSalaryAndPayments,
+                                canViewUnitReports: grant.canViewUnitReports,
+                                existing: grant,
+                              });
+                            }}
+                          >
+                            <Pencil size={18} />
+                          </ActionIcon>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            size="lg"
+                            aria-label={t("structure:authorization.remove")}
+                            onClick={() => setRemoveTarget(grant)}
+                          >
+                            <Trash2 size={18} />
+                          </ActionIcon>
+                        </Group>
+                      )}
+                    </Group>
+                    <Group gap={4} mt="xs" wrap="wrap">
+                      <Badge variant="outline">{t("structure:authorization.base")}</Badge>
+                      {grant.canViewSalaryAndPayments && (
+                        <Badge variant="light">{t("structure:authorization.salaryShort")}</Badge>
+                      )}
+                      {grant.canViewUnitReports && (
+                        <Badge variant="light">{t("structure:authorization.reportsShort")}</Badge>
+                      )}
+                    </Group>
+                  </Paper>
+                ))}
+              </Stack>
+            </>
           )}
 
           {canManage && editor && (

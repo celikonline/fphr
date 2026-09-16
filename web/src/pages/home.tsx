@@ -43,6 +43,8 @@ const CARD_STYLE: CSSProperties = {
   boxShadow: "0 0 0 4px var(--mantine-color-gray-light)",
 };
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
+/** `InboxTaskDto.submittedAt` is a full timestamp (not a `DateOnly`), so `formatDateOnly` doesn't apply. */
+const SUBMITTED_DATE: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
 
 /** 403/404 are expected (permission, access setting or module not deployed) - don't retry them. */
 function retryUnlessClientError(failureCount: number, error: unknown): boolean {
@@ -544,11 +546,11 @@ function TeamLeaveRequestsWidget() {
 
 /**
  * "Onay Bekleyenler": a read-only summary of the caller's approval inbox (Faz 1 tur 1). Decisions stay in
- * `/app/inbox` - this widget only surfaces the count and the top items. No date column: `InboxTaskDto`
- * (Workflow) doesn't carry one yet - see report note to BE.
+ * `/app/inbox` - this widget only surfaces the count and the top items. `InboxTaskDto.submittedAt` (Faz 1
+ * tur 2, BE-added) shows a short TR date when present; older/unfilled tasks just omit it.
  */
 function PendingApprovalsWidget() {
-  const { t } = useTranslation(["home", "workflow"]);
+  const { t, i18n } = useTranslation(["home", "workflow"]);
   const { data, isLoading, error } = useQuery({
     queryKey: ["home", "pending-approvals"],
     queryFn: listInbox,
@@ -586,9 +588,16 @@ function PendingApprovalsWidget() {
                 <Text size="sm" truncate>
                   {entry.requesterName ?? "—"}
                 </Text>
-                <Text size="sm" c="dimmed" truncate className="shrink-0">
-                  {t(`workflow:requestType.${entry.requestType}`)}
-                </Text>
+                <Group gap="xs" wrap="nowrap" className="shrink-0">
+                  {entry.submittedAt && (
+                    <Text size="sm" c="dimmed">
+                      {new Intl.DateTimeFormat(i18n.language, SUBMITTED_DATE).format(new Date(entry.submittedAt))}
+                    </Text>
+                  )}
+                  <Text size="sm" c="dimmed" truncate>
+                    {t(`workflow:requestType.${entry.requestType}`)}
+                  </Text>
+                </Group>
               </>
             )}
           />

@@ -8,6 +8,7 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Shouldly;

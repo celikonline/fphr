@@ -93,4 +93,29 @@ public sealed class EmployeeOnboardingTaskTests
         result.Error.Code.ShouldBe(OnboardingDomainErrors.EmployeeTaskAlreadyFinalized);
         task.Status.ShouldBe(EmployeeOnboardingTaskStatus.Waived);
     }
+
+    [Fact]
+    public void IsOverdue_PendingTask_PastDueDate_ReturnsTrue()
+    {
+        var task = NewTask();
+
+        task.IsOverdue(new DateOnly(2026, 10, 2)).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsOverdue_PendingTask_DueDateToday_ReturnsFalse()
+    {
+        var task = NewTask();
+
+        task.IsOverdue(new DateOnly(2026, 10, 1)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsOverdue_CompletedTask_PastDueDate_ReturnsFalse()
+    {
+        var task = NewTask();
+        task.Complete(Guid.NewGuid());
+
+        task.IsOverdue(new DateOnly(2026, 10, 2)).ShouldBeFalse();
+    }
 }

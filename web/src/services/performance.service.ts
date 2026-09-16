@@ -88,6 +88,15 @@ export interface CreateMyGoalInput {
   reviewCycleId?: string | null;
 }
 
+/** `CreateGoalRequest` (İK/yönetici - başkasına hedef ataması). */
+export interface CreateGoalInput {
+  employeeId: string;
+  title: string;
+  description?: string | null;
+  targetDate: string;
+  reviewCycleId?: string | null;
+}
+
 export async function getMyGoals(): Promise<Goal[]> {
   const { data } = await apiClient.get<Goal[]>(`${PERFORMANCE_BASE}/goals/me`);
   return data;
@@ -105,6 +114,12 @@ export async function updateMyGoalProgress(id: string, progress: number): Promis
 /** performance.team.goals (yöneticinin ekip hedefleri, salt okunur - iptal dışında). */
 export async function getTeamGoals(): Promise<Goal[]> {
   const { data } = await apiClient.get<Goal[]>(`${PERFORMANCE_BASE}/goals/team`);
+  return data;
+}
+
+/** performance.goals.manage (İK/yönetici bir çalışana hedef atar). `goals` ucu diğerlerinin aksine `{id}` sarmalamaz, ham Guid döner (bkz. `createMyGoal`). */
+export async function createGoal(input: CreateGoalInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${PERFORMANCE_BASE}/goals`, input);
   return data;
 }
 

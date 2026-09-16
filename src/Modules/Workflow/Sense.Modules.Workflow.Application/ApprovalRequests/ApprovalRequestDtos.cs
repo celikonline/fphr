@@ -22,7 +22,8 @@ public sealed record InboxTaskDto(
     Guid SubjectId,
     string? RequesterName,
     int StepNumber,
-    bool IsFallbackRoleTask);
+    bool IsFallbackRoleTask,
+    DateTime SubmittedAt);
 
 /// <summary>Summary row for the caller's own submitted approval requests.</summary>
 public sealed record MyApprovalRequestDto(

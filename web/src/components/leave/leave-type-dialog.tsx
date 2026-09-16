@@ -15,6 +15,7 @@ import {
   Textarea,
   TextInput,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -107,6 +108,7 @@ function defaultSettings(): LeaveTypeSettings {
 export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveRuleSet; editing: LeaveType | null; onClose: () => void }) {
   const { t } = useTranslation(["leave", "common"]);
   const queryClient = useQueryClient();
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const [settings, setSettings] = useState<LeaveTypeSettings>(editing?.settings ?? defaultSettings());
   const [error, setError] = useState<string | null>(null);
 
@@ -139,7 +141,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="48rem" title={t(editing ? "leave:types.editTitle" : "leave:types.addTitle")}>
+    <Modal opened onClose={onClose} size="48rem" title={t(editing ? "leave:types.editTitle" : "leave:types.addTitle")} fullScreen={isMobile}>
       <form onSubmit={submit}>
         <Stack gap="lg">
           <Fieldset legend={t("leave:types.section.general")}>

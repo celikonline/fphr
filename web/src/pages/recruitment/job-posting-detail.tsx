@@ -280,71 +280,134 @@ function JobPostingDetail() {
             {t("recruitment:applications.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:applications.candidate")}</Table.Th>
-                <Table.Th>{t("recruitment:applications.appliedAt")}</Table.Th>
-                <Table.Th>{t("recruitment:applications.stage")}</Table.Th>
-                {canSubmitForms && <Table.Th>{t("recruitment:applications.forms")}</Table.Th>}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {applicationsQuery.data.map((application) => {
-                const candidate = candidateById.get(application.candidateId);
-                const isTerminal = application.stage === "hired" || application.stage === "rejected";
-                const isAnonymized = candidate?.isAnonymized ?? false;
-                return (
-                  <Table.Tr key={application.id} opacity={isAnonymized ? 0.6 : 1}>
-                    <Table.Td>
-                      <Group gap={6} wrap="nowrap">
-                        <Text>{candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}</Text>
-                        {isAnonymized && (
-                          <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:applications.candidate")}</Table.Th>
+                    <Table.Th>{t("recruitment:applications.appliedAt")}</Table.Th>
+                    <Table.Th>{t("recruitment:applications.stage")}</Table.Th>
+                    {canSubmitForms && <Table.Th>{t("recruitment:applications.forms")}</Table.Th>}
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {applicationsQuery.data.map((application) => {
+                    const candidate = candidateById.get(application.candidateId);
+                    const isTerminal = application.stage === "hired" || application.stage === "rejected";
+                    const isAnonymized = candidate?.isAnonymized ?? false;
+                    return (
+                      <Table.Tr key={application.id} opacity={isAnonymized ? 0.6 : 1}>
+                        <Table.Td>
+                          <Group gap={6} wrap="nowrap">
+                            <Text>{candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}</Text>
+                            {isAnonymized && (
+                              <Tooltip label={t("recruitment:candidates.anonymizedRowHint")}>
+                                <Badge size="sm" color="gray" variant="light">
+                                  {t("recruitment:candidates.anonymized")}
+                                </Badge>
+                              </Tooltip>
+                            )}
+                          </Group>
+                        </Table.Td>
+                        <Table.Td>{formatDateTime(application.appliedAt, i18n.language)}</Table.Td>
+                        <Table.Td className="max-w-[220px]">
+                          {isAnonymized ? (
+                            <Text size="sm" c="dimmed">
+                              {t(`recruitment:applications.stages.${application.stage}`)}
+                            </Text>
+                          ) : (
+                            <Select
+                              data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
+                              value={application.stage}
+                              disabled={!canManageApplications || isTerminal}
+                              allowDeselect={false}
+                              onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
+                            />
+                          )}
+                        </Table.Td>
+                        {canSubmitForms && (
+                          <Table.Td>
+                            <Button
+                              size="xs"
+                              variant="subtle"
+                              leftSection={<ClipboardCheck size={14} />}
+                              onClick={() => {
+                                setFormApplicationId(application.id);
+                                setFormTemplateId(null);
+                                setFormAnswers({});
+                              }}
+                            >
+                              {t("recruitment:applications.fillForm")}
+                            </Button>
+                          </Table.Td>
+                        )}
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {applicationsQuery.data.map((application) => {
+                  const candidate = candidateById.get(application.candidateId);
+                  const isTerminal = application.stage === "hired" || application.stage === "rejected";
+                  const isAnonymized = candidate?.isAnonymized ?? false;
+                  return (
+                    <Card key={application.id} withBorder padding="sm" radius="md" opacity={isAnonymized ? 0.6 : 1}>
+                      <Stack gap={6}>
+                        <Group gap={6} wrap="nowrap" justify="space-between">
+                          <Text fw={500} size="sm">
+                            {candidate ? `${candidate.firstName} ${candidate.lastName}` : "—"}
+                          </Text>
+                          {isAnonymized && (
                             <Badge size="sm" color="gray" variant="light">
                               {t("recruitment:candidates.anonymized")}
                             </Badge>
-                          </Tooltip>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    <Table.Td>{formatDateTime(application.appliedAt, i18n.language)}</Table.Td>
-                    <Table.Td className="max-w-[220px]">
-                      {isAnonymized ? (
-                        <Text size="sm" c="dimmed">
-                          {t(`recruitment:applications.stages.${application.stage}`)}
+                          )}
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          {formatDateTime(application.appliedAt, i18n.language)}
                         </Text>
-                      ) : (
-                        <Select
-                          data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
-                          value={application.stage}
-                          disabled={!canManageApplications || isTerminal}
-                          allowDeselect={false}
-                          onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
-                        />
-                      )}
-                    </Table.Td>
-                    {canSubmitForms && (
-                      <Table.Td>
-                        <Button
-                          size="xs"
-                          variant="subtle"
-                          leftSection={<ClipboardCheck size={14} />}
-                          onClick={() => {
-                            setFormApplicationId(application.id);
-                            setFormTemplateId(null);
-                            setFormAnswers({});
-                          }}
-                        >
-                          {t("recruitment:applications.fillForm")}
-                        </Button>
-                      </Table.Td>
-                    )}
-                  </Table.Tr>
-                );
-              })}
-            </Table.Tbody>
-          </Table>
+                        {isAnonymized ? (
+                          <Badge size="sm" variant="light">
+                            {t(`recruitment:applications.stages.${application.stage}`)}
+                          </Badge>
+                        ) : (
+                          <Select
+                            label={t("recruitment:applications.stage")}
+                            data={APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }))}
+                            value={application.stage}
+                            disabled={!canManageApplications || isTerminal}
+                            allowDeselect={false}
+                            onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
+                          />
+                        )}
+                        {canSubmitForms && (
+                          <Button
+                            size="xs"
+                            variant="subtle"
+                            leftSection={<ClipboardCheck size={14} />}
+                            onClick={() => {
+                              setFormApplicationId(application.id);
+                              setFormTemplateId(null);
+                              setFormAnswers({});
+                            }}
+                          >
+                            {t("recruitment:applications.fillForm")}
+                          </Button>
+                        )}
+                      </Stack>
+                    </Card>
+                  );
+                })}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 

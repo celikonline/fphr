@@ -93,36 +93,82 @@ export default function EmployeeDirectory() {
           </Text>
         ) : (
           <>
-            <Table.ScrollContainer minWidth={600}>
-              <Table highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>{t("employees:columns.name")}</Table.Th>
-                    <Table.Th>{t("employees:columns.orgUnit")}</Table.Th>
-                    <Table.Th>{t("employees:columns.workEmail")}</Table.Th>
-                    <Table.Th>{t("employees:columns.workPhone")}</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {data.items.map((entry) => (
-                    <Table.Tr key={entry.id}>
-                      <Table.Td fw={500}>{entry.displayName}</Table.Td>
-                      <Table.Td>{(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}</Table.Td>
-                      <Table.Td>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table.ScrollContainer minWidth={600}>
+                <Table highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>{t("employees:columns.name")}</Table.Th>
+                      <Table.Th>{t("employees:columns.orgUnit")}</Table.Th>
+                      <Table.Th>{t("employees:columns.workEmail")}</Table.Th>
+                      <Table.Th>{t("employees:columns.workPhone")}</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {data.items.map((entry) => (
+                      <Table.Tr key={entry.id}>
+                        <Table.Td fw={500}>{entry.displayName}</Table.Td>
+                        <Table.Td>{(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}</Table.Td>
+                        <Table.Td>
+                          {entry.workEmail ? (
+                            <Anchor href={`mailto:${entry.workEmail}`} size="sm" c="inherit">
+                              {entry.workEmail}
+                            </Anchor>
+                          ) : (
+                            "—"
+                          )}
+                        </Table.Td>
+                        <Table.Td>{entry.workPhone ?? "—"}</Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            </div>
+
+            {/* Dar ekran (≤390px dahil): kart listesi */}
+            <div className="md:hidden">
+              <Stack gap="sm" p="sm">
+                {data.items.map((entry) => (
+                  <Card key={entry.id} withBorder padding="sm" radius="md">
+                    <Stack gap={2} className="min-w-0">
+                      <Text fw={500} size="sm" truncate>
+                        {entry.displayName}
+                      </Text>
+                      <Text size="xs" c="dimmed" truncate>
+                        {(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}
+                      </Text>
+                    </Stack>
+                    <Stack gap={4} mt="xs">
+                      <Group gap={4} wrap="nowrap">
+                        <Text size="xs" c="dimmed">
+                          {t("employees:columns.workEmail")}:
+                        </Text>
                         {entry.workEmail ? (
-                          <Anchor href={`mailto:${entry.workEmail}`} size="sm" c="inherit">
+                          <Anchor href={`mailto:${entry.workEmail}`} size="xs" c="inherit" truncate>
                             {entry.workEmail}
                           </Anchor>
                         ) : (
-                          "—"
+                          <Text size="xs" c="dimmed">
+                            —
+                          </Text>
                         )}
-                      </Table.Td>
-                      <Table.Td>{entry.workPhone ?? "—"}</Table.Td>
-                    </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
+                      </Group>
+                      <Group gap={4} wrap="nowrap">
+                        <Text size="xs" c="dimmed">
+                          {t("employees:columns.workPhone")}:
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {entry.workPhone ?? "—"}
+                        </Text>
+                      </Group>
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+
             <PaginationFooter result={data} onPageChange={setPage} />
           </>
         )}
