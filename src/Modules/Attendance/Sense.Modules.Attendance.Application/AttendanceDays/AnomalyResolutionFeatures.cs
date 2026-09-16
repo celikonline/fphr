@@ -4,6 +4,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -36,7 +37,8 @@ public sealed class SetWorkedHoursValidator : AbstractValidator<SetWorkedHoursCo
 }
 
 public sealed class SetWorkedHoursHandler(
-    IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser, TimeProvider clock)
+    IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser,
+    IWorkScheduleReadService schedules, IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<SetWorkedHoursCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(SetWorkedHoursCommand command, CancellationToken cancellationToken)
@@ -67,6 +69,7 @@ public sealed class SetWorkedHoursHandler(
 
         resolutions.Add(AnomalyResolution.Create(
             tenant.TenantId, day.Id, anomaly, AnomalyResolutionAction.SetWorkedHours, null, null, currentUser.UserId, clock.GetUtcNow().UtcDateTime));
+        await TimesheetWeekEvaluator.PublishIfCompletedAsync(days, schedules, outbox, tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
         return day.Id;
     }
 }
@@ -76,7 +79,8 @@ public sealed class SetWorkedHoursHandler(
 public sealed record IgnoreAttendanceAnomalyCommand(Guid AttendanceDayId) : ICommand<Guid>;
 
 public sealed class IgnoreAttendanceAnomalyHandler(
-    IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser, TimeProvider clock)
+    IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser,
+    IWorkScheduleReadService schedules, IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<IgnoreAttendanceAnomalyCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(IgnoreAttendanceAnomalyCommand command, CancellationToken cancellationToken)
@@ -102,6 +106,7 @@ public sealed class IgnoreAttendanceAnomalyHandler(
 
         resolutions.Add(AnomalyResolution.Create(
             tenant.TenantId, day.Id, anomaly, AnomalyResolutionAction.Ignore, null, null, currentUser.UserId, clock.GetUtcNow().UtcDateTime));
+        await TimesheetWeekEvaluator.PublishIfCompletedAsync(days, schedules, outbox, tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
         return day.Id;
     }
 }
@@ -120,7 +125,7 @@ public sealed class AddOvertimeFromAnomalyValidator : AbstractValidator<AddOvert
 
 public sealed class AddOvertimeFromAnomalyHandler(
     IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser,
-    ILeaveCommandService leave, TimeProvider clock)
+    ILeaveCommandService leave, IWorkScheduleReadService schedules, IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<AddOvertimeFromAnomalyCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(AddOvertimeFromAnomalyCommand command, CancellationToken cancellationToken)
@@ -162,6 +167,7 @@ public sealed class AddOvertimeFromAnomalyHandler(
 
         resolutions.Add(AnomalyResolution.Create(
             tenant.TenantId, day.Id, anomaly, AnomalyResolutionAction.AddOvertime, LinkedEntityTypes.OvertimeRequest, overtime.Value, currentUser.UserId, clock.GetUtcNow().UtcDateTime));
+        await TimesheetWeekEvaluator.PublishIfCompletedAsync(days, schedules, outbox, tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
         return day.Id;
     }
 }
@@ -176,7 +182,7 @@ public sealed record CreateLeaveRequestFromAnomalyCommand(Guid AttendanceDayId, 
 
 public sealed class CreateLeaveRequestFromAnomalyHandler(
     IAttendanceDayRepository days, IAnomalyResolutionRepository resolutions, IDataScopeService dataScope, ITenantContext tenant, ICurrentUser currentUser,
-    ILeaveCommandService leave, TimeProvider clock)
+    ILeaveCommandService leave, IWorkScheduleReadService schedules, IIntegrationEventOutbox outbox, TimeProvider clock)
     : ICommandHandler<CreateLeaveRequestFromAnomalyCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateLeaveRequestFromAnomalyCommand command, CancellationToken cancellationToken)
@@ -218,6 +224,7 @@ public sealed class CreateLeaveRequestFromAnomalyHandler(
 
         resolutions.Add(AnomalyResolution.Create(
             tenant.TenantId, day.Id, anomaly, AnomalyResolutionAction.CreateLeaveRequest, LinkedEntityTypes.LeaveRequest, leaveRequest.Value, currentUser.UserId, clock.GetUtcNow().UtcDateTime));
+        await TimesheetWeekEvaluator.PublishIfCompletedAsync(days, schedules, outbox, tenant.TenantId, day.EmployeeId, day.Date, cancellationToken);
         return day.Id;
     }
 }

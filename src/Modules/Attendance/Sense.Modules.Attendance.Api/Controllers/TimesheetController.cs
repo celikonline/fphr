@@ -25,6 +25,12 @@ public sealed class TimesheetController : ApiControllerBase
     public async Task<IActionResult> List(Guid employeeId, [FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListAttendanceDaysQuery(employeeId, from, to), ct));
 
+    /// <summary>Haftalık ızgara başlığı (11.3.6 "28 Ekim haftası"): o haftanın tamamlanma durumu.</summary>
+    [HttpGet("employees/{employeeId:guid}/week-summary")]
+    [ProducesResponseType<TimesheetWeekSummaryDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> WeekSummary(Guid employeeId, [FromQuery] DateOnly weekStart, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetTimesheetWeekSummaryQuery(employeeId, weekStart), ct));
+
     [HttpPost("employees/{employeeId:guid}/record")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Record(Guid employeeId, [FromBody] RecordAttendanceRequest request, CancellationToken ct) =>

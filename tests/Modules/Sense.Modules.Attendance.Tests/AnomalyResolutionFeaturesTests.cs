@@ -6,6 +6,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
@@ -28,12 +29,18 @@ public sealed class AnomalyResolutionFeaturesTests
     private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly ILeaveCommandService _leave = Substitute.For<ILeaveCommandService>();
+    private readonly IWorkScheduleReadService _schedules = Substitute.For<IWorkScheduleReadService>();
+    private readonly IIntegrationEventOutbox _outbox = Substitute.For<IIntegrationEventOutbox>();
 
     public AnomalyResolutionFeaturesTests()
     {
         _tenant.TenantId.Returns(_tenantId);
         _currentUser.UserId.Returns(_userId);
         _dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetResolveKey, _employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        _days.ListForEmployeeAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new List<AttendanceDay>());
+        _schedules.GetWorkingDaysAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new List<DateOnly>());
     }
 
     private AttendanceDay UnderworkDay() =>
@@ -49,7 +56,7 @@ public sealed class AnomalyResolutionFeaturesTests
     {
         var day = UnderworkDay();
         ExistingDay(day);
-        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, TimeProvider.System);
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new SetWorkedHoursCommand(day.Id, PlannedMinutes, "Elle düzeltildi"), TestContext.Current.CancellationToken);
 
@@ -64,7 +71,7 @@ public sealed class AnomalyResolutionFeaturesTests
     {
         var day = OverworkDay();
         ExistingDay(day);
-        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, TimeProvider.System);
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new SetWorkedHoursCommand(day.Id, PlannedMinutes, null), TestContext.Current.CancellationToken);
 
@@ -79,7 +86,7 @@ public sealed class AnomalyResolutionFeaturesTests
         var day = UnderworkDay();
         ExistingDay(day);
         _dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetResolveKey, _employeeId, Arg.Any<CancellationToken>()).Returns(false);
-        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, TimeProvider.System);
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new SetWorkedHoursCommand(day.Id, PlannedMinutes, null), TestContext.Current.CancellationToken);
 
@@ -92,7 +99,7 @@ public sealed class AnomalyResolutionFeaturesTests
     {
         var day = OverworkDay();
         ExistingDay(day);
-        var handler = new IgnoreAttendanceAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, TimeProvider.System);
+        var handler = new IgnoreAttendanceAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new IgnoreAttendanceAnomalyCommand(day.Id), TestContext.Current.CancellationToken);
 
@@ -108,7 +115,7 @@ public sealed class AnomalyResolutionFeaturesTests
         ExistingDay(day);
         var overtimeId = Guid.NewGuid();
         _leave.CreateOvertimeRequestAsync(_employeeId, day.Date, new TimeOnly(17, 0), 60, "Fazla mesai", Arg.Any<CancellationToken>()).Returns(overtimeId);
-        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, TimeProvider.System);
+        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new AddOvertimeFromAnomalyCommand(day.Id, new TimeOnly(17, 0), 60, "Fazla mesai"), TestContext.Current.CancellationToken);
 
@@ -125,7 +132,7 @@ public sealed class AnomalyResolutionFeaturesTests
         ExistingDay(day);
         _leave.CreateOvertimeRequestAsync(_employeeId, day.Date, new TimeOnly(17, 0), 60, null, Arg.Any<CancellationToken>())
             .Returns(Error.Forbidden("leave.errors.employee_not_in_scope"));
-        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, TimeProvider.System);
+        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new AddOvertimeFromAnomalyCommand(day.Id, new TimeOnly(17, 0), 60, null), TestContext.Current.CancellationToken);
 
@@ -139,7 +146,7 @@ public sealed class AnomalyResolutionFeaturesTests
     {
         var day = UnderworkDay();
         ExistingDay(day);
-        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, TimeProvider.System);
+        var handler = new AddOvertimeFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new AddOvertimeFromAnomalyCommand(day.Id, new TimeOnly(17, 0), 60, null), TestContext.Current.CancellationToken);
 
@@ -156,7 +163,7 @@ public sealed class AnomalyResolutionFeaturesTests
         var leaveTypeId = Guid.NewGuid();
         var leaveRequestId = Guid.NewGuid();
         _leave.CreateApprovedLeaveAsync(_employeeId, leaveTypeId, day.Date, day.Date, "Az çalışma çünkü izinli", Arg.Any<CancellationToken>()).Returns(leaveRequestId);
-        var handler = new CreateLeaveRequestFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, TimeProvider.System);
+        var handler = new CreateLeaveRequestFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new CreateLeaveRequestFromAnomalyCommand(day.Id, leaveTypeId, "Az çalışma çünkü izinli"), TestContext.Current.CancellationToken);
 
@@ -167,12 +174,42 @@ public sealed class AnomalyResolutionFeaturesTests
     }
 
     [Fact]
+    public async Task SetWorkedHours_LastOpenDayOfWeek_PublishesTimesheetWeekCompleted()
+    {
+        var day = UnderworkDay();
+        ExistingDay(day);
+        _schedules.GetWorkingDaysAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(new List<DateOnly> { day.Date });
+        _days.ListForEmployeeAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(new List<AttendanceDay> { day });
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
+
+        await handler.Handle(new SetWorkedHoursCommand(day.Id, PlannedMinutes, null), TestContext.Current.CancellationToken);
+
+        _outbox.Received(1).Enqueue(Arg.Is<Sense.Modules.Attendance.Contracts.Events.TimesheetWeekCompleted>(e => e.EmployeeId == _employeeId));
+    }
+
+    [Fact]
+    public async Task SetWorkedHours_OtherDayInWeekStillUnresolved_DoesNotPublish()
+    {
+        var day = UnderworkDay();
+        var stillOpen = AttendanceDay.Record(
+            _tenantId, _employeeId, day.Date.AddDays(1), PlannedStart, new TimeOnly(19, 0), PlannedStart, PlannedEnd, PlannedMinutes, 0, AttendanceDaySource.Manual);
+        ExistingDay(day);
+        _schedules.GetWorkingDaysAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(new List<DateOnly> { day.Date, stillOpen.Date });
+        _days.ListForEmployeeAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(new List<AttendanceDay> { day, stillOpen });
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
+
+        await handler.Handle(new SetWorkedHoursCommand(day.Id, PlannedMinutes, null), TestContext.Current.CancellationToken);
+
+        _outbox.DidNotReceive().Enqueue(Arg.Any<Sense.Modules.Attendance.Contracts.Events.TimesheetWeekCompleted>());
+    }
+
+    [Fact]
     public async Task CreateLeaveRequest_AlreadyResolvedDay_Fails()
     {
         var day = UnderworkDay();
         day.ResolveWithOverride(PlannedMinutes, null);
         ExistingDay(day);
-        var handler = new CreateLeaveRequestFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, TimeProvider.System);
+        var handler = new CreateLeaveRequestFromAnomalyHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _leave, _schedules, _outbox, TimeProvider.System);
 
         var result = await handler.Handle(new CreateLeaveRequestFromAnomalyCommand(day.Id, Guid.NewGuid(), null), TestContext.Current.CancellationToken);
 
