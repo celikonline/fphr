@@ -26,7 +26,9 @@
     "all": "[DE] All",
     "hasUserAccount": "[DE] User account",
     "withAccount": "[DE] With account",
-    "withoutAccount": "[DE] Without account"
+    "withoutAccount": "[DE] Without account",
+    "missingInfo": "[DE] Missing info",
+    "missingInfoHint": "[DE] Hired, but the national ID, hire/birth date, unit, contract type or employment type is empty."
   },
   "columns": {
     "name": "[DE] Name",

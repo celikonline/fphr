@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { Anchor, Button, Card, Checkbox, Group, Input, Paper, Select, Switch, Text, TextInput, Title } from "@mantine/core";
+import { Anchor, Badge, Button, Card, Checkbox, Group, Input, Paper, Select, Switch, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { GitBranch, Plus, Search, Users } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
@@ -17,6 +17,7 @@ import { AccountStatusBadge, EmployeeStatusBadge } from "@/components/employees/
 import BulkActionsMenu from "@/components/employees/bulk-actions-menu";
 import { BULK_ACTIONS } from "@/components/employees/bulk-actions";
 import CreateEmployeeDialog from "@/components/employees/create-employee-dialog";
+import { CONTRACT_TYPE_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "@/components/employees/employee-enum-options";
 import EmployeeDirectory from "@/components/employees/employee-directory";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
 import { useOrgUnits } from "@/components/employees/use-org-units";
@@ -61,6 +62,9 @@ function EmployeeGrid() {
   const [includeSubUnits, setIncludeSubUnits] = useState(true);
   const [status, setStatus] = useState(ALL);
   const [account, setAccount] = useState(ALL);
+  const [employmentType, setEmploymentType] = useState(ALL);
+  const [contractType, setContractType] = useState(ALL);
+  const [missingInfo, setMissingInfo] = useState(false);
   const [sort, setSort] = useState<{ field: EmployeeSortField; desc: boolean }>({ field: "displayName", desc: false });
   const [selection, setSelection] = useState<SelectionState>(EMPTY_SELECTION);
   const [createOpen, setCreateOpen] = useState(false);
@@ -78,8 +82,11 @@ function EmployeeGrid() {
       status: status === ALL ? null : status,
       hasUserAccount: account === ALL ? null : account === "yes",
       managerEmployeeId: null,
+      employmentType: employmentType === ALL ? null : employmentType,
+      contractType: contractType === ALL ? null : contractType,
+      missingInfo: missingInfo ? true : null,
     }),
-    [debouncedSearch, orgUnitId, includeSubUnits, status, account]
+    [debouncedSearch, orgUnitId, includeSubUnits, status, account, employmentType, contractType, missingInfo]
   );
 
   // A new filter starts from page 1 with an empty selection (adjusted during render, not in an effect).
@@ -104,6 +111,9 @@ function EmployeeGrid() {
         includeSubUnits: filter.includeSubUnits,
         status: filter.status,
         hasUserAccount: filter.hasUserAccount,
+        employmentType: filter.employmentType,
+        contractType: filter.contractType,
+        missingInfo: filter.missingInfo,
       }),
     placeholderData: (previous) => previous,
   });
@@ -214,9 +224,18 @@ function EmployeeGrid() {
       header: t("employees:columns.name"),
       meta: { label: t("employees:columns.name") },
       cell: ({ row }) => (
-        <Text size="sm" fw={500}>
-          {row.original.displayName}
-        </Text>
+        <Group gap="xs" wrap="nowrap">
+          <Text size="sm" fw={500}>
+            {row.original.displayName}
+          </Text>
+          {row.original.hasMissingInfo && (
+            <Tooltip label={t("employees:filters.missingInfoHint")}>
+              <Badge size="xs" variant="light" color="orange">
+                {t("employees:filters.missingInfo")}
+              </Badge>
+            </Tooltip>
+          )}
+        </Group>
       ),
     },
     {
@@ -285,7 +304,8 @@ function EmployeeGrid() {
     queryClient.invalidateQueries({ queryKey: ["employees"] });
   }
 
-  const hasActiveFilters = filter.q || filter.orgUnitId || filter.status || filter.hasUserAccount !== null;
+  const hasActiveFilters =
+    filter.q || filter.orgUnitId || filter.status || filter.hasUserAccount !== null || filter.employmentType || filter.contractType || filter.missingInfo;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
@@ -364,6 +384,40 @@ function EmployeeGrid() {
             { value: "no", label: t("employees:filters.withoutAccount") },
           ]}
         />
+        <Select
+          id="emp-filter-employmentType"
+          w={176}
+          label={t("employees:fields.employmentType")}
+          styles={FILTER_LABEL_STYLES}
+          value={employmentType}
+          onChange={(value) => setEmploymentType(value ?? ALL)}
+          allowDeselect={false}
+          data={[
+            { value: ALL, label: t("employees:filters.all") },
+            ...EMPLOYMENT_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.employmentType.${option}`) })),
+          ]}
+        />
+        <Select
+          id="emp-filter-contractType"
+          w={176}
+          label={t("employees:fields.contractType")}
+          styles={FILTER_LABEL_STYLES}
+          value={contractType}
+          onChange={(value) => setContractType(value ?? ALL)}
+          allowDeselect={false}
+          data={[
+            { value: ALL, label: t("employees:filters.all") },
+            ...CONTRACT_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.contractType.${option}`) })),
+          ]}
+        />
+        <div className="flex h-9 items-center">
+          <Switch
+            id="emp-filter-missingInfo"
+            checked={missingInfo}
+            onChange={(e) => setMissingInfo(e.currentTarget.checked)}
+            label={t("employees:filters.missingInfo")}
+          />
+        </div>
         <DataTableViewOptions table={table} className="ml-auto" />
       </Group>
 

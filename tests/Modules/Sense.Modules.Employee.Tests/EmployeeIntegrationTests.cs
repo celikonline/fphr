@@ -255,6 +255,42 @@ public sealed class EmployeeIntegrationTests : TestFixture
         result.ShouldContain(new DepartmentDistributionItemDto(null, null, 1));
     }
 
+    /// <summary>Grid filters and the "Eksik bilgi" badge (Faz 1a E7): employment/contract type filters and the completeness flag.</summary>
+    [Fact]
+    public async Task List_FiltersByEmploymentAndContractType_AndFlagsIncompleteRecords()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var units = await SeedOrgUnitsAsync(tenantId);
+        var hireDate = new DateOnly(2024, 5, 1);
+
+        // Everything filled in: no badge.
+        var complete = await ExecuteCommandAsync(new CreateEmployeeCommand(
+            "Tam", "Kayıt", Tckn.Next(), null, null, null, hireDate, new DateOnly(1990, 1, 1), units.Sales, null,
+            ContractType: ContractType.Indefinite, EmploymentType: EmploymentType.FullTime));
+
+        // Hired but missing the birth date, unit, contract and employment type.
+        var incomplete = await ExecuteCommandAsync(new CreateEmployeeCommand("Eksik", "Kayıt", Tckn.Next(), null, null, null, hireDate, null, null, null));
+
+        // Draft (quick add): knowingly incomplete, never flagged.
+        var draft = await ExecuteCommandAsync(new CreateEmployeeCommand("Taslak", "Kayıt", null, null, null, null, null, null, null, null));
+
+        var rows = await ListAsync();
+        rows.Single(e => e.Id == complete.Value.Id).HasMissingInfo.ShouldBeFalse();
+        rows.Single(e => e.Id == incomplete.Value.Id).HasMissingInfo.ShouldBeTrue();
+        rows.Single(e => e.Id == draft.Value.Id).HasMissingInfo.ShouldBeFalse();
+        rows.Single(e => e.Id == complete.Value.Id).EmploymentType.ShouldBe(EmploymentType.FullTime);
+
+        (await ListAsync(filter: Filter(missingInfo: true))).Select(e => e.Id).ShouldBe([incomplete.Value.Id]);
+        (await ListAsync(filter: Filter(missingInfo: false))).Select(e => e.Id).ShouldBe([complete.Value.Id, draft.Value.Id], ignoreOrder: true);
+        (await ListAsync(filter: Filter(employmentType: "fullTime"))).Select(e => e.Id).ShouldBe([complete.Value.Id]);
+        (await ListAsync(filter: Filter(contractType: "indefinite"))).Select(e => e.Id).ShouldBe([complete.Value.Id]);
+        (await ListAsync(filter: Filter(employmentType: "partTime"))).ShouldBeEmpty();
+
+        // An unparsable enum is ignored rather than failing the whole list.
+        (await ListAsync(filter: Filter(employmentType: "bilinmeyen"))).Count.ShouldBe(3);
+    }
+
     [Fact]
     public async Task Detail_ResolvesDepartmentAndTitleNamesFromOrgPlacement()
     {
@@ -396,8 +432,16 @@ public sealed class EmployeeIntegrationTests : TestFixture
         return result.Value.Items;
     }
 
-    private static EmployeeFilter Filter(Guid? orgUnitId = null, bool includeSubUnits = false, string? status = null, bool? hasUserAccount = null, Guid? managerId = null) =>
-        new(null, orgUnitId, includeSubUnits, status, hasUserAccount, managerId);
+    private static EmployeeFilter Filter(
+        Guid? orgUnitId = null,
+        bool includeSubUnits = false,
+        string? status = null,
+        bool? hasUserAccount = null,
+        Guid? managerId = null,
+        string? employmentType = null,
+        string? contractType = null,
+        bool? missingInfo = null) =>
+        new(null, orgUnitId, includeSubUnits, status, hasUserAccount, managerId, employmentType, contractType, missingInfo);
 
     private static CreateEmployeeCommand NewCreate(string firstName, string lastName, string? nationalId = null, Guid? orgUnitId = null, Guid? managerId = null, string? workEmail = null) =>
         new(firstName, lastName, nationalId, workEmail, null, null, null, null, orgUnitId, managerId);

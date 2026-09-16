@@ -47,13 +47,25 @@ public sealed class EmployeeSelectionResolver(IEmployeeReadStore store, IOrgUnit
                 : [orgUnitId];
         }
 
+        // Unknown enum text is ignored rather than rejected: the grid's own selects can only send valid values, and a
+        // hand-written query string should not 400 the whole list.
+        var employmentType = Enum.TryParse<EmploymentType>(filter.EmploymentType, ignoreCase: true, out var parsedEmployment) && Enum.IsDefined(parsedEmployment)
+            ? parsedEmployment
+            : (EmploymentType?)null;
+        var contractType = Enum.TryParse<ContractType>(filter.ContractType, ignoreCase: true, out var parsedContract) && Enum.IsDefined(parsedContract)
+            ? parsedContract
+            : (ContractType?)null;
+
         return new EmployeeCriteria(
             Q: filter.Q,
             OrgUnitIds: orgUnitIds,
             Status: status,
             HasUserAccount: filter.HasUserAccount,
             ManagerEmployeeId: filter.ManagerEmployeeId,
-            VisibleIds: visible);
+            VisibleIds: visible,
+            EmploymentType: employmentType,
+            ContractType: contractType,
+            MissingInfo: filter.MissingInfo);
     }
 
     public async Task<IReadOnlyList<Guid>> ResolveAsync(Guid tenantId, EmployeeSelection selection, string permission, CancellationToken ct)

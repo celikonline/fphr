@@ -16,7 +16,21 @@ public sealed record EmployeeCriteria(
     Guid? ManagerEmployeeId = null,
     IReadOnlySet<Guid>? VisibleIds = null,
     bool ActiveOnly = false,
-    bool SearchNationalId = true);
+    bool SearchNationalId = true,
+    EmploymentType? EmploymentType = null,
+    ContractType? ContractType = null,
+    bool? MissingInfo = null);
+
+/// <summary>
+/// "Eksik bilgi" (11.3.03 E7): the personnel fields an employee record is expected to carry once it is real. A Draft
+/// row (quick-add, no hire date yet) is not flagged - it is knowingly incomplete until someone hires them.
+/// </summary>
+public static class EmployeeCompleteness
+{
+    public static bool IsMissingInfo(EmployeeRow e) =>
+        e.Status != EmployeeStatus.Draft &&
+        (e.NationalId is null || e.HireDate is null || e.BirthDate is null || e.OrgUnitId is null || e.ContractType is null || e.EmploymentType is null);
+}
 
 /// <summary>Flat read model of an employee row.</summary>
 public sealed record EmployeeRow(

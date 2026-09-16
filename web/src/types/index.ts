@@ -58,6 +58,10 @@ export interface EmployeeFilter {
   status?: string | null;
   hasUserAccount?: boolean | null;
   managerEmployeeId?: string | null;
+  employmentType?: string | null;
+  contractType?: string | null;
+  /** "Eksik bilgi": true lists only incomplete records, false only complete ones. */
+  missingInfo?: boolean | null;
 }
 
 /**

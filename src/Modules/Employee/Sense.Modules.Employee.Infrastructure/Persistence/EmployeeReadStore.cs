@@ -142,6 +142,26 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
             query = query.Where(e => e.ManagerEmployeeId == managerId);
         }
 
+        if (c.EmploymentType is { } employmentType)
+        {
+            query = query.Where(e => e.EmploymentType == employmentType);
+        }
+
+        if (c.ContractType is { } contractType)
+        {
+            query = query.Where(e => e.ContractType == contractType);
+        }
+
+        // "Eksik bilgi": mirrors EmployeeCompleteness.IsMissingInfo, which the DTO uses for the badge.
+        if (c.MissingInfo is { } missingInfo)
+        {
+            query = missingInfo
+                ? query.Where(e => e.Status != EmployeeStatus.Draft &&
+                    (e.NationalId == null || e.HireDate == null || e.BirthDate == null || e.OrgUnitId == null || e.ContractType == null || e.EmploymentType == null))
+                : query.Where(e => e.Status == EmployeeStatus.Draft ||
+                    (e.NationalId != null && e.HireDate != null && e.BirthDate != null && e.OrgUnitId != null && e.ContractType != null && e.EmploymentType != null));
+        }
+
         if (!string.IsNullOrWhiteSpace(c.Q))
         {
             var pattern = ContainsPattern(c.Q);

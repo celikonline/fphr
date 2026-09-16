@@ -19,7 +19,11 @@ public sealed record EmployeeListItemDto(
     string? ManagerDisplayName,
     Guid? UserId,
     UserAccountStatus AccountStatus,
-    DateOnly? HireDate);
+    DateOnly? HireDate,
+    ContractType? ContractType = null,
+    EmploymentType? EmploymentType = null,
+    // "Eksik bilgi" badge (EmployeeCompleteness.IsMissingInfo): a non-draft record with an unfilled personnel field.
+    bool HasMissingInfo = false);
 
 /// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). DepartmentName/TitleName are resolved from the org placement chain (Department/Title levels) so callers without organization.units.read still see them. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(

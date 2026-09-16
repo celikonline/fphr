@@ -109,6 +109,13 @@ public sealed record EmployeeListFilterRequest
     public bool? HasUserAccount { get; init; }
 
     public Guid? ManagerEmployeeId { get; init; }
+
+    public string? EmploymentType { get; init; }
+
+    public string? ContractType { get; init; }
+
+    /// <summary>"Eksik bilgi": true lists only records with an unfilled personnel field, false only complete ones.</summary>
+    public bool? MissingInfo { get; init; }
 }
 
 public sealed record BulkAssignManagerRequest(EmployeeSelection Selection, Guid ManagerEmployeeId);
@@ -124,7 +131,9 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<PagedResult<EmployeeListItemDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] PagedQuery paging, [FromQuery] EmployeeListFilterRequest filter, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(
-            new ListEmployeesQuery(paging, new EmployeeFilter(paging.Q, filter.OrgUnitId, filter.IncludeSubUnits, filter.Status, filter.HasUserAccount, filter.ManagerEmployeeId)),
+            new ListEmployeesQuery(paging, new EmployeeFilter(
+                paging.Q, filter.OrgUnitId, filter.IncludeSubUnits, filter.Status, filter.HasUserAccount, filter.ManagerEmployeeId,
+                filter.EmploymentType, filter.ContractType, filter.MissingInfo)),
             ct));
 
     /// <summary>The caller's own employee card (404 when the caller has no employee record).</summary>

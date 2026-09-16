@@ -1,7 +1,20 @@
 namespace Sense.Modules.Employee.Contracts;
 
 /// <summary>Employee grid filter; also the "select all matching" part of an <see cref="EmployeeSelection"/>.</summary>
-public sealed record EmployeeFilter(string? Q, Guid? OrgUnitId, bool IncludeSubUnits, string? Status, bool? HasUserAccount, Guid? ManagerEmployeeId);
+/// <summary>
+/// Employee grid filters. <paramref name="EmploymentType"/>/<paramref name="ContractType"/> are the camelCase enum
+/// names the API serializes; <paramref name="MissingInfo"/> is the "Eksik bilgi" switch (see EmployeeCriteria).
+/// </summary>
+public sealed record EmployeeFilter(
+    string? Q,
+    Guid? OrgUnitId,
+    bool IncludeSubUnits,
+    string? Status,
+    bool? HasUserAccount,
+    Guid? ManagerEmployeeId,
+    string? EmploymentType = null,
+    string? ContractType = null,
+    bool? MissingInfo = null);
 
 /// <summary>
 /// Grid selection. "Tümünü seç": Filter set + EmployeeIds null => every employee matching the filter (within the caller's

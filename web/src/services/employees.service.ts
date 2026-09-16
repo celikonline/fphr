@@ -57,6 +57,10 @@ export interface EmployeeListItem {
   userId: string | null;
   accountStatus: UserAccountStatus;
   hireDate: string | null;
+  contractType: ContractType | null;
+  employmentType: EmploymentType | null;
+  /** "Eksik bilgi" badge: a hired record with an unfilled personnel field (drafts are never flagged). */
+  hasMissingInfo: boolean;
 }
 
 /**

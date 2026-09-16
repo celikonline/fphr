@@ -64,7 +64,10 @@ public sealed class ListEmployeesHandler(
             e.ManagerEmployeeId is { } m ? managerNames.GetValueOrDefault(m) : null,
             e.UserId,
             e.UserId is { } u && accountInfo.TryGetValue(u, out var info) ? info.Status : UserAccountStatus.None,
-            e.HireDate));
+            e.HireDate,
+            e.ContractType,
+            e.EmploymentType,
+            EmployeeCompleteness.IsMissingInfo(e)));
     }
 }
 
