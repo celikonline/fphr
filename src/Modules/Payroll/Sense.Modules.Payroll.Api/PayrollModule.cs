@@ -13,8 +13,9 @@ using Sense.Shared.Infrastructure.DependencyInjection;
 namespace Sense.Modules.Payroll.Api;
 
 /// <summary>
-/// Payroll module composition root (Faz 3 P0/P1): golden-set calculation engine only this slice - no API endpoints
-/// yet (profile/period/trace screens are P2+/P8), so this registers DbContext + repositories + permissions.
+/// Payroll module composition root (Faz 3 P0-P2): calculation engine, payroll periods/payslips and the
+/// EmployeePayrollProfile CRUD handlers - no API endpoints yet (screens are P8), so this registers
+/// DbContext + repositories + permissions for other modules/tests to call the handlers directly.
 /// </summary>
 public sealed class PayrollModule : IModule
 {

@@ -23,4 +23,6 @@ public sealed record PayrollLegislationSnapshot(
     decimal MealIncomeTaxDailyExemption,
     /// <summary>Fraction of the daily gross minimum wage that is SGK-exempt for cash/meal-card meal benefits.</summary>
     decimal MealSgkDailyExemptionRate,
+    /// <summary>Whether the meal+market card variant gets the same exemption as Cash/MealCardOnly (11.3.07-bordro.md "Meal.MarketCard.ExemptionApplies"; current draft: false, fully taxed).</summary>
+    bool MealMarketCardExemptionApplies,
     DateOnly AsOf);

@@ -11,8 +11,8 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// caller, not this calculator: a real <c>IAttendanceInputProvider</c>-shaped port would just resolve this value.
 /// </param>
 /// <param name="CalendarDaysInMonth">Days in the period's calendar month (used for daily-rate display and meal exemption pro-ration).</param>
-/// <param name="MealVariant">Only <see cref="MealBenefitVariant.None"/> and <see cref="MealBenefitVariant.Cash"/> are implemented this slice.</param>
-/// <param name="MealDailyAmount">Cash meal benefit paid per worked day; ignored unless <paramref name="MealVariant"/> is Cash.</param>
+/// <param name="MealVariant">Which of the 4 meal benefit shapes applies (11.3.07-bordro.md "Yemek ödemesi 4 varyantı"); all are implemented (P2).</param>
+/// <param name="MealDailyAmount">Meal benefit paid per worked day; ignored (treated as 0) unless <paramref name="MealVariant"/> requires one (Cash/MealCardOnly/MealAndMarketCard).</param>
 /// <param name="PriorCumulativeGvBase">Sum of GV_BASE from earlier months in the same calendar year (0 for a first-month/single-month case).</param>
 /// <param name="AsOfDate">Reference date for resolving which LegislationParameter row applies (ADR 0008); normally the period's month.</param>
 public sealed record PayrollCalculationInput(

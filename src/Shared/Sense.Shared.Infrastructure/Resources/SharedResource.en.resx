@@ -646,6 +646,15 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Worked days must be greater than zero.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>This meal benefit variant is not supported yet.</value></data>
 
+  <!-- Payroll (Faz 3 P2): payroll profile (EmployeePayrollProfile) -->
+  <data name="payroll.profile.not_found" xml:space="preserve"><value>Payroll profile not found.</value></data>
+  <data name="payroll.errors.profile_date_range_invalid" xml:space="preserve"><value>The valid-from date cannot be after the valid-to date.</value></data>
+  <data name="payroll.errors.profile_sgk_workplace_required" xml:space="preserve"><value>An SGK workplace must be selected.</value></data>
+  <data name="payroll.errors.profile_meal_amount_invalid" xml:space="preserve"><value>The daily meal benefit amount is invalid for this variant.</value></data>
+  <data name="payroll.errors.profile_overlap" xml:space="preserve"><value>The employee already has another payroll profile covering this date range.</value></data>
+  <data name="payroll.errors.profile_external_code_too_long" xml:space="preserve"><value>The external payroll employee code is too long.</value></data>
+  <data name="payroll.errors.profile_notes_too_long" xml:space="preserve"><value>The note is too long.</value></data>
+
   <!-- Recruitment (Faz 6 R0): job posting/candidate/application core -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>View Job Postings</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>Create Job Posting</value></data>
@@ -683,6 +692,11 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
   <data name="attendance.day.not_found" xml:space="preserve"><value>Attendance day not found.</value></data>
+  <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>This day has no anomaly to resolve.</value></data>
+  <data name="attendance.day.already_resolved" xml:space="preserve"><value>This day has already been resolved or ignored.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>This action is not valid for the day's anomaly type.</value></data>
+  <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Resolve timesheet anomalies</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>

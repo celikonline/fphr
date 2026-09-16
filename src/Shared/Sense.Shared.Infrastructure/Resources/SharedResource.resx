@@ -655,6 +655,15 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Çalışılan gün sayısı sıfırdan büyük olmalıdır.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>Bu yemek ödemesi varyantı henüz desteklenmiyor.</value></data>
 
+  <!-- Payroll (Faz 3 P2): bordro parametresi (EmployeePayrollProfile) -->
+  <data name="payroll.profile.not_found" xml:space="preserve"><value>Bordro parametresi bulunamadı.</value></data>
+  <data name="payroll.errors.profile_date_range_invalid" xml:space="preserve"><value>Geçerlilik başlangıç tarihi bitiş tarihinden sonra olamaz.</value></data>
+  <data name="payroll.errors.profile_sgk_workplace_required" xml:space="preserve"><value>SGK işyeri seçilmelidir.</value></data>
+  <data name="payroll.errors.profile_meal_amount_invalid" xml:space="preserve"><value>Yemek ödemesi günlük tutarı bu varyant için geçersiz.</value></data>
+  <data name="payroll.errors.profile_overlap" xml:space="preserve"><value>Bu tarih aralığında çalışan için başka bir bordro parametresi zaten var.</value></data>
+  <data name="payroll.errors.profile_external_code_too_long" xml:space="preserve"><value>Dış bordro personel kodu çok uzun.</value></data>
+  <data name="payroll.errors.profile_notes_too_long" xml:space="preserve"><value>Not çok uzun.</value></data>
+
   <!-- Recruitment (Faz 6 R0): ilan/aday/başvuru çekirdeği -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>İlanları görüntüleme</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>İlan oluşturma</value></data>
@@ -693,7 +702,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
   <data name="attendance.day.not_found" xml:space="preserve"><value>Puantaj kaydı bulunamadı.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
+  <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>Bu günde çözülecek bir uyuşmazlık yok.</value></data>
+  <data name="attendance.day.already_resolved" xml:space="preserve"><value>Bu gün zaten çözüldü veya görmezden gelindi.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Çalışılan süre negatif olamaz.</value></data>
+  <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>Bu aksiyon, günün uyuşmazlık türü için uygun değil.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
+  <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Puantaj uyuşmazlıklarını çözme</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Puantaj</value></data>

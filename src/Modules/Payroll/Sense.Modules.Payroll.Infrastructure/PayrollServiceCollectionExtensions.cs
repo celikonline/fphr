@@ -19,6 +19,7 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IPayrollPeriodRepository, PayrollPeriodRepository>();
         services.AddScoped<IPayslipRepository, PayslipRepository>();
         services.AddScoped<IPayslipCalculationTraceRepository, PayslipCalculationTraceRepository>();
+        services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         return services;
     }
 }

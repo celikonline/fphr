@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
+using Sense.Modules.Payroll.Domain.Profiles;
 
 namespace Sense.Modules.Payroll.Infrastructure.Persistence;
 
@@ -35,5 +36,27 @@ public sealed class PayslipCalculationTraceRepository(PayrollDbContext context) 
         await context.CalculationTraces
             .Where(t => t.PayslipId == payslipId)
             .OrderByDescending(t => t.Version)
+            .FirstOrDefaultAsync(cancellationToken);
+}
+
+public sealed class EmployeePayrollProfileRepository(PayrollDbContext context) : IEmployeePayrollProfileRepository
+{
+    public void Add(EmployeePayrollProfile profile) => context.EmployeePayrollProfiles.Add(profile);
+
+    public void Remove(EmployeePayrollProfile profile) => context.EmployeePayrollProfiles.Remove(profile);
+
+    public async Task<EmployeePayrollProfile?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.EmployeePayrollProfiles.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayrollProfile>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.EmployeePayrollProfiles
+            .Where(p => p.EmployeeId == employeeId)
+            .OrderByDescending(p => p.ValidFrom)
+            .ToListAsync(cancellationToken);
+
+    public async Task<EmployeePayrollProfile?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default) =>
+        await context.EmployeePayrollProfiles
+            .Where(p => p.EmployeeId == employeeId && p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
+            .OrderByDescending(p => p.ValidFrom)
             .FirstOrDefaultAsync(cancellationToken);
 }

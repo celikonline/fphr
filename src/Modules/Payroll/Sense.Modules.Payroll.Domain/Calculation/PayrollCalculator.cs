@@ -6,9 +6,9 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// <summary>
 /// Pure gross-to-net payroll engine (11.3.7 "Hesap turnusolu") for one monthly-salaried employee, one month, full
 /// worked days (no Attendance input yet - see <see cref="PayrollCalculationInput.WorkedDays"/>), no variable pay
-/// items (FM/adjustments: P3/P4), Cash meal benefit only (other 3 variants: P2). No DB access - all statutory values
-/// come in via <see cref="PayrollLegislationSnapshot"/>, resolved by the Application layer from
-/// <c>ILegislationParameterReader</c> (ADR 0008). NET_TO_GROSS_ITER is out of scope for this slice.
+/// items (FM/adjustments: P3/P4). All 4 meal benefit variants are supported (P2, 11.3.07-bordro.md "Yemek varyant
+/// kuralları"). No DB access - all statutory values come in via <see cref="PayrollLegislationSnapshot"/>, resolved by
+/// the Application layer from <c>ILegislationParameterReader</c> (ADR 0008). NET_TO_GROSS_ITER is out of scope for this slice.
 ///
 /// Minimum-wage exemption design decision (11.3.7 "MINWAGE_EXEMPTION_GV/DV"): rather than seeding separate
 /// Payroll.MinimumWage.MonthlyIncomeTaxExemption / MonthlyStampTaxExemption parameters, both exemptions are DERIVED
@@ -23,10 +23,9 @@ public static class PayrollCalculator
     {
         Guard.Against(input.GrossMonthlySalary <= 0m, "GrossMonthlySalary must be positive.");
         Guard.Positive(input.WorkedDays, nameof(input.WorkedDays));
-        if (input.MealVariant is not (MealBenefitVariant.None or MealBenefitVariant.Cash))
+        if (!Enum.IsDefined(input.MealVariant))
         {
-            throw new NotSupportedException(
-                $"Meal benefit variant '{input.MealVariant}' is not implemented in the P1 calculation engine; only None and Cash are (deferred to P2, faz3-durum-takibi.md).");
+            throw new NotSupportedException($"Meal benefit variant '{input.MealVariant}' is not a known value.");
         }
 
         var steps = new List<TraceStep>();
@@ -48,14 +47,39 @@ public static class PayrollCalculator
             "gross (maktu aylık ücret; değişken kalem yok - FM/ek ödeme P4 kapsamı)",
             gross, []));
 
-        // Meal benefit (Cash only): exemption split, worked-day pro-rated.
-        var mealTotal = input.MealVariant == MealBenefitVariant.Cash ? input.MealDailyAmount * days : 0m;
-        var dailyGrossMinimumWage = p.MinimumWageGross / input.CalendarDaysInMonth;
-        var mealSgkExemptDaily = p.MealSgkDailyExemptionRate * dailyGrossMinimumWage;
-        var mealSgkExemptTotal = Math.Min(mealTotal, mealSgkExemptDaily * days);
-        var mealSgkExcess = mealTotal - mealSgkExemptTotal;
-        var mealGvExemptTotal = Math.Min(mealTotal, p.MealIncomeTaxDailyExemption * days);
-        var mealGvExcess = mealTotal - mealGvExemptTotal;
+        // Meal benefit (11.3.07-bordro.md "Yemek varyant kuralları", worked-day pro-rated):
+        //  - None: no amount, no effect.
+        //  - Cash/MealCardOnly: daily-exemption split (GV: fixed daily amount; SGK: rate * daily gross minimum wage),
+        //    excess above exemption joins the base; the full amount is paid in net.
+        //  - InKind: fully outside both bases (informational only) and not paid in cash (employer provides the meal
+        //    directly, no cash reaches the employee) - so it does not add to Net either.
+        //  - MealAndMarketCard: paid in net like Cash, but the exemption only applies if the legislation snapshot
+        //    says so (current draft: it does not, so the whole amount joins both bases).
+        var paysCash = input.MealVariant is MealBenefitVariant.Cash or MealBenefitVariant.MealCardOnly or MealBenefitVariant.MealAndMarketCard;
+        var mealTotal = paysCash ? input.MealDailyAmount * days : 0m;
+        decimal mealSgkExcess;
+        decimal mealGvExcess;
+        if (input.MealVariant == MealBenefitVariant.InKind)
+        {
+            mealSgkExcess = 0m;
+            mealGvExcess = 0m;
+        }
+        else if (input.MealVariant == MealBenefitVariant.MealAndMarketCard && !p.MealMarketCardExemptionApplies)
+        {
+            mealSgkExcess = mealTotal;
+            mealGvExcess = mealTotal;
+        }
+        else
+        {
+            var dailyGrossMinimumWage = p.MinimumWageGross / input.CalendarDaysInMonth;
+            var mealSgkExemptDaily = p.MealSgkDailyExemptionRate * dailyGrossMinimumWage;
+            var mealSgkExemptTotal = Math.Min(mealTotal, mealSgkExemptDaily * days);
+            mealSgkExcess = mealTotal - mealSgkExemptTotal;
+            var mealGvExemptTotal = Math.Min(mealTotal, p.MealIncomeTaxDailyExemption * days);
+            mealGvExcess = mealTotal - mealGvExemptTotal;
+        }
+
+        var mealNetAddition = input.MealVariant == MealBenefitVariant.InKind ? 0m : mealTotal;
 
         // SGK_BASE
         var sgkBase = Math.Clamp(gross + mealSgkExcess, p.SgkFloor, p.SgkCeiling);
@@ -157,12 +181,12 @@ public static class PayrollCalculator
             0m, []));
 
         // NET
-        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealTotal);
+        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Net, "payroll.trace.step.net",
             Map(("gross", gross), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee),
-                ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption), ("mealCashNet", mealTotal)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit yemek",
+                ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption), ("mealNetAddition", mealNetAddition)),
+            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç)",
             net, []));
 
         // EMPLOYER_SGK

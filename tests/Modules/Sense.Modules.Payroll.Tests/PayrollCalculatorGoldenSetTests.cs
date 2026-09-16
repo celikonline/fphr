@@ -32,6 +32,9 @@ public sealed class PayrollCalculatorGoldenSetTests
     private const decimal MealIncomeTaxDailyExemption = 240.00m;
     private const decimal MealSgkDailyExemptionRate = 0.2365m;
 
+    /// <summary>Current draft (LegislationParameterSeed id 39): the meal+market card variant is NOT exempt.</summary>
+    private const bool MealMarketCardExemptionApplies = false;
+
     /// <summary>2026 draft brackets (15/20/27/35/40), same shape as the seeded Payroll.IncomeTax.Brackets JSON.</summary>
     private static readonly PayrollLegislationSnapshot Snapshot = new(
         [
@@ -52,6 +55,7 @@ public sealed class PayrollCalculatorGoldenSetTests
         MinimumWageGross,
         MealIncomeTaxDailyExemption,
         MealSgkDailyExemptionRate,
+        MealMarketCardExemptionApplies,
         AsOf);
 
     [Fact]
@@ -153,11 +157,61 @@ public sealed class PayrollCalculatorGoldenSetTests
     }
 
     [Fact]
-    public void UnsupportedMealVariant_Throws()
+    public void InKindMeal_IsInformationalOnly_LeavesBasesAndNetUnchanged()
     {
-        // InKind/MealCardOnly/MealAndMarketCard are deferred to P2 (faz3-durum-takibi.md); Calculate must fail loudly
-        // rather than silently mis-price them.
-        var input = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.InKind, 100m, 0m, AsOf);
+        // Ayni yemek (11.3.07-bordro.md "ayni → SGK ve GV matrahı dışında, tutarsız, bilgi kalemi"): the employer
+        // provides the meal directly, so no cash reaches the employee and the daily amount does not move any base.
+        var noMealInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var inKindInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.InKind, 200m, 0m, AsOf);
+
+        var noMeal = PayrollCalculator.Calculate(noMealInput, Snapshot);
+        var inKind = PayrollCalculator.Calculate(inKindInput, Snapshot);
+
+        inKind.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(noMeal.Step(PayrollTraceStepCodes.SgkBase).Output);
+        inKind.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(noMeal.Step(PayrollTraceStepCodes.GvBase).Output);
+        inKind.NetAmount.ShouldBe(noMeal.NetAmount);
+    }
+
+    [Fact]
+    public void MealCardOnly_WithinExemption_BehavesLikeCash()
+    {
+        // "nakit ve yalnız yemek kartı" share the same exemption rule (11.3.07-bordro.md) - same numbers as the
+        // existing Cash-within-exemption case, just paid via card instead of cash.
+        const decimal mealDailyAmount = 200m;
+        var cashInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.Cash, mealDailyAmount, 0m, AsOf);
+        var cardInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.MealCardOnly, mealDailyAmount, 0m, AsOf);
+
+        var cash = PayrollCalculator.Calculate(cashInput, Snapshot);
+        var card = PayrollCalculator.Calculate(cardInput, Snapshot);
+
+        card.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(cash.Step(PayrollTraceStepCodes.SgkBase).Output);
+        card.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(cash.Step(PayrollTraceStepCodes.GvBase).Output);
+        card.NetAmount.ShouldBe(cash.NetAmount);
+    }
+
+    [Fact]
+    public void MealAndMarketCard_ExemptionNotApplied_EntersBothBasesButStillPaidInNet()
+    {
+        // Yemek+market kartı, mevcut taslak parametreyle (Meal.MarketCard.ExemptionApplies=false, id 39): tamamı SGK
+        // ve GV matrahına girer (istisna yok) ama yine de net'e nakit yemek gibi eklenir (kart yüklemesi de bir ödeme).
+        const decimal mealDailyAmount = 200m;
+        var mealTotal = mealDailyAmount * WorkedDays; // 6,000
+        var noMealInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var marketCardInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.MealAndMarketCard, mealDailyAmount, 0m, AsOf);
+
+        var noMeal = PayrollCalculator.Calculate(noMealInput, Snapshot);
+        var marketCard = PayrollCalculator.Calculate(marketCardInput, Snapshot);
+
+        // SGK_BASE = clamp(200,000 + 6,000, floor, ceiling) = 206,000 (no exemption, full amount is excess).
+        marketCard.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(noMeal.Step(PayrollTraceStepCodes.SgkBase).Output + mealTotal);
+        marketCard.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBeGreaterThan(noMeal.Step(PayrollTraceStepCodes.GvBase).Output);
+        marketCard.NetAmount.ShouldBeGreaterThan(noMeal.NetAmount);
+    }
+
+    [Fact]
+    public void UnknownMealVariant_Throws()
+    {
+        var input = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, (MealBenefitVariant)99, 100m, 0m, AsOf);
 
         Should.Throw<NotSupportedException>(() => PayrollCalculator.Calculate(input, Snapshot));
     }

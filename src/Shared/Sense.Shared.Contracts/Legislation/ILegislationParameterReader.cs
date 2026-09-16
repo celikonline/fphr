@@ -108,6 +108,9 @@ public static class LegislationParameterKeys
     public const string PayrollMealIncomeTaxDailyExemption = "Payroll.Meal.IncomeTax.DailyExemption";
     public const string PayrollMealSgkDailyExemptionRate = "Payroll.Meal.Sgk.DailyExemptionRate";
 
+    /// <summary>Faz 3 P2 (11.3.07-bordro.md "Yemek varyant kuralları"): 0/1 decimal, whether the meal+market card variant gets the Cash/MealCardOnly exemption.</summary>
+    public const string PayrollMealMarketCardExemptionApplies = "Payroll.Meal.MarketCard.ExemptionApplies";
+
     // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"). Seeded via a Leave migration
     // (ADR 0008: single owner table leave.legislation_parameters) - Employee only reads them through this reader.
     public const string JobSecurityMinHeadcount = "JobSecurity.MinHeadcount";

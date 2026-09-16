@@ -4,6 +4,7 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
+using Sense.Modules.Payroll.Domain.Profiles;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -22,6 +23,8 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
     public DbSet<Payslip> Payslips => Set<Payslip>();
 
     public DbSet<PayslipCalculationTrace> CalculationTraces => Set<PayslipCalculationTrace>();
+
+    public DbSet<EmployeePayrollProfile> EmployeePayrollProfiles => Set<EmployeePayrollProfile>();
 }
 
 internal static class PayrollTables
@@ -29,6 +32,7 @@ internal static class PayrollTables
     public const string Periods = "payroll_periods";
     public const string Payslips = "payslips";
     public const string CalculationTraces = "payslip_calculation_traces";
+    public const string EmployeePayrollProfiles = "employee_payroll_profiles";
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
 }
@@ -69,5 +73,25 @@ public sealed class PayslipCalculationTraceConfiguration : IEntityTypeConfigurat
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.StepsJson).HasColumnType(PersistenceDefaults.JsonbColumnType);
         b.HasIndex(x => new { x.TenantId, x.PayslipId, x.Version });
+    }
+}
+
+public sealed class EmployeePayrollProfileConfiguration : IEntityTypeConfiguration<EmployeePayrollProfile>
+{
+    public void Configure(EntityTypeBuilder<EmployeePayrollProfile> b)
+    {
+        b.ToTable(PayrollTables.EmployeePayrollProfiles);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.WageBasis).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.SgkStatus).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.MealBenefitVariant).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.TransportVariant).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.PaymentMethod).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.IncentiveLawCode).HasMaxLength(PayrollLimits.IncentiveLawCodeMaxLength);
+        b.Property(x => x.ExternalPayrollCode).HasMaxLength(PayrollLimits.ExternalPayrollCodeMaxLength);
+        b.Property(x => x.Notes).HasMaxLength(PayrollLimits.NotesMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ValidFrom });
+        b.Ignore(x => x.DomainEvents);
     }
 }

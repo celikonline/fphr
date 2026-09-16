@@ -32,6 +32,7 @@ public static class PayrollLegislationSnapshotResolver
             MinimumWageGross: await Decimal(reader, LegislationParameterKeys.PayrollMinimumWageGross, asOf, cancellationToken),
             MealIncomeTaxDailyExemption: await Decimal(reader, LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, asOf, cancellationToken),
             MealSgkDailyExemptionRate: await Decimal(reader, LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, asOf, cancellationToken),
+            MealMarketCardExemptionApplies: await Decimal(reader, LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, asOf, cancellationToken) != 0m,
             AsOf: asOf);
     }
 

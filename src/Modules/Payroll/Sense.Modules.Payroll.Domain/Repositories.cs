@@ -1,5 +1,6 @@
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
+using Sense.Modules.Payroll.Domain.Profiles;
 
 namespace Sense.Modules.Payroll.Domain;
 
@@ -26,4 +27,19 @@ public interface IPayslipCalculationTraceRepository
     void Add(PayslipCalculationTrace trace);
 
     Task<PayslipCalculationTrace?> FindLatestByPayslipIdAsync(Guid payslipId, CancellationToken cancellationToken = default);
+}
+
+public interface IEmployeePayrollProfileRepository
+{
+    void Add(EmployeePayrollProfile profile);
+
+    void Remove(EmployeePayrollProfile profile);
+
+    Task<EmployeePayrollProfile?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every version of the employee's profile, newest ValidFrom first.</summary>
+    Task<IReadOnlyList<EmployeePayrollProfile>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The version in effect on <paramref name="asOf"/>, if any.</summary>
+    Task<EmployeePayrollProfile?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
 }

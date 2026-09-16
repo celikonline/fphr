@@ -538,6 +538,36 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Key = "Payroll.IncomeTax.Brackets",
                             Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - GVK md.103 kümülatif gelir vergisi tarifesi (%15/20/27/35/40)",
                             ValueJson = "[{\"upperBound\":158000,\"rate\":0.15},{\"upperBound\":330000,\"rate\":0.20},{\"upperBound\":1200000,\"rate\":0.27},{\"upperBound\":4300000,\"rate\":0.35},{\"upperBound\":null,\"rate\":0.40}]"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000037"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 30m,
+                            EffectiveFrom = new DateOnly(2003, 6, 10),
+                            Key = "JobSecurity.MinHeadcount",
+                            Source = "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: 30 ve üzeri işçi çalıştıran işyeri (yaklaşık, iş kolu gruplaması hariç)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000038"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 6m,
+                            EffectiveFrom = new DateOnly(2003, 6, 10),
+                            Key = "JobSecurity.MinSeniorityMonths",
+                            Source = "4857 s. İş Kanunu md.18 (RG 10.06.2003/25134) - iş güvencesi kapsamı: en az 6 aylık kıdem"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000039"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 0m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Meal.MarketCard.ExemptionApplies",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"
                         });
                 });
 

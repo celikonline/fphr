@@ -218,6 +218,122 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.ToTable("payroll_periods", "payroll");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Profiles.EmployeePayrollProfile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("BankAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bank_account_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<string>("ExternalPayrollCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("external_payroll_code");
+
+                    b.Property<string>("IncentiveLawCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("incentive_law_code");
+
+                    b.Property<string>("MealBenefitVariant")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("meal_benefit_variant");
+
+                    b.Property<decimal>("MealDailyAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("meal_daily_amount");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("notes");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("payment_method");
+
+                    b.Property<string>("SgkStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("sgk_status");
+
+                    b.Property<Guid>("SgkWorkplaceCompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sgk_workplace_company_id");
+
+                    b.Property<Guid?>("SgkWorkplaceLocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sgk_workplace_location_id");
+
+                    b.Property<bool>("SickDaysReducePay")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sick_days_reduce_pay");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("TransportVariant")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("transport_variant");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_from");
+
+                    b.Property<DateOnly?>("ValidTo")
+                        .HasColumnType("date")
+                        .HasColumnName("valid_to");
+
+                    b.Property<string>("WageBasis")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("wage_basis");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_payroll_profiles");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employee_payroll_profiles_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "ValidFrom")
+                        .HasDatabaseName("ix_employee_payroll_profiles_tenant_id_employee_id_valid_from");
+
+                    b.ToTable("employee_payroll_profiles", "payroll");
+                });
+
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>
                 {
                     b.Property<Guid>("MessageId")

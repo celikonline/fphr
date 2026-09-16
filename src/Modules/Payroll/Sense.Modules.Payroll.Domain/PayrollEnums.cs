@@ -20,9 +20,10 @@ public enum PayrollPeriodStatus
 }
 
 /// <summary>
-/// Meal benefit payment shape (11.3.7 "Yemek ödemesi 4 varyantı"). Only <see cref="None"/> and <see cref="Cash"/> are
-/// implemented by <see cref="Calculation.PayrollCalculator"/> in this slice; the other three are deferred to P2
-/// (yemek varyantları) and make <see cref="Calculation.PayrollCalculator.Calculate"/> throw <see cref="NotSupportedException"/>.
+/// Meal benefit payment shape (11.3.7 "Yemek ödemesi 4 varyantı"), all implemented by <see cref="Calculation.PayrollCalculator"/>
+/// (P2): <see cref="Cash"/>/<see cref="MealCardOnly"/> exempt up to the daily thresholds and pay the excess in net;
+/// <see cref="InKind"/> is fully outside the SGK/GV base and not paid in cash (informational only); <see cref="MealAndMarketCard"/>
+/// is fully taxed unless <see cref="Calculation.PayrollLegislationSnapshot.MealMarketCardExemptionApplies"/> says otherwise.
 /// </summary>
 public enum MealBenefitVariant
 {
@@ -31,4 +32,30 @@ public enum MealBenefitVariant
     InKind = 2,
     MealCardOnly = 3,
     MealAndMarketCard = 4,
+}
+
+/// <summary>SGK sicil durumu (11.3.7 "SGK statüsü"): affects incentive/discount eligibility (not applied yet, TODO P2+).</summary>
+public enum SgkStatus
+{
+    Normal = 0,
+    Retired = 1,
+    Intern = 2,
+    Apprentice = 3,
+    Foreign = 4,
+}
+
+/// <summary>Yol yardımı varyantı (11.3.7): nakit / kart / servis / yok.</summary>
+public enum TransportVariant
+{
+    None = 0,
+    Cash = 1,
+    Card = 2,
+    Shuttle = 3,
+}
+
+/// <summary>Ödeme yöntemi (11.3.7 "Ödeme yöntemi"): banka veya elden.</summary>
+public enum PayrollPaymentMethod
+{
+    Bank = 0,
+    Cash = 1,
 }
