@@ -125,6 +125,7 @@ export interface Candidate {
   email: string;
   phone: string | null;
   source: CandidateSource;
+  tagIds: string[];
 }
 
 export interface CandidateContactInput {
@@ -151,6 +152,10 @@ export async function createCandidate(input: CandidateContactInput): Promise<str
 
 export async function updateCandidate(id: string, input: CandidateContactInput): Promise<void> {
   await apiClient.put(`${RECRUITMENT_BASE}/candidates/${id}`, input);
+}
+
+export async function setCandidateTags(id: string, tagIds: string[]): Promise<void> {
+  await apiClient.put(`${RECRUITMENT_BASE}/candidates/${id}/tags`, { tagIds });
 }
 
 export type ApplicationStage = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
@@ -233,4 +238,28 @@ export async function submitJobRequisition(id: string): Promise<void> {
 
 export async function cancelJobRequisition(id: string): Promise<void> {
   await apiClient.post(`${RECRUITMENT_BASE}/requisitions/${id}/cancel`);
+}
+
+export interface Tag {
+  id: string;
+  name: string;
+  isActive: boolean;
+}
+
+export async function listTags(activeOnly = false): Promise<Tag[]> {
+  const { data } = await apiClient.get<Tag[]>(`${RECRUITMENT_BASE}/tags`, { params: { activeOnly } });
+  return data;
+}
+
+export async function createTag(name: string): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/tags`, { name });
+  return data;
+}
+
+export async function deactivateTag(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/tags/${id}/deactivate`);
+}
+
+export async function reactivateTag(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/tags/${id}/reactivate`);
 }

@@ -4,13 +4,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, UserRound } from "lucide-react";
-import { ActionIcon, Button, Card, Group, Modal, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { Pencil, Plus, Search, Tags as TagsIcon, UserRound } from "lucide-react";
+import { ActionIcon, Badge, Button, Card, Group, Modal, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { createCandidate, listCandidates, updateCandidate, type Candidate } from "@/services/recruitment.service";
+import {
+  createCandidate,
+  createTag,
+  listCandidates,
+  listTags,
+  setCandidateTags,
+  updateCandidate,
+  type Candidate,
+} from "@/services/recruitment.service";
 
 const CANDIDATES_KEY = ["recruitment", "candidates"] as const;
 
@@ -51,6 +59,8 @@ function Candidates() {
     queryFn: () => listCandidates(debouncedSearch || undefined),
     placeholderData: (previous) => previous,
   });
+  const tagsQuery = useQuery({ queryKey: ["recruitment", "tags"], queryFn: () => listTags() });
+  const tagNameById = new Map((tagsQuery.data ?? []).map((tag) => [tag.id, tag.name]));
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
@@ -79,6 +89,34 @@ function Candidates() {
     },
     onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
   });
+
+  const [tagCandidate, setTagCandidate] = useState<Candidate | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [newTagName, setNewTagName] = useState("");
+
+  const setTagsMutation = useMutation({
+    mutationFn: ({ id, tagIds }: { id: string; tagIds: string[] }) => setCandidateTags(id, tagIds),
+    onSuccess: () => {
+      invalidate();
+      setTagCandidate(null);
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const createTagMutation = useMutation({
+    mutationFn: createTag,
+    onSuccess: (id) => {
+      queryClient.invalidateQueries({ queryKey: ["recruitment", "tags"] });
+      setSelectedTagIds((prev) => [...prev, id]);
+      setNewTagName("");
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  function openTagEditor(candidate: Candidate) {
+    setSelectedTagIds(candidate.tagIds);
+    setTagCandidate(candidate);
+  }
 
   function openCreate() {
     reset({ firstName: "", lastName: "", email: "", phone: "" });
@@ -145,6 +183,7 @@ function Candidates() {
                 <Table.Th>{t("recruitment:candidates.email")}</Table.Th>
                 <Table.Th>{t("recruitment:candidates.phone")}</Table.Th>
                 <Table.Th>{t("recruitment:candidates.source")}</Table.Th>
+                <Table.Th>{t("recruitment:candidates.tags")}</Table.Th>
                 {canManage && <Table.Th ta="right">{t("common:actions")}</Table.Th>}
               </Table.Tr>
             </Table.Thead>
@@ -159,9 +198,29 @@ function Candidates() {
                   <Table.Td>{candidate.email}</Table.Td>
                   <Table.Td>{candidate.phone ?? "—"}</Table.Td>
                   <Table.Td>{t(`recruitment:candidates.sources.${candidate.source}`)}</Table.Td>
+                  <Table.Td>
+                    <Group gap={4}>
+                      {candidate.tagIds.length === 0 ? (
+                        <Text size="sm" c="dimmed">
+                          —
+                        </Text>
+                      ) : (
+                        candidate.tagIds.map((tagId) => (
+                          <Badge key={tagId} size="sm" variant="light">
+                            {tagNameById.get(tagId) ?? "…"}
+                          </Badge>
+                        ))
+                      )}
+                    </Group>
+                  </Table.Td>
                   {canManage && (
                     <Table.Td>
-                      <Group justify="flex-end">
+                      <Group justify="flex-end" wrap="nowrap">
+                        <Tooltip label={t("recruitment:candidates.editTags")}>
+                          <ActionIcon variant="subtle" color="gray" onClick={() => openTagEditor(candidate)}>
+                            <TagsIcon size={16} />
+                          </ActionIcon>
+                        </Tooltip>
                         <Tooltip label={t("recruitment:candidates.editCandidate")}>
                           <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)}>
                             <Pencil size={16} />
@@ -211,6 +270,46 @@ function Candidates() {
             </Group>
           </Stack>
         </form>
+      </Modal>
+
+      <Modal opened={tagCandidate !== null} onClose={() => setTagCandidate(null)} title={t("recruitment:candidates.editTags")}>
+        <Stack gap="md">
+          <MultiSelect
+            label={t("recruitment:candidates.tags")}
+            data={(tagsQuery.data ?? []).filter((tag) => tag.isActive).map((tag) => ({ value: tag.id, label: tag.name }))}
+            value={selectedTagIds}
+            onChange={setSelectedTagIds}
+            searchable
+          />
+          <Group gap="xs" align="flex-end">
+            <TextInput
+              className="flex-1"
+              label={t("recruitment:candidates.newTag")}
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.currentTarget.value)}
+            />
+            <Button
+              type="button"
+              variant="default"
+              disabled={!newTagName.trim() || createTagMutation.isPending}
+              onClick={() => createTagMutation.mutate(newTagName.trim())}
+            >
+              {t("recruitment:candidates.addTag")}
+            </Button>
+          </Group>
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={() => setTagCandidate(null)} disabled={setTagsMutation.isPending}>
+              {t("common:cancel")}
+            </Button>
+            <Button
+              type="button"
+              disabled={setTagsMutation.isPending}
+              onClick={() => tagCandidate && setTagsMutation.mutate({ id: tagCandidate.id, tagIds: selectedTagIds })}
+            >
+              {setTagsMutation.isPending ? t("common:saving") : t("common:save")}
+            </Button>
+          </Group>
+        </Stack>
       </Modal>
     </div>
   );
