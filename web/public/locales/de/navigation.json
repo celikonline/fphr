@@ -81,6 +81,11 @@
     "billingDesc": "[DE] Subscription and invoice details",
     "dataTransferSection": "[DE] Data transfer",
     "dataTransfer": "[DE] Data transfer center",
-    "dataTransferDesc": "[DE] Bulk data import with Excel templates"
+    "dataTransferDesc": "[DE] Bulk data import with Excel templates",
+    "recruitmentSection": "[DE] Recruitment",
+    "recruitmentFormTemplates": "[DE] Form templates",
+    "recruitmentFormTemplatesDesc": "[DE] Feedback, scorecard, and outcome form templates",
+    "recruitmentAutomationRules": "[DE] Automation rules",
+    "recruitmentAutomationRulesDesc": "[DE] Mandatory-form rules on pipeline stage transitions"
   }
 }

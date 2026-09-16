@@ -81,6 +81,8 @@ export const SETTINGS_PERMISSIONS = {
   subcontractors: ["employee.subcontractor.manage"],
   documentTypes: ["documents.document_types.view", "documents.document_types.manage"],
   missingDocuments: ["documents.requirements.view"],
+  recruitmentFormTemplates: ["recruitment.form_templates.read"],
+  recruitmentAutomationRules: ["recruitment.automation_rules.read"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -412,6 +414,28 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/data-transfer",
         icon: FileSpreadsheet,
         permissions: SETTINGS_PERMISSIONS.dataTransfer,
+      },
+    ],
+  },
+  {
+    key: "recruitment",
+    labelKey: "settings.recruitmentSection",
+    links: [
+      {
+        key: "recruitmentFormTemplates",
+        labelKey: "settings.recruitmentFormTemplates",
+        descriptionKey: "settings.recruitmentFormTemplatesDesc",
+        path: "/app/settings/recruitment/form-templates",
+        icon: FileText,
+        permissions: SETTINGS_PERMISSIONS.recruitmentFormTemplates,
+      },
+      {
+        key: "recruitmentAutomationRules",
+        labelKey: "settings.recruitmentAutomationRules",
+        descriptionKey: "settings.recruitmentAutomationRulesDesc",
+        path: "/app/settings/recruitment/automation-rules",
+        icon: Workflow,
+        permissions: SETTINGS_PERMISSIONS.recruitmentAutomationRules,
       },
     ],
   },

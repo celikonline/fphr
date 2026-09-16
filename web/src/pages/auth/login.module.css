@@ -116,11 +116,37 @@
   translate: 4px 0;
 }
 
-/* Form panel with a soft Kurumsal Mavi glow top-right and a faint Patlangaç glow bottom-left. */
+/*
+ * Form panel: a light echo of the brand panel - Kurumsal Mavi, Yardımcı Renk 1 and 2 glows over a pale blue wash
+ * (deeper navy tints in the dark scheme), with the same fading dot grid and a slowly drifting orb.
+ */
 .formPanel {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+  background-image:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--mantine-color-brand-6) 30%, transparent), transparent 45%),
+    radial-gradient(
+      circle at 0% 100%,
+      light-dark(
+        color-mix(in srgb, var(--mantine-color-blue-6) 22%, transparent),
+        color-mix(in srgb, var(--mantine-color-blue-6) 45%, transparent)
+      ),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 0% 25%,
+      light-dark(
+        color-mix(in srgb, var(--mantine-color-cyan-4) 22%, transparent),
+        color-mix(in srgb, var(--mantine-color-navy-6) 35%, transparent)
+      ),
+      transparent 40%
+    ),
+    linear-gradient(
+      160deg,
+      light-dark(var(--mantine-color-white), var(--mantine-color-dark-7)),
+      light-dark(var(--mantine-color-brand-0), var(--mantine-color-navy-9))
+    );
 }
 
 .formPanel::before,
@@ -128,24 +154,35 @@
   content: "";
   position: absolute;
   z-index: -1;
-  border-radius: 50%;
   pointer-events: none;
 }
 
 .formPanel::before {
-  top: -240px;
-  right: -200px;
-  width: 560px;
-  height: 560px;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--mantine-color-brand-6) 20%, transparent), transparent 70%);
+  inset: 0;
+  background-image: radial-gradient(
+    light-dark(
+      color-mix(in srgb, var(--mantine-color-brand-6) 16%, transparent),
+      color-mix(in srgb, white 10%, transparent)
+    )
+    1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(circle at 100% 0%, black, transparent 60%);
 }
 
 .formPanel::after {
-  bottom: -220px;
-  left: -220px;
-  width: 440px;
-  height: 440px;
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--mantine-color-orange-6) 10%, transparent), transparent 70%);
+  right: -160px;
+  bottom: 12%;
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--mantine-color-brand-5) 24%, transparent),
+    transparent 70%
+  );
+  animation: float 14s ease-in-out -3s infinite;
 }
 
 /* Buton/Patlangaç 2 → 3 accent above the form title. */
@@ -227,7 +264,8 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .shape,
-  .pulse::after {
+  .pulse::after,
+  .formPanel::after {
     animation: none;
   }
 }

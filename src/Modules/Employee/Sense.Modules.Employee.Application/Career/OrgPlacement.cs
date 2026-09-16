@@ -56,6 +56,14 @@ public sealed class OrgPlacement
 
         return chain;
     }
+
+    /// <summary>The chain unit at the level with <paramref name="levelCode"/> (e.g. "Department", "Title"), or null when the chain has none.</summary>
+    public OrgUnitInfo? LevelUnitFor(Guid? orgUnitId, string levelCode)
+    {
+        var level = Types.FirstOrDefault(t => t.Code == levelCode);
+        var assignment = level is null ? null : ChainFor(orgUnitId).FirstOrDefault(a => a.OrgUnitTypeId == level.Id);
+        return assignment is null ? null : UnitsById.GetValueOrDefault(assignment.OrgUnitId);
+    }
 }
 
 /// <summary>Loads the <see cref="OrgPlacement"/> snapshot once per request (or per import batch).</summary>

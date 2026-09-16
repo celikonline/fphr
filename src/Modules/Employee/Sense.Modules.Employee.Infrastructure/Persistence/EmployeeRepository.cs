@@ -70,6 +70,22 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         return await context.Employees.Where(e => list.Contains(e.Id)).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<EmployeeEntity>> ListByIdsWithPaymentsAndCustomFieldsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var list = ids.ToList();
+        return await context.Employees
+            .Where(e => list.Contains(e.Id))
+            .Include(e => e.SalaryRecords)
+            .Include(e => e.CustomFieldValues)
+            .AsSplitQuery()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(e => e.Id == employeeId && e.Status != EmployeeStatus.Terminated, cancellationToken);
 

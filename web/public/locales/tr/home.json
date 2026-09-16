@@ -21,6 +21,11 @@
     "title": "Yaklaşan İzinler",
     "empty": "Önümüzdeki {{days}} gün içinde izinli olacak çalışan yok."
   },
+  "teamRequests": {
+    "title": "İzin Talepleri",
+    "empty": "Onay bekleyen izin talebi yok.",
+    "viewCalendar": "Takvimde Gör"
+  },
   "events": {
     "title": "Etkinlik Takvimi",
     "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."

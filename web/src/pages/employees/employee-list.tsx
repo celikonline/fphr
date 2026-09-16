@@ -3,8 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { Anchor, Badge, Button, Card, Checkbox, Group, Input, Paper, Select, Switch, Text, TextInput, Title, Tooltip } from "@mantine/core";
-import { GitBranch, Plus, Search, Users } from "lucide-react";
+import {
+  Anchor,
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  Group,
+  Input,
+  Paper,
+  SegmentedControl,
+  Select,
+  Switch,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { GitBranch, LayoutGrid, List, Plus, Search, Users } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
@@ -17,6 +33,7 @@ import { AccountStatusBadge, EmployeeStatusBadge } from "@/components/employees/
 import BulkActionsMenu from "@/components/employees/bulk-actions-menu";
 import { BULK_ACTIONS } from "@/components/employees/bulk-actions";
 import CreateEmployeeDialog from "@/components/employees/create-employee-dialog";
+import EmployeeCardGrid from "@/components/employees/employee-card-grid";
 import { CONTRACT_TYPE_OPTIONS, EMPLOYMENT_TYPE_OPTIONS } from "@/components/employees/employee-enum-options";
 import EmployeeDirectory from "@/components/employees/employee-directory";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
@@ -24,7 +41,18 @@ import { useOrgUnits } from "@/components/employees/use-org-units";
 
 const DEFAULT_PAGE_SIZE = 20;
 const COLUMN_VISIBILITY_KEY = "senseik.employees.grid.columns";
+const VIEW_MODE_KEY = "senseik.employees.viewMode";
 const ALL = "__all__";
+
+type ViewMode = "list" | "grid";
+
+function readViewMode(): ViewMode {
+  try {
+    return localStorage.getItem(VIEW_MODE_KEY) === "grid" ? "grid" : "list";
+  } catch {
+    return "list";
+  }
+}
 const BULK_PERMISSIONS = [...new Set(BULK_ACTIONS.map((a) => a.permission))];
 /** Small dimmed filter labels, matching the org unit filter's `Input.Label`. */
 const FILTER_LABEL_STYLES = {
@@ -68,6 +96,16 @@ function EmployeeGrid() {
   const [sort, setSort] = useState<{ field: EmployeeSortField; desc: boolean }>({ field: "displayName", desc: false });
   const [selection, setSelection] = useState<SelectionState>(EMPTY_SELECTION);
   const [createOpen, setCreateOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
+
+  function changeViewMode(next: ViewMode) {
+    setViewMode(next);
+    try {
+      localStorage.setItem(VIEW_MODE_KEY, next);
+    } catch {
+      // Storage unavailable (private mode): the choice just isn't remembered.
+    }
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -418,11 +456,48 @@ function EmployeeGrid() {
             label={t("employees:filters.missingInfo")}
           />
         </div>
-        <DataTableViewOptions table={table} className="ml-auto" />
+        <Group gap="xs" ml="auto">
+          {viewMode === "list" && <DataTableViewOptions table={table} />}
+          <SegmentedControl
+            aria-label={t("employees:viewMode.label")}
+            value={viewMode}
+            onChange={(value) => changeViewMode(value as ViewMode)}
+            data={[
+              {
+                value: "list",
+                label: (
+                  <Tooltip label={t("employees:viewMode.list")}>
+                    <span className="flex items-center" aria-label={t("employees:viewMode.list")}>
+                      <List size={16} />
+                    </span>
+                  </Tooltip>
+                ),
+              },
+              {
+                value: "grid",
+                label: (
+                  <Tooltip label={t("employees:viewMode.grid")}>
+                    <span className="flex items-center" aria-label={t("employees:viewMode.grid")}>
+                      <LayoutGrid size={16} />
+                    </span>
+                  </Tooltip>
+                ),
+              },
+            ]}
+          />
+        </Group>
       </Group>
 
       {canBulk && (
         <Group gap="sm">
+          {viewMode === "grid" && items.length > 0 && (
+            <Checkbox
+              aria-label={t("employees:bulk.selectPage")}
+              checked={pageFullySelected}
+              indeterminate={!pageFullySelected && selectedOnPage > 0}
+              onChange={(e) => togglePage(e.currentTarget.checked)}
+            />
+          )}
           <BulkActionsMenu
             selection={apiSelection}
             selectedCount={selectedCount}
@@ -466,15 +541,28 @@ function EmployeeGrid() {
       )}
 
       <Card withBorder padding={0}>
-        <DataTable
-          table={table}
-          isLoading={isLoading}
-          isFetching={isFetching}
-          stickyHeader
-          emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
-          isRowSelected={(employee) => isSelected(employee.id)}
-          onRowClick={(employee) => navigate(`/app/employees/${employee.id}`)}
-        />
+        {viewMode === "grid" ? (
+          <EmployeeCardGrid
+            items={items}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
+            unitNames={unitNames}
+            onOpen={(employee) => navigate(`/app/employees/${employee.id}`)}
+            isSelected={isSelected}
+            onToggle={canBulk ? toggleRow : undefined}
+          />
+        ) : (
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            stickyHeader
+            emptyMessage={hasActiveFilters ? t("employees:emptyFiltered") : t("employees:empty")}
+            isRowSelected={(employee) => isSelected(employee.id)}
+            onRowClick={(employee) => navigate(`/app/employees/${employee.id}`)}
+          />
+        )}
         {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
 

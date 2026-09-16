@@ -422,6 +422,12 @@ export async function getLeaveCalendar(query: LeaveCalendarQuery): Promise<Leave
   return data;
 }
 
+/** Pending leave requests of the caller's team (leave.requests.read data scope) for the Ana Sayfa "İzin Talepleri" widget. */
+export async function getTeamLeaveRequests(): Promise<LeaveCalendarEntry[]> {
+  const { data } = await apiClient.get<LeaveCalendarEntry[]>(`${LEAVE_BASE}/team/requests`);
+  return data;
+}
+
 // ---------------------------------------------------------------- Overtime ("Fazla mesai")
 
 export type OvertimeRequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "cancelled";

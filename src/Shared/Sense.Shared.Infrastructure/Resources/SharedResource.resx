@@ -347,6 +347,11 @@ Bağlantı {expires} tarihine kadar geçerlidir. Bu isteği siz yapmadıysanız 
   <data name="email.welcome.body" xml:space="preserve"><value>Merhaba {name},
 
 SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
+  <data name="email.report_ready.subject" xml:space="preserve"><value>Raporunuz hazır — SenseİK</value></data>
+  <data name="email.report_ready.body" xml:space="preserve"><value>Merhaba {name},
+
+İstediğiniz rapor oluşturuldu. Görüntülemek ve indirmek için bağlantıya tıklayın:
+{url}</value></data>
   <!-- Doğrulama mesajlarındaki alan adları (field.{snake_case}) -->
   <data name="field.code" xml:space="preserve"><value>Kod</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Şirket adı</value></data>
@@ -445,6 +450,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.postalCode" xml:space="preserve"><value>Posta kodu</value></data>
   <data name="import.column.employee.contractType" xml:space="preserve"><value>Sözleşme türü</value></data>
   <data name="import.column.employee.employmentType" xml:space="preserve"><value>Çalışma şekli</value></data>
+  <data name="import.column.employee.salaryEffectiveFrom" xml:space="preserve"><value>Maaş geçerlilik tarihi</value></data>
+  <data name="import.column.employee.salaryAmount" xml:space="preserve"><value>Maaş</value></data>
+  <data name="import.column.employee.salaryCurrency" xml:space="preserve"><value>Para birimi</value></data>
+  <data name="import.column.employee.salaryType" xml:space="preserve"><value>Maaş türü</value></data>
+  <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Ödeme düzeni</value></data>
+  <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Yol yardımı</value></data>
+  <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Yemek yardımı</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>İzin hak edişinin başladığı gerçek tarih; boş bırakılırsa işe başlama tarihi kullanılır.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
@@ -471,6 +483,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.birthDate.description" xml:space="preserve"><value>GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG.</value></data>
   <data name="import.column.employee.manager.description" xml:space="preserve"><value>Sistemde kayıtlı aktif bir çalışanın adı soyadı.</value></data>
   <data name="import.column.employee.orgUnit.description" xml:space="preserve"><value>Bu seviyede tanımlı aktif bir birimin adı (listeden seçin).</value></data>
+  <data name="import.column.employee.salaryEffectiveFrom.description" xml:space="preserve"><value>GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG; Maaş ile birlikte doldurulmazsa satırdaki maaş bloğu tümüyle yok sayılır.</value></data>
+  <data name="import.column.employee.salaryAmount.description" xml:space="preserve"><value>Sayısal, en fazla iki ondalık; Maaş geçerlilik tarihi ile birlikte doldurulmazsa satırdaki maaş bloğu tümüyle yok sayılır.</value></data>
+  <data name="import.column.employee.salaryCurrency.description" xml:space="preserve"><value>ISO 4217 kodu (ör. TRY, EUR, USD); "TL" ve "Euro" kısaltmaları da kabul edilir. Maaş bloğu doluysa zorunludur.</value></data>
+  <data name="import.column.employee.salaryType.description" xml:space="preserve"><value>Listeden seçin (Net veya Brüt). Maaş bloğu doluysa zorunludur.</value></data>
+  <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Listeden seçin (Aylık, Günlük, Yıllık, Haftalık, Saatlik). Maaş bloğu doluysa zorunludur.</value></data>
+  <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
+  <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
+  <data name="import.column.employee.customField.description" xml:space="preserve"><value>Kiracı tanımlı özel alan; boş bırakılırsa mevcut değer korunur. Seçenekli alanlarda listeden seçin; çoklu seçimde değerler ["Değer1","Değer2"] biçiminde girilir.</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Başlık satırındaki kolon adlarını değiştirmeyin; gizli 2. satırdaki kolon anahtarlarını silmeyin. Başlığı değişen kolonlar yükleme sonrası elle eşleştirilebilir.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>Kullanmadığınız kolonları silebilir, kolonların sırasını değiştirebilir veya araya kendi kolonlarınızı ekleyebilirsiniz (eklenen kolonlar 'Yok say' olarak bırakılır).</value></data>
   <data name="import.instructions.dates" xml:space="preserve"><value>Tarihler GG.AA.YYYY, GG/AA/YYYY veya YYYY-AA-GG biçiminde (isteğe bağlı SS:DD saatiyle) ya da Excel tarih hücresi olarak yazılmalıdır; '1 Ocak 2020' gibi metinler kabul edilmez.</value></data>
@@ -713,6 +733,26 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.tag.name_required" xml:space="preserve"><value>Etiket adı zorunludur.</value></data>
   <data name="recruitment.tag.already_inactive" xml:space="preserve"><value>Etiket zaten devre dışı.</value></data>
   <data name="recruitment.tag.name_taken" xml:space="preserve"><value>Bu isimde bir etiket zaten var.</value></data>
+  <data name="recruitment.form_templates.read" xml:space="preserve"><value>Form şablonlarını görüntüleme</value></data>
+  <data name="recruitment.form_templates.manage" xml:space="preserve"><value>Form şablonu oluşturma, alanlarını değiştirme veya devre dışı bırakma</value></data>
+  <data name="recruitment.form_responses.read" xml:space="preserve"><value>Form yanıtlarını görüntüleme</value></data>
+  <data name="recruitment.form_responses.submit" xml:space="preserve"><value>Form yanıtı gönderme</value></data>
+  <data name="recruitment.automation_rules.read" xml:space="preserve"><value>Otomasyon kurallarını görüntüleme</value></data>
+  <data name="recruitment.automation_rules.manage" xml:space="preserve"><value>Otomasyon kuralı oluşturma veya devre dışı bırakma</value></data>
+  <data name="recruitment.form_template.not_found" xml:space="preserve"><value>Form şablonu bulunamadı.</value></data>
+  <data name="recruitment.form_template.name_required" xml:space="preserve"><value>Form şablonu adı zorunludur.</value></data>
+  <data name="recruitment.form_template.fields_required" xml:space="preserve"><value>Form şablonu en az bir alan içermelidir.</value></data>
+  <data name="recruitment.form_template.already_inactive" xml:space="preserve"><value>Form şablonu zaten devre dışı.</value></data>
+  <data name="recruitment.form_field.label_required" xml:space="preserve"><value>Alan etiketi zorunludur.</value></data>
+  <data name="recruitment.form_field.options_required" xml:space="preserve"><value>Açılır liste alanı için en az bir seçenek gereklidir.</value></data>
+  <data name="recruitment.form_template.scorecard_requires_score_fields" xml:space="preserve"><value>Skor kart şablonu en az bir skor alanı içermelidir.</value></data>
+  <data name="recruitment.form_template.scorecard_weights_must_sum_to_100" xml:space="preserve"><value>Skor alanlarının ağırlıkları toplamı 100 olmalıdır.</value></data>
+  <data name="recruitment.form_response.field_required" xml:space="preserve"><value>"{Label}" alanı zorunludur.</value></data>
+  <data name="recruitment.form_response.score_invalid" xml:space="preserve"><value>"{Label}" alanı 0-100 arasında bir sayı olmalıdır.</value></data>
+  <data name="recruitment.automation_rule.not_found" xml:space="preserve"><value>Otomasyon kuralı bulunamadı.</value></data>
+  <data name="recruitment.automation_rule.same_stage" xml:space="preserve"><value>Başlangıç ve hedef aşama aynı olamaz.</value></data>
+  <data name="recruitment.automation_rule.already_inactive" xml:space="preserve"><value>Otomasyon kuralı zaten devre dışı.</value></data>
+  <data name="recruitment.application.required_form_missing" xml:space="preserve"><value>Bu aşamaya geçmek için önce gerekli formun doldurulması gerekiyor.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
@@ -741,6 +781,19 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.shift.daily_limit_exceeded" xml:space="preserve"><value>Günlük çalışma süresi üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>Haftalık çalışma saati üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>Haftalık çalışma günü üst sınırı aşıldı.</value></data>
+  <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>Çalışan bu tarih/saat için "müsait değilim" girişi yapmış.</value></data>
+  <data name="attendance.shift.self" xml:space="preserve"><value>Kendi vardiyalarımı görüntüleme</value></data>
+  <data name="attendance.availability.self" xml:space="preserve"><value>Müsaitlik durumumu bildirme</value></data>
+  <data name="attendance.availability.view" xml:space="preserve"><value>Çalışan müsaitliğini görüntüleme</value></data>
+  <data name="attendance.availability.time_range_invalid" xml:space="preserve"><value>Müsaitlik saat aralığı geçersiz.</value></data>
+  <data name="attendance.availability.already_cancelled" xml:space="preserve"><value>Bu müsaitlik girişi zaten iptal edilmiş.</value></data>
+  <data name="attendance.availability.not_found" xml:space="preserve"><value>Müsaitlik girişi bulunamadı.</value></data>
+  <data name="attendance.availability.not_owner" xml:space="preserve"><value>Bu müsaitlik girişi size ait değil.</value></data>
+  <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
+  <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
+  <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>
+  <data name="attendance.compensatory.not_open" xml:space="preserve"><value>Bu telafi kaydı açık durumda değil.</value></data>
+  <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Telafi süresi pozitif olmalıdır.</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Puantaj</value></data>
@@ -833,4 +886,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.not_assigned" xml:space="preserve"><value>Bu zimmet şu anda atanmış durumda değil.</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>Atanmış bir zimmet emekliye ayrılamaz; önce iade edilmelidir.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <!-- Reporting (Raporlar menüsü - roadmap #70) -->
+  <data name="report_execution.report_key_required" xml:space="preserve"><value>Rapor anahtarı zorunludur.</value></data>
+  <data name="report_execution.not_found" xml:space="preserve"><value>Rapor çalıştırması bulunamadı.</value></data>
+  <data name="report_execution.unknown_report_key" xml:space="preserve"><value>Bilinmeyen rapor.</value></data>
+  <data name="report_execution.report_permission_denied" xml:space="preserve"><value>Bu raporu oluşturma yetkiniz yok.</value></data>
+  <data name="report_execution.not_owner" xml:space="preserve"><value>Bu rapor çalıştırması size ait değil.</value></data>
+  <data name="report_execution.not_ready" xml:space="preserve"><value>Rapor henüz hazır değil.</value></data>
+  <data name="reports.catalog.view" xml:space="preserve"><value>Rapor kataloğunu görüntüleme</value></data>
+  <data name="reports.executions.generate" xml:space="preserve"><value>Rapor oluşturma</value></data>
+  <data name="reports.my.executions" xml:space="preserve"><value>Kendi oluşturduğu raporları görüntüleme</value></data>
 </root>

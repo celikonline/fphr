@@ -8,6 +8,11 @@
   "emptyFiltered": "Filtreye uyan çalışan bulunamadı.",
   "genericError": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
   "loading": "Yükleniyor...",
+  "viewMode": {
+    "label": "Görünüm",
+    "list": "Liste görünümü",
+    "grid": "Kart görünümü"
+  },
   "unknownUnit": "Bilinmeyen birim",
   "unknownEmployee": "Bilinmeyen çalışan",
   "noUnit": "Birim yok",
@@ -299,6 +304,11 @@
     "matchCount_other": "{{count}} eşleşme",
     "reports_one": "{{count}} kişilik ekip",
     "reports_other": "{{count}} kişilik ekip",
+    "print": "Yazdır",
+    "zoomIn": "Yakınlaştır",
+    "zoomOut": "Uzaklaştır",
+    "company": "Şirket",
+    "allCompanies": "Tüm şirketler",
     "empty": "Gösterilecek çalışan yok.",
     "forbiddenTitle": "Organizasyon şeması görüntülenemiyor",
     "forbiddenDescription": "Organizasyon şeması şirketiniz tarafından çalışanlara kapatılmış olabilir veya bu sayfa için yetkiniz yok."

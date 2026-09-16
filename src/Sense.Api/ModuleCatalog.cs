@@ -12,6 +12,7 @@ using Sense.Modules.Notifications.Api;
 using Sense.Modules.Organization.Api;
 using Sense.Modules.Payroll.Api;
 using Sense.Modules.Recruitment.Api;
+using Sense.Modules.Reporting.Api;
 using Sense.Modules.Workflow.Api;
 using Sense.Shared.Contracts.Modules;
 
@@ -37,5 +38,6 @@ public static class ModuleCatalog
         new ExpenseModule(),
         new IntegrationsModule(),
         new AssetsModule(),
+        new ReportingModule(),
     ];
 }

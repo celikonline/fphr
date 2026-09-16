@@ -23,7 +23,9 @@ public sealed record EmployeeListItemDto(
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
     // "Eksik bilgi" badge (EmployeeCompleteness.IsMissingInfo): a non-draft record with an unfilled personnel field.
-    bool HasMissingInfo = false);
+    bool HasMissingInfo = false,
+    // Title level of the org placement chain (shown on the grid's card view), like EmployeeDetailDto.TitleName.
+    string? TitleName = null);
 
 /// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). DepartmentName/TitleName are resolved from the org placement chain (Department/Title levels) so callers without organization.units.read still see them. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(
@@ -86,7 +88,14 @@ public sealed record TerminateEmployeeResultDto(
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 
-public sealed record OrgChartNodeDto(Guid Id, string DisplayName, Guid? OrgUnitId, IReadOnlyList<OrgChartNodeDto> Children);
+public sealed record OrgChartNodeDto(
+    Guid Id,
+    string DisplayName,
+    Guid? OrgUnitId,
+    IReadOnlyList<OrgChartNodeDto> Children,
+    string? TitleName = null,
+    Guid? CompanyId = null,
+    string? CompanyName = null);
 
 public sealed record UpcomingBirthdayDto(Guid Id, string DisplayName, Guid? OrgUnitId, DateOnly NextBirthday);
 

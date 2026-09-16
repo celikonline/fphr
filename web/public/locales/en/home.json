@@ -21,6 +21,11 @@
     "title": "Upcoming Leave",
     "empty": "No one is on leave in the next {{days}} days."
   },
+  "teamRequests": {
+    "title": "Leave Requests",
+    "empty": "No leave requests awaiting approval.",
+    "viewCalendar": "View calendar"
+  },
   "events": {
     "title": "Event Calendar",
     "planned": "The event calendar arrives in Phase 4; meetings and events will be listed here."

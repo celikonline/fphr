@@ -1,24 +1,58 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Avatar, Button, Card, Group, Paper, Skeleton, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
-import { ChevronDown, ChevronRight, EyeOff, GitBranch, Search } from "lucide-react";
+import {
+  ActionIcon,
+  Anchor,
+  Avatar,
+  Button,
+  Card,
+  Group,
+  Select,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import {
+  ChevronDown,
+  ChevronUp,
+  EyeOff,
+  GitBranch,
+  Minus,
+  Plus,
+  Printer,
+  Search,
+} from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { avatarColor } from "@/components/employees/employee-badges";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { getOrgChart, type OrgChartNode } from "@/services/employees.service";
-import { useOrgUnits } from "@/components/employees/use-org-units";
+import classes from "./org-chart.module.css";
+
+const ALL_COMPANIES = "all";
+const ZOOM_STEPS = [0.5, 0.65, 0.8, 1, 1.2];
+/** Printable width of a landscape A4 page at 96dpi (12mm margins); wider charts are scaled down to fit. */
+const PRINT_WIDTH_PX = 1030;
 
 function normalize(value: string): string {
   return value.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function collectIds(nodes: OrgChartNode[], into: Set<string>): Set<string> {
+function collectIds(
+  nodes: OrgChartNode[],
+  into: Set<string>,
+  maxDepth = Infinity,
+  depth = 0
+): Set<string> {
+  if (depth >= maxDepth) return into;
   for (const node of nodes) {
     if (node.children.length > 0) {
       into.add(node.id);
-      collectIds(node.children, into);
+      collectIds(node.children, into, maxDepth, depth + 1);
     }
   }
   return into;
@@ -29,7 +63,9 @@ function searchTree(nodes: OrgChartNode[], needle: string) {
   const matches = new Set<string>();
   const open = new Set<string>();
   const visit = (node: OrgChartNode): boolean => {
-    let hit = normalize(node.displayName).includes(needle);
+    let hit =
+      normalize(node.displayName).includes(needle) ||
+      normalize(node.titleName ?? "").includes(needle);
     if (hit) matches.add(node.id);
     let childHit = false;
     for (const child of node.children) childHit = visit(child) || childHit;
@@ -41,11 +77,79 @@ function searchTree(nodes: OrgChartNode[], needle: string) {
   return { matches, open };
 }
 
+/** Keeps the company's employees; a manager from another company drops out and their matching reports move up to the nearest kept manager. */
+function filterByCompany(nodes: OrgChartNode[], companyId: string): OrgChartNode[] {
+  return nodes.flatMap((node) => {
+    const children = filterByCompany(node.children, companyId);
+    return node.companyId === companyId ? [{ ...node, children }] : children;
+  });
+}
+
+function companyOptions(nodes: OrgChartNode[]) {
+  const names = new Map<string, string>();
+  let hasUnplaced = false;
+  const visit = (node: OrgChartNode) => {
+    if (node.companyId) names.set(node.companyId, node.companyName ?? "—");
+    else hasUnplaced = true;
+    node.children.forEach(visit);
+  };
+  nodes.forEach(visit);
+  const companies = [...names]
+    .map(([value, label]) => ({ value, label }))
+    .sort((a, b) => a.label.localeCompare(b.label, "tr"));
+  return { companies, hasUnplaced };
+}
+
+/** Prints only the chart: clones it with the page's styles into a hidden light-scheme iframe. */
+async function printChart(tree: HTMLElement, title: string) {
+  const frame = document.createElement("iframe");
+  frame.style.cssText = "position:fixed;right:0;bottom:0;width:0;height:0;border:0";
+  document.body.appendChild(frame);
+  const doc = frame.contentDocument;
+  const win = frame.contentWindow;
+  if (!doc || !win) {
+    frame.remove();
+    return;
+  }
+
+  doc.title = title;
+  doc.documentElement.setAttribute("data-mantine-color-scheme", "light");
+  const loads: Promise<unknown>[] = [];
+  document.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+    const copy = doc.importNode(node, true);
+    if (copy instanceof HTMLLinkElement) {
+      loads.push(
+        new Promise((resolve) => {
+          copy.addEventListener("load", resolve, { once: true });
+          copy.addEventListener("error", resolve, { once: true });
+        })
+      );
+    }
+    doc.head.appendChild(copy);
+  });
+  const pageStyle = doc.createElement("style");
+  pageStyle.textContent =
+    "@page{size:landscape;margin:12mm}body{margin:0;background:#fff}[data-print-hide]{display:none!important}";
+  doc.head.appendChild(pageStyle);
+
+  const clone = doc.importNode(tree, true);
+  doc.body.appendChild(clone);
+  await Promise.all(loads);
+  // Measured in the iframe, unaffected by the on-screen zoom; `min-width: max-content` keeps the full width.
+  clone.style.zoom = String(Math.min(1, PRINT_WIDTH_PX / clone.scrollWidth));
+  win.addEventListener("afterprint", () => frame.remove(), { once: true });
+  win.focus();
+  win.print();
+}
+
 export default function OrgChartPage() {
   const { t } = useTranslation(["employees", "common"]);
   const canReadEmployees = usePermission("employee.employees.read");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [zoomIndex, setZoomIndex] = useState(ZOOM_STEPS.indexOf(1));
+  const treeRef = useRef<HTMLUListElement>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["employees", "org-chart"],
@@ -53,15 +157,24 @@ export default function OrgChartPage() {
     retry: (count, err) => getApiErrorStatus(err) !== 403 && count < 1,
   });
 
-  // Fresh chart data opens the top level (adjusted during render, not in an effect).
+  // Fresh chart data opens the first two levels (adjusted during render, not in an effect).
   const [expandedFor, setExpandedFor] = useState<typeof data>(undefined);
   if (expandedFor !== data) {
     setExpandedFor(data);
-    if (data) setExpanded(new Set(data.filter((root) => root.children.length > 0).map((root) => root.id)));
+    if (data) setExpanded(collectIds(data, new Set(), 2));
   }
 
+  const { companies, hasUnplaced } = useMemo(() => companyOptions(data ?? []), [data]);
+  const showAllOption = companies.length !== 1 || hasUnplaced;
+  const company =
+    selectedCompany ?? (showAllOption ? ALL_COMPANIES : (companies[0]?.value ?? ALL_COMPANIES));
+  const roots = useMemo(
+    () => (data && company !== ALL_COMPANIES ? filterByCompany(data, company) : (data ?? [])),
+    [data, company]
+  );
+
   const needle = normalize(search.trim());
-  const found = useMemo(() => (data && needle ? searchTree(data, needle) : null), [data, needle]);
+  const found = useMemo(() => (needle ? searchTree(roots, needle) : null), [roots, needle]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -90,16 +203,41 @@ export default function OrgChartPage() {
     );
   }
 
+  const zoom = ZOOM_STEPS[zoomIndex];
+  const nodes = roots.map((node) => (
+    <OrgChartItem
+      key={node.id}
+      node={node}
+      expanded={expanded}
+      forcedOpen={found?.open}
+      matches={found?.matches}
+      onToggle={toggle}
+      canOpenCard={canReadEmployees}
+    />
+  ));
+
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
-      <div>
-        <Title order={1} size="h2">
-          <Group component="span" gap="xs">
-            <GitBranch size={24} /> {t("employees:orgChart.title")}
-          </Group>
-        </Title>
-        <Text c="dimmed">{t("employees:orgChart.subtitle")}</Text>
-      </div>
+    <div className="space-y-6 p-6 md:p-10">
+      <Group justify="space-between" align="flex-start" gap="sm">
+        <div>
+          <Title order={1} size="h2">
+            <Group component="span" gap="xs">
+              <GitBranch size={24} /> {t("employees:orgChart.title")}
+            </Group>
+          </Title>
+          <Text c="dimmed">{t("employees:orgChart.subtitle")}</Text>
+        </div>
+        <Button
+          type="button"
+          leftSection={<Printer size={16} />}
+          disabled={roots.length === 0}
+          onClick={() =>
+            treeRef.current && void printChart(treeRef.current, t("employees:orgChart.title"))
+          }
+        >
+          {t("employees:orgChart.print")}
+        </Button>
+      </Group>
 
       <Group gap="xs">
         <TextInput
@@ -110,14 +248,47 @@ export default function OrgChartPage() {
           value={search}
           onChange={(e) => setSearch(e.currentTarget.value)}
         />
-        {data && data.length > 0 && (
+        {roots.length > 0 && (
           <>
-            <Button type="button" variant="default" size="sm" onClick={() => setExpanded(collectIds(data, new Set()))}>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => setExpanded(collectIds(roots, new Set()))}
+            >
               {t("employees:orgChart.expandAll")}
             </Button>
-            <Button type="button" variant="default" size="sm" onClick={() => setExpanded(new Set())}>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => setExpanded(new Set())}
+            >
               {t("employees:orgChart.collapseAll")}
             </Button>
+            <Group gap={4} wrap="nowrap">
+              <ActionIcon
+                type="button"
+                variant="default"
+                aria-label={t("employees:orgChart.zoomOut")}
+                disabled={zoomIndex === 0}
+                onClick={() => setZoomIndex((i) => i - 1)}
+              >
+                <Minus size={14} />
+              </ActionIcon>
+              <Text size="sm" w={44} ta="center" c="dimmed">
+                {Math.round(zoom * 100)}%
+              </Text>
+              <ActionIcon
+                type="button"
+                variant="default"
+                aria-label={t("employees:orgChart.zoomIn")}
+                disabled={zoomIndex === ZOOM_STEPS.length - 1}
+                onClick={() => setZoomIndex((i) => i + 1)}
+              >
+                <Plus size={14} />
+              </ActionIcon>
+            </Group>
           </>
         )}
         {found && (
@@ -127,12 +298,16 @@ export default function OrgChartPage() {
         )}
       </Group>
 
-      <Card withBorder padding="md">
+      <Card withBorder padding="lg">
         {isLoading ? (
-          <Stack gap="xs">
-            <Skeleton h={40} w="66%" />
-            <Skeleton h={40} w="50%" ml={32} />
-            <Skeleton h={40} w="50%" ml={32} />
+          <Stack align="center" gap="lg">
+            <Skeleton h={36} w={160} />
+            <Skeleton h={64} w={64} />
+            <Group gap="xl">
+              <Skeleton h={64} w={64} />
+              <Skeleton h={64} w={64} />
+              <Skeleton h={64} w={64} />
+            </Group>
           </Stack>
         ) : error ? (
           <Text p="lg" ta="center" size="sm" c="red">
@@ -143,19 +318,44 @@ export default function OrgChartPage() {
             {t("employees:orgChart.empty")}
           </Text>
         ) : (
-          <ul role="tree" className="space-y-1">
-            {data.map((node) => (
-              <OrgChartItem
-                key={node.id}
-                node={node}
-                expanded={expanded}
-                forcedOpen={found?.open}
-                matches={found?.matches}
-                onToggle={toggle}
-                canOpenCard={canReadEmployees}
-              />
-            ))}
-          </ul>
+          <div className="overflow-auto pb-2">
+            <div style={{ zoom }}>
+              <ul
+                ref={treeRef}
+                role="tree"
+                aria-label={t("employees:orgChart.title")}
+                className={classes.tree}
+              >
+                {companies.length > 0 ? (
+                  <li role="none">
+                    <Select
+                      className={classes.company}
+                      variant="unstyled"
+                      px="sm"
+                      size="sm"
+                      fw={500}
+                      allowDeselect={false}
+                      comboboxProps={{ width: "max-content", position: "bottom-start" }}
+                      aria-label={t("employees:orgChart.company")}
+                      data={
+                        showAllOption
+                          ? [
+                              { value: ALL_COMPANIES, label: t("employees:orgChart.allCompanies") },
+                              ...companies,
+                            ]
+                          : companies
+                      }
+                      value={company}
+                      onChange={(value) => setSelectedCompany(value)}
+                    />
+                    {nodes.length > 0 && <ul role="group">{nodes}</ul>}
+                  </li>
+                ) : (
+                  nodes
+                )}
+              </ul>
+            </div>
+          </div>
         )}
       </Card>
     </div>
@@ -171,86 +371,75 @@ interface OrgChartItemProps {
   canOpenCard: boolean;
 }
 
-function OrgChartItem({ node, expanded, forcedOpen, matches, onToggle, canOpenCard }: OrgChartItemProps) {
+function OrgChartItem({
+  node,
+  expanded,
+  forcedOpen,
+  matches,
+  onToggle,
+  canOpenCard,
+}: OrgChartItemProps) {
   const { t } = useTranslation(["employees"]);
-  const navigate = useNavigate();
-  const { nameById } = useOrgUnits();
   const hasChildren = node.children.length > 0;
   const isOpen = hasChildren && (expanded.has(node.id) || Boolean(forcedOpen?.has(node.id)));
   const isMatch = Boolean(matches?.has(node.id));
-  const dimmed = matches !== undefined && !isMatch;
-  const unitName = node.orgUnitId ? nameById.get(node.orgUnitId) : undefined;
   const [first = "", ...rest] = node.displayName.split(" ");
-  const toggleLabel = isOpen ? t("employees:orgChart.collapse") : t("employees:orgChart.expand");
+  const toggleLabel = `${isOpen ? t("employees:orgChart.collapse") : t("employees:orgChart.expand")} · ${t("employees:orgChart.reports", { count: node.children.length })}`;
 
-  const content: ReactNode = (
-    <Group gap="sm" wrap="nowrap" className="min-w-0">
-      <Avatar size={32} radius="xl" color={avatarColor(node.id)}>
-        {`${first.charAt(0)}${rest[rest.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr")}
-      </Avatar>
-      <div className="min-w-0">
-        <Text size="sm" fw={500} truncate>
-          {node.displayName}
-        </Text>
-        {(unitName || hasChildren) && (
-          <Text size="xs" c="dimmed" truncate>
-            {[unitName, hasChildren ? t("employees:orgChart.reports", { count: node.children.length }) : null]
-              .filter(Boolean)
-              .join(" · ")}
+  return (
+    <li
+      role="treeitem"
+      aria-expanded={hasChildren ? isOpen : undefined}
+      aria-label={node.displayName}
+    >
+      <div
+        className={classes.node}
+        data-match={isMatch || undefined}
+        data-dimmed={(matches !== undefined && !isMatch) || undefined}
+      >
+        <div className={classes.avatar}>
+          <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
+            {`${first.charAt(0)}${rest[rest.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr")}
+          </Avatar>
+          {hasChildren && (
+            <Tooltip label={toggleLabel} openDelay={400}>
+              <ActionIcon
+                type="button"
+                size="sm"
+                radius="xl"
+                variant="default"
+                className={classes.toggle}
+                aria-label={toggleLabel}
+                data-print-hide
+                onClick={() => onToggle(node.id)}
+              >
+                {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </div>
+        {canOpenCard ? (
+          <Anchor
+            component={Link}
+            to={`/app/employees/${node.id}`}
+            className={classes.name}
+            underline="hover"
+          >
+            {node.displayName}
+          </Anchor>
+        ) : (
+          <Text component="span" className={classes.name}>
+            {node.displayName}
+          </Text>
+        )}
+        {node.titleName && (
+          <Text component="span" className={classes.title}>
+            {node.titleName}
           </Text>
         )}
       </div>
-    </Group>
-  );
-
-  const nodeStyle = {
-    opacity: dimmed ? 0.6 : undefined,
-    borderColor: isMatch ? "var(--mantine-primary-color-filled)" : undefined,
-    boxShadow: isMatch ? "0 0 0 1px var(--mantine-primary-color-filled)" : undefined,
-  };
-
-  return (
-    <li role="treeitem" aria-expanded={hasChildren ? isOpen : undefined}>
-      <Group gap={4} wrap="nowrap">
-        {hasChildren ? (
-          <Tooltip label={toggleLabel} openDelay={500}>
-            <ActionIcon type="button" variant="subtle" color="gray" aria-label={toggleLabel} onClick={() => onToggle(node.id)}>
-              {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-            </ActionIcon>
-          </Tooltip>
-        ) : (
-          <div className="w-7 shrink-0" aria-hidden />
-        )}
-        {canOpenCard ? (
-          <Button
-            type="button"
-            variant={isMatch ? "light" : "default"}
-            h="auto"
-            px="sm"
-            py={8}
-            fw={400}
-            justify="flex-start"
-            className="min-w-0"
-            style={nodeStyle}
-            onClick={() => navigate(`/app/employees/${node.id}`)}
-          >
-            {content}
-          </Button>
-        ) : (
-          <Paper
-            withBorder
-            px="sm"
-            py={8}
-            className="min-w-0"
-            bg={isMatch ? "var(--mantine-primary-color-light)" : undefined}
-            style={nodeStyle}
-          >
-            {content}
-          </Paper>
-        )}
-      </Group>
       {isOpen && (
-        <ul role="group" className="ml-3.5 mt-1 space-y-1 border-l pl-4" style={{ borderColor: "var(--mantine-color-default-border)" }}>
+        <ul role="group">
           {node.children.map((child) => (
             <OrgChartItem
               key={child.id}

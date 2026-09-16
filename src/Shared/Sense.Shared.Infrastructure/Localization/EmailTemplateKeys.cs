@@ -9,6 +9,8 @@ public static class EmailTemplateKeys
     public const string PasswordResetBody = "email.password_reset.body";
     public const string WelcomeSubject = "email.welcome.subject";
     public const string WelcomeBody = "email.welcome.body";
+    public const string ReportReadySubject = "email.report_ready.subject";
+    public const string ReportReadyBody = "email.report_ready.body";
 
     public static class Placeholders
     {

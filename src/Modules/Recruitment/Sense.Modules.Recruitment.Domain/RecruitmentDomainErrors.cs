@@ -38,7 +38,6 @@ public static class RecruitmentDomainErrors
     public const string ScorecardRequiresScoreFields = "recruitment.form_template.scorecard_requires_score_fields";
     public const string ScorecardWeightsMustSumTo100 = "recruitment.form_template.scorecard_weights_must_sum_to_100";
 
-    public const string FormResponseNotFound = "recruitment.form_response.not_found";
     public const string FormResponseFieldRequired = "recruitment.form_response.field_required";
     public const string FormResponseScoreInvalid = "recruitment.form_response.score_invalid";
 

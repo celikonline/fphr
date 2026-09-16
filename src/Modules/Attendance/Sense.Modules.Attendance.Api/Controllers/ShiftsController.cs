@@ -84,4 +84,10 @@ public sealed class ShiftsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Unlock(DateOnly periodMonth, [FromBody] UnlockShiftPeriodRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new UnlockShiftPeriodCommand(periodMonth, request.Reason), ct));
+
+    /// <summary>"Vardiyam" (package A5 self-servis).</summary>
+    [HttpGet("me")]
+    [ProducesResponseType<IReadOnlyList<ShiftAssignmentDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyShiftAssignmentsQuery(from, to), ct));
 }

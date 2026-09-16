@@ -61,6 +61,8 @@ export interface EmployeeListItem {
   employmentType: EmploymentType | null;
   /** "Eksik bilgi" badge: a hired record with an unfilled personnel field (drafts are never flagged). */
   hasMissingInfo: boolean;
+  /** "Title" level unit of the placement chain (card view); missing when unplaced. */
+  titleName?: string | null;
 }
 
 /**
@@ -185,6 +187,10 @@ export interface OrgChartNode {
   displayName: string;
   orgUnitId: string | null;
   children: OrgChartNode[];
+  /** "Title"/"Company" level units of the placement chain; resolved server-side, missing when unplaced. */
+  titleName?: string | null;
+  companyId?: string | null;
+  companyName?: string | null;
 }
 
 export interface UpcomingBirthday {

@@ -1,7 +1,9 @@
 using Sense.Modules.Employee.Application;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Organization.Contracts;
 using Shouldly;
 using Xunit;
 using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
@@ -310,6 +312,25 @@ public sealed class EmployeeDomainTests
         tree[0].Children.Single().DisplayName.ShouldBe("Cto");
         tree[0].Children.Single().Children.Single().DisplayName.ShouldBe("Dev");
         tree[2].Children.Single().DisplayName.ShouldBe("LoopB");
+    }
+
+    [Fact]
+    public void OrgChart_WithPlacement_ResolvesTitleAndCompanyFromUnitChain()
+    {
+        Guid companyLevel = Guid.NewGuid(), titleLevel = Guid.NewGuid(), acme = Guid.NewGuid(), cfo = Guid.NewGuid();
+        var placement = new OrgPlacement(
+            [new OrgUnitTypeInfo(companyLevel, "Company", "Şirket", 1), new OrgUnitTypeInfo(titleLevel, "Title", "Ünvan", 4)],
+            [new OrgUnitInfo(acme, companyLevel, null, "Acme"), new OrgUnitInfo(cfo, titleLevel, acme, "CFO")]);
+        var placed = Row("Placed", null) with { OrgUnitId = cfo };
+        var unplaced = Row("Unplaced", null);
+
+        var tree = OrgChartBuilder.Build([placed, unplaced], placement);
+
+        tree[0].TitleName.ShouldBe("CFO");
+        tree[0].CompanyId.ShouldBe(acme);
+        tree[0].CompanyName.ShouldBe("Acme");
+        tree[1].TitleName.ShouldBeNull();
+        tree[1].CompanyId.ShouldBeNull();
     }
 
     private static EmployeeRow Row(string name, DateOnly? birthDate, Guid? managerId = null) =>

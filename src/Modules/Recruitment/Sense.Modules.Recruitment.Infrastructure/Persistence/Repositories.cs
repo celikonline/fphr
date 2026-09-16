@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Applications;
+using Sense.Modules.Recruitment.Domain.AutomationRules;
 using Sense.Modules.Recruitment.Domain.Candidates;
+using Sense.Modules.Recruitment.Domain.FormResponses;
+using Sense.Modules.Recruitment.Domain.FormTemplates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Modules.Recruitment.Domain.Tags;
@@ -130,4 +133,70 @@ public sealed class TagRepository(RecruitmentDbContext context) : ITagRepository
 
         return await query.OrderBy(t => t.Name).ToListAsync(cancellationToken);
     }
+}
+
+/// <summary>EF Core-backed RecruitmentFormTemplate repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class RecruitmentFormTemplateRepository(RecruitmentDbContext context) : IRecruitmentFormTemplateRepository
+{
+    public void Add(RecruitmentFormTemplate template) => context.FormTemplates.Add(template);
+
+    public async Task<Result<RecruitmentFormTemplate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var template = await context.FormTemplates.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
+        return template is null ? Error.NotFound(RecruitmentDomainErrors.FormTemplateNotFound) : template;
+    }
+
+    public async Task<IReadOnlyList<RecruitmentFormTemplate>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default)
+    {
+        var query = context.FormTemplates.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(t => t.IsActive);
+        }
+
+        return await query.OrderBy(t => t.Name).ToListAsync(cancellationToken);
+    }
+}
+
+/// <summary>EF Core-backed RecruitmentFormResponse repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class RecruitmentFormResponseRepository(RecruitmentDbContext context) : IRecruitmentFormResponseRepository
+{
+    public void Add(RecruitmentFormResponse response) => context.FormResponses.Add(response);
+
+    public async Task<IReadOnlyList<RecruitmentFormResponse>> ListByJobApplicationAsync(Guid jobApplicationId, CancellationToken cancellationToken = default) =>
+        await context.FormResponses
+            .Where(r => r.JobApplicationId == jobApplicationId)
+            .OrderByDescending(r => r.SubmittedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<bool> ExistsForTemplateAsync(Guid jobApplicationId, Guid templateId, CancellationToken cancellationToken = default) =>
+        await context.FormResponses.AnyAsync(r => r.JobApplicationId == jobApplicationId && r.TemplateId == templateId, cancellationToken);
+}
+
+/// <summary>EF Core-backed AutomationRule repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class AutomationRuleRepository(RecruitmentDbContext context) : IAutomationRuleRepository
+{
+    public void Add(AutomationRule rule) => context.AutomationRules.Add(rule);
+
+    public async Task<Result<AutomationRule>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var rule = await context.AutomationRules.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return rule is null ? Error.NotFound(RecruitmentDomainErrors.AutomationRuleNotFound) : rule;
+    }
+
+    public async Task<IReadOnlyList<AutomationRule>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default)
+    {
+        var query = context.AutomationRules.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(r => r.IsActive);
+        }
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AutomationRule>> FindActiveForTransitionAsync(ApplicationStage fromStage, ApplicationStage toStage, CancellationToken cancellationToken = default) =>
+        await context.AutomationRules
+            .Where(r => r.IsActive && r.FromStage == fromStage && r.ToStage == toStage)
+            .ToListAsync(cancellationToken);
 }

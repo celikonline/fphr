@@ -1,9 +1,11 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Application;
+using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
+using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.WorkSchedules;
@@ -35,15 +37,18 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IShiftSettingsRepository, ShiftSettingsRepository>();
         services.AddScoped<IShiftAssignmentRepository, ShiftAssignmentRepository>();
         services.AddScoped<IShiftPlanLockRepository, ShiftPlanLockRepository>();
+        services.AddScoped<IEmployeeAvailabilityRepository, EmployeeAvailabilityRepository>();
+        services.AddScoped<ICompensatoryWorkLedgerRepository, CompensatoryWorkLedgerRepository>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         return services;
     }
 
-    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired), registered explicitly for Sense.Worker.</summary>
+    /// <summary>Attendance's cross-module integration event handlers (EmployeeHired, TimesheetWeekCompleted), registered explicitly for Sense.Worker.</summary>
     public static IServiceCollection AddAttendanceIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
+        services.AddScoped<IIntegrationEventHandler<TimesheetWeekCompleted>, TimesheetWeekCompletedHandler>();
         return services;
     }
 }

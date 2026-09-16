@@ -5,14 +5,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, Plus, UserPlus } from "lucide-react";
+import { ArrowLeft, Briefcase, ClipboardCheck, Plus, UserPlus } from "lucide-react";
 import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Divider,
   Group,
   Modal,
+  NumberInput,
   Select,
   Stack,
   Table,
@@ -33,10 +35,14 @@ import {
   getJobRequisition,
   listApplicationsByPosting,
   listCandidates,
+  listFormResponsesByApplication,
+  listFormTemplates,
   moveJobApplicationStage,
+  submitFormResponse,
   APPLICATION_STAGES,
   type ApplicationStage,
   type Candidate,
+  type FieldAnswerInput,
   type JobPosting,
 } from "@/services/recruitment.service";
 
@@ -67,6 +73,7 @@ function JobPostingDetail() {
   const { t, i18n } = useTranslation(["recruitment", "common"]);
   const queryClient = useQueryClient();
   const canManageApplications = usePermission("recruitment.applications.manage");
+  const canSubmitForms = usePermission("recruitment.form_responses.submit");
   const { nameById: orgUnitNameById } = useOrgUnits();
 
   const postingQuery = useQuery({
@@ -86,6 +93,7 @@ function JobPostingDetail() {
     enabled: Boolean(id),
   });
   const candidatesQuery = useQuery({ queryKey: ["recruitment", "candidates"], queryFn: () => listCandidates() });
+  const templatesQuery = useQuery({ queryKey: ["recruitment", "form-templates", "active"], queryFn: () => listFormTemplates(true) });
 
   const candidateById = useMemo(() => new Map((candidatesQuery.data ?? []).map((c: Candidate) => [c.id, c])), [candidatesQuery.data]);
 
@@ -132,6 +140,33 @@ function JobPostingDetail() {
     },
     onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
   });
+
+  const [formApplicationId, setFormApplicationId] = useState<string | null>(null);
+  const [formTemplateId, setFormTemplateId] = useState<string | null>(null);
+  const [formAnswers, setFormAnswers] = useState<Record<string, string>>({});
+
+  const responsesQuery = useQuery({
+    queryKey: ["recruitment", "form-responses", formApplicationId],
+    queryFn: () => listFormResponsesByApplication(formApplicationId!),
+    enabled: Boolean(formApplicationId),
+  });
+
+  const submitFormMutation = useMutation({
+    mutationFn: () => {
+      const answers: FieldAnswerInput[] = Object.entries(formAnswers).map(([fieldId, value]) => ({ fieldId, value: value || null }));
+      return submitFormResponse(formTemplateId!, formApplicationId!, answers);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recruitment", "form-responses", formApplicationId] });
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:applications.formSubmitted") });
+      setFormTemplateId(null);
+      setFormAnswers({});
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const selectedTemplate = (templatesQuery.data ?? []).find((tpl) => tpl.id === formTemplateId);
+  const templateOptions = (templatesQuery.data ?? []).map((tpl) => ({ value: tpl.id, label: tpl.name }));
 
   function closeAddDialog() {
     setAddOpen(false);
@@ -222,6 +257,7 @@ function JobPostingDetail() {
                 <Table.Th>{t("recruitment:applications.candidate")}</Table.Th>
                 <Table.Th>{t("recruitment:applications.appliedAt")}</Table.Th>
                 <Table.Th>{t("recruitment:applications.stage")}</Table.Th>
+                {canSubmitForms && <Table.Th>{t("recruitment:applications.forms")}</Table.Th>}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -241,6 +277,22 @@ function JobPostingDetail() {
                         onChange={(value) => value && stageMutation.mutate({ applicationId: application.id, stage: value as ApplicationStage })}
                       />
                     </Table.Td>
+                    {canSubmitForms && (
+                      <Table.Td>
+                        <Button
+                          size="xs"
+                          variant="subtle"
+                          leftSection={<ClipboardCheck size={14} />}
+                          onClick={() => {
+                            setFormApplicationId(application.id);
+                            setFormTemplateId(null);
+                            setFormAnswers({});
+                          }}
+                        >
+                          {t("recruitment:applications.fillForm")}
+                        </Button>
+                      </Table.Td>
+                    )}
                   </Table.Tr>
                 );
               })}
@@ -308,6 +360,83 @@ function JobPostingDetail() {
               </Stack>
             </form>
           )}
+        </Stack>
+      </Modal>
+
+      <Modal opened={formApplicationId !== null} onClose={() => setFormApplicationId(null)} title={t("recruitment:applications.fillForm")} size="lg">
+        <Stack gap="md">
+          {responsesQuery.data && responsesQuery.data.length > 0 && (
+            <Text size="sm" c="dimmed">
+              {t("recruitment:applications.responsesSubmitted", { count: responsesQuery.data.length })}
+            </Text>
+          )}
+
+          <Select
+            label={t("recruitment:applications.selectTemplate")}
+            data={templateOptions}
+            value={formTemplateId}
+            onChange={(value) => {
+              setFormTemplateId(value);
+              setFormAnswers({});
+            }}
+            searchable
+          />
+
+          {selectedTemplate && (
+            <Stack gap="sm">
+              {selectedTemplate.fields.map((field) => {
+                const value = formAnswers[field.id] ?? "";
+                const setValue = (v: string) => setFormAnswers((prev) => ({ ...prev, [field.id]: v }));
+                const label = `${field.label}${field.isRequired ? " *" : ""}`;
+
+                if (field.fieldType === "scoreCard") {
+                  return (
+                    <NumberInput
+                      key={field.id}
+                      label={label}
+                      min={0}
+                      max={100}
+                      value={value === "" ? undefined : Number(value)}
+                      onChange={(v) => setValue(v === "" || v === undefined ? "" : String(v))}
+                    />
+                  );
+                }
+
+                if (field.fieldType === "dropdown") {
+                  return (
+                    <Select
+                      key={field.id}
+                      label={label}
+                      data={field.options}
+                      value={value || null}
+                      onChange={(v) => setValue(v ?? "")}
+                    />
+                  );
+                }
+
+                if (field.fieldType === "checkbox") {
+                  return (
+                    <Checkbox key={field.id} label={label} checked={value === "true"} onChange={(e) => setValue(e.currentTarget.checked ? "true" : "false")} />
+                  );
+                }
+
+                if (field.fieldType === "date") {
+                  return <TextInput key={field.id} type="date" label={label} value={value} onChange={(e) => setValue(e.currentTarget.value)} />;
+                }
+
+                return <TextInput key={field.id} label={label} value={value} onChange={(e) => setValue(e.currentTarget.value)} />;
+              })}
+            </Stack>
+          )}
+
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={() => setFormApplicationId(null)} disabled={submitFormMutation.isPending}>
+              {t("common:cancel")}
+            </Button>
+            <Button type="button" disabled={!formTemplateId || submitFormMutation.isPending} onClick={() => submitFormMutation.mutate()}>
+              {submitFormMutation.isPending ? t("common:saving") : t("common:save")}
+            </Button>
+          </Group>
         </Stack>
       </Modal>
     </div>

@@ -29,6 +29,8 @@ public static class EmployeeImportOptions
             "Tam zamanlı", "Yarı zamanlı", "Geçici", "Sözleşmeli", "Serbest çalışan", "Stajyer",
             "Seyyar", "Çırak", "Mevsimlik", "Geçici iş ilişkisi (Büro)", "Alt işveren",
         ],
+        [typeof(SalaryType)] = ["Net", "Brüt"],
+        [typeof(PayFrequency)] = ["Aylık", "Günlük", "Yıllık", "Haftalık", "Saatlik"],
     };
 
     /// <summary>The values a column offers, in enum order.</summary>

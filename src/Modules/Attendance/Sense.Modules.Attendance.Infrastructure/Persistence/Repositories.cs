@@ -163,3 +163,41 @@ public sealed class ShiftPlanLockRepository(AttendanceDbContext context) : IShif
             ?? context.ShiftPlanLocks.Local.FirstOrDefault(p => p.PeriodMonth == normalized);
     }
 }
+
+public sealed class EmployeeAvailabilityRepository(AttendanceDbContext context) : IEmployeeAvailabilityRepository
+{
+    public void Add(EmployeeAvailability availability) => context.EmployeeAvailabilities.Add(availability);
+
+    public async Task<Result<EmployeeAvailability>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var availability = await context.EmployeeAvailabilities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return availability is null ? Error.NotFound(AttendanceDomainErrors.AvailabilityNotFound) : availability;
+    }
+
+    public async Task<IReadOnlyList<EmployeeAvailability>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.EmployeeAvailabilities
+            .Where(a => a.EmployeeId == employeeId && a.Date >= from && a.Date <= to)
+            .OrderBy(a => a.Date)
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository
+{
+    public void Add(CompensatoryWorkLedger ledger) => context.CompensatoryWorkLedgers.Add(ledger);
+
+    public async Task<Result<CompensatoryWorkLedger>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var ledger = await context.CompensatoryWorkLedgers.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+        return ledger is null ? Error.NotFound(AttendanceDomainErrors.CompensatoryLedgerNotFound) : ledger;
+    }
+
+    public async Task<CompensatoryWorkLedger?> FindByEmployeeAndWeekAsync(Guid employeeId, DateOnly weekStart, CancellationToken cancellationToken = default) =>
+        await context.CompensatoryWorkLedgers.FirstOrDefaultAsync(l => l.EmployeeId == employeeId && l.WeekStart == weekStart, cancellationToken)
+        ?? context.CompensatoryWorkLedgers.Local.FirstOrDefault(l => l.EmployeeId == employeeId && l.WeekStart == weekStart);
+
+    public async Task<IReadOnlyList<CompensatoryWorkLedger>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        await context.CompensatoryWorkLedgers
+            .Where(l => l.EmployeeId == employeeId && l.WeekStart >= from && l.WeekStart <= to)
+            .OrderBy(l => l.WeekStart)
+            .ToListAsync(cancellationToken);
+}

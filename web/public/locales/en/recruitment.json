@@ -106,7 +106,12 @@
     "createSuccess": "Application added.",
     "stageChanged": "Stage updated.",
     "empty": "No applications for this posting yet.",
-    "alreadyTerminal": "This application is resolved; its stage cannot be changed."
+    "alreadyTerminal": "This application is resolved; its stage cannot be changed.",
+    "forms": "Forms",
+    "fillForm": "Fill form",
+    "selectTemplate": "Select form template",
+    "responsesSubmitted": "{{count}} form response(s) submitted.",
+    "formSubmitted": "Form response submitted."
   },
   "requisitions": {
     "title": "Job Requisitions",
@@ -135,6 +140,54 @@
     "submitSuccess": "Requisition submitted for approval.",
     "cancelSuccess": "Requisition cancelled.",
     "empty": "No requisitions yet."
+  },
+  "formTemplates": {
+    "title": "Form Templates",
+    "subtitle": "Manage feedback, scorecard, and outcome form templates.",
+    "addTemplate": "Add Template",
+    "dialogCreateTitle": "New Form Template",
+    "name": "Name",
+    "type": "Type",
+    "types": {
+      "feedback": "Feedback",
+      "scorecard": "Scorecard",
+      "outcome": "Outcome"
+    },
+    "fieldCount": "Field count",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "fieldLabel": "Field label",
+    "fieldType": "Field type",
+    "fieldTypes": {
+      "scoreCard": "Score",
+      "paragraph": "Paragraph",
+      "singleLine": "Single line",
+      "date": "Date",
+      "dropdown": "Dropdown",
+      "checkbox": "Checkbox"
+    },
+    "optionsCommaSeparated": "Options (comma-separated)",
+    "weight": "Weight (%)",
+    "weightSum": "Score field weight total: {{sum}}/100",
+    "required": "Required",
+    "sensitive": "Sensitive",
+    "addField": "Add Field",
+    "createSuccess": "Form template created.",
+    "empty": "No form templates yet."
+  },
+  "automationRules": {
+    "title": "Automation Rules",
+    "subtitle": "Manage mandatory-form rules on pipeline stage transitions.",
+    "addRule": "Add Rule",
+    "dialogCreateTitle": "New Automation Rule",
+    "fromStage": "From stage",
+    "toStage": "To stage",
+    "requiredForm": "Required form",
+    "transition": "Transition",
+    "createSuccess": "Automation rule created.",
+    "empty": "No automation rules yet."
   },
   "genericError": "Something went wrong."
 }

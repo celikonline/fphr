@@ -87,6 +87,44 @@ public sealed class GetLeaveCalendarHandler(
     }
 }
 
+/// <summary>İzin Talepleri: pending leave requests of the employees in the caller's leave.requests.read data scope (Team for a Manager).</summary>
+[RequiresPermission("leave.requests.read")]
+public sealed record ListTeamLeaveRequestsQuery : IQuery<IReadOnlyList<LeaveCalendarEntryDto>>;
+
+public sealed class ListTeamLeaveRequestsHandler(
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IDataScopeService dataScope,
+    IEmployeeDirectory employees,
+    ILeaveRequestRepository requests,
+    ILeaveRuleSetRepository ruleSets,
+    TimeProvider clock)
+    : IQueryHandler<ListTeamLeaveRequestsQuery, IReadOnlyList<LeaveCalendarEntryDto>>
+{
+    public async Task<Result<IReadOnlyList<LeaveCalendarEntryDto>>> Handle(ListTeamLeaveRequestsQuery query, CancellationToken cancellationToken)
+    {
+        var visible = await dataScope.GetVisibleEmployeeIdsAsync(LeavePermissions.RequestsRead.Key, cancellationToken);
+        if (visible is { Count: 0 })
+        {
+            return Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>([]);
+        }
+
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var candidates = await requests.ListActiveInRangeAsync(today, today.AddDays(LeaveLimits.CalendarMaxRangeDays), visible, cancellationToken);
+        var pending = candidates.Where(r => r.Status == LeaveRequestStatus.Pending && r.EmployeeId != currentUser.EmployeeId).ToList();
+        if (pending.Count == 0)
+        {
+            return Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>([]);
+        }
+
+        var types = (await ruleSets.ListAsync(cancellationToken)).SelectMany(s => s.Types).ToDictionary(t => t.Id);
+        var names = (await employees.GetContactsAsync(tenant.TenantId, pending.Select(r => r.EmployeeId).Distinct().ToList(), cancellationToken))
+            .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+        return Result.Success(LeaveCalendar.Build(pending, types, names));
+    }
+}
+
 public static class LeaveCalendar
 {
     public static Result ValidateRange(DateOnly from, DateOnly to)

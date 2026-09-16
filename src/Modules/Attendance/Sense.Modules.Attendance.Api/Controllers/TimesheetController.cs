@@ -42,6 +42,12 @@ public sealed class TimesheetController : ApiControllerBase
     public async Task<IActionResult> Mine([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyAttendanceDaysQuery(from, to), ct));
 
+    /// <summary>"Puantajım" özet kartları (toplam çalışma günü/saati).</summary>
+    [HttpGet("me/summary")]
+    [ProducesResponseType<MyTimesheetSummaryDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MySummary([FromQuery] DateOnly from, [FromQuery] DateOnly to, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyTimesheetSummaryQuery(from, to), ct));
+
     /// <summary>Hücre çekmecesindeki hareketler (11.3.6): bir günün uyuşmazlık çözüm geçmişi.</summary>
     [HttpGet("days/{attendanceDayId:guid}/resolutions")]
     [ProducesResponseType<IReadOnlyList<AnomalyResolutionDto>>(StatusCodes.Status200OK)]

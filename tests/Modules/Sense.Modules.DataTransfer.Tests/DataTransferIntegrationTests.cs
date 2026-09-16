@@ -9,7 +9,10 @@ using Sense.Modules.DataTransfer.Application.ImportJobs;
 using Sense.Modules.DataTransfer.Domain.ImportJobs;
 using Sense.Modules.DataTransfer.Infrastructure.Persistence;
 using Sense.Modules.Employee.Api;
+using Sense.Modules.Employee.Application.CustomFields;
 using Sense.Modules.Employee.Application.Employees;
+using Sense.Modules.Employee.Application.Payments;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
@@ -291,7 +294,7 @@ public sealed class DataTransferIntegrationTests : TestFixture
         var firstName = job.SourceColumns.Single(c => c.Header == "Given name");
         (firstName.SuggestedTargetKey, firstName.AutoMatched).ShouldBe(("firstName", true));
         // Every template column except the renamed "firstName" header maps itself by the hidden key row.
-        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(29);
+        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(36);
 
         await MapAsync(job, "Upsert", "SkipInvalidRows");
         var run = await RunAsync(job.Id);
@@ -308,6 +311,95 @@ public sealed class DataTransferIntegrationTests : TestFixture
         await MapAsync(csvJob, "Upsert", "SkipInvalidRows");
         (await RunAsync(csvJob.Id)).InsertedCount.ShouldBe(1);
         (await ServiceProvider!.GetRequiredService<EmployeeDbContext>().Employees.AsNoTracking().SingleAsync(e => e.NationalId == csvId)).BirthDate.ShouldBe(new DateOnly(1999, 9, 21));
+    }
+
+    /// <summary>
+    /// E6 part 2 (salary block + custom field columns): a full block on a new-hire row creates a SalaryRecord; an
+    /// empty block on an update row leaves existing salary history untouched; a block with only the effective date
+    /// filled is silently ignored (11.3.03 "Maaş bloğu bütünlüğü"); a custom field column round-trips through
+    /// CustomFieldValueCoercion, and an unknown option value is a row error rather than a crash.
+    /// </summary>
+    [Fact]
+    public async Task Import_AppliesSalaryBlockAndCustomFields_PerRowSemantics()
+    {
+        var tenantId = SetUser();
+        await SeedOrgAsync(tenantId);
+
+        var definition = await ExecuteCommandAsync(new CreateCustomFieldDefinitionCommand(
+            "beden", "Beden", CustomFieldDataType.SingleSelect, CustomFieldSection.Personal, ["S", "M", "L"], false, false, false));
+        definition.IsSuccess.ShouldBeTrue(definition.IsFailure ? definition.Error.Code : null);
+
+        var existing = await CreateEmployeeAsync("Deniz", "Kara", Tckn.Next());
+        var existingSalary = await ExecuteCommandAsync(
+            new AddSalaryRecordCommand(existing.Id, new DateOnly(2023, 1, 1), 20000m, "TRY", SalaryType.Net, PayFrequency.Monthly));
+        existingSalary.IsSuccess.ShouldBeTrue(existingSalary.IsFailure ? existingSalary.Error.Code : null);
+
+        var newHireId = Tckn.Next();
+        var onlyDateId = Tckn.Next();
+        var badOptionId = Tckn.Next();
+
+        var template = (await ExecuteQueryAsync(new DownloadImportTemplateQuery(Template, "tr"))).Value;
+        byte[] filled;
+        using (var workbook = new XLWorkbook(new MemoryStream(template.Content)))
+        {
+            var sheet = workbook.Worksheet(1);
+            var columnOf = sheet.Row(2).CellsUsed().ToDictionary(c => c.GetString(), c => c.Address.ColumnNumber);
+
+            // Row 3: new hire, full salary block + a valid custom field value.
+            sheet.Cell(3, columnOf["firstName"]).Value = "Ela";
+            sheet.Cell(3, columnOf["lastName"]).Value = "Su";
+            sheet.Cell(3, columnOf["nationalId"]).Value = newHireId;
+            sheet.Cell(3, columnOf["salaryEffectiveFrom"]).Value = new DateTime(2026, 1, 1);
+            sheet.Cell(3, columnOf["salaryAmount"]).Value = "30000";
+            sheet.Cell(3, columnOf["salaryCurrency"]).Value = "TL";
+            sheet.Cell(3, columnOf["salaryType"]).Value = "Net";
+            sheet.Cell(3, columnOf["payFrequency"]).Value = "Aylık";
+            sheet.Cell(3, columnOf["transportAllowance"]).Value = "500";
+            sheet.Cell(3, columnOf["customField:beden"]).Value = "M";
+
+            // Row 4: existing employee, empty salary block and empty custom field column - both untouched.
+            sheet.Cell(4, columnOf["nationalId"]).Value = existing.NationalId;
+            sheet.Cell(4, columnOf["city"]).Value = "İzmir";
+
+            // Row 5: new hire, only the effective date filled - the whole block is silently ignored (not an error).
+            sheet.Cell(5, columnOf["firstName"]).Value = "Onur";
+            sheet.Cell(5, columnOf["lastName"]).Value = "Ak";
+            sheet.Cell(5, columnOf["nationalId"]).Value = onlyDateId;
+            sheet.Cell(5, columnOf["salaryEffectiveFrom"]).Value = new DateTime(2026, 2, 1);
+
+            // Row 6: new hire, unknown custom field option - a row error, not a crash.
+            sheet.Cell(6, columnOf["firstName"]).Value = "Mert";
+            sheet.Cell(6, columnOf["lastName"]).Value = "Yaz";
+            sheet.Cell(6, columnOf["nationalId"]).Value = badOptionId;
+            sheet.Cell(6, columnOf["customField:beden"]).Value = "XL";
+
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            filled = stream.ToArray();
+        }
+
+        var job = await UploadAsync("maas-ve-ozel-alan.xlsx", filled);
+        await MapAsync(job, "Upsert", "SkipInvalidRows");
+        var run = await RunAsync(job.Id);
+        (run.InsertedCount, run.UpdatedCount, run.ErrorCount).ShouldBe((2, 1, 1));
+
+        var db = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+        var ela = await db.Employees.Include(e => e.SalaryRecords).Include(e => e.CustomFieldValues).AsSplitQuery().AsNoTracking().SingleAsync(e => e.NationalId == newHireId);
+        var elaSalary = ela.SalaryRecords.ShouldHaveSingleItem();
+        (elaSalary.EffectiveFrom, elaSalary.Amount, elaSalary.Currency, elaSalary.SalaryType, elaSalary.PayFrequency, elaSalary.TransportAllowance, elaSalary.Source).ShouldBe(
+            (new DateOnly(2026, 1, 1), 30000m, "TRY", SalaryType.Net, PayFrequency.Monthly, 500m, SalarySource.Import));
+        ela.CustomFieldValues.ShouldHaveSingleItem().Value.ShouldBe("M");
+
+        var deniz = await db.Employees.Include(e => e.SalaryRecords).AsSplitQuery().AsNoTracking().SingleAsync(e => e.Id == existing.Id);
+        deniz.SalaryRecords.ShouldHaveSingleItem().EffectiveFrom.ShouldBe(new DateOnly(2023, 1, 1));
+
+        var onur = await db.Employees.Include(e => e.SalaryRecords).AsSplitQuery().AsNoTracking().SingleAsync(e => e.NationalId == onlyDateId);
+        onur.SalaryRecords.ShouldBeEmpty();
+
+        (await db.Employees.AsNoTracking().AnyAsync(e => e.NationalId == badOptionId)).ShouldBeFalse();
+        var errors = (await ExecuteQueryAsync(new ListImportJobRowsQuery(job.Id, "Error", new PagedQuery()))).Value;
+        var badRow = errors.Items.ShouldHaveSingleItem();
+        badRow.Errors.Single().Code.ShouldBe(CustomFieldDomainErrors.OptionUnknown);
     }
 
     private static IReadOnlyList<string> Codes(PagedResult<ImportJobRowDto> rows, int rowNumber) =>

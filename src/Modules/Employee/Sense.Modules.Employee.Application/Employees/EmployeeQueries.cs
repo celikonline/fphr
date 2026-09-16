@@ -29,7 +29,8 @@ public sealed class ListEmployeesHandler(
     ITenantContext tenant,
     IEmployeeReadStore store,
     EmployeeSelectionResolver resolver,
-    IUserAccountLookup accounts) : IQueryHandler<ListEmployeesQuery, PagedResult<EmployeeListItemDto>>
+    IUserAccountLookup accounts,
+    OrgPlacementLoader placementLoader) : IQueryHandler<ListEmployeesQuery, PagedResult<EmployeeListItemDto>>
 {
     public async Task<Result<PagedResult<EmployeeListItemDto>>> Handle(ListEmployeesQuery query, CancellationToken cancellationToken)
     {
@@ -49,6 +50,10 @@ public sealed class ListEmployeesHandler(
             ? new Dictionary<Guid, UserAccountInfo>()
             : await accounts.GetAsync(tenant.TenantId, userIds, cancellationToken);
 
+        var placement = page.Items.Any(e => e.OrgUnitId is not null)
+            ? await placementLoader.LoadAsync(cancellationToken)
+            : null;
+
         return page.Map(e => new EmployeeListItemDto(
             e.Id,
             e.FirstName,
@@ -67,7 +72,8 @@ public sealed class ListEmployeesHandler(
             e.HireDate,
             e.ContractType,
             e.EmploymentType,
-            EmployeeCompleteness.IsMissingInfo(e)));
+            EmployeeCompleteness.IsMissingInfo(e),
+            placement?.LevelUnitFor(e.OrgUnitId, "Title")?.Name));
     }
 }
 
@@ -143,9 +149,8 @@ public sealed class EmployeeDetailBuilder(
         if (e.OrgUnitId is not null)
         {
             var placement = await placementLoader.LoadAsync(ct).ConfigureAwait(false);
-            var chain = placement.ChainFor(e.OrgUnitId);
-            departmentName = LevelName(placement, chain, "Department");
-            titleName = LevelName(placement, chain, "Title");
+            departmentName = placement.LevelUnitFor(e.OrgUnitId, "Department")?.Name;
+            titleName = placement.LevelUnitFor(e.OrgUnitId, "Title")?.Name;
         }
 
         string? subcontractorName = null;
@@ -202,13 +207,6 @@ public sealed class EmployeeDetailBuilder(
             e.TerminationType,
             e.SgkExitCode);
     }
-
-    private static string? LevelName(OrgPlacement placement, IReadOnlyList<OrgAssignmentInput> chain, string levelCode)
-    {
-        var level = placement.Types.FirstOrDefault(t => t.Code == levelCode);
-        var assignment = level is null ? null : chain.FirstOrDefault(a => a.OrgUnitTypeId == level.Id);
-        return assignment is null ? null : placement.UnitsById.GetValueOrDefault(assignment.OrgUnitId)?.Name;
-    }
 }
 
 /// <summary>The caller's own employee card ("Kendi kartım"); 404 when the caller has no linked employee record.</summary>
@@ -262,23 +260,29 @@ public sealed class GetEmployeeDirectoryHandler(IEmployeeReadStore store, IAcces
     }
 }
 
-/// <summary>Organization chart by manager hierarchy (roots = active employees without an active manager). Company-wide like the directory.</summary>
+/// <summary>
+/// Organization chart by manager hierarchy (roots = active employees without an active manager). Company-wide like the
+/// directory. Title/company names come from the org placement chain (like the employee card) so callers without
+/// organization.units.read still see them.
+/// </summary>
 [RequiresPermission(EmployeePermissions.OrgChartViewKey)]
 [RequiresAccessSetting(AccessSettingKeys.AccountShowOrgChart)]
 public sealed record GetOrgChartQuery : IQuery<IReadOnlyList<OrgChartNodeDto>>;
 
-public sealed class GetOrgChartHandler(IEmployeeReadStore store) : IQueryHandler<GetOrgChartQuery, IReadOnlyList<OrgChartNodeDto>>
+public sealed class GetOrgChartHandler(IEmployeeReadStore store, OrgPlacementLoader placementLoader)
+    : IQueryHandler<GetOrgChartQuery, IReadOnlyList<OrgChartNodeDto>>
 {
     public async Task<Result<IReadOnlyList<OrgChartNodeDto>>> Handle(GetOrgChartQuery query, CancellationToken cancellationToken)
     {
         var rows = await store.ListAllAsync(new EmployeeCriteria(ActiveOnly: true), cancellationToken);
-        return Result.Success(OrgChartBuilder.Build(rows));
+        var placement = await placementLoader.LoadAsync(cancellationToken);
+        return Result.Success(OrgChartBuilder.Build(rows, placement));
     }
 }
 
 public static class OrgChartBuilder
 {
-    public static IReadOnlyList<OrgChartNodeDto> Build(IReadOnlyList<EmployeeRow> rows)
+    public static IReadOnlyList<OrgChartNodeDto> Build(IReadOnlyList<EmployeeRow> rows, OrgPlacement? placement = null)
     {
         var ids = rows.Select(r => r.Id).ToHashSet();
         var ordered = rows.OrderBy(r => r.DisplayName, StringComparer.CurrentCultureIgnoreCase).ToList();
@@ -290,7 +294,7 @@ public static class OrgChartBuilder
         var roots = new List<OrgChartNodeDto>();
         foreach (var root in ordered.Where(r => r.ManagerEmployeeId is not { } m || !ids.Contains(m)))
         {
-            roots.Add(BuildNode(root, children, visited));
+            roots.Add(BuildNode(root, children, visited, placement));
         }
 
         // Rows only reachable through a (corrupt) manager loop would otherwise disappear from the chart.
@@ -298,21 +302,23 @@ public static class OrgChartBuilder
         {
             if (!visited.Contains(orphan.Id))
             {
-                roots.Add(BuildNode(orphan, children, visited));
+                roots.Add(BuildNode(orphan, children, visited, placement));
             }
         }
 
         return roots;
     }
 
-    private static OrgChartNodeDto BuildNode(EmployeeRow row, ILookup<Guid, EmployeeRow> children, HashSet<Guid> visited)
+    private static OrgChartNodeDto BuildNode(EmployeeRow row, ILookup<Guid, EmployeeRow> children, HashSet<Guid> visited, OrgPlacement? placement)
     {
         visited.Add(row.Id);
         var childNodes = children[row.Id]
             .Where(c => !visited.Contains(c.Id))
-            .Select(c => BuildNode(c, children, visited))
+            .Select(c => BuildNode(c, children, visited, placement))
             .ToList();
-        return new OrgChartNodeDto(row.Id, row.DisplayName, row.OrgUnitId, childNodes);
+        var company = placement?.LevelUnitFor(row.OrgUnitId, "Company");
+        return new OrgChartNodeDto(
+            row.Id, row.DisplayName, row.OrgUnitId, childNodes, placement?.LevelUnitFor(row.OrgUnitId, "Title")?.Name, company?.Id, company?.Name);
     }
 }
 

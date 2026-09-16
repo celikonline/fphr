@@ -1,0 +1,151 @@
+/* Top-down org chart. Nested <ul>/<li> draw their own connectors: each <li> paints the horizontal bar above it
+   (::before = left half, ::after = right half + drop line) and every nested <ul> paints the line down from its parent.
+   States come from data attributes: data-match, data-dimmed. */
+
+.tree {
+  --org-line: light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
+  --org-gap: 28px;
+  --org-radius: 6px;
+
+  display: flex;
+  justify-content: center;
+  min-width: max-content;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.tree ul {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: var(--org-gap) 0 0;
+}
+
+.tree li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  list-style: none;
+  padding: var(--org-gap) 6px 0;
+}
+
+.tree li::before,
+.tree li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 50%;
+  width: 50%;
+  height: var(--org-gap);
+  border-top: 2px solid var(--org-line);
+}
+
+.tree li::after {
+  right: auto;
+  left: calc(50% - 1px);
+  border-left: 2px solid var(--org-line);
+}
+
+.tree li:only-child::before {
+  display: none;
+}
+
+.tree li:only-child::after {
+  border-top: 0;
+}
+
+.tree li:first-child::before,
+.tree li:last-child::after {
+  border-top: 0;
+}
+
+.tree li:last-child:not(:only-child)::before {
+  right: calc(50% - 1px);
+  border-right: 2px solid var(--org-line);
+  border-top-right-radius: var(--org-radius);
+}
+
+.tree li:last-child:not(:only-child)::after {
+  border-left: 0;
+}
+
+.tree li:first-child:not(:only-child)::after {
+  border-top-left-radius: var(--org-radius);
+}
+
+.tree ul::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: calc(50% - 1px);
+  height: var(--org-gap);
+  border-left: 2px solid var(--org-line);
+}
+
+/* Top level: no bar above the first row. */
+.tree > li {
+  padding-top: 0;
+}
+
+.tree > li::before,
+.tree > li::after {
+  display: none;
+}
+
+.company {
+  min-width: 160px;
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  border: 1px solid var(--mantine-color-default-border);
+  border-radius: var(--mantine-radius-sm);
+}
+
+.node {
+  display: flex;
+  width: 148px;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: var(--mantine-radius-md);
+  text-align: center;
+  transition: opacity 120ms ease;
+}
+
+.node[data-match] {
+  background-color: var(--mantine-primary-color-light);
+  box-shadow: 0 0 0 1px var(--mantine-primary-color-filled);
+}
+
+.node[data-dimmed] {
+  opacity: 0.45;
+}
+
+.avatar {
+  position: relative;
+  margin-bottom: 6px;
+}
+
+.toggle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  box-shadow: var(--mantine-shadow-xs);
+}
+
+.name {
+  max-width: 100%;
+  color: var(--mantine-primary-color-filled);
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  max-width: 100%;
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}

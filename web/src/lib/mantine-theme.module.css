@@ -1,0 +1,78 @@
+/*
+ * Soft form surfaces (Google Meet style): inputs are tonal blue-gray fills without a hard border, and pick up a
+ * brand border with a light ring on focus. Error/success states keep Mantine's colored borders.
+ */
+
+.inputWrapper {
+  --input-radius: calc(0.75rem * var(--mantine-scale));
+  --input-bd-focus: var(--mantine-primary-color-filled);
+}
+
+.inputWrapper:where([data-variant="default"], [data-variant="filled"]):not([data-error], [data-success]) {
+  --input-bg: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+  --input-bd: transparent;
+}
+
+.inputWrapper:where([data-variant="default"], [data-variant="filled"]) {
+  --input-disabled-bg: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.input {
+  transition:
+    border-color 100ms ease,
+    background-color 100ms ease,
+    box-shadow 100ms ease;
+}
+
+.input:hover:not(:focus, :focus-within, :disabled, [data-disabled]) {
+  --input-bg: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+}
+
+.input:focus,
+.input:focus-within {
+  --input-bg: var(--mantine-color-body);
+  box-shadow: 0 0 0 calc(0.1875rem * var(--mantine-scale))
+    light-dark(var(--mantine-color-brand-1), rgba(57, 166, 243, 0.25));
+}
+
+.inputWrapper[data-error] .input:focus,
+.inputWrapper[data-error] .input:focus-within {
+  box-shadow: 0 0 0 calc(0.1875rem * var(--mantine-scale))
+    light-dark(var(--mantine-color-red-1), rgba(220, 92, 108, 0.25));
+}
+
+.label {
+  font-weight: 500;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-1));
+}
+
+/* Sections become soft panels; the legend sits inside the panel as a heading instead of cutting a border. */
+.fieldset {
+  border-color: transparent;
+  border-radius: var(--mantine-radius-lg);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  padding-top: var(--mantine-spacing-md);
+}
+
+.legend {
+  float: inline-start;
+  width: 100%;
+  padding: 0;
+  margin-bottom: var(--mantine-spacing-sm);
+  font-weight: 600;
+  color: light-dark(var(--mantine-color-brand-8), var(--mantine-color-brand-3));
+}
+
+/* Inputs on a tinted panel switch to the page surface so they still stand out. */
+.fieldset .inputWrapper:where([data-variant="default"], [data-variant="filled"]):not([data-error], [data-success]) {
+  --input-bg: var(--mantine-color-body);
+}
+
+.fieldset .input:hover:not(:focus, :focus-within, :disabled, [data-disabled]) {
+  --input-bg: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+}
+
+.modalTitle {
+  font-weight: 600;
+  font-size: var(--mantine-font-size-lg);
+}

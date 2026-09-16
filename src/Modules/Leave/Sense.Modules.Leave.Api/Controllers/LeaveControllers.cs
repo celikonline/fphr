@@ -276,6 +276,18 @@ public sealed class LeaveCalendarController : ApiControllerBase
         FromResult((await Dispatcher.Query(new GetLeaveCalendarQuery(from, to, orgUnitId), ct)).Localize(localizer));
 }
 
+/// <summary>İzin Talepleri: pending leave requests of the caller's team, for the "Ana Sayfa" dashboard widget.</summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route("api/v{version:apiVersion}/leave/team/requests")]
+[Authorize]
+public sealed class LeaveTeamRequestsController : ApiControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<LeaveCalendarEntryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new ListTeamLeaveRequestsQuery(), ct)).Localize(localizer));
+}
+
 public sealed record OvertimeRequestBody(DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description);
 
 public sealed record RecordOvertimeConsentRequest(DateOnly GivenAt, OvertimeConsentSource Source, bool CoversNightWork, Guid? DocumentId);

@@ -85,6 +85,10 @@ public static class SystemRoleDefinitions
              "attendance.corrections.approve", "expense.claims.view", "expense.claims.approve", "employee.*.view", "organization.*.view", "performance.team.*",
              "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*", "reports.team.*", "documents.*.view",
              .. PermissionPatterns.SelfService, "leave.balances.read", "leave.calendar.read",
+             // Ana Sayfa "İzin Talepleri" widget needs the team's pending leave requests; "leave.requests.view"/".approve"
+             // above are stale placeholders that never matched a real LeavePermissions key (same pattern as the two keys
+             // above this comment) - appended the real key rather than replacing them.
+             "leave.requests.read",
              // Package A3: 11.3.06 spec names the resolve permission "attendance.timesheet.resolve" (matching the
              // module's other attendance.timesheet.* keys), not the "attendance.corrections.approve" placeholder
              // above that was never wired to an actual permission - appended rather than replacing it (hot file).

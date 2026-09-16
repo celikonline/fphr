@@ -338,6 +338,11 @@ The link is valid until {expires}. If you did not request this, ignore this e-ma
   <data name="email.welcome.body" xml:space="preserve"><value>Hello {name},
 
 Your SenseİK account is active. Sign in: {url}</value></data>
+  <data name="email.report_ready.subject" xml:space="preserve"><value>Your report is ready — SenseİK</value></data>
+  <data name="email.report_ready.body" xml:space="preserve"><value>Hello {name},
+
+The report you requested has been generated. Click the link to view and download it:
+{url}</value></data>
   <!-- Field names used in validation messages (field.{snake_case}) -->
   <data name="field.code" xml:space="preserve"><value>Code</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Company name</value></data>
@@ -436,6 +441,13 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="import.column.employee.postalCode" xml:space="preserve"><value>Postal code</value></data>
   <data name="import.column.employee.contractType" xml:space="preserve"><value>Contract type</value></data>
   <data name="import.column.employee.employmentType" xml:space="preserve"><value>Employment type</value></data>
+  <data name="import.column.employee.salaryEffectiveFrom" xml:space="preserve"><value>Salary effective date</value></data>
+  <data name="import.column.employee.salaryAmount" xml:space="preserve"><value>Salary</value></data>
+  <data name="import.column.employee.salaryCurrency" xml:space="preserve"><value>Currency</value></data>
+  <data name="import.column.employee.salaryType" xml:space="preserve"><value>Salary type</value></data>
+  <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Pay frequency</value></data>
+  <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
+  <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>The real date leave entitlement accrues from; left empty, the hire date is used.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
@@ -462,6 +474,14 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="import.column.employee.birthDate.description" xml:space="preserve"><value>DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD.</value></data>
   <data name="import.column.employee.manager.description" xml:space="preserve"><value>Full name of an existing active employee.</value></data>
   <data name="import.column.employee.orgUnit.description" xml:space="preserve"><value>Name of an active unit defined at this level (pick from the list).</value></data>
+  <data name="import.column.employee.salaryEffectiveFrom.description" xml:space="preserve"><value>DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD; without Salary as well, the row's whole salary block is ignored.</value></data>
+  <data name="import.column.employee.salaryAmount.description" xml:space="preserve"><value>Numeric, at most two decimals; without Salary effective date as well, the row's whole salary block is ignored.</value></data>
+  <data name="import.column.employee.salaryCurrency.description" xml:space="preserve"><value>ISO 4217 code (e.g. TRY, EUR, USD); the abbreviations "TL" and "Euro" are also accepted. Required when the salary block is filled.</value></data>
+  <data name="import.column.employee.salaryType.description" xml:space="preserve"><value>Pick from the list (Net or Gross). Required when the salary block is filled.</value></data>
+  <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Pick from the list (Monthly, Daily, Yearly, Weekly, Hourly). Required when the salary block is filled.</value></data>
+  <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
+  <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
+  <data name="import.column.employee.customField.description" xml:space="preserve"><value>Tenant-defined custom field; an empty cell keeps the stored value. Pick from the list for option-based fields; for multi-select, enter the values as a JSON list such as ["Value1","Value2"].</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Do not rename the header row; do not delete the hidden key row (row 2). Renamed columns can be mapped manually after upload.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>You may delete unused columns, reorder columns or insert your own columns (extra columns are left as 'Ignore').</value></data>
   <data name="import.instructions.dates" xml:space="preserve"><value>Dates must be DD.MM.YYYY, DD/MM/YYYY or YYYY-MM-DD (optionally with HH:MM) or Excel date cells; text such as '1 January 2020' is rejected.</value></data>
@@ -704,6 +724,26 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="recruitment.tag.name_required" xml:space="preserve"><value>A tag name is required.</value></data>
   <data name="recruitment.tag.already_inactive" xml:space="preserve"><value>This tag is already inactive.</value></data>
   <data name="recruitment.tag.name_taken" xml:space="preserve"><value>A tag with this name already exists.</value></data>
+  <data name="recruitment.form_templates.read" xml:space="preserve"><value>View Form Templates</value></data>
+  <data name="recruitment.form_templates.manage" xml:space="preserve"><value>Create, replace the fields of, or deactivate a form template</value></data>
+  <data name="recruitment.form_responses.read" xml:space="preserve"><value>View Form Responses</value></data>
+  <data name="recruitment.form_responses.submit" xml:space="preserve"><value>Submit a form response</value></data>
+  <data name="recruitment.automation_rules.read" xml:space="preserve"><value>View Automation Rules</value></data>
+  <data name="recruitment.automation_rules.manage" xml:space="preserve"><value>Create or deactivate an automation rule</value></data>
+  <data name="recruitment.form_template.not_found" xml:space="preserve"><value>Form template not found.</value></data>
+  <data name="recruitment.form_template.name_required" xml:space="preserve"><value>A form template name is required.</value></data>
+  <data name="recruitment.form_template.fields_required" xml:space="preserve"><value>A form template must have at least one field.</value></data>
+  <data name="recruitment.form_template.already_inactive" xml:space="preserve"><value>This form template is already inactive.</value></data>
+  <data name="recruitment.form_field.label_required" xml:space="preserve"><value>A field label is required.</value></data>
+  <data name="recruitment.form_field.options_required" xml:space="preserve"><value>A dropdown field needs at least one option.</value></data>
+  <data name="recruitment.form_template.scorecard_requires_score_fields" xml:space="preserve"><value>A scorecard template must have at least one score field.</value></data>
+  <data name="recruitment.form_template.scorecard_weights_must_sum_to_100" xml:space="preserve"><value>Score field weights must add up to 100.</value></data>
+  <data name="recruitment.form_response.field_required" xml:space="preserve"><value>"{Label}" is required.</value></data>
+  <data name="recruitment.form_response.score_invalid" xml:space="preserve"><value>"{Label}" must be a number between 0 and 100.</value></data>
+  <data name="recruitment.automation_rule.not_found" xml:space="preserve"><value>Automation rule not found.</value></data>
+  <data name="recruitment.automation_rule.same_stage" xml:space="preserve"><value>The from and to stages cannot be the same.</value></data>
+  <data name="recruitment.automation_rule.already_inactive" xml:space="preserve"><value>This automation rule is already inactive.</value></data>
+  <data name="recruitment.application.required_form_missing" xml:space="preserve"><value>A required form must be submitted before moving to this stage.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>View timesheets</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
@@ -730,6 +770,19 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="attendance.shift.daily_limit_exceeded" xml:space="preserve"><value>The daily working hours limit was exceeded.</value></data>
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>The weekly working hours limit was exceeded.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>The weekly working days limit was exceeded.</value></data>
+  <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>The employee reported being unavailable for this date/time.</value></data>
+  <data name="attendance.shift.self" xml:space="preserve"><value>View my own shifts</value></data>
+  <data name="attendance.availability.self" xml:space="preserve"><value>Report my own availability</value></data>
+  <data name="attendance.availability.view" xml:space="preserve"><value>View employee availability</value></data>
+  <data name="attendance.availability.time_range_invalid" xml:space="preserve"><value>The availability time range is invalid.</value></data>
+  <data name="attendance.availability.already_cancelled" xml:space="preserve"><value>This availability entry has already been cancelled.</value></data>
+  <data name="attendance.availability.not_found" xml:space="preserve"><value>Availability entry not found.</value></data>
+  <data name="attendance.availability.not_owner" xml:space="preserve"><value>This availability entry does not belong to you.</value></data>
+  <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
+  <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
+  <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
+  <data name="attendance.compensatory.not_open" xml:space="preserve"><value>This compensatory work ledger entry is not open.</value></data>
+  <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Compensatory minutes must be positive.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>
@@ -824,4 +877,14 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="asset.not_assigned" xml:space="preserve"><value>This asset is not currently assigned.</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
+  <!-- Reporting (Reports menu - roadmap #70) -->
+  <data name="report_execution.report_key_required" xml:space="preserve"><value>Report key is required.</value></data>
+  <data name="report_execution.not_found" xml:space="preserve"><value>Report execution not found.</value></data>
+  <data name="report_execution.unknown_report_key" xml:space="preserve"><value>Unknown report.</value></data>
+  <data name="report_execution.report_permission_denied" xml:space="preserve"><value>You do not have permission to generate this report.</value></data>
+  <data name="report_execution.not_owner" xml:space="preserve"><value>This report execution does not belong to you.</value></data>
+  <data name="report_execution.not_ready" xml:space="preserve"><value>The report is not ready yet.</value></data>
+  <data name="reports.catalog.view" xml:space="preserve"><value>View report catalog</value></data>
+  <data name="reports.executions.generate" xml:space="preserve"><value>Generate reports</value></data>
+  <data name="reports.my.executions" xml:space="preserve"><value>View own generated reports</value></data>
 </root>

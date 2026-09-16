@@ -43,6 +43,8 @@ import JobPostingDetailPage from "@/pages/recruitment/job-posting-detail";
 import CandidatesPage from "@/pages/recruitment/candidates";
 import TrustPage from "@/pages/trust";
 import JobRequisitionsPage from "@/pages/recruitment/job-requisitions";
+import RecruitmentFormTemplatesPage from "@/pages/settings/recruitment-form-templates";
+import RecruitmentAutomationRulesPage from "@/pages/settings/recruitment-automation-rules";
 import PaymentsPage from "@/pages/payments";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
@@ -100,6 +102,8 @@ export default function App() {
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />
           <Route path="recruitment/candidates" element={<CandidatesPage />} />
           <Route path="recruitment/requisitions" element={<JobRequisitionsPage />} />
+          <Route path="settings/recruitment/form-templates" element={<RecruitmentFormTemplatesPage />} />
+          <Route path="settings/recruitment/automation-rules" element={<RecruitmentAutomationRulesPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

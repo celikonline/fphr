@@ -11,7 +11,7 @@ import { avatarColor, initials } from "@/components/employees/employee-badges";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
-import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
+import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, getTeamLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
 
@@ -480,6 +480,66 @@ function UpcomingLeavesWidget() {
   );
 }
 
+/** "İzin Talepleri": pending leave requests of the caller's team, awaiting review. */
+function TeamLeaveRequestsWidget() {
+  const { t, i18n } = useTranslation(["home"]);
+  const days = useDays();
+  const canReadEmployees = usePermission("employee.employees.read");
+  const { data, isLoading, error, isFetching, refetch } = useQuery({
+    queryKey: ["home", "team-leave-requests"],
+    queryFn: getTeamLeaveRequests,
+    retry: retryUnlessClientError,
+  });
+  const entries = useMemo(
+    () => [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, LIST_LIMIT),
+    [data],
+  );
+
+  return (
+    <WidgetCard
+      title={t("home:teamRequests.title")}
+      icon={<Plane size={18} />}
+      accent="var(--mantine-color-orange-6)"
+      action={
+        <ActionIcon variant="subtle" size="sm" onClick={() => void refetch()} loading={isFetching} aria-label={t("home:refresh")}>
+          <RotateCw size={18} />
+        </ActionIcon>
+      }
+    >
+      {isLoading ? (
+        <WidgetSkeleton />
+      ) : error && getApiErrorStatus(error) !== 404 ? (
+        <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
+      ) : entries.length === 0 ? (
+        <WidgetMessage>{t("home:teamRequests.empty")}</WidgetMessage>
+      ) : (
+        <>
+          <RowList
+            items={entries}
+            rowKey={(entry) => entry.requestId}
+            render={(entry) => (
+              <>
+                <Group gap="sm" wrap="nowrap" className="min-w-0">
+                  <Avatar size={30} radius="xl" color={avatarColor(entry.employeeId)}>
+                    {nameInitials(entry.employeeName)}
+                  </Avatar>
+                  <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
+                </Group>
+                <Amount
+                  days={`${days(entry.calculatedDays)}${t("home:daysSuffix")}`}
+                  date={formatDateOnly(entry.startDate, i18n.language, SHORT_DATE)}
+                />
+              </>
+            )}
+          />
+          <Divider mt="md" />
+          <FooterLink to="/app/leave/calendar" label={t("home:teamRequests.viewCalendar")} />
+        </>
+      )}
+    </WidgetCard>
+  );
+}
+
 interface HolidayGroup {
   key: string;
   name: string;
@@ -669,6 +729,7 @@ export default function HomePage() {
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
   const canViewLeaveBalances = usePermission("leave.my.balances");
+  const canViewTeamRequests = usePermission("leave.requests.read");
   // The leave calendar endpoint also requires the Calendar.ShowMenu access setting.
   const hasLeaveCalendarPermission = usePermission("leave.my.calendar");
   const showCalendarMenu = useAccessSetting("showCalendarMenu");
@@ -683,6 +744,7 @@ export default function HomePage() {
     [showOrgInfo && <OrgInfoWidget key="org" />, canViewDirectory && <DepartmentDistributionWidget key="distribution" />],
     [canViewLeaveBalances && <LeaveInfoWidget key="leave" />, showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />],
     [
+      canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
       showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
       canViewHolidays && <HolidaysWidget key="holidays" />,
       showEvents && (

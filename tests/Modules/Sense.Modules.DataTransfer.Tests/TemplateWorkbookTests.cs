@@ -5,6 +5,7 @@ using Sense.Modules.DataTransfer.Application.ImportJobs;
 using Sense.Modules.DataTransfer.Domain.ImportJobs;
 using Sense.Modules.DataTransfer.Infrastructure.Files;
 using Sense.Modules.Employee.Application.Import;
+using Sense.Modules.Employee.Domain;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Import;
@@ -35,6 +36,7 @@ public sealed class TemplateWorkbookTests
             "Ad", "Soyad", "Kimlik numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
             "İzne esas hak ediş tarihi", "Cinsiyet", "Medeni durum", "Çocuk sayısı", "Eğitim durumu", "Son mezuniyet derecesi", "Askerlik durumu",
             "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu", "Sözleşme türü", "Çalışma şekli",
+            "Maaş geçerlilik tarihi", "Maaş", "Para birimi", "Maaş türü", "Ödeme düzeni", "Yol yardımı", "Yemek yardımı",
             "Şirket", "Departman"]);
 
         var keys = data.Row(2).CellsUsed().Select(c => c.GetString()).ToList();
@@ -42,6 +44,7 @@ public sealed class TemplateWorkbookTests
             "firstName", "lastName", "nationalId", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
             "leaveAccrualStartDate", "gender", "maritalStatus", "childCount", "educationStatus", "highestEducationLevel", "militaryStatus",
             "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode", "contractType", "employmentType",
+            "salaryEffectiveFrom", "salaryAmount", "salaryCurrency", "salaryType", "payFrequency", "transportAllowance", "mealAllowance",
             "orgUnit:Company", "orgUnit:Department"]);
         data.Row(2).IsHidden.ShouldBeTrue();
         data.RowsUsed(XLCellsUsedOptions.Contents).Count().ShouldBe(2);
@@ -57,8 +60,8 @@ public sealed class TemplateWorkbookTests
         departmentValidation.Value.ShouldContain("Listeler");
         departmentValidation.Ranges.Single().RangeAddress.FirstAddress.RowNumber.ShouldBe(3);
 
-        // One dropdown per option-bearing column: the two org levels plus the nine enum columns (E6).
-        data.DataValidations.Count().ShouldBe(11);
+        // One dropdown per option-bearing column: the two org levels plus the eleven enum columns (E6 personnel fields + salary type/pay frequency).
+        data.DataValidations.Count().ShouldBe(13);
 
         var instructions = workbook.Worksheet("Açıklamalar");
         instructions.Cell(1, 1).GetString().ShouldBe("Veri aktarım kuralları");
@@ -164,7 +167,9 @@ public sealed class TemplateWorkbookTests
             new OrgUnitInfo(Guid.NewGuid(), DepartmentType.Id, company.Id, "AR-GE"),
             new OrgUnitInfo(Guid.NewGuid(), DepartmentType.Id, company.Id, "satış"),
         ]);
-        return new EmployeeMasterImportTemplate(tenant, orgUnits);
+        var customFields = Substitute.For<ICustomFieldDefinitionRepository>();
+        customFields.ListActiveAsync(Arg.Any<CancellationToken>()).Returns([]);
+        return new EmployeeMasterImportTemplate(tenant, orgUnits, customFields);
     }
 
     private static ImportTemplateCatalog Catalog() =>

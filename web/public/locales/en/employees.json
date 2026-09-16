@@ -8,6 +8,11 @@
   "emptyFiltered": "No employees match the filter.",
   "genericError": "The operation could not be completed. Please try again.",
   "loading": "Loading...",
+  "viewMode": {
+    "label": "View",
+    "list": "List view",
+    "grid": "Card view"
+  },
   "unknownUnit": "Unknown unit",
   "unknownEmployee": "Unknown employee",
   "noUnit": "No unit",
@@ -299,6 +304,11 @@
     "matchCount_other": "{{count}} matches",
     "reports_one": "{{count}} direct report",
     "reports_other": "{{count}} direct reports",
+    "print": "Print",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "company": "Company",
+    "allCompanies": "All companies",
     "empty": "No employees to show.",
     "forbiddenTitle": "The organization chart is not available",
     "forbiddenDescription": "Your company may have hidden the organization chart from employees, or you don't have permission for this page."

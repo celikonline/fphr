@@ -1,4 +1,17 @@
-import { Badge, createTheme, type MantineColorsTuple } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  createTheme,
+  defaultVariantColorsResolver,
+  Fieldset,
+  Input,
+  InputWrapper,
+  Modal,
+  type MantineColorsTuple,
+  type VariantColorsResolver,
+} from "@mantine/core";
+
+import classes from "./mantine-theme.module.css";
 
 /*
  * Corporate palette. Each named color sits at the tuple index Mantine reads for filled components (6 unless noted);
@@ -179,8 +192,25 @@ const dark: MantineColorsTuple = [
   "#070c15",
 ];
 
+/**
+ * `variant="default"` (secondary buttons, action icons) is a soft tonal fill instead of a white box with a gray border.
+ * The tokens are defined per color scheme in src/styles/index.css.
+ */
+const variantColorResolver: VariantColorsResolver = (input) => {
+  if (input.variant === "default") {
+    return {
+      background: "var(--sense-tonal-bg)",
+      hover: "var(--sense-tonal-hover)",
+      color: "var(--sense-tonal-color)",
+      border: "calc(0.0625rem * var(--mantine-scale)) solid transparent",
+    };
+  }
+  return defaultVariantColorsResolver(input);
+};
+
 export const mantineTheme = createTheme({
   primaryColor: "brand",
+  variantColorResolver,
   primaryShade: { light: 6, dark: 5 },
   colors: { brand, navy, blue, cyan, teal, red, orange, yellow, gold, steel, gray, dark },
   /** Yazı Rengi 1. */
@@ -193,5 +223,11 @@ export const mantineTheme = createTheme({
   components: {
     // Mantine badges are uppercase by default; the app shows statuses and counts in normal case.
     Badge: Badge.extend({ styles: { root: { textTransform: "none" } } }),
+    // Soft form styling (Google Meet style): tonal inputs, pill buttons, panel fieldsets, rounder dialogs.
+    Button: Button.extend({ defaultProps: { radius: "xl" } }),
+    Input: Input.extend({ classNames: { wrapper: classes.inputWrapper, input: classes.input } }),
+    InputWrapper: InputWrapper.extend({ classNames: { label: classes.label } }),
+    Fieldset: Fieldset.extend({ classNames: { root: classes.fieldset, legend: classes.legend } }),
+    Modal: Modal.extend({ defaultProps: { radius: "lg" }, classNames: { title: classes.modalTitle } }),
   },
 });

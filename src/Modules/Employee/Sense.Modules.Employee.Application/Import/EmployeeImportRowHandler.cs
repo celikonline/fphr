@@ -1,11 +1,15 @@
+using System.Globalization;
 using Sense.Modules.Employee.Application.Career;
+using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Kernel.ValueObjects;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
 using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
@@ -24,7 +28,9 @@ public sealed class EmployeeImportRowHandler(
     IEmployeeUnitOfWork unitOfWork,
     IOrgUnitLookup orgUnits,
     IDataScopeService dataScope,
-    CareerService career) : IImportRowHandler
+    CareerService career,
+    ICustomFieldDefinitionRepository customFields,
+    EmployeeSensitiveAccess sensitiveAccess) : IImportRowHandler
 {
     public string TemplateCode => EmployeeImportColumns.TemplateCode;
 
@@ -76,7 +82,9 @@ public sealed class EmployeeImportRowHandler(
     private async Task<bool> ApplyAsync(List<EmployeeImportPlan> plans, Dictionary<int, ImportRowResult> results, OrgPlacement placement, CancellationToken ct)
     {
         var updateIds = plans.Where(p => p.Existing is not null && p.HasChanges).Select(p => p.Existing!.Id).ToList();
-        var tracked = (await employees.ListByIdsAsync(updateIds, ct).ConfigureAwait(false)).ToDictionary(e => e.Id);
+        // Salary/custom field values are not auto-included (see IEmployeeRepository); a batch may touch either on any
+        // updated employee, so every tracked target loads both collections regardless (batch job, not latency-sensitive).
+        var tracked = (await employees.ListByIdsWithPaymentsAndCustomFieldsAsync(updateIds, ct).ConfigureAwait(false)).ToDictionary(e => e.Id);
         var managerMap = new Dictionary<Guid, Guid?>(await employees.GetManagerMapAsync(ct).ConfigureAwait(false));
         var context = career.BuildContext(placement, managerMap);
         var anyChange = false;
@@ -90,6 +98,21 @@ public sealed class EmployeeImportRowHandler(
                 {
                     results[plan.RowNumber] = Failed(plan, created.Error.Code);
                     continue;
+                }
+
+                if (plan.Salary is { } newSalary)
+                {
+                    var added = created.Value.AddSalaryRecord(newSalary);
+                    if (added.IsFailure)
+                    {
+                        results[plan.RowNumber] = Failed(plan, added.Error.Code);
+                        continue;
+                    }
+                }
+
+                if (plan.CustomFieldValues is { Count: > 0 } newCustomFields)
+                {
+                    created.Value.SetCustomFieldValues(newCustomFields);
                 }
 
                 employees.Add(created.Value);
@@ -141,6 +164,21 @@ public sealed class EmployeeImportRowHandler(
                 career.Materialize(employee, placement);
             }
 
+            if (plan.Salary is { } salary)
+            {
+                var added = employee.AddSalaryRecord(salary);
+                if (added.IsFailure)
+                {
+                    results[plan.RowNumber] = Failed(plan, added.Error.Code);
+                    continue;
+                }
+            }
+
+            if (plan.CustomFieldValues is { Count: > 0 } customFieldValues)
+            {
+                employee.SetCustomFieldValues(customFieldValues);
+            }
+
             results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Updated, plan.NationalId, employee.Id, []);
             anyChange = true;
         }
@@ -156,7 +194,9 @@ public sealed class EmployeeImportRowHandler(
         var units = await orgUnits.ListActiveUnitsAsync(tenantId, ct).ConfigureAwait(false);
         var visible = await dataScope.GetVisibleEmployeeIdsAsync(EmployeePermissions.EmployeesImportKey, ct).ConfigureAwait(false);
         var accessibleUnits = await dataScope.GetAccessibleOrgUnitIdsAsync(EmployeePermissions.EmployeesImportKey, ct).ConfigureAwait(false);
-        return new EmployeeImportSnapshot(rows, types, units, visible, accessibleUnits);
+        var customFieldDefinitions = await customFields.ListActiveAsync(ct).ConfigureAwait(false);
+        var canViewSensitiveCustomFields = await sensitiveAccess.CanViewAsync(ct).ConfigureAwait(false);
+        return new EmployeeImportSnapshot(rows, types, units, visible, accessibleUnits, customFieldDefinitions, canViewSensitiveCustomFields);
     }
 
     private static ImportRowResult Failed(EmployeeImportPlan plan, string code) =>
@@ -187,7 +227,9 @@ public sealed record EmployeeImportPlan(
     Guid? OrgUnitId,
     bool SetManager,
     Guid? ManagerId,
-    bool HasChanges);
+    bool HasChanges,
+    SalaryRecordData? Salary = null,
+    IReadOnlyDictionary<Guid, string?>? CustomFieldValues = null);
 
 public sealed record EmployeeImportValidation(EmployeeImportPlan? Plan, string? MatchKey, Guid? ExistingId, IReadOnlyList<ImportRowError> Errors);
 
@@ -199,7 +241,9 @@ public sealed class EmployeeImportSnapshot
         IReadOnlyList<OrgUnitTypeInfo> types,
         IReadOnlyList<OrgUnitInfo> units,
         IReadOnlySet<Guid>? visibleEmployeeIds,
-        IReadOnlySet<Guid>? accessibleOrgUnitIds)
+        IReadOnlySet<Guid>? accessibleOrgUnitIds,
+        IReadOnlyList<CustomFieldDefinition> customFieldDefinitions,
+        bool canViewSensitiveCustomFields)
     {
         ByNationalId = employees.Where(e => e.NationalId is not null).GroupBy(e => e.NationalId!).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
         // Status rename (Faz 1a): Inactive -> Terminated is the closest equivalent to "not usable as a manager match".
@@ -211,9 +255,17 @@ public sealed class EmployeeImportSnapshot
         VisibleEmployeeIds = visibleEmployeeIds;
         AccessibleOrgUnitIds = accessibleOrgUnitIds;
         Placement = new OrgPlacement(types, units);
+        CustomFieldDefinitions = customFieldDefinitions;
+        CanViewSensitiveCustomFields = canViewSensitiveCustomFields;
     }
 
     public OrgPlacement Placement { get; }
+
+    /// <summary>Active custom field definitions ("customField:{Key}" columns), loaded once per batch.</summary>
+    public IReadOnlyList<CustomFieldDefinition> CustomFieldDefinitions { get; }
+
+    /// <summary>Whether the caller holds employee.sensitive.view - gates whether a sensitive custom field's cell is applied (same rule as <see cref="Sense.Modules.Employee.Application.Employees.SetEmployeeCustomFieldsHandler"/>).</summary>
+    public bool CanViewSensitiveCustomFields { get; }
 
     public IReadOnlyDictionary<string, EmployeeRow> ByNationalId { get; }
 
@@ -349,6 +401,8 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var postalCode = Text(row, EmployeeImportColumns.PostalCode);
         var contractType = Enum<ContractType>(row, EmployeeImportColumns.ContractType, errors);
         var employmentType = Enum<EmploymentType>(row, EmployeeImportColumns.EmploymentType, errors);
+        var salary = Salary(row, errors);
+        var customFieldValues = CustomFields(row, errors);
 
         if (errors.Count > 0 || nationalId is null)
         {
@@ -397,7 +451,9 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var hasChanges = existing is null ||
             info != ExistingInfo(existing) ||
             (setOrgUnit && orgUnitId != existing.OrgUnitId) ||
-            (setManager && managerId != existing.ManagerEmployeeId);
+            (setManager && managerId != existing.ManagerEmployeeId) ||
+            salary is not null ||
+            customFieldValues.Count > 0;
 
         if (setManager)
         {
@@ -405,7 +461,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         }
 
         return new EmployeeImportValidation(
-            new EmployeeImportPlan(row.RowNumber, nationalId, existing, newId, info, setOrgUnit, orgUnitId, setManager, managerId, hasChanges),
+            new EmployeeImportPlan(row.RowNumber, nationalId, existing, newId, info, setOrgUnit, orgUnitId, setManager, managerId, hasChanges, salary, customFieldValues),
             nationalId,
             existing?.Id,
             []);
@@ -597,6 +653,151 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
 
         errors.Add(new ImportRowError(EmployeeImportColumns.ChildCount, EmployeeDomainErrors.ChildCountInvalid, ValueArgs(text)));
         return null;
+    }
+
+    /// <summary>
+    /// "Maaş bloğu bütünlüğü" (11.3.03): without both an effective date and an amount, the whole block is ignored -
+    /// not an error, even if other salary cells are filled. Once both are present, every other cell is validated
+    /// normally (missing Currency/SalaryType/PayFrequency mirrors <see cref="Payments.SalaryRules"/>'s manual-entry
+    /// requiredness; everything else reuses <see cref="SalaryRecord"/>'s own rules via the values it accepts).
+    /// </summary>
+    private static SalaryRecordData? Salary(ImportRow row, List<ImportRowError> errors)
+    {
+        if (row.Get(EmployeeImportColumns.SalaryEffectiveFrom) is null || row.Get(EmployeeImportColumns.SalaryAmount) is null)
+        {
+            return null;
+        }
+
+        var effectiveFrom = Date(row, EmployeeImportColumns.SalaryEffectiveFrom, errors);
+        var amount = Amount(row, EmployeeImportColumns.SalaryAmount, EmployeeDomainErrors.SalaryAmountInvalid, allowZero: false, errors);
+
+        var currencyCell = row.Get(EmployeeImportColumns.SalaryCurrency);
+        string? currency = null;
+        if (currencyCell is null)
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.SalaryCurrency, EmployeeDomainErrors.CurrencyRequired));
+        }
+        else
+        {
+            var normalized = NormalizeCurrencyAlias(Text(row, EmployeeImportColumns.SalaryCurrency));
+            if (normalized is not null && Currencies.IsKnown(normalized))
+            {
+                currency = normalized;
+            }
+            else
+            {
+                errors.Add(ValueError(EmployeeImportColumns.SalaryCurrency, EmployeeDomainErrors.CurrencyInvalid, currencyCell));
+            }
+        }
+
+        var salaryTypeCell = row.Get(EmployeeImportColumns.SalaryType);
+        var salaryType = Enum<SalaryType>(row, EmployeeImportColumns.SalaryType, errors);
+        if (salaryTypeCell is null)
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.SalaryType, EmployeeDomainErrors.SalaryTypeRequired));
+        }
+
+        var payFrequencyCell = row.Get(EmployeeImportColumns.PayFrequency);
+        var payFrequency = Enum<PayFrequency>(row, EmployeeImportColumns.PayFrequency, errors);
+        if (payFrequencyCell is null)
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.PayFrequency, EmployeeDomainErrors.SalaryPayFrequencyRequired));
+        }
+
+        var transportAllowance = Amount(row, EmployeeImportColumns.TransportAllowance, EmployeeDomainErrors.SalaryAllowanceInvalid, allowZero: true, errors);
+        var mealAllowance = Amount(row, EmployeeImportColumns.MealAllowance, EmployeeDomainErrors.SalaryAllowanceInvalid, allowZero: true, errors);
+
+        if (effectiveFrom is null || amount is null || currency is null || salaryType is null || payFrequency is null)
+        {
+            return null;
+        }
+
+        return new SalaryRecordData(
+            effectiveFrom.Value, amount.Value, currency, salaryType.Value, payFrequency.Value, transportAllowance, mealAllowance, Source: SalarySource.Import);
+    }
+
+    /// <summary>Kolay İK kısaltmaları ("TL", "Euro") normalize to their ISO 4217 code before <see cref="Currencies.IsKnown"/>; every other value only gets <see cref="SalaryRecord.NormalizeCurrency"/>'s trim/uppercase.</summary>
+    private static readonly Dictionary<string, string> CurrencyAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["TL"] = Currencies.TRY,
+        ["EURO"] = Currencies.EUR,
+    };
+
+    private static string? NormalizeCurrencyAlias(string? text) =>
+        text is not null && CurrencyAliases.TryGetValue(text, out var iso) ? iso : SalaryRecord.NormalizeCurrency(text);
+
+    /// <summary>A decimal cell (salary amount/allowances): absent keeps the current value (null, no error); present but not a valid amount is a row error.</summary>
+    private static decimal? Amount(ImportRow row, string key, string invalidCode, bool allowZero, List<ImportRowError> errors)
+    {
+        var cell = row.Get(key);
+        if (cell is null)
+        {
+            return null;
+        }
+
+        if (decimal.TryParse(cell.Text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value) &&
+            SalaryRecord.IsValidAmount(value, allowZero))
+        {
+            return value;
+        }
+
+        errors.Add(ValueError(key, invalidCode, cell));
+        return null;
+    }
+
+    /// <summary>
+    /// One entry per mapped, non-empty "customField:{Key}" column, coerced/validated by the same
+    /// <see cref="CustomFieldValueCoercion"/> the HR/self-service write endpoints use. An empty cell keeps the
+    /// stored value (omitted from the dictionary); a sensitive definition's cell is silently skipped when the
+    /// caller lacks employee.sensitive.view - same precedent as <see cref="SetEmployeeCustomFieldsHandler"/>.
+    /// </summary>
+    private Dictionary<Guid, string?> CustomFields(ImportRow row, List<ImportRowError> errors)
+    {
+        var values = new Dictionary<Guid, string?>();
+        foreach (var definition in snapshot.CustomFieldDefinitions)
+        {
+            var key = EmployeeImportColumns.CustomField(definition.Key);
+            var cell = row.Get(key);
+            if (cell is null)
+            {
+                continue;
+            }
+
+            if (definition.IsSensitive && !snapshot.CanViewSensitiveCustomFields)
+            {
+                continue;
+            }
+
+            string? rawValue;
+            if (definition.DataType == CustomFieldDataType.Date)
+            {
+                // Coerce's DateOnly.TryParse expects an invariant/ISO-ish string; native spreadsheet date cells and
+                // "dd.MM.yyyy" text need the same parser every other Date column uses before reaching it.
+                if (!ImportValueParser.TryParseDate(cell, out var date))
+                {
+                    errors.Add(ValueError(key, ImportErrorCodes.InvalidDate, cell));
+                    continue;
+                }
+
+                rawValue = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                var normalized = ImportValueParser.Normalize(cell.Text);
+                rawValue = normalized.Length == 0 ? null : normalized;
+            }
+
+            var coerced = CustomFieldValueCoercion.Coerce(definition, rawValue);
+            if (coerced.IsFailure)
+            {
+                errors.Add(new ImportRowError(key, coerced.Error.Code, ValueArgs(cell.Text ?? string.Empty)));
+                continue;
+            }
+
+            values[definition.Id] = coerced.Value;
+        }
+
+        return values;
     }
 
     private static void CheckLength(List<ImportRowError> errors, string key, string? value, int max)

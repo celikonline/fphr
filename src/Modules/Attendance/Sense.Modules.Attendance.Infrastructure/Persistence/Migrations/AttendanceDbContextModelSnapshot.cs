@@ -191,6 +191,139 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.ToTable("attendance_days", "attendance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Availability.EmployeeAvailability", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<TimeOnly?>("End")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<TimeOnly?>("Start")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_availabilities");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employee_availabilities_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "Date")
+                        .HasDatabaseName("ix_employee_availabilities_tenant_id_employee_id_date");
+
+                    b.ToTable("employee_availabilities", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Compensatory.CompensatoryWorkLedger", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("CompensatedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("compensated_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int>("DeficitMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("deficit_minutes");
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateOnly>("WeekStart")
+                        .HasColumnType("date")
+                        .HasColumnName("week_start");
+
+                    b.HasKey("Id")
+                        .HasName("pk_compensatory_work_ledgers");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_compensatory_work_ledgers_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "WeekStart")
+                        .IsUnique()
+                        .HasDatabaseName("ix_compensatory_work_ledgers_tenant_id_employee_id_week_start");
+
+                    b.ToTable("compensatory_work_ledgers", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftAssignment", b =>
                 {
                     b.Property<Guid>("Id")

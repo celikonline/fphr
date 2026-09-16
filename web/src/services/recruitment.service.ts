@@ -263,3 +263,107 @@ export async function deactivateTag(id: string): Promise<void> {
 export async function reactivateTag(id: string): Promise<void> {
   await apiClient.post(`${RECRUITMENT_BASE}/tags/${id}/reactivate`);
 }
+
+export type FormTemplateType = "feedback" | "scorecard" | "outcome";
+export const FORM_TEMPLATE_TYPES: FormTemplateType[] = ["feedback", "scorecard", "outcome"];
+
+export type FormFieldType = "scoreCard" | "paragraph" | "singleLine" | "date" | "dropdown" | "checkbox";
+export const FORM_FIELD_TYPES: FormFieldType[] = ["scoreCard", "paragraph", "singleLine", "date", "dropdown", "checkbox"];
+
+export interface FormField {
+  id: string;
+  label: string;
+  fieldType: FormFieldType;
+  isRequired: boolean;
+  isSensitive: boolean;
+  sortOrder: number;
+  options: string[];
+  weight: number | null;
+}
+
+export interface FormFieldInput {
+  id?: string | null;
+  label: string;
+  fieldType: FormFieldType;
+  isRequired: boolean;
+  isSensitive: boolean;
+  options?: string[] | null;
+  weight?: number | null;
+}
+
+export interface FormTemplate {
+  id: string;
+  name: string;
+  templateType: FormTemplateType;
+  isActive: boolean;
+  fields: FormField[];
+}
+
+export async function listFormTemplates(activeOnly = false): Promise<FormTemplate[]> {
+  const { data } = await apiClient.get<FormTemplate[]>(`${RECRUITMENT_BASE}/form-templates`, { params: { activeOnly } });
+  return data;
+}
+
+export async function createFormTemplate(name: string, templateType: FormTemplateType, fields: FormFieldInput[]): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/form-templates`, { name, templateType, fields });
+  return data;
+}
+
+export async function deactivateFormTemplate(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/form-templates/${id}/deactivate`);
+}
+
+export async function reactivateFormTemplate(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/form-templates/${id}/reactivate`);
+}
+
+export interface FieldAnswerInput {
+  fieldId: string;
+  value: string | null;
+}
+
+export interface FormResponse {
+  id: string;
+  templateId: string;
+  jobApplicationId: string;
+  submittedByEmployeeId: string;
+  submittedAt: string;
+  weightedScore: number | null;
+  answers: { fieldId: string; value: string }[];
+}
+
+export async function listFormResponsesByApplication(jobApplicationId: string): Promise<FormResponse[]> {
+  const { data } = await apiClient.get<FormResponse[]>(`${RECRUITMENT_BASE}/form-responses`, { params: { jobApplicationId } });
+  return data;
+}
+
+export async function submitFormResponse(templateId: string, jobApplicationId: string, answers: FieldAnswerInput[]): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/form-responses`, { templateId, jobApplicationId, answers });
+  return data;
+}
+
+export interface AutomationRule {
+  id: string;
+  fromStage: ApplicationStage;
+  toStage: ApplicationStage;
+  requiredFormTemplateId: string;
+  isActive: boolean;
+}
+
+export async function listAutomationRules(activeOnly = false): Promise<AutomationRule[]> {
+  const { data } = await apiClient.get<AutomationRule[]>(`${RECRUITMENT_BASE}/automation-rules`, { params: { activeOnly } });
+  return data;
+}
+
+export async function createAutomationRule(fromStage: ApplicationStage, toStage: ApplicationStage, requiredFormTemplateId: string): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/automation-rules`, { fromStage, toStage, requiredFormTemplateId });
+  return data;
+}
+
+export async function deactivateAutomationRule(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/automation-rules/${id}/deactivate`);
+}
+
+export async function reactivateAutomationRule(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/automation-rules/${id}/reactivate`);
+}

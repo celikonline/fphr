@@ -106,7 +106,12 @@
     "createSuccess": "[DE] Application added.",
     "stageChanged": "[DE] Stage updated.",
     "empty": "[DE] No applications for this posting yet.",
-    "alreadyTerminal": "[DE] This application is resolved; its stage cannot be changed."
+    "alreadyTerminal": "[DE] This application is resolved; its stage cannot be changed.",
+    "forms": "[DE] Forms",
+    "fillForm": "[DE] Fill form",
+    "selectTemplate": "[DE] Select form template",
+    "responsesSubmitted": "[DE] {{count}} form response(s) submitted.",
+    "formSubmitted": "[DE] Form response submitted."
   },
   "requisitions": {
     "title": "[DE] Job Requisitions",
@@ -135,6 +140,54 @@
     "submitSuccess": "[DE] Requisition submitted for approval.",
     "cancelSuccess": "[DE] Requisition cancelled.",
     "empty": "[DE] No requisitions yet."
+  },
+  "formTemplates": {
+    "title": "[DE] Form Templates",
+    "subtitle": "[DE] Manage feedback, scorecard, and outcome form templates.",
+    "addTemplate": "[DE] Add Template",
+    "dialogCreateTitle": "[DE] New Form Template",
+    "name": "[DE] Name",
+    "type": "[DE] Type",
+    "types": {
+      "feedback": "[DE] Feedback",
+      "scorecard": "[DE] Scorecard",
+      "outcome": "[DE] Outcome"
+    },
+    "fieldCount": "[DE] Field count",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "fieldLabel": "[DE] Field label",
+    "fieldType": "[DE] Field type",
+    "fieldTypes": {
+      "scoreCard": "[DE] Score",
+      "paragraph": "[DE] Paragraph",
+      "singleLine": "[DE] Single line",
+      "date": "[DE] Date",
+      "dropdown": "[DE] Dropdown",
+      "checkbox": "[DE] Checkbox"
+    },
+    "optionsCommaSeparated": "[DE] Options (comma-separated)",
+    "weight": "[DE] Weight (%)",
+    "weightSum": "[DE] Score field weight total: {{sum}}/100",
+    "required": "[DE] Required",
+    "sensitive": "[DE] Sensitive",
+    "addField": "[DE] Add Field",
+    "createSuccess": "[DE] Form template created.",
+    "empty": "[DE] No form templates yet."
+  },
+  "automationRules": {
+    "title": "[DE] Automation Rules",
+    "subtitle": "[DE] Manage mandatory-form rules on pipeline stage transitions.",
+    "addRule": "[DE] Add Rule",
+    "dialogCreateTitle": "[DE] New Automation Rule",
+    "fromStage": "[DE] From stage",
+    "toStage": "[DE] To stage",
+    "requiredForm": "[DE] Required form",
+    "transition": "[DE] Transition",
+    "createSuccess": "[DE] Automation rule created.",
+    "empty": "[DE] No automation rules yet."
   },
   "genericError": "[DE] Something went wrong."
 }

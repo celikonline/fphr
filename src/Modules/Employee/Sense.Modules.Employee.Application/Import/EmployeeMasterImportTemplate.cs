@@ -1,4 +1,6 @@
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Employee.Domain;
+using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -38,16 +40,32 @@ public static class EmployeeImportColumns
     public const string ContractType = "contractType";
     public const string EmploymentType = "employmentType";
 
+    // Salary block ("Maaş bloğu", E6 part 2): one salary record per row; the whole block is ignored (not an error)
+    // unless both SalaryEffectiveFrom and SalaryAmount are filled (11.3.03 "Maaş bloğu bütünlüğü").
+    public const string SalaryEffectiveFrom = "salaryEffectiveFrom";
+    public const string SalaryAmount = "salaryAmount";
+    public const string SalaryCurrency = "salaryCurrency";
+    public const string SalaryType = "salaryType";
+    public const string PayFrequency = "payFrequency";
+    public const string TransportAllowance = "transportAllowance";
+    public const string MealAllowance = "mealAllowance";
+
     /// <summary>Dynamic column per active hierarchy level: "orgUnit:{OrgUnitType.Code}".</summary>
     public const string OrgUnitPrefix = "orgUnit:";
 
     public static string OrgUnit(string typeCode) => OrgUnitPrefix + typeCode;
 
+    /// <summary>Dynamic column per active custom field definition: "customField:{CustomFieldDefinition.Key}".</summary>
+    public const string CustomFieldPrefix = "customField:";
+
+    public static string CustomField(string key) => CustomFieldPrefix + key;
+
     public static string HeaderKey(string key) => "import.column.employee." + key;
 }
 
 /// <summary>"Çalışanlar" import template (Faz 0 item 7/8): identity/contact fields, manager by full name, one column per active org level.</summary>
-public sealed class EmployeeMasterImportTemplate(ITenantContext tenant, IOrgUnitLookup orgUnits) : IImportTemplate
+public sealed class EmployeeMasterImportTemplate(
+    ITenantContext tenant, IOrgUnitLookup orgUnits, ICustomFieldDefinitionRepository customFields) : IImportTemplate
 {
     private const string KeyPrefix = "import.template.employee.master.";
 
@@ -98,6 +116,13 @@ public sealed class EmployeeMasterImportTemplate(ITenantContext tenant, IOrgUnit
             Static(EmployeeImportColumns.PostalCode, ImportColumnDataType.Text),
             Options<ContractType>(EmployeeImportColumns.ContractType),
             Options<EmploymentType>(EmployeeImportColumns.EmploymentType),
+            Static(EmployeeImportColumns.SalaryEffectiveFrom, ImportColumnDataType.Date),
+            Static(EmployeeImportColumns.SalaryAmount, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.SalaryCurrency, ImportColumnDataType.Text),
+            Options<SalaryType>(EmployeeImportColumns.SalaryType),
+            Options<PayFrequency>(EmployeeImportColumns.PayFrequency),
+            Static(EmployeeImportColumns.TransportAllowance, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.MealAllowance, ImportColumnDataType.Text),
         };
 
         var types = await orgUnits.ListActiveTypesAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
@@ -114,8 +139,32 @@ public sealed class EmployeeMasterImportTemplate(ITenantContext tenant, IOrgUnit
                 ImportColumnRequirement.Optional, Options: options, DescriptionKey: EmployeeImportColumns.HeaderKey("orgUnit") + ".description"));
         }
 
+        // One column per active custom field definition ("Özel alanlar", E6 part 2): header = the tenant's field
+        // name (not a resource key, same as the org unit columns above), key = "customField:{definition.Key}".
+        var definitions = await customFields.ListActiveAsync(cancellationToken).ConfigureAwait(false);
+        foreach (var definition in definitions.OrderBy(d => d.SortOrder).ThenBy(d => d.Name, StringComparer.Create(System.Globalization.CultureInfo.GetCultureInfo("tr-TR"), ignoreCase: true)))
+        {
+            var isSelect = definition.DataType is CustomFieldDataType.SingleSelect or CustomFieldDataType.MultiSelect;
+            columns.Add(new ImportColumn(
+                EmployeeImportColumns.CustomField(definition.Key), HeaderKey: null, HeaderText: definition.Name, CustomFieldColumnType(definition.DataType),
+                ImportColumnRequirement.Optional, Options: isSelect ? definition.Options : null,
+                DescriptionKey: EmployeeImportColumns.HeaderKey("customField") + ".description"));
+        }
+
         return columns;
     }
+
+    /// <summary>
+    /// No numeric/boolean data type exists in <see cref="ImportColumnDataType"/> (see <see cref="EmployeeImportColumns.ChildCount"/>
+    /// for the same choice), so Text/Number/Boolean custom fields are offered as free text and coerced/validated by
+    /// <see cref="Sense.Modules.Employee.Application.Employees.CustomFieldValueCoercion"/> on import.
+    /// </summary>
+    private static ImportColumnDataType CustomFieldColumnType(CustomFieldDataType dataType) => dataType switch
+    {
+        CustomFieldDataType.Date => ImportColumnDataType.Date,
+        CustomFieldDataType.SingleSelect or CustomFieldDataType.MultiSelect => ImportColumnDataType.Lookup,
+        _ => ImportColumnDataType.Text,
+    };
 
     public IReadOnlyList<ImportSampleRow> GetSampleRows(IReadOnlyList<ImportColumn> columns)
     {

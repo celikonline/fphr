@@ -91,6 +91,65 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                     b.ToTable("job_applications", "recruitment");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.AutomationRules.AutomationRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("FromStage")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("from_stage");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("RequiredFormTemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("required_form_template_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("ToStage")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("to_stage");
+
+                    b.HasKey("Id")
+                        .HasName("pk_automation_rules");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_automation_rules_tenant_id");
+
+                    b.HasIndex("TenantId", "FromStage", "ToStage", "IsActive")
+                        .HasDatabaseName("ix_automation_rules_tenant_id_from_stage_to_stage_is_active");
+
+                    b.ToTable("automation_rules", "recruitment");
+                });
+
             modelBuilder.Entity("Sense.Modules.Recruitment.Domain.Candidates.Candidate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -157,6 +216,124 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_candidates_tenant_id_email");
 
                     b.ToTable("candidates", "recruitment");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.FormResponses.RecruitmentFormResponse", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("JobApplicationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("job_application_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateTime>("SubmittedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("submitted_at");
+
+                    b.Property<Guid>("SubmittedByEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("submitted_by_employee_id");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("WeightedScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("weighted_score");
+
+                    b.HasKey("Id")
+                        .HasName("pk_form_responses");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_form_responses_tenant_id");
+
+                    b.HasIndex("JobApplicationId", "TemplateId")
+                        .HasDatabaseName("ix_form_responses_job_application_id_template_id");
+
+                    b.HasIndex("TenantId", "JobApplicationId")
+                        .HasDatabaseName("ix_form_responses_tenant_id_job_application_id");
+
+                    b.ToTable("form_responses", "recruitment");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.FormTemplates.RecruitmentFormTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("TemplateType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("template_type");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_form_templates");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_form_templates_tenant_id");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("ix_form_templates_tenant_id_is_active");
+
+                    b.ToTable("form_templates", "recruitment");
                 });
 
             modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobPostings.JobPosting", b =>
@@ -580,6 +757,131 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.FormResponses.RecruitmentFormResponse", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Recruitment.Domain.FormResponses.FieldAnswer", "Answers", b1 =>
+                        {
+                            b1.Property<Guid>("ResponseId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("response_id");
+
+                            b1.Property<Guid>("FieldId")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid")
+                                .HasColumnName("field_id");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("created_at");
+
+                            b1.Property<Guid?>("CreatedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("created_user_id");
+
+                            b1.Property<DateTime?>("ModifiedDate")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("modified_date");
+
+                            b1.Property<Guid?>("ModifiedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("modified_user_id");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(4000)
+                                .HasColumnType("character varying(4000)")
+                                .HasColumnName("value");
+
+                            b1.HasKey("ResponseId", "FieldId")
+                                .HasName("pk_field_answers");
+
+                            b1.ToTable("field_answers", "recruitment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ResponseId")
+                                .HasConstraintName("fk_field_answers_form_responses_response_id");
+                        });
+
+                    b.Navigation("Answers");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.FormTemplates.RecruitmentFormTemplate", b =>
+                {
+                    b.OwnsMany("Sense.Modules.Recruitment.Domain.FormTemplates.FormField", "Fields", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<DateTime>("CreatedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("created_at");
+
+                            b1.Property<Guid?>("CreatedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("created_user_id");
+
+                            b1.Property<string>("FieldType")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("field_type");
+
+                            b1.Property<bool>("IsRequired")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_required");
+
+                            b1.Property<bool>("IsSensitive")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_sensitive");
+
+                            b1.Property<string>("Label")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("label");
+
+                            b1.Property<DateTime?>("ModifiedDate")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("modified_date");
+
+                            b1.Property<Guid?>("ModifiedUserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("modified_user_id");
+
+                            b1.Property<string>("Options")
+                                .IsRequired()
+                                .HasColumnType("jsonb")
+                                .HasColumnName("options");
+
+                            b1.Property<int>("SortOrder")
+                                .HasColumnType("integer")
+                                .HasColumnName("sort_order");
+
+                            b1.Property<Guid>("TemplateId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("template_id");
+
+                            b1.Property<int?>("Weight")
+                                .HasColumnType("integer")
+                                .HasColumnName("weight");
+
+                            b1.HasKey("Id")
+                                .HasName("pk_form_fields");
+
+                            b1.HasIndex("TemplateId")
+                                .HasDatabaseName("ix_form_fields_template_id");
+
+                            b1.ToTable("form_fields", "recruitment");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TemplateId")
+                                .HasConstraintName("fk_form_fields_form_templates_template_id");
+                        });
+
+                    b.Navigation("Fields");
                 });
 
             modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobPostings.JobPosting", b =>

@@ -106,7 +106,12 @@
     "createSuccess": "Başvuru eklendi.",
     "stageChanged": "Aşama güncellendi.",
     "empty": "Bu ilana henüz başvuru yok.",
-    "alreadyTerminal": "Bu başvuru sonuçlandı; aşaması değiştirilemez."
+    "alreadyTerminal": "Bu başvuru sonuçlandı; aşaması değiştirilemez.",
+    "forms": "Formlar",
+    "fillForm": "Form doldur",
+    "selectTemplate": "Form şablonu seç",
+    "responsesSubmitted": "{{count}} form yanıtı gönderildi.",
+    "formSubmitted": "Form yanıtı gönderildi."
   },
   "requisitions": {
     "title": "Talep Formları",
@@ -135,6 +140,54 @@
     "submitSuccess": "Talep formu onaya gönderildi.",
     "cancelSuccess": "Talep formu iptal edildi.",
     "empty": "Henüz talep formu yok."
+  },
+  "formTemplates": {
+    "title": "Form Şablonları",
+    "subtitle": "Geri bildirim, skor kart ve sonuç formu şablonlarını yönetin.",
+    "addTemplate": "Şablon Ekle",
+    "dialogCreateTitle": "Yeni Form Şablonu",
+    "name": "Ad",
+    "type": "Tür",
+    "types": {
+      "feedback": "Geri bildirim",
+      "scorecard": "Skor kart",
+      "outcome": "Sonuç"
+    },
+    "fieldCount": "Alan sayısı",
+    "active": "Aktif",
+    "inactive": "Devre dışı",
+    "deactivate": "Devre dışı bırak",
+    "reactivate": "Aktifleştir",
+    "fieldLabel": "Alan etiketi",
+    "fieldType": "Alan türü",
+    "fieldTypes": {
+      "scoreCard": "Skor",
+      "paragraph": "Paragraf",
+      "singleLine": "Tek satır",
+      "date": "Tarih",
+      "dropdown": "Açılır liste",
+      "checkbox": "Onay kutusu"
+    },
+    "optionsCommaSeparated": "Seçenekler (virgülle ayırın)",
+    "weight": "Ağırlık (%)",
+    "weightSum": "Skor alanlarının ağırlık toplamı: {{sum}}/100",
+    "required": "Zorunlu",
+    "sensitive": "Hassas",
+    "addField": "Alan Ekle",
+    "createSuccess": "Form şablonu oluşturuldu.",
+    "empty": "Henüz form şablonu yok."
+  },
+  "automationRules": {
+    "title": "Otomasyon Kuralları",
+    "subtitle": "Aşama geçişlerinde zorunlu form kurallarını yönetin.",
+    "addRule": "Kural Ekle",
+    "dialogCreateTitle": "Yeni Otomasyon Kuralı",
+    "fromStage": "Başlangıç aşaması",
+    "toStage": "Hedef aşama",
+    "requiredForm": "Zorunlu form",
+    "transition": "Geçiş",
+    "createSuccess": "Otomasyon kuralı oluşturuldu.",
+    "empty": "Henüz otomasyon kuralı yok."
   },
   "genericError": "Bir şeyler ters gitti."
 }

@@ -81,6 +81,11 @@
     "billingDesc": "Abonelik ve fatura bilgileri",
     "dataTransferSection": "Veri aktar",
     "dataTransfer": "Veri aktarım merkezi",
-    "dataTransferDesc": "Excel şablonlarıyla toplu veri aktarımı"
+    "dataTransferDesc": "Excel şablonlarıyla toplu veri aktarımı",
+    "recruitmentSection": "İşe alım",
+    "recruitmentFormTemplates": "Form şablonları",
+    "recruitmentFormTemplatesDesc": "Geri bildirim, skor kart ve sonuç formu şablonları",
+    "recruitmentAutomationRules": "Otomasyon kuralları",
+    "recruitmentAutomationRulesDesc": "Aşama geçişlerinde zorunlu form kuralları"
   }
 }
