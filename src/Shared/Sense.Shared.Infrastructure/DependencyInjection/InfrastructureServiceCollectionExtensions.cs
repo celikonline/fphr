@@ -9,12 +9,14 @@ using Minio;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
+using Sense.Shared.Contracts.Export;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Persistence;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Contracts.Storage;
 using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Infrastructure.Events;
+using Sense.Shared.Infrastructure.Export;
 using Sense.Shared.Infrastructure.Messaging;
 using Sense.Shared.Infrastructure.Messaging.Behaviours;
 using Sense.Shared.Infrastructure.Observability;
@@ -44,6 +46,9 @@ public static class InfrastructureServiceCollectionExtensions
 
         // Shared field-level encryption port (moved from Identity so other modules, e.g. Employee, can reuse it).
         services.TryAddSingleton<IEncryptionProvider, AesGcmEncryptionProvider>();
+
+        // Ortak "tablo -> Excel" dışa aktarma portu (Faz 1, TB-1); stateless, tüm modüller doğrudan enjekte edebilir.
+        services.TryAddSingleton<IReportExporter, ExcelReportExporter>();
 
         services.TryAddSingleton(TimeProvider.System);
 

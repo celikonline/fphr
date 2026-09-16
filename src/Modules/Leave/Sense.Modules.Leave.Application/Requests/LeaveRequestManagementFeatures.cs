@@ -111,7 +111,8 @@ public sealed record LeaveApprovalDto(string Status, int? CurrentStepNumber, IRe
 public sealed record LeaveRequestDetailDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
-    string? LeaveTypeName, Guid? PreviousRequestId, DateTime? CancelledAt, string? CancellationReason, string EmployeeName, LeaveApprovalDto? Approval);
+    string? LeaveTypeName, Guid? PreviousRequestId, DateTime? CancelledAt, string? CancellationReason, string EmployeeName, LeaveApprovalDto? Approval,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
 
 public sealed class LeaveRequestDetailBuilder(
     ITenantContext tenant,
@@ -159,7 +160,7 @@ public sealed class LeaveRequestDetailBuilder(
         return new LeaveRequestDetailDto(
             dto.Id, dto.EmployeeId, dto.LeaveTypeId, dto.LeaveTypeCode, dto.StartDate, dto.EndDate, dto.CalculatedDays, dto.Description, dto.Status, dto.Source,
             dto.ApprovalRequestId, dto.RevisionNo, dto.SubmittedAt, dto.DecidedAt, dto.LeaveTypeName, dto.PreviousRequestId, dto.CancelledAt, dto.CancellationReason,
-            names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval);
+            names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval, dto.StartTime, dto.EndTime, dto.HalfDayPeriod);
     }
 
     /// <summary>Workflow status strings ("InProgress") in the API's camelCase enum style ("inProgress").</summary>

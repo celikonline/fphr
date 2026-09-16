@@ -186,3 +186,44 @@ public sealed class SubmitExpenseClaimHandler(
         return Result.Success();
     }
 }
+
+/// <summary>HR/Finance marks an Approved claim as paid (e.g. after a bank transfer). Status must already be Approved.</summary>
+[RequiresPermission("expense.claims.pay")]
+public sealed record PayExpenseClaimCommand(Guid ClaimId, string? PaymentNote) : ICommand;
+
+public sealed class PayExpenseClaimValidator : AbstractValidator<PayExpenseClaimCommand>
+{
+    public PayExpenseClaimValidator()
+    {
+        RuleFor(x => x.ClaimId).NotEmpty();
+        RuleFor(x => x.PaymentNote).MaximumLength(ExpenseLimits.DescriptionMaxLength);
+    }
+}
+
+public sealed class PayExpenseClaimHandler(ICurrentUser currentUser, TimeProvider clock, IExpenseClaimRepository claims, IIntegrationEventOutbox outbox)
+    : ICommandHandler<PayExpenseClaimCommand>
+{
+    public async Task<Result> Handle(PayExpenseClaimCommand command, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } payerEmployeeId)
+        {
+            return Error.NotFound(ExpenseErrors.NoEmployeeForUser);
+        }
+
+        var existing = await claims.GetByIdAsync(command.ClaimId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        var claim = existing.Value;
+        var paid = claim.MarkPaid(clock.GetUtcNow().UtcDateTime, payerEmployeeId, command.PaymentNote);
+        if (paid.IsFailure)
+        {
+            return paid;
+        }
+
+        outbox.Enqueue(new ExpenseClaimPaid(claim.TenantId, claim.Id, claim.EmployeeId, claim.TotalAmount));
+        return Result.Success();
+    }
+}

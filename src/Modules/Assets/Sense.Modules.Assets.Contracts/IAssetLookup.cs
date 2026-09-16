@@ -10,4 +10,11 @@ public interface IAssetLookup
 {
     /// <summary>True if the employee currently has at least one Assigned (unreturned) asset.</summary>
     Task<bool> HasOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Count of the employee's currently Assigned (unreturned) assets. Used by Employee's offboarding wizard
+    /// (TerminateEmployeeCommand) to show a non-blocking "N zimmet iade edilmedi" warning - termination is never
+    /// gated on this, only advisory (mirrors JobSecurityEvaluator's warning-not-block pattern).
+    /// </summary>
+    Task<int> CountOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }

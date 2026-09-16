@@ -57,7 +57,21 @@ public sealed class AdvanceRequestTests
         advance.Approve(approvalId, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
         advance.Status.ShouldBe(AdvanceRequestStatus.Approved);
 
-        advance.MarkPaid(DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+        var payerId = Guid.NewGuid();
+        advance.MarkPaid(DateTime.UtcNow, payerId, "Banka havalesi").IsSuccess.ShouldBeTrue();
         advance.Status.ShouldBe(AdvanceRequestStatus.Paid);
+        advance.PaidByEmployeeId.ShouldBe(payerId);
+        advance.PaymentNote.ShouldBe("Banka havalesi");
+    }
+
+    [Fact]
+    public void MarkPaid_WhenNotApproved_Fails()
+    {
+        var advance = AdvanceRequest.Submit(TenantId, EmployeeId, 5000m, "TRY", DateOnly.FromDateTime(DateTime.UtcNow), false, null, null).Value;
+
+        var result = advance.MarkPaid(DateTime.UtcNow, Guid.NewGuid(), null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ExpenseDomainErrors.AdvanceAlreadyPaid);
     }
 }

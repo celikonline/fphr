@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Domain.ApprovalPolicies;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
@@ -134,6 +135,18 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         b.HasKey(x => x.Id);
 
         b.Property(x => x.JointEmploymentGroupCode).HasMaxLength(OrganizationTables.CodeLength);
+
+        // Faz 2 (TB-10, "Şirket profili"): legal/registry + operating-hours fields, all optional.
+        b.Property(x => x.RegistrationNumber).HasMaxLength(OrganizationLimits.RegistrationNumberMaxLength);
+        b.Property(x => x.TaxNumber).HasMaxLength(OrganizationLimits.TaxNumberMaxLength);
+        b.Property(x => x.Address).HasMaxLength(OrganizationTables.AddressLength);
+        b.Property(x => x.City).HasMaxLength(OrganizationLimits.CityMaxLength);
+        b.Property(x => x.Country).HasMaxLength(OrganizationLimits.CountryMaxLength);
+        b.Property(x => x.OperatingHoursStart).HasColumnType("time without time zone");
+        b.Property(x => x.OperatingHoursEnd).HasColumnType("time without time zone");
+        b.Property(x => x.WorkingDaysCsv).HasMaxLength(OrganizationLimits.WorkingDaysCsvMaxLength).HasColumnName("working_days");
+        b.Property(x => x.LogoUrl).HasMaxLength(OrganizationLimits.LogoUrlMaxLength);
+        b.Ignore(x => x.WorkingDays);
 
         b.HasIndex(x => new { x.TenantId, x.OrgUnitId }).IsUnique();
         b.HasOne<OrgUnit>().WithMany().HasForeignKey(x => x.OrgUnitId).OnDelete(DeleteBehavior.Restrict);

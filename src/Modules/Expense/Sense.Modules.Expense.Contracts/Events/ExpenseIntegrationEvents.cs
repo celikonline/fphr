@@ -12,6 +12,9 @@ public sealed record ExpenseClaimApproved(Guid TenantId, Guid ClaimId, Guid Empl
 /// <summary>Published when Workflow rejects an expense claim's approval request.</summary>
 public sealed record ExpenseClaimRejected(Guid TenantId, Guid ClaimId, Guid EmployeeId) : IntegrationEvent(TenantId);
 
+/// <summary>Published when HR/Finance marks an approved expense claim as paid.</summary>
+public sealed record ExpenseClaimPaid(Guid TenantId, Guid ClaimId, Guid EmployeeId, decimal TotalAmount) : IntegrationEvent(TenantId);
+
 /// <summary>Published when an employee submits an advance-payment request.</summary>
 public sealed record AdvanceRequestSubmitted(Guid TenantId, Guid AdvanceRequestId, Guid EmployeeId, decimal Amount, string Currency)
     : IntegrationEvent(TenantId);
@@ -21,3 +24,6 @@ public sealed record AdvanceRequestApproved(Guid TenantId, Guid AdvanceRequestId
 
 /// <summary>Published when Workflow rejects an advance request's approval request.</summary>
 public sealed record AdvanceRequestRejected(Guid TenantId, Guid AdvanceRequestId, Guid EmployeeId) : IntegrationEvent(TenantId);
+
+/// <summary>Published when HR/Finance marks an approved advance request as paid.</summary>
+public sealed record AdvanceRequestPaid(Guid TenantId, Guid AdvanceRequestId, Guid EmployeeId, decimal Amount) : IntegrationEvent(TenantId);

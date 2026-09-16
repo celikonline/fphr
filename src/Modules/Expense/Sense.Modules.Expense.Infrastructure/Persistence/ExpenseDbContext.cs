@@ -65,6 +65,7 @@ public sealed class ExpenseClaimConfiguration : IEntityTypeConfiguration<Expense
         b.Property(x => x.Description).HasMaxLength(ExpenseTables.DescriptionLength);
         b.Property(x => x.TotalAmount).HasPrecision(18, 2);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(ExpenseTables.StatusLength).IsRequired();
+        b.Property(x => x.PaymentNote).HasMaxLength(ExpenseTables.DescriptionLength);
 
         b.HasIndex(x => new { x.TenantId, x.EmployeeId });
         b.HasIndex(x => new { x.TenantId, x.Status });
@@ -112,6 +113,7 @@ public sealed class AdvanceRequestConfiguration : IEntityTypeConfiguration<Advan
         b.Property(x => x.Currency).HasMaxLength(ExpenseTables.CurrencyLength).IsRequired();
         b.Property(x => x.Description).HasMaxLength(ExpenseTables.DescriptionLength);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(ExpenseTables.StatusLength).IsRequired();
+        b.Property(x => x.PaymentNote).HasMaxLength(ExpenseTables.DescriptionLength);
 
         b.HasIndex(x => new { x.TenantId, x.EmployeeId });
         b.HasIndex(x => new { x.TenantId, x.Status });

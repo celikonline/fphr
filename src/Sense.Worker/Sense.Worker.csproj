@@ -19,6 +19,7 @@
     <ProjectReference Include="../Modules/Expense/Sense.Modules.Expense.Infrastructure/Sense.Modules.Expense.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Integrations/Sense.Modules.Integrations.Infrastructure/Sense.Modules.Integrations.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Assets/Sense.Modules.Assets.Infrastructure/Sense.Modules.Assets.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Performance/Sense.Modules.Performance.Infrastructure/Sense.Modules.Performance.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

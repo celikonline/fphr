@@ -51,6 +51,10 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
 
     public DateTime? PaidAt { get; private set; }
 
+    public Guid? PaidByEmployeeId { get; private set; }
+
+    public string? PaymentNote { get; private set; }
+
     public IReadOnlyList<ExpenseItem> Items => _items.AsReadOnly();
 
     public static ExpenseClaim Create(Guid tenantId, Guid employeeId, string? description) =>
@@ -165,7 +169,7 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
         return Result.Success();
     }
 
-    public Result MarkPaid(DateTime whenUtc)
+    public Result MarkPaid(DateTime whenUtc, Guid paidByEmployeeId, string? paymentNote)
     {
         if (Status != ExpenseClaimStatus.Approved)
         {
@@ -174,6 +178,8 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
 
         Status = ExpenseClaimStatus.Paid;
         PaidAt = whenUtc;
+        PaidByEmployeeId = paidByEmployeeId;
+        PaymentNote = Trim(paymentNote);
         return Result.Success();
     }
 

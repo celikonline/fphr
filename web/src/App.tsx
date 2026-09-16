@@ -3,12 +3,15 @@ import { useEffect } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import LoginPage from "@/pages/auth/login";
 import InviteAcceptPage from "@/pages/auth/invite-accept";
+import ForgotPasswordPage from "@/pages/auth/forgot-password";
+import ResetPasswordPage from "@/pages/auth/reset-password";
 import HomePage from "@/pages/home";
 import NotFoundPage from "@/pages/not-found";
 import ProtectedRoute from "@/components/protected-route";
 import ComingSoonPage from "@/components/coming-soon-page";
 import AppLayout from "@/layouts/app-layout";
 import CompanyProfilePage from "@/pages/company-profile";
+import ReportsPage from "@/pages/reports";
 import LocationsPage from "@/pages/locations";
 import UsersRolesPage from "@/pages/users-roles";
 import AuditLogPage from "@/pages/audit-log";
@@ -46,6 +49,9 @@ import JobRequisitionsPage from "@/pages/recruitment/job-requisitions";
 import RecruitmentFormTemplatesPage from "@/pages/settings/recruitment-form-templates";
 import RecruitmentAutomationRulesPage from "@/pages/settings/recruitment-automation-rules";
 import PaymentsPage from "@/pages/payments";
+import ExpensePaymentsAdminPage from "@/pages/expense-payments-admin";
+import MyTimesheetPage from "@/pages/attendance/my-timesheet";
+import MyShiftsPage from "@/pages/attendance/my-shifts";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -66,6 +72,8 @@ export default function App() {
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/invite/:token" element={<InviteAcceptPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/approve/:token" element={<ApproveTokenPage />} />
 
         {/* Protected Routes: single app shell (sidebar + header) */}
@@ -86,7 +94,7 @@ export default function App() {
           <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
           <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
           <Route path="requests" element={<RequestsPage />} />
-          <Route path="reports" element={<ComingSoonPage titleKey="nav.reports" phase={4} />} />
+          <Route path="reports" element={<ReportsPage />} />
           <Route path="support" element={<ComingSoonPage titleKey="nav.support" phase={4} />} />
           <Route path="apps" element={<AppsPage />} />
           <Route path="account" element={<AccountPage />} />
@@ -97,6 +105,9 @@ export default function App() {
           <Route path="leave/calendar" element={<LeaveCalendarPage />} />
           <Route path="leave/overtimes" element={<MyOvertimesPage />} />
           <Route path="payments" element={<PaymentsPage />} />
+          <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
+          <Route path="attendance/timesheet" element={<MyTimesheetPage />} />
+          <Route path="attendance/shifts" element={<MyShiftsPage />} />
 
           <Route path="recruitment/postings" element={<JobPostingsPage />} />
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />

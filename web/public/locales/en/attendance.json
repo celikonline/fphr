@@ -1,0 +1,58 @@
+{
+  "empty": "No records for this period.",
+  "genericError": "Something went wrong.",
+  "previousMonth": "Previous month",
+  "nextMonth": "Next month",
+  "my": {
+    "timesheetTitle": "My Timesheet",
+    "timesheetSubtitle": "Your recorded check-in/check-out times and monthly summary.",
+    "dailyListTitle": "Daily records",
+    "shiftTitle": "My Shifts",
+    "shiftSubtitle": "Your assigned shift plan."
+  },
+  "summary": {
+    "workedDays": "Days worked",
+    "workedHours": "Time worked"
+  },
+  "duration": {
+    "hoursMinutes": "{{h}}h {{m}}m",
+    "hoursOnly": "{{h}}h",
+    "minutesOnly": "{{m}}m"
+  },
+  "day": {
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "worked": "Worked"
+  },
+  "anomaly": {
+    "noData": "No record",
+    "missingCheckIn": "Missing check-in",
+    "missingCheckOut": "Missing check-out",
+    "lateArrival": "Late arrival",
+    "earlyLeave": "Early leave",
+    "lateLeave": "Late leave",
+    "overwork": "Overwork",
+    "underwork": "Underwork",
+    "unplannedWork": "Unplanned work"
+  },
+  "resolutionState": {
+    "unresolved": "Unresolved",
+    "resolved": "Resolved",
+    "ignored": "Ignored"
+  },
+  "source": {
+    "manual": "Manual",
+    "import": "Import",
+    "device": "Device"
+  },
+  "shift": {
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "night": "Night shift",
+    "break": "Break",
+    "note": "Note",
+    "empty": "You have no shift records for this period."
+  }
+}

@@ -42,6 +42,62 @@ public sealed class LeaveRequestStateTests
     }
 
     [Fact]
+    public void Submit_Hourly_StoresTheTimeRange()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var submitted = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, day, day, 0.2667m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(11, 0));
+
+        submitted.IsSuccess.ShouldBeTrue();
+        submitted.Value.StartTime.ShouldBe(new TimeOnly(9, 0));
+        submitted.Value.EndTime.ShouldBe(new TimeOnly(11, 0));
+        submitted.Value.HalfDayPeriod.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Submit_HalfDay_StoresThePeriod()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var submitted = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, day, day, 0.5m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, halfDayPeriod: HalfDayPeriod.Afternoon);
+
+        submitted.IsSuccess.ShouldBeTrue();
+        submitted.Value.HalfDayPeriod.ShouldBe(HalfDayPeriod.Afternoon);
+        submitted.Value.StartTime.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Submit_HourlyAcrossTwoDays_IsRejected()
+    {
+        LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, new DateOnly(2026, 10, 5), new DateOnly(2026, 10, 6), 0.2667m, null,
+            LeaveRequestSource.SelfService, DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(11, 0))
+            .Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayRequiresSingleDate);
+    }
+
+    [Fact]
+    public void Submit_HourlyWithEndBeforeStart_IsRejected()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, day, day, 0.2667m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(11, 0), endTime: new TimeOnly(9, 0))
+            .Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+    }
+
+    [Fact]
+    public void Submit_BothHourlyAndHalfDay_IsRejected()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, day, day, 0.5m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(11, 0), halfDayPeriod: HalfDayPeriod.Morning)
+            .Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+    }
+
+    [Fact]
     public void UpdatePending_BumpsRevision_AndOldApprovalDecisionIsIgnored()
     {
         var request = NewRequest();
@@ -93,11 +149,13 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
     }
 
-    private async Task<Result<LeaveRequestDto>> SubmitAsync(Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end)
+    private async Task<Result<LeaveRequestDto>> SubmitAsync(
+        Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end, TimeOnly? startTime = null, TimeOnly? endTime = null)
     {
         using var scope = ServiceProvider!.CreateScope();
         var handler = ActivatorUtilities.CreateInstance<SubmitLeaveRequestHandler>(scope.ServiceProvider, _currentUser, _workflow);
-        var result = await handler.Handle(new SubmitLeaveRequestCommand(leaveTypeId, start, end, null), CancellationToken.None);
+        var result = await handler.Handle(
+            new SubmitLeaveRequestCommand(leaveTypeId, start, end, null, StartTime: startTime, EndTime: endTime), CancellationToken.None);
         if (result.IsSuccess)
         {
             await scope.ServiceProvider.GetRequiredService<LeaveDbContext>().SaveChangesAsync();
@@ -227,5 +285,45 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var stored = await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().Requests.SingleAsync(r => r.Id == requestId);
         stored.Status.ShouldBe(LeaveRequestStatus.Rejected);
         (await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().LedgerEntries.CountAsync()).ShouldBe(0);
+    }
+
+    /// <summary>"leave.type.job_search" is seeded with Unit=Hourly (11.3.5 seed list) - no rule set edit needed for this slice.</summary>
+    [Fact]
+    public async Task Submit_Hourly_CalculatesFractionalDays_AndRejectsAMultiDayRange()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        var approvalId = Guid.NewGuid();
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(approvalId));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid jobSearchId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            jobSearchId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.JobSearch).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        // 2 of the default 450-minute workday = 120/450, rounded to the ledger's 4-decimal precision.
+        var submitted = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0));
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+        submitted.Value.CalculatedDays.ShouldBe(0.2667m);
+        submitted.Value.StartTime.ShouldBe(new TimeOnly(9, 0));
+        submitted.Value.EndTime.ShouldBe(new TimeOnly(11, 0));
+
+        var multiDay = await SubmitAsync(tenantId, jobSearchId, monday, monday.AddDays(1), new TimeOnly(9, 0), new TimeOnly(11, 0));
+        multiDay.Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayRequiresSingleDate);
+
+        var bus = ServiceProvider.GetRequiredService<IEventBus>();
+        await bus.Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Leave, submitted.Value.Id, employeeId));
+
+        using var verify = ServiceProvider.CreateScope();
+        var usage = await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
+        usage.Amount.ShouldBe(-0.2667m);
     }
 }

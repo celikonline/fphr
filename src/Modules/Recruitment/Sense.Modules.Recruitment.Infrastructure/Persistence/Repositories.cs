@@ -33,6 +33,21 @@ public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPos
 
         return await query.OrderByDescending(p => p.CreatedAt).ToListAsync(cancellationToken);
     }
+
+    public async Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, CancellationToken cancellationToken = default)
+    {
+        var posting = await context.JobPostings
+            .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
+            .FirstOrDefaultAsync(p => p.ApplySlug == applySlug && p.Status == JobPostingStatus.Open, cancellationToken);
+        return posting is null ? Error.NotFound(RecruitmentDomainErrors.PostingNotFound) : posting;
+    }
+
+    public async Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, CancellationToken cancellationToken = default) =>
+        await context.JobPostings
+            .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
+            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open && p.Id != excludePostingId)
+            .OrderByDescending(p => p.PublishedAt)
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed Candidate repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
@@ -57,6 +72,9 @@ public sealed class CandidateRepository(RecruitmentDbContext context) : ICandida
 
         return await query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
     }
+
+    public async Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
+        await context.Candidates.FirstOrDefaultAsync(c => c.Email == email, cancellationToken);
 }
 
 /// <summary>EF Core-backed JobApplication repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
@@ -81,6 +99,9 @@ public sealed class JobApplicationRepository(RecruitmentDbContext context) : IJo
             .Where(a => a.CandidateId == candidateId)
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync(cancellationToken);
+
+    public async Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default) =>
+        await context.JobApplications.AnyAsync(a => a.JobPostingId == jobPostingId && a.CandidateId == candidateId, cancellationToken);
 }
 
 /// <summary>EF Core-backed JobRequisition repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

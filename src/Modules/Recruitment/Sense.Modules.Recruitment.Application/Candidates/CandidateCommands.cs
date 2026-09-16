@@ -8,7 +8,7 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Application.Candidates;
 
-/// <summary>Adds a candidate manually (career-site self-apply is a later Recruitment package).</summary>
+/// <summary>Adds a candidate manually (self-service career-site apply is <see cref="Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationCommand"/>).</summary>
 [RequiresPermission("recruitment.candidates.manage")]
 public sealed record CreateCandidateCommand(string FirstName, string LastName, string Email, string? Phone) : ICommand<Guid>;
 

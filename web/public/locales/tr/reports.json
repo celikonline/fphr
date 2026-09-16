@@ -1,0 +1,36 @@
+{
+  "title": "Raporlar",
+  "subtitle": "Şirket genelinde işgücü KPI'larını görüntüleyin.",
+  "empty": "Seçili dönem için KPI verisi yok.",
+  "filters": {
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "clear": "Filtreleri temizle"
+  },
+  "breakdown": {
+    "columns": {
+      "kpi": "KPI",
+      "dimension": "Kırılım",
+      "count": "Sayı",
+      "share": "Oran"
+    },
+    "empty": "Kırılım verisi yok."
+  },
+  "kpi": {
+    "CAREER_PATH_RATIO": {
+      "label": "Kariyer Yolu Oranı"
+    },
+    "GENDER_RATIO": {
+      "label": "Cinsiyet Dağılımı"
+    },
+    "TURNOVER_RATE": {
+      "label": "Devir Oranı"
+    },
+    "EARLY_TURNOVER_RATE": {
+      "label": "Erken Devir Oranı"
+    },
+    "GENDER_RATIO_BY_UNIT": {
+      "label": "Birim Bazında Cinsiyet Dağılımı"
+    }
+  }
+}

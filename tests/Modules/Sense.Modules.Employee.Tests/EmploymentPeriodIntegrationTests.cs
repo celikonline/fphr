@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
@@ -54,6 +55,10 @@ public sealed class EmploymentPeriodIntegrationTests : TestFixture
 
         // Employee only consumes ILegislationParameterReader (owned by the Leave module in production).
         services.AddSingleton(Substitute.For<ILegislationParameterReader>());
+
+        // Same treatment for Assets.Contracts.IAssetLookup (registered by AssetsModule in production); unconfigured
+        // NSubstitute calls return 0, i.e. "no open assets" for every employee in this test.
+        services.AddSingleton(Substitute.For<IAssetLookup>());
 
         services.AddSingleton<IIntegrationEventHandler<ContractEvents.EmployeeRehired>>(_rehired);
     }

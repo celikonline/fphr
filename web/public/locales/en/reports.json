@@ -1,0 +1,36 @@
+{
+  "title": "Reports",
+  "subtitle": "View company-wide workforce KPIs.",
+  "empty": "No KPI data for the selected period.",
+  "filters": {
+    "from": "From",
+    "to": "To",
+    "clear": "Clear filters"
+  },
+  "breakdown": {
+    "columns": {
+      "kpi": "KPI",
+      "dimension": "Breakdown",
+      "count": "Count",
+      "share": "Share"
+    },
+    "empty": "No breakdown data."
+  },
+  "kpi": {
+    "CAREER_PATH_RATIO": {
+      "label": "Career Path Ratio"
+    },
+    "GENDER_RATIO": {
+      "label": "Gender Ratio"
+    },
+    "TURNOVER_RATE": {
+      "label": "Turnover Rate"
+    },
+    "EARLY_TURNOVER_RATE": {
+      "label": "Early Turnover Rate"
+    },
+    "GENDER_RATIO_BY_UNIT": {
+      "label": "Gender Ratio by Unit"
+    }
+  }
+}

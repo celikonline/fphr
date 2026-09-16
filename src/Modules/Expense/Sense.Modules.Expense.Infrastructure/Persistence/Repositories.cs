@@ -58,6 +58,17 @@ public sealed class ExpenseClaimRepository(ExpenseDbContext context) : IExpenseC
             .Where(c => c.EmployeeId == employeeId && c.Status != ExpenseClaimStatus.Draft)
             .OrderByDescending(c => c.SubmittedAt)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ExpenseClaim>> ListAsync(ExpenseClaimStatus? status, CancellationToken cancellationToken = default)
+    {
+        var query = context.ExpenseClaims.Where(c => c.Status != ExpenseClaimStatus.Draft);
+        if (status is { } value)
+        {
+            query = query.Where(c => c.Status == value);
+        }
+
+        return await query.OrderByDescending(c => c.SubmittedAt).ToListAsync(cancellationToken);
+    }
 }
 
 public sealed class AdvanceRequestRepository(ExpenseDbContext context) : IAdvanceRequestRepository
@@ -78,4 +89,15 @@ public sealed class AdvanceRequestRepository(ExpenseDbContext context) : IAdvanc
             .Where(a => a.EmployeeId == employeeId)
             .OrderByDescending(a => a.RequestedDate)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<AdvanceRequest>> ListAsync(AdvanceRequestStatus? status, CancellationToken cancellationToken = default)
+    {
+        var query = context.AdvanceRequests.AsQueryable();
+        if (status is { } value)
+        {
+            query = query.Where(a => a.Status == value);
+        }
+
+        return await query.OrderByDescending(a => a.RequestedDate).ToListAsync(cancellationToken);
+    }
 }

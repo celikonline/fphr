@@ -87,6 +87,21 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("country");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -104,6 +119,15 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("joint_employment_group_code");
 
+                    b.Property<Guid?>("LogoDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("logo_document_id");
+
+                    b.Property<string>("LogoUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("logo_url");
+
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_date");
@@ -112,13 +136,36 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
 
+                    b.Property<TimeOnly?>("OperatingHoursEnd")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("operating_hours_end");
+
+                    b.Property<TimeOnly?>("OperatingHoursStart")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("operating_hours_start");
+
                     b.Property<Guid>("OrgUnitId")
                         .HasColumnType("uuid")
                         .HasColumnName("org_unit_id");
 
+                    b.Property<string>("RegistrationNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("registration_number");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tax_number");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
+
+                    b.Property<string>("WorkingDaysCsv")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("working_days");
 
                     b.HasKey("Id")
                         .HasName("pk_companies");

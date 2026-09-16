@@ -5,7 +5,7 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Domain.Candidates;
 
-/// <summary>Where a candidate record came from. Only <see cref="Manual"/> is reachable in R0 - the career-site apply flow (R3) adds CareerSite.</summary>
+/// <summary>Where a candidate record came from. <see cref="CareerSite"/> is set by the public career-site apply flow (R3, see Application/Public).</summary>
 public enum CandidateSource
 {
     Manual,
@@ -15,8 +15,9 @@ public enum CandidateSource
 }
 
 /// <summary>
-/// A candidate (Kolay İK "Aday"). R0 scope: contact info only, added manually by a recruiter; the career-site public
-/// apply form, CV parsing and tagging (roadmap #89) are deferred (see faz6-durum-takibi.md).
+/// A candidate (Kolay İK "Aday"): contact info, added either manually by a recruiter or by the candidate themselves
+/// via the public career-site apply form (R3, see Application/Public). CV parsing and auto-tagging (roadmap #89)
+/// are still deferred (see faz6-durum-takibi.md).
 /// </summary>
 public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
 {
@@ -50,7 +51,9 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
 
     public IReadOnlyList<CandidateTagAssignment> Tags => _tags.AsReadOnly();
 
-    public static Result<Candidate> Create(Guid tenantId, string firstName, string lastName, string email, string? phone, Guid? id = null)
+    public static Result<Candidate> Create(
+        Guid tenantId, string firstName, string lastName, string email, string? phone, Guid? id = null,
+        CandidateSource source = CandidateSource.Manual)
     {
         if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
         {
@@ -68,7 +71,7 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
             Guard.MaxLength(lastName.Trim(), RecruitmentLimits.NameMaxLength),
             Guard.MaxLength(email.Trim(), RecruitmentLimits.EmailMaxLength),
             string.IsNullOrWhiteSpace(phone) ? null : Guard.MaxLength(phone.Trim(), RecruitmentLimits.PhoneMaxLength),
-            CandidateSource.Manual);
+            source);
     }
 
     public Result UpdateContactInfo(string firstName, string lastName, string email, string? phone)

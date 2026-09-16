@@ -39,9 +39,9 @@ public enum JobPostingArchiveReason
 }
 
 /// <summary>
-/// A job posting (Kolay İK "İlan"). R0 scope: manual lifecycle (draft/publish/close/reopen/archive) and an access list;
-/// requisition+approval gating (roadmap #87), the career-site public apply flow, form builder and automation rules are
-/// deferred to later Recruitment packages (see docs/analysis/kolayik-video/faz6-durum-takibi.md).
+/// A job posting (Kolay İK "İlan"). R0 scope: manual lifecycle (draft/publish/close/reopen/archive) and an access list.
+/// The public career-site apply flow (R3, see Application/Public) reads Open postings by <see cref="ApplySlug"/>,
+/// bypassing the tenant query filter (anonymous request) and resolving the tenant from the posting itself.
 /// </summary>
 public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
 {

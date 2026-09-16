@@ -61,3 +61,44 @@ public sealed class CreateAdvanceRequestHandler(
         return advance.Id;
     }
 }
+
+/// <summary>HR/Finance marks an Approved advance request as paid (e.g. after a bank transfer). Status must already be Approved.</summary>
+[RequiresPermission("expense.advances.pay")]
+public sealed record PayAdvanceRequestCommand(Guid RequestId, string? PaymentNote) : ICommand;
+
+public sealed class PayAdvanceRequestValidator : AbstractValidator<PayAdvanceRequestCommand>
+{
+    public PayAdvanceRequestValidator()
+    {
+        RuleFor(x => x.RequestId).NotEmpty();
+        RuleFor(x => x.PaymentNote).MaximumLength(ExpenseLimits.DescriptionMaxLength);
+    }
+}
+
+public sealed class PayAdvanceRequestHandler(ICurrentUser currentUser, TimeProvider clock, IAdvanceRequestRepository requests, IIntegrationEventOutbox outbox)
+    : ICommandHandler<PayAdvanceRequestCommand>
+{
+    public async Task<Result> Handle(PayAdvanceRequestCommand command, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } payerEmployeeId)
+        {
+            return Error.NotFound(ExpenseErrors.NoEmployeeForUser);
+        }
+
+        var existing = await requests.GetByIdAsync(command.RequestId, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        var advance = existing.Value;
+        var paid = advance.MarkPaid(clock.GetUtcNow().UtcDateTime, payerEmployeeId, command.PaymentNote);
+        if (paid.IsFailure)
+        {
+            return paid;
+        }
+
+        outbox.Enqueue(new AdvanceRequestPaid(advance.TenantId, advance.Id, advance.EmployeeId, advance.Amount));
+        return Result.Success();
+    }
+}

@@ -51,6 +51,35 @@ public sealed class Company : TenantAggregateRoot<Guid>, IAuditLogged
     /// </summary>
     public string? JointEmploymentGroupCode { get; private set; }
 
+    /// <summary>Legal/registry fields (Faz 2, TB-10 "Şirket profili"). All optional - a Company row exists before anyone fills these in.</summary>
+    public string? RegistrationNumber { get; private set; }
+
+    /// <summary>Tax number (vergi no). Deliberately not encrypted like TCKN/IBAN - this is public trade-registry data, not a KVKK special category.</summary>
+    public string? TaxNumber { get; private set; }
+
+    public string? Address { get; private set; }
+
+    public string? City { get; private set; }
+
+    public string? Country { get; private set; }
+
+    public TimeOnly? OperatingHoursStart { get; private set; }
+
+    public TimeOnly? OperatingHoursEnd { get; private set; }
+
+    /// <summary>Comma-separated lowercase weekday codes (<see cref="CompanyWorkingDays.Codes"/>), e.g. "mon,tue,wed,thu,fri". Null/empty means unset.</summary>
+    public string? WorkingDaysCsv { get; private set; }
+
+    /// <summary>Document module reference for the uploaded logo (Faz 2 Documents integration); resolving a durable display URL for it is future work.</summary>
+    public Guid? LogoDocumentId { get; private set; }
+
+    public string? LogoUrl { get; private set; }
+
+    public IReadOnlyList<string> WorkingDays =>
+        string.IsNullOrWhiteSpace(WorkingDaysCsv)
+            ? []
+            : WorkingDaysCsv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
     public static Result<Company> Create(Guid tenantId, Guid orgUnitId, Guid? holidayCalendarId = null, Guid? id = null)
     {
         if (orgUnitId == Guid.Empty)
@@ -75,8 +104,52 @@ public sealed class Company : TenantAggregateRoot<Guid>, IAuditLogged
 
     public void SetJointEmploymentGroupCode(string? code) =>
         JointEmploymentGroupCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
+
+    /// <summary>
+    /// Sets the legal/registry profile fields in one call (Faz 2, TB-10 "Şirket profili": tenant profile
+    /// screen edits all of these together). Working days are validated/normalized by the caller
+    /// (<see cref="CompanyWorkingDays"/>) - this aggregate only stores the already-normalized CSV.
+    /// </summary>
+    public void UpdateProfile(
+        string? registrationNumber,
+        string? taxNumber,
+        string? address,
+        string? city,
+        string? country,
+        TimeOnly? operatingHoursStart,
+        TimeOnly? operatingHoursEnd,
+        IReadOnlyList<string>? workingDays)
+    {
+        RegistrationNumber = Trimmed(registrationNumber);
+        TaxNumber = Trimmed(taxNumber);
+        Address = Trimmed(address);
+        City = Trimmed(city);
+        Country = Trimmed(country);
+        OperatingHoursStart = operatingHoursStart;
+        OperatingHoursEnd = operatingHoursEnd;
+        WorkingDaysCsv = workingDays is { Count: > 0 } ? string.Join(',', workingDays) : null;
+
+        Raise(new CompanyProfileUpdated(Id, TenantId));
+    }
+
+    /// <summary>Records the uploaded logo's Document id and current display URL (see <see cref="LogoUrl"/> remarks).</summary>
+    public void SetLogo(Guid? documentId, string? url)
+    {
+        LogoDocumentId = documentId;
+        LogoUrl = string.IsNullOrWhiteSpace(url) ? null : url.Trim();
+    }
+
+    private static string? Trimmed(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+}
+
+/// <summary>Canonical weekday codes for <see cref="Company.WorkingDaysCsv"/>, matching the web `WeekDay` union type.</summary>
+public static class CompanyWorkingDays
+{
+    public static readonly IReadOnlyList<string> Codes = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 }
 
 public sealed record CompanyCreated(Guid CompanyId, Guid TenantId, Guid OrgUnitId) : DomainEvent;
 
 public sealed record CompanyHolidayCalendarChanged(Guid CompanyId, Guid TenantId, Guid? HolidayCalendarId) : DomainEvent;
+
+public sealed record CompanyProfileUpdated(Guid CompanyId, Guid TenantId) : DomainEvent;

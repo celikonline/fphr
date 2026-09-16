@@ -56,4 +56,18 @@ public static class OrganizationLimits
 
     /// <summary>Default cap on how many hierarchy levels (OrgUnitType rows) a tenant may define; see IOptions&lt;OrganizationOptions&gt; (future item).</summary>
     public const int MaxUnitTypesDefault = 10;
+
+    /// <summary>Company profile field limits (Faz 2, TB-10).</summary>
+    public const int RegistrationNumberMaxLength = 50;
+
+    public const int TaxNumberMaxLength = 50;
+
+    public const int CityMaxLength = 100;
+
+    public const int CountryMaxLength = 100;
+
+    /// <summary>Max length of the stored CSV of weekday codes (7 x "xxx," fits comfortably).</summary>
+    public const int WorkingDaysCsvMaxLength = 40;
+
+    public const int LogoUrlMaxLength = 1000;
 }

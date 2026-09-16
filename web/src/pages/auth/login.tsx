@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -298,14 +298,7 @@ export default function LoginPage() {
               label={t("auth:rememberMe")}
               styles={{ label: { color: "var(--mantine-color-dimmed)" } }}
             />
-            <Text
-              size="sm"
-              fw={500}
-              c="dimmed"
-              opacity={0.6}
-              style={{ cursor: "not-allowed" }}
-              title={t("auth:forgotPassword")}
-            >
+            <Text component={Link} to="/forgot-password" size="sm" fw={500} c="dimmed" style={{ textDecoration: "none" }}>
               {t("auth:forgotPassword")}
             </Text>
           </Group>

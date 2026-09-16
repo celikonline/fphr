@@ -531,6 +531,8 @@
       "leaveSettled": "Yıllık izinler kullandırıldı veya ücreti ödendi",
       "leaveSettledHint": "İşaretlenirse bu dönem yeniden işe alımda izin kıdemine sayılmaz.",
       "collectiveTitle": "Toplu işten çıkarma uyarısı",
+      "openAssetsTitle": "Zimmet uyarısı",
+      "openAssetsWarning": "Bu çalışanın üzerinde {{count}} adet iade edilmemiş zimmet var. Çıkış tamamlanabilir; iade işlemini \"Zimmet\" sekmesinden unutmayın.",
       "warningTitle": "Dikkat edilmesi gerekenler",
       "dateRequired": "İşten ayrılma tarihi zorunludur.",
       "reasonRequired": "İşten ayrılma nedeni seçin.",

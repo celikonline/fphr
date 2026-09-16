@@ -78,6 +78,8 @@
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Integrations.Tests/Sense.Modules.Integrations.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Assets.Tests/Sense.Modules.Assets.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Reporting.Tests/Sense.Modules.Reporting.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Performance.Tests/Sense.Modules.Performance.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
@@ -139,5 +141,19 @@
     <Project Path="src/Modules/Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
     <Project Path="src/Modules/Assets/Sense.Modules.Assets.Domain/Sense.Modules.Assets.Domain.csproj" />
     <Project Path="src/Modules/Assets/Sense.Modules.Assets.Infrastructure/Sense.Modules.Assets.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Reporting/">
+    <Project Path="src/Modules/Reporting/Sense.Modules.Reporting.Api/Sense.Modules.Reporting.Api.csproj" />
+    <Project Path="src/Modules/Reporting/Sense.Modules.Reporting.Application/Sense.Modules.Reporting.Application.csproj" />
+    <Project Path="src/Modules/Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
+    <Project Path="src/Modules/Reporting/Sense.Modules.Reporting.Domain/Sense.Modules.Reporting.Domain.csproj" />
+    <Project Path="src/Modules/Reporting/Sense.Modules.Reporting.Infrastructure/Sense.Modules.Reporting.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Performance/">
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Api/Sense.Modules.Performance.Api.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Application/Sense.Modules.Performance.Application.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Contracts/Sense.Modules.Performance.Contracts.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Domain/Sense.Modules.Performance.Domain.csproj" />
+    <Project Path="src/Modules/Performance/Sense.Modules.Performance.Infrastructure/Sense.Modules.Performance.Infrastructure.csproj" />
   </Folder>
 </Solution>

@@ -65,6 +65,11 @@ public sealed class AssetRepository(AssetsDbContext context) : IAssetRepository
             a => a.TenantId == tenantId && a.AssignedEmployeeId == employeeId && a.Status == AssetStatus.Assigned,
             cancellationToken);
 
+    public async Task<int> CountOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Assets.CountAsync(
+            a => a.TenantId == tenantId && a.AssignedEmployeeId == employeeId && a.Status == AssetStatus.Assigned,
+            cancellationToken);
+
     private static IQueryable<Asset> Filter(IQueryable<Asset> query, Guid? employeeId, AssetStatus? status, Guid? categoryId)
     {
         if (employeeId is { } emp)

@@ -23,6 +23,8 @@ public static class LeaveDomainErrors
     public const string RequestApprovalMismatch = "leave.request.approval_mismatch";
     public const string RequestInvalidRange = "leave.errors.invalid_range";
     public const string RequestZeroDays = "leave.errors.zero_days";
+    public const string RequestPartialDayRequiresSingleDate = "leave.errors.partial_day_requires_single_date";
+    public const string RequestPartialDayTimeInvalid = "leave.errors.partial_day_time_invalid";
     public const string RequestNotCancellable = "leave.errors.request_not_cancellable";
     public const string RequestCancellationReasonRequired = "leave.errors.cancellation_reason_required";
     public const string RuleSetIsDefault = "leave.errors.rule_set_is_default";

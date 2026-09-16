@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Contracts;
@@ -462,6 +463,7 @@ public sealed class TerminateEmployeeHandler(
     TerminationReasonProvisioningService reasonProvisioning,
     JobSecurityEvaluator jobSecurity,
     CollectiveDismissalEvaluator collectiveDismissal,
+    IAssetLookup assetLookup,
     IIntegrationEventOutbox outbox,
     EmployeeDetailBuilder details) : ICommandHandler<TerminateEmployeeCommand, TerminateEmployeeResultDto>
 {
@@ -505,8 +507,15 @@ public sealed class TerminateEmployeeHandler(
         outbox.Enqueue(new Contracts.Events.EmployeeTerminated(
             tenant.TenantId, employee.Id, ToContractType(terminationType), reason.Code, sgkExitCode) { ActorUserId = currentUser.UserId });
 
+        // Advisory only (roadmap: offboarding <-> zimmet), same non-blocking pattern as the job-security/collective
+        // dismissal warnings above: HR sees the open-asset count and can still complete the exit without returning
+        // them first. The fact itself stays visible afterwards through Assets' own data (an Asset stays
+        // Status == Assigned, pointing at a now-terminated employee, until someone records its return) - there is
+        // no dedicated structured audit-log entry yet (Faz 1's audit-log backend is still being built).
+        var openAssetCount = await assetLookup.CountOpenAssetsAsync(tenant.TenantId, employee.Id, cancellationToken);
+
         var dto = await details.BuildAsync(employee, cancellationToken);
-        return new TerminateEmployeeResultDto(dto, evaluation.InScope, evaluation.ShowWarning, evaluation.WarningMessage, collective);
+        return new TerminateEmployeeResultDto(dto, evaluation.InScope, evaluation.ShowWarning, evaluation.WarningMessage, collective, openAssetCount);
     }
 
     private static Contracts.Events.TerminationType ToContractType(Domain.Employees.TerminationType type) => type switch

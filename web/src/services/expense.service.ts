@@ -1,8 +1,8 @@
 /**
- * Expense module (Faz 4 Ex0): mirrors `ExpenseClaimsController`/`AdvancesController`/`PaymentsController`/
- * `ExpenseCategoriesController.cs` (`api/v1/expense/{claims,advances,payments,categories}`). Ex0 scope only:
- * self-service claim/advance creation + submit, combined payments overview. No approve/pay actions here - those
- * happen through Workflow (see docs/analysis/kolayik-video/faz4-durum-takibi.md "Ex0").
+ * Expense module: mirrors `ExpenseClaimsController`/`AdvancesController`/`PaymentsController`/
+ * `ExpenseCategoriesController.cs` (`api/v1/expense/{claims,advances,payments,categories}`). Self-service
+ * claim/advance creation + submit, combined payments overview, plus the HR/Finance worklist (tenant-wide list +
+ * "mark as paid") added in Faz 7 - approval itself still happens through Workflow.
  */
 import { apiClient } from "@senseik/api-client";
 
@@ -33,6 +33,8 @@ export interface ExpenseClaim {
   submittedAt: string | null;
   decidedAt: string | null;
   paidAt: string | null;
+  paidByEmployeeId: string | null;
+  paymentNote: string | null;
   items: ExpenseItem[];
 }
 
@@ -74,6 +76,17 @@ export async function submitExpenseClaim(claimId: string): Promise<void> {
   await apiClient.post(`${EXPENSE_BASE}/claims/${claimId}/submit`);
 }
 
+/** HR/Finance worklist: tenant-wide non-Draft claims, optionally filtered to one status (e.g. "approved", awaiting pay). */
+export async function listExpenseClaims(status?: ExpenseClaimStatus): Promise<ExpenseClaim[]> {
+  const { data } = await apiClient.get<ExpenseClaim[]>(`${EXPENSE_BASE}/claims`, { params: status ? { status } : undefined });
+  return data;
+}
+
+/** HR/Finance marks an Approved claim as paid. */
+export async function payExpenseClaim(claimId: string, paymentNote?: string | null): Promise<void> {
+  await apiClient.post(`${EXPENSE_BASE}/claims/${claimId}/pay`, { paymentNote: paymentNote ?? null });
+}
+
 export interface AdvanceRequest {
   id: string;
   employeeId: string;
@@ -87,6 +100,8 @@ export interface AdvanceRequest {
   approvalRequestId: string | null;
   decidedAt: string | null;
   paidAt: string | null;
+  paidByEmployeeId: string | null;
+  paymentNote: string | null;
 }
 
 export interface CreateAdvanceRequestInput {
@@ -106,6 +121,17 @@ export async function listMyAdvanceRequests(): Promise<AdvanceRequest[]> {
 export async function createAdvanceRequest(input: CreateAdvanceRequestInput): Promise<string> {
   const { data } = await apiClient.post<string>(`${EXPENSE_BASE}/advances`, input);
   return data;
+}
+
+/** HR/Finance worklist: tenant-wide advance requests, optionally filtered to one status (e.g. "approved", awaiting pay). */
+export async function listAdvanceRequests(status?: AdvanceRequestStatus): Promise<AdvanceRequest[]> {
+  const { data } = await apiClient.get<AdvanceRequest[]>(`${EXPENSE_BASE}/advances`, { params: status ? { status } : undefined });
+  return data;
+}
+
+/** HR/Finance marks an Approved advance request as paid. */
+export async function payAdvanceRequest(requestId: string, paymentNote?: string | null): Promise<void> {
+  await apiClient.post(`${EXPENSE_BASE}/advances/${requestId}/pay`, { paymentNote: paymentNote ?? null });
 }
 
 export type PaymentKind = "expense" | "advance" | "overtime" | "adjustment";

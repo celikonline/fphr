@@ -531,6 +531,8 @@
       "leaveSettled": "[DE] Annual leave used up or paid out",
       "leaveSettledHint": "[DE] When ticked, this period does not count towards leave seniority after a rehire.",
       "collectiveTitle": "[DE] Collective dismissal warning",
+      "openAssetsTitle": "[DE] Asset warning",
+      "openAssetsWarning": "[DE] This employee still has {{count}} unreturned asset(s). The exit can still be completed - remember to record the return from the \"Assets\" tab.",
       "warningTitle": "[DE] Points to watch",
       "dateRequired": "[DE] The termination date is required.",
       "reasonRequired": "[DE] Pick a termination reason.",

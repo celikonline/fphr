@@ -77,14 +77,17 @@ public sealed record EmployeeDetailDto(
 
 /// <summary>
 /// Result of the termination wizard's submit step: the updated card plus the advisory job-security warning (never
-/// gates the termination - see JobSecurityEvaluator).
+/// gates the termination - see JobSecurityEvaluator) and the count of assets (zimmet) still assigned to the employee
+/// at exit time (from Assets.Contracts.IAssetLookup; also never blocks - HR can complete the exit and return the
+/// equipment afterwards from the employee card's "Zimmet" tab).
 /// </summary>
 public sealed record TerminateEmployeeResultDto(
     EmployeeDetailDto Employee,
     bool JobSecurityInScope,
     bool JobSecurityWarning,
     string? JobSecurityWarningMessage,
-    CollectiveDismissalEvaluation? CollectiveDismissal = null);
+    CollectiveDismissalEvaluation? CollectiveDismissal = null,
+    int OpenAssetCount = 0);
 
 public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
 

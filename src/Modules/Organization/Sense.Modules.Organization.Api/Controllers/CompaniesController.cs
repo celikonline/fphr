@@ -12,6 +12,21 @@ public sealed record AssignHolidayCalendarRequest(Guid? HolidayCalendarId);
 /// <summary>Request to create a company (root Company-level unit + holiday calendar).</summary>
 public sealed record CreateCompanyRequest(string Name, Guid? HolidayCalendarId);
 
+/// <summary>Request body for the "Şirket profili" screen (Faz 2, TB-10).</summary>
+public sealed record UpdateCompanyProfileRequest(
+    string Name,
+    string? RegistrationNumber,
+    string? TaxNumber,
+    string? Address,
+    string? City,
+    string? Country,
+    string? OperatingHoursStart,
+    string? OperatingHoursEnd,
+    IReadOnlyList<string>? WorkingDays);
+
+/// <summary>Request to set (or, with a null DocumentId, clear) the company profile's logo.</summary>
+public sealed record SetCompanyLogoRequest(Guid? LogoDocumentId, string? LogoUrl);
+
 /// <summary>Companies: list, create ("Şirket ekle": Ad + Tatil takvimi), and holiday-calendar assignment.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/organization/companies")]
@@ -35,4 +50,33 @@ public sealed class CompaniesController : ApiControllerBase
     [ProducesResponseType<CompanyDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> AssignHolidayCalendar(Guid id, [FromBody] AssignHolidayCalendarRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AssignCompanyHolidayCalendarCommand(id, request.HolidayCalendarId), ct));
+
+    /// <summary>Gets the tenant's primary company profile ("Şirket profili" screen, Faz 2 TB-10).</summary>
+    [HttpGet("profile")]
+    [ProducesResponseType<CompanyProfileDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetProfile(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetCompanyProfileQuery(), ct));
+
+    /// <summary>Updates the tenant's primary company profile: name (renames its OrgUnit), legal/registry fields, and operating hours.</summary>
+    [HttpPut("profile")]
+    [ProducesResponseType<CompanyProfileDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateCompanyProfileRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(
+            new UpdateCompanyProfileCommand(
+                request.Name,
+                request.RegistrationNumber,
+                request.TaxNumber,
+                request.Address,
+                request.City,
+                request.Country,
+                request.OperatingHoursStart,
+                request.OperatingHoursEnd,
+                request.WorkingDays),
+            ct));
+
+    /// <summary>Sets (or clears) the company profile's logo reference (documentId from the Documents module upload flow).</summary>
+    [HttpPut("profile/logo")]
+    [ProducesResponseType<CompanyProfileDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetLogo([FromBody] SetCompanyLogoRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetCompanyLogoCommand(request.LogoDocumentId, request.LogoUrl), ct));
 }

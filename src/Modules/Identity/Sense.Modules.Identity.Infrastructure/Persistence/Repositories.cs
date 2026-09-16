@@ -116,6 +116,15 @@ public sealed class RefreshTokenRepository(IdentityDbContext db) : IRefreshToken
     public void Add(RefreshToken token) => db.RefreshTokens.Add(token);
 }
 
+public sealed class PasswordResetTokenRepository(IdentityDbContext db) : IPasswordResetTokenRepository
+{
+    /// <summary>Anonim sıfırlama akışında kiracı henüz bilinmez: filtre kaldırılır, kiracı token kaydından okunur.</summary>
+    public Task<PasswordResetToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct) =>
+        db.PasswordResetTokens.IgnoreQueryFilters([IdentityDbContext.TenantFilter]).FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+
+    public void Add(PasswordResetToken token) => db.PasswordResetTokens.Add(token);
+}
+
 public sealed class ImpersonationGrantRepository(IdentityDbContext db) : IImpersonationGrantRepository
 {
     public Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct) => db.ImpersonationGrants.FirstOrDefaultAsync(g => g.Id == id, ct);

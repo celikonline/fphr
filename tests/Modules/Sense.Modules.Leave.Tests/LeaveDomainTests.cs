@@ -136,6 +136,36 @@ public sealed class LeaveDayCounterTests
     }
 }
 
+/// <summary>Fractional-day calculation for LeaveType.Unit = HalfDay/Hourly (11.3.5 - yarım gün ve saatlik izin).</summary>
+public sealed class LeavePartialDayTests
+{
+    [Fact]
+    public void HalfDayFraction_IsAlwaysHalfADay() => LeavePartialDay.HalfDayFraction.ShouldBe(0.5m);
+
+    [Fact]
+    public void HourlyFraction_UsesTheDefaultDailyWorkMinutes_SameBasisAsOvertime()
+    {
+        // 7.5 h/day default (md.63: 45 h / 6 gün); 3 h 45 min = half a day.
+        var result = LeavePartialDay.HourlyFraction(new TimeOnly(9, 0), new TimeOnly(12, 45));
+
+        result.ShouldBe(0.5m);
+        LeavePartialDay.DefaultDailyWorkMinutes.ShouldBe(450);
+    }
+
+    [Fact]
+    public void HourlyFraction_RoundsToLedgerPrecision()
+    {
+        // 2 hours of a 450-minute day = 120/450 = 0.2666...; rounds to 4 decimals like LeaveLedgerEntry.Amount.
+        var result = LeavePartialDay.HourlyFraction(new TimeOnly(9, 0), new TimeOnly(11, 0));
+
+        result.ShouldBe(0.2667m);
+    }
+
+    [Fact]
+    public void HourlyFraction_HonorsACustomDailyWorkMinutes() =>
+        LeavePartialDay.HourlyFraction(new TimeOnly(9, 0), new TimeOnly(13, 0), dailyWorkMinutes: 480).ShouldBe(0.5m);
+}
+
 public sealed class LeaveTypeTests
 {
     private static readonly Guid TenantId = Guid.NewGuid();

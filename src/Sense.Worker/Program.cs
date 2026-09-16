@@ -27,6 +27,7 @@ using Sense.Modules.Organization.Domain;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Payroll.Infrastructure;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Performance.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Contracts;
@@ -169,6 +170,21 @@ builder.Services.AddModuleHandlers(
     typeof(RecruitmentDbContext).Assembly,
     typeof(Sense.Modules.Recruitment.Domain.IJobPostingRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<RecruitmentDbContext>>();
+
+// Performance (faz-08 R0): consumes Employee's EmployeeTerminated to archive (freeze, not delete/cancel) the
+// terminated employee's open goals - see Sense.Modules.Performance.Application.Employees.EmployeeTerminatedHandler.
+// Application assembly passed directly (Payroll's EmployeeHiredHandler pattern) rather than Recruitment's separate
+// AddXIntegrationEventHandlers extension, since there's only the one handler so far.
+builder.Services.AddModuleDbContext<Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext>(
+    builder.Configuration, Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext.SchemaName);
+builder.Services.AddPerformanceCoreServices();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext.SchemaName,
+    typeof(Sense.Modules.Performance.Contracts.PerformancePermissions).Assembly,
+    typeof(Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext).Assembly,
+    typeof(Sense.Modules.Performance.Domain.IGoalRepository).Assembly,
+    typeof(Sense.Modules.Performance.Application.Employees.EmployeeTerminatedHandler).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Performance.Infrastructure.Persistence.PerformanceDbContext>>();
 
 // Expense: consumes Workflow's ApprovalCompleted/ApprovalRejected for RequestType "ExpenseClaim"/"Advance"
 // (ExpenseClaimApprovalCompletedHandler/RejectedHandler, AdvanceApprovalCompletedHandler/RejectedHandler in

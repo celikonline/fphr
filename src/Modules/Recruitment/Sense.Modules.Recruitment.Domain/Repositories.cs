@@ -18,6 +18,16 @@ public interface IJobPostingRepository
     Task<Result<JobPosting>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<JobPosting>> ListAsync(JobPostingStatus? status = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Public career-site lookup by the permanent apply slug (R3): bypasses the tenant query filter, since the
+    /// caller is anonymous and doesn't know the tenant yet - the caller must resolve tenant scope from the result
+    /// before doing anything else (see PublicCareerCommands/Queries).
+    /// </summary>
+    Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, CancellationToken cancellationToken = default);
+
+    /// <summary>Other Open postings of the same tenant (R3 "diğer açık pozisyonlar"), excluding one posting id.</summary>
+    Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Candidate aggregate repository.</summary>
@@ -28,6 +38,9 @@ public interface ICandidateRepository
     Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Candidate>> ListAsync(string? search = null, CancellationToken cancellationToken = default);
+
+    /// <summary>Exact e-mail match within the current tenant scope (career-site apply: reuse an existing candidate instead of duplicating).</summary>
+    Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
 }
 
 /// <summary>JobApplication aggregate repository.</summary>
@@ -40,6 +53,9 @@ public interface IJobApplicationRepository
     Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default);
+
+    /// <summary>True if this candidate already has an application for this posting (unique index backs this, but the career-site apply flow wants a friendly error, not a DB exception).</summary>
+    Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>JobRequisition aggregate repository.</summary>

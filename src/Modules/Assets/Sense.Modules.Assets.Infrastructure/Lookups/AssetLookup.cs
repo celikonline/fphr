@@ -8,4 +8,7 @@ public sealed class AssetLookup(IAssetRepository assets) : IAssetLookup
 {
     public Task<bool> HasOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
         assets.HasOpenAssetsAsync(tenantId, employeeId, cancellationToken);
+
+    public Task<int> CountOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        assets.CountOpenAssetsAsync(tenantId, employeeId, cancellationToken);
 }

@@ -105,7 +105,23 @@ public sealed class ExpenseClaimTests
         claim.Approve(approvalId, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
         claim.Status.ShouldBe(ExpenseClaimStatus.Approved);
 
-        claim.MarkPaid(DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+        var payerId = Guid.NewGuid();
+        claim.MarkPaid(DateTime.UtcNow, payerId, "Banka havalesi").IsSuccess.ShouldBeTrue();
         claim.Status.ShouldBe(ExpenseClaimStatus.Paid);
+        claim.PaidByEmployeeId.ShouldBe(payerId);
+        claim.PaymentNote.ShouldBe("Banka havalesi");
+    }
+
+    [Fact]
+    public void MarkPaid_WhenNotApproved_Fails()
+    {
+        var claim = ExpenseClaim.Create(TenantId, EmployeeId, null);
+        claim.AddItem(CategoryId, 100m, DateOnly.FromDateTime(DateTime.UtcNow), null, "TRY", null, null);
+        claim.Submit();
+
+        var result = claim.MarkPaid(DateTime.UtcNow, Guid.NewGuid(), null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ExpenseDomainErrors.ClaimNotApproved);
     }
 }

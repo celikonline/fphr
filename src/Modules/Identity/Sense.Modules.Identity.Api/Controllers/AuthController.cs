@@ -30,6 +30,10 @@ public sealed record RefreshRequest(string RefreshToken);
 
 public sealed record LogoutRequest(string? RefreshToken, bool AllSessions);
 
+public sealed record ForgotPasswordRequest(string Email);
+
+public sealed record ResetPasswordRequest(string Token, string NewPassword);
+
 /// <summary>Giriş, token yenileme, çıkış.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route(IdentityRoutes.Auth)]
@@ -52,6 +56,19 @@ public sealed class AuthController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout([FromBody] LogoutRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new LogoutCommand(request.RefreshToken, request.AllSessions), ct));
+
+    /// <summary>Var olmayan e-posta için de aynı (204) yanıt döner — kullanıcı numaralandırmasına izin verilmez.</summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ForgotPasswordCommand(request.Email), ct));
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ResetPasswordCommand(request.Token, request.NewPassword), ct));
 }
 
 /// <summary>Oturum açmış kullanıcı: profil, roller, izinler, kapsamlar.</summary>

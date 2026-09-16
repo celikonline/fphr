@@ -28,6 +28,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+
     public DbSet<ImpersonationGrant> ImpersonationGrants => Set<ImpersonationGrant>();
 
     public DbSet<UnitAuthorization> UnitAuthorizations => Set<UnitAuthorization>();
@@ -43,6 +45,7 @@ internal static class IdentityTables
     public const string RolePermissions = "role_permissions";
     public const string Invitations = "invitations";
     public const string RefreshTokens = "refresh_tokens";
+    public const string PasswordResetTokens = "password_reset_tokens";
     public const string ImpersonationGrants = "impersonation_grants";
     public const string UnitAuthorizations = "unit_authorizations";
 
@@ -182,6 +185,18 @@ public sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refresh
         b.Property(x => x.ReplacedByTokenHash).HasMaxLength(IdentityTables.HashLength);
         b.Property(x => x.DeviceInfo).HasMaxLength(Domain.IdentityLimits.DeviceInfoMaxLength);
         b.Property(x => x.IpAddress).HasMaxLength(IdentityTables.CodeLength);
+    }
+}
+
+public sealed class PasswordResetTokenConfiguration : IEntityTypeConfiguration<PasswordResetToken>
+{
+    public void Configure(EntityTypeBuilder<PasswordResetToken> b)
+    {
+        b.ToTable(IdentityTables.PasswordResetTokens);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.TokenHash).HasMaxLength(IdentityTables.HashLength).IsRequired();
+        b.HasIndex(x => x.TokenHash).IsUnique();
+        b.HasIndex(x => x.UserId);
     }
 }
 

@@ -83,6 +83,8 @@
   <data name="user.cannot_modify_self" xml:space="preserve"><value>Kendi hesabınız üzerinde bu işlemi yapamazsınız.</value></data>
   <data name="user.password_too_short" xml:space="preserve"><value>Parola en az {minLength} karakter olmalı.</value></data>
   <data name="user.password_mismatch" xml:space="preserve"><value>Mevcut parola hatalı.</value></data>
+  <data name="password_reset.not_found" xml:space="preserve"><value>Sıfırlama bağlantısı geçersiz.</value></data>
+  <data name="password_reset.expired" xml:space="preserve"><value>Sıfırlama bağlantısının süresi dolmuş veya daha önce kullanılmış.</value></data>
 
   <!-- Rol -->
   <data name="role.invalid_code" xml:space="preserve"><value>Rol kodu yalnızca harf, rakam, '_' ve '-' içerebilir (en fazla 50 karakter).</value></data>
@@ -285,6 +287,7 @@
   <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Gün sayısı 0 ile 366 arasında olmalıdır.</value></data>
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Şirket yapısı seviyelerini yönetme</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Şirket ekleme</value></data>
+  <data name="organization.company_profile.manage" xml:space="preserve"><value>Şirket profilini yönetme</value></data>
   <data name="organization.holidays.view" xml:space="preserve"><value>Resmi tatilleri görüntüleme</value></data>
   <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Birim onay süreçlerini yönetme</value></data>
   <data name="organization.unit.not_found" xml:space="preserve"><value>Birim bulunamadı.</value></data>
@@ -600,6 +603,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.request.approval_mismatch" xml:space="preserve"><value>Onay kararı talebin güncel sürümüne ait değil.</value></data>
   <data name="leave.request.not_owner" xml:space="preserve"><value>Bu işlemi yalnız talep sahibi yapabilir.</value></data>
   <data name="leave.errors.zero_days" xml:space="preserve"><value>Seçilen tarihlerde izinden düşülecek gün yok.</value></data>
+  <data name="leave.errors.partial_day_requires_single_date" xml:space="preserve"><value>Yarım gün veya saatlik izin yalnız tek bir gün için alınabilir.</value></data>
+  <data name="leave.errors.partial_day_time_invalid" xml:space="preserve"><value>Bu izin türü için saat aralığı veya yarım gün seçimi eksik ya da geçersiz.</value></data>
   <data name="leave.errors.type_not_available" xml:space="preserve"><value>Bu izin türü talep edilemez.</value></data>
   <data name="leave.errors.overlap" xml:space="preserve"><value>Bu tarihlerde bekleyen veya onaylı başka bir izniniz var.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>Bu izin türünde bir talepte en fazla {max} gün alınabilir.</value></data>
@@ -753,6 +758,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.automation_rule.same_stage" xml:space="preserve"><value>Başlangıç ve hedef aşama aynı olamaz.</value></data>
   <data name="recruitment.automation_rule.already_inactive" xml:space="preserve"><value>Otomasyon kuralı zaten devre dışı.</value></data>
   <data name="recruitment.application.required_form_missing" xml:space="preserve"><value>Bu aşamaya geçmek için önce gerekli formun doldurulması gerekiyor.</value></data>
+  <data name="recruitment.application.already_exists" xml:space="preserve"><value>Bu ilana zaten başvurdunuz.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
@@ -845,9 +851,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.my.claims.view" xml:space="preserve"><value>Kendi harcama taleplerini görüntüleme</value></data>
   <data name="expense.claims.view" xml:space="preserve"><value>Harcama taleplerini görüntüleme</value></data>
   <data name="expense.claims.approve" xml:space="preserve"><value>Harcama taleplerine onaycı olarak görünme</value></data>
+  <data name="expense.claims.pay" xml:space="preserve"><value>Harcama taleplerini ödendi olarak işaretleme</value></data>
   <data name="expense.my.advances.create" xml:space="preserve"><value>Kendi avans talebini oluşturma</value></data>
   <data name="expense.my.advances.view" xml:space="preserve"><value>Kendi avans taleplerini görüntüleme</value></data>
   <data name="expense.advances.view" xml:space="preserve"><value>Avans taleplerini görüntüleme</value></data>
+  <data name="expense.advances.pay" xml:space="preserve"><value>Avans taleplerini ödendi olarak işaretleme</value></data>
   <data name="expense.my.payments.view" xml:space="preserve"><value>Kendi ödemeler özetini görüntüleme</value></data>
   <data name="expense.categories.view" xml:space="preserve"><value>Harcama kategorilerini görüntüleme</value></data>
   <data name="expense.categories.manage" xml:space="preserve"><value>Harcama kategorilerini yönetme</value></data>
@@ -896,4 +904,34 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="reports.catalog.view" xml:space="preserve"><value>Rapor kataloğunu görüntüleme</value></data>
   <data name="reports.executions.generate" xml:space="preserve"><value>Rapor oluşturma</value></data>
   <data name="reports.my.executions" xml:space="preserve"><value>Kendi oluşturduğu raporları görüntüleme</value></data>
+  <!-- Performance (faz-08 R0: Review Cycle/Form + Goal skeleton) -->
+  <data name="performance.reviews.view" xml:space="preserve"><value>Değerlendirme dönemlerini görüntüleme</value></data>
+  <data name="performance.reviews.manage" xml:space="preserve"><value>Değerlendirme dönemi/form yönetimi</value></data>
+  <data name="performance.reviews.approve" xml:space="preserve"><value>Değerlendirme dönemini kapatma</value></data>
+  <data name="performance.goals.view" xml:space="preserve"><value>Hedefleri görüntüleme</value></data>
+  <data name="performance.goals.manage" xml:space="preserve"><value>Hedef yönetimi</value></data>
+  <data name="performance.my.reviews" xml:space="preserve"><value>Kendi değerlendirmelerini görüntüleme</value></data>
+  <data name="performance.my.goals" xml:space="preserve"><value>Kendi hedeflerini yönetme</value></data>
+  <data name="performance.team.goals" xml:space="preserve"><value>Ekip hedeflerini görüntüleme</value></data>
+  <data name="performance.cycle.not_found" xml:space="preserve"><value>Değerlendirme dönemi bulunamadı.</value></data>
+  <data name="performance.cycle.name_required" xml:space="preserve"><value>Dönem adı zorunludur.</value></data>
+  <data name="performance.cycle.invalid_date_range" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden sonra olmalıdır.</value></data>
+  <data name="performance.cycle.not_activatable" xml:space="preserve"><value>Yalnızca taslak durumundaki dönem etkinleştirilebilir.</value></data>
+  <data name="performance.cycle.not_closable" xml:space="preserve"><value>Yalnızca etkin durumdaki dönem kapatılabilir.</value></data>
+  <data name="performance.cycle.already_closed" xml:space="preserve"><value>Dönem zaten kapatılmış.</value></data>
+  <data name="performance.form.not_found" xml:space="preserve"><value>Değerlendirme formu bulunamadı.</value></data>
+  <data name="performance.form.title_required" xml:space="preserve"><value>Form başlığı zorunludur.</value></data>
+  <data name="performance.form.questions_required" xml:space="preserve"><value>En az bir soru eklemelisiniz.</value></data>
+  <data name="performance.form.question_text_required" xml:space="preserve"><value>Soru metni zorunludur.</value></data>
+  <data name="performance.form.weights_must_sum_to_100" xml:space="preserve"><value>Soru ağırlıkları toplamı 100 olmalıdır.</value></data>
+  <data name="performance.form.not_publishable" xml:space="preserve"><value>Yalnızca taslak formlar yayınlanabilir.</value></data>
+  <data name="performance.form.not_editable" xml:space="preserve"><value>Yayınlanmış form düzenlenemez.</value></data>
+  <data name="performance.form.cycle_closed" xml:space="preserve"><value>Kapatılmış bir döneme form eklenemez.</value></data>
+  <data name="performance.goal.not_found" xml:space="preserve"><value>Hedef bulunamadı.</value></data>
+  <data name="performance.goal.title_required" xml:space="preserve"><value>Hedef başlığı zorunludur.</value></data>
+  <data name="performance.goal.progress_invalid" xml:space="preserve"><value>İlerleme yüzdesi 0 ile 100 arasında olmalıdır.</value></data>
+  <data name="performance.goal.not_updatable" xml:space="preserve"><value>Tamamlanmış, iptal edilmiş veya arşivlenmiş bir hedefin ilerlemesi güncellenemez.</value></data>
+  <data name="performance.goal.not_cancellable" xml:space="preserve"><value>Tamamlanmış, iptal edilmiş veya arşivlenmiş bir hedef iptal edilemez.</value></data>
+  <data name="performance.goal.employee_invalid" xml:space="preserve"><value>Seçilen çalışan bulunamadı veya pasif.</value></data>
+  <data name="performance.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
 </root>

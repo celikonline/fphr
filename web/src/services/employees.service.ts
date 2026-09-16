@@ -518,6 +518,8 @@ export interface TerminateEmployeeResult {
   jobSecurityWarning: boolean;
   jobSecurityWarningMessage: string | null;
   collectiveDismissal: CollectiveDismissalStatus | null;
+  /** Count of the employee's still-assigned assets (zimmet) at exit time; advisory only, never blocks the wizard. */
+  openAssetCount: number;
 }
 
 export type EmploymentPeriodSource = "hire" | "rehire" | "groupTransfer" | "businessTransfer" | "import";

@@ -1,4 +1,5 @@
 using Sense.Modules.Expense.Domain;
+using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -45,5 +46,19 @@ public sealed class GetExpenseClaimHandler(ICurrentUser currentUser, IExpenseCla
         }
 
         return ExpenseClaimMapper.ToDto(existing.Value);
+    }
+}
+
+/// <summary>HR/Finance worklist: tenant-wide non-Draft claims, optionally filtered to one status (e.g. Approved, awaiting pay).</summary>
+[RequiresPermission("expense.claims.view")]
+public sealed record ListExpenseClaimsQuery(ExpenseClaimStatus? Status) : IQuery<IReadOnlyList<ExpenseClaimDto>>;
+
+public sealed class ListExpenseClaimsHandler(IExpenseClaimRepository claims) : IQueryHandler<ListExpenseClaimsQuery, IReadOnlyList<ExpenseClaimDto>>
+{
+    public async Task<Result<IReadOnlyList<ExpenseClaimDto>>> Handle(ListExpenseClaimsQuery query, CancellationToken cancellationToken)
+    {
+        var list = await claims.ListAsync(query.Status, cancellationToken);
+        IReadOnlyList<ExpenseClaimDto> dtos = list.Select(ExpenseClaimMapper.ToDto).ToList();
+        return Result.Success(dtos);
     }
 }

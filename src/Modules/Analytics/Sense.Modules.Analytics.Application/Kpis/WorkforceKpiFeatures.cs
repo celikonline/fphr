@@ -1,3 +1,4 @@
+using Sense.Modules.Analytics.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -31,7 +32,8 @@ public sealed record KpiResultDto(string Key, string Label, decimal Value, strin
 [RequiresPermission("analytics.kpi.view")]
 public sealed record GetWorkforceKpisQuery(DateOnly? From = null, DateOnly? To = null) : IQuery<IReadOnlyList<KpiResultDto>>;
 
-public sealed class GetWorkforceKpisHandler(ITenantContext tenant, IEmployeeAnalyticsQueries employeeAnalytics, IOrgUnitLookup orgUnits, TimeProvider clock)
+public sealed class GetWorkforceKpisHandler(
+    ITenantContext tenant, IEmployeeAnalyticsQueries employeeAnalytics, IOrgUnitLookup orgUnits, IDataScopeService dataScope, TimeProvider clock)
     : IQueryHandler<GetWorkforceKpisQuery, IReadOnlyList<KpiResultDto>>
 {
     public async Task<Result<IReadOnlyList<KpiResultDto>>> Handle(GetWorkforceKpisQuery query, CancellationToken cancellationToken)
@@ -39,21 +41,33 @@ public sealed class GetWorkforceKpisHandler(ITenantContext tenant, IEmployeeAnal
         var to = query.To ?? DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
         var from = query.From ?? new DateOnly(to.Year, 1, 1);
 
-        var activeHeadcount = await employeeAnalytics.GetActiveHeadcountAsync(tenant.TenantId, cancellationToken);
-        var careerChanges = await employeeAnalytics.GetCareerPathChangeCountsAsync(tenant.TenantId, from, to, cancellationToken);
-        var genderHeadcount = await employeeAnalytics.GetGenderHeadcountAsync(tenant.TenantId, cancellationToken);
-        var terminations = await employeeAnalytics.GetTerminationCountsAsync(tenant.TenantId, from, to, cancellationToken);
-        var genderByUnit = await employeeAnalytics.GetGenderByOrgUnitAsync(tenant.TenantId, cancellationToken);
+        // "Company" scope (Owner/HRAdmin/... - the roles this permission ships with by default) sees every KPI.
+        // Anything narrower (a unit manager's Department/Team/Location scope) sees only the unit breakdown, filtered
+        // to their accessible units - the other four KPIs are tenant-wide aggregates that Employee.Contracts doesn't
+        // expose pre-filtered by employee/unit yet, so excluding them (rather than showing a wrong/unscoped number)
+        // is the safe choice; widening them needs an Employee.Contracts query shape change (cross-module, not ours).
+        var accessibleUnitIds = await dataScope.GetAccessibleOrgUnitIdsAsync(AnalyticsPermissions.KpiView.Key, cancellationToken);
         var unitNames = (await orgUnits.ListActiveUnitsAsync(tenant.TenantId, cancellationToken)).ToDictionary(u => u.Id, u => u.Name);
-
-        var results = new List<KpiResultDto>
+        var genderByUnit = await employeeAnalytics.GetGenderByOrgUnitAsync(tenant.TenantId, cancellationToken);
+        if (accessibleUnitIds is not null)
         {
-            BuildCareerPathRatio(from, to, careerChanges, activeHeadcount),
-            BuildGenderRatio(from, to, genderHeadcount),
-            BuildTurnoverRate(from, to, terminations, activeHeadcount),
-            BuildEarlyTurnoverRate(from, to, terminations),
-            BuildGenderRatioByUnit(from, to, genderByUnit, unitNames),
-        };
+            genderByUnit = genderByUnit.Where(g => g.OrgUnitId is { } id && accessibleUnitIds.Contains(id)).ToList();
+        }
+
+        var results = new List<KpiResultDto> { BuildGenderRatioByUnit(from, to, genderByUnit, unitNames) };
+
+        if (accessibleUnitIds is null)
+        {
+            var activeHeadcount = await employeeAnalytics.GetActiveHeadcountAsync(tenant.TenantId, cancellationToken);
+            var careerChanges = await employeeAnalytics.GetCareerPathChangeCountsAsync(tenant.TenantId, from, to, cancellationToken);
+            var genderHeadcount = await employeeAnalytics.GetGenderHeadcountAsync(tenant.TenantId, cancellationToken);
+            var terminations = await employeeAnalytics.GetTerminationCountsAsync(tenant.TenantId, from, to, cancellationToken);
+
+            results.Insert(0, BuildCareerPathRatio(from, to, careerChanges, activeHeadcount));
+            results.Insert(1, BuildGenderRatio(from, to, genderHeadcount));
+            results.Insert(2, BuildTurnoverRate(from, to, terminations, activeHeadcount));
+            results.Insert(3, BuildEarlyTurnoverRate(from, to, terminations));
+        }
 
         return Result.Success<IReadOnlyList<KpiResultDto>>(results);
     }

@@ -92,6 +92,43 @@ public sealed class AssetLookupIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task CountOpenAssetsAsync_CountsOnlyThisEmployeesAssignedAssets()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var categoryId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var otherEmployeeId = Guid.NewGuid();
+
+        using (var writeScope = ServiceProvider!.CreateScope())
+        {
+            var db = writeScope.ServiceProvider.GetRequiredService<AssetsDbContext>();
+            var assets = writeScope.ServiceProvider.GetRequiredService<IAssetRepository>();
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            var laptop = Asset.Create(tenantId, categoryId, "MacBook Pro 14", "SN-1", null).Value;
+            laptop.Assign(employeeId, today).IsSuccess.ShouldBeTrue();
+            assets.Add(laptop);
+
+            var phone = Asset.Create(tenantId, categoryId, "iPhone 15", "SN-2", null).Value;
+            phone.Assign(employeeId, today).IsSuccess.ShouldBeTrue();
+            assets.Add(phone);
+
+            var othersLaptop = Asset.Create(tenantId, categoryId, "ThinkPad", "SN-3", null).Value;
+            othersLaptop.Assign(otherEmployeeId, today).IsSuccess.ShouldBeTrue();
+            assets.Add(othersLaptop);
+
+            await db.SaveChangesAsync();
+        }
+
+        using var checkScope = ServiceProvider!.CreateScope();
+        var lookup = checkScope.ServiceProvider.GetRequiredService<IAssetLookup>();
+        (await lookup.CountOpenAssetsAsync(tenantId, employeeId)).ShouldBe(2);
+        (await lookup.CountOpenAssetsAsync(tenantId, otherEmployeeId)).ShouldBe(1);
+        (await lookup.CountOpenAssetsAsync(tenantId, Guid.NewGuid())).ShouldBe(0);
+    }
+
+    [Fact]
     public async Task HasOpenAssetsAsync_WhenRetiredWithoutEverBeingAssigned_IsFalse()
     {
         var tenantId = Guid.NewGuid();

@@ -1,3 +1,7 @@
+/**
+ * `as const` so `fontWeight` narrows to RN's literal `FontWeight` union (e.g. `"700"`) instead of widening to
+ * `string` - lets these presets spread directly into a `StyleSheet.create<TextStyle>()` entry without a cast.
+ */
 export const typography = {
   h1: {
     fontSize: 32,
@@ -44,4 +48,4 @@ export const typography = {
     fontWeight: "500",
     lineHeight: 16
   }
-};
+} as const;

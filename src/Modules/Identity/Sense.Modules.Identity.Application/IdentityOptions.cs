@@ -90,6 +90,9 @@ public static class IdentityErrors
     public const string PasswordTooShort = "user.password_too_short";
     public const string PasswordMismatch = "user.password_mismatch";
 
+    public const string PasswordResetTokenNotFound = "password_reset.not_found";
+    public const string PasswordResetTokenExpired = "password_reset.expired";
+
     public const string RoleInvalidCode = "role.invalid_code";
     public const string RoleSystemCode = "role.system_code";
     public const string RoleCodeTaken = "role.code_taken";

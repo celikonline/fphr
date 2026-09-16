@@ -31,6 +31,9 @@ public interface IExpenseClaimRepository
 
     /// <summary>Non-Draft claims for the payments-overview projection (Expense-schema-only, per design doc).</summary>
     Task<IReadOnlyList<ExpenseClaim>> ListSubmittedByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Tenant-wide non-Draft claims for the HR/Finance payment worklist; optionally filtered to one status (e.g. Approved, awaiting pay).</summary>
+    Task<IReadOnlyList<ExpenseClaim>> ListAsync(ExpenseClaimStatus? status, CancellationToken cancellationToken = default);
 }
 
 /// <summary>AdvanceRequest aggregate repository.</summary>
@@ -43,4 +46,7 @@ public interface IAdvanceRequestRepository
     Task<AdvanceRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AdvanceRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Tenant-wide advance requests for the HR/Finance payment worklist; optionally filtered to one status (e.g. Approved, awaiting pay).</summary>
+    Task<IReadOnlyList<AdvanceRequest>> ListAsync(AdvanceRequestStatus? status, CancellationToken cancellationToken = default);
 }

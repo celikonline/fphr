@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.Employees;
@@ -39,6 +40,7 @@ public sealed class TerminationIntegrationTests : TestFixture
     private readonly IPermissionService _permissions = Substitute.For<IPermissionService>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly ILegislationParameterReader _legislation = Substitute.For<ILegislationParameterReader>();
+    private readonly IAssetLookup _assetLookup = Substitute.For<IAssetLookup>();
     private readonly RecordingHandler<ContractEvents.EmployeeTerminated> _terminated = new();
 
     protected override void ConfigureServices(IServiceCollection services)
@@ -60,6 +62,10 @@ public sealed class TerminationIntegrationTests : TestFixture
         // Employee only consumes ILegislationParameterReader (owned/registered by the Leave module in production);
         // stubbed here instead of pulling the whole Leave module in as a test dependency.
         services.AddSingleton(_legislation);
+
+        // Same treatment for Assets.Contracts.IAssetLookup (registered by AssetsModule in production, not pulled in
+        // here); unconfigured NSubstitute calls return 0, matching "no open assets" unless a test configures it.
+        services.AddSingleton(_assetLookup);
 
         services.AddSingleton<IIntegrationEventHandler<ContractEvents.EmployeeTerminated>>(_terminated);
     }
@@ -172,6 +178,30 @@ public sealed class TerminationIntegrationTests : TestFixture
         var representative = await TerminateWithScopeAsync(seniorHire, ContractType.Indefinite, isEmployerRepresentative: true, withSecondActiveEmployee: true);
         representative.Value.JobSecurityInScope.ShouldBeFalse();
         representative.Value.JobSecurityWarning.ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Offboarding &lt;-&gt; zimmet (Assets.Contracts.IAssetLookup): an employee with open (unreturned) assets can still
+    /// be terminated - the count is advisory only (surfaced in the result DTO for the web exit dialog), it never
+    /// blocks the wizard, mirroring the job-security/collective-dismissal warnings.
+    /// </summary>
+    [Fact]
+    public async Task Terminate_WithOpenAssets_SucceedsAndReportsTheCount()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+        var hireDate = new DateOnly(2022, 1, 10);
+        var terminationDate = new DateOnly(2026, 6, 1);
+
+        var employee = await ExecuteCommandAsync(new CreateEmployeeCommand("Zimmetli", "Çalışan", null, null, null, null, hireDate, null, null, null));
+        var reasonId = (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.Single(r => r.Code == "Resignation").Id;
+
+        _assetLookup.CountOpenAssetsAsync(tenantId, employee.Value.Id, Arg.Any<CancellationToken>()).Returns(2);
+
+        var terminated = await ExecuteCommandAsync(new TerminateEmployeeCommand(employee.Value.Id, terminationDate, reasonId));
+        terminated.IsSuccess.ShouldBeTrue("open assets must never block the exit wizard");
+        terminated.Value.Employee.Status.ShouldBe(nameof(EmployeeStatus.Terminated));
+        terminated.Value.OpenAssetCount.ShouldBe(2);
     }
 
     /// <summary>Tenant-authored termination reasons ("kiracı kendi nedenini oluşturur"): create, rename, deactivate, and terminate with one.</summary>

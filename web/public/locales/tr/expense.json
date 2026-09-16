@@ -57,5 +57,28 @@
   "categories": {
     "travel": "Yolculuk ve Ulaşım",
     "food": "Yiyecek ve İçecek"
+  },
+  "admin": {
+    "title": "Masraf ve Avans Ödemeleri",
+    "subtitle": "Onaylanmış harcama ve avans taleplerini görüntüleyin, ödeme yapıldığında işaretleyin.",
+    "tabs": {
+      "claims": "Harcama Talepleri",
+      "advances": "Avans Talepleri"
+    },
+    "col": {
+      "description": "Açıklama",
+      "submittedAt": "Gönderim tarihi",
+      "requestedDate": "Talep tarihi",
+      "amount": "Tutar",
+      "status": "Durum"
+    },
+    "empty": "Bu durumda talep bulunamadı.",
+    "pay": "Öde",
+    "payDialogTitle": "Ödeme onayı",
+    "payAmount": "Ödenecek tutar",
+    "paymentNote": "Ödeme notu",
+    "paymentNotePlaceholder": "Örn. banka havale referansı",
+    "confirmPay": "Ödendi olarak işaretle",
+    "paidSuccess": "Ödeme kaydedildi."
   }
 }

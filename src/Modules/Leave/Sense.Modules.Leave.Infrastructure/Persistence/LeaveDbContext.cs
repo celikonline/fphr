@@ -190,6 +190,7 @@ public sealed class LeaveRequestConfiguration : IEntityTypeConfiguration<LeaveRe
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.Source).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.CalculatedDays).HasPrecision(LeaveTables.DaysPrecision, LeaveTables.DaysScale);
+        b.Property(x => x.HalfDayPeriod).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.Description).HasMaxLength(LeaveLimits.DescriptionMaxLength);
         b.Property(x => x.SubmittedIpAddress).HasMaxLength(LeaveTables.IpAddressLength);
         b.Property(x => x.CancellationReason).HasMaxLength(LeaveLimits.CancellationReasonMaxLength);

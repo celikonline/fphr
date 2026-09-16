@@ -89,6 +89,15 @@ namespace Sense.Modules.Expense.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid_at");
 
+                    b.Property<Guid?>("PaidByEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("paid_by_employee_id");
+
+                    b.Property<string>("PaymentNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("payment_note");
+
                     b.Property<DateOnly>("RequestedDate")
                         .HasColumnType("date")
                         .HasColumnName("requested_date");
@@ -222,6 +231,15 @@ namespace Sense.Modules.Expense.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("paid_at");
+
+                    b.Property<Guid?>("PaidByEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("paid_by_employee_id");
+
+                    b.Property<string>("PaymentNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("payment_note");
 
                     b.Property<string>("Status")
                         .IsRequired()

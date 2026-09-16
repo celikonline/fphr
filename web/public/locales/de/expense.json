@@ -57,5 +57,28 @@
   "categories": {
     "travel": "[DE] Travel and Transportation",
     "food": "[DE] Food and Beverage"
+  },
+  "admin": {
+    "title": "[DE] Expense & Advance Payments",
+    "subtitle": "[DE] View approved expense and advance requests, and mark them as paid.",
+    "tabs": {
+      "claims": "[DE] Expense Claims",
+      "advances": "[DE] Advance Requests"
+    },
+    "col": {
+      "description": "[DE] Description",
+      "submittedAt": "[DE] Submitted on",
+      "requestedDate": "[DE] Requested on",
+      "amount": "[DE] Amount",
+      "status": "[DE] Status"
+    },
+    "empty": "[DE] No requests found for this status.",
+    "pay": "[DE] Pay",
+    "payDialogTitle": "[DE] Confirm payment",
+    "payAmount": "[DE] Amount to pay",
+    "paymentNote": "[DE] Payment note",
+    "paymentNotePlaceholder": "[DE] E.g. bank transfer reference",
+    "confirmPay": "[DE] Mark as paid",
+    "paidSuccess": "[DE] Payment recorded."
   }
 }

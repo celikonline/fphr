@@ -17,6 +17,7 @@ public static class RecruitmentDomainErrors
 
     public const string ApplicationNotFound = "recruitment.application.not_found";
     public const string ApplicationAlreadyTerminal = "recruitment.application.already_terminal";
+    public const string ApplicationAlreadyExists = "recruitment.application.already_exists";
 
     public const string RequisitionNotFound = "recruitment.requisition.not_found";
     public const string RequisitionTitleRequired = "recruitment.requisition.title_required";

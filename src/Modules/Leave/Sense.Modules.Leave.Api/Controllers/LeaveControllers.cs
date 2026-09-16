@@ -6,6 +6,7 @@ using Sense.Modules.Leave.Application.Calendar;
 using Sense.Modules.Leave.Application.Overtime;
 using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
+using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Kernel.Results;
@@ -27,11 +28,15 @@ public sealed record LeaveRuleSetAssignmentResponse(int AssignedCount, IReadOnly
 public sealed record SetLeaveTypeDisabledRequest(bool Disabled);
 
 /// <summary>Self-service submit/edit body; <c>PreviousRequestId</c> (submit only) re-submits the caller's rejected request.</summary>
-public sealed record LeaveRequestBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null);
+public sealed record LeaveRequestBody(
+    Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
 
 public sealed record CancelLeaveRequestBody(string Reason);
 
-public sealed record LeaveRequestOnBehalfBody(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval);
+public sealed record LeaveRequestOnBehalfBody(
+    Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
 
 public sealed record AdjustLeaveBalanceRequest(Guid LeaveTypeId, decimal Days, DateOnly EffectiveDate, string Reason);
 
@@ -182,14 +187,18 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     public async Task<IActionResult> CreateOnBehalf(
         Guid employeeId, [FromBody] LeaveRequestOnBehalfBody request, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
         FromResult((await Dispatcher.Send(
-            new CreateLeaveRequestOnBehalfCommand(employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval), ct))
+            new CreateLeaveRequestOnBehalfCommand(
+                employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval,
+                request.StartTime, request.EndTime, request.HalfDayPeriod), ct))
             .Localize(localizer));
 
     [HttpGet("requests/preview")]
     [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Preview(
-        Guid employeeId, [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
-        FromResult((await Dispatcher.Query(new PreviewEmployeeLeaveRequestQuery(employeeId, leaveTypeId, start, end), ct)).Localize(localizer));
+        Guid employeeId, [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromQuery] TimeOnly? startTime,
+        [FromQuery] TimeOnly? endTime, [FromQuery] HalfDayPeriod? halfDayPeriod, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new PreviewEmployeeLeaveRequestQuery(employeeId, leaveTypeId, start, end, startTime, endTime, halfDayPeriod), ct))
+            .Localize(localizer));
 
     [HttpGet("ledger")]
     [ProducesResponseType<IReadOnlyList<LeaveLedgerEntryDto>>(StatusCodes.Status200OK)]
@@ -241,21 +250,28 @@ public sealed class MyLeaveController : ApiControllerBase
     [HttpGet("requests/preview")]
     [ProducesResponseType<LeaveRequestPreviewResponse>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Preview(
-        [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromQuery] Guid? editedRequestId, [FromServices] IErrorLocalizer localizer,
+        [FromQuery] Guid leaveTypeId, [FromQuery] DateOnly start, [FromQuery] DateOnly end, [FromQuery] Guid? editedRequestId,
+        [FromQuery] TimeOnly? startTime, [FromQuery] TimeOnly? endTime, [FromQuery] HalfDayPeriod? halfDayPeriod, [FromServices] IErrorLocalizer localizer,
         CancellationToken ct) =>
-        FromResult((await Dispatcher.Query(new PreviewMyLeaveRequestQuery(leaveTypeId, start, end, editedRequestId), ct)).Localize(localizer));
+        FromResult((await Dispatcher.Query(new PreviewMyLeaveRequestQuery(leaveTypeId, start, end, editedRequestId, startTime, endTime, halfDayPeriod), ct))
+            .Localize(localizer));
 
     [HttpPost("requests")]
     [ProducesResponseType<LeaveRequestDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Submit([FromBody] LeaveRequestBody request, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
         FromResult((await Dispatcher.Send(
-            new SubmitLeaveRequestCommand(request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId), ct))
+            new SubmitLeaveRequestCommand(
+                request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId,
+                request.StartTime, request.EndTime, request.HalfDayPeriod), ct))
             .Localize(localizer));
 
     [HttpPut("requests/" + ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdatePending(Guid id, [FromBody] LeaveRequestBody request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new UpdatePendingLeaveRequestCommand(id, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description), ct));
+        FromResult(await Dispatcher.Send(
+            new UpdatePendingLeaveRequestCommand(
+                id, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.StartTime, request.EndTime, request.HalfDayPeriod),
+            ct));
 
     [HttpPost("requests/" + ApiRoutes.IdParam + "/withdraw")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

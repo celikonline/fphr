@@ -1,8 +1,10 @@
 using NSubstitute;
 using Sense.Modules.Analytics.Application.Kpis;
+using Sense.Modules.Analytics.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Security;
 using Shouldly;
 using Xunit;
 
@@ -17,6 +19,7 @@ public sealed class WorkforceKpiHandlerTests
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly IEmployeeAnalyticsQueries _employeeAnalytics = Substitute.For<IEmployeeAnalyticsQueries>();
     private readonly IOrgUnitLookup _orgUnits = Substitute.For<IOrgUnitLookup>();
+    private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly ITenantContext _tenant;
 
     public WorkforceKpiHandlerTests()
@@ -30,9 +33,12 @@ public sealed class WorkforceKpiHandlerTests
             .Returns(new List<GenderByOrgUnitCount>());
         _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<OrgUnitInfo>());
+        // null = Company scope (unrestricted) - the existing tests below all assume the full 5-KPI set; the
+        // narrower-scope (unit manager) path is covered separately in GenderRatioByUnit_RestrictedScope_*.
+        _dataScope.GetAccessibleOrgUnitIdsAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns((IReadOnlySet<Guid>?)null);
     }
 
-    private GetWorkforceKpisHandler CreateHandler() => new(_tenant, _employeeAnalytics, _orgUnits, TimeProvider.System);
+    private GetWorkforceKpisHandler CreateHandler() => new(_tenant, _employeeAnalytics, _orgUnits, _dataScope, TimeProvider.System);
 
     [Fact]
     public async Task CareerPathRatio_DividesChangesByActiveHeadcount()
@@ -169,5 +175,34 @@ public sealed class WorkforceKpiHandlerTests
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         result.Value[0].PeriodStart.ShouldBe(new DateOnly(today.Year, 1, 1));
         result.Value[0].PeriodEnd.ShouldBe(today);
+    }
+
+    [Fact]
+    public async Task RestrictedScope_OnlyReturnsGenderRatioByUnit_FilteredToAccessibleUnits()
+    {
+        var accessibleUnit = Guid.NewGuid();
+        var otherUnit = Guid.NewGuid();
+        _dataScope.GetAccessibleOrgUnitIdsAsync(AnalyticsPermissions.KpiView.Key, Arg.Any<CancellationToken>())
+            .Returns(new HashSet<Guid> { accessibleUnit });
+        _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount>
+            {
+                new(accessibleUnit, "Female", 2),
+                new(otherUnit, "Male", 5),
+            });
+        _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<OrgUnitInfo> { new(accessibleUnit, Guid.NewGuid(), null, "Erişilebilir Birim") });
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        // Only the unit breakdown KPI - the four tenant-wide aggregates are excluded rather than shown unscoped.
+        result.Value.Count.ShouldBe(1);
+        var byUnit = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit);
+        byUnit.Value.ShouldBe(2m);
+        byUnit.Breakdown.ShouldHaveSingleItem();
+        byUnit.Breakdown[0].Dimension.ShouldBe("Erişilebilir Birim / Female");
+        await _employeeAnalytics.DidNotReceive().GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>());
     }
 }

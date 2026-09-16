@@ -14,7 +14,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 | 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2+D3+D4 | 🟡 Kısmi | Bkz. aşağıdaki "D1"–"D4" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) + HR'ın ve çalışanın kendi belgesini yükleyip gereksinime bağlaması var |
 | 62 | Harcama: çoklu fiş + vergi oranı + mobil OCR | Ex0 | 🟡 Kısmi | Bkz. aşağıdaki "Ex0" bölümü | Çoklu fiş + vergi hesaplama var; OCR (`IReceiptOcr`), dosya yükleme entegrasyonu (yalnız `ReceiptFileId` string alanı var), web ekranı yok |
 | 63 | Avans talebi: para birimi, taksit | Ex0 | 🟡 Kısmi | Bkz. "Ex0" | Alanların hepsi var (tutar/para birimi/tarih/taksit); web ekranı yok |
-| 64 | "Kendi hesabım > Ödemeler" birleşik ekran | Ex0 | 🟡 Kısmi | Bkz. "Ex0" | Backend projeksiyonu (`GetMyPaymentsOverviewQuery`) var, yalnız Expense şemasını okuyor (tasarım kararına uygun); FM ödemesi/PayrollAdjustment satırları henüz yok (Leave/Payroll entegrasyonu ayrı paket); web ekranı yok |
+| 64 | "Kendi hesabım > Ödemeler" birleşik ekran | Ex0 | 🟡 Kısmi | Bkz. "Ex0"/"Ex1" | Self-servis backend projeksiyonu (`GetMyPaymentsOverviewQuery`) + web ekranı (`payments.tsx`) var, yalnız Expense şemasını okuyor (tasarım kararına uygun). Ex1'de eklendi: HR/Finance tarafı — onaylı taleplerin "ödendi" olarak işaretlenmesi (`POST .../pay`) + tenant-wide worklist ekranı (`expense-payments-admin.tsx`). FM ödemesi/PayrollAdjustment satırları hâlâ yok (Leave/Payroll entegrasyonu ayrı paket, bkz. hrteam Faz 7 görev tanımı) |
 | 65 | Zimmet şablonu (e-posta bilgilendirme, kimlik no, kategori aktarımda otomatik oluşur, seri no, veriliş/iade tarihi, açıklama) | As0 | 🟡 Kısmi | Bkz. aşağıdaki "As0" bölümü | Kategori (seed: Bilgisayar/Telefon/Araç/Diğer), seri no, veriliş/iade tarihi, açıklama, ata/iade/emekli et var; e-posta bilgilendirme, "aktarımda otomatik oluşur" (DataTransfer şablonu), kategori yönetim ekranı (Ayarlar) yapılmadı |
 | 69 | Yardım Merkezi + Desteğe bağlan (Announcements > Support) | — | ❌ Başlanmadı | — | `Announcements` modülü henüz yok |
 | 70 | Raporlar menüsü + "Kendin oluştur" + asenkron e-posta | — | ❌ Başlanmadı | — | — |
@@ -113,6 +113,18 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - Vergi oranı seçenek listesi (`LegislationParameter Vat.Rates`) yok; `TaxRate` serbest ondalık alan.
 - `Organization.Contracts.ApprovalRequestTypes` genişletmesi (Recruitment R1 ile birlikte, contract-first PR) bekliyor.
 
+## Ex1 — Expense: ödeme yürütme (mark-as-paid) + HR/Finance ödeme iş listesi
+
+**Bağlam:** hrteam paralel takım yapısında "Faz 7" (Masraf/avans/bordro entegrasyonu) görev tanımının ilk dilimi; bu depodaki modül kökü Ex0 ile aynıdır (`Sense.Modules.Expense`), ayrı bir modül açılmadı.
+
+**Kapsam:** Ex0'da domain metodu var ama hiçbir uçtan çağrılmıyordu (`ExpenseClaim.MarkPaid`/`AdvanceRequest.MarkPaid`) — bugüne kadar hiçbir talep üretimde "paid" olamıyordu. Bu paket: (1) her iki `MarkPaid` metodunu `(whenUtc, paidByEmployeeId, paymentNote)` alacak şekilde genişletti (kim ödedi + ödeme notu artık kayıtlı — `PaidByEmployeeId`/`PaymentNote` alanları, migration `20260916150000_AddExpensePaymentTracking`, yalnız 4 nullable kolon ekliyor, geri alınabilir); (2) `PayExpenseClaimCommand`/`PayAdvanceRequestCommand` + `POST /expense/claims/{id}/pay` ve `POST /expense/advances/{id}/pay` uçları (izinler `expense.claims.pay`/`expense.advances.pay`, üç bölümlü); (3) HR/Finance tenant-genelinde worklist sorguları `ListExpenseClaimsQuery`/`ListAdvanceRequestsQuery` (opsiyonel durum filtresi) + `GET /expense/claims`/`GET /expense/advances` uçları (izinler `expense.claims.view`/`expense.advances.view`, zaten Ex0'dan beri tanımlıydı); (4) ödendiğinde yeni integration event'ler `ExpenseClaimPaid`/`AdvanceRequestPaid` (henüz tüketeni yok — Payroll köprüsü için ayrılan yer); (5) web: `web/src/pages/expense-payments-admin.tsx` (`/app/expenses/payments`, sekmeli — Harcama Talepleri/Avans Talepleri, durum filtresi + "Öde" diyaloğu), `expense.service.ts`'e `listExpenseClaims`/`listAdvanceRequests`/`payExpenseClaim`/`payAdvanceRequest`, nav girişi + i18n (tr/en gerçek, de `[DE]` placeholder).
+
+**İzinler:** `SystemRoleDefinitions.cs`'e dokunulmadı — HR (`expense.*`) ve Finance (`expense.*`) rolleri yeni `expense.claims.pay`/`expense.advances.pay` anahtarlarını mevcut tam joker'le otomatik alıyor; Manager'ın `expense.claims.view/approve`'u pay'i kapsamıyor (kasıtlı — onay ile ödeme ayrı yetkiler). Kategori yönetim ekranı (backend zaten tam: `ExpenseCategoriesController` create/list/setActive) bu turda yapılmadı — sıradaki iş.
+
+**Doğrulama:** Bu oturumda da (Ex0'ın Web/As1 notlarındaki gibi) sandbox `docker`/`pnpm`/`git pull` komutlarını onaysız engelliyor — `dotnet build`/`test`, `tsc`/`eslint`/`vite build` **çalıştırılamadı**. Değişiklikler elle satır satır gözden geçirildi: yeni migration + `Designer.cs`/`ModelSnapshot.cs` üçlüsü mevcut `InitialExpense` deseniyle birebir (alfabetik property sırası, snake_case kolon adları); `ExpenseClaimTests`/`AdvanceRequestTests`'teki eski `MarkPaid(DateTime)` çağrıları yeni imzaya güncellendi + `MarkPaid_WhenNotApproved_Fails` testleri eklendi (derlemeden geçtiği doğrulanamadı, yalnız gözden geçirildi).
+
+**Eksik / Not:** Kategori yönetim web ekranı (Ayarlar) yok — backend hazır, sıradaki iş. Attendance/Leave/Payroll köprüleri (bordro girdisi, TB-7) bu pakette yok — ayrı iş, Attendance.Contracts'ta gereken sözleşme henüz tanımlı değil. SGK/e-Bildirge, banka ödeme dosyası, dış bordro export'u — PO karar noktası, bu pakette başlanmadı.
+
 ## As0 — Assets: zimmet çekirdeği (kategori, ata/iade/emekli et) + Documents'a `IAssetLookup` bağlantısı
 
 **Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
@@ -131,6 +143,14 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 **Doğrulama:** Bkz. bu görevin son raporu (build/test sonuçları orada).
 
+## As1 — Offboarding ↔ zimmet bağlantısı ("işten çıkarken açık zimmet var" uyarısı)
+
+**Kapsam:** `Assets.Contracts.IAssetLookup`e `CountOpenAssetsAsync(tenantId, employeeId)` eklendi (var olan `HasOpenAssetsAsync`in yanına, yeni port icat edilmedi — `IAssetRepository.CountOpenAssetsAsync` + `AssetLookup` implementasyonu). `Sense.Modules.Employee.Application` projesine `Assets.Contracts` referansı eklendi; `TerminateEmployeeHandler` artık işten çıkarma sırasında açık zimmet sayısını okuyup `TerminateEmployeeResultDto.OpenAssetCount`'a koyuyor — **JobSecurityEvaluator/CollectiveDismissalEvaluator ile aynı "yalnız uyarı, asla engellemez" deseni**; `Employee.Terminate()` domain metoduna dokunulmadı (okuma tarafında/DTO'da çözüldü). Web: "İşten ayrılış" diyaloğu (`lifecycle-actions.tsx`) artık `assets.assets.view` izni olan kullanıcıya diyalog açılır açılmaz turuncu bir uyarı (`Alert`) ve başarılı çıkıştan sonra bir toast gösteriyor ("N adet iade edilmemiş zimmet var, Zimmet sekmesinden iade edin"); i18n tr/en gerçek çeviri, de `[DE] ...` placeholder.
+
+**Kasıtlı sapmalar / kapsam dışı:** Ayrı bir yapılandırılmış "denetim log" satırı yazılmıyor — Faz 1'in audit-log backend'i bu turda henüz inşa ediliyor, ilerleyen bir turda oraya bir not eklenebilir. Bugünkü kalıcı iz: (a) `TerminateEmployeeResultDto`/API yanıtı, (b) Asset kaydının kendisi — iade edilmeden çıkış yapılan bir çalışanın zimmeti `Status == Assigned` olarak, artık işten ayrılmış bir `AssignedEmployeeId`'ye işaret ederek kalmaya devam eder, ta ki biri iade etsin (bu zaten dolaylı bir iz). Zorunlu engelleme (iade edilmeden çıkış tamamlanamasın) yapılmadı — TALIMAT'ta açıkça "engelleyici olmayan" istendi.
+
+**Doğrulama:** Backend: `AssetLookupIntegrationTests.CountOpenAssetsAsync_CountsOnlyThisEmployeesAssignedAssets` (yeni, Postgres/Testcontainers), `TerminationIntegrationTests.Terminate_WithOpenAssets_SucceedsAndReportsTheCount` (yeni, Postgres/Testcontainers) + iki mevcut termination test dosyasına `IAssetLookup` NSubstitute kaydı eklendi (yoksa DI çözümlemesi kırılırdı). Bu turda `dotnet build`/`dotnet test` bu ortamda **çalıştırılamadı** (sandbox, `docker run`/`docker exec`'i onay gerektirmeden engelliyor — bkz. rapor); değişiklikler satır satır elle gözden geçirildi, aynı dosyadaki mevcut kalıplar birebir izlendi.
+
 ## Değişiklik geçmişi
 
 - 2026-09-16: Dosya oluşturuldu; D1 (Documents belge tipi taksonomisi + koşullu gereksinim değerlendirici, backend) tamamlandı.
@@ -139,3 +159,5 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - 2026-09-16: Ex0 (Expense modül iskeleti + harcama talebi/avans/ödemeler özeti çekirdeği, backend) eklendi.
 - 2026-09-16: D4 (çalışanın kendi belgesini kendi yükleyip gereksinimini karşılaması, self-service) eklendi.
 - 2026-09-16: As0 (Assets modül iskeleti: zimmet kategori/ata/iade/emekli et + Documents'ın `HasOpenAssets` koşuluna gerçek `IAssetLookup` bağlantısı) eklendi.
+- 2026-09-16: As1 (offboarding ↔ zimmet: `IAssetLookup.CountOpenAssetsAsync` + `TerminateEmployeeHandler`'da engelleyici olmayan uyarı, web çıkış diyaloğunda gösterim) eklendi.
+- 2026-09-16: Ex1 (hrteam Faz 7 tur 1: ödeme yürütme — `MarkPaid` uçları + HR/Finance ödeme iş listesi web ekranı) eklendi.

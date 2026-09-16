@@ -59,6 +59,10 @@ public sealed class AdvanceRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public DateTime? PaidAt { get; private set; }
 
+    public Guid? PaidByEmployeeId { get; private set; }
+
+    public string? PaymentNote { get; private set; }
+
     public static Result<AdvanceRequest> Submit(
         Guid tenantId, Guid employeeId, decimal amount, string currency, DateOnly requestedDate,
         bool isInstallmentRequested, int? installmentCount, string? description)
@@ -110,7 +114,7 @@ public sealed class AdvanceRequest : TenantAggregateRoot<Guid>, IAuditLogged
         return Result.Success();
     }
 
-    public Result MarkPaid(DateTime whenUtc)
+    public Result MarkPaid(DateTime whenUtc, Guid paidByEmployeeId, string? paymentNote)
     {
         if (Status != AdvanceRequestStatus.Approved)
         {
@@ -119,6 +123,8 @@ public sealed class AdvanceRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
         Status = AdvanceRequestStatus.Paid;
         PaidAt = whenUtc;
+        PaidByEmployeeId = paidByEmployeeId;
+        PaymentNote = string.IsNullOrWhiteSpace(paymentNote) ? null : Guard.MaxLength(paymentNote.Trim(), ExpenseLimits.DescriptionMaxLength);
         return Result.Success();
     }
 }

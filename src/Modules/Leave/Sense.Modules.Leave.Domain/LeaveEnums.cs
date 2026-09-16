@@ -68,6 +68,13 @@ public enum LeaveUnit
     Hourly = 2,
 }
 
+/// <summary>Which half of the work day a <see cref="LeaveUnit.HalfDay"/> request covers.</summary>
+public enum HalfDayPeriod
+{
+    Morning = 0,
+    Afternoon = 1,
+}
+
 public enum SeniorityComparison
 {
     GreaterOrEqual = 0,

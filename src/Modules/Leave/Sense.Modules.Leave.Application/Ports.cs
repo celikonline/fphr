@@ -12,8 +12,9 @@ namespace Sense.Modules.Leave.Application;
 public interface ILeaveUnitOfWork : IUnitOfWork;
 
 /// <summary>
-/// Placeholder for the employee's work schedule until Attendance publishes IWorkScheduleReadService (roadmap #23):
-/// the Infrastructure implementation treats Monday–Friday as working days for everyone.
+/// Leave's read port for the employee's work schedule. Roadmap #23 is done: the Infrastructure implementation
+/// (<c>WorkScheduleReaderAdapter</c>) adapts Attendance.Contracts.IWorkScheduleReadService, so this reflects the
+/// employee's actual assigned schedule rather than a Monday–Friday assumption.
 /// </summary>
 public interface IWorkScheduleReader
 {

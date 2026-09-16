@@ -31,11 +31,17 @@ public static class ExpensePermissions
     public static readonly Permission ClaimsApprove = new(
         "expense.claims.approve", Module, "Approve Expense Claims", Group, "Appear as an eligible approver for expense claims within scope");
 
+    public static readonly Permission ClaimsPay = new(
+        "expense.claims.pay", Module, "Pay Expense Claims", Group, "Mark an approved expense claim as paid");
+
     public static readonly Permission MyAdvances = new(
         "expense.my.advances", Module, "Own Advance Requests", Group, "Create and view your own advance-payment requests");
 
     public static readonly Permission AdvancesView = new(
         "expense.advances.view", Module, "View Advance Requests", Group, "View advance-payment requests within scope");
+
+    public static readonly Permission AdvancesPay = new(
+        "expense.advances.pay", Module, "Pay Advance Requests", Group, "Mark an approved advance request as paid");
 
     public static readonly Permission MyPayments = new(
         "expense.my.payments", Module, "Own Payments", Group, "View your own combined expense/advance payments overview");
@@ -48,8 +54,8 @@ public static class ExpensePermissions
 
     public static IEnumerable<Permission> All =>
     [
-        MyClaims, ClaimsView, ClaimsApprove,
-        MyAdvances, AdvancesView,
+        MyClaims, ClaimsView, ClaimsApprove, ClaimsPay,
+        MyAdvances, AdvancesView, AdvancesPay,
         MyPayments,
         CategoriesView, CategoriesManage,
     ];

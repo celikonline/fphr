@@ -69,6 +69,10 @@ public static class OrganizationPermissions
     public static readonly Permission CompaniesCreate = new(
         CompaniesCreateKey, Module, "Create Company", Group, "Create a company together with its holiday calendar");
 
+    /// <summary>Edit the tenant's company profile (legal/registry fields, operating hours, logo). Faz 2, TB-10.</summary>
+    public static readonly Permission CompanyProfileManage = new(
+        CompanyProfileManageKey, Module, "Manage Company Profile", Group, "Edit the company profile: legal/registry fields, operating hours, and logo");
+
     /// <summary>View the effective upcoming holidays (home page list).</summary>
     public static readonly Permission HolidaysView = new(
         HolidaysViewKey, Module, "View Holidays", Group, "View upcoming official holidays");
@@ -79,6 +83,7 @@ public static class OrganizationPermissions
 
     public const string UnitTypesManageKey = "organization.unit_types.manage";
     public const string CompaniesCreateKey = "organization.companies.create";
+    public const string CompanyProfileManageKey = "organization.company_profile.manage";
     public const string HolidaysViewKey = "organization.holidays.view";
     public const string ApprovalAssignmentsManageKey = "organization.approval_assignments.manage";
 
@@ -87,5 +92,5 @@ public static class OrganizationPermissions
         [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete,
          HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate,
          LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete,
-         UnitTypesManage, CompaniesCreate, HolidaysView, ApprovalAssignmentsManage];
+         UnitTypesManage, CompaniesCreate, CompanyProfileManage, HolidaysView, ApprovalAssignmentsManage];
 }

@@ -15,7 +15,9 @@ using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Modules.Notifications.Infrastructure.Persistence;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Modules.Performance.Infrastructure.Persistence;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Modules.Reporting.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence;
@@ -36,6 +38,8 @@ builder.Services.AddModuleDbContext<RecruitmentDbContext>(builder.Configuration,
 builder.Services.AddModuleDbContext<ExpenseDbContext>(builder.Configuration, ExpenseDbContext.SchemaName);
 builder.Services.AddModuleDbContext<IntegrationsDbContext>(builder.Configuration, IntegrationsDbContext.SchemaName);
 builder.Services.AddModuleDbContext<AssetsDbContext>(builder.Configuration, AssetsDbContext.SchemaName);
+builder.Services.AddModuleDbContext<ReportingDbContext>(builder.Configuration, ReportingDbContext.SchemaName);
+builder.Services.AddModuleDbContext<PerformanceDbContext>(builder.Configuration, PerformanceDbContext.SchemaName);
 
 using var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(MigratorConstants.LoggerName);

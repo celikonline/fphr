@@ -6,9 +6,10 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Employee.Domain/Sense.Modules.Employee.Domain.csproj" />
     <ProjectReference Include="../Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
-    <!-- Cross-module read contracts only (IOrgUnitLookup, IUserAccountLookup), per Modules_TalkOnlyThroughContracts -->
+    <!-- Cross-module read contracts only (IOrgUnitLookup, IUserAccountLookup, IAssetLookup), per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="../../Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

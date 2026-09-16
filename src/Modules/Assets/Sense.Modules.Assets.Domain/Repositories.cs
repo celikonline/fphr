@@ -34,4 +34,7 @@ public interface IAssetRepository
     Task<IReadOnlyList<Asset>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
     Task<bool> HasOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Count of the employee's currently Assigned (unreturned) assets - used to warn HR at offboarding time.</summary>
+    Task<int> CountOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }

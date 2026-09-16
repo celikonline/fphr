@@ -1,0 +1,58 @@
+{
+  "empty": "[DE] No records for this period.",
+  "genericError": "[DE] Something went wrong.",
+  "previousMonth": "[DE] Previous month",
+  "nextMonth": "[DE] Next month",
+  "my": {
+    "timesheetTitle": "[DE] My Timesheet",
+    "timesheetSubtitle": "[DE] Your recorded check-in/check-out times and monthly summary.",
+    "dailyListTitle": "[DE] Daily records",
+    "shiftTitle": "[DE] My Shifts",
+    "shiftSubtitle": "[DE] Your assigned shift plan."
+  },
+  "summary": {
+    "workedDays": "[DE] Days worked",
+    "workedHours": "[DE] Time worked"
+  },
+  "duration": {
+    "hoursMinutes": "[DE] {{h}}h {{m}}m",
+    "hoursOnly": "[DE] {{h}}h",
+    "minutesOnly": "[DE] {{m}}m"
+  },
+  "day": {
+    "checkIn": "[DE] Check-in",
+    "checkOut": "[DE] Check-out",
+    "worked": "[DE] Worked"
+  },
+  "anomaly": {
+    "noData": "[DE] No record",
+    "missingCheckIn": "[DE] Missing check-in",
+    "missingCheckOut": "[DE] Missing check-out",
+    "lateArrival": "[DE] Late arrival",
+    "earlyLeave": "[DE] Early leave",
+    "lateLeave": "[DE] Late leave",
+    "overwork": "[DE] Overwork",
+    "underwork": "[DE] Underwork",
+    "unplannedWork": "[DE] Unplanned work"
+  },
+  "resolutionState": {
+    "unresolved": "[DE] Unresolved",
+    "resolved": "[DE] Resolved",
+    "ignored": "[DE] Ignored"
+  },
+  "source": {
+    "manual": "[DE] Manual",
+    "import": "[DE] Import",
+    "device": "[DE] Device"
+  },
+  "shift": {
+    "status": {
+      "draft": "[DE] Draft",
+      "published": "[DE] Published"
+    },
+    "night": "[DE] Night shift",
+    "break": "[DE] Break",
+    "note": "[DE] Note",
+    "empty": "[DE] You have no shift records for this period."
+  }
+}

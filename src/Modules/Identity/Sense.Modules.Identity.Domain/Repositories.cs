@@ -78,6 +78,14 @@ public interface IRefreshTokenRepository
     void Add(RefreshToken token);
 }
 
+public interface IPasswordResetTokenRepository
+{
+    /// <summary>Anonim sıfırlama akışı: kiracı filtresi olmadan token hash'i ile.</summary>
+    Task<PasswordResetToken?> GetByTokenHashAsync(string tokenHash, CancellationToken ct);
+
+    void Add(PasswordResetToken token);
+}
+
 public interface IImpersonationGrantRepository
 {
     Task<ImpersonationGrant?> GetByIdAsync(Guid id, CancellationToken ct);

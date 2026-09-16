@@ -78,6 +78,8 @@
   <data name="user.cannot_modify_self" xml:space="preserve"><value>You cannot perform this action on your own account.</value></data>
   <data name="user.password_too_short" xml:space="preserve"><value>The password must be at least {minLength} characters.</value></data>
   <data name="user.password_mismatch" xml:space="preserve"><value>The current password is incorrect.</value></data>
+  <data name="password_reset.not_found" xml:space="preserve"><value>This reset link is invalid.</value></data>
+  <data name="password_reset.expired" xml:space="preserve"><value>This reset link has expired or was already used.</value></data>
 
   <data name="role.invalid_code" xml:space="preserve"><value>The role code may only contain letters, digits, '_' and '-' (max 50 characters).</value></data>
   <data name="role.system_code" xml:space="preserve"><value>This code is reserved for a system role.</value></data>
@@ -276,6 +278,7 @@
   <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Days must be between 0 and 366.</value></data>
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Manage organization structure levels</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Add companies</value></data>
+  <data name="organization.company_profile.manage" xml:space="preserve"><value>Manage company profile</value></data>
   <data name="organization.holidays.view" xml:space="preserve"><value>View official holidays</value></data>
   <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Manage unit approval processes</value></data>
   <data name="organization.unit.not_found" xml:space="preserve"><value>Unit not found.</value></data>
@@ -591,6 +594,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.request.approval_mismatch" xml:space="preserve"><value>The approval decision does not belong to the current revision of the request.</value></data>
   <data name="leave.request.not_owner" xml:space="preserve"><value>Only the requester can do this.</value></data>
   <data name="leave.errors.zero_days" xml:space="preserve"><value>The selected dates contain no chargeable leave days.</value></data>
+  <data name="leave.errors.partial_day_requires_single_date" xml:space="preserve"><value>A half-day or hourly leave request can only cover a single day.</value></data>
+  <data name="leave.errors.partial_day_time_invalid" xml:space="preserve"><value>This leave type requires a valid time range or half-day selection.</value></data>
   <data name="leave.errors.type_not_available" xml:space="preserve"><value>This leave type cannot be requested.</value></data>
   <data name="leave.errors.overlap" xml:space="preserve"><value>You already have a pending or approved leave on these dates.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>At most {max} days can be requested at once for this leave type.</value></data>
@@ -744,6 +749,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.automation_rule.same_stage" xml:space="preserve"><value>The from and to stages cannot be the same.</value></data>
   <data name="recruitment.automation_rule.already_inactive" xml:space="preserve"><value>This automation rule is already inactive.</value></data>
   <data name="recruitment.application.required_form_missing" xml:space="preserve"><value>A required form must be submitted before moving to this stage.</value></data>
+  <data name="recruitment.application.already_exists" xml:space="preserve"><value>You have already applied to this posting.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>View timesheets</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
@@ -836,9 +842,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.my.claims.view" xml:space="preserve"><value>View own expense claims</value></data>
   <data name="expense.claims.view" xml:space="preserve"><value>View expense claims</value></data>
   <data name="expense.claims.approve" xml:space="preserve"><value>Appear as an approver for expense claims</value></data>
+  <data name="expense.claims.pay" xml:space="preserve"><value>Mark expense claims as paid</value></data>
   <data name="expense.my.advances.create" xml:space="preserve"><value>Create own advance request</value></data>
   <data name="expense.my.advances.view" xml:space="preserve"><value>View own advance requests</value></data>
   <data name="expense.advances.view" xml:space="preserve"><value>View advance requests</value></data>
+  <data name="expense.advances.pay" xml:space="preserve"><value>Mark advance requests as paid</value></data>
   <data name="expense.my.payments.view" xml:space="preserve"><value>View own payments overview</value></data>
   <data name="expense.categories.view" xml:space="preserve"><value>View expense categories</value></data>
   <data name="expense.categories.manage" xml:space="preserve"><value>Manage expense categories</value></data>
@@ -887,4 +895,34 @@ The report you requested has been generated. Click the link to view and download
   <data name="reports.catalog.view" xml:space="preserve"><value>View report catalog</value></data>
   <data name="reports.executions.generate" xml:space="preserve"><value>Generate reports</value></data>
   <data name="reports.my.executions" xml:space="preserve"><value>View own generated reports</value></data>
+  <!-- Performance (faz-08 R0: Review Cycle/Form + Goal skeleton) -->
+  <data name="performance.reviews.view" xml:space="preserve"><value>View review cycles</value></data>
+  <data name="performance.reviews.manage" xml:space="preserve"><value>Manage review cycles/forms</value></data>
+  <data name="performance.reviews.approve" xml:space="preserve"><value>Close a review cycle</value></data>
+  <data name="performance.goals.view" xml:space="preserve"><value>View goals</value></data>
+  <data name="performance.goals.manage" xml:space="preserve"><value>Manage goals</value></data>
+  <data name="performance.my.reviews" xml:space="preserve"><value>View own reviews</value></data>
+  <data name="performance.my.goals" xml:space="preserve"><value>Manage own goals</value></data>
+  <data name="performance.team.goals" xml:space="preserve"><value>View team goals</value></data>
+  <data name="performance.cycle.not_found" xml:space="preserve"><value>Review cycle not found.</value></data>
+  <data name="performance.cycle.name_required" xml:space="preserve"><value>Cycle name is required.</value></data>
+  <data name="performance.cycle.invalid_date_range" xml:space="preserve"><value>End date must be after the start date.</value></data>
+  <data name="performance.cycle.not_activatable" xml:space="preserve"><value>Only a draft cycle can be activated.</value></data>
+  <data name="performance.cycle.not_closable" xml:space="preserve"><value>Only an active cycle can be closed.</value></data>
+  <data name="performance.cycle.already_closed" xml:space="preserve"><value>The cycle is already closed.</value></data>
+  <data name="performance.form.not_found" xml:space="preserve"><value>Review form not found.</value></data>
+  <data name="performance.form.title_required" xml:space="preserve"><value>Form title is required.</value></data>
+  <data name="performance.form.questions_required" xml:space="preserve"><value>At least one question is required.</value></data>
+  <data name="performance.form.question_text_required" xml:space="preserve"><value>Question text is required.</value></data>
+  <data name="performance.form.weights_must_sum_to_100" xml:space="preserve"><value>Question weights must sum to 100.</value></data>
+  <data name="performance.form.not_publishable" xml:space="preserve"><value>Only a draft form can be published.</value></data>
+  <data name="performance.form.not_editable" xml:space="preserve"><value>A published form cannot be edited.</value></data>
+  <data name="performance.form.cycle_closed" xml:space="preserve"><value>A form cannot be added to a closed cycle.</value></data>
+  <data name="performance.goal.not_found" xml:space="preserve"><value>Goal not found.</value></data>
+  <data name="performance.goal.title_required" xml:space="preserve"><value>Goal title is required.</value></data>
+  <data name="performance.goal.progress_invalid" xml:space="preserve"><value>Progress must be between 0 and 100.</value></data>
+  <data name="performance.goal.not_updatable" xml:space="preserve"><value>A completed, cancelled, or archived goal's progress cannot be updated.</value></data>
+  <data name="performance.goal.not_cancellable" xml:space="preserve"><value>A completed, cancelled, or archived goal cannot be cancelled.</value></data>
+  <data name="performance.goal.employee_invalid" xml:space="preserve"><value>The selected employee was not found or is inactive.</value></data>
+  <data name="performance.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
 </root>

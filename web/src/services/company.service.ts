@@ -3,19 +3,20 @@
  *
  * Screen 1 (Item 20): view/edit the tenant's company profile + logo upload.
  *
- * TODO(item-20-backend): There is no CompaniesController / rich tenant-profile endpoint yet.
- * The only real tenant data today is the thin `Tenant` row (id/slug/name/taxNumber/locale/timeZone)
- * exposed via `/v1/identity/tenants` on the auth side - it has no address, operating hours, working
- * days, or logo. Until a backend endpoint exists (e.g. `GET/PUT /v1/identity/tenants/{id}/profile`),
- * this service persists the profile to localStorage so the screen is fully usable end-to-end.
- * Swap the two functions below for real `apiClient` calls once that endpoint exists - the shape of
- * `CompanyProfile` was designed to match the task's field list so no page changes should be needed.
+ * Faz 2 (TB-10): wired to the real backend now - `GET/PUT /v1/organization/companies/profile` and
+ * `PUT /v1/organization/companies/profile/logo` (Sense.Modules.Organization.Api.CompaniesController).
+ * The `CompanyProfile` shape below is unchanged from the pre-existing mock (see structure.service.ts's
+ * `Company` for the separate, narrower "Şirket ekle" DTO - deliberately not reused here, they serve
+ * different screens/contracts).
  *
- * Logo upload IS wired to the real Documents module (Item 15) via `uploadDocumentFile`
- * (documents.service.ts): initiate-upload -> PUT bytes directly to storage -> confirm-upload.
+ * Logo upload is wired to the real Documents module (Item 15) via `uploadDocumentFile`
+ * (documents.service.ts): initiate-upload -> PUT bytes directly to storage -> confirm-upload, then the
+ * resulting documentId + a local preview URL are persisted on the profile via the dedicated logo endpoint.
  */
-import { mockDelay, readMock, writeMock } from "@/services/mock/local-store";
+import { apiClient } from "@senseik/api-client";
 import { uploadDocumentFile } from "@/services/documents.service";
+
+const PROFILE_BASE = "/v1/organization/companies/profile";
 
 export interface OperatingHours {
   start: string; // "09:00"
@@ -39,31 +40,63 @@ export interface CompanyProfile {
   updatedAt: string;
 }
 
-const MOCK_KEY = "senseik.mock.company-profile";
-
-const DEFAULT_PROFILE: CompanyProfile = {
-  id: "current-tenant",
-  name: "Algosense Demo A.Ş.",
-  registrationNumber: "0123456789",
-  taxNumber: "1234567890",
-  address: "Maslak Mahallesi, Büyükdere Caddesi No:1, Sarıyer",
-  city: "İstanbul",
-  country: "Türkiye",
-  operatingHours: { start: "09:00", end: "18:00" },
-  workingDays: ["mon", "tue", "wed", "thu", "fri"],
-  updatedAt: new Date().toISOString(),
-};
-
-export async function getCompanyProfile(): Promise<CompanyProfile> {
-  await mockDelay();
-  return readMock(MOCK_KEY, DEFAULT_PROFILE);
+interface CompanyProfileResponse {
+  id: string;
+  orgUnitId: string;
+  name: string;
+  registrationNumber?: string;
+  taxNumber?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  operatingHoursStart?: string;
+  operatingHoursEnd?: string;
+  workingDays: WeekDay[];
+  logoDocumentId?: string;
+  logoUrl?: string;
+  updatedAt: string;
 }
 
+function fromResponse(dto: CompanyProfileResponse): CompanyProfile {
+  return {
+    id: dto.id,
+    name: dto.name,
+    registrationNumber: dto.registrationNumber ?? "",
+    taxNumber: dto.taxNumber ?? "",
+    address: dto.address ?? "",
+    city: dto.city ?? "",
+    country: dto.country ?? "",
+    operatingHours: { start: dto.operatingHoursStart ?? "09:00", end: dto.operatingHoursEnd ?? "18:00" },
+    workingDays: dto.workingDays,
+    logoDocumentId: dto.logoDocumentId,
+    logoUrl: dto.logoUrl,
+    updatedAt: dto.updatedAt,
+  };
+}
+
+export async function getCompanyProfile(): Promise<CompanyProfile> {
+  const { data } = await apiClient.get<CompanyProfileResponse>(PROFILE_BASE);
+  return fromResponse(data);
+}
+
+/**
+ * Saves the full "Şirket profili" form. Callers (the profile page) always submit the complete set of
+ * fields - the backend command renames the company's org unit (`name`) and replaces the legal/registry
+ * fields together, so a true partial PATCH isn't meaningful here.
+ */
 export async function updateCompanyProfile(patch: Partial<CompanyProfile>): Promise<CompanyProfile> {
-  await mockDelay();
-  const current = readMock(MOCK_KEY, DEFAULT_PROFILE);
-  const updated: CompanyProfile = { ...current, ...patch, updatedAt: new Date().toISOString() };
-  return writeMock(MOCK_KEY, updated);
+  const { data } = await apiClient.put<CompanyProfileResponse>(PROFILE_BASE, {
+    name: patch.name,
+    registrationNumber: patch.registrationNumber,
+    taxNumber: patch.taxNumber,
+    address: patch.address,
+    city: patch.city,
+    country: patch.country,
+    operatingHoursStart: patch.operatingHours?.start,
+    operatingHoursEnd: patch.operatingHours?.end,
+    workingDays: patch.workingDays,
+  });
+  return fromResponse(data);
 }
 
 export interface UploadLogoResult {
@@ -72,20 +105,20 @@ export interface UploadLogoResult {
 }
 
 /**
- * Uploads a new company logo through the real Documents presigned-URL flow and stores the
- * reference on the mock company profile. Falls back to a local object URL for instant preview
- * if the upload itself fails (the profile screen has no real backend yet, see the file header).
+ * Uploads a new company logo through the real Documents presigned-URL flow, then persists the
+ * documentId on the profile via the dedicated logo endpoint. Falls back to a local object URL for
+ * instant preview if the upload itself fails.
  */
 export async function uploadCompanyLogo(file: File): Promise<UploadLogoResult> {
   const objectUrl = URL.createObjectURL(file);
 
   try {
     const documentId = await uploadDocumentFile(file, "logos");
-    await updateCompanyProfile({ logoDocumentId: documentId, logoUrl: objectUrl });
+    await apiClient.put<CompanyProfileResponse>(`${PROFILE_BASE}/logo`, { logoDocumentId: documentId, logoUrl: objectUrl });
     return { documentId, logoUrl: objectUrl };
   } catch (error) {
     console.error("Logo upload failed, falling back to local preview only:", error);
-    await updateCompanyProfile({ logoUrl: objectUrl });
+    await apiClient.put<CompanyProfileResponse>(`${PROFILE_BASE}/logo`, { logoDocumentId: null, logoUrl: objectUrl });
     return { logoUrl: objectUrl };
   }
 }

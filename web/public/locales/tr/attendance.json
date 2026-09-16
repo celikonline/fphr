@@ -1,0 +1,58 @@
+{
+  "empty": "Bu dönemde kayıt yok.",
+  "genericError": "İşlem sırasında bir hata oluştu.",
+  "previousMonth": "Önceki ay",
+  "nextMonth": "Sonraki ay",
+  "my": {
+    "timesheetTitle": "Puantajım",
+    "timesheetSubtitle": "Kayıtlı giriş-çıkış saatleriniz ve aylık özetiniz.",
+    "dailyListTitle": "Günlük kayıtlar",
+    "shiftTitle": "Vardiyam",
+    "shiftSubtitle": "Size atanmış vardiya planı."
+  },
+  "summary": {
+    "workedDays": "Çalışılan gün",
+    "workedHours": "Çalışılan süre"
+  },
+  "duration": {
+    "hoursMinutes": "{{h}} sa {{m}} dk",
+    "hoursOnly": "{{h}} sa",
+    "minutesOnly": "{{m}} dk"
+  },
+  "day": {
+    "checkIn": "Giriş",
+    "checkOut": "Çıkış",
+    "worked": "Çalışılan"
+  },
+  "anomaly": {
+    "noData": "Kayıt yok",
+    "missingCheckIn": "Giriş eksik",
+    "missingCheckOut": "Çıkış eksik",
+    "lateArrival": "Geç giriş",
+    "earlyLeave": "Erken çıkış",
+    "lateLeave": "Geç çıkış",
+    "overwork": "Fazla çalışma",
+    "underwork": "Az çalışma",
+    "unplannedWork": "Plansız çalışma"
+  },
+  "resolutionState": {
+    "unresolved": "Çözülmedi",
+    "resolved": "Çözüldü",
+    "ignored": "Yok sayıldı"
+  },
+  "source": {
+    "manual": "Elle",
+    "import": "İçe aktarım",
+    "device": "Cihaz"
+  },
+  "shift": {
+    "status": {
+      "draft": "Taslak",
+      "published": "Yayınlandı"
+    },
+    "night": "Gece vardiyası",
+    "break": "Mola",
+    "note": "Not",
+    "empty": "Bu dönemde vardiya kaydınız yok."
+  }
+}

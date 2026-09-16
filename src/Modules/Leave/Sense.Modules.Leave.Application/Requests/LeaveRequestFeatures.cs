@@ -3,6 +3,7 @@ using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Balances;
+using Sense.Modules.Leave.Domain.Calendar;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
@@ -33,13 +34,15 @@ public static class LeaveRequestErrors
 public sealed record LeaveRequestDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
-    string? LeaveTypeName = null, Guid? PreviousRequestId = null, DateTime? CancelledAt = null, string? CancellationReason = null);
+    string? LeaveTypeName = null, Guid? PreviousRequestId = null, DateTime? CancelledAt = null, string? CancellationReason = null,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
 
 internal static class LeaveRequestMapper
 {
     public static LeaveRequestDto ToDto(LeaveRequest r, string? typeName = null) =>
         new(r.Id, r.EmployeeId, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.StartDate, r.EndDate, r.CalculatedDays, r.Description, r.Status, r.Source,
-            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName, r.PreviousRequestId, r.CancelledAt, r.CancellationReason);
+            r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName, r.PreviousRequestId, r.CancelledAt, r.CancellationReason,
+            r.StartTime, r.EndTime, r.HalfDayPeriod);
 
     /// <summary>
     /// Maps requests with the leave type name (stored name; seeded types carry a resource key the API localizes) from the employee's
@@ -80,7 +83,7 @@ public sealed class LeaveRequestRules(
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
-        bool requireSelfService = true)
+        bool requireSelfService = true, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
     {
         if (end < start)
         {
@@ -110,7 +113,26 @@ public sealed class LeaveRequestRules(
             return Error.Validation(LeaveRequestErrors.DescriptionRequired);
         }
 
-        var days = (await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct)).Days;
+        // The type's configured Unit dictates what the request must carry: Hourly needs a time range, HalfDay a
+        // period flag, both single-day; a FullDay type rejects either (it has no matching UI to produce them).
+        var partial = ValidatePartialDayShape(type.Unit, start, end, startTime, endTime, halfDayPeriod);
+        if (partial.IsFailure)
+        {
+            return partial.Error;
+        }
+
+        decimal days;
+        if (type.Unit == LeaveUnit.FullDay)
+        {
+            days = (await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct)).Days;
+        }
+        else
+        {
+            // Hourly/HalfDay still need the single day to be open (not a holiday/weekly rest the type doesn't count).
+            var dayOpen = (await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct)).Days > 0m;
+            days = !dayOpen ? 0m : type.Unit == LeaveUnit.Hourly ? LeavePartialDay.HourlyFraction(startTime!.Value, endTime!.Value) : LeavePartialDay.HalfDayFraction;
+        }
+
         if (days <= 0m)
         {
             return Error.Validation(LeaveDomainErrors.RequestZeroDays);
@@ -156,6 +178,23 @@ public sealed class LeaveRequestRules(
 
         return (type, days);
     }
+
+    /// <summary>Hourly needs a time range, HalfDay a period, both single-day; FullDay accepts neither.</summary>
+    private static Result ValidatePartialDayShape(LeaveUnit unit, DateOnly start, DateOnly end, TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod)
+    {
+        switch (unit)
+        {
+            case LeaveUnit.Hourly when startTime is null || endTime is null || endTime <= startTime:
+            case LeaveUnit.HalfDay when halfDayPeriod is null:
+                return Error.Validation(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+            case LeaveUnit.FullDay when startTime is not null || endTime is not null || halfDayPeriod is not null:
+                return Error.Validation(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+            case LeaveUnit.Hourly or LeaveUnit.HalfDay when start != end:
+                return Error.Validation(LeaveDomainErrors.RequestPartialDayRequiresSingleDate);
+            default:
+                return Result.Success();
+        }
+    }
 }
 
 /// <summary>
@@ -163,7 +202,9 @@ public sealed class LeaveRequestRules(
 /// <see cref="PreviousRequestId"/> it re-submits the caller's own rejected request (Source = Resubmission); the rejected record stays.
 /// </summary>
 [RequiresPermission("leave.my.requests")]
-public sealed record SubmitLeaveRequestCommand(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null)
+public sealed record SubmitLeaveRequestCommand(
+    Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveRequestCommand>
@@ -191,7 +232,9 @@ public sealed class SubmitLeaveRequestHandler(
             }
         }
 
-        var valid = await rules.ValidateAsync(tenant.TenantId, employeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken);
+        var valid = await rules.ValidateAsync(
+            tenant.TenantId, employeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken,
+            startTime: command.StartTime, endTime: command.EndTime, halfDayPeriod: command.HalfDayPeriod);
         if (valid.IsFailure)
         {
             return valid.Error;
@@ -200,7 +243,7 @@ public sealed class SubmitLeaveRequestHandler(
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, employeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
             command.Description, command.PreviousRequestId is null ? LeaveRequestSource.SelfService : LeaveRequestSource.Resubmission,
-            clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null, command.PreviousRequestId);
+            clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null, command.PreviousRequestId, command.StartTime, command.EndTime, command.HalfDayPeriod);
         if (submitted.IsFailure)
         {
             return submitted.Error;
@@ -220,7 +263,9 @@ public sealed class SubmitLeaveRequestHandler(
 
 /// <summary>UpdatePendingLeaveRequest: requester edits a pending request; the old approval is cancelled and a new one started (RevisionNo++).</summary>
 [RequiresPermission("leave.my.requests")]
-public sealed record UpdatePendingLeaveRequestCommand(Guid RequestId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description) : ICommand;
+public sealed record UpdatePendingLeaveRequestCommand(
+    Guid RequestId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null) : ICommand;
 
 public sealed class UpdatePendingLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, IWorkflowService workflow)
@@ -244,7 +289,9 @@ public sealed class UpdatePendingLeaveRequestHandler(
             return Error.Conflict(LeaveDomainErrors.RequestNotPending);
         }
 
-        var valid = await rules.ValidateAsync(tenant.TenantId, request.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, request.Id, cancellationToken);
+        var valid = await rules.ValidateAsync(
+            tenant.TenantId, request.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, request.Id, cancellationToken,
+            startTime: command.StartTime, endTime: command.EndTime, halfDayPeriod: command.HalfDayPeriod);
         if (valid.IsFailure)
         {
             return valid.Error;
@@ -259,7 +306,9 @@ public sealed class UpdatePendingLeaveRequestHandler(
             }
         }
 
-        var updated = request.UpdatePending(valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days, command.Description);
+        var updated = request.UpdatePending(
+            valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days, command.Description,
+            command.StartTime, command.EndTime, command.HalfDayPeriod);
         if (updated.IsFailure)
         {
             return updated;
@@ -388,7 +437,8 @@ internal static class LeaveRequestPreview
 {
     public static async Task<Result<LeaveRequestPreviewDto>> BuildAsync(
         LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, ILeaveDayCalculator dayCalculator,
-        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct)
+        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct,
+        TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
     {
         if (end < start)
         {
@@ -415,14 +465,25 @@ internal static class LeaveRequestPreview
 
         var count = await dayCalculator.CalculateAsync(tenantId, employeeId, start, end, type.CountsNonWorkingDays, ct);
         // Description is not part of the preview; pass a placeholder so "description required" does not show up as a warning.
-        var valid = await rules.ValidateAsync(tenantId, employeeId, leaveTypeId, start, end, "-", editedRequestId, ct, requireSelfService);
+        var valid = await rules.ValidateAsync(
+            tenantId, employeeId, leaveTypeId, start, end, "-", editedRequestId, ct, requireSelfService, startTime, endTime, halfDayPeriod);
         IReadOnlyList<Error> warnings = valid.IsFailure ? [valid.Error] : [];
-        return new LeaveRequestPreviewDto(count.Days, count.WeeklyRestDays, count.PublicHolidayDays, warnings);
+
+        // On failure (e.g. missing time range while typing) show the best-effort fraction instead of the whole-day count.
+        var days = valid.IsSuccess ? valid.Value.Days : type.Unit switch
+        {
+            LeaveUnit.Hourly when startTime is { } st && endTime is { } et && et > st => LeavePartialDay.HourlyFraction(st, et),
+            LeaveUnit.HalfDay => LeavePartialDay.HalfDayFraction,
+            _ => count.Days,
+        };
+        return new LeaveRequestPreviewDto(days, count.WeeklyRestDays, count.PublicHolidayDays, warnings);
     }
 }
 
 [RequiresPermission("leave.my.requests")]
-public sealed record PreviewMyLeaveRequestQuery(Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, Guid? EditedRequestId) : IQuery<LeaveRequestPreviewDto>;
+public sealed record PreviewMyLeaveRequestQuery(
+    Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, Guid? EditedRequestId,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null) : IQuery<LeaveRequestPreviewDto>;
 
 public sealed class PreviewMyLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
@@ -434,11 +495,13 @@ public sealed class PreviewMyLeaveRequestHandler(
             ? Error.NotFound(LeaveErrors.NoEmployeeForUser)
             : await LeaveRequestPreview.BuildAsync(
                 rules, profiles, ruleSets, dayCalculator, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
-                cancellationToken);
+                cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
 }
 
 [RequiresPermission("leave.requests.create_on_behalf")]
-public sealed record PreviewEmployeeLeaveRequestQuery(Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate) : IQuery<LeaveRequestPreviewDto>;
+public sealed record PreviewEmployeeLeaveRequestQuery(
+    Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null) : IQuery<LeaveRequestPreviewDto>;
 
 public sealed class PreviewEmployeeLeaveRequestHandler(
     ITenantContext tenant, IDataScopeService dataScope, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
@@ -450,7 +513,7 @@ public sealed class PreviewEmployeeLeaveRequestHandler(
             ? Error.Forbidden(LeaveErrors.EmployeeNotInScope)
             : await LeaveRequestPreview.BuildAsync(
                 rules, profiles, ruleSets, dayCalculator, tenant.TenantId, query.EmployeeId, query.LeaveTypeId, query.StartDate, query.EndDate, null, false,
-                cancellationToken);
+                cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
 }
 
 /// <summary>
@@ -459,7 +522,9 @@ public sealed class PreviewEmployeeLeaveRequestHandler(
 /// is posted; otherwise the Workflow "Leave" approval starts as for self-service.
 /// </summary>
 [RequiresPermission("leave.requests.create_on_behalf")]
-public sealed record CreateLeaveRequestOnBehalfCommand(Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval)
+public sealed record CreateLeaveRequestOnBehalfCommand(
+    Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
@@ -485,7 +550,8 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         }
 
         var valid = await rules.ValidateAsync(
-            tenant.TenantId, command.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken, requireSelfService: false);
+            tenant.TenantId, command.EmployeeId, command.LeaveTypeId, command.StartDate, command.EndDate, command.Description, null, cancellationToken,
+            requireSelfService: false, startTime: command.StartTime, endTime: command.EndTime, halfDayPeriod: command.HalfDayPeriod);
         if (valid.IsFailure)
         {
             return valid.Error;
@@ -494,7 +560,7 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         var now = clock.GetUtcNow().UtcDateTime;
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, command.EmployeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
-            command.Description, LeaveRequestSource.OnBehalf, now, currentUser.IpAddress, null);
+            command.Description, LeaveRequestSource.OnBehalf, now, currentUser.IpAddress, null, null, command.StartTime, command.EndTime, command.HalfDayPeriod);
         if (submitted.IsFailure)
         {
             return submitted.Error;
