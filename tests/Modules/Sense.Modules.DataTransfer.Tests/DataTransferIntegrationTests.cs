@@ -276,6 +276,11 @@ public sealed class DataTransferIntegrationTests : TestFixture
             sheet.Cell(3, columnOf["nationalId"]).Value = nationalId;
             sheet.Cell(3, columnOf["hireDate"]).Value = new DateTime(2025, 2, 3);
             sheet.Cell(3, columnOf["orgUnit:Department"]).Value = "AR-GE";
+            // E6 columns: the workbook's Turkish label and the enum member name are both accepted.
+            sheet.Cell(3, columnOf["gender"]).Value = "Kadın";
+            sheet.Cell(3, columnOf["employmentType"]).Value = "PartTime";
+            sheet.Cell(3, columnOf["childCount"]).Value = 2;
+            sheet.Cell(3, columnOf["city"]).Value = "Ankara";
             using var stream = new MemoryStream();
             workbook.SaveAs(stream);
             filled = stream.ToArray();
@@ -285,13 +290,16 @@ public sealed class DataTransferIntegrationTests : TestFixture
         job.TotalRows.ShouldBe(1);
         var firstName = job.SourceColumns.Single(c => c.Header == "Given name");
         (firstName.SuggestedTargetKey, firstName.AutoMatched).ShouldBe(("firstName", true));
-        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(13);
+        // Every template column except the renamed "firstName" header maps itself by the hidden key row.
+        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(29);
 
         await MapAsync(job, "Upsert", "SkipInvalidRows");
         var run = await RunAsync(job.Id);
         (run.Status, run.InsertedCount).ShouldBe(("Completed", 1));
         var selin = await ServiceProvider!.GetRequiredService<EmployeeDbContext>().Employees.AsNoTracking().SingleAsync(e => e.NationalId == nationalId);
         (selin.DisplayName, selin.HireDate, selin.OrgUnitId).ShouldBe(("Selin Öz", new DateOnly(2025, 2, 3), org.AcmeRnd));
+        (selin.Gender, selin.EmploymentType, selin.ChildCount, selin.City)
+            .ShouldBe((Gender.Female, EmploymentType.PartTime, 2, "Ankara"));
 
         var csvId = Tckn.Next();
         var csv = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes($"Ad;Soyad;Kimlik numarası;Doğum tarihi\r\nÇağla;Şen;{csvId};21/09/1999\r\n")).ToArray();

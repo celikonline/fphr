@@ -429,6 +429,38 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.hireDate" xml:space="preserve"><value>İşe başlama tarihi</value></data>
   <data name="import.column.employee.birthDate" xml:space="preserve"><value>Doğum tarihi</value></data>
   <data name="import.column.employee.manager" xml:space="preserve"><value>Yönetici</value></data>
+  <data name="import.column.employee.leaveAccrualStartDate" xml:space="preserve"><value>İzne esas hak ediş tarihi</value></data>
+  <data name="import.column.employee.gender" xml:space="preserve"><value>Cinsiyet</value></data>
+  <data name="import.column.employee.maritalStatus" xml:space="preserve"><value>Medeni durum</value></data>
+  <data name="import.column.employee.childCount" xml:space="preserve"><value>Çocuk sayısı</value></data>
+  <data name="import.column.employee.educationStatus" xml:space="preserve"><value>Eğitim durumu</value></data>
+  <data name="import.column.employee.highestEducationLevel" xml:space="preserve"><value>Son mezuniyet derecesi</value></data>
+  <data name="import.column.employee.militaryStatus" xml:space="preserve"><value>Askerlik durumu</value></data>
+  <data name="import.column.employee.disabilityDegree" xml:space="preserve"><value>Engellilik derecesi</value></data>
+  <data name="import.column.employee.bloodType" xml:space="preserve"><value>Kan grubu</value></data>
+  <data name="import.column.employee.mobilePhone" xml:space="preserve"><value>Cep telefonu</value></data>
+  <data name="import.column.employee.homePhone" xml:space="preserve"><value>Ev telefonu</value></data>
+  <data name="import.column.employee.addressLine" xml:space="preserve"><value>Adres</value></data>
+  <data name="import.column.employee.city" xml:space="preserve"><value>Şehir</value></data>
+  <data name="import.column.employee.postalCode" xml:space="preserve"><value>Posta kodu</value></data>
+  <data name="import.column.employee.contractType" xml:space="preserve"><value>Sözleşme türü</value></data>
+  <data name="import.column.employee.employmentType" xml:space="preserve"><value>Çalışma şekli</value></data>
+  <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>İzin hak edişinin başladığı gerçek tarih; boş bırakılırsa işe başlama tarihi kullanılır.</value></data>
+  <data name="import.column.employee.gender.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
+  <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
+  <data name="import.column.employee.childCount.description" xml:space="preserve"><value>0 veya daha büyük tam sayı.</value></data>
+  <data name="import.column.employee.educationStatus.description" xml:space="preserve"><value>Öğrenci veya Mezun.</value></data>
+  <data name="import.column.employee.highestEducationLevel.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
+  <data name="import.column.employee.militaryStatus.description" xml:space="preserve"><value>Hassas alan; yalnızca yetkili kullanıcılar görebilir.</value></data>
+  <data name="import.column.employee.disabilityDegree.description" xml:space="preserve"><value>Hassas alan; yalnızca yetkili kullanıcılar görebilir.</value></data>
+  <data name="import.column.employee.bloodType.description" xml:space="preserve"><value>Hassas alan; yalnızca yetkili kullanıcılar görebilir.</value></data>
+  <data name="import.column.employee.mobilePhone.description" xml:space="preserve"><value>Cep telefonu, en fazla 30 karakter.</value></data>
+  <data name="import.column.employee.homePhone.description" xml:space="preserve"><value>Ev telefonu, en fazla 30 karakter.</value></data>
+  <data name="import.column.employee.addressLine.description" xml:space="preserve"><value>Açık adres, en fazla 250 karakter.</value></data>
+  <data name="import.column.employee.city.description" xml:space="preserve"><value>Şehir, en fazla 100 karakter.</value></data>
+  <data name="import.column.employee.postalCode.description" xml:space="preserve"><value>Posta kodu, en fazla 20 karakter.</value></data>
+  <data name="import.column.employee.contractType.description" xml:space="preserve"><value>Belirsiz süreli veya Belirli süreli.</value></data>
+  <data name="import.column.employee.employmentType.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
   <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Çalışanın adı (eşleştirmede kullanılır).</value></data>
   <data name="import.column.employee.lastName.description" xml:space="preserve"><value>Çalışanın soyadı (eşleştirmede kullanılır).</value></data>
   <data name="import.column.employee.nationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>

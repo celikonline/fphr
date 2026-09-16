@@ -329,15 +329,33 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
 
         var hireDate = Date(row, EmployeeImportColumns.HireDate, errors);
         var birthDate = Date(row, EmployeeImportColumns.BirthDate, errors);
+        var leaveAccrualStartDate = Date(row, EmployeeImportColumns.LeaveAccrualStartDate, errors);
         var managerId = ResolveManager(row, existing, errors);
         var (setOrgUnit, orgUnitId) = ResolveOrgUnit(row, existing, errors);
+
+        // Personnel fields (E6): an empty cell keeps the stored value, an unknown option is a row error.
+        var gender = Enum<Gender>(row, EmployeeImportColumns.Gender, errors);
+        var maritalStatus = Enum<MaritalStatus>(row, EmployeeImportColumns.MaritalStatus, errors);
+        var childCount = ChildCount(row, errors);
+        var educationStatus = Enum<EducationStatus>(row, EmployeeImportColumns.EducationStatus, errors);
+        var highestEducationLevel = Enum<HighestEducationLevel>(row, EmployeeImportColumns.HighestEducationLevel, errors);
+        var militaryStatus = Enum<MilitaryStatus>(row, EmployeeImportColumns.MilitaryStatus, errors);
+        var disabilityDegree = Enum<DisabilityDegree>(row, EmployeeImportColumns.DisabilityDegree, errors);
+        var bloodType = Enum<BloodType>(row, EmployeeImportColumns.BloodType, errors);
+        var mobilePhone = Text(row, EmployeeImportColumns.MobilePhone);
+        var homePhone = Text(row, EmployeeImportColumns.HomePhone);
+        var addressLine = Text(row, EmployeeImportColumns.AddressLine);
+        var city = Text(row, EmployeeImportColumns.City);
+        var postalCode = Text(row, EmployeeImportColumns.PostalCode);
+        var contractType = Enum<ContractType>(row, EmployeeImportColumns.ContractType, errors);
+        var employmentType = Enum<EmploymentType>(row, EmployeeImportColumns.EmploymentType, errors);
 
         if (errors.Count > 0 || nationalId is null)
         {
             return new EmployeeImportValidation(null, nationalId, existing?.Id, errors);
         }
 
-        var info = existing is null
+        var baseInfo = existing is null
             ? new EmployeeInfo(firstName!, lastName!, nationalId, workEmail, personalEmail, workPhone, hireDate, birthDate)
             : ExistingInfo(existing) with
             {
@@ -347,6 +365,26 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
                 HireDate = hireDate ?? existing.HireDate,
                 BirthDate = birthDate ?? existing.BirthDate,
             };
+
+        var info = baseInfo with
+        {
+            LeaveAccrualStartDate = leaveAccrualStartDate,
+            Gender = gender ?? baseInfo.Gender,
+            MaritalStatus = maritalStatus ?? baseInfo.MaritalStatus,
+            ChildCount = childCount ?? baseInfo.ChildCount,
+            EducationStatus = educationStatus ?? baseInfo.EducationStatus,
+            HighestEducationLevel = highestEducationLevel ?? baseInfo.HighestEducationLevel,
+            MilitaryStatus = militaryStatus ?? baseInfo.MilitaryStatus,
+            DisabilityDegree = disabilityDegree ?? baseInfo.DisabilityDegree,
+            BloodType = bloodType ?? baseInfo.BloodType,
+            MobilePhone = mobilePhone ?? baseInfo.MobilePhone,
+            HomePhone = homePhone ?? baseInfo.HomePhone,
+            AddressLine = addressLine ?? baseInfo.AddressLine,
+            City = city ?? baseInfo.City,
+            PostalCode = postalCode ?? baseInfo.PostalCode,
+            ContractType = contractType ?? baseInfo.ContractType,
+            EmploymentType = employmentType ?? baseInfo.EmploymentType,
+        };
 
         var domainCheck = EmployeeEntity.Validate(info);
         if (domainCheck.IsFailure)
@@ -522,6 +560,42 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         }
 
         errors.Add(ValueError(key, ImportErrorCodes.InvalidDate, cell));
+        return null;
+    }
+
+    /// <summary>An enum column (E6): empty keeps the stored value, an unrecognized option is reported as a lookup error.</summary>
+    private static T? Enum<T>(ImportRow row, string key, List<ImportRowError> errors)
+        where T : struct, Enum
+    {
+        var text = Text(row, key);
+        if (text is null)
+        {
+            return null;
+        }
+
+        if (EmployeeImportOptions.TryParse<T>(text, out var value))
+        {
+            return value;
+        }
+
+        errors.Add(new ImportRowError(key, ImportErrorCodes.LookupNotFound, ValueArgs(text)));
+        return null;
+    }
+
+    private static int? ChildCount(ImportRow row, List<ImportRowError> errors)
+    {
+        var text = Text(row, EmployeeImportColumns.ChildCount);
+        if (text is null)
+        {
+            return null;
+        }
+
+        if (int.TryParse(text, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var count) && count >= 0)
+        {
+            return count;
+        }
+
+        errors.Add(new ImportRowError(EmployeeImportColumns.ChildCount, EmployeeDomainErrors.ChildCountInvalid, ValueArgs(text)));
         return null;
     }
 

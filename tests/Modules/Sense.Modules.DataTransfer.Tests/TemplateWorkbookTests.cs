@@ -31,22 +31,34 @@ public sealed class TemplateWorkbookTests
         var data = workbook.Worksheet("Çalışanlar");
 
         var headers = data.Row(1).CellsUsed().Select(c => c.GetString()).ToList();
-        headers.ShouldBe(["Ad", "Soyad", "Kimlik numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici", "Şirket", "Departman"]);
+        headers.ShouldBe([
+            "Ad", "Soyad", "Kimlik numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
+            "İzne esas hak ediş tarihi", "Cinsiyet", "Medeni durum", "Çocuk sayısı", "Eğitim durumu", "Son mezuniyet derecesi", "Askerlik durumu",
+            "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu", "Sözleşme türü", "Çalışma şekli",
+            "Şirket", "Departman"]);
 
         var keys = data.Row(2).CellsUsed().Select(c => c.GetString()).ToList();
-        keys.ShouldBe(["firstName", "lastName", "nationalId", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager", "orgUnit:Company", "orgUnit:Department"]);
+        keys.ShouldBe([
+            "firstName", "lastName", "nationalId", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
+            "leaveAccrualStartDate", "gender", "maritalStatus", "childCount", "educationStatus", "highestEducationLevel", "militaryStatus",
+            "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode", "contractType", "employmentType",
+            "orgUnit:Company", "orgUnit:Department"]);
         data.Row(2).IsHidden.ShouldBeTrue();
         data.RowsUsed(XLCellsUsedOptions.Contents).Count().ShouldBe(2);
 
         var lists = workbook.Worksheet("Listeler");
         lists.Visibility.ShouldBe(XLWorksheetVisibility.Hidden);
-        lists.Column(2).CellsUsed().Select(c => c.GetString()).ShouldBe(["orgUnit:Department", "AR-GE", "Satış"]);
+        var departmentList = lists.ColumnsUsed().Single(c => c.FirstCellUsed().GetString() == "orgUnit:Department");
+        departmentList.CellsUsed().Select(c => c.GetString()).ShouldBe(["orgUnit:Department", "AR-GE", "Satış"]);
 
-        var departmentValidation = data.DataValidations.Single(v => v.Ranges.Any(r => r.RangeAddress.FirstAddress.ColumnNumber == 11));
+        var departmentColumn = keys.IndexOf("orgUnit:Department") + 1;
+        var departmentValidation = data.DataValidations.Single(v => v.Ranges.Any(r => r.RangeAddress.FirstAddress.ColumnNumber == departmentColumn));
         departmentValidation.AllowedValues.ShouldBe(XLAllowedValues.List);
         departmentValidation.Value.ShouldContain("Listeler");
         departmentValidation.Ranges.Single().RangeAddress.FirstAddress.RowNumber.ShouldBe(3);
-        data.DataValidations.Count().ShouldBe(2);
+
+        // One dropdown per option-bearing column: the two org levels plus the nine enum columns (E6).
+        data.DataValidations.Count().ShouldBe(11);
 
         var instructions = workbook.Worksheet("Açıklamalar");
         instructions.Cell(1, 1).GetString().ShouldBe("Veri aktarım kuralları");

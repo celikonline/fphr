@@ -1,4 +1,5 @@
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Import;
@@ -18,6 +19,24 @@ public static class EmployeeImportColumns
     public const string HireDate = "hireDate";
     public const string BirthDate = "birthDate";
     public const string Manager = "manager";
+
+    // Personnel fields added by E1/E2, offered by the template since E6.
+    public const string LeaveAccrualStartDate = "leaveAccrualStartDate";
+    public const string Gender = "gender";
+    public const string MaritalStatus = "maritalStatus";
+    public const string ChildCount = "childCount";
+    public const string EducationStatus = "educationStatus";
+    public const string HighestEducationLevel = "highestEducationLevel";
+    public const string MilitaryStatus = "militaryStatus";
+    public const string DisabilityDegree = "disabilityDegree";
+    public const string BloodType = "bloodType";
+    public const string MobilePhone = "mobilePhone";
+    public const string HomePhone = "homePhone";
+    public const string AddressLine = "addressLine";
+    public const string City = "city";
+    public const string PostalCode = "postalCode";
+    public const string ContractType = "contractType";
+    public const string EmploymentType = "employmentType";
 
     /// <summary>Dynamic column per active hierarchy level: "orgUnit:{OrgUnitType.Code}".</summary>
     public const string OrgUnitPrefix = "orgUnit:";
@@ -63,6 +82,22 @@ public sealed class EmployeeMasterImportTemplate(ITenantContext tenant, IOrgUnit
             Static(EmployeeImportColumns.HireDate, ImportColumnDataType.Date),
             Static(EmployeeImportColumns.BirthDate, ImportColumnDataType.Date),
             Static(EmployeeImportColumns.Manager, ImportColumnDataType.Lookup),
+            Static(EmployeeImportColumns.LeaveAccrualStartDate, ImportColumnDataType.Date),
+            Options<Gender>(EmployeeImportColumns.Gender),
+            Options<MaritalStatus>(EmployeeImportColumns.MaritalStatus),
+            Static(EmployeeImportColumns.ChildCount, ImportColumnDataType.Text),
+            Options<EducationStatus>(EmployeeImportColumns.EducationStatus),
+            Options<HighestEducationLevel>(EmployeeImportColumns.HighestEducationLevel),
+            Options<MilitaryStatus>(EmployeeImportColumns.MilitaryStatus),
+            Options<DisabilityDegree>(EmployeeImportColumns.DisabilityDegree),
+            Options<BloodType>(EmployeeImportColumns.BloodType),
+            Static(EmployeeImportColumns.MobilePhone, ImportColumnDataType.Phone),
+            Static(EmployeeImportColumns.HomePhone, ImportColumnDataType.Phone),
+            Static(EmployeeImportColumns.AddressLine, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.City, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.PostalCode, ImportColumnDataType.Text),
+            Options<ContractType>(EmployeeImportColumns.ContractType),
+            Options<EmploymentType>(EmployeeImportColumns.EmploymentType),
         };
 
         var types = await orgUnits.ListActiveTypesAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
@@ -125,6 +160,12 @@ public sealed class EmployeeMasterImportTemplate(ITenantContext tenant, IOrgUnit
                 KeyPrefix + "sample.invalid_email"),
         ];
     }
+
+    /// <summary>An enum column: the workbook offers the Turkish labels, the row handler also accepts the enum member name.</summary>
+    private static ImportColumn Options<T>(string key)
+        where T : struct, Enum =>
+        new(key, EmployeeImportColumns.HeaderKey(key), HeaderText: null, ImportColumnDataType.Lookup, ImportColumnRequirement.Optional,
+            Options: EmployeeImportOptions.For<T>(), DescriptionKey: EmployeeImportColumns.HeaderKey(key) + ".description");
 
     private static ImportColumn Static(string key, ImportColumnDataType type, ImportColumnRequirement requirement = ImportColumnRequirement.Optional, bool isMatchKey = false) =>
         new(key, EmployeeImportColumns.HeaderKey(key), HeaderText: null, type, requirement, isMatchKey, DescriptionKey: EmployeeImportColumns.HeaderKey(key) + ".description");

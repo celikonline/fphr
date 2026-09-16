@@ -420,6 +420,38 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="import.column.employee.hireDate" xml:space="preserve"><value>Hire date</value></data>
   <data name="import.column.employee.birthDate" xml:space="preserve"><value>Birth date</value></data>
   <data name="import.column.employee.manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="import.column.employee.leaveAccrualStartDate" xml:space="preserve"><value>Leave accrual start date</value></data>
+  <data name="import.column.employee.gender" xml:space="preserve"><value>Gender</value></data>
+  <data name="import.column.employee.maritalStatus" xml:space="preserve"><value>Marital status</value></data>
+  <data name="import.column.employee.childCount" xml:space="preserve"><value>Number of children</value></data>
+  <data name="import.column.employee.educationStatus" xml:space="preserve"><value>Education status</value></data>
+  <data name="import.column.employee.highestEducationLevel" xml:space="preserve"><value>Highest education level</value></data>
+  <data name="import.column.employee.militaryStatus" xml:space="preserve"><value>Military status</value></data>
+  <data name="import.column.employee.disabilityDegree" xml:space="preserve"><value>Disability degree</value></data>
+  <data name="import.column.employee.bloodType" xml:space="preserve"><value>Blood type</value></data>
+  <data name="import.column.employee.mobilePhone" xml:space="preserve"><value>Mobile phone</value></data>
+  <data name="import.column.employee.homePhone" xml:space="preserve"><value>Home phone</value></data>
+  <data name="import.column.employee.addressLine" xml:space="preserve"><value>Address</value></data>
+  <data name="import.column.employee.city" xml:space="preserve"><value>City</value></data>
+  <data name="import.column.employee.postalCode" xml:space="preserve"><value>Postal code</value></data>
+  <data name="import.column.employee.contractType" xml:space="preserve"><value>Contract type</value></data>
+  <data name="import.column.employee.employmentType" xml:space="preserve"><value>Employment type</value></data>
+  <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>The real date leave entitlement accrues from; left empty, the hire date is used.</value></data>
+  <data name="import.column.employee.gender.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
+  <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
+  <data name="import.column.employee.childCount.description" xml:space="preserve"><value>An integer of 0 or more.</value></data>
+  <data name="import.column.employee.educationStatus.description" xml:space="preserve"><value>Student or Graduate.</value></data>
+  <data name="import.column.employee.highestEducationLevel.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
+  <data name="import.column.employee.militaryStatus.description" xml:space="preserve"><value>Sensitive field; only authorized users can see it.</value></data>
+  <data name="import.column.employee.disabilityDegree.description" xml:space="preserve"><value>Sensitive field; only authorized users can see it.</value></data>
+  <data name="import.column.employee.bloodType.description" xml:space="preserve"><value>Sensitive field; only authorized users can see it.</value></data>
+  <data name="import.column.employee.mobilePhone.description" xml:space="preserve"><value>Mobile phone, at most 30 characters.</value></data>
+  <data name="import.column.employee.homePhone.description" xml:space="preserve"><value>Home phone, at most 30 characters.</value></data>
+  <data name="import.column.employee.addressLine.description" xml:space="preserve"><value>Street address, at most 250 characters.</value></data>
+  <data name="import.column.employee.city.description" xml:space="preserve"><value>City, at most 100 characters.</value></data>
+  <data name="import.column.employee.postalCode.description" xml:space="preserve"><value>Postal code, at most 20 characters.</value></data>
+  <data name="import.column.employee.contractType.description" xml:space="preserve"><value>Indefinite term or Fixed term.</value></data>
+  <data name="import.column.employee.employmentType.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
   <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Employee's first name (used for matching).</value></data>
   <data name="import.column.employee.lastName.description" xml:space="preserve"><value>Employee's last name (used for matching).</value></data>
   <data name="import.column.employee.nationalId.description" xml:space="preserve"><value>11-digit Turkish national ID; employees are matched by this number.</value></data>
