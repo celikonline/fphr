@@ -7,6 +7,7 @@ import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
+import { DOCUMENTS_CARD_TAB_PERMISSIONS, DocumentsSection } from "./documents-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
 import { SubcontractorSection } from "./subcontractor-section";
@@ -92,6 +93,7 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     permission: ["employee.salary.view", "employee.employees.read", "employee.my.view"],
     component: PaymentsSection,
   },
+  { key: "documents", labelKey: "employees:card.tabs.documents", permission: DOCUMENTS_CARD_TAB_PERMISSIONS, component: DocumentsSection },
   { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, component: LeaveSection },
   { key: "overtime", labelKey: "employees:card.tabs.overtime", permission: OVERTIME_CARD_TAB_PERMISSION, component: OvertimeSection },
   { key: "other", labelKey: "employees:card.tabs.other", component: tabPlaceholder("other") },

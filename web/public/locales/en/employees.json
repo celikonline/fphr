@@ -321,6 +321,7 @@
       "customFields": "Custom fields",
       "career": "Career",
       "payments": "Payments",
+      "documents": "Files",
       "leave": "Leave",
       "overtime": "Overtime",
       "other": "Other",
@@ -329,7 +330,7 @@
     "tabNotes": {
       "leave": "Leave balances and requests appear here once the Leave module is available.",
       "overtime": "Overtime records and requests appear here once the Leave/Overtime module is available.",
-      "other": "Assets, trainings and files are added to this tab in later phases."
+      "other": "Assets and trainings are added to this tab in later phases."
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",

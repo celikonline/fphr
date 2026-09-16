@@ -678,6 +678,16 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>
+  <data name="recruitment.requisitions.read" xml:space="preserve"><value>Talep formlarını görüntüleme</value></data>
+  <data name="recruitment.requisitions.manage" xml:space="preserve"><value>Talep formu oluşturma, onaya gönderme veya iptal etme</value></data>
+  <data name="recruitment.requisition.not_found" xml:space="preserve"><value>Talep formu bulunamadı.</value></data>
+  <data name="recruitment.requisition.title_required" xml:space="preserve"><value>Talep formu başlığı zorunludur.</value></data>
+  <data name="recruitment.requisition.headcount_invalid" xml:space="preserve"><value>Talep edilen kişi sayısı sıfırdan büyük olmalıdır.</value></data>
+  <data name="recruitment.requisition.not_submittable" xml:space="preserve"><value>Yalnızca taslak durumundaki talep formu onaya gönderilebilir.</value></data>
+  <data name="recruitment.requisition.not_pending" xml:space="preserve"><value>Talep formu onay bekleme durumunda değil.</value></data>
+  <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Yalnızca taslak veya onay bekleyen talep formu iptal edilebilir.</value></data>
+  <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>Bağlı talep formu henüz onaylanmadığı için ilan yayınlanamaz.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
@@ -701,4 +711,21 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="document_type.not_found" xml:space="preserve"><value>Belge tipi bulunamadı.</value></data>
+  <data name="document_type.code_required" xml:space="preserve"><value>Belge tipi kodu zorunludur.</value></data>
+  <data name="document_type.code_too_long" xml:space="preserve"><value>Belge tipi kodu çok uzun.</value></data>
+  <data name="document_type.name_required" xml:space="preserve"><value>Belge tipi adı zorunludur.</value></data>
+  <data name="document_type.condition_required_for_conditional" xml:space="preserve"><value>Koşullu aşama için bir koşul seçilmelidir.</value></data>
+  <data name="document_type.condition_not_allowed" xml:space="preserve"><value>Koşul yalnızca koşullu aşamada seçilebilir.</value></data>
+  <data name="document_type.invalid_quantity" xml:space="preserve"><value>Adet en az 1 olmalıdır.</value></data>
+  <data name="document_type.invalid_renewal_period" xml:space="preserve"><value>Yenileme süresi en az 1 gün olmalıdır.</value></data>
+  <data name="document_type.invalid_retention" xml:space="preserve"><value>Saklama süresi en az 1 gün olmalıdır.</value></data>
+  <data name="document_type.system_immutable" xml:space="preserve"><value>Sistem belge tipinin bu alanı değiştirilemez.</value></data>
+  <data name="employee_document_requirement.not_found" xml:space="preserve"><value>Belge gereksinimi bulunamadı.</value></data>
+  <data name="employee_document_requirement.waive_reason_required" xml:space="preserve"><value>Muafiyet nedeni zorunludur.</value></data>
+  <data name="documents.document_types.view" xml:space="preserve"><value>Belge tiplerini görüntüleme</value></data>
+  <data name="documents.document_types.manage" xml:space="preserve"><value>Belge tiplerini yönetme</value></data>
+  <data name="documents.requirements.view" xml:space="preserve"><value>Özlük belge gereksinimlerini görüntüleme</value></data>
+  <data name="documents.requirements.manage" xml:space="preserve"><value>Özlük belge gereksinimlerini yönetme</value></data>
+  <data name="documents.my.requirements" xml:space="preserve"><value>Kendi özlük belge gereksinimlerini görüntüleme</value></data>
 </root>

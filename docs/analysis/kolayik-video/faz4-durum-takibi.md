@@ -5,13 +5,13 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 **Son güncelleme:** 2026-09-16
 **Nasıl güncellenir:** Kalem durumu değişince satırı koda göre güncelle, tarihi değiştir. Durumlar: ❌ Başlanmadı · 🟡 Kısmi · ✅ Bitti.
 
-**Not (2026-09-16):** Bu oturumda çalışma ağacında eşzamanlı başka oturum(lar)ın da yazdığı çok sayıda commit edilmemiş değişiklik bulundu (yeni `src/Modules/Attendance`, `Payroll`, `Recruitment`, `Analytics`, Employee E4/E5a/Terminations çalışması, Leave `LegislationParameter` genişletmesi, web navigasyon/ana sayfa değişiklikleri, yeni `faz3-durum-takibi.md`/`faz7-durum-takibi.md`) — bu dosya yalnızca aşağıdaki D1 kalemini (Documents modülü) izler, diğer eşzamanlı işler kendi durum dosyalarında izlenmeli.
+**Not (2026-09-16):** Bu oturumda çalışma ağacında eşzamanlı başka oturum(lar)ın da yazdığı çok sayıda commit edilmemiş değişiklik bulundu (yeni `src/Modules/Attendance`, `Payroll`, `Recruitment`, `Analytics`, Employee E4/E5a/Terminations çalışması, Leave `LegislationParameter` genişletmesi, web navigasyon/ana sayfa değişiklikleri, yeni `faz3-durum-takibi.md`/`faz7-durum-takibi.md`) — bu dosya yalnızca aşağıdaki D1/D2 kalemlerini (Documents modülü) izler, diğer eşzamanlı işler kendi durum dosyalarında izlenmeli.
 
 ## Faz 4 kalemleri
 
 | # | Kalem | Paket | Durum | Kanıt | Eksik / Not |
 |---|---|---|---|---|---|
-| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1 | 🟡 Kısmi | Bkz. aşağıdaki "D1" bölümü | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; yalnız taksonomi + koşullu değerlendirme + manuel karşılama var |
+| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2 | 🟡 Kısmi | Bkz. aşağıdaki "D1"/"D2" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) var; belge yükleyip gereksinime bağlama ayrı bir kontrat açığına takılı |
 | 62 | Harcama: çoklu fiş + vergi oranı + mobil OCR | — | ❌ Başlanmadı | — | `Expense` modülü henüz yok |
 | 63 | Avans talebi: para birimi, taksit | — | ❌ Başlanmadı | — | `Expense` modülü henüz yok |
 | 64 | "Kendi hesabım > Ödemeler" birleşik ekran | — | ❌ Başlanmadı | — | Expense'e bağlı |
@@ -25,7 +25,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 ## D1 — Documents: belge tipi taksonomisi + koşullu gereksinim değerlendirici (yalnız backend)
 
-**Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
+**Dal:** `eb6c4eb` (feat(documents): add document type definitions and employee document requirement rules) — commit edildi.
 
 **Kapsam:** `DocumentTypeDefinition` (5 aşamalı taksonomi: Onboarding/Conditional/DuringEmployment/Offboarding/Recommended; tenant başına kopyalanan, düzenlenebilir sistem seed'i — 43 satır, `LeaveType` ile aynı desen), `DocumentRequirementCondition` (12 koşul türü: yaş<18, engellilik, yabancı uyruk, teşvik, engelli vergi indirimi, eski hükümlü/terör mağduru, periyodik sağlık kontrolü, ehliyet gereksinimi, açık zimmet, ağır/tehlikeli iş, FM onayı, vardiyalı çalışma), saf domain servisi `DocumentRequirementEvaluator.ResolveAtHire` (yalnız Onboarding + eşleşen Conditional; DuringEmployment/Offboarding/Recommended işe alımda tetiklenmiyor — olay/sihirbaz güdümlü, kapsam dışı), `EmployeeDocumentRequirement` (çalışan × belge tipi; Missing/Uploaded/Waived, muafiyet nedeni/kim/ne zaman, `Document`'e bağlantı).
 
@@ -36,13 +36,33 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 **Doğrulama:** `Sense.Modules.Documents.Tests` (yeni proje) 42/42 test geçti (domain: `DocumentTypeDefinition`/`EmployeeDocumentRequirement`/`DocumentRequirementEvaluator`; application: Create/Update/List/Waive/ClearWaive handler'ları + `EmployeeHiredDocumentRequirementHandler` — eşleşen/eşleşmeyen koşul + idempotency). `dotnet build Sense.slnx` bu değişiklikler için 0 hata verdi. Tüm çözümün `dotnet test`'i eşzamanlı diğer oturumların etkisiyle bu oturumda tamamlanamadı — bir dahaki fırsatta tekrar çalıştırılıp diğer modüllerde (Attendance/Payroll/Recruitment/Analytics/Terminations) regresyon olmadığı doğrulanmalı.
 
 **Eksik / Not:**
-- Web arayüzü yok (Ayarlar > Belge tipleri sayfası, çalışan kartı "Dosyalar" sekmesi, Eksik belge raporu sayfası) — sonraki paket (D2).
+- ~~Web arayüzü yok~~ → bkz. aşağıdaki D2.
 - #68'in "sistem kayıtları belge olarak düşer" kısmı yapılmadı: `IDocumentRenderer` (PDF/Word), `Document.SourceRef`/`SignatureStatus` alanları, Leave/Workflow olay tüketicileri (izin formu, FM onay belgesi vb.) — Faz 1'in "İzin formu PDF ve Word" kalemiyle birlikte ele alınmalı, ayrı paket.
 - Test projesi Postgres/Testcontainers entegrasyon testi değil, NSubstitute mock testleri — modülün geri kalanının `[Collection("PostgreSQL")]` deseniyle tutarlı değil; takip gerekiyor.
 - Koşullardan yalnız 2'si (`AgeUnder18`, `HasDisability`) gerçek veriyle değerlendiriliyor; kalan 10'u (`NonTurkishNational`, `HasIncentive`, `UsesDisabilityTaxReduction`, `ExConvictOrTerrorVictim`, `RequiresPeriodicHealthCheck`, `RequiresDriving`, `HasOpenAssets`, `VeryHazardousJob`, `HasOvertimeConsent`, `IsShiftWorker`) ilgili modüller (Employee Nationality alanı, Payroll teşvik, Assets, Attendance, Leave FM onayı) gelene kadar `false` sabit — kod içinde açıkça not düşüldü.
 - Grace period (30 gün) ve reevaluate komutunun tarih tabanı sabit kodlanmış; tenant ayarı değil.
-- Kod henüz commit edilmedi.
+
+## D2 — Documents: web arayüzü (Ayarlar > Belge tipleri, çalışan kartı "Dosyalar", Eksik belge raporu)
+
+**Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
+
+**Kapsam:**
+- `Ayarlar > Şirket > Belge tipleri` (`web/src/pages/settings/document-types.tsx`): D1'deki `DocumentTypesController` için tam CRUD (liste/oluştur/düzenle/aktif-pasif), `termination-reasons.tsx` ile aynı desen (liste + modal dialog, sistem/kiracı rozeti, aşama filtresi).
+- `Ayarlar > Şirket > Eksik belge raporu` (`web/src/pages/settings/missing-documents-report.tsx`): `GetMissingDocumentReportQuery` için sayfalı, durum filtreli tablo; çalışan adına tıklayınca ilgili çalışanın "Dosyalar" sekmesine gider.
+- Çalışan kartı "Dosyalar" sekmesi (`web/src/components/employees/documents-section.tsx`, `card-tabs.tsx`'e eklendi): çalışanın belge gereksinimlerini durum/aşama/son tarih ile listeler; `documents.requirements.view` varsa `employees/{id}/requirements`, yoksa (`documents.my.requirements`) `me/requirements` çağrılır. HR için Muaf tut (nedenli) / Muafiyeti kaldır / Yeniden değerlendir aksiyonları.
+- Servis katmanı: `web/src/services/documents.service.ts`.
+- Yeni i18n namespace'i `documents` (tr/en gerçek çeviri, de `[DE] ...` placeholder deseni) + `navigation.json`/`employees.json`'a ilgili anahtarlar.
+- `SharedResource(.en).resx`'e D1'in belge tipi/gereksinim hata kodları ve 5 izin adı için lokalize metin eklendi (önceden hiçbiri yoktu, hata mesajları kod olarak dönüyordu).
+
+**Kapsam dışı (bilinçli):** Belgeyi doğrudan sekmeden yükleyip gereksinime bağlama (`POST .../requirements/{id}/link`) eklenmedi — bu, mevcut `Document` yükleme akışının bilinen bir kontrat açığına (`initiate-upload` yanıtı yeni `Document.Id`'yi döndürmüyor, bkz. `company.service.ts` içindeki not) takılıyor; ayrı bir pakette ele alınmalı.
+
+**Doğrulama:** `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` (Docker `node:24-alpine`) hatasız; `dotnet build` ile `Sense.Shared.Infrastructure` (resx değişiklikleri) hatasız.
+
+**Eksik / Not:**
+- Belge yükleme + gereksinime bağlama (yukarıdaki kapsam dışı not).
+- Rapor sayfasında arama/dışa aktarma yok (Audit Log sayfasındaki gibi); şimdilik yalnız durum filtresi.
 
 ## Değişiklik geçmişi
 
 - 2026-09-16: Dosya oluşturuldu; D1 (Documents belge tipi taksonomisi + koşullu gereksinim değerlendirici, backend) tamamlandı.
+- 2026-09-16: D2 (web arayüzü: Belge tipleri ayarları, çalışan kartı Dosyalar sekmesi, Eksik belge raporu) eklendi.

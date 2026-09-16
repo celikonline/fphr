@@ -32,6 +32,8 @@ import {
   Workflow,
   CalendarClock,
   Stamp,
+  FileStack,
+  FileWarning,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -77,6 +79,8 @@ export const SETTINGS_PERMISSIONS = {
   customFields: ["employee.customfield.view"],
   terminationReasons: ["employee.termination_reason.manage"],
   subcontractors: ["employee.subcontractor.manage"],
+  documentTypes: ["documents.document_types.view", "documents.document_types.manage"],
+  missingDocuments: ["documents.requirements.view"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -290,6 +294,22 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/subcontractors",
         icon: Building2,
         permissions: SETTINGS_PERMISSIONS.subcontractors,
+      },
+      {
+        key: "documentTypes",
+        labelKey: "settings.documentTypes",
+        descriptionKey: "settings.documentTypesDesc",
+        path: "/app/settings/company/document-types",
+        icon: FileStack,
+        permissions: SETTINGS_PERMISSIONS.documentTypes,
+      },
+      {
+        key: "missingDocuments",
+        labelKey: "settings.missingDocuments",
+        descriptionKey: "settings.missingDocumentsDesc",
+        path: "/app/settings/company/missing-documents",
+        icon: FileWarning,
+        permissions: SETTINGS_PERMISSIONS.missingDocuments,
       },
     ],
   },

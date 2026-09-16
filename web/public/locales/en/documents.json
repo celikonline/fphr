@@ -1,0 +1,109 @@
+{
+  "documentTypes": {
+    "title": "Document types",
+    "subtitle": "Manage the mandatory and conditional document types for the personnel file.",
+    "add": "Add document type",
+    "editTitle": "Edit document type",
+    "showInactive": "Show inactive document types too",
+    "allStages": "All stages",
+    "active": "Active",
+    "inactive": "Inactive",
+    "system": "System",
+    "custom": "Tenant",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "empty": "No document types recorded.",
+    "saved": "Document type saved.",
+    "statusSaved": "Document type status updated.",
+    "codeHint": "Stable code used in exports and reports; cannot be changed afterwards.",
+    "codeLocked": "The code cannot be changed once created.",
+    "stageLocked": "The stage cannot be changed once created.",
+    "renewalHint": "Leave empty if the document never expires.",
+    "retentionHint": "Leave empty to skip a default retention period.",
+    "sensitive": "Special-category data",
+    "columns": {
+      "name": "Name",
+      "code": "Code",
+      "stage": "Stage",
+      "condition": "Condition",
+      "required": "Required",
+      "origin": "Origin",
+      "status": "Status",
+      "renewalPeriodDays": "Renewal period (days)",
+      "quantity": "Quantity",
+      "sortOrder": "Sort order",
+      "defaultRetentionDays": "Default retention (days)"
+    },
+    "errors": {
+      "generic": "The document type could not be saved.",
+      "loadFailed": "Document types could not be loaded.",
+      "codeRequired": "Code is required.",
+      "codeTooLong": "Code is too long.",
+      "nameRequired": "Name is required.",
+      "conditionRequired": "A condition must be selected for the conditional stage.",
+      "conditionNotAllowed": "A condition can only be selected for the conditional stage.",
+      "invalidQuantity": "Quantity must be at least 1.",
+      "invalidRenewalPeriod": "Renewal period must be at least 1 day.",
+      "invalidRetention": "Retention period must be at least 1 day."
+    }
+  },
+  "requirements": {
+    "title": "Personnel documents",
+    "reevaluate": "Reevaluate",
+    "reevaluated": "Document requirements reevaluated.",
+    "empty": "No document requirements for this employee.",
+    "dueDate": "Due date",
+    "waivedReason": "Waiver reason",
+    "waive": "Waive",
+    "waiveTitle": "Waive {{name}}",
+    "clearWaive": "Clear waiver",
+    "saved": "Saved.",
+    "errors": {
+      "generic": "The action could not be completed.",
+      "loadFailed": "Document requirements could not be loaded.",
+      "reasonRequired": "A waiver reason is required."
+    }
+  },
+  "report": {
+    "title": "Missing document report",
+    "subtitle": "View missing, uploaded and waived personnel documents across the tenant.",
+    "allStatuses": "All statuses",
+    "empty": "No records found.",
+    "columns": {
+      "employee": "Employee",
+      "documentType": "Document type",
+      "stage": "Stage",
+      "status": "Status",
+      "dueDate": "Due date"
+    }
+  },
+  "enum": {
+    "notSet": "Not set",
+    "stage": {
+      "onboarding": "Onboarding",
+      "conditional": "Conditional",
+      "duringEmployment": "During employment",
+      "offboarding": "Offboarding",
+      "recommended": "Recommended"
+    },
+    "condition": {
+      "ageUnder18": "Under 18",
+      "hasDisability": "Has disability",
+      "nonTurkishNational": "Non-Turkish national",
+      "hasIncentive": "Uses an incentive",
+      "usesDisabilityTaxReduction": "Disability tax reduction",
+      "exConvictOrTerrorVictim": "Ex-convict / terror victim",
+      "requiresPeriodicHealthCheck": "Periodic health check",
+      "requiresDriving": "Requires a driving license",
+      "hasOpenAssets": "Has open assets",
+      "veryHazardousJob": "Very hazardous job",
+      "hasOvertimeConsent": "Overtime consent",
+      "isShiftWorker": "Shift worker"
+    },
+    "status": {
+      "missing": "Missing",
+      "uploaded": "Uploaded",
+      "waived": "Waived"
+    }
+  }
+}

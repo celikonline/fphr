@@ -1,0 +1,109 @@
+{
+  "documentTypes": {
+    "title": "[DE] Document types",
+    "subtitle": "[DE] Manage the mandatory and conditional document types for the personnel file.",
+    "add": "[DE] Add document type",
+    "editTitle": "[DE] Edit document type",
+    "showInactive": "[DE] Show inactive document types too",
+    "allStages": "[DE] All stages",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "system": "[DE] System",
+    "custom": "[DE] Tenant",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "empty": "[DE] No document types recorded.",
+    "saved": "[DE] Document type saved.",
+    "statusSaved": "[DE] Document type status updated.",
+    "codeHint": "[DE] Stable code used in exports and reports; cannot be changed afterwards.",
+    "codeLocked": "[DE] The code cannot be changed once created.",
+    "stageLocked": "[DE] The stage cannot be changed once created.",
+    "renewalHint": "[DE] Leave empty if the document never expires.",
+    "retentionHint": "[DE] Leave empty to skip a default retention period.",
+    "sensitive": "[DE] Special-category data",
+    "columns": {
+      "name": "[DE] Name",
+      "code": "[DE] Code",
+      "stage": "[DE] Stage",
+      "condition": "[DE] Condition",
+      "required": "[DE] Required",
+      "origin": "[DE] Origin",
+      "status": "[DE] Status",
+      "renewalPeriodDays": "[DE] Renewal period (days)",
+      "quantity": "[DE] Quantity",
+      "sortOrder": "[DE] Sort order",
+      "defaultRetentionDays": "[DE] Default retention (days)"
+    },
+    "errors": {
+      "generic": "[DE] The document type could not be saved.",
+      "loadFailed": "[DE] Document types could not be loaded.",
+      "codeRequired": "[DE] Code is required.",
+      "codeTooLong": "[DE] Code is too long.",
+      "nameRequired": "[DE] Name is required.",
+      "conditionRequired": "[DE] A condition must be selected for the conditional stage.",
+      "conditionNotAllowed": "[DE] A condition can only be selected for the conditional stage.",
+      "invalidQuantity": "[DE] Quantity must be at least 1.",
+      "invalidRenewalPeriod": "[DE] Renewal period must be at least 1 day.",
+      "invalidRetention": "[DE] Retention period must be at least 1 day."
+    }
+  },
+  "requirements": {
+    "title": "[DE] Personnel documents",
+    "reevaluate": "[DE] Reevaluate",
+    "reevaluated": "[DE] Document requirements reevaluated.",
+    "empty": "[DE] No document requirements for this employee.",
+    "dueDate": "[DE] Due date",
+    "waivedReason": "[DE] Waiver reason",
+    "waive": "[DE] Waive",
+    "waiveTitle": "[DE] Waive {{name}}",
+    "clearWaive": "[DE] Clear waiver",
+    "saved": "[DE] Saved.",
+    "errors": {
+      "generic": "[DE] The action could not be completed.",
+      "loadFailed": "[DE] Document requirements could not be loaded.",
+      "reasonRequired": "[DE] A waiver reason is required."
+    }
+  },
+  "report": {
+    "title": "[DE] Missing document report",
+    "subtitle": "[DE] View missing, uploaded and waived personnel documents across the tenant.",
+    "allStatuses": "[DE] All statuses",
+    "empty": "[DE] No records found.",
+    "columns": {
+      "employee": "[DE] Employee",
+      "documentType": "[DE] Document type",
+      "stage": "[DE] Stage",
+      "status": "[DE] Status",
+      "dueDate": "[DE] Due date"
+    }
+  },
+  "enum": {
+    "notSet": "[DE] Not set",
+    "stage": {
+      "onboarding": "[DE] Onboarding",
+      "conditional": "[DE] Conditional",
+      "duringEmployment": "[DE] During employment",
+      "offboarding": "[DE] Offboarding",
+      "recommended": "[DE] Recommended"
+    },
+    "condition": {
+      "ageUnder18": "[DE] Under 18",
+      "hasDisability": "[DE] Has disability",
+      "nonTurkishNational": "[DE] Non-Turkish national",
+      "hasIncentive": "[DE] Uses an incentive",
+      "usesDisabilityTaxReduction": "[DE] Disability tax reduction",
+      "exConvictOrTerrorVictim": "[DE] Ex-convict / terror victim",
+      "requiresPeriodicHealthCheck": "[DE] Periodic health check",
+      "requiresDriving": "[DE] Requires a driving license",
+      "hasOpenAssets": "[DE] Has open assets",
+      "veryHazardousJob": "[DE] Very hazardous job",
+      "hasOvertimeConsent": "[DE] Overtime consent",
+      "isShiftWorker": "[DE] Shift worker"
+    },
+    "status": {
+      "missing": "[DE] Missing",
+      "uploaded": "[DE] Uploaded",
+      "waived": "[DE] Waived"
+    }
+  }
+}

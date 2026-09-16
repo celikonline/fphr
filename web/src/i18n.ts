@@ -31,6 +31,7 @@ i18n
       "notifications",
       "leave",
       "recruitment",
+      "documents",
     ],
     interpolation: {
       escapeValue: false,

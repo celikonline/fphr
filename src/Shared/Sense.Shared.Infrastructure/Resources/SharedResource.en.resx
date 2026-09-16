@@ -669,6 +669,16 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
+  <data name="recruitment.requisitions.read" xml:space="preserve"><value>View Job Requisitions</value></data>
+  <data name="recruitment.requisitions.manage" xml:space="preserve"><value>Create, submit for approval, or cancel a job requisition</value></data>
+  <data name="recruitment.requisition.not_found" xml:space="preserve"><value>Job requisition not found.</value></data>
+  <data name="recruitment.requisition.title_required" xml:space="preserve"><value>A job requisition title is required.</value></data>
+  <data name="recruitment.requisition.headcount_invalid" xml:space="preserve"><value>Requested headcount must be greater than zero.</value></data>
+  <data name="recruitment.requisition.not_submittable" xml:space="preserve"><value>Only a draft requisition can be submitted for approval.</value></data>
+  <data name="recruitment.requisition.not_pending" xml:space="preserve"><value>The requisition is not awaiting a decision.</value></data>
+  <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Only a draft or pending requisition can be cancelled.</value></data>
+  <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
+  <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>The linked requisition has not been approved yet, so this posting cannot be published.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>View timesheets</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
@@ -692,4 +702,21 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="document_type.not_found" xml:space="preserve"><value>Document type not found.</value></data>
+  <data name="document_type.code_required" xml:space="preserve"><value>Document type code is required.</value></data>
+  <data name="document_type.code_too_long" xml:space="preserve"><value>Document type code is too long.</value></data>
+  <data name="document_type.name_required" xml:space="preserve"><value>Document type name is required.</value></data>
+  <data name="document_type.condition_required_for_conditional" xml:space="preserve"><value>A condition must be selected for the conditional stage.</value></data>
+  <data name="document_type.condition_not_allowed" xml:space="preserve"><value>A condition can only be selected for the conditional stage.</value></data>
+  <data name="document_type.invalid_quantity" xml:space="preserve"><value>Quantity must be at least 1.</value></data>
+  <data name="document_type.invalid_renewal_period" xml:space="preserve"><value>Renewal period must be at least 1 day.</value></data>
+  <data name="document_type.invalid_retention" xml:space="preserve"><value>Retention period must be at least 1 day.</value></data>
+  <data name="document_type.system_immutable" xml:space="preserve"><value>This field of a system document type cannot be changed.</value></data>
+  <data name="employee_document_requirement.not_found" xml:space="preserve"><value>Document requirement not found.</value></data>
+  <data name="employee_document_requirement.waive_reason_required" xml:space="preserve"><value>A waiver reason is required.</value></data>
+  <data name="documents.document_types.view" xml:space="preserve"><value>View document types</value></data>
+  <data name="documents.document_types.manage" xml:space="preserve"><value>Manage document types</value></data>
+  <data name="documents.requirements.view" xml:space="preserve"><value>View personnel document requirements</value></data>
+  <data name="documents.requirements.manage" xml:space="preserve"><value>Manage personnel document requirements</value></data>
+  <data name="documents.my.requirements" xml:space="preserve"><value>View own personnel document requirements</value></data>
 </root>

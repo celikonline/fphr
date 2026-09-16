@@ -1,0 +1,109 @@
+{
+  "documentTypes": {
+    "title": "Belge tipleri",
+    "subtitle": "Özlük dosyası için zorunlu ve koşullu belge tiplerini yönetin.",
+    "add": "Belge tipi ekle",
+    "editTitle": "Belge tipini düzenle",
+    "showInactive": "Pasif belge tiplerini de göster",
+    "allStages": "Tüm aşamalar",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "system": "Sistem",
+    "custom": "Kiracı",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "empty": "Kayıtlı belge tipi yok.",
+    "saved": "Belge tipi kaydedildi.",
+    "statusSaved": "Belge tipi durumu güncellendi.",
+    "codeHint": "Aktarım ve raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
+    "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+    "stageLocked": "Aşama oluşturulduktan sonra değiştirilemez.",
+    "renewalHint": "Boş bırakılırsa belge süresiz kabul edilir.",
+    "retentionHint": "Boş bırakılırsa varsayılan saklama süresi uygulanmaz.",
+    "sensitive": "Özel nitelikli veri",
+    "columns": {
+      "name": "Ad",
+      "code": "Kod",
+      "stage": "Aşama",
+      "condition": "Koşul",
+      "required": "Zorunlu",
+      "origin": "Kaynak",
+      "status": "Durum",
+      "renewalPeriodDays": "Yenileme süresi (gün)",
+      "quantity": "Adet",
+      "sortOrder": "Sıra",
+      "defaultRetentionDays": "Varsayılan saklama süresi (gün)"
+    },
+    "errors": {
+      "generic": "Belge tipi kaydedilemedi.",
+      "loadFailed": "Belge tipleri yüklenemedi.",
+      "codeRequired": "Kod zorunludur.",
+      "codeTooLong": "Kod çok uzun.",
+      "nameRequired": "Ad zorunludur.",
+      "conditionRequired": "Koşullu aşama için bir koşul seçilmelidir.",
+      "conditionNotAllowed": "Koşul yalnızca koşullu aşamada seçilebilir.",
+      "invalidQuantity": "Adet en az 1 olmalıdır.",
+      "invalidRenewalPeriod": "Yenileme süresi en az 1 gün olmalıdır.",
+      "invalidRetention": "Saklama süresi en az 1 gün olmalıdır."
+    }
+  },
+  "requirements": {
+    "title": "Özlük belgeleri",
+    "reevaluate": "Yeniden değerlendir",
+    "reevaluated": "Belge gereksinimleri yeniden değerlendirildi.",
+    "empty": "Bu çalışan için belge gereksinimi bulunmuyor.",
+    "dueDate": "Son tarih",
+    "waivedReason": "Muafiyet nedeni",
+    "waive": "Muaf tut",
+    "waiveTitle": "{{name}} için muafiyet",
+    "clearWaive": "Muafiyeti kaldır",
+    "saved": "Kaydedildi.",
+    "errors": {
+      "generic": "İşlem gerçekleştirilemedi.",
+      "loadFailed": "Belge gereksinimleri yüklenemedi.",
+      "reasonRequired": "Muafiyet nedeni zorunludur."
+    }
+  },
+  "report": {
+    "title": "Eksik belge raporu",
+    "subtitle": "Kiracı genelinde eksik, yüklenmiş ve muaf tutulmuş özlük belgelerini görüntüleyin.",
+    "allStatuses": "Tüm durumlar",
+    "empty": "Kayıt bulunamadı.",
+    "columns": {
+      "employee": "Çalışan",
+      "documentType": "Belge tipi",
+      "stage": "Aşama",
+      "status": "Durum",
+      "dueDate": "Son tarih"
+    }
+  },
+  "enum": {
+    "notSet": "Seçilmedi",
+    "stage": {
+      "onboarding": "İşe alım",
+      "conditional": "Koşullu",
+      "duringEmployment": "Çalışma sürecinde",
+      "offboarding": "İşten ayrılış",
+      "recommended": "Önerilen"
+    },
+    "condition": {
+      "ageUnder18": "18 yaşından küçük",
+      "hasDisability": "Engellilik",
+      "nonTurkishNational": "Yabancı uyruklu",
+      "hasIncentive": "Teşvikten yararlanma",
+      "usesDisabilityTaxReduction": "Engellilik vergi indirimi",
+      "exConvictOrTerrorVictim": "Eski hükümlü / terör mağduru",
+      "requiresPeriodicHealthCheck": "Periyodik sağlık kontrolü",
+      "requiresDriving": "Ehliyet gereksinimi",
+      "hasOpenAssets": "Açık zimmet kaydı",
+      "veryHazardousJob": "Çok tehlikeli iş",
+      "hasOvertimeConsent": "Fazla mesai onayı",
+      "isShiftWorker": "Vardiyalı çalışma"
+    },
+    "status": {
+      "missing": "Eksik",
+      "uploaded": "Yüklendi",
+      "waived": "Muaf"
+    }
+  }
+}
