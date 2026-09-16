@@ -86,6 +86,63 @@
     "halfDay": "Half day",
     "hourly": "Hourly"
   },
+  "negativeBalance": {
+    "none": "Off",
+    "unlimited": "Unlimited negative balance",
+    "limited": "Limited negative balance"
+  },
+  "accrualTiming": {
+    "endOfPeriod": "End of period",
+    "startOfPeriod": "Start of period"
+  },
+  "accrualBasis": {
+    "hireDate": "Based on hire date",
+    "calendarYear": "Based on calendar year"
+  },
+  "types": {
+    "addTitle": "Add new type and rule",
+    "editTitle": "Edit leave type",
+    "added": "Leave type added.",
+    "saved": "Leave type updated.",
+    "name": "Type name",
+    "description": "Description",
+    "isPaid": "Paid leave",
+    "codeHint": "For legislation/report mapping; pick \"Custom leave\" for most new types.",
+    "section": {
+      "general": "General",
+      "limit": "Limit and accrual",
+      "rules": "Usage rules"
+    },
+    "perRequestMaxDays": "Max days per request",
+    "annualDays": "Annual days",
+    "ageExceptionEnabled": "Age exception",
+    "ageExceptionMinDays": "Days under the exception",
+    "negativeBalance": "Negative balance",
+    "negativeBalanceLimitDays": "Negative balance limit (days)",
+    "accrualTiming": "Accrual timing",
+    "accrualBasis": "Accrual period start",
+    "carryOverMaxDays": "Carry-over limit (days)",
+    "seniorityTiers": "Seniority tiers",
+    "addTier": "Add tier",
+    "noTiers": "No tiers defined.",
+    "tierAfterYears": "Years of service",
+    "tierComparison": "Comparison",
+    "tierGreaterOrEqual": "And above",
+    "tierGreaterThan": "Above",
+    "tierExtraDays": "Extra days",
+    "minConsecutiveDays": "Min consecutive days",
+    "maxConsecutiveDays": "Max consecutive days",
+    "waitingPeriodMonths": "Waiting period (months)",
+    "waitingPeriodMonthsHint": "How long after hire this type cannot be requested.",
+    "requiresDescription": "Description required",
+    "requiresSubstitute": "Substitute assignment required",
+    "requiresDocument": "Document required",
+    "countsNonWorkingDays": "Also count weekend/holiday days",
+    "countsTowardAccrualService": "Counts towards accrual seniority",
+    "showTypeNameOnCalendar": "Show type name on calendar",
+    "isSensitive": "Sensitive type (health data etc.)",
+    "allowSelfServiceRequest": "Employees can request it themselves"
+  },
   "summary": {
     "title": "Summary",
     "details": "Details",
@@ -206,6 +263,8 @@
     "unpaid": "Unpaid",
     "active": "Active",
     "disabled": "Disabled",
+    "enable": "Enable",
+    "disable": "Disable",
     "visible": "Visible",
     "hidden": "Hidden",
     "nameRequired": "Name is required.",

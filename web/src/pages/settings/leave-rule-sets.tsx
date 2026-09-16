@@ -22,12 +22,13 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { AlertTriangle, Copy, Pencil, ScrollText, Search, Star, Trash2, UserPlus } from "lucide-react";
+import { AlertTriangle, Copy, Pencil, Plus, ScrollText, Search, Star, Trash2, UserPlus } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { useDays, useLeaveName } from "@/components/leave/leave-shared";
+import { LeaveTypeDialog } from "@/components/leave/leave-type-dialog";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { listEmployees } from "@/services/employees.service";
@@ -38,8 +39,10 @@ import {
   listLeaveRuleSets,
   renameLeaveRuleSet,
   setDefaultLeaveRuleSet,
+  setLeaveTypeDisabled,
   type LeaveRuleSet,
   type LeaveRuleSetAssignmentResult,
+  type LeaveType,
   type LeaveTypeSettings,
 } from "@/services/leave.service";
 
@@ -61,6 +64,7 @@ function LeaveRuleSets() {
   const leaveName = useLeaveName();
   const canManage = usePermission("leave.rule_sets.manage");
   const canAssign = usePermission("leave.rule_sets.assign");
+  const canManageTypes = usePermission("leave.types.manage");
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: RULE_SETS_KEY, queryFn: listLeaveRuleSets });
   const sets = [...(query.data ?? [])].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || leaveName(a.name).localeCompare(leaveName(b.name)));
@@ -70,6 +74,7 @@ function LeaveRuleSets() {
   const [renaming, setRenaming] = useState<LeaveRuleSet | null>(null);
   const [assigning, setAssigning] = useState<LeaveRuleSet | null>(null);
   const [deleting, setDeleting] = useState<LeaveRuleSet | null>(null);
+  const [typeDialog, setTypeDialog] = useState<"new" | LeaveType | null>(null);
 
   const onError = (error: unknown) =>
     toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("leave:genericError")) });
@@ -171,8 +176,13 @@ function LeaveRuleSets() {
                 <Title order={4}>
                   {leaveName(selected.name)} — {t("leave:ruleSets.typesTitle")}
                 </Title>
-                {(canManage || canAssign) && (
+                {(canManage || canAssign || canManageTypes) && (
                   <Group gap="xs">
+                    {canManageTypes && (
+                      <Button type="button" size="sm" leftSection={<Plus size={16} />} onClick={() => setTypeDialog("new")}>
+                        {t("leave:types.addTitle")}
+                      </Button>
+                    )}
                     {canAssign && (
                       <Button type="button" size="sm" variant="default" leftSection={<UserPlus size={16} />} onClick={() => setAssigning(selected)}>
                         {t("leave:ruleSets.assign")}
@@ -230,7 +240,7 @@ function LeaveRuleSets() {
                     {t("leave:ruleSets.noTypes")}
                   </Text>
                 ) : (
-                  <LeaveTypesTable set={selected} />
+                  <LeaveTypesTable set={selected} canManageTypes={canManageTypes} onEdit={setTypeDialog} />
                 )}
               </div>
             </Card>
@@ -252,6 +262,14 @@ function LeaveRuleSets() {
       {renaming && <RenameRuleSetDialog set={renaming} onClose={() => setRenaming(null)} />}
 
       {assigning && <AssignRuleSetDialog set={assigning} onClose={() => setAssigning(null)} />}
+
+      {typeDialog && selected && (
+        <LeaveTypeDialog
+          ruleSet={selected}
+          editing={typeDialog === "new" ? null : typeDialog}
+          onClose={() => setTypeDialog(null)}
+        />
+      )}
 
       <ConfirmDialog
         open={Boolean(deleting)}
@@ -515,10 +533,25 @@ function limitText(settings: LeaveTypeSettings, t: (key: string) => string, days
 
 type LeaveTypeRow = LeaveRuleSet["types"][number];
 
-function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
-  const { t } = useTranslation(["leave"]);
+function LeaveTypesTable({
+  set,
+  canManageTypes,
+  onEdit,
+}: {
+  set: LeaveRuleSet;
+  canManageTypes: boolean;
+  onEdit: (type: LeaveType) => void;
+}) {
+  const { t } = useTranslation(["leave", "common"]);
   const leaveName = useLeaveName();
   const days = useDays();
+  const queryClient = useQueryClient();
+
+  const toggleDisabledMutation = useMutation({
+    mutationFn: (row: LeaveTypeRow) => setLeaveTypeDisabled(set.id, row.id, !row.settings.isDisabled),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: RULE_SETS_KEY }),
+    onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("leave:genericError")) }),
+  });
 
   // Disabled types render muted; DataTable rows take no class, so every cell carries it.
   const text = (row: LeaveTypeRow, value: string) => (
@@ -584,6 +617,33 @@ function LeaveTypesTable({ set }: { set: LeaveRuleSet }) {
         </Badge>
       ),
     },
+    ...(canManageTypes
+      ? [
+          {
+            id: "actions",
+            header: "",
+            meta: { label: t("common:actions"), headerClassName: "w-40" },
+            enableSorting: false,
+            cell: ({ row }: { row: { original: LeaveTypeRow } }) => (
+              <Group gap="xs" justify="flex-end" wrap="nowrap">
+                <Button type="button" size="xs" variant="subtle" onClick={() => onEdit(row.original)}>
+                  {t("common:edit")}
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="subtle"
+                  color={row.original.settings.isDisabled ? "teal" : "red"}
+                  loading={toggleDisabledMutation.isPending && toggleDisabledMutation.variables?.id === row.original.id}
+                  onClick={() => toggleDisabledMutation.mutate(row.original)}
+                >
+                  {row.original.settings.isDisabled ? t("leave:ruleSets.enable") : t("leave:ruleSets.disable")}
+                </Button>
+              </Group>
+            ),
+          } satisfies ColumnDef<LeaveTypeRow>,
+        ]
+      : []),
   ];
 
   const table = useDataTable({

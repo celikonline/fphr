@@ -86,6 +86,63 @@
     "halfDay": "Yarım gün",
     "hourly": "Saatlik"
   },
+  "negativeBalance": {
+    "none": "Kapalı",
+    "unlimited": "Limitsiz eksi bakiye",
+    "limited": "Limitli eksi bakiye"
+  },
+  "accrualTiming": {
+    "endOfPeriod": "Dönem sonunda",
+    "startOfPeriod": "Dönem başında"
+  },
+  "accrualBasis": {
+    "hireDate": "İşe başlama tarihine göre",
+    "calendarYear": "Takvim yılına göre"
+  },
+  "types": {
+    "addTitle": "Yeni Tür ve Kural Ekle",
+    "editTitle": "İzin türünü düzenle",
+    "added": "İzin türü eklendi.",
+    "saved": "İzin türü güncellendi.",
+    "name": "Tür adı",
+    "description": "Açıklama",
+    "isPaid": "Ücretli izin",
+    "codeHint": "Mevzuat/rapor eşlemesi için; çoğu yeni tür için \"Özel izin\" seçin.",
+    "section": {
+      "general": "Genel",
+      "limit": "Limit ve hak ediş",
+      "rules": "Kullanım kuralları"
+    },
+    "perRequestMaxDays": "Talep başına en fazla gün",
+    "annualDays": "Yıllık gün",
+    "ageExceptionEnabled": "Yaş istisnası",
+    "ageExceptionMinDays": "İstisna uygulanan gün sayısı",
+    "negativeBalance": "Eksi bakiye",
+    "negativeBalanceLimitDays": "Eksi bakiye limiti (gün)",
+    "accrualTiming": "Hak ediş zamanlaması",
+    "accrualBasis": "Hak ediş dönemi başlangıcı",
+    "carryOverMaxDays": "Devir limiti (gün)",
+    "seniorityTiers": "Kıdem kademeleri",
+    "addTier": "Kademe ekle",
+    "noTiers": "Kademe tanımlanmadı.",
+    "tierAfterYears": "Kıdem yılı",
+    "tierComparison": "Karşılaştırma",
+    "tierGreaterOrEqual": "Ve üzeri",
+    "tierGreaterThan": "Üzeri",
+    "tierExtraDays": "Ek gün",
+    "minConsecutiveDays": "En az ardışık gün",
+    "maxConsecutiveDays": "En fazla ardışık gün",
+    "waitingPeriodMonths": "Bekleme süresi (ay)",
+    "waitingPeriodMonthsHint": "İşe başlamadan sonra bu tür talep edilemeyen süre.",
+    "requiresDescription": "Açıklama zorunlu",
+    "requiresSubstitute": "Vekil ataması zorunlu",
+    "requiresDocument": "Belge zorunlu",
+    "countsNonWorkingDays": "Hafta tatili/resmî tatil günlerini de say",
+    "countsTowardAccrualService": "Kıdem/hak ediş süresine dahil et",
+    "showTypeNameOnCalendar": "Takvimde tür adını göster",
+    "isSensitive": "Hassas tür (sağlık verisi vb.)",
+    "allowSelfServiceRequest": "Çalışan kendi talep edebilsin"
+  },
   "summary": {
     "title": "Özet",
     "details": "Detaylar",
@@ -206,6 +263,8 @@
     "unpaid": "Ücretsiz",
     "active": "Aktif",
     "disabled": "Devre dışı",
+    "enable": "Etkinleştir",
+    "disable": "Devre dışı bırak",
     "visible": "Görünür",
     "hidden": "Gizli",
     "nameRequired": "Ad zorunludur.",

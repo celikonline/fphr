@@ -188,6 +188,13 @@ export interface LeaveRequestPreviewInput {
   editedRequestId?: string;
 }
 
+/** "Kıdem kademesi": completed service years compared with `afterYears` add `extraDays` (cumulative); Annual type only. */
+export interface LeaveSeniorityTier {
+  afterYears: number;
+  comparison: "greaterOrEqual" | "greaterThan";
+  extraDays: number;
+}
+
 /** `LeaveTypeSettings` (only the fields the web reads are typed strictly). */
 export interface LeaveTypeSettings {
   code: LeaveTypeCode;
@@ -206,7 +213,7 @@ export interface LeaveTypeSettings {
   accrualBasis: AccrualBasis;
   carryOverMode: CarryOverMode;
   carryOverMaxDays?: number | null;
-  seniorityTiers?: unknown[] | null;
+  seniorityTiers?: LeaveSeniorityTier[] | null;
   minConsecutiveDays?: number | null;
   maxConsecutiveDays?: number | null;
   unit: LeaveUnit;
@@ -373,6 +380,21 @@ export async function deleteLeaveRuleSet(id: string): Promise<void> {
 export async function assignLeaveRuleSet(id: string, employeeIds: string[]): Promise<LeaveRuleSetAssignmentResult> {
   const { data } = await apiClient.post<LeaveRuleSetAssignmentResult>(`${LEAVE_BASE}/rule-sets/${id}/assign`, { employeeIds });
   return { assignedCount: data.assignedCount ?? 0, warnings: data.warnings ?? [] };
+}
+
+/** "Yeni Tür ve Kural Ekle": adds a leave type to the rule set; returns the new type's id. */
+export async function addLeaveType(ruleSetId: string, settings: LeaveTypeSettings): Promise<string> {
+  const { data } = await apiClient.post<string>(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types`, settings);
+  return data;
+}
+
+export async function updateLeaveType(ruleSetId: string, typeId: string, settings: LeaveTypeSettings): Promise<void> {
+  await apiClient.put(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types/${typeId}`, settings);
+}
+
+/** Hides/reactivates a type without deleting it (its history and ledger rows stay put). */
+export async function setLeaveTypeDisabled(ruleSetId: string, typeId: string, disabled: boolean): Promise<void> {
+  await apiClient.put(`${LEAVE_BASE}/rule-sets/${ruleSetId}/types/${typeId}/disabled`, { disabled });
 }
 
 // ---------------------------------------------------------------- Request detail / cancel / calendar

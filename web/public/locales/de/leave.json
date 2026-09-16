@@ -86,6 +86,63 @@
     "halfDay": "[DE] Half day",
     "hourly": "[DE] Hourly"
   },
+  "negativeBalance": {
+    "none": "[DE] Off",
+    "unlimited": "[DE] Unlimited negative balance",
+    "limited": "[DE] Limited negative balance"
+  },
+  "accrualTiming": {
+    "endOfPeriod": "[DE] End of period",
+    "startOfPeriod": "[DE] Start of period"
+  },
+  "accrualBasis": {
+    "hireDate": "[DE] Based on hire date",
+    "calendarYear": "[DE] Based on calendar year"
+  },
+  "types": {
+    "addTitle": "[DE] Add new type and rule",
+    "editTitle": "[DE] Edit leave type",
+    "added": "[DE] Leave type added.",
+    "saved": "[DE] Leave type updated.",
+    "name": "[DE] Type name",
+    "description": "[DE] Description",
+    "isPaid": "[DE] Paid leave",
+    "codeHint": "[DE] For legislation/report mapping; pick \"Custom leave\" for most new types.",
+    "section": {
+      "general": "[DE] General",
+      "limit": "[DE] Limit and accrual",
+      "rules": "[DE] Usage rules"
+    },
+    "perRequestMaxDays": "[DE] Max days per request",
+    "annualDays": "[DE] Annual days",
+    "ageExceptionEnabled": "[DE] Age exception",
+    "ageExceptionMinDays": "[DE] Days under the exception",
+    "negativeBalance": "[DE] Negative balance",
+    "negativeBalanceLimitDays": "[DE] Negative balance limit (days)",
+    "accrualTiming": "[DE] Accrual timing",
+    "accrualBasis": "[DE] Accrual period start",
+    "carryOverMaxDays": "[DE] Carry-over limit (days)",
+    "seniorityTiers": "[DE] Seniority tiers",
+    "addTier": "[DE] Add tier",
+    "noTiers": "[DE] No tiers defined.",
+    "tierAfterYears": "[DE] Years of service",
+    "tierComparison": "[DE] Comparison",
+    "tierGreaterOrEqual": "[DE] And above",
+    "tierGreaterThan": "[DE] Above",
+    "tierExtraDays": "[DE] Extra days",
+    "minConsecutiveDays": "[DE] Min consecutive days",
+    "maxConsecutiveDays": "[DE] Max consecutive days",
+    "waitingPeriodMonths": "[DE] Waiting period (months)",
+    "waitingPeriodMonthsHint": "[DE] How long after hire this type cannot be requested.",
+    "requiresDescription": "[DE] Description required",
+    "requiresSubstitute": "[DE] Substitute assignment required",
+    "requiresDocument": "[DE] Document required",
+    "countsNonWorkingDays": "[DE] Also count weekend/holiday days",
+    "countsTowardAccrualService": "[DE] Counts towards accrual seniority",
+    "showTypeNameOnCalendar": "[DE] Show type name on calendar",
+    "isSensitive": "[DE] Sensitive type (health data etc.)",
+    "allowSelfServiceRequest": "[DE] Employees can request it themselves"
+  },
   "summary": {
     "title": "[DE] Summary",
     "details": "[DE] Details",
@@ -206,6 +263,8 @@
     "unpaid": "[DE] Unpaid",
     "active": "[DE] Active",
     "disabled": "[DE] Disabled",
+    "enable": "[DE] Enable",
+    "disable": "[DE] Disable",
     "visible": "[DE] Visible",
     "hidden": "[DE] Hidden",
     "nameRequired": "[DE] Name is required.",
