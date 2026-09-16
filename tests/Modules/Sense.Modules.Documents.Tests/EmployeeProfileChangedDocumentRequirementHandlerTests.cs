@@ -1,5 +1,6 @@
 using NSubstitute;
 using Sense.Modules.Assets.Contracts;
+using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
