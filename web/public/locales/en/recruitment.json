@@ -84,7 +84,11 @@
     "tags": "Tags",
     "editTags": "Edit tags",
     "newTag": "New tag",
-    "addTag": "Add"
+    "addTag": "Add",
+    "anonymize": "Anonymize (GDPR/KVKK)",
+    "anonymizeDescription": "This candidate's name, e-mail and phone will be irreversibly erased; their application history stays, but no longer identifies this person.",
+    "anonymizeSuccess": "Candidate data has been anonymized.",
+    "anonymized": "Anonymized"
   },
   "applications": {
     "title": "Applications",
@@ -188,6 +192,29 @@
     "transition": "Transition",
     "createSuccess": "Automation rule created.",
     "empty": "No automation rules yet."
+  },
+  "career": {
+    "notFoundTitle": "Posting not found",
+    "notFoundText": "This link is invalid or the posting is no longer open.",
+    "loadError": "There was a problem loading this posting.",
+    "closingDate": "Application deadline",
+    "publishedAt": "Published",
+    "applyTitle": "Application form",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phone": "Phone",
+    "phoneOptional": "Phone (optional)",
+    "consentText": "My personal data will be processed and retained for this application and possible hiring processes in accordance with applicable data protection law.",
+    "consentRequired": "You must accept the privacy notice to continue.",
+    "submit": "Apply",
+    "submitting": "Submitting...",
+    "submitSuccessTitle": "Your application has been received",
+    "submitSuccessText": "Thank you for your interest. Your application will be reviewed and you will be notified by email of any updates.",
+    "alreadyApplied": "You have already applied to this posting with this email.",
+    "otherOpenPositions": "Other open positions",
+    "noOtherPositions": "There are no other open positions right now.",
+    "backToPosting": "Back to posting"
   },
   "genericError": "Something went wrong."
 }

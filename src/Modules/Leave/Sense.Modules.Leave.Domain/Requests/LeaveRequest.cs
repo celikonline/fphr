@@ -182,6 +182,40 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public bool Overlaps(DateOnly start, DateOnly end) => StartDate <= end && start <= EndDate;
 
+    /// <summary>
+    /// The overlap gate for the "leave.errors.overlap" check (11.3.5 "Talep doğrulama" step 6/12): a whole-day
+    /// date-range overlap always conflicts. When both this request and the candidate are single-day partial
+    /// requests (Hourly time range or HalfDay period) sharing the same date, only an actual time intersection
+    /// conflicts - e.g. a Morning HalfDay and an 13:00-15:00 Hourly request on the same day do not. HalfDay
+    /// periods map to fixed slots (Morning = 00:00-12:00, Afternoon = 12:00-24:00); the exact shift boundary is
+    /// not modelled at this layer.
+    /// </summary>
+    public bool ConflictsWith(DateOnly start, DateOnly end, TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod)
+    {
+        if (!Overlaps(start, end))
+        {
+            return false;
+        }
+
+        var minePartial = StartTime is not null || HalfDayPeriod is not null;
+        var otherPartial = startTime is not null || halfDayPeriod is not null;
+        if (!minePartial || !otherPartial)
+        {
+            return true;
+        }
+
+        var (mineStart, mineEnd) = ToTimeRange(StartTime, EndTime, HalfDayPeriod);
+        var (otherStart, otherEnd) = ToTimeRange(startTime, endTime, halfDayPeriod);
+        return mineStart < otherEnd && otherStart < mineEnd;
+    }
+
+    private static (TimeOnly Start, TimeOnly End) ToTimeRange(TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod) => halfDayPeriod switch
+    {
+        global::Sense.Modules.Leave.Domain.HalfDayPeriod.Morning => (TimeOnly.MinValue, new TimeOnly(12, 0)),
+        global::Sense.Modules.Leave.Domain.HalfDayPeriod.Afternoon => (new TimeOnly(12, 0), TimeOnly.MaxValue),
+        _ => (startTime!.Value, endTime!.Value),
+    };
+
     private Result Decide(Guid approvalRequestId, LeaveRequestStatus status, DateTime at)
     {
         if (Status != LeaveRequestStatus.Pending)

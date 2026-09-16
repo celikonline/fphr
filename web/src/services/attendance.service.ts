@@ -258,3 +258,81 @@ export async function getMyShiftAssignments(query: DateRangeQuery): Promise<Shif
   const { data } = await apiClient.get<ShiftAssignment[]>(`${ATTENDANCE_BASE}/shifts/me`, { params: query });
   return data;
 }
+
+// ---------------------------------------------------------------- Çalışma takvimleri / Work Schedules
+
+/** .NET `DayOfWeek` serialized camelCase; Sunday-first like the API, UI renders Monday-first. */
+export type WeekDay = "sunday" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday";
+
+export const WEEK_DAYS_MONDAY_FIRST: WeekDay[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+/** `WorkScheduleDayDto`. `start`/`end`/`breakStart`/`breakEnd` are `TimeOnly` ("HH:mm:ss"), null when not a working day. */
+export interface WorkScheduleDay {
+  dayOfWeek: WeekDay;
+  isWorkingDay: boolean;
+  start?: string | null;
+  end?: string | null;
+  breakStart?: string | null;
+  breakEnd?: string | null;
+}
+
+/** `WorkScheduleDto`. */
+export interface WorkSchedule {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  isActive: boolean;
+  includeSaturdayWhenFullWeek: boolean;
+  weeklyMinutes: number;
+  assignedEmployeeCount: number;
+  days: WorkScheduleDay[];
+}
+
+export interface WorkScheduleDaysInput {
+  days: WorkScheduleDay[];
+  includeSaturdayWhenFullWeek: boolean;
+}
+
+/** attendance.workschedule.view. */
+export async function listWorkSchedules(includeInactive = false): Promise<WorkSchedule[]> {
+  const { data } = await apiClient.get<WorkSchedule[]>(`${ATTENDANCE_BASE}/work-schedules`, { params: { includeInactive } });
+  return data;
+}
+
+export async function getWorkSchedule(id: string): Promise<WorkSchedule> {
+  const { data } = await apiClient.get<WorkSchedule>(`${ATTENDANCE_BASE}/work-schedules/${id}`);
+  return data;
+}
+
+/** "Yeni çalışma takvimi ekle" (attendance.workschedule.manage). */
+export async function createWorkSchedule(input: { name: string } & WorkScheduleDaysInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${ATTENDANCE_BASE}/work-schedules`, input);
+  return data;
+}
+
+export async function renameWorkSchedule(id: string, name: string): Promise<void> {
+  await apiClient.put(`${ATTENDANCE_BASE}/work-schedules/${id}/name`, { name });
+}
+
+export async function updateWorkScheduleDays(id: string, input: WorkScheduleDaysInput): Promise<void> {
+  await apiClient.put(`${ATTENDANCE_BASE}/work-schedules/${id}/days`, input);
+}
+
+/** "Varsayılan yap": exactly one default schedule remains per tenant afterwards. */
+export async function setDefaultWorkSchedule(id: string): Promise<void> {
+  await apiClient.post(`${ATTENDANCE_BASE}/work-schedules/${id}/set-default`);
+}
+
+export async function setWorkScheduleActive(id: string, isActive: boolean): Promise<void> {
+  await apiClient.put(`${ATTENDANCE_BASE}/work-schedules/${id}/active`, { isActive });
+}
+
+/** Fails (Conflict) when the schedule is the default one or still has assigned employees. */
+export async function deleteWorkSchedule(id: string): Promise<void> {
+  await apiClient.delete(`${ATTENDANCE_BASE}/work-schedules/${id}`);
+}
+
+/** "Çalışanlara ata" (attendance.workschedule.assign); each employee gets a new dated assignment. */
+export async function assignWorkSchedule(id: string, employeeIds: string[], effectiveFrom: string): Promise<void> {
+  await apiClient.post(`${ATTENDANCE_BASE}/work-schedules/${id}/assign`, { employeeIds, effectiveFrom });
+}

@@ -80,5 +80,32 @@
     "paymentNotePlaceholder": "Örn. banka havale referansı",
     "confirmPay": "Ödendi olarak işaretle",
     "paidSuccess": "Ödeme kaydedildi."
+  },
+  "categoriesAdmin": {
+    "title": "Harcama Kategorileri",
+    "subtitle": "Çalışanların fiş eklerken seçtiği harcama kategori kataloğunu yönetin.",
+    "add": "Kategori ekle",
+    "addTitle": "Kategori ekle",
+    "showInactive": "Pasif kategorileri de göster",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "empty": "Kayıtlı kategori yok.",
+    "saved": "Kategori kaydedildi.",
+    "statusSaved": "Kategori durumu güncellendi.",
+    "codeHint": "Aktarım ve raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
+    "columns": {
+      "name": "Ad",
+      "code": "Kod",
+      "defaultTaxRate": "Varsayılan KDV oranı",
+      "status": "Durum"
+    },
+    "errors": {
+      "generic": "Kategori kaydedilemedi.",
+      "loadFailed": "Kategoriler yüklenemedi.",
+      "codeRequired": "Kod zorunludur.",
+      "nameRequired": "Ad zorunludur."
+    }
   }
 }

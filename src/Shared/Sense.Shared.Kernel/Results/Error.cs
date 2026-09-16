@@ -25,6 +25,9 @@ public enum ErrorType
 
     /// <summary>Abonelik/modül kapalı → 402.</summary>
     Payment = 7,
+
+    /// <summary>İstek hız sınırını aştı → 429.</summary>
+    TooManyRequests = 8,
 }
 
 /// <summary>
@@ -70,4 +73,5 @@ public static class ErrorCodes
     public const string ConcurrencyConflict = "general.concurrency_conflict";
     public const string RequestCancelled = "general.request_cancelled";
     public const string InternalError = "general.internal_error";
+    public const string RateLimitExceeded = "general.rate_limit_exceeded";
 }

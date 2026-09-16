@@ -84,7 +84,11 @@
     "tags": "[DE] Tags",
     "editTags": "[DE] Edit tags",
     "newTag": "[DE] New tag",
-    "addTag": "[DE] Add"
+    "addTag": "[DE] Add",
+    "anonymize": "[DE] Anonymize (GDPR/KVKK)",
+    "anonymizeDescription": "[DE] This candidate's name, e-mail and phone will be irreversibly erased; their application history stays, but no longer identifies this person.",
+    "anonymizeSuccess": "[DE] Candidate data has been anonymized.",
+    "anonymized": "[DE] Anonymized"
   },
   "applications": {
     "title": "[DE] Applications",
@@ -188,6 +192,29 @@
     "transition": "[DE] Transition",
     "createSuccess": "[DE] Automation rule created.",
     "empty": "[DE] No automation rules yet."
+  },
+  "career": {
+    "notFoundTitle": "[DE] Posting not found",
+    "notFoundText": "[DE] This link is invalid or the posting is no longer open.",
+    "loadError": "[DE] There was a problem loading this posting.",
+    "closingDate": "[DE] Application deadline",
+    "publishedAt": "[DE] Published",
+    "applyTitle": "[DE] Application form",
+    "firstName": "[DE] First name",
+    "lastName": "[DE] Last name",
+    "email": "[DE] Email",
+    "phone": "[DE] Phone",
+    "phoneOptional": "[DE] Phone (optional)",
+    "consentText": "[DE] My personal data will be processed and retained for this application and possible hiring processes in accordance with applicable data protection law.",
+    "consentRequired": "[DE] You must accept the privacy notice to continue.",
+    "submit": "[DE] Apply",
+    "submitting": "[DE] Submitting...",
+    "submitSuccessTitle": "[DE] Your application has been received",
+    "submitSuccessText": "[DE] Thank you for your interest. Your application will be reviewed and you will be notified by email of any updates.",
+    "alreadyApplied": "[DE] You have already applied to this posting with this email.",
+    "otherOpenPositions": "[DE] Other open positions",
+    "noOtherPositions": "[DE] There are no other open positions right now.",
+    "backToPosting": "[DE] Back to posting"
   },
   "genericError": "[DE] Something went wrong."
 }

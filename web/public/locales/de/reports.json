@@ -16,6 +16,9 @@
     },
     "empty": "[DE] No breakdown data."
   },
+  "kpiSection": {
+    "title": "[DE] Workforce KPIs"
+  },
   "kpi": {
     "CAREER_PATH_RATIO": {
       "label": "[DE] Career Path Ratio"
@@ -32,5 +35,35 @@
     "GENDER_RATIO_BY_UNIT": {
       "label": "[DE] Gender Ratio by Unit"
     }
+  },
+  "catalog": {
+    "title": "[DE] Generate a Report",
+    "selectLabel": "[DE] Report",
+    "selectPlaceholder": "[DE] Choose a report",
+    "generate": "[DE] Generate",
+    "generateSuccess": "[DE] Report generated.",
+    "generateError": "[DE] Could not generate the report.",
+    "empty": "[DE] There are no reports you can view.",
+    "documents": {
+      "missingDocuments": {
+        "label": "[DE] Missing Documents Report"
+      }
+    }
+  },
+  "history": {
+    "columns": {
+      "report": "[DE] Report",
+      "status": "[DE] Status",
+      "requestedAt": "[DE] Requested At"
+    },
+    "status": {
+      "queued": "[DE] Queued",
+      "running": "[DE] Running",
+      "succeeded": "[DE] Succeeded",
+      "failed": "[DE] Failed"
+    },
+    "download": "[DE] Download",
+    "downloadError": "[DE] Could not download the file.",
+    "empty": "[DE] No reports have been generated yet."
   }
 }

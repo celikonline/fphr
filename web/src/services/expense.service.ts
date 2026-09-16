@@ -163,3 +163,24 @@ export async function listExpenseCategories(includeInactive = false): Promise<Ex
   const { data } = await apiClient.get<ExpenseCategory[]>(`${EXPENSE_BASE}/categories`, { params: { includeInactive } });
   return data;
 }
+
+export interface CreateExpenseCategoryInput {
+  code: string;
+  nameKey: string;
+  defaultTaxRate?: number | null;
+}
+
+/** HR/Finance (`expense.categories.manage`) adds a new category to the tenant's catalog. */
+export async function createExpenseCategory(input: CreateExpenseCategoryInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${EXPENSE_BASE}/categories`, {
+    code: input.code,
+    nameKey: input.nameKey,
+    defaultTaxRate: input.defaultTaxRate ?? null,
+  });
+  return data;
+}
+
+/** HR/Finance (`expense.categories.manage`) activates or deactivates a category. */
+export async function setExpenseCategoryActive(categoryId: string, isActive: boolean): Promise<void> {
+  await apiClient.put(`${EXPENSE_BASE}/categories/${categoryId}/active`, { isActive });
+}

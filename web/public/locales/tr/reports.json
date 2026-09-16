@@ -16,6 +16,9 @@
     },
     "empty": "Kırılım verisi yok."
   },
+  "kpiSection": {
+    "title": "İşgücü KPI'ları"
+  },
   "kpi": {
     "CAREER_PATH_RATIO": {
       "label": "Kariyer Yolu Oranı"
@@ -32,5 +35,35 @@
     "GENDER_RATIO_BY_UNIT": {
       "label": "Birim Bazında Cinsiyet Dağılımı"
     }
+  },
+  "catalog": {
+    "title": "Rapor Oluştur",
+    "selectLabel": "Rapor",
+    "selectPlaceholder": "Bir rapor seçin",
+    "generate": "Oluştur",
+    "generateSuccess": "Rapor oluşturuldu.",
+    "generateError": "Rapor oluşturulamadı.",
+    "empty": "Görüntüleyebileceğiniz bir rapor yok.",
+    "documents": {
+      "missingDocuments": {
+        "label": "Eksik Belgeler Raporu"
+      }
+    }
+  },
+  "history": {
+    "columns": {
+      "report": "Rapor",
+      "status": "Durum",
+      "requestedAt": "Talep Tarihi"
+    },
+    "status": {
+      "queued": "Sırada",
+      "running": "Çalışıyor",
+      "succeeded": "Tamamlandı",
+      "failed": "Başarısız"
+    },
+    "download": "İndir",
+    "downloadError": "Dosya indirilemedi.",
+    "empty": "Henüz oluşturulmuş bir rapor yok."
   }
 }

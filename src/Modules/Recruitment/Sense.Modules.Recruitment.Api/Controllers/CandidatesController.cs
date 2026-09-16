@@ -54,4 +54,20 @@ public sealed class CandidatesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> SetTags(Guid id, [FromBody] SetCandidateTagsRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new SetCandidateTagsCommand(id, request.TagIds), ct));
+
+    /// <summary>KVKK "unutulma hakkı": irreversibly scrubs one candidate's personal data on request.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/anonymize")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Anonymize(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AnonymizeCandidateCommand(id), ct));
+
+    /// <summary>
+    /// KVKK retention sweep: anonymizes every candidate whose retention window has elapsed. Returns the number of
+    /// candidates anonymized. Safe to call repeatedly (only touches rows still due) - intended for a scheduled
+    /// trigger until a recurring background job can be wired for it (see AnonymizeExpiredCandidatesCommand doc).
+    /// </summary>
+    [HttpPost("anonymize-expired")]
+    [ProducesResponseType<int>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AnonymizeExpired(CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AnonymizeExpiredCandidatesCommand(), ct));
 }

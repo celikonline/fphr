@@ -1,14 +1,27 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, X } from "lucide-react";
-import { Button, Card, Group, Input, SimpleGrid, Skeleton, Text, Title } from "@mantine/core";
+import { BarChart3, Download, FileText, X } from "lucide-react";
+import { Badge, Button, Card, Group, Input, Select, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import NoAccess from "@/components/no-access";
-import { usePermission } from "@/components/permission-guard";
+import PaginationFooter from "@/components/pagination-footer";
+import { useAnyPermission, usePermission } from "@/components/permission-guard";
+import { toast } from "@/hooks/use-toast";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateTime } from "@/lib/dates";
 import { getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
+import {
+  downloadReportExecution,
+  getReportCatalog,
+  listReportExecutions,
+  requestReport,
+  saveDownloadedReportFile,
+  type ReportExecution,
+  type ReportExecutionStatus,
+} from "@/services/reports.service";
 
 interface BreakdownRow {
   id: string;
@@ -30,13 +43,33 @@ function formatShare(value: number, locale: string): string {
   return new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }
 
+const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
+  queued: "gray",
+  running: "blue",
+  succeeded: "green",
+  failed: "red",
+};
+
 export default function ReportsPage() {
-  const canView = usePermission("analytics.kpi.view");
-  if (!canView) return <NoAccess />;
-  return <WorkforceReports />;
+  const { t } = useTranslation(["reports"]);
+  const canViewKpis = usePermission("analytics.kpi.view");
+  const canUseReports = useAnyPermission(["reports.catalog.view", "reports.my.executions"]);
+  if (!canViewKpis && !canUseReports) return <NoAccess />;
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+      <div>
+        <Title order={1} size="h2" className="flex items-center gap-2">
+          <BarChart3 size={24} /> {t("reports:title")}
+        </Title>
+        <Text c="dimmed">{t("reports:subtitle")}</Text>
+      </div>
+      {canViewKpis && <WorkforceKpis />}
+      {canUseReports && <ReportCatalogAndHistory />}
+    </div>
+  );
 }
 
-function WorkforceReports() {
+function WorkforceKpis() {
   const { t, i18n } = useTranslation(["reports", "common"]);
   const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
   const [from, setFrom] = useState("");
@@ -98,15 +131,10 @@ function WorkforceReports() {
   const hasFilters = from !== "" || to !== "";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
-      <Group justify="space-between" align="flex-start" gap="sm">
-        <div>
-          <Title order={1} size="h2" className="flex items-center gap-2">
-            <BarChart3 size={24} /> {t("reports:title")}
-          </Title>
-          <Text c="dimmed">{t("reports:subtitle")}</Text>
-        </div>
-      </Group>
+    <Stack gap="md">
+      <Title order={2} size="h4">
+        {t("reports:kpiSection.title")}
+      </Title>
 
       <Card withBorder padding="md">
         <Group align="flex-end" gap="sm">
@@ -154,6 +182,166 @@ function WorkforceReports() {
       <Card withBorder padding={0}>
         <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("reports:breakdown.empty")} />
       </Card>
-    </div>
+    </Stack>
+  );
+}
+
+const EXECUTIONS_PAGE_SIZE = 10;
+
+/** Report catalog (request a report) + the caller's own execution history, R0 synchronous generation. */
+function ReportCatalogAndHistory() {
+  const { t, i18n } = useTranslation(["reports", "common"]);
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const canViewCatalog = usePermission("reports.catalog.view");
+  const canGenerate = usePermission("reports.executions.generate");
+  const canViewHistory = usePermission("reports.my.executions");
+  const queryClient = useQueryClient();
+  const [reportKey, setReportKey] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+
+  const { data: catalog, isLoading: catalogLoading } = useQuery({
+    queryKey: ["reports", "catalog"],
+    queryFn: getReportCatalog,
+    enabled: canViewCatalog,
+  });
+
+  const { data: executions, isLoading: executionsLoading, isFetching: executionsFetching } = useQuery({
+    queryKey: ["reports", "executions", page],
+    queryFn: () => listReportExecutions({ page, pageSize: EXECUTIONS_PAGE_SIZE }),
+    enabled: canViewHistory,
+    placeholderData: (previous) => previous,
+  });
+
+  const requestMutation = useMutation({
+    mutationFn: (key: string) => requestReport(key),
+    onSuccess: (execution) => {
+      queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
+      if (execution.status === "failed") {
+        toast({
+          variant: "destructive",
+          title: t("common:error"),
+          description: execution.errorMessage ?? t("reports:catalog.generateError"),
+        });
+      } else {
+        toast({ variant: "success", title: t("reports:catalog.generateSuccess") });
+      }
+    },
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("reports:catalog.generateError")),
+      }),
+  });
+
+  const downloadMutation = useMutation({
+    mutationFn: (execution: ReportExecution) => downloadReportExecution(execution.id, execution.resultFileName ?? `${execution.reportKey}.dat`),
+    onSuccess: saveDownloadedReportFile,
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("reports:history.downloadError")),
+      }),
+  });
+
+  const columns: ColumnDef<ReportExecution>[] = [
+    {
+      id: "reportKey",
+      accessorKey: "reportKey",
+      header: t("reports:history.columns.report"),
+      meta: { label: t("reports:history.columns.report") },
+      cell: ({ row }) => t(`reports:catalog.${row.original.reportKey}.label`, { defaultValue: row.original.reportKey }),
+    },
+    {
+      id: "status",
+      accessorKey: "status",
+      header: t("reports:history.columns.status"),
+      meta: { label: t("reports:history.columns.status"), headerClassName: "w-32" },
+      cell: ({ row }) => (
+        <Badge variant="filled" color={EXECUTION_STATUS_COLOR[row.original.status]}>
+          {t(`reports:history.status.${row.original.status}`)}
+        </Badge>
+      ),
+    },
+    {
+      id: "requestedAt",
+      accessorKey: "requestedAt",
+      header: t("reports:history.columns.requestedAt"),
+      meta: { label: t("reports:history.columns.requestedAt"), headerClassName: "w-48" },
+      cell: ({ row }) => formatDateTime(row.original.requestedAt, locale),
+    },
+    {
+      id: "download",
+      header: "",
+      meta: { headerClassName: "w-16" },
+      cell: ({ row }) =>
+        row.original.status === "succeeded" ? (
+          <Button
+            type="button"
+            variant="subtle"
+            size="xs"
+            leftSection={<Download size={14} />}
+            loading={downloadMutation.isPending && downloadMutation.variables?.id === row.original.id}
+            onClick={() => downloadMutation.mutate(row.original)}
+          >
+            {t("reports:history.download")}
+          </Button>
+        ) : null,
+    },
+  ];
+
+  const table = useDataTable({ columns, data: executions?.items ?? [], getRowId: (r) => r.id });
+
+  return (
+    <Stack gap="md">
+      <Title order={2} size="h4" className="flex items-center gap-2">
+        <FileText size={18} /> {t("reports:catalog.title")}
+      </Title>
+
+      {canViewCatalog && (
+        <Card withBorder padding="md">
+          <Group align="flex-end" gap="sm">
+            <Select
+              w={320}
+              label={t("reports:catalog.selectLabel")}
+              placeholder={t("reports:catalog.selectPlaceholder")}
+              data={(catalog ?? []).map((item) => ({
+                value: item.key,
+                label: t(`reports:catalog.${item.key}.label`, { defaultValue: item.key }),
+              }))}
+              value={reportKey}
+              onChange={setReportKey}
+              disabled={catalogLoading || (catalog ?? []).length === 0}
+              clearable
+            />
+            {canGenerate && (
+              <Button
+                type="button"
+                disabled={!reportKey}
+                loading={requestMutation.isPending}
+                onClick={() => reportKey && requestMutation.mutate(reportKey)}
+              >
+                {t("reports:catalog.generate")}
+              </Button>
+            )}
+          </Group>
+          {!catalogLoading && (catalog ?? []).length === 0 && (
+            <Text c="dimmed" size="sm" mt="sm">
+              {t("reports:catalog.empty")}
+            </Text>
+          )}
+        </Card>
+      )}
+
+      {canViewHistory && (
+        <Card withBorder padding={0}>
+          <DataTable table={table} isLoading={executionsLoading} isFetching={executionsFetching} emptyMessage={t("reports:history.empty")} />
+          {executions && (
+            <PaginationFooter result={executions} onPageChange={setPage} />
+          )}
+        </Card>
+      )}
+    </Stack>
   );
 }

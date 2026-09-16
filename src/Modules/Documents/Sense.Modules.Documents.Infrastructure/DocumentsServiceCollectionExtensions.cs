@@ -30,13 +30,14 @@ public static class DocumentsServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Documents' cross-module integration event handlers (EmployeeHired, and Assets' AssetAssigned/AssetReturned -
-    /// roadmap #65), registered explicitly for Sense.Worker (not the whole Application assembly, so API-only handler
-    /// dependencies stay out).
+    /// Documents' cross-module integration event handlers (EmployeeHired, EmployeeProfileChanged, and Assets'
+    /// AssetAssigned/AssetReturned - roadmap #65), registered explicitly for Sense.Worker (not the whole Application
+    /// assembly, so API-only handler dependencies stay out).
     /// </summary>
     public static IServiceCollection AddDocumentsIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredDocumentRequirementHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeProfileChanged>, EmployeeProfileChangedDocumentRequirementHandler>();
         services.AddScoped<IIntegrationEventHandler<AssetAssigned>, AssetAssignedDocumentRequirementHandler>();
         services.AddScoped<IIntegrationEventHandler<AssetReturned>, AssetReturnedDocumentRequirementHandler>();
         return services;

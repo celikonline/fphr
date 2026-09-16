@@ -4,13 +4,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Tags as TagsIcon, UserRound } from "lucide-react";
+import { Pencil, Plus, Search, ShieldOff, Tags as TagsIcon, UserRound } from "lucide-react";
 import { ActionIcon, Badge, Button, Card, Group, Modal, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
+  anonymizeCandidate,
   createCandidate,
   createTag,
   listCandidates,
@@ -86,6 +87,17 @@ function Candidates() {
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("recruitment:candidates.updateSuccess") });
       setDialog({ open: false });
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const [anonymizeTarget, setAnonymizeTarget] = useState<Candidate | null>(null);
+  const anonymizeMutation = useMutation({
+    mutationFn: anonymizeCandidate,
+    onSuccess: () => {
+      invalidate();
+      toast({ variant: "success", title: t("common:success"), description: t("recruitment:candidates.anonymizeSuccess") });
+      setAnonymizeTarget(null);
     },
     onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
   });
@@ -191,9 +203,16 @@ function Candidates() {
               {data.map((candidate) => (
                 <Table.Tr key={candidate.id}>
                   <Table.Td>
-                    <Text fw={500}>
-                      {candidate.firstName} {candidate.lastName}
-                    </Text>
+                    <Group gap={6} wrap="nowrap">
+                      <Text fw={500}>
+                        {candidate.firstName} {candidate.lastName}
+                      </Text>
+                      {candidate.isAnonymized && (
+                        <Badge size="sm" color="gray" variant="light">
+                          {t("recruitment:candidates.anonymized")}
+                        </Badge>
+                      )}
+                    </Group>
                   </Table.Td>
                   <Table.Td>{candidate.email}</Table.Td>
                   <Table.Td>{candidate.phone ?? "—"}</Table.Td>
@@ -222,8 +241,18 @@ function Candidates() {
                           </ActionIcon>
                         </Tooltip>
                         <Tooltip label={t("recruitment:candidates.editCandidate")}>
-                          <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)}>
+                          <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(candidate)} disabled={candidate.isAnonymized}>
                             <Pencil size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label={t("recruitment:candidates.anonymize")}>
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            onClick={() => setAnonymizeTarget(candidate)}
+                            disabled={candidate.isAnonymized}
+                          >
+                            <ShieldOff size={16} />
                           </ActionIcon>
                         </Tooltip>
                       </Group>
@@ -307,6 +336,27 @@ function Candidates() {
               onClick={() => tagCandidate && setTagsMutation.mutate({ id: tagCandidate.id, tagIds: selectedTagIds })}
             >
               {setTagsMutation.isPending ? t("common:saving") : t("common:save")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Modal opened={anonymizeTarget !== null} onClose={() => setAnonymizeTarget(null)} title={t("recruitment:candidates.anonymize")}>
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("recruitment:candidates.anonymizeDescription")}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={() => setAnonymizeTarget(null)} disabled={anonymizeMutation.isPending}>
+              {t("common:cancel")}
+            </Button>
+            <Button
+              type="button"
+              color="red"
+              loading={anonymizeMutation.isPending}
+              onClick={() => anonymizeTarget && anonymizeMutation.mutate(anonymizeTarget.id)}
+            >
+              {t("recruitment:candidates.anonymize")}
             </Button>
           </Group>
         </Stack>

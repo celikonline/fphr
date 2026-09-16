@@ -67,6 +67,7 @@ public static class ProblemTitleKeys
     public const string Payment = "problem.title.payment";
     public const string Failure = "problem.title.failure";
     public const string Cancelled = "problem.title.cancelled";
+    public const string TooManyRequests = "problem.title.too_many_requests";
 
     public static string For(ErrorType type) => type switch
     {
@@ -77,6 +78,7 @@ public static class ProblemTitleKeys
         ErrorType.Conflict => Conflict,
         ErrorType.Rule => Rule,
         ErrorType.Payment => Payment,
+        ErrorType.TooManyRequests => TooManyRequests,
         _ => Failure,
     };
 }

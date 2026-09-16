@@ -194,6 +194,31 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task AnonymizeCandidate_ScrubsPersonalData_AndIsIdempotencyGuarded()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        SetCurrentUser(tenantId, Guid.NewGuid(), "hr@example.com", new HashSet<string> { "HR" });
+
+        var candidateResult = await ExecuteCommandAsync(new CreateCandidateCommand("Ada", "Yılmaz", "ada.yilmaz@example.com", "5551234567"));
+        candidateResult.IsSuccess.ShouldBeTrue();
+        var candidateId = candidateResult.Value;
+
+        var anonymized = await ExecuteCommandAsync(new AnonymizeCandidateCommand(candidateId));
+        anonymized.IsSuccess.ShouldBeTrue();
+
+        var dto = await ExecuteQueryAsync(new GetCandidateQuery(candidateId));
+        dto.IsSuccess.ShouldBeTrue();
+        dto.Value.IsAnonymized.ShouldBeTrue();
+        dto.Value.Email.ShouldEndWith(Candidate.AnonymizedEmailDomain);
+
+        // KVKK imha idempotent olmalı - ikinci çağrı sessizce yeniden silmez, açık bir hata döner.
+        var second = await ExecuteCommandAsync(new AnonymizeCandidateCommand(candidateId));
+        second.IsFailure.ShouldBeTrue();
+        second.Error.Code.ShouldBe(RecruitmentDomainErrors.CandidateAlreadyAnonymized);
+    }
+
+    [Fact]
     public async Task PublicCareerFlow_RelatedPostings_OnlyReturnsSameTenantOpenPostings()
     {
         var tenantId = Guid.NewGuid();

@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Availability;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;

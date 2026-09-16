@@ -39,6 +39,13 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
         Source = source;
     }
 
+    /// <summary>
+    /// Fixed domain part an anonymized candidate's e-mail always carries (see <see cref="Anonymize"/>). Public so
+    /// the infrastructure repository's retention sweep query can filter already-anonymized rows server-side,
+    /// without loading every candidate into memory.
+    /// </summary>
+    public const string AnonymizedEmailDomain = "@kvkk.anonim.local";
+
     public string FirstName { get; private set; } = string.Empty;
 
     public string LastName { get; private set; } = string.Empty;
@@ -50,6 +57,34 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
     public CandidateSource Source { get; private set; }
 
     public IReadOnlyList<CandidateTagAssignment> Tags => _tags.AsReadOnly();
+
+    /// <summary>
+    /// True once <see cref="Anonymize"/> has run (KVKK imha). No dedicated boolean column exists yet (see
+    /// <see cref="RecruitmentLimits.CandidateDataRetentionMonths"/> doc comment for why) - detected from the
+    /// deterministic anonymized e-mail shape instead, so no migration is needed to add this capability.
+    /// </summary>
+    public bool IsAnonymized => Email.EndsWith(AnonymizedEmailDomain, StringComparison.Ordinal);
+
+    /// <summary>
+    /// KVKK imha: irreversibly scrubs this candidate's personal data (name, e-mail, phone, tags) in place. The row
+    /// itself is kept (job application history, audit trail) but no longer identifies a real person. Idempotency
+    /// guard: calling this twice fails with <see cref="RecruitmentDomainErrors.CandidateAlreadyAnonymized"/> rather
+    /// than silently re-scrubbing (an already-anonymized row has nothing left to remove).
+    /// </summary>
+    public Result Anonymize()
+    {
+        if (IsAnonymized)
+        {
+            return Error.Conflict(RecruitmentDomainErrors.CandidateAlreadyAnonymized);
+        }
+
+        FirstName = "Silinmiş";
+        LastName = "Aday";
+        Email = $"silinmis-{Id:N}{AnonymizedEmailDomain}".ToLowerInvariant();
+        Phone = null;
+        _tags.Clear();
+        return Result.Success();
+    }
 
     public static Result<Candidate> Create(
         Guid tenantId, string firstName, string lastName, string email, string? phone, Guid? id = null,

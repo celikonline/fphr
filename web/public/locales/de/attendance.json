@@ -54,5 +54,49 @@
     "break": "[DE] Break",
     "note": "[DE] Note",
     "empty": "[DE] You have no shift records for this period."
+  },
+  "weekDay": {
+    "monday": "[DE] Monday",
+    "tuesday": "[DE] Tuesday",
+    "wednesday": "[DE] Wednesday",
+    "thursday": "[DE] Thursday",
+    "friday": "[DE] Friday",
+    "saturday": "[DE] Saturday",
+    "sunday": "[DE] Sunday"
+  },
+  "workSchedules": {
+    "title": "[DE] Work schedules",
+    "subtitle": "[DE] Weekly working days, hours and break windows.",
+    "addTitle": "[DE] Add work schedule",
+    "editDays": "[DE] Edit days",
+    "editDaysTitle": "[DE] Edit days",
+    "name": "[DE] Schedule name",
+    "nameRequired": "[DE] Schedule name is required.",
+    "renameTitle": "[DE] Rename",
+    "renamed": "[DE] Work schedule renamed.",
+    "created": "[DE] Work schedule created.",
+    "daysUpdated": "[DE] Days updated.",
+    "deleted": "[DE] Work schedule deleted.",
+    "default": "[DE] Default",
+    "inactive": "[DE] Inactive",
+    "makeDefault": "[DE] Make default",
+    "defaultSet": "[DE] Default work schedule updated.",
+    "activate": "[DE] Activate",
+    "deactivate": "[DE] Deactivate",
+    "dayOff": "[DE] Day off",
+    "breakLabel": "[DE] Break",
+    "includeSaturday": "[DE] Include Saturday in full-week calculation",
+    "includeSaturdayDesc": "[DE] For schedules with 6 full working days, Saturday is also counted.",
+    "deleteTitle": "[DE] Delete work schedule",
+    "deleteDescription": "[DE] Are you sure you want to delete \"{{name}}\"?",
+    "deleteBlockedDefault": "[DE] The default work schedule cannot be deleted.",
+    "deleteBlockedEmployees": "[DE] Cannot delete while assigned to {{count}} employee(s).",
+    "col": {
+      "name": "[DE] Name",
+      "days": "[DE] Working days",
+      "weeklyHours": "[DE] Weekly hours",
+      "assigned": "[DE] Assigned employees"
+    },
+    "workingDayCount": "[DE] {{count}} days"
   }
 }

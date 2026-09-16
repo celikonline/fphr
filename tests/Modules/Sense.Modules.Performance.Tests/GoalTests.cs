@@ -116,4 +116,38 @@ public sealed class GoalTests
 
         goal.Status.ShouldBe(GoalStatus.Completed);
     }
+
+    [Fact]
+    public void Archive_CancelledGoal_IsNoOp()
+    {
+        var goal = Goal.Create(Guid.NewGuid(), Guid.NewGuid(), "Satışları %10 artır", null, TargetDate, null).Value;
+        goal.Cancel();
+
+        goal.Archive();
+
+        goal.Status.ShouldBe(GoalStatus.Cancelled);
+    }
+
+    [Fact]
+    public void Archive_ArchivedGoal_IsIdempotent()
+    {
+        var goal = Goal.Create(Guid.NewGuid(), Guid.NewGuid(), "Satışları %10 artır", null, TargetDate, null).Value;
+        goal.Archive();
+
+        goal.Archive();
+
+        goal.Status.ShouldBe(GoalStatus.Archived);
+    }
+
+    [Fact]
+    public void UpdateProgress_AfterArchive_IsRejected()
+    {
+        var goal = Goal.Create(Guid.NewGuid(), Guid.NewGuid(), "Satışları %10 artır", null, TargetDate, null).Value;
+        goal.Archive();
+
+        var result = goal.UpdateProgress(50);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(PerformanceDomainErrors.GoalNotUpdatable);
+    }
 }

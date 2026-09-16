@@ -138,8 +138,10 @@ public sealed class LeaveRequestRules(
             return Error.Validation(LeaveDomainErrors.RequestZeroDays);
         }
 
+        // ListActiveOverlappingAsync only narrows by date range (SQL-friendly); the actual conflict (same-day
+        // partial requests only clash if their time ranges intersect) is decided in memory by ConflictsWith.
         var overlapping = await requests.ListActiveOverlappingAsync(employeeId, start, end, ct);
-        if (overlapping.Any(r => r.Id != editedRequestId))
+        if (overlapping.Any(r => r.Id != editedRequestId && r.ConflictsWith(start, end, startTime, endTime, halfDayPeriod)))
         {
             return Error.Conflict(LeaveRequestErrors.Overlap);
         }

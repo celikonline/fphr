@@ -84,7 +84,11 @@
     "tags": "Etiketler",
     "editTags": "Etiketleri düzenle",
     "newTag": "Yeni etiket",
-    "addTag": "Ekle"
+    "addTag": "Ekle",
+    "anonymize": "Anonimleştir (KVKK)",
+    "anonymizeDescription": "Bu adayın adı, e-postası ve telefonu geri alınamaz şekilde silinecek; başvuru geçmişi kaydı kalır ama artık bu kişiyi tanımlamaz.",
+    "anonymizeSuccess": "Aday verisi anonimleştirildi.",
+    "anonymized": "Anonimleştirildi"
   },
   "applications": {
     "title": "Başvurular",
@@ -188,6 +192,29 @@
     "transition": "Geçiş",
     "createSuccess": "Otomasyon kuralı oluşturuldu.",
     "empty": "Henüz otomasyon kuralı yok."
+  },
+  "career": {
+    "notFoundTitle": "İlan bulunamadı",
+    "notFoundText": "Bu bağlantı geçersiz veya ilan artık yayında değil.",
+    "loadError": "İlan yüklenirken bir sorun oluştu.",
+    "closingDate": "Son başvuru tarihi",
+    "publishedAt": "Yayın tarihi",
+    "applyTitle": "Başvuru Formu",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "email": "E-posta",
+    "phone": "Telefon",
+    "phoneOptional": "Telefon (opsiyonel)",
+    "consentText": "Kişisel verilerim, bu başvuru ve olası işe alım süreçleri kapsamında KVKK'ya uygun şekilde işlenecek ve saklanacaktır.",
+    "consentRequired": "Devam etmek için aydınlatma metnini onaylamanız gerekir.",
+    "submit": "Başvur",
+    "submitting": "Gönderiliyor...",
+    "submitSuccessTitle": "Başvurunuz alındı",
+    "submitSuccessText": "İlgileniniz için teşekkür ederiz. Başvurunuz değerlendirmeye alınacak, gelişmelerden e-posta ile haberdar edileceksiniz.",
+    "alreadyApplied": "Bu ilana bu e-posta ile zaten başvurdunuz.",
+    "otherOpenPositions": "Diğer açık pozisyonlar",
+    "noOtherPositions": "Şu anda başka açık pozisyon yok.",
+    "backToPosting": "İlana dön"
   },
   "genericError": "Bir şeyler ters gitti."
 }

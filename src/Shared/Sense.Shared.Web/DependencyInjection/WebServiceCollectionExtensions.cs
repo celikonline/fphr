@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Asp.Versioning;
 using FluentValidation;
 using Hangfire;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Sense.Shared.Contracts.Configuration;
@@ -17,7 +19,9 @@ using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Infrastructure;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Notifications;
+using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Authorization;
+using Sense.Shared.Web.Controllers;
 using Sense.Shared.Web.ErrorHandling;
 using Sense.Shared.Web.Localization;
 
@@ -121,6 +125,8 @@ public static class WebServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Scoped<IAuthorizationHandler, PermissionHandler>());
         services.AddAuthorization();
 
+        services.AddSenseRateLimiting(configuration);
+
         services.AddOpenApi(OpenApiDocumentName);
         services.AddHealthChecks();
         services.AddHttpContextAccessor();
@@ -171,6 +177,69 @@ public static class WebServiceCollectionExtensions
 
     /// <summary>Applies the CORS policy registered by <see cref="AddSenseWeb"/>. Must run before UseAuthentication/UseAuthorization.</summary>
     public static IApplicationBuilder UseSenseCors(this IApplicationBuilder app) => app.UseCors(CorsPolicyName);
+
+    /// <summary>
+    /// ADR-0003: anonim uçlar için IP bazlı sabit pencere hız sınırlama politikaları
+    /// (<see cref="RateLimitPolicyNames.PublicAnonymous"/>/<see cref="RateLimitPolicyNames.PublicAnonymousWrite"/>).
+    /// Politikalar yalnızca ilgili modül controller/action'larına <c>[EnableRateLimiting("...")]</c> ile uygulandığında
+    /// devreye girer; global bir varsayılan limiter eklenmez (kimlik doğrulamalı uçlar etkilenmez).
+    /// </summary>
+    private static IServiceCollection AddSenseRateLimiting(this IServiceCollection services, IConfiguration configuration)
+    {
+        var options = configuration.GetSection(ConfigurationSections.RateLimiting).Get<RateLimitingOptions>() ?? new RateLimitingOptions();
+
+        services.AddRateLimiter(limiter =>
+        {
+            limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymous, httpContext => CreatePartition(httpContext, options.PublicAnonymous));
+            limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymousWrite, httpContext => CreatePartition(httpContext, options.PublicAnonymousWrite));
+            limiter.OnRejected = WriteRateLimitProblemAsync;
+        });
+
+        return services;
+    }
+
+    /// <summary>IP adresine göre bölümlenmiş sabit pencere limiter; ters proxy arkasında X-Forwarded-For zaten <see cref="HttpContext.Connection"/>'a yansıtılmış olmalı (bkz. Forwarded Headers middleware'i).</summary>
+    private static RateLimitPartition<string> CreatePartition(HttpContext httpContext, RateLimitPolicyOptions policyOptions)
+    {
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = policyOptions.PermitLimit,
+            Window = TimeSpan.FromSeconds(policyOptions.WindowSeconds),
+            QueueLimit = policyOptions.QueueLimit,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+        });
+    }
+
+    /// <summary>Diğer hatalarla aynı ProblemDetails biçimi (bkz. <see cref="ErrorHandling.GlobalExceptionHandler"/>); Retry-After başlığı eklenir.</summary>
+    private static async ValueTask WriteRateLimitProblemAsync(OnRejectedContext context, CancellationToken cancellationToken)
+    {
+        var httpContext = context.HttpContext;
+        var localizer = httpContext.RequestServices.GetRequiredService<IErrorLocalizer>();
+        var problemOptions = httpContext.RequestServices.GetRequiredService<IOptions<ProblemMappingOptions>>().Value;
+        var error = new Error(ErrorCodes.RateLimitExceeded, ErrorType.TooManyRequests);
+
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            httpContext.Response.Headers.RetryAfter = ((int)retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
+        }
+
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = localizer.Title(ErrorType.TooManyRequests),
+            Detail = localizer.Message(error),
+            Type = problemOptions.TypeBaseUrl + error.Code,
+            Instance = httpContext.Request.Path,
+        };
+        problem.Extensions[Sense.Shared.Contracts.Configuration.ProblemDetailsDefaults.CodeExtension] = error.Code;
+        problem.Extensions[Sense.Shared.Contracts.Configuration.ProblemDetailsDefaults.TraceIdExtension] = httpContext.TraceIdentifier;
+
+        httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        httpContext.Response.ContentType = MediaTypes.ProblemJson;
+        await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken).ConfigureAwait(false);
+    }
 }
 
 /// <summary>Doğrulama mesajlarındaki alan adlarının kaynak anahtarları: field.{snake_case}.</summary>

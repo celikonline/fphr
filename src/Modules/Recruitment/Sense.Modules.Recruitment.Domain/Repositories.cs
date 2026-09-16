@@ -41,6 +41,12 @@ public interface ICandidateRepository
 
     /// <summary>Exact e-mail match within the current tenant scope (career-site apply: reuse an existing candidate instead of duplicating).</summary>
     Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Not-yet-anonymized candidates created before <paramref name="createdBefore"/> (KVKK retention sweep, see
+    /// <see cref="Sense.Modules.Recruitment.Domain.RecruitmentLimits.CandidateDataRetentionMonths"/>).
+    /// </summary>
+    Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default);
 }
 
 /// <summary>JobApplication aggregate repository.</summary>

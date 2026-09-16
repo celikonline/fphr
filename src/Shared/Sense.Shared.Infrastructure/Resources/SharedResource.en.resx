@@ -41,6 +41,7 @@
   <data name="problem.title.payment" xml:space="preserve"><value>Subscription required</value></data>
   <data name="problem.title.failure" xml:space="preserve"><value>Unexpected error</value></data>
   <data name="problem.title.cancelled" xml:space="preserve"><value>Request cancelled</value></data>
+  <data name="problem.title.too_many_requests" xml:space="preserve"><value>Too many requests</value></data>
 
   <data name="general.null_value" xml:space="preserve"><value>Value cannot be empty.</value></data>
   <data name="general.validation_error" xml:space="preserve"><value>The submitted data failed validation.</value></data>
@@ -48,6 +49,7 @@
   <data name="general.request_cancelled" xml:space="preserve"><value>The client cancelled the request.</value></data>
   <data name="general.internal_error" xml:space="preserve"><value>An unexpected error occurred.</value></data>
   <data name="general.not_found" xml:space="preserve"><value>Record not found.</value></data>
+  <data name="general.rate_limit_exceeded" xml:space="preserve"><value>Too many requests were sent; please try again later.</value></data>
 
   <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
@@ -711,6 +713,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Candidate not found.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>The candidate's first and last name are required.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
+  <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Candidate data has already been anonymized.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
   <data name="recruitment.requisitions.read" xml:space="preserve"><value>View Job Requisitions</value></data>

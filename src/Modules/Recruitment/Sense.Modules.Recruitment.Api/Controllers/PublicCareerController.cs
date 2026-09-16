@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sense.Modules.Recruitment.Application.Public;
 using Sense.Shared.Web.Controllers;
 
@@ -22,6 +23,7 @@ public sealed class PublicCareerController : ApiControllerBase
     /// <summary>An Open posting's public detail by its apply slug.</summary>
     [HttpGet("{applySlug}")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous")]
     [ProducesResponseType<PublicJobPostingDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(string applySlug, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetPublicJobPostingQuery(applySlug), ct));
@@ -29,13 +31,18 @@ public sealed class PublicCareerController : ApiControllerBase
     /// <summary>The same company's other Open postings ("diğer açık pozisyonlar"), anchored on one posting's slug.</summary>
     [HttpGet("{applySlug}/related")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous")]
     [ProducesResponseType<IReadOnlyList<PublicJobPostingSummaryDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Related(string applySlug, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListRelatedPublicJobPostingsQuery(applySlug), ct));
 
-    /// <summary>Submits a candidate's application for one posting.</summary>
+    /// <summary>
+    /// Submits a candidate's application for one posting. Rate limit policy name ("public-anonymous-write") is
+    /// ADR-0003 (see shared pano B-3); the policy itself (window/limit) is Faz 1's in Program.cs/WebServiceCollectionExtensions.
+    /// </summary>
     [HttpPost("{applySlug}/apply")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous-write")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Apply(string applySlug, [FromBody] SubmitCareerApplicationRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(

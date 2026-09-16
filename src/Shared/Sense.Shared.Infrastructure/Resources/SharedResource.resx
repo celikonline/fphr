@@ -42,6 +42,7 @@
   <data name="problem.title.payment" xml:space="preserve"><value>Abonelik gerekli</value></data>
   <data name="problem.title.failure" xml:space="preserve"><value>Beklenmeyen hata</value></data>
   <data name="problem.title.cancelled" xml:space="preserve"><value>İstek iptal edildi</value></data>
+  <data name="problem.title.too_many_requests" xml:space="preserve"><value>Çok fazla istek</value></data>
 
   <!-- Genel -->
   <data name="general.null_value" xml:space="preserve"><value>Değer boş olamaz.</value></data>
@@ -50,6 +51,7 @@
   <data name="general.request_cancelled" xml:space="preserve"><value>İstemci isteği iptal etti.</value></data>
   <data name="general.internal_error" xml:space="preserve"><value>Beklenmeyen bir hata oluştu.</value></data>
   <data name="general.not_found" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
+  <data name="general.rate_limit_exceeded" xml:space="preserve"><value>Çok fazla istek gönderildi; lütfen bir süre sonra tekrar deneyin.</value></data>
 
   <!-- Kimlik doğrulama / yetki -->
   <data name="auth.unauthenticated" xml:space="preserve"><value>Kimlik doğrulaması gerekli.</value></data>
@@ -720,6 +722,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Aday bulunamadı.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>Adayın adı ve soyadı zorunludur.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
+  <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Aday verisi zaten anonimleştirilmiş.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>
   <data name="recruitment.requisitions.read" xml:space="preserve"><value>Talep formlarını görüntüleme</value></data>

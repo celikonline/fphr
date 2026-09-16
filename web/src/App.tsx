@@ -36,6 +36,7 @@ import MissingDocumentsReportPage from "@/pages/settings/missing-documents-repor
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
+import CareerJobPostingPage from "@/pages/public/career/job-posting";
 import RequestsPage from "@/pages/requests";
 import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
@@ -52,6 +53,7 @@ import PaymentsPage from "@/pages/payments";
 import ExpensePaymentsAdminPage from "@/pages/expense-payments-admin";
 import MyTimesheetPage from "@/pages/attendance/my-timesheet";
 import MyShiftsPage from "@/pages/attendance/my-shifts";
+import WorkSchedulesPage from "@/pages/settings/work-schedules";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -75,6 +77,7 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
         <Route path="/approve/:token" element={<ApproveTokenPage />} />
+        <Route path="/kariyer/:applySlug" element={<CareerJobPostingPage />} />
 
         {/* Protected Routes: single app shell (sidebar + header) */}
         <Route
@@ -127,13 +130,14 @@ export default function App() {
           <Route path="settings/company/subcontractors" element={<SubcontractorsPage />} />
           <Route path="settings/company/document-types" element={<DocumentTypesPage />} />
           <Route path="settings/company/missing-documents" element={<MissingDocumentsReportPage />} />
+          <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
           <Route
             path="settings/rules/*"
             element={
               <ComingSoonPage
                 titleKey="settings.rules"
                 phase={1}
-                itemKeys={["settings.workCalendars", "settings.visaProcesses"]}
+                itemKeys={["settings.visaProcesses"]}
               />
             }
           />

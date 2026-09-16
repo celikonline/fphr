@@ -27,6 +27,17 @@ public sealed class DocumentRequirementMaterializationService(
     /// <summary>4857 md.8: two months to hand over the written contract or a working-conditions document. Used when no Contract.WorkingConditionsDocDeadlineDays row is seeded.</summary>
     public const int DefaultContractDocumentDeadlineDays = 60;
 
+    /// <summary>
+    /// WaivedReason used when re-materialization auto-clears a still-<see cref="DocumentRequirementStatus.Missing"/>
+    /// Conditional requirement because its condition no longer matches (faz4 TB-9: "append-only materialization
+    /// sorunu"). Never touches Uploaded/already-Waived rows or non-Conditional stages.
+    /// </summary>
+    public const string AutoWaivedReason = "Koşul artık geçerli değil (otomatik yeniden değerlendirme)";
+
+    /// <summary>Actor recorded on an auto-waive - no human triggered it, same "no user" convention as
+    /// <c>WaiveDocumentRequirementHandler</c>'s <c>currentUser.UserId ?? Guid.Empty</c>.</summary>
+    public static readonly Guid SystemActorId = Guid.Empty;
+
     /// <param name="dueDateBasis">
     /// For EmployeeHired, the employee's real HireDate. For the manual reevaluate command there is no cross-module
     /// HireDate lookup today (Employee.Contracts exposes only derived booleans for sensitive fields, and HireDate
@@ -67,6 +78,7 @@ public sealed class DocumentRequirementMaterializationService(
 
         var activeTypes = await types.ListAsync(stage: null, isActive: true, cancellationToken);
         var resolved = DocumentRequirementEvaluator.ResolveAtHire(activeTypes, context);
+        await AutoWaiveStaleConditionalRequirementsAsync(employeeId, activeTypes, resolved, cancellationToken);
         var dueDate = dueDateBasis.AddDays(DefaultGraceDays);
 
         // The written contract has a statutory deadline (4857 md.8) rather than the generic grace period.
@@ -97,5 +109,51 @@ public sealed class DocumentRequirementMaterializationService(
         }
 
         return created;
+    }
+
+    /// <summary>
+    /// Append-only materialization never removed a requirement once its condition stopped matching (e.g. the
+    /// employee turned 18, a disability record was corrected). This clears the gap for the one case that's safe to
+    /// automate: a still-<see cref="DocumentRequirementStatus.Missing"/> Conditional requirement whose type is no
+    /// longer in <paramref name="resolvedTypes"/> gets auto-waived. Uploaded requirements (real evidence already on
+    /// file) and manually-Waived ones are left untouched; non-Conditional stages (Onboarding/DuringEmployment/
+    /// Offboarding) are out of scope here - their disappearance means the type itself was deactivated, a distinct
+    /// HR decision, not a condition re-evaluation.
+    /// </summary>
+    private async Task AutoWaiveStaleConditionalRequirementsAsync(
+        Guid employeeId,
+        IReadOnlyCollection<DocumentTypeDefinition> activeTypes,
+        IReadOnlyCollection<DocumentTypeDefinition> resolvedTypes,
+        CancellationToken cancellationToken)
+    {
+        var conditionalTypeIds = activeTypes
+            .Where(t => t.Stage == DocumentTypeStage.Conditional)
+            .Select(t => t.Id)
+            .ToHashSet();
+        if (conditionalTypeIds.Count == 0)
+        {
+            return;
+        }
+
+        var resolvedTypeIds = resolvedTypes.Select(t => t.Id).ToHashSet();
+        // Defensive `?? []`: existing unit tests stub IEmployeeDocumentRequirementRepository with NSubstitute without
+        // configuring ListByEmployeeAsync, and NSubstitute's default for an unconfigured Task<IReadOnlyList<T>>
+        // member is a completed task wrapping null, not an empty list.
+        var existingRequirements = await requirements.ListByEmployeeAsync(employeeId, cancellationToken) ?? [];
+        foreach (var requirement in existingRequirements)
+        {
+            if (requirement.Status != DocumentRequirementStatus.Missing)
+            {
+                continue;
+            }
+
+            if (!conditionalTypeIds.Contains(requirement.DocumentTypeId) || resolvedTypeIds.Contains(requirement.DocumentTypeId))
+            {
+                continue;
+            }
+
+            // AutoWaivedReason is a non-empty constant, so this can never fail the domain's "reason required" check.
+            _ = requirement.Waive(AutoWaivedReason, SystemActorId);
+        }
     }
 }

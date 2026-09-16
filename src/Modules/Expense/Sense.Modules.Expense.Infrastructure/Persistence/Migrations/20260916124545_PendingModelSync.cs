@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Sense.Modules.Expense.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class AddExpensePaymentTracking : Migration
+    public partial class PendingModelSync : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

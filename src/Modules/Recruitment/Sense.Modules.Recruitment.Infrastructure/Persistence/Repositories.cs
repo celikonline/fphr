@@ -75,6 +75,11 @@ public sealed class CandidateRepository(RecruitmentDbContext context) : ICandida
 
     public async Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
         await context.Candidates.FirstOrDefaultAsync(c => c.Email == email, cancellationToken);
+
+    public async Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default) =>
+        await context.Candidates
+            .Where(c => c.CreatedAt < createdBefore && !c.Email.EndsWith(Candidate.AnonymizedEmailDomain))
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed JobApplication repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

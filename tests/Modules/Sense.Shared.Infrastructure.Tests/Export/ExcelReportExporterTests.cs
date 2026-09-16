@@ -35,7 +35,7 @@ public sealed class ExcelReportExporterTests
         sheet.Cell(2, 2).GetDouble().ShouldBe(45000.5);
         sheet.Cell(2, 3).GetDateTime().ShouldBe(new DateTime(2024, 3, 1));
         sheet.Cell(2, 3).Style.NumberFormat.Format.ShouldBe("dd.mm.yyyy");
-        sheet.SheetView.FrozenRows.ShouldBe(1);
+        sheet.SheetView.SplitRow.ShouldBe(1);
     }
 
     [Fact]

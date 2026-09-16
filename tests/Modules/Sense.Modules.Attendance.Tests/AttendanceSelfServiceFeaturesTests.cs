@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Shifts;
 using Sense.Modules.Attendance.Contracts;

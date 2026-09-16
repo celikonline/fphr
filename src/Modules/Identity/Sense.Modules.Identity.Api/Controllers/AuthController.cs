@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Auth;
 using Sense.Modules.Identity.Application.Invitations;
@@ -58,14 +59,22 @@ public sealed class AuthController : ApiControllerBase
         FromResult(await Dispatcher.Send(new LogoutCommand(request.RefreshToken, request.AllSessions), ct));
 
     /// <summary>Var olmayan e-posta için de aynı (204) yanıt döner — kullanıcı numaralandırmasına izin verilmez.</summary>
+    /// <remarks>
+    /// Rate limit politika adı ("public-anonymous-write") ADR-0003 ile PO tarafından karara bağlandı; politikanın
+    /// kendisi (pencere/limit) Faz 1'in Program.cs'inde tanımlanır (bkz. paylaşılan pano B-3). Bu öznitelik o politika
+    /// henüz tanımlanmamışken de zararsızdır: `UseRateLimiter()` devreye girmeden `[EnableRateLimiting]` yalnızca
+    /// endpoint metadata'sı ekler, çalışma zamanında hiçbir şeyi değiştirmez.
+    /// </remarks>
     [HttpPost("forgot-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous-write")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ForgotPasswordCommand(request.Email), ct));
 
     [HttpPost("reset-password")]
     [AllowAnonymous]
+    [EnableRateLimiting("public-anonymous-write")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ResetPasswordCommand(request.Token, request.NewPassword), ct));

@@ -80,5 +80,32 @@
     "paymentNotePlaceholder": "E.g. bank transfer reference",
     "confirmPay": "Mark as paid",
     "paidSuccess": "Payment recorded."
+  },
+  "categoriesAdmin": {
+    "title": "Expense Categories",
+    "subtitle": "Manage the expense category catalog employees pick from when adding receipts.",
+    "add": "Add category",
+    "addTitle": "Add category",
+    "showInactive": "Show inactive categories too",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "empty": "No categories yet.",
+    "saved": "Category saved.",
+    "statusSaved": "Category status updated.",
+    "codeHint": "Fixed code used in exports and reports; cannot be changed later.",
+    "columns": {
+      "name": "Name",
+      "code": "Code",
+      "defaultTaxRate": "Default VAT rate",
+      "status": "Status"
+    },
+    "errors": {
+      "generic": "Category could not be saved.",
+      "loadFailed": "Categories could not be loaded.",
+      "codeRequired": "Code is required.",
+      "nameRequired": "Name is required."
+    }
   }
 }

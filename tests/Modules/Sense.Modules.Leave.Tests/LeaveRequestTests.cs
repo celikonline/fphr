@@ -98,6 +98,59 @@ public sealed class LeaveRequestStateTests
     }
 
     [Fact]
+    public void ConflictsWith_SameDayNonOverlappingHourlyRanges_DoNotConflict()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var existing = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.JobSearch, day, day, 0.1333m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(10, 0)).Value;
+
+        existing.ConflictsWith(day, day, new TimeOnly(11, 0), new TimeOnly(12, 0), null).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ConflictsWith_SameDayOverlappingHourlyRanges_Conflicts()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var existing = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.JobSearch, day, day, 0.1333m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(11, 0)).Value;
+
+        existing.ConflictsWith(day, day, new TimeOnly(10, 0), new TimeOnly(12, 0), null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConflictsWith_MorningHalfDay_AndAfternoonHourly_DoNotConflict_ButAnHourlyCrossingNoonDoes()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var existing = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.Excuse, day, day, 0.5m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, halfDayPeriod: HalfDayPeriod.Morning).Value;
+
+        existing.ConflictsWith(day, day, new TimeOnly(13, 0), new TimeOnly(15, 0), null).ShouldBeFalse();
+        existing.ConflictsWith(day, day, null, null, HalfDayPeriod.Afternoon).ShouldBeFalse();
+        existing.ConflictsWith(day, day, new TimeOnly(11, 0), new TimeOnly(13, 0), null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConflictsWith_FullDayRequest_AlwaysConflictsOnASharedDate_EvenAgainstAPartialCandidate()
+    {
+        var existing = NewRequest(); // FullDay, 2026-10-05..2026-10-09
+        existing.ConflictsWith(new DateOnly(2026, 10, 5), new DateOnly(2026, 10, 5), new TimeOnly(9, 0), new TimeOnly(10, 0), null).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ConflictsWith_DifferentDates_NeverConflicts()
+    {
+        var day = new DateOnly(2026, 10, 5);
+        var existing = LeaveRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), LeaveTypeCode.JobSearch, day, day, 0.1333m, null, LeaveRequestSource.SelfService,
+            DateTime.UtcNow, null, null, startTime: new TimeOnly(9, 0), endTime: new TimeOnly(11, 0)).Value;
+
+        existing.ConflictsWith(day.AddDays(1), day.AddDays(1), new TimeOnly(9, 0), new TimeOnly(11, 0), null).ShouldBeFalse();
+    }
+
+    [Fact]
     public void UpdatePending_BumpsRevision_AndOldApprovalDecisionIsIgnored()
     {
         var request = NewRequest();
@@ -325,5 +378,43 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         using var verify = ServiceProvider.CreateScope();
         var usage = await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
         usage.Amount.ShouldBe(-0.2667m);
+    }
+
+    /// <summary>
+    /// Before LeaveRequest.ConflictsWith, the "leave.errors.overlap" gate only looked at the date range, so a
+    /// second same-day Hourly request was always rejected regardless of the actual time window. Now only a real
+    /// time intersection conflicts.
+    /// </summary>
+    [Fact]
+    public async Task Submit_TwoHourlyRequestsSameDay_OnlyConflictsWhenTimesActuallyIntersect()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        var approvalId = Guid.NewGuid();
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(approvalId));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid jobSearchId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            jobSearchId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.JobSearch).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        var first = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(10, 0));
+        first.IsSuccess.ShouldBeTrue(first.IsFailure ? first.Error.Code : null);
+
+        // Non-overlapping window, same day: both requests stay active, but the time ranges do not intersect.
+        var nonOverlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 0), new TimeOnly(12, 0));
+        nonOverlapping.IsSuccess.ShouldBeTrue(nonOverlapping.IsFailure ? nonOverlapping.Error.Code : null);
+
+        // Overlapping window: still rejected.
+        var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 30), new TimeOnly(12, 30));
+        overlapping.Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
     }
 }

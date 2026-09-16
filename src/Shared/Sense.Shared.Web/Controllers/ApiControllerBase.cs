@@ -86,6 +86,7 @@ public static class HttpStatusMap
         ErrorType.Conflict => StatusCodes.Status409Conflict,
         ErrorType.Rule => StatusCodes.Status422UnprocessableEntity,
         ErrorType.Payment => StatusCodes.Status402PaymentRequired,
+        ErrorType.TooManyRequests => StatusCodes.Status429TooManyRequests,
         _ => StatusCodes.Status500InternalServerError,
     };
 }

@@ -54,5 +54,49 @@
     "break": "Mola",
     "note": "Not",
     "empty": "Bu dönemde vardiya kaydınız yok."
+  },
+  "weekDay": {
+    "monday": "Pazartesi",
+    "tuesday": "Salı",
+    "wednesday": "Çarşamba",
+    "thursday": "Perşembe",
+    "friday": "Cuma",
+    "saturday": "Cumartesi",
+    "sunday": "Pazar"
+  },
+  "workSchedules": {
+    "title": "Çalışma takvimleri",
+    "subtitle": "Haftalık çalışma günleri, saatleri ve mola aralıkları.",
+    "addTitle": "Yeni çalışma takvimi ekle",
+    "editDays": "Günleri düzenle",
+    "editDaysTitle": "Günleri düzenle",
+    "name": "Takvim adı",
+    "nameRequired": "Takvim adı zorunludur.",
+    "renameTitle": "Yeniden adlandır",
+    "renamed": "Çalışma takvimi yeniden adlandırıldı.",
+    "created": "Çalışma takvimi oluşturuldu.",
+    "daysUpdated": "Günler güncellendi.",
+    "deleted": "Çalışma takvimi silindi.",
+    "default": "Varsayılan",
+    "inactive": "Pasif",
+    "makeDefault": "Varsayılan yap",
+    "defaultSet": "Varsayılan çalışma takvimi güncellendi.",
+    "activate": "Aktifleştir",
+    "deactivate": "Pasifleştir",
+    "dayOff": "Tatil",
+    "breakLabel": "Mola",
+    "includeSaturday": "Tam hafta hesaplamasına cumartesiyi dahil et",
+    "includeSaturdayDesc": "Haftalık 6 gün tam çalışılan takvimlerde cumartesi günü de hesaba katılır.",
+    "deleteTitle": "Çalışma takvimini sil",
+    "deleteDescription": "\"{{name}}\" takvimini silmek istediğinize emin misiniz?",
+    "deleteBlockedDefault": "Varsayılan çalışma takvimi silinemez.",
+    "deleteBlockedEmployees": "{{count}} çalışana atanmışken silinemez.",
+    "col": {
+      "name": "Ad",
+      "days": "Çalışma günleri",
+      "weeklyHours": "Haftalık süre",
+      "assigned": "Atanan çalışan"
+    },
+    "workingDayCount": "{{count}} gün"
   }
 }

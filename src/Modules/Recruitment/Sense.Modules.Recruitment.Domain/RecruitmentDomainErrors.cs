@@ -14,6 +14,7 @@ public static class RecruitmentDomainErrors
     public const string CandidateNotFound = "recruitment.candidate.not_found";
     public const string CandidateNameRequired = "recruitment.candidate.name_required";
     public const string CandidateEmailRequired = "recruitment.candidate.email_required";
+    public const string CandidateAlreadyAnonymized = "recruitment.candidate.already_anonymized";
 
     public const string ApplicationNotFound = "recruitment.application.not_found";
     public const string ApplicationAlreadyTerminal = "recruitment.application.already_terminal";
@@ -58,4 +59,13 @@ public static class RecruitmentLimits
     public const int PhoneMaxLength = 30;
     public const int ApplySlugLength = 22;
     public const int FormAnswerMaxLength = 4_000;
+
+    /// <summary>
+    /// KVKK data retention window for a candidate's personal data (Faz 9 "KVKK uyumlu aday verisi saklama ve imha").
+    /// After this many months from <c>CreatedAt</c> a candidate not hired is eligible for anonymization; see
+    /// <see cref="Sense.Modules.Recruitment.Domain.Candidates.Candidate.Anonymize"/>. No dedicated retention/consent
+    /// column exists yet - deliberately derived from the existing audit <c>CreatedAt</c> column (no migration this
+    /// slice, see ADR-0001 "elle migration yasak"); revisit once EF tooling is back and Faz 1's ConsentRecord ships.
+    /// </summary>
+    public const int CandidateDataRetentionMonths = 24;
 }

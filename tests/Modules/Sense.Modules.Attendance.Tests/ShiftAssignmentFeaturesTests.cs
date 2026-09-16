@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.Shifts;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -22,6 +23,7 @@ public sealed class AssignShiftHandlerTests
     private readonly IShiftAssignmentRepository _shifts = Substitute.For<IShiftAssignmentRepository>();
     private readonly IShiftSettingsRepository _settingsRepository = Substitute.For<IShiftSettingsRepository>();
     private readonly IShiftPlanLockRepository _locks = Substitute.For<IShiftPlanLockRepository>();
+    private readonly IEmployeeAvailabilityRepository _availability = Substitute.For<IEmployeeAvailabilityRepository>();
     private readonly IEmployeeLookup _employeeLookup = Substitute.For<IEmployeeLookup>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
     private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
@@ -36,9 +38,11 @@ public sealed class AssignShiftHandlerTests
         _locks.FindByPeriodAsync(Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns((ShiftPlanLock?)null);
         _shifts.ListForRangeAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>())
             .Returns(new List<ShiftAssignment>());
+        _availability.ListForEmployeeAsync(Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeAvailability>());
     }
 
-    private AssignShiftHandler CreateHandler() => new(_tenant, _shifts, _settingsRepository, _locks, _employeeLookup, _dataScope, _unitOfWork);
+    private AssignShiftHandler CreateHandler() => new(_tenant, _shifts, _settingsRepository, _locks, _availability, _employeeLookup, _dataScope, _unitOfWork);
 
     [Fact]
     public async Task Handle_NewAssignment_Succeeds()

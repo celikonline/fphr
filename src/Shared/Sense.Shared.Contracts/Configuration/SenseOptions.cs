@@ -15,6 +15,7 @@ public static class ConfigurationSections
     public const string Frontend = "Frontend";
     public const string Identity = "Identity";
     public const string Observability = "Observability";
+    public const string RateLimiting = "RateLimiting";
 }
 
 public static class ConnectionStringNames
@@ -189,4 +190,41 @@ public static class ObservabilityDefaults
     public const string MetricsPath = "/metrics";
     public const double TracingSampleRatio = 1.0;
     public const double SentryTracesSampleRate = 0.1;
+}
+
+/// <summary>
+/// ADR-0003: anonim (kimlik doğrulamasız) uçlar için IP bazlı sabit pencere hız sınırlama. Politika adları
+/// (<see cref="RateLimitPolicyNames.PublicAnonymous"/>/<see cref="RateLimitPolicyNames.PublicAnonymousWrite"/>)
+/// sözleşme sayılır, değiştirilemez; sadece sayısal değerler burada ayarlanır.
+/// </summary>
+public sealed class RateLimitingOptions
+{
+    /// <summary>Anonim okuma uçları (ör. GET) için politika.</summary>
+    public RateLimitPolicyOptions PublicAnonymous { get; set; } = new() { PermitLimit = RateLimitingDefaults.PublicAnonymousPermitLimit };
+
+    /// <summary>Anonim yazma uçları (ör. POST başvuru, şifre sıfırlama) için daha sıkı politika.</summary>
+    public RateLimitPolicyOptions PublicAnonymousWrite { get; set; } = new() { PermitLimit = RateLimitingDefaults.PublicAnonymousWritePermitLimit };
+}
+
+public sealed class RateLimitPolicyOptions
+{
+    public int PermitLimit { get; set; } = RateLimitingDefaults.PublicAnonymousPermitLimit;
+
+    public int WindowSeconds { get; set; } = RateLimitingDefaults.WindowSeconds;
+
+    public int QueueLimit { get; set; }
+}
+
+public static class RateLimitingDefaults
+{
+    public const int PublicAnonymousPermitLimit = 30;
+    public const int PublicAnonymousWritePermitLimit = 5;
+    public const int WindowSeconds = 60;
+}
+
+/// <summary>Sözleşme: politika adları PO sahipliğinde, değiştirilemez (bkz. ADR-0003).</summary>
+public static class RateLimitPolicyNames
+{
+    public const string PublicAnonymous = "public-anonymous";
+    public const string PublicAnonymousWrite = "public-anonymous-write";
 }

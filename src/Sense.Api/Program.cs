@@ -83,6 +83,10 @@ try
     app.UseSenseLocalization();
     app.UseSenseCors();
 
+    // ADR-0003: anonim uçlar için IP bazlı hız sınırlama (public-anonymous / public-anonymous-write);
+    // yalnızca [EnableRateLimiting("...")] ile işaretli uç noktalarda devreye girer.
+    app.UseRateLimiter();
+
     app.UseAuthentication();
     app.UseRequestContext();
     app.UseAuthorization();

@@ -126,6 +126,8 @@ export interface Candidate {
   phone: string | null;
   source: CandidateSource;
   tagIds: string[];
+  /** KVKK imha uygulanmış mı (bkz. `anonymizeCandidate`/`anonymizeExpiredCandidates`). */
+  isAnonymized: boolean;
 }
 
 export interface CandidateContactInput {
@@ -156,6 +158,17 @@ export async function updateCandidate(id: string, input: CandidateContactInput):
 
 export async function setCandidateTags(id: string, tagIds: string[]): Promise<void> {
   await apiClient.put(`${RECRUITMENT_BASE}/candidates/${id}/tags`, { tagIds });
+}
+
+/** KVKK "unutulma hakkı": bu adayın kişisel verilerini geri alınamaz şekilde anonimleştirir. */
+export async function anonymizeCandidate(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/candidates/${id}/anonymize`);
+}
+
+/** KVKK saklama süresi dolan tüm adayları anonimleştirir; anonimleştirilen aday sayısını döner. */
+export async function anonymizeExpiredCandidates(): Promise<number> {
+  const { data } = await apiClient.post<number>(`${RECRUITMENT_BASE}/candidates/anonymize-expired`);
+  return data;
 }
 
 export type ApplicationStage = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
@@ -366,4 +379,46 @@ export async function deactivateAutomationRule(id: string): Promise<void> {
 
 export async function reactivateAutomationRule(id: string): Promise<void> {
   await apiClient.post(`${RECRUITMENT_BASE}/automation-rules/${id}/reactivate`);
+}
+
+// ---------------------------------------------------------------- Public career site (anonymous, no-auth pages)
+// Mirrors `PublicCareerController.cs` (`api/v1/recruitment/public/postings`). Tenant is resolved server-side from
+// the posting's `ApplySlug` alone - never send/expect a tenant id here.
+
+export interface PublicJobPosting {
+  applySlug: string;
+  title: string;
+  employmentType: RecruitmentEmploymentType;
+  description: string | null;
+  closingDate: string | null;
+  publishedAt: string | null;
+}
+
+export interface PublicJobPostingSummary {
+  applySlug: string;
+  title: string;
+  employmentType: RecruitmentEmploymentType;
+  publishedAt: string | null;
+}
+
+export interface SubmitCareerApplicationInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+}
+
+export async function getPublicJobPosting(applySlug: string): Promise<PublicJobPosting> {
+  const { data } = await apiClient.get<PublicJobPosting>(`${RECRUITMENT_BASE}/public/postings/${applySlug}`);
+  return data;
+}
+
+export async function listRelatedPublicJobPostings(applySlug: string): Promise<PublicJobPostingSummary[]> {
+  const { data } = await apiClient.get<PublicJobPostingSummary[]>(`${RECRUITMENT_BASE}/public/postings/${applySlug}/related`);
+  return data;
+}
+
+export async function submitCareerApplication(applySlug: string, input: SubmitCareerApplicationInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/public/postings/${applySlug}/apply`, input);
+  return data;
 }

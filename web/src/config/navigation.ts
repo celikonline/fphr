@@ -83,6 +83,7 @@ export const SETTINGS_PERMISSIONS = {
   missingDocuments: ["documents.requirements.view"],
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
+  workSchedules: ["attendance.workschedule.view"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -134,7 +135,14 @@ export const NAV_ITEMS: NavItem[] = [
   },
   { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, iconColor: "gold" },
   { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow, iconColor: "navy" },
-  { key: "reports", labelKey: "nav.reports", path: "/app/reports", icon: BarChart3, permissions: ["analytics.kpi.view"], iconColor: "blue" },
+  {
+    key: "reports",
+    labelKey: "nav.reports",
+    path: "/app/reports",
+    icon: BarChart3,
+    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
+    iconColor: "blue",
+  },
   {
     key: "settings",
     labelKey: "nav.settings",
@@ -364,8 +372,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         descriptionKey: "settings.workCalendarsDesc",
         path: "/app/settings/rules/work-calendars",
         icon: CalendarClock,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 1,
+        permissions: SETTINGS_PERMISSIONS.workSchedules,
       },
       {
         key: "visaProcesses",

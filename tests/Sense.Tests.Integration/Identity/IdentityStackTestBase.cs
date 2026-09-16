@@ -53,6 +53,7 @@ public abstract class IdentityStackTestBase : TestFixture
         {
             o.BaseUrl = "https://app.senseik.test";
             o.InviteAcceptPath = "/invite/{token}";
+            o.PasswordResetPath = "/reset-password/{token}";
         });
         services.AddSingleton<TimeProvider>(Time);
         services.AddSingleton<IIdentityMailer>(Mailer);
@@ -184,13 +185,19 @@ public sealed class RecordingIdentityMailer : IIdentityMailer
 {
     public List<(string To, string Url)> Invitations { get; } = [];
 
+    public List<(string To, string Url)> PasswordResets { get; } = [];
+
     public Task SendInvitationAsync(string toEmail, string toName, string tenantName, string inviteUrl, DateTime expiresAtUtc, CancellationToken ct)
     {
         Invitations.Add((toEmail, inviteUrl));
         return Task.CompletedTask;
     }
 
-    public Task SendPasswordResetAsync(string toEmail, string toName, string resetUrl, DateTime expiresAtUtc, CancellationToken ct) => Task.CompletedTask;
+    public Task SendPasswordResetAsync(string toEmail, string toName, string resetUrl, DateTime expiresAtUtc, CancellationToken ct)
+    {
+        PasswordResets.Add((toEmail, resetUrl));
+        return Task.CompletedTask;
+    }
 
     public Task SendWelcomeAsync(string toEmail, string toName, string tenantName, string loginUrl, CancellationToken ct) => Task.CompletedTask;
 }

@@ -34,4 +34,33 @@ public sealed class CandidateTests
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(RecruitmentDomainErrors.CandidateEmailRequired);
     }
+
+    [Fact]
+    public void Anonymize_ScrubsPersonalDataAndTags()
+    {
+        var candidate = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "ada.yilmaz@example.com", "5551234567").Value;
+        candidate.SetTags([Guid.NewGuid()]);
+
+        var result = candidate.Anonymize();
+
+        result.IsSuccess.ShouldBeTrue();
+        candidate.IsAnonymized.ShouldBeTrue();
+        candidate.FirstName.ShouldNotBe("Ada");
+        candidate.LastName.ShouldNotBe("Yılmaz");
+        candidate.Email.ShouldEndWith(Candidate.AnonymizedEmailDomain);
+        candidate.Phone.ShouldBeNull();
+        candidate.Tags.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Anonymize_CalledTwice_SecondCallFails()
+    {
+        var candidate = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "ada.yilmaz@example.com", null).Value;
+        candidate.Anonymize();
+
+        var result = candidate.Anonymize();
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(RecruitmentDomainErrors.CandidateAlreadyAnonymized);
+    }
 }
