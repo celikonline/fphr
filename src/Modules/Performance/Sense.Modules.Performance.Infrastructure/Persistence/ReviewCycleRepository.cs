@@ -23,4 +23,24 @@ public sealed class ReviewCycleRepository(PerformanceDbContext context) : IRevie
         await context.ReviewCycles
             .Where(c => c.Participants.Any(p => p.Assignments.Any(a => a.EvaluatorEmployeeId == evaluatorEmployeeId)))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ReviewCycle>> ListWithGoalsForParticipantAsync(Guid participantEmployeeId, CancellationToken cancellationToken = default) =>
+        await context.ReviewCycles
+            .Where(c => c.Kind == ReviewKind.CompetencyAndGoal && c.Participants.Any(p => p.EmployeeId == participantEmployeeId && p.IncludeGoals))
+            .ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed GoalCategory repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class GoalCategoryRepository(PerformanceDbContext context) : IGoalCategoryRepository
+{
+    public void Add(GoalCategory category) => context.GoalCategories.Add(category);
+
+    public async Task<Result<GoalCategory>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var category = await context.GoalCategories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+        return category is null ? Error.NotFound(PerformanceDomainErrors.GoalCategoryNotFound) : category;
+    }
+
+    public async Task<IReadOnlyList<GoalCategory>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.GoalCategories.OrderBy(c => c.Name).ToListAsync(cancellationToken);
 }

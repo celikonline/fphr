@@ -34,6 +34,35 @@ public static class ScoreCalculator
         return competencyScores.Count == 0 ? null : WeightedAverage(competencyScores);
     }
 
+    /// <summary>hedef puanı = skalaya göre puan; hedef genel puanı = hedef ağırlıklı ortalama. Only ResultApproved goals count.</summary>
+    public static decimal? CalculateGoalScore(ReviewParticipant participant)
+    {
+        var goalScores = participant.Goals
+            .Where(g => g.Status == GoalStatus.ResultApproved && g.Points is not null)
+            .Select(g => (Weight: g.Weight ?? 0m, Score: g.Points!.Value))
+            .ToList();
+
+        return goalScores.Count == 0 ? null : WeightedAverage(goalScores);
+    }
+
+    /// <summary>nihai = yetkinlik ağırlığı × yetkinlik puanı + hedef ağırlığı × hedef puanı (11.3.10); CompetencyWeight boşsa 50/50.</summary>
+    public static decimal? CalculateFinalScore(ReviewCycle cycle, decimal? competencyScore, decimal? goalScore, bool includeGoals)
+    {
+        if (cycle.Kind != ReviewKind.CompetencyAndGoal || !includeGoals || goalScore is null)
+        {
+            return competencyScore;
+        }
+
+        if (competencyScore is null)
+        {
+            return goalScore;
+        }
+
+        var competencyWeight = cycle.CompetencyWeight ?? 50m;
+        var goalWeight = 100m - competencyWeight;
+        return Math.Round((competencyWeight * competencyScore.Value + goalWeight * goalScore.Value) / 100m, 2, MidpointRounding.AwayFromZero);
+    }
+
     private static decimal? CalculateQuestionScore(ReviewCycle cycle, ReviewParticipant participant, Guid questionId)
     {
         var relationAverages = new List<(decimal Weight, decimal Score)>();

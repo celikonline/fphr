@@ -19,22 +19,11 @@ public sealed class ReviewCycleTests
         var result = ReviewCycle.Create(
             Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, ReviewKind.Competency,
             RatingScale.ZeroToHundred, CommentMode.Optional, EvaluatorLabelMode.Name, reportShowPhoto: true,
-            employeeCanViewResults: true, employeeCanDownloadPdf: true, SelfAndManagerConfigs(managerMinRequired: 1), OneCompetencyOneQuestion());
+            employeeCanViewResults: true, employeeCanDownloadPdf: true, GoalEntryBy.Employee, null,
+            SelfAndManagerConfigs(managerMinRequired: 1), OneCompetencyOneQuestion());
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(ReviewCycleStatus.Draft);
-    }
-
-    [Fact]
-    public void Create_GoalKind_IsRejected()
-    {
-        var result = ReviewCycle.Create(
-            Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, ReviewKind.CompetencyAndGoal,
-            RatingScale.ZeroToHundred, CommentMode.Optional, EvaluatorLabelMode.Name, false, false, false,
-            SelfAndManagerConfigs(1), OneCompetencyOneQuestion());
-
-        result.IsFailure.ShouldBeTrue();
-        result.Error.Code.ShouldBe(PerformanceDomainErrors.CycleGoalKindNotYetSupported);
     }
 
     /// <summary>
@@ -121,11 +110,14 @@ public sealed class ReviewCycleTests
         cycle.Participants.Single().CompetencyScore.ShouldBe(65.00m);
     }
 
-    private static ReviewCycle CreateValidCycle(IReadOnlyList<RelationConfigInput> relationConfigs) =>
+    internal static ReviewCycle CreateValidCycle(
+        IReadOnlyList<RelationConfigInput> relationConfigs, ReviewKind kind = ReviewKind.Competency,
+        GoalEntryBy goalEntryBy = GoalEntryBy.Employee, decimal? competencyWeight = null) =>
         ReviewCycle.Create(
-            Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, ReviewKind.Competency,
+            Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, kind,
             RatingScale.ZeroToHundred, CommentMode.Optional, EvaluatorLabelMode.Name, reportShowPhoto: true,
-            employeeCanViewResults: true, employeeCanDownloadPdf: true, relationConfigs, OneCompetencyOneQuestion()).Value;
+            employeeCanViewResults: true, employeeCanDownloadPdf: true, goalEntryBy, competencyWeight,
+            relationConfigs, OneCompetencyOneQuestion()).Value;
 
     private static void AddTenParticipants(ReviewCycle cycle, bool sevenWithFiveManagers)
     {

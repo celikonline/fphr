@@ -7,16 +7,10 @@ namespace Sense.Modules.Performance.Tests;
 /// <summary>"Değerlendirmeyi tamamla" (ForceComplete): per-category minimum eligibility, Skipped stragglers, and the no-eligible error.</summary>
 public sealed class ForceCompleteTests
 {
-    private static readonly DateOnly PeriodStart = new(2026, 1, 1);
-    private static readonly DateOnly PeriodEnd = new(2026, 3, 31);
-
     [Fact]
     public void ForceComplete_ParticipantMeetingMinimum_CompletesAndSkipsStragglers()
     {
-        var cycle = ReviewCycle.Create(
-            Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, ReviewKind.Competency,
-            RatingScale.ZeroToHundred, CommentMode.Optional, EvaluatorLabelMode.Name, true, true, true,
-            ReviewCycleTests.SelfDisabledManagerOnly(minRequired: 2), ReviewCycleTests.OneCompetencyOneQuestion()).Value;
+        var cycle = ReviewCycleTests.CreateValidCycle(ReviewCycleTests.SelfDisabledManagerOnly(minRequired: 2));
 
         var employeeId = Guid.NewGuid();
         var evaluatorIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
@@ -48,10 +42,7 @@ public sealed class ForceCompleteTests
     [Fact]
     public void ForceComplete_NoParticipantMeetsMinimum_ReturnsErrorAndChangesNothing()
     {
-        var cycle = ReviewCycle.Create(
-            Guid.NewGuid(), "2026 Q1", PeriodStart, PeriodEnd, ReviewKind.Competency,
-            RatingScale.ZeroToHundred, CommentMode.Optional, EvaluatorLabelMode.Name, true, true, true,
-            ReviewCycleTests.SelfDisabledManagerOnly(minRequired: 2), ReviewCycleTests.OneCompetencyOneQuestion()).Value;
+        var cycle = ReviewCycleTests.CreateValidCycle(ReviewCycleTests.SelfDisabledManagerOnly(minRequired: 2));
 
         var employeeId = Guid.NewGuid();
         var evaluators = new Dictionary<EvaluatorRelation, IReadOnlyList<Guid>> { [EvaluatorRelation.Manager] = [Guid.NewGuid(), Guid.NewGuid()] };

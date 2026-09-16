@@ -8,13 +8,15 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Performance.Api.Controllers;
 
 public sealed record CreateReviewCycleRequest(
-    string Name, DateOnly PeriodStart, DateOnly PeriodEnd, RatingScale RatingScale, CommentMode DefaultCommentMode,
+    string Name, DateOnly PeriodStart, DateOnly PeriodEnd, ReviewKind Kind, RatingScale RatingScale, CommentMode DefaultCommentMode,
     EvaluatorLabelMode EvaluatorLabelMode, bool ReportShowPhoto, bool EmployeeCanViewResults, bool EmployeeCanDownloadPdf,
+    GoalEntryBy GoalEntryBy, decimal? CompetencyWeight,
     IReadOnlyList<RelationConfigInputDto> RelationConfigs, IReadOnlyList<CompetencyInputDto> Competencies);
 
 public sealed record UpdateReviewCycleDraftRequest(
     string Name, DateOnly PeriodStart, DateOnly PeriodEnd, RatingScale RatingScale, CommentMode DefaultCommentMode,
     EvaluatorLabelMode EvaluatorLabelMode, bool ReportShowPhoto, bool EmployeeCanViewResults, bool EmployeeCanDownloadPdf,
+    GoalEntryBy GoalEntryBy, decimal? CompetencyWeight,
     IReadOnlyList<RelationConfigInputDto> RelationConfigs, IReadOnlyList<CompetencyInputDto> Competencies);
 
 public sealed record AddParticipantsRequest(IReadOnlyList<AddParticipantInputDto> Participants);
@@ -41,9 +43,9 @@ public sealed class ReviewCyclesController : ApiControllerBase
     public async Task<IActionResult> Create([FromBody] CreateReviewCycleRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new CreateReviewCycleCommand(
-                request.Name, request.PeriodStart, request.PeriodEnd, request.RatingScale, request.DefaultCommentMode,
+                request.Name, request.PeriodStart, request.PeriodEnd, request.Kind, request.RatingScale, request.DefaultCommentMode,
                 request.EvaluatorLabelMode, request.ReportShowPhoto, request.EmployeeCanViewResults, request.EmployeeCanDownloadPdf,
-                request.RelationConfigs, request.Competencies),
+                request.GoalEntryBy, request.CompetencyWeight, request.RelationConfigs, request.Competencies),
             ct));
 
     /// <summary>Taslak durumdayken sihirbaz adımlarını yeniden düzenler.</summary>
@@ -54,7 +56,7 @@ public sealed class ReviewCyclesController : ApiControllerBase
             new UpdateReviewCycleDraftCommand(
                 id, request.Name, request.PeriodStart, request.PeriodEnd, request.RatingScale, request.DefaultCommentMode,
                 request.EvaluatorLabelMode, request.ReportShowPhoto, request.EmployeeCanViewResults, request.EmployeeCanDownloadPdf,
-                request.RelationConfigs, request.Competencies),
+                request.GoalEntryBy, request.CompetencyWeight, request.RelationConfigs, request.Competencies),
             ct));
 
     /// <summary>Katılımcılar adımı: çalışan + kategori bazlı değerlendirici ekler.</summary>

@@ -23,6 +23,164 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.Goal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("ActualValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("actual_value");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid>("EnteredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entered_by");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<decimal?>("Points")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("numeric(7,2)")
+                        .HasColumnName("points");
+
+                    b.Property<Guid?>("ResultApprovedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("result_approved_by");
+
+                    b.Property<string>("ResultComment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("result_comment");
+
+                    b.Property<Guid?>("ResultEnteredBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("result_entered_by");
+
+                    b.Property<Guid>("ReviewParticipantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("review_participant_id");
+
+                    b.Property<string>("Scale")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("scale");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TargetValue")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("target_value");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("Weight")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id")
+                        .HasName("pk_goals");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_goals_category_id");
+
+                    b.HasIndex("ReviewParticipantId")
+                        .HasDatabaseName("ix_goals_review_participant_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_goals_tenant_id");
+
+                    b.ToTable("goals", "performance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.GoalCategory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_goal_categories");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_goal_categories_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_goal_categories_tenant_id_name");
+
+                    b.ToTable("goal_categories", "performance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.ReviewAssignment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -148,6 +306,11 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<decimal?>("CompetencyWeight")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("competency_weight");
+
                     b.Property<DateTime?>("CompletedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("completed_at_utc");
@@ -184,6 +347,12 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("evaluator_label_mode");
+
+                    b.Property<string>("GoalEntryBy")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("goal_entry_by");
 
                     b.Property<string>("Kind")
                         .IsRequired()
@@ -285,6 +454,16 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
                         .HasPrecision(7, 2)
                         .HasColumnType("numeric(7,2)")
                         .HasColumnName("final_score");
+
+                    b.Property<decimal>("GoalProgress")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("goal_progress");
+
+                    b.Property<decimal?>("GoalScore")
+                        .HasPrecision(7, 2)
+                        .HasColumnType("numeric(7,2)")
+                        .HasColumnName("goal_score");
 
                     b.Property<bool>("IncludeGoals")
                         .HasColumnType("boolean")
@@ -628,6 +807,16 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox_messages", "performance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.Goal", b =>
+                {
+                    b.HasOne("Sense.Modules.Performance.Domain.ReviewCycles.ReviewParticipant", null)
+                        .WithMany("Goals")
+                        .HasForeignKey("ReviewParticipantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_goals_review_participants_review_participant_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.ReviewAssignment", b =>
                 {
                     b.HasOne("Sense.Modules.Performance.Domain.ReviewCycles.ReviewParticipant", null)
@@ -710,6 +899,8 @@ namespace Sense.Modules.Performance.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Sense.Modules.Performance.Domain.ReviewCycles.ReviewParticipant", b =>
                 {
                     b.Navigation("Assignments");
+
+                    b.Navigation("Goals");
                 });
 #pragma warning restore 612, 618
         }

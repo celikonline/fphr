@@ -17,11 +17,12 @@ public sealed record QuestionInputDto(int Order, string Text, decimal? Weight, C
 
 public sealed record CompetencyInputDto(string Name, decimal? Weight, IReadOnlyList<QuestionInputDto> Questions);
 
-/// <summary>Creates a review cycle (sihirbaz "Kaydet ve bitir" - Genel bilgiler + Yetkinlik + Sorular + Erişim in one call).</summary>
+/// <summary>Creates a review cycle (sihirbaz "Kaydet ve bitir" - Genel bilgiler + Yetkinlik + Sorular + Hedef girişi + Erişim in one call).</summary>
 [RequiresPermission("performance.cycle.create")]
 public sealed record CreateReviewCycleCommand(
-    string Name, DateOnly PeriodStart, DateOnly PeriodEnd, RatingScale RatingScale, CommentMode DefaultCommentMode,
+    string Name, DateOnly PeriodStart, DateOnly PeriodEnd, ReviewKind Kind, RatingScale RatingScale, CommentMode DefaultCommentMode,
     EvaluatorLabelMode EvaluatorLabelMode, bool ReportShowPhoto, bool EmployeeCanViewResults, bool EmployeeCanDownloadPdf,
+    GoalEntryBy GoalEntryBy, decimal? CompetencyWeight,
     IReadOnlyList<RelationConfigInputDto> RelationConfigs, IReadOnlyList<CompetencyInputDto> Competencies) : ICommand<Guid>;
 
 public sealed class CreateReviewCycleValidator : AbstractValidator<CreateReviewCycleCommand>
@@ -46,9 +47,9 @@ public sealed class CreateReviewCycleHandler(ITenantContext tenant, IReviewCycle
     public Task<Result<Guid>> Handle(CreateReviewCycleCommand command, CancellationToken cancellationToken)
     {
         var created = ReviewCycle.Create(
-            tenant.TenantId, command.Name, command.PeriodStart, command.PeriodEnd, ReviewKind.Competency,
+            tenant.TenantId, command.Name, command.PeriodStart, command.PeriodEnd, command.Kind,
             command.RatingScale, command.DefaultCommentMode, command.EvaluatorLabelMode, command.ReportShowPhoto,
-            command.EmployeeCanViewResults, command.EmployeeCanDownloadPdf,
+            command.EmployeeCanViewResults, command.EmployeeCanDownloadPdf, command.GoalEntryBy, command.CompetencyWeight,
             ToDomainRelationConfigs(command.RelationConfigs), ToDomainCompetencies(command.Competencies));
 
         if (created.IsFailure)
@@ -73,6 +74,7 @@ public sealed class CreateReviewCycleHandler(ITenantContext tenant, IReviewCycle
 public sealed record UpdateReviewCycleDraftCommand(
     Guid ReviewCycleId, string Name, DateOnly PeriodStart, DateOnly PeriodEnd, RatingScale RatingScale, CommentMode DefaultCommentMode,
     EvaluatorLabelMode EvaluatorLabelMode, bool ReportShowPhoto, bool EmployeeCanViewResults, bool EmployeeCanDownloadPdf,
+    GoalEntryBy GoalEntryBy, decimal? CompetencyWeight,
     IReadOnlyList<RelationConfigInputDto> RelationConfigs, IReadOnlyList<CompetencyInputDto> Competencies) : ICommand;
 
 public sealed class UpdateReviewCycleDraftValidator : AbstractValidator<UpdateReviewCycleDraftCommand>
@@ -106,6 +108,7 @@ public sealed class UpdateReviewCycleDraftHandler(IReviewCycleRepository cycles)
         var result = existing.Value.UpdateDraft(
             command.Name, command.PeriodStart, command.PeriodEnd, command.RatingScale, command.DefaultCommentMode,
             command.EvaluatorLabelMode, command.ReportShowPhoto, command.EmployeeCanViewResults, command.EmployeeCanDownloadPdf,
+            command.GoalEntryBy, command.CompetencyWeight,
             CreateReviewCycleHandler.ToDomainRelationConfigs(command.RelationConfigs), CreateReviewCycleHandler.ToDomainCompetencies(command.Competencies));
         return result.IsFailure ? result.Error : Result.Success();
     }

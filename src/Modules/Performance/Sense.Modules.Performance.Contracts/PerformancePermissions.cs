@@ -4,9 +4,10 @@ namespace Sense.Modules.Performance.Contracts;
 
 /// <summary>
 /// Performance module permission definitions. SystemRoleDefinitions.cs already carries "performance.*" for HR/Owner/Admin
-/// (anticipated ahead of this module's build-out) and every base role already carries PermissionPatterns.SelfService
-/// ("*.my.*"), so only <see cref="FormFill"/> (not a "my.*" key - an evaluator fills someone else's review) needed an
-/// explicit addition to Employee/Manager's include lists.
+/// and "performance.goals.*" for Manager (anticipated ahead of this module's build-out - the "goals" (plural) resource
+/// segment matches that pre-existing pattern on purpose), and every base role already carries PermissionPatterns.SelfService
+/// ("*.my.*"). Only <see cref="FormFill"/> and Employee's goal-entry keys (not "my.*"/"goals.*" - an evaluator fills
+/// someone else's review, an employee writes to a participant record they don't own) needed explicit additions.
 /// </summary>
 public static class PerformancePermissions
 {
@@ -45,6 +46,29 @@ public static class PerformancePermissions
     public static readonly Permission MyAssignments = new(
         "performance.my.assignments", Module, "View My Assignments", Group, "View the caller's own assigned evaluation forms and results");
 
+    /// <summary>Add a goal for a participant ("Hedef ekle" - by the employee or their first manager, per GoalEntryBy).</summary>
+    public static readonly Permission GoalsCreate = new(
+        "performance.goals.create", Module, "Add Goal", Group, "Add a goal for a review participant");
+
+    /// <summary>"Hedefleri onayla": bulk-approve a participant's Draft goals.</summary>
+    public static readonly Permission GoalsApprove = new(
+        "performance.goals.approve", Module, "Approve Goals", Group, "Approve a review participant's draft goals");
+
+    /// <summary>"Sonuç gir": record a goal's actual value.</summary>
+    public static readonly Permission GoalsEnterResult = new(
+        "performance.goals.enter_result", Module, "Enter Goal Result", Group, "Enter a goal's actual result");
+
+    /// <summary>"Sonuçları onayla": bulk-approve a participant's entered goal results.</summary>
+    public static readonly Permission GoalsApproveResult = new(
+        "performance.goals.approve_result", Module, "Approve Goal Results", Group, "Approve a review participant's entered goal results");
+
+    /// <summary>Manage the tenant-defined goal category list.</summary>
+    public static readonly Permission GoalCategoryManage = new(
+        "performance.goal_category.manage", Module, "Manage Goal Categories", Group, "Create and list goal categories");
+
     public static IEnumerable<Permission> All =>
-        [CycleView, CycleCreate, CycleUpdate, CyclePublish, CycleForceComplete, ParticipantManage, FormFill, MyAssignments];
+    [
+        CycleView, CycleCreate, CycleUpdate, CyclePublish, CycleForceComplete, ParticipantManage, FormFill, MyAssignments,
+        GoalsCreate, GoalsApprove, GoalsEnterResult, GoalsApproveResult, GoalCategoryManage,
+    ];
 }

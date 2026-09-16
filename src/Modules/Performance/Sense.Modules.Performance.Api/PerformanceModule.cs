@@ -40,5 +40,6 @@ public sealed class PerformanceModule : IModule
             typeof(PerformancePermissions).Assembly);
 
         services.AddScoped<IReviewCycleRepository, ReviewCycleRepository>();
+        services.AddScoped<IGoalCategoryRepository, GoalCategoryRepository>();
     }
 }

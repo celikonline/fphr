@@ -15,4 +15,9 @@ public sealed class MyAssignmentsController : ApiControllerBase
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<MyAssignmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List(CancellationToken ct) => FromResult(await Dispatcher.Query(new ListMyAssignmentsQuery(), ct));
+
+    /// <summary>"Hedeflerim" (yalnız Kind=CompetencyAndGoal, IncludeGoals açık dönemler).</summary>
+    [HttpGet("/api/v{version:apiVersion}/performance/my-goals")]
+    [ProducesResponseType<IReadOnlyList<MyGoalCycleDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListGoals(CancellationToken ct) => FromResult(await Dispatcher.Query(new ListMyGoalsQuery(), ct));
 }

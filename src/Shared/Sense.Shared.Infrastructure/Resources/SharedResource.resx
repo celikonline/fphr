@@ -561,7 +561,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.cycle.period_invalid" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
   <data name="performance.cycle.not_draft" xml:space="preserve"><value>Bu işlem yalnız taslak durumdaki dönemlerde yapılabilir.</value></data>
   <data name="performance.cycle.not_published" xml:space="preserve"><value>Bu işlem yalnız yayınlanmış dönemlerde yapılabilir.</value></data>
-  <data name="performance.cycle.goal_kind_not_yet_supported" xml:space="preserve"><value>"Yetkinlik + Hedef" türü henüz desteklenmiyor.</value></data>
   <data name="performance.competency.required" xml:space="preserve"><value>En az bir yetkinlik eklenmelidir.</value></data>
   <data name="performance.competency.name_required" xml:space="preserve"><value>Yetkinlik adı zorunludur.</value></data>
   <data name="performance.question.required" xml:space="preserve"><value>Her yetkinlik için en az bir soru eklenmelidir.</value></data>
@@ -581,4 +580,25 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.response.comment_required" xml:space="preserve"><value>"{Text}" sorusu için yorum zorunludur.</value></data>
   <data name="performance.response.unknown_question" xml:space="preserve"><value>Bilinmeyen soru: {QuestionId}.</value></data>
   <data name="performance.force_complete.no_eligible" xml:space="preserve"><value>Belirlenen minimum değerlere uygun çalışan bulunamadığı için herhangi bir rapor oluşturulamadı.</value></data>
+
+  <!-- Performance: hedef akışı (Yetkinlik + Hedef, Faz 5 P5) -->
+  <data name="performance.goals.create" xml:space="preserve"><value>Hedef ekleme</value></data>
+  <data name="performance.goals.approve" xml:space="preserve"><value>Hedefleri onaylama</value></data>
+  <data name="performance.goals.enter_result" xml:space="preserve"><value>Hedef sonucu girme</value></data>
+  <data name="performance.goals.approve_result" xml:space="preserve"><value>Hedef sonuçlarını onaylama</value></data>
+  <data name="performance.goal_category.manage" xml:space="preserve"><value>Hedef kategorilerini yönetme</value></data>
+
+  <data name="performance.goal.not_enabled_for_participant" xml:space="preserve"><value>Bu katılımcı için hedef akışı açık değil.</value></data>
+  <data name="performance.goal.category_required" xml:space="preserve"><value>Hedef kategorisi zorunludur.</value></data>
+  <data name="performance.goal.name_required" xml:space="preserve"><value>Hedef adı zorunludur.</value></data>
+  <data name="performance.goal.scale_required" xml:space="preserve"><value>Hedef skalası en az bir aralık içermelidir.</value></data>
+  <data name="performance.goal.not_found" xml:space="preserve"><value>Hedef bulunamadı.</value></data>
+  <data name="performance.goal.not_draft" xml:space="preserve"><value>Bu hedef artık taslak durumunda değil.</value></data>
+  <data name="performance.goal.no_draft_goals" xml:space="preserve"><value>Onaylanacak taslak hedef yok.</value></data>
+  <data name="performance.goal.not_approved" xml:space="preserve"><value>Hedef henüz onaylanmadı.</value></data>
+  <data name="performance.goal.no_result_entered_goals" xml:space="preserve"><value>Onaylanacak, sonucu girilmiş hedef yok.</value></data>
+  <data name="performance.goal.result_out_of_scale" xml:space="preserve"><value>Girilen gerçekleşen değer ({actualValue}) hedef skalasındaki hiçbir aralığa uymuyor.</value></data>
+  <data name="performance.goal.entry_mode_mismatch" xml:space="preserve"><value>Bu dönemde hedef girişi/sonuç girişi yalnız GoalEntryBy ayarında belirlenen kişi tarafından yapılabilir.</value></data>
+  <data name="performance.goal_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
+  <data name="performance.goal_category.not_found" xml:space="preserve"><value>Hedef kategorisi bulunamadı.</value></data>
 </root>

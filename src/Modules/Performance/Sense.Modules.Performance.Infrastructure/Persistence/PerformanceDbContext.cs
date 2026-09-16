@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Performance.Domain.ReviewCycles;
@@ -27,6 +28,10 @@ public sealed class PerformanceDbContext(DbContextOptions<PerformanceDbContext> 
     public DbSet<ReviewAssignment> ReviewAssignments => Set<ReviewAssignment>();
 
     public DbSet<ReviewResponse> ReviewResponses => Set<ReviewResponse>();
+
+    public DbSet<Goal> Goals => Set<Goal>();
+
+    public DbSet<GoalCategory> GoalCategories => Set<GoalCategory>();
 }
 
 internal static class PerformanceTables
@@ -38,6 +43,8 @@ internal static class PerformanceTables
     public const string ReviewParticipants = "review_participants";
     public const string ReviewAssignments = "review_assignments";
     public const string ReviewResponses = "review_responses";
+    public const string Goals = "goals";
+    public const string GoalCategories = "goal_categories";
 
     /// <summary>String length for enum-as-string columns.</summary>
     public const int EnumCodeLength = 30;
@@ -57,6 +64,8 @@ public sealed class ReviewCycleConfiguration : IEntityTypeConfiguration<ReviewCy
         b.Property(x => x.EvaluatorLabelMode).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
         b.Property(x => x.CompletedBy).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
+        b.Property(x => x.GoalEntryBy).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
+        b.Property(x => x.CompetencyWeight).HasPrecision(5, 2);
 
         b.HasIndex(x => new { x.TenantId, x.Status });
 
@@ -130,13 +139,17 @@ public sealed class ReviewParticipantConfiguration : IEntityTypeConfiguration<Re
         b.Property(x => x.Status).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
         b.Property(x => x.CompetencyProgress).HasPrecision(5, 2);
         b.Property(x => x.CompetencyScore).HasPrecision(7, 2);
+        b.Property(x => x.GoalProgress).HasPrecision(5, 2);
+        b.Property(x => x.GoalScore).HasPrecision(7, 2);
         b.Property(x => x.FinalScore).HasPrecision(7, 2);
 
         b.HasIndex(x => new { x.TenantId, x.EmployeeId });
         b.HasIndex(x => new { x.ReviewCycleId, x.EmployeeId }).IsUnique();
 
         b.HasMany(x => x.Assignments).WithOne().HasForeignKey(a => a.ReviewParticipantId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(x => x.Goals).WithOne().HasForeignKey(g => g.ReviewParticipantId).OnDelete(DeleteBehavior.Cascade);
         b.Navigation(x => x.Assignments).AutoInclude();
+        b.Navigation(x => x.Goals).AutoInclude();
     }
 }
 
@@ -170,5 +183,45 @@ public sealed class ReviewResponseConfiguration : IEntityTypeConfiguration<Revie
         b.Property(x => x.Score).HasPrecision(5, 2);
 
         b.HasIndex(x => new { x.ReviewAssignmentId, x.QuestionId }).IsUnique();
+    }
+}
+
+public sealed class GoalConfiguration : IEntityTypeConfiguration<Goal>
+{
+    public void Configure(EntityTypeBuilder<Goal> b)
+    {
+        b.ToTable(PerformanceTables.Goals);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        b.Property(x => x.Name).HasMaxLength(PerformanceLimits.NameMaxLength).IsRequired();
+        b.Property(x => x.Description).HasMaxLength(PerformanceLimits.TextMaxLength);
+        b.Property(x => x.ResultComment).HasMaxLength(PerformanceLimits.CommentMaxLength);
+        b.Property(x => x.TargetValue).HasPrecision(18, 2);
+        b.Property(x => x.ActualValue).HasPrecision(18, 2);
+        b.Property(x => x.Points).HasPrecision(7, 2);
+        b.Property(x => x.Weight).HasPrecision(5, 2);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(PerformanceTables.EnumCodeLength);
+
+        b.Property(x => x.Scale)
+            .HasConversion(
+                scale => JsonSerializer.Serialize(scale, JsonSerializerOptions.Web),
+                json => JsonSerializer.Deserialize<List<GoalScaleRange>>(json, JsonSerializerOptions.Web) ?? new List<GoalScaleRange>())
+            .HasColumnType(PersistenceDefaults.JsonbColumnType);
+
+        b.HasIndex(x => x.CategoryId);
+    }
+}
+
+public sealed class GoalCategoryConfiguration : IEntityTypeConfiguration<GoalCategory>
+{
+    public void Configure(EntityTypeBuilder<GoalCategory> b)
+    {
+        b.ToTable(PerformanceTables.GoalCategories);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(PerformanceLimits.NameMaxLength).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
     }
 }

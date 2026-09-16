@@ -112,7 +112,7 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.Employee, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
-             "announcements.feed.*", "documents.company.view", "ai.assistant.use", "performance.form.fill"],
+             "announcements.feed.*", "documents.company.view", "ai.assistant.use", "performance.form.fill", "performance.goals.create", "performance.goals.enter_result"],
             []),
 
         new(SystemRoleCodes.Intern, DataScope.Self,

@@ -6,6 +6,7 @@ namespace Sense.Modules.Performance.Domain.ReviewCycles;
 public sealed class ReviewParticipant : TenantEntity<Guid>
 {
     private readonly List<ReviewAssignment> _assignments = [];
+    private readonly List<Goal> _goals = [];
 
     private ReviewParticipant()
     {
@@ -34,14 +35,24 @@ public sealed class ReviewParticipant : TenantEntity<Guid>
 
     public decimal? CompetencyScore { get; private set; }
 
-    /// <summary>CompetencyScore ile eşit (Kind=CompetencyAndGoal ve hedef ağırlıklandırması bu MVP'de yok).</summary>
+    /// <summary>ResultApproved=100, aksi 0 (11.3.10) - ikili bir tamamlanma göstergesi, atama ilerleme yüzdesi değil.</summary>
+    public decimal GoalProgress { get; private set; }
+
+    public decimal? GoalScore { get; private set; }
+
+    /// <summary>Kind=Competency veya IncludeGoals=false ise CompetencyScore ile eşit; Kind=CompetencyAndGoal ise ReviewCycle.CompetencyWeight'e göre karışım.</summary>
     public decimal? FinalScore { get; private set; }
 
     public DateTime? CompletedAtUtc { get; private set; }
 
     public IReadOnlyList<ReviewAssignment> Assignments => _assignments.AsReadOnly();
 
+    public IReadOnlyList<Goal> Goals => _goals.AsReadOnly();
+
     public bool AllAssignmentsCompleted => _assignments.Count > 0 && _assignments.All(a => a.Status == ReviewAssignmentStatus.Completed);
+
+    /// <summary>Hedef akışı bu katılımcı için devrede değilse (IncludeGoals=false) her zaman uygun sayılır.</summary>
+    public bool AllGoalsResultApproved => !IncludeGoals || (_goals.Count > 0 && _goals.All(g => g.Status == GoalStatus.ResultApproved));
 
     internal static ReviewParticipant Create(Guid tenantId, Guid reviewCycleId, Guid employeeId, bool includeGoals) =>
         new(tenantId, reviewCycleId, employeeId, includeGoals);
@@ -59,13 +70,24 @@ public sealed class ReviewParticipant : TenantEntity<Guid>
         }
     }
 
-    internal void Complete(decimal? score, DateTime now)
+    internal Goal AddGoal(Guid categoryId, string name, string? description, decimal targetValue, IReadOnlyList<GoalScaleRange> scale, decimal? weight, Guid enteredBy)
     {
-        CompetencyScore = score;
-        FinalScore = score;
+        var goal = new Goal(TenantId, Id, categoryId, name, description, targetValue, scale, weight, enteredBy);
+        _goals.Add(goal);
+        return goal;
+    }
+
+    internal void RecalculateGoalProgress() => GoalProgress = AllGoalsResultApproved && _goals.Count > 0 ? 100m : 0m;
+
+    internal void Complete(decimal? competencyScore, decimal? goalScore, decimal? finalScore, DateTime now)
+    {
+        CompetencyScore = competencyScore;
+        GoalScore = goalScore;
+        FinalScore = finalScore;
         Status = ReviewParticipantStatus.Completed;
         CompletedAtUtc = now;
         CompetencyProgress = 100m;
+        RecalculateGoalProgress();
     }
 }
 

@@ -13,13 +13,19 @@ public sealed record ReviewResponseDto(Guid QuestionId, decimal Score, string? C
 public sealed record ReviewAssignmentDto(
     Guid Id, EvaluatorRelation Relation, Guid EvaluatorEmployeeId, ReviewAssignmentStatus Status, DateTime? CompletedAtUtc, IReadOnlyList<ReviewResponseDto> Responses);
 
+public sealed record GoalDto(
+    Guid Id, Guid CategoryId, string Name, string? Description, decimal TargetValue, decimal? ActualValue, decimal? Points,
+    string? ResultComment, decimal? Weight, GoalStatus Status);
+
 public sealed record ReviewParticipantDto(
-    Guid Id, Guid EmployeeId, ReviewParticipantStatus Status, decimal CompetencyProgress, decimal? CompetencyScore, decimal? FinalScore,
-    DateTime? CompletedAtUtc, IReadOnlyList<ReviewAssignmentDto> Assignments);
+    Guid Id, Guid EmployeeId, bool IncludeGoals, ReviewParticipantStatus Status, decimal CompetencyProgress, decimal? CompetencyScore,
+    decimal GoalProgress, decimal? GoalScore, decimal? FinalScore, DateTime? CompletedAtUtc,
+    IReadOnlyList<ReviewAssignmentDto> Assignments, IReadOnlyList<GoalDto> Goals);
 
 public sealed record ReviewCycleDto(
     Guid Id, string Name, DateOnly PeriodStart, DateOnly PeriodEnd, ReviewKind Kind, RatingScale RatingScale, CommentMode DefaultCommentMode,
     EvaluatorLabelMode EvaluatorLabelMode, bool ReportShowPhoto, bool EmployeeCanViewResults, bool EmployeeCanDownloadPdf,
+    GoalEntryBy GoalEntryBy, decimal? CompetencyWeight,
     ReviewCycleStatus Status, DateTime? PublishedAtUtc, DateTime? CompletedAtUtc, ReviewCompletionMode? CompletedBy,
     IReadOnlyList<RelationConfigDto> RelationConfigs, IReadOnlyList<CompetencyDto> Competencies, IReadOnlyList<ReviewParticipantDto> Participants);
 
@@ -37,6 +43,7 @@ internal static class ReviewCycleMapper
     public static ReviewCycleDto ToDto(ReviewCycle cycle) => new(
         cycle.Id, cycle.Name, cycle.PeriodStart, cycle.PeriodEnd, cycle.Kind, cycle.RatingScale, cycle.DefaultCommentMode,
         cycle.EvaluatorLabelMode, cycle.ReportShowPhoto, cycle.EmployeeCanViewResults, cycle.EmployeeCanDownloadPdf,
+        cycle.GoalEntryBy, cycle.CompetencyWeight,
         cycle.Status, cycle.PublishedAtUtc, cycle.CompletedAtUtc, cycle.CompletedBy,
         cycle.RelationConfigs.Select(r => new RelationConfigDto(r.Relation, r.MinRequired is not null, r.Weight, r.MinRequired)).ToList(),
         cycle.Competencies.Select(ToDto).ToList(),
@@ -47,8 +54,13 @@ internal static class ReviewCycleMapper
         competency.Questions.OrderBy(q => q.Order).Select(q => new QuestionDto(q.Id, q.Order, q.Text, q.Weight, q.CommentMode)).ToList());
 
     public static ReviewParticipantDto ToDto(ReviewParticipant participant) => new(
-        participant.Id, participant.EmployeeId, participant.Status, participant.CompetencyProgress, participant.CompetencyScore, participant.FinalScore,
-        participant.CompletedAtUtc, participant.Assignments.Select(ToDto).ToList());
+        participant.Id, participant.EmployeeId, participant.IncludeGoals, participant.Status, participant.CompetencyProgress, participant.CompetencyScore,
+        participant.GoalProgress, participant.GoalScore, participant.FinalScore,
+        participant.CompletedAtUtc, participant.Assignments.Select(ToDto).ToList(), participant.Goals.Select(ToDto).ToList());
+
+    public static GoalDto ToDto(Goal goal) => new(
+        goal.Id, goal.CategoryId, goal.Name, goal.Description, goal.TargetValue, goal.ActualValue, goal.Points,
+        goal.ResultComment, goal.Weight, goal.Status);
 
     public static ReviewAssignmentDto ToDto(ReviewAssignment assignment) => new(
         assignment.Id, assignment.Relation, assignment.EvaluatorEmployeeId, assignment.Status, assignment.CompletedAtUtc,

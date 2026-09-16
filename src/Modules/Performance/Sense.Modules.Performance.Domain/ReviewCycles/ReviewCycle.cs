@@ -31,7 +31,7 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
     private ReviewCycle(
         Guid id, Guid tenantId, string name, DateOnly periodStart, DateOnly periodEnd, ReviewKind kind,
         RatingScale ratingScale, CommentMode defaultCommentMode, EvaluatorLabelMode evaluatorLabelMode, bool reportShowPhoto,
-        bool employeeCanViewResults, bool employeeCanDownloadPdf)
+        bool employeeCanViewResults, bool employeeCanDownloadPdf, GoalEntryBy goalEntryBy, decimal? competencyWeight)
         : base(id, tenantId)
     {
         Name = name;
@@ -44,6 +44,8 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
         ReportShowPhoto = reportShowPhoto;
         EmployeeCanViewResults = employeeCanViewResults;
         EmployeeCanDownloadPdf = employeeCanDownloadPdf;
+        GoalEntryBy = goalEntryBy;
+        CompetencyWeight = competencyWeight;
         Status = ReviewCycleStatus.Draft;
     }
 
@@ -70,6 +72,12 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>"Değerlendirilenler sonuçlara erişim: PDF raporunu indirebilsin".</summary>
     public bool EmployeeCanDownloadPdf { get; private set; }
 
+    /// <summary>Yalnız Kind=CompetencyAndGoal'da anlamlı: hedef girişini/sonuç girişini çalışan mı yapar, birinci yönetici mi.</summary>
+    public GoalEntryBy GoalEntryBy { get; private set; }
+
+    /// <summary>nihai puan karışımında yetkinlik tarafının ağırlığı (0-100); null → 50/50. Yalnız Kind=CompetencyAndGoal'da kullanılır.</summary>
+    public decimal? CompetencyWeight { get; private set; }
+
     public ReviewCycleStatus Status { get; private set; }
 
     public DateTime? PublishedAtUtc { get; private set; }
@@ -87,7 +95,7 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
     public static Result<ReviewCycle> Create(
         Guid tenantId, string name, DateOnly periodStart, DateOnly periodEnd, ReviewKind kind,
         RatingScale ratingScale, CommentMode defaultCommentMode, EvaluatorLabelMode evaluatorLabelMode, bool reportShowPhoto,
-        bool employeeCanViewResults, bool employeeCanDownloadPdf,
+        bool employeeCanViewResults, bool employeeCanDownloadPdf, GoalEntryBy goalEntryBy, decimal? competencyWeight,
         IReadOnlyList<RelationConfigInput> relationConfigs, IReadOnlyList<CompetencyInput> competencies, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -98,11 +106,6 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
         if (periodEnd < periodStart)
         {
             return Error.Validation(PerformanceDomainErrors.CyclePeriodInvalid);
-        }
-
-        if (kind != ReviewKind.Competency)
-        {
-            return Error.Rule(PerformanceDomainErrors.CycleGoalKindNotYetSupported);
         }
 
         var relationValidation = ValidateRelationConfigs(relationConfigs);
@@ -119,17 +122,18 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
 
         var cycle = new ReviewCycle(
             id ?? Guid.CreateVersion7(), tenantId, Guard.MaxLength(name.Trim(), PerformanceLimits.NameMaxLength), periodStart, periodEnd, kind,
-            ratingScale, defaultCommentMode, evaluatorLabelMode, reportShowPhoto, employeeCanViewResults, employeeCanDownloadPdf);
+            ratingScale, defaultCommentMode, evaluatorLabelMode, reportShowPhoto, employeeCanViewResults, employeeCanDownloadPdf, goalEntryBy, competencyWeight);
 
         cycle.ReplaceRelationConfigsUnchecked(relationConfigs);
         cycle.ReplaceCompetenciesUnchecked(competencies);
         return cycle;
     }
 
-    /// <summary>Replaces config while still Draft (sihirbaz adımlarına geri dönüp düzenleme).</summary>
+    /// <summary>Replaces config while still Draft (sihirbaz adımlarına geri dönüp düzenleme). Kind is fixed at Create time.</summary>
     public Result UpdateDraft(
         string name, DateOnly periodStart, DateOnly periodEnd, RatingScale ratingScale, CommentMode defaultCommentMode,
         EvaluatorLabelMode evaluatorLabelMode, bool reportShowPhoto, bool employeeCanViewResults, bool employeeCanDownloadPdf,
+        GoalEntryBy goalEntryBy, decimal? competencyWeight,
         IReadOnlyList<RelationConfigInput> relationConfigs, IReadOnlyList<CompetencyInput> competencies)
     {
         if (Status != ReviewCycleStatus.Draft)
@@ -168,6 +172,8 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
         ReportShowPhoto = reportShowPhoto;
         EmployeeCanViewResults = employeeCanViewResults;
         EmployeeCanDownloadPdf = employeeCanDownloadPdf;
+        GoalEntryBy = goalEntryBy;
+        CompetencyWeight = competencyWeight;
         ReplaceRelationConfigsUnchecked(relationConfigs);
         ReplaceCompetenciesUnchecked(competencies);
         return Result.Success();
@@ -326,7 +332,114 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
         participant.RecalculateProgress();
         Raise(new ReviewAssignmentCompleted(Id, TenantId, participant.EmployeeId, assignment.Id));
 
-        if (participant.AllAssignmentsCompleted)
+        if (participant.AllAssignmentsCompleted && participant.AllGoalsResultApproved)
+        {
+            CompleteParticipant(participant, now, ReviewCompletionMode.Natural);
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>Hedef ekle (yalnız Kind=CompetencyAndGoal ve katılımcının IncludeGoals'u açıkken).</summary>
+    public Result<Guid> AddGoal(
+        Guid participantId, Guid categoryId, string name, string? description, decimal targetValue,
+        IReadOnlyList<GoalScaleRange> scale, decimal? weight, Guid enteredBy)
+    {
+        if (Kind != ReviewKind.CompetencyAndGoal)
+        {
+            return Error.Rule(PerformanceDomainErrors.GoalNotEnabledForParticipant);
+        }
+
+        var participant = _participants.FirstOrDefault(p => p.Id == participantId);
+        if (participant is null)
+        {
+            return Error.NotFound(PerformanceDomainErrors.ParticipantNotFound);
+        }
+
+        if (!participant.IncludeGoals)
+        {
+            return Error.Rule(PerformanceDomainErrors.GoalNotEnabledForParticipant);
+        }
+
+        if (categoryId == Guid.Empty)
+        {
+            return Error.Validation(PerformanceDomainErrors.GoalCategoryRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Error.Validation(PerformanceDomainErrors.GoalNameRequired);
+        }
+
+        if (scale.Count == 0)
+        {
+            return Error.Validation(PerformanceDomainErrors.GoalScaleRequired);
+        }
+
+        var goal = participant.AddGoal(categoryId, Guard.MaxLength(name.Trim(), PerformanceLimits.NameMaxLength), description, targetValue, scale, weight, enteredBy);
+        return goal.Id;
+    }
+
+    /// <summary>"Hedefleri onayla": katılımcının tüm Taslak hedeflerini toplu olarak onaylar.</summary>
+    public Result ApproveGoals(Guid participantId, Guid approvedBy)
+    {
+        var participant = _participants.FirstOrDefault(p => p.Id == participantId);
+        if (participant is null)
+        {
+            return Error.NotFound(PerformanceDomainErrors.ParticipantNotFound);
+        }
+
+        var draftGoals = participant.Goals.Where(g => g.Status == GoalStatus.Draft).ToList();
+        if (draftGoals.Count == 0)
+        {
+            return Error.Rule(PerformanceDomainErrors.GoalNoDraftGoals);
+        }
+
+        foreach (var goal in draftGoals)
+        {
+            goal.Approve(approvedBy);
+        }
+
+        Raise(new GoalsApproved(Id, TenantId, participant.EmployeeId, draftGoals.Count));
+        return Result.Success();
+    }
+
+    /// <summary>"Sonuç gir": tek bir hedefin gerçekleşen değerini kaydeder, skalaya göre puanı hesaplar.</summary>
+    public Result EnterGoalResult(Guid goalId, decimal actualValue, string? resultComment, Guid enteredBy)
+    {
+        var goal = _participants.SelectMany(p => p.Goals).FirstOrDefault(g => g.Id == goalId);
+        if (goal is null)
+        {
+            return Error.NotFound(PerformanceDomainErrors.GoalNotFound);
+        }
+
+        return goal.EnterResult(actualValue, resultComment, enteredBy);
+    }
+
+    /// <summary>"Sonuçları onayla": katılımcının tüm "Sonuç girildi" hedeflerini toplu onaylar; hedef akışı tamamlanan katılımcının doğal tamamlanmasını tetikleyebilir.</summary>
+    public Result ApproveGoalResults(Guid participantId, Guid approvedBy, DateTime now)
+    {
+        var participant = _participants.FirstOrDefault(p => p.Id == participantId);
+        if (participant is null)
+        {
+            return Error.NotFound(PerformanceDomainErrors.ParticipantNotFound);
+        }
+
+        var enteredGoals = participant.Goals.Where(g => g.Status == GoalStatus.ResultEntered).ToList();
+        if (enteredGoals.Count == 0)
+        {
+            return Error.Rule(PerformanceDomainErrors.GoalNoResultEnteredGoals);
+        }
+
+        foreach (var goal in enteredGoals)
+        {
+            goal.ApproveResult(approvedBy);
+        }
+
+        Raise(new GoalResultsApproved(Id, TenantId, participant.EmployeeId, enteredGoals.Count));
+
+        if (Status == ReviewCycleStatus.Published && participant.Status != ReviewParticipantStatus.Completed
+            && participant.AllAssignmentsCompleted && participant.AllGoalsResultApproved)
         {
             CompleteParticipant(participant, now, ReviewCompletionMode.Natural);
         }
@@ -386,13 +499,16 @@ public sealed class ReviewCycle : TenantAggregateRoot<Guid>, IAuditLogged
             }
         }
 
-        return true;
+        // Yetkinlik + Hedef: hedef durumu "Sonuçlar onaylandı" değilse tamamlanamaz (11.3.10).
+        return participant.AllGoalsResultApproved;
     }
 
     private void CompleteParticipant(ReviewParticipant participant, DateTime now, ReviewCompletionMode mode)
     {
-        var score = ScoreCalculator.CalculateParticipantScore(this, participant);
-        participant.Complete(score, now);
+        var competencyScore = ScoreCalculator.CalculateParticipantScore(this, participant);
+        var goalScore = ScoreCalculator.CalculateGoalScore(participant);
+        var finalScore = ScoreCalculator.CalculateFinalScore(this, competencyScore, goalScore, participant.IncludeGoals);
+        participant.Complete(competencyScore, goalScore, finalScore, now);
         Raise(new ReviewParticipantCompleted(Id, TenantId, participant.EmployeeId, mode));
 
         if (_participants.All(p => p.Status == ReviewParticipantStatus.Completed))
@@ -496,3 +612,7 @@ public sealed record ReviewAssignmentCompleted(Guid ReviewCycleId, Guid TenantId
 public sealed record ReviewParticipantCompleted(Guid ReviewCycleId, Guid TenantId, Guid ParticipantEmployeeId, ReviewCompletionMode CompletionMode) : DomainEvent;
 
 public sealed record ReviewCycleForceCompleted(Guid ReviewCycleId, Guid TenantId, int ParticipantsCompleted) : DomainEvent;
+
+public sealed record GoalsApproved(Guid ReviewCycleId, Guid TenantId, Guid ParticipantEmployeeId, int GoalCount) : DomainEvent;
+
+public sealed record GoalResultsApproved(Guid ReviewCycleId, Guid TenantId, Guid ParticipantEmployeeId, int GoalCount) : DomainEvent;

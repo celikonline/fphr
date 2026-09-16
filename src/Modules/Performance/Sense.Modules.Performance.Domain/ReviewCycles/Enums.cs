@@ -1,13 +1,26 @@
 namespace Sense.Modules.Performance.Domain.ReviewCycles;
 
-/// <summary>
-/// "Yetkinlik" (competency questions only) or "Yetkinlik + Hedef" (adds the goal sub-flow). Only <see cref="Competency"/>
-/// is implemented so far - the goal sub-flow (Goal entity, AddGoal/ApproveGoals/...) is a follow-up; see plan deviation #3.
-/// </summary>
+/// <summary>"Yetkinlik" (competency questions only) or "Yetkinlik + Hedef" (adds the goal sub-flow).</summary>
 public enum ReviewKind
 {
     Competency = 0,
     CompetencyAndGoal = 1,
+}
+
+/// <summary>Who enters/writes goal results: the employee themselves (with manager approval steps) or their first manager (who does both).</summary>
+public enum GoalEntryBy
+{
+    Employee = 0,
+    FirstManager = 1,
+}
+
+/// <summary>Hedef ekle → Hedefleri onayla → Sonuç gir → Sonuçları onayla.</summary>
+public enum GoalStatus
+{
+    Draft = 0,
+    Approved = 1,
+    ResultEntered = 2,
+    ResultApproved = 3,
 }
 
 /// <summary>Evaluator category (Kendisi/Üstü/Astı/Diğer). "External" from the design doc is folded into Peer for MVP.</summary>

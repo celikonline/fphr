@@ -4,4 +4,7 @@ namespace Sense.Modules.Performance.Application;
 public static class PerformanceErrors
 {
     public const string EvaluatorNotActive = "performance.participant.evaluator_not_active";
+
+    /// <summary>GoalEntryBy=Employee'de yalnız çalışanın kendisi, FirstManager'da yalnız yöneticisi hedef/sonuç girebilir.</summary>
+    public const string GoalEntryModeMismatch = "performance.goal.entry_mode_mismatch";
 }
