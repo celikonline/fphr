@@ -86,21 +86,68 @@ public sealed class LinkDocumentToRequirementHandler(
     IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents)
     : ICommandHandler<LinkDocumentToRequirementCommand, EmployeeDocumentRequirementDto>
 {
-    public async Task<Result<EmployeeDocumentRequirementDto>> Handle(LinkDocumentToRequirementCommand command, CancellationToken cancellationToken)
+    public async Task<Result<EmployeeDocumentRequirementDto>> Handle(LinkDocumentToRequirementCommand command, CancellationToken cancellationToken) =>
+        await LinkCore.LinkAsync(requirements, types, documents, command.RequirementId, command.DocumentId, ownerEmployeeId: null, cancellationToken);
+}
+
+/// <summary>Self-service: links an uploaded Document to the caller's own requirement, marking it satisfied.</summary>
+[RequiresPermission("documents.my.requirements")]
+public sealed record LinkMyDocumentToRequirementCommand(Guid RequirementId, Guid DocumentId) : ICommand<EmployeeDocumentRequirementDto>;
+
+public sealed class LinkMyDocumentToRequirementValidator : AbstractValidator<LinkMyDocumentToRequirementCommand>
+{
+    public LinkMyDocumentToRequirementValidator()
     {
-        var requirement = await requirements.GetByIdAsync(command.RequirementId, cancellationToken);
+        RuleFor(x => x.RequirementId).NotEmpty();
+        RuleFor(x => x.DocumentId).NotEmpty();
+    }
+}
+
+public sealed class LinkMyDocumentToRequirementHandler(
+    ICurrentUser currentUser, IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents)
+    : ICommandHandler<LinkMyDocumentToRequirementCommand, EmployeeDocumentRequirementDto>
+{
+    public async Task<Result<EmployeeDocumentRequirementDto>> Handle(LinkMyDocumentToRequirementCommand command, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(DocumentsErrors.NoEmployeeForUser);
+        }
+
+        return await LinkCore.LinkAsync(requirements, types, documents, command.RequirementId, command.DocumentId, employeeId, cancellationToken);
+    }
+}
+
+/// <summary>Shared by the HR-manage and self-service link commands; <paramref name="ownerEmployeeId"/> null = no ownership check (HR path).</summary>
+internal static class LinkCore
+{
+    public static async Task<Result<EmployeeDocumentRequirementDto>> LinkAsync(
+        IEmployeeDocumentRequirementRepository requirements,
+        IDocumentTypeDefinitionRepository types,
+        IDocumentRepository documents,
+        Guid requirementId,
+        Guid documentId,
+        Guid? ownerEmployeeId,
+        CancellationToken cancellationToken)
+    {
+        var requirement = await requirements.GetByIdAsync(requirementId, cancellationToken);
         if (requirement.IsFailure)
         {
             return requirement.Error;
         }
 
-        var document = await documents.GetByIdAsync(command.DocumentId, cancellationToken);
+        if (ownerEmployeeId is { } employeeId && requirement.Value.EmployeeId != employeeId)
+        {
+            return Error.Forbidden(DocumentsErrors.NotOwner);
+        }
+
+        var document = await documents.GetByIdAsync(documentId, cancellationToken);
         if (document.IsFailure)
         {
             return document.Error;
         }
 
-        requirement.Value.MarkUploaded(command.DocumentId);
+        requirement.Value.MarkUploaded(documentId);
 
         var type = await types.GetByIdAsync(requirement.Value.DocumentTypeId, cancellationToken);
         return type.IsFailure ? type.Error : EmployeeDocumentRequirementDto.From(requirement.Value, type.Value);

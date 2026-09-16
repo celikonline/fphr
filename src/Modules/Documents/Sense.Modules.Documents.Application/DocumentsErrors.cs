@@ -13,4 +13,7 @@ public static class DocumentsErrors
     public const string DocumentTypeCodeTaken = "document_type.code_taken";
 
     public const string NoEmployeeForUser = "documents.employee.not_linked";
+
+    /// <summary>Self-service write attempted against a requirement that belongs to a different employee.</summary>
+    public const string NotOwner = "employee_document_requirement.not_owner";
 }

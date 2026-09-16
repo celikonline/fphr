@@ -63,13 +63,21 @@ public static class DocumentsPermissions
         "Documents",
         "Waive, clear, link and reevaluate employees' personnel document requirements");
 
-    /// <summary>Self-service: view the caller's own document requirement status.</summary>
+    /// <summary>Self-service: view the caller's own document requirement status, and satisfy one by uploading/linking a document.</summary>
     public static readonly Permission MyRequirements = new(
         "documents.my.requirements",
         Module,
         "My Document Requirements",
         "Documents",
-        "View the caller's own personnel document requirement status");
+        "View the caller's own personnel document requirement status, and satisfy one by linking an uploaded document");
+
+    /// <summary>Self-service: upload a file document for the caller's own use (e.g. to satisfy one's own requirement).</summary>
+    public static readonly Permission MyFilesCreate = new(
+        "documents.my.files.create",
+        Module,
+        "Upload My Document",
+        "Documents",
+        "Upload a file document for the caller's own use");
 
     /// <summary>All Documents module permissions.</summary>
     public static IEnumerable<Permission> All =>
@@ -82,5 +90,6 @@ public static class DocumentsPermissions
         RequirementsView,
         RequirementsManage,
         MyRequirements,
+        MyFilesCreate,
     ];
 }

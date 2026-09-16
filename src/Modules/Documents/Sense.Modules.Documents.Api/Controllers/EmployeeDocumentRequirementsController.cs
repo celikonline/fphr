@@ -54,6 +54,12 @@ public sealed class EmployeeDocumentRequirementsController : ApiControllerBase
     public async Task<IActionResult> Link(Guid id, [FromBody] LinkDocumentToRequirementRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new LinkDocumentToRequirementCommand(id, request.DocumentId), ct));
 
+    /// <summary>Self-service: links an uploaded Document to the caller's own requirement, marking it satisfied.</summary>
+    [HttpPost("me/requirements/{id:guid}/link")]
+    [ProducesResponseType<EmployeeDocumentRequirementDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LinkMine(Guid id, [FromBody] LinkDocumentToRequirementRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new LinkMyDocumentToRequirementCommand(id, request.DocumentId), ct));
+
     /// <summary>Re-runs requirement materialization for an existing employee.</summary>
     [HttpPost("employees/{employeeId:guid}/requirements/reevaluate")]
     [ProducesResponseType<IReadOnlyList<EmployeeDocumentRequirementDto>>(StatusCodes.Status200OK)]

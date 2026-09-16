@@ -166,6 +166,12 @@ export async function linkDocumentToRequirement(requirementId: string, documentI
   return data;
 }
 
+/** Self-service: requires `documents.my.requirements` and only succeeds for the caller's own requirement. */
+export async function linkMyDocumentToRequirement(requirementId: string, documentId: string): Promise<EmployeeDocumentRequirement> {
+  const { data } = await apiClient.post<EmployeeDocumentRequirement>(`${DOCUMENTS_BASE}/me/requirements/${requirementId}/link`, { documentId });
+  return data;
+}
+
 interface InitiateUploadResult {
   documentId: string;
   presignedUrl: string;
@@ -175,11 +181,14 @@ interface InitiateUploadResult {
 
 /**
  * Uploads a file through the Documents module's presigned-URL flow (initiate -> PUT bytes directly to
- * storage -> confirm) and returns the new Document's real id. Requires `documents.files.create`.
+ * storage -> confirm) and returns the new Document's real id.
+ * `scope: "hr"` (default) requires `documents.files.create`; `"me"` requires `documents.my.files.create`
+ * and uploads for the caller's own use (e.g. to satisfy their own requirement via `linkMyDocumentToRequirement`).
  */
-export async function uploadDocumentFile(file: File, bucketName = "documents"): Promise<string> {
+export async function uploadDocumentFile(file: File, bucketName = "documents", scope: "hr" | "me" = "hr"): Promise<string> {
+  const base = scope === "me" ? `${DOCUMENTS_BASE}/me` : DOCUMENTS_BASE;
   const contentType = file.type || "application/octet-stream";
-  const { data: initiated } = await apiClient.post<InitiateUploadResult>(`${DOCUMENTS_BASE}/initiate-upload`, {
+  const { data: initiated } = await apiClient.post<InitiateUploadResult>(`${base}/initiate-upload`, {
     fileName: file.name,
     contentType,
     fileSizeBytes: file.size,
@@ -190,7 +199,7 @@ export async function uploadDocumentFile(file: File, bucketName = "documents"): 
   const uploadResponse = await axios.put(initiated.presignedUrl, file, { headers: { "Content-Type": contentType } });
   const etag = (uploadResponse.headers["etag"] as string | undefined) ?? initiated.requestId;
 
-  await apiClient.post(`${DOCUMENTS_BASE}/${initiated.documentId}/confirm-upload`, {
+  await apiClient.post(`${base}/${initiated.documentId}/confirm-upload`, {
     eTag: etag,
     actualFileSizeBytes: file.size,
   });

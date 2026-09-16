@@ -37,49 +37,39 @@ public sealed class InitiateUploadHandler(
     ICurrentUser currentUser,
     IDocumentRepository documents) : ICommandHandler<InitiateUploadCommand, InitiateUploadResponse>
 {
-    public async Task<Result<InitiateUploadResponse>> Handle(InitiateUploadCommand command, CancellationToken cancellationToken)
+    public Task<Result<InitiateUploadResponse>> Handle(InitiateUploadCommand command, CancellationToken cancellationToken) =>
+        UploadCore.InitiateAsync(fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
+}
+
+/// <summary>Self-service: initiates a file upload for the caller's own use (e.g. to satisfy their own document requirement).</summary>
+[RequiresPermission("documents.my.files.create")]
+public sealed record InitiateMyUploadCommand(
+    string FileName,
+    string ContentType,
+    long FileSizeBytes,
+    string? BucketName = "documents") : ICommand<InitiateUploadResponse>;
+
+public sealed class InitiateMyUploadValidator : AbstractValidator<InitiateMyUploadCommand>
+{
+    public InitiateMyUploadValidator()
     {
-        try
-        {
-            var fileKey = $"{Guid.CreateVersion7().ToString("N")}/{command.FileName}";
-            var bucketName = command.BucketName ?? "documents";
-
-            // Initiate upload in storage
-            var presignedRequest = await fileStorage.InitiateUploadAsync(
-                tenant.TenantId,
-                bucketName,
-                fileKey,
-                command.ContentType,
-                cancellationToken);
-
-            // Create document aggregate in Pending state
-            var doc = Document.Create(
-                tenant.TenantId,
-                command.FileName,
-                fileKey,
-                command.ContentType,
-                command.FileSizeBytes,
-                currentUser.UserId ?? Guid.Empty,
-                bucketName);
-
-            if (doc.IsFailure)
-            {
-                return doc.Error;
-            }
-
-            documents.Add(doc.Value);
-
-            return new InitiateUploadResponse(
-                doc.Value.Id,
-                presignedRequest.UploadUrl,
-                presignedRequest.RequestId,
-                presignedRequest.ExpiresAt);
-        }
-        catch (InvalidOperationException)
-        {
-            return Error.Failure(DocumentsErrors.UploadInitiationFailed);
-        }
+        RuleFor(x => x.FileName).NotEmpty().MaximumLength(DocumentsLimits.TitleMaxLength);
+        RuleFor(x => x.ContentType).NotEmpty().MaximumLength(DocumentsLimits.ContentTypeMaxLength);
+        RuleFor(x => x.FileSizeBytes)
+            .GreaterThan(0)
+            .LessThanOrEqualTo(DocumentsLimits.MaxFileSize);
+        RuleFor(x => x.BucketName).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.BucketName));
     }
+}
+
+public sealed class InitiateMyUploadHandler(
+    IFileStorage fileStorage,
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IDocumentRepository documents) : ICommandHandler<InitiateMyUploadCommand, InitiateUploadResponse>
+{
+    public Task<Result<InitiateUploadResponse>> Handle(InitiateMyUploadCommand command, CancellationToken cancellationToken) =>
+        UploadCore.InitiateAsync(fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
 }
 
 /// <summary>Confirms an upload and validates the ETag (content hash).</summary>
@@ -104,9 +94,102 @@ public sealed class ConfirmUploadHandler(
     ITenantContext tenant,
     IDocumentRepository documents) : ICommandHandler<ConfirmUploadCommand, ConfirmUploadResponse>
 {
-    public async Task<Result<ConfirmUploadResponse>> Handle(ConfirmUploadCommand command, CancellationToken cancellationToken)
+    public Task<Result<ConfirmUploadResponse>> Handle(ConfirmUploadCommand command, CancellationToken cancellationToken) =>
+        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, cancellationToken);
+}
+
+/// <summary>Self-service: confirms an upload initiated via <see cref="InitiateMyUploadCommand"/>.</summary>
+[RequiresPermission("documents.my.files.create")]
+public sealed record ConfirmMyUploadCommand(
+    Guid DocumentId,
+    string ETag,
+    long ActualFileSizeBytes) : ICommand<ConfirmUploadResponse>;
+
+public sealed class ConfirmMyUploadValidator : AbstractValidator<ConfirmMyUploadCommand>
+{
+    public ConfirmMyUploadValidator()
     {
-        var doc = await documents.GetByIdAsync(command.DocumentId, cancellationToken);
+        RuleFor(x => x.DocumentId).NotEmpty();
+        RuleFor(x => x.ETag).NotEmpty();
+        RuleFor(x => x.ActualFileSizeBytes).GreaterThan(0);
+    }
+}
+
+public sealed class ConfirmMyUploadHandler(
+    IFileStorage fileStorage,
+    ITenantContext tenant,
+    IDocumentRepository documents) : ICommandHandler<ConfirmMyUploadCommand, ConfirmUploadResponse>
+{
+    public Task<Result<ConfirmUploadResponse>> Handle(ConfirmMyUploadCommand command, CancellationToken cancellationToken) =>
+        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, cancellationToken);
+}
+
+/// <summary>Shared by the HR and self-service upload commands; the raw upload isn't employee-scoped (see documents.my.files.create's remark).</summary>
+internal static class UploadCore
+{
+    public static async Task<Result<InitiateUploadResponse>> InitiateAsync(
+        IFileStorage fileStorage,
+        ITenantContext tenant,
+        ICurrentUser currentUser,
+        IDocumentRepository documents,
+        string fileName,
+        string contentType,
+        long fileSizeBytes,
+        string? bucketName,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var fileKey = $"{Guid.CreateVersion7().ToString("N")}/{fileName}";
+            var resolvedBucket = bucketName ?? "documents";
+
+            // Initiate upload in storage
+            var presignedRequest = await fileStorage.InitiateUploadAsync(
+                tenant.TenantId,
+                resolvedBucket,
+                fileKey,
+                contentType,
+                cancellationToken);
+
+            // Create document aggregate in Pending state
+            var doc = Document.Create(
+                tenant.TenantId,
+                fileName,
+                fileKey,
+                contentType,
+                fileSizeBytes,
+                currentUser.UserId ?? Guid.Empty,
+                resolvedBucket);
+
+            if (doc.IsFailure)
+            {
+                return doc.Error;
+            }
+
+            documents.Add(doc.Value);
+
+            return new InitiateUploadResponse(
+                doc.Value.Id,
+                presignedRequest.UploadUrl,
+                presignedRequest.RequestId,
+                presignedRequest.ExpiresAt);
+        }
+        catch (InvalidOperationException)
+        {
+            return Error.Failure(DocumentsErrors.UploadInitiationFailed);
+        }
+    }
+
+    public static async Task<Result<ConfirmUploadResponse>> ConfirmAsync(
+        IFileStorage fileStorage,
+        ITenantContext tenant,
+        IDocumentRepository documents,
+        Guid documentId,
+        string eTag,
+        long actualFileSizeBytes,
+        CancellationToken cancellationToken)
+    {
+        var doc = await documents.GetByIdAsync(documentId, cancellationToken);
         if (doc.IsFailure)
         {
             return doc.Error;
@@ -119,11 +202,11 @@ public sealed class ConfirmUploadHandler(
                 tenant.TenantId,
                 doc.Value.BucketName,
                 doc.Value.FileKey,
-                command.ETag,
+                eTag,
                 cancellationToken);
 
             // Update document state
-            doc.Value.ConfirmUpload(command.ETag, command.ActualFileSizeBytes);
+            doc.Value.ConfirmUpload(eTag, actualFileSizeBytes);
 
             return new ConfirmUploadResponse(
                 doc.Value.Id,

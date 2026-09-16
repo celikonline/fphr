@@ -59,6 +59,28 @@ public sealed class DocumentsController : ApiControllerBase
         return FromResult(result);
     }
 
+    /// <summary>Self-service: initiates a file upload for the caller's own use (e.g. to satisfy their own document requirement).</summary>
+    [HttpPost("me/initiate-upload")]
+    [ProducesResponseType<InitiateUploadResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> InitiateMyUpload([FromBody] InitiateUploadRequest request, CancellationToken ct)
+    {
+        var result = await Dispatcher.Send(
+            new InitiateMyUploadCommand(request.FileName, request.ContentType, request.FileSizeBytes, request.BucketName),
+            ct);
+        return FromResult(result);
+    }
+
+    /// <summary>Self-service: confirms an upload initiated via <c>me/initiate-upload</c>.</summary>
+    [HttpPost("me/" + ApiRoutes.IdParam + "/confirm-upload")]
+    [ProducesResponseType<ConfirmUploadResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ConfirmMyUpload(Guid id, [FromBody] ConfirmUploadRequest request, CancellationToken ct)
+    {
+        var result = await Dispatcher.Send(
+            new ConfirmMyUploadCommand(id, request.ETag, request.ActualFileSizeBytes),
+            ct);
+        return FromResult(result);
+    }
+
     /// <summary>Deletes a document and removes file from storage.</summary>
     [HttpDelete(ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

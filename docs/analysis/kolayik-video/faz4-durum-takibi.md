@@ -11,11 +11,11 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 | # | Kalem | Paket | Durum | Kanıt | Eksik / Not |
 |---|---|---|---|---|---|
-| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2+D3 | 🟡 Kısmi | Bkz. aşağıdaki "D1"/"D2"/"D3" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) + HR'ın belge yükleyip gereksinime bağlaması var; çalışanın kendi belgesini kendi yüklemesi (self-service) yok |
+| 66–68 | Zorunlu belge listesi seed'i (5 yaşam döngüsü aşaması), koşullu zorunlu belge kuralları (`DocumentRequirementRule`), sistem kayıtlarının özlük dosyasına belge olarak düşmesi | D1+D2+D3+D4 | 🟡 Kısmi | Bkz. aşağıdaki "D1"–"D4" bölümleri | Sistem kayıtlarının otomatik belge üretimi (#68 — izin formu/FM onayı/imzalı pusula PDF/Word render + `SourceRef`) yapılmadı; taksonomi + koşullu değerlendirme + manuel karşılama + web arayüzü (Ayarlar, çalışan kartı, rapor) + HR'ın ve çalışanın kendi belgesini yükleyip gereksinime bağlaması var |
 | 62 | Harcama: çoklu fiş + vergi oranı + mobil OCR | Ex0 | 🟡 Kısmi | Bkz. aşağıdaki "Ex0" bölümü | Çoklu fiş + vergi hesaplama var; OCR (`IReceiptOcr`), dosya yükleme entegrasyonu (yalnız `ReceiptFileId` string alanı var), web ekranı yok |
 | 63 | Avans talebi: para birimi, taksit | Ex0 | 🟡 Kısmi | Bkz. "Ex0" | Alanların hepsi var (tutar/para birimi/tarih/taksit); web ekranı yok |
 | 64 | "Kendi hesabım > Ödemeler" birleşik ekran | Ex0 | 🟡 Kısmi | Bkz. "Ex0" | Backend projeksiyonu (`GetMyPaymentsOverviewQuery`) var, yalnız Expense şemasını okuyor (tasarım kararına uygun); FM ödemesi/PayrollAdjustment satırları henüz yok (Leave/Payroll entegrasyonu ayrı paket); web ekranı yok |
-| 65 | Zimmet şablonu | — | ❌ Başlanmadı | — | `Assets` modülü henüz yok |
+| 65 | Zimmet şablonu (e-posta bilgilendirme, kimlik no, kategori aktarımda otomatik oluşur, seri no, veriliş/iade tarihi, açıklama) | As0 | 🟡 Kısmi | Bkz. aşağıdaki "As0" bölümü | Kategori (seed: Bilgisayar/Telefon/Araç/Diğer), seri no, veriliş/iade tarihi, açıklama, ata/iade/emekli et var; e-posta bilgilendirme, "aktarımda otomatik oluşur" (DataTransfer şablonu), kategori yönetim ekranı (Ayarlar) yapılmadı |
 | 69 | Yardım Merkezi + Desteğe bağlan (Announcements > Support) | — | ❌ Başlanmadı | — | `Announcements` modülü henüz yok |
 | 70 | Raporlar menüsü + "Kendin oluştur" + asenkron e-posta | — | ❌ Başlanmadı | — | — |
 | 71 | Etkinlik takvimi widget'ı | — | ❌ Başlanmadı | — | Announcements'a bağlı |
@@ -39,7 +39,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - ~~Web arayüzü yok~~ → bkz. aşağıdaki D2.
 - #68'in "sistem kayıtları belge olarak düşer" kısmı yapılmadı: `IDocumentRenderer` (PDF/Word), `Document.SourceRef`/`SignatureStatus` alanları, Leave/Workflow olay tüketicileri (izin formu, FM onay belgesi vb.) — Faz 1'in "İzin formu PDF ve Word" kalemiyle birlikte ele alınmalı, ayrı paket.
 - Test projesi Postgres/Testcontainers entegrasyon testi değil, NSubstitute mock testleri — modülün geri kalanının `[Collection("PostgreSQL")]` deseniyle tutarlı değil; takip gerekiyor.
-- Koşullardan yalnız 2'si (`AgeUnder18`, `HasDisability`) gerçek veriyle değerlendiriliyor; kalan 10'u (`NonTurkishNational`, `HasIncentive`, `UsesDisabilityTaxReduction`, `ExConvictOrTerrorVictim`, `RequiresPeriodicHealthCheck`, `RequiresDriving`, `HasOpenAssets`, `VeryHazardousJob`, `HasOvertimeConsent`, `IsShiftWorker`) ilgili modüller (Employee Nationality alanı, Payroll teşvik, Assets, Attendance, Leave FM onayı) gelene kadar `false` sabit — kod içinde açıkça not düşüldü.
+- Koşullardan 3'ü (`AgeUnder18`, `HasDisability`, `HasOpenAssets`) artık gerçek veriyle değerlendiriliyor (`HasOpenAssets`: Assets modülünün `IAssetLookup.HasOpenAssetsAsync` sözleşmesi üzerinden, bkz. `faz0-durum-takibi.md`/roadmap #65); kalan 9'u (`NonTurkishNational`, `HasIncentive`, `UsesDisabilityTaxReduction`, `ExConvictOrTerrorVictim`, `RequiresPeriodicHealthCheck`, `RequiresDriving`, `VeryHazardousJob`, `HasOvertimeConsent`, `IsShiftWorker`) ilgili modüller (Employee Nationality alanı, Payroll teşvik, Attendance, Leave FM onayı) gelene kadar `false` sabit — kod içinde açıkça not düşüldü. Not: `DocumentRequirementMaterializationService.MaterializeAsync` yalnızca eksik gereksinimleri ekliyor (append-only); bir koşul sonradan `false`'a dönerse (ör. zimmet iade edilirse) daha önce materialize edilmiş `AssetHandoverForm` satırı otomatik silinmiyor/geri alınmıyor — "kaybolma" davranışı bu paket kapsamında yok, yalnız "belirme" var.
 - Grace period (30 gün) ve reevaluate komutunun tarih tabanı sabit kodlanmış; tenant ayarı değil.
 
 ## D2 — Documents: web arayüzü (Ayarlar > Belge tipleri, çalışan kartı "Dosyalar", Eksik belge raporu)
@@ -58,6 +58,7 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 
 **Eksik / Not:**
 - ~~Belge yükleme + gereksinime bağlama~~ → D3'te kapatıldı.
+- ~~Çalışanın kendi belgesini kendi yüklemesi~~ → D4'te kapatıldı.
 - Rapor sayfasında arama/dışa aktarma yok (Audit Log sayfasındaki gibi); şimdilik yalnız durum filtresi.
 
 ## D3 — Documents: `initiate-upload` kontrat açığı + "Dosyalar" sekmesinden yükleyip gereksinime bağlama
@@ -73,8 +74,25 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 **Doğrulama:** `dotnet build` + `dotnet test tests/Modules/Sense.Modules.Documents.Tests` (43/43 yeşil) `InitiateUploadResponse` alan eklemesiyle; web tarafı `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` hatasız.
 
 **Eksik / Not:**
-- Yalnız HR/yönetici tarafı kapatıldı (`documents.requirements.manage` + `documents.files.create` gereken roller). Bir çalışanın **kendi** eksik belgesini kendi "Dosyalarım" ekranından yüklemesi hâlâ yok — `documents.my.*` joker izni `documents.files.create`'i kapsamıyor (segment eşleşmiyor); bu, ayrı bir izin/rol kararı (`SystemRoleDefinitions.cs`) gerektiriyor, kapsam dışı bırakıldı.
+- ~~Yalnız HR/yönetici tarafı kapatıldı, self-service yok~~ → D4'te kapatıldı.
 - `initiate-upload`'ın diğer tüketicisi (şirket logosu) de bu düzeltmeden faydalandı ama o ekran ayrı bir bilinen boşluğa (gerçek `CompaniesController` yok, profil localStorage'da tutuluyor) sahip, dokunulmadı.
+
+## D4 — Documents: çalışanın kendi belgesini kendi yükleyip gereksinimini karşılaması (self-service)
+
+**Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
+
+**Kapsam:** D3'ün notunu kapatıyor — `documents.files.create`/`documents.requirements.manage` `*.my.*` joker deseniyle eşleşmediği için bir çalışan kendi eksik belgesini yükleyemiyordu.
+- Yeni izin `documents.my.files.create` (`DocumentsPermissions.cs`) — Employee self-service rolünün mevcut `*.my.*` include deseni bunu otomatik yakalıyor, `SystemRoleDefinitions.cs`'ye dokunulmadı (yalnız deploy'da `SystemRolePermissionSynchronizer` yeniden senkronlar).
+- Backend: `InitiateUploadCommand`/`ConfirmUploadCommand`'ın gövdesi `UploadCore.InitiateAsync`/`ConfirmAsync`'e çıkarıldı (davranış aynı, ham yükleme çalışana özel değil); iki ince self-service komutu eklendi — `InitiateMyUploadCommand`/`ConfirmMyUploadCommand` (`documents.my.files.create`), aynı çekirdeği çağırıyor. `LinkDocumentToRequirementHandler`'ın gövdesi de `LinkCore.LinkAsync`'e çıkarıldı; yeni `LinkMyDocumentToRequirementCommand` (`documents.my.requirements`) `ICurrentUser.EmployeeId`'yi hedef gereksinimin `EmployeeId`'siyle karşılaştırıp uyuşmazsa `Error.Forbidden(employee_document_requirement.not_owner)` döndürüyor (Expense modülünün `expense.my.claims`/`NotOwner` deseniyle aynı, bkz. `ExpenseClaimCommands.cs`).
+- API: `documents/me/initiate-upload`, `documents/me/{id}/confirm-upload`, `documents/me/requirements/{id}/link` (`DocumentsController.cs`, `EmployeeDocumentRequirementsController.cs`).
+- Web: `documents.service.ts`'e `uploadDocumentFile(file, bucketName, scope)` (`scope: "hr" | "me"`) ve `linkMyDocumentToRequirement`; `documents-section.tsx`'te tek bir `uploadMode` ("hr" HR/admin için tüm eksik+muaf satırlarda, "me" düz çalışan için yalnız eksik satırlarda) — aynı "Yükle" aksiyonu artık hem HR hem çalışanın kendi kartında çalışıyor.
+- `SharedResource(.en).resx`'e `documents.my.files.create` izin adı ve `employee_document_requirement.not_owner` hata mesajı eklendi.
+
+**Doğrulama:** `dotnet test tests/Modules/Sense.Modules.Documents.Tests` 46/46 yeşil (3 yeni test: `Link_MarksRequirementUploaded_AndReturnsDto`, `LinkMine_OwnRequirement_MarksUploaded`, `LinkMine_AnotherEmployeesRequirement_Fails_AndLeavesStatusUnchanged` — sahiplik kontrolü + durum değişmiyor); `dotnet build` Documents API hatasız; web `pnpm exec tsc --noEmit`, `pnpm exec eslint src`, `pnpm exec vite build` hatasız.
+
+**Eksik / Not:**
+- Çalışan yalnız `missing` durumundaki kendi gereksinimini yükleyebiliyor; `waived` bir gereksinimi kendi başına yeniden yükleyip değiştirmesi engellendi (bilinçli — HR'ın muafiyet kararını sessizce ezmesin diye), bu yol yalnızca HR tarafında (`canManage`) açık.
+- Self-service akış tarayıcıda uçtan uca (gerçek dosya + presigned URL + S3/MinIO) test edilmedi — yalnız birim testleri ve derleme/tip kontrolleri.
 
 ## Ex0 — Expense: harcama talebi + avans + ödemeler özeti çekirdeği (yalnız backend)
 
@@ -100,3 +118,4 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - 2026-09-16: D2 (web arayüzü: Belge tipleri ayarları, çalışan kartı Dosyalar sekmesi, Eksik belge raporu) eklendi.
 - 2026-09-16: D3 (initiate-upload kontrat açığı düzeltildi; Dosyalar sekmesinden yükleyip gereksinime bağlama) eklendi.
 - 2026-09-16: Ex0 (Expense modül iskeleti + harcama talebi/avans/ödemeler özeti çekirdeği, backend) eklendi.
+- 2026-09-16: D4 (çalışanın kendi belgesini kendi yükleyip gereksinimini karşılaması, self-service) eklendi.

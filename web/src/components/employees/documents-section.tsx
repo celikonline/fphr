@@ -13,6 +13,7 @@ import {
   getEmployeeDocumentRequirements,
   getMyDocumentRequirements,
   linkDocumentToRequirement,
+  linkMyDocumentToRequirement,
   reevaluateEmployeeDocumentRequirements,
   uploadDocumentFile,
   waiveDocumentRequirement,
@@ -33,7 +34,10 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   const { t, i18n } = useTranslation(["documents", "common"]);
   const canManage = usePermission("documents.requirements.manage");
   const canViewAny = usePermission("documents.requirements.view");
-  const canUpload = usePermission("documents.files.create") && canManage;
+  const canUploadHr = usePermission("documents.files.create") && canManage;
+  const canUploadSelf = usePermission("documents.my.files.create");
+  // A plain employee has "me" only; HR/admin roles' "documents.*" wildcard covers both, so "hr" wins.
+  const uploadMode: "hr" | "me" | null = canUploadHr ? "hr" : canUploadSelf ? "me" : null;
   const queryClient = useQueryClient();
   const [waiving, setWaiving] = useState<EmployeeDocumentRequirement | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,8 +69,8 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
 
   const uploadMutation = useMutation({
     mutationFn: async ({ requirement, file }: { requirement: EmployeeDocumentRequirement; file: File }) => {
-      const documentId = await uploadDocumentFile(file);
-      return linkDocumentToRequirement(requirement.id, documentId);
+      const documentId = await uploadDocumentFile(file, "documents", uploadMode === "me" ? "me" : "hr");
+      return uploadMode === "me" ? linkMyDocumentToRequirement(requirement.id, documentId) : linkDocumentToRequirement(requirement.id, documentId);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey });
@@ -139,9 +143,9 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
                     `${requirement.dueDate ? " · " : ""}${t("documents:requirements.waivedReason")}: ${requirement.waivedReason}`}
                 </Text>
               </Stack>
-              {canManage && requirement.status !== "uploaded" && (
+              {requirement.status !== "uploaded" && (canManage || uploadMode === "me") && (
                 <Group gap={4}>
-                  {canUpload && (
+                  {uploadMode && (uploadMode === "hr" || requirement.status === "missing") && (
                     <Button
                       type="button"
                       variant="subtle"
@@ -153,12 +157,12 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
                       {t("documents:requirements.upload")}
                     </Button>
                   )}
-                  {requirement.status === "missing" && (
+                  {canManage && requirement.status === "missing" && (
                     <Button type="button" variant="subtle" size="sm" onClick={() => setWaiving(requirement)}>
                       {t("documents:requirements.waive")}
                     </Button>
                   )}
-                  {requirement.status === "waived" && (
+                  {canManage && requirement.status === "waived" && (
                     <Button
                       type="button"
                       variant="subtle"
@@ -176,7 +180,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
         </Stack>
       )}
 
-      {canUpload && <input ref={fileInputRef} type="file" className="hidden" onChange={fileSelected} />}
+      {uploadMode && <input ref={fileInputRef} type="file" className="hidden" onChange={fileSelected} />}
       {waiving && <WaiveDialog requirement={waiving} queryKey={queryKey} onClose={() => setWaiving(null)} />}
     </Card>
   );

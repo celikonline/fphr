@@ -1,7 +1,9 @@
 using NSubstitute;
+using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
+using Sense.Modules.Documents.Domain.Documents;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
@@ -78,5 +80,72 @@ public sealed class EmployeeDocumentRequirementHandlerTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(DocumentRequirementStatus.Missing);
         result.Value.WaivedReason.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Link_MarksRequirementUploaded_AndReturnsDto()
+    {
+        var type = HealthReportType();
+        var requirement = EmployeeDocumentRequirement.Materialize(TenantId, EmployeeId, type.Id, null).Value;
+        var document = Document.Create(TenantId, "saglik-raporu.pdf", "key/saglik-raporu.pdf", "application/pdf", 1024, Guid.NewGuid()).Value;
+
+        var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
+        requirements.GetByIdAsync(requirement.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(requirement)));
+        var types = Substitute.For<IDocumentTypeDefinitionRepository>();
+        types.GetByIdAsync(type.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(type)));
+        var documents = Substitute.For<IDocumentRepository>();
+        documents.GetByIdAsync(document.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(document)));
+
+        var handler = new LinkDocumentToRequirementHandler(requirements, types, documents);
+        var result = await handler.Handle(new LinkDocumentToRequirementCommand(requirement.Id, document.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(DocumentRequirementStatus.Uploaded);
+        result.Value.DocumentId.ShouldBe(document.Id);
+    }
+
+    [Fact]
+    public async Task LinkMine_OwnRequirement_MarksUploaded()
+    {
+        var type = HealthReportType();
+        var requirement = EmployeeDocumentRequirement.Materialize(TenantId, EmployeeId, type.Id, null).Value;
+        var document = Document.Create(TenantId, "saglik-raporu.pdf", "key/saglik-raporu.pdf", "application/pdf", 1024, Guid.NewGuid()).Value;
+
+        var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
+        requirements.GetByIdAsync(requirement.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(requirement)));
+        var types = Substitute.For<IDocumentTypeDefinitionRepository>();
+        types.GetByIdAsync(type.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(type)));
+        var documents = Substitute.For<IDocumentRepository>();
+        documents.GetByIdAsync(document.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(document)));
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(EmployeeId);
+
+        var handler = new LinkMyDocumentToRequirementHandler(currentUser, requirements, types, documents);
+        var result = await handler.Handle(new LinkMyDocumentToRequirementCommand(requirement.Id, document.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(DocumentRequirementStatus.Uploaded);
+    }
+
+    [Fact]
+    public async Task LinkMine_AnotherEmployeesRequirement_Fails_AndLeavesStatusUnchanged()
+    {
+        var type = HealthReportType();
+        var requirement = EmployeeDocumentRequirement.Materialize(TenantId, EmployeeId, type.Id, null).Value;
+        var document = Document.Create(TenantId, "saglik-raporu.pdf", "key/saglik-raporu.pdf", "application/pdf", 1024, Guid.NewGuid()).Value;
+
+        var requirements = Substitute.For<IEmployeeDocumentRequirementRepository>();
+        requirements.GetByIdAsync(requirement.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult(Result.Success(requirement)));
+        var types = Substitute.For<IDocumentTypeDefinitionRepository>();
+        var documents = Substitute.For<IDocumentRepository>();
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(Guid.NewGuid()); // a different employee than the requirement's owner
+
+        var handler = new LinkMyDocumentToRequirementHandler(currentUser, requirements, types, documents);
+        var result = await handler.Handle(new LinkMyDocumentToRequirementCommand(requirement.Id, document.Id), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(DocumentsErrors.NotOwner);
+        requirement.Status.ShouldBe(DocumentRequirementStatus.Missing);
     }
 }
