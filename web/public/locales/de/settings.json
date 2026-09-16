@@ -94,6 +94,41 @@
     "empty": "[DE] No support access requests.",
     "senseStaff": "[DE] Sense support team"
   },
+  "terminationReasons": {
+    "title": "[DE] Termination reasons",
+    "subtitle": "[DE] Manage the reason list the termination wizard offers.",
+    "add": "[DE] Add reason",
+    "editTitle": "[DE] Edit reason",
+    "showInactive": "[DE] Show inactive reasons",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "system": "[DE] System",
+    "custom": "[DE] Tenant",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "empty": "[DE] No reasons recorded.",
+    "saved": "[DE] The reason is saved.",
+    "statusSaved": "[DE] The reason's status is updated.",
+    "codeHint": "[DE] The stable code imports and reports match on; it cannot be changed later.",
+    "codeLocked": "[DE] The code cannot be changed after creation.",
+    "typeHint": "[DE] Pre-fills the wizard; every termination can override it.",
+    "columns": {
+      "name": "[DE] Name",
+      "code": "[DE] Code",
+      "type": "[DE] Default termination type",
+      "sgkExitCode": "[DE] SGK exit code",
+      "origin": "[DE] Origin",
+      "status": "[DE] Status",
+      "sortOrder": "[DE] Order"
+    },
+    "errors": {
+      "generic": "[DE] The reason could not be saved.",
+      "loadFailed": "[DE] The reasons could not be loaded.",
+      "codeTaken": "[DE] A reason with this code already exists.",
+      "codeRequired": "[DE] The code is required.",
+      "nameRequired": "[DE] The name is required."
+    }
+  },
   "customFields": {
     "title": "[DE] Custom fields",
     "subtitle": "[DE] Manage the custom field definitions shown on employee cards.",

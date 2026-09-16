@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Avatar, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
-import { ArrowLeft, Lock, Mail, MoreVertical, SearchX } from "lucide-react";
+import { ArrowLeft, Lock, LogOut, Mail, MoreVertical, PauseCircle, PlayCircle, SearchX, UserPlus } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -14,6 +14,15 @@ import { inviteEmployee } from "@/services/invitations.service";
 import { AccountStatusBadge, avatarColor, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
+import { EmployeeLifecycleDialogs, lifecycleActionsFor, type LifecycleAction } from "@/components/employees/lifecycle-actions";
+
+function LifecycleIcon({ action }: { action: LifecycleAction }) {
+  const size = 16;
+  if (action === "suspend") return <PauseCircle size={size} />;
+  if (action === "reactivate") return <PlayCircle size={size} />;
+  if (action === "terminate") return <LogOut size={size} />;
+  return <UserPlus size={size} />;
+}
 
 export default function EmployeeCardPage() {
   const { id = "", tab } = useParams();
@@ -112,7 +121,10 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
   const queryClient = useQueryClient();
   const { nameById } = useOrgUnits();
   const canInvite = usePermission("identity.users.invite");
+  const canUpdate = usePermission("employee.employees.update");
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [lifecycleAction, setLifecycleAction] = useState<LifecycleAction | null>(null);
+  const lifecycleActions = canUpdate ? lifecycleActionsFor(employee.status) : [];
 
   const targetEmail = employee.workEmail ?? employee.personalEmail;
   const targetSourceKey = employee.workEmail ? "work" : "personal";
@@ -160,7 +172,7 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
             <AccountStatusBadge status={employee.accountStatus} />
           </Group>
         </div>
-        {showInvite && (
+        {(showInvite || lifecycleActions.length > 0) && (
           <Menu position="bottom-end" width={256}>
             <Tooltip label={t("common:actions")}>
               <Menu.Target>
@@ -171,18 +183,32 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
             </Tooltip>
             <Menu.Dropdown>
               <Menu.Label>{t("common:actions")}</Menu.Label>
-              <Menu.Item disabled={!targetEmail} onClick={() => setConfirmOpen(true)} leftSection={<Mail size={16} />}>
-                {inviteLabel}
-              </Menu.Item>
-              {!targetEmail && (
+              {showInvite && (
+                <Menu.Item disabled={!targetEmail} onClick={() => setConfirmOpen(true)} leftSection={<Mail size={16} />}>
+                  {inviteLabel}
+                </Menu.Item>
+              )}
+              {showInvite && !targetEmail && (
                 <Text size="xs" c="dimmed" px="sm" pb="xs">
                   {t("employees:invite.emailRequiredHint")}
                 </Text>
               )}
+              {lifecycleActions.map((action) => (
+                <Menu.Item
+                  key={action}
+                  color={action === "terminate" ? "red" : undefined}
+                  leftSection={<LifecycleIcon action={action} />}
+                  onClick={() => setLifecycleAction(action)}
+                >
+                  {t(`employees:lifecycle.action.${action}`)}
+                </Menu.Item>
+              ))}
             </Menu.Dropdown>
           </Menu>
         )}
       </Group>
+
+      <EmployeeLifecycleDialogs employee={employee} action={lifecycleAction} onClose={() => setLifecycleAction(null)} />
 
       <ConfirmDialog
         open={confirmOpen}

@@ -26,6 +26,7 @@ import DataTransferPage from "@/pages/settings/data-transfer";
 import DataTransferJobPage from "@/pages/settings/data-transfer-job";
 import ApprovalFlowsPage from "@/pages/settings/approval-flows";
 import CustomFieldsPage from "@/pages/settings/custom-fields";
+import TerminationReasonsPage from "@/pages/settings/termination-reasons";
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
@@ -97,6 +98,7 @@ export default function App() {
           <Route path="settings/company/profile" element={<CompanyProfilePage />} />
           <Route path="settings/company/approval-flows" element={<ApprovalFlowsPage />} />
           <Route path="settings/company/custom-fields" element={<CustomFieldsPage />} />
+          <Route path="settings/company/termination-reasons" element={<TerminationReasonsPage />} />
           <Route
             path="settings/rules/*"
             element={

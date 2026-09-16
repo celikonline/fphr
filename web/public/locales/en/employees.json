@@ -156,6 +156,31 @@
       "agencyWorker": "Agency worker",
       "subcontractor": "Subcontractor"
     },
+    "suspensionReason": {
+      "MilitaryService": "Military service",
+      "UnionOffice": "Union office",
+      "LongUnpaidLeave": "Long unpaid leave",
+      "Detention": "Detention",
+      "HealthReport": "Health report",
+      "ForceMajeure": "Force majeure",
+      "Other": "Other"
+    },
+    "terminationType": {
+      "validCause_Art18": "Employer termination (valid cause, art. 18)",
+      "employeeJustCause_Art24": "Employee just cause (art. 24)",
+      "employerJustCause_Art25": "Employer just cause (art. 25)",
+      "mutualRescission": "Mutual rescission",
+      "resignation": "Resignation",
+      "fixedTermExpiry": "Fixed-term expiry",
+      "other": "Other"
+    },
+    "employmentPeriodSource": {
+      "hire": "Hire",
+      "rehire": "Rehire",
+      "groupTransfer": "Group transfer",
+      "businessTransfer": "Business transfer",
+      "import": "Import"
+    },
     "careerChangeType": {
       "hire": "Hire",
       "promotion": "Promotion",
@@ -418,6 +443,80 @@
       "personal": "Personal",
       "career": "Career",
       "other": "Other"
+    }
+  },
+  "lifecycle": {
+    "action": {
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "terminate": "Terminate",
+      "rehire": "Rehire"
+    },
+    "suspend": {
+      "title": "Suspend employee",
+      "description": "A suspended employee is not counted in the active headcount; the login account is not touched.",
+      "reason": "Suspension reason",
+      "submit": "Suspend",
+      "success": "The employee is suspended."
+    },
+    "reactivate": {
+      "title": "Reactivate employee",
+      "description": "{{name}} will be set back to active.",
+      "submit": "Reactivate",
+      "success": "The employee is active again."
+    },
+    "terminate": {
+      "title": "Termination",
+      "description": "The reason pre-fills the termination type and the SGK exit code; both stay editable.",
+      "date": "Termination date",
+      "reason": "Termination reason",
+      "type": "Termination type",
+      "typeHint": "Left empty, the reason's default applies.",
+      "sgkExitCode": "SGK exit code",
+      "severancePaid": "Severance paid",
+      "severancePaidHint": "When paid, this period does not count towards severance seniority after a rehire.",
+      "leaveSettled": "Annual leave used up or paid out",
+      "leaveSettledHint": "When ticked, this period does not count towards leave seniority after a rehire.",
+      "collectiveTitle": "Collective dismissal warning",
+      "warningTitle": "Points to watch",
+      "dateRequired": "The termination date is required.",
+      "reasonRequired": "Pick a termination reason.",
+      "dateBeforeHire": "The termination date cannot be before the hire date ({{date}}).",
+      "submit": "Terminate",
+      "success": "The employee is terminated."
+    },
+    "rehire": {
+      "title": "Rehire employee",
+      "description": "A new employment period starts; previous periods can be carried into leave seniority.",
+      "hireDate": "New hire date",
+      "merge": "Count previous periods towards leave seniority",
+      "mergeHint": "Counted previous service: {{days}} days (periods settled at exit excluded).",
+      "dateRequired": "The hire date is required.",
+      "dateBeforeExit": "The new hire date must be after the previous exit date ({{date}}).",
+      "submit": "Rehire",
+      "success": "The employee is rehired. Leave accrual starts on {{date}}."
+    }
+  },
+  "employmentPeriods": {
+    "title": "Employment periods",
+    "empty": "No employment periods recorded.",
+    "current": "Ongoing",
+    "columns": {
+      "period": "Period",
+      "source": "Started by",
+      "reason": "Exit reason",
+      "days": "Counted days"
+    },
+    "severancePaid": "Severance paid",
+    "leaveSettled": "Leave settled",
+    "seniority": {
+      "title": "Seniority",
+      "leave": "Leave seniority",
+      "severance": "Severance seniority",
+      "jobSecurity": "Job-security seniority",
+      "months": "{{count}} months",
+      "days": "{{count}} days",
+      "since": "since {{date}}"
     }
   }
 }

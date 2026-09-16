@@ -16,6 +16,7 @@ import {
   KeyRound,
   LifeBuoy,
   ListChecks,
+  LogOut,
   MapPin,
   Network,
   Palmtree,
@@ -74,6 +75,7 @@ export const SETTINGS_PERMISSIONS = {
   dataTransfer: ["datatransfer.import.view"],
   workflowPolicies: ["workflow.policies.read"],
   customFields: ["employee.customfield.view"],
+  terminationReasons: ["employee.termination_reason.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -271,6 +273,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/custom-fields",
         icon: ListChecks,
         permissions: SETTINGS_PERMISSIONS.customFields,
+      },
+      {
+        key: "terminationReasons",
+        labelKey: "settings.terminationReasons",
+        descriptionKey: "settings.terminationReasonsDesc",
+        path: "/app/settings/company/termination-reasons",
+        icon: LogOut,
+        permissions: SETTINGS_PERMISSIONS.terminationReasons,
       },
     ],
   },

@@ -156,6 +156,31 @@
       "agencyWorker": "Geçici iş ilişkisi (Büro)",
       "subcontractor": "Alt işveren"
     },
+    "suspensionReason": {
+      "MilitaryService": "Askerlik",
+      "UnionOffice": "Sendika yöneticiliği",
+      "LongUnpaidLeave": "Uzun süreli ücretsiz izin",
+      "Detention": "Gözaltı/tutukluluk",
+      "HealthReport": "Sağlık raporu",
+      "ForceMajeure": "Zorlayıcı neden",
+      "Other": "Diğer"
+    },
+    "terminationType": {
+      "validCause_Art18": "İşveren feshi (geçerli neden, md.18)",
+      "employeeJustCause_Art24": "İşçinin haklı feshi (md.24)",
+      "employerJustCause_Art25": "İşverenin haklı feshi (md.25)",
+      "mutualRescission": "İkale (anlaşmalı fesih)",
+      "resignation": "İstifa",
+      "fixedTermExpiry": "Belirli süreli sözleşme sonu",
+      "other": "Diğer"
+    },
+    "employmentPeriodSource": {
+      "hire": "İşe giriş",
+      "rehire": "Yeniden işe giriş",
+      "groupTransfer": "Grup içi transfer",
+      "businessTransfer": "İşyeri devri",
+      "import": "Veri aktarımı"
+    },
     "careerChangeType": {
       "hire": "İşe giriş",
       "promotion": "Terfi",
@@ -418,6 +443,80 @@
       "personal": "Kişisel",
       "career": "Kariyer",
       "other": "Diğer"
+    }
+  },
+  "lifecycle": {
+    "action": {
+      "suspend": "Askıya al",
+      "reactivate": "Askıdan geri al",
+      "terminate": "İşten çıkar",
+      "rehire": "Yeniden işe al"
+    },
+    "suspend": {
+      "title": "Çalışanı askıya al",
+      "description": "Askıya alınan çalışan aktif kadroda sayılmaz; giriş hesabına dokunulmaz.",
+      "reason": "Askıya alma nedeni",
+      "submit": "Askıya al",
+      "success": "Çalışan askıya alındı."
+    },
+    "reactivate": {
+      "title": "Askıdan geri al",
+      "description": "{{name}} yeniden aktif duruma alınacak.",
+      "submit": "Geri al",
+      "success": "Çalışan yeniden aktif."
+    },
+    "terminate": {
+      "title": "İşten ayrılış",
+      "description": "Ayrılma nedeni fesih türünü ve SGK çıkış kodunu ön-doldurur; ikisini de değiştirebilirsiniz.",
+      "date": "İşten ayrılma tarihi",
+      "reason": "İşten ayrılma nedeni",
+      "type": "Fesih türü",
+      "typeHint": "Boş bırakılırsa nedenin varsayılanı uygulanır.",
+      "sgkExitCode": "SGK çıkış kodu",
+      "severancePaid": "Kıdem tazminatı ödendi",
+      "severancePaidHint": "Ödendiyse bu dönem yeniden işe alımda kıdem tazminatı kıdemine sayılmaz.",
+      "leaveSettled": "Yıllık izinler kullandırıldı veya ücreti ödendi",
+      "leaveSettledHint": "İşaretlenirse bu dönem yeniden işe alımda izin kıdemine sayılmaz.",
+      "collectiveTitle": "Toplu işten çıkarma uyarısı",
+      "warningTitle": "Dikkat edilmesi gerekenler",
+      "dateRequired": "İşten ayrılma tarihi zorunludur.",
+      "reasonRequired": "İşten ayrılma nedeni seçin.",
+      "dateBeforeHire": "İşten ayrılma tarihi işe başlama tarihinden ({{date}}) önce olamaz.",
+      "submit": "İşten çıkar",
+      "success": "Çalışan işten çıkarıldı."
+    },
+    "rehire": {
+      "title": "Yeniden işe al",
+      "description": "Yeni bir çalışma dönemi açılır; önceki dönemler izin kıdemine eklenebilir.",
+      "hireDate": "Yeni işe başlama tarihi",
+      "merge": "Önceki dönemler izin kıdemine sayılsın",
+      "mergeHint": "Sayılan önceki süre: {{days}} gün (çıkışta tasfiye edilmiş dönemler hariç).",
+      "dateRequired": "İşe başlama tarihi zorunludur.",
+      "dateBeforeExit": "Yeni işe başlama tarihi önceki ayrılma tarihinden ({{date}}) sonra olmalıdır.",
+      "submit": "Yeniden işe al",
+      "success": "Çalışan yeniden işe alındı. İzne esas hak ediş tarihi: {{date}}."
+    }
+  },
+  "employmentPeriods": {
+    "title": "Çalışma dönemleri",
+    "empty": "Kayıtlı çalışma dönemi yok.",
+    "current": "Devam ediyor",
+    "columns": {
+      "period": "Dönem",
+      "source": "Başlangıç nedeni",
+      "reason": "Ayrılma nedeni",
+      "days": "Sayılan gün"
+    },
+    "severancePaid": "Kıdem tazminatı ödendi",
+    "leaveSettled": "İzinler tasfiye edildi",
+    "seniority": {
+      "title": "Kıdem",
+      "leave": "İzin kıdemi",
+      "severance": "Kıdem tazminatı kıdemi",
+      "jobSecurity": "İş güvencesi kıdemi",
+      "months": "{{count}} ay",
+      "days": "{{count}} gün",
+      "since": "{{date}} tarihinden itibaren"
     }
   }
 }

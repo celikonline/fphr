@@ -156,6 +156,31 @@
       "agencyWorker": "[DE] Agency worker",
       "subcontractor": "[DE] Subcontractor"
     },
+    "suspensionReason": {
+      "MilitaryService": "[DE] Military service",
+      "UnionOffice": "[DE] Union office",
+      "LongUnpaidLeave": "[DE] Long unpaid leave",
+      "Detention": "[DE] Detention",
+      "HealthReport": "[DE] Health report",
+      "ForceMajeure": "[DE] Force majeure",
+      "Other": "[DE] Other"
+    },
+    "terminationType": {
+      "validCause_Art18": "[DE] Employer termination (valid cause, art. 18)",
+      "employeeJustCause_Art24": "[DE] Employee just cause (art. 24)",
+      "employerJustCause_Art25": "[DE] Employer just cause (art. 25)",
+      "mutualRescission": "[DE] Mutual rescission",
+      "resignation": "[DE] Resignation",
+      "fixedTermExpiry": "[DE] Fixed-term expiry",
+      "other": "[DE] Other"
+    },
+    "employmentPeriodSource": {
+      "hire": "[DE] Hire",
+      "rehire": "[DE] Rehire",
+      "groupTransfer": "[DE] Group transfer",
+      "businessTransfer": "[DE] Business transfer",
+      "import": "[DE] Import"
+    },
     "careerChangeType": {
       "hire": "[DE] Hire",
       "promotion": "[DE] Promotion",
@@ -418,6 +443,80 @@
       "personal": "[DE] Personal",
       "career": "[DE] Career",
       "other": "[DE] Other"
+    }
+  },
+  "lifecycle": {
+    "action": {
+      "suspend": "[DE] Suspend",
+      "reactivate": "[DE] Reactivate",
+      "terminate": "[DE] Terminate",
+      "rehire": "[DE] Rehire"
+    },
+    "suspend": {
+      "title": "[DE] Suspend employee",
+      "description": "[DE] A suspended employee is not counted in the active headcount; the login account is not touched.",
+      "reason": "[DE] Suspension reason",
+      "submit": "[DE] Suspend",
+      "success": "[DE] The employee is suspended."
+    },
+    "reactivate": {
+      "title": "[DE] Reactivate employee",
+      "description": "[DE] {{name}} will be set back to active.",
+      "submit": "[DE] Reactivate",
+      "success": "[DE] The employee is active again."
+    },
+    "terminate": {
+      "title": "[DE] Termination",
+      "description": "[DE] The reason pre-fills the termination type and the SGK exit code; both stay editable.",
+      "date": "[DE] Termination date",
+      "reason": "[DE] Termination reason",
+      "type": "[DE] Termination type",
+      "typeHint": "[DE] Left empty, the reason's default applies.",
+      "sgkExitCode": "[DE] SGK exit code",
+      "severancePaid": "[DE] Severance paid",
+      "severancePaidHint": "[DE] When paid, this period does not count towards severance seniority after a rehire.",
+      "leaveSettled": "[DE] Annual leave used up or paid out",
+      "leaveSettledHint": "[DE] When ticked, this period does not count towards leave seniority after a rehire.",
+      "collectiveTitle": "[DE] Collective dismissal warning",
+      "warningTitle": "[DE] Points to watch",
+      "dateRequired": "[DE] The termination date is required.",
+      "reasonRequired": "[DE] Pick a termination reason.",
+      "dateBeforeHire": "[DE] The termination date cannot be before the hire date ({{date}}).",
+      "submit": "[DE] Terminate",
+      "success": "[DE] The employee is terminated."
+    },
+    "rehire": {
+      "title": "[DE] Rehire employee",
+      "description": "[DE] A new employment period starts; previous periods can be carried into leave seniority.",
+      "hireDate": "[DE] New hire date",
+      "merge": "[DE] Count previous periods towards leave seniority",
+      "mergeHint": "[DE] Counted previous service: {{days}} days (periods settled at exit excluded).",
+      "dateRequired": "[DE] The hire date is required.",
+      "dateBeforeExit": "[DE] The new hire date must be after the previous exit date ({{date}}).",
+      "submit": "[DE] Rehire",
+      "success": "[DE] The employee is rehired. Leave accrual starts on {{date}}."
+    }
+  },
+  "employmentPeriods": {
+    "title": "[DE] Employment periods",
+    "empty": "[DE] No employment periods recorded.",
+    "current": "[DE] Ongoing",
+    "columns": {
+      "period": "[DE] Period",
+      "source": "[DE] Started by",
+      "reason": "[DE] Exit reason",
+      "days": "[DE] Counted days"
+    },
+    "severancePaid": "[DE] Severance paid",
+    "leaveSettled": "[DE] Leave settled",
+    "seniority": {
+      "title": "[DE] Seniority",
+      "leave": "[DE] Leave seniority",
+      "severance": "[DE] Severance seniority",
+      "jobSecurity": "[DE] Job-security seniority",
+      "months": "[DE] {{count}} months",
+      "days": "[DE] {{count}} days",
+      "since": "[DE] since {{date}}"
     }
   }
 }

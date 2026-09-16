@@ -53,6 +53,8 @@
     "approvalFlowsDesc": "Talep türlerine göre onay adımları",
     "customFields": "Özel alanlar",
     "customFieldsDesc": "Çalışan kartlarına eklenen özel alan tanımları",
+    "terminationReasons": "İşten ayrılma nedenleri",
+    "terminationReasonsDesc": "İşten ayrılış sihirbazındaki neden listesi",
     "rules": "Kurallar",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",

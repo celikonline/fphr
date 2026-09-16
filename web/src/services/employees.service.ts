@@ -122,6 +122,11 @@ export interface EmployeeDetail {
   titleName?: string | null;
   /** Custom field values visible to the caller (see `CustomFieldValue`); empty when none are defined or none are visible. */
   customFields: CustomFieldValue[] | null;
+  /** Set once the employee is Terminated ("İşten ayrılış sihirbazı"). */
+  terminationDate?: string | null;
+  terminationReasonId?: string | null;
+  terminationType?: TerminationType | null;
+  sgkExitCode?: string | null;
 }
 
 /**
@@ -413,5 +418,187 @@ export interface UpdateMyProfileInput {
 
 export async function updateMyProfile(input: UpdateMyProfileInput): Promise<EmployeeDetail> {
   const { data } = await apiClient.put<EmployeeDetail>(`${EMPLOYEES_BASE}/me/profile`, input);
+  return data;
+}
+
+// ---------------------------------------------------------------- Lifecycle: suspend / terminate / rehire (E5a)
+
+/** 4857 termination types; camelCase enum JSON like the other native C# enums. */
+export type TerminationType =
+  | "validCause_Art18"
+  | "employeeJustCause_Art24"
+  | "employerJustCause_Art25"
+  | "mutualRescission"
+  | "resignation"
+  | "fixedTermExpiry"
+  | "other";
+
+export const TERMINATION_TYPES: TerminationType[] = [
+  "validCause_Art18",
+  "employeeJustCause_Art24",
+  "employerJustCause_Art25",
+  "mutualRescission",
+  "resignation",
+  "fixedTermExpiry",
+  "other",
+];
+
+export const SUSPENSION_REASONS: SuspensionReason[] = [
+  "MilitaryService",
+  "UnionOffice",
+  "LongUnpaidLeave",
+  "Detention",
+  "HealthReport",
+  "ForceMajeure",
+  "Other",
+];
+
+/** A row of the tenant's termination reason catalog; system rows come from the seed, tenant rows are added in Settings. */
+export interface TerminationReason {
+  id: string;
+  code: string;
+  name: string;
+  defaultSgkExitCode: string | null;
+  defaultTerminationType: TerminationType | null;
+  isSystem: boolean;
+  isActive: boolean;
+}
+
+export interface TerminationReasonInput {
+  /** Only read on create; the code is immutable afterwards. */
+  code?: string | null;
+  name: string;
+  defaultSgkExitCode: string | null;
+  defaultTerminationType: TerminationType | null;
+  sortOrder: number;
+}
+
+export interface TerminateEmployeeInput {
+  terminationDate: string;
+  terminationReasonId: string;
+  /** Null = use the reason's default. */
+  terminationType: TerminationType | null;
+  sgkExitCode: string | null;
+  /** Exit settlement: they close the employment period and decide whether it counts towards a later rehire. */
+  severancePaid: boolean;
+  leaveSettledAtExit: boolean;
+}
+
+/** Advisory collective-dismissal status of the rolling 30-day window (4857 md.29); never blocks a termination. */
+export interface CollectiveDismissalStatus {
+  inScope: boolean;
+  showWarning: boolean;
+  windowStart: string;
+  windowEnd: string;
+  dismissalsInWindow: number;
+  threshold: number;
+  headcount: number;
+  noticeDays: number;
+  rehirePriorityMonths: number;
+  tempWorkerBanMonths: number;
+  warningMessage: string | null;
+}
+
+export interface TerminateEmployeeResult {
+  employee: EmployeeDetail;
+  jobSecurityInScope: boolean;
+  jobSecurityWarning: boolean;
+  jobSecurityWarningMessage: string | null;
+  collectiveDismissal: CollectiveDismissalStatus | null;
+}
+
+export type EmploymentPeriodSource = "hire" | "rehire" | "groupTransfer" | "businessTransfer" | "import";
+
+export interface EmploymentPeriod {
+  id: string;
+  startDate: string;
+  endDate: string | null;
+  source: EmploymentPeriodSource;
+  terminationReasonId: string | null;
+  terminationReasonName: string | null;
+  severancePaid: boolean;
+  leaveSettledAtExit: boolean;
+  countedDays: number;
+}
+
+/** Merged seniority; the start dates are "as if worked continuously" dates (gaps and uncounted periods deducted). */
+export interface EmploymentSeniority {
+  asOf: string;
+  leaveSeniorityStartDate: string | null;
+  leaveSeniorityDays: number;
+  severanceSeniorityStartDate: string | null;
+  severanceSeniorityDays: number;
+  jobSecuritySeniorityMonths: number;
+}
+
+export interface EmploymentHistory {
+  periods: EmploymentPeriod[];
+  seniority: EmploymentSeniority;
+}
+
+export interface RehireEmployeeInput {
+  hireDate: string;
+  /** "Önceki dönem izin kıdemine sayılsın mı": carries the counted previous periods into the leave accrual start. */
+  mergePreviousPeriods: boolean;
+  /** Overrides the merged suggestion outright. */
+  leaveAccrualStartDate: string | null;
+}
+
+export interface RehireEmployeeResult {
+  employee: EmployeeDetail;
+  employmentHistory: EmploymentHistory;
+}
+
+export async function suspendEmployee(employeeId: string, reason: SuspensionReason): Promise<EmployeeDetail> {
+  const { data } = await apiClient.post<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/suspend`, { reason });
+  return data;
+}
+
+export async function reactivateEmployee(employeeId: string): Promise<EmployeeDetail> {
+  const { data } = await apiClient.post<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/reactivate`);
+  return data;
+}
+
+export async function getTerminationReasons(includeInactive = false): Promise<TerminationReason[]> {
+  const { data } = await apiClient.get<TerminationReason[]>(`${EMPLOYEES_BASE}/termination-reasons`, { params: { includeInactive } });
+  return data;
+}
+
+export async function createTerminationReason(input: TerminationReasonInput): Promise<TerminationReason> {
+  const { data } = await apiClient.post<TerminationReason>(`${EMPLOYEES_BASE}/termination-reasons`, input);
+  return data;
+}
+
+export async function updateTerminationReason(reasonId: string, input: TerminationReasonInput): Promise<TerminationReason> {
+  const { data } = await apiClient.put<TerminationReason>(`${EMPLOYEES_BASE}/termination-reasons/${reasonId}`, input);
+  return data;
+}
+
+export async function setTerminationReasonActive(reasonId: string, active: boolean): Promise<TerminationReason> {
+  const { data } = await apiClient.post<TerminationReason>(
+    `${EMPLOYEES_BASE}/termination-reasons/${reasonId}/${active ? "reactivate" : "deactivate"}`,
+  );
+  return data;
+}
+
+export async function getCollectiveDismissalStatus(asOf?: string): Promise<CollectiveDismissalStatus> {
+  const { data } = await apiClient.get<CollectiveDismissalStatus>(`${EMPLOYEES_BASE}/collective-dismissal-status`, {
+    params: asOf ? { asOf } : undefined,
+  });
+  return data;
+}
+
+export async function terminateEmployee(employeeId: string, input: TerminateEmployeeInput): Promise<TerminateEmployeeResult> {
+  const { data } = await apiClient.post<TerminateEmployeeResult>(`${EMPLOYEES_BASE}/${employeeId}/terminate`, input);
+  return data;
+}
+
+export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {
+  const { data } = await apiClient.get<EmploymentHistory>(`${EMPLOYEES_BASE}/${employeeId}/employment-periods`);
+  return data;
+}
+
+export async function rehireEmployee(employeeId: string, input: RehireEmployeeInput): Promise<RehireEmployeeResult> {
+  const { data } = await apiClient.post<RehireEmployeeResult>(`${EMPLOYEES_BASE}/${employeeId}/rehire`, input);
   return data;
 }

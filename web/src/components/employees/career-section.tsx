@@ -10,6 +10,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { EmploymentPeriodsSection } from "./employment-periods-section";
 import {
   addCareerRecord,
   deleteCareerRecord,
@@ -239,6 +240,8 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
           </Box>
         )}
       </Card>
+
+      <EmploymentPeriodsSection employee={employee} />
 
       {dialog && (
         <CareerRecordDialog

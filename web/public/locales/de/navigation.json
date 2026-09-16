@@ -52,6 +52,8 @@
     "approvalFlows": "[DE] Approval flows",
     "customFields": "[DE] Custom fields",
     "customFieldsDesc": "[DE] Custom field definitions shown on employee cards",
+    "terminationReasons": "[DE] Termination reasons",
+    "terminationReasonsDesc": "[DE] The reason list offered by the termination wizard",
     "approvalFlowsDesc": "[DE] Approval steps per request type",
     "rules": "[DE] Rules",
     "workCalendars": "[DE] Work calendars",

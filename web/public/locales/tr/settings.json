@@ -94,6 +94,41 @@
     "empty": "Destek erişim talebi yok.",
     "senseStaff": "Sense destek ekibi"
   },
+  "terminationReasons": {
+    "title": "İşten ayrılma nedenleri",
+    "subtitle": "İşten ayrılış sihirbazında çıkan neden listesini yönetin.",
+    "add": "Neden ekle",
+    "editTitle": "Nedeni düzenle",
+    "showInactive": "Pasif nedenleri de göster",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "system": "Sistem",
+    "custom": "Kiracı",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "empty": "Kayıtlı neden yok.",
+    "saved": "Neden kaydedildi.",
+    "statusSaved": "Neden durumu güncellendi.",
+    "codeHint": "Aktarım ve raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
+    "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
+    "typeHint": "Sihirbazda ön-dolu gelir; her fesihte değiştirilebilir.",
+    "columns": {
+      "name": "Ad",
+      "code": "Kod",
+      "type": "Varsayılan fesih türü",
+      "sgkExitCode": "SGK çıkış kodu",
+      "origin": "Kaynak",
+      "status": "Durum",
+      "sortOrder": "Sıra"
+    },
+    "errors": {
+      "generic": "Neden kaydedilemedi.",
+      "loadFailed": "Nedenler yüklenemedi.",
+      "codeTaken": "Bu kod ile zaten bir neden var.",
+      "codeRequired": "Kod zorunludur.",
+      "nameRequired": "Ad zorunludur."
+    }
+  },
   "customFields": {
     "title": "Özel alanlar",
     "subtitle": "Çalışan kartlarına eklenen özel alan tanımlarını yönetin.",
