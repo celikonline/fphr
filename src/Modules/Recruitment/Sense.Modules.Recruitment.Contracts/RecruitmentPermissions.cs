@@ -49,9 +49,29 @@ public static class RecruitmentPermissions
     public static readonly Permission TagsManage = new(
         "recruitment.tags.manage", Module, "Manage Tags", Group, "Create or deactivate a candidate tag");
 
+    public static readonly Permission FormTemplatesRead = new(
+        "recruitment.form_templates.read", Module, "Read Form Templates", Group, "View feedback/scorecard/outcome form templates");
+
+    public static readonly Permission FormTemplatesManage = new(
+        "recruitment.form_templates.manage", Module, "Manage Form Templates", Group, "Create, replace the fields of, or deactivate a form template");
+
+    public static readonly Permission FormResponsesRead = new(
+        "recruitment.form_responses.read", Module, "Read Form Responses", Group, "View an application's submitted form responses");
+
+    /// <summary>Also granted to the Interviewer system role (see SystemRoleDefinitions.cs) - replaces that role's earlier speculative "recruitment.scorecards.submit" key.</summary>
+    public static readonly Permission FormResponsesSubmit = new(
+        "recruitment.form_responses.submit", Module, "Submit Form Response", Group, "Submit a feedback, scorecard, or outcome form response for an application");
+
+    public static readonly Permission AutomationRulesRead = new(
+        "recruitment.automation_rules.read", Module, "Read Automation Rules", Group, "View pipeline automation rules");
+
+    public static readonly Permission AutomationRulesManage = new(
+        "recruitment.automation_rules.manage", Module, "Manage Automation Rules", Group, "Create or deactivate a pipeline automation rule");
+
     public static IEnumerable<Permission> All =>
         [
             PostingsRead, PostingsCreate, PostingsUpdate, PostingsArchive, CandidatesRead, CandidatesManage,
             ApplicationsRead, ApplicationsManage, RequisitionsRead, RequisitionsManage, TagsRead, TagsManage,
+            FormTemplatesRead, FormTemplatesManage, FormResponsesRead, FormResponsesSubmit, AutomationRulesRead, AutomationRulesManage,
         ];
 }

@@ -60,6 +60,18 @@ internal static class ShiftPlanLockGuard
     }
 }
 
+/// <summary>"Müsait değilim" çakışması (package A5): a planner cannot assign a shift over an active availability entry that overlaps it.</summary>
+internal static class ShiftAvailabilityGuard
+{
+    public static async Task<Result> EnsureNoConflictAsync(IEmployeeAvailabilityRepository availability, Guid employeeId, ShiftAssignment candidate, CancellationToken cancellationToken)
+    {
+        var entries = await availability.ListForEmployeeAsync(employeeId, candidate.Date, candidate.Date, cancellationToken);
+        return entries.Any(e => e.ConflictsWith(candidate.Start, candidate.End))
+            ? Error.Conflict(AttendanceDomainErrors.ShiftAvailabilityConflict)
+            : Result.Success();
+    }
+}
+
 /// <summary>Haftalık/aylık vardiya ızgarası (11.3.6).</summary>
 [RequiresPermission("attendance.shift.view")]
 public sealed record ListShiftAssignmentsQuery(DateOnly From, DateOnly To, IReadOnlyList<Guid>? EmployeeIds) : IQuery<IReadOnlyList<ShiftAssignmentDto>>;

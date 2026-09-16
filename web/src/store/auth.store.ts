@@ -19,6 +19,12 @@ export interface User {
   tenant?: { id: string; name: string; slug: string } | null;
 }
 
+export interface TenantChoice {
+  tenantId: string;
+  slug: string;
+  name: string;
+}
+
 /** Mirrors `LoginResultDto` / `LoginStatuses` in Sense.Modules.Identity.Application/Dtos.cs. */
 interface LoginResult {
   status: "ok" | "select_tenant" | "mfa_required";
@@ -26,7 +32,11 @@ interface LoginResult {
     accessToken: string;
     refreshToken: string;
   };
+  tenants?: TenantChoice[];
 }
+
+/** Outcome of `login()`: either the session is established, or the caller must let the user pick a tenant and retry. */
+export type LoginOutcome = { status: "ok" } | { status: "select_tenant"; tenants: TenantChoice[] };
 
 // Base paths mirror `IdentityRoutes` in AuthController.cs.
 const AUTH_BASE = "/v1/identity/auth";
@@ -87,7 +97,7 @@ interface AuthStore {
   features: MeFeatures | null;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, tenantSlug?: string) => Promise<LoginOutcome>;
   logout: () => void;
   /** Re-reads /identity/me (permissions, access settings) - call after changing anything that affects the caller. */
   refreshMe: () => Promise<void>;
@@ -109,12 +119,17 @@ export const useAuthStore = create<AuthStore>()(
       isLoading: false,
       error: null,
 
-      login: async (email: string, password: string) => {
+      login: async (email: string, password: string, tenantSlug?: string) => {
         set({ isLoading: true, error: null });
         try {
-          const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/login`, { email, password });
+          const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/login`, { email, password, tenantSlug });
 
-          // Tenant selection and MFA need their own screens, which don't exist yet.
+          if (data.status === "select_tenant") {
+            set({ isLoading: false });
+            return { status: "select_tenant", tenants: data.tenants ?? [] };
+          }
+
+          // MFA needs its own screen, which doesn't exist yet.
           if (data.status !== "ok" || !data.tokens) {
             throw new Error(`Login requires an unsupported step: ${data.status}`);
           }
@@ -130,6 +145,7 @@ export const useAuthStore = create<AuthStore>()(
             features: toFeatures(me),
             isLoading: false,
           });
+          return { status: "ok" };
         } catch (error) {
           localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
           const message = toErrorMessage(error);

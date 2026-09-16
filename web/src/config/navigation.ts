@@ -187,7 +187,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
   { key: "timesheet", labelKey: "apps.timesheet", path: "/app/apps", icon: CalendarClock, phase: 2 },
   { key: "shifts", labelKey: "apps.shifts", path: "/app/apps", icon: CalendarRange, phase: 2 },
   { key: "payroll", labelKey: "apps.payroll", path: "/app/apps", icon: Wallet, phase: 3 },
-  { key: "expenses", labelKey: "apps.expenses", path: "/app/apps", icon: FileText, phase: 4 },
+  {
+    key: "expenses",
+    labelKey: "apps.expenses",
+    path: "/app/payments",
+    icon: FileText,
+    permissions: ["expense.my.payments"],
+    iconColor: "blue",
+  },
   { key: "performance", labelKey: "apps.performance", path: "/app/apps", icon: Target, phase: 5 },
   {
     key: "recruitment",

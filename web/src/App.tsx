@@ -43,6 +43,7 @@ import JobPostingDetailPage from "@/pages/recruitment/job-posting-detail";
 import CandidatesPage from "@/pages/recruitment/candidates";
 import TrustPage from "@/pages/trust";
 import JobRequisitionsPage from "@/pages/recruitment/job-requisitions";
+import PaymentsPage from "@/pages/payments";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -93,6 +94,7 @@ export default function App() {
           <Route path="leave" element={<MyLeavePage />} />
           <Route path="leave/calendar" element={<LeaveCalendarPage />} />
           <Route path="leave/overtimes" element={<MyOvertimesPage />} />
+          <Route path="payments" element={<PaymentsPage />} />
 
           <Route path="recruitment/postings" element={<JobPostingsPage />} />
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />

@@ -92,11 +92,15 @@ public static class AttendancePermissions
     public static readonly Permission AvailabilityView = new(
         "attendance.availability.view", Module, "View Employee Availability", Group, "View employees' availability entries when planning shifts");
 
+    public const string CompensatoryViewKey = "attendance.compensatory.view";
+
     public static readonly Permission CompensatoryView = new(
-        "attendance.compensatory.view", Module, "View Compensatory Work Ledger", Group, "View employees' telafi çalışması debt/compensation ledger");
+        CompensatoryViewKey, Module, "View Compensatory Work Ledger", Group, "View employees' telafi çalışması debt/compensation ledger");
+
+    public const string CompensatoryManageKey = "attendance.compensatory.manage";
 
     public static readonly Permission CompensatoryManage = new(
-        "attendance.compensatory.manage", Module, "Record Compensatory Work", Group, "Log compensatory hours worked against an open telafi debt");
+        CompensatoryManageKey, Module, "Record Compensatory Work", Group, "Log compensatory hours worked against an open telafi debt");
 
     public static IEnumerable<Permission> All =>
         [

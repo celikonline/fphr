@@ -108,7 +108,8 @@ public static class SystemRoleDefinitions
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Interviewer, DataScope.Custom,
-            ["recruitment.interviews.view", "recruitment.interviews.notes", "recruitment.scorecards.submit", "recruitment.candidates.summary", .. PermissionPatterns.SelfService],
+            ["recruitment.interviews.view", "recruitment.interviews.notes", "recruitment.form_templates.read", "recruitment.form_responses.read",
+             "recruitment.form_responses.submit", "recruitment.candidates.summary", .. PermissionPatterns.SelfService],
             []),
 
         new(SystemRoleCodes.Auditor, DataScope.Company,

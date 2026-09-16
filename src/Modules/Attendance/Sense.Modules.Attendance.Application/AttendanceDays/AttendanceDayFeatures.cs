@@ -107,3 +107,25 @@ public sealed class GetMyAttendanceDaysHandler(IAttendanceDayRepository days, IC
         return list.Select(AttendanceDayMapper.ToDto).ToList();
     }
 }
+
+/// <summary>Puantajım özet kartları (package A5, 11.3.6 "toplam çalışma günü/saati"): totals over a period, from the caller's own AttendanceDay rows.</summary>
+public sealed record MyTimesheetSummaryDto(int WorkedDays, int WorkedMinutes);
+
+[RequiresPermission("attendance.my.timesheet")]
+public sealed record GetMyTimesheetSummaryQuery(DateOnly From, DateOnly To) : IQuery<MyTimesheetSummaryDto>;
+
+public sealed class GetMyTimesheetSummaryHandler(IAttendanceDayRepository days, ICurrentUser currentUser) : IQueryHandler<GetMyTimesheetSummaryQuery, MyTimesheetSummaryDto>
+{
+    public async Task<Result<MyTimesheetSummaryDto>> Handle(GetMyTimesheetSummaryQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(AttendanceErrors.EmployeeNotFound);
+        }
+
+        var list = await days.ListForEmployeeAsync(employeeId, query.From, query.To, cancellationToken);
+        var workedMinutes = list.Sum(d => d.OverrideWorkedMinutes ?? d.WorkedMinutes);
+        var workedDays = list.Count(d => (d.OverrideWorkedMinutes ?? d.WorkedMinutes) > 0);
+        return new MyTimesheetSummaryDto(workedDays, workedMinutes);
+    }
+}

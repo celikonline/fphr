@@ -16,8 +16,8 @@ interface RequestTypeCard {
 const REQUEST_TYPES: RequestTypeCard[] = [
   { key: "leave", icon: CalendarDays, to: "/app/leave?new=1" },
   { key: "overtime", icon: Clock, to: "/app/leave/overtimes?new=1" },
-  { key: "advance", icon: CreditCard, phase: 4 },
-  { key: "expense", icon: Receipt, phase: 4 },
+  { key: "advance", icon: CreditCard, to: "/app/payments?new=advance" },
+  { key: "expense", icon: Receipt, to: "/app/payments?new=expense" },
   { key: "visa", icon: Stamp, phase: 4 },
 ];
 
@@ -30,8 +30,10 @@ export default function RequestsPage() {
   const navigate = useNavigate();
   const canLeave = usePermission("leave.my.requests");
   const canOvertime = usePermission("leave.my.overtimes");
+  const canAdvance = usePermission("expense.my.advances");
+  const canExpense = usePermission("expense.my.claims");
 
-  const availability: Record<string, boolean> = { leave: canLeave, overtime: canOvertime, advance: true, expense: true, visa: true };
+  const availability: Record<string, boolean> = { leave: canLeave, overtime: canOvertime, advance: canAdvance, expense: canExpense, visa: true };
   const visible = REQUEST_TYPES.filter((type) => availability[type.key]);
 
   return (

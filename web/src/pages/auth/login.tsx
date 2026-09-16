@@ -8,6 +8,7 @@ import {
   Checkbox,
   Group,
   Menu,
+  Modal,
   PasswordInput,
   Stack,
   Text,
@@ -15,9 +16,21 @@ import {
   ThemeIcon,
   Title,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
-import { ArrowRight, Palmtree, Eye, EyeOff, Moon, Sun, Monitor, Wallet, Target } from "lucide-react";
-import { useAuthStore } from "@/store/auth.store";
+import {
+  ArrowRight,
+  Building2,
+  Palmtree,
+  Eye,
+  EyeOff,
+  Moon,
+  Sun,
+  Monitor,
+  Wallet,
+  Target,
+} from "lucide-react";
+import { useAuthStore, type TenantChoice } from "@/store/auth.store";
 import { useUIStore } from "@/store/ui.store";
 import classes from "./login.module.css";
 
@@ -107,6 +120,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [tenantChoices, setTenantChoices] = useState<TenantChoice[] | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,9 +128,29 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(email, password);
+      const result = await login(email, password);
+      if (result.status === "select_tenant") {
+        setTenantChoices(result.tenants);
+        return;
+      }
       navigate("/app", { replace: true });
     } catch (err) {
+      setError(err instanceof Error ? err.message : t("auth:loginFailed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSelectTenant = async (tenant: TenantChoice) => {
+    setIsLoading(true);
+    setError("");
+
+    try {
+      await login(email, password, tenant.slug);
+      setTenantChoices(null);
+      navigate("/app", { replace: true });
+    } catch (err) {
+      setTenantChoices(null);
       setError(err instanceof Error ? err.message : t("auth:loginFailed"));
     } finally {
       setIsLoading(false);
@@ -298,6 +332,44 @@ export default function LoginPage() {
           </Text>
         </form>
       </main>
+
+      <Modal
+        opened={tenantChoices !== null}
+        onClose={() => setTenantChoices(null)}
+        title={t("auth:selectCompany.title")}
+        centered
+      >
+        <Text size="sm" c="dimmed" mb="md">
+          {t("auth:selectCompany.subtitle")}
+        </Text>
+        <Stack gap="xs">
+          {tenantChoices?.map((tenant) => (
+            <UnstyledButton
+              key={tenant.tenantId}
+              onClick={() => handleSelectTenant(tenant)}
+              disabled={isLoading}
+              className={classes.tenantOption}
+            >
+              <Group justify="space-between" wrap="nowrap">
+                <Group gap="sm" wrap="nowrap">
+                  <ThemeIcon variant="light" color="brand" size={36} radius="md">
+                    <Building2 size={18} />
+                  </ThemeIcon>
+                  <div>
+                    <Text fw={600} size="sm">
+                      {tenant.name}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {tenant.slug}
+                    </Text>
+                  </div>
+                </Group>
+                <ArrowRight size={16} />
+              </Group>
+            </UnstyledButton>
+          ))}
+        </Stack>
+      </Modal>
     </div>
   );
 }
