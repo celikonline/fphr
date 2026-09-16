@@ -152,8 +152,7 @@ builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
     typeof(Sense.Modules.Payroll.Contracts.PayrollPermissions).Assembly,
     typeof(PayrollDbContext).Assembly,
-    typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly,
-    typeof(Sense.Modules.Payroll.Application.Employees.EmployeeHiredHandler).Assembly);
+    typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PayrollDbContext>>();
 
 // Recruitment: JobPostingPublished/JobApplicationStageChanged still have no subscriber (a later Recruitment package)

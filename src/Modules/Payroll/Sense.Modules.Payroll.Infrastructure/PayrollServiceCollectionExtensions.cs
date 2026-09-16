@@ -65,7 +65,7 @@ public static class PayrollServiceCollectionExtensions
     /// Employee's IEmployeeSalaryLookup to already be registered.</summary>
     public static IServiceCollection AddPayrollChangeDetectionJob(this IServiceCollection services)
     {
-        services.AddScoped<ChangeDetectionJob>();
+        services.AddSingleton<ChangeDetectionJob>();
         services.AddHostedService<ChangeDetectionHostedService>();
         return services;
     }
