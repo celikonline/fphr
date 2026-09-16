@@ -664,6 +664,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.profile_external_code_too_long" xml:space="preserve"><value>Dış bordro personel kodu çok uzun.</value></data>
   <data name="payroll.errors.profile_notes_too_long" xml:space="preserve"><value>Not çok uzun.</value></data>
 
+  <!-- Payroll (Faz 3 P3): dönem hesabı, "Değişti" mekanizması (PayslipDirtyFlag/ChangeDetectionRun) -->
+  <data name="payroll.errors.period_already_open" xml:space="preserve"><value>Bu ay için bordro dönemi zaten açık.</value></data>
+  <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Maaş değişti</value></data>
+  <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Bordro parametresi değişti</value></data>
+  <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
+  <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
+  <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>
+
   <!-- Recruitment (Faz 6 R0): ilan/aday/başvuru çekirdeği -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>İlanları görüntüleme</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>İlan oluşturma</value></data>
@@ -697,6 +705,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Yalnızca taslak veya onay bekleyen talep formu iptal edilebilir.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>Bağlı talep formu henüz onaylanmadığı için ilan yayınlanamaz.</value></data>
+  <data name="recruitment.tags.read" xml:space="preserve"><value>Etiket kataloğunu görüntüleme</value></data>
+  <data name="recruitment.tags.manage" xml:space="preserve"><value>Etiket oluşturma veya devre dışı bırakma</value></data>
+  <data name="recruitment.tag.not_found" xml:space="preserve"><value>Etiket bulunamadı.</value></data>
+  <data name="recruitment.tag.name_required" xml:space="preserve"><value>Etiket adı zorunludur.</value></data>
+  <data name="recruitment.tag.already_inactive" xml:space="preserve"><value>Etiket zaten devre dışı.</value></data>
+  <data name="recruitment.tag.name_taken" xml:space="preserve"><value>Bu isimde bir etiket zaten var.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>Puantajları görüntüleme</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Puantaj kaydı/düzeltmesi yapma</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>Kendi puantajımı görüntüleme</value></data>
@@ -802,4 +816,19 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
   <data name="expense.not_owner" xml:space="preserve"><value>Bu talep size ait değil.</value></data>
   <data name="expense.category.inactive" xml:space="preserve"><value>Bu kategori pasif durumda.</value></data>
+  <!-- Assets (zimmet - roadmap #65) -->
+  <data name="assets.assets.view" xml:space="preserve"><value>Zimmetleri görüntüleme</value></data>
+  <data name="assets.assets.manage" xml:space="preserve"><value>Zimmetleri yönetme</value></data>
+  <data name="assets.categories.view" xml:space="preserve"><value>Zimmet kategorilerini görüntüleme</value></data>
+  <data name="assets.categories.manage" xml:space="preserve"><value>Zimmet kategorilerini yönetme</value></data>
+  <data name="assets.my.assets" xml:space="preserve"><value>Kendi zimmetlerini görüntüleme</value></data>
+  <data name="asset_category.not_found" xml:space="preserve"><value>Zimmet kategorisi bulunamadı.</value></data>
+  <data name="asset_category.code_required" xml:space="preserve"><value>Kategori kodu zorunludur.</value></data>
+  <data name="asset_category.code_taken" xml:space="preserve"><value>Bu kategori kodu zaten kullanılıyor.</value></data>
+  <data name="asset.not_found" xml:space="preserve"><value>Zimmet bulunamadı.</value></data>
+  <data name="asset.name_required" xml:space="preserve"><value>Zimmet adı zorunludur.</value></data>
+  <data name="asset.already_assigned" xml:space="preserve"><value>Bu zimmet zaten bir çalışana atanmış veya emekliye ayrılmış.</value></data>
+  <data name="asset.not_assigned" xml:space="preserve"><value>Bu zimmet şu anda atanmış durumda değil.</value></data>
+  <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>Atanmış bir zimmet emekliye ayrılamaz; önce iade edilmelidir.</value></data>
+  <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
 </root>

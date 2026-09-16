@@ -322,6 +322,7 @@
       "career": "[DE] Kariyer",
       "payments": "[DE] Ödemeler",
       "documents": "[DE] Files",
+      "assets": "[DE] Assets",
       "leave": "[DE] İzinler",
       "overtime": "[DE] Fazla mesailer",
       "other": "[DE] Diğer",
@@ -330,7 +331,7 @@
     "tabNotes": {
       "leave": "[DE] İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
       "overtime": "[DE] Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
-      "other": "[DE] Zimmetler ve eğitimler sonraki fazlarda bu sekmeye eklenecek."
+      "other": "[DE] Eğitimler sonraki fazlarda bu sekmeye eklenecek."
     },
     "noAccountHint": "[DE] This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "[DE] Only an account owner can grant or revoke the account owner role.",

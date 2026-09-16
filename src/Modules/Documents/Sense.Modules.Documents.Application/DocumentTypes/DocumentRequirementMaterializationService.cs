@@ -1,3 +1,4 @@
+using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
@@ -16,6 +17,7 @@ public sealed class DocumentRequirementMaterializationService(
     IDocumentTypeDefinitionRepository types,
     IEmployeeDocumentRequirementRepository requirements,
     IEmployeeDocumentEligibilityLookup eligibility,
+    IAssetLookup assetLookup,
     DocumentTypeProvisioningService provisioning,
     ILegislationParameterReader legislation)
 {
@@ -37,16 +39,16 @@ public sealed class DocumentRequirementMaterializationService(
         await provisioning.EnsureSeededAsync(tenantId, cancellationToken);
 
         var signals = await eligibility.GetSignalsAsync(tenantId, employeeId, cancellationToken);
+        var hasOpenAssets = await assetLookup.HasOpenAssetsAsync(tenantId, employeeId, cancellationToken);
 
-        // Only two signals are available cross-module today (BirthDate/DisabilityDegree live on Employee and are
-        // sensitive - only derived booleans are exposed, per architecture rule). The rest are hardcoded false until
-        // their owning data exists:
+        // Three signals are available cross-module today: BirthDate/DisabilityDegree live on Employee and are
+        // sensitive (only derived booleans are exposed, per architecture rule); HasOpenAssets comes from the Assets
+        // module's IAssetLookup (roadmap #65). The rest are hardcoded false until their owning data exists:
         //  - NonTurkishNational: no Nationality field on Employee yet
         //  - HasIncentive / UsesDisabilityTaxReduction: Payroll incentive tracking doesn't exist yet
         //  - ExConvictOrTerrorVictim: no such field anywhere yet (manual/HR-only data point)
         //  - RequiresPeriodicHealthCheck / VeryHazardousJob: no job-hazard classification yet
         //  - RequiresDriving: no job/position attribute for this yet
-        //  - HasOpenAssets: Assets module doesn't exist yet
         //  - HasOvertimeConsent: Leave's OvertimeConsent isn't wired as a cross-module signal yet
         //  - IsShiftWorker: Attendance shift scheduling doesn't exist yet
         var context = new EmployeeDocumentContext(
@@ -58,7 +60,7 @@ public sealed class DocumentRequirementMaterializationService(
             IsExConvictOrTerrorVictim: false,
             RequiresPeriodicHealthCheck: false,
             RequiresDriving: false,
-            HasOpenAssets: false,
+            HasOpenAssets: hasOpenAssets,
             IsVeryHazardousJob: false,
             HasOvertimeConsent: false,
             IsShiftWorker: false);

@@ -112,6 +112,24 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - Vergi oranı seçenek listesi (`LegislationParameter Vat.Rates`) yok; `TaxRate` serbest ondalık alan.
 - `Organization.Contracts.ApprovalRequestTypes` genişletmesi (Recruitment R1 ile birlikte, contract-first PR) bekliyor.
 
+## As0 — Assets: zimmet çekirdeği (kategori, ata/iade/emekli et) + Documents'a `IAssetLookup` bağlantısı
+
+**Dal:** commit edilmedi (bu oturumda çalışma ağacına yazıldı).
+
+**Kapsam:** Expense'in 5 projeli şablonu birebir izlendi (`Sense.Modules.Assets.{Domain,Contracts,Application,Infrastructure,Api}`, şema `assets`). `AssetCategory` (tenant başına lazy seed: `computer`/`phone`/`vehicle`/`other` → "Bilgisayar"/"Telefon"/"Araç"/"Diğer"; `ExpenseCategory`'den farklı olarak `Name` düz metin, kaynak anahtarı değil — kiracı doğrudan yeniden adlandırabiliyor). `Asset` (`Unassigned → Assigned → Unassigned/Retired`; tek güncel atama alanı, geçmiş/defter yok — "açık zimmeti var" = `Status == Assigned`; `Assign` zaten Assigned/Retired iken hata, `Return` yalnız Assigned iken, `Retire` Assigned iken hata verir). `AssignAssetCommand`/`ReturnAssetCommand` işlemi tamamlayınca kendi outbox'ına `AssetAssigned`/`AssetReturned` yazıyor (`IIntegrationEventOutbox.Enqueue`, CLAUDE.md deseni — ayrı bir domain-event `Raise()` katmanı yok, Expense'in `ExpenseClaimApprovalHandlers`'ıyla aynı doğrudan enqueue deseni).
+
+**Documents entegrasyonu (bu paketin asıl amacı):** `Sense.Modules.Documents.Application.csproj`'a `Sense.Modules.Assets.Contracts` referansı eklendi (contracts-only, `Modules_TalkOnlyThroughContracts` mimari kuralına uygun). `DocumentRequirementMaterializationService` artık `IAssetLookup.HasOpenAssetsAsync`'i çağırıp `EmployeeDocumentContext.HasOpenAssets`'i gerçek değerle dolduruyor (önceden sabit `false`). Yeni `AssetEventDocumentRequirementHandlers.cs`: `AssetAssignedDocumentRequirementHandler`/`AssetReturnedDocumentRequirementHandler`, ikisi de aynı `DocumentRequirementMaterializationService.MaterializeAsync`'i (Reevaluate komutuyla aynı, "bugün" taban tarihiyle) çağırıp kaydediyor; `DocumentsServiceCollectionExtensions.AddDocumentsIntegrationEventHandlers`'a eklendi (Sense.Worker'da `EmployeeHiredDocumentRequirementHandler`'ın yanına).
+
+**Host bağlama:** `ModuleCatalog.cs`'e `new AssetsModule()`, `Sense.slnx`'e 5 proje + test projesi, `Sense.Migrator/Program.cs`'e `AssetsDbContext` kaydı, `Sense.Worker/Program.cs`'e `AssetsDbContext` + `AddAssetsCoreServices()` + outbox poller (Expense'in hemen ardına, Documents'ın tükettiği olayları üreten tek yönlü bir üretici modül olarak — kendi tükettiği bir olay yok, bu yüzden Expense'teki gibi yalnız "core services" yarısı var, eşleşen bir `AddAssetsIntegrationEventHandlers` yok).
+
+**İzinler:** `assets.assets.{view,manage}`, `assets.categories.{view,manage}`, `assets.my.assets` — üç bölümlü desen. `SystemRoleDefinitions.cs`'te **hiçbir değişiklik gerekmedi**: HR/HRSpecialist include listeleri Assets hiç yokken bile `assets.*` içeriyordu (Expense'in `ExpensePermissions.cs`'indeki notla aynı önceden-öngörülmüş durum), Employee'nin `*.my.*` joker deseni `assets.my.assets`'i otomatik kapsıyor.
+
+**Kasıtlı sapmalar / kapsam dışı (görev talimatına göre bilinçli):** Kategori yönetim ekranı (Ayarlar) yok — kategoriler yalnız lazy-seed. Atama geçmişi/defteri yok — bir zimmet iade edildiğinde `AssignedEmployeeId`/`IssuedAt` temizleniyor, yalnız `ReturnedAt` "son iade" için kalıyor; bu yüzden `GetEmployeeAssetsQuery`/`ListByEmployeeAsync` yalnız **güncel** atamaları döndürüyor, iade edilmiş geçmiş kayıtları employee bazında listeleyemiyor (spesifikasyonun "history isn't tracked" notuyla tutarlı). E-posta bilgilendirme, DataTransfer aktarım şablonu, atama onay akışı yok. `DocumentRequirementMaterializationService.MaterializeAsync`'in append-only doğası nedeniyle `AssetHandoverForm` gereksinimi bir zimmet iade edildiğinde otomatik silinmiyor/geri alınmıyor (yalnız "belirme" var, "kaybolma" yok) — bu Reevaluate komutunun da önceden sahip olduğu bir sınırlama, bu paket onu miras alıyor.
+
+**Web:** Çalışan kartına "Zimmet" sekmesi (`assets-section.tsx`, `card-tabs.tsx`'e eklendi), `web/src/services/assets.service.ts`, yeni `assets` i18n namespace'i (tr/en gerçek çeviri, de `[DE] ...` placeholder).
+
+**Doğrulama:** Bkz. bu görevin son raporu (build/test sonuçları orada).
+
 ## Değişiklik geçmişi
 
 - 2026-09-16: Dosya oluşturuldu; D1 (Documents belge tipi taksonomisi + koşullu gereksinim değerlendirici, backend) tamamlandı.
@@ -119,3 +137,4 @@ Kaynak: [11.7-yol-haritasi.md](./11.7-yol-haritasi.md) Faz 4 satırları (kalem 
 - 2026-09-16: D3 (initiate-upload kontrat açığı düzeltildi; Dosyalar sekmesinden yükleyip gereksinime bağlama) eklendi.
 - 2026-09-16: Ex0 (Expense modül iskeleti + harcama talebi/avans/ödemeler özeti çekirdeği, backend) eklendi.
 - 2026-09-16: D4 (çalışanın kendi belgesini kendi yükleyip gereksinimini karşılaması, self-service) eklendi.
+- 2026-09-16: As0 (Assets modül iskeleti: zimmet kategori/ata/iade/emekli et + Documents'ın `HasOpenAssets` koşuluna gerçek `IAssetLookup` bağlantısı) eklendi.

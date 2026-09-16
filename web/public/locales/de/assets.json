@@ -1,0 +1,32 @@
+{
+  "section": {
+    "title": "[DE] Assets",
+    "assign": "[DE] Assign asset",
+    "assignTitle": "[DE] Assign asset",
+    "return": "[DE] Return",
+    "returnTitle": "[DE] Return \"{{name}}\"",
+    "pickAsset": "[DE] Asset",
+    "newAsset": "[DE] Create a new asset",
+    "category": "[DE] Category",
+    "name": "[DE] Name",
+    "serialNumber": "[DE] Serial number",
+    "description": "[DE] Description",
+    "issuedAt": "[DE] Issued on",
+    "returnedAt": "[DE] Returned on",
+    "empty": "[DE] No assets recorded.",
+    "assigned": "[DE] Asset assigned.",
+    "returned": "[DE] Asset returned.",
+    "errors": {
+      "generic": "[DE] The action could not be completed.",
+      "loadFailed": "[DE] Assets could not be loaded.",
+      "nameAndCategoryRequired": "[DE] A name and category are required for a new asset."
+    }
+  },
+  "enum": {
+    "status": {
+      "unassigned": "[DE] Unassigned",
+      "assigned": "[DE] Assigned",
+      "retired": "[DE] Retired"
+    }
+  }
+}

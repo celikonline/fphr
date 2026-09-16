@@ -77,6 +77,7 @@
     <Project Path="tests/Modules/Sense.Modules.Recruitment.Tests/Sense.Modules.Recruitment.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Documents.Tests/Sense.Modules.Documents.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Integrations.Tests/Sense.Modules.Integrations.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Assets.Tests/Sense.Modules.Assets.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
@@ -131,5 +132,12 @@
     <Project Path="src/Modules/Integrations/Sense.Modules.Integrations.Contracts/Sense.Modules.Integrations.Contracts.csproj" />
     <Project Path="src/Modules/Integrations/Sense.Modules.Integrations.Domain/Sense.Modules.Integrations.Domain.csproj" />
     <Project Path="src/Modules/Integrations/Sense.Modules.Integrations.Infrastructure/Sense.Modules.Integrations.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Assets/">
+    <Project Path="src/Modules/Assets/Sense.Modules.Assets.Api/Sense.Modules.Assets.Api.csproj" />
+    <Project Path="src/Modules/Assets/Sense.Modules.Assets.Application/Sense.Modules.Assets.Application.csproj" />
+    <Project Path="src/Modules/Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
+    <Project Path="src/Modules/Assets/Sense.Modules.Assets.Domain/Sense.Modules.Assets.Domain.csproj" />
+    <Project Path="src/Modules/Assets/Sense.Modules.Assets.Infrastructure/Sense.Modules.Assets.Infrastructure.csproj" />
   </Folder>
 </Solution>

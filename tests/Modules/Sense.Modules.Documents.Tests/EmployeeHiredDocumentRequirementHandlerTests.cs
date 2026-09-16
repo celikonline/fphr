@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
@@ -27,6 +28,14 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         reader.FindAsync(Arg.Any<string>(), Arg.Any<DateOnly>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<LegislationParameterValue?>(null));
         return reader;
+    }
+
+    /// <summary>No open assets by default; AssetHandoverForm-specific behavior is covered by AssetEventDocumentRequirementHandlerTests.</summary>
+    private static IAssetLookup AssetLookup()
+    {
+        var lookup = Substitute.For<IAssetLookup>();
+        lookup.HasOpenAssetsAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(false);
+        return lookup;
     }
 
     private static DocumentTypeDefinition Onboarding(string code) =>
@@ -59,7 +68,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
             .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: true, HasDisability: false)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), provisioning, Legislation());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -90,7 +99,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), provisioning, Legislation());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -121,7 +130,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
 
         var materialization = new DocumentRequirementMaterializationService(
-            types, requirements, eligibility, new DocumentTypeProvisioningService(types), Legislation());
+            types, requirements, eligibility, AssetLookup(), new DocumentTypeProvisioningService(types), Legislation());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 

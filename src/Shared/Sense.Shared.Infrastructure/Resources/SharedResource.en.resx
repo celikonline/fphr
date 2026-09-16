@@ -655,6 +655,14 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="payroll.errors.profile_external_code_too_long" xml:space="preserve"><value>The external payroll employee code is too long.</value></data>
   <data name="payroll.errors.profile_notes_too_long" xml:space="preserve"><value>The note is too long.</value></data>
 
+  <!-- Payroll (Faz 3 P3): period run, "Değişti" mechanism (PayslipDirtyFlag/ChangeDetectionRun) -->
+  <data name="payroll.errors.period_already_open" xml:space="preserve"><value>A payroll period is already open for this month.</value></data>
+  <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Salary changed</value></data>
+  <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
+  <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
+  <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>
+  <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Input data changed after the last calculation (automatic reconciliation)</value></data>
+
   <!-- Recruitment (Faz 6 R0): job posting/candidate/application core -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>View Job Postings</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>Create Job Posting</value></data>
@@ -688,6 +696,12 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="recruitment.requisition.not_cancellable" xml:space="preserve"><value>Only a draft or pending requisition can be cancelled.</value></data>
   <data name="recruitment.requisition.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <data name="recruitment.posting.requisition_not_approved" xml:space="preserve"><value>The linked requisition has not been approved yet, so this posting cannot be published.</value></data>
+  <data name="recruitment.tags.read" xml:space="preserve"><value>View Tag Catalog</value></data>
+  <data name="recruitment.tags.manage" xml:space="preserve"><value>Create or deactivate a tag</value></data>
+  <data name="recruitment.tag.not_found" xml:space="preserve"><value>Tag not found.</value></data>
+  <data name="recruitment.tag.name_required" xml:space="preserve"><value>A tag name is required.</value></data>
+  <data name="recruitment.tag.already_inactive" xml:space="preserve"><value>This tag is already inactive.</value></data>
+  <data name="recruitment.tag.name_taken" xml:space="preserve"><value>A tag with this name already exists.</value></data>
   <data name="attendance.timesheet.view" xml:space="preserve"><value>View timesheets</value></data>
   <data name="attendance.timesheet.edit" xml:space="preserve"><value>Record and correct timesheets</value></data>
   <data name="attendance.my.timesheet" xml:space="preserve"><value>View my own timesheet</value></data>
@@ -793,4 +807,19 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <data name="expense.not_owner" xml:space="preserve"><value>This request does not belong to you.</value></data>
   <data name="expense.category.inactive" xml:space="preserve"><value>This category is inactive.</value></data>
+  <!-- Assets (zimmet - roadmap #65) -->
+  <data name="assets.assets.view" xml:space="preserve"><value>View assets</value></data>
+  <data name="assets.assets.manage" xml:space="preserve"><value>Manage assets</value></data>
+  <data name="assets.categories.view" xml:space="preserve"><value>View asset categories</value></data>
+  <data name="assets.categories.manage" xml:space="preserve"><value>Manage asset categories</value></data>
+  <data name="assets.my.assets" xml:space="preserve"><value>View your own assets</value></data>
+  <data name="asset_category.not_found" xml:space="preserve"><value>Asset category not found.</value></data>
+  <data name="asset_category.code_required" xml:space="preserve"><value>A category code is required.</value></data>
+  <data name="asset_category.code_taken" xml:space="preserve"><value>This category code is already in use.</value></data>
+  <data name="asset.not_found" xml:space="preserve"><value>Asset not found.</value></data>
+  <data name="asset.name_required" xml:space="preserve"><value>An asset name is required.</value></data>
+  <data name="asset.already_assigned" xml:space="preserve"><value>This asset is already assigned to an employee or retired.</value></data>
+  <data name="asset.not_assigned" xml:space="preserve"><value>This asset is not currently assigned.</value></data>
+  <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
+  <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
 </root>

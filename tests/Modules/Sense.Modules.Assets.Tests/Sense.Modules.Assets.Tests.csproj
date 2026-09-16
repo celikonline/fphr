@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Assets/Sense.Modules.Assets.Api/Sense.Modules.Assets.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Assets/Sense.Modules.Assets.Application/Sense.Modules.Assets.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Assets/Sense.Modules.Assets.Domain/Sense.Modules.Assets.Domain.csproj" />
+    <ProjectReference Include="../../../src/Modules/Assets/Sense.Modules.Assets.Infrastructure/Sense.Modules.Assets.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+</Project>

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sense.Migrator;
+using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.DataTransfer.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure.Persistence;
@@ -34,6 +35,7 @@ builder.Services.AddModuleDbContext<PayrollDbContext>(builder.Configuration, Pay
 builder.Services.AddModuleDbContext<RecruitmentDbContext>(builder.Configuration, RecruitmentDbContext.SchemaName);
 builder.Services.AddModuleDbContext<ExpenseDbContext>(builder.Configuration, ExpenseDbContext.SchemaName);
 builder.Services.AddModuleDbContext<IntegrationsDbContext>(builder.Configuration, IntegrationsDbContext.SchemaName);
+builder.Services.AddModuleDbContext<AssetsDbContext>(builder.Configuration, AssetsDbContext.SchemaName);
 
 using var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(MigratorConstants.LoggerName);

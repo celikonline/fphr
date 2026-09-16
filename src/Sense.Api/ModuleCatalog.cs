@@ -1,4 +1,5 @@
 using Sense.Modules.Analytics.Api;
+using Sense.Modules.Assets.Api;
 using Sense.Modules.Attendance.Api;
 using Sense.Modules.DataTransfer.Api;
 using Sense.Modules.Documents.Api;
@@ -35,5 +36,6 @@ public static class ModuleCatalog
         new RecruitmentModule(),
         new ExpenseModule(),
         new IntegrationsModule(),
+        new AssetsModule(),
     ];
 }

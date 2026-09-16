@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
@@ -25,10 +26,16 @@ public static class DocumentsServiceCollectionExtensions
         return services;
     }
 
-    /// <summary>Documents' cross-module integration event handler (EmployeeHired), registered explicitly for Sense.Worker (not the whole Application assembly, so API-only handler dependencies stay out).</summary>
+    /// <summary>
+    /// Documents' cross-module integration event handlers (EmployeeHired, and Assets' AssetAssigned/AssetReturned -
+    /// roadmap #65), registered explicitly for Sense.Worker (not the whole Application assembly, so API-only handler
+    /// dependencies stay out).
+    /// </summary>
     public static IServiceCollection AddDocumentsIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredDocumentRequirementHandler>();
+        services.AddScoped<IIntegrationEventHandler<AssetAssigned>, AssetAssignedDocumentRequirementHandler>();
+        services.AddScoped<IIntegrationEventHandler<AssetReturned>, AssetReturnedDocumentRequirementHandler>();
         return services;
     }
 }

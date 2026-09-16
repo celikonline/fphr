@@ -5,6 +5,7 @@ import { Hourglass } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { EmployeeDetail } from "@/services/employees.service";
+import { ASSETS_CARD_TAB_PERMISSIONS, AssetsSection } from "./assets-section";
 import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
 import { DOCUMENTS_CARD_TAB_PERMISSIONS, DocumentsSection } from "./documents-section";
@@ -94,6 +95,7 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     component: PaymentsSection,
   },
   { key: "documents", labelKey: "employees:card.tabs.documents", permission: DOCUMENTS_CARD_TAB_PERMISSIONS, component: DocumentsSection },
+  { key: "assets", labelKey: "employees:card.tabs.assets", permission: ASSETS_CARD_TAB_PERMISSIONS, component: AssetsSection },
   { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, component: LeaveSection },
   { key: "overtime", labelKey: "employees:card.tabs.overtime", permission: OVERTIME_CARD_TAB_PERMISSION, component: OvertimeSection },
   { key: "other", labelKey: "employees:card.tabs.other", component: tabPlaceholder("other") },

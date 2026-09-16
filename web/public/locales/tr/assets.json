@@ -1,0 +1,32 @@
+{
+  "section": {
+    "title": "Zimmet",
+    "assign": "Zimmet ata",
+    "assignTitle": "Zimmet ata",
+    "return": "İade al",
+    "returnTitle": "\"{{name}}\" zimmetini iade al",
+    "pickAsset": "Zimmet",
+    "newAsset": "Yeni zimmet oluştur",
+    "category": "Kategori",
+    "name": "Ad",
+    "serialNumber": "Seri no",
+    "description": "Açıklama",
+    "issuedAt": "Veriliş tarihi",
+    "returnedAt": "İade tarihi",
+    "empty": "Kayıtlı zimmet yok.",
+    "assigned": "Zimmet atandı.",
+    "returned": "Zimmet iade alındı.",
+    "errors": {
+      "generic": "İşlem tamamlanamadı.",
+      "loadFailed": "Zimmetler yüklenemedi.",
+      "nameAndCategoryRequired": "Yeni zimmet için ad ve kategori zorunludur."
+    }
+  },
+  "enum": {
+    "status": {
+      "unassigned": "Boşta",
+      "assigned": "Atanmış",
+      "retired": "Emekli"
+    }
+  }
+}

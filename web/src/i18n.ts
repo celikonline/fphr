@@ -32,6 +32,7 @@ i18n
       "leave",
       "recruitment",
       "documents",
+      "assets",
       "trust",
       "requests",
     ],

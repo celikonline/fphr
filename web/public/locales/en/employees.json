@@ -322,6 +322,7 @@
       "career": "Career",
       "payments": "Payments",
       "documents": "Files",
+      "assets": "Assets",
       "leave": "Leave",
       "overtime": "Overtime",
       "other": "Other",
@@ -330,7 +331,7 @@
     "tabNotes": {
       "leave": "Leave balances and requests appear here once the Leave module is available.",
       "overtime": "Overtime records and requests appear here once the Leave/Overtime module is available.",
-      "other": "Assets and trainings are added to this tab in later phases."
+      "other": "Trainings are added to this tab in later phases."
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
     "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",

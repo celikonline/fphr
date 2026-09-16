@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Assets.Infrastructure;
+using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure;
@@ -9,6 +11,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Expense.Infrastructure;
 using Sense.Modules.Expense.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
@@ -131,16 +134,25 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Attendance.Domain.IWorkScheduleRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AttendanceDbContext>>();
 
-// Payroll (Faz 3 P0/P1): calculation-engine golden set only this slice, no cross-module event consumers yet
-// (the "Değişti" dirty-flag mechanism that listens to Attendance/Leave/Employee events is P3), so just DbContext +
-// handler scanning + its own outbox poller, mirroring the Documents/Organization blocks above.
+// Payroll (Faz 3 P0-P3): calculation-engine golden set + EmployeePayrollProfile CRUD, EmployeeHired -> initial
+// profile, and (P3) the "Değişti" dirty-flag mechanism: SalaryChanged/EmployeeProfileChanged (Employee) and
+// LeaveCancelled (Leave) consumers write PayslipDirtyFlag rows, plus the periodic ChangeDetectionRun hash-
+// reconciliation hosted service ("5 dk mutabakat", event kaçırma sigortası). The EmployeeHired handler needs
+// Employee's IEmployeeSalaryLookup (WageBasis) and Organization's IOrgUnitLookup (default SGK workplace company);
+// ChangeDetectionJob also reads IEmployeeSalaryLookup directly - both registered explicitly here since this host
+// wires modules manually rather than through each IModule.AddModule (mirrors IEmployeeContactLookup above).
 builder.Services.AddModuleDbContext<PayrollDbContext>(builder.Configuration, PayrollDbContext.SchemaName);
 builder.Services.AddPayrollServices(builder.Configuration);
+builder.Services.AddPayrollIntegrationEventHandlers();
+builder.Services.AddPayrollChangeDetectionJob();
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();
 builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
     typeof(Sense.Modules.Payroll.Contracts.PayrollPermissions).Assembly,
     typeof(PayrollDbContext).Assembly,
-    typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly);
+    typeof(Sense.Modules.Payroll.Domain.IPayrollPeriodRepository).Assembly,
+    typeof(Sense.Modules.Payroll.Application.Employees.EmployeeHiredHandler).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<PayrollDbContext>>();
 
 // Recruitment: JobPostingPublished/JobApplicationStageChanged still have no subscriber (a later Recruitment package)
@@ -171,6 +183,19 @@ builder.Services.AddModuleHandlers(
     typeof(ExpenseDbContext).Assembly,
     typeof(Sense.Modules.Expense.Domain.IExpenseClaimRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<ExpenseDbContext>>();
+
+// Assets (zimmet, roadmap #65): writes AssetAssigned/AssetReturned to its own outbox; Documents consumes both
+// (AssetEventDocumentRequirementHandlers, registered in AddDocumentsIntegrationEventHandlers above) to
+// materialize/keep the AssetHandoverForm conditional requirement in sync. Assets itself consumes no other module's
+// events in this pass, so AddAssetsCoreServices is the only registration call (no matching event-handlers half).
+builder.Services.AddModuleDbContext<AssetsDbContext>(builder.Configuration, AssetsDbContext.SchemaName);
+builder.Services.AddAssetsCoreServices();
+builder.Services.AddModuleHandlers(
+    AssetsDbContext.SchemaName,
+    typeof(Sense.Modules.Assets.Application.AssetsErrors).Assembly,
+    typeof(AssetsDbContext).Assembly,
+    typeof(Sense.Modules.Assets.Contracts.AssetsPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AssetsDbContext>>();
 
 // Integrations (Faz 8 #61): consumes Employee's employee.* lifecycle events and turns them into outbound webhook
 // deliveries for tenants with an active subscription (see faz8-durum-takibi.md). Writes nothing to its own outbox
