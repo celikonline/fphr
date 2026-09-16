@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, Card, Group, Text, Title } from "@mantine/core";
+import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { Hourglass } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
@@ -9,6 +9,7 @@ import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
+import { UnionSection } from "./union-section";
 import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
 import { OVERTIME_CARD_TAB_PERMISSION, OvertimeSection } from "@/components/leave/overtime-section";
 
@@ -54,13 +55,23 @@ function tabPlaceholder(key: string, phase?: string) {
   return Component;
 }
 
+/** Kişisel bilgiler + "Sendika bilgileri" (E5b); the union block hides itself without employee.union.view. */
+function PersonalWithUnion({ employee }: EmployeeCardTabProps) {
+  return (
+    <Stack gap="lg">
+      <PersonalSection employee={employee} />
+      <UnionSection employee={employee} />
+    </Stack>
+  );
+}
+
 /**
  * Employee card tabs, in display order. To fill a slot (e.g. Leave/Overtime from PC-B's modules) replace the entry's
  * `component` with the real one - one array entry plus one component, nothing else in the card changes.
  */
 export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   { key: "general", labelKey: "employees:card.tabs.general", component: GeneralSection },
-  { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalSection },
+  { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalWithUnion },
   { key: "customFields", labelKey: "employees:card.tabs.customFields", component: CustomFieldsSection },
   { key: "career", labelKey: "employees:card.tabs.career", component: CareerSection },
   {

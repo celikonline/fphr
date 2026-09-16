@@ -602,3 +602,56 @@ export async function rehireEmployee(employeeId: string, input: RehireEmployeeIn
   const { data } = await apiClient.post<RehireEmployeeResult>(`${EMPLOYEES_BASE}/${employeeId}/rehire`, input);
   return data;
 }
+
+// ---------------------------------------------------------------- Union memberships (Sendika bilgileri, E5b)
+
+/** "TİS kapsamı": member, solidarity dues, union-approved coverage, or explicitly out of scope. */
+export type UnionCoverageType = "member" | "solidarityDues" | "unionApproved" | "outOfScope";
+
+export const UNION_COVERAGE_TYPES: UnionCoverageType[] = ["member", "solidarityDues", "unionApproved", "outOfScope"];
+
+/** Special-category personal data (KVKK md.6): only returned with employee.union.view, name stored encrypted. */
+export interface UnionMembership {
+  id: string;
+  unionName: string;
+  businessLineCode: string | null;
+  membershipDate: string;
+  /** Collective-agreement entitlement runs from here, not from the membership date. */
+  employerNotifiedDate: string | null;
+  coverageType: UnionCoverageType;
+  isUnionOfficer: boolean;
+  officerSince: string | null;
+  endDate: string | null;
+  isCurrent: boolean;
+}
+
+export interface UnionMembershipInput {
+  unionName: string;
+  membershipDate: string;
+  coverageType: UnionCoverageType;
+  businessLineCode: string | null;
+  employerNotifiedDate: string | null;
+  isUnionOfficer: boolean;
+  officerSince: string | null;
+  endDate: string | null;
+}
+
+export async function getUnionMemberships(employeeId: string): Promise<UnionMembership[]> {
+  const { data } = await apiClient.get<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships`);
+  return data;
+}
+
+export async function addUnionMembership(employeeId: string, input: UnionMembershipInput): Promise<UnionMembership[]> {
+  const { data } = await apiClient.post<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships`, input);
+  return data;
+}
+
+export async function updateUnionMembership(employeeId: string, membershipId: string, input: UnionMembershipInput): Promise<UnionMembership[]> {
+  const { data } = await apiClient.put<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`, input);
+  return data;
+}
+
+export async function deleteUnionMembership(employeeId: string, membershipId: string): Promise<UnionMembership[]> {
+  const { data } = await apiClient.delete<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`);
+  return data;
+}

@@ -174,6 +174,12 @@
       "fixedTermExpiry": "[DE] Fixed-term expiry",
       "other": "[DE] Other"
     },
+    "unionCoverageType": {
+      "member": "[DE] Member",
+      "solidarityDues": "[DE] Solidarity dues",
+      "unionApproved": "[DE] Union-approved",
+      "outOfScope": "[DE] Out of scope"
+    },
     "employmentPeriodSource": {
       "hire": "[DE] Hire",
       "rehire": "[DE] Rehire",
@@ -443,6 +449,32 @@
       "personal": "[DE] Personal",
       "career": "[DE] Career",
       "other": "[DE] Other"
+    }
+  },
+  "union": {
+    "title": "[DE] Union membership",
+    "empty": "[DE] No union membership recorded.",
+    "add": "[DE] Add membership",
+    "editTitle": "[DE] Edit membership",
+    "dialogDescription": "[DE] Union data is special-category personal data: it is stored encrypted and only authorized users can see it.",
+    "name": "[DE] Union name",
+    "businessLine": "[DE] Business line code",
+    "membershipDate": "[DE] Membership date",
+    "notifiedDate": "[DE] Employer notified on",
+    "notifiedDateHint": "[DE] Collective agreement entitlement runs from this date.",
+    "endDate": "[DE] End date",
+    "coverageType": "[DE] Collective agreement coverage",
+    "current": "[DE] Ongoing",
+    "officer": "[DE] Union officer",
+    "officerHint": "[DE] Union office is a reason to suspend the employee.",
+    "officerSince": "[DE] Officer since",
+    "saved": "[DE] The union membership is saved.",
+    "deleted": "[DE] The union membership is deleted.",
+    "deleteTitle": "[DE] Delete membership",
+    "deleteDescription": "[DE] This union membership record will be deleted. Continue?",
+    "validation": {
+      "nameRequired": "[DE] The union name is required.",
+      "membershipDateRequired": "[DE] The membership date is required."
     }
   },
   "lifecycle": {

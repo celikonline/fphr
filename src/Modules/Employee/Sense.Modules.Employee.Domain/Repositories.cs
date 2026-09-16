@@ -26,6 +26,9 @@ public interface IEmployeeRepository
     /// <summary>Tracked employee with its employment periods loaded (not auto-included anywhere else); required by the termination/rehire/seniority paths.</summary>
     Task<Result<EmployeeEntity>> GetWithEmploymentPeriodsAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>Tracked employee with its union memberships loaded (special-category data, never auto-included).</summary>
+    Task<Result<EmployeeEntity>> GetWithUnionAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsActiveAsync(Guid employeeId, CancellationToken cancellationToken = default);

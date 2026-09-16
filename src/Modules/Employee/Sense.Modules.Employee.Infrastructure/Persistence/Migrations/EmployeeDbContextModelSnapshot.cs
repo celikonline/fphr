@@ -579,6 +579,85 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.ToTable("employees", "employee");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmployeeUnionMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BusinessLineCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("business_line_code");
+
+                    b.Property<string>("CoverageType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("coverage_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EmployerNotifiedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("employer_notified_date");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<bool>("IsUnionOfficer")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_union_officer");
+
+                    b.Property<DateOnly>("MembershipDate")
+                        .HasColumnType("date")
+                        .HasColumnName("membership_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly?>("OfficerSince")
+                        .HasColumnType("date")
+                        .HasColumnName("officer_since");
+
+                    b.Property<string>("ProtectedUnionName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("protected_union_name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_union_memberships");
+
+                    b.HasIndex("EmployeeId")
+                        .HasDatabaseName("ix_union_memberships_employee_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_union_memberships_tenant_id");
+
+                    b.ToTable("union_memberships", "employee");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmploymentPeriod", b =>
                 {
                     b.Property<Guid>("Id")
@@ -998,6 +1077,16 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_custom_field_values_employees_employee_id");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmployeeUnionMembership", b =>
+                {
+                    b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
+                        .WithMany("UnionMemberships")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_union_memberships_employees_employee_id");
+                });
+
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Employees.EmploymentPeriod", b =>
                 {
                     b.HasOne("Sense.Modules.Employee.Domain.Employees.Employee", null)
@@ -1029,6 +1118,8 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                     b.Navigation("EmploymentPeriods");
 
                     b.Navigation("SalaryRecords");
+
+                    b.Navigation("UnionMemberships");
                 });
 #pragma warning restore 612, 618
         }

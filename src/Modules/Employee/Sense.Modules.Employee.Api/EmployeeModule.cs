@@ -8,6 +8,7 @@ using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Application.Payments;
 using Sense.Modules.Employee.Application.Terminations;
+using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
@@ -66,6 +67,9 @@ public sealed class EmployeeModule : IModule
 
         // Employment periods + rehire (E5a): merged seniority for leave, severance and the job-security check.
         services.AddScoped<EmploymentHistoryReader>();
+
+        // Union memberships (E5b): special-category data, encrypted with the shared IEncryptionProvider.
+        services.AddScoped<UnionMembershipService>();
 
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();

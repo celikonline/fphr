@@ -36,6 +36,12 @@ public static class EmployeePermissions
     /// <summary>Create/update/deactivate termination reasons (tenant catalog; reading them needs only employees.read).</summary>
     public const string TerminationReasonManageKey = "employee.termination_reason.manage";
 
+    /// <summary>Union memberships - special-category personal data (KVKK md.6), so they have their own read permission.</summary>
+    public const string UnionViewKey = "employee.union.view";
+
+    /// <summary>Add/edit/delete union memberships.</summary>
+    public const string UnionManageKey = "employee.union.manage";
+
     /// <summary>
     /// Self-service edit of one's own contact/address fields and employee-editable custom field values
     /// ("Self-servis düzenleme", 11.3.03). Contains ".self." so the wildcard role wiring (PermissionPatterns.SelfService)
@@ -104,6 +110,14 @@ public static class EmployeePermissions
     public static readonly Permission TerminationReasonManage = new(
         TerminationReasonManageKey, Module, "Manage Termination Reasons", Group, "Create, rename, deactivate and reactivate termination reasons");
 
+    /// <summary>View union memberships.</summary>
+    public static readonly Permission UnionView = new(
+        UnionViewKey, Module, "View Union Membership", Group, "View union membership details (special-category data)");
+
+    /// <summary>Maintain union memberships.</summary>
+    public static readonly Permission UnionManage = new(
+        UnionManageKey, Module, "Manage Union Membership", Group, "Add, edit and delete union memberships");
+
     /// <summary>Self-service profile edit (own contact fields + own employee-editable custom fields).</summary>
     public static readonly Permission ProfileSelfEdit = new(
         ProfileSelfEditKey, Module, "Edit Own Profile", Group, "Edit one's own contact fields and employee-editable custom fields");
@@ -112,6 +126,6 @@ public static class EmployeePermissions
     public static IEnumerable<Permission> All =>
         [
             EmployeesRead, EmployeesCreate, EmployeesUpdate, EmployeesBulkUpdate, DirectoryView, OrgChartView, SalaryView, SalaryEdit,
-            BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, ProfileSelfEdit,
+            BankAccountsEdit, MyView, EmployeesImport, SensitiveView, CustomFieldManage, CustomFieldView, TerminationReasonManage, UnionView, UnionManage, ProfileSelfEdit,
         ];
 }

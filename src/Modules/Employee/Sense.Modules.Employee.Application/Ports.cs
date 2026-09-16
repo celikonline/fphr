@@ -102,6 +102,9 @@ public interface IEmployeeReadStore
     /// <summary>Untracked employee with its employment periods (the seniority reads reuse the aggregate's own counting rules).</summary>
     Task<Domain.Employees.Employee?> GetWithEmploymentPeriodsAsync(Guid id, CancellationToken ct);
 
+    /// <summary>Untracked employee with its union memberships (special-category data; only the union reads load it).</summary>
+    Task<Domain.Employees.Employee?> GetWithUnionAsync(Guid id, CancellationToken ct);
+
     /// <summary>Stored custom field values of one employee, keyed by CustomFieldDefinition id.</summary>
     Task<IReadOnlyDictionary<Guid, string?>> GetCustomFieldValuesAsync(Guid employeeId, CancellationToken ct);
 

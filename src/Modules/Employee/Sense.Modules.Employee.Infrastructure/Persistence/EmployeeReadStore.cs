@@ -70,6 +70,11 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
             .Include(e => e.EmploymentPeriods)
             .FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
 
+    public async Task<EmployeeEntity?> GetWithUnionAsync(Guid id, CancellationToken ct) =>
+        await db.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Include(e => e.UnionMemberships)
+            .FirstOrDefaultAsync(e => e.Id == id, ct).ConfigureAwait(false);
+
     public async Task<IReadOnlyDictionary<Guid, string?>> GetCustomFieldValuesAsync(Guid employeeId, CancellationToken ct)
     {
         var employee = await db.Employees.AsNoTracking().IgnoreAutoIncludes()

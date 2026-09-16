@@ -5,6 +5,7 @@ using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Terminations;
+using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Shared.Contracts.Bulk;
@@ -271,6 +272,30 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<CollectiveDismissalEvaluation>(StatusCodes.Status200OK)]
     public async Task<IActionResult> CollectiveDismissalStatus([FromQuery] DateOnly? asOf, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetCollectiveDismissalStatusQuery(asOf), ct));
+
+    /// <summary>Union memberships of an employee ("Sendika bilgileri"); special-category data behind employee.union.view.</summary>
+    [HttpGet(ApiRoutes.IdParam + "/union-memberships")]
+    [ProducesResponseType<IReadOnlyList<UnionMembershipDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UnionMemberships(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListUnionMembershipsQuery(id), ct));
+
+    /// <summary>Records a union membership; an employee may have only one open membership at a time.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/union-memberships")]
+    [ProducesResponseType<IReadOnlyList<UnionMembershipDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddUnionMembership(Guid id, [FromBody] UnionMembershipInput request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AddUnionMembershipCommand(id, request), ct));
+
+    /// <summary>Edits a union membership (e.g. ending it or recording the employer notification date).</summary>
+    [HttpPut(ApiRoutes.IdParam + "/union-memberships/{membershipId:guid}")]
+    [ProducesResponseType<IReadOnlyList<UnionMembershipDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateUnionMembership(Guid id, Guid membershipId, [FromBody] UnionMembershipInput request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateUnionMembershipCommand(id, membershipId, request), ct));
+
+    /// <summary>Deletes a union membership recorded by mistake.</summary>
+    [HttpDelete(ApiRoutes.IdParam + "/union-memberships/{membershipId:guid}")]
+    [ProducesResponseType<IReadOnlyList<UnionMembershipDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeleteUnionMembership(Guid id, Guid membershipId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteUnionMembershipCommand(id, membershipId), ct));
 
     /// <summary>Employment periods and merged seniority of an employee ("Çalışma dönemleri ve kıdem birleştirme").</summary>
     [HttpGet(ApiRoutes.IdParam + "/employment-periods")]

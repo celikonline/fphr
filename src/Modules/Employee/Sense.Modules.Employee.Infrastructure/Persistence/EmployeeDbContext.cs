@@ -37,6 +37,7 @@ internal static class EmployeeTables
     public const string CareerOrgAssignments = "career_org_assignments";
     public const string CareerRecordIdColumn = "CareerRecordId";
     public const string EmploymentPeriods = "employment_periods";
+    public const string UnionMemberships = "union_memberships";
     public const string SalaryRecords = "salary_records";
     public const string BankAccounts = "bank_accounts";
     public const string CustomFieldDefinitions = "custom_field_definitions";
@@ -123,12 +124,15 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasMany(x => x.BankAccounts).WithOne().HasForeignKey(a => a.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(x => x.CustomFieldValues).WithOne().HasForeignKey(v => v.EmployeeId).OnDelete(DeleteBehavior.Cascade);
         b.HasMany(x => x.EmploymentPeriods).WithOne().HasForeignKey(p => p.EmployeeId).OnDelete(DeleteBehavior.Cascade);
+        b.HasMany(x => x.UnionMemberships).WithOne().HasForeignKey(m => m.EmployeeId).OnDelete(DeleteBehavior.Cascade);
 
         b.Ignore(x => x.CareerTimeline);
         b.Ignore(x => x.SalaryHistory);
         b.Ignore(x => x.OrderedBankAccounts);
         b.Ignore(x => x.EmploymentTimeline);
         b.Ignore(x => x.OpenEmploymentPeriod);
+        b.Ignore(x => x.UnionTimeline);
+        b.Ignore(x => x.CurrentUnionMembership);
         b.Ignore(x => x.HasCareerData);
         b.Ignore(x => x.DomainEvents);
     }
@@ -180,6 +184,25 @@ public sealed class EmploymentPeriodConfiguration : IEntityTypeConfiguration<Emp
 
         b.HasIndex(x => new { x.EmployeeId, x.StartDate });
         b.Ignore(x => x.IsOpen);
+    }
+}
+
+public sealed class EmployeeUnionMembershipConfiguration : IEntityTypeConfiguration<EmployeeUnionMembership>
+{
+    public void Configure(EntityTypeBuilder<EmployeeUnionMembership> b)
+    {
+        b.ToTable(EmployeeTables.UnionMemberships);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+
+        // Ciphertext of the union name (special-category data): longer than the plain limit because of AES-GCM + base64.
+        b.Property(x => x.ProtectedUnionName).HasMaxLength(EmployeeLimits.ProtectedIbanMaxLength).IsRequired();
+        b.Property(x => x.BusinessLineCode).HasMaxLength(UnionLimits.BusinessLineCodeMaxLength);
+        b.Property(x => x.CoverageType).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired();
+        b.Property(x => x.IsUnionOfficer).IsRequired();
+
+        b.HasIndex(x => x.EmployeeId);
+        b.Ignore(x => x.IsCurrent);
     }
 }
 

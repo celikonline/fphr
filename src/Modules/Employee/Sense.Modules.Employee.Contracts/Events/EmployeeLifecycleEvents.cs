@@ -133,6 +133,9 @@ public static class EmployeeProfileSections
 
     /// <summary>Self-service edit (PUT /employees/me/profile): contact fields and/or own employee-editable custom field values.</summary>
     public const string SelfService = "self_service";
+
+    /// <summary>Union memberships (added/edited/deleted); no values are carried - union data is special-category.</summary>
+    public const string Union = "union";
 }
 
 /// <summary>

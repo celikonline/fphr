@@ -32,6 +32,15 @@ public static class EmployeeDomainErrors
 
     /// <summary>The new hire date must be after the previous period's exit date.</summary>
     public const string RehireDateBeforePreviousExit = "employee.rehire_date_before_previous_exit";
+
+    public const string UnionMembershipNotFound = "employee.union_membership_not_found";
+    public const string UnionNameRequired = "employee.union_name_required";
+    public const string UnionBusinessLineCodeTooLong = "employee.union_business_line_code_too_long";
+    public const string UnionEndDateBeforeMembership = "employee.union_end_date_before_membership";
+    public const string UnionOfficerSinceBeforeMembership = "employee.union_officer_since_before_membership";
+
+    /// <summary>An employee belongs to one union at a time: end the open membership first.</summary>
+    public const string UnionMembershipAlreadyOpen = "employee.union_membership_already_open";
     public const string TerminationReasonNotFound = "employee.termination_reason_not_found";
     public const string TerminationReasonCodeRequired = "employee.termination_reason_code_required";
     public const string TerminationReasonCodeTooLong = "employee.termination_reason_code_too_long";

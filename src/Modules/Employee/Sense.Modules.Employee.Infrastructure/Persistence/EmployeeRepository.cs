@@ -49,6 +49,15 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         return employee is null ? Error.NotFound(EmployeeDomainErrors.EmployeeNotFound) : employee;
     }
 
+    public async Task<Result<EmployeeEntity>> GetWithUnionAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var employee = await context.Employees
+            .Include(e => e.UnionMemberships)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+        return employee is null ? Error.NotFound(EmployeeDomainErrors.EmployeeNotFound) : employee;
+    }
+
     public async Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
     {
         if (ids.Count == 0)

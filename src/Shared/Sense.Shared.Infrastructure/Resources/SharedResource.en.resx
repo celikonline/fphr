@@ -180,6 +180,12 @@
   <data name="employee.termination_reason_name_required" xml:space="preserve"><value>The termination reason name is required.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Only terminated employees can be rehired.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
+  <data name="employee.union_membership_not_found" xml:space="preserve"><value>Union membership not found.</value></data>
+  <data name="employee.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
+  <data name="employee.union_business_line_code_too_long" xml:space="preserve"><value>The business line code can be at most 30 characters.</value></data>
+  <data name="employee.union_end_date_before_membership" xml:space="preserve"><value>The end date cannot be before the membership date.</value></data>
+  <data name="employee.union_officer_since_before_membership" xml:space="preserve"><value>Union office cannot start before the membership date.</value></data>
+  <data name="employee.union_membership_already_open" xml:space="preserve"><value>The employee already has an open union membership; end it first.</value></data>
   <data name="employee.career_record_not_found" xml:space="preserve"><value>Career record not found.</value></data>
   <data name="employee.career_valid_from_invalid" xml:space="preserve"><value>The position start date must be after the start of the previous career record.</value></data>
   <data name="employee.career_before_hire_date" xml:space="preserve"><value>The position start date cannot be before the hire date.</value></data>
@@ -220,6 +226,8 @@
   <data name="employee.customfield.manage" xml:space="preserve"><value>Manage custom field definitions</value></data>
   <data name="employee.customfield.view" xml:space="preserve"><value>View custom field definitions</value></data>
   <data name="employee.termination_reason.manage" xml:space="preserve"><value>Manage termination reasons</value></data>
+  <data name="employee.union.view" xml:space="preserve"><value>View union membership</value></data>
+  <data name="employee.union.manage" xml:space="preserve"><value>Manage union membership</value></data>
   <data name="employee.self.edit" xml:space="preserve"><value>Edit own profile</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Custom field definition not found.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>The custom field key is required.</value></data>
