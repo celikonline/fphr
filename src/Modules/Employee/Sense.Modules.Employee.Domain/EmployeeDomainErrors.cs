@@ -33,6 +33,16 @@ public static class EmployeeDomainErrors
     /// <summary>The new hire date must be after the previous period's exit date.</summary>
     public const string RehireDateBeforePreviousExit = "employee.rehire_date_before_previous_exit";
 
+    public const string SubcontractorNotFound = "employee.subcontractor_not_found";
+    public const string SubcontractorNameRequired = "employee.subcontractor_name_required";
+    public const string SubcontractorNameTooLong = "employee.subcontractor_name_too_long";
+    public const string SubcontractorTaxNumberTooLong = "employee.subcontractor_tax_number_too_long";
+    public const string SubcontractorContactEmailInvalid = "employee.subcontractor_contact_email_invalid";
+    public const string SubcontractorContractEndBeforeStart = "employee.subcontractor_contract_end_before_start";
+
+    /// <summary>An employee can only be linked to an active subcontractor.</summary>
+    public const string SubcontractorInactive = "employee.subcontractor_inactive";
+
     public const string UnionMembershipNotFound = "employee.union_membership_not_found";
     public const string UnionNameRequired = "employee.union_name_required";
     public const string UnionBusinessLineCodeTooLong = "employee.union_business_line_code_too_long";

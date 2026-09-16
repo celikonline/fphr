@@ -189,6 +189,13 @@
   <data name="employee.termination_reason_name_required" xml:space="preserve"><value>İşten ayrılma nedeni adı zorunludur.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
+  <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Alt işveren firma bulunamadı.</value></data>
+  <data name="employee.subcontractor_name_required" xml:space="preserve"><value>Alt işveren firma adı zorunludur.</value></data>
+  <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>Firma adı en fazla 200 karakter olabilir.</value></data>
+  <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>Vergi numarası en fazla 20 karakter olabilir.</value></data>
+  <data name="employee.subcontractor_contact_email_invalid" xml:space="preserve"><value>İletişim e-postası geçersiz.</value></data>
+  <data name="employee.subcontractor_contract_end_before_start" xml:space="preserve"><value>Sözleşme bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="employee.subcontractor_inactive" xml:space="preserve"><value>Pasif bir alt işverene çalışan bağlanamaz.</value></data>
   <data name="employee.union_membership_not_found" xml:space="preserve"><value>Sendika üyeliği bulunamadı.</value></data>
   <data name="employee.union_name_required" xml:space="preserve"><value>Sendika adı zorunludur.</value></data>
   <data name="employee.union_business_line_code_too_long" xml:space="preserve"><value>İş kolu kodu en fazla 30 karakter olabilir.</value></data>
@@ -237,6 +244,7 @@
   <data name="employee.termination_reason.manage" xml:space="preserve"><value>İşten ayrılma nedenlerini yönetme</value></data>
   <data name="employee.union.view" xml:space="preserve"><value>Sendika bilgilerini görüntüleme</value></data>
   <data name="employee.union.manage" xml:space="preserve"><value>Sendika bilgilerini yönetme</value></data>
+  <data name="employee.subcontractor.manage" xml:space="preserve"><value>Alt işveren firmalarını yönetme</value></data>
   <data name="employee.self.edit" xml:space="preserve"><value>Kendi profilini düzenleme</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Özel alan tanımı bulunamadı.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>Özel alan anahtarı zorunludur.</value></data>

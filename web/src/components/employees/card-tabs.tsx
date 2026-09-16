@@ -9,6 +9,7 @@ import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
+import { SubcontractorSection } from "./subcontractor-section";
 import { UnionSection } from "./union-section";
 import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
 import { OVERTIME_CARD_TAB_PERMISSION, OvertimeSection } from "@/components/leave/overtime-section";
@@ -55,6 +56,16 @@ function tabPlaceholder(key: string, phase?: string) {
   return Component;
 }
 
+/** Genel bilgiler + "Alt işveren" (E5b). */
+function GeneralWithSubcontractor({ employee }: EmployeeCardTabProps) {
+  return (
+    <Stack gap="lg">
+      <GeneralSection employee={employee} />
+      <SubcontractorSection employee={employee} />
+    </Stack>
+  );
+}
+
 /** Kişisel bilgiler + "Sendika bilgileri" (E5b); the union block hides itself without employee.union.view. */
 function PersonalWithUnion({ employee }: EmployeeCardTabProps) {
   return (
@@ -70,7 +81,7 @@ function PersonalWithUnion({ employee }: EmployeeCardTabProps) {
  * `component` with the real one - one array entry plus one component, nothing else in the card changes.
  */
 export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
-  { key: "general", labelKey: "employees:card.tabs.general", component: GeneralSection },
+  { key: "general", labelKey: "employees:card.tabs.general", component: GeneralWithSubcontractor },
   { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalWithUnion },
   { key: "customFields", labelKey: "employees:card.tabs.customFields", component: CustomFieldsSection },
   { key: "career", labelKey: "employees:card.tabs.career", component: CareerSection },

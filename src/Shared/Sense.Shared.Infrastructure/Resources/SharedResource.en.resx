@@ -180,6 +180,13 @@
   <data name="employee.termination_reason_name_required" xml:space="preserve"><value>The termination reason name is required.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Only terminated employees can be rehired.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
+  <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Subcontractor not found.</value></data>
+  <data name="employee.subcontractor_name_required" xml:space="preserve"><value>The subcontractor name is required.</value></data>
+  <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>The company name can be at most 200 characters.</value></data>
+  <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>The tax number can be at most 20 characters.</value></data>
+  <data name="employee.subcontractor_contact_email_invalid" xml:space="preserve"><value>The contact email is not valid.</value></data>
+  <data name="employee.subcontractor_contract_end_before_start" xml:space="preserve"><value>The contract end date cannot be before its start date.</value></data>
+  <data name="employee.subcontractor_inactive" xml:space="preserve"><value>An employee cannot be linked to an inactive subcontractor.</value></data>
   <data name="employee.union_membership_not_found" xml:space="preserve"><value>Union membership not found.</value></data>
   <data name="employee.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
   <data name="employee.union_business_line_code_too_long" xml:space="preserve"><value>The business line code can be at most 30 characters.</value></data>
@@ -228,6 +235,7 @@
   <data name="employee.termination_reason.manage" xml:space="preserve"><value>Manage termination reasons</value></data>
   <data name="employee.union.view" xml:space="preserve"><value>View union membership</value></data>
   <data name="employee.union.manage" xml:space="preserve"><value>Manage union membership</value></data>
+  <data name="employee.subcontractor.manage" xml:space="preserve"><value>Manage subcontractors</value></data>
   <data name="employee.self.edit" xml:space="preserve"><value>Edit own profile</value></data>
   <data name="employee.custom_field.not_found" xml:space="preserve"><value>Custom field definition not found.</value></data>
   <data name="employee.custom_field.key_required" xml:space="preserve"><value>The custom field key is required.</value></data>

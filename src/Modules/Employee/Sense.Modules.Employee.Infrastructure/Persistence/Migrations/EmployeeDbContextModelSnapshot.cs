@@ -508,6 +508,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
 
+                    b.Property<Guid?>("SubcontractorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("subcontractor_id");
+
                     b.Property<DateTime?>("SuspendedAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("suspended_at_utc");
@@ -816,6 +820,83 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_salary_records_employee_id_effective_from");
 
                     b.ToTable("salary_records", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Employee.Domain.Subcontractors.Subcontractor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("contact_name");
+
+                    b.Property<string>("ContactPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("contact_phone");
+
+                    b.Property<DateOnly?>("ContractEndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("contract_end_date");
+
+                    b.Property<DateOnly?>("ContractStartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("contract_start_date");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("tax_number");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subcontractors");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_subcontractors_tenant_id");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("ix_subcontractors_tenant_id_is_active");
+
+                    b.ToTable("subcontractors", "employee");
                 });
 
             modelBuilder.Entity("Sense.Modules.Employee.Domain.Terminations.TerminationReason", b =>

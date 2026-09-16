@@ -477,6 +477,13 @@
       "membershipDateRequired": "[DE] The membership date is required."
     }
   },
+  "subcontractor": {
+    "title": "[DE] Subcontractor",
+    "company": "[DE] Subcontractor company",
+    "hint": "[DE] Pick the company when the employee works for a subcontractor; leave empty for your own staff.",
+    "none": "[DE] Own staff",
+    "saved": "[DE] The subcontractor link is saved."
+  },
   "lifecycle": {
     "action": {
       "suspend": "[DE] Suspend",

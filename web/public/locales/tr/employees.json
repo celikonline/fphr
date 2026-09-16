@@ -477,6 +477,13 @@
       "membershipDateRequired": "Üyelik tarihi zorunludur."
     }
   },
+  "subcontractor": {
+    "title": "Alt işveren",
+    "company": "Taşeron firma",
+    "hint": "Çalışan bir alt işverene bağlıysa seçin; kendi kadronuz için boş bırakın.",
+    "none": "Kendi kadromuz",
+    "saved": "Alt işveren bilgisi kaydedildi."
+  },
   "lifecycle": {
     "action": {
       "suspend": "Askıya al",

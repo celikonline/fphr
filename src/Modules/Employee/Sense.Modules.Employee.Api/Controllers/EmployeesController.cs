@@ -4,10 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.EmploymentPeriods;
+using Sense.Modules.Employee.Application.Subcontractors;
 using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Paging;
 using Sense.Shared.Web.Controllers;
@@ -75,6 +77,9 @@ public sealed record TerminationReasonRequest(
     string? DefaultSgkExitCode = null,
     TerminationType? DefaultTerminationType = null,
     int SortOrder = 0);
+
+/// <summary>Body for linking an employee to a subcontractor; null unlinks them.</summary>
+public sealed record LinkSubcontractorRequest(Guid? SubcontractorId);
 
 /// <summary>"Yeniden işe al" body; MergePreviousPeriods carries the counted previous periods into the new leave accrual start.</summary>
 public sealed record RehireEmployeeRequest(DateOnly HireDate, bool MergePreviousPeriods = true, DateOnly? LeaveAccrualStartDate = null);
@@ -272,6 +277,42 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<CollectiveDismissalEvaluation>(StatusCodes.Status200OK)]
     public async Task<IActionResult> CollectiveDismissalStatus([FromQuery] DateOnly? asOf, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetCollectiveDismissalStatusQuery(asOf), ct));
+
+    /// <summary>Subcontractor ("alt işveren") catalog of the tenant.</summary>
+    [HttpGet("subcontractors")]
+    [ProducesResponseType<IReadOnlyList<SubcontractorDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Subcontractors([FromQuery] bool includeInactive, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListSubcontractorsQuery(includeInactive), ct));
+
+    /// <summary>Adds a subcontractor company.</summary>
+    [HttpPost("subcontractors")]
+    [ProducesResponseType<SubcontractorDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> CreateSubcontractor([FromBody] SubcontractorData request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CreateSubcontractorCommand(request), ct));
+
+    /// <summary>Edits a subcontractor company.</summary>
+    [HttpPut("subcontractors/{subcontractorId:guid}")]
+    [ProducesResponseType<SubcontractorDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateSubcontractor(Guid subcontractorId, [FromBody] SubcontractorData request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateSubcontractorCommand(subcontractorId, request), ct));
+
+    /// <summary>Hides a subcontractor from the pickers (rows are never deleted - employees reference them).</summary>
+    [HttpPost("subcontractors/{subcontractorId:guid}/deactivate")]
+    [ProducesResponseType<SubcontractorDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DeactivateSubcontractor(Guid subcontractorId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetSubcontractorActiveCommand(subcontractorId, Active: false), ct));
+
+    /// <summary>Brings a deactivated subcontractor back.</summary>
+    [HttpPost("subcontractors/{subcontractorId:guid}/reactivate")]
+    [ProducesResponseType<SubcontractorDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ReactivateSubcontractor(Guid subcontractorId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetSubcontractorActiveCommand(subcontractorId, Active: true), ct));
+
+    /// <summary>Links the employee to a subcontractor, or unlinks them with a null id.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/subcontractor")]
+    [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LinkSubcontractor(Guid id, [FromBody] LinkSubcontractorRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new LinkEmployeeSubcontractorCommand(id, request.SubcontractorId), ct));
 
     /// <summary>Union memberships of an employee ("Sendika bilgileri"); special-category data behind employee.union.view.</summary>
     [HttpGet(ApiRoutes.IdParam + "/union-memberships")]

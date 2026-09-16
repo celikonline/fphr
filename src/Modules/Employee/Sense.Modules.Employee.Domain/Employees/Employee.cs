@@ -200,6 +200,12 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 
     public EmploymentType? EmploymentType { get; private set; }
 
+    /// <summary>
+    /// The subcontractor this employee belongs to ("alt işveren çalışanı", 11.3.03 E5b); null for the tenant's own
+    /// staff. Same-module, FK-less reference like <see cref="TerminationReasonId"/>; set through <see cref="LinkSubcontractor"/>.
+    /// </summary>
+    public Guid? SubcontractorId { get; private set; }
+
     /// <summary>Cross-module reference to Organization.OrgUnit; nullable (an employee may not be assigned to a unit yet).</summary>
     public Guid? OrgUnitId { get; private set; }
 
@@ -602,6 +608,9 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     }
 
     public void LinkUser(Guid userId) => UserId = userId;
+
+    /// <summary>Links (or unlinks, with null) the subcontractor this employee works for; the Application layer checks the id exists and is active.</summary>
+    public void LinkSubcontractor(Guid? subcontractorId) => SubcontractorId = subcontractorId;
 
     public void SetStatus(EmployeeStatus status)
     {

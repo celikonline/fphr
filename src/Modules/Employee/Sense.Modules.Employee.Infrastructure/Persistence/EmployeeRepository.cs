@@ -3,6 +3,7 @@ using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
@@ -159,4 +160,39 @@ public sealed class TerminationReasonRepository(EmployeeDbContext context) : ITe
 
     public async Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default) =>
         await context.TerminationReasons.AnyAsync(r => r.Code == code && (exceptId == null || r.Id != exceptId), cancellationToken);
+}
+
+/// <summary>EF Core-backed subcontractor catalog with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class SubcontractorRepository(EmployeeDbContext context) : ISubcontractorRepository
+{
+    public void Add(Subcontractor subcontractor) => context.Subcontractors.Add(subcontractor);
+
+    public async Task<Result<Subcontractor>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var subcontractor = await context.Subcontractors.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        return subcontractor is null ? Error.NotFound(EmployeeDomainErrors.SubcontractorNotFound) : subcontractor;
+    }
+
+    public async Task<IReadOnlyList<Subcontractor>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default)
+    {
+        var query = context.Subcontractors.AsNoTracking();
+        if (!includeInactive)
+        {
+            query = query.Where(s => s.IsActive);
+        }
+
+        return await query.OrderBy(s => s.Name).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        if (ids.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        return await context.Subcontractors.AsNoTracking()
+            .Where(s => ids.Contains(s.Id))
+            .ToDictionaryAsync(s => s.Id, s => s.Name, cancellationToken);
+    }
 }

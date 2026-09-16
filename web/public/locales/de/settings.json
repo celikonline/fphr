@@ -94,6 +94,37 @@
     "empty": "[DE] No support access requests.",
     "senseStaff": "[DE] Sense support team"
   },
+  "subcontractors": {
+    "title": "[DE] Subcontractors",
+    "subtitle": "[DE] Manage the subcontractor companies working at your worksite.",
+    "add": "[DE] Add company",
+    "editTitle": "[DE] Edit company",
+    "showInactive": "[DE] Show inactive companies",
+    "active": "[DE] Active",
+    "inactive": "[DE] Inactive",
+    "deactivate": "[DE] Deactivate",
+    "reactivate": "[DE] Reactivate",
+    "empty": "[DE] No subcontractors recorded.",
+    "saved": "[DE] The company is saved.",
+    "statusSaved": "[DE] The company's status is updated.",
+    "contactName": "[DE] Contact person",
+    "contactEmail": "[DE] Contact email",
+    "contactPhone": "[DE] Contact phone",
+    "contractStart": "[DE] Contract start",
+    "contractEnd": "[DE] Contract end",
+    "columns": {
+      "name": "[DE] Company name",
+      "taxNumber": "[DE] Tax number",
+      "contact": "[DE] Contact",
+      "contract": "[DE] Contract",
+      "status": "[DE] Status"
+    },
+    "errors": {
+      "generic": "[DE] The company could not be saved.",
+      "loadFailed": "[DE] The companies could not be loaded.",
+      "nameRequired": "[DE] The company name is required."
+    }
+  },
   "terminationReasons": {
     "title": "[DE] Termination reasons",
     "subtitle": "[DE] Manage the reason list the termination wizard offers.",

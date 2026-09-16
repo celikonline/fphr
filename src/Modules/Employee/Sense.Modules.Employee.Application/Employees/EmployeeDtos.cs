@@ -62,6 +62,8 @@ public sealed record EmployeeDetailDto(
     string? DepartmentName = null,
     string? TitleName = null,
     IReadOnlyList<CustomFieldValueDto>? CustomFields = null,
+    Guid? SubcontractorId = null,
+    string? SubcontractorName = null,
     DateOnly? TerminationDate = null,
     Guid? TerminationReasonId = null,
     TerminationType? TerminationType = null,

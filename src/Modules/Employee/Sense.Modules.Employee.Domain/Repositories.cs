@@ -1,5 +1,6 @@
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Kernel.Results;
 // Alias uses a name other than "Employee": a using-alias literally named "Employee" does not win
@@ -83,4 +84,18 @@ public interface ITerminationReasonRepository
 
     /// <summary>True if another reason of the tenant already uses this code.</summary>
     Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Subcontractor ("alt işveren") catalog repository; rows are deactivated, never deleted (employees reference them).</summary>
+public interface ISubcontractorRepository
+{
+    void Add(Subcontractor subcontractor);
+
+    Task<Result<Subcontractor>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Subcontractors ordered by name; inactive ones included only when asked.</summary>
+    Task<IReadOnlyList<Subcontractor>> ListAsync(bool includeInactive, CancellationToken cancellationToken = default);
+
+    /// <summary>Names of the given subcontractors (card/list display).</summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 }

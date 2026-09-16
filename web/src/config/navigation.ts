@@ -76,6 +76,7 @@ export const SETTINGS_PERMISSIONS = {
   workflowPolicies: ["workflow.policies.read"],
   customFields: ["employee.customfield.view"],
   terminationReasons: ["employee.termination_reason.manage"],
+  subcontractors: ["employee.subcontractor.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -281,6 +282,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/termination-reasons",
         icon: LogOut,
         permissions: SETTINGS_PERMISSIONS.terminationReasons,
+      },
+      {
+        key: "subcontractors",
+        labelKey: "settings.subcontractors",
+        descriptionKey: "settings.subcontractorsDesc",
+        path: "/app/settings/company/subcontractors",
+        icon: Building2,
+        permissions: SETTINGS_PERMISSIONS.subcontractors,
       },
     ],
   },

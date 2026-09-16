@@ -7,6 +7,7 @@ using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.EmploymentPeriods;
 using Sense.Modules.Employee.Application.Import;
 using Sense.Modules.Employee.Application.Payments;
+using Sense.Modules.Employee.Application.Subcontractors;
 using Sense.Modules.Employee.Application.Terminations;
 using Sense.Modules.Employee.Application.Union;
 using Sense.Modules.Employee.Contracts;
@@ -70,6 +71,9 @@ public sealed class EmployeeModule : IModule
 
         // Union memberships (E5b): special-category data, encrypted with the shared IEncryptionProvider.
         services.AddScoped<UnionMembershipService>();
+
+        // Subcontractor catalog (E5b): employees link to it; the İSG headcount threshold (Faz 7) reads that link.
+        services.AddScoped<ISubcontractorRepository, SubcontractorRepository>();
 
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();

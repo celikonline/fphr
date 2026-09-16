@@ -97,7 +97,8 @@ public sealed class EmployeeDetailBuilder(
     EmployeeSensitiveAccess sensitiveAccess,
     CustomFieldValueReader customFields,
     TimeProvider clock,
-    OrgPlacementLoader placementLoader)
+    OrgPlacementLoader placementLoader,
+    Domain.ISubcontractorRepository subcontractors)
 {
     /// <summary>From a tracked aggregate (command responses, before SaveChanges): career records are in memory, so PositionStartDate is derived here.</summary>
     public Task<EmployeeDetailDto> BuildAsync(Domain.Employees.Employee employee, CancellationToken ct) =>
@@ -144,6 +145,13 @@ public sealed class EmployeeDetailBuilder(
             titleName = LevelName(placement, chain, "Title");
         }
 
+        string? subcontractorName = null;
+        if (e.SubcontractorId is { } subcontractorId)
+        {
+            var names = await subcontractors.GetNamesAsync([subcontractorId], ct).ConfigureAwait(false);
+            subcontractorName = names.GetValueOrDefault(subcontractorId);
+        }
+
         return new EmployeeDetailDto(
             e.Id,
             e.FirstName,
@@ -184,6 +192,8 @@ public sealed class EmployeeDetailBuilder(
             departmentName,
             titleName,
             customFieldValues,
+            e.SubcontractorId,
+            subcontractorName,
             e.TerminationDate,
             e.TerminationReasonId,
             e.TerminationType,

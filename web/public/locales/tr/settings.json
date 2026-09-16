@@ -94,6 +94,37 @@
     "empty": "Destek erişim talebi yok.",
     "senseStaff": "Sense destek ekibi"
   },
+  "subcontractors": {
+    "title": "Alt işverenler",
+    "subtitle": "İşyerinizde çalışan taşeron firmaları yönetin.",
+    "add": "Firma ekle",
+    "editTitle": "Firmayı düzenle",
+    "showInactive": "Pasif firmaları da göster",
+    "active": "Aktif",
+    "inactive": "Pasif",
+    "deactivate": "Pasifleştir",
+    "reactivate": "Aktifleştir",
+    "empty": "Kayıtlı alt işveren yok.",
+    "saved": "Firma kaydedildi.",
+    "statusSaved": "Firma durumu güncellendi.",
+    "contactName": "İletişim kişisi",
+    "contactEmail": "İletişim e-postası",
+    "contactPhone": "İletişim telefonu",
+    "contractStart": "Sözleşme başlangıcı",
+    "contractEnd": "Sözleşme bitişi",
+    "columns": {
+      "name": "Firma adı",
+      "taxNumber": "Vergi no",
+      "contact": "İletişim",
+      "contract": "Sözleşme",
+      "status": "Durum"
+    },
+    "errors": {
+      "generic": "Firma kaydedilemedi.",
+      "loadFailed": "Firmalar yüklenemedi.",
+      "nameRequired": "Firma adı zorunludur."
+    }
+  },
   "terminationReasons": {
     "title": "İşten ayrılma nedenleri",
     "subtitle": "İşten ayrılış sihirbazında çıkan neden listesini yönetin.",

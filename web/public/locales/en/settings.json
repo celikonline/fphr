@@ -94,6 +94,37 @@
     "empty": "No support access requests.",
     "senseStaff": "Sense support team"
   },
+  "subcontractors": {
+    "title": "Subcontractors",
+    "subtitle": "Manage the subcontractor companies working at your worksite.",
+    "add": "Add company",
+    "editTitle": "Edit company",
+    "showInactive": "Show inactive companies",
+    "active": "Active",
+    "inactive": "Inactive",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "empty": "No subcontractors recorded.",
+    "saved": "The company is saved.",
+    "statusSaved": "The company's status is updated.",
+    "contactName": "Contact person",
+    "contactEmail": "Contact email",
+    "contactPhone": "Contact phone",
+    "contractStart": "Contract start",
+    "contractEnd": "Contract end",
+    "columns": {
+      "name": "Company name",
+      "taxNumber": "Tax number",
+      "contact": "Contact",
+      "contract": "Contract",
+      "status": "Status"
+    },
+    "errors": {
+      "generic": "The company could not be saved.",
+      "loadFailed": "The companies could not be loaded.",
+      "nameRequired": "The company name is required."
+    }
+  },
   "terminationReasons": {
     "title": "Termination reasons",
     "subtitle": "Manage the reason list the termination wizard offers.",

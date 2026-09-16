@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -28,6 +29,8 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
 
     public DbSet<TerminationReason> TerminationReasons => Set<TerminationReason>();
+
+    public DbSet<Subcontractor> Subcontractors => Set<Subcontractor>();
 }
 
 internal static class EmployeeTables
@@ -43,6 +46,7 @@ internal static class EmployeeTables
     public const string CustomFieldDefinitions = "custom_field_definitions";
     public const string CustomFieldValues = "custom_field_values";
     public const string TerminationReasons = "termination_reasons";
+    public const string Subcontractors = "subcontractors";
 
     public const int StatusLength = 30;
 }
@@ -184,6 +188,25 @@ public sealed class EmploymentPeriodConfiguration : IEntityTypeConfiguration<Emp
 
         b.HasIndex(x => new { x.EmployeeId, x.StartDate });
         b.Ignore(x => x.IsOpen);
+    }
+}
+
+public sealed class SubcontractorConfiguration : IEntityTypeConfiguration<Subcontractor>
+{
+    public void Configure(EntityTypeBuilder<Subcontractor> b)
+    {
+        b.ToTable(EmployeeTables.Subcontractors);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Name).HasMaxLength(SubcontractorLimits.NameMaxLength).IsRequired();
+        b.Property(x => x.TaxNumber).HasMaxLength(SubcontractorLimits.TaxNumberMaxLength);
+        b.Property(x => x.ContactName).HasMaxLength(SubcontractorLimits.ContactNameMaxLength);
+        b.Property(x => x.ContactEmail).HasMaxLength(EmployeeLimits.EmailMaxLength);
+        b.Property(x => x.ContactPhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
+        b.Property(x => x.IsActive).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.IsActive });
+        b.Ignore(x => x.DomainEvents);
     }
 }
 

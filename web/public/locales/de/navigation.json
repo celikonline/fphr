@@ -54,6 +54,8 @@
     "customFieldsDesc": "[DE] Custom field definitions shown on employee cards",
     "terminationReasons": "[DE] Termination reasons",
     "terminationReasonsDesc": "[DE] The reason list offered by the termination wizard",
+    "subcontractors": "[DE] Subcontractors",
+    "subcontractorsDesc": "[DE] Subcontractor companies and the employees linked to them",
     "approvalFlowsDesc": "[DE] Approval steps per request type",
     "rules": "[DE] Rules",
     "workCalendars": "[DE] Work calendars",

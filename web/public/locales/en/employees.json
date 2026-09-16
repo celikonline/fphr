@@ -477,6 +477,13 @@
       "membershipDateRequired": "The membership date is required."
     }
   },
+  "subcontractor": {
+    "title": "Subcontractor",
+    "company": "Subcontractor company",
+    "hint": "Pick the company when the employee works for a subcontractor; leave empty for your own staff.",
+    "none": "Own staff",
+    "saved": "The subcontractor link is saved."
+  },
   "lifecycle": {
     "action": {
       "suspend": "Suspend",

@@ -55,6 +55,8 @@
     "customFieldsDesc": "Çalışan kartlarına eklenen özel alan tanımları",
     "terminationReasons": "İşten ayrılma nedenleri",
     "terminationReasonsDesc": "İşten ayrılış sihirbazındaki neden listesi",
+    "subcontractors": "Alt işverenler",
+    "subcontractorsDesc": "Taşeron firmalar ve çalışan bağlantısı",
     "rules": "Kurallar",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",

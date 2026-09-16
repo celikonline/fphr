@@ -122,6 +122,9 @@ export interface EmployeeDetail {
   titleName?: string | null;
   /** Custom field values visible to the caller (see `CustomFieldValue`); empty when none are defined or none are visible. */
   customFields: CustomFieldValue[] | null;
+  /** Subcontractor the employee belongs to ("alt işveren çalışanı"); null for the tenant's own staff. */
+  subcontractorId?: string | null;
+  subcontractorName?: string | null;
   /** Set once the employee is Terminated ("İşten ayrılış sihirbazı"). */
   terminationDate?: string | null;
   terminationReasonId?: string | null;
@@ -653,5 +656,58 @@ export async function updateUnionMembership(employeeId: string, membershipId: st
 
 export async function deleteUnionMembership(employeeId: string, membershipId: string): Promise<UnionMembership[]> {
   const { data } = await apiClient.delete<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`);
+  return data;
+}
+
+// ---------------------------------------------------------------- Subcontractors (Alt işveren, E5b)
+
+/** A subcontractor company whose staff work at the tenant's worksite; deactivated rows stay linked to their employees. */
+export interface Subcontractor {
+  id: string;
+  name: string;
+  taxNumber: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
+  isActive: boolean;
+}
+
+export interface SubcontractorInput {
+  name: string;
+  taxNumber: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  contractStartDate: string | null;
+  contractEndDate: string | null;
+}
+
+export async function getSubcontractors(includeInactive = false): Promise<Subcontractor[]> {
+  const { data } = await apiClient.get<Subcontractor[]>(`${EMPLOYEES_BASE}/subcontractors`, { params: { includeInactive } });
+  return data;
+}
+
+export async function createSubcontractor(input: SubcontractorInput): Promise<Subcontractor> {
+  const { data } = await apiClient.post<Subcontractor>(`${EMPLOYEES_BASE}/subcontractors`, input);
+  return data;
+}
+
+export async function updateSubcontractor(subcontractorId: string, input: SubcontractorInput): Promise<Subcontractor> {
+  const { data } = await apiClient.put<Subcontractor>(`${EMPLOYEES_BASE}/subcontractors/${subcontractorId}`, input);
+  return data;
+}
+
+export async function setSubcontractorActive(subcontractorId: string, active: boolean): Promise<Subcontractor> {
+  const { data } = await apiClient.post<Subcontractor>(
+    `${EMPLOYEES_BASE}/subcontractors/${subcontractorId}/${active ? "reactivate" : "deactivate"}`,
+  );
+  return data;
+}
+
+/** Links the employee to a subcontractor; null unlinks them (tenant's own staff). */
+export async function linkEmployeeSubcontractor(employeeId: string, subcontractorId: string | null): Promise<EmployeeDetail> {
+  const { data } = await apiClient.put<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/subcontractor`, { subcontractorId });
   return data;
 }
