@@ -6,6 +6,7 @@ using Sense.Modules.Performance.Application.ReviewCycles;
 using Sense.Modules.Performance.Contracts;
 using Sense.Modules.Performance.Domain;
 using Sense.Modules.Performance.Infrastructure.Persistence;
+using Sense.Modules.Performance.Infrastructure.Reports;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -41,5 +42,6 @@ public sealed class PerformanceModule : IModule
 
         services.AddScoped<IReviewCycleRepository, ReviewCycleRepository>();
         services.AddScoped<IGoalCategoryRepository, GoalCategoryRepository>();
+        services.AddScoped<IReviewReportRenderer, QuestPdfReviewReportRenderer>();
     }
 }

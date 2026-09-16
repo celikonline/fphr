@@ -66,9 +66,13 @@ public static class PerformancePermissions
     public static readonly Permission GoalCategoryManage = new(
         "performance.goal_category.manage", Module, "Manage Goal Categories", Group, "Create and list goal categories");
 
+    /// <summary>Download a participant's individual PDF report (Detaylı/Özet). Self-download also requires the cycle's EmployeeCanDownloadPdf flag.</summary>
+    public static readonly Permission ReportDownload = new(
+        "performance.report.download", Module, "Download Individual Report", Group, "Download a review participant's individual PDF report");
+
     public static IEnumerable<Permission> All =>
     [
         CycleView, CycleCreate, CycleUpdate, CyclePublish, CycleForceComplete, ParticipantManage, FormFill, MyAssignments,
-        GoalsCreate, GoalsApprove, GoalsEnterResult, GoalsApproveResult, GoalCategoryManage,
+        GoalsCreate, GoalsApprove, GoalsEnterResult, GoalsApproveResult, GoalCategoryManage, ReportDownload,
     ];
 }

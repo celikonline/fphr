@@ -7,4 +7,7 @@ public static class PerformanceErrors
 
     /// <summary>GoalEntryBy=Employee'de yalnız çalışanın kendisi, FirstManager'da yalnız yöneticisi hedef/sonuç girebilir.</summary>
     public const string GoalEntryModeMismatch = "performance.goal.entry_mode_mismatch";
+
+    public const string ReportNotReady = "performance.report.not_ready";
+    public const string ReportSelfDownloadDisabled = "performance.report.self_download_disabled";
 }

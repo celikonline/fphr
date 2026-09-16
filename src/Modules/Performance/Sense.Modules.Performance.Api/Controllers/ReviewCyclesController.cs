@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Performance.Application.ReviewCycles;
 using Sense.Modules.Performance.Domain.ReviewCycles;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Performance.Api.Controllers;
@@ -27,6 +28,8 @@ public sealed record AddParticipantsRequest(IReadOnlyList<AddParticipantInputDto
 [Authorize]
 public sealed class ReviewCyclesController : ApiControllerBase
 {
+    private ICurrentUser CurrentUser => HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
+
     /// <summary>Lists review cycles (grid standardı).</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<ReviewCycleSummaryDto>>(StatusCodes.Status200OK)]
@@ -74,4 +77,15 @@ public sealed class ReviewCyclesController : ApiControllerBase
     [HttpPost(ApiRoutes.IdParam + "/force-complete")]
     [ProducesResponseType<int>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ForceComplete(Guid id, CancellationToken ct) => FromResult(await Dispatcher.Send(new ForceCompleteReviewCycleCommand(id), ct));
+
+    /// <summary>"Detaylı rapor" / "Özet rapor" / "Bireysel analiz raporunu indir" - canlı üretilen PDF.</summary>
+    [HttpGet(ApiRoutes.IdParam + "/participants/{participantId:guid}/report")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(FileContentResult))]
+    public async Task<IActionResult> DownloadReport(
+        Guid id, Guid participantId, [FromQuery] Guid participantEmployeeId, [FromQuery] ReviewReportKind kind, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(
+            new GenerateReviewReportQuery(id, participantId, participantEmployeeId, kind, CurrentUser.EmployeeId ?? Guid.Empty), ct);
+        return result.IsSuccess ? File(result.Value.Content, MediaTypes.Pdf, result.Value.FileName) : Problem(result.Error);
+    }
 }

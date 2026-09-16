@@ -601,4 +601,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.goal.entry_mode_mismatch" xml:space="preserve"><value>Bu dönemde hedef girişi/sonuç girişi yalnız GoalEntryBy ayarında belirlenen kişi tarafından yapılabilir.</value></data>
   <data name="performance.goal_category.name_required" xml:space="preserve"><value>Kategori adı zorunludur.</value></data>
   <data name="performance.goal_category.not_found" xml:space="preserve"><value>Hedef kategorisi bulunamadı.</value></data>
+
+  <!-- Performance: bireysel rapor indirme (Faz 5 P6) -->
+  <data name="performance.report.download" xml:space="preserve"><value>Bireysel rapor indirme</value></data>
+  <data name="performance.report.not_ready" xml:space="preserve"><value>Bu katılımcının değerlendirmesi henüz tamamlanmadığı için rapor oluşturulamıyor.</value></data>
+  <data name="performance.report.self_download_disabled" xml:space="preserve"><value>Bu dönemde kendi raporunuzu indirme izniniz yok.</value></data>
 </root>

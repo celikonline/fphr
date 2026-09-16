@@ -13,22 +13,11 @@ public static class ScoreCalculator
         var competencyScores = new List<(decimal Weight, decimal Score)>();
         foreach (var competency in cycle.Competencies)
         {
-            var questionScores = new List<(decimal Weight, decimal Score)>();
-            foreach (var question in competency.Questions)
+            var score = CalculateCompetencyScore(cycle, participant, competency);
+            if (score is { } value)
             {
-                var relationScore = CalculateQuestionScore(cycle, participant, question.Id);
-                if (relationScore is { } score)
-                {
-                    questionScores.Add((question.Weight ?? 0m, score));
-                }
+                competencyScores.Add((competency.Weight ?? 0m, value));
             }
-
-            if (questionScores.Count == 0)
-            {
-                continue;
-            }
-
-            competencyScores.Add((competency.Weight ?? 0m, WeightedAverage(questionScores)));
         }
 
         return competencyScores.Count == 0 ? null : WeightedAverage(competencyScores);
@@ -63,7 +52,24 @@ public static class ScoreCalculator
         return Math.Round((competencyWeight * competencyScore.Value + goalWeight * goalScore.Value) / 100m, 2, MidpointRounding.AwayFromZero);
     }
 
-    private static decimal? CalculateQuestionScore(ReviewCycle cycle, ReviewParticipant participant, Guid questionId)
+    /// <summary>yetkinlik puanı = soru ağırlıklı ortalama. Public for report rendering.</summary>
+    public static decimal? CalculateCompetencyScore(ReviewCycle cycle, ReviewParticipant participant, ReviewCompetency competency)
+    {
+        var questionScores = new List<(decimal Weight, decimal Score)>();
+        foreach (var question in competency.Questions)
+        {
+            var score = CalculateQuestionScore(cycle, participant, question.Id);
+            if (score is { } value)
+            {
+                questionScores.Add((question.Weight ?? 0m, value));
+            }
+        }
+
+        return questionScores.Count == 0 ? null : WeightedAverage(questionScores);
+    }
+
+    /// <summary>soru puanı = tamamlanmış atamalardaki değerlendirici puanlarının kategori ağırlıklı ortalaması. Public for report rendering.</summary>
+    public static decimal? CalculateQuestionScore(ReviewCycle cycle, ReviewParticipant participant, Guid questionId)
     {
         var relationAverages = new List<(decimal Weight, decimal Score)>();
         foreach (var config in cycle.RelationConfigs.Where(c => c.MinRequired is not null))
