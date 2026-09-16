@@ -60,7 +60,9 @@ public sealed class MoveJobApplicationStageValidator : AbstractValidator<MoveJob
     }
 }
 
-public sealed class MoveJobApplicationStageHandler(IJobApplicationRepository applications, IIntegrationEventOutbox outbox)
+public sealed class MoveJobApplicationStageHandler(
+    IJobApplicationRepository applications, IAutomationRuleRepository automationRules, IRecruitmentFormResponseRepository formResponses,
+    IIntegrationEventOutbox outbox)
     : ICommandHandler<MoveJobApplicationStageCommand>
 {
     public async Task<Result> Handle(MoveJobApplicationStageCommand command, CancellationToken cancellationToken)
@@ -71,7 +73,20 @@ public sealed class MoveJobApplicationStageHandler(IJobApplicationRepository app
             return existing.Error;
         }
 
-        var moved = existing.Value.MoveStage(Enum.Parse<ApplicationStage>(command.Stage));
+        var targetStage = Enum.Parse<ApplicationStage>(command.Stage);
+
+        // AutomationRule gating (roadmap #88): an active rule for this exact (FromStage, ToStage) pair requires at
+        // least one submitted form response against its template before the transition is allowed.
+        var applicableRules = await automationRules.FindActiveForTransitionAsync(existing.Value.Stage, targetStage, cancellationToken);
+        foreach (var rule in applicableRules)
+        {
+            if (!await formResponses.ExistsForTemplateAsync(existing.Value.Id, rule.RequiredFormTemplateId, cancellationToken))
+            {
+                return Error.Rule(RecruitmentErrors.RequiredFormMissing);
+            }
+        }
+
+        var moved = existing.Value.MoveStage(targetStage);
         if (moved.IsFailure)
         {
             return moved.Error;

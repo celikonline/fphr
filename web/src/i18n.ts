@@ -35,6 +35,7 @@ i18n
       "assets",
       "trust",
       "requests",
+      "expense",
     ],
     interpolation: {
       escapeValue: false,

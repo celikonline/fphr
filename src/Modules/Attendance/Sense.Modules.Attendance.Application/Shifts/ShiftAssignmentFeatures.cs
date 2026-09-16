@@ -103,7 +103,7 @@ public sealed class AssignShiftValidator : AbstractValidator<AssignShiftCommand>
 
 public sealed class AssignShiftHandler(
     ITenantContext tenant, IShiftAssignmentRepository shifts, IShiftSettingsRepository settingsRepository, IShiftPlanLockRepository locks,
-    IEmployeeLookup employeeLookup, IDataScopeService dataScope, IAttendanceUnitOfWork unitOfWork)
+    IEmployeeAvailabilityRepository availability, IEmployeeLookup employeeLookup, IDataScopeService dataScope, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<AssignShiftCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(AssignShiftCommand command, CancellationToken cancellationToken)
@@ -143,6 +143,12 @@ public sealed class AssignShiftHandler(
                 return limitCheck.Error;
             }
 
+            var availabilityCheck = await ShiftAvailabilityGuard.EnsureNoConflictAsync(availability, command.EmployeeId, candidateCheck.Value, cancellationToken);
+            if (availabilityCheck.IsFailure)
+            {
+                return availabilityCheck.Error;
+            }
+
             var updated = existing.Update(command.Start, command.End, command.BreakMinutes, command.IsNight, command.Note);
             return updated.IsFailure ? updated.Error : existing.Id;
         }
@@ -157,6 +163,12 @@ public sealed class AssignShiftHandler(
         if (newLimitCheck.IsFailure)
         {
             return newLimitCheck.Error;
+        }
+
+        var newAvailabilityCheck = await ShiftAvailabilityGuard.EnsureNoConflictAsync(availability, command.EmployeeId, created.Value, cancellationToken);
+        if (newAvailabilityCheck.IsFailure)
+        {
+            return newAvailabilityCheck.Error;
         }
 
         shifts.Add(created.Value);
@@ -179,7 +191,7 @@ public sealed class RepeatShiftAssignmentsValidator : AbstractValidator<RepeatSh
 
 public sealed class RepeatShiftAssignmentsHandler(
     ITenantContext tenant, IShiftAssignmentRepository shifts, IShiftSettingsRepository settingsRepository, IShiftPlanLockRepository locks,
-    IDataScopeService dataScope, IAttendanceUnitOfWork unitOfWork)
+    IEmployeeAvailabilityRepository availability, IDataScopeService dataScope, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<RepeatShiftAssignmentsCommand>
 {
     public async Task<Result> Handle(RepeatShiftAssignmentsCommand command, CancellationToken cancellationToken)
@@ -222,6 +234,12 @@ public sealed class RepeatShiftAssignmentsHandler(
                     if (limitCheck.IsFailure)
                     {
                         return limitCheck.Error;
+                    }
+
+                    var availabilityCheck = await ShiftAvailabilityGuard.EnsureNoConflictAsync(availability, employeeId, candidateCheck.Value, cancellationToken);
+                    if (availabilityCheck.IsFailure)
+                    {
+                        return availabilityCheck.Error;
                     }
 
                     if (existing is not null)
@@ -281,5 +299,24 @@ public sealed class PublishShiftAssignmentsHandler(IShiftAssignmentRepository sh
         }
 
         return Result.Success();
+    }
+}
+
+/// <summary>"Vardiyam" (package A5 self-servis).</summary>
+[RequiresPermission("attendance.shift.self")]
+public sealed record GetMyShiftAssignmentsQuery(DateOnly From, DateOnly To) : IQuery<IReadOnlyList<ShiftAssignmentDto>>;
+
+public sealed class GetMyShiftAssignmentsHandler(IShiftAssignmentRepository shifts, ICurrentUser currentUser)
+    : IQueryHandler<GetMyShiftAssignmentsQuery, IReadOnlyList<ShiftAssignmentDto>>
+{
+    public async Task<Result<IReadOnlyList<ShiftAssignmentDto>>> Handle(GetMyShiftAssignmentsQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(AttendanceErrors.EmployeeNotFound);
+        }
+
+        var list = await shifts.ListForRangeAsync(query.From, query.To, [employeeId], cancellationToken);
+        return list.Select(ShiftAssignmentMapper.ToDto).ToList();
     }
 }

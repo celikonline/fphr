@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Availability;
+using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;

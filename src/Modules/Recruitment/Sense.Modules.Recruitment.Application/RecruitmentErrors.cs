@@ -12,4 +12,6 @@ public static class RecruitmentErrors
     public const string RequisitionNotApproved = "recruitment.posting.requisition_not_approved";
 
     public const string TagNameTaken = "recruitment.tag.name_taken";
+
+    public const string RequiredFormMissing = "recruitment.application.required_form_missing";
 }

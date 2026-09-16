@@ -1,0 +1,61 @@
+{
+  "genericError": "The action could not be completed.",
+  "payments": {
+    "title": "My Payments",
+    "subtitle": "Status of your expense and advance requests.",
+    "empty": "You have no expense or advance requests yet.",
+    "col": {
+      "kind": "Type",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "status": "Status"
+    },
+    "kind": {
+      "expense": "Expense",
+      "advance": "Advance",
+      "overtime": "Overtime payment",
+      "adjustment": "Adjustment"
+    }
+  },
+  "status": {
+    "draft": "Draft",
+    "submitted": "Pending approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "paid": "Paid"
+  },
+  "claim": {
+    "newButton": "+ Expense",
+    "dialogTitle": "Expense claim",
+    "description": "General description",
+    "descriptionPlaceholder": "E.g. client visit",
+    "continue": "Continue",
+    "addItem": "Add receipt",
+    "noItems": "No receipts added yet.",
+    "total": "Total amount",
+    "submit": "Submit",
+    "submitted": "Your claim has been submitted."
+  },
+  "item": {
+    "category": "Category",
+    "categoryPlaceholder": "Select a category",
+    "amount": "Amount",
+    "taxRate": "Tax rate",
+    "description": "Receipt description"
+  },
+  "advance": {
+    "newButton": "+ Advance",
+    "dialogTitle": "Advance request",
+    "amount": "Amount",
+    "installmentRequested": "I want installments",
+    "installmentCount": "Installment count",
+    "description": "Description",
+    "submit": "Submit",
+    "submitted": "Your request has been submitted."
+  },
+  "categories": {
+    "travel": "Travel and Transportation",
+    "food": "Food and Beverage"
+  }
+}

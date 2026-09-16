@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Availability;
+using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
@@ -31,6 +33,10 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<ShiftAssignment> ShiftAssignments => Set<ShiftAssignment>();
 
     public DbSet<ShiftPlanLock> ShiftPlanLocks => Set<ShiftPlanLock>();
+
+    public DbSet<EmployeeAvailability> EmployeeAvailabilities => Set<EmployeeAvailability>();
+
+    public DbSet<CompensatoryWorkLedger> CompensatoryWorkLedgers => Set<CompensatoryWorkLedger>();
 }
 
 internal static class AttendanceTables
@@ -42,6 +48,8 @@ internal static class AttendanceTables
     public const string ShiftSettings = "shift_settings";
     public const string ShiftAssignments = "shift_assignments";
     public const string ShiftPlanLocks = "shift_plan_locks";
+    public const string EmployeeAvailabilities = "employee_availabilities";
+    public const string CompensatoryWorkLedgers = "compensatory_work_ledgers";
     public const int OverrideReasonMaxLength = 1000;
     public const int LinkedEntityTypeMaxLength = 50;
     public const int NoteMaxLength = 1000;
@@ -151,6 +159,34 @@ public sealed class ShiftPlanLockConfiguration : IEntityTypeConfiguration<ShiftP
         b.Property(x => x.Source).HasConversion<string>();
         b.Property(x => x.UnlockReason).HasMaxLength(AttendanceTables.UnlockReasonMaxLength);
         b.HasIndex(x => new { x.TenantId, x.PeriodMonth }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class EmployeeAvailabilityConfiguration : IEntityTypeConfiguration<EmployeeAvailability>
+{
+    public void Configure(EntityTypeBuilder<EmployeeAvailability> b)
+    {
+        b.ToTable(AttendanceTables.EmployeeAvailabilities);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Kind).HasConversion<string>();
+        b.Property(x => x.Status).HasConversion<string>();
+        b.Property(x => x.Note).HasMaxLength(AttendanceTables.NoteMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class CompensatoryWorkLedgerConfiguration : IEntityTypeConfiguration<CompensatoryWorkLedger>
+{
+    public void Configure(EntityTypeBuilder<CompensatoryWorkLedger> b)
+    {
+        b.ToTable(AttendanceTables.CompensatoryWorkLedgers);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Status).HasConversion<string>();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.WeekStart }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

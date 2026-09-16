@@ -281,7 +281,7 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
                 {t("common:cancel")}
               </Button>
               <Button type="button" loading={createMutation.isPending} onClick={() => createMutation.mutate()}>
-                {t("common:continue")}
+                {t("expense:claim.continue")}
               </Button>
             </Group>
           </>

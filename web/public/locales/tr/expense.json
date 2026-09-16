@@ -1,0 +1,61 @@
+{
+  "genericError": "İşlem tamamlanamadı.",
+  "payments": {
+    "title": "Ödemelerim",
+    "subtitle": "Harcama ve avans taleplerinizin durumu.",
+    "empty": "Henüz bir harcama veya avans talebiniz yok.",
+    "col": {
+      "kind": "Tür",
+      "date": "Tarih",
+      "description": "Açıklama",
+      "amount": "Tutar",
+      "status": "Durum"
+    },
+    "kind": {
+      "expense": "Harcama",
+      "advance": "Avans",
+      "overtime": "Fazla mesai ödemesi",
+      "adjustment": "Ek ödeme/kesinti"
+    }
+  },
+  "status": {
+    "draft": "Taslak",
+    "submitted": "Onay bekliyor",
+    "approved": "Onaylandı",
+    "rejected": "Reddedildi",
+    "paid": "Ödendi"
+  },
+  "claim": {
+    "newButton": "+ Harcama",
+    "dialogTitle": "Harcama talebi",
+    "description": "Genel açıklama",
+    "descriptionPlaceholder": "Örn. müşteri ziyareti",
+    "continue": "Devam et",
+    "addItem": "Fiş ekle",
+    "noItems": "Henüz fiş eklenmedi.",
+    "total": "Toplam tutar",
+    "submit": "Gönder",
+    "submitted": "Talebiniz gönderildi."
+  },
+  "item": {
+    "category": "Kategori",
+    "categoryPlaceholder": "Kategori seçin",
+    "amount": "Tutar",
+    "taxRate": "Vergi oranı",
+    "description": "Fiş açıklaması"
+  },
+  "advance": {
+    "newButton": "+ Avans",
+    "dialogTitle": "Avans talebi",
+    "amount": "Tutar",
+    "installmentRequested": "Taksit talep ediyorum",
+    "installmentCount": "Taksit sayısı",
+    "description": "Açıklama",
+    "submit": "Gönder",
+    "submitted": "Talebiniz gönderildi."
+  },
+  "categories": {
+    "travel": "Yolculuk ve Ulaşım",
+    "food": "Yiyecek ve İçecek"
+  }
+}

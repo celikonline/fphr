@@ -1,0 +1,61 @@
+{
+  "genericError": "[DE] The action could not be completed.",
+  "payments": {
+    "title": "[DE] My Payments",
+    "subtitle": "[DE] Status of your expense and advance requests.",
+    "empty": "[DE] You have no expense or advance requests yet.",
+    "col": {
+      "kind": "[DE] Type",
+      "date": "[DE] Date",
+      "description": "[DE] Description",
+      "amount": "[DE] Amount",
+      "status": "[DE] Status"
+    },
+    "kind": {
+      "expense": "[DE] Expense",
+      "advance": "[DE] Advance",
+      "overtime": "[DE] Overtime payment",
+      "adjustment": "[DE] Adjustment"
+    }
+  },
+  "status": {
+    "draft": "[DE] Draft",
+    "submitted": "[DE] Pending approval",
+    "approved": "[DE] Approved",
+    "rejected": "[DE] Rejected",
+    "paid": "[DE] Paid"
+  },
+  "claim": {
+    "newButton": "[DE] + Expense",
+    "dialogTitle": "[DE] Expense claim",
+    "description": "[DE] General description",
+    "descriptionPlaceholder": "[DE] E.g. client visit",
+    "continue": "[DE] Continue",
+    "addItem": "[DE] Add receipt",
+    "noItems": "[DE] No receipts added yet.",
+    "total": "[DE] Total amount",
+    "submit": "[DE] Submit",
+    "submitted": "[DE] Your claim has been submitted."
+  },
+  "item": {
+    "category": "[DE] Category",
+    "categoryPlaceholder": "[DE] Select a category",
+    "amount": "[DE] Amount",
+    "taxRate": "[DE] Tax rate",
+    "description": "[DE] Receipt description"
+  },
+  "advance": {
+    "newButton": "[DE] + Advance",
+    "dialogTitle": "[DE] Advance request",
+    "amount": "[DE] Amount",
+    "installmentRequested": "[DE] I want installments",
+    "installmentCount": "[DE] Installment count",
+    "description": "[DE] Description",
+    "submit": "[DE] Submit",
+    "submitted": "[DE] Your request has been submitted."
+  },
+  "categories": {
+    "travel": "[DE] Travel and Transportation",
+    "food": "[DE] Food and Beverage"
+  }
+}
