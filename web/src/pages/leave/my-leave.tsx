@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Button, Card, Group, Skeleton, Text, Title, Tooltip } from "@mantine/core";
 import { CalendarDays, Eye, ListChecks, ListOrdered, Pencil, RotateCcw, Undo2, type LucideIcon } from "lucide-react";
@@ -40,11 +41,25 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const queryClient = useQueryClient();
   const leaveName = useLeaveName();
   const [ledgerOpen, setLedgerOpen] = useState(false);
+  // Tek "Talep" hub'ından (/app/requests) `?new=1` ile gelince ekleme diyaloğu ilk render'da açık başlar (roadmap #42).
+  const [searchParams, setSearchParams] = useSearchParams();
   const [dialog, setDialog] = useState<
     { mode: "add" } | { mode: "edit"; request: LeaveRequest } | { mode: "resubmit"; request: LeaveRequest } | null
-  >(null);
+  >(() => (canRequests && searchParams.get("new") === "1" ? { mode: "add" } : null));
   const [withdrawing, setWithdrawing] = useState<LeaveRequest | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setSearchParams(
+        (params) => {
+          params.delete("new");
+          return params;
+        },
+        { replace: true },
+      );
+    }
+  }, [searchParams, setSearchParams]);
 
   const balancesQuery = useQuery({
     queryKey: [...MY_LEAVE_KEY, "balances"],

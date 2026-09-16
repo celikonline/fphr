@@ -32,6 +32,8 @@ i18n
       "leave",
       "recruitment",
       "documents",
+      "trust",
+      "requests",
     ],
     interpolation: {
       escapeValue: false,

@@ -130,7 +130,7 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["leave.rule_sets.read"],
     iconColor: "steel",
   },
-  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, phase: 1, iconColor: "gold" },
+  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, iconColor: "gold" },
   { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow, iconColor: "navy" },
   { key: "reports", labelKey: "nav.reports", path: "/app/reports", icon: BarChart3, phase: 4, iconColor: "blue" },
   {
@@ -144,8 +144,9 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
-  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
   { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, phase: 4, iconColor: "orange" },
+  { key: "trust", labelKey: "nav.trust", path: "/app/trust", icon: ShieldCheck, iconColor: "teal" },
+  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
 ];
 
 /** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
@@ -202,6 +203,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/recruitment/candidates",
     icon: Users,
     permissions: ["recruitment.candidates.read"],
+    iconColor: "gold",
+  },
+  {
+    key: "recruitmentRequisitions",
+    labelKey: "apps.recruitmentRequisitions",
+    path: "/app/recruitment/requisitions",
+    icon: ClipboardList,
+    permissions: ["recruitment.requisitions.read"],
     iconColor: "gold",
   },
   { key: "analytics", labelKey: "apps.analytics", path: "/app/apps", icon: PieChart, phase: 7 },

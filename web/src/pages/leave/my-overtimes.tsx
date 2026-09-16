@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ActionIcon, Button, Card, Group, Skeleton, Text, Title, Tooltip } from "@mantine/core";
 import { Clock, Undo2 } from "lucide-react";
@@ -24,9 +25,23 @@ export default function MyOvertimesPage() {
 function MyOvertimes() {
   const { t, i18n } = useTranslation(["leave", "common"]);
   const queryClient = useQueryClient();
-  const [adding, setAdding] = useState(false);
+  // Tek "Talep" hub'ından (/app/requests) `?new=1` ile gelince ekleme diyaloğu ilk render'da açık başlar (roadmap #42).
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [adding, setAdding] = useState(() => searchParams.get("new") === "1");
   const [withdrawing, setWithdrawing] = useState<OvertimeRequest | null>(null);
   const query = useQuery({ queryKey: MY_OVERTIMES_KEY, queryFn: getMyOvertimes });
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setSearchParams(
+        (params) => {
+          params.delete("new");
+          return params;
+        },
+        { replace: true },
+      );
+    }
+  }, [searchParams, setSearchParams]);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["leave", "overtimes"] });
 

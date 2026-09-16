@@ -1,0 +1,26 @@
+{
+  "subtitle": "[DE] What would you like to request?",
+  "empty": "[DE] There is no request type available to you right now.",
+  "types": {
+    "leave": {
+      "title": "[DE] Leave request",
+      "description": "[DE] Annual, excuse, sick and other leave types."
+    },
+    "overtime": {
+      "title": "[DE] Overtime request",
+      "description": "[DE] Record the overtime you worked."
+    },
+    "advance": {
+      "title": "[DE] Advance request",
+      "description": "[DE] An advance to be deducted from your salary."
+    },
+    "expense": {
+      "title": "[DE] Expense claim",
+      "description": "[DE] Reimbursement for your business expenses."
+    },
+    "visa": {
+      "title": "[DE] Visa document request",
+      "description": "[DE] Start a visa document process for travel."
+    }
+  }
+}

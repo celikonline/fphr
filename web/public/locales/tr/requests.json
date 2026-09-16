@@ -1,0 +1,26 @@
+{
+  "subtitle": "Ne için talep oluşturmak istiyorsunuz?",
+  "empty": "Şu anda oluşturabileceğiniz bir talep türü yok.",
+  "types": {
+    "leave": {
+      "title": "İzin talebi",
+      "description": "Yıllık, mazeret, hastalık ve diğer izin türleri."
+    },
+    "overtime": {
+      "title": "Fazla mesai talebi",
+      "description": "Yaptığınız fazla mesaiyi kaydedin."
+    },
+    "advance": {
+      "title": "Avans talebi",
+      "description": "Maaşınızdan mahsup edilecek avans talebi."
+    },
+    "expense": {
+      "title": "Harcama talebi",
+      "description": "İş harcamalarınız için geri ödeme talebi."
+    },
+    "visa": {
+      "title": "Vize belgesi talebi",
+      "description": "Seyahat için vize belgesi süreci başlatın."
+    }
+  }
+}

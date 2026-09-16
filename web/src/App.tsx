@@ -33,6 +33,7 @@ import MissingDocumentsReportPage from "@/pages/settings/missing-documents-repor
 import WorkflowInboxPage from "@/pages/inbox";
 import NotificationPreferencesPage from "@/pages/notifications/preferences";
 import ApproveTokenPage from "@/pages/public/approve";
+import RequestsPage from "@/pages/requests";
 import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
 import LeaveCalendarPage from "@/pages/leave/leave-calendar";
@@ -40,6 +41,8 @@ import MyOvertimesPage from "@/pages/leave/my-overtimes";
 import JobPostingsPage from "@/pages/recruitment/job-postings";
 import JobPostingDetailPage from "@/pages/recruitment/job-posting-detail";
 import CandidatesPage from "@/pages/recruitment/candidates";
+import TrustPage from "@/pages/trust";
+import JobRequisitionsPage from "@/pages/recruitment/job-requisitions";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -79,11 +82,12 @@ export default function App() {
 
           <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
           <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
-          <Route path="requests" element={<ComingSoonPage titleKey="nav.requests" phase={1} />} />
+          <Route path="requests" element={<RequestsPage />} />
           <Route path="reports" element={<ComingSoonPage titleKey="nav.reports" phase={4} />} />
           <Route path="support" element={<ComingSoonPage titleKey="nav.support" phase={4} />} />
           <Route path="apps" element={<AppsPage />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="trust" element={<TrustPage />} />
           <Route path="inbox" element={<WorkflowInboxPage />} />
           <Route path="notifications/settings" element={<NotificationPreferencesPage />} />
           <Route path="leave" element={<MyLeavePage />} />
@@ -93,6 +97,7 @@ export default function App() {
           <Route path="recruitment/postings" element={<JobPostingsPage />} />
           <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />
           <Route path="recruitment/candidates" element={<CandidatesPage />} />
+          <Route path="recruitment/requisitions" element={<JobRequisitionsPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

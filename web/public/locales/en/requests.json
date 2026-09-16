@@ -1,0 +1,26 @@
+{
+  "subtitle": "What would you like to request?",
+  "empty": "There is no request type available to you right now.",
+  "types": {
+    "leave": {
+      "title": "Leave request",
+      "description": "Annual, excuse, sick and other leave types."
+    },
+    "overtime": {
+      "title": "Overtime request",
+      "description": "Record the overtime you worked."
+    },
+    "advance": {
+      "title": "Advance request",
+      "description": "An advance to be deducted from your salary."
+    },
+    "expense": {
+      "title": "Expense claim",
+      "description": "Reimbursement for your business expenses."
+    },
+    "visa": {
+      "title": "Visa document request",
+      "description": "Start a visa document process for travel."
+    }
+  }
+}
