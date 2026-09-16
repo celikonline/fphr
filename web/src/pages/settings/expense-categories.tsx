@@ -3,7 +3,23 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Receipt, Plus, Pencil } from "lucide-react";
-import { ActionIcon, Badge, Button, Card, Group, Modal, NumberInput, Stack, Switch, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import {
+  ActionIcon,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  NumberInput,
+  Skeleton,
+  Stack,
+  Switch,
+  Text,
+  TextInput,
+  Title,
+  Tooltip,
+} from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -34,6 +50,8 @@ function ExpenseCategoriesAdmin() {
   const { t, i18n } = useTranslation(["expense", "common"]);
   const canManage = usePermission("expense.categories.manage");
   const queryClient = useQueryClient();
+  // Dar telefon (Faz 7 gün açılışı tur 1 FE md.3): tablo yerine kart listesi.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const [includeInactive, setIncludeInactive] = useState(true);
   const categoriesQuery = useQuery({
@@ -159,6 +177,15 @@ function ExpenseCategoriesAdmin() {
           <Text size="sm" c="red" ta="center" p="lg">
             {t("expense:categoriesAdmin.errors.loadFailed")}
           </Text>
+        ) : isMobile ? (
+          <CategoriesMobileList
+            categories={categories}
+            isLoading={categoriesQuery.isLoading}
+            canManage={canManage}
+            onEdit={setEditTarget}
+            onToggleActive={(category) => toggleActiveMutation.mutate(category)}
+            togglePendingId={toggleActiveMutation.isPending ? toggleActiveMutation.variables?.id : undefined}
+          />
         ) : (
           <DataTable table={table} isLoading={categoriesQuery.isLoading} emptyMessage={t("expense:categoriesAdmin.empty")} />
         )}
@@ -167,6 +194,74 @@ function ExpenseCategoriesAdmin() {
       {dialogOpen && <CategoryDialog onClose={() => setDialogOpen(false)} />}
       {editTarget && <EditCategoryDialog category={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
+  );
+}
+
+/** ≤390px kart listesi (Faz 7 gün açılışı tur 1 FE md.3): ad, varsa üst limit, aktif rozeti, aksiyonlar. */
+function CategoriesMobileList({
+  categories,
+  isLoading,
+  canManage,
+  onEdit,
+  onToggleActive,
+  togglePendingId,
+}: {
+  categories: ExpenseCategory[];
+  isLoading: boolean;
+  canManage: boolean;
+  onEdit: (category: ExpenseCategory) => void;
+  onToggleActive: (category: ExpenseCategory) => void;
+  togglePendingId: string | undefined;
+}) {
+  const { t, i18n } = useTranslation(["expense", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (categories.length === 0) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" p="lg">
+        {t("expense:categoriesAdmin.empty")}
+      </Text>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {categories.map((category) => (
+        <Card key={category.id} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Text size="sm" fw={500} truncate="end">
+              {category.nameKey}
+            </Text>
+            <Badge variant={category.isActive ? "light" : "outline"} color={category.isActive ? "green" : "gray"}>
+              {category.isActive ? t("expense:categoriesAdmin.active") : t("expense:categoriesAdmin.inactive")}
+            </Badge>
+          </Group>
+          {category.maxAmount != null && (
+            <Text size="xs" c="dimmed" mt={4}>
+              {t("expense:categoriesAdmin.columns.maxAmount")}: {formatMoney(category.maxAmount, "TRY", i18n.language)}
+            </Text>
+          )}
+          {canManage && (
+            <Group justify="flex-end" gap="xs" mt="xs">
+              <Button type="button" size="xs" variant="subtle" leftSection={<Pencil size={14} />} onClick={() => onEdit(category)}>
+                {t("common:edit")}
+              </Button>
+              <Button
+                type="button"
+                size="xs"
+                variant="subtle"
+                color={category.isActive ? "red" : "teal"}
+                loading={togglePendingId === category.id}
+                onClick={() => onToggleActive(category)}
+              >
+                {category.isActive ? t("expense:categoriesAdmin.deactivate") : t("expense:categoriesAdmin.reactivate")}
+              </Button>
+            </Group>
+          )}
+        </Card>
+      ))}
+    </Stack>
   );
 }
 

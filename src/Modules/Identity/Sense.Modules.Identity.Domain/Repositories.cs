@@ -26,6 +26,9 @@ public interface IUserRepository
 
     Task<User?> GetByEmailAsync(string email, CancellationToken ct);
 
+    /// <summary>Fesih olayı (G-3-01) gibi çapraz modül tüketicileri için: çalışan kaydına bağlı kullanıcı (varsa).</summary>
+    Task<User?> GetByEmployeeIdAsync(Guid employeeId, CancellationToken ct);
+
     /// <summary>Kiracı filtresi olmadan: giriş ekranında e-posta → kiracı listesi.</summary>
     Task<IReadOnlyList<(User User, Guid TenantId)>> FindAcrossTenantsByEmailAsync(string email, CancellationToken ct);
 

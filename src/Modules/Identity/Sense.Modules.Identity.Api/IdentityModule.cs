@@ -50,6 +50,10 @@ public sealed class IdentityModule : IModule
             (sp, options) => options.AddInterceptors(sp.GetRequiredService<IdentityAuditLogInterceptor>()));
         services.AddModuleHandlers(IdentityDbContext.SchemaName, typeof(IdentityPermissions).Assembly, typeof(IdentityDbContext).Assembly);
 
+        // EmployeeTerminatedHandler (G-3-01) gibi doğrudan enjekte edilen integration event handler'ları için
+        // (Performance/Assets modüllerindeki I*UnitOfWork kalıbıyla aynı; komut handler'ları UnitOfWorkBehaviour'dan geçer).
+        services.AddScoped<IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
+
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

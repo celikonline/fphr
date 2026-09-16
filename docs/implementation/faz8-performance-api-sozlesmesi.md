@@ -3,7 +3,9 @@
 Bu doküman FE ikizinin `performance.service.ts` ve `pages/performance/*` için ihtiyaç duyduğu 14
 ucu, koddaki **mevcut** şekliyle belgeler (§1-6 tur 3'ten, §7-14 tur 4'te eklendi; kod §1-6 için
 değiştirilmedi, §14'ün `performance.review.immutable` hatası tur 4'te eklenen gerçek bir kod
-değişikliğini yansıtıyor — bkz. "Değiştirilemezlik" bölümü). Kaynak:
+değişikliğini yansıtıyor — bkz. "Değiştirilemezlik" bölümü). **Tur 5:** §2/§3/§5'e G-8-19/G-8-20
+hataları eklendi (`performance.review.immutable`, `performance.goal.target_date_outside_cycle`) —
+`GoalDto`/uç şekli değişmedi, yalnızca yeni hata kodları. Kaynak:
 `Sense.Modules.Performance.Api.Controllers.{GoalsController, ReviewCyclesController,
 ReviewFormsController}`, `Sense.Modules.Performance.Application.{Goals,ReviewCycles,ReviewForms}`.
 
@@ -21,14 +23,20 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 - **Yetki:** `performance.my.goals`
 - **Gövde:** `{ title: string, description?: string, targetDate: "yyyy-MM-dd", reviewCycleId?: string (guid) }`
 - **Yanıt:** `200 { id: string (guid) }` (ham `Guid`, sarmalayıcı yok — `Dispatcher.Send` sonucu doğrudan serileşir)
-- Hata: `performance.goal.title_required` (400, boş başlık).
+- Hatalar: `performance.goal.title_required` (400, boş başlık). `reviewCycleId` verilmişse (G-8-20,
+  tur 5): dönem bulunamazsa `performance.cycle.not_found` (404 — karar (a), yeni not-found kodu
+  açılmadı), dönem `Closed` ise `performance.review.immutable` (409), `targetDate` dönemin
+  `[startDate, endDate]` aralığı dışındaysa `performance.goal.target_date_outside_cycle` (400).
 
 ## 3. `POST /api/v1/performance/goals/{id}/progress/me`
 - **Yetki:** `performance.my.goals`
 - **Gövde:** `{ progress: int }` (0-100)
 - **Yanıt:** `204 No Content`
 - Hatalar: `performance.goal.progress_invalid` (400, aralık dışı), `performance.goal.not_updatable`
-  (409, hedef zaten terminal — Completed/Cancelled/Archived), `403 Forbidden` (hedef caller'a ait değilse).
+  (409, hedef zaten terminal — Completed/Cancelled/Archived), `403 Forbidden` (hedef caller'a ait
+  değilse — **öz-servis kontrol sırası (karar b): önce 403, sonra aşağıdaki 409**),
+  `performance.review.immutable` (409, hedef bir `reviewCycleId`'ye bağlıysa ve o dönem `Closed` ise,
+  G-8-19, tur 5).
 
 ## 4. `GET /api/v1/performance/goals/team`
 - **Yetki:** `performance.team.goals`
@@ -40,7 +48,10 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 ## 5. `POST /api/v1/performance/goals/{id}/cancel`
 - **Yetki:** `performance.goals.manage`
 - **Yanıt:** `204 No Content`
-- Hata: `performance.goal.not_cancellable` (409, hedef zaten Completed/Cancelled/Archived).
+- Hatalar: `performance.goal.not_cancellable` (409, hedef zaten Completed/Cancelled/Archived),
+  `performance.review.immutable` (409, hedef bir `reviewCycleId`'ye bağlıysa ve o dönem `Closed` ise,
+  G-8-19, tur 5). Karar (c): çalışanın **kendi** hedefini iptal ettiği bir uç yok — bu uç yalnız
+  `performance.goals.manage` ile, iptal ilk sürümde yönetici/İK işidir (kasıtlı, bkz. §14 sonu).
 - Not: `team-goals.tsx`'teki iptal aksiyonu bu ucu çağırır — `team/goals` GET'i `performance.team.goals`
   ile korunsa da iptal komutu ayrı yetki (`performance.goals.manage`) ister; FE iki yetkiyi de
   (`RequiresPermission` middleware zaten 403 döner) tek ekranda karışık kullanabilir, buton görünürlüğünü
@@ -164,10 +175,10 @@ bu durumu "düzenlenemez, salt-okunur" göstermesi yeterli, ayrı bir aksiyon su
 | Uç | İzin | Bilinen hata kodları |
 |---|---|---|
 | `GET goals/me` | `performance.my.goals` | — |
-| `POST goals/me` | `performance.my.goals` | `performance.goal.title_required` |
-| `POST goals/{id}/progress/me` | `performance.my.goals` | `performance.goal.progress_invalid`, `performance.goal.not_updatable`, `403 Forbidden` (başkasının hedefi) |
+| `POST goals/me` | `performance.my.goals` | `performance.goal.title_required`, `performance.cycle.not_found`, `performance.review.immutable`, `performance.goal.target_date_outside_cycle` |
+| `POST goals/{id}/progress/me` | `performance.my.goals` | `performance.goal.progress_invalid`, `performance.goal.not_updatable`, `403 Forbidden` (başkasının hedefi — kontrol sırası: önce 403), `performance.review.immutable` (dönem kapalı) |
 | `GET goals/team` | `performance.team.goals` | — |
-| `POST goals/{id}/cancel` | `performance.goals.manage` | `performance.goal.not_cancellable` |
+| `POST goals/{id}/cancel` | `performance.goals.manage` | `performance.goal.not_cancellable`, `performance.review.immutable` (dönem kapalı) |
 | `GET review-cycles/me` | `performance.my.reviews` | — |
 | `GET review-cycles` | `performance.reviews.view` | — |
 | `GET review-cycles/{id}` | `performance.reviews.view` | `performance.cycle.not_found` |
@@ -199,11 +210,16 @@ Diğer (bu turda FE'nin kullanmadığı ama modülde var olan) uçlar: `GET/POST
   için. Idempotent: outbox yeniden teslimatında ikinci `Archive()` çağrısı no-op'tur.
 
 ## Bilinen açık işler / sınır dışı
-- **Migration henüz yok** — `status/faz-08/MIGRATION-ISTEGI.md` (ADR-0005, üst karar ADR-0011: main'de
-  migration'sız EF modelleri "ileri düzelt"); migration girmeden bu uçlar gerçek bir veritabanına karşı
-  500/"no such table" verir, yalnız kod + mimari testler yeşildir. Tur 4'te `PerformanceDbContext`
-  konfigürasyonları (tablo/kolon/index) koda karşı yeniden teyit edildi, şema **değişmedi**.
+- **(Tur 5 itibarıyla) `InitialPerformance` migration'ı main'de** (`3211e05`) — modül artık gerçek
+  tablolu; önceki turların "migration henüz yok" notu geçerliliğini yitirdi.
 - **360 derece geri bildirim, 1:1 notu, yetkinlik matrisi, eğitim, anket/eNPS, duyuru/takdir:** bu R0
   iskeletinin kapsamı dışında — K-5 (Survey/eNPS modül sınırı) hâlâ PO kararı bekliyor.
 - `employeeName` yalnızca `goals/team`'de doldurulur; `goals/me` ve `goals/employee/{id}` yanıtlarında
   her zaman `null`'dır (FE bu alanlarda kendi employeeId/isim bağlamını zaten bilir).
+- **Karar (c) — çalışan kendi hedefini iptal edemez:** ilk sürümde kasıtlı; iptal yalnız yönetici/İK'da
+  (`performance.goals.manage`, §5). Bir `CancelMyGoalCommand`/uç **yok**, FE eklemeye çalışmamalı.
+- **(Tur 5) G-8-19/G-8-20:** dönem (`ReviewCycle`) kapalıyken o döneme bağlı (`reviewCycleId` dolu)
+  hiçbir hedefte ilerleme güncellenemez/iptal edilemez/yeni hedef oluşturulamaz
+  (`performance.review.immutable`, 409); oluşturmada ayrıca `targetDate` dönemin `[startDate, endDate]`
+  aralığı dışında olamaz (`performance.goal.target_date_outside_cycle`, 400). `reviewCycleId` boşsa
+  (dönemsiz hedef) davranış değişmedi. Bkz. §2, §3, §5 ve `GoalCommands.cs`'teki `GoalReviewCycleGuard`.

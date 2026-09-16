@@ -69,6 +69,18 @@ public static class DeviceLogCsvParser
 
         var delimiter = DetectDelimiter(lines[0]);
 
+        // G-6-15: the first header column names the employee code; "nationalId" is accepted as an alias for
+        // "employeeCode" (case-insensitive) - both mean the same TC kimlik no value in that column. Anything else
+        // is the same "missing employee code" contract error, reported on the header line itself.
+        var headerColumns = lines[0].TrimEnd('\r').Split(delimiter);
+        var codeColumnHeader = headerColumns.Length > 0 ? headerColumns[0].Trim() : string.Empty;
+        if (!string.Equals(codeColumnHeader, "employeeCode", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(codeColumnHeader, "nationalId", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add(new DeviceLogParseError(1, DeviceLogErrorCodes.MissingEmployeeCode, codeColumnHeader));
+            return new DeviceLogParseResult(rows, errors);
+        }
+
         // Line 1 is always the header (TALIMAT: "başlık satırı"); data starts at line 2.
         for (var i = 1; i < lines.Length; i++)
         {

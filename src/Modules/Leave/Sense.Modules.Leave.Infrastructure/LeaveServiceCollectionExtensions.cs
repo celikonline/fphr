@@ -53,6 +53,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IOvertimeConversionRepository, OvertimeConversionRepository>();
         services.AddScoped<IAbsenceRecordRepository, AbsenceRecordRepository>();
         services.AddScoped<IAbsenceReader, AbsenceReader>();
+        services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         return services;
     }
 

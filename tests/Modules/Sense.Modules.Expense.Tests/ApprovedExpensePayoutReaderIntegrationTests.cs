@@ -16,8 +16,10 @@ namespace Sense.Modules.Expense.Tests;
 
 /// <summary>
 /// Integration tests (real PostgreSQL via Testcontainers) for <see cref="ApprovedExpensePayoutReader"/>, the
-/// Payroll bridge (S-13, faz-07 tur 1 madde 2): only Approved-and-not-yet-Paid claims decided in the requested
-/// month count toward <see cref="ExpensePayoutSummary.ApprovedExpenseTotal"/>, and only Paid advances count toward
+/// Payroll bridge (S-13, faz-07 tur 1 madde 2 + tur 2 madde 5): only Approved-and-not-yet-Paid claims decided in the
+/// requested month count, split per *item* by <c>ReceiptFileId</c> - receipted items toward
+/// <see cref="ExpensePayoutSummary.ApprovedExpenseTotal"/>, receipt-less (fişsiz) items toward
+/// <see cref="ExpensePayoutSummary.UndocumentedExpenseTotal"/> - and only Paid advances count toward
 /// <see cref="ExpensePayoutSummary.OpenAdvanceBalance"/> (month-agnostic snapshot).
 /// </summary>
 [Collection("PostgreSQL")]
@@ -49,9 +51,11 @@ public sealed class ApprovedExpensePayoutReaderIntegrationTests : TestFixture
         {
             var db = writeScope.ServiceProvider.GetRequiredService<ExpenseDbContext>();
 
-            // Approved in September 2026 -> counted.
+            // Approved in September 2026 -> counted: one receipted item (ApprovedExpenseTotal) + one fişsiz item
+            // (UndocumentedExpenseTotal, S-13 eki - faz-07 tur 2 madde 5).
             var approvedThisMonth = ExpenseClaim.Create(tenantId, employeeId, "Eylul masrafi");
-            approvedThisMonth.AddItem(categoryId, 300m, receiptDate, null, "TRY", null, null);
+            approvedThisMonth.AddItem(categoryId, 300m, receiptDate, null, "TRY", "receipt-key-1", null);
+            approvedThisMonth.AddItem(categoryId, 120m, receiptDate, null, "TRY", null, "Fişsiz kalem");
             approvedThisMonth.Submit();
             var approvalId1 = Guid.NewGuid();
             approvedThisMonth.AttachApproval(approvalId1, DateTime.UtcNow);
@@ -79,7 +83,7 @@ public sealed class ApprovedExpensePayoutReaderIntegrationTests : TestFixture
 
             // Other employee's claim -> excluded from this employee's total, but present when queried for both.
             var otherEmployeeClaim = ExpenseClaim.Create(tenantId, otherEmployeeId, null);
-            otherEmployeeClaim.AddItem(categoryId, 150m, receiptDate, null, "TRY", null, null);
+            otherEmployeeClaim.AddItem(categoryId, 150m, receiptDate, null, "TRY", "receipt-key-2", null);
             otherEmployeeClaim.Submit();
             var approvalId4 = Guid.NewGuid();
             otherEmployeeClaim.AttachApproval(approvalId4, DateTime.UtcNow);
@@ -110,10 +114,12 @@ public sealed class ApprovedExpensePayoutReaderIntegrationTests : TestFixture
 
             var mine = result.Single(r => r.EmployeeId == employeeId);
             mine.ApprovedExpenseTotal.ShouldBe(300m);
+            mine.UndocumentedExpenseTotal.ShouldBe(120m);
             mine.OpenAdvanceBalance.ShouldBe(1000m);
 
             var others = result.Single(r => r.EmployeeId == otherEmployeeId);
             others.ApprovedExpenseTotal.ShouldBe(150m);
+            others.UndocumentedExpenseTotal.ShouldBe(0m);
             others.OpenAdvanceBalance.ShouldBe(0m);
         }
     }

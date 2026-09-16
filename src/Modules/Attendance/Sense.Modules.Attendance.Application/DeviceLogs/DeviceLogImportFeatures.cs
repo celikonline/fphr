@@ -66,16 +66,19 @@ public sealed class ImportDeviceLogsHandler(
             plans.Add(new Plan(row.Line, employeeId.Value, DateOnly.FromDateTime(row.Timestamp), row.Timestamp, row.Direction));
         }
 
+        var overnightDates = await ReassignNightShiftPunchesAsync(plans, days, cancellationToken).ConfigureAwait(false);
+
         var imported = 0;
         var anyChange = false;
         foreach (var group in plans.GroupBy(p => (p.EmployeeId, p.Date)))
         {
+            var isOvernight = overnightDates.Contains(group.Key);
             var ins = group.Where(p => p.Direction == DeviceLogDirection.In).ToList();
             var outs = group.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
             var checkIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : (TimeOnly?)null;
             var checkOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : (TimeOnly?)null;
 
-            if (checkIn is not null && checkOut is not null && checkOut <= checkIn)
+            if (!isOvernight && checkIn is not null && checkOut is not null && checkOut <= checkIn)
             {
                 foreach (var plan in group)
                 {
@@ -89,11 +92,11 @@ public sealed class ImportDeviceLogsHandler(
             var existing = await days.FindByEmployeeAndDateAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
-                existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device);
+                existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight);
             }
             else
             {
-                var day = AttendanceDay.Record(tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device);
+                var day = AttendanceDay.Record(tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight);
                 days.Add(day);
             }
 
@@ -107,5 +110,63 @@ public sealed class ImportDeviceLogsHandler(
         }
 
         return new DeviceLogImportResultDto(imported, errors.Count, errors.OrderBy(e => e.Line).ToList());
+    }
+
+    /// <summary>
+    /// Night shift day assignment (G-6-14, 4857 md.69): a morning "out" punch (before 12:00) that has no earlier
+    /// "in" punch the same day is attributed to the previous calendar day when that previous day has an unmatched
+    /// afternoon/evening "in" (12:00 or later, no later "out" already pairs with it that day) - either another row
+    /// in this same file, or the previous day's existing <see cref="AttendanceDay"/> record (check-in set, check-out
+    /// still empty). Every other case is left on its own day (today's behavior); no query against the planned shift
+    /// is made in this first version. Mutates the plans in place (moves the "out" to the previous date) and returns
+    /// the (employee, date) pairs that must be treated as overnight when the day is recorded.
+    /// </summary>
+    private static async Task<HashSet<(Guid EmployeeId, DateOnly Date)>> ReassignNightShiftPunchesAsync(
+        List<Plan> plans, IAttendanceDayRepository days, CancellationToken cancellationToken)
+    {
+        var noon = new TimeOnly(12, 0);
+        var overnightDates = new HashSet<(Guid EmployeeId, DateOnly Date)>();
+
+        for (var i = 0; i < plans.Count; i++)
+        {
+            var candidate = plans[i];
+            if (candidate.Direction != DeviceLogDirection.Out || TimeOnly.FromDateTime(candidate.Timestamp) >= noon)
+            {
+                continue;
+            }
+
+            var sameDayEarlierIn = plans.Any(p =>
+                p.EmployeeId == candidate.EmployeeId && p.Date == candidate.Date &&
+                p.Direction == DeviceLogDirection.In && p.Timestamp < candidate.Timestamp);
+            if (sameDayEarlierIn)
+            {
+                continue;
+            }
+
+            var previousDate = candidate.Date.AddDays(-1);
+            var unmatchedPreviousIn = plans.Any(inRow =>
+                inRow.EmployeeId == candidate.EmployeeId && inRow.Date == previousDate &&
+                inRow.Direction == DeviceLogDirection.In && TimeOnly.FromDateTime(inRow.Timestamp) >= noon &&
+                !plans.Any(laterOut =>
+                    laterOut.EmployeeId == inRow.EmployeeId && laterOut.Date == inRow.Date &&
+                    laterOut.Direction == DeviceLogDirection.Out && laterOut.Timestamp > inRow.Timestamp));
+
+            var matchesExistingRecord = false;
+            if (!unmatchedPreviousIn)
+            {
+                var existingPrevious = await days.FindByEmployeeAndDateAsync(candidate.EmployeeId, previousDate, cancellationToken).ConfigureAwait(false);
+                matchesExistingRecord = existingPrevious is { CheckOut: null, CheckIn: not null } && existingPrevious.CheckIn.Value >= noon;
+            }
+
+            if (!unmatchedPreviousIn && !matchesExistingRecord)
+            {
+                continue;
+            }
+
+            plans[i] = candidate with { Date = previousDate };
+            overnightDates.Add((candidate.EmployeeId, previousDate));
+        }
+
+        return overnightDates;
     }
 }

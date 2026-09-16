@@ -44,6 +44,42 @@ export interface ReviewCycle {
   status: ReviewCycleStatus;
 }
 
+/** Mirrors `ReviewFormStatus`. */
+export type ReviewFormStatus = "draft" | "published";
+
+/** `ReviewFormQuestionDto`. */
+export interface ReviewFormQuestion {
+  id: string;
+  text: string;
+  /** int, 0-100; sorular toplamı 100 olmalı. */
+  weight: number;
+  order: number;
+}
+
+/** `ReviewFormDto`. */
+export interface ReviewForm {
+  id: string;
+  reviewCycleId: string;
+  title: string;
+  status: ReviewFormStatus;
+  /** Her zaman `order` alanına göre sıralı döner. */
+  questions: ReviewFormQuestion[];
+}
+
+/** `CreateReviewCycleRequest`. */
+export interface CreateReviewCycleInput {
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** `CreateReviewFormRequest`. */
+export interface CreateReviewFormInput {
+  reviewCycleId: string;
+  title: string;
+  questions: { text: string; weight: number }[];
+}
+
 /** `CreateMyGoalRequest`. */
 export interface CreateMyGoalInput {
   title: string;
@@ -81,4 +117,47 @@ export async function cancelGoal(id: string): Promise<void> {
 export async function getMyReviewCycles(): Promise<ReviewCycle[]> {
   const { data } = await apiClient.get<ReviewCycle[]>(`${PERFORMANCE_BASE}/review-cycles/me`);
   return data;
+}
+
+/** performance.reviews.view (İK/yönetici dönem yönetimi - tüm dönemler, Draft dahil). */
+export async function listReviewCycles(status?: ReviewCycleStatus): Promise<ReviewCycle[]> {
+  const { data } = await apiClient.get<ReviewCycle[]>(`${PERFORMANCE_BASE}/review-cycles`, {
+    params: status ? { status } : undefined,
+  });
+  return data;
+}
+
+/** performance.reviews.manage. Yeni dönem her zaman Draft durumunda oluşur. */
+export async function createReviewCycle(input: CreateReviewCycleInput): Promise<string> {
+  const { data } = await apiClient.post<{ id: string }>(`${PERFORMANCE_BASE}/review-cycles`, input);
+  return data.id;
+}
+
+/** performance.reviews.manage. Draft -> Active. */
+export async function activateReviewCycle(id: string): Promise<void> {
+  await apiClient.post(`${PERFORMANCE_BASE}/review-cycles/${id}/activate`);
+}
+
+/** performance.reviews.approve (.manage değil - kapatma daha yüksek yetki ister). Active -> Closed, terminal. */
+export async function closeReviewCycle(id: string): Promise<void> {
+  await apiClient.post(`${PERFORMANCE_BASE}/review-cycles/${id}/close`);
+}
+
+/** performance.reviews.view. Sorular `order` alanına göre sıralı döner. */
+export async function listReviewForms(reviewCycleId: string): Promise<ReviewForm[]> {
+  const { data } = await apiClient.get<ReviewForm[]>(`${PERFORMANCE_BASE}/review-forms`, {
+    params: { reviewCycleId },
+  });
+  return data;
+}
+
+/** performance.reviews.manage. Yeni form her zaman Draft, sorularıyla birlikte tek istekte oluşur. */
+export async function createReviewForm(input: CreateReviewFormInput): Promise<string> {
+  const { data } = await apiClient.post<{ id: string }>(`${PERFORMANCE_BASE}/review-forms`, input);
+  return data.id;
+}
+
+/** performance.reviews.manage. Draft -> Published, terminal (yeni soru için yeni form gerekir). */
+export async function publishReviewForm(id: string): Promise<void> {
+  await apiClient.post(`${PERFORMANCE_BASE}/review-forms/${id}/publish`);
 }

@@ -131,6 +131,32 @@ public sealed class DeviceLogCsvParserTests
         result.Errors.ShouldBeEmpty();
     }
 
+    // G-6-15: "nationalId" is an accepted alias for "employeeCode" in the header's first column.
+    [Fact]
+    public void Parse_NationalIdHeaderAlias_IsAccepted()
+    {
+        const string csv = "nationalId;timestamp;direction\n10000000146;2026-09-16T08:03:00;in\n";
+
+        var result = DeviceLogCsvParser.Parse(csv);
+
+        result.Errors.ShouldBeEmpty();
+        result.Rows.ShouldHaveSingleItem();
+        result.Rows[0].EmployeeCode.ShouldBe("10000000146");
+    }
+
+    [Fact]
+    public void Parse_UnrecognizedCodeColumnHeader_ReportsMissingEmployeeCodeOnHeaderLine()
+    {
+        const string csv = "code;timestamp;direction\n10000000146;2026-09-16T08:03:00;in\n";
+
+        var result = DeviceLogCsvParser.Parse(csv);
+
+        result.Rows.ShouldBeEmpty();
+        result.Errors.ShouldHaveSingleItem();
+        result.Errors[0].Line.ShouldBe(1);
+        result.Errors[0].Code.ShouldBe(DeviceLogErrorCodes.MissingEmployeeCode);
+    }
+
     [Fact]
     public void Parse_MixOfValidAndInvalidRows_ReportsEachIndependently()
     {

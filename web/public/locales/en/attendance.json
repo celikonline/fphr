@@ -138,10 +138,40 @@
       "leaveTypeRequired": "Select a leave type."
     }
   },
+  "shiftLock": {
+    "scheduledLockDate": "Scheduled lock date"
+  },
+  "myAvailability": {
+    "title": "My Availability",
+    "addButton": "Report unavailability",
+    "empty": "You have no availability entries for this month.",
+    "allDay": "All day",
+    "kind": {
+      "unavailable": "I don't want to work",
+      "weeklyRestRequest": "Weekly rest request"
+    },
+    "cancel": "Cancel",
+    "cancelTitle": "Cancel availability entry",
+    "cancelDescription": "Are you sure you want to cancel the entry for {{date}}?",
+    "cancelled": "Availability entry cancelled.",
+    "dialogTitle": "Report unavailability",
+    "dateLabel": "Date",
+    "dateRequired": "Select a date.",
+    "datePast": "You cannot select a past date.",
+    "kindLabel": "Type",
+    "startLabel": "Start time",
+    "endLabel": "End time",
+    "timeRequired": "Enter the start and end time.",
+    "endBeforeStart": "End time must be after the start time.",
+    "noteLabel": "Note",
+    "noteTooLong": "The note can be at most 500 characters.",
+    "submit": "Submit",
+    "submitted": "Availability entry created."
+  },
   "deviceLogImport": {
     "title": "Import PDKS device log",
     "subtitle": "Upload the CSV exported from a turnstile/card/fingerprint device; check-in/check-out records are applied to the timesheet.",
-    "formatHint": "First row is the header: employeeCode;timestamp;direction;deviceId — employeeCode is the employee's national ID number; semicolon or comma separated, UTF-8.",
+    "formatHint": "First row is the header: employeeCode;timestamp;direction;deviceId — the first column header may be \"employeeCode\" or \"nationalId\", its value is the employee's national ID number; semicolon or comma separated, UTF-8.",
     "downloadSample": "Download sample CSV",
     "dropzoneTitle": "Drop the CSV file here, or click to choose",
     "dropzoneHint": "Up to 5 MB",

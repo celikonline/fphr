@@ -1,9 +1,10 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileStack, Plus } from "lucide-react";
-import { Badge, Button, Card, Group, Modal, NumberInput, Select, Stack, Switch, Text, TextInput, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Modal, NumberInput, Select, Skeleton, Stack, Switch, Text, TextInput, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -48,6 +49,8 @@ function DocumentTypesAdmin() {
   const { t } = useTranslation(["documents", "common"]);
   const canManage = usePermission("documents.document_types.manage");
   const queryClient = useQueryClient();
+  // Narrow phones (Faz 4 gün açılışı tur 1 FE md.2): card list instead of a horizontally-scrolled table.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const [includeInactive, setIncludeInactive] = useState(true);
   const [stageFilter, setStageFilter] = useState<DocumentTypeStage | typeof NONE>(NONE);
@@ -203,6 +206,14 @@ function DocumentTypesAdmin() {
           <Text size="sm" c="red" ta="center" p="lg">
             {t("documents:documentTypes.errors.loadFailed")}
           </Text>
+        ) : isMobile ? (
+          <DocumentTypesMobileList
+            types={types}
+            isLoading={typesQuery.isLoading}
+            canManage={canManage}
+            onEdit={setDialogTarget}
+            toggleActiveMutation={toggleActiveMutation}
+          />
         ) : (
           <DataTable table={table} isLoading={typesQuery.isLoading} emptyMessage={t("documents:documentTypes.empty")} />
         )}
@@ -210,6 +221,75 @@ function DocumentTypesAdmin() {
 
       {dialogTarget && <TypeDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />}
     </div>
+  );
+}
+
+/** ≤390px card list mirroring the desktop table's columns (Faz 4 gün açılışı tur 1 FE md.2). */
+function DocumentTypesMobileList({
+  types,
+  isLoading,
+  canManage,
+  onEdit,
+  toggleActiveMutation,
+}: {
+  types: DocumentType[];
+  isLoading: boolean;
+  canManage: boolean;
+  onEdit: (type: DocumentType) => void;
+  toggleActiveMutation: UseMutationResult<DocumentType, Error, DocumentType>;
+}) {
+  const { t } = useTranslation(["documents", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (types.length === 0) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" p="lg">
+        {t("documents:documentTypes.empty")}
+      </Text>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {types.map((type) => (
+        <Card key={type.id} withBorder padding="md">
+          <Stack gap={4}>
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Text size="sm" fw={500}>
+                {type.name}
+              </Text>
+              <Badge variant={type.isActive ? "light" : "outline"} color={type.isActive ? "green" : "gray"}>
+                {type.isActive ? t("documents:documentTypes.active") : t("documents:documentTypes.inactive")}
+              </Badge>
+            </Group>
+            <Text size="xs" c="dimmed" ff="monospace">
+              {type.code}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t(`documents:enum.stage.${type.stage}`)}
+            </Text>
+            {canManage && (
+              <Group gap="xs" justify="flex-end" wrap="wrap" mt={4}>
+                <Button type="button" size="xs" variant="subtle" onClick={() => onEdit(type)}>
+                  {t("common:edit")}
+                </Button>
+                <Button
+                  type="button"
+                  size="xs"
+                  variant="subtle"
+                  color={type.isActive ? "red" : "teal"}
+                  loading={toggleActiveMutation.isPending && toggleActiveMutation.variables?.id === type.id}
+                  onClick={() => toggleActiveMutation.mutate(type)}
+                >
+                  {type.isActive ? t("documents:documentTypes.deactivate") : t("documents:documentTypes.reactivate")}
+                </Button>
+              </Group>
+            )}
+          </Stack>
+        </Card>
+      ))}
+    </Stack>
   );
 }
 

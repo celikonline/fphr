@@ -103,6 +103,41 @@ export default function UsersRolesPage() {
 
 type TFn = (key: string, opts?: Record<string, unknown>) => string;
 
+/** Aksiyon menüsü — masaüstü tablo satırı ve mobil kart listesi arasında paylaşılır (aynı koşullar/aynı öğeler). */
+function UserActionsMenu({
+  user,
+  t,
+  onEditAccessType,
+  onEditRoles,
+  onToggleStatus,
+  onResetMfa,
+}: {
+  user: UserListItem;
+  t: TFn;
+  onEditAccessType: () => void;
+  onEditRoles: () => void;
+  onToggleStatus: () => void;
+  onResetMfa: () => void;
+}) {
+  return (
+    <Menu position="bottom-end" withinPortal>
+      <Menu.Target>
+        <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("common:actions")}>
+          <MoreHorizontal className="h-4 w-4" />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item onClick={onEditAccessType}>{t("users:editAccessType")}</Menu.Item>
+        <Menu.Item onClick={onEditRoles}>{t("users:editRoles")}</Menu.Item>
+        <Menu.Item onClick={onToggleStatus}>
+          {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
+        </Menu.Item>
+        {user.mfaEnabled && <Menu.Item onClick={onResetMfa}>{t("users:mfaReset.action")}</Menu.Item>}
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
+
 function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale: string }) {
   const queryClient = useQueryClient();
 
@@ -407,23 +442,14 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
               const user = row.original;
               return (
                 <div onClick={(e) => e.stopPropagation()}>
-                  <Menu position="bottom-end" withinPortal>
-                    <Menu.Target>
-                      <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("common:actions")}>
-                        <MoreHorizontal className="h-4 w-4" />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      <Menu.Item onClick={() => setAccessTypeDialogUser(user)}>{t("users:editAccessType")}</Menu.Item>
-                      <Menu.Item onClick={() => setRolesDialogUser(user)}>{t("users:editRoles")}</Menu.Item>
-                      <Menu.Item onClick={() => setStatusDialogUser(user)}>
-                        {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
-                      </Menu.Item>
-                      {user.mfaEnabled && (
-                        <Menu.Item onClick={() => setMfaResetDialogUser(user)}>{t("users:mfaReset.action")}</Menu.Item>
-                      )}
-                    </Menu.Dropdown>
-                  </Menu>
+                  <UserActionsMenu
+                    user={user}
+                    t={t}
+                    onEditAccessType={() => setAccessTypeDialogUser(user)}
+                    onEditRoles={() => setRolesDialogUser(user)}
+                    onToggleStatus={() => setStatusDialogUser(user)}
+                    onResetMfa={() => setMfaResetDialogUser(user)}
+                  />
                 </div>
               );
             },
@@ -501,12 +527,88 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       )}
 
       <Card withBorder padding={0}>
-        <DataTable
-          table={table}
-          isLoading={isLoading}
-          emptyMessage={t("users:empty")}
-          isRowSelected={(user) => selected.has(user.id)}
-        />
+        {/* Geniş ekran: tablo */}
+        <div className="hidden md:block">
+          <DataTable
+            table={table}
+            isLoading={isLoading}
+            emptyMessage={t("users:empty")}
+            isRowSelected={(user) => selected.has(user.id)}
+          />
+        </div>
+
+        {/* Dar ekran (≤390px dahil): kart listesi */}
+        <div className="md:hidden">
+          {isLoading ? (
+            <Stack gap="sm" p="sm">
+              <Skeleton h={72} />
+              <Skeleton h={72} />
+              <Skeleton h={72} />
+            </Stack>
+          ) : pageItems.length === 0 ? (
+            <Text size="sm" c="dimmed" ta="center" p="lg">
+              {t("users:empty")}
+            </Text>
+          ) : (
+            <Stack gap="sm" p="sm">
+              {pageItems.map((user) => (
+                <Card key={user.id} withBorder padding="sm" radius="md">
+                  <Group justify="space-between" wrap="nowrap" align="flex-start">
+                    <Stack gap={2} className="min-w-0">
+                      <Text fw={500} size="sm" truncate>
+                        {user.firstName} {user.lastName}
+                      </Text>
+                      <Text size="xs" c="dimmed" truncate>
+                        {user.email}
+                      </Text>
+                    </Stack>
+                    {canManage && (
+                      <UserActionsMenu
+                        user={user}
+                        t={t}
+                        onEditAccessType={() => setAccessTypeDialogUser(user)}
+                        onEditRoles={() => setRolesDialogUser(user)}
+                        onToggleStatus={() => setStatusDialogUser(user)}
+                        onResetMfa={() => setMfaResetDialogUser(user)}
+                      />
+                    )}
+                  </Group>
+                  <Group gap={4} mt="xs" wrap="wrap">
+                    <Badge {...STATUS_BADGE[user.status]}>{t(`users:status.${user.status}`)}</Badge>
+                    {user.roles.slice(0, 2).map((r) => (
+                      <Badge key={r.id} variant="outline" color="gray">
+                        {r.name ?? r.code}
+                      </Badge>
+                    ))}
+                    {user.roles.length > 2 && (
+                      <Badge variant="outline" color="gray">
+                        +{user.roles.length - 2}
+                      </Badge>
+                    )}
+                    {user.mfaEnabled ? (
+                      <Badge
+                        variant="light"
+                        color="green"
+                        leftSection={<ShieldCheck className="h-3 w-3" />}
+                      >
+                        {t("users:mfa")}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        color="gray"
+                        leftSection={<ShieldOff className="h-3 w-3" />}
+                      >
+                        {t("users:mfa")}
+                      </Badge>
+                    )}
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </div>
+
         {!isLoading && (
           <PaginationFooter
             result={pageResult}

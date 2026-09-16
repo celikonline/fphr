@@ -297,6 +297,8 @@
   <data name="organization.holidays.view" xml:space="preserve"><value>Resmi tatilleri görüntüleme</value></data>
   <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Birim onay süreçlerini yönetme</value></data>
   <data name="organization.unit.not_found" xml:space="preserve"><value>Birim bulunamadı.</value></data>
+  <data name="organization.unit.has_active_children" xml:space="preserve"><value>Alt birimleri aktif olan birim pasifleştirilemez.</value></data>
+  <data name="organization.unit.has_active_employees" xml:space="preserve"><value>Bu birimde aktif çalışan bulunduğu için birim pasifleştirilemez.</value></data>
   <data name="organization.approval_assignment.org_unit_required" xml:space="preserve"><value>Birim zorunludur.</value></data>
   <data name="organization.approval_assignment.request_type_required" xml:space="preserve"><value>Talep türü zorunludur.</value></data>
   <data name="organization.approval_assignment.request_type_invalid" xml:space="preserve"><value>Talep türü harfle başlayan, yalnız harf ve rakam içeren en fazla 50 karakterlik bir kod olmalıdır.</value></data>
@@ -332,6 +334,7 @@
   <data name="identity.invitation.employee_not_found" xml:space="preserve"><value>Davet edilecek çalışan bulunamadı.</value></data>
   <data name="identity.invitation.email_in_use" xml:space="preserve"><value>Bu e-posta adresi başka bir çalışana bağlı bir kullanıcıya ait.</value></data>
   <data name="identity.invitation.user_disabled" xml:space="preserve"><value>Çalışanın kullanıcı hesabı pasif; önce hesabı etkinleştirin.</value></data>
+  <data name="identity.invitation.privacy_notice_outdated" xml:space="preserve"><value>Aydınlatma metni güncellendi, lütfen sayfayı yenileyip yeniden onaylayın.</value></data>
   <data name="impersonation.not_found" xml:space="preserve"><value>Destek erişimi talebi bulunamadı.</value></data>
   <data name="impersonation.not_pending" xml:space="preserve"><value>Talep onay beklemiyor.</value></data>
   <data name="impersonation.not_approved" xml:space="preserve"><value>Talep onaylanmamış.</value></data>
@@ -674,6 +677,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.absence.reversal_reason_required" xml:space="preserve"><value>Ters kayıt gerekçesi zorunludur (en fazla 500 karakter).</value></data>
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>Bu devamsızlık kaydı zaten ters çevrilmiş.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>Bir ters kayıt tekrar ters çevrilemez.</value></data>
+  <data name="leave.absence.conflicts_with_leave" xml:space="preserve"><value>Bu tarihte onaylı izin bulunduğu için devamsızlık girilemez.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>Çalışma takvimlerini görüntüleme</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Çalışma takvimlerini yönetme</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Çalışma takvimi atama</value></data>
@@ -971,5 +975,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.goal.not_updatable" xml:space="preserve"><value>Tamamlanmış, iptal edilmiş veya arşivlenmiş bir hedefin ilerlemesi güncellenemez.</value></data>
   <data name="performance.goal.not_cancellable" xml:space="preserve"><value>Tamamlanmış, iptal edilmiş veya arşivlenmiş bir hedef iptal edilemez.</value></data>
   <data name="performance.goal.employee_invalid" xml:space="preserve"><value>Seçilen çalışan bulunamadı veya pasif.</value></data>
+  <data name="performance.goal.target_date_outside_cycle" xml:space="preserve"><value>Hedef tarihi değerlendirme dönemi aralığında olmalıdır.</value></data>
   <data name="performance.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
 </root>

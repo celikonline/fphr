@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "@mantine/hooks";
 import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { Inbox as InboxIcon } from "lucide-react";
 import { ApprovalCard } from "@/components/ui/approval-card";
@@ -28,6 +29,9 @@ function WorkflowInbox() {
   const { t } = useTranslation(["workflow", "common"]);
   const canOverride = usePermission("workflow.request.override");
   const queryClient = useQueryClient();
+  // ≤390px: decide/override buttons need a ≥40px touch target (Faz 1 tur 1 FE md.4).
+  const isMobile = useMediaQuery("(max-width: 390px)");
+  const touchButtonStyle = isMobile ? { minHeight: 40 } : undefined;
 
   const inboxQuery = useQuery({ queryKey: INBOX_QUERY_KEY, queryFn: listInbox });
   const items = inboxQuery.data ?? [];
@@ -85,13 +89,19 @@ function WorkflowInbox() {
               ]}
               actions={
                 <>
-                  <Button type="button" size="xs" onClick={() => setDecideTarget({ task, override: false })}>
+                  <Button
+                    type="button"
+                    size={isMobile ? "sm" : "xs"}
+                    style={touchButtonStyle}
+                    onClick={() => setDecideTarget({ task, override: false })}
+                  >
                     {t("workflow:inbox.decide")}
                   </Button>
                   {canOverride && (
                     <Button
                       type="button"
-                      size="xs"
+                      size={isMobile ? "sm" : "xs"}
+                      style={touchButtonStyle}
                       variant="default"
                       onClick={() => setDecideTarget({ task, override: true })}
                     >
@@ -127,6 +137,8 @@ interface DecideDialogProps {
 function DecideDialog({ task, override, onClose, onDecided }: DecideDialogProps) {
   const { t } = useTranslation(["workflow", "common"]);
   const [comment, setComment] = useState("");
+  const isMobile = useMediaQuery("(max-width: 390px)");
+  const touchButtonStyle = isMobile ? { minHeight: 40 } : undefined;
 
   const mutation = useMutation({
     mutationFn: (outcome: DecideTaskPayload["outcome"]) => {
@@ -175,14 +187,20 @@ function DecideDialog({ task, override, onClose, onDecided }: DecideDialogProps)
           autosize
           minRows={3}
         />
-        <Group justify="flex-end" gap="xs">
-          <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
+        <Group justify="flex-end" gap="xs" wrap={isMobile ? "wrap" : "nowrap"}>
+          <Button type="button" variant="default" style={touchButtonStyle} onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button type="button" color="red" onClick={() => mutation.mutate("rejected")} disabled={mutation.isPending}>
+          <Button
+            type="button"
+            color="red"
+            style={touchButtonStyle}
+            onClick={() => mutation.mutate("rejected")}
+            disabled={mutation.isPending}
+          >
             {t("workflow:inbox.reject")}
           </Button>
-          <Button type="button" onClick={() => mutation.mutate("approved")} disabled={mutation.isPending}>
+          <Button type="button" style={touchButtonStyle} onClick={() => mutation.mutate("approved")} disabled={mutation.isPending}>
             {t("workflow:inbox.approve")}
           </Button>
         </Group>

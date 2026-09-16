@@ -5,10 +5,24 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Alert, Button, Card, Center, Checkbox, PasswordInput, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
+import {
+  Alert,
+  Anchor,
+  Button,
+  Card,
+  Center,
+  Checkbox,
+  Modal,
+  PasswordInput,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { AlertTriangle, MailCheck } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
+import { getApiErrorMessage, getApiErrorStatus, getApiProblem } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
 import { acceptInvitation, getInvitationPreview } from "@/services/invitations.service";
 import classes from "./invite-accept.module.css";
@@ -36,6 +50,36 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
         {children}
       </Card>
     </Center>
+  );
+}
+
+/**
+ * KVKK aydınlatma metni bağlantısı + modalı (TALIMAT tur 1 FE madde 1). Kalıp `pages/public/career/job-posting.tsx`
+ * içindeki `PrivacyNoticeLink`'in aynısı — bileşen oradan import edilmiyor, bu sayfaya özgü kopyalanmış hâli.
+ * Modal kapanınca onay kutusunu otomatik işaretlemiyoruz; kullanıcı okuyup kendisi işaretler.
+ */
+function PrivacyNoticeLink() {
+  const { t } = useTranslation(["auth", "common"]);
+  const [opened, setOpened] = useState(false);
+  return (
+    <>
+      <Anchor component="button" type="button" size="sm" onClick={() => setOpened(true)}>
+        {t("auth:privacy.readNotice")}
+      </Anchor>
+      <Modal opened={opened} onClose={() => setOpened(false)} title={t("auth:privacy.title")}>
+        <Stack gap="sm">
+          <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
+            {t("auth:privacy.body")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t("auth:privacy.versionLabel", { version: t("auth:privacy.noticeVersion") })}
+          </Text>
+          <Button variant="default" onClick={() => setOpened(false)}>
+            {t("common:close")}
+          </Button>
+        </Stack>
+      </Modal>
+    </>
   );
 }
 
@@ -95,7 +139,17 @@ export default function InviteAcceptPage() {
       toast({ variant: "success", title: t("common:success"), description: t("auth:invite.acceptSuccess") });
       navigate("/login", { replace: true });
     },
-    onError: (error) => setSubmitError(getApiErrorMessage(error, t("auth:invite.acceptError"))),
+    onError: (error) => {
+      // S-12 ekindeki BE sözleşmesi (G-3-05): KVKK sabiti güncellendiğinde eski versiyonla gönderilen kabul
+      // reddedilir. Backend `detail`'i zaten yerelleştirilmiş metni taşır ama burada özel kodu yakalayıp
+      // `auth:privacy.outdated` üzerinden göstermek, i18n içeriğini FE tarafında da tek yerde tutuyor.
+      const code = getApiProblem(error)?.code;
+      setSubmitError(
+        code === "identity.invitation.privacy_notice_outdated"
+          ? t("auth:privacy.outdated")
+          : getApiErrorMessage(error, t("auth:invite.acceptError")),
+      );
+    },
   });
 
   if (!token || (preview.isError && [400, 404].includes(getApiErrorStatus(preview.error) ?? 0))) {
@@ -171,6 +225,7 @@ export default function InviteAcceptPage() {
             label={t("auth:invite.privacyNotice")}
             error={errorText(errors.privacyNoticeAccepted?.message)}
           />
+          <PrivacyNoticeLink />
 
           <Button type="submit" fullWidth disabled={acceptMutation.isPending}>
             {acceptMutation.isPending ? t("auth:invite.accepting") : t("auth:invite.accept")}

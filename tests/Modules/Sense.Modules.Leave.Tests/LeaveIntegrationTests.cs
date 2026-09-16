@@ -162,12 +162,10 @@ public sealed class LeaveIntegrationTests : TestFixture
     }
 
     /// <summary>
-    /// Absence (11.3.5 kapsamı dışı, tur 3 iş emri): leave.absence_records is not migrated yet (ADR-0005 - Leave's
-    /// one open migration slot this turn is HalfDayAndHourlyLeave; Absence's migration is the next request, see
-    /// status/faz-05/MIGRATION-ISTEGI.md). Domain rules are covered DB-free by AbsenceRecordTests; this documents the
-    /// intended round-trip and unskips once `dotnet ef database update` includes the absence_records table.
+    /// Absence (11.3.5 kapsamı dışı): `20260916143056_AddAbsence` (main) migrates leave.absence_records - this round-trip
+    /// used to be Skip-gated on that migration (ADR-0005); domain rules are also covered DB-free by AbsenceRecordTests.
     /// </summary>
-    [Fact(Skip = "leave.absence_records not migrated yet (ADR-0005 - Absence migration is queued after HalfDayAndHourlyLeave)")]
+    [Fact]
     public async Task AbsenceRecord_RecordedThenReversed_RoundTripsAndReversalIsNotReReversible()
     {
         var tenantId = Guid.NewGuid();

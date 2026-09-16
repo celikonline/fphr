@@ -8,6 +8,7 @@
     <!-- Cross-module contracts only, per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

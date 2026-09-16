@@ -19,13 +19,27 @@ public sealed class ApprovedExpensePayoutReader(ExpenseDbContext context) : IApp
 
         var ids = employeeIds.ToList();
 
-        var approvedTotals = await context.ExpenseClaims.AsNoTracking()
+        // Item-level (not claim-level) split: a claim can mix receipted and unreceipted items, so the tax-free
+        // ApprovedExpenseTotal and the informational-only UndocumentedExpenseTotal are both summed per item's own
+        // ReceiptFileId (PO kararı, S-13 eki - "fişsiz kalemler bordroya vergisiz eklenmez, ayrı toplamda raporlanır").
+        var approvedClaimItems = await context.ExpenseClaims.AsNoTracking()
             .Where(c => c.TenantId == tenantId && ids.Contains(c.EmployeeId)
                 && c.Status == ExpenseClaimStatus.Approved
                 && c.DecidedAt != null && c.DecidedAt.Value.Year == year && c.DecidedAt.Value.Month == month)
-            .GroupBy(c => c.EmployeeId)
-            .Select(g => new { EmployeeId = g.Key, Total = g.Sum(c => c.TotalAmount) })
+            .SelectMany(c => c.Items, (c, i) => new { c.EmployeeId, i.Amount, i.ReceiptFileId })
             .ToListAsync(cancellationToken);
+
+        var approvedTotals = approvedClaimItems
+            .Where(i => i.ReceiptFileId != null)
+            .GroupBy(i => i.EmployeeId)
+            .Select(g => new { EmployeeId = g.Key, Total = g.Sum(i => i.Amount) })
+            .ToList();
+
+        var undocumentedTotals = approvedClaimItems
+            .Where(i => i.ReceiptFileId == null)
+            .GroupBy(i => i.EmployeeId)
+            .Select(g => new { EmployeeId = g.Key, Total = g.Sum(i => i.Amount) })
+            .ToList();
 
         var openAdvances = await context.AdvanceRequests.AsNoTracking()
             .Where(a => a.TenantId == tenantId && ids.Contains(a.EmployeeId) && a.Status == AdvanceRequestStatus.Paid)
@@ -34,13 +48,15 @@ public sealed class ApprovedExpensePayoutReader(ExpenseDbContext context) : IApp
             .ToListAsync(cancellationToken);
 
         var employeesWithData = approvedTotals.Select(x => x.EmployeeId)
+            .Union(undocumentedTotals.Select(x => x.EmployeeId))
             .Union(openAdvances.Select(x => x.EmployeeId));
 
         return employeesWithData
             .Select(employeeId => new ExpensePayoutSummary(
                 employeeId,
                 approvedTotals.FirstOrDefault(x => x.EmployeeId == employeeId)?.Total ?? 0m,
-                openAdvances.FirstOrDefault(x => x.EmployeeId == employeeId)?.Total ?? 0m))
+                openAdvances.FirstOrDefault(x => x.EmployeeId == employeeId)?.Total ?? 0m,
+                undocumentedTotals.FirstOrDefault(x => x.EmployeeId == employeeId)?.Total ?? 0m))
             .ToList();
     }
 }

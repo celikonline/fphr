@@ -1,5 +1,6 @@
 using FluentValidation;
 using Sense.Modules.Recruitment.Domain;
+using Sense.Modules.Recruitment.Domain.FormTemplates;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -19,7 +20,10 @@ public sealed class AnonymizeCandidateValidator : AbstractValidator<AnonymizeCan
     public AnonymizeCandidateValidator() => RuleFor(x => x.CandidateId).NotEmpty();
 }
 
-public sealed class AnonymizeCandidateHandler(ICandidateRepository candidates) : ICommandHandler<AnonymizeCandidateCommand>
+public sealed class AnonymizeCandidateHandler(
+    ICandidateRepository candidates, IJobApplicationRepository applications,
+    IRecruitmentFormResponseRepository formResponses, IRecruitmentFormTemplateRepository formTemplates)
+    : ICommandHandler<AnonymizeCandidateCommand>
 {
     public async Task<Result> Handle(AnonymizeCandidateCommand command, CancellationToken cancellationToken)
     {
@@ -30,7 +34,14 @@ public sealed class AnonymizeCandidateHandler(ICandidateRepository candidates) :
         }
 
         var anonymized = existing.Value.Anonymize();
-        return anonymized.IsFailure ? anonymized.Error : Result.Success();
+        if (anonymized.IsFailure)
+        {
+            return anonymized.Error;
+        }
+
+        await CandidateFormResponseRetentionScrubber.ScrubAsync(
+            command.CandidateId, applications, formResponses, formTemplates, cancellationToken);
+        return Result.Success();
     }
 }
 
@@ -46,7 +57,10 @@ public sealed class AnonymizeCandidateHandler(ICandidateRepository candidates) :
 [RequiresPermission("recruitment.candidates.manage")]
 public sealed record AnonymizeExpiredCandidatesCommand : ICommand<int>;
 
-public sealed class AnonymizeExpiredCandidatesHandler(ICandidateRepository candidates, TimeProvider timeProvider)
+public sealed class AnonymizeExpiredCandidatesHandler(
+    ICandidateRepository candidates, IJobApplicationRepository applications,
+    IRecruitmentFormResponseRepository formResponses, IRecruitmentFormTemplateRepository formTemplates,
+    TimeProvider timeProvider)
     : ICommandHandler<AnonymizeExpiredCandidatesCommand, int>
 {
     public async Task<Result<int>> Handle(AnonymizeExpiredCandidatesCommand command, CancellationToken cancellationToken)
@@ -60,9 +74,53 @@ public sealed class AnonymizeExpiredCandidatesHandler(ICandidateRepository candi
             if (candidate.Anonymize().IsSuccess)
             {
                 anonymizedCount++;
+                await CandidateFormResponseRetentionScrubber.ScrubAsync(
+                    candidate.Id, applications, formResponses, formTemplates, cancellationToken);
             }
         }
 
         return anonymizedCount;
+    }
+}
+
+/// <summary>
+/// KVKK imha (G-9-12, Faz 9 gün açılışı TALIMAT'ı madde 4): bir adayın anonimleştirilmesine eşlik eden form cevabı
+/// temizliği. Hem <see cref="AnonymizeCandidateHandler"/>/<see cref="AnonymizeExpiredCandidatesHandler"/> (CQRS
+/// dispatcher üzerinden) hem de dispatcher'ı bilerek atlayan
+/// <c>Sense.Modules.Recruitment.Infrastructure.BackgroundJobs.CandidateRetentionSweepJobHandler</c>'dan (Infrastructure
+/// bu Application projesine referans veriyor) çağrılır - aynı mantığın iki yerde ayrı ayrı yazılmaması için tek yerde.
+/// </summary>
+public static class CandidateFormResponseRetentionScrubber
+{
+    public static async Task ScrubAsync(
+        Guid candidateId,
+        IJobApplicationRepository applications,
+        IRecruitmentFormResponseRepository formResponses,
+        IRecruitmentFormTemplateRepository formTemplates,
+        CancellationToken cancellationToken)
+    {
+        var candidateApplications = await applications.ListByCandidateAsync(candidateId, cancellationToken);
+        var scoreCardFieldsByTemplate = new Dictionary<Guid, IReadOnlySet<Guid>>();
+
+        foreach (var application in candidateApplications)
+        {
+            var responses = await formResponses.ListByJobApplicationAsync(application.Id, cancellationToken);
+            foreach (var response in responses)
+            {
+                if (!scoreCardFieldsByTemplate.TryGetValue(response.TemplateId, out var scoreCardFieldIds))
+                {
+                    var template = await formTemplates.GetByIdAsync(response.TemplateId, cancellationToken);
+                    scoreCardFieldIds = template.IsSuccess
+                        ? (IReadOnlySet<Guid>)template.Value.Fields
+                            .Where(f => f.FieldType == FormFieldType.ScoreCard)
+                            .Select(f => f.Id)
+                            .ToHashSet()
+                        : new HashSet<Guid>();
+                    scoreCardFieldsByTemplate[response.TemplateId] = scoreCardFieldIds;
+                }
+
+                response.ScrubFreeTextAnswers(scoreCardFieldIds);
+            }
+        }
     }
 }

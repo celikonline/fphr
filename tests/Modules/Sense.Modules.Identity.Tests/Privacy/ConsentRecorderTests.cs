@@ -71,4 +71,101 @@ public sealed class ConsentRecorderTests
         (await recorder.HasActiveConsentAsync(tenantId, ConsentSubjectType.Candidate, subjectId, ConsentType.CandidatePool, CancellationToken.None))
             .ShouldBeTrue();
     }
+
+    [Fact]
+    public async Task WithdrawAsync_ActiveRecordExists_WithdrawsItAndSaves()
+    {
+        var recorder = new ConsentRecorder(_repository, _unitOfWork);
+        var tenantId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        var withdrawnAt = new DateTimeOffset(2026, 9, 16, 12, 0, 0, TimeSpan.Zero);
+        var active = ConsentRecord.Create(new RecordConsent(
+            tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, "2026-09", withdrawnAt.AddDays(-10), null));
+        _repository.FindActiveAsync(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, Arg.Any<CancellationToken>())
+            .Returns(active);
+
+        var result = await recorder.WithdrawAsync(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, withdrawnAt, CancellationToken.None);
+
+        result.ShouldBeTrue();
+        active.IsActive.ShouldBeFalse();
+        active.WithdrawnAt.ShouldBe(withdrawnAt);
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task WithdrawAsync_NoActiveRecord_ReturnsFalseAndDoesNotSave()
+    {
+        var recorder = new ConsentRecorder(_repository, _unitOfWork);
+        var tenantId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        _repository.FindActiveAsync(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, Arg.Any<CancellationToken>())
+            .Returns((ConsentRecord?)null);
+
+        var result = await recorder.WithdrawAsync(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, DateTimeOffset.UtcNow, CancellationToken.None);
+
+        result.ShouldBeFalse();
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RecordAsync_AfterWithdrawal_CreatesNewActiveRecord()
+    {
+        var recorder = new ConsentRecorder(_repository, _unitOfWork);
+        var tenantId = Guid.NewGuid();
+        var subjectId = Guid.NewGuid();
+        var withdrawnAt = new DateTimeOffset(2026, 9, 16, 12, 0, 0, TimeSpan.Zero);
+        var withdrawn = ConsentRecord.Create(new RecordConsent(
+            tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, "2026-01", withdrawnAt.AddDays(-30), null));
+        withdrawn.Withdraw(withdrawnAt);
+
+        // Geri alınmış kayıt artık aktif olmadığı için repository "aktif kayıt yok" döner (SupersededAt olmasa da).
+        _repository.FindActiveAsync(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, Arg.Any<CancellationToken>())
+            .Returns((ConsentRecord?)null);
+
+        var request = new RecordConsent(tenantId, ConsentSubjectType.User, subjectId, ConsentType.Marketing, "2026-09", withdrawnAt.AddDays(1), null);
+        var id = await recorder.RecordAsync(request, CancellationToken.None);
+
+        id.ShouldNotBe(Guid.Empty);
+        ConsentRecord? added = null;
+        _repository.Received(1).Add(Arg.Do<ConsentRecord>(r => added = r));
+        added.ShouldNotBeNull();
+        added!.IsActive.ShouldBeTrue();
+        added.WithdrawnAt.ShouldBeNull();
+    }
+}
+
+/// <summary>G-1-09: <see cref="ConsentRecord.Create"/> ispat kolonlarında (tür/sürüm/özne) boş veya varsayılan
+/// değer kabul etmez - modülün mevcut domain hata kalıbı (<c>Sense.Shared.Kernel.Guard</c>).</summary>
+public sealed class ConsentRecordCreateInvariantTests
+{
+    private static RecordConsent ValidRequest() => new(
+        Guid.NewGuid(), ConsentSubjectType.User, Guid.NewGuid(), ConsentType.KvkkNotice, "2026-09", DateTimeOffset.UtcNow, null);
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_BlankConsentType_ThrowsArgumentException(string consentType)
+    {
+        var request = ValidRequest() with { ConsentType = consentType };
+
+        Should.Throw<ArgumentException>(() => ConsentRecord.Create(request));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Create_BlankNoticeVersion_ThrowsArgumentException(string noticeVersion)
+    {
+        var request = ValidRequest() with { NoticeVersion = noticeVersion };
+
+        Should.Throw<ArgumentException>(() => ConsentRecord.Create(request));
+    }
+
+    [Fact]
+    public void Create_EmptySubjectId_ThrowsArgumentException()
+    {
+        var request = ValidRequest() with { SubjectId = Guid.Empty };
+
+        Should.Throw<ArgumentException>(() => ConsentRecord.Create(request));
+    }
 }

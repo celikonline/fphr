@@ -85,6 +85,14 @@ public sealed class RecruitmentFormResponse : TenantAggregateRoot<Guid>, IAuditL
     }
 
     private static bool IsValidScore(string? value) => decimal.TryParse(value, out var score) && score is >= 0 and <= 100;
+
+    /// <summary>
+    /// KVKK imha (G-9-12, Faz 9 gün açılışı TALIMAT'ı madde 4): adayın anonimleştirilmesi sırasında serbest metin
+    /// yanıtları (mülakat notları vb.) kaldırılır; <paramref name="scoreCardFieldIds"/> içindeki alanların (sayısal
+    /// puan) yanıtları korunur - skor istatistikleri/ortalamaları bozulmaz, yalnızca kişiyi tanımlayan metin kalmaz.
+    /// </summary>
+    public void ScrubFreeTextAnswers(IReadOnlySet<Guid> scoreCardFieldIds) =>
+        _answers.RemoveAll(a => !scoreCardFieldIds.Contains(a.FieldId));
 }
 
 /// <summary>One field's answer. Owned collection; only answered (non-blank) fields are stored.</summary>

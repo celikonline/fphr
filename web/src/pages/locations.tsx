@@ -290,7 +290,72 @@ export default function LocationsPage() {
       </div>
 
       <Card withBorder padding={0}>
-        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("locations:empty")} />
+        {/* Geniş ekran: tablo */}
+        <div className="hidden md:block">
+          <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("locations:empty")} />
+        </div>
+
+        {/* Dar ekran (≤390px dahil): kart listesi */}
+        <div className="p-3 md:hidden">
+          {isLoading ? (
+            <Text size="sm" c="dimmed">
+              {t("common:loading")}
+            </Text>
+          ) : (data?.items.length ?? 0) === 0 ? (
+            <Text size="sm" c="dimmed" ta="center" p="lg">
+              {t("locations:empty")}
+            </Text>
+          ) : (
+            <Stack gap="sm">
+              {data?.items.map((location) => (
+                <Card key={location.id} withBorder padding="sm" radius="md">
+                  <Group justify="space-between" align="flex-start" wrap="nowrap">
+                    <div>
+                      <Text fw={500} size="sm">
+                        {location.name}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {t(`locations:types.${location.type}`)} · {location.countryCode}
+                      </Text>
+                      {location.address && (
+                        <Text size="xs" c="dimmed">
+                          {location.address}
+                        </Text>
+                      )}
+                    </div>
+                    {canManage && (
+                      <Group gap={4} wrap="nowrap">
+                        <Tooltip label={t("locations:editLocation")}>
+                          <ActionIcon
+                            type="button"
+                            variant="subtle"
+                            color="gray"
+                            aria-label={t("locations:editLocation")}
+                            onClick={() => openEdit(location)}
+                          >
+                            <Pencil size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                        <Tooltip label={t("locations:deleteLocation")}>
+                          <ActionIcon
+                            type="button"
+                            variant="subtle"
+                            color="red"
+                            aria-label={t("locations:deleteLocation")}
+                            onClick={() => setDeleteTarget(location)}
+                          >
+                            <Trash2 size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Group>
+                    )}
+                  </Group>
+                </Card>
+              ))}
+            </Stack>
+          )}
+        </div>
+
         {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
 

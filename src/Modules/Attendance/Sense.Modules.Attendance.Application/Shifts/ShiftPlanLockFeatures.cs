@@ -8,25 +8,33 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.Shifts;
 
-public sealed record ShiftPlanLockStatusDto(DateOnly PeriodMonth, bool IsLocked, DateTime? LockedAt, DateTime? UnlockedAt, string? UnlockReason);
+/// <summary>
+/// <see cref="ScheduledLockDate"/> (TALIMAT faz-06 backend md.4, <see cref="ShiftSettings.GetScheduledLockDate"/>):
+/// ayar kaydı yoksa veya <see cref="ShiftSettings.AutoLockEnabled"/> kapalıysa <c>null</c> - alan JSON'dan düşer,
+/// mevcut tüketiciler kırılmaz.
+/// </summary>
+public sealed record ShiftPlanLockStatusDto(DateOnly PeriodMonth, bool IsLocked, DateTime? LockedAt, DateTime? UnlockedAt, string? UnlockReason, DateOnly? ScheduledLockDate);
 
 internal static class ShiftPlanLockMapper
 {
-    public static ShiftPlanLockStatusDto ToDto(DateOnly periodMonth, ShiftPlanLock? plan) =>
-        new(periodMonth, plan?.IsLocked ?? false, plan?.IsLocked == true ? plan.LockedAt : null, plan?.UnlockedAt, plan?.UnlockReason);
+    public static ShiftPlanLockStatusDto ToDto(DateOnly periodMonth, ShiftPlanLock? plan, DateOnly? scheduledLockDate) =>
+        new(periodMonth, plan?.IsLocked ?? false, plan?.IsLocked == true ? plan.LockedAt : null, plan?.UnlockedAt, plan?.UnlockReason, scheduledLockDate);
 }
 
-/// <summary>Aylık görünümdeki kilit bandı (11.3.6 "26 Ağustos tarihinde kilitlenecek" - kilit tarihinin kendisi henüz otomatik hesaplanmıyor, bkz. ShiftSettings.AutoLock*).</summary>
+/// <summary>Aylık görünümdeki kilit bandı (11.3.6 "26 Ağustos tarihinde kilitlenecek").</summary>
 [RequiresPermission("attendance.shift.view")]
 public sealed record GetShiftPlanLockStatusQuery(DateOnly PeriodMonth) : IQuery<ShiftPlanLockStatusDto>;
 
-public sealed class GetShiftPlanLockStatusHandler(IShiftPlanLockRepository locks) : IQueryHandler<GetShiftPlanLockStatusQuery, ShiftPlanLockStatusDto>
+public sealed class GetShiftPlanLockStatusHandler(IShiftPlanLockRepository locks, IShiftSettingsRepository settings)
+    : IQueryHandler<GetShiftPlanLockStatusQuery, ShiftPlanLockStatusDto>
 {
     public async Task<Result<ShiftPlanLockStatusDto>> Handle(GetShiftPlanLockStatusQuery query, CancellationToken cancellationToken)
     {
         var normalized = ShiftPlanLock.NormalizeToMonthStart(query.PeriodMonth);
         var plan = await locks.FindByPeriodAsync(normalized, cancellationToken);
-        return ShiftPlanLockMapper.ToDto(normalized, plan);
+        var settingsRow = await settings.FindAsync(cancellationToken);
+        var scheduledLockDate = settingsRow?.GetScheduledLockDate(normalized);
+        return ShiftPlanLockMapper.ToDto(normalized, plan, scheduledLockDate);
     }
 }
 

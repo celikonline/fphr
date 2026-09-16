@@ -38,6 +38,10 @@
     "leaveUsage": {
       "label": "[DE] Leave Usage Rate",
       "detail": "[DE] {{used}} / {{total}} days used"
+    },
+    "overtimeCost": {
+      "label": "[DE] Overtime Cost",
+      "detail": "[DE] {{employeeCount}} employees · {{excludedCount}} excluded"
     }
   },
   "catalog": {

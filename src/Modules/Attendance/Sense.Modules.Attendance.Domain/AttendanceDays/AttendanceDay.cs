@@ -18,14 +18,15 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
     private AttendanceDay(
         Guid id, Guid tenantId, Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut,
-        TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source)
+        TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source,
+        bool overnight)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
         Date = date;
         Source = source;
         ResolutionState = AttendanceResolutionState.Unresolved;
-        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes);
+        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight);
     }
 
     public Guid EmployeeId { get; private set; }
@@ -60,19 +61,26 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
     public static AttendanceDay Record(
         Guid tenantId, Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut,
-        TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source) =>
-        new(Guid.CreateVersion7(), tenantId, employeeId, date, checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, source);
+        TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source,
+        bool overnight = false) =>
+        new(Guid.CreateVersion7(), tenantId, employeeId, date, checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, source, overnight);
 
-    /// <summary>Overwrites this day's check-in/out and re-derives worked minutes and anomaly flags (re-import or re-record).</summary>
-    public Result UpdateRecord(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source)
+    /// <summary>
+    /// Overwrites this day's check-in/out and re-derives worked minutes and anomaly flags (re-import or re-record).
+    /// <paramref name="overnight"/> (G-6-14, 4857 md.69) marks a night shift whose check-out punch belongs to the
+    /// next calendar day but is attributed back to this day's record (PDKS import) - in that case
+    /// <paramref name="checkOut"/> being earlier in the day than <paramref name="checkIn"/> is expected, and worked
+    /// minutes wrap past midnight instead of being rejected as reversed order.
+    /// </summary>
+    public Result UpdateRecord(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source, bool overnight = false)
     {
-        if (checkIn is not null && checkOut is not null && checkOut <= checkIn)
+        if (!overnight && checkIn is not null && checkOut is not null && checkOut <= checkIn)
         {
             return Error.Validation(AttendanceDomainErrors.DayCheckOutBeforeCheckIn);
         }
 
         Source = source;
-        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes);
+        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight);
         return Result.Success();
     }
 
@@ -141,7 +149,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         return Result.Success();
     }
 
-    private void Recompute(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes)
+    private void Recompute(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, bool overnight = false)
     {
         CheckIn = checkIn;
         CheckOut = checkOut;
@@ -156,7 +164,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         OverrideReason = null;
 
         WorkedMinutes = checkIn is not null && checkOut is not null
-            ? Math.Max((int)(checkOut.Value.ToTimeSpan() - checkIn.Value.ToTimeSpan()).TotalMinutes - breakMinutes, 0)
+            ? Math.Max((int)WorkedSpan(checkIn.Value, checkOut.Value, overnight).TotalMinutes - breakMinutes, 0)
             : 0;
 
         var isWorkingDay = plannedStart is not null && plannedEnd is not null;
@@ -213,5 +221,18 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
         Anomalies = anomalies;
         ResolutionState = anomalies == AttendanceAnomaly.None ? AttendanceResolutionState.Resolved : AttendanceResolutionState.Unresolved;
+    }
+
+    /// <summary>Elapsed time from check-in to check-out; wraps past midnight for an <paramref name="overnight"/> shift
+    /// (same pattern as <c>Shifts.ShiftAssignment.ShiftMinutes</c>) instead of yielding a negative span.</summary>
+    private static TimeSpan WorkedSpan(TimeOnly checkIn, TimeOnly checkOut, bool overnight)
+    {
+        var span = checkOut.ToTimeSpan() - checkIn.ToTimeSpan();
+        if (overnight && span <= TimeSpan.Zero)
+        {
+            span += TimeSpan.FromDays(1);
+        }
+
+        return span;
     }
 }

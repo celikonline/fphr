@@ -5,12 +5,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Briefcase, ClipboardCheck, Plus, UserPlus } from "lucide-react";
+import { ArrowLeft, Briefcase, Check, ClipboardCheck, Copy, ExternalLink, Plus, UserPlus } from "lucide-react";
 import {
+  Anchor,
   Badge,
   Button,
   Card,
   Checkbox,
+  CopyButton,
   Divider,
   Group,
   Modal,
@@ -215,6 +217,32 @@ function JobPostingDetail() {
               {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {t(`recruitment:employmentTypes.${posting.employmentType}`)}
             </Text>
           </Group>
+          {posting.status === "open" && (
+            <Group gap="xs" mt={8}>
+              <CopyButton value={`${window.location.origin}/kariyer/${posting.applySlug}`}>
+                {({ copied, copy }) => (
+                  <Button
+                    size="xs"
+                    variant="default"
+                    color={copied ? "teal" : undefined}
+                    leftSection={copied ? <Check size={14} /> : <Copy size={14} />}
+                    onClick={copy}
+                  >
+                    {copied ? t("recruitment:postingDetail.careerLink.copied") : t("recruitment:postingDetail.careerLink.copy")}
+                  </Button>
+                )}
+              </CopyButton>
+              <Anchor
+                href={`/kariyer/${posting.applySlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                size="sm"
+                className="inline-flex items-center gap-1"
+              >
+                {t("recruitment:postingDetail.careerLink.openInCareer")} <ExternalLink size={12} />
+              </Anchor>
+            </Group>
+          )}
         </div>
       </Group>
 

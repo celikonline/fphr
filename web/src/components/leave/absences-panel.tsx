@@ -2,15 +2,19 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ActionIcon, Button, Card, Group, Input, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
-import { RotateCcw, UserX } from "lucide-react";
+import { ActionIcon, Alert, Button, Card, Group, Input, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import { AlertTriangle, RotateCcw, UserX } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime, toDateOnly } from "@/lib/dates";
 import { addAbsence, listAbsences, reverseAbsence, type Absence, type AbsenceInput, type AbsenceKind } from "@/services/leave.service";
+
+/** Narrow phones (S-6 mobil kalıbı, `missing-documents-report.tsx`): a card list reads better than a horizontally-scrolled table. */
+const MOBILE_QUERY = "(max-width: 390px)";
 
 const ABSENCES_COLUMNS_KEY = "senseik.leave.absences.columns";
 const NOTE_MAX_LENGTH = 500;
@@ -20,6 +24,27 @@ const ABSENCE_KINDS: AbsenceKind[] = ["unexcused", "excused", "late"];
 function currentYearRange(): { from: string; to: string } {
   const year = new Date().getFullYear();
   return { from: `${year}-01-01`, to: `${year}-12-31` };
+}
+
+/**
+ * G-5-10 client-side heads-up (4857 md.25/II-g): ≥3 `unexcused` days in the same calendar month, or 2 consecutive
+ * calendar days, counting only active original records (not reversed, not itself a reversal — same predicate as the
+ * "Ters kayıt" column action). No server call; this is not a legal determination, only an information banner.
+ */
+function exceedsUnexcusedThreshold(items: Absence[]): boolean {
+  const active = items.filter((item) => item.kind === "unexcused" && !item.isReversed && !item.reversesId);
+  const byMonth = new Map<string, number>();
+  for (const item of active) {
+    const month = item.date.slice(0, 7);
+    byMonth.set(month, (byMonth.get(month) ?? 0) + 1);
+  }
+  if ([...byMonth.values()].some((count) => count >= 3)) return true;
+  const dates = [...new Set(active.map((item) => item.date))].sort();
+  const asUtcMs = (value: string) => {
+    const [year, month, day] = value.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
+  };
+  return dates.some((date, index) => index > 0 && asUtcMs(date) - asUtcMs(dates[index - 1]) === 24 * 60 * 60 * 1000);
 }
 
 function Strike({ reversed, children }: { reversed: boolean; children: ReactNode }) {
@@ -49,6 +74,9 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
 
   const invalidate = () => void queryClient.invalidateQueries({ queryKey: ["leave", "absences", employeeId] });
   const rows = useMemo(() => [...(query.data ?? [])].sort((a, b) => b.date.localeCompare(a.date)), [query.data]);
+  const exceedsThreshold = useMemo(() => exceedsUnexcusedThreshold(rows), [rows]);
+  const showThresholdAlert = canManage && exceedsThreshold;
+  const isMobile = useMediaQuery(MOBILE_QUERY);
 
   const columns: ColumnDef<Absence>[] = [
     {
@@ -78,11 +106,12 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
       enableSorting: false,
       header: t("leave:absences.note"),
       meta: { label: t("leave:absences.note"), cellClassName: "max-w-[16rem] truncate" },
-      cell: ({ row }) => (
-        <Strike reversed={row.original.isReversed}>
-          <span title={row.original.note ?? undefined}>{row.original.note ?? "—"}</span>
-        </Strike>
-      ),
+      cell: ({ row }) =>
+        row.original.note ? (
+          <Strike reversed={row.original.isReversed}>
+            <span title={row.original.note}>{row.original.note}</span>
+          </Strike>
+        ) : null,
     },
     {
       id: "recordedBy",
@@ -162,6 +191,11 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
           </Button>
         )}
       </Group>
+      {showThresholdAlert && (
+        <Alert color="yellow" variant="light" icon={<AlertTriangle size={16} />} mb="md">
+          {t("leave:absences.thresholdAlert")}
+        </Alert>
+      )}
       {query.isLoading ? (
         <Skeleton h={128} />
       ) : query.isError ? (
@@ -172,6 +206,8 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
         <Text size="sm" c="dimmed">
           {t("leave:absences.empty")}
         </Text>
+      ) : isMobile ? (
+        <AbsencesMobileList items={rows} canManage={canManage} onReverse={setReversing} />
       ) : (
         <Stack gap="xs">
           <Group justify="flex-end">
@@ -209,6 +245,67 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
   );
 }
 
+/** ≤390px card list mirroring the desktop table's columns (S-6 mobil kalıbı). */
+function AbsencesMobileList({
+  items,
+  canManage,
+  onReverse,
+}: {
+  items: Absence[];
+  canManage: boolean;
+  onReverse: (absence: Absence) => void;
+}) {
+  const { t, i18n } = useTranslation(["leave"]);
+
+  return (
+    <Stack gap="sm">
+      {items.map((item) => (
+        <Card key={item.id} withBorder padding="md">
+          <Stack gap={4}>
+            <Group justify="space-between" align="flex-start" wrap="nowrap">
+              <Strike reversed={item.isReversed}>
+                <Text size="sm" fw={500}>
+                  {formatDateOnly(item.date, i18n.language)}
+                </Text>
+              </Strike>
+              {canManage && !item.isReversed && !item.reversesId && (
+                <Tooltip label={t("leave:absences.reverse")}>
+                  <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("leave:absences.reverse")} onClick={() => onReverse(item)}>
+                    <RotateCcw size={16} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </Group>
+            <Strike reversed={item.isReversed}>
+              <Text size="sm" c="dimmed">
+                {t(`leave:absences.kind.${item.kind}`)}
+                {item.hours != null ? ` · ${item.hours} ${t("leave:absences.hours")}` : ""}
+              </Text>
+            </Strike>
+            {item.note && (
+              <Strike reversed={item.isReversed}>
+                <Text size="sm">{item.note}</Text>
+              </Strike>
+            )}
+            <Text size="xs" c="dimmed">
+              {item.recordedBy} · {formatDateTime(item.recordedAt, i18n.language)}
+            </Text>
+            {item.isReversed ? (
+              <Text size="xs" c="dimmed">
+                {t("leave:absences.reversed")}
+              </Text>
+            ) : item.reversesId ? (
+              <Text size="xs" c="dimmed">
+                {t("leave:absences.reversal")}
+              </Text>
+            ) : null}
+          </Stack>
+        </Card>
+      ))}
+    </Stack>
+  );
+}
+
 interface AddAbsenceDialogProps {
   employeeId: string;
   onClose: () => void;
@@ -227,7 +324,14 @@ function AddAbsenceDialog({ employeeId, onClose, onSaved }: AddAbsenceDialogProp
   const mutation = useMutation({
     mutationFn: (input: AbsenceInput) => addAbsence(employeeId, input),
     onSuccess: onSaved,
-    onError: (err) => setError(getApiErrorMessage(err, t("leave:genericError"))),
+    onError: (err) => {
+      const problem = getApiProblem(err);
+      setError(
+        problem?.code === "leave.absence.conflicts_with_leave"
+          ? t("leave:absences.conflictsWithLeave")
+          : getApiErrorMessage(err, t("leave:genericError")),
+      );
+    },
   });
 
   function submit(event: FormEvent) {

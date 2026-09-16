@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Modules/Analytics/Sense.Modules.Analytics.Application/Sense.Modules.Analytics.Application.csproj" />
     <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

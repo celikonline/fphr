@@ -138,10 +138,40 @@
       "leaveTypeRequired": "[DE] Select a leave type."
     }
   },
+  "shiftLock": {
+    "scheduledLockDate": "[DE] Scheduled lock date"
+  },
+  "myAvailability": {
+    "title": "[DE] My Availability",
+    "addButton": "[DE] Report unavailability",
+    "empty": "[DE] You have no availability entries for this month.",
+    "allDay": "[DE] All day",
+    "kind": {
+      "unavailable": "[DE] I don't want to work",
+      "weeklyRestRequest": "[DE] Weekly rest request"
+    },
+    "cancel": "[DE] Cancel",
+    "cancelTitle": "[DE] Cancel availability entry",
+    "cancelDescription": "[DE] Are you sure you want to cancel the entry for {{date}}?",
+    "cancelled": "[DE] Availability entry cancelled.",
+    "dialogTitle": "[DE] Report unavailability",
+    "dateLabel": "[DE] Date",
+    "dateRequired": "[DE] Select a date.",
+    "datePast": "[DE] You cannot select a past date.",
+    "kindLabel": "[DE] Type",
+    "startLabel": "[DE] Start time",
+    "endLabel": "[DE] End time",
+    "timeRequired": "[DE] Enter the start and end time.",
+    "endBeforeStart": "[DE] End time must be after the start time.",
+    "noteLabel": "[DE] Note",
+    "noteTooLong": "[DE] The note can be at most 500 characters.",
+    "submit": "[DE] Submit",
+    "submitted": "[DE] Availability entry created."
+  },
   "deviceLogImport": {
     "title": "[DE] Import PDKS device log",
     "subtitle": "[DE] Upload the CSV exported from a turnstile/card/fingerprint device; check-in/check-out records are applied to the timesheet.",
-    "formatHint": "[DE] First row is the header: employeeCode;timestamp;direction;deviceId — employeeCode is the employee's national ID number; semicolon or comma separated, UTF-8.",
+    "formatHint": "[DE] First row is the header: employeeCode;timestamp;direction;deviceId — the first column header may be \"employeeCode\" or \"nationalId\", its value is the employee's national ID number; semicolon or comma separated, UTF-8.",
     "downloadSample": "[DE] Download sample CSV",
     "dropzoneTitle": "[DE] Drop the CSV file here, or click to choose",
     "dropzoneHint": "[DE] Up to 5 MB",

@@ -40,6 +40,11 @@
     <Project Path="src/Modules/Identity/Sense.Modules.Identity.Domain/Sense.Modules.Identity.Domain.csproj" />
     <Project Path="src/Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Modules/Onboarding/">
+    <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Application/Sense.Modules.Onboarding.Application.csproj" />
+    <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
+    <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Domain/Sense.Modules.Onboarding.Domain.csproj" />
+  </Folder>
   <Folder Name="/src/Modules/Organization/">
     <Project Path="src/Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />
     <Project Path="src/Modules/Organization/Sense.Modules.Organization.Application/Sense.Modules.Organization.Application.csproj" />
@@ -80,6 +85,7 @@
     <Project Path="tests/Modules/Sense.Modules.Assets.Tests/Sense.Modules.Assets.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Reporting.Tests/Sense.Modules.Reporting.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Performance.Tests/Sense.Modules.Performance.Tests.csproj" />
+    <Project Path="tests/Modules/Sense.Modules.Onboarding.Tests/Sense.Modules.Onboarding.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />

@@ -1,7 +1,13 @@
 # Faz 4 — Onboarding/offboarding görev listesi taslağı (K-4)
 
-**Durum:** Taslak, kod yazılmadı (TALIMAT tur 1 md.4: "PO tur 2'de karar verir"). Bu doküman K-4 karar noktasına
-girdi olsun diye yazıldı; onay sonrası ayrı bir turda uygulanacak.
+**Durum:** K-4 kararı çıktı (ADR-0012, Kapı A onaylandı) → `src/Modules/Onboarding/Sense.Modules.Onboarding.{Domain,Application,Contracts}`
+kodda mevcut (Domain/Application/Contracts + fake-repo birim testleri, `tests/Modules/Sense.Modules.Onboarding.Tests`).
+**Kapı A alan seti, aşağıdaki ilk taslaktan daha dar** - PO'nun TALIMAT'ta verdiği somut sözleşme şuydu (taslaktaki
+`Code`/`Name`/`ResponsibleRole` enum/`RequiresApproval` yerine): `OnboardingTaskTemplate(Stage, Title ≤200,
+ResponsibleRoleCode string, DueDateOffsetDays int, IsMandatory, IsActive)` + `EmployeeOnboardingTask(EmployeeId,
+TemplateId, Stage, DueDate, Status Pending|Completed|Waived, CompletedBy/At, WaivedReason+WaivedBy+WaivedAt)`.
+`RequiresApproval`/Workflow bağı, `Code`/ad-hoc görev, çoklu sorumlu rolü ilk sürüm dışı bırakıldı - aşağıdaki
+şema/uç önerileri hâlâ **taslak** (Kapı B'de netleşecek), yalnız domain agregatları koda geçti.
 
 ## Bugün ne var, ne yok
 
@@ -109,6 +115,21 @@ ilk hafta değerlendirmesi") tamamlanmak istendiğinde `IWorkflowService.StartAs
 `ApprovalRequestApproved`/`ApprovalRequestRejected` event'i (zaten var) tüketilip görev `Completed`/`Pending`'e
 döner. İlk sürümde `RequiresApproval` hiçbir şablonda `true` olmayabilir - alan sadece ileriye dönük genişleme
 noktası olarak eklenir, zorunlu kullanım yok.
+
+## G-4-15 — Yasal görev örnekleri (seed önerisi, her biri "doğrulanmalı" etiketiyle)
+
+Kapı B'de `OnboardingTaskTemplate` seed verisine girecek örnekler - mevzuat referansları güncelliği için mutlaka
+bir uzman/hukuk danışmanı tarafından **doğrulanmalı**, burada yalnız yön göstermek için yazıldı:
+
+| Şablon | Stage | `DueDateOffsetDays` | Gerekçe | Doğrulanmalı mı |
+|---|---|---|---|---|
+| SGK işe giriş bildirgesi | Onboarding | **-1** (referans = HireDate, bildirge işe başlamadan **önce** SGK'ya ulaşmalı) | 5510 sayılı Kanun md.8 - sigortalılığın işe başlamadan önce bildirilmesi zorunlu | Evet - istisnai haller (aynı gün bildirim vb.) mevzuatta ayrıca düzenleniyor, tek bir sabit ofset her sektöre uymayabilir |
+| SGK işten ayrılış bildirgesi | Offboarding | **+10** (referans = TerminationDate) | 5510 sayılı Kanun - işten ayrılışın 10 gün içinde bildirilmesi | Evet - süre bazı istisnai fesih türlerinde değişebilir |
+| Deneme süresi değerlendirmesi | Onboarding | **+60** (referans = HireDate, 4857 sayılı İş Kanunu md.15 azami 2 ay) | Deneme süresi dolmadan önce yöneticinin değerlendirme yapması için hatırlatma | Evet - toplu iş sözleşmesiyle azami 4 aya çıkabilir (md.15), tenant bazlı ayarlanabilir olması gerekebilir |
+
+Not: `DueDateOffsetDays` negatifse "referans tarihinden önce" (Kapı A'daki domain kuralı - bkz. `OnboardingTaskTemplate.DueDateOffsetDays`
+XML doc'u), pozitifse "sonra". Yukarıdaki üç örnek de bu tek işaretli-tam-sayı modeliyle ifade edilebiliyor;
+ayrı bir "before/after" enum'una gerek kalmadı.
 
 ## Bu turda yapılmayan
 

@@ -35,6 +35,7 @@ public sealed class PayrollPeriodCalculationService(
     ITenantContext tenant,
     TimeProvider clock,
     IWorkedTimeReader workedTimeReader,
+    IAbsenceDaysReader absenceDaysReader,
     IExpensePayoutReader expensePayoutReader)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -105,7 +106,25 @@ public sealed class PayrollPeriodCalculationService(
         // employee/period) keeps today's full-month assumption; once IWorkedTimeReader has a real Attendance-backed
         // implementation, WorkedDays reflects actual attendance instead.
         var workedTime = await workedTimeReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
-        var workedDays = workedTime?.WorkedDays ?? calendarDays;
+
+        int workedDays;
+        if (workedTime is not null)
+        {
+            // Attendance (PDKS) already resolved a worked-day figure - use it as-is; the Leave absence bridge below
+            // is skipped entirely to avoid double-counting the same missing days from two sources (G-7-08/09, faz-07
+            // tur 2 madde 3 "Çift sayım kuralı").
+            workedDays = workedTime.WorkedDays;
+        }
+        else
+        {
+            // No Attendance data this employee/period: fall back to İK's manually entered devamsızlık (Leave
+            // AbsenceRecord, Unexcused only) as the missing-day source. Both null (no Attendance, no absence data
+            // either) keeps the pre-existing full-calendar-month assumption; a null or zero absence count leaves
+            // workedDays unchanged (G-7-08 PO kararı: WorkedDays bu turda yalnız bugünkü kullanım - yemek
+            // pro-rasyonu - için, hafta tatili/resmi tatil ücret hakkına dokunmaz).
+            var unexcusedDays = await absenceDaysReader.GetUnexcusedDaysAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
+            workedDays = unexcusedDays is > 0 ? Math.Max(0, calendarDays - unexcusedDays.Value) : calendarDays;
+        }
 
         // TB-7 Expense köprüsü (roadmap #23, faz-07 tur 1 madde 3): port boş/null dönerse 0 - bugünkü davranış sürer.
         var expensePayout = await expensePayoutReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);

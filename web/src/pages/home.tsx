@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
 import { DonutChart } from "@mantine/charts";
-import { BarChart3, Cake, CalendarDays, Check, ChevronRight, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
+import { BarChart3, Cake, CalendarDays, Check, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { avatarColor, initials } from "@/components/employees/employee-badges";
@@ -12,6 +12,7 @@ import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
 import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, getTeamLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
+import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
 
@@ -21,6 +22,7 @@ const UPCOMING_LEAVE_DAYS = 30;
 const LIST_LIMIT = 3;
 const BIRTHDAY_LIMIT = 5;
 const REQUEST_LIMIT = 4;
+const APPROVAL_LIMIT = 5;
 const SLATE = "var(--mantine-color-gray-6)";
 const ACCENT = "var(--mantine-primary-color-filled)";
 /** Categorical palette of the distribution chart, taken from the corporate colors. */
@@ -540,6 +542,64 @@ function TeamLeaveRequestsWidget() {
   );
 }
 
+/**
+ * "Onay Bekleyenler": a read-only summary of the caller's approval inbox (Faz 1 tur 1). Decisions stay in
+ * `/app/inbox` - this widget only surfaces the count and the top items. No date column: `InboxTaskDto`
+ * (Workflow) doesn't carry one yet - see report note to BE.
+ */
+function PendingApprovalsWidget() {
+  const { t } = useTranslation(["home", "workflow"]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["home", "pending-approvals"],
+    queryFn: listInbox,
+    retry: retryUnlessClientError,
+  });
+  const entries = useMemo(() => (data ?? []).slice(0, APPROVAL_LIMIT), [data]);
+
+  // Not an approver, or an approver with nothing pending right now - the card simply doesn't render.
+  if (!isLoading && !error && entries.length === 0) return null;
+
+  return (
+    <WidgetCard
+      title={t("home:pendingApprovals.title")}
+      icon={<InboxIcon size={18} />}
+      accent="var(--mantine-color-blue-6)"
+      action={
+        data && data.length > 0 ? (
+          <Badge variant="light" color="blue">
+            {data.length}
+          </Badge>
+        ) : undefined
+      }
+    >
+      {isLoading ? (
+        <WidgetSkeleton />
+      ) : error ? (
+        <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
+      ) : (
+        <>
+          <RowList
+            items={entries}
+            rowKey={(entry) => entry.taskId}
+            render={(entry) => (
+              <>
+                <Text size="sm" truncate>
+                  {entry.requesterName ?? "—"}
+                </Text>
+                <Text size="sm" c="dimmed" truncate className="shrink-0">
+                  {t(`workflow:requestType.${entry.requestType}`)}
+                </Text>
+              </>
+            )}
+          />
+          <Divider mt="md" />
+          <FooterLink to="/app/inbox" label={t("home:pendingApprovals.viewAll")} />
+        </>
+      )}
+    </WidgetCard>
+  );
+}
+
 interface HolidayGroup {
   key: string;
   name: string;
@@ -730,6 +790,7 @@ export default function HomePage() {
   const canViewDirectory = usePermission("employee.directory.view");
   const canViewLeaveBalances = usePermission("leave.my.balances");
   const canViewTeamRequests = usePermission("leave.requests.read");
+  const canViewInbox = usePermission("workflow.inbox.view");
   // The leave calendar endpoint also requires the Calendar.ShowMenu access setting.
   const hasLeaveCalendarPermission = usePermission("leave.my.calendar");
   const showCalendarMenu = useAccessSetting("showCalendarMenu");
@@ -744,6 +805,7 @@ export default function HomePage() {
     [showOrgInfo && <OrgInfoWidget key="org" />, canViewDirectory && <DepartmentDistributionWidget key="distribution" />],
     [canViewLeaveBalances && <LeaveInfoWidget key="leave" />, showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />],
     [
+      canViewInbox && <PendingApprovalsWidget key="pending-approvals" />,
       canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
       showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
       canViewHolidays && <HolidaysWidget key="holidays" />,

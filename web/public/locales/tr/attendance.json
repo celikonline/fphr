@@ -138,10 +138,40 @@
       "leaveTypeRequired": "İzin türü seçin."
     }
   },
+  "shiftLock": {
+    "scheduledLockDate": "Otomatik kilit tarihi"
+  },
+  "myAvailability": {
+    "title": "Müsaitliğim",
+    "addButton": "Müsait değilim bildir",
+    "empty": "Bu ay için müsaitlik kaydınız yok.",
+    "allDay": "Tüm gün",
+    "kind": {
+      "unavailable": "Çalışmak istemiyorum",
+      "weeklyRestRequest": "Haftalık izin talebi"
+    },
+    "cancel": "İptal et",
+    "cancelTitle": "Müsaitlik kaydını iptal et",
+    "cancelDescription": "{{date}} tarihli kaydı iptal etmek istediğinize emin misiniz?",
+    "cancelled": "Müsaitlik kaydı iptal edildi.",
+    "dialogTitle": "Müsait değilim bildir",
+    "dateLabel": "Tarih",
+    "dateRequired": "Tarih seçin.",
+    "datePast": "Geçmiş bir tarih seçemezsiniz.",
+    "kindLabel": "Tür",
+    "startLabel": "Başlangıç saati",
+    "endLabel": "Bitiş saati",
+    "timeRequired": "Başlangıç ve bitiş saatini girin.",
+    "endBeforeStart": "Bitiş saati başlangıçtan sonra olmalı.",
+    "noteLabel": "Not",
+    "noteTooLong": "Not en fazla 500 karakter olabilir.",
+    "submit": "Gönder",
+    "submitted": "Müsaitlik kaydı oluşturuldu."
+  },
   "deviceLogImport": {
     "title": "PDKS cihaz kaydı içe aktar",
     "subtitle": "Turnike/kart/parmak izi cihazından alınan CSV dosyasını yükleyin; giriş-çıkış kayıtları puantaja işlenir.",
-    "formatHint": "İlk satır başlık: employeeCode;timestamp;direction;deviceId — employeeCode çalışanın TC kimlik numarasıdır; noktalı virgül veya virgülle ayrılabilir, UTF-8.",
+    "formatHint": "İlk satır başlık: employeeCode;timestamp;direction;deviceId — ilk kolon başlığı \"employeeCode\" ya da \"nationalId\" olabilir, değeri çalışanın TC kimlik numarasıdır; noktalı virgül veya virgülle ayrılabilir, UTF-8.",
     "downloadSample": "Örnek CSV indir",
     "dropzoneTitle": "CSV dosyasını sürükleyin ya da seçmek için tıklayın",
     "dropzoneHint": "En fazla 5 MB",

@@ -16,6 +16,7 @@ public sealed class ShiftPlanLockFeaturesTests
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly Guid _userId = Guid.NewGuid();
     private readonly IShiftPlanLockRepository _locks = Substitute.For<IShiftPlanLockRepository>();
+    private readonly IShiftSettingsRepository _settings = Substitute.For<IShiftSettingsRepository>();
     private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
 
@@ -23,6 +24,7 @@ public sealed class ShiftPlanLockFeaturesTests
     {
         _tenant.TenantId.Returns(_tenantId);
         _currentUser.UserId.Returns(_userId);
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns((ShiftSettings?)null);
     }
 
     [Fact]
@@ -82,10 +84,29 @@ public sealed class ShiftPlanLockFeaturesTests
     public async Task GetStatus_NoRow_ReturnsUnlocked()
     {
         _locks.FindByPeriodAsync(PeriodMonth, Arg.Any<CancellationToken>()).Returns((ShiftPlanLock?)null);
-        var handler = new GetShiftPlanLockStatusHandler(_locks);
+        var handler = new GetShiftPlanLockStatusHandler(_locks, _settings);
 
         var result = await handler.Handle(new GetShiftPlanLockStatusQuery(PeriodMonth), TestContext.Current.CancellationToken);
 
         result.Value.IsLocked.ShouldBeFalse();
+    }
+
+    // TALIMAT faz-06 backend md.4: ScheduledLockDate is filled from ShiftSettings.GetScheduledLockDate when the
+    // settings row exists and auto-lock is enabled.
+    [Fact]
+    public async Task GetStatus_AutoLockEnabled_FillsScheduledLockDate()
+    {
+        _locks.FindByPeriodAsync(PeriodMonth, Arg.Any<CancellationToken>()).Returns((ShiftPlanLock?)null);
+        var settings = ShiftSettings.CreateDefault(_tenantId);
+        settings.Update(
+            ShiftSettings.DefaultMaxDailyMinutes, ShiftSettings.DefaultMaxWeeklyDays, ShiftSettings.DefaultMaxWeeklyMinutes,
+            nightWorkEnabled: false, null, null, null, ShiftSettings.DefaultBreakMinMinutes, breakIsPaid: false,
+            autoLockEnabled: true, autoLockDayOfMonth: 26, autoLockNotifyDaysBefore: 3);
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        var handler = new GetShiftPlanLockStatusHandler(_locks, _settings);
+
+        var result = await handler.Handle(new GetShiftPlanLockStatusQuery(PeriodMonth), TestContext.Current.CancellationToken);
+
+        result.Value.ScheduledLockDate.ShouldBe(new DateOnly(2026, 10, 26));
     }
 }

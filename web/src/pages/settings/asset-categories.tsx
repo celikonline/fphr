@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Package, Plus } from "lucide-react";
-import { Button, Card, Group, Modal, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Card, Group, Modal, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -29,6 +30,8 @@ export default function AssetCategoriesPage() {
 function AssetCategoriesAdmin() {
   const { t } = useTranslation(["assets", "common"]);
   const canManage = usePermission("assets.categories.manage");
+  // Narrow phones (Faz 4 gün açılışı tur 1 FE md.1): card list instead of a horizontally-scrolled table.
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const categoriesQuery = useQuery({
     queryKey: CATEGORIES_QUERY_KEY,
@@ -90,18 +93,78 @@ function AssetCategoriesAdmin() {
         )}
       </Group>
 
-      <Card withBorder padding="lg">
-        {categoriesQuery.isError ? (
+      {categoriesQuery.isError ? (
+        <Card withBorder padding="lg">
           <Text size="sm" c="red" ta="center" p="lg">
             {t("assets:categories.errors.loadFailed")}
           </Text>
-        ) : (
+        </Card>
+      ) : isMobile ? (
+        <CategoriesMobileList
+          categories={categories}
+          isLoading={categoriesQuery.isLoading}
+          canManage={canManage}
+          onEdit={setDialogTarget}
+        />
+      ) : (
+        <Card withBorder padding={0}>
           <DataTable table={table} isLoading={categoriesQuery.isLoading} emptyMessage={t("assets:categories.empty")} />
-        )}
-      </Card>
+        </Card>
+      )}
 
       {dialogTarget && <CategoryDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />}
     </div>
+  );
+}
+
+/** ≤390px card list mirroring the desktop table's columns (Faz 4 gün açılışı tur 1 FE md.1). */
+function CategoriesMobileList({
+  categories,
+  isLoading,
+  canManage,
+  onEdit,
+}: {
+  categories: AssetCategory[];
+  isLoading: boolean;
+  canManage: boolean;
+  onEdit: (category: AssetCategory) => void;
+}) {
+  const { t } = useTranslation(["assets", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (categories.length === 0) {
+    return (
+      <Card withBorder padding="lg">
+        <Text size="sm" c="dimmed" ta="center">
+          {t("assets:categories.empty")}
+        </Text>
+      </Card>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {categories.map((category) => (
+        <Card key={category.id} withBorder padding="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Stack gap={4}>
+              <Text size="sm" fw={500}>
+                {category.name}
+              </Text>
+              <Text size="xs" c="dimmed" ff="monospace">
+                {category.code}
+              </Text>
+            </Stack>
+            {canManage && (
+              <Button type="button" size="xs" variant="subtle" onClick={() => onEdit(category)}>
+                {t("common:edit")}
+              </Button>
+            )}
+          </Group>
+        </Card>
+      ))}
+    </Stack>
   );
 }
 

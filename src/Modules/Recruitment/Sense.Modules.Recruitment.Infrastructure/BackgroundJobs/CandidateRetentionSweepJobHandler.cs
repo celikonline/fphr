@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Recruitment.Application;
+using Sense.Modules.Recruitment.Application.Candidates;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Shared.Contracts.BackgroundJobs;
 
@@ -19,6 +20,9 @@ namespace Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 /// </summary>
 public sealed class CandidateRetentionSweepJobHandler(
     ICandidateRepository candidates,
+    IJobApplicationRepository applications,
+    IRecruitmentFormResponseRepository formResponses,
+    IRecruitmentFormTemplateRepository formTemplates,
     IRecruitmentUnitOfWork unitOfWork,
     TimeProvider timeProvider,
     ILogger<CandidateRetentionSweepJobHandler> logger) : IScheduledJobHandler
@@ -41,6 +45,8 @@ public sealed class CandidateRetentionSweepJobHandler(
             if (candidate.Anonymize().IsSuccess)
             {
                 anonymizedCount++;
+                // G-9-12: skorlar hariç serbest metin form cevapları da imha edilir (bkz. CandidateRetentionCommands.cs).
+                await CandidateFormResponseRetentionScrubber.ScrubAsync(candidate.Id, applications, formResponses, formTemplates, ct);
             }
         }
 

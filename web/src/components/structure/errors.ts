@@ -7,6 +7,8 @@ const CODE_MESSAGES: Record<string, string> = {
   "organization.unit_type.in_use": "structure:errors.levelInUse",
   "organization.unit.parent_cycle": "structure:errors.parentCycle",
   "organization.location.in_use": "structure:errors.locationInUse",
+  "organization.unit.has_active_children": "structure:errors.unitHasChildren",
+  "organization.unit.has_active_employees": "structure:errors.unitHasActiveEmployees",
 };
 
 /**

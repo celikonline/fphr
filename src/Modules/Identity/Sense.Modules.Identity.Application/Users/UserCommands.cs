@@ -490,6 +490,13 @@ public sealed class AcceptInvitationValidator : AbstractValidator<AcceptInvitati
         RuleFor(x => x.Password).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
         RuleFor(x => x.PrivacyNoticeAccepted).Equal(true);
         RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().MaximumLength(20).When(x => x.PrivacyNoticeAccepted);
+
+        // G-3-05 (gün açılışı TALIMAT'ı): eski/önbelleklenmiş bir sayfadan gönderilen farklı bir sürüm sessizce
+        // kabul edilmez - sayfa yenilenip metin yeniden onaylanmalı (Faz 9'un aynı kuralıyla aynı sabit değer).
+        RuleFor(x => x.PrivacyNoticeVersion)
+            .Equal(IdentityDefaults.KnownPrivacyNoticeVersion)
+            .When(x => x.PrivacyNoticeAccepted)
+            .WithMessage(IdentityErrors.InvitationPrivacyNoticeOutdated);
     }
 }
 

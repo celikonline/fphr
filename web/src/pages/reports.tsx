@@ -13,7 +13,7 @@ import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import { getLeaveUsageKpi, getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
+import { getLeaveUsageKpi, getOvertimeCostKpi, getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
 import {
   downloadReportExecution,
   getReportCatalog,
@@ -48,6 +48,13 @@ function formatShare(value: number, locale: string): string {
 /** S-15 isn't deployed everywhere yet (faz-10 R0) - a 404 means "hide the card", not "show an error". */
 function retryUnlessNotFound(failureCount: number, error: unknown): boolean {
   if (getApiErrorStatus(error) === 404) return false;
+  return failureCount < 1;
+}
+
+/** S-17 overtime-cost: 404 (uç yayılı değil) **or** 403 (maaş görüntüleme izni yok) both mean "hide the card". */
+function retryUnlessNotFoundOrForbidden(failureCount: number, error: unknown): boolean {
+  const status = getApiErrorStatus(error);
+  if (status === 404 || status === 403) return false;
   return failureCount < 1;
 }
 
@@ -186,6 +193,7 @@ function WorkforceKpis() {
           </Card>
         )}
         <LeaveUsageKpiCard />
+        <OvertimeCostKpiCard />
       </SimpleGrid>
 
       <Card withBorder padding={0}>
@@ -243,6 +251,62 @@ function LeaveUsageKpiCard() {
               ))}
             </Stack>
           )}
+        </>
+      )}
+    </Card>
+  );
+}
+
+/** Fazla mesai maliyeti KPI'ı (S-17, faz-10): maaş görüntüleme izni olmayana (403) ve uç yayılı
+ * olmayan ortamlarda (404) kart hiç gösterilmez - `analytics.kpi.view` yetkisi bu KPI için yeterli değil. */
+function OvertimeCostKpiCard() {
+  const { t, i18n } = useTranslation(["reports"]);
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["analytics", "overtime-cost-kpi", year, month],
+    queryFn: () => getOvertimeCostKpi({ year, month }),
+    retry: retryUnlessNotFoundOrForbidden,
+  });
+
+  const status = getApiErrorStatus(error);
+  if (status === 404 || status === 403) return null;
+
+  return (
+    <Card withBorder padding="lg">
+      <Text size="xs" c="dimmed">
+        {t("reports:kpi.overtimeCost.label")}
+      </Text>
+      {isLoading ? (
+        <Skeleton h={28} mt={8} w="40%" />
+      ) : !data ? (
+        <Text c="dimmed" size="sm" mt={8}>
+          {t("reports:empty")}
+        </Text>
+      ) : data.totals.length === 0 ? (
+        <Text c="dimmed" size="sm" mt={8}>
+          {t("reports:empty")}
+        </Text>
+      ) : (
+        <>
+          <Stack gap={2} mt={4}>
+            {data.totals.map((total) => (
+              <Text key={total.currency} size="xl" fw={700}>
+                {new Intl.NumberFormat(locale, { style: "currency", currency: total.currency, maximumFractionDigits: 0 }).format(
+                  total.amount,
+                )}
+              </Text>
+            ))}
+          </Stack>
+          <Text size="xs" c="dimmed" mt={4}>
+            {t("reports:kpi.overtimeCost.detail", {
+              employeeCount: new Intl.NumberFormat(locale).format(data.employeeCount),
+              excludedCount: new Intl.NumberFormat(locale).format(data.excludedEmployeeCount),
+            })}
+          </Text>
         </>
       )}
     </Card>

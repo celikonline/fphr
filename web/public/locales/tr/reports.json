@@ -38,6 +38,10 @@
     "leaveUsage": {
       "label": "İzin Kullanım Oranı",
       "detail": "{{used}} / {{total}} gün kullanıldı"
+    },
+    "overtimeCost": {
+      "label": "Fazla Mesai Maliyeti",
+      "detail": "{{employeeCount}} çalışan · {{excludedCount}} hariç tutuldu"
     }
   },
   "catalog": {

@@ -12,11 +12,15 @@ public sealed record EmployeeDocumentRequirementDto(
     DocumentRequirementStatus Status,
     DateOnly? DueDate,
     Guid? DocumentId,
-    string? WaivedReason)
+    string? WaivedReason,
+    DateOnly? ExpiryDate = null)
 {
-    public static EmployeeDocumentRequirementDto From(EmployeeDocumentRequirement requirement, DocumentTypeDefinition type) => new(
+    /// <summary><paramref name="expiryDate"/> is the linked <c>Document.ExpiryDate</c> when <see cref="EmployeeDocumentRequirement.DocumentId"/>
+    /// is set, null otherwise - caller resolves it via a bulk query (see <see cref="EmployeeDocumentRequirementMapping.ToDtosAsync"/>).</summary>
+    public static EmployeeDocumentRequirementDto From(
+        EmployeeDocumentRequirement requirement, DocumentTypeDefinition type, DateOnly? expiryDate = null) => new(
         requirement.Id, requirement.EmployeeId, requirement.DocumentTypeId, type.Code, type.Name, type.Stage,
-        requirement.Status, requirement.DueDate, requirement.DocumentId, requirement.WaivedReason);
+        requirement.Status, requirement.DueDate, requirement.DocumentId, requirement.WaivedReason, expiryDate);
 }
 
 public sealed record MissingDocumentReportItemDto(

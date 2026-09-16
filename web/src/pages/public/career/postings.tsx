@@ -45,10 +45,12 @@ function PostingCard({ item }: { item: PublicJobPostingListItem }) {
           )}
         </Group>
         <Group gap="md" c="dimmed">
-          <Group gap={4}>
-            <MapPin size={14} />
-            <Text size="sm">{item.location || t("recruitment:career.list.locationUnspecified")}</Text>
-          </Group>
+          {item.location && (
+            <Group gap={4}>
+              <MapPin size={14} />
+              <Text size="sm">{item.location}</Text>
+            </Group>
+          )}
           {item.publishedAt && (
             <Text size="sm">
               {t("recruitment:career.publishedAt")}: {formatDateOnly(item.publishedAt, i18n.language)}

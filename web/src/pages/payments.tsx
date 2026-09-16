@@ -25,7 +25,8 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
-import { AlertTriangle, CreditCard, Plus, Receipt, Trash2, Wallet } from "lucide-react";
+import { useMediaQuery } from "@mantine/hooks";
+import { AlertTriangle, CreditCard, Info, Plus, Receipt, Trash2, Wallet } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -73,6 +74,8 @@ function Payments() {
   const queryClient = useQueryClient();
   const canClaims = usePermission("expense.my.claims");
   const canAdvances = usePermission("expense.my.advances");
+  // Dar telefon (Faz 7 gün açılışı tur 1 FE md.1): kart listesi + oluşturma diyalogları tam ekran.
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const [searchParams, setSearchParams] = useSearchParams();
   const [claimDialogOpen, setClaimDialogOpen] = useState(() => canClaims && searchParams.get("new") === "expense");
   const [advanceDialogOpen, setAdvanceDialogOpen] = useState(() => canAdvances && searchParams.get("new") === "advance");
@@ -129,6 +132,8 @@ function Payments() {
           <Text size="sm" c="dimmed">
             {t("expense:payments.empty")}
           </Text>
+        ) : isMobile ? (
+          <PaymentsMobileList rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} />
         ) : (
           <PaymentsTable rows={paymentsQuery.data ?? []} formatDate={date} formatAmount={amount} t={t} />
         )}
@@ -136,6 +141,7 @@ function Payments() {
 
       {claimDialogOpen && (
         <ExpenseClaimDialog
+          isMobile={Boolean(isMobile)}
           onClose={() => setClaimDialogOpen(false)}
           onSubmitted={() => {
             setClaimDialogOpen(false);
@@ -147,6 +153,7 @@ function Payments() {
 
       {advanceDialogOpen && (
         <AdvanceRequestDialog
+          isMobile={Boolean(isMobile)}
           onClose={() => setAdvanceDialogOpen(false)}
           onSubmitted={() => {
             setAdvanceDialogOpen(false);
@@ -202,8 +209,57 @@ function PaymentsTable({
   );
 }
 
+/** ≤390px kart listesi (Faz 7 gün açılışı tur 1 FE md.1): masaüstü tablonun aynı kolonları, kart biçiminde. */
+function PaymentsMobileList({
+  rows,
+  formatDate,
+  formatAmount,
+  t,
+}: {
+  rows: PaymentOverviewRow[];
+  formatDate: (value: string) => string;
+  formatAmount: (value: number, currency: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}) {
+  return (
+    <Stack gap="sm">
+      {rows.map((row) => (
+        <Card key={`${row.kind}-${row.sourceId}`} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Badge color="gray" variant="light">
+              {t(`expense:payments.kind.${row.kind}`)}
+            </Badge>
+            <Badge color={STATUS_COLOR[row.status.toLowerCase()] ?? "gray"} variant="light">
+              {t(`expense:status.${row.status.toLowerCase()}`, { defaultValue: row.status })}
+            </Badge>
+          </Group>
+          <Text size="sm" truncate="end" mt={6}>
+            {row.description ?? "—"}
+          </Text>
+          <Group justify="space-between" mt={4}>
+            <Text size="xs" c="dimmed">
+              {formatDate(row.date)}
+            </Text>
+            <Text size="sm" fw={500}>
+              {formatAmount(row.amount, row.currency)}
+            </Text>
+          </Group>
+        </Card>
+      ))}
+    </Stack>
+  );
+}
+
 /** "Talep > Harcama": create a Draft claim, add/remove receipt items, then Submit once at least one item exists. */
-function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmitted: () => void }) {
+function ExpenseClaimDialog({
+  isMobile,
+  onClose,
+  onSubmitted,
+}: {
+  isMobile: boolean;
+  onClose: () => void;
+  onSubmitted: () => void;
+}) {
   const { t, i18n } = useTranslation(["expense", "common"]);
   const queryClient = useQueryClient();
   const [claimId, setClaimId] = useState<string | null>(null);
@@ -269,7 +325,7 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
     selectedCategoryMaxAmount != null && itemAmount !== "" && Number(itemAmount) > selectedCategoryMaxAmount;
 
   return (
-    <Modal opened onClose={onClose} title={t("expense:claim.dialogTitle")} size="lg">
+    <Modal opened onClose={onClose} title={t("expense:claim.dialogTitle")} size="lg" fullScreen={isMobile}>
       <Stack gap="md">
         {!claimId ? (
           <>
@@ -336,6 +392,11 @@ function ExpenseClaimDialog({ onClose, onSubmitted }: { onClose: () => void; onS
                     {t("expense:item.limitWarning", { limit: formatMoney(selectedCategoryMaxAmount, "TRY", i18n.language) })}
                   </Alert>
                 )}
+                {/* TALIMAT gün açılışı tur 1 FE md.4: fiş yükleme bu dilimde yok (ReceiptFileId hep null),
+                    bordroya vergisiz eklenme kuralını (BE md.5) bilgilendirici olarak önden göster; engellemez. */}
+                <Alert color="blue" icon={<Info className="h-4 w-4" />} py="xs" variant="light">
+                  {t("expense:item.noReceiptWarning")}
+                </Alert>
                 <Group justify="flex-end">
                   <Button
                     type="button"
@@ -435,7 +496,15 @@ const advanceSchema = z.object({
 type AdvanceFormValues = z.infer<typeof advanceSchema>;
 
 /** "Talep > Avans": only Amount is strictly required (part1 web walkthrough); the rest default. */
-function AdvanceRequestDialog({ onClose, onSubmitted }: { onClose: () => void; onSubmitted: () => void }) {
+function AdvanceRequestDialog({
+  isMobile,
+  onClose,
+  onSubmitted,
+}: {
+  isMobile: boolean;
+  onClose: () => void;
+  onSubmitted: () => void;
+}) {
   const { t } = useTranslation(["expense", "common"]);
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const {
@@ -463,7 +532,7 @@ function AdvanceRequestDialog({ onClose, onSubmitted }: { onClose: () => void; o
   });
 
   return (
-    <Modal opened onClose={onClose} title={t("expense:advance.dialogTitle")} size="md">
+    <Modal opened onClose={onClose} title={t("expense:advance.dialogTitle")} size="md" fullScreen={isMobile}>
       <form onSubmit={handleSubmit((values) => createMutation.mutate(values))}>
         <Stack gap="md">
           <Controller

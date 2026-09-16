@@ -94,7 +94,17 @@ public sealed class PayrollPeriodCalculationServiceTests
     private static PayrollPeriodCalculationService BuildService(
         out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
-        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader, out IExpensePayoutReader expensePayoutReader)
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader, out IExpensePayoutReader expensePayoutReader) =>
+        BuildService(out payslips, out traces, out profiles, out dirtyFlags, out salaryLookup, out workedTimeReader, out _, out expensePayoutReader);
+
+    /// <summary>Overload additionally exposing the IAbsenceDaysReader fake (Leave devamsızlık köprüsü, G-7-08/09,
+    /// faz-07 tur 2 madde 3): default NSubstitute behaviour (GetUnexcusedDaysAsync returns null) reproduces "no
+    /// absence data" without any .Returns() setup, so every other test in this file is unaffected.</summary>
+    private static PayrollPeriodCalculationService BuildService(
+        out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
+        out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
+        out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -106,13 +116,15 @@ public sealed class PayrollPeriodCalculationServiceTests
             .Returns(Task.FromResult<PayslipDirtyFlag?>(null));
         salaryLookup = Substitute.For<IEmployeeSalaryLookup>();
         workedTimeReader = Substitute.For<IWorkedTimeReader>();
+        absenceDaysReader = Substitute.For<IAbsenceDaysReader>();
         expensePayoutReader = Substitute.For<IExpensePayoutReader>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
         return new PayrollPeriodCalculationService(
-            payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System, workedTimeReader, expensePayoutReader);
+            payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
+            workedTimeReader, absenceDaysReader, expensePayoutReader);
     }
 
     [Fact]
@@ -180,6 +192,8 @@ public sealed class PayrollPeriodCalculationServiceTests
     /// <summary>TB-7 port (tur 3 TALIMAT madde 2): no IWorkedTimeReader data (default NSubstitute behaviour - GetAsync
     /// returns null for any Arg without an explicit .Returns()) must reproduce exactly the pre-port behaviour, the
     /// DAYS trace step's workedDays = the calendar month's day count.</summary>
+    /// <summary>Md.3 test 3/3 (faz-07 tur 2 madde 4): neither Attendance nor Leave has data (both ports' default
+    /// NSubstitute null) - keeps the pre-existing full-calendar-month assumption.</summary>
     [Fact]
     public async Task RecalculateAllAsync_FallsBackToFullCalendarMonth_WhenWorkedTimeReaderHasNoData()
     {
@@ -191,6 +205,43 @@ public sealed class PayrollPeriodCalculationServiceTests
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
 
         CapturedDaysStepOutput(traces).ShouldBe(31); // March 2026
+    }
+
+    /// <summary>Md.3 test 1/3 (faz-07 tur 2 madde 4, "çift sayım kuralı"): Attendance (PDKS) has data - the Leave
+    /// absence bridge is never even consulted, let alone allowed to reduce WorkedDays further.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_IgnoresAbsenceDaysReader_WhenWorkedTimeReaderHasData()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out var workedTimeReader, out var absenceDaysReader, out _);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<int?>(5));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedDaysStepOutput(traces).ShouldBe(18); // PDKS değeri aynen kullanılır, absence'ın 5'i hiç sorulmaz.
+        await absenceDaysReader.DidNotReceive().GetUnexcusedDaysAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>Md.3 test 2/3 (faz-07 tur 2 madde 4): no Attendance data, but Leave has 5 Unexcused absence days this
+    /// month - WorkedDays drops from the full calendar month (31 for March 2026) by that count.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_ReducesWorkedDaysByUnexcusedAbsences_WhenWorkedTimeReaderHasNoDataButAbsencesDo()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<int?>(5));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedDaysStepOutput(traces).ShouldBe(26); // 31 (Mart 2026) - 5 unexcused
     }
 
     /// <summary>TB-7 port: a fake with data (WorkedDays=18) overrides the full-month assumption - the DAYS trace step
@@ -236,6 +287,24 @@ public sealed class PayrollPeriodCalculationServiceTests
         salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         expensePayoutReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpensePayoutFigures?>(new ExpensePayoutFigures(ApprovedExpenseTotal: 2_500m, OpenAdvanceBalance: 1_000m)));
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedNetStepExpenseReimbursementInput(traces).ShouldBe("2500");
+    }
+
+    /// <summary>S-13 eki (faz-07 tur 2 madde 5, PO kararı): UndocumentedExpenseTotal (fişsiz kalemler) is Excel-only
+    /// information, never fed into NET - only ApprovedExpenseTotal (2,500 here) reaches the trace, not the 900 fişsiz
+    /// figure alongside it.</summary>
+    [Fact]
+    public async Task RecalculateAllAsync_IgnoresUndocumentedExpenseTotal_ForNetReimbursement()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var expensePayoutReader);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        expensePayoutReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<ExpensePayoutFigures?>(new ExpensePayoutFigures(ApprovedExpenseTotal: 2_500m, OpenAdvanceBalance: 0m, UndocumentedExpenseTotal: 900m)));
 
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
 

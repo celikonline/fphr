@@ -288,6 +288,8 @@
   <data name="organization.holidays.view" xml:space="preserve"><value>View official holidays</value></data>
   <data name="organization.approval_assignments.manage" xml:space="preserve"><value>Manage unit approval processes</value></data>
   <data name="organization.unit.not_found" xml:space="preserve"><value>Unit not found.</value></data>
+  <data name="organization.unit.has_active_children" xml:space="preserve"><value>A unit with active child units cannot be deactivated.</value></data>
+  <data name="organization.unit.has_active_employees" xml:space="preserve"><value>A unit with active employees cannot be deactivated.</value></data>
   <data name="organization.approval_assignment.org_unit_required" xml:space="preserve"><value>Unit is required.</value></data>
   <data name="organization.approval_assignment.request_type_required" xml:space="preserve"><value>Request type is required.</value></data>
   <data name="organization.approval_assignment.request_type_invalid" xml:space="preserve"><value>Request type must be a code of at most 50 letters and digits starting with an uppercase letter.</value></data>
@@ -323,6 +325,7 @@
   <data name="identity.invitation.employee_not_found" xml:space="preserve"><value>The employee to invite was not found.</value></data>
   <data name="identity.invitation.email_in_use" xml:space="preserve"><value>This e-mail address belongs to a user linked to another employee.</value></data>
   <data name="identity.invitation.user_disabled" xml:space="preserve"><value>The employee's user account is disabled; enable it first.</value></data>
+  <data name="identity.invitation.privacy_notice_outdated" xml:space="preserve"><value>The privacy notice was updated; please refresh the page and accept it again.</value></data>
   <data name="impersonation.not_found" xml:space="preserve"><value>Support access request not found.</value></data>
   <data name="impersonation.not_pending" xml:space="preserve"><value>The request is not pending approval.</value></data>
   <data name="impersonation.not_approved" xml:space="preserve"><value>The request has not been approved.</value></data>
@@ -665,6 +668,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.absence.reversal_reason_required" xml:space="preserve"><value>A reversal reason is required (at most 500 characters).</value></data>
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>This absence record has already been reversed.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>A reversal record cannot itself be reversed.</value></data>
+  <data name="leave.absence.conflicts_with_leave" xml:space="preserve"><value>An absence cannot be recorded on this date because an approved leave already covers it.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>View work schedules</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Manage work schedules</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Assign work schedules</value></data>
@@ -962,5 +966,6 @@ The report you requested has been generated. Click the link to view and download
   <data name="performance.goal.not_updatable" xml:space="preserve"><value>A completed, cancelled, or archived goal's progress cannot be updated.</value></data>
   <data name="performance.goal.not_cancellable" xml:space="preserve"><value>A completed, cancelled, or archived goal cannot be cancelled.</value></data>
   <data name="performance.goal.employee_invalid" xml:space="preserve"><value>The selected employee was not found or is inactive.</value></data>
+  <data name="performance.goal.target_date_outside_cycle" xml:space="preserve"><value>The target date must fall within the review cycle's date range.</value></data>
   <data name="performance.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
 </root>

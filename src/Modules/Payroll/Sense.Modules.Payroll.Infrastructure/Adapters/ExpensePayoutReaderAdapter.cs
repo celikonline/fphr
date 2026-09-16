@@ -18,6 +18,6 @@ public sealed class ExpensePayoutReaderAdapter(IApprovedExpensePayoutReader payo
         // month is the common case), not a "veri yok" distinction - see IApprovedExpensePayoutReader's own doc.
         var results = await payouts.GetAsync(tenantId, year, month, [employeeId], cancellationToken);
         var match = results.FirstOrDefault(r => r.EmployeeId == employeeId);
-        return match is null ? null : new ExpensePayoutFigures(match.ApprovedExpenseTotal, match.OpenAdvanceBalance);
+        return match is null ? null : new ExpensePayoutFigures(match.ApprovedExpenseTotal, match.OpenAdvanceBalance, match.UndocumentedExpenseTotal);
     }
 }

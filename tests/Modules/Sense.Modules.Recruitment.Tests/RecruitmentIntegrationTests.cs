@@ -14,7 +14,9 @@ using Sense.Modules.Recruitment.Domain.FormResponses;
 using Sense.Modules.Recruitment.Domain.FormTemplates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Modules.Recruitment.Infrastructure;
+using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Tests.Shared.Fixtures;
@@ -69,6 +71,11 @@ public sealed class RecruitmentIntegrationTests : TestFixture
 
         services.AddSingleton<FakeTenantSlugLookup>();
         services.AddSingleton<ITenantSlugLookup>(sp => sp.GetRequiredService<FakeTenantSlugLookup>());
+
+        // Faz 9 gün açılışı TALIMAT'ı madde 1 (job testi): CandidateRetentionSweepJobHandler normalde yalnız
+        // RecruitmentModule.AddModule'de (Sense.Api/Hangfire) kayıtlıdır - burada da kaydederek gerçek DB'ye karşı
+        // BackgroundJobExecutor'ı devreye sokmadan doğrudan çözümleyip çağırabiliyoruz.
+        services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
     }
 
     /// <summary>
@@ -365,6 +372,188 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         apply.Error.Code.ShouldBe(RecruitmentDomainErrors.PostingNotFound);
     }
 
+    /// <summary>G-9-09 (Faz 9 gün açılışı TALIMAT'ı madde 1, komut yolu): Hired aşamasında en az bir başvurusu olan
+    /// aday, saklama süresi dolmuş olsa da <see cref="AnonymizeExpiredCandidatesCommand"/> tarafından atlanır.</summary>
+    [Fact]
+    public async Task AnonymizeExpiredCandidates_ExcludesHiredCandidate()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        SetCurrentUser(tenantId, Guid.NewGuid(), "hr@example.com", new HashSet<string> { "HR" });
+
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var hiredCandidateId = (await ExecuteCommandAsync(new CreateCandidateCommand("Hired", "Aday", "hired.komut@example.com", null))).Value;
+        var pendingCandidateId = (await ExecuteCommandAsync(new CreateCandidateCommand("Bekleyen", "Aday", "bekleyen.komut@example.com", null))).Value;
+
+        var hiredApplicationId = (await ExecuteCommandAsync(new CreateJobApplicationCommand(postingId, hiredCandidateId))).Value;
+        (await ExecuteCommandAsync(new MoveJobApplicationStageCommand(hiredApplicationId, nameof(ApplicationStage.Hired)))).IsSuccess.ShouldBeTrue();
+
+        await BackdateCandidateCreatedAtAsync(hiredCandidateId, pendingCandidateId);
+
+        var swept = await ExecuteCommandAsync(new AnonymizeExpiredCandidatesCommand());
+        swept.IsSuccess.ShouldBeTrue();
+        swept.Value.ShouldBe(1);
+
+        (await ExecuteQueryAsync(new GetCandidateQuery(hiredCandidateId))).Value.IsAnonymized.ShouldBeFalse();
+        (await ExecuteQueryAsync(new GetCandidateQuery(pendingCandidateId))).Value.IsAnonymized.ShouldBeTrue();
+    }
+
+    /// <summary>G-9-09, job yolu: <see cref="CandidateRetentionSweepJobHandler"/> doğrudan (dispatcher'sız)
+    /// çağrıldığında da aynı Hired hariç tutma kuralına uyar - kural repository sorgusunda olduğu için iki yol da
+    /// aynı davranışı miras alır, ama job'un kendi DI zincirinin de gerçekten çalıştığını burada kanıtlıyoruz.</summary>
+    [Fact]
+    public async Task CandidateRetentionSweepJob_ExcludesHiredCandidate()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        SetCurrentUser(tenantId, Guid.NewGuid(), "hr@example.com", new HashSet<string> { "HR" });
+
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var hiredCandidateId = (await ExecuteCommandAsync(new CreateCandidateCommand("Hired", "Aday", "hired.job@example.com", null))).Value;
+        var pendingCandidateId = (await ExecuteCommandAsync(new CreateCandidateCommand("Bekleyen", "Aday", "bekleyen.job@example.com", null))).Value;
+
+        var hiredApplicationId = (await ExecuteCommandAsync(new CreateJobApplicationCommand(postingId, hiredCandidateId))).Value;
+        (await ExecuteCommandAsync(new MoveJobApplicationStageCommand(hiredApplicationId, nameof(ApplicationStage.Hired)))).IsSuccess.ShouldBeTrue();
+
+        await BackdateCandidateCreatedAtAsync(hiredCandidateId, pendingCandidateId);
+
+        await using (var jobScope = ServiceProvider!.CreateAsyncScope())
+        {
+            var handler = jobScope.ServiceProvider.GetServices<IScheduledJobHandler>().Single(h => h.Handles == JobType.CandidateRetentionSweep);
+            await handler.ExecuteAsync(new ScheduledJobContext(tenantId, null, DateTimeOffset.UtcNow), CancellationToken.None);
+        }
+
+        (await ExecuteQueryAsync(new GetCandidateQuery(hiredCandidateId))).Value.IsAnonymized.ShouldBeFalse();
+        (await ExecuteQueryAsync(new GetCandidateQuery(pendingCandidateId))).Value.IsAnonymized.ShouldBeTrue();
+    }
+
+    /// <summary>G-9-12 (Faz 9 gün açılışı TALIMAT'ı madde 4): aday anonimleştirilince form cevaplarındaki serbest
+    /// metin (Paragraph) yanıtı kaldırılır, ScoreCard (sayısal puan) yanıtı aynen kalır.</summary>
+    [Fact]
+    public async Task AnonymizeCandidate_ScrubsFreeTextFormAnswers_KeepsScoreCardAnswers()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        SetCurrentUser(tenantId, Guid.NewGuid(), "hr@example.com", new HashSet<string> { "HR" });
+
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var candidateId = (await ExecuteCommandAsync(new CreateCandidateCommand("Skor", "Adayı", "skor.adayi@example.com", null))).Value;
+        var applicationId = (await ExecuteCommandAsync(new CreateJobApplicationCommand(postingId, candidateId))).Value;
+
+        Guid scoreFieldId;
+        Guid textFieldId;
+        Guid responseId;
+        await using (var scope = ServiceProvider!.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+            var template = RecruitmentFormTemplate.Create(
+                tenantId, "Değerlendirme Formu", RecruitmentFormTemplateType.Scorecard,
+                [
+                    new FormFieldInput(null, "Genel Puan", FormFieldType.ScoreCard, true, false, null, 100),
+                    new FormFieldInput(null, "Notlar", FormFieldType.Paragraph, false, false, null, null),
+                ]).Value;
+            db.FormTemplates.Add(template);
+            await db.SaveChangesAsync();
+            scoreFieldId = template.Fields.First(f => f.FieldType == FormFieldType.ScoreCard).Id;
+            textFieldId = template.Fields.First(f => f.FieldType == FormFieldType.Paragraph).Id;
+
+            var response = RecruitmentFormResponse.Submit(
+                tenantId, template, applicationId, Guid.NewGuid(),
+                new Dictionary<Guid, string?> { [scoreFieldId] = "85", [textFieldId] = "Adayın kişisel gözlemleri burada" }).Value;
+            db.FormResponses.Add(response);
+            await db.SaveChangesAsync();
+            responseId = response.Id;
+        }
+
+        (await ExecuteCommandAsync(new AnonymizeCandidateCommand(candidateId))).IsSuccess.ShouldBeTrue();
+
+        await using var readScope = ServiceProvider!.CreateAsyncScope();
+        var readDb = readScope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var savedResponse = await readDb.FormResponses.SingleAsync(r => r.Id == responseId);
+        savedResponse.Answers.Any(a => a.FieldId == textFieldId).ShouldBeFalse();
+        savedResponse.Answers.Single(a => a.FieldId == scoreFieldId).Value.ShouldBe("85");
+    }
+
+    /// <summary>Madde 2/3: süresi dolmuş bir ilanın public detayı da, tam olarak var olmayan bir ilan gibi 404
+    /// PostingNotFound döner - "kapalı"dan ayırt edilebilecek bir sinyal sızmaz.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_ExpiredPosting_DetailReturnsNotFound()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreateExpiredPostingAsync(tenantId, "Süresi Dolmuş İlan");
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(applySlug));
+
+        detail.IsFailure.ShouldBeTrue();
+        detail.Error.Code.ShouldBe(RecruitmentDomainErrors.PostingNotFound);
+    }
+
+    /// <summary>Madde 2/3: süresi dolmuş bir ilana apply de 404 döner ve hiçbir aday/başvuru kaydı oluşmaz.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_ExpiredPosting_ApplyReturnsNotFound_NoRecordCreated()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreateExpiredPostingAsync(tenantId, "Süresi Dolmuş İlan");
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var apply = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Test", "Aday", "suresi.dolmus@example.com", null, "2026-09", true));
+
+        apply.IsFailure.ShouldBeTrue();
+        apply.Error.Code.ShouldBe(RecruitmentDomainErrors.PostingNotFound);
+
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        using var readTenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        (await db.Candidates.AnyAsync(c => c.Email == "suresi.dolmus@example.com")).ShouldBeFalse();
+    }
+
+    /// <summary>Madde 2/3: related listesi de süresi dolmuş bir kardeş ilanı döndürmez.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_RelatedPostings_ExcludesExpiredSibling()
+    {
+        var tenantId = Guid.NewGuid();
+        var anchorId = await CreatePublishedPostingAsync(tenantId, "İlan A");
+        var expiredSiblingId = await CreateExpiredPostingAsync(tenantId, "Süresi Dolmuş Kardeş İlan");
+        var anchorSlug = await GetApplySlugAsync(anchorId);
+        _ = expiredSiblingId;
+
+        var related = await ExecuteQueryAsync(new ListRelatedPublicJobPostingsQuery(anchorSlug));
+
+        related.IsSuccess.ShouldBeTrue();
+        related.Value.ShouldBeEmpty();
+    }
+
+    /// <summary>Madde 2/3 sınır durumu: kapanış tarihi bugün olan ilan hâlâ görünür (kapanış tarihi dahildir).</summary>
+    [Fact]
+    public async Task PublicCareerFlow_ClosingDateIsToday_StillVisible()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreateClosingTodayPostingAsync(tenantId, "Bugün Kapanan İlan");
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(applySlug));
+
+        detail.IsSuccess.ShouldBeTrue();
+        detail.Value.ApplySlug.ShouldBe(applySlug);
+    }
+
+    /// <summary>Backdates two candidates' <c>created_at</c> past the retention window via raw SQL - the audit
+    /// interceptor stamps <c>CreatedAt</c> on insert and refuses to let a normal EF update touch it afterward
+    /// (see AuditTenantInterceptor.Apply/Modified), so this is the only way to simulate "created a long time ago".</summary>
+    private async Task BackdateCandidateCreatedAtAsync(params Guid[] candidateIds)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var past = DateTime.UtcNow.AddMonths(-(RecruitmentLimits.CandidateDataRetentionMonths + 1));
+        foreach (var candidateId in candidateIds)
+        {
+            await db.Database.ExecuteSqlInterpolatedAsync(
+                $"UPDATE recruitment.candidates SET created_at = {past} WHERE id = {candidateId}");
+        }
+    }
+
     private async Task<Guid> CreatePublishedPostingAsync(Guid tenantId, string title = "Backend Geliştirici")
     {
         Guid postingId;
@@ -401,6 +590,20 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         posting.Publish();
         var yesterday = DateOnly.FromDateTime(Clock!.GetUtcNow().UtcDateTime).AddDays(-1);
         posting.Update(title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", null, null, yesterday);
+        db.JobPostings.Add(posting);
+        await db.SaveChangesAsync();
+        return posting.Id;
+    }
+
+    /// <summary>Sınır durumu yardımcısı (madde 2/3): kapanış tarihi tam olarak bugün olan, hâlâ Open bir ilan.</summary>
+    private async Task<Guid> CreateClosingTodayPostingAsync(Guid tenantId, string title)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var posting = JobPosting.Create(tenantId, title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", Guid.NewGuid(), null).Value;
+        posting.Publish();
+        var today = DateOnly.FromDateTime(Clock!.GetUtcNow().UtcDateTime);
+        posting.Update(title, Guid.NewGuid(), null, RecruitmentEmploymentType.FullTime, "Açıklama", null, null, today);
         db.JobPostings.Add(posting);
         await db.SaveChangesAsync();
         return posting.Id;

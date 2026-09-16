@@ -3,7 +3,13 @@
 Sonraki iş dikeyleri (Attendance, Payroll, Approvals, Dashboard, …) bu kalıbı kopyalar. Referans
 uygulama: **Leave** (`src/services/LeaveService.ts` + `src/screens/app/LeaveScreen.tsx` +
 `src/__tests__/services/LeaveService.test.ts`). İkinci örnek: **Attendance**
-(`src/services/AttendanceService.ts` + `src/screens/app/AttendanceScreen.tsx`).
+(`src/services/AttendanceService.ts` + `src/screens/app/AttendanceScreen.tsx`). Üçüncü örnek:
+**Approvals** (`src/services/ApprovalsService.ts` + `src/screens/app/ApprovalsScreen.tsx` +
+`src/__tests__/services/ApprovalsService.test.ts`) - farkı: kendi self-servis verisi yerine web
+`workflow.service.ts`'in `/workflow/inbox` uçlarını (başka birinin onayına düşen talepler) tüketiyor
+ve bir "karar" gönderiyor (`decide`, gerekçe zorunlu olduğunda `comment` alanı doluyor); `InboxTaskDto`
+bugün talep tutarı/tarihi taşımıyor (backlog B-10-02, Workflow sözleşmesi genişleyince eklenecek),
+kart bu yüzden yalnız talep sahibi + tür + adım numarasını gösteriyor.
 
 ## Katmanlar
 

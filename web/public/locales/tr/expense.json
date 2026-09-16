@@ -45,7 +45,8 @@
     "description": "Fiş açıklaması",
     "exceedsLimit": "Limit aşıldı",
     "exceedsLimitTooltip": "Bu fişin tutarı, kategorisi için tanımlı üst limiti aşıyor.",
-    "limitWarning": "Bu tutar, seçili kategori için tanımlı {{limit}} üst limitini aşıyor. Yine de fişi ekleyebilirsiniz."
+    "limitWarning": "Bu tutar, seçili kategori için tanımlı {{limit}} üst limitini aşıyor. Yine de fişi ekleyebilirsiniz.",
+    "noReceiptWarning": "Fişsiz kalemler bordroda vergisiz ödenmez."
   },
   "advance": {
     "newButton": "+ Avans",

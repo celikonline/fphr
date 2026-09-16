@@ -17,4 +17,10 @@ public sealed class WorkforceKpisController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<KpiResultDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Workforce([FromQuery] DateOnly? from, [FromQuery] DateOnly? to, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetWorkforceKpisQuery(from, to), ct));
+
+    /// <summary>S-15 izin kullanım KPI'sı (roadmap #99).</summary>
+    [HttpGet("leave-usage")]
+    [ProducesResponseType<LeaveUsageKpiDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> LeaveUsage([FromQuery] int? year, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetLeaveUsageKpiQuery(year, orgUnitId), ct));
 }

@@ -45,7 +45,8 @@
     "description": "Receipt description",
     "exceedsLimit": "Over limit",
     "exceedsLimitTooltip": "This receipt's amount exceeds its category's maximum.",
-    "limitWarning": "This amount exceeds the selected category's {{limit}} limit. You can still add the receipt."
+    "limitWarning": "This amount exceeds the selected category's {{limit}} limit. You can still add the receipt.",
+    "noReceiptWarning": "Items without a receipt are not paid tax-free in payroll."
   },
   "advance": {
     "newButton": "+ Advance",

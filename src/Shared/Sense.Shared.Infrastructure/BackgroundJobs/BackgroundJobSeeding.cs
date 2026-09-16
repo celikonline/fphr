@@ -46,6 +46,19 @@ public static class BackgroundJobSeeding
             Description = "Remind about documents expiring soon or already expired",
             Payload = "{}"
         };
+
+        // Faz 1 / Faz 9 tur 1: per-tenant daily sweep that anonymizes/retires candidate data past its retention
+        // window (Faz 9's Hired-filtered consumer lands in the same push as this seed - see PANO.md G-9-09).
+        // 03:30 Europe/Istanbul is the intended wall-clock time; same caveat as DocumentExpiryReminder above about
+        // IBackgroundJobService.RecurringAsync having no TimeZoneInfo parameter yet.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "CandidateRetentionSweep",
+            JobType = JobType.CandidateRetentionSweep,
+            CronExpression = "30 3 * * *", // 03:30 daily (Europe/Istanbul intent, see remark above)
+            Description = "Sweep candidate records past their retention window for anonymization",
+            Payload = "{}"
+        };
     }
 }
 

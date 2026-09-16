@@ -4,17 +4,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, ShieldOff, Tags as TagsIcon, UserRound } from "lucide-react";
-import { ActionIcon, Badge, Button, Card, Group, Modal, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { Archive, ClipboardList, Pencil, Plus, Search, ShieldOff, Tags as TagsIcon, UserRound } from "lucide-react";
+import { ActionIcon, Badge, Button, Card, Drawer, Group, Modal, MultiSelect, Stack, Table, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateTime } from "@/lib/dates";
 import {
   anonymizeCandidate,
+  anonymizeExpiredCandidates,
   createCandidate,
   createTag,
+  listApplicationsByCandidate,
   listCandidates,
+  listJobPostings,
   listTags,
   setCandidateTags,
   updateCandidate,
@@ -44,7 +48,7 @@ export default function CandidatesPage() {
 }
 
 function Candidates() {
-  const { t } = useTranslation(["recruitment", "common"]);
+  const { t, i18n } = useTranslation(["recruitment", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("recruitment.candidates.manage");
 
@@ -101,6 +105,33 @@ function Candidates() {
     },
     onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
   });
+
+  const [anonymizeExpiredOpen, setAnonymizeExpiredOpen] = useState(false);
+  const anonymizeExpiredMutation = useMutation({
+    mutationFn: anonymizeExpiredCandidates,
+    onSuccess: (count) => {
+      invalidate();
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description:
+          count > 0
+            ? t("recruitment:candidates.anonymizeExpired.successCount", { count })
+            : t("recruitment:candidates.anonymizeExpired.successEmpty"),
+      });
+      setAnonymizeExpiredOpen(false);
+    },
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("recruitment:genericError")) }),
+  });
+
+  const [applicationsCandidate, setApplicationsCandidate] = useState<Candidate | null>(null);
+  const applicationsQuery = useQuery({
+    queryKey: ["recruitment", "candidates", applicationsCandidate?.id, "applications"],
+    queryFn: () => listApplicationsByCandidate(applicationsCandidate!.id),
+    enabled: applicationsCandidate !== null,
+  });
+  const postingsQuery = useQuery({ queryKey: ["recruitment", "postings"], queryFn: () => listJobPostings() });
+  const postingTitleById = new Map((postingsQuery.data ?? []).map((p) => [p.id, p.title]));
 
   const [tagCandidate, setTagCandidate] = useState<Candidate | null>(null);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
@@ -160,9 +191,19 @@ function Candidates() {
           <Text c="dimmed">{t("recruitment:candidates.subtitle")}</Text>
         </div>
         {canManage && (
-          <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
-            {t("recruitment:candidates.addCandidate")}
-          </Button>
+          <Group gap="sm">
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<Archive size={16} />}
+              onClick={() => setAnonymizeExpiredOpen(true)}
+            >
+              {t("recruitment:candidates.anonymizeExpired.buttonLabel")}
+            </Button>
+            <Button type="button" leftSection={<Plus size={16} />} onClick={openCreate}>
+              {t("recruitment:candidates.addCandidate")}
+            </Button>
+          </Group>
         )}
       </Group>
 
@@ -237,6 +278,11 @@ function Candidates() {
                   {canManage && (
                     <Table.Td>
                       <Group justify="flex-end" wrap="nowrap">
+                        <Tooltip label={t("recruitment:candidates.applications.actionLabel")}>
+                          <ActionIcon variant="subtle" color="gray" onClick={() => setApplicationsCandidate(candidate)}>
+                            <ClipboardList size={16} />
+                          </ActionIcon>
+                        </Tooltip>
                         <Tooltip label={t("recruitment:candidates.editTags")}>
                           <ActionIcon variant="subtle" color="gray" onClick={() => openTagEditor(candidate)}>
                             <TagsIcon size={16} />
@@ -362,6 +408,83 @@ function Candidates() {
           </Group>
         </Stack>
       </Modal>
+
+      <Modal
+        opened={anonymizeExpiredOpen}
+        onClose={() => setAnonymizeExpiredOpen(false)}
+        title={t("recruitment:candidates.anonymizeExpired.dialogTitle")}
+      >
+        <Stack gap="md">
+          <Text size="sm" c="dimmed">
+            {t("recruitment:candidates.anonymizeExpired.description")}
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => setAnonymizeExpiredOpen(false)}
+              disabled={anonymizeExpiredMutation.isPending}
+            >
+              {t("common:cancel")}
+            </Button>
+            <Button
+              type="button"
+              color="red"
+              loading={anonymizeExpiredMutation.isPending}
+              onClick={() => anonymizeExpiredMutation.mutate()}
+            >
+              {t("recruitment:candidates.anonymizeExpired.confirm")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Drawer
+        opened={applicationsCandidate !== null}
+        onClose={() => setApplicationsCandidate(null)}
+        title={
+          applicationsCandidate
+            ? t("recruitment:candidates.applications.drawerTitle", {
+                name: `${applicationsCandidate.firstName} ${applicationsCandidate.lastName}`,
+              })
+            : ""
+        }
+        position="right"
+      >
+        <Stack gap="sm">
+          {applicationsQuery.isLoading ? (
+            <Text size="sm" c="dimmed">
+              {t("common:loading")}
+            </Text>
+          ) : applicationsQuery.isError ? (
+            <Text size="sm" c="red">
+              {getApiErrorMessage(applicationsQuery.error, t("recruitment:genericError"))}
+            </Text>
+          ) : !applicationsQuery.data || applicationsQuery.data.length === 0 ? (
+            <Text size="sm" c="dimmed">
+              {t("recruitment:candidates.applications.empty")}
+            </Text>
+          ) : (
+            applicationsQuery.data.map((application) => (
+              <Card key={application.id} withBorder padding="sm">
+                <Stack gap={4}>
+                  <Group justify="space-between" wrap="nowrap">
+                    <Text size="sm" fw={500}>
+                      {postingTitleById.get(application.jobPostingId) ?? application.jobPostingId.slice(0, 8)}
+                    </Text>
+                    <Badge size="sm" variant="light">
+                      {t(`recruitment:applications.stages.${application.stage}`)}
+                    </Badge>
+                  </Group>
+                  <Text size="xs" c="dimmed">
+                    {t("recruitment:applications.appliedAt")}: {formatDateTime(application.appliedAt, i18n.language)}
+                  </Text>
+                </Stack>
+              </Card>
+            ))
+          )}
+        </Stack>
+      </Drawer>
     </div>
   );
 }

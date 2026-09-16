@@ -46,6 +46,13 @@
     "empty": "[DE] No postings yet.",
     "viewDetail": "[DE] View posting"
   },
+  "postingDetail": {
+    "careerLink": {
+      "copy": "[DE] Copy link",
+      "copied": "[DE] Copied",
+      "openInCareer": "[DE] Open on career page"
+    }
+  },
   "employmentTypes": {
     "fullTime": "[DE] Full-time",
     "partTime": "[DE] Part-time",
@@ -89,7 +96,20 @@
     "anonymizeDescription": "[DE] This candidate's name, e-mail and phone will be irreversibly erased; their application history stays, but no longer identifies this person.",
     "anonymizeSuccess": "[DE] Candidate data has been anonymized.",
     "anonymized": "[DE] Anonymized",
-    "anonymizedRowHint": "[DE] This candidate's data was anonymized under data protection rules; it can no longer be edited or moved to another stage."
+    "anonymizedRowHint": "[DE] This candidate's data was anonymized under data protection rules; it can no longer be edited or moved to another stage.",
+    "anonymizeExpired": {
+      "buttonLabel": "[DE] Anonymize expired retention",
+      "dialogTitle": "[DE] Anonymize candidates past retention period",
+      "description": "[DE] All candidates whose retention period has expired will have their name, e-mail and phone irreversibly erased. Hired candidates are excluded from this action.",
+      "confirm": "[DE] Anonymize",
+      "successCount": "[DE] {{count}} candidate(s) anonymized.",
+      "successEmpty": "[DE] No candidates past retention period."
+    },
+    "applications": {
+      "actionLabel": "[DE] Applications",
+      "drawerTitle": "[DE] {{name}} - Applications",
+      "empty": "[DE] This candidate has no applications yet."
+    }
   },
   "applications": {
     "title": "[DE] Applications",

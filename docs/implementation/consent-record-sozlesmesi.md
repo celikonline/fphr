@@ -19,6 +19,7 @@ public interface IConsentRecorder
 {
     Task<Guid> RecordAsync(RecordConsent request, CancellationToken ct);
     Task<bool> HasActiveConsentAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, CancellationToken ct);
+    Task<bool> WithdrawAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, DateTimeOffset withdrawnAt, CancellationToken ct);
 }
 
 public sealed record RecordConsent(
@@ -49,12 +50,18 @@ public static class ConsentType
   Recruitment modülü kendi `candidate_id`'sini `SubjectId` olarak geçirir — Identity, Candidate
   tablosuna FK **kurmaz** (modüller arası bağımlılık sadece `*.Contracts` üzerinden), `SubjectId`
   serbest `Guid` referans olarak kalır.
-- **Append-only, immutable:** Bir rıza kaydı asla güncellenmez/silinmez. "Rıza geri alma"
-  (`ConsentType` bazında) ayrı bir kayıt türüyle (ör. gelecekte `RevokedAt` alanlı ikinci kayıt veya
-  `revoke_...` action'ı) modellenir — bu tur kapsamında değil, `HasActiveConsentAsync` şimdilik
-  "bu tür için en az bir kayıt var mı" sorgusuna karşılık gelir; geri alma modeli eklendiğinde bu
-  sorgunun anlamı "en son kayıt geri alınmamış" olacak şekilde genişleyecektir (implementasyon
-  notunda ayrıca işlenecek, arayüz imzası **değişmeyecek**).
+- **Append-only, immutable (G-1-01 netleştirmesi):** "Append-only" şu anlama gelir: **ispat
+  kolonları** (`consent_type`, `notice_version`, `accepted_at`, `ip_address`, özne alanları
+  `subject_type`/`subject_id`) bir satır yazıldıktan sonra hiçbir zaman güncellenmez veya silinmez.
+  Yalnız iki **yaşam döngüsü damgası** — `superseded_at` (yeni bir rıza aynı türde geldiğinde) ve
+  `withdrawn_at` (özne rızayı geri aldığında) — satırın kendisinde **null → dolu** yönünde, **bir
+  kez**, idempotent şekilde yazılır (`ConsentRecord.Supersede`/`Withdraw`, ikinci çağrı ilk değeri
+  korur). Bu iki damgadan biri doluysa kayıt artık aktif değildir (`IsActive = SupersededAt is null
+  && WithdrawnAt is null`); "geri alma" satırı silmez veya değiştirmez, yalnızca `withdrawn_at`'i
+  doldurur — ispat amaçlı geçmiş, geri alınmış olsa bile sorgulanabilir kalır. Geri alma **yeni bir
+  kayıt açmaz**; öznenin yeniden rıza vermesi ayrı bir `RecordAsync` çağrısıyla yeni bir satır
+  oluşturur (`superseded_at`/`withdrawn_at` dolu olan eski satırlar sorgulanabilir kalmaya devam
+  eder — hiçbiri silinmez).
 - **`ConsentType` neden serbest `string`, `enum` değil:** Faz 3/9 dışında ileride yeni rıza türleri
   (ör. çerez izni, biyometrik veri izni) eklenebilir; her ekleme Identity'de yeniden derleme/deploy
   gerektirmesin diye sabitler (`const string`) kullanıldı — DB'de serbest metin olarak durur ama
@@ -64,6 +71,15 @@ public static class ConsentType
   `"2026-01"`); metin değiştiğinde eski rızalar geçersiz sayılmaz ama hangi sürüme rıza verildiği
   denetlenebilir kalır (KVKK ispat yükü).
 - **`IpAddress`:** HTTP isteği dışında (ör. arka plan job, sistem migrasyonu) null olabilir.
+- **G-1-04 notu (`Employee` öznesi ve KVKK hukuki dayanağı):** `ConsentSubjectType.Employee` rızaları
+  **yalnızca gerçekten isteğe bağlı** işlemler için kullanılır (ör. şirket içi anket/etkinlik verisi
+  paylaşımı, isteğe bağlı iletişim tercihleri). Bordro, SGK bildirimi, özlük dosyası gibi
+  **iş sözleşmesinin ifası veya kanuni yükümlülük** kapsamındaki işleme KVKK md. 5/2-c (sözleşmenin
+  kurulması/ifası) veya md. 5/2-ç (kanuni yükümlülük) dayanağına göre yapılır ve bu işlemler
+  `IConsentRecorder.HasActiveConsentAsync` ile **kapılanmaz** — rıza yokluğu bordro/SGK/özlük
+  işlemesini engellemez veya durdurmaz. Bu ayrım, "rıza her veri işleme için gerekir" yanlış
+  varsayımını önlemek için burada açıkça belirtilir; ihlali (bordro akışının rızaya bağlanması)
+  Faz 1'e bloker olarak bildirilir.
 
 ## Faz 3/9 için beklenen kullanım
 
@@ -89,6 +105,23 @@ bilinçli bir karar (DI çözümlemesi implementasyon tamamlanana kadar başarı
 3 birim test: `tests/Modules/Sense.Modules.Identity.Tests/Privacy/ConsentRecorderTests.cs` (NSubstitute ile
 `IConsentRecordRepository`/`IUnitOfWork` sahte, gerçek DB yok).
 
+## Tur 1 (ikinci dilim): geri alma (G-1-02) + domain değişmezleri (G-1-09)
+
+- `ConsentRecord.WithdrawnAt` (`DateTimeOffset?`) + idempotent `Withdraw(DateTimeOffset at)`;
+  `IsActive => SupersededAt is null && WithdrawnAt is null`.
+- `IConsentRecorder.WithdrawAsync(tenantId, subjectType, subjectId, consentType, withdrawnAt, ct)`:
+  `ConsentRecorder` implementasyonu `FindActiveAsync` → aktif kayıt varsa `Withdraw` + `SaveChangesAsync` →
+  `true`; aktif kayıt yoksa hiçbir şey değiştirmeden (SaveChanges dahil) `false` (idempotent, hata
+  fırlatmaz). Geri alma yeni kayıt açmaz; yeniden rıza ayrı bir `RecordAsync` çağrısıyla yeni aktif
+  satır üretir. 4 yeni birim test (aktif kaydı geri alır + kaydeder; aktif kayıt yoksa `false` +
+  `SaveChanges` çağrılmaz; geri alma sonrası `RecordAsync` yeni aktif kayıt üretir).
+- `ConsentRecord.Create` (G-1-09): `Sense.Shared.Kernel.Guard` ile ispat kolonları doğrulanır —
+  `ConsentType`/`NoticeVersion` boş/yalnız boşluk olamaz (`Guard.NotEmpty`), `SubjectId` `Guid.Empty`
+  olamaz (`Guard.NotDefault`) — modülün mevcut domain hata kalıbı (`Tenant`/`User` sınıflarıyla aynı
+  `Guard` sınıfı). 4 yeni birim test: `ConsentRecordCreateInvariantTests`.
+- Yalnız ekleme yapıldı; `RecordAsync`/`HasActiveConsentAsync` imzaları ve `ConsentRecorder`'ın henüz
+  DI'a kayıtlı olmama durumu **değişmedi**.
+
 ## Beklenen `identity.consent_records` kolonları (EF/migration henüz yok — `AddAuditLog` main'e girdikten sonra ayrı bir `MIGRATION-ISTEGI.md` girdisi olacak)
 
 | Kolon | Tip | Null | Not |
@@ -101,15 +134,27 @@ bilinçli bir karar (DI çözümlemesi implementasyon tamamlanana kadar başarı
 | `notice_version` | `varchar(20)` | hayır | ör. `"2026-09"` |
 | `accepted_at` | `timestamp with time zone` | hayır | |
 | `ip_address` | `varchar(45)` | evet | IPv6 için yeterli uzunluk; job/migrasyon kaynaklı kayıtlarda null |
-| `superseded_at` | `timestamp with time zone` | evet | null = hâlâ aktif |
+| `superseded_at` | `timestamp with time zone` | evet | null = hâlâ aktif; aynı özne+tür için yeni kayıt geldiğinde doldurulur |
+| `withdrawn_at` | `timestamp with time zone` | evet | null = geri alınmamış; `IConsentRecorder.WithdrawAsync` ile doldurulur (G-1-02) |
 
-**İndeksler:** `(tenant_id, subject_type, subject_id, consent_type)` — `FindActiveAsync`'in birincil erişim yolu
-(pratikte `WHERE ... AND superseded_at IS NULL` ile daraltılacak, kısmi index bir seçenek).
+**İndeksler:**
+- `(tenant_id, subject_type, subject_id, consent_type)` — `FindActiveAsync`'in genel erişim yolu.
+- **Kısmi unique index (G-1-11):**
+  `(tenant_id, subject_type, subject_id, consent_type) WHERE superseded_at IS NULL AND withdrawn_at IS NULL`
+  — aynı özne+tür için aynı anda en fazla **bir** aktif kayıt olmasını veritabanı seviyesinde garanti
+  eder (uygulama katmanındaki "önce supersede et, sonra ekle" kuralına ek güvence; yarış durumunda
+  ikinci INSERT unique ihlaliyle reddedilir).
 
 ## Açık iş (sonraki Faz 1 turu)
 
-- `identity.consent_records` EF entity + config + migration (`MIGRATION-ISTEGI.md`'ye ADR-0005'e göre eklenecek,
-  yukarıdaki kolon listesiyle).
+- `identity.consent_records` EF entity + config + migration — istek `status/faz-01/MIGRATION-ISTEGI.md`'ye
+  bu turda yazıldı (`AddConsentRecords`, ADR-0005), yukarıdaki kolon/index listesiyle. `IdentityDbContext`'e
+  bu tur **dokunulmadı**.
+  - **⚠️ Not (PC-B not-bloker):** yukarıdaki kolon listesi (S-3/TB-3 sözleşmesi, doc/`MIGRATION-ISTEGI.md`
+    ile birebir) ADR-0011 EF dondurma öncesi taslaktı; ADR-0011 kuyruğu artık boşaldı (PANO: `AuditLogEntries`
+    dahil 6/7 main'de) — bu, `AddConsentRecords`'un da aynı ADR-0013 kalıbıyla (izole EF grubu commit'i) bir
+    sonraki turda yazılabileceği anlamına gelir, ayrıca bir onay gerekmez.
 - `IConsentRecordRepository : ...` EF implementasyonu (Identity.Infrastructure) + `ConsentRecorder`'ın
-  IdentityModule'de DI kaydı.
-- Rıza geri alma modelinin netleştirilmesi (bu belge güncellenecek).
+  IdentityModule'de DI kaydı — migration main'e girdikten sonra.
+- Rıza geri alma modeli bu turda netleşti (`WithdrawnAt`/`WithdrawAsync`, yukarısı); açık kalan tek şey EF
+  tarafı.

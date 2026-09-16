@@ -8,6 +8,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Requests;
+using Sense.Modules.Leave.Application.RuleSets;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Ledger;
@@ -210,12 +211,12 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
     }
 
     private async Task<Result<LeaveRequestDto>> SubmitAsync(
-        Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end, TimeOnly? startTime = null, TimeOnly? endTime = null)
+        Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
     {
         using var scope = ServiceProvider!.CreateScope();
         var handler = ActivatorUtilities.CreateInstance<SubmitLeaveRequestHandler>(scope.ServiceProvider, _currentUser, _workflow);
         var result = await handler.Handle(
-            new SubmitLeaveRequestCommand(leaveTypeId, start, end, null, StartTime: startTime, EndTime: endTime), CancellationToken.None);
+            new SubmitLeaveRequestCommand(leaveTypeId, start, end, null, StartTime: startTime, EndTime: endTime, HalfDayPeriod: halfDayPeriod), CancellationToken.None);
         if (result.IsSuccess)
         {
             await scope.ServiceProvider.GetRequiredService<LeaveDbContext>().SaveChangesAsync();
@@ -504,5 +505,96 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // Overlapping window: still rejected.
         var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 30), new TimeOnly(12, 30));
         overlapping.Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
+    }
+
+    /// <summary>
+    /// LeaveRequestRules.ValidatePartialDayShape gap (faz-05 tur 1 madde 5): an Hourly-unit type ("leave.type.job_search")
+    /// submitted without a time range is rejected before LeaveRequest.Submit is even reached.
+    /// </summary>
+    [Fact]
+    public async Task Submit_HourlyType_WithoutTimeRange_IsRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid jobSearchId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            jobSearchId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.JobSearch).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        (await SubmitAsync(tenantId, jobSearchId, monday, monday)).Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+    }
+
+    /// <summary>
+    /// LeaveRequestRules.ValidatePartialDayShape gap: a FullDay-unit type ("leave.type.annual") rejects a time range or
+    /// half-day period - current (unchanged) behaviour, not a "leave request without time fields" special case.
+    /// </summary>
+    [Fact]
+    public async Task Submit_FullDayType_WithTimeRange_IsRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        (await SubmitAsync(tenantId, annualId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0))).Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+    }
+
+    /// <summary>
+    /// LeaveRequestRules.ValidatePartialDayShape gap: a HalfDay-unit type needs a period and a single day (no seeded
+    /// type uses Unit=HalfDay - "leave.type.job_search" is the only non-FullDay seed and it is Hourly), and the
+    /// successful path calculates the fixed <see cref="LeavePartialDay.HalfDayFraction"/> (0.5 gün).
+    /// </summary>
+    [Fact]
+    public async Task Submit_HalfDayType_RequiresPeriodAndSingleDay_AndCalculatesHalfADay()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        var approvalId = Guid.NewGuid();
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(approvalId));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid halfDayTypeId;
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var ruleSetId = (await db.RuleSets.SingleAsync()).Id;
+            var settings = new LeaveTypeSettings(LeaveTypeCode.Custom, "Yarım gün izni", null, true, LeaveLimitType.Unlimited, Unit: LeaveUnit.HalfDay);
+            var added = await ActivatorUtilities.CreateInstance<AddLeaveTypeHandler>(write.ServiceProvider)
+                .Handle(new AddLeaveTypeCommand(ruleSetId, settings), CancellationToken.None);
+            added.IsSuccess.ShouldBeTrue(added.IsFailure ? added.Error.Code : null);
+            halfDayTypeId = added.Value;
+            await db.SaveChangesAsync();
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        (await SubmitAsync(tenantId, halfDayTypeId, monday, monday)).Error.Code.ShouldBe(LeaveDomainErrors.RequestPartialDayTimeInvalid);
+        (await SubmitAsync(tenantId, halfDayTypeId, monday, monday.AddDays(1), halfDayPeriod: HalfDayPeriod.Morning)).Error.Code
+            .ShouldBe(LeaveDomainErrors.RequestPartialDayRequiresSingleDate);
+
+        var submitted = await SubmitAsync(tenantId, halfDayTypeId, monday, monday, halfDayPeriod: HalfDayPeriod.Morning);
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+        submitted.Value.CalculatedDays.ShouldBe(0.5m);
     }
 }

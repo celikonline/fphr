@@ -31,6 +31,9 @@ public sealed class UserRepository(IdentityDbContext db) : IUserRepository
         return db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalized, ct);
     }
 
+    public Task<User?> GetByEmployeeIdAsync(Guid employeeId, CancellationToken ct) =>
+        db.Users.FirstOrDefaultAsync(u => u.EmployeeId == employeeId, ct);
+
     /// <summary>Giriş ekranı: kiracı filtresi bilinçli olarak kaldırılır (yalnız e-posta eşleşmesi, silinmişler hariç).</summary>
     public async Task<IReadOnlyList<(User User, Guid TenantId)>> FindAcrossTenantsByEmailAsync(string email, CancellationToken ct)
     {

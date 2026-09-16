@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Domain.Impersonation;
 using Sense.Modules.Identity.Domain.Invitations;
 using Sense.Modules.Identity.Domain.Roles;
@@ -12,7 +13,8 @@ using Sense.Shared.Infrastructure.Persistence;
 
 namespace Sense.Modules.Identity.Infrastructure.Persistence;
 
-public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITenantContext tenantContext) : ModuleDbContext(options, tenantContext)
+public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> options, ITenantContext tenantContext)
+    : ModuleDbContext(options, tenantContext), IIdentityUnitOfWork
 {
     public const string SchemaName = "identity";
 

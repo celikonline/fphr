@@ -11,6 +11,7 @@ import {
   Menu,
   Select,
   Skeleton,
+  Stack,
   Table,
   Text,
   TextInput,
@@ -46,6 +47,58 @@ const CALENDARS_QUERY_KEY = ["organization", "holiday-calendars"] as const;
 const NONE = "__none__";
 
 type FormState = { unit?: OrgUnit } | null;
+type TFn = (key: string, opts?: Record<string, unknown>) => string;
+
+/** Aksiyon menüsü — masaüstü tablo satırı ve mobil kart listesi arasında paylaşılır (aynı koşullar/aynı öğeler). */
+function UnitActionsMenu({
+  t,
+  canUpdateUnit,
+  canAuthorize,
+  canDeleteUnit,
+  onEdit,
+  onAuthorize,
+  onDeactivate,
+}: {
+  t: TFn;
+  canUpdateUnit: boolean;
+  canAuthorize: boolean;
+  canDeleteUnit: boolean;
+  onEdit: () => void;
+  onAuthorize: () => void;
+  onDeactivate: () => void;
+}) {
+  return (
+    <Menu position="bottom-end">
+      <Tooltip label={t("common:actions")}>
+        <Menu.Target>
+          <ActionIcon variant="subtle" color="gray" aria-label={t("common:actions")}>
+            <MoreHorizontal size={16} />
+          </ActionIcon>
+        </Menu.Target>
+      </Tooltip>
+      <Menu.Dropdown>
+        {canUpdateUnit && (
+          <Menu.Item leftSection={<Pencil size={16} />} onClick={onEdit}>
+            {t("common:edit")}
+          </Menu.Item>
+        )}
+        {canAuthorize && (
+          <Menu.Item leftSection={<ShieldCheck size={16} />} onClick={onAuthorize}>
+            {t("structure:authorization.title")}
+          </Menu.Item>
+        )}
+        {canDeleteUnit && (
+          <>
+            <Menu.Divider />
+            <Menu.Item color="red" leftSection={<Ban size={16} />} onClick={onDeactivate}>
+              {t("structure:units.deactivate")}
+            </Menu.Item>
+          </>
+        )}
+      </Menu.Dropdown>
+    </Menu>
+  );
+}
 
 export default function CompanyStructurePage() {
   const canRead = usePermission("organization.units.read");
@@ -163,7 +216,7 @@ function CompanyStructure() {
       toast({
         variant: "destructive",
         title: t("common:error"),
-        description: structureErrorMessage(error, t, undefined, { 409: "structure:errors.unitHasChildren" }),
+        description: structureErrorMessage(error, t),
       });
       setDeactivateTarget(null);
     },

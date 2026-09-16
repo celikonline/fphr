@@ -9,11 +9,17 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { cancelGoal, getTeamGoals, type Goal, type GoalStatus } from "@/services/performance.service";
 
 const TEAM_GOALS_KEY = ["performance", "goals", "team"] as const;
+
+function goalErrorMessage(error: unknown, t: (key: string) => string): string {
+  const problem = getApiProblem(error);
+  if (problem?.code === "performance.review.immutable") return t("performance:goals.errors.reviewImmutable");
+  return getApiErrorMessage(error, t("performance:genericError"));
+}
 
 const STATUS_BADGE: Record<GoalStatus, { color?: string; variant: "light" | "filled" | "outline" }> = {
   open: { variant: "light" },
@@ -47,7 +53,7 @@ function TeamGoals() {
     },
     onError: (err) => {
       setCancelTarget(null);
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("performance:genericError")) });
+      toast({ variant: "destructive", title: t("common:error"), description: goalErrorMessage(err, t) });
     },
   });
 

@@ -135,6 +135,7 @@
     "levelSystemImmutable": "The Company level is a system level and can't be deleted.",
     "levelInUse": "This level can't be deleted because its units have active employees.",
     "unitHasChildren": "This unit has active sub-units and can't be deactivated. Move or deactivate the sub-units first.",
+    "unitHasActiveEmployees": "This unit has active employees and can't be deactivated.",
     "parentCycle": "The selected parent unit would create a cycle.",
     "locationInUse": "The location is linked to an active unit."
   }

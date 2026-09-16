@@ -5,9 +5,11 @@ namespace Sense.Modules.Payroll.Application.Ports;
 /// tur 1 madde 3). <see cref="ApprovedExpenseTotal"/> is the only figure <see cref="Domain.Calculation.PayrollCalculator"/>
 /// currently consumes (feeds <see cref="Domain.Calculation.PayrollCalculationInput.ExpenseReimbursement"/> as a
 /// tax-free NET addition); <see cref="OpenAdvanceBalance"/> is informational this slice, reserved for a future
-/// avans-deduction bridge (not wired into the calculator yet).
+/// avans-deduction bridge (not wired into the calculator yet). <see cref="UndocumentedExpenseTotal"/> (S-13 eki, PO
+/// kararı) is the receipt-less (fişsiz) counterpart of <see cref="ApprovedExpenseTotal"/> - never fed into the
+/// calculator, only surfaced for the Excel export's "Fişsiz masraf (bordroya eklenmedi)" column.
 /// </summary>
-public sealed record ExpensePayoutFigures(decimal ApprovedExpenseTotal, decimal OpenAdvanceBalance);
+public sealed record ExpensePayoutFigures(decimal ApprovedExpenseTotal, decimal OpenAdvanceBalance, decimal UndocumentedExpenseTotal = 0m);
 
 /// <summary>
 /// Payroll's read port for the employee's monthly approved-expense-reimbursement figures - mirrors

@@ -10,4 +10,12 @@ public interface ILocationLookup
 {
     /// <summary>True if an active location with this id exists for the given tenant.</summary>
     Task<bool> ExistsActiveAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves location names for display (S-19, Faz 9 kariyer sayfası). Includes inactive locations
+    /// (a closed posting may still reference a now-inactive location and should still show its name);
+    /// ids with no matching location for this tenant are simply absent from the result - callers must
+    /// not assume every requested id comes back.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default);
 }

@@ -22,12 +22,15 @@ public interface IJobPostingRepository
     /// <summary>
     /// Public career-site lookup by the permanent apply slug (R3): bypasses the tenant query filter, since the
     /// caller is anonymous and doesn't know the tenant yet - the caller must resolve tenant scope from the result
-    /// before doing anything else (see PublicCareerCommands/Queries).
+    /// before doing anything else (see PublicCareerCommands/Queries). <paramref name="asOf"/> mirrors
+    /// <see cref="ListPublicByTenantAsync"/>'s ClosingDate rule (Faz 9 gün açılışı TALIMAT'ı madde 2) - a posting
+    /// whose closing date has passed is treated exactly like one that doesn't exist (404 <c>PostingNotFound</c>,
+    /// never a distinct "kapalı" signal, so a stale link can't be used to probe posting existence).
     /// </summary>
-    Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, CancellationToken cancellationToken = default);
+    Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, DateOnly asOf, CancellationToken cancellationToken = default);
 
-    /// <summary>Other Open postings of the same tenant (R3 "diğer açık pozisyonlar"), excluding one posting id.</summary>
-    Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, CancellationToken cancellationToken = default);
+    /// <summary>Other Open, not-yet-expired postings of the same tenant (R3 "diğer açık pozisyonlar"), excluding one posting id.</summary>
+    Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, DateOnly asOf, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Public career site's posting list for one tenant (S-10, Faz 9 gün açılışı TALIMAT'ı): Open status AND not
@@ -50,7 +53,10 @@ public interface ICandidateRepository
 
     /// <summary>
     /// Not-yet-anonymized candidates created before <paramref name="createdBefore"/> (KVKK retention sweep, see
-    /// <see cref="Sense.Modules.Recruitment.Domain.RecruitmentLimits.CandidateDataRetentionMonths"/>).
+    /// <see cref="Sense.Modules.Recruitment.Domain.RecruitmentLimits.CandidateDataRetentionMonths"/>). Excludes a
+    /// candidate with at least one <see cref="Applications.ApplicationStage.Hired"/> application (G-9-09, Faz 9 gün
+    /// açılışı TALIMAT'ı: işe alınmış bir adayın kaydı otomatik saklama süpürmesiyle silinmez - istihdam ilişkisinin
+    /// kaynağı olarak elde tutulur; yalnızca manuel/isteğe bağlı imha hâlâ mümkündür).
     /// </summary>
     Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default);
 }

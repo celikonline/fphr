@@ -24,9 +24,16 @@
     "title": "[DE] Title",
     "description": "[DE] Description",
     "targetDate": "[DE] Target date",
+    "targetDateCycleHint": "[DE] Cycle range: {{start}} – {{end}}",
     "reviewCycle": "[DE] Review cycle",
     "reviewCycleNone": "[DE] No cycle selected",
     "submit": "[DE] Add"
+  },
+  "goals": {
+    "errors": {
+      "targetDateOutsideCycle": "[DE] The target date must fall within the review cycle's date range.",
+      "reviewImmutable": "[DE] This goal belongs to a closed review cycle and can no longer be changed."
+    }
   },
   "team": {
     "title": "[DE] Team goals",
@@ -45,7 +52,7 @@
     "cancelled": "[DE] Goal cancelled."
   },
   "reviewCycles": {
-    "title": "[DE] My review cycles",
+    "title": "[DE] Review cycles",
     "subtitle": "[DE] View the review cycles you are part of.",
     "empty": "[DE] You don't have any review cycles assigned right now.",
     "dateRange": "[DE] {{start}} – {{end}}",
@@ -53,6 +60,66 @@
       "draft": "[DE] Draft",
       "active": "[DE] Active",
       "closed": "[DE] Closed"
+    },
+    "tabs": {
+      "mine": "[DE] My cycles",
+      "all": "[DE] All cycles"
+    },
+    "admin": {
+      "filter": {
+        "label": "[DE] Filter by status",
+        "all": "[DE] All"
+      },
+      "empty": "[DE] No review cycles defined.",
+      "create": "[DE] Create cycle",
+      "createTitle": "[DE] New review cycle",
+      "createSubmit": "[DE] Create",
+      "created": "[DE] Review cycle created.",
+      "fields": {
+        "name": "[DE] Cycle name",
+        "startDate": "[DE] Start date",
+        "endDate": "[DE] End date"
+      },
+      "errors": {
+        "invalidDateRange": "[DE] The end date must be after the start date.",
+        "nameRequired": "[DE] Cycle name is required."
+      },
+      "activate": "[DE] Activate",
+      "activated": "[DE] Cycle activated.",
+      "close": "[DE] Close",
+      "closed": "[DE] Cycle closed.",
+      "closeConfirmTitle": "[DE] Close cycle",
+      "closeConfirmDescription": "[DE] Are you sure you want to close \"{{name}}\"? This cannot be undone; once closed, no forms linked to this cycle can be published."
+    }
+  },
+  "reviewForms": {
+    "openButton": "[DE] Forms",
+    "title": "[DE] {{name}} - Review forms",
+    "create": "[DE] Create form",
+    "createTitle": "[DE] New review form",
+    "createSubmit": "[DE] Create",
+    "created": "[DE] Review form created.",
+    "empty": "[DE] No review forms for this cycle.",
+    "questionCount": "[DE] {{count}} questions",
+    "status": {
+      "draft": "[DE] Draft",
+      "published": "[DE] Published"
+    },
+    "publish": "[DE] Publish",
+    "published": "[DE] Form published.",
+    "fields": {
+      "title": "[DE] Form title",
+      "questions": "[DE] Questions",
+      "questionText": "[DE] Question text"
+    },
+    "addQuestion": "[DE] Add question",
+    "removeQuestion": "[DE] Remove question",
+    "totalWeight": "[DE] Total weight: {{total}}%",
+    "errors": {
+      "weightsMustSumTo100": "[DE] The question weights must add up to 100%.",
+      "titleRequired": "[DE] Form title is required.",
+      "questionTextRequired": "[DE] Question text is required.",
+      "cycleImmutable": "[DE] This cycle is closed, so the form can no longer be published."
     }
   }
 }

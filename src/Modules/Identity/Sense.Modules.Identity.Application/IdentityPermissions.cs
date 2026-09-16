@@ -11,6 +11,8 @@ public static class IdentityPermissions
     public const string UsersManage = "identity.users.manage";
     public const string UsersInvite = "identity.users.invite";
     public const string UsersSuspend = "identity.users.suspend";
+
+    // Kullanılmıyor — yönetici MFA sıfırlama identity.users.manage (tur 1). Kaldırma kararı backlog B-3-01.
     public const string UsersResetMfa = "identity.users.reset_mfa";
     public const string UsersImpersonate = "identity.users.impersonate";
     public const string RolesView = "identity.roles.view";

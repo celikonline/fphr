@@ -46,6 +46,13 @@
     "empty": "Henüz ilan yok.",
     "viewDetail": "İlanı görüntüle"
   },
+  "postingDetail": {
+    "careerLink": {
+      "copy": "Bağlantıyı kopyala",
+      "copied": "Kopyalandı",
+      "openInCareer": "Kariyer sayfasında aç"
+    }
+  },
   "employmentTypes": {
     "fullTime": "Tam zamanlı",
     "partTime": "Yarı zamanlı",
@@ -89,7 +96,20 @@
     "anonymizeDescription": "Bu adayın adı, e-postası ve telefonu geri alınamaz şekilde silinecek; başvuru geçmişi kaydı kalır ama artık bu kişiyi tanımlamaz.",
     "anonymizeSuccess": "Aday verisi anonimleştirildi.",
     "anonymized": "Anonimleştirildi",
-    "anonymizedRowHint": "Bu adayın verileri KVKK kapsamında anonimleştirildi; düzenlenemez veya aşaması taşınamaz."
+    "anonymizedRowHint": "Bu adayın verileri KVKK kapsamında anonimleştirildi; düzenlenemez veya aşaması taşınamaz.",
+    "anonymizeExpired": {
+      "buttonLabel": "Saklama süresi dolanları anonimleştir",
+      "dialogTitle": "Saklama süresi dolan adayları anonimleştir",
+      "description": "Saklama süresi dolan tüm adayların adı, e-postası ve telefonu geri alınamaz şekilde silinecek. İşe alınan adaylar bu işlemden hariç tutulur.",
+      "confirm": "Anonimleştir",
+      "successCount": "{{count}} aday anonimleştirildi.",
+      "successEmpty": "Süresi dolan aday yok."
+    },
+    "applications": {
+      "actionLabel": "Başvurular",
+      "drawerTitle": "{{name}} - Başvurular",
+      "empty": "Bu adayın henüz başvurusu yok."
+    }
   },
   "applications": {
     "title": "Başvurular",

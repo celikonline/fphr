@@ -21,20 +21,14 @@ namespace Sense.Modules.Reporting.Tests;
 /// real database, the way they do in production.
 /// </summary>
 /// <remarks>
-/// ReportingDbContext has no EF migration yet (ADR-0011/MIGRATION-ISTEGI.md "InitialReporting" - queued, not
-/// generated). <see cref="OnDatabaseReadyAsync"/> still calls Database.MigrateAsync() per the TestFixture
-/// contract, but with zero migrations it only creates the (empty) migrations-history table - report_executions
-/// never gets created, so every test here is skipped with that reason until the migration lands. Do not remove
-/// the Skip once it starts failing for a different reason (that would mean the migration landed and this file
-/// needs a real run, not a permanent skip).
+/// ReportingDbContext's "InitialReporting" EF migration landed 2026-09-16 (ADR-0011/MIGRATION-ISTEGI.md,
+/// commit 3211e05) - <see cref="OnDatabaseReadyAsync"/>'s Database.MigrateAsync() now creates report_executions
+/// for real, so these run against a real PostgreSQL container (Testcontainers, see TestFixture/[Collection]).
 /// </remarks>
 [Collection("PostgreSQL")]
 [Trait("Category", "Integration")]
 public sealed class ReportExecutionIntegrationTests : TestFixture
 {
-    private const string NoMigrationYet =
-        "reporting.report_executions has no EF migration yet (ADR-0011, MIGRATION-ISTEGI.md 'InitialReporting') - Database.MigrateAsync() no-ops with zero migrations.";
-
     protected override void ConfigureServices(IServiceCollection services)
     {
         var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
@@ -46,7 +40,7 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
     protected override async Task OnDatabaseReadyAsync() =>
         await ServiceProvider!.GetRequiredService<ReportingDbContext>().Database.MigrateAsync();
 
-    [Fact(Skip = NoMigrationYet)]
+    [Fact]
     public async Task GetReportExecutionFileQuery_WhenRequestedByAnotherUser_FailsForbidden_ThroughRealTenantFilterAndOwnershipCheck()
     {
         var tenantId = Guid.NewGuid();
@@ -74,7 +68,7 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
         result.Error.Code.ShouldBe(ReportingErrors.NotOwner);
     }
 
-    [Fact(Skip = NoMigrationYet)]
+    [Fact]
     public async Task GetReportExecutionFileQuery_WhenRequestedByAnotherTenant_FailsNotFound_ThroughGlobalTenantFilter()
     {
         var tenantId = Guid.NewGuid();
@@ -104,7 +98,7 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
         result.Error.Code.ShouldBe(ReportingErrors.ReportExecutionNotFound);
     }
 
-    [Fact(Skip = NoMigrationYet)]
+    [Fact]
     public async Task GetReportExecutionFileQuery_WhenOwner_ReturnsFile()
     {
         var tenantId = Guid.NewGuid();

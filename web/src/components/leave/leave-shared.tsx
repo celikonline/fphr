@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Anchor, Badge, Button, Card, Divider, Group, Modal, Progress, Select, Skeleton, Stack, Text, Title, type BadgeProps } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { CalendarRange, ListOrdered } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
@@ -19,6 +20,8 @@ import {
 
 const ALL_TYPES = "__all__";
 const PAGE_SIZE = 20;
+/** Narrow phones (S-6 mobil kalıbı, `missing-documents-report.tsx`): a card list reads better than a horizontally-scrolled table. */
+const MOBILE_QUERY = "(max-width: 390px)";
 const REQUESTS_COLUMNS_KEY = "senseik.leave.requests.columns";
 const LEDGER_COLUMNS_KEY = "senseik.leave.ledger.columns";
 /** Column chooser trigger sized like the surrounding `size="sm"` buttons. */
@@ -354,6 +357,7 @@ export function LeaveRequestsTable({
 }) {
   const { t, i18n } = useTranslation(["leave"]);
   const days = useDays();
+  const isMobile = useMediaQuery(MOBILE_QUERY);
   // Newest first until the user sorts by a column.
   const sorted = useMemo(() => [...requests].sort((a, b) => b.startDate.localeCompare(a.startDate)), [requests]);
 
@@ -468,12 +472,74 @@ export function LeaveRequestsTable({
     );
   }
 
+  if (isMobile) {
+    return <LeaveRequestsMobileList requests={sorted} typeName={typeName} actions={actions} onOpen={onOpen} />;
+  }
+
   return (
     <Stack gap="xs">
       <Group justify="flex-end">
         <DataTableViewOptions table={table} className={COLUMN_CHOOSER_CLASS} />
       </Group>
       <DataTable table={table} onRowClick={onOpen} />
+    </Stack>
+  );
+}
+
+/** ≤390px card list mirroring `LeaveRequestsTable`'s columns (S-6 mobil kalıbı). */
+function LeaveRequestsMobileList({
+  requests,
+  typeName,
+  actions,
+  onOpen,
+}: {
+  requests: LeaveRequest[];
+  typeName: (request: LeaveRequest) => string;
+  actions?: (request: LeaveRequest) => ReactNode;
+  onOpen?: (request: LeaveRequest) => void;
+}) {
+  const { t, i18n } = useTranslation(["leave"]);
+  const days = useDays();
+
+  return (
+    <Stack gap="sm">
+      {requests.map((request) => (
+        <Card
+          key={request.id}
+          withBorder
+          padding="md"
+          onClick={onOpen ? () => onOpen(request) : undefined}
+          style={onOpen ? { cursor: "pointer" } : undefined}
+        >
+          <Stack gap={4}>
+            <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
+              <Text size="sm" fw={500}>
+                {typeName(request)}
+              </Text>
+              <LeaveStatusBadge status={request.status} />
+            </Group>
+            <Text size="xs" c="dimmed">
+              {formatDateOnly(request.startDate, i18n.language)} – {formatDateOnly(request.endDate, i18n.language)} · {days(request.calculatedDays)}{" "}
+              {t("leave:days")}
+            </Text>
+            {request.status === "cancelled" && request.cancellationReason && (
+              <Text size="xs" c="dimmed">
+                {request.cancellationReason}
+              </Text>
+            )}
+            {request.description && (
+              <Text size="xs" c="dimmed">
+                {request.description}
+              </Text>
+            )}
+            {actions && (
+              <Group justify="flex-end" gap={4} wrap="nowrap" onClick={(event) => event.stopPropagation()}>
+                {actions(request)}
+              </Group>
+            )}
+          </Stack>
+        </Card>
+      ))}
     </Stack>
   );
 }

@@ -135,6 +135,7 @@
     "levelSystemImmutable": "Şirket seviyesi sistem seviyesidir; silinemez.",
     "levelInUse": "Bu seviyedeki birimlerde aktif çalışan olduğu için seviye silinemez.",
     "unitHasChildren": "Bu birimin aktif alt birimleri olduğu için pasifleştirilemez. Önce alt birimleri taşıyın veya pasifleştirin.",
+    "unitHasActiveEmployees": "Bu birimde aktif çalışan bulunduğu için birim pasifleştirilemez.",
     "parentCycle": "Seçilen üst birim döngü oluşturuyor.",
     "locationInUse": "Lokasyon aktif bir birime bağlı."
   }

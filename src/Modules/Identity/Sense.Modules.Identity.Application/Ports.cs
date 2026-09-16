@@ -1,7 +1,13 @@
 using Sense.Modules.Identity.Domain.Users;
+using Sense.Shared.Contracts.Persistence;
 using Sense.Shared.Contracts.Security;
 
 namespace Sense.Modules.Identity.Application;
+
+/// <summary>Identity'nin SaveChanges portu; komut handler'ları için <see cref="IUnitOfWork"/> zaten pipeline'ın
+/// UnitOfWorkBehaviour'ı ile dolaylı çözülür - bu, doğrudan enjekte edilen tüketiciler (ör. integration event
+/// handler'ları, Performance/Assets modüllerindeki <c>I*UnitOfWork</c> kalıbıyla aynı) içindir.</summary>
+public interface IIdentityUnitOfWork : IUnitOfWork;
 
 /// <summary>Parola hash'leme (Infrastructure: ASP.NET Core PasswordHasher, PBKDF2).</summary>
 public interface IPasswordHasher

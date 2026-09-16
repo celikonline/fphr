@@ -61,4 +61,19 @@ public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRe
             .Where(d => d.Status != DocumentStatus.Deleted)
             .AnyAsync(d => d.FileKey == fileKey && d.BucketName == bucketName, cancellationToken);
     }
+
+    public async Task<IReadOnlyDictionary<Guid, DateOnly?>> GetExpiryDatesByIdsAsync(
+        IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken = default)
+    {
+        if (documentIds.Count == 0)
+        {
+            return new Dictionary<Guid, DateOnly?>();
+        }
+
+        // Query is automatically filtered by tenant via global filter in DbContext
+        return await context.Documents
+            .Where(d => documentIds.Contains(d.Id))
+            .Select(d => new { d.Id, d.ExpiryDate })
+            .ToDictionaryAsync(d => d.Id, d => d.ExpiryDate, cancellationToken);
+    }
 }

@@ -16,4 +16,14 @@ public sealed class BackgroundJobSeedingTests
         seeds.Count.ShouldBe(1);
         seeds[0].CronExpression.ShouldBe("0 6 * * *");
     }
+
+    [Fact]
+    public void GetDefaultSeeds_ContainsExactlyOneCandidateRetentionSweepEntry()
+    {
+        var seeds = BackgroundJobSeeding.GetDefaultSeeds().Where(s => s.JobType == JobType.CandidateRetentionSweep).ToList();
+
+        seeds.Count.ShouldBe(1);
+        seeds[0].JobName.ShouldBe("CandidateRetentionSweep");
+        seeds[0].CronExpression.ShouldBe("30 3 * * *");
+    }
 }

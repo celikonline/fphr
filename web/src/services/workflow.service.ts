@@ -70,6 +70,8 @@ export interface InboxTaskDto {
   requesterName?: string;
   stepNumber: number;
   isFallbackRoleTask: boolean;
+  /** BE ekliyor (tur 2 sözleşmesi); henüz gelmiyorsa undefined/null olarak ele alınır. */
+  submittedAt?: string | null;
 }
 
 export async function listInbox(): Promise<InboxTaskDto[]> {

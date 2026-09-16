@@ -146,4 +146,61 @@ public sealed class ImportDeviceLogsHandlerTests
         result.Value.Skipped.ShouldBe(1);
         result.Value.Errors.ShouldContain(e => e.Code == DeviceLogErrorCodes.MissingEmployeeCode);
     }
+
+    // G-6-14 (4857 md.69): a night shift's "out" punch (past midnight, on the next calendar day) is attributed
+    // back to the shift's own start day instead of forming a broken pair on either side.
+    [Fact]
+    public async Task Handle_NightShiftInBeforeMidnightOutAfter_AssignsBothPunchesToStartDay()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T23:50:00;in\n" +
+                            "10000000146;2026-09-17T06:10:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Imported.ShouldBe(2);
+        result.Value.Skipped.ShouldBe(0);
+        result.Value.Errors.ShouldBeEmpty();
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d =>
+            d.Date == Date && d.CheckIn == new TimeOnly(23, 50) && d.CheckOut == new TimeOnly(6, 10) && d.WorkedMinutes == 380));
+        // Only the start-day's AttendanceDay is touched - the next calendar day is never looked up as its own record.
+        await _days.DidNotReceive().FindByEmployeeAndDateAsync(_employeeId, Date.AddDays(1), Arg.Any<CancellationToken>());
+    }
+
+    // Regular day shift (checkout same day, well before midnight) must stay exactly as today's behavior.
+    [Fact]
+    public async Task Handle_RegularDayShift_IsNotTreatedAsNightShift()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T08:55:00;in\n" +
+                            "10000000146;2026-09-16T18:05:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.CheckIn == new TimeOnly(8, 55) && d.CheckOut == new TimeOnly(18, 5) && d.WorkedMinutes == 550));
+    }
+
+    // A stray morning "out" with no matching previous-day evening "in" (in this file or an existing record) keeps
+    // today's behavior: its own day, missing check-in anomaly - not silently reassigned.
+    [Fact]
+    public async Task Handle_MorningOutWithoutPreviousDayCheckIn_StaysOnOwnDay()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date.AddDays(-1), Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n10000000146;2026-09-16T06:10:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Imported.ShouldBe(1);
+        result.Value.Skipped.ShouldBe(0);
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.Date == Date && d.CheckIn == null && d.CheckOut == new TimeOnly(6, 10)));
+    }
 }

@@ -1,5 +1,6 @@
 using Sense.Shared.Contracts.Persistence;
 using Sense.Shared.Contracts.Privacy;
+using Sense.Shared.Kernel;
 
 namespace Sense.Modules.Identity.Application.Privacy;
 
@@ -38,22 +39,30 @@ public sealed class ConsentRecord
     /// <summary>Null = hâlâ aktif; dolu = aynı özne+tür için daha yeni bir kayıt geldiği an.</summary>
     public DateTimeOffset? SupersededAt { get; private set; }
 
-    public bool IsActive => SupersededAt is null;
+    /// <summary>Null = geri alınmamış; dolu = öznenin bu rızayı geri aldığı an (G-1-02).</summary>
+    public DateTimeOffset? WithdrawnAt { get; private set; }
 
+    public bool IsActive => SupersededAt is null && WithdrawnAt is null;
+
+    /// <summary>G-1-09: ispat kolonları (tür/sürüm/özne) boş veya varsayılan olamaz.</summary>
     public static ConsentRecord Create(RecordConsent request) => new()
     {
         Id = Guid.CreateVersion7(),
         TenantId = request.TenantId,
         SubjectType = request.SubjectType,
-        SubjectId = request.SubjectId,
-        ConsentType = request.ConsentType,
-        NoticeVersion = request.NoticeVersion,
+        SubjectId = Guard.NotDefault(request.SubjectId),
+        ConsentType = Guard.NotEmpty(request.ConsentType),
+        NoticeVersion = Guard.NotEmpty(request.NoticeVersion),
         AcceptedAt = request.AcceptedAt,
         IpAddress = request.IpAddress,
     };
 
     /// <summary>Idempotent: birden fazla çağrılırsa ilk <see cref="SupersededAt"/> korunur.</summary>
     public void Supersede(DateTimeOffset at) => SupersededAt ??= at;
+
+    /// <summary>Idempotent geri alma: birden fazla çağrılırsa ilk <see cref="WithdrawnAt"/> korunur (G-1-02).
+    /// Geri alma yeni kayıt açmaz; bu satır append-only kalır, yalnızca yaşam döngüsü damgası doldurulur.</summary>
+    public void Withdraw(DateTimeOffset at) => WithdrawnAt ??= at;
 }
 
 /// <summary>
@@ -89,4 +98,19 @@ public sealed class ConsentRecorder(IConsentRecordRepository repository, IUnitOf
 
     public async Task<bool> HasActiveConsentAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, CancellationToken ct) =>
         await repository.FindActiveAsync(tenantId, subjectType, subjectId, consentType, ct) is not null;
+
+    /// <summary>Idempotent: aktif kayıt yoksa hiçbir şey değiştirmeden (SaveChanges dahil) <see langword="false"/>
+    /// döner. Geri alma yeni bir kayıt açmaz - yeniden rıza için ayrı bir <see cref="RecordAsync"/> çağrısı gerekir.</summary>
+    public async Task<bool> WithdrawAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, DateTimeOffset withdrawnAt, CancellationToken ct)
+    {
+        var active = await repository.FindActiveAsync(tenantId, subjectType, subjectId, consentType, ct);
+        if (active is null)
+        {
+            return false;
+        }
+
+        active.Withdraw(withdrawnAt);
+        await unitOfWork.SaveChangesAsync(ct);
+        return true;
+    }
 }

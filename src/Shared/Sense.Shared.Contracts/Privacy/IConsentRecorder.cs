@@ -12,6 +12,11 @@ public interface IConsentRecorder
 
     /// <summary>Belirtilen özne için verilen rıza türünde, henüz geri alınmamış aktif bir kayıt olup olmadığını sorgular.</summary>
     Task<bool> HasActiveConsentAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, CancellationToken ct);
+
+    /// <summary>Aktif bir rıza kaydı varsa geri alır ve <see langword="true"/> döner; aktif kayıt yoksa hiçbir şey
+    /// değiştirmeden <see langword="false"/> döner (idempotent, hata fırlatmaz). Geri alma yeni bir kayıt açmaz;
+    /// yeniden rıza için ayrı bir <see cref="RecordAsync"/> çağrısı gerekir.</summary>
+    Task<bool> WithdrawAsync(Guid tenantId, ConsentSubjectType subjectType, Guid subjectId, string consentType, DateTimeOffset withdrawnAt, CancellationToken ct);
 }
 
 /// <summary>Bir rıza kaydı isteği.</summary>

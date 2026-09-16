@@ -78,11 +78,12 @@ logo_document_id uuid nullable).
 
 ## Maliyet merkezleri (S-4, roadmap Faz 2 item #2)
 
-**Durum (bu tur):** Domain aggregate (`CostCenter`, tur 3) + Application katmanı (komut/sorgu
-handler'ları, bu tur) + `CostCentersController` (bu tur) yazıldı; **EF config/migration/DI kaydı henüz
-yok** (`status/faz-02/MIGRATION-ISTEGI.md`, ADR-0005/0008 — modül başına tek açık istek, EF dondurma).
-Uç şekli aşağıda **donmuştur**, FE bu sözleşmeyle geliştirir; DB'ye bağlanınca (repository impl + DI)
-davranış değişmez, yalnız 500 yerine gerçek veri döner.
+**Durum (gün açılışı tur 1, ADR-0013):** Domain aggregate (`CostCenter`) + Application katmanı (komut/
+sorgu handler'ları) + `CostCentersController` + **EF config/repository/lookup/DI kaydı** (bu tur, tek
+izole grup) yazıldı; yalnız **migration henüz üretilmedi** (`status/faz-02/MIGRATION-ISTEGI.md`,
+ADR-0005/0013 — komut çalıştırılana kadar PO push etmez, Testcontainers entegrasyon testleri "pending
+model changes" ile kırılabilir, bilinçli geçici durum). Uç şekli aşağıda **donmuştur**, FE bu sözleşmeyle
+geliştirir; migration landınca davranış değişmez, yalnız 500 yerine gerçek veri döner.
 
 ### `GET /api/v{version}/organization/cost-centers?includeInactive=false`
 - Yetki: `organization.cost_centers.view`
@@ -130,9 +131,29 @@ ExternalAccountant/Auditor'ın zaten sahip olduğu joker) bu iki anahtarı **oto
 gerçek `apiClient` çağrıları; eski localStorage mock'u kaldırıldı. `web/src/pages/company-profile.tsx`
 sayfa yapısı değişmedi (talimat şartı) — servis katmanı arkadan değişti.
 
+## Birim pasifleştirme — hata kodları (gün açılışı tur 1 BE md.1-2)
+
+`DELETE /api/v{version}/organization/units/{id}` (soft-deactivate, `OrgUnitsController` — mevcut uç,
+davranış genişletildi):
+- 409 `organization.unit.has_active_children` — alt birimleri aktif olan birim pasifleştirilemez (kod
+  değeri düzeltildi: daha önce yanlışlıkla `organization.unit_type.in_use` ile aynıydı, artık ayrı).
+- 409 `organization.unit.has_active_employees` — **yeni**: birimde aktif çalışan varsa pasifleştirme
+  engellenir (`DeactivateOrgUnitHandler`'a `IEmployeeLookup.AnyActiveInOrgUnitsAsync` eklendi,
+  `DeleteOrgUnitTypeHandler` ile aynı kalıp). Kontrol sırası: önce alt birim, sonra aktif çalışan.
+- `organization.unit_type.in_use` (seviye silme ucu, `OrgUnitTypesController`) **değişmedi** — web
+  `structure/errors.ts` ona hâlâ ayrı bağlı, dokunulmadı.
+
+## S-19 — konum adı portu (Faz 9 kariyer sayfası için, Faz 2 yazar)
+
+`Organization.Contracts.ILocationLookup.GetNamesAsync(tenantId, locationIds, ct)` →
+`IReadOnlyDictionary<Guid, string>`. Pasif konumlar dahil edilir (kapanmış bir ilan hâlâ artık pasif bir
+konuma referans verebilir ve adını göstermeye devam etmeli); tenant'a ait olmayan veya bulunamayan id'ler
+sonuç sözlüğünde **yok** — çağıran her istediği id'nin geri geleceğini varsaymamalı. Mevcut
+`ExistsActiveAsync` değişmedi. Implementasyon: `Infrastructure/Lookups/LocationLookup.cs`.
+
 ## Bilinen açık işler (bu fazın kapsamı dışında bırakıldı, not düşüldü)
 - Logo için kalıcı görüntüleme URL'i (Documents.Contracts lookup).
 - Çoklu şirket (`JointEmploymentGroupCode`) senaryosunda `PrimaryCompanyResolver`'ın genişletilmesi.
-- Maliyet merkezleri: EF config + `AddCostCenters` migration + `ICostCenterRepository`/`ICostCenterLookup`
-  Infrastructure impl'i + DI kaydı bekliyor (`status/faz-02/MIGRATION-ISTEGI.md`); uçlar derleniyor ama
-  DI çözümlenemediği için bu istek işlenene kadar 500 döner.
+- Maliyet merkezleri: `AddCostCenters` migration'ının üretilmesi bekliyor (`status/faz-02/
+  MIGRATION-ISTEGI.md`); EF config/repository/lookup/DI kaydı artık kodda, uçlar derleniyor ama migration
+  landana kadar DB'ye bağlanamaz.

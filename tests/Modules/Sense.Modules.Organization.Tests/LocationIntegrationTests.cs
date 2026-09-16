@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
+using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Tests.Shared.Fixtures;
@@ -98,5 +99,53 @@ public sealed class LocationIntegrationTests : TestFixture
         var reloaded = await db.Locations.SingleAsync(l => l.Id == location.Id);
         var second = reloaded.Deactivate();
         second.IsFailure.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// S-19 (Faz 2 yazar, Faz 9 sonraki tur tüketir): <see cref="LocationLookup.GetNamesAsync"/> includes
+    /// inactive locations (a closed career posting may still reference one), omits ids from other tenants,
+    /// and simply skips ids with no match instead of throwing.
+    /// </summary>
+    [Fact]
+    public async Task GetNamesAsync_IncludesInactive_ExcludesOtherTenantAndUnknownIds()
+    {
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        var otherTenantId = Guid.NewGuid();
+
+        Location active;
+        Location inactive;
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            active = Location.Create(tenantId, "İstanbul HQ", LocationType.Office, "TR", null).Value;
+            inactive = Location.Create(tenantId, "Eski Şube", LocationType.Office, "TR", null).Value;
+            inactive.Deactivate();
+            db.Locations.AddRange(active, inactive);
+            await db.SaveChangesAsync();
+        }
+
+        Location otherTenantLocation;
+        using (TenantContextSetter!.BeginScope(otherTenantId))
+        {
+            otherTenantLocation = Location.Create(otherTenantId, "Başka Kiracı", LocationType.Office, "TR", null).Value;
+            db.Locations.Add(otherTenantLocation);
+            await db.SaveChangesAsync();
+        }
+
+        var lookup = new LocationLookup(db);
+        var unknownId = Guid.NewGuid();
+
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            var names = await lookup.GetNamesAsync(tenantId, [active.Id, inactive.Id, otherTenantLocation.Id, unknownId]);
+
+            names.Count.ShouldBe(2);
+            names[active.Id].ShouldBe("İstanbul HQ");
+            names[inactive.Id].ShouldBe("Eski Şube");
+            names.ContainsKey(otherTenantLocation.Id).ShouldBeFalse();
+            names.ContainsKey(unknownId).ShouldBeFalse();
+        }
     }
 }

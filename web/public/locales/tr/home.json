@@ -21,6 +21,11 @@
     "title": "Yaklaşan İzinler",
     "empty": "Önümüzdeki {{days}} gün içinde izinli olacak çalışan yok."
   },
+  "pendingApprovals": {
+    "title": "Onay Bekleyenler",
+    "viewAll": "Tümünü Gör",
+    "empty": "Onayınızı bekleyen talep yok."
+  },
   "teamRequests": {
     "title": "İzin Talepleri",
     "empty": "Onay bekleyen izin talebi yok.",

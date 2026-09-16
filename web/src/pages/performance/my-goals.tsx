@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -10,7 +10,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage } from "@/lib/api-error";
+import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import {
   createMyGoal,
@@ -35,6 +35,13 @@ const STATUS_BADGE: Record<GoalStatus, { color?: string; variant: "light" | "fil
 function GoalStatusBadge({ status }: { status: GoalStatus }) {
   const { t } = useTranslation(["performance"]);
   return <Badge {...STATUS_BADGE[status]}>{t(`performance:status.${status}`)}</Badge>;
+}
+
+function goalErrorMessage(error: unknown, t: (key: string) => string): string {
+  const problem = getApiProblem(error);
+  if (problem?.code === "performance.goal.target_date_outside_cycle") return t("performance:goals.errors.targetDateOutsideCycle");
+  if (problem?.code === "performance.review.immutable") return t("performance:goals.errors.reviewImmutable");
+  return getApiErrorMessage(error, t("performance:genericError"));
 }
 
 const schema = z.object({
@@ -76,6 +83,9 @@ function MyGoals() {
     defaultValues: { title: "", description: "", targetDate: "", reviewCycleId: "" },
   });
 
+  const selectedCycleId = useWatch({ control, name: "reviewCycleId" });
+  const selectedCycle = (cyclesQuery.data ?? []).find((cycle) => cycle.id === selectedCycleId);
+
   const createMutation = useMutation({
     mutationFn: (input: CreateMyGoalInput) => createMyGoal(input),
     onSuccess: () => {
@@ -84,7 +94,7 @@ function MyGoals() {
       setAddOpen(false);
       reset();
     },
-    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("performance:genericError")) }),
+    onError: (err) => toast({ variant: "destructive", title: t("common:error"), description: goalErrorMessage(err, t) }),
   });
 
   function submit(values: FormValues) {
@@ -187,10 +197,23 @@ function MyGoals() {
                   <Text size="sm" fw={500} mb={4}>
                     {t("performance:form.targetDate")} <span aria-hidden>*</span>
                   </Text>
-                  <DatePicker value={field.value} onChange={field.onChange} />
+                  <DatePicker
+                    value={field.value}
+                    onChange={field.onChange}
+                    min={selectedCycle?.startDate}
+                    max={selectedCycle?.endDate}
+                  />
                   {errors.targetDate && (
                     <Text size="xs" c="red" mt={4}>
                       {t("common:required")}
+                    </Text>
+                  )}
+                  {selectedCycle && (
+                    <Text size="xs" c="dimmed" mt={4}>
+                      {t("performance:form.targetDateCycleHint", {
+                        start: date(selectedCycle.startDate),
+                        end: date(selectedCycle.endDate),
+                      })}
                     </Text>
                   )}
                 </div>
@@ -248,7 +271,7 @@ function ProgressDialog({ goal, onClose, onSaved }: { goal: Goal; onClose: () =>
   const mutation = useMutation({
     mutationFn: () => updateMyGoalProgress(goal.id, value),
     onSuccess: onSaved,
-    onError: (err) => setError(getApiErrorMessage(err, t("performance:genericError"))),
+    onError: (err) => setError(goalErrorMessage(err, t)),
   });
 
   return (

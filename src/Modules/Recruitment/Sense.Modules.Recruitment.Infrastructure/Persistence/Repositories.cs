@@ -34,18 +34,20 @@ public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPos
         return await query.OrderByDescending(p => p.CreatedAt).ToListAsync(cancellationToken);
     }
 
-    public async Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, CancellationToken cancellationToken = default)
+    public async Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, DateOnly asOf, CancellationToken cancellationToken = default)
     {
         var posting = await context.JobPostings
             .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
-            .FirstOrDefaultAsync(p => p.ApplySlug == applySlug && p.Status == JobPostingStatus.Open, cancellationToken);
+            .FirstOrDefaultAsync(p => p.ApplySlug == applySlug && p.Status == JobPostingStatus.Open
+                && (p.ClosingDate == null || p.ClosingDate >= asOf), cancellationToken);
         return posting is null ? Error.NotFound(RecruitmentDomainErrors.PostingNotFound) : posting;
     }
 
-    public async Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, CancellationToken cancellationToken = default) =>
+    public async Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, DateOnly asOf, CancellationToken cancellationToken = default) =>
         await context.JobPostings
             .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
-            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open && p.Id != excludePostingId)
+            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open && p.Id != excludePostingId
+                && (p.ClosingDate == null || p.ClosingDate >= asOf))
             .OrderByDescending(p => p.PublishedAt)
             .ToListAsync(cancellationToken);
 
@@ -86,7 +88,9 @@ public sealed class CandidateRepository(RecruitmentDbContext context) : ICandida
 
     public async Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default) =>
         await context.Candidates
-            .Where(c => c.CreatedAt < createdBefore && !c.Email.EndsWith(Candidate.AnonymizedEmailDomain))
+            .Where(c => c.CreatedAt < createdBefore && !c.Email.EndsWith(Candidate.AnonymizedEmailDomain)
+                // G-9-09: işe alınmış (Hired) bir başvurusu olan aday otomatik saklama süpürmesinden hariç tutulur.
+                && !context.JobApplications.Any(a => a.CandidateId == c.Id && a.Stage == ApplicationStage.Hired))
             .ToListAsync(cancellationToken);
 }
 

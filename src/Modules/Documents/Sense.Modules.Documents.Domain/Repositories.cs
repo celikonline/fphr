@@ -24,6 +24,11 @@ public interface IDocumentRepository
 
     /// <summary>Checks if a document with given key already exists in bucket.</summary>
     Task<bool> ExistsByKeyAsync(string fileKey, string bucketName, CancellationToken cancellationToken = default);
+
+    /// <summary>Bulk-resolves <c>ExpiryDate</c> for the given document IDs (tenant-filtered), one query for N requirements
+    /// instead of N (used by <c>EmployeeDocumentRequirementMapping.ToDtosAsync</c>). Missing IDs are simply absent from the result.</summary>
+    Task<IReadOnlyDictionary<Guid, DateOnly?>> GetExpiryDatesByIdsAsync(
+        IReadOnlyCollection<Guid> documentIds, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Tenant document type catalog repository.</summary>

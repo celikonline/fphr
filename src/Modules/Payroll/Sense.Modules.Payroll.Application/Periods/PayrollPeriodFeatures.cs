@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -198,6 +199,7 @@ public sealed class ExportPayrollPeriodHandler(
     IPayslipCalculationTraceRepository traces,
     IEmployeePayrollProfileRepository profiles,
     IEmployeeDirectory employeeDirectory,
+    IExpensePayoutReader expensePayoutReader,
     ITenantContext tenant,
     IReportExporter exporter) : IQueryHandler<ExportPayrollPeriodQuery, ExportFileResult>
 {
@@ -216,7 +218,8 @@ public sealed class ExportPayrollPeriodHandler(
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId);
 
-        var rows = new List<(string Sicil, string AdSoyad, decimal Brut, decimal SgkIsci, decimal GelirVergisi, decimal Damga, decimal Net, decimal MasrafIadesi)>();
+        var rows = new List<(string Sicil, string AdSoyad, decimal Brut, decimal SgkIsci, decimal IssizlikIsci, decimal GelirVergisi, decimal Damga, decimal Net, decimal MasrafIadesi, decimal FissizMasraf)>();
+        var missingSicilCount = 0;
         foreach (var payslip in periodPayslips)
         {
             var contact = contacts.GetValueOrDefault(payslip.EmployeeId);
@@ -224,47 +227,73 @@ public sealed class ExportPayrollPeriodHandler(
 
             // "Sicil" - Payroll has no dedicated employee-number field (Employee module doesn't either, verified this
             // tur); EmployeePayrollProfile.ExternalPayrollCode ("harici bordro kodu") is the closest existing concept
-            // and is blank for most employees today - left empty rather than falling back to a PII-bearing id.
+            // and is blank for most employees today (PO kararı, tur 1 kapanışı: resmi "sicil" bu alan, boşsa hücre
+            // boş kalır + özet sayfasına sayısı yazılır - faz-07 tur 2 madde 1).
             var profile = await profiles.FindCurrentAsync(payslip.EmployeeId, periodStart, cancellationToken);
             var sicil = profile?.ExternalPayrollCode ?? string.Empty;
+            if (sicil.Length == 0)
+            {
+                missingSicilCount++;
+            }
 
             var trace = await traces.FindLatestByPayslipIdAsync(payslip.Id, cancellationToken);
-            var (sgkEmployee, incomeTaxAfterExemption, stampTaxAfterExemption, expenseReimbursement) = ExtractFigures(trace?.StepsJson);
+            var (sgkEmployee, unempEmployee, incomeTaxAfterExemption, stampTaxAfterExemption, expenseReimbursement) = ExtractFigures(trace?.StepsJson);
 
-            rows.Add((sicil, adSoyad, payslip.GrossAmount, sgkEmployee, incomeTaxAfterExemption, stampTaxAfterExemption, payslip.NetAmount, expenseReimbursement));
+            // S-13 eki (faz-07 tur 2 madde 5): fişsiz kalemler NET'e hiç girmez (ExtractFigures'daki expenseReimbursement
+            // yalnız receipted kalemleri kapsar), Excel'de ayrı, bilgilendirici bir kolonda raporlanır.
+            var payout = await expensePayoutReader.GetAsync(tenant.TenantId, payslip.EmployeeId, period.Year, period.Month, cancellationToken);
+            var undocumentedExpense = payout?.UndocumentedExpenseTotal ?? 0m;
+
+            rows.Add((sicil, adSoyad, payslip.GrossAmount, sgkEmployee, unempEmployee, incomeTaxAfterExemption, stampTaxAfterExemption, payslip.NetAmount, expenseReimbursement, undocumentedExpense));
         }
 
-        var table = new ExportTable(
+        var dataTable = new ExportTable(
             $"Bordro {period.Year}-{period.Month:D2}",
             [
-                new ExportColumn("Sicil"),
+                new ExportColumn("Sicil (Bordro Kodu)"),
                 new ExportColumn("Ad Soyad"),
                 new ExportColumn("Brüt", ExportColumnType.Number),
                 new ExportColumn("SGK İşçi", ExportColumnType.Number),
+                new ExportColumn("İşsizlik Sigortası İşçi", ExportColumnType.Number),
                 new ExportColumn("Gelir Vergisi", ExportColumnType.Number),
                 new ExportColumn("Damga Vergisi", ExportColumnType.Number),
                 new ExportColumn("Net", ExportColumnType.Number),
                 new ExportColumn("Masraf İadesi", ExportColumnType.Number),
+                new ExportColumn("Fişsiz Masraf (Bordroya Eklenmedi)", ExportColumnType.Number),
             ],
             rows.OrderBy(r => r.AdSoyad, StringComparer.Create(new CultureInfo("tr-TR"), ignoreCase: false))
-                .Select(r => (IReadOnlyList<object?>)[r.Sicil, r.AdSoyad, r.Brut, r.SgkIsci, r.GelirVergisi, r.Damga, r.Net, r.MasrafIadesi])
+                .Select(r => (IReadOnlyList<object?>)[r.Sicil, r.AdSoyad, r.Brut, r.SgkIsci, r.IssizlikIsci, r.GelirVergisi, r.Damga, r.Net, r.MasrafIadesi, r.FissizMasraf])
                 .ToList());
 
-        return exporter.ExportToExcel(table, cancellationToken);
+        // Özet sayfası (faz-07 tur 2 madde 1): "Bordro kodu tanımsız çalışan: N".
+        var summaryTable = new ExportTable(
+            "Özet",
+            [
+                new ExportColumn("Metrik"),
+                new ExportColumn("Değer", ExportColumnType.Number),
+            ],
+            [
+                [(object?)"Toplam çalışan", rows.Count],
+                [(object?)"Bordro kodu tanımsız çalışan", missingSicilCount],
+            ]);
+
+        return exporter.ExportToExcel($"Bordro {period.Year}-{period.Month:D2}.xlsx", [dataTable, summaryTable], cancellationToken);
     }
 
     /// <summary>Re-derives the after-exemption income/stamp tax and the expense reimbursement NET addition from the
     /// stored trace JSON (see PayrollCalculator: MINWAGE_EXEMPTION_GV/DV steps' Output is the exemption *amount*, not
-    /// the after-exemption tax, and NET's expenseReimbursement input is the tax-free masraf iadesi - TB-7).</summary>
-    private static (decimal SgkEmployee, decimal IncomeTaxAfterExemption, decimal StampTaxAfterExemption, decimal ExpenseReimbursement) ExtractFigures(string? stepsJson)
+    /// the after-exemption tax, and NET's expenseReimbursement input is the tax-free masraf iadesi - TB-7).
+    /// UNEMP_EMPLOYEE (G-7-10, faz-07 tur 2 madde 2) is read straight from its own step, no exemption to net out.</summary>
+    private static (decimal SgkEmployee, decimal UnempEmployee, decimal IncomeTaxAfterExemption, decimal StampTaxAfterExemption, decimal ExpenseReimbursement) ExtractFigures(string? stepsJson)
     {
         if (string.IsNullOrEmpty(stepsJson))
         {
-            return (0m, 0m, 0m, 0m);
+            return (0m, 0m, 0m, 0m, 0m);
         }
 
         var steps = JsonSerializer.Deserialize<List<TraceStep>>(stepsJson, StepsJsonOptions) ?? [];
         var sgkEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.SgkEmployee)?.Output ?? 0m;
+        var unempEmployee = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.UnempEmployee)?.Output ?? 0m;
         var incomeTax = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.IncomeTax)?.Output ?? 0m;
         var minWageExemptionGv = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.MinWageExemptionGv)?.Output ?? 0m;
         var stampTax = steps.FirstOrDefault(s => s.Code == PayrollTraceStepCodes.StampTax)?.Output ?? 0m;
@@ -274,6 +303,6 @@ public sealed class ExportPayrollPeriodHandler(
             ? decimal.Parse(value, CultureInfo.InvariantCulture)
             : 0m;
 
-        return (sgkEmployee, incomeTax - minWageExemptionGv, stampTax - minWageExemptionDv, expenseReimbursement);
+        return (sgkEmployee, unempEmployee, incomeTax - minWageExemptionGv, stampTax - minWageExemptionDv, expenseReimbursement);
     }
 }

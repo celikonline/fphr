@@ -183,7 +183,10 @@ public sealed class DeactivateOrgUnitValidator : AbstractValidator<DeactivateOrg
     public DeactivateOrgUnitValidator() => RuleFor(x => x.Id).NotEmpty();
 }
 
-public sealed class DeactivateOrgUnitHandler(IOrgUnitRepository units) : ICommandHandler<DeactivateOrgUnitCommand>
+public sealed class DeactivateOrgUnitHandler(
+    ITenantContext tenant,
+    IOrgUnitRepository units,
+    IEmployeeLookup employeeLookup) : ICommandHandler<DeactivateOrgUnitCommand>
 {
     public async Task<Result> Handle(DeactivateOrgUnitCommand command, CancellationToken cancellationToken)
     {
@@ -196,6 +199,11 @@ public sealed class DeactivateOrgUnitHandler(IOrgUnitRepository units) : IComman
         if (await units.HasChildrenAsync(command.Id, cancellationToken))
         {
             return Error.Conflict(OrganizationErrors.HasActiveChildren);
+        }
+
+        if (await employeeLookup.AnyActiveInOrgUnitsAsync(tenant.TenantId, [command.Id], cancellationToken))
+        {
+            return Error.Conflict(OrganizationErrors.UnitHasActiveEmployees);
         }
 
         var result = existing.Value.Deactivate();

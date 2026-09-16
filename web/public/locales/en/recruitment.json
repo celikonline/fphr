@@ -46,6 +46,13 @@
     "empty": "No postings yet.",
     "viewDetail": "View posting"
   },
+  "postingDetail": {
+    "careerLink": {
+      "copy": "Copy link",
+      "copied": "Copied",
+      "openInCareer": "Open on career page"
+    }
+  },
   "employmentTypes": {
     "fullTime": "Full-time",
     "partTime": "Part-time",
@@ -89,7 +96,20 @@
     "anonymizeDescription": "This candidate's name, e-mail and phone will be irreversibly erased; their application history stays, but no longer identifies this person.",
     "anonymizeSuccess": "Candidate data has been anonymized.",
     "anonymized": "Anonymized",
-    "anonymizedRowHint": "This candidate's data was anonymized under data protection rules; it can no longer be edited or moved to another stage."
+    "anonymizedRowHint": "This candidate's data was anonymized under data protection rules; it can no longer be edited or moved to another stage.",
+    "anonymizeExpired": {
+      "buttonLabel": "Anonymize expired retention",
+      "dialogTitle": "Anonymize candidates past retention period",
+      "description": "All candidates whose retention period has expired will have their name, e-mail and phone irreversibly erased. Hired candidates are excluded from this action.",
+      "confirm": "Anonymize",
+      "successCount": "{{count}} candidate(s) anonymized.",
+      "successEmpty": "No candidates past retention period."
+    },
+    "applications": {
+      "actionLabel": "Applications",
+      "drawerTitle": "{{name}} - Applications",
+      "empty": "This candidate has no applications yet."
+    }
   },
   "applications": {
     "title": "Applications",

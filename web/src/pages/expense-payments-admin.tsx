@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Banknote } from "lucide-react";
-import { Badge, Button, Card, Group, Modal, Select, Stack, Tabs, Text, Textarea, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Tabs, Text, Textarea, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -83,6 +84,8 @@ function ClaimsWorklist() {
   const { t, i18n } = useTranslation(["expense", "common"]);
   const queryClient = useQueryClient();
   const canPay = usePermission("expense.claims.pay");
+  // Dar telefon (Faz 7 gün açılışı tur 1 FE md.2): tablo yerine kart listesi, "Öde" aynı izin koşuluyla.
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const [status, setStatus] = useState<ExpenseClaimStatus>("approved");
   const [payTarget, setPayTarget] = useState<ExpenseClaim | null>(null);
 
@@ -156,6 +159,13 @@ function ClaimsWorklist() {
         <Text size="sm" c="red" ta="center" p="lg">
           {getApiErrorMessage(claimsQuery.error, t("expense:genericError"))}
         </Text>
+      ) : isMobile ? (
+        <ClaimsMobileList
+          claims={claims}
+          isLoading={claimsQuery.isLoading}
+          canPay={canPay}
+          onPay={setPayTarget}
+        />
       ) : (
         <DataTable table={table} isLoading={claimsQuery.isLoading} emptyMessage={t("expense:admin.empty")} />
       )}
@@ -176,10 +186,69 @@ function ClaimsWorklist() {
   );
 }
 
+/** ≤390px kart listesi (Faz 7 gün açılışı tur 1 FE md.2): masaüstü tablonun aynı kolonları + "Öde" aksiyonu. */
+function ClaimsMobileList({
+  claims,
+  isLoading,
+  canPay,
+  onPay,
+}: {
+  claims: ExpenseClaim[];
+  isLoading: boolean;
+  canPay: boolean;
+  onPay: (claim: ExpenseClaim) => void;
+}) {
+  const { t, i18n } = useTranslation(["expense", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (claims.length === 0) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" p="lg">
+        {t("expense:admin.empty")}
+      </Text>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {claims.map((claim) => (
+        <Card key={claim.id} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Text size="sm" truncate="end">
+              {claim.description || "—"}
+            </Text>
+            <Badge color={STATUS_COLOR[claim.status] ?? "gray"} variant="light">
+              {t(`expense:status.${claim.status}`, { defaultValue: claim.status })}
+            </Badge>
+          </Group>
+          <Group justify="space-between" mt={4}>
+            <Text size="xs" c="dimmed">
+              {claim.submittedAt ? formatDateTime(claim.submittedAt, i18n.language) : "—"}
+            </Text>
+            <Text size="sm" fw={500}>
+              {claim.totalAmount.toLocaleString(i18n.language)} {claim.items[0]?.currency ?? "TRY"}
+            </Text>
+          </Group>
+          {canPay && claim.status === "approved" && (
+            <Group justify="flex-end" mt="xs">
+              <Button type="button" size="xs" variant="light" leftSection={<Banknote size={14} />} onClick={() => onPay(claim)}>
+                {t("expense:admin.pay")}
+              </Button>
+            </Group>
+          )}
+        </Card>
+      ))}
+    </Stack>
+  );
+}
+
 function AdvancesWorklist() {
   const { t, i18n } = useTranslation(["expense", "common"]);
   const queryClient = useQueryClient();
   const canPay = usePermission("expense.advances.pay");
+  // Dar telefon (Faz 7 gün açılışı tur 1 FE md.2): tablo yerine kart listesi, "Öde" aynı izin koşuluyla.
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const [status, setStatus] = useState<AdvanceRequestStatus>("approved");
   const [payTarget, setPayTarget] = useState<AdvanceRequest | null>(null);
 
@@ -252,6 +321,13 @@ function AdvancesWorklist() {
         <Text size="sm" c="red" ta="center" p="lg">
           {getApiErrorMessage(advancesQuery.error, t("expense:genericError"))}
         </Text>
+      ) : isMobile ? (
+        <AdvancesMobileList
+          advances={advances}
+          isLoading={advancesQuery.isLoading}
+          canPay={canPay}
+          onPay={setPayTarget}
+        />
       ) : (
         <DataTable table={table} isLoading={advancesQuery.isLoading} emptyMessage={t("expense:admin.empty")} />
       )}
@@ -269,6 +345,63 @@ function AdvancesWorklist() {
         />
       )}
     </Card>
+  );
+}
+
+/** ≤390px kart listesi (Faz 7 gün açılışı tur 1 FE md.2): masaüstü tablonun aynı kolonları + "Öde" aksiyonu. */
+function AdvancesMobileList({
+  advances,
+  isLoading,
+  canPay,
+  onPay,
+}: {
+  advances: AdvanceRequest[];
+  isLoading: boolean;
+  canPay: boolean;
+  onPay: (advance: AdvanceRequest) => void;
+}) {
+  const { t, i18n } = useTranslation(["expense", "common"]);
+
+  if (isLoading) return <Skeleton h={160} />;
+
+  if (advances.length === 0) {
+    return (
+      <Text size="sm" c="dimmed" ta="center" p="lg">
+        {t("expense:admin.empty")}
+      </Text>
+    );
+  }
+
+  return (
+    <Stack gap="sm">
+      {advances.map((advance) => (
+        <Card key={advance.id} withBorder padding="sm" radius="md">
+          <Group justify="space-between" align="flex-start" wrap="nowrap">
+            <Text size="sm" truncate="end">
+              {advance.description || "—"}
+            </Text>
+            <Badge color={STATUS_COLOR[advance.status] ?? "gray"} variant="light">
+              {t(`expense:status.${advance.status}`, { defaultValue: advance.status })}
+            </Badge>
+          </Group>
+          <Group justify="space-between" mt={4}>
+            <Text size="xs" c="dimmed">
+              {formatDateOnly(advance.requestedDate, i18n.language)}
+            </Text>
+            <Text size="sm" fw={500}>
+              {advance.amount.toLocaleString(i18n.language)} {advance.currency}
+            </Text>
+          </Group>
+          {canPay && advance.status === "approved" && (
+            <Group justify="flex-end" mt="xs">
+              <Button type="button" size="xs" variant="light" leftSection={<Banknote size={14} />} onClick={() => onPay(advance)}>
+                {t("expense:admin.pay")}
+              </Button>
+            </Group>
+          )}
+        </Card>
+      ))}
+    </Stack>
   );
 }
 

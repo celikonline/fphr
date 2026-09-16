@@ -6,7 +6,7 @@ import { useAuthStore } from "@/store/authStore";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
-import { leaveService, type EmployeeLeaveBalances } from "@/services/LeaveService";
+import { leaveService, type EmployeeLeaveBalances, type LeaveBalanceItem } from "@/services/LeaveService";
 import { attendanceService, type MyTimesheetSummary } from "@/services/AttendanceService";
 import type { MainTabsParamList } from "@/types/navigation";
 
@@ -24,9 +24,20 @@ function formatWorkedMinutes(minutes: number): string {
   return `${hours} sa ${remaining} dk`;
 }
 
-function totalAvailableBalance(balances: EmployeeLeaveBalances | null): number {
-  if (!balances) return 0;
-  return balances.balances.reduce((sum, item) => sum + item.balance.availableBalance, 0);
+/**
+ * G-10-07: yalnız yıllık izin bakiyesini göstermek istiyoruz - olay bazlı izinler (evlilik, doğum,
+ * mazeret ...) toplama karışmaz. `leaveTypeCode` ile yıllık türü ayırt edebiliyorsak onu döneriz;
+ * ayırt edilemiyorsa (tenant'ın yıllık izin türü hiç tanımlı değilse) ilk 3 türü ayrı satır olarak
+ * kartta listeleriz - kartın kendisi tek bir toplam göstermez.
+ */
+function annualLeaveBalance(balances: EmployeeLeaveBalances | null): LeaveBalanceItem | null {
+  if (!balances) return null;
+  return balances.balances.find((item) => item.leaveTypeCode === "annual") ?? null;
+}
+
+function firstLeaveBalances(balances: EmployeeLeaveBalances | null, count: number): LeaveBalanceItem[] {
+  if (!balances) return [];
+  return balances.balances.slice(0, count);
 }
 
 export default function DashboardScreen() {
@@ -64,6 +75,8 @@ export default function DashboardScreen() {
     setRefreshing(false);
   }
 
+  const annualBalance = annualLeaveBalance(balances);
+
   return (
     <ScrollView
       style={styles.container}
@@ -93,9 +106,26 @@ export default function DashboardScreen() {
             style={[styles.card, styles.summaryCard]}
             onPress={() => navigation.navigate("Leave")}
           >
-            <Text style={styles.cardLabel}>İzin bakiyem</Text>
-            <Text style={styles.cardValue}>{totalAvailableBalance(balances)} gün</Text>
-            <Text style={styles.cardSubtext}>kullanılabilir</Text>
+            {annualBalance ? (
+              <>
+                <Text style={styles.cardLabel}>Yıllık izin bakiyem</Text>
+                <Text style={styles.cardValue}>{annualBalance.balance.availableBalance} gün</Text>
+                <Text style={styles.cardSubtext}>kullanılabilir</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.cardLabel}>İzin bakiyelerim</Text>
+                {firstLeaveBalances(balances, 3).length === 0 ? (
+                  <Text style={styles.cardSubtext}>Bakiye kaydı yok</Text>
+                ) : (
+                  firstLeaveBalances(balances, 3).map((item) => (
+                    <Text key={item.leaveTypeCode + item.leaveTypeName} style={styles.cardSubtext}>
+                      {item.leaveTypeName}: {item.balance.availableBalance} gün
+                    </Text>
+                  ))
+                )}
+              </>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity

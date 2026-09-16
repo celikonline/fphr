@@ -21,6 +21,11 @@
     "title": "[DE] Upcoming leave",
     "empty": "[DE] No one is on leave in the next {{days}} days."
   },
+  "pendingApprovals": {
+    "title": "[DE] Pending approvals",
+    "viewAll": "[DE] View all",
+    "empty": "[DE] No requests awaiting your approval."
+  },
   "teamRequests": {
     "title": "[DE] Leave requests",
     "empty": "[DE] No leave requests awaiting approval.",

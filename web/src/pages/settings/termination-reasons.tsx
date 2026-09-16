@@ -169,7 +169,67 @@ function TerminationReasonsAdmin() {
             {t("settings:terminationReasons.errors.loadFailed")}
           </Text>
         ) : (
-          <DataTable table={table} isLoading={reasonsQuery.isLoading} emptyMessage={t("settings:terminationReasons.empty")} />
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <DataTable table={table} isLoading={reasonsQuery.isLoading} emptyMessage={t("settings:terminationReasons.empty")} />
+            </div>
+
+            {/* Dar ekran (≤390px dahil): kart listesi */}
+            <div className="md:hidden">
+              {reasonsQuery.isLoading ? (
+                <Text size="sm" c="dimmed">
+                  {t("common:loading")}
+                </Text>
+              ) : reasons.length === 0 ? (
+                <Text size="sm" c="dimmed" ta="center" p="lg">
+                  {t("settings:terminationReasons.empty")}
+                </Text>
+              ) : (
+                <Stack gap="sm">
+                  {reasons.map((reason) => (
+                    <Card key={reason.id} withBorder padding="sm" radius="md">
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <div>
+                          <Text fw={500} size="sm">
+                            {reason.name}
+                          </Text>
+                          <Text size="xs" c="dimmed" ff="monospace">
+                            {reason.code}
+                          </Text>
+                          {reason.defaultSgkExitCode && (
+                            <Text size="xs" c="dimmed">
+                              {t("settings:terminationReasons.columns.sgkExitCode")}: {reason.defaultSgkExitCode}
+                            </Text>
+                          )}
+                        </div>
+                        <Badge variant={reason.isActive ? "light" : "outline"} color={reason.isActive ? "green" : "gray"}>
+                          {reason.isActive ? t("settings:terminationReasons.active") : t("settings:terminationReasons.inactive")}
+                        </Badge>
+                      </Group>
+                      {canManage && (
+                        <Group gap="xs" justify="flex-end" mt="sm">
+                          <Button type="button" size="xs" variant="subtle" onClick={() => setDialogTarget(reason)}>
+                            {t("common:edit")}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="subtle"
+                            color={reason.isActive ? "red" : "teal"}
+                            loading={toggleActiveMutation.isPending && toggleActiveMutation.variables?.id === reason.id}
+                            onClick={() => toggleActiveMutation.mutate(reason)}
+                          >
+                            {reason.isActive ? t("settings:terminationReasons.deactivate") : t("settings:terminationReasons.reactivate")}
+                          </Button>
+                        </Group>
+                      )}
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </div>
+          </>
         )}
       </Card>
 

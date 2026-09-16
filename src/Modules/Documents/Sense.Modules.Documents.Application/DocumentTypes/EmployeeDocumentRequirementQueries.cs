@@ -11,16 +11,31 @@ namespace Sense.Modules.Documents.Application.DocumentTypes;
 
 internal static class EmployeeDocumentRequirementMapping
 {
+    /// <summary>Maps requirements to DTOs, resolving <c>ExpiryDate</c> for all linked documents in a single
+    /// batched query (no N+1) - see S-6/faz-04 gereksinim DTO'sunda geçerlilik tarihi.</summary>
     public static async Task<IReadOnlyList<EmployeeDocumentRequirementDto>> ToDtosAsync(
-        IReadOnlyList<EmployeeDocumentRequirement> requirements, IDocumentTypeDefinitionRepository types, CancellationToken cancellationToken)
+        IReadOnlyList<EmployeeDocumentRequirement> requirements,
+        IDocumentTypeDefinitionRepository types,
+        IDocumentRepository documents,
+        CancellationToken cancellationToken)
     {
+        var documentIds = requirements
+            .Where(r => r.DocumentId is not null)
+            .Select(r => r.DocumentId!.Value)
+            .Distinct()
+            .ToList();
+        var expiryDates = await documents.GetExpiryDatesByIdsAsync(documentIds, cancellationToken);
+
         var dtos = new List<EmployeeDocumentRequirementDto>(requirements.Count);
         foreach (var requirement in requirements)
         {
             var type = await types.GetByIdAsync(requirement.DocumentTypeId, cancellationToken);
             if (type.IsSuccess)
             {
-                dtos.Add(EmployeeDocumentRequirementDto.From(requirement, type.Value));
+                var expiryDate = requirement.DocumentId is { } documentId
+                    ? expiryDates.GetValueOrDefault(documentId)
+                    : null;
+                dtos.Add(EmployeeDocumentRequirementDto.From(requirement, type.Value, expiryDate));
             }
         }
 
@@ -31,13 +46,14 @@ internal static class EmployeeDocumentRequirementMapping
 [RequiresPermission("documents.requirements.view")]
 public sealed record GetEmployeeDocumentRequirementsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<EmployeeDocumentRequirementDto>>;
 
-public sealed class GetEmployeeDocumentRequirementsHandler(IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types)
+public sealed class GetEmployeeDocumentRequirementsHandler(
+    IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents)
     : IQueryHandler<GetEmployeeDocumentRequirementsQuery, IReadOnlyList<EmployeeDocumentRequirementDto>>
 {
     public async Task<Result<IReadOnlyList<EmployeeDocumentRequirementDto>>> Handle(GetEmployeeDocumentRequirementsQuery query, CancellationToken cancellationToken)
     {
         var list = await requirements.ListByEmployeeAsync(query.EmployeeId, cancellationToken);
-        return Result.Success(await EmployeeDocumentRequirementMapping.ToDtosAsync(list, types, cancellationToken));
+        return Result.Success(await EmployeeDocumentRequirementMapping.ToDtosAsync(list, types, documents, cancellationToken));
     }
 }
 
@@ -46,7 +62,7 @@ public sealed class GetEmployeeDocumentRequirementsHandler(IEmployeeDocumentRequ
 public sealed record GetMyDocumentRequirementsQuery : IQuery<IReadOnlyList<EmployeeDocumentRequirementDto>>;
 
 public sealed class GetMyDocumentRequirementsHandler(
-    ICurrentUser currentUser, IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types)
+    ICurrentUser currentUser, IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents)
     : IQueryHandler<GetMyDocumentRequirementsQuery, IReadOnlyList<EmployeeDocumentRequirementDto>>
 {
     public async Task<Result<IReadOnlyList<EmployeeDocumentRequirementDto>>> Handle(GetMyDocumentRequirementsQuery query, CancellationToken cancellationToken)
@@ -57,7 +73,7 @@ public sealed class GetMyDocumentRequirementsHandler(
         }
 
         var list = await requirements.ListByEmployeeAsync(employeeId, cancellationToken);
-        return Result.Success(await EmployeeDocumentRequirementMapping.ToDtosAsync(list, types, cancellationToken));
+        return Result.Success(await EmployeeDocumentRequirementMapping.ToDtosAsync(list, types, documents, cancellationToken));
     }
 }
 

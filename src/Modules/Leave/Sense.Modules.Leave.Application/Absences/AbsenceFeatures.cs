@@ -3,6 +3,7 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Absences;
+using Sense.Modules.Leave.Domain.Requests;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -11,13 +12,14 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Leave.Application.Absences;
 
 /// <summary>Employee card → Devamsızlık row. <see cref="ReversesId"/>/<see cref="IsReversed"/> mirror the append-only pattern (bkz. AbsenceRecord).</summary>
+/// <remarks>G-5-11: <see cref="Note"/> is null unless the caller holds <c>leave.absences.manage</c> (KVKK md.4 data minimization) — not a missing value, an intentionally withheld one.</remarks>
 public sealed record AbsenceDto(
     Guid Id, DateOnly Date, AbsenceKind Kind, decimal? Hours, string? Note, string RecordedBy, DateTime RecordedAt, Guid? ReversesId, bool IsReversed);
 
 internal static class AbsenceMapper
 {
     public static async Task<IReadOnlyList<AbsenceDto>> ToDtosAsync(
-        Guid tenantId, IReadOnlyList<AbsenceRecord> records, IUserProfileLookup userProfiles, CancellationToken ct)
+        Guid tenantId, IReadOnlyList<AbsenceRecord> records, IUserProfileLookup userProfiles, bool includeNote, CancellationToken ct)
     {
         if (records.Count == 0)
         {
@@ -30,7 +32,7 @@ internal static class AbsenceMapper
         return records
             .OrderByDescending(r => r.Date).ThenByDescending(r => r.CreatedAt)
             .Select(r => new AbsenceDto(
-                r.Id, r.Date, r.Kind, r.Hours, r.Note, names.GetValueOrDefault(r.RecordedByUserId)?.DisplayName ?? string.Empty, r.CreatedAt,
+                r.Id, r.Date, r.Kind, r.Hours, includeNote ? r.Note : null, names.GetValueOrDefault(r.RecordedByUserId)?.DisplayName ?? string.Empty, r.CreatedAt,
                 r.ReversesId, reversedIds.Contains(r.Id)))
             .ToList();
     }
@@ -41,7 +43,8 @@ internal static class AbsenceMapper
 public sealed record ListEmployeeAbsencesQuery(Guid EmployeeId, DateOnly From, DateOnly To) : IQuery<IReadOnlyList<AbsenceDto>>;
 
 public sealed class ListEmployeeAbsencesHandler(
-    ITenantContext tenant, IDataScopeService dataScope, IAbsenceRecordRepository absences, IUserProfileLookup userProfiles)
+    ITenantContext tenant, ICurrentUser currentUser, IPermissionService permissions, IDataScopeService dataScope, IAbsenceRecordRepository absences,
+    IUserProfileLookup userProfiles)
     : IQueryHandler<ListEmployeeAbsencesQuery, IReadOnlyList<AbsenceDto>>
 {
     public async Task<Result<IReadOnlyList<AbsenceDto>>> Handle(ListEmployeeAbsencesQuery query, CancellationToken cancellationToken)
@@ -56,8 +59,10 @@ public sealed class ListEmployeeAbsencesHandler(
             return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
         }
 
+        // G-5-11: the note is visible only to callers who also hold leave.absences.manage - view-only access sees the record without it.
+        var includeNote = currentUser.UserId is { } userId && await permissions.HasAsync(userId, LeavePermissions.AbsencesManage.Key, cancellationToken);
         var records = await absences.ListAsync(query.EmployeeId, query.From, query.To, cancellationToken);
-        return Result.Success(await AbsenceMapper.ToDtosAsync(tenant.TenantId, records, userProfiles, cancellationToken));
+        return Result.Success(await AbsenceMapper.ToDtosAsync(tenant.TenantId, records, userProfiles, includeNote, cancellationToken));
     }
 }
 
@@ -74,7 +79,8 @@ public sealed class RecordAbsenceValidator : AbstractValidator<RecordAbsenceComm
     }
 }
 
-public sealed class RecordAbsenceHandler(ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, IAbsenceRecordRepository absences)
+public sealed class RecordAbsenceHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, IAbsenceRecordRepository absences, ILeaveRequestRepository leaveRequests)
     : ICommandHandler<RecordAbsenceCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordAbsenceCommand command, CancellationToken cancellationToken)
@@ -82,6 +88,17 @@ public sealed class RecordAbsenceHandler(ITenantContext tenant, ICurrentUser cur
         if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.AbsencesManage.Key, command.EmployeeId, cancellationToken))
         {
             return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        // G-5-09: Unexcused/Excused cannot be recorded on a date an Approved full-day leave already covers; HalfDay/Hourly
+        // leave and the Late kind are exempt (a reversal never reaches here - ReverseAbsenceHandler is a separate path).
+        if (command.Kind != AbsenceKind.Late)
+        {
+            var overlapping = await leaveRequests.ListActiveOverlappingAsync(command.EmployeeId, command.Date, command.Date, cancellationToken);
+            if (overlapping.Any(r => r.Status == LeaveRequestStatus.Approved && r.StartTime is null && r.HalfDayPeriod is null))
+            {
+                return Error.Conflict(LeaveErrors.AbsenceConflictsWithLeave);
+            }
         }
 
         var record = AbsenceRecord.Record(

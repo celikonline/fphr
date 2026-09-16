@@ -108,4 +108,22 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
         AutoLockNotifyDaysBefore = autoLockNotifyDaysBefore;
         return Result.Success();
     }
+
+    /// <summary>
+    /// Otomatik kilit tarihi (11.3.6 "26 Ağustos tarihinde kilitlenecek"): <paramref name="periodMonth"/> ayın
+    /// herhangi bir günü olabilir, ay başına normalize edilir (<see cref="ShiftPlanLock.NormalizeToMonthStart"/>).
+    /// <see cref="AutoLockEnabled"/> kapalıysa <c>null</c>; açıksa dönemin **bir sonraki ayının**
+    /// <see cref="AutoLockDayOfMonth"/> günü döner - o ay bu günü içermiyorsa (kısa ay/Şubat) ayın son günü kullanılır.
+    /// </summary>
+    public DateOnly? GetScheduledLockDate(DateOnly periodMonth)
+    {
+        if (!AutoLockEnabled)
+        {
+            return null;
+        }
+
+        var nextMonth = ShiftPlanLock.NormalizeToMonthStart(periodMonth).AddMonths(1);
+        var day = Math.Min(AutoLockDayOfMonth, DateTime.DaysInMonth(nextMonth.Year, nextMonth.Month));
+        return new DateOnly(nextMonth.Year, nextMonth.Month, day);
+    }
 }

@@ -40,6 +40,10 @@ public static class PayrollServiceCollectionExtensions
         // added as a tax-free NET addition; ExpensePayoutReaderAdapter mirrors AttendanceWorkedTimeReaderAdapter.
         services.AddScoped<IExpensePayoutReader, ExpensePayoutReaderAdapter>();
 
+        // Leave devamsızlık köprüsü (G-7-08/09, faz-07 tur 2 madde 3): only consulted when IWorkedTimeReader has no
+        // data (double-count guard, see PayrollPeriodCalculationService.CalculateOneAsync).
+        services.AddScoped<IAbsenceDaysReader, LeaveAbsenceDaysReaderAdapter>();
+
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();
         services.AddScoped<PayslipDirtyFlagService>();

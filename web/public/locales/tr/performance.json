@@ -24,9 +24,16 @@
     "title": "Başlık",
     "description": "Açıklama",
     "targetDate": "Hedef tarih",
+    "targetDateCycleHint": "Dönem aralığı: {{start}} – {{end}}",
     "reviewCycle": "Değerlendirme dönemi",
     "reviewCycleNone": "Dönem seçilmedi",
     "submit": "Ekle"
+  },
+  "goals": {
+    "errors": {
+      "targetDateOutsideCycle": "Hedef tarihi değerlendirme dönemi aralığında olmalıdır.",
+      "reviewImmutable": "Bu hedef kapalı bir değerlendirme dönemine bağlı, artık değiştirilemez."
+    }
   },
   "team": {
     "title": "Ekip hedefleri",
@@ -45,7 +52,7 @@
     "cancelled": "Hedef iptal edildi."
   },
   "reviewCycles": {
-    "title": "Değerlendirme döngülerim",
+    "title": "Değerlendirme döngüleri",
     "subtitle": "İçinde bulunduğunuz değerlendirme dönemlerini görüntüleyin.",
     "empty": "Şu anda size tanımlı bir değerlendirme dönemi yok.",
     "dateRange": "{{start}} – {{end}}",
@@ -53,6 +60,66 @@
       "draft": "Taslak",
       "active": "Devam ediyor",
       "closed": "Kapandı"
+    },
+    "tabs": {
+      "mine": "Dönemlerim",
+      "all": "Tüm dönemler"
+    },
+    "admin": {
+      "filter": {
+        "label": "Duruma göre filtrele",
+        "all": "Tümü"
+      },
+      "empty": "Tanımlı değerlendirme dönemi yok.",
+      "create": "Dönem oluştur",
+      "createTitle": "Yeni değerlendirme dönemi",
+      "createSubmit": "Oluştur",
+      "created": "Değerlendirme dönemi oluşturuldu.",
+      "fields": {
+        "name": "Dönem adı",
+        "startDate": "Başlangıç tarihi",
+        "endDate": "Bitiş tarihi"
+      },
+      "errors": {
+        "invalidDateRange": "Bitiş tarihi başlangıç tarihinden sonra olmalıdır.",
+        "nameRequired": "Dönem adı zorunludur."
+      },
+      "activate": "Başlat",
+      "activated": "Dönem başlatıldı.",
+      "close": "Kapat",
+      "closed": "Dönem kapatıldı.",
+      "closeConfirmTitle": "Dönemi kapat",
+      "closeConfirmDescription": "\"{{name}}\" dönemini kapatmak istediğinize emin misiniz? Bu işlem geri alınamaz; kapandıktan sonra döneme bağlı hiçbir form yayınlanamaz."
+    }
+  },
+  "reviewForms": {
+    "openButton": "Formlar",
+    "title": "{{name}} - Değerlendirme formları",
+    "create": "Form oluştur",
+    "createTitle": "Yeni değerlendirme formu",
+    "createSubmit": "Oluştur",
+    "created": "Değerlendirme formu oluşturuldu.",
+    "empty": "Bu döneme ait değerlendirme formu yok.",
+    "questionCount": "{{count}} soru",
+    "status": {
+      "draft": "Taslak",
+      "published": "Yayınlandı"
+    },
+    "publish": "Yayınla",
+    "published": "Form yayınlandı.",
+    "fields": {
+      "title": "Form başlığı",
+      "questions": "Sorular",
+      "questionText": "Soru metni"
+    },
+    "addQuestion": "Soru ekle",
+    "removeQuestion": "Soruyu kaldır",
+    "totalWeight": "Toplam ağırlık: %{{total}}",
+    "errors": {
+      "weightsMustSumTo100": "Soru ağırlıklarının toplamı %100 olmalıdır.",
+      "titleRequired": "Form başlığı zorunludur.",
+      "questionTextRequired": "Soru metni zorunludur.",
+      "cycleImmutable": "Bu dönem kapatıldığı için form artık yayınlanamaz."
     }
   }
 }

@@ -168,6 +168,56 @@ export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | n
   return data;
 }
 
+// ---------------------------------------------------------------- Müsaitlik / Availability
+
+/** `AvailabilityKind` (package A5, 11.3.6 "müsait değilim"). */
+export type AvailabilityKind = "unavailable" | "weeklyRestRequest";
+
+export type AvailabilityStatus = "active" | "cancelled";
+
+/** `EmployeeAvailabilityDto`; `start`/`end` null on both means the whole day. */
+export interface EmployeeAvailability {
+  id: string;
+  employeeId: string;
+  date: string;
+  start?: string | null;
+  end?: string | null;
+  kind: AvailabilityKind;
+  note?: string | null;
+  status: AvailabilityStatus;
+}
+
+/** "Müsaitliğim" listesi (attendance.availability.self). */
+export async function getMyAvailability(query: DateRangeQuery): Promise<EmployeeAvailability[]> {
+  const { data } = await apiClient.get<EmployeeAvailability[]>(`${ATTENDANCE_BASE}/availability/me`, { params: query });
+  return data;
+}
+
+export interface SubmitAvailabilityInput {
+  date: string;
+  start: string | null;
+  end: string | null;
+  kind: AvailabilityKind;
+  note: string | null;
+}
+
+/** "Müsait değilim bildir" (attendance.availability.self). */
+export async function submitMyAvailability(input: SubmitAvailabilityInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${ATTENDANCE_BASE}/availability/me`, input);
+  return data;
+}
+
+/** attendance.availability.self. */
+export async function cancelMyAvailability(id: string): Promise<void> {
+  await apiClient.post(`${ATTENDANCE_BASE}/availability/me/${id}/cancel`);
+}
+
+/** Planlayıcı görünümü: bir çalışanın müsaitlik girişleri (attendance.availability.view). */
+export async function getEmployeeAvailability(employeeId: string, query: DateRangeQuery): Promise<EmployeeAvailability[]> {
+  const { data } = await apiClient.get<EmployeeAvailability[]>(`${ATTENDANCE_BASE}/availability/employees/${employeeId}`, { params: query });
+  return data;
+}
+
 /** Bir satırın içe alınamama nedeni (S-11); `code` `attendance.device_log.*` biçiminde, FE'de yerelleştirilir. */
 export interface DeviceLogImportError {
   line: number;
@@ -284,6 +334,8 @@ export interface ShiftPlanLock {
   lockedAt?: string | null;
   unlockedAt?: string | null;
   unlockReason?: string | null;
+  /** Otomatik kilit ayarı açıksa hesaplanan kilitlenme tarihi ("yyyy-MM-dd"); ayar kapalıysa alan düşer (BE md.4). */
+  scheduledLockDate?: string | null;
 }
 
 export async function getShiftPlanLockStatus(periodMonth: string): Promise<ShiftPlanLock> {

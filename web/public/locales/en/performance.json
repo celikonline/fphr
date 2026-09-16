@@ -24,9 +24,16 @@
     "title": "Title",
     "description": "Description",
     "targetDate": "Target date",
+    "targetDateCycleHint": "Cycle range: {{start}} – {{end}}",
     "reviewCycle": "Review cycle",
     "reviewCycleNone": "No cycle selected",
     "submit": "Add"
+  },
+  "goals": {
+    "errors": {
+      "targetDateOutsideCycle": "The target date must fall within the review cycle's date range.",
+      "reviewImmutable": "This goal belongs to a closed review cycle and can no longer be changed."
+    }
   },
   "team": {
     "title": "Team goals",
@@ -45,7 +52,7 @@
     "cancelled": "Goal cancelled."
   },
   "reviewCycles": {
-    "title": "My review cycles",
+    "title": "Review cycles",
     "subtitle": "View the review cycles you are part of.",
     "empty": "You don't have any review cycles assigned right now.",
     "dateRange": "{{start}} – {{end}}",
@@ -53,6 +60,66 @@
       "draft": "Draft",
       "active": "Active",
       "closed": "Closed"
+    },
+    "tabs": {
+      "mine": "My cycles",
+      "all": "All cycles"
+    },
+    "admin": {
+      "filter": {
+        "label": "Filter by status",
+        "all": "All"
+      },
+      "empty": "No review cycles defined.",
+      "create": "Create cycle",
+      "createTitle": "New review cycle",
+      "createSubmit": "Create",
+      "created": "Review cycle created.",
+      "fields": {
+        "name": "Cycle name",
+        "startDate": "Start date",
+        "endDate": "End date"
+      },
+      "errors": {
+        "invalidDateRange": "The end date must be after the start date.",
+        "nameRequired": "Cycle name is required."
+      },
+      "activate": "Activate",
+      "activated": "Cycle activated.",
+      "close": "Close",
+      "closed": "Cycle closed.",
+      "closeConfirmTitle": "Close cycle",
+      "closeConfirmDescription": "Are you sure you want to close \"{{name}}\"? This cannot be undone; once closed, no forms linked to this cycle can be published."
+    }
+  },
+  "reviewForms": {
+    "openButton": "Forms",
+    "title": "{{name}} - Review forms",
+    "create": "Create form",
+    "createTitle": "New review form",
+    "createSubmit": "Create",
+    "created": "Review form created.",
+    "empty": "No review forms for this cycle.",
+    "questionCount": "{{count}} questions",
+    "status": {
+      "draft": "Draft",
+      "published": "Published"
+    },
+    "publish": "Publish",
+    "published": "Form published.",
+    "fields": {
+      "title": "Form title",
+      "questions": "Questions",
+      "questionText": "Question text"
+    },
+    "addQuestion": "Add question",
+    "removeQuestion": "Remove question",
+    "totalWeight": "Total weight: {{total}}%",
+    "errors": {
+      "weightsMustSumTo100": "The question weights must add up to 100%.",
+      "titleRequired": "Form title is required.",
+      "questionTextRequired": "Question text is required.",
+      "cycleImmutable": "This cycle is closed, so the form can no longer be published."
     }
   }
 }

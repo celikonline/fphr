@@ -140,7 +140,62 @@ function CostCentersAdmin() {
             {t("settings:costCenters.errors.loadFailed")}
           </Text>
         ) : (
-          <DataTable table={table} isLoading={costCentersQuery.isLoading} emptyMessage={t("settings:costCenters.empty")} />
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <DataTable table={table} isLoading={costCentersQuery.isLoading} emptyMessage={t("settings:costCenters.empty")} />
+            </div>
+
+            {/* Dar ekran (≤390px dahil): kart listesi */}
+            <div className="md:hidden">
+              {costCentersQuery.isLoading ? (
+                <Text size="sm" c="dimmed">
+                  {t("common:loading")}
+                </Text>
+              ) : costCenters.length === 0 ? (
+                <Text size="sm" c="dimmed" ta="center" p="lg">
+                  {t("settings:costCenters.empty")}
+                </Text>
+              ) : (
+                <Stack gap="sm">
+                  {costCenters.map((costCenter) => (
+                    <Card key={costCenter.id} withBorder padding="sm" radius="md">
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <div>
+                          <Text fw={500} size="sm">
+                            {costCenter.name}
+                          </Text>
+                          <Text size="xs" c="dimmed" ff="monospace">
+                            {costCenter.code}
+                          </Text>
+                        </div>
+                        <Badge variant={costCenter.isActive ? "light" : "outline"} color={costCenter.isActive ? "green" : "gray"}>
+                          {costCenter.isActive ? t("settings:costCenters.active") : t("settings:costCenters.inactive")}
+                        </Badge>
+                      </Group>
+                      {canManage && (
+                        <Group gap="xs" justify="flex-end" mt="sm">
+                          <Button type="button" size="xs" variant="subtle" onClick={() => setDialogTarget(costCenter)}>
+                            {t("common:edit")}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="subtle"
+                            color={costCenter.isActive ? "red" : "teal"}
+                            loading={toggleActiveMutation.isPending && toggleActiveMutation.variables?.id === costCenter.id}
+                            onClick={() => toggleActiveMutation.mutate(costCenter)}
+                          >
+                            {costCenter.isActive ? t("settings:costCenters.deactivate") : t("settings:costCenters.reactivate")}
+                          </Button>
+                        </Group>
+                      )}
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+            </div>
+          </>
         )}
       </Card>
 

@@ -40,7 +40,7 @@ public sealed class SubmitCareerApplicationValidator : AbstractValidator<SubmitC
 
 public sealed class SubmitCareerApplicationHandler(
     IJobPostingRepository postings, ICandidateRepository candidates, IJobApplicationRepository applications,
-    ITenantContextSetter tenantSetter, ILogger<SubmitCareerApplicationHandler> logger)
+    ITenantContextSetter tenantSetter, TimeProvider timeProvider, ILogger<SubmitCareerApplicationHandler> logger)
     : ICommandHandler<SubmitCareerApplicationCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(SubmitCareerApplicationCommand command, CancellationToken cancellationToken)
@@ -52,7 +52,10 @@ public sealed class SubmitCareerApplicationHandler(
             return Error.Validation(RecruitmentDomainErrors.ApplicationPrivacyNoticeOutdated);
         }
 
-        var posting = await postings.GetPublicByApplySlugAsync(command.ApplySlug, cancellationToken);
+        // Süresi dolmuş bir ilana (ClosingDate geçmiş) apply de tıpkı var olmayan/kapalı bir ilan gibi 404 döner -
+        // kapanış tarihi geçmiş bir bağlantı üzerinden başvuru alınmaz (Faz 9 gün açılışı TALIMAT'ı madde 2).
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var posting = await postings.GetPublicByApplySlugAsync(command.ApplySlug, today, cancellationToken);
         if (posting.IsFailure)
         {
             return posting.Error;

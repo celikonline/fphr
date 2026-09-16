@@ -1,4 +1,5 @@
 using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Shared.Contracts.Messaging;
@@ -14,12 +15,13 @@ namespace Sense.Modules.Recruitment.Application.Public;
 /// </summary>
 public sealed record GetPublicJobPostingQuery(string ApplySlug) : IQuery<PublicJobPostingDto>;
 
-public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings)
+public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, TimeProvider timeProvider)
     : IQueryHandler<GetPublicJobPostingQuery, PublicJobPostingDto>
 {
     public async Task<Result<PublicJobPostingDto>> Handle(GetPublicJobPostingQuery query, CancellationToken cancellationToken)
     {
-        var found = await postings.GetPublicByApplySlugAsync(query.ApplySlug, cancellationToken);
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var found = await postings.GetPublicByApplySlugAsync(query.ApplySlug, today, cancellationToken);
         return found.IsFailure ? found.Error : ToDto(found.Value);
     }
 
@@ -30,19 +32,20 @@ public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings)
 /// <summary>Other Open postings of the same company (R3 "diğer açık pozisyonlar"), reached by anchoring on one posting's slug.</summary>
 public sealed record ListRelatedPublicJobPostingsQuery(string ApplySlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
-public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository postings)
+public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository postings, TimeProvider timeProvider)
     : IQueryHandler<ListRelatedPublicJobPostingsQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
         ListRelatedPublicJobPostingsQuery query, CancellationToken cancellationToken)
     {
-        var anchor = await postings.GetPublicByApplySlugAsync(query.ApplySlug, cancellationToken);
+        var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+        var anchor = await postings.GetPublicByApplySlugAsync(query.ApplySlug, today, cancellationToken);
         if (anchor.IsFailure)
         {
             return anchor.Error;
         }
 
-        var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, cancellationToken);
+        var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, today, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = related
             .Select(ToSummaryDto)
             .ToList();

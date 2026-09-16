@@ -60,6 +60,14 @@ public static class IdentityDefaults
     public const int RoleCodeMaxLength = 50;
     public const int DeviceInfoMaxLength = 300;
     public const int ReasonMaxLength = 500;
+
+    /// <summary>
+    /// Ürün genelinde tek geçerli KVKK aydınlatma metni sürümü (Faz 9'un <c>RecruitmentLimits.KnownPrivacyNoticeVersion</c>
+    /// ile aynı değer; PO kararı, gün açılışı TALIMAT'ı 2026-09-16). Davet kabulünde <c>PrivacyNoticeAccepted</c>
+    /// true iken bundan farklı bir değer <see cref="IdentityErrors.InvitationPrivacyNoticeOutdated"/> ile reddedilir
+    /// (kullanıcı eski/önbelleklenmiş bir sayfa görüyordur). Ortak sabit backlog: bugün her modül kendi kopyasını tutar.
+    /// </summary>
+    public const string KnownPrivacyNoticeVersion = "2026-09";
 }
 
 /// <summary>Identity hata kodları (= yerelleştirme anahtarları).</summary>
@@ -134,6 +142,10 @@ public static class IdentityErrors
     public const string InvitationEmailInUse = "identity.invitation.email_in_use";
 
     public const string InvitationUserDisabled = "identity.invitation.user_disabled";
+
+    /// <summary>Davet kabulünde <c>privacyNoticeVersion</c>, ürün genelinde tek geçerli <see cref="IdentityDefaults.KnownPrivacyNoticeVersion"/>
+    /// ile eşleşmiyor (G-3-05, gün açılışı TALIMAT'ı) — sayfa yenilenip metin yeniden onaylanmalı.</summary>
+    public const string InvitationPrivacyNoticeOutdated = "identity.invitation.privacy_notice_outdated";
 
     public const string ImpersonationNotFound = "impersonation.not_found";
     public const string ImpersonationNotPending = "impersonation.not_pending";
