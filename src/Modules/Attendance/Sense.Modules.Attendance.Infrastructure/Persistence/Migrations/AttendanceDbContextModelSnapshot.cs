@@ -191,6 +191,236 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.ToTable("attendance_days", "attendance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BreakMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("break_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<TimeOnly>("End")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("end");
+
+                    b.Property<bool>("IsNight")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_night");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
+
+                    b.Property<TimeOnly>("Start")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("start");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_assignments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_shift_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "Date")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shift_assignments_tenant_id_employee_id_date");
+
+                    b.ToTable("shift_assignments", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftPlanLock", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime>("LockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_at");
+
+                    b.Property<Guid?>("LockedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("locked_by_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly>("PeriodMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("period_month");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("UnlockReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("unlock_reason");
+
+                    b.Property<DateTime?>("UnlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("unlocked_at");
+
+                    b.Property<Guid?>("UnlockedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("unlocked_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_plan_locks");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_shift_plan_locks_tenant_id");
+
+                    b.HasIndex("TenantId", "PeriodMonth")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shift_plan_locks_tenant_id_period_month");
+
+                    b.ToTable("shift_plan_locks", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AutoLockDayOfMonth")
+                        .HasColumnType("integer")
+                        .HasColumnName("auto_lock_day_of_month");
+
+                    b.Property<bool>("AutoLockEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("auto_lock_enabled");
+
+                    b.Property<int>("AutoLockNotifyDaysBefore")
+                        .HasColumnType("integer")
+                        .HasColumnName("auto_lock_notify_days_before");
+
+                    b.Property<bool>("BreakIsPaid")
+                        .HasColumnType("boolean")
+                        .HasColumnName("break_is_paid");
+
+                    b.Property<int>("BreakMinMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("break_min_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<int>("MaxDailyMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_daily_minutes");
+
+                    b.Property<int>("MaxWeeklyDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_weekly_days");
+
+                    b.Property<int>("MaxWeeklyMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("max_weekly_minutes");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<bool>("NightWorkEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("night_work_enabled");
+
+                    b.Property<TimeOnly?>("NightWorkEnd")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("night_work_end");
+
+                    b.Property<int?>("NightWorkMaxMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("night_work_max_minutes");
+
+                    b.Property<TimeOnly?>("NightWorkStart")
+                        .HasColumnType("time without time zone")
+                        .HasColumnName("night_work_start");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_shift_settings");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shift_settings_tenant_id");
+
+                    b.ToTable("shift_settings", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.WorkSchedules.EmployeeWorkScheduleAssignment", b =>
                 {
                     b.Property<Guid>("Id")

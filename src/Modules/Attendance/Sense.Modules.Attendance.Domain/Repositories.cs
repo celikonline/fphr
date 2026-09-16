@@ -1,4 +1,5 @@
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
 
@@ -48,4 +49,33 @@ public interface IAnomalyResolutionRepository
     void Add(AnomalyResolution resolution);
 
     Task<IReadOnlyList<AnomalyResolution>> ListForDayAsync(Guid attendanceDayId, CancellationToken cancellationToken = default);
+}
+
+public interface IShiftSettingsRepository
+{
+    void Add(ShiftSettings settings);
+
+    Task<ShiftSettings?> FindAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IShiftAssignmentRepository
+{
+    void Add(ShiftAssignment assignment);
+
+    Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<ShiftAssignment?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
+
+    /// <summary>Haftalık/aylık görünüm (11.3.6): every assignment in [from, to], optionally scoped to a set of employees.</summary>
+    Task<IReadOnlyList<ShiftAssignment>> ListForRangeAsync(DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
+
+    /// <summary>"Bekleyen/paylaşılmamış vardiyalar" sayacı (11.3.6 aylık görünüm).</summary>
+    Task<int> CountUnpublishedAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface IShiftPlanLockRepository
+{
+    void Add(ShiftPlanLock plan);
+
+    Task<ShiftPlanLock?> FindByPeriodAsync(DateOnly periodMonth, CancellationToken cancellationToken = default);
 }

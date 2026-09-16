@@ -56,6 +56,34 @@ public static class AttendancePermissions
     public static readonly Permission TimesheetResolve = new(
         TimesheetResolveKey, Module, "Resolve Timesheet Anomalies", Group, "Apply a suggested resolution (overtime, worked hours, leave request, ignore) to a flagged attendance day");
 
+    /// <summary>
+    /// Vardiya izinleri (package A4, 11.3.6 "Roller ve yetkiler"). Timekeeper's "attendance.*" wildcard already
+    /// grants view/plan/publish; its exclude list is appended with lock/unlock/settings (11.3.06 role mapping:
+    /// "Timekeeper → ... plan/publish ... approve/lock yok") since the placeholder excludes someone pre-wrote there
+    /// (attendance.timesheets.lock/.unlock, attendance.settings.*) don't match this module's actual key shape.
+    /// Manager's include list is appended with shift.plan/.publish ("Manager → view/resolve/plan/publish @Team").
+    /// </summary>
+    public static readonly Permission ShiftView = new(
+        "attendance.shift.view", Module, "View Shift Plan", Group, "View the shift plan (weekly/monthly views, reports)");
+
+    public static readonly Permission ShiftPlan = new(
+        "attendance.shift.plan", Module, "Plan Shifts", Group, "Create, edit and repeat draft shift assignments");
+
+    public static readonly Permission ShiftPublish = new(
+        "attendance.shift.publish", Module, "Publish Shifts", Group, "Publish draft shift assignments to employees");
+
+    public static readonly Permission ShiftSettingsManage = new(
+        "attendance.shift.settings", Module, "Manage Shift Settings", Group, "Configure daily/weekly limits, night work, break and auto-lock settings");
+
+    public static readonly Permission ShiftLock = new(
+        "attendance.shift.lock", Module, "Lock Shift Plan", Group, "Lock a month's shift plan against further changes");
+
+    public static readonly Permission ShiftUnlock = new(
+        "attendance.shift.unlock", Module, "Unlock Shift Plan", Group, "Reopen a locked month's shift plan (audited exception)");
+
     public static IEnumerable<Permission> All =>
-        [WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve];
+        [
+            WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
+            ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock,
+        ];
 }

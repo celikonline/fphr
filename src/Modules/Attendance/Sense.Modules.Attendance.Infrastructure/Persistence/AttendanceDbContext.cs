@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -24,6 +25,12 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<AttendanceDay> AttendanceDays => Set<AttendanceDay>();
 
     public DbSet<AnomalyResolution> AnomalyResolutions => Set<AnomalyResolution>();
+
+    public DbSet<ShiftSettings> ShiftSettings => Set<ShiftSettings>();
+
+    public DbSet<ShiftAssignment> ShiftAssignments => Set<ShiftAssignment>();
+
+    public DbSet<ShiftPlanLock> ShiftPlanLocks => Set<ShiftPlanLock>();
 }
 
 internal static class AttendanceTables
@@ -32,8 +39,13 @@ internal static class AttendanceTables
     public const string WorkScheduleAssignments = "employee_work_schedule_assignments";
     public const string AttendanceDays = "attendance_days";
     public const string AnomalyResolutions = "anomaly_resolutions";
+    public const string ShiftSettings = "shift_settings";
+    public const string ShiftAssignments = "shift_assignments";
+    public const string ShiftPlanLocks = "shift_plan_locks";
     public const int OverrideReasonMaxLength = 1000;
     public const int LinkedEntityTypeMaxLength = 50;
+    public const int NoteMaxLength = 1000;
+    public const int UnlockReasonMaxLength = 1000;
 }
 
 public sealed class WorkScheduleConfiguration : IEntityTypeConfiguration<WorkSchedule>
@@ -98,6 +110,47 @@ public sealed class AnomalyResolutionConfiguration : IEntityTypeConfiguration<An
         b.Property(x => x.Action).HasConversion<string>();
         b.Property(x => x.LinkedEntityType).HasMaxLength(AttendanceTables.LinkedEntityTypeMaxLength);
         b.HasIndex(x => new { x.TenantId, x.AttendanceDayId });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class ShiftSettingsConfiguration : IEntityTypeConfiguration<ShiftSettings>
+{
+    public void Configure(EntityTypeBuilder<ShiftSettings> b)
+    {
+        b.ToTable(AttendanceTables.ShiftSettings);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.HasIndex(x => x.TenantId).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class ShiftAssignmentConfiguration : IEntityTypeConfiguration<ShiftAssignment>
+{
+    public void Configure(EntityTypeBuilder<ShiftAssignment> b)
+    {
+        b.ToTable(AttendanceTables.ShiftAssignments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Status).HasConversion<string>();
+        b.Property(x => x.Note).HasMaxLength(AttendanceTables.NoteMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Date }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+        b.Ignore(x => x.ShiftMinutes);
+    }
+}
+
+public sealed class ShiftPlanLockConfiguration : IEntityTypeConfiguration<ShiftPlanLock>
+{
+    public void Configure(EntityTypeBuilder<ShiftPlanLock> b)
+    {
+        b.ToTable(AttendanceTables.ShiftPlanLocks);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Source).HasConversion<string>();
+        b.Property(x => x.UnlockReason).HasMaxLength(AttendanceTables.UnlockReasonMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.PeriodMonth }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

@@ -88,12 +88,20 @@ public static class SystemRoleDefinitions
              // Package A3: 11.3.06 spec names the resolve permission "attendance.timesheet.resolve" (matching the
              // module's other attendance.timesheet.* keys), not the "attendance.corrections.approve" placeholder
              // above that was never wired to an actual permission - appended rather than replacing it (hot file).
-             "attendance.timesheet.resolve"],
+             "attendance.timesheet.resolve",
+             // Package A4: role mapping "Manager → view/resolve/plan/publish @Team" - Manager plans and publishes
+             // shifts for their team but does not get shift.settings/.lock/.unlock (Owner/Admin/HR only, via attendance.*).
+             "attendance.shift.plan", "attendance.shift.publish"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
             ["attendance.*", "leave.*.view", "employee.*.view", "organization.*.view", "reports.attendance.*", .. PermissionPatterns.SelfService, "leave.*.read"],
-            ["attendance.timesheets.lock", "attendance.timesheets.unlock", "attendance.settings.*", .. PermissionPatterns.Sensitive]),
+            ["attendance.timesheets.lock", "attendance.timesheets.unlock", "attendance.settings.*",
+             // Package A4: role mapping "Timekeeper → view/edit/resolve/import/plan/publish/availability.view @Department|Location
+             // (approve/lock yok)" - the excludes above never matched this module's actual key shape (attendance.shift.*,
+             // not attendance.timesheets.*/attendance.settings.*), so Timekeeper's "attendance.*" wildcard would otherwise
+             // have granted shift lock/unlock/settings too; excluded explicitly instead.
+             "attendance.shift.lock", "attendance.shift.unlock", "attendance.shift.settings", .. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Recruiter, DataScope.Company,
             ["recruitment.*", "employee.create", "employee.*.view", "organization.*.view", "reports.recruitment.*", "documents.*.view", .. PermissionPatterns.SelfService],

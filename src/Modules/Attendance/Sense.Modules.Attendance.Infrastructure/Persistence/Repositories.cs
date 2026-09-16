@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
 
@@ -109,4 +110,54 @@ public sealed class AnomalyResolutionRepository(AttendanceDbContext context) : I
             .Where(r => r.AttendanceDayId == attendanceDayId)
             .OrderBy(r => r.ResolvedAt)
             .ToListAsync(cancellationToken);
+}
+
+public sealed class ShiftSettingsRepository(AttendanceDbContext context) : IShiftSettingsRepository
+{
+    public void Add(ShiftSettings settings) => context.ShiftSettings.Add(settings);
+
+    public async Task<ShiftSettings?> FindAsync(CancellationToken cancellationToken = default) =>
+        await context.ShiftSettings.FirstOrDefaultAsync(cancellationToken)
+        ?? context.ShiftSettings.Local.FirstOrDefault();
+}
+
+public sealed class ShiftAssignmentRepository(AttendanceDbContext context) : IShiftAssignmentRepository
+{
+    public void Add(ShiftAssignment assignment) => context.ShiftAssignments.Add(assignment);
+
+    public async Task<Result<ShiftAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var assignment = await context.ShiftAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return assignment is null ? Error.NotFound(AttendanceDomainErrors.ShiftNotFound) : assignment;
+    }
+
+    public async Task<ShiftAssignment?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default) =>
+        await context.ShiftAssignments.FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.Date == date, cancellationToken);
+
+    public async Task<IReadOnlyList<ShiftAssignment>> ListForRangeAsync(
+        DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default)
+    {
+        var query = context.ShiftAssignments.Where(a => a.Date >= from && a.Date <= to);
+        if (employeeIds is { Count: > 0 })
+        {
+            query = query.Where(a => employeeIds.Contains(a.EmployeeId));
+        }
+
+        return await query.OrderBy(a => a.Date).ThenBy(a => a.EmployeeId).ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountUnpublishedAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
+        context.ShiftAssignments.CountAsync(a => a.Date >= from && a.Date <= to && a.Status == ShiftAssignmentStatus.Draft, cancellationToken);
+}
+
+public sealed class ShiftPlanLockRepository(AttendanceDbContext context) : IShiftPlanLockRepository
+{
+    public void Add(ShiftPlanLock plan) => context.ShiftPlanLocks.Add(plan);
+
+    public async Task<ShiftPlanLock?> FindByPeriodAsync(DateOnly periodMonth, CancellationToken cancellationToken = default)
+    {
+        var normalized = ShiftPlanLock.NormalizeToMonthStart(periodMonth);
+        return await context.ShiftPlanLocks.FirstOrDefaultAsync(p => p.PeriodMonth == normalized, cancellationToken)
+            ?? context.ShiftPlanLocks.Local.FirstOrDefault(p => p.PeriodMonth == normalized);
+    }
 }

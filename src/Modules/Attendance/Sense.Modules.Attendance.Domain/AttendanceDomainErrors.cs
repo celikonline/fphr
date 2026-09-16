@@ -18,6 +18,17 @@ public static class AttendanceDomainErrors
     public const string DayAlreadyResolved = "attendance.day.already_resolved";
     public const string OverrideMinutesInvalid = "attendance.day.override_minutes_invalid";
     public const string AnomalyActionNotAllowed = "attendance.day.anomaly_action_not_allowed";
+    public const string ShiftSettingsInvalid = "attendance.shift.settings_invalid";
+    public const string ShiftTimeRangeInvalid = "attendance.shift.time_range_invalid";
+    public const string ShiftAlreadyPublished = "attendance.shift.already_published";
+    public const string ShiftNotFound = "attendance.shift.not_found";
+    public const string ShiftPeriodLocked = "attendance.shift.period_locked";
+    public const string ShiftPeriodAlreadyLocked = "attendance.shift.period_already_locked";
+    public const string ShiftPeriodNotLocked = "attendance.shift.period_not_locked";
+    public const string ShiftUnlockReasonRequired = "attendance.shift.unlock_reason_required";
+    public const string ShiftDailyLimitExceeded = "attendance.shift.daily_limit_exceeded";
+    public const string ShiftWeeklyHoursExceeded = "attendance.shift.weekly_hours_exceeded";
+    public const string ShiftWeeklyDaysExceeded = "attendance.shift.weekly_days_exceeded";
 }
 
 /// <summary>Domain limits.</summary>

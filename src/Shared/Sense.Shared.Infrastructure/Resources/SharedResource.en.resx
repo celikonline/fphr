@@ -697,6 +697,23 @@ Your SenseİK account is active. Sign in: {url}</value></data>
   <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>This action is not valid for the day's anomaly type.</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Resolve timesheet anomalies</value></data>
+  <data name="attendance.shift.view" xml:space="preserve"><value>View shift plan</value></data>
+  <data name="attendance.shift.plan" xml:space="preserve"><value>Plan shifts</value></data>
+  <data name="attendance.shift.publish" xml:space="preserve"><value>Publish shifts</value></data>
+  <data name="attendance.shift.settings" xml:space="preserve"><value>Manage shift settings</value></data>
+  <data name="attendance.shift.lock" xml:space="preserve"><value>Lock shift plan</value></data>
+  <data name="attendance.shift.unlock" xml:space="preserve"><value>Unlock shift plan</value></data>
+  <data name="attendance.shift.settings_invalid" xml:space="preserve"><value>The shift settings are invalid.</value></data>
+  <data name="attendance.shift.time_range_invalid" xml:space="preserve"><value>The shift time range is invalid.</value></data>
+  <data name="attendance.shift.already_published" xml:space="preserve"><value>This shift has already been published.</value></data>
+  <data name="attendance.shift.not_found" xml:space="preserve"><value>Shift assignment not found.</value></data>
+  <data name="attendance.shift.period_locked" xml:space="preserve"><value>This period's shift plan is locked.</value></data>
+  <data name="attendance.shift.period_already_locked" xml:space="preserve"><value>This period is already locked.</value></data>
+  <data name="attendance.shift.period_not_locked" xml:space="preserve"><value>This period is not locked.</value></data>
+  <data name="attendance.shift.unlock_reason_required" xml:space="preserve"><value>An unlock reason is required.</value></data>
+  <data name="attendance.shift.daily_limit_exceeded" xml:space="preserve"><value>The daily working hours limit was exceeded.</value></data>
+  <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>The weekly working hours limit was exceeded.</value></data>
+  <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>The weekly working days limit was exceeded.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>

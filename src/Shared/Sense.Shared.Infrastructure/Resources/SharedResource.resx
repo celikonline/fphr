@@ -708,6 +708,23 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>Bu aksiyon, günün uyuşmazlık türü için uygun değil.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Puantaj uyuşmazlıklarını çözme</value></data>
+  <data name="attendance.shift.view" xml:space="preserve"><value>Vardiya planını görüntüleme</value></data>
+  <data name="attendance.shift.plan" xml:space="preserve"><value>Vardiya planlama</value></data>
+  <data name="attendance.shift.publish" xml:space="preserve"><value>Vardiya yayınlama</value></data>
+  <data name="attendance.shift.settings" xml:space="preserve"><value>Vardiya ayarlarını yönetme</value></data>
+  <data name="attendance.shift.lock" xml:space="preserve"><value>Vardiya planını kilitleme</value></data>
+  <data name="attendance.shift.unlock" xml:space="preserve"><value>Vardiya planı kilidini açma</value></data>
+  <data name="attendance.shift.settings_invalid" xml:space="preserve"><value>Vardiya ayarları geçersiz.</value></data>
+  <data name="attendance.shift.time_range_invalid" xml:space="preserve"><value>Vardiya saat aralığı geçersiz.</value></data>
+  <data name="attendance.shift.already_published" xml:space="preserve"><value>Vardiya zaten yayınlanmış.</value></data>
+  <data name="attendance.shift.not_found" xml:space="preserve"><value>Vardiya kaydı bulunamadı.</value></data>
+  <data name="attendance.shift.period_locked" xml:space="preserve"><value>Bu dönemin vardiya planı kilitli.</value></data>
+  <data name="attendance.shift.period_already_locked" xml:space="preserve"><value>Bu dönem zaten kilitli.</value></data>
+  <data name="attendance.shift.period_not_locked" xml:space="preserve"><value>Bu dönem kilitli değil.</value></data>
+  <data name="attendance.shift.unlock_reason_required" xml:space="preserve"><value>Kilidi açma sebebi zorunludur.</value></data>
+  <data name="attendance.shift.daily_limit_exceeded" xml:space="preserve"><value>Günlük çalışma süresi üst sınırı aşıldı.</value></data>
+  <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>Haftalık çalışma saati üst sınırı aşıldı.</value></data>
+  <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>Haftalık çalışma günü üst sınırı aşıldı.</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="import.template.attendance.pdks.name" xml:space="preserve"><value>PDKS / Puantaj</value></data>
