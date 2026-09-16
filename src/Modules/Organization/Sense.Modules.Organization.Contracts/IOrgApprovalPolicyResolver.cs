@@ -16,10 +16,13 @@ public static class ApprovalRequestTypes
     public const string Expense = "Expense";
     public const string Overtime = "Overtime";
 
+    /// <summary>Recruitment's job requisition approval (Faz 6 R1, roadmap #87 "Requisition submit→approval→posting unlock").</summary>
+    public const string Requisition = "Requisition";
+
     public const int MaxLength = 50;
 
     /// <summary>Unit-assignable request types, in display order.</summary>
-    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime];
+    public static readonly IReadOnlyList<string> All = [Leave, Advance, Expense, Overtime, Requisition];
 
     /// <summary>True if <paramref name="requestType"/> follows the identifier rule above.</summary>
     public static bool IsWellFormed(string? requestType) =>

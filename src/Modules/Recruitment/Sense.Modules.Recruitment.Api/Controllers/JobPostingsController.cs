@@ -6,9 +6,10 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
 
-/// <summary>Request to create a job posting.</summary>
+/// <summary>Request to create a job posting. <paramref name="RequisitionId"/> is optional (R1, roadmap #87).</summary>
 public sealed record CreateJobPostingRequest(
-    string Title, Guid OrgUnitId, Guid? LocationId, string EmploymentType, string? Description, Guid OwnerUserId, Guid? HiringManagerUserId);
+    string Title, Guid OrgUnitId, Guid? LocationId, string EmploymentType, string? Description, Guid OwnerUserId,
+    Guid? HiringManagerUserId, Guid? RequisitionId = null);
 
 /// <summary>Request to update a job posting's fields.</summary>
 public sealed record UpdateJobPostingRequest(
@@ -46,7 +47,7 @@ public sealed class JobPostingsController : ApiControllerBase
         FromResult(await Dispatcher.Send(
             new CreateJobPostingCommand(
                 request.Title, request.OrgUnitId, request.LocationId, request.EmploymentType, request.Description,
-                request.OwnerUserId, request.HiringManagerUserId),
+                request.OwnerUserId, request.HiringManagerUserId, request.RequisitionId),
             ct));
 
     /// <summary>Edits a job posting's fields (does not change its status).</summary>

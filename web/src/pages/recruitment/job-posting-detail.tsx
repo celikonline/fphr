@@ -30,6 +30,7 @@ import {
   createCandidate,
   createJobApplication,
   getJobPosting,
+  getJobRequisition,
   listApplicationsByPosting,
   listCandidates,
   moveJobApplicationStage,
@@ -72,6 +73,12 @@ function JobPostingDetail() {
     queryKey: ["recruitment", "postings", id],
     queryFn: () => getJobPosting(id!),
     enabled: Boolean(id),
+  });
+  const requisitionId = postingQuery.data?.requisitionId;
+  const requisitionQuery = useQuery({
+    queryKey: ["recruitment", "requisitions", requisitionId],
+    queryFn: () => getJobRequisition(requisitionId!),
+    enabled: Boolean(requisitionId),
   });
   const applicationsQuery = useQuery({
     queryKey: ["recruitment", "applications", "by-posting", id],
@@ -174,6 +181,14 @@ function JobPostingDetail() {
           </Group>
         </div>
       </Group>
+
+      {requisitionQuery.data && requisitionQuery.data.status !== "approved" && (
+        <Card withBorder bg="var(--mantine-color-yellow-0)">
+          <Text size="sm">
+            {t("recruitment:postings.requisitionPendingWarning", { status: t(`recruitment:requisitions.statuses.${requisitionQuery.data.status}`) })}
+          </Text>
+        </Card>
+      )}
 
       {posting.description && (
         <Card withBorder>

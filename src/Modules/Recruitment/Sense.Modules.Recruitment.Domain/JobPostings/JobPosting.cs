@@ -53,7 +53,7 @@ public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
 
     private JobPosting(
         Guid id, Guid tenantId, string title, Guid orgUnitId, Guid? locationId, RecruitmentEmploymentType employmentType,
-        string? description, Guid ownerUserId, Guid? hiringManagerUserId, string applySlug)
+        string? description, Guid ownerUserId, Guid? hiringManagerUserId, string applySlug, Guid? requisitionId)
         : base(id, tenantId)
     {
         Title = title;
@@ -64,6 +64,7 @@ public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
         OwnerUserId = ownerUserId;
         HiringManagerUserId = hiringManagerUserId;
         ApplySlug = applySlug;
+        RequisitionId = requisitionId;
         Status = JobPostingStatus.Draft;
     }
 
@@ -83,6 +84,9 @@ public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
 
     public Guid? HiringManagerUserId { get; private set; }
 
+    /// <summary>Optional requisition gating <see cref="Publish"/> (R1, roadmap #87): set, it must be Approved before the posting can go live.</summary>
+    public Guid? RequisitionId { get; private set; }
+
     public JobPostingStatus Status { get; private set; }
 
     /// <summary>Permanent, never regenerated once assigned - the career-site apply URL is built from it (R3).</summary>
@@ -100,7 +104,7 @@ public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
 
     public static Result<JobPosting> Create(
         Guid tenantId, string title, Guid orgUnitId, Guid? locationId, RecruitmentEmploymentType employmentType,
-        string? description, Guid ownerUserId, Guid? hiringManagerUserId, Guid? id = null)
+        string? description, Guid ownerUserId, Guid? hiringManagerUserId, Guid? requisitionId = null, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
@@ -110,7 +114,7 @@ public sealed class JobPosting : TenantAggregateRoot<Guid>, IAuditLogged
         var slug = Guid.CreateVersion7().ToString("N")[..RecruitmentLimits.ApplySlugLength];
         return new JobPosting(
             id ?? Guid.CreateVersion7(), tenantId, Guard.MaxLength(title.Trim(), RecruitmentLimits.TitleMaxLength),
-            orgUnitId, locationId, employmentType, description, ownerUserId, hiringManagerUserId, slug);
+            orgUnitId, locationId, employmentType, description, ownerUserId, hiringManagerUserId, slug, requisitionId);
     }
 
     public Result Update(

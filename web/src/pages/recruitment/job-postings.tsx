@@ -17,6 +17,7 @@ import { listUsers } from "@/services/users.service";
 import {
   createJobPosting,
   listJobPostings,
+  listJobRequisitions,
   publishJobPosting,
   closeJobPosting,
   archiveJobPosting,
@@ -33,6 +34,7 @@ const schema = z.object({
   title: z.string().min(1),
   orgUnitId: z.string().min(1),
   hiringManagerUserId: z.string().optional(),
+  requisitionId: z.string().optional(),
   employmentType: z.enum(RECRUITMENT_EMPLOYMENT_TYPES as [RecruitmentEmploymentType, ...RecruitmentEmploymentType[]]),
   description: z.string().optional(),
 });
@@ -64,6 +66,10 @@ function JobPostings() {
   const { data, isLoading, isError, error } = useQuery({ queryKey: POSTINGS_KEY, queryFn: () => listJobPostings() });
   const { options: orgUnitOptions, nameById: orgUnitNameById } = useOrgUnits();
   const { data: users } = useQuery({ queryKey: ["users", "options"], queryFn: () => listUsers({ pageSize: 200 }) });
+  const { data: approvedRequisitions } = useQuery({
+    queryKey: ["recruitment", "requisitions", "approved"],
+    queryFn: () => listJobRequisitions("approved"),
+  });
 
   const [createOpen, setCreateOpen] = useState(false);
   const [archiveTarget, setArchiveTarget] = useState<JobPosting | null>(null);
@@ -71,7 +77,7 @@ function JobPostings() {
 
   const { register, handleSubmit, reset, control, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", orgUnitId: "", hiringManagerUserId: "", employmentType: "fullTime", description: "" },
+    defaultValues: { title: "", orgUnitId: "", hiringManagerUserId: "", requisitionId: "", employmentType: "fullTime", description: "" },
   });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: POSTINGS_KEY });
@@ -85,6 +91,7 @@ function JobPostings() {
         description: values.description || null,
         ownerUserId: currentUserId!,
         hiringManagerUserId: values.hiringManagerUserId || null,
+        requisitionId: values.requisitionId || null,
       }),
     onSuccess: () => {
       invalidate();
@@ -135,8 +142,13 @@ function JobPostings() {
     [users],
   );
 
+  const requisitionSelectOptions = useMemo(
+    () => (approvedRequisitions ?? []).map((r) => ({ value: r.id, label: `${r.title} (${r.headcountRequested})` })),
+    [approvedRequisitions],
+  );
+
   function openCreate() {
-    reset({ title: "", orgUnitId: "", hiringManagerUserId: "", employmentType: "fullTime", description: "" });
+    reset({ title: "", orgUnitId: "", hiringManagerUserId: "", requisitionId: "", employmentType: "fullTime", description: "" });
     setCreateOpen(true);
   }
 
@@ -273,6 +285,22 @@ function JobPostings() {
                   label={t("recruitment:postings.hiringManager")}
                   placeholder={t("recruitment:postings.hiringManagerNone")}
                   data={userSelectOptions}
+                  value={field.value || null}
+                  onChange={(value) => field.onChange(value ?? "")}
+                  onBlur={field.onBlur}
+                  searchable
+                  clearable
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="requisitionId"
+              render={({ field }) => (
+                <Select
+                  label={t("recruitment:postings.requisition")}
+                  placeholder={t("recruitment:postings.requisitionNone")}
+                  data={requisitionSelectOptions}
                   value={field.value || null}
                   onChange={(value) => field.onChange(value ?? "")}
                   onBlur={field.onBlur}

@@ -1,13 +1,13 @@
 import { Link, NavLink as RouterNavLink, Outlet } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ActionIcon, Alert, Badge, Box, Button, Group, Menu, NavLink, Stack, Text, Tooltip } from "@mantine/core";
-import { Grip, ShieldAlert } from "lucide-react";
+import { ActionIcon, Alert, Badge, Box, Button, Group, Indicator, Menu, NavLink, Stack, Text, Tooltip } from "@mantine/core";
+import { Bell, Grip, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
-import { NotificationBell } from "@/components/notifications/notification-bell";
+import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -26,6 +26,7 @@ function NavList({ collapsed }: { collapsed: boolean }) {
         ))}
       </Stack>
       <Stack component="nav" gap={4} className={`px-2 py-3 ${classes.footerNav}`}>
+        <NotificationsNavItem collapsed={collapsed} />
         {footerItems.map((item) => (
           <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
         ))}
@@ -35,6 +36,46 @@ function NavList({ collapsed }: { collapsed: boolean }) {
 }
 
 const NAV_LINK_CLASS_NAMES = { root: classes.navLink, section: classes.navSection, body: classes.navBody };
+
+/** "Bildirimler" at the top of the sidebar footer: unread count on the bell, dropdown opens beside the sidebar. */
+function NotificationsNavItem({ collapsed }: { collapsed: boolean }) {
+  const { t } = useTranslation(["notifications"]);
+  const label = t("notifications:bell.label");
+
+  return (
+    <NotificationsMenu
+      position="right-end"
+      tooltip={collapsed ? label : undefined}
+      renderTarget={(unread) => (
+        <NavLink
+          component="button"
+          type="button"
+          variant="light"
+          aria-label={collapsed ? label : undefined}
+          mod={{ collapsed }}
+          classNames={NAV_LINK_CLASS_NAMES}
+          styles={{ section: { color: "var(--mantine-color-steel-6)" } }}
+          leftSection={
+            <Indicator
+              color="red"
+              size={16}
+              offset={2}
+              label={unread}
+              maxValue={99}
+              disabled={unread === 0}
+              styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
+              inline
+            >
+              <Bell size={20} className="block" />
+            </Indicator>
+          }
+          label={collapsed ? undefined : label}
+          noWrap
+        />
+      )}
+    />
+  );
+}
 
 function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boolean; label: string }) {
   const { t } = useTranslation(["navigation"]);
@@ -205,7 +246,6 @@ export default function AppLayout() {
             <Brand />
             <div className="flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6">
               <Greeting />
-              <NotificationBell />
               <AppsLauncher />
             </div>
           </header>

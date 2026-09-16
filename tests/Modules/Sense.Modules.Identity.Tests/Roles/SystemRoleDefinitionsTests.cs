@@ -15,7 +15,7 @@ public sealed class SystemRoleDefinitionsTests
             "employee.employees.read", "employee.employees.create", "employee.employees.update", "employee.employees.bulk_update",
             "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "employee.salary.edit", "employee.bank_accounts.edit",
             "employee.sensitive.view", "organization.holidays.view", "organization.units.read",
-            "organization.approval_assignments.manage",
+            "organization.approval_assignments.manage", "billing.invoices.view",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -61,6 +61,15 @@ public sealed class SystemRoleDefinitionsTests
         Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.salary.edit");
         Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.bank_accounts.edit");
         Resolve(SystemRoleCodes.Auditor).ShouldNotContain("employee.sensitive.view");
+    }
+
+    [Fact]
+    public void Owner_And_Admin_BothGetBilling()
+    {
+        // Faz 8 #103: the source transcript has admins reaching billing while owners cannot — the plan direction
+        // (Owner keeps billing.*) was kept, but Admin's exclusion of it was lifted so both types get it now.
+        Resolve(SystemRoleCodes.Owner).ShouldContain("billing.invoices.view");
+        Resolve(SystemRoleCodes.Admin).ShouldContain("billing.invoices.view");
     }
 
     [Fact]

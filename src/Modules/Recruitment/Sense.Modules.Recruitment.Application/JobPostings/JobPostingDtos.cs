@@ -11,6 +11,7 @@ public sealed record JobPostingDto(
     string? CompanyNotes,
     Guid OwnerUserId,
     Guid? HiringManagerUserId,
+    Guid? RequisitionId,
     string Status,
     string ApplySlug,
     DateOnly? ClosingDate,

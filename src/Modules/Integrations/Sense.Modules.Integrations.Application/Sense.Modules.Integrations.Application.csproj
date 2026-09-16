@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Integrations.Domain/Sense.Modules.Integrations.Domain.csproj" />
+    <ProjectReference Include="../Sense.Modules.Integrations.Contracts/Sense.Modules.Integrations.Contracts.csproj" />
+    <!-- Cross-module read: Employee's employee.* lifecycle integration events, per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
+</Project>

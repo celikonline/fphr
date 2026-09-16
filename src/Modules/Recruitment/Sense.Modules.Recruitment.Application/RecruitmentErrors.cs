@@ -7,4 +7,7 @@ public static class RecruitmentErrors
     public const string LocationInvalid = "recruitment.posting.location_invalid";
     public const string OwnerUserInvalid = "recruitment.posting.owner_invalid";
     public const string HiringManagerUserInvalid = "recruitment.posting.hiring_manager_invalid";
+
+    public const string NoEmployeeForUser = "recruitment.requisition.no_employee_for_user";
+    public const string RequisitionNotApproved = "recruitment.posting.requisition_not_approved";
 }

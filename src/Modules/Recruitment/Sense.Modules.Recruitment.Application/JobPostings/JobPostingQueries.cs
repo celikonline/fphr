@@ -47,6 +47,7 @@ internal static class JobPostingMapper
             posting.CompanyNotes,
             posting.OwnerUserId,
             posting.HiringManagerUserId,
+            posting.RequisitionId,
             posting.Status.ToString(),
             posting.ApplySlug,
             posting.ClosingDate,

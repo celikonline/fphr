@@ -237,6 +237,10 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
 
+                    b.Property<Guid?>("RequisitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requisition_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -260,6 +264,9 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_job_postings_apply_slug");
 
+                    b.HasIndex("RequisitionId")
+                        .HasDatabaseName("ix_job_postings_requisition_id");
+
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_job_postings_tenant_id");
 
@@ -267,6 +274,97 @@ namespace Sense.Modules.Recruitment.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_job_postings_tenant_id_status");
 
                     b.ToTable("job_postings", "recruitment");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Recruitment.Domain.JobRequisitions.JobRequisition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approval_request_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("decided_at");
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("employment_type");
+
+                    b.Property<int>("HeadcountRequested")
+                        .HasColumnType("integer")
+                        .HasColumnName("headcount_requested");
+
+                    b.Property<string>("Justification")
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)")
+                        .HasColumnName("justification");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("OrgUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_unit_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RequesterEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("requester_employee_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id")
+                        .HasName("pk_job_requisitions");
+
+                    b.HasIndex("ApprovalRequestId")
+                        .HasDatabaseName("ix_job_requisitions_approval_request_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_job_requisitions_tenant_id");
+
+                    b.HasIndex("TenantId", "Status")
+                        .HasDatabaseName("ix_job_requisitions_tenant_id_status");
+
+                    b.ToTable("job_requisitions", "recruitment");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

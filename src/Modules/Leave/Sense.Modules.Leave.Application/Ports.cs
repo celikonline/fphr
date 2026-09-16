@@ -21,6 +21,13 @@ public interface IWorkScheduleReader
 
     /// <summary>Planned working intervals (local wall-clock) on the days [from, to], holidays not yet removed.</summary>
     Task<IReadOnlyList<ScheduledInterval>> GetScheduledIntervalsAsync(Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// "Pazartesi'den Cuma'ya izin alırsa Cumartesi'yi ekle" (roadmap #23): whether the schedule in effect on
+    /// <paramref name="date"/> (typically a Saturday) has the flag on. Resolved per date, like every other schedule
+    /// read, so a schedule reassignment mid-range is honored at its EffectiveFrom.
+    /// </summary>
+    Task<Func<DateOnly, bool>> GetIncludeSaturdayWhenFullWeekPredicateAsync(Guid tenantId, Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Leave day calculation for a date range (work schedule + the tenant's effective holiday calendar).</summary>
@@ -35,7 +42,11 @@ public sealed class LeaveDayCalculator(IWorkScheduleReader schedules, IHolidayCa
     public async Task<LeaveDayCount> CalculateAsync(
         Guid tenantId, Guid employeeId, DateOnly start, DateOnly end, bool countsNonWorkingDays, CancellationToken cancellationToken = default)
     {
-        var isWorkingDay = await schedules.GetWorkingDayPredicateAsync(tenantId, employeeId, start, end, cancellationToken);
+        // The Saturday rule (roadmap #23) can add a Saturday up to 6 days past `end` (a Mon–Fri request's own week);
+        // both predicates are fetched over that wider window so LeaveDayCounter never sees an unresolved date.
+        var scheduleWindowEnd = end.AddDays(6);
+        var isWorkingDay = await schedules.GetWorkingDayPredicateAsync(tenantId, employeeId, start, scheduleWindowEnd, cancellationToken);
+        var includeSaturdayWhenFullWeek = await schedules.GetIncludeSaturdayWhenFullWeekPredicateAsync(tenantId, employeeId, start, scheduleWindowEnd, cancellationToken);
         var calendar = await holidays.ResolveCalendarAsync(tenantId, null, null, cancellationToken);
         var holidayMap = calendar is null
             ? new Dictionary<DateOnly, string>()
@@ -43,7 +54,7 @@ public sealed class LeaveDayCalculator(IWorkScheduleReader schedules, IHolidayCa
                 .GroupBy(h => h.Date)
                 .ToDictionary(g => g.Key, g => g.First().Name);
 
-        return LeaveDayCounter.Count(start, end, isWorkingDay, holidayMap, countsNonWorkingDays);
+        return LeaveDayCounter.Count(start, end, isWorkingDay, holidayMap, countsNonWorkingDays, includeSaturdayWhenFullWeek);
     }
 }
 

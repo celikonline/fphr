@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Recruitment.Application;
 using Sense.Modules.Recruitment.Contracts;
 using Sense.Modules.Recruitment.Domain;
+using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -41,5 +42,9 @@ public sealed class RecruitmentModule : IModule
         services.AddScoped<IJobPostingRepository, JobPostingRepository>();
         services.AddScoped<ICandidateRepository, CandidateRepository>();
         services.AddScoped<IJobApplicationRepository, JobApplicationRepository>();
+        services.AddScoped<IJobRequisitionRepository, JobRequisitionRepository>();
+        // RequisitionApprovalCompletedHandler/RejectedHandler (Scrutor-scanned above) need IRecruitmentUnitOfWork even
+        // though only Sense.Worker ever dispatches them - registered here too so DI validation passes at Api startup.
+        services.AddRecruitmentCoreServices();
     }
 }

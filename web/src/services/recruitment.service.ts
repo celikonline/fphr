@@ -49,6 +49,7 @@ export interface JobPosting {
   companyNotes: string | null;
   ownerUserId: string;
   hiringManagerUserId: string | null;
+  requisitionId: string | null;
   status: JobPostingStatus;
   applySlug: string;
   closingDate: string | null;
@@ -66,6 +67,7 @@ export interface CreateJobPostingInput {
   description?: string | null;
   ownerUserId: string;
   hiringManagerUserId?: string | null;
+  requisitionId?: string | null;
 }
 
 export interface UpdateJobPostingInput {
@@ -180,4 +182,55 @@ export async function createJobApplication(jobPostingId: string, candidateId: st
 
 export async function moveJobApplicationStage(id: string, stage: ApplicationStage): Promise<void> {
   await apiClient.post(`${RECRUITMENT_BASE}/applications/${id}/stage`, { stage });
+}
+
+export type RequisitionReason = "newPosition" | "replacement";
+export const REQUISITION_REASONS: RequisitionReason[] = ["newPosition", "replacement"];
+
+export type RequisitionStatus = "draft" | "pendingApproval" | "approved" | "rejected" | "cancelled";
+
+export interface JobRequisition {
+  id: string;
+  title: string;
+  orgUnitId: string;
+  employmentType: RecruitmentEmploymentType;
+  headcountRequested: number;
+  reason: RequisitionReason;
+  justification: string | null;
+  requesterEmployeeId: string;
+  status: RequisitionStatus;
+  approvalRequestId: string | null;
+  decidedAt: string | null;
+}
+
+export interface CreateJobRequisitionInput {
+  title: string;
+  orgUnitId: string;
+  employmentType: RecruitmentEmploymentType;
+  headcountRequested: number;
+  reason: RequisitionReason;
+  justification?: string | null;
+}
+
+export async function listJobRequisitions(status?: RequisitionStatus): Promise<JobRequisition[]> {
+  const { data } = await apiClient.get<JobRequisition[]>(`${RECRUITMENT_BASE}/requisitions`, { params: { status } });
+  return data;
+}
+
+export async function getJobRequisition(id: string): Promise<JobRequisition> {
+  const { data } = await apiClient.get<JobRequisition>(`${RECRUITMENT_BASE}/requisitions/${id}`);
+  return data;
+}
+
+export async function createJobRequisition(input: CreateJobRequisitionInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${RECRUITMENT_BASE}/requisitions`, input);
+  return data;
+}
+
+export async function submitJobRequisition(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/requisitions/${id}/submit`);
+}
+
+export async function cancelJobRequisition(id: string): Promise<void> {
+  await apiClient.post(`${RECRUITMENT_BASE}/requisitions/${id}/cancel`);
 }

@@ -6,6 +6,12 @@ public sealed record CareerPathChangeCounts(int Promotion, int LateralMove, int 
     public int Total => Promotion + LateralMove + Demotion + TitleChange;
 }
 
+/// <summary>Terminations in a period (roadmap #99 turnover KPI); <see cref="WithinFirstSixMonths"/> is the early-attrition slice (tenure &lt; 182 days at termination).</summary>
+public sealed record TerminationCounts(int Total, int WithinFirstSixMonths);
+
+/// <summary>Active-employee headcount for one (org unit, gender) pair (roadmap #99c "cinsiyet × pozisyon grubu"); null OrgUnitId groups employees with no unit assigned.</summary>
+public sealed record GenderByOrgUnitCount(Guid? OrgUnitId, string Gender, int Count);
+
 /// <summary>
 /// Read-only cross-module workforce KPI inputs: lets Analytics compute KPIs without depending on Employee's
 /// Domain or Infrastructure. Implemented by Sense.Modules.Employee.Infrastructure and registered by EmployeeModule.AddModule.
@@ -20,4 +26,10 @@ public interface IEmployeeAnalyticsQueries
 
     /// <summary>Active-employee headcount by gender (key = Gender.ToString(), e.g. "Male"/"Female"/"Unspecified"/"Other").</summary>
     Task<IReadOnlyDictionary<string, int>> GetGenderHeadcountAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>Terminations (any <c>TerminationType</c>) whose TerminationDate falls in [from, to].</summary>
+    Task<TerminationCounts> GetTerminationCountsAsync(Guid tenantId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>Active-employee headcount grouped by (OrgUnitId, Gender). The caller resolves OrgUnitId to a display name via Organization.Contracts.</summary>
+    Task<IReadOnlyList<GenderByOrgUnitCount>> GetGenderByOrgUnitAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }

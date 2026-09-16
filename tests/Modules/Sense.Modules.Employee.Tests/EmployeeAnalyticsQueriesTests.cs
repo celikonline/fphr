@@ -118,8 +118,75 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
         counts[nameof(Gender.Male)].ShouldBe(1);
     }
 
-    private static EmployeeEntity NewActiveEmployee(Guid tenantId, string firstName, string lastName, DateOnly? hireDate = null, Gender gender = Gender.Unspecified) =>
-        EmployeeEntity.Create(tenantId, new EmployeeInfo(firstName, lastName, HireDate: hireDate ?? new DateOnly(2024, 1, 1), Gender: gender)).Value;
+    [Fact]
+    public async Task GetTerminationCountsAsync_CountsTerminationsInPeriod_AndSplitsEarlyAttrition()
+    {
+        var tenantId = Guid.NewGuid();
+        var context = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            // Terminated 3 months after hire: within the "first 6 months" slice.
+            var earlyLeaver = NewActiveEmployee(tenantId, "Early", "Leaver", hireDate: new DateOnly(2026, 1, 1));
+            earlyLeaver.Terminate(new DateOnly(2026, 4, 1), Guid.NewGuid(), TerminationType.Resignation, sgkExitCode: null).IsSuccess.ShouldBeTrue();
+            context.Employees.Add(earlyLeaver);
+
+            // Terminated after 2 years: not early attrition.
+            var tenuredLeaver = NewActiveEmployee(tenantId, "Tenured", "Leaver", hireDate: new DateOnly(2024, 1, 1));
+            tenuredLeaver.Terminate(new DateOnly(2026, 6, 1), Guid.NewGuid(), TerminationType.Resignation, sgkExitCode: null).IsSuccess.ShouldBeTrue();
+            context.Employees.Add(tenuredLeaver);
+
+            // Terminated outside the queried period: must not be counted.
+            var outsidePeriod = NewActiveEmployee(tenantId, "Outside", "Period", hireDate: new DateOnly(2020, 1, 1));
+            outsidePeriod.Terminate(new DateOnly(2027, 2, 1), Guid.NewGuid(), TerminationType.Resignation, sgkExitCode: null).IsSuccess.ShouldBeTrue();
+            context.Employees.Add(outsidePeriod);
+
+            context.Employees.Add(NewActiveEmployee(tenantId, "Still", "Active"));
+
+            await context.SaveChangesAsync();
+        }
+
+        var queries = new EmployeeAnalyticsQueries(context);
+        TerminationCounts counts;
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            counts = await queries.GetTerminationCountsAsync(tenantId, new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31), CancellationToken.None);
+        }
+
+        counts.Total.ShouldBe(2);
+        counts.WithinFirstSixMonths.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task GetGenderByOrgUnitAsync_GroupsActiveEmployeesByOrgUnitAndGender_IncludingUnassigned()
+    {
+        var tenantId = Guid.NewGuid();
+        var unitId = Guid.NewGuid();
+        var context = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            context.Employees.Add(NewActiveEmployee(tenantId, "A", "Unit", gender: Gender.Female, orgUnitId: unitId));
+            context.Employees.Add(NewActiveEmployee(tenantId, "B", "Unit", gender: Gender.Female, orgUnitId: unitId));
+            context.Employees.Add(NewActiveEmployee(tenantId, "C", "NoUnit", gender: Gender.Male, orgUnitId: null));
+            await context.SaveChangesAsync();
+        }
+
+        var queries = new EmployeeAnalyticsQueries(context);
+        IReadOnlyList<GenderByOrgUnitCount> counts;
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            counts = await queries.GetGenderByOrgUnitAsync(tenantId, CancellationToken.None);
+        }
+
+        counts.Single(c => c.OrgUnitId == unitId).Count.ShouldBe(2);
+        counts.Single(c => c.OrgUnitId == unitId).Gender.ShouldBe(nameof(Gender.Female));
+        counts.Single(c => c.OrgUnitId == null).Count.ShouldBe(1);
+    }
+
+    private static EmployeeEntity NewActiveEmployee(
+        Guid tenantId, string firstName, string lastName, DateOnly? hireDate = null, Gender gender = Gender.Unspecified, Guid? orgUnitId = null) =>
+        EmployeeEntity.Create(tenantId, new EmployeeInfo(firstName, lastName, HireDate: hireDate ?? new DateOnly(2024, 1, 1), Gender: gender), orgUnitId: orgUnitId).Value;
 
     private static EmployeeEntity NewDraftEmployee(Guid tenantId, string firstName, string lastName) =>
         EmployeeEntity.Create(tenantId, new EmployeeInfo(firstName, lastName)).Value;

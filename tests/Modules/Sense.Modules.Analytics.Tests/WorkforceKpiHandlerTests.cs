@@ -1,6 +1,7 @@
 using NSubstitute;
 using Sense.Modules.Analytics.Application.Kpis;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Shouldly;
 using Xunit;
@@ -8,20 +9,30 @@ using Xunit;
 namespace Sense.Modules.Analytics.Tests;
 
 /// <summary>
-/// GetWorkforceKpisHandler: ratio/share math and defaulting, against a fake IEmployeeAnalyticsQueries.
+/// GetWorkforceKpisHandler: ratio/share math and defaulting, against fake IEmployeeAnalyticsQueries/IOrgUnitLookup.
 /// No DB - Employee's own EmployeeAnalyticsQueries implementation is covered separately in Employee.Tests.
 /// </summary>
 public sealed class WorkforceKpiHandlerTests
 {
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly IEmployeeAnalyticsQueries _employeeAnalytics = Substitute.For<IEmployeeAnalyticsQueries>();
+    private readonly IOrgUnitLookup _orgUnits = Substitute.For<IOrgUnitLookup>();
     private readonly ITenantContext _tenant;
 
     public WorkforceKpiHandlerTests()
     {
         _tenant = Substitute.For<ITenantContext>();
         _tenant.TenantId.Returns(_tenantId);
+        // Defaults, overridden by the tests that care about them.
+        _employeeAnalytics.GetTerminationCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new TerminationCounts(0, 0));
+        _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount>());
+        _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<OrgUnitInfo>());
     }
+
+    private GetWorkforceKpisHandler CreateHandler() => new(_tenant, _employeeAnalytics, _orgUnits, TimeProvider.System);
 
     [Fact]
     public async Task CareerPathRatio_DividesChangesByActiveHeadcount()
@@ -32,7 +43,7 @@ public sealed class WorkforceKpiHandlerTests
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
 
-        var handler = new GetWorkforceKpisHandler(_tenant, _employeeAnalytics, TimeProvider.System);
+        var handler = CreateHandler();
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
@@ -51,7 +62,7 @@ public sealed class WorkforceKpiHandlerTests
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
 
-        var handler = new GetWorkforceKpisHandler(_tenant, _employeeAnalytics, TimeProvider.System);
+        var handler = CreateHandler();
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
@@ -67,7 +78,7 @@ public sealed class WorkforceKpiHandlerTests
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int> { ["Female"] = 4, ["Male"] = 6 });
 
-        var handler = new GetWorkforceKpisHandler(_tenant, _employeeAnalytics, TimeProvider.System);
+        var handler = CreateHandler();
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
@@ -75,6 +86,72 @@ public sealed class WorkforceKpiHandlerTests
         gender.Value.ShouldBe(10m);
         gender.Breakdown.Single(b => b.Dimension == "Male").Share.ShouldBe(0.6m);
         gender.Breakdown.Single(b => b.Dimension == "Female").Share.ShouldBe(0.4m);
+    }
+
+    [Fact]
+    public async Task TurnoverRate_DividesTerminationsByActiveHeadcount_AndEarlyTurnoverIsShareWithinSixMonths()
+    {
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(40);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>());
+        _employeeAnalytics.GetTerminationCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new TerminationCounts(Total: 4, WithinFirstSixMonths: 1));
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        result.Value.Single(k => k.Key == KpiKeys.TurnoverRate).Value.ShouldBe(0.1m); // 4 / 40
+        result.Value.Single(k => k.Key == KpiKeys.EarlyTurnoverRate).Value.ShouldBe(0.25m); // 1 / 4
+    }
+
+    [Fact]
+    public async Task TurnoverRate_IsZero_WhenNoActiveEmployees()
+    {
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(0);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>());
+        _employeeAnalytics.GetTerminationCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new TerminationCounts(0, 0));
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        result.Value.Single(k => k.Key == KpiKeys.TurnoverRate).Value.ShouldBe(0m);
+        result.Value.Single(k => k.Key == KpiKeys.EarlyTurnoverRate).Value.ShouldBe(0m);
+    }
+
+    [Fact]
+    public async Task GenderRatioByUnit_LabelsKnownUnits_AndFallsBackToUnassignedForNullOrgUnitId()
+    {
+        var unitId = Guid.NewGuid();
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(3);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>());
+        _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount>
+            {
+                new(unitId, "Female", 2),
+                new(null, "Male", 1),
+            });
+        _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<OrgUnitInfo> { new(unitId, Guid.NewGuid(), null, "Ankara Şubesi") });
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        var byUnit = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit);
+        byUnit.Value.ShouldBe(3m);
+        byUnit.Breakdown.Single(b => b.Dimension == "Ankara Şubesi / Female").Share.ShouldBe(0.6667m);
+        byUnit.Breakdown.Single(b => b.Dimension == "Unassigned / Male").Count.ShouldBe(1);
     }
 
     [Fact]
@@ -86,7 +163,7 @@ public sealed class WorkforceKpiHandlerTests
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
 
-        var handler = new GetWorkforceKpisHandler(_tenant, _employeeAnalytics, TimeProvider.System);
+        var handler = CreateHandler();
         var result = await handler.Handle(new GetWorkforceKpisQuery(), CancellationToken.None);
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);

@@ -37,6 +37,15 @@ public static class RecruitmentPermissions
     public static readonly Permission ApplicationsManage = new(
         "recruitment.applications.manage", Module, "Manage Applications", Group, "Add an application, or move it between pipeline stages");
 
+    public static readonly Permission RequisitionsRead = new(
+        "recruitment.requisitions.read", Module, "Read Job Requisitions", Group, "View job requisitions");
+
+    public static readonly Permission RequisitionsManage = new(
+        "recruitment.requisitions.manage", Module, "Manage Job Requisitions", Group, "Create, submit for approval, or cancel a job requisition");
+
     public static IEnumerable<Permission> All =>
-        [PostingsRead, PostingsCreate, PostingsUpdate, PostingsArchive, CandidatesRead, CandidatesManage, ApplicationsRead, ApplicationsManage];
+        [
+            PostingsRead, PostingsCreate, PostingsUpdate, PostingsArchive, CandidatesRead, CandidatesManage,
+            ApplicationsRead, ApplicationsManage, RequisitionsRead, RequisitionsManage,
+        ];
 }

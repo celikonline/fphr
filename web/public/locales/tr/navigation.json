@@ -17,7 +17,8 @@
     "reports": "Raporlar",
     "settings": "Ayarlar",
     "account": "Profilim",
-    "support": "Destek"
+    "support": "Destek",
+    "trust": "Güven ve güvenlik"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
@@ -36,6 +37,7 @@
     "performance": "Performans",
     "recruitment": "İşe alım",
     "recruitmentCandidates": "Adaylar",
+    "recruitmentRequisitions": "Talep formları",
     "analytics": "Analitik",
     "workflowInbox": "Onay kutusu"
   },

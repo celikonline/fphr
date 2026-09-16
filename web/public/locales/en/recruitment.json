@@ -14,6 +14,9 @@
     "companyNotes": "Company notes",
     "hiringManager": "Hiring manager",
     "hiringManagerNone": "Not assigned",
+    "requisition": "Requisition",
+    "requisitionNone": "No requisition",
+    "requisitionPendingWarning": "The linked requisition is \"{{status}}\"; this posting cannot be published until it is approved.",
     "closingDate": "Closing date",
     "status": "Status",
     "statuses": {
@@ -100,6 +103,34 @@
     "stageChanged": "Stage updated.",
     "empty": "No applications for this posting yet.",
     "alreadyTerminal": "This application is resolved; its stage cannot be changed."
+  },
+  "requisitions": {
+    "title": "Job Requisitions",
+    "subtitle": "Create and submit headcount requests for approval.",
+    "addRequisition": "Add Requisition",
+    "dialogCreateTitle": "New Requisition",
+    "titleField": "Title",
+    "headcount": "Headcount requested",
+    "reason": "Reason",
+    "reasons": {
+      "newPosition": "New position",
+      "replacement": "Replacement"
+    },
+    "justification": "Justification",
+    "status": "Status",
+    "statuses": {
+      "draft": "Draft",
+      "pendingApproval": "Pending approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "submit": "Submit for approval",
+    "cancel": "Cancel",
+    "createSuccess": "Requisition created.",
+    "submitSuccess": "Requisition submitted for approval.",
+    "cancelSuccess": "Requisition cancelled.",
+    "empty": "No requisitions yet."
   },
   "genericError": "Something went wrong."
 }

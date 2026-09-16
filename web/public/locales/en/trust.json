@@ -1,0 +1,32 @@
+{
+  "title": "Trust & security",
+  "subtitle": "How we protect your data.",
+  "intro": "Protecting your company's and employees' data is our priority. This page summarizes our security approach; it will be updated as our independent audit and certification work progresses.",
+  "sections": {
+    "encryption": {
+      "title": "Encryption",
+      "body": "Data is encrypted in transit with TLS and at rest at the storage layer. Sensitive personnel fields (national ID, IBAN, health information) are only shown unmasked to authorized users."
+    },
+    "tenantIsolation": {
+      "title": "Tenant isolation",
+      "body": "Each company's data is separated from every other company's by access filters applied on the tenant identifier; a user can only reach their own tenant's data."
+    },
+    "accessControl": {
+      "title": "Access control & audit log",
+      "body": "A role- and permission-based access model defines in detail who can view or change what. User and system actions are written to the audit log and can be viewed from the Audit Log screen."
+    },
+    "supportAccess": {
+      "title": "Support access stays in your control",
+      "body": "Our support team cannot reach your data without a time-limited access grant that you approve. Access you grant expires automatically and can be revoked at any time."
+    },
+    "continuity": {
+      "title": "Backups & continuity",
+      "body": "Data is backed up regularly and recovery processes are in place for unexpected incidents."
+    },
+    "compliance": {
+      "title": "Compliance & certification",
+      "body": "Special-category data under KVKK (Turkey's data protection law), such as union membership, is protected with dedicated permissions. Our independent security certification work is ongoing; contact us for current status and reports."
+    }
+  },
+  "contactCta": "Contact Support with security questions."
+}

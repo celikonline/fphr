@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, type ReactElement } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Button, Group, Indicator, Menu, ScrollArea, Stack, Text, Tooltip } from "@mantine/core";
-import { Bell, Settings2 } from "lucide-react";
+import { Button, Group, Menu, ScrollArea, Stack, Text, Tooltip, type MenuProps } from "@mantine/core";
+import { Settings2 } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import {
   NOTIFICATIONS_QUERY_KEY,
@@ -17,16 +17,24 @@ import {
 } from "@/services/notifications.service";
 
 const UNREAD_POLL_MS = 45_000;
-const BELL_PAGE_SIZE = 10;
+const PAGE_SIZE = 10;
 
-/** Header bell: polled unread badge, latest notifications dropdown, mark read. Renders nothing without the view permission. */
-export function NotificationBell() {
-  const canView = usePermission("notifications.my.view");
-  if (!canView) return null;
-  return <NotificationBellMenu />;
+interface NotificationsMenuProps {
+  position: MenuProps["position"];
+  /** The trigger element; receives the polled unread count for its badge. */
+  renderTarget: (unread: number) => ReactElement;
+  /** Shown around an icon-only trigger. */
+  tooltip?: string;
 }
 
-function NotificationBellMenu() {
+/** Polled unread badge, latest notifications dropdown, mark read. Renders nothing without the view permission. */
+export function NotificationsMenu(props: NotificationsMenuProps) {
+  const canView = usePermission("notifications.my.view");
+  if (!canView) return null;
+  return <NotificationsDropdown {...props} />;
+}
+
+function NotificationsDropdown({ position, renderTarget, tooltip }: NotificationsMenuProps) {
   const { t, i18n } = useTranslation(["notifications"]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -40,7 +48,7 @@ function NotificationBellMenu() {
   });
   const listQuery = useQuery({
     queryKey: [...NOTIFICATIONS_QUERY_KEY, "bell"],
-    queryFn: () => listMyNotifications({ page: 1, pageSize: BELL_PAGE_SIZE }),
+    queryFn: () => listMyNotifications({ page: 1, pageSize: PAGE_SIZE }),
     enabled: open,
   });
 
@@ -57,32 +65,17 @@ function NotificationBellMenu() {
     if (item.actionUrl) navigate(item.actionUrl);
   }
 
+  const target = <Menu.Target>{renderTarget(unread)}</Menu.Target>;
+
   return (
-    <Menu opened={open} onChange={setOpen} position="bottom-end" width={320}>
-      <Tooltip label={t("notifications:bell.label")}>
-        <Menu.Target>
-          <ActionIcon
-            variant="subtle"
-            color="gray"
-            size="lg"
-            aria-label={t("notifications:bell.label")}
-            style={{ overflow: "visible" }}
-          >
-            <Indicator
-              color="red"
-              size={16}
-              offset={2}
-              label={unread}
-              maxValue={99}
-              disabled={unread === 0}
-              styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
-              inline
-            >
-              <Bell size={16} className="block" />
-            </Indicator>
-          </ActionIcon>
-        </Menu.Target>
-      </Tooltip>
+    <Menu opened={open} onChange={setOpen} position={position} width={320}>
+      {tooltip ? (
+        <Tooltip label={tooltip} position="right" openDelay={300}>
+          {target}
+        </Tooltip>
+      ) : (
+        target
+      )}
       <Menu.Dropdown p={0}>
         <Group justify="space-between" wrap="nowrap" px="sm" py="xs">
           <Text size="sm" fw={600}>

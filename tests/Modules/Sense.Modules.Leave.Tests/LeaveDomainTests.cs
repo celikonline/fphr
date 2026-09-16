@@ -37,6 +37,103 @@ public sealed class LeaveDayCounterTests
         result.Days.ShouldBe(10m);
         result.WeeklyRestDays.ShouldBe(0);
     }
+
+    private static readonly IReadOnlyDictionary<DateOnly, string> NoHolidays = new Dictionary<DateOnly, string>();
+
+    /// <summary>"Pazartesi'den Cuma'ya izin alırsa Cumartesi'yi ekle" (roadmap #23, 11.3.5/11.3.6).</summary>
+    [Fact]
+    public void SaturdayRule_FullMondayToFridayRequest_AddsTheFollowingSaturdayPastTheRequestedEnd()
+    {
+        // Mon 2026-10-26 .. Fri 2026-10-30 requested; Saturday 10-31 is not itself in the request.
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 30), LeaveDayCounter.MondayToFriday, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Days.ShouldBe(6m);
+        result.Breakdown.Count.ShouldBe(6, "Saturday is appended even though it falls after the requested end date");
+        var saturday = result.Breakdown.Single(d => d.Date == new DateOnly(2026, 10, 31));
+        saturday.Kind.ShouldBe(LeaveDayKind.WeeklyRest);
+        saturday.Counted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SaturdayRule_WithoutTheFlag_LeavesTheCountUnchanged()
+    {
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 30), LeaveDayCounter.MondayToFriday, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => false);
+
+        result.Days.ShouldBe(5m);
+        result.Breakdown.Count.ShouldBe(5);
+    }
+
+    [Fact]
+    public void SaturdayRule_PartialWeekRequest_DoesNotApply()
+    {
+        // Wed–Fri only: Monday and Tuesday (working days) are not requested, so the week is not "fully" taken.
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 28), new DateOnly(2026, 10, 30), LeaveDayCounter.MondayToFriday, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Days.ShouldBe(3m);
+        result.Breakdown.ShouldNotContain(d => d.Date == new DateOnly(2026, 10, 31));
+    }
+
+    [Fact]
+    public void SaturdayRule_WhenSaturdayIsAWorkingDay_DoesNotApply()
+    {
+        // "Cumartesi çalışma" schedules are supported: the rule never fires for a Saturday that is itself scheduled.
+        bool AlwaysWorking(DateOnly date) => date.DayOfWeek is not DayOfWeek.Sunday;
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 30), AlwaysWorking, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Breakdown.ShouldNotContain(d => d.Date == new DateOnly(2026, 10, 31));
+    }
+
+    [Fact]
+    public void SaturdayRule_WithAMidWeekRestDayOutsideTheRequest_StillAppliesToTheWorkingDays()
+    {
+        // "Perşembe tatil" style schedule (11.3.5): Monday is off, Tue–Fri working. The employee only requests the
+        // working days (Monday needs no leave); the missing Monday must not block the Saturday rule.
+        bool TuesdayToFridayOnly(DateOnly date) => date.DayOfWeek is DayOfWeek.Tuesday or DayOfWeek.Wednesday or DayOfWeek.Thursday or DayOfWeek.Friday;
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 27), new DateOnly(2026, 10, 30), TuesdayToFridayOnly, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Days.ShouldBe(5m, "4 requested working days + the added Saturday");
+        result.Breakdown.Single(d => d.Date == new DateOnly(2026, 10, 31)).Counted.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SaturdayRule_WhenAWorkingDayInTheWeekIsNotRequested_DoesNotApply()
+    {
+        // The Thursday-holiday open point (11.3.5 §Gün hesabı): Thursday is a normal working day per schedule but the
+        // employee's continuous request stops on Wednesday - the default is that the rule does not relax for this.
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 28), LeaveDayCounter.MondayToFriday, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Breakdown.ShouldNotContain(d => d.Date == new DateOnly(2026, 10, 31));
+    }
+
+    [Fact]
+    public void SaturdayRule_TwoConsecutiveFullWeeks_AppliesToEachWeekIndependently()
+    {
+        // Mon 2026-10-26 .. Fri 2026-11-06: two full weeks: the first Saturday (10-31) is already inside the range,
+        // the second (11-07) falls right after it - "her takvim haftası ayrı değerlendirilir".
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 11, 6), LeaveDayCounter.MondayToFriday, NoHolidays,
+            countsNonWorkingDays: false, includeSaturdayWhenFullWeek: _ => true);
+
+        result.Days.ShouldBe(12m, "10 workdays + both Saturdays; the Sunday between them stays excluded");
+        result.WeeklyRestDays.ShouldBe(1);
+        result.Breakdown.Single(d => d.Date == new DateOnly(2026, 10, 31)).Counted.ShouldBeTrue();
+        result.Breakdown.Single(d => d.Date == new DateOnly(2026, 11, 7)).Counted.ShouldBeTrue();
+        result.Breakdown.Single(d => d.Date == new DateOnly(2026, 11, 1)).Counted.ShouldBeFalse();
+    }
 }
 
 public sealed class LeaveTypeTests

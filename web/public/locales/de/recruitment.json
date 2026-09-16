@@ -14,6 +14,9 @@
     "companyNotes": "[DE] Company notes",
     "hiringManager": "[DE] Hiring manager",
     "hiringManagerNone": "[DE] Not assigned",
+    "requisition": "[DE] Requisition",
+    "requisitionNone": "[DE] No requisition",
+    "requisitionPendingWarning": "[DE] The linked requisition is \"{{status}}\"; this posting cannot be published until it is approved.",
     "closingDate": "[DE] Closing date",
     "status": "[DE] Status",
     "statuses": {
@@ -100,6 +103,34 @@
     "stageChanged": "[DE] Stage updated.",
     "empty": "[DE] No applications for this posting yet.",
     "alreadyTerminal": "[DE] This application is resolved; its stage cannot be changed."
+  },
+  "requisitions": {
+    "title": "[DE] Job Requisitions",
+    "subtitle": "[DE] Create and submit headcount requests for approval.",
+    "addRequisition": "[DE] Add Requisition",
+    "dialogCreateTitle": "[DE] New Requisition",
+    "titleField": "[DE] Title",
+    "headcount": "[DE] Headcount requested",
+    "reason": "[DE] Reason",
+    "reasons": {
+      "newPosition": "[DE] New position",
+      "replacement": "[DE] Replacement"
+    },
+    "justification": "[DE] Justification",
+    "status": "[DE] Status",
+    "statuses": {
+      "draft": "[DE] Draft",
+      "pendingApproval": "[DE] Pending approval",
+      "approved": "[DE] Approved",
+      "rejected": "[DE] Rejected",
+      "cancelled": "[DE] Cancelled"
+    },
+    "submit": "[DE] Submit for approval",
+    "cancel": "[DE] Cancel",
+    "createSuccess": "[DE] Requisition created.",
+    "submitSuccess": "[DE] Requisition submitted for approval.",
+    "cancelSuccess": "[DE] Requisition cancelled.",
+    "empty": "[DE] No requisitions yet."
   },
   "genericError": "[DE] Something went wrong."
 }

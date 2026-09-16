@@ -1,0 +1,32 @@
+{
+  "title": "Güven ve güvenlik",
+  "subtitle": "Verilerinizi nasıl koruduğumuz hakkında.",
+  "intro": "Şirketinizin ve çalışanlarınızın verilerini korumak önceliğimiz. Bu sayfada güvenlik yaklaşımımızı özetliyoruz; bağımsız denetim ve sertifikasyon çalışmalarımız ilerledikçe burası güncellenecek.",
+  "sections": {
+    "encryption": {
+      "title": "Şifreleme",
+      "body": "Veriler aktarım sırasında TLS ile, veritabanında ise depolama katmanında şifrelenir. Hassas özlük alanları (TCKN, IBAN, sağlık bilgileri) yalnızca yetkili kullanıcılara maskesiz gösterilir."
+    },
+    "tenantIsolation": {
+      "title": "Kiracı izolasyonu",
+      "body": "Her şirketin verisi, kiracı kimliğine göre uygulanan erişim filtreleriyle diğer şirketlerden ayrıştırılır; bir kullanıcı yalnızca kendi kiracısının verisine erişebilir."
+    },
+    "accessControl": {
+      "title": "Erişim kontrolü ve denetim kaydı",
+      "body": "Rol ve izin bazlı erişim modeliyle kim neyi görebilir/değiştirebilir ayrıntılı biçimde tanımlanır. Kullanıcı ve sistem işlemleri denetim kaydına yazılır ve Denetim Kaydı ekranından görüntülenebilir."
+    },
+    "supportAccess": {
+      "title": "Destek erişimi sizin kontrolünüzde",
+      "body": "Destek ekibimiz, sizin onayladığınız ve süresi sınırlı bir erişim izni olmadan verilerinize erişemez. Onayladığınız erişim süresi dolunca otomatik kapanır ve istediğiniz an iptal edilebilir."
+    },
+    "continuity": {
+      "title": "Yedekleme ve süreklilik",
+      "body": "Veriler düzenli olarak yedeklenir ve olağandışı durumlara karşı kurtarma süreçleri işletilir."
+    },
+    "compliance": {
+      "title": "Uyumluluk ve sertifikasyon",
+      "body": "KVKK kapsamındaki özel nitelikli verileri (ör. sendika üyeliği) ayrı izinlerle koruyoruz. Bağımsız güvenlik sertifikasyonu çalışmalarımız sürüyor; güncel durum ve raporlar için bizimle iletişime geçebilirsiniz."
+    }
+  },
+  "contactCta": "Güvenlik sorularınız için Destek ile iletişime geçin."
+}

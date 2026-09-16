@@ -17,7 +17,8 @@
     "reports": "Reports",
     "settings": "Settings",
     "account": "My profile",
-    "support": "Support"
+    "support": "Support",
+    "trust": "Trust & security"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
@@ -36,6 +37,7 @@
     "performance": "Performance",
     "recruitment": "Recruitment",
     "recruitmentCandidates": "Candidates",
+    "recruitmentRequisitions": "Requisitions",
     "analytics": "Analytics",
     "workflowInbox": "Approval inbox"
   },

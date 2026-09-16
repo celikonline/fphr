@@ -1,8 +1,9 @@
 name: senseik
 
-# Full-stack local dev: builds and runs the API and web app as containers alongside the
-# same postgres / redis / minio / mailpit dependencies defined in infra/docker-compose.yml
-# (reused here via `include` so there is a single source of truth for those services).
+# Full-stack local dev: builds and runs the API, the outbox worker and the web app as containers
+# alongside the same postgres / redis / minio / mailpit dependencies defined in
+# infra/docker-compose.yml (reused here via `include` so there is a single source of truth for
+# those services).
 #
 # Quick start:
 #   cp .env.example .env
@@ -53,6 +54,39 @@ services:
         condition: service_healthy
       minio-init:
         condition: service_completed_successfully
+
+  # Drains every module's outbox and runs the cross-module event handlers (EmployeeHired -> leave
+  # profile / document requirements / work schedule, Workflow decisions -> leave requests, in-app
+  # notifications + e-mail delivery, daily leave balance recalculation). Without it those side
+  # effects never happen: an employee hired through the UI gets no leave profile, approvals never
+  # land, no notification is ever sent.
+  worker:
+    build:
+      context: .
+      dockerfile: src/Sense.Worker/Dockerfile
+    container_name: senseik-worker
+    environment:
+      DOTNET_ENVIRONMENT: Development
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-senseik};Username=${POSTGRES_USER:-sense};Password=${POSTGRES_PASSWORD:-sense};Include Error Detail=true
+      ConnectionStrings__Redis: redis:6379,abortConnect=false
+      Storage__Provider: MinIO
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_ROOT_USER:-minio}
+      MinIO__SecretKey: ${MINIO_ROOT_PASSWORD:-minio12345}
+      MinIO__UseHttps: "false"
+      Email__Smtp__Host: mailpit
+      Email__Smtp__Port: "1025"
+      Frontend__BaseUrl: http://localhost:${WEB_PORT:-3000}
+      Observability__OtlpEndpoint: http://jaeger:4317
+      Observability__Logs__Enabled: "true"
+      Observability__Logs__Endpoint: http://loki:3100/otlp/v1/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
 
   web:
     build:

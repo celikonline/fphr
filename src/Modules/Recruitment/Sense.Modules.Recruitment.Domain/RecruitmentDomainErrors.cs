@@ -9,6 +9,7 @@ public static class RecruitmentDomainErrors
     public const string PostingNotCloseable = "recruitment.posting.not_closeable";
     public const string PostingNotArchivable = "recruitment.posting.not_archivable";
     public const string PostingAlreadyArchived = "recruitment.posting.already_archived";
+    public const string PostingRequisitionNotApproved = "recruitment.posting.requisition_not_approved";
 
     public const string CandidateNotFound = "recruitment.candidate.not_found";
     public const string CandidateNameRequired = "recruitment.candidate.name_required";
@@ -16,6 +17,13 @@ public static class RecruitmentDomainErrors
 
     public const string ApplicationNotFound = "recruitment.application.not_found";
     public const string ApplicationAlreadyTerminal = "recruitment.application.already_terminal";
+
+    public const string RequisitionNotFound = "recruitment.requisition.not_found";
+    public const string RequisitionTitleRequired = "recruitment.requisition.title_required";
+    public const string RequisitionHeadcountInvalid = "recruitment.requisition.headcount_invalid";
+    public const string RequisitionNotSubmittable = "recruitment.requisition.not_submittable";
+    public const string RequisitionNotPending = "recruitment.requisition.not_pending";
+    public const string RequisitionNotCancellable = "recruitment.requisition.not_cancellable";
 }
 
 /// <summary>Domain constants and length limits.</summary>

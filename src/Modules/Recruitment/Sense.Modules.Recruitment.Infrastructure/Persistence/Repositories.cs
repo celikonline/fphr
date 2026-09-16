@@ -3,6 +3,7 @@ using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Infrastructure.Persistence;
@@ -76,4 +77,30 @@ public sealed class JobApplicationRepository(RecruitmentDbContext context) : IJo
             .Where(a => a.CandidateId == candidateId)
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync(cancellationToken);
+}
+
+/// <summary>EF Core-backed JobRequisition repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+public sealed class JobRequisitionRepository(RecruitmentDbContext context) : IJobRequisitionRepository
+{
+    public void Add(JobRequisition requisition) => context.JobRequisitions.Add(requisition);
+
+    public async Task<Result<JobRequisition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var requisition = await context.JobRequisitions.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return requisition is null ? Error.NotFound(RecruitmentDomainErrors.RequisitionNotFound) : requisition;
+    }
+
+    public async Task<JobRequisition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.JobRequisitions.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status = null, CancellationToken cancellationToken = default)
+    {
+        var query = context.JobRequisitions.AsQueryable();
+        if (status is not null)
+        {
+            query = query.Where(r => r.Status == status);
+        }
+
+        return await query.OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
+    }
 }

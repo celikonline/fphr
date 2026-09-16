@@ -1,6 +1,7 @@
 using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Domain;
@@ -35,4 +36,17 @@ public interface IJobApplicationRepository
     Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>JobRequisition aggregate repository.</summary>
+public interface IJobRequisitionRepository
+{
+    void Add(JobRequisition requisition);
+
+    Task<Result<JobRequisition>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Null-safe variant for the ApprovalCompleted/ApprovalRejected handlers (SubjectId is the requisition's own id).</summary>
+    Task<JobRequisition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status = null, CancellationToken cancellationToken = default);
 }

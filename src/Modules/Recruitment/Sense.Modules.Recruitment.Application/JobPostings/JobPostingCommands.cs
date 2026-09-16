@@ -5,6 +5,7 @@ using Sense.Modules.Recruitment.Contracts;
 using Sense.Modules.Recruitment.Contracts.Events;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
@@ -13,10 +14,11 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Application.JobPostings;
 
-/// <summary>Creates a job posting in Draft status.</summary>
+/// <summary>Creates a job posting in Draft status. <paramref name="RequisitionId"/> is optional (roadmap #87); when set, <see cref="PublishJobPostingCommand"/> requires it to be Approved.</summary>
 [RequiresPermission("recruitment.postings.create")]
 public sealed record CreateJobPostingCommand(
-    string Title, Guid OrgUnitId, Guid? LocationId, string EmploymentType, string? Description, Guid OwnerUserId, Guid? HiringManagerUserId)
+    string Title, Guid OrgUnitId, Guid? LocationId, string EmploymentType, string? Description, Guid OwnerUserId,
+    Guid? HiringManagerUserId, Guid? RequisitionId = null)
     : ICommand<Guid>;
 
 public sealed class CreateJobPostingValidator : AbstractValidator<CreateJobPostingCommand>
@@ -46,7 +48,8 @@ public sealed class CreateJobPostingHandler(
 
         var created = JobPosting.Create(
             tenant.TenantId, command.Title, command.OrgUnitId, command.LocationId,
-            Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType), command.Description, command.OwnerUserId, command.HiringManagerUserId);
+            Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType), command.Description, command.OwnerUserId,
+            command.HiringManagerUserId, command.RequisitionId);
         if (created.IsFailure)
         {
             return created.Error;
@@ -135,7 +138,8 @@ public sealed class UpdateJobPostingHandler(
 [RequiresPermission("recruitment.postings.update")]
 public sealed record PublishJobPostingCommand(Guid PostingId) : ICommand;
 
-public sealed class PublishJobPostingHandler(IJobPostingRepository postings, IIntegrationEventOutbox outbox) : ICommandHandler<PublishJobPostingCommand>
+public sealed class PublishJobPostingHandler(IJobPostingRepository postings, IJobRequisitionRepository requisitions, IIntegrationEventOutbox outbox)
+    : ICommandHandler<PublishJobPostingCommand>
 {
     public async Task<Result> Handle(PublishJobPostingCommand command, CancellationToken cancellationToken)
     {
@@ -143,6 +147,15 @@ public sealed class PublishJobPostingHandler(IJobPostingRepository postings, IIn
         if (existing.IsFailure)
         {
             return existing.Error;
+        }
+
+        if (existing.Value.RequisitionId is { } requisitionId)
+        {
+            var requisition = await requisitions.FindByIdAsync(requisitionId, cancellationToken);
+            if (requisition is null || requisition.Status != RequisitionStatus.Approved)
+            {
+                return Error.Rule(RecruitmentErrors.RequisitionNotApproved);
+            }
         }
 
         var wasPublishedBefore = existing.Value.PublishedAt is not null;
