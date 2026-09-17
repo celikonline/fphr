@@ -156,6 +156,13 @@ public sealed class SystemRoleCoverageTests
             new Permission("reporting.reports.view", "reporting", "reporting.reports.view", "Test"),
             new Permission("workflow.tasks.view", "workflow", "workflow.tasks.view", "Test"),
             new Permission("workflow.tasks.manage", "workflow", "workflow.tasks.manage", "Test"),
+            new Permission("employee.my.view", "employee", "employee.my.view", "Test"),
+            new Permission("attendance.my.workschedule", "attendance", "attendance.my.workschedule", "Test"),
+            new Permission("attendance.my.timesheet", "attendance", "attendance.my.timesheet", "Test"),
+            new Permission("documents.my.requirements", "documents", "documents.my.requirements", "Test"),
+            new Permission("documents.my.files", "documents", "documents.my.files", "Test"),
+            new Permission("notifications.my.view", "notifications", "notifications.my.view", "Test"),
+            new Permission("notifications.my.manage", "notifications", "notifications.my.manage", "Test"),
         };
     }
 }

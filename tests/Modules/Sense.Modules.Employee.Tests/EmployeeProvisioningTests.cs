@@ -46,7 +46,8 @@ public sealed class EmployeeProvisioningTests : TestFixture
         tenant.TenantId.Returns(tenantId);
 
         var repo = new EmployeeRepository(db);
-        var provisioning = new EmployeeProvisioning(tenant, repo, outbox);
+        var unitOfWork = new EmployeeUnitOfWork(db);
+        var provisioning = new EmployeeProvisioning(tenant, repo, outbox, unitOfWork);
 
         var request = new CandidateHireRequest(
             FirstName: "Ahmet",
