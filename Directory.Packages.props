@@ -106,6 +106,6 @@
     <PackageVersion Include="Respawn" Version="6.*" />
     <PackageVersion Include="NetArchTest.Rules" Version="1.*" />
     <PackageVersion Include="Verify.XunitV3" Version="30.*" />
-    <PackageVersion Include="coverlet.collector" Version="6.*" />
+    <PackageVersion Include="coverlet.collector" Version="10.*" />
   </ItemGroup>
 </Project>
