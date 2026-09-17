@@ -106,7 +106,7 @@ jobs:
         run: dotnet test Sense.slnx -c Release --no-build --filter "Category=Integration" --logger "trx;LogFileName=integration-tests.trx" --collect:"XPlat Code Coverage" --results-directory TestResults
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-results
