@@ -14,6 +14,9 @@ name: senseik
 # If you'd rather run the API/web with hot-reload on the host (dotnet watch / vite) and
 # only containerize the infrastructure, use `docker compose -f infra/docker-compose.yml
 # up -d` instead - that's what the root README's quick start does.
+#
+# Port kalıbı: infra/docker-compose.yml'deki gibi, host'a yayınlanan portlar "standart
+# port + 10000" kalıbını izler (API 8080 -> 18080, web 3000 -> 13000).
 
 include:
   - infra/docker-compose.yml
@@ -32,13 +35,13 @@ services:
       MinIO__Endpoint: minio:9000
       # Presigned URLs are signed with this endpoint instead, since they're consumed by the browser
       # (outside the compose network) which can't resolve the "minio" hostname above.
-      MinIO__PublicEndpoint: localhost:${MINIO_PORT:-9000}
+      MinIO__PublicEndpoint: localhost:${MINIO_PORT:-19000}
       MinIO__AccessKey: ${MINIO_ROOT_USER:-minio}
       MinIO__SecretKey: ${MINIO_ROOT_PASSWORD:-minio12345}
       MinIO__UseHttps: "false"
       Email__Smtp__Host: mailpit
       Email__Smtp__Port: "1025"
-      Frontend__BaseUrl: http://localhost:${WEB_PORT:-3000}
+      Frontend__BaseUrl: http://localhost:${WEB_PORT:-13000}
       Seeding__Enabled: "true"
       Seeding__Profile: ${SEED_PROFILE:-demo}
       SENTRY_DSN: ${SENTRY_DSN:-}
@@ -47,7 +50,7 @@ services:
       Observability__Logs__Enabled: "true"
       Observability__Logs__Endpoint: http://loki:3100/otlp/v1/logs
     ports:
-      - "${API_PORT:-8080}:8080"
+      - "${API_PORT:-18080}:8080"
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,7 +82,7 @@ services:
       MinIO__UseHttps: "false"
       Email__Smtp__Host: mailpit
       Email__Smtp__Port: "1025"
-      Frontend__BaseUrl: http://localhost:${WEB_PORT:-3000}
+      Frontend__BaseUrl: http://localhost:${WEB_PORT:-13000}
       Observability__OtlpEndpoint: http://jaeger:4317
       Observability__Logs__Enabled: "true"
       Observability__Logs__Endpoint: http://loki:3100/otlp/v1/logs
@@ -99,9 +102,9 @@ services:
         # Baked into the JS bundle at build time (see web/Dockerfile) - must be the URL the
         # *browser* reaches the API on, i.e. the host-published API_PORT, not the api service's
         # container-internal address.
-        VITE_API_BASE_URL: http://localhost:${API_PORT:-8080}/api
+        VITE_API_BASE_URL: http://localhost:${API_PORT:-18080}/api
     container_name: senseik-web
     ports:
-      - "${WEB_PORT:-3000}:8080"
+      - "${WEB_PORT:-13000}:8080"
     depends_on:
       - api
