@@ -189,7 +189,7 @@ function ShiftPlan() {
       <Group justify="space-between" align="center" wrap="wrap" gap="sm">
         <OrgUnitSelect value={orgUnitId} onChange={setOrgUnitId} emptyLabel={t("attendance:shiftPlan.allUnits")} className="w-64" />
         <Group gap="xs" wrap="nowrap">
-          <Tooltip label={t("attendance:previousMonth")}>
+          <Tooltip label={t("attendance:shiftPlan.previousWeek")}>
             <ActionIcon
               variant="default"
               aria-label={t("attendance:shiftPlan.previousWeek")}
@@ -201,7 +201,7 @@ function ShiftPlan() {
           <Text fw={500} miw={200} ta="center">
             {formatDateOnly(weekStartIso, i18n.language, { day: "2-digit", month: "short" })} – {formatDateOnly(weekEnd, i18n.language, { day: "2-digit", month: "short", year: "numeric" })}
           </Text>
-          <Tooltip label={t("attendance:nextMonth")}>
+          <Tooltip label={t("attendance:shiftPlan.nextWeek")}>
             <ActionIcon
               variant="default"
               aria-label={t("attendance:shiftPlan.nextWeek")}

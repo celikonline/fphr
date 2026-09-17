@@ -325,8 +325,10 @@ public sealed class PayrollPeriodCalculationServiceTests
 
     private static List<TraceStep> CapturedSteps(IPayslipCalculationTraceRepository traces)
     {
-        PayslipCalculationTrace? captured = null;
-        traces.Received(1).Add(Arg.Do<PayslipCalculationTrace>(t => captured = t));
-        return JsonSerializer.Deserialize<List<TraceStep>>(captured!.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
+        traces.Received(1).Add(Arg.Any<PayslipCalculationTrace>());
+        var captured = (PayslipCalculationTrace)traces.ReceivedCalls()
+            .Single(c => c.GetMethodInfo().Name == nameof(IPayslipCalculationTraceRepository.Add))
+            .GetArguments()[0]!;
+        return JsonSerializer.Deserialize<List<TraceStep>>(captured.StepsJson, new JsonSerializerOptions(JsonSerializerDefaults.Web))!;
     }
 }

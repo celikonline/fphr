@@ -8,10 +8,12 @@ import { z } from "zod";
 import {
   Alert,
   Anchor,
+  Badge,
   Button,
   Card,
   Center,
   Checkbox,
+  Group,
   Modal,
   PasswordInput,
   Skeleton,
@@ -57,6 +59,11 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
  * KVKK aydınlatma metni bağlantısı + modalı (TALIMAT tur 1 FE madde 1). Kalıp `pages/public/career/job-posting.tsx`
  * içindeki `PrivacyNoticeLink`'in aynısı — bileşen oradan import edilmiyor, bu sayfaya özgü kopyalanmış hâli.
  * Modal kapanınca onay kutusunu otomatik işaretlemiyoruz; kullanıcı okuyup kendisi işaretler.
+ *
+ * TALIMAT tur 6 açılışı (ADR-0026): metnin hukuk/İK onayı henüz gelmedi (🧑 H-4), bu yüzden metin **taslak**
+ * etiketiyle ve versiyonuyla gösterilir — onay gelince versiyon artar, eski rızalar geçersizleşir. Rıza
+ * gönderiminde versiyon alanı (`privacyNoticeVersion`, bkz. `invitations.service.ts`) zaten her zaman dolu
+ * gönderiliyor (sabit `auth:privacy.noticeVersion`), bu turda değişmedi.
  */
 function PrivacyNoticeLink() {
   const { t } = useTranslation(["auth", "common"]);
@@ -66,13 +73,27 @@ function PrivacyNoticeLink() {
       <Anchor component="button" type="button" size="sm" onClick={() => setOpened(true)}>
         {t("auth:privacy.readNotice")}
       </Anchor>
-      <Modal opened={opened} onClose={() => setOpened(false)} title={t("auth:privacy.title")}>
+      <Modal
+        opened={opened}
+        onClose={() => setOpened(false)}
+        title={
+          <Group gap="xs" wrap="nowrap">
+            <Text fw={600}>{t("auth:privacy.title")}</Text>
+            <Badge color="yellow" variant="light" size="sm">
+              {t("auth:privacy.draftBadge")}
+            </Badge>
+          </Group>
+        }
+      >
         <Stack gap="sm">
           <Text size="sm" style={{ whiteSpace: "pre-wrap" }}>
             {t("auth:privacy.body")}
           </Text>
           <Text size="xs" c="dimmed">
             {t("auth:privacy.versionLabel", { version: t("auth:privacy.noticeVersion") })}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t("auth:privacy.draftNotice")}
           </Text>
           <Button variant="default" onClick={() => setOpened(false)}>
             {t("common:close")}

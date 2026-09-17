@@ -23,21 +23,21 @@ export default function LoginScreen({ navigation }: Props) {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
+      Alert.alert("Hata", "Lütfen e-posta ve şifrenizi girin");
       return;
     }
 
     try {
       await login(email, password);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "An error occurred";
-      Alert.alert("Login Failed", message);
+      const message = error instanceof Error ? error.message : "Bir hata oluştu";
+      Alert.alert("Giriş başarısız", message);
     }
   };
 
   const handleBiometricLogin = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email first");
+      Alert.alert("Hata", "Lütfen önce e-posta adresinizi girin");
       return;
     }
     navigation.navigate("BiometricPrompt", { email });
@@ -55,7 +55,7 @@ export default function LoginScreen({ navigation }: Props) {
           marginBottom: 15,
           borderRadius: 8
         }}
-        placeholder="Email"
+        placeholder="E-posta"
         value={email}
         onChangeText={setEmail}
         editable={!isLoading}
@@ -69,7 +69,7 @@ export default function LoginScreen({ navigation }: Props) {
           marginBottom: 20,
           borderRadius: 8
         }}
-        placeholder="Password"
+        placeholder="Şifre"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -90,7 +90,7 @@ export default function LoginScreen({ navigation }: Props) {
         {isLoading ? (
           <ActivityIndicator color="white" />
         ) : (
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Login</Text>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Giriş yap</Text>
         )}
       </TouchableOpacity>
 
@@ -106,12 +106,12 @@ export default function LoginScreen({ navigation }: Props) {
           onPress={handleBiometricLogin}
           disabled={isLoading}
         >
-          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Use Fingerprint</Text>
+          <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Parmak izi ile giriş yap</Text>
         </TouchableOpacity>
       )}
 
       <TouchableOpacity onPress={() => navigation.navigate("ForgotPassword")}>
-        <Text style={{ color: "#0066cc", textAlign: "center" }}>Forgot Password?</Text>
+        <Text style={{ color: "#0066cc", textAlign: "center" }}>Şifremi unuttum</Text>
       </TouchableOpacity>
     </View>
   );

@@ -10,16 +10,16 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
 
   const handleReset = () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email");
+      Alert.alert("Hata", "Lütfen e-posta adresinizi girin");
       return;
     }
-    Alert.alert("Success", "Password reset link sent to " + email);
+    Alert.alert("Başarılı", "Şifre sıfırlama bağlantısı " + email + " adresine gönderildi");
     navigation.goBack();
   };
 
   return (
     <View style={{ flex: 1, padding: 20, justifyContent: "center" }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>Reset Password</Text>
+      <Text style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}>Şifreyi sıfırla</Text>
 
       <TextInput
         style={{
@@ -29,7 +29,7 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
           marginBottom: 20,
           borderRadius: 8
         }}
-        placeholder="Email"
+        placeholder="E-posta"
         value={email}
         onChangeText={setEmail}
       />
@@ -44,11 +44,11 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
         }}
         onPress={handleReset}
       >
-        <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Send Reset Link</Text>
+        <Text style={{ color: "white", fontSize: 16, fontWeight: "bold" }}>Sıfırlama bağlantısı gönder</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.goBack()}>
-        <Text style={{ color: "#0066cc", textAlign: "center" }}>Back to Login</Text>
+        <Text style={{ color: "#0066cc", textAlign: "center" }}>Girişe dön</Text>
       </TouchableOpacity>
     </View>
   );

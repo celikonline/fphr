@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { User, AuthTokens } from "@/types";
 import { authService } from "@/services/AuthService";
 import { SecureStorage } from "@/lib/storage";
+import { setUnauthorizedHandler } from "@/lib/apiClient";
 
 export interface AuthStore {
   // State
@@ -188,3 +189,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
 
   clearError: () => set({ error: null })
 }));
+
+// apiClient has no direct dependency on the store (would be circular: apiClient -> authStore ->
+// AuthService -> apiClient); it calls this callback instead when a token refresh fails, so an
+// already-cleared session on the server can't keep showing the app as signed in.
+setUnauthorizedHandler(() => {
+  useAuthStore.setState({ isAuthenticated: false, tokens: null, user: null, tenantId: null });
+});

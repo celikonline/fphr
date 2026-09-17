@@ -1,6 +1,18 @@
 import type { ReactNode } from "react";
 import { Card, Group, Stack, Text } from "@mantine/core";
 
+/** Matches a bare UUID (v1-v5, any case) with no other surrounding text. */
+const RAW_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Callers sometimes pass a record's raw id as `subtitle` before a human-readable label is wired up.
+ * Showing `3f2b9c4a-...` to an HR user is not acceptable content, so a bare-GUID subtitle is treated
+ * as "no label available" and simply not rendered - no placeholder text is invented.
+ */
+function isRawIdentifier(value: ReactNode): boolean {
+  return typeof value === "string" && RAW_ID_PATTERN.test(value.trim());
+}
+
 export interface ApprovalCardField {
   label: ReactNode;
   value: ReactNode;
@@ -34,7 +46,7 @@ export function ApprovalCard({ title, subtitle, badges, fields, actions, classNa
             <Text fw={600}>{title}</Text>
             {badges}
           </Group>
-          {subtitle && (
+          {subtitle && !isRawIdentifier(subtitle) && (
             <Text size="xs" c="dimmed" truncate>
               {subtitle}
             </Text>

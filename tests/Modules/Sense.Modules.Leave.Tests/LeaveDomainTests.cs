@@ -246,11 +246,13 @@ public sealed class LeaveBalanceEngineTests
     private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid EmployeeId = Guid.NewGuid();
 
-    private static LeaveType AnnualType(CarryOverMode carryOver = CarryOverMode.Unlimited, decimal? carryOverMax = null, decimal annualDays = 14m)
+    private static LeaveType AnnualType(
+        CarryOverMode carryOver = CarryOverMode.Unlimited, decimal? carryOverMax = null, decimal annualDays = 14m,
+        AccrualFrequency accrualFrequency = AccrualFrequency.Yearly, AccrualTiming accrualTiming = AccrualTiming.EndOfPeriod)
     {
         var set = LeaveRuleSet.Create(TenantId, "Set").Value;
         var settings = LeaveRuleSetSeed.Types(StatutoryLeaveDurations.Turkey2026).First(t => t.Code == LeaveTypeCode.Annual)
-            with { CarryOverMode = carryOver, CarryOverMaxDays = carryOverMax, AnnualDays = annualDays };
+            with { CarryOverMode = carryOver, CarryOverMaxDays = carryOverMax, AnnualDays = annualDays, AccrualFrequency = accrualFrequency, AccrualTiming = accrualTiming };
         return set.AddType(settings).Value;
     }
 
@@ -279,6 +281,35 @@ public sealed class LeaveBalanceEngineTests
         LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, birthDate: new DateOnly(1990, 1, 1), StatutoryAnnualLeave.Turkey2026).ShouldBe(14m);
         LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, birthDate: new DateOnly(2003, 6, 1), StatutoryAnnualLeave.Turkey2026).ShouldBe(20m);
         LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, birthDate: new DateOnly(1970, 1, 1), StatutoryAnnualLeave.Turkey2026).ShouldBe(20m);
+    }
+
+    /// <summary>ADR-0024 / Bulgu 1: yaş istisnası tabanı (md.53/IV) 1 yıllık kıdem şartına bağlıdır — kıdem
+    /// dolmadan (years=0) bir Monthly/StartOfPeriod yapılandırmada yaş istisnasının 20 günlük tabanı
+    /// uygulanmamalı; sonuç türün normal (kademesiz) tabanında kalmalı, 20'ye yükselmemeli.</summary>
+    [Fact]
+    public void YearlyEntitlement_DoesNotApplyAgeException_BeforeOneYearSeniority()
+    {
+        var start = new DateOnly(2024, 1, 1);
+        var type = AnnualType(accrualFrequency: AccrualFrequency.Monthly, accrualTiming: AccrualTiming.StartOfPeriod);
+        var youngBirthDate = new DateOnly(2007, 6, 1); // 17 yaşında (accrualDate'te)
+
+        var accrualDate = start; // years = 0 (henüz 1 yıl dolmadı)
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, youngBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(14m); // AnnualDays tabanı (Tier1) — 20 günlük yaş istisnası tabanı UYGULANMAZ
+    }
+
+    [Fact]
+    public void YearlyEntitlement_AppliesAgeException_AfterOneYearSeniority()
+    {
+        var start = new DateOnly(2024, 1, 1);
+        var type = AnnualType(accrualFrequency: AccrualFrequency.Monthly, accrualTiming: AccrualTiming.StartOfPeriod);
+        var youngBirthDate = new DateOnly(2007, 6, 1); // aynı çalışan, bir yıl sonra hâlâ 18 yaş altı
+
+        var accrualDate = start.AddYears(1); // years = 1
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, youngBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(20m); // kıdem 1 yılı doldurunca yaş istisnası tabanı devreye girer
     }
 
     [Fact]

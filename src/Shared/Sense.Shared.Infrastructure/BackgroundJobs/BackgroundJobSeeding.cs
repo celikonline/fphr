@@ -35,9 +35,9 @@ public static class BackgroundJobSeeding
 
         // Faz 1 tur 1: per-tenant daily reminder for documents nearing/past their expiry date
         // (Documents.Infrastructure.BackgroundJobs.DocumentExpiryReminderJobHandler). 06:00 Europe/Istanbul is the
-        // intended wall-clock time; IBackgroundJobService.RecurringAsync has no TimeZoneInfo parameter yet (no seed
-        // consumer wires GetDefaultSeeds() into RecurringAsync today - see this method's doc comment - so there is
-        // nothing to point a time zone at in this slice), so the cron string alone assumes the host's default zone.
+        // intended wall-clock time; IBackgroundJobService.RecurringAsync has no TimeZoneInfo parameter (G-1-13:
+        // BackgroundJobSeedSynchronizer now wires this into RecurringAsync per active tenant at API startup), so
+        // the cron string alone assumes the host's default zone - no zone is passed anywhere in this slice.
         yield return new BackgroundJobSeed
         {
             JobName = "DocumentExpiryReminder",
@@ -50,7 +50,7 @@ public static class BackgroundJobSeeding
         // Faz 1 / Faz 9 tur 1: per-tenant daily sweep that anonymizes/retires candidate data past its retention
         // window (Faz 9's Hired-filtered consumer lands in the same push as this seed - see PANO.md G-9-09).
         // 03:30 Europe/Istanbul is the intended wall-clock time; same caveat as DocumentExpiryReminder above about
-        // IBackgroundJobService.RecurringAsync having no TimeZoneInfo parameter yet.
+        // IBackgroundJobService.RecurringAsync having no TimeZoneInfo parameter.
         yield return new BackgroundJobSeed
         {
             JobName = "CandidateRetentionSweep",

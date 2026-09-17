@@ -28,6 +28,17 @@ interface QueuedRequest {
 let isRefreshing = false;
 let failedQueue: QueuedRequest[] = [];
 
+/**
+ * Fires when a token refresh attempt fails (refresh token missing/expired/rejected by the
+ * server). The store registers itself here instead of this module importing the store directly,
+ * to avoid a circular import (apiClient -> authStore -> AuthService -> apiClient).
+ */
+let onUnauthorized: (() => void) | null = null;
+
+export const setUnauthorizedHandler = (handler: (() => void) | null): void => {
+  onUnauthorized = handler;
+};
+
 const processQueue = (error: unknown, token?: string | null) => {
   failedQueue.forEach(prom => {
     if (error) {
@@ -118,8 +129,10 @@ class ApiClient {
             return this.instance(originalRequest);
           } catch (err) {
             processQueue(err, null);
-            // Clear tokens and redirect to login will be handled by store
+            // Clear tokens and drop the store's authenticated flag so the UI falls back to Login
+            // instead of appearing signed in with a session the server has already rejected.
             await SecureStorage.clearAll();
+            onUnauthorized?.();
             return Promise.reject(err);
           }
         }

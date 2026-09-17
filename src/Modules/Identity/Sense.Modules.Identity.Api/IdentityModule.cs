@@ -13,10 +13,12 @@ using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Infrastructure.Messaging;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Notifications;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Infrastructure.BackgroundJobs;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Notifications;
 
@@ -78,6 +80,12 @@ public sealed class IdentityModule : IModule
         // Mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşır (API başlangıcı).
         services.AddScoped<SystemRolePermissionSynchronizer>();
         services.AddHostedService<SystemRolePermissionSyncHostedService>();
+
+        // Cross-module read contract consumed by Shared (G-1-13): BackgroundJobSeedSynchronizer, her yazılabilir
+        // kiracı için KVKK md.7 seed'lerini (DocumentExpiryReminder, CandidateRetentionSweep vb.) API başlangıcında kaydeder.
+        services.AddScoped<IActiveTenantDirectory, TenantDirectory>();
+        services.AddScoped<BackgroundJobSeedSynchronizer>();
+        services.AddHostedService<BackgroundJobSeedSyncHostedService>();
 
         // Cross-module read contract consumed by Employee (hesap durumu / erişim tipi / son davet)
         services.AddScoped<IUserAccountLookup, UserAccountLookup>();

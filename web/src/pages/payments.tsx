@@ -70,7 +70,7 @@ export default function PaymentsPage() {
 }
 
 function Payments() {
-  const { t, i18n } = useTranslation(["expense", "common", "requests"]);
+  const { t, i18n } = useTranslation(["expense", "common"]);
   const queryClient = useQueryClient();
   const canClaims = usePermission("expense.my.claims");
   const canAdvances = usePermission("expense.my.advances");

@@ -27,10 +27,12 @@ public sealed class ConsentRecorderTests
         var id = await recorder.RecordAsync(request, CancellationToken.None);
 
         id.ShouldNotBe(Guid.Empty);
-        ConsentRecord? added = null;
-        _repository.Received(1).Add(Arg.Do<ConsentRecord>(r => added = r));
+        _repository.Received(1).Add(Arg.Any<ConsentRecord>());
+        var added = (ConsentRecord)_repository.ReceivedCalls()
+            .Single(c => c.GetMethodInfo().Name == nameof(IConsentRecordRepository.Add))
+            .GetArguments()[0]!;
         added.ShouldNotBeNull();
-        added!.Id.ShouldBe(id);
+        added.Id.ShouldBe(id);
         added.IsActive.ShouldBeTrue();
         added.NoticeVersion.ShouldBe("2026-09");
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
@@ -126,10 +128,12 @@ public sealed class ConsentRecorderTests
         var id = await recorder.RecordAsync(request, CancellationToken.None);
 
         id.ShouldNotBe(Guid.Empty);
-        ConsentRecord? added = null;
-        _repository.Received(1).Add(Arg.Do<ConsentRecord>(r => added = r));
+        _repository.Received(1).Add(Arg.Any<ConsentRecord>());
+        var added = (ConsentRecord)_repository.ReceivedCalls()
+            .Single(c => c.GetMethodInfo().Name == nameof(IConsentRecordRepository.Add))
+            .GetArguments()[0]!;
         added.ShouldNotBeNull();
-        added!.IsActive.ShouldBeTrue();
+        added.IsActive.ShouldBeTrue();
         added.WithdrawnAt.ShouldBeNull();
     }
 }

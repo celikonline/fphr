@@ -15,8 +15,8 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
       try {
         await loginWithBiometric(email);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Please try again";
-        Alert.alert("Biometric Login Failed", message);
+        const message = error instanceof Error ? error.message : "Lütfen tekrar deneyin";
+        Alert.alert("Biyometrik giriş başarısız", message);
         navigation.goBack();
       }
     };
@@ -27,7 +27,7 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
   return (
     <View style={{ flex: 1, padding: 20, justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator size="large" color="#0066cc" />
-      <Text style={{ marginTop: 20, fontSize: 16 }}>Authenticating...</Text>
+      <Text style={{ marginTop: 20, fontSize: 16 }}>Kimlik doğrulanıyor...</Text>
 
       <TouchableOpacity
         style={{
@@ -40,7 +40,7 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
         }}
         onPress={() => navigation.goBack()}
       >
-        <Text style={{ color: "white", fontWeight: "bold" }}>Cancel</Text>
+        <Text style={{ color: "white", fontWeight: "bold" }}>Vazgeç</Text>
       </TouchableOpacity>
     </View>
   );

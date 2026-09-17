@@ -70,9 +70,11 @@ public static class LeaveBalanceEngine
         var days = (type.AnnualDays ?? 0m) + type.SeniorityTiers.Where(t => t.AppliesTo(years)).Sum(t => t.ExtraDays);
         int? age = birthDate is { } b ? CompletedYears(b, accrualDate) : null;
 
-        if (type.AgeExceptionEnabled && type.AgeExceptionMinDays is { } minDays && age is { } a && statutory is not null
+        if (years >= 1 && type.AgeExceptionEnabled && type.AgeExceptionMinDays is { } minDays && age is { } a && statutory is not null
             && (a <= statutory.YoungAgeMax || a >= statutory.OldAgeMin))
         {
+            // 4857 md.53/IV: yaş istisnası gün sayısını 20'ye yükseltir, "en az bir yıl çalışmış olmak"
+            // şartını kaldırmaz (ADR-0024). completedYears < 1 iken bu taban uygulanmaz.
             days = Math.Max(days, minDays);
         }
 
