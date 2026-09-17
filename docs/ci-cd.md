@@ -147,8 +147,8 @@ cp .env.example .env
 docker compose up -d --build
 dotnet run --project src/Sense.Migrator -- migrate
 dotnet run --project src/Sense.Migrator -- seed --profile demo
-# API:  http://localhost:8080/scalar/v1  (health: http://localhost:8080/health)
-# Web:  http://localhost:3000
+# API:  http://localhost:18080/scalar/v1  (health: http://localhost:18080/health)
+# Web:  http://localhost:13000
 ```
 
 Yalnızca **altyapıyı** (postgres/redis/minio/mailpit) container'da çalıştırıp API/web'i

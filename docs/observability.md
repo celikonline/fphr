@@ -33,10 +33,10 @@ dotnet run --project src/Sense.Api                                  # Developmen
 
 | Araç | Adres | Not |
 |---|---|---|
-| Grafana | http://localhost:3001 | `admin` / `admin` (`GRAFANA_ADMIN_*`); ana sayfa = API Genel Bakış |
-| Prometheus | http://localhost:9090 | Status → Targets, Alerts |
-| Jaeger | http://localhost:16686 | servis `SenseIK.Api` |
-| Loki | http://localhost:3100 | yalnızca API; Grafana → Explore → Loki |
+| Grafana | http://localhost:13001 | `admin` / `admin` (`GRAFANA_ADMIN_*`); ana sayfa = API Genel Bakış |
+| Prometheus | http://localhost:19090 | Status → Targets, Alerts |
+| Jaeger | http://localhost:26686 | servis `SenseIK.Api` |
+| Loki | http://localhost:13100 | yalnızca API; Grafana → Explore → Loki |
 | API metrikleri | `GET /metrics` | Prometheus metin formatı |
 
 Yapılandırma dosyaları `infra/observability/` altındadır:
@@ -84,7 +84,7 @@ Kural: metrik etiketleri düşük kardinaliteli olmalı — **kiracı, kullanıc
 
 `LogExportExtensions.WriteToSenseLogExport`, `Observability:Logs:Enabled=true` ise (Development'ta açık, container
 stack'te `Observability__Logs__Enabled`) Serilog'a `Serilog.Sinks.OpenTelemetry` ekler ve OTLP/HTTP ile
-`Observability:Logs:Endpoint`'e (varsayılan `http://localhost:3100/otlp/v1/logs`) gönderir.
+`Observability:Logs:Endpoint`'e (varsayılan `http://localhost:13100/otlp/v1/logs`) gönderir.
 
 - Index etiketleri (resource attribute): `service_name`, `deployment_environment`.
 - Structured metadata: tüm Serilog property'leri (`CorrelationId`, `TenantId`, `UserId`, `ClientApp`, `RequestPath`,
@@ -193,7 +193,7 @@ kullanmaz (yalnızca `Activator.CreateInstance`); bu yüzden ikisi de DI yerine 
   (ör. 0.1). Üst servisten gelen örnekleme kararına her zaman uyulur.
 - **Exception kaydı**: ASP.NET Core ve HttpClient span'lerinde `RecordException = true`.
 - **Metrics**: yukarıdaki "Metrikler (Prometheus)" bölümüne bakın (OTLP ile değil, `/metrics` üzerinden).
-- **Exporter**: OTLP/gRPC (`Observability:OtlpEndpoint`, varsayılan `http://localhost:4317`) — Jaeger'in kendi
+- **Exporter**: OTLP/gRPC (`Observability:OtlpEndpoint`, varsayılan `http://localhost:14317`) — Jaeger'in kendi
   (deprecated) native exporter paketi yerine, Jaeger'in yerleşik OTLP alıcısına gönderilir.
 - **Jaeger'de arama**: *Tags* alanına `sense.correlation_id=<id>` veya `sense.client.app=mobile` yazın; ya da yanıt
   başlığındaki `X-Trace-Id` ile doğrudan izi açın.
@@ -206,7 +206,7 @@ Jaeger'i local'de çalıştırma (`infra/docker-compose.yml`, `obs` profili — 
 docker compose -f infra/docker-compose.yml --profile obs up -d
 ```
 
-Jaeger UI: http://localhost:16686 → servis adı `SenseIK.Api` → API'ye birkaç istek atın → "Find Traces".
+Jaeger UI: http://localhost:26686 → servis adı `SenseIK.Api` → API'ye birkaç istek atın → "Find Traces".
 EF Core sorguları, dispatcher span'inin altında çocuk span olarak görünür (Npgsql enstrümantasyonu sayesinde).
 
 ## Sentry
@@ -262,12 +262,12 @@ Yanıt örneği (`/health`):
   çalışıyorsa `https://host.docker.internal:5001/metrics`, container'daysa `api:8080` scrape edilir; kullanılmayan hedefin
   `DOWN` görünmesi normaldir. `Observability:EnableMetrics=true` mı?
 - **Grafana'da log yok**: `Observability:Logs:Enabled=true` mı (Production/`appsettings.json`'da varsayılan kapalı)?
-  Loki ayakta mı (`curl localhost:3100/ready`)? API container'daysa endpoint `http://loki:3100/otlp/v1/logs` olmalı.
+  Loki ayakta mı (`curl localhost:13100/ready`)? API container'daysa endpoint `http://loki:3100/otlp/v1/logs` olmalı.
 - **Grafana Jaeger datasource 404**: Jaeger imajı 2.21+ olmuş olabilir (bkz. yukarıdaki not).
 
 - **Jaeger'de iz görünmüyor**: `Observability:EnableTracing=true` mu? `docker compose --profile obs` ile Jaeger
-  ayakta mı (`docker ps`)? OTLP portu (4317) erişilebilir mi? `Observability:OtlpEndpoint` doğru mu (container
-  dışından çalışıyorsanız `localhost:4317`, API de container içindeyse servis adı `jaeger:4317`)?
+  ayakta mı (`docker ps`)? OTLP portu (14317) erişilebilir mi? `Observability:OtlpEndpoint` doğru mu (container
+  dışından çalışıyorsanız `localhost:14317`, API de container içindeyse servis adı `jaeger:4317`)?
 - **Sentry hata almıyor**: `SENTRY_DSN` gerçekten ayarlı mı (`echo $env:SENTRY_DSN`)? Hata 500 (Unhandled) seviyesinde
   mi (yalnızca 500+ `SentrySdk.CaptureException` çağrılır, 4xx için değil)? `SentryOptions.Debug` (Development'ta
   otomatik açık) konsol loglarında SDK'nın DSN'i kabul edip etmediğini gösterir.
