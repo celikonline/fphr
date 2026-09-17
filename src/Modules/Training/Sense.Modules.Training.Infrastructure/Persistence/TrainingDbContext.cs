@@ -17,7 +17,7 @@ public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
     public override string Schema => SchemaName;
 
     public DbSet<TrainingProgram> TrainingPrograms => Set<TrainingProgram>();
-    public DbSet<ProgramEnrollment> Enrollments => Set<ProgramEnrollment>();
+    public DbSet<Enrollment> Enrollments => Set<Enrollment>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -54,17 +54,17 @@ public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
                 .IsUnique();
         });
 
-        // ProgramEnrollment configuration
-        builder.Entity<ProgramEnrollment>(b =>
+        // Enrollment configuration
+        builder.Entity<Enrollment>(b =>
         {
-            b.ToTable("ProgramEnrollments");
+            b.ToTable("Enrollments");
 
             b.HasKey(x => x.Id);
 
             b.Property(x => x.TenantId)
                 .IsRequired();
 
-            b.Property(x => x.ProgramId)
+            b.Property(x => x.TrainingProgramId)
                 .IsRequired();
 
             b.Property(x => x.EmployeeId)
@@ -73,11 +73,14 @@ public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
             b.Property(x => x.EnrolledAt)
                 .IsRequired();
 
-            b.HasIndex(x => new { x.TenantId, x.ProgramId })
-                .HasName("IX_ProgramEnrollments_TenantId_ProgramId");
+            b.Property(x => x.Status)
+                .HasConversion<string>();
+
+            b.HasIndex(x => new { x.TenantId, x.TrainingProgramId })
+                .HasName("IX_Enrollments_TenantId_TrainingProgramId");
 
             b.HasIndex(x => new { x.TenantId, x.EmployeeId })
-                .HasName("IX_ProgramEnrollments_TenantId_EmployeeId");
+                .HasName("IX_Enrollments_TenantId_EmployeeId");
         });
     }
 }

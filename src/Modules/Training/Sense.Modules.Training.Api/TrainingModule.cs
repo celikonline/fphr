@@ -37,5 +37,7 @@ public sealed class TrainingModule : IModule
             typeof(TrainingPermissions).Assembly);
 
         services.AddScoped<ITrainingUnitOfWork>(sp => sp.GetRequiredService<TrainingDbContext>());
+        services.AddScoped<ITrainingProgramRepository, TrainingProgramRepository>();
+        services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
     }
 }

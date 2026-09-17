@@ -86,8 +86,6 @@
     <Project Path="tests/Modules/Sense.Modules.Reporting.Tests/Sense.Modules.Reporting.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Performance.Tests/Sense.Modules.Performance.Tests.csproj" />
     <Project Path="tests/Modules/Sense.Modules.Onboarding.Tests/Sense.Modules.Onboarding.Tests.csproj" />
-    <Project Path="tests/Modules/Sense.Modules.Training.Tests/Sense.Modules.Training.Tests.csproj" />
-    <Project Path="tests/Modules/Sense.Modules.Announcements.Tests/Sense.Modules.Announcements.Tests.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Workflow/">
     <Project Path="src/Modules/Workflow/Sense.Modules.Workflow.Api/Sense.Modules.Workflow.Api.csproj" />
@@ -143,13 +141,6 @@
     <Project Path="src/Modules/Integrations/Sense.Modules.Integrations.Domain/Sense.Modules.Integrations.Domain.csproj" />
     <Project Path="src/Modules/Integrations/Sense.Modules.Integrations.Infrastructure/Sense.Modules.Integrations.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/Announcements/">
-    <Project Path="src/Modules/Announcements/Sense.Modules.Announcements.Api/Sense.Modules.Announcements.Api.csproj" />
-    <Project Path="src/Modules/Announcements/Sense.Modules.Announcements.Application/Sense.Modules.Announcements.Application.csproj" />
-    <Project Path="src/Modules/Announcements/Sense.Modules.Announcements.Contracts/Sense.Modules.Announcements.Contracts.csproj" />
-    <Project Path="src/Modules/Announcements/Sense.Modules.Announcements.Domain/Sense.Modules.Announcements.Domain.csproj" />
-    <Project Path="src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Sense.Modules.Announcements.Infrastructure.csproj" />
-  </Folder>
   <Folder Name="/src/Modules/Assets/">
     <Project Path="src/Modules/Assets/Sense.Modules.Assets.Api/Sense.Modules.Assets.Api.csproj" />
     <Project Path="src/Modules/Assets/Sense.Modules.Assets.Application/Sense.Modules.Assets.Application.csproj" />
@@ -170,12 +161,5 @@
     <Project Path="src/Modules/Performance/Sense.Modules.Performance.Contracts/Sense.Modules.Performance.Contracts.csproj" />
     <Project Path="src/Modules/Performance/Sense.Modules.Performance.Domain/Sense.Modules.Performance.Domain.csproj" />
     <Project Path="src/Modules/Performance/Sense.Modules.Performance.Infrastructure/Sense.Modules.Performance.Infrastructure.csproj" />
-  </Folder>
-  <Folder Name="/src/Modules/Training/">
-    <Project Path="src/Modules/Training/Sense.Modules.Training.Api/Sense.Modules.Training.Api.csproj" />
-    <Project Path="src/Modules/Training/Sense.Modules.Training.Application/Sense.Modules.Training.Application.csproj" />
-    <Project Path="src/Modules/Training/Sense.Modules.Training.Contracts/Sense.Modules.Training.Contracts.csproj" />
-    <Project Path="src/Modules/Training/Sense.Modules.Training.Domain/Sense.Modules.Training.Domain.csproj" />
-    <Project Path="src/Modules/Training/Sense.Modules.Training.Infrastructure/Sense.Modules.Training.Infrastructure.csproj" />
   </Folder>
 </Solution>

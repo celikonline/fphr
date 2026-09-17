@@ -37,5 +37,7 @@ public sealed class AnnouncementsModule : IModule
             typeof(AnnouncementsPermissions).Assembly);
 
         services.AddScoped<IAnnouncementsUnitOfWork>(sp => sp.GetRequiredService<AnnouncementsDbContext>());
+        services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+        services.AddScoped<IAnnouncementReadRecordRepository, AnnouncementReadRecordRepository>();
     }
 }
