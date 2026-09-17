@@ -63,5 +63,6 @@
   "noAccessDescription": "Gerekli yetki için şirket yöneticinizle iletişime geçin.",
   "errors": {
     "rateLimited": "Çok fazla istek gönderildi. Lütfen {{seconds}} saniye sonra tekrar deneyin."
-  }
+  },
+  "reload": "Sayfayı yenile"
 }

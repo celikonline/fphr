@@ -116,6 +116,11 @@ public static class WebServiceCollectionExtensions
                     policy.WithOrigins(frontendBaseUrl)
                         .AllowAnyHeader()
                         .AllowAnyMethod()
+                        // Every authenticated call carries an Authorization header, so each one is a
+                        // preflighted request. Without a max-age the browser re-sends OPTIONS before
+                        // *every* GET, doubling the round trips on each screen. Two hours is Chrome's
+                        // ceiling; longer values are silently clamped rather than honoured.
+                        .SetPreflightMaxAge(TimeSpan.FromHours(2))
                         .WithExposedHeaders(Sense.Shared.Contracts.Security.SenseHeaderNames.ExposedToClients);
                 }
             });

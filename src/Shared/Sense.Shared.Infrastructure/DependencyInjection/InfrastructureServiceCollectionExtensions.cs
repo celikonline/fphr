@@ -169,7 +169,7 @@ public static class InfrastructureServiceCollectionExtensions
             throw new InvalidOperationException("MinIO configuration (MinIO:Endpoint, MinIO:AccessKey, MinIO:SecretKey) is required.");
         }
 
-        // Register MinIO client
+        // Register MinIO client for internal server-to-server calls (bucket/object management).
         services.AddSingleton<IMinioClient>(sp =>
         {
             var options = sp.GetRequiredService<IOptions<MinioOptions>>().Value;
@@ -177,6 +177,22 @@ public static class InfrastructureServiceCollectionExtensions
                 .WithEndpoint(options.Endpoint)
                 .WithCredentials(options.AccessKey, options.SecretKey)
                 .WithSSL(options.UseHttps)
+                .Build();
+        });
+
+        // Register a second MinIO client used only to sign presigned URLs handed to browser/mobile
+        // clients. When Endpoint is a Docker-internal hostname (e.g. "minio:9000"), that hostname is
+        // baked into the presigned URL and unresolvable outside the compose network, so PublicEndpoint
+        // (e.g. "localhost:9000") must be used for signing instead. Falls back to Endpoint when unset.
+        services.AddKeyedSingleton<IMinioClient>(MinioAdapter.PublicClientKey, (sp, _) =>
+        {
+            var options = sp.GetRequiredService<IOptions<MinioOptions>>().Value;
+            var endpoint = string.IsNullOrWhiteSpace(options.PublicEndpoint) ? options.Endpoint : options.PublicEndpoint;
+            var useHttps = options.PublicUseHttps ?? options.UseHttps;
+            return new MinioClient()
+                .WithEndpoint(endpoint)
+                .WithCredentials(options.AccessKey, options.SecretKey)
+                .WithSSL(useHttps)
                 .Build();
         });
 

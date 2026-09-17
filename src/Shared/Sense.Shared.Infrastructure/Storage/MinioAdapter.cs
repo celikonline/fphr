@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -15,8 +16,15 @@ public sealed class MinioOptions
 {
     public const string Section = "MinIO";
 
-    /// <summary>MinIO server endpoint (e.g., "localhost:9000").</summary>
+    /// <summary>MinIO server endpoint used for server-to-server calls (e.g., "minio:9000" inside Docker).</summary>
     public string Endpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Endpoint embedded in presigned URLs handed to browser/mobile clients (e.g., "localhost:9000").
+    /// Falls back to <see cref="Endpoint"/> when unset — needed whenever <see cref="Endpoint"/> is a
+    /// Docker-internal hostname that isn't resolvable outside the compose network.
+    /// </summary>
+    public string? PublicEndpoint { get; set; }
 
     /// <summary>MinIO access key.</summary>
     public string AccessKey { get; set; } = string.Empty;
@@ -26,6 +34,9 @@ public sealed class MinioOptions
 
     /// <summary>Use HTTPS for MinIO communication (default false for local dev).</summary>
     public bool UseHttps { get; set; }
+
+    /// <summary>Use HTTPS for the public endpoint. Falls back to <see cref="UseHttps"/> when unset.</summary>
+    public bool? PublicUseHttps { get; set; }
 
     /// <summary>Default upload presigned URL expiration in minutes (default 60).</summary>
     public int UploadExpirationMinutes { get; set; } = 60;
@@ -38,6 +49,7 @@ public sealed class MinioOptions
 public sealed class MinioAdapter : IFileStorage
 {
     private readonly IMinioClient _client;
+    private readonly IMinioClient _publicClient;
     private readonly MinioOptions _options;
     private readonly ITenantContext _tenantContext;
     private readonly ICurrentUser _currentUser;
@@ -45,17 +57,22 @@ public sealed class MinioAdapter : IFileStorage
 
     public MinioAdapter(
         IMinioClient client,
+        [FromKeyedServices(PublicClientKey)] IMinioClient publicClient,
         IOptions<MinioOptions> options,
         ITenantContext tenantContext,
         ICurrentUser currentUser,
         ILogger<MinioAdapter> logger)
     {
         _client = Guard.NotNull(client);
+        _publicClient = Guard.NotNull(publicClient);
         _options = Guard.NotNull(options).Value;
         _tenantContext = Guard.NotNull(tenantContext);
         _currentUser = Guard.NotNull(currentUser);
         _logger = Guard.NotNull(logger);
     }
+
+    /// <summary>DI key for the MinIO client used to sign URLs handed to external clients.</summary>
+    public const string PublicClientKey = "minio-public";
 
     /// <inheritdoc />
     public async Task<PresignedUrlRequest> InitiateUploadAsync(
@@ -90,7 +107,7 @@ public sealed class MinioAdapter : IFileStorage
                 .WithObject(key)
                 .WithExpiry(_options.UploadExpirationMinutes * 60); // Convert to seconds
 
-            var uploadUrl = await _client.PresignedPutObjectAsync(presignedArgs);
+            var uploadUrl = await _publicClient.PresignedPutObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(_options.UploadExpirationMinutes);
             var requestId = Guid.CreateVersion7().ToString("N");
 
@@ -206,7 +223,7 @@ public sealed class MinioAdapter : IFileStorage
                 .WithObject(key)
                 .WithExpiry(expirationMinutes * 60); // Convert to seconds
 
-            var downloadUrl = await _client.PresignedGetObjectAsync(presignedArgs);
+            var downloadUrl = await _publicClient.PresignedGetObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
             _logger.LogInformation(

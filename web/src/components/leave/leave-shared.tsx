@@ -24,6 +24,8 @@ const PAGE_SIZE = 20;
 const MOBILE_QUERY = "(max-width: 390px)";
 const REQUESTS_COLUMNS_KEY = "senseik.leave.requests.columns";
 const LEDGER_COLUMNS_KEY = "senseik.leave.ledger.columns";
+/** Shared empty fallback: a fresh `[]` per render would restart the ledger table's page reset every render. */
+const NO_LEDGER_ENTRIES: LeaveLedgerEntry[] = [];
 /** Column chooser trigger sized like the surrounding `size="sm"` buttons. */
 const COLUMN_CHOOSER_CLASS = "h-9 px-3";
 
@@ -218,7 +220,7 @@ export function LeaveLedgerDialog({
   const days = useDays();
   const [typeId, setTypeId] = useState(ALL_TYPES);
   const filter = typeId === ALL_TYPES ? undefined : typeId;
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = NO_LEDGER_ENTRIES, isLoading } = useQuery({
     queryKey: ["leave", "ledger", own ? "me" : employeeId, filter ?? null],
     queryFn: () => (own ? getMyLeaveLedger(filter) : getEmployeeLeaveLedger(employeeId, filter)),
   });

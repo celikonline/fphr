@@ -7,6 +7,7 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type PaginationState,
   type RowData,
   type SortingState,
   type Table as TanStackTable,
@@ -78,6 +79,10 @@ export function useDataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(
     () => readVisibility(columnVisibilityKey) ?? initialColumnVisibility
   );
+  const [pagination, setPagination] = React.useState<PaginationState>(() => ({
+    pageIndex: 0,
+    pageSize: pageSize ?? MIN_PAGE_SIZE_OPTION,
+  }));
   const sorting = controlledSorting ?? localSorting;
 
   // The table instance is rebuilt every render by design; this app does not run the React Compiler.
@@ -86,10 +91,21 @@ export function useDataTable<TData, TValue>({
     columns,
     data,
     getRowId: getRowId ? (row) => getRowId(row) : undefined,
-    state: { sorting, columnVisibility },
+    state: { sorting, columnVisibility, ...(pageSize !== undefined && { pagination }) },
     // Only tables that page on the client need the page index reset when data changes. Leaving it on for
     // server-paged/unpaged tables turns a fresh `data` array per render into an endless reset → re-render loop.
     autoResetPageIndex: pageSize !== undefined,
+    // Pagination is controlled here purely so the reset above can be a no-op when it changes nothing.
+    // A caller that rebuilds `data` on every render would otherwise re-enter reset → render forever and
+    // starve every lower-priority update in the app, including react-router's page transitions.
+    onPaginationChange:
+      pageSize === undefined
+        ? undefined
+        : (updater) =>
+            setPagination((current) => {
+              const next = resolve(updater, current);
+              return next.pageIndex === current.pageIndex && next.pageSize === current.pageSize ? current : next;
+            }),
     manualSorting: onSortingChange !== undefined,
     sortDescFirst: false,
     enableSortingRemoval: false,

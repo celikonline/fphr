@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -101,46 +101,55 @@ function WorkforceKpis() {
     setTo("");
   }
 
-  const kpis = data ?? [];
-  const breakdownRows: BreakdownRow[] = kpis.flatMap((kpi) =>
-    kpi.breakdown.map((b, index) => ({
-      id: `${kpi.key}-${index}`,
-      kpiKey: kpi.key,
-      kpiLabel: t(`reports:kpi.${kpi.key}.label`, { defaultValue: kpi.label }),
-      dimension: b.dimension,
-      count: b.count,
-      share: b.share,
-    })),
+  // `data`/`columns` must keep a stable identity across renders: this table pages on the client, so
+  // `autoResetPageIndex` is on and a fresh array per render would loop reset → re-render forever.
+  const kpis = useMemo(() => data ?? [], [data]);
+  const breakdownRows: BreakdownRow[] = useMemo(
+    () =>
+      kpis.flatMap((kpi) =>
+        kpi.breakdown.map((b, index) => ({
+          id: `${kpi.key}-${index}`,
+          kpiKey: kpi.key,
+          kpiLabel: t(`reports:kpi.${kpi.key}.label`, { defaultValue: kpi.label }),
+          dimension: b.dimension,
+          count: b.count,
+          share: b.share,
+        })),
+      ),
+    [kpis, t],
   );
 
-  const columns: ColumnDef<BreakdownRow>[] = [
-    {
-      id: "kpiLabel",
-      accessorKey: "kpiLabel",
-      header: t("reports:breakdown.columns.kpi"),
-      meta: { label: t("reports:breakdown.columns.kpi") },
-    },
-    {
-      id: "dimension",
-      accessorKey: "dimension",
-      header: t("reports:breakdown.columns.dimension"),
-      meta: { label: t("reports:breakdown.columns.dimension") },
-    },
-    {
-      id: "count",
-      accessorKey: "count",
-      header: t("reports:breakdown.columns.count"),
-      meta: { label: t("reports:breakdown.columns.count"), headerClassName: "w-32" },
-      cell: ({ row }) => new Intl.NumberFormat(locale).format(row.original.count),
-    },
-    {
-      id: "share",
-      accessorKey: "share",
-      header: t("reports:breakdown.columns.share"),
-      meta: { label: t("reports:breakdown.columns.share"), headerClassName: "w-32" },
-      cell: ({ row }) => formatShare(row.original.share, locale),
-    },
-  ];
+  const columns: ColumnDef<BreakdownRow>[] = useMemo(
+    () => [
+      {
+        id: "kpiLabel",
+        accessorKey: "kpiLabel",
+        header: t("reports:breakdown.columns.kpi"),
+        meta: { label: t("reports:breakdown.columns.kpi") },
+      },
+      {
+        id: "dimension",
+        accessorKey: "dimension",
+        header: t("reports:breakdown.columns.dimension"),
+        meta: { label: t("reports:breakdown.columns.dimension") },
+      },
+      {
+        id: "count",
+        accessorKey: "count",
+        header: t("reports:breakdown.columns.count"),
+        meta: { label: t("reports:breakdown.columns.count"), headerClassName: "w-32" },
+        cell: ({ row }) => new Intl.NumberFormat(locale).format(row.original.count),
+      },
+      {
+        id: "share",
+        accessorKey: "share",
+        header: t("reports:breakdown.columns.share"),
+        meta: { label: t("reports:breakdown.columns.share"), headerClassName: "w-32" },
+        cell: ({ row }) => formatShare(row.original.share, locale),
+      },
+    ],
+    [t, locale],
+  );
 
   const table = useDataTable({ columns, data: breakdownRows, getRowId: (r) => r.id, pageSize: 10 });
   const hasFilters = from !== "" || to !== "";

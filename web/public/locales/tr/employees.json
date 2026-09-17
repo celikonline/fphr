@@ -313,7 +313,10 @@
     "allCompanies": "Tüm şirketler",
     "empty": "Gösterilecek çalışan yok.",
     "forbiddenTitle": "Organizasyon şeması görüntülenemiyor",
-    "forbiddenDescription": "Organizasyon şeması şirketiniz tarafından çalışanlara kapatılmış olabilir veya bu sayfa için yetkiniz yok."
+    "forbiddenDescription": "Organizasyon şeması şirketiniz tarafından çalışanlara kapatılmış olabilir veya bu sayfa için yetkiniz yok.",
+    "viewCard": "{{name}} kişi kartını görüntüle",
+    "viewProfile": "Tam profili görüntüle",
+    "cardError": "Kişi kartı yüklenemedi."
   },
   "card": {
     "backToList": "Çalışanlara dön",

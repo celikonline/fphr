@@ -313,7 +313,10 @@
     "allCompanies": "[DE] All companies",
     "empty": "[DE] No employees to show.",
     "forbiddenTitle": "[DE] The organization chart is not available",
-    "forbiddenDescription": "[DE] Your company may have hidden the organization chart from employees, or you don't have permission for this page."
+    "forbiddenDescription": "[DE] Your company may have hidden the organization chart from employees, or you don't have permission for this page.",
+    "viewCard": "[DE] View {{name}}'s person card",
+    "viewProfile": "[DE] View full profile",
+    "cardError": "[DE] Couldn't load the person card."
   },
   "card": {
     "backToList": "[DE] Back to employees",
