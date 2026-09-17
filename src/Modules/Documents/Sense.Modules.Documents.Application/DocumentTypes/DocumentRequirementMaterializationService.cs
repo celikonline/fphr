@@ -69,7 +69,7 @@ public sealed class DocumentRequirementMaterializationService(
             HasIncentive: false,
             UsesDisabilityTaxReduction: false,
             IsExConvictOrTerrorVictim: false,
-            RequiresPeriodicHealthCheck: false,
+            RequiresPeriodicHealthCheck: signals?.IsUndergroundWorker ?? false,
             RequiresDriving: false,
             HasOpenAssets: hasOpenAssets,
             IsVeryHazardousJob: false,

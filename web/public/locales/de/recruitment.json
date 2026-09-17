@@ -136,7 +136,8 @@
     "fillForm": "[DE] Fill form",
     "selectTemplate": "[DE] Select form template",
     "responsesSubmitted": "[DE] {{count}} form response(s) submitted.",
-    "formSubmitted": "[DE] Form response submitted."
+    "formSubmitted": "[DE] Form response submitted.",
+    "formResponsesCleaned": "[DE] This information was deleted according to KVKK requirements."
   },
   "requisitions": {
     "title": "[DE] Job Requisitions",

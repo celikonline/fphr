@@ -124,7 +124,9 @@ export function RootNavigator() {
       try {
         await checkAuth();
       } catch (error) {
-        console.error("Failed to check authentication:", error);
+        if (__DEV__) {
+          console.error("Failed to check authentication:", error);
+        }
       } finally {
         setAppReady(true);
       }

@@ -8,7 +8,27 @@
 
 import axios, { AxiosInstance } from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+/**
+ * Never fall back to an `http://` URL: a production build with a missing
+ * `VITE_API_BASE_URL` would otherwise send the Bearer token in cleartext.
+ * A same-origin `/api` fallback keeps dev (Vite proxy) working without that risk.
+ */
+const baseURL = import.meta.env.VITE_API_BASE_URL || "/api";
+
+if (typeof window !== "undefined" && /^http:\/\//i.test(baseURL)) {
+  const host = (() => {
+    try {
+      return new URL(baseURL).hostname;
+    } catch {
+      return "";
+    }
+  })();
+  if (host !== "localhost" && host !== "127.0.0.1") {
+    console.warn(
+      "[api-client] VITE_API_BASE_URL uses cleartext http on a non-local host; tokens would travel unencrypted."
+    );
+  }
+}
 
 /** localStorage key holding the access token attached to every request. */
 export const AUTH_TOKEN_STORAGE_KEY = "auth_token";
@@ -16,8 +36,27 @@ export const AUTH_TOKEN_STORAGE_KEY = "auth_token";
 /** The web app's persisted auth store (zustand `persist` name in web/src/store/auth.store.ts). */
 const AUTH_STORE_STORAGE_KEY = "auth-store";
 
+/** localStorage access must not throw (private mode / disabled storage). */
+function readToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function clearSession(): void {
+  try {
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(AUTH_STORE_STORAGE_KEY);
+  } catch {
+    // Storage unavailable - nothing to clear.
+  }
+}
+
 const apiClient: AxiosInstance = axios.create({
   baseURL,
+  timeout: 30_000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -46,21 +85,20 @@ function newCorrelationId(): string {
   });
 }
 
-// Tracing/client headers: every request carries its own correlation id (unless the caller set one to tie
-// several calls together) so a failed call can be found in Grafana/Jaeger by the id shown to the user.
+// Single request interceptor (tracing/client headers + auth token): one place to audit,
+// no ordering surprises between chained interceptors.
 apiClient.interceptors.request.use((config) => {
+  // Tracing/client headers: every request carries its own correlation id (unless the caller
+  // set one to tie several calls together) so a failed call can be found in Grafana/Jaeger
+  // by the id shown to the user.
   if (!config.headers.has(SenseHeaders.CorrelationId)) {
     config.headers.set(SenseHeaders.CorrelationId, newCorrelationId());
   }
   config.headers.set(SenseHeaders.ClientApp, "web");
   config.headers.set(SenseHeaders.ClientPlatform, "web");
   config.headers.set(SenseHeaders.ClientVersion, clientVersion);
-  return config;
-});
-
-// Add interceptor to include auth token
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  // Bearer token is never sent via query params - header only.
+  const token = readToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -77,9 +115,9 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && error.config?.headers?.Authorization) {
       // Clear both the token and the persisted store, otherwise the route guard still sees a
       // logged-in user after the redirect.
-      localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
-      localStorage.removeItem(AUTH_STORE_STORAGE_KEY);
-      window.location.href = "/login";
+      clearSession();
+      // Fixed same-origin path - never a caller-supplied URL, so no open redirect.
+      window.location.assign("/login");
     }
     return Promise.reject(error);
   }

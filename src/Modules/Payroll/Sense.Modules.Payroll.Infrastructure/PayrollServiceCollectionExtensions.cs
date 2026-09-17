@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Contracts.Events;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
@@ -43,6 +44,10 @@ public static class PayrollServiceCollectionExtensions
         // Leave devamsızlık köprüsü (G-7-08/09, faz-07 tur 2 madde 3): only consulted when IWorkedTimeReader has no
         // data (double-count guard, see PayrollPeriodCalculationService.CalculateOneAsync).
         services.AddScoped<IAbsenceDaysReader, LeaveAbsenceDaysReaderAdapter>();
+
+        // Maliyet merkezi filtresi (faz-07 tur 1 madde 1, ACİL KARAR ADR-0023): period/export queries filter payslips
+        // by cost center if requested. Temporary stub adapter until faz-02 provides real implementation.
+        services.AddScoped<IEmployeeCostCenterReader, EmployeeCostCenterReaderAdapter>();
 
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();

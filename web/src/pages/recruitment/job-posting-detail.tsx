@@ -475,6 +475,21 @@ function JobPostingDetail() {
 
       <Modal opened={formApplicationId !== null} onClose={() => setFormApplicationId(null)} title={t("recruitment:applications.fillForm")} size="lg">
         <Stack gap="md">
+          {(() => {
+            const app = applicationsQuery.data?.find(a => a.id === formApplicationId);
+            const cand = app ? candidateById.get(app.candidateId) : null;
+            if (cand?.isAnonymized) {
+              return (
+                <Card withBorder bg="var(--mantine-color-yellow-0)">
+                  <Text size="sm" c="orange">
+                    {t("recruitment:applications.formResponsesCleaned")}
+                  </Text>
+                </Card>
+              );
+            }
+            return null;
+          })()}
+
           {responsesQuery.data && responsesQuery.data.length > 0 && (
             <Text size="sm" c="dimmed">
               {t("recruitment:applications.responsesSubmitted", { count: responsesQuery.data.length })}

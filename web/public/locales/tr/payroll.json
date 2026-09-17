@@ -21,6 +21,7 @@
     "exportButton": "Excel indir",
     "empty": "Bu dönemde henüz bordro satırı yok.",
     "workedDays": "Çalışılan gün",
+    "costCenterFilter": "Maliyet merkezi seçin...",
     "columns": {
       "employee": "Çalışan",
       "gross": "Brüt",

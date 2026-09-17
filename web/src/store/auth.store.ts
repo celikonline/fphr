@@ -60,6 +60,42 @@ const EMPTY_ACCESS: AccessSettings = {
   showAllLeavesInCalendar: false,
 };
 
+/** localStorage may throw (private mode); auth must keep working without it. */
+function safeStorageSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Token stays in memory only for this tab.
+  }
+}
+
+function safeStorageRemove(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Nothing to clear.
+  }
+}
+
+/** Single live copy of the api-client token (session survives reload; the zustand persist no longer keeps a second copy). */
+function readStoredToken(): string | null {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** True when the JWT `exp` claim is in the past (or the token is unreadable). */
+function isJwtExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1] ?? ""));
+    return typeof payload.exp !== "number" || payload.exp * 1000 <= Date.now();
+  } catch {
+    return true;
+  }
+}
+
 /** Backend errors are ProblemDetails; prefer its localized `detail` over axios' generic message. */
 function toErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
@@ -103,7 +139,7 @@ async function establishSession(
   tokens: { accessToken: string; refreshToken: string }
 ): Promise<void> {
   // api-client attaches this key as the Bearer token, so /me (and every other service) is authenticated.
-  localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, tokens.accessToken);
+  safeStorageSet(AUTH_TOKEN_STORAGE_KEY, tokens.accessToken);
   const me = await getMe();
 
   set({
@@ -141,7 +177,7 @@ export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => ({
       user: null,
-      token: null,
+      token: typeof window === "undefined" ? null : readStoredToken(),
       refreshToken: null,
       features: null,
       isLoading: false,
@@ -169,7 +205,7 @@ export const useAuthStore = create<AuthStore>()(
           await establishSession(set, data.tokens);
           return { status: "ok" };
         } catch (error) {
-          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+          safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
           const message = toErrorMessage(error);
           set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
           throw new Error(message, { cause: error });
@@ -186,7 +222,7 @@ export const useAuthStore = create<AuthStore>()(
           await establishSession(set, data.tokens);
           return { status: "ok" };
         } catch (error) {
-          localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+          safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
           const message = toErrorMessage(error);
           set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
           throw new Error(message, { cause: error });
@@ -194,7 +230,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       logout: () => {
-        localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+        safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
         set({ user: null, token: null, refreshToken: null, features: null, error: null });
       },
 
@@ -211,12 +247,15 @@ export const useAuthStore = create<AuthStore>()(
       setUser: (user) => set({ user }),
 
       setToken: (token, refreshToken) => {
-        localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+        safeStorageSet(AUTH_TOKEN_STORAGE_KEY, token);
         set({ token, refreshToken });
       },
 
       isAuthenticated: () => {
-        return !!get().token && !!get().user;
+        const { token, user } = get();
+        // An expired JWT must not count as authenticated, otherwise the guard renders
+        // protected pages until the first API 401 fires.
+        return !!token && !!user && !isJwtExpired(token);
       },
 
       hasPermission: (permission) => {
@@ -237,12 +276,24 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: "auth-store",
+      version: 2,
+      // Tokens are intentionally NOT persisted: a single copy lives in memory plus the
+      // api-client key for the current tab. Persisting them would keep a second, long-lived
+      // copy in localStorage that any XSS payload could exfiltrate after the tab closes.
+      // (Full mitigation is httpOnly cookies + refresh rotation - a backend change.)
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
-        refreshToken: state.refreshToken,
         features: state.features,
       }),
+      migrate: (persistedState, _version) => {
+        // Drop tokens persisted by older versions (single live copy only from now on).
+        if (persistedState && typeof persistedState === "object") {
+          const state = persistedState as Record<string, unknown>;
+          delete state.token;
+          delete state.refreshToken;
+        }
+        return persistedState;
+      },
     }
   )
 );

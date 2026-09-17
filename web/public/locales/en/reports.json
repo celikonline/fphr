@@ -1,23 +1,107 @@
 {
-  "title": "Reports",
-  "subtitle": "View company-wide workforce KPIs.",
+  "title": "HR Analytics and Reports",
+  "subtitle": "Track company workforce metrics and real-time trends to base strategic decisions on concrete data.",
   "empty": "No KPI data for the selected period.",
   "filters": {
-    "from": "From",
-    "to": "To",
-    "clear": "Clear filters"
+    "from": "Start Date",
+    "to": "End Date",
+    "clear": "Clear Filters",
+    "periodYear": "Year",
+    "unitFilter": "Department / Unit",
+    "allUnits": "All Units"
+  },
+  "tabs": {
+    "overview": "Overview & Smart Insights",
+    "demographics": "Company Profile & Demographics",
+    "turnover": "Turnover & Retention",
+    "productivity": "Productivity, Leaves & Overtime",
+    "career": "Career & Mobility",
+    "breakdown": "Detailed Data Table"
+  },
+  "insights": {
+    "title": "Digital HR Analyst Ready for Action",
+    "subtitle": "AI-powered analytics engine automatically detects anomalies, trend deviations, and opportunities for workforce optimization.",
+    "badgeAi": "AI Powered Analytics",
+    "anomalyTitle": "Outlier / Trend Deviation",
+    "anomalyDesc": "Early turnover (within the first 6 months) has exceeded company targets by 18% in the last quarter. Reviewing onboarding and orientation checkpoints is recommended.",
+    "recommendationTitle": "Leave Utilization & Balancing Recommendation",
+    "recommendationDesc": "Annual leave usage is currently at 42%. To prevent end-of-year leave accumulation and operational bottlenecks, department-based scheduling can be initiated.",
+    "correlationTitle": "Cross-Metric Correlation",
+    "correlationDesc": "Employees who received an internal promotion or role progression display a 94% retention rate. Internal career ladders directly reduce turnover."
+  },
+  "charts": {
+    "monthlyTurnoverTitle": "Monthly Turnover Trend (Last 12 Months)",
+    "monthlyTurnoverSubtitle": "Monthly employee turnover rate (%) vs target benchmark",
+    "monthlyMovementTitle": "Workforce Movement (Hires vs Exits)",
+    "monthlyMovementSubtitle": "Hired employees, terminations, and net headcount change",
+    "hires": "Hires",
+    "terminations": "Terminations",
+    "netChange": "Net Change",
+    "turnoverRate": "Turnover Rate (%)",
+    "genderTitle": "Gender Distribution",
+    "genderSubtitle": "Company-wide workforce gender proportions and counts",
+    "generationTitle": "Generations & Age Groups",
+    "generationSubtitle": "Gen Z, Millennials (Gen Y), Gen X, and Baby Boomers",
+    "tenureTitle": "Tenure / Seniority Distribution",
+    "tenureSubtitle": "Employee count by length of service",
+    "departmentTitle": "Headcount by Department",
+    "departmentSubtitle": "Active employee concentration per department",
+    "employmentTypeTitle": "Employment & Work Model",
+    "employmentTypeSubtitle": "Full-time, hybrid, remote, and intern distributions",
+    "exitReasonsTitle": "Reasons for Leaving",
+    "exitReasonsSubtitle": "Reported exit reasons and percentage breakdown",
+    "leaveByTypeTitle": "Leave Usage by Type",
+    "leaveByTypeSubtitle": "Annual, casual, medical, and other leave categories",
+    "leaveByDeptTitle": "Leave Usage Rate by Department",
+    "leaveByDeptSubtitle": "Percentage of entitled leave days used (%)",
+    "overtimeTrendTitle": "Overtime Cost & Affected Employee Trend",
+    "overtimeTrendSubtitle": "Monthly overtime cost and employee participation",
+    "careerMovesTitle": "Career Change Types",
+    "careerMovesSubtitle": "Promotions, lateral moves, and title adjustments",
+    "earlyTurnoverComparison": "Early Turnover (First 6 Months)",
+    "earlyTurnoverComparisonSubtitle": "Share of early exits among total terminations",
+    "tenureUnder1": "< 1 Year",
+    "tenure1to2": "1 - 2 Years",
+    "tenure3to5": "3 - 5 Years",
+    "tenure5to10": "5 - 10 Years",
+    "tenureOver10": "10+ Years"
+  },
+  "summary": {
+    "activeHeadcount": "Active Headcount",
+    "activeHeadcountHint": "Total active employees across the company",
+    "turnover": "Annual Turnover Rate",
+    "turnoverHint": "Trailing 12-month turnover rate",
+    "earlyTurnover": "First 6-Month Attrition",
+    "earlyTurnoverHint": "Share of early career exits",
+    "femaleRatio": "Female Employee Ratio",
+    "femaleRatioHint": "Workforce gender balance",
+    "leaveUsage": "Leave Usage Rate",
+    "leaveUsageHint": "Proportion of entitled leave utilized",
+    "promotions": "Career Mobility",
+    "promotionsHint": "Period promotions and internal movements"
   },
   "breakdown": {
     "columns": {
-      "kpi": "KPI",
-      "dimension": "Breakdown",
+      "kpi": "KPI Name",
+      "dimension": "Dimension / Breakdown",
       "count": "Count",
-      "share": "Share"
+      "share": "Share (%)"
     },
-    "empty": "No breakdown data."
+    "empty": "No breakdown data available."
   },
   "kpiSection": {
-    "title": "Workforce KPIs"
+    "title": "Workforce KPIs and Analytics"
+  },
+  "visuals": {
+    "eyebrow": "Strategic HR Analytics",
+    "title": "Transform Data into Strategic Decisions",
+    "caption": "Derived from real-time workforce metrics",
+    "snapshot": "Current Snapshot",
+    "total": "Total Headcount",
+    "distribution": "Distribution View",
+    "distributionHint": "Employee count by category",
+    "shareTitle": "Percentage Share",
+    "shareHint": "Proportion of total"
   },
   "kpi": {
     "CAREER_PATH_RATIO": {
@@ -46,10 +130,10 @@
   },
   "catalog": {
     "title": "Generate a Report",
-    "selectLabel": "Report",
-    "selectPlaceholder": "Choose a report",
+    "selectLabel": "Report Template",
+    "selectPlaceholder": "Select a report...",
     "generate": "Generate",
-    "generateSuccess": "Report generated.",
+    "generateSuccess": "Report generated successfully.",
     "generateError": "Could not generate the report.",
     "empty": "There are no reports you can view.",
     "documents": {
@@ -71,7 +155,7 @@
       "failed": "Failed"
     },
     "download": "Download",
-    "downloadError": "Could not download the file.",
+    "downloadError": "Could not download the report file.",
     "empty": "No reports have been generated yet."
   }
 }

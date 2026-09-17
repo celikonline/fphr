@@ -603,4 +603,126 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
         submitted.Value.CalculatedDays.ShouldBe(0.5m);
     }
+
+    /// <summary>
+    /// OverlappingApprovedCount in PreviewDto: count only approved (not pending) leave on the same start date,
+    /// same org unit, excluding the caller.
+    /// </summary>
+    [Fact]
+    public async Task Preview_OverlappingApprovedCount_OnSameStartDate_Returns2()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        var orgUnitId = Guid.NewGuid();
+        var peerApproved1 = Guid.NewGuid();
+        var peerApproved2 = Guid.NewGuid();
+        var peerPending = Guid.NewGuid();
+
+        var employeeLookup = ServiceProvider.GetRequiredService<IEmployeeLookup>();
+        employeeLookup.GetOrgUnitIdAsync(tenantId, employeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        var directory = ServiceProvider.GetRequiredService<IEmployeeDirectory>();
+        directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(orgUnitId)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { peerApproved1, peerApproved2, peerPending });
+        directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact>());
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var testDate = today.AddDays(14);
+
+        LeaveRequest MakePeerRequest(Guid peerId) =>
+            LeaveRequest.Submit(tenantId, peerId, Guid.NewGuid(), LeaveTypeCode.Annual, testDate, testDate, 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            var approved1 = MakePeerRequest(peerApproved1);
+            var approvalId1 = Guid.NewGuid();
+            approved1.AttachApproval(approvalId1);
+            approved1.Approve(approvalId1, DateTime.UtcNow);
+            db.Requests.Add(approved1);
+
+            var approved2 = MakePeerRequest(peerApproved2);
+            var approvalId2 = Guid.NewGuid();
+            approved2.AttachApproval(approvalId2);
+            approved2.Approve(approvalId2, DateTime.UtcNow);
+            db.Requests.Add(approved2);
+
+            db.Requests.Add(MakePeerRequest(peerPending)); // stays Pending
+
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, testDate, testDate, null), CancellationToken.None);
+
+        preview.IsSuccess.ShouldBeTrue(preview.IsFailure ? preview.Error.Code : null);
+        preview.Value.OverlappingApprovedCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task Preview_OverlappingApprovedCount_NoOverlap_Returns0()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        var orgUnitId = Guid.NewGuid();
+        var peerApproved = Guid.NewGuid();
+
+        var employeeLookup = ServiceProvider.GetRequiredService<IEmployeeLookup>();
+        employeeLookup.GetOrgUnitIdAsync(tenantId, employeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        var directory = ServiceProvider.GetRequiredService<IEmployeeDirectory>();
+        directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(orgUnitId)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { peerApproved });
+        directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact>());
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var testDateOther = today.AddDays(14);
+        var previewDate = today.AddDays(20);
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            var approved = LeaveRequest.Submit(tenantId, peerApproved, Guid.NewGuid(), LeaveTypeCode.Annual, testDateOther, testDateOther, 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            var approvalId = Guid.NewGuid();
+            approved.AttachApproval(approvalId);
+            approved.Approve(approvalId, DateTime.UtcNow);
+            db.Requests.Add(approved);
+
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, previewDate, previewDate, null), CancellationToken.None);
+
+        preview.IsSuccess.ShouldBeTrue(preview.IsFailure ? preview.Error.Code : null);
+        preview.Value.OverlappingApprovedCount.ShouldBe(0);
+    }
 }

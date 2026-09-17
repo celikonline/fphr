@@ -19,6 +19,24 @@ import {
 const UNREAD_POLL_MS = 45_000;
 const PAGE_SIZE = 10;
 
+/**
+ * Allows only same-origin app paths (`/app/...`, `/login`, ...). Rejects protocol-relative
+ * URLs (`//evil`), absolute URLs, and non-http schemes (`javascript:`, `data:`).
+ */
+export function isSafeAppPath(url: string): boolean {
+  if (!url.startsWith("/") || url.startsWith("//") || url.startsWith("/\\")) return false;
+  const lower = url.toLowerCase();
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:")) return false;
+  try {
+    const parsed = new URL(url, "https://app.local");
+    if (parsed.origin !== "https://app.local") return false;
+    const scheme = parsed.protocol.toLowerCase();
+    return scheme === "https:" || scheme === "http:";
+  } catch {
+    return false;
+  }
+}
+
 /** Icon shown next to the title for template keys that need one (i18n label: `notifications:types.*`). */
 const TEMPLATE_ICONS: Partial<Record<string, { icon: LucideIcon; labelKey: string }>> = {
   "documents.expiry_reminder": { icon: FileClock, labelKey: "notifications:types.documentExpiryReminder" },
@@ -67,7 +85,9 @@ function NotificationsDropdown({ position, renderTarget, tooltip }: Notification
 
   function openItem(item: UserNotificationDto) {
     if (!item.readAt && canManage) markRead.mutate(item.id);
-    if (item.actionUrl) navigate(item.actionUrl);
+    // actionUrl comes from the server - only follow same-origin app paths so a malicious or
+    // compromised payload can't turn the bell into an open redirect (//evil, http:, javascript: ...).
+    if (item.actionUrl && isSafeAppPath(item.actionUrl)) navigate(item.actionUrl);
   }
 
   const target = <Menu.Target>{renderTarget(unread)}</Menu.Target>;

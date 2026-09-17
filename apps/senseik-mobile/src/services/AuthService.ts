@@ -30,7 +30,10 @@ export class AuthService {
 
       return response.data;
     } catch (error) {
-      console.error("Login failed:", error);
+      // Never log the error object: axios errors embed the request password and tokens.
+      if (__DEV__) {
+        console.error("Login failed.");
+      }
       throw error;
     }
   }
@@ -40,7 +43,9 @@ export class AuthService {
       // Call logout endpoint (optional, for audit)
       await apiClient.post("/api/auth/logout", {});
     } catch (error) {
-      console.error("Logout API call failed:", error);
+      if (__DEV__) {
+        console.error("Logout API call failed:", error);
+      }
       // Continue with local logout even if API fails
     }
 
@@ -60,7 +65,12 @@ export class AuthService {
         refreshToken
       });
 
-      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      const data = response.data?.data;
+      const accessToken: unknown = data?.accessToken;
+      const newRefreshToken: unknown = data?.refreshToken;
+      if (typeof accessToken !== "string" || !accessToken || typeof newRefreshToken !== "string" || !newRefreshToken) {
+        throw new Error("Invalid refresh response");
+      }
 
       await SecureStorage.setAccessToken(accessToken);
       await SecureStorage.setRefreshToken(newRefreshToken);
@@ -71,7 +81,10 @@ export class AuthService {
         expiresIn: response.data.data.expiresIn || 900 // 15 minutes default
       };
     } catch (error) {
-      console.error("Token refresh failed:", error);
+      // Never log the error object: it embeds the Authorization header and refresh token.
+      if (__DEV__) {
+        console.error("Token refresh failed.");
+      }
       throw error;
     }
   }
@@ -81,7 +94,9 @@ export class AuthService {
       const response = await apiClient.get<User>("/api/users/me");
       return response.data;
     } catch (error) {
-      console.error("Failed to fetch current user:", error);
+      if (__DEV__) {
+        console.error("Failed to fetch current user:", error);
+      }
       return null;
     }
   }
@@ -97,7 +112,9 @@ export class AuthService {
       await this.getCurrentUser();
       return true;
     } catch (error) {
-      console.error("Token validation failed:", error);
+      if (__DEV__) {
+        console.error("Token validation failed:", error);
+      }
       return false;
     }
   }
@@ -136,7 +153,9 @@ export class AuthService {
         tenantId
       };
     } catch (error) {
-      console.error("Biometric login failed:", error);
+      if (__DEV__) {
+        console.error("Biometric login failed.");
+      }
       throw error;
     }
   }
@@ -148,11 +167,18 @@ export class AuthService {
       if (!lastEmail) {
         throw new Error("Please log in with password first to enable biometric");
       }
+      // Without a stored refresh token, biometric login could never succeed later.
+      const refreshToken = await SecureStorage.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error("Please log in with password first to enable biometric");
+      }
 
       // Enable biometric (will prompt user)
       await biometricService.enableBiometric();
     } catch (error) {
-      console.error("Failed to enable biometric login:", error);
+      if (__DEV__) {
+        console.error("Failed to enable biometric login:", error);
+      }
       throw error;
     }
   }

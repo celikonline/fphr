@@ -28,4 +28,7 @@ public enum JobType
 
     /// <summary>Faz 9: KVKK retention sweep - anonymize candidates whose retention window elapsed (Recruitment module).</summary>
     CandidateRetentionSweep = 8,
+
+    /// <summary>Faz 6: Automatically lock shift periods that are due (Attendance module).</summary>
+    ShiftPeriodAutoLock = 9,
 }

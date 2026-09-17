@@ -144,7 +144,9 @@ export const useAuthStore = create<AuthStore>((set) => ({
         set({ isAuthenticated: false, isLoading: false });
       }
     } catch (error) {
-      console.error("Auth check failed:", error);
+      if (__DEV__) {
+        console.error("Auth check failed:", error);
+      }
       set({
         isAuthenticated: false,
         error: error instanceof Error ? error.message : "Auth check failed",

@@ -31,7 +31,7 @@ public sealed record TeamOverlapEmployeeDto(Guid EmployeeId, string Name, DateOn
 public sealed record TeamOverlapDto(int Count, IReadOnlyList<TeamOverlapEmployeeDto> Employees);
 
 /// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing.</summary>
-public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null);
+public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null, int OverlappingApprovedCount = 0);
 
 internal static class LeaveRequestPreview
 {
@@ -109,7 +109,8 @@ public sealed class PreviewMyLeaveRequestHandler(
         }
 
         var overlap = await BuildTeamOverlapAsync(employeeId, query.StartDate, query.EndDate, cancellationToken);
-        return preview.Value with { TeamOverlap = overlap };
+        var approvedCount = await GetApprovedOverlapCountAsync(employeeId, query.StartDate, cancellationToken);
+        return preview.Value with { TeamOverlap = overlap, OverlappingApprovedCount = approvedCount };
     }
 
     /// <summary>Same org unit, active (Pending/Approved) leave overlapping [start, end], excluding the caller.</summary>
@@ -143,6 +144,26 @@ public sealed class PreviewMyLeaveRequestHandler(
             .Select(r => new TeamOverlapEmployeeDto(r.EmployeeId, names.GetValueOrDefault(r.EmployeeId, string.Empty), r.StartDate, r.EndDate))
             .ToList();
         return new TeamOverlapDto(overlapping.Count, shown);
+    }
+
+    /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>
+    private async Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return 0;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != employeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return 0;
+        }
+
+        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
+        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
     }
 }
 

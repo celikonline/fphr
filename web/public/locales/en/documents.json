@@ -67,7 +67,8 @@
       "generic": "The action could not be completed.",
       "loadFailed": "Document requirements could not be loaded.",
       "reasonRequired": "A waiver reason is required.",
-      "uploadFailed": "The document could not be uploaded."
+      "uploadFailed": "The document could not be uploaded.",
+      "invalidFile": "Unsupported file type or size (max 10 MB: PDF, image, Word, Excel)."
     }
   },
   "expiry": {

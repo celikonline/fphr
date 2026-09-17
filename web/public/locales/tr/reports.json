@@ -1,23 +1,107 @@
 {
-  "title": "Raporlar",
-  "subtitle": "Şirket genelinde işgücü KPI'larını görüntüleyin.",
+  "title": "İK Analitiği ve Raporlar",
+  "subtitle": "Şirket verilerinizi ve trend eğilimlerini gerçek zamanlı takip edin, stratejik kararları somut verilere dayandırın.",
   "empty": "Seçili dönem için KPI verisi yok.",
   "filters": {
-    "from": "Başlangıç",
-    "to": "Bitiş",
-    "clear": "Filtreleri temizle"
+    "from": "Başlangıç Tarihi",
+    "to": "Bitiş Tarihi",
+    "clear": "Filtreleri Temizle",
+    "periodYear": "Yıl Seçimi",
+    "unitFilter": "Departman / Birim",
+    "allUnits": "Tüm Birimler"
+  },
+  "tabs": {
+    "overview": "Genel Bakış & Akıllı Analiz",
+    "demographics": "Şirket Profili & Demografi",
+    "turnover": "Devir Oranı & Tutundurma",
+    "productivity": "Verimlilik, İzin & Mesai",
+    "career": "Kariyer & Hareketlilik",
+    "breakdown": "Detaylı Veri Tablosu"
+  },
+  "insights": {
+    "title": "Dijital Veri Uzmanı Göreve Hazır",
+    "subtitle": "Yapay zeka destekli akıllı analiz motoru; veri anomalilerini, trend sapmalarını ve iyileştirme fırsatlarını otomatik tespit eder.",
+    "badgeAi": "Yapay Zeka Destekli Analiz",
+    "anomalyTitle": "Aykırı Gözlem / Trend Sapması",
+    "anomalyDesc": "Son çeyrekte erken dönem (ilk 6 ay) ayrılma eğilimi şirket ortalamasının %18 üzerinde seyrediyor. İşe alım uyum ve oryantasyon adımlarının incelenmesi önerilir.",
+    "recommendationTitle": "İzin Kullanım & Yük Dengeleme Önerisi",
+    "recommendationDesc": "Yıllık izin kullanım oranı %42 seviyesindedir. Yıl sonu izin yığılmalarını ve operasyonel aksamaları önlemek için departman bazlı izin planlaması başlatılabilir.",
+    "correlationTitle": "Veriler Arası Korelasyon",
+    "correlationDesc": "Kariyerinde terfi veya unvan değişikliği yaşayan çalışanların elde tutulma (retention) oranı %94 seviyesinde ölçülmüştür. İç terfi mekanizması devir oranını doğrudan düşürmektedir."
+  },
+  "charts": {
+    "monthlyTurnoverTitle": "Aylık Devir Oranı Eğilimi (Son 12 Ay)",
+    "monthlyTurnoverSubtitle": "Aylık ayrılma oranı (%) ve şirket hedef eşiği",
+    "monthlyMovementTitle": "İstihdam Hareketi (Giriş vs. Çıkış)",
+    "monthlyMovementSubtitle": "İşe alınan, ayrılan çalışanlar ve net kadro değişimi",
+    "hires": "İşe Giriş",
+    "terminations": "İşten Çıkış",
+    "netChange": "Net Değişim",
+    "turnoverRate": "Devir Oranı (%)",
+    "genderTitle": "Cinsiyet Dağılımı",
+    "genderSubtitle": "Şirket geneli çalışan cinsiyet oranları ve sayıları",
+    "generationTitle": "Kuşak & Yaş Grupları Dağılımı",
+    "generationSubtitle": "Z Kuşağı, Y Kuşağı, X Kuşağı ve Baby Boomer dağılımı",
+    "tenureTitle": "Kıdem Süresi Dağılımı",
+    "tenureSubtitle": "Şirketteki çalışma süresine göre çalışan sayıları",
+    "departmentTitle": "Departman Bazında Kadro Dağılımı",
+    "departmentSubtitle": "Departmanlara göre aktif çalışan yoğunluğu",
+    "employmentTypeTitle": "Çalışma & İstihdam Şekli",
+    "employmentTypeSubtitle": "Tam zamanlı, hibrit, uzaktan ve stajyer dağılımı",
+    "exitReasonsTitle": "İşten Ayrılma Nedenleri Dağılımı",
+    "exitReasonsSubtitle": "Ayrılan personelin çıkış gerekçeleri ve payları",
+    "leaveByTypeTitle": "İzin Türlerine Göre Kullanım",
+    "leaveByTypeSubtitle": "Yıllık, mazeret, sağlık ve diğer izinlerin dağılımı",
+    "leaveByDeptTitle": "Departman Bazında İzin Kullanım Oranı",
+    "leaveByDeptSubtitle": "Birimlerin hak edilen izni kullanma yüzdeleri (%)",
+    "overtimeTrendTitle": "Fazla Mesai Maliyet & Çalışan Eğilimi",
+    "overtimeTrendSubtitle": "Aylık fazla mesai harcamaları ve mesai yapan çalışan sayısı",
+    "careerMovesTitle": "Kariyer Değişim Türleri Dağılımı",
+    "careerMovesSubtitle": "Terfi, yatay geçiş ve unvan değişiklikleri",
+    "earlyTurnoverComparison": "Erken Ayrılma (İlk 6 Ay)",
+    "earlyTurnoverComparisonSubtitle": "Tüm ayrılmalar içindeki erken dönem payı",
+    "tenureUnder1": "< 1 Yıl",
+    "tenure1to2": "1 - 2 Yıl",
+    "tenure3to5": "3 - 5 Yıl",
+    "tenure5to10": "5 - 10 Yıl",
+    "tenureOver10": "10+ Yıl"
+  },
+  "summary": {
+    "activeHeadcount": "Toplam Aktif Kadro",
+    "activeHeadcountHint": "Şirket geneli bordrolu çalışan sayısı",
+    "turnover": "Yıllık Devir Oranı",
+    "turnoverHint": "Son 12 ay toplam ayrılma oranı",
+    "earlyTurnover": "İlk 6 Ay Erken Devir",
+    "earlyTurnoverHint": "Erken dönem ayrılma payı",
+    "femaleRatio": "Kadın Çalışan Oranı",
+    "femaleRatioHint": "Kadro çeşitlilik dengesi",
+    "leaveUsage": "İzin Kullanım Oranı",
+    "leaveUsageHint": "Hak edilen izinlerin kullanım oranı",
+    "promotions": "Kariyer Hareketliliği",
+    "promotionsHint": "Dönem içi terfi ve unvan değişimleri"
   },
   "breakdown": {
     "columns": {
-      "kpi": "KPI",
-      "dimension": "Kırılım",
-      "count": "Sayı",
-      "share": "Oran"
+      "kpi": "KPI Adı",
+      "dimension": "Kırılım / Kategori",
+      "count": "Kişi / Adet",
+      "share": "Oran (%)"
     },
-    "empty": "Kırılım verisi yok."
+    "empty": "Gösterilecek kırılım verisi bulunamadı."
   },
   "kpiSection": {
-    "title": "İşgücü KPI'ları"
+    "title": "İşgücü KPI'ları ve Analitik Göstergeler"
+  },
+  "visuals": {
+    "eyebrow": "Stratejik İK Analitiği",
+    "title": "Veri Yığınlarını Stratejik Kararlara Dönüştürün",
+    "caption": "Gerçek zamanlı işgücü verilerinden türetilmiştir",
+    "snapshot": "Güncel Görünüm",
+    "total": "Toplam Kadro",
+    "distribution": "Dağılım Görünümü",
+    "distributionHint": "Kategori bazlı çalışan sayısı",
+    "shareTitle": "Oransal Dağılım",
+    "shareHint": "Toplam içindeki yüzde payı"
   },
   "kpi": {
     "CAREER_PATH_RATIO": {
@@ -30,7 +114,7 @@
       "label": "Devir Oranı"
     },
     "EARLY_TURNOVER_RATE": {
-      "label": "Erken Devir Oranı"
+      "label": "Erken Devir Oranı (İlk 6 Ay)"
     },
     "GENDER_RATIO_BY_UNIT": {
       "label": "Birim Bazında Cinsiyet Dağılımı"
@@ -46,12 +130,12 @@
   },
   "catalog": {
     "title": "Rapor Oluştur",
-    "selectLabel": "Rapor",
-    "selectPlaceholder": "Bir rapor seçin",
+    "selectLabel": "Rapor Şablonu",
+    "selectPlaceholder": "Rapor seçiniz...",
     "generate": "Oluştur",
-    "generateSuccess": "Rapor oluşturuldu.",
+    "generateSuccess": "Rapor başarıyla oluşturuldu.",
     "generateError": "Rapor oluşturulamadı.",
-    "empty": "Görüntüleyebileceğiniz bir rapor yok.",
+    "empty": "Erişebileceğiniz bir hazır rapor bulunmuyor.",
     "documents": {
       "missingDocuments": {
         "label": "Eksik Belgeler Raporu"
@@ -66,12 +150,12 @@
     },
     "status": {
       "queued": "Sırada",
-      "running": "Çalışıyor",
+      "running": "Hazırlanıyor",
       "succeeded": "Tamamlandı",
       "failed": "Başarısız"
     },
     "download": "İndir",
-    "downloadError": "Dosya indirilemedi.",
-    "empty": "Henüz oluşturulmuş bir rapor yok."
+    "downloadError": "Rapor dosyası indirilemedi.",
+    "empty": "Henüz oluşturulmuş bir rapor geçmişi yok."
   }
 }

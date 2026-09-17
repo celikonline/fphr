@@ -117,7 +117,7 @@ function MfaEnrollDialog({
           </Group>
         </div>
 
-        <Anchor href={enrollment.otpAuthUri} size="sm" target="_blank" rel="noreferrer">
+        <Anchor href={enrollment.otpAuthUri} size="sm" target="_blank" rel="noreferrer noopener">
           {t("account:mfaSection.otpauthLink")}
         </Anchor>
 

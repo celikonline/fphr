@@ -14,9 +14,8 @@ export default function BiometricPromptScreen({ navigation, route }: Props) {
     const attemptBiometric = async () => {
       try {
         await loginWithBiometric(email);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Lütfen tekrar deneyin";
-        Alert.alert("Biyometrik giriş başarısız", message);
+      } catch {
+        Alert.alert("Biyometrik giriş başarısız", "Lütfen tekrar deneyin veya şifrenizle giriş yapın.");
         navigation.goBack();
       }
     };

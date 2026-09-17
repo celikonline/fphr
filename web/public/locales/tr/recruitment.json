@@ -136,7 +136,8 @@
     "fillForm": "Form doldur",
     "selectTemplate": "Form şablonu seç",
     "responsesSubmitted": "{{count}} form yanıtı gönderildi.",
-    "formSubmitted": "Form yanıtı gönderildi."
+    "formSubmitted": "Form yanıtı gönderildi.",
+    "formResponsesCleaned": "Bu bilgiler KVKK gereği temizlendi."
   },
   "requisitions": {
     "title": "Talep Formları",

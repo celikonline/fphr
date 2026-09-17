@@ -80,8 +80,8 @@ function RelatedPostings({ items }: { items: PublicJobPostingSummary[] }) {
         <Title order={4}>{t("recruitment:career.otherOpenPositions")}</Title>
         <Stack gap={6}>
           {items.map((item) => (
-            <Group key={item.applySlug} justify="space-between" wrap="nowrap">
-              <Stack gap={2}>
+            <Group key={item.applySlug} justify="space-between" wrap="wrap" align="flex-start">
+              <Stack gap={2} style={{ flex: 1 }}>
                 <Text
                   component={Link}
                   to={`/kariyer/${item.applySlug}`}
@@ -313,7 +313,7 @@ export default function CareerJobPostingPage() {
               <Badge variant="light">{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Badge>
             </Group>
             <Title order={2}>{posting.title}</Title>
-            <Group gap="md" c="dimmed">
+            <Stack gap={{ base: "xs", sm: "md" }} c="dimmed">
               {posting.location && (
                 <Group gap={4}>
                   <MapPin size={14} />
@@ -330,7 +330,7 @@ export default function CareerJobPostingPage() {
                   {t("recruitment:career.publishedAt")}: {formatDateTime(posting.publishedAt, i18n.language)}
                 </Text>
               )}
-            </Group>
+            </Stack>
             {posting.description && (
               <>
                 <Divider my="xs" />

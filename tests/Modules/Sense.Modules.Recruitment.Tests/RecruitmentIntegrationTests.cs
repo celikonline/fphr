@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Application;
@@ -92,6 +94,11 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         // RecruitmentModule.AddModule'de (Sense.Api/Hangfire) kayıtlıdır - burada da kaydederek gerçek DB'ye karşı
         // BackgroundJobExecutor'ı devreye sokmadan doğrudan çözümleyip çağırabiliyoruz.
         services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
+
+        // Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler S-23 IEmployeeProvisioning'i çağırır;
+        // bu fixture'da fake implementasyon kaydedilir (gerçek implementasyon Faz 2'de).
+        services.AddSingleton<FakeEmployeeProvisioning>();
+        services.AddSingleton<IEmployeeProvisioning>(sp => sp.GetRequiredService<FakeEmployeeProvisioning>());
     }
 
     /// <summary>
@@ -652,6 +659,73 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         detail.Value.ApplySlug.ShouldBe(applySlug);
     }
 
+    /// <summary>Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler unit test - Hired stage
+    /// triggers IEmployeeProvisioning.CreateFromCandidateAsync with correct fields.</summary>
+    [Fact]
+    public async Task JobApplicationStageChangedHandler_HiredStage_TriggersProvisioning()
+    {
+        var tenantId = Guid.NewGuid();
+        var candidateId = Guid.NewGuid();
+        var applicationId = Guid.NewGuid();
+        var postingId = Guid.NewGuid();
+
+        var fake = new FakeJobApplicationRepository();
+        var application = JobApplication.Create(tenantId, postingId, candidateId);
+        fake.ApplicationsById[application.Id] = application;
+
+        var fakeCandidate = new FakeCandidateRepository();
+        var candidate = Candidate.Create(tenantId, "John", "Doe", "john.doe@example.com", "+905551234567").Value;
+        fakeCandidate.CandidatesById[candidate.Id] = candidate;
+
+        var fakeProvisioning = new FakeEmployeeProvisioning();
+        var fakeUnitOfWork = new FakeRecruitmentUnitOfWork();
+        var logger = new NullLogger<JobApplicationStageChangedHandler>();
+        var handler = new JobApplicationStageChangedHandler(fake, fakeCandidate, fakeProvisioning, fakeUnitOfWork, logger);
+
+        var @event = new JobApplicationStageChanged(tenantId, applicationId, postingId, candidateId, nameof(ApplicationStage.Hired));
+
+        await handler.Handle(@event, CancellationToken.None);
+
+        fakeProvisioning.ProvisionedCandidates.Count.ShouldBe(1);
+        var request = fakeProvisioning.ProvisionedCandidates[0];
+        request.FirstName.ShouldBe("John");
+        request.LastName.ShouldBe("Doe");
+        request.Email.ShouldBe("john.doe@example.com");
+        request.Phone.ShouldBe("+905551234567");
+        request.NationalId.ShouldBeNull();
+        request.OrgUnitId.ShouldBeNull();
+        request.PositionTitle.ShouldBeNull();
+        request.SourceApplicationId.ShouldBe(applicationId);
+        fakeUnitOfWork.SaveChangesCalled.ShouldBeTrue();
+    }
+
+    /// <summary>Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler unit test - non-Hired
+    /// stage changes do not trigger provisioning.</summary>
+    [Fact]
+    public async Task JobApplicationStageChangedHandler_NonHiredStage_DoesNotTrigger()
+    {
+        var tenantId = Guid.NewGuid();
+        var candidateId = Guid.NewGuid();
+        var applicationId = Guid.NewGuid();
+        var postingId = Guid.NewGuid();
+
+        var fake = new FakeJobApplicationRepository();
+        var fakeCandidate = new FakeCandidateRepository();
+        var fakeProvisioning = new FakeEmployeeProvisioning();
+        var fakeUnitOfWork = new FakeRecruitmentUnitOfWork();
+        var logger = new NullLogger<JobApplicationStageChangedHandler>();
+        var handler = new JobApplicationStageChangedHandler(fake, fakeCandidate, fakeProvisioning, fakeUnitOfWork, logger);
+
+        // Test Screening, Interview, Offer, Rejected - none should trigger provisioning.
+        foreach (var stage in new[] { "Screening", "Interview", "Offer", "Rejected" })
+        {
+            fakeProvisioning.Reset();
+            var @event = new JobApplicationStageChanged(tenantId, applicationId, postingId, candidateId, stage);
+            await handler.Handle(@event, CancellationToken.None);
+            fakeProvisioning.ProvisionedCandidates.Count.ShouldBe(0);
+        }
+    }
+
     /// <summary>Backdates two candidates' <c>created_at</c> past the retention window via raw SQL - the audit
     /// interceptor stamps <c>CreatedAt</c> on insert and refuses to let a normal EF update touch it afterward
     /// (see AuditTenantInterceptor.Apply/Modified), so this is the only way to simulate "created a long time ago".</summary>
@@ -817,5 +891,90 @@ public sealed class RecruitmentIntegrationTests : TestFixture
                 .ToDictionary(id => id, id => _byId[id]);
             return Task.FromResult(result);
         }
+    }
+
+    /// <summary>
+    /// In-memory <see cref="IEmployeeProvisioning"/> for this fixture (S-23 - Faz 9 tur 1): records each
+    /// provisioning request for assertion in tests, returning a dummy employee Guid. Implementation deferred
+    /// to Faz 2 BE.
+    /// </summary>
+    private sealed class FakeEmployeeProvisioning : IEmployeeProvisioning
+    {
+        public List<CandidateHireRequest> ProvisionedCandidates { get; } = [];
+
+        public void Reset() => ProvisionedCandidates.Clear();
+
+        public Task<Guid> CreateFromCandidateAsync(
+            Guid tenantId,
+            CandidateHireRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            ProvisionedCandidates.Add(request);
+            return Task.FromResult(Guid.CreateVersion7()); // Dummy employee Guid
+        }
+    }
+
+    /// <summary>In-memory <see cref="IJobApplicationRepository"/> for unit testing.</summary>
+    private sealed class FakeJobApplicationRepository : IJobApplicationRepository
+    {
+        public Dictionary<Guid, JobApplication> ApplicationsById { get; } = [];
+
+        public Task<Result<JobApplication>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApplicationsById.TryGetValue(id, out var app) ? Result.Success(app) : Result.Failure<JobApplication>(RecruitmentDomainErrors.ApplicationNotFound));
+
+        public void Add(JobApplication application) => ApplicationsById[application.Id] = application;
+        public void Remove(JobApplication application) => ApplicationsById.Remove(application.Id);
+        public Task<IReadOnlyList<JobApplication>> ListByPostingAsync(Guid postingId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == postingId).ToList());
+        public Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.CandidateId == candidateId).ToList());
+        public Task<Result<JobApplication>> FindByPostingAndCandidateAsync(Guid postingId, Guid candidateId, CancellationToken cancellationToken = default)
+        {
+            var app = ApplicationsById.Values.FirstOrDefault(a => a.JobPostingId == postingId && a.CandidateId == candidateId);
+            return Task.FromResult(app != null ? Result.Success(app) : Result.Failure<JobApplication>(RecruitmentDomainErrors.ApplicationNotFound));
+        }
+        public Task<IReadOnlyList<JobApplication>> ListByStageAsync(string stage, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>([]);
+    }
+
+    /// <summary>In-memory <see cref="ICandidateRepository"/> for unit testing.</summary>
+    private sealed class FakeCandidateRepository : ICandidateRepository
+    {
+        public Dictionary<Guid, Candidate> CandidatesById { get; } = [];
+
+        public Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(CandidatesById.TryGetValue(id, out var candidate) ? Result.Success(candidate) : Result.Failure<Candidate>(RecruitmentDomainErrors.CandidateNotFound));
+
+        public void Add(Candidate candidate) => CandidatesById[candidate.Id] = candidate;
+        public void Remove(Candidate candidate) => CandidatesById.Remove(candidate.Id);
+        public Task<IReadOnlyList<Candidate>> ListAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.ToList());
+        public Task<Result<Candidate>> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            var candidate = CandidatesById.Values.FirstOrDefault(c => c.Email == email);
+            return Task.FromResult(candidate != null ? Result.Success(candidate) : Result.Failure<Candidate>(RecruitmentDomainErrors.CandidateNotFound));
+        }
+        public Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime cutoffDateUtc, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>([]);
+        public Task<IReadOnlyList<Candidate>> ListAnonymizedAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.Where(c => c.IsAnonymized).ToList());
+    }
+
+    /// <summary>In-memory <see cref="IRecruitmentUnitOfWork"/> for unit testing.</summary>
+    private sealed class FakeRecruitmentUnitOfWork : IRecruitmentUnitOfWork
+    {
+        public bool SaveChangesCalled { get; private set; }
+
+        public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SaveChangesCalled = true;
+            return Task.CompletedTask;
+        }
+
+        public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RollbackAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Dispose() { }
+        public ValueTask DisposeAsync() => default;
     }
 }

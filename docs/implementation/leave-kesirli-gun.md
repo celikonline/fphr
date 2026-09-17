@@ -57,3 +57,11 @@ devamsızlık olarak sayılmaz ve **otomatik olarak `AbsenceRecord`'a dönüşme
 geçiş yalnız İK'nın elle `POST .../absences` çağrısıyla olur. Faz 7/10 gibi tüketiciler devamsızlık sayısını
 her zaman `Leave.Contracts.IAbsenceReader` üzerinden okumalı, Attendance anomali kayıtlarını devamsızlık
 sinyali olarak kullanmamalıdır.
+
+**Yarım gün / saatlik izin (ilk sürüm dışı, backlog):** `LeaveUnit` (FullDay/HalfDay/Hourly) şu an domain'de
+tür özelliği olarak (`LeaveType.Unit`) modellenmiş, talep ('LeaveRequest') ise yalnız tam gün varsayımıyla
+üretilmektedir. Gerekçeler: (1) talep formunda saat/yarım gün seçici UI (hazırlanıyor), (2) çalışanın gerçek
+günlük çalışma saatine bağlı kesir hesabı (`IWorkScheduleReader` geçişi, şu an sabit 450 dakika), (3) bordro
+entegrasyonu (`Payroll.Contracts` kesirli gün işlemesi). İlk sürümde türün tüm talepleri tam gün beklenir;
+yarım/saatlik talep kaydı teknik olarak mümkün ama önerilmez. Backlog: Faz 7 kesirli gün desteğiyle birlikte talep
+düzeltmesi ve form seçimi eklenmesi (bkz. `docs/analysis/` faz 05 envanteri).
