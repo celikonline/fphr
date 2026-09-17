@@ -37,7 +37,7 @@
     <PackageVersion Include="Asp.Versioning.Mvc" Version="10.*" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.*" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.*" />
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.*" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="3.*" />
   </ItemGroup>
 
   <ItemGroup Label="Application">
