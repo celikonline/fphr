@@ -725,4 +725,155 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         preview.IsSuccess.ShouldBeTrue(preview.IsFailure ? preview.Error.Code : null);
         preview.Value.OverlappingApprovedCount.ShouldBe(0);
     }
+
+    /// <summary>
+    /// Calendar entries include OverlappingApprovedCount: approved leave on the same start date from the same org unit,
+    /// excluding the entry's own employee.
+    /// </summary>
+    [Fact]
+    public async Task GetLeaveCalendarHandler_IncludesOverlappingApprovedCount()
+    {
+        var tenantId = Guid.NewGuid();
+        var mainEmployeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(mainEmployeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, mainEmployeeId, accrualStart, accrualStart));
+
+        var orgUnitId = Guid.NewGuid();
+        var peerApproved1 = Guid.NewGuid();
+        var peerApproved2 = Guid.NewGuid();
+
+        var employeeLookup = ServiceProvider.GetRequiredService<IEmployeeLookup>();
+        employeeLookup.GetOrgUnitIdAsync(tenantId, mainEmployeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        employeeLookup.GetOrgUnitIdAsync(tenantId, peerApproved1, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        employeeLookup.GetOrgUnitIdAsync(tenantId, peerApproved2, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        var directory = ServiceProvider.GetRequiredService<IEmployeeDirectory>();
+        directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(orgUnitId)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { mainEmployeeId, peerApproved1, peerApproved2 });
+        directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact> {
+                new(mainEmployeeId, "Main", "Employee", null, null, null, "active"),
+                new(peerApproved1, "Peer", "One", null, null, null, "active"),
+                new(peerApproved2, "Peer", "Two", null, null, null, "active")
+            });
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var testDate = today.AddDays(14);
+        var calendarFrom = testDate;
+        var calendarTo = testDate.AddDays(6);
+
+        LeaveRequest MakeRequest(Guid employeeId) =>
+            LeaveRequest.Submit(tenantId, employeeId, Guid.NewGuid(), LeaveTypeCode.Annual, testDate, testDate, 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            // Main employee's request (Approved)
+            var mainRequest = MakeRequest(mainEmployeeId);
+            var mainApprovalId = Guid.NewGuid();
+            mainRequest.AttachApproval(mainApprovalId);
+            mainRequest.Approve(mainApprovalId, DateTime.UtcNow);
+            db.Requests.Add(mainRequest);
+
+            // Peer 1 (Approved) — should appear in calendar and show count of other approved on same date
+            var peer1Request = MakeRequest(peerApproved1);
+            var peer1ApprovalId = Guid.NewGuid();
+            peer1Request.AttachApproval(peer1ApprovalId);
+            peer1Request.Approve(peer1ApprovalId, DateTime.UtcNow);
+            db.Requests.Add(peer1Request);
+
+            // Peer 2 (Approved) — should appear in calendar and show count of other approved on same date
+            var peer2Request = MakeRequest(peerApproved2);
+            var peer2ApprovalId = Guid.NewGuid();
+            peer2Request.AttachApproval(peer2ApprovalId);
+            peer2Request.Approve(peer2ApprovalId, DateTime.UtcNow);
+            db.Requests.Add(peer2Request);
+
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        var handler = ActivatorUtilities.CreateInstance<GetLeaveCalendarHandler>(scope.ServiceProvider, _currentUser);
+        var result = await handler.Handle(new GetLeaveCalendarQuery(calendarFrom, calendarTo, orgUnitId), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
+        // Main employee sees peer1 and peer2 on the same date
+        result.Value.ShouldHaveCountGreaterThanOrEqualTo(2);
+        var peerEntry1 = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved1);
+        var peerEntry2 = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved2);
+        peerEntry1.ShouldNotBeNull();
+        peerEntry2.ShouldNotBeNull();
+        // Each peer should see count = 2 (the main employee + the other peer on same date)
+        peerEntry1.OverlappingApprovedCount.ShouldBe(2);
+        peerEntry2.OverlappingApprovedCount.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task GetLeaveCalendarHandler_NoOverlap_OverlappingApprovedCountIs0()
+    {
+        var tenantId = Guid.NewGuid();
+        var mainEmployeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(mainEmployeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, mainEmployeeId, accrualStart, accrualStart));
+
+        var orgUnitId = Guid.NewGuid();
+        var peerApproved = Guid.NewGuid();
+
+        var employeeLookup = ServiceProvider.GetRequiredService<IEmployeeLookup>();
+        employeeLookup.GetOrgUnitIdAsync(tenantId, mainEmployeeId, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        employeeLookup.GetOrgUnitIdAsync(tenantId, peerApproved, Arg.Any<CancellationToken>()).Returns(orgUnitId);
+        var directory = ServiceProvider.GetRequiredService<IEmployeeDirectory>();
+        directory.ListActiveEmployeeIdsInOrgUnitsAsync(tenantId, Arg.Is<IReadOnlyCollection<Guid>>(c => c.Contains(orgUnitId)), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { mainEmployeeId, peerApproved });
+        directory.GetContactsAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact> {
+                new(mainEmployeeId, "Main", "Employee", null, null, null, "active"),
+                new(peerApproved, "Peer", "One", null, null, null, "active")
+            });
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var testDateMain = today.AddDays(14);
+        var testDatePeer = today.AddDays(20); // Different date
+        var calendarFrom = testDateMain;
+        var calendarTo = testDatePeer;
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            // Main employee's request on day 14
+            var mainRequest = LeaveRequest.Submit(tenantId, mainEmployeeId, Guid.NewGuid(), LeaveTypeCode.Annual, testDateMain, testDateMain, 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            var mainApprovalId = Guid.NewGuid();
+            mainRequest.AttachApproval(mainApprovalId);
+            mainRequest.Approve(mainApprovalId, DateTime.UtcNow);
+            db.Requests.Add(mainRequest);
+
+            // Peer's request on day 20 (different)
+            var peerRequest = LeaveRequest.Submit(tenantId, peerApproved, Guid.NewGuid(), LeaveTypeCode.Annual, testDatePeer, testDatePeer, 1m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            var peerApprovalId = Guid.NewGuid();
+            peerRequest.AttachApproval(peerApprovalId);
+            peerRequest.Approve(peerApprovalId, DateTime.UtcNow);
+            db.Requests.Add(peerRequest);
+
+            await db.SaveChangesAsync();
+        }
+
+        using var scope = ServiceProvider.CreateScope();
+        var handler = ActivatorUtilities.CreateInstance<GetLeaveCalendarHandler>(scope.ServiceProvider, _currentUser);
+        var result = await handler.Handle(new GetLeaveCalendarQuery(calendarFrom, calendarTo, orgUnitId), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
+        result.Value.ShouldHaveCountGreaterThanOrEqualTo(1);
+        var peerEntry = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved);
+        peerEntry.ShouldNotBeNull();
+        // Peer's leave is on a different date, so no overlapping approved
+        peerEntry.OverlappingApprovedCount.ShouldBe(0);
+    }
 }

@@ -81,7 +81,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
 
   return (
     <Card withBorder padding="lg">
-      <Group justify="space-between" wrap="wrap" mb="md">
+      <Group justify="space-between" wrap="nowrap" mb="md">
         <Title order={4}>{t("assets:section.title")}</Title>
         {canManage && (
           <Button type="button" size="sm" leftSection={<PackagePlus size={16} />} onClick={() => setAssigning(true)}>
@@ -176,7 +176,7 @@ function ReturnAssetForm({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
           <Text size="sm" fw={500}>
             {t("assets:section.returnedAt")}
           </Text>
-          <DatePicker id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
+          <DatePicker label={t("assets:section.returnedAt")} id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
         </Stack>
         <Group justify="flex-end" gap="sm">
           <Button type="button" variant="default" onClick={onCancel} disabled={busy}>

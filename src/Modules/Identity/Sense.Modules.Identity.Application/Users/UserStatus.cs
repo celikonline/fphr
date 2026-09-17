@@ -120,7 +120,7 @@ public sealed class ResetUserMfaHandler(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to send MFA reset notice to user {UserId}.", user.Id);
+                logger.LogWarning(ex, "Failed to send MFA reset notice to user {UserId}.", user.Id);
             }
         }
 

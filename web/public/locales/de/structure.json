@@ -54,21 +54,21 @@
     "deactivateSuccess": "[DE] Unit deactivated."
   },
   "approvalPolicies": {
-    "title": "[DE] Onay süreçleri",
-    "hint": "[DE] Opsiyonel alanlar. Boş bırakılan tür üst birimden devralınır.",
+    "title": "[DE] Approval processes",
+    "hint": "[DE] Optional fields. A request type left empty is inherited from the parent unit.",
     "requestType": {
-      "Leave": "[DE] İzin onay süreci",
-      "Advance": "[DE] Avans onay süreci",
-      "Expense": "[DE] Harcama onay süreci",
-      "Overtime": "[DE] Fazla mesai onay süreci"
+      "Leave": "[DE] Leave approval process",
+      "Advance": "[DE] Advance approval process",
+      "Expense": "[DE] Expense approval process",
+      "Overtime": "[DE] Overtime approval process"
     },
-    "inherit": "[DE] Üst birimden devral",
-    "inheritedFrom": "[DE] Üst birimden: {{unit}}",
-    "inheritedFromWithPolicy": "[DE] Üst birimden: {{unit}} · {{policy}}",
-    "defaultFirstManager": "[DE] Süreç atanmadı; talepler çalışanın ilk yöneticisine gider.",
-    "workflowUnavailable": "[DE] Onay süreçleri Workflow modülü devreye girdiğinde seçilebilecek.",
-    "unknownPolicy": "[DE] Tanımsız süreç",
-    "unknownUnit": "[DE] Bilinmeyen birim"
+    "inherit": "[DE] Inherit from parent unit",
+    "inheritedFrom": "[DE] From parent unit: {{unit}}",
+    "inheritedFromWithPolicy": "[DE] From parent unit: {{unit}} · {{policy}}",
+    "defaultFirstManager": "[DE] No process assigned; requests go to the employee's first manager.",
+    "workflowUnavailable": "[DE] Approval processes can be selected once the Workflow module is available.",
+    "unknownPolicy": "[DE] Unknown process",
+    "unknownUnit": "[DE] Unknown unit"
   },
   "companies": {
     "createDescription": "[DE] Enter the company name and holiday calendar. The calendar applies to every unit down to the lowest level of the company.",

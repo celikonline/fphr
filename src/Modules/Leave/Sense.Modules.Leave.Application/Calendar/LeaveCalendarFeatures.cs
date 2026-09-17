@@ -4,6 +4,7 @@ using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -17,7 +18,7 @@ namespace Sense.Modules.Leave.Application.Calendar;
 /// </summary>
 public sealed record LeaveCalendarEntryDto(
     Guid RequestId, Guid EmployeeId, string EmployeeName, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays, LeaveRequestStatus Status,
-    bool IsMasked, LeaveTypeCode? LeaveTypeCode, string? LeaveTypeName);
+    bool IsMasked, LeaveTypeCode? LeaveTypeCode, string? LeaveTypeName, int OverlappingApprovedCount = 0);
 
 /// <summary>
 /// İzin takvimi: pending and approved leave overlapping [From, To] (at most 93 days). Visible employees: the caller's
@@ -34,6 +35,7 @@ public sealed class GetLeaveCalendarHandler(
     IDataScopeService dataScope,
     IAccessSettingsService accessSettings,
     IEmployeeDirectory employees,
+    IEmployeeLookup employeeLookup,
     ILeaveRequestRepository requests,
     ILeaveRuleSetRepository ruleSets)
     : IQueryHandler<GetLeaveCalendarQuery, IReadOnlyList<LeaveCalendarEntryDto>>
@@ -68,7 +70,20 @@ public sealed class GetLeaveCalendarHandler(
         var names = (await employees.GetContactsAsync(tenant.TenantId, leaves.Select(l => l.EmployeeId).Distinct().ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
-        return Result.Success(LeaveCalendar.Build(leaves, types, names));
+        var entries = new List<LeaveCalendarEntryDto>();
+        foreach (var leave in leaves.OrderBy(l => l.StartDate).ThenBy(l => l.EmployeeName ?? string.Empty))
+        {
+            var overlappingCount = await GetApprovedOverlapCountAsync(leave.EmployeeId, leave.StartDate, cancellationToken);
+            var type = types.GetValueOrDefault(leave.LeaveTypeId);
+            var masked = LeaveCalendar.IsMasked(type);
+            entries.Add(new LeaveCalendarEntryDto(
+                leave.Id, leave.EmployeeId, names.GetValueOrDefault(leave.EmployeeId) ?? string.Empty,
+                leave.StartDate, leave.EndDate, leave.CalculatedDays, leave.Status, masked,
+                masked ? null : type!.Code, masked ? null : type!.Name,
+                overlappingCount));
+        }
+
+        return Result.Success(entries);
     }
 
     private async Task<IReadOnlyCollection<Guid>?> VisibleEmployeeIdsAsync(CancellationToken cancellationToken)
@@ -85,6 +100,26 @@ public sealed class GetLeaveCalendarHandler(
 
         return currentUser.EmployeeId is { } employeeId ? [employeeId] : [];
     }
+
+    /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>
+    private async Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return 0;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != employeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return 0;
+        }
+
+        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
+        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
+    }
 }
 
 /// <summary>İzin Talepleri: pending leave requests of the employees in the caller's leave.requests.read data scope (Team for a Manager).</summary>
@@ -96,6 +131,7 @@ public sealed class ListTeamLeaveRequestsHandler(
     ICurrentUser currentUser,
     IDataScopeService dataScope,
     IEmployeeDirectory employees,
+    IEmployeeLookup employeeLookup,
     ILeaveRequestRepository requests,
     ILeaveRuleSetRepository ruleSets,
     TimeProvider clock)
@@ -121,7 +157,40 @@ public sealed class ListTeamLeaveRequestsHandler(
         var names = (await employees.GetContactsAsync(tenant.TenantId, pending.Select(r => r.EmployeeId).Distinct().ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
-        return Result.Success(LeaveCalendar.Build(pending, types, names));
+        var entries = new List<LeaveCalendarEntryDto>();
+        foreach (var leave in pending.OrderBy(r => r.StartDate).ThenBy(r => r.EmployeeName ?? string.Empty))
+        {
+            var overlappingCount = await GetApprovedOverlapCountAsync(leave.EmployeeId, leave.StartDate, cancellationToken);
+            var type = types.GetValueOrDefault(leave.LeaveTypeId);
+            var masked = LeaveCalendar.IsMasked(type);
+            entries.Add(new LeaveCalendarEntryDto(
+                leave.Id, leave.EmployeeId, names.GetValueOrDefault(leave.EmployeeId) ?? string.Empty,
+                leave.StartDate, leave.EndDate, leave.CalculatedDays, leave.Status, masked,
+                masked ? null : type!.Code, masked ? null : type!.Name,
+                overlappingCount));
+        }
+
+        return Result.Success(entries);
+    }
+
+    /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>
+    private async Task<int> GetApprovedOverlapCountAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, employeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return 0;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != employeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return 0;
+        }
+
+        var approved = await requests.ListActiveInRangeAsync(date, date, peers, cancellationToken);
+        return approved.Count(r => r.Status == LeaveRequestStatus.Approved);
     }
 }
 

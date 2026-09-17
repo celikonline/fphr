@@ -9,6 +9,7 @@
     <!-- Cross-module read contracts only, per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <!-- IWorkflowService (submit/cancel a requisition's approval) + ApprovalCompleted/ApprovalRejected event handlers (R1) -->
     <ProjectReference Include="../../Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
