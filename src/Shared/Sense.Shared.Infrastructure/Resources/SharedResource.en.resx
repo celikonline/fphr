@@ -867,7 +867,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="documents.requirements.view" xml:space="preserve"><value>View personnel document requirements</value></data>
   <data name="documents.requirements.manage" xml:space="preserve"><value>Manage personnel document requirements</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>View and satisfy own personnel document requirements</value></data>
-  <data name="documents.my.files.create" xml:space="preserve"><value>Upload own document</value></data>
+  <data name="documents.my.files" xml:space="preserve"><value>Upload own document</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>This document requirement does not belong to you.</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->

@@ -7,10 +7,18 @@ using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Legislation;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Leave.Infrastructure.Persistence;
+
+/// <summary>Clamps API-facing list caps to the shared page-size ceiling.</summary>
+internal static class ListTake
+{
+    public static IQueryable<T> Apply<T>(IQueryable<T> query, int take) =>
+        query.Take(Math.Clamp(take, 1, PagingDefaults.MaxPageSize));
+}
 
 public sealed class LeaveRuleSetRepository(LeaveDbContext context) : ILeaveRuleSetRepository
 {
@@ -30,6 +38,9 @@ public sealed class LeaveRuleSetRepository(LeaveDbContext context) : ILeaveRuleS
 
     public async Task<IReadOnlyList<LeaveRuleSet>> ListAsync(CancellationToken cancellationToken = default) =>
         await context.RuleSets.OrderByDescending(r => r.IsDefault).ThenBy(r => r.Name).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<LeaveRuleSet>> ListAsync(int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.RuleSets.OrderByDescending(r => r.IsDefault).ThenBy(r => r.Name), take).ToListAsync(cancellationToken);
 
     public Task<int> CountAssignedEmployeesAsync(Guid ruleSetId, CancellationToken cancellationToken = default) =>
         context.Profiles.CountAsync(p => p.RuleSetId == ruleSetId, cancellationToken);
@@ -94,6 +105,9 @@ public sealed class LeaveRequestRepository(LeaveDbContext context) : ILeaveReque
     public async Task<IReadOnlyList<LeaveRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Requests.Where(r => r.EmployeeId == employeeId).OrderByDescending(r => r.StartDate).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<LeaveRequest>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.Requests.Where(r => r.EmployeeId == employeeId).OrderByDescending(r => r.StartDate), take).ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<LeaveRequest>> ListActiveOverlappingAsync(Guid employeeId, DateOnly start, DateOnly end, CancellationToken cancellationToken = default) =>
         await context.Requests
             .Where(r => r.EmployeeId == employeeId
@@ -132,6 +146,11 @@ public sealed class OvertimeRequestRepository(LeaveDbContext context) : IOvertim
         await context.OvertimeRequests.Where(r => r.EmployeeId == employeeId)
             .OrderByDescending(r => r.WorkDate).ThenByDescending(r => r.StartTime).ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<OvertimeRequest>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(
+            context.OvertimeRequests.Where(r => r.EmployeeId == employeeId).OrderByDescending(r => r.WorkDate).ThenByDescending(r => r.StartTime), take)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<OvertimeRequest>> ListActiveAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default) =>
         await context.OvertimeRequests
             .Where(r => r.EmployeeId == employeeId
@@ -149,6 +168,9 @@ public sealed class OvertimeConsentRepository(LeaveDbContext context) : IOvertim
 
     public async Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.OvertimeConsents.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.GivenAt).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.OvertimeConsents.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.GivenAt), take).ToListAsync(cancellationToken);
 }
 
 public sealed class OvertimeConversionRepository(LeaveDbContext context) : IOvertimeConversionRepository
@@ -157,6 +179,9 @@ public sealed class OvertimeConversionRepository(LeaveDbContext context) : IOver
 
     public async Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.OvertimeConversions.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.ConvertedAt).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.OvertimeConversions.Where(c => c.EmployeeId == employeeId).OrderByDescending(c => c.ConvertedAt), take).ToListAsync(cancellationToken);
 }
 
 public sealed class AbsenceRecordRepository(LeaveDbContext context) : IAbsenceRecordRepository

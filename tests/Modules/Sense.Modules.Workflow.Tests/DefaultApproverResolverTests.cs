@@ -1,10 +1,11 @@
 using System.Threading;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalPolicies;
 using Sense.Modules.Workflow.Infrastructure.Resolvers;
-using NSubstitute;
 using Shouldly;
 using Xunit;
 
@@ -20,7 +21,7 @@ public sealed class DefaultApproverResolverTests
     private readonly IEmployeeLookup _employeeLookup = Substitute.For<IEmployeeLookup>();
     private readonly IApprovalPolicyRepository _policyRepository = Substitute.For<IApprovalPolicyRepository>();
 
-    private DefaultApproverResolver Resolver => new(_orgPolicyResolver, _employeeLookup, _policyRepository);
+    private DefaultApproverResolver Resolver => new(_orgPolicyResolver, _employeeLookup, _policyRepository, Substitute.For<ILogger<DefaultApproverResolver>>());
 
     [Fact]
     public async Task ResolveAsync_ActiveOrgUnitPolicy_UsesItsSteps()

@@ -73,7 +73,7 @@ public static class DocumentsPermissions
 
     /// <summary>Self-service: upload a file document for the caller's own use (e.g. to satisfy one's own requirement).</summary>
     public static readonly Permission MyFilesCreate = new(
-        "documents.my.files.create",
+        "documents.my.files",
         Module,
         "Upload My Document",
         "Documents",

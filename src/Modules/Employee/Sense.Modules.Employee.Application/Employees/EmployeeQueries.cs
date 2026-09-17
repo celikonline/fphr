@@ -42,10 +42,10 @@ public sealed class ListEmployeesHandler(
 
         var page = await store.ListAsync(criteria, query.Paging, cancellationToken);
 
-        var managerIds = page.Items.Where(e => e.ManagerEmployeeId is not null).Select(e => e.ManagerEmployeeId!.Value).Distinct().ToList();
+        var managerIds = page.Items.Select(e => e.ManagerEmployeeId).OfType<Guid>().Distinct().ToList();
         var managerNames = await store.GetDisplayNamesAsync(managerIds, cancellationToken);
 
-        var userIds = page.Items.Where(e => e.UserId is not null).Select(e => e.UserId!.Value).Distinct().ToList();
+        var userIds = page.Items.Select(e => e.UserId).OfType<Guid>().Distinct().ToList();
         var accountInfo = userIds.Count == 0
             ? new Dictionary<Guid, UserAccountInfo>()
             : await accounts.GetAsync(tenant.TenantId, userIds, cancellationToken);

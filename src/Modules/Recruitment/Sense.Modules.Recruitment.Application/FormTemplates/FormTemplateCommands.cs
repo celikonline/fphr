@@ -33,7 +33,7 @@ public sealed class CreateFormTemplateHandler(ITenantContext tenant, IRecruitmen
     public Task<Result<Guid>> Handle(CreateFormTemplateCommand command, CancellationToken cancellationToken)
     {
         var created = RecruitmentFormTemplate.Create(
-            tenant.TenantId, command.Name, Enum.Parse<RecruitmentFormTemplateType>(command.TemplateType), FormFieldMapper.ToDomainInputs(command.Fields));
+            tenant.TenantId, command.Name, FormFieldMapper.ParseTemplateType(command.TemplateType), FormFieldMapper.ToDomainInputs(command.Fields));
         if (created.IsFailure)
         {
             return Task.FromResult(Result.Failure<Guid>(created.Error));
@@ -54,6 +54,11 @@ public sealed class ReplaceFormTemplateFieldsValidator : AbstractValidator<Repla
     {
         RuleFor(x => x.TemplateId).NotEmpty();
         RuleFor(x => x.Fields).NotEmpty();
+        RuleForEach(x => x.Fields).ChildRules(field =>
+        {
+            field.RuleFor(f => f.Label).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
+            field.RuleFor(f => f.FieldType).IsEnumName(typeof(FormFieldType));
+        });
     }
 }
 
@@ -113,5 +118,15 @@ public sealed class ReactivateFormTemplateHandler(IRecruitmentFormTemplateReposi
 internal static class FormFieldMapper
 {
     public static IReadOnlyList<FormFieldInput> ToDomainInputs(IReadOnlyList<FormFieldInputDto> fields) =>
-        fields.Select(f => new FormFieldInput(f.Id, f.Label, Enum.Parse<FormFieldType>(f.FieldType), f.IsRequired, f.IsSensitive, f.Options, f.Weight)).ToList();
+        fields.Select(f => new FormFieldInput(f.Id, f.Label, ParseFieldType(f.FieldType, f.Label), f.IsRequired, f.IsSensitive, f.Options, f.Weight)).ToList();
+
+    public static RecruitmentFormTemplateType ParseTemplateType(string value) =>
+        Enum.TryParse<RecruitmentFormTemplateType>(value, out var parsed)
+            ? parsed
+            : throw new ArgumentException($"Invalid template type: '{value}'.", nameof(value));
+
+    private static FormFieldType ParseFieldType(string value, string label) =>
+        Enum.TryParse<FormFieldType>(value, out var parsed)
+            ? parsed
+            : throw new ArgumentException($"Invalid field type: '{value}' (field '{label}').", nameof(value));
 }

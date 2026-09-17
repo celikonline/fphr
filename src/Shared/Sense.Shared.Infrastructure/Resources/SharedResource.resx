@@ -876,7 +876,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="documents.requirements.view" xml:space="preserve"><value>Özlük belge gereksinimlerini görüntüleme</value></data>
   <data name="documents.requirements.manage" xml:space="preserve"><value>Özlük belge gereksinimlerini yönetme</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>Kendi özlük belge gereksinimlerini görüntüleme ve karşılama</value></data>
-  <data name="documents.my.files.create" xml:space="preserve"><value>Kendi belgesini yükleme</value></data>
+  <data name="documents.my.files" xml:space="preserve"><value>Kendi belgesini yükleme</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>Bu belge gereksinimi size ait değil.</value></data>
 
   <!-- Integrations (Faz 8 #61): dış bordro webhook -->

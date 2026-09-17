@@ -12,6 +12,9 @@ public interface IWebhookSubscriptionRepository
 
     Task<IReadOnlyList<WebhookSubscription>> ListAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>At most <paramref name="take"/> subscriptions (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<WebhookSubscription>> ListAsync(int take, CancellationToken cancellationToken = default);
+
     /// <summary>Active subscriptions whose <see cref="WebhookSubscription.EventTypes"/> include <paramref name="eventType"/>.</summary>
     Task<IReadOnlyList<WebhookSubscription>> ListSubscribedToAsync(string eventType, CancellationToken cancellationToken = default);
 }

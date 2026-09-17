@@ -221,7 +221,7 @@ interface InitiateUploadResult {
 /**
  * Uploads a file through the Documents module's presigned-URL flow (initiate -> PUT bytes directly to
  * storage -> confirm) and returns the new Document's real id.
- * `scope: "hr"` (default) requires `documents.files.create`; `"me"` requires `documents.my.files.create`
+ * `scope: "hr"` (default) requires `documents.files.create`; `"me"` requires `documents.my.files`
  * and uploads for the caller's own use (e.g. to satisfy their own requirement via `linkMyDocumentToRequirement`).
  * `expiryDate` (backend `DateOnly` "yyyy-MM-dd", optional) records the document's own validity date (ehliyet,
  * oturma izni, İSG sertifikası, ...) - distinct from the requirement's `dueDate` (S-6 sözleşmesi, Faz 4 tur 3).

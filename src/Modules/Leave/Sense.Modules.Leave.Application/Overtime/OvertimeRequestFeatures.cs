@@ -6,6 +6,7 @@ using Sense.Modules.Leave.Domain.Overtime;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Contracts.Events;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Legislation;
@@ -248,7 +249,7 @@ public sealed class WithdrawOvertimeRequestHandler(ICurrentUser currentUser, IOv
 }
 
 [RequiresPermission("leave.my.overtimes")]
-public sealed record ListMyOvertimeRequestsQuery : IQuery<IReadOnlyList<OvertimeRequestDto>>;
+public sealed record ListMyOvertimeRequestsQuery(int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<OvertimeRequestDto>>;
 
 public sealed class ListMyOvertimeRequestsHandler(ICurrentUser currentUser, IOvertimeRequestRepository requests)
     : IQueryHandler<ListMyOvertimeRequestsQuery, IReadOnlyList<OvertimeRequestDto>>
@@ -260,13 +261,13 @@ public sealed class ListMyOvertimeRequestsHandler(ICurrentUser currentUser, IOve
             return Error.NotFound(LeaveErrors.NoEmployeeForUser);
         }
 
-        IReadOnlyList<OvertimeRequestDto> list = (await requests.ListByEmployeeAsync(employeeId, cancellationToken)).Select(OvertimeMapper.ToDto).ToList();
+        IReadOnlyList<OvertimeRequestDto> list = (await requests.ListByEmployeeAsync(employeeId, query.Take, cancellationToken)).Select(OvertimeMapper.ToDto).ToList();
         return Result.Success(list);
     }
 }
 
 [RequiresPermission("leave.overtimes.read")]
-public sealed record ListEmployeeOvertimeRequestsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<OvertimeRequestDto>>;
+public sealed record ListEmployeeOvertimeRequestsQuery(Guid EmployeeId, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<OvertimeRequestDto>>;
 
 public sealed class ListEmployeeOvertimeRequestsHandler(IOvertimeRequestRepository requests, IDataScopeService dataScope)
     : IQueryHandler<ListEmployeeOvertimeRequestsQuery, IReadOnlyList<OvertimeRequestDto>>
@@ -278,7 +279,7 @@ public sealed class ListEmployeeOvertimeRequestsHandler(IOvertimeRequestReposito
             return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
         }
 
-        IReadOnlyList<OvertimeRequestDto> list = (await requests.ListByEmployeeAsync(query.EmployeeId, cancellationToken)).Select(OvertimeMapper.ToDto).ToList();
+        IReadOnlyList<OvertimeRequestDto> list = (await requests.ListByEmployeeAsync(query.EmployeeId, query.Take, cancellationToken)).Select(OvertimeMapper.ToDto).ToList();
         return Result.Success(list);
     }
 }

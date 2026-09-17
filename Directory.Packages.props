@@ -37,6 +37,7 @@
     <PackageVersion Include="Asp.Versioning.Mvc" Version="8.*" />
     <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.*" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.*" />
+    <!-- Pinned to 2.*: Microsoft.AspNetCore.OpenApi 10.x requires Microsoft.OpenApi >= 2.12 && < 3.0 (3.* breaks restore with NU1608 and the OpenAPI source generator with CS0200). -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.*" />
   </ItemGroup>
 

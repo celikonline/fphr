@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
@@ -190,9 +191,12 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // AddLeaveServices' IWorkScheduleReader now adapts Attendance.Contracts.IWorkScheduleReadService (roadmap #23).
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceCoreServices(configuration);
+        // roadmap #23 (A1): EmployeeHired -> default schedule assignment must run here too, otherwise the
+        // real IWorkScheduleReadService reports every day closed and all submits fail with zero_days.
+        services.AddAttendanceIntegrationEventHandlers();
         services.AddLeaveServices(configuration);
         services.AddModuleHandlers(
-            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly);
+            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly, typeof(Attendance.Contracts.IWorkScheduleReadService).Assembly);
 
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
@@ -246,7 +250,8 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
             annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
         }
 
-        // 14 days accrued; Mon..Fri of a future week = 5 working days.
+        // 14 days accrued; Mon..Fri of a future week = 5 working days + the Saturday rule (full Mon–Fri
+        // taken with the default schedule's IncludeSaturdayWhenFullWeek flag) = 6 leave days.
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
         var submitted = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(4));
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
@@ -260,10 +265,10 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
         var request = await db.Requests.SingleAsync(r => r.Id == submitted.Value.Id);
         request.Status.ShouldBe(LeaveRequestStatus.Approved);
-        request.CalculatedDays.ShouldBe(5m);
+        request.CalculatedDays.ShouldBe(6m);
         request.ApprovalRequestId.ShouldBe(approvalId);
         var usage = await db.LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
-        usage.Amount.ShouldBe(-5m);
+        usage.Amount.ShouldBe(-6m);
         usage.EffectiveDate.ShouldBe(monday);
         usage.SourceRefId.ShouldBe(submitted.Value.Id);
     }
@@ -291,8 +296,9 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
 
         var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
             .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(6), null), CancellationToken.None);
-        preview.Value.Days.ShouldBe(5m);
-        preview.Value.WeeklyRestDays.ShouldBe(2);
+        // Mon..Sun: 5 working days + Saturday appended by the Saturday rule (full week, flag on) = 6; only Sunday rests.
+        preview.Value.Days.ShouldBe(6m);
+        preview.Value.WeeklyRestDays.ShouldBe(1);
         preview.Value.Warnings.ShouldBeEmpty();
         var tooLong = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
             .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(27), null), CancellationToken.None);

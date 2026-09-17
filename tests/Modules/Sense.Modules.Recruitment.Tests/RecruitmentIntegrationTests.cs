@@ -19,6 +19,7 @@ using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
@@ -79,6 +80,13 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         // ListPublicJobPostingsByTenantSlugHandler artık ctor'da ILocationLookup istiyor, aksi halde DI çözümlemesi patlar.
         services.AddSingleton<FakeLocationLookup>();
         services.AddSingleton<ILocationLookup>(sp => sp.GetRequiredService<FakeLocationLookup>());
+
+        // AuthorizationBehaviour (pipeline) ctor'unda IPermissionService + IDataScopeService ister; Recruitment
+        // istekleri anonim de olabilir (public career) - bu fixture'da izin/kapsam her zaman açık: Employee/
+        // Organization fixture'larındaki GrantAllPermissions/FakeDataScope precedent'i.
+        services.AddSingleton<IPermissionService, GrantAllPermissions>();
+        services.AddSingleton<IDataScopeService, OpenDataScope>();
+        services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
 
         // Faz 9 gün açılışı TALIMAT'ı madde 1 (job testi): CandidateRetentionSweepJobHandler normalde yalnız
         // RecruitmentModule.AddModule'de (Sense.Api/Hangfire) kayıtlıdır - burada da kaydederek gerçek DB'ye karşı
@@ -518,8 +526,18 @@ public sealed class RecruitmentIntegrationTests : TestFixture
             await handler.ExecuteAsync(new ScheduledJobContext(tenantId, null, DateTimeOffset.UtcNow), CancellationToken.None);
         }
 
-        (await ExecuteQueryAsync(new GetCandidateQuery(hiredCandidateId))).Value.IsAnonymized.ShouldBeFalse();
-        (await ExecuteQueryAsync(new GetCandidateQuery(pendingCandidateId))).Value.IsAnonymized.ShouldBeTrue();
+        // NB: fresh scopes below, not ExecuteQueryAsync: the root dispatcher scope still tracks the pre-job
+        // entity state, and EF re-query does not refresh already-tracked instances - a production read always
+        // runs in its own request scope, so assert through one here too.
+        (await IsAnonymizedAsync(hiredCandidateId)).ShouldBeFalse();
+        (await IsAnonymizedAsync(pendingCandidateId)).ShouldBeTrue();
+    }
+
+    private async Task<bool> IsAnonymizedAsync(Guid candidateId)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var candidates = scope.ServiceProvider.GetRequiredService<ICandidateRepository>();
+        return (await candidates.GetByIdAsync(candidateId)).Value.IsAnonymized;
     }
 
     /// <summary>G-9-12 (Faz 9 gün açılışı TALIMAT'ı madde 4): aday anonimleştirilince form cevaplarındaki serbest
@@ -712,6 +730,42 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     private sealed record FormFieldSnapshot(Guid Id);
+
+    /// <summary>
+    /// AuthorizationBehaviour/AccessSettingsAuthorizationBehaviour portları: Recruitment isteklerinde ne
+    /// [RequiresPermission] engeli (public career anonim akar) ne [RequiresAccessSetting] var; ama pipeline
+    /// davranışları ctor'dan çözüldüğü için kayıt şart. Her şeyi açan in-memory implementasyonlar (Employee
+    /// fixture'ındaki GrantAllPermissions/FakeDataScope/AllAccessSettingsEnabled precedent'i).
+    /// </summary>
+    private sealed class GrantAllPermissions : IPermissionService
+    {
+        public Task<bool> HasAsync(Guid userId, string permission, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+        public Task<IReadOnlySet<string>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<string>>(new HashSet<string>());
+
+        public Task<DataScope> GetScopeAsync(Guid userId, string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult(DataScope.Company);
+    }
+
+    private sealed class OpenDataScope : IDataScopeService
+    {
+        public Task<IReadOnlySet<Guid>?> GetVisibleEmployeeIdsAsync(string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<Guid>?>(null);
+
+        public Task<bool> CanAccessEmployeeAsync(string permission, Guid employeeId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
+
+        public Task<IReadOnlySet<Guid>?> GetAccessibleOrgUnitIdsAsync(string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<Guid>?>(null);
+    }
+
+    private sealed class AllAccessSettingsEnabled : IAccessSettingsService
+    {
+        public Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+        public Task<bool> IsEnabledForCurrentUserAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    }
 
     /// <summary>
     /// In-memory <see cref="ITenantSlugLookup"/> for this fixture (see class doc comment): tests call

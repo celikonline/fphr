@@ -25,6 +25,24 @@ import {
 
 export const DOCUMENTS_CARD_TAB_PERMISSIONS = ["documents.requirements.view", "documents.my.requirements"];
 
+/** Client-side upload guard (defense in depth - the server re-validates size/type). */
+const DOCUMENT_ACCEPT =
+  ".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,image/png,image/jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+function isAllowedDocument(file: File): boolean {
+  if (file.size > DOCUMENT_MAX_BYTES) return false;
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+  return DOCUMENT_ACCEPT.split(",")
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean)
+    .some((token) => {
+      if (token.startsWith(".")) return name.endsWith(token);
+      return type === token;
+    });
+}
+
 const STATUS_COLOR: Record<DocumentRequirementStatus, string> = {
   missing: "red",
   uploaded: "green",
@@ -37,7 +55,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   const canManage = usePermission("documents.requirements.manage");
   const canViewAny = usePermission("documents.requirements.view");
   const canUploadHr = usePermission("documents.files.create") && canManage;
-  const canUploadSelf = usePermission("documents.my.files.create");
+  const canUploadSelf = usePermission("documents.my.files");
   // A plain employee has "me" only; HR/admin roles' "documents.*" wildcard covers both, so "hr" wins.
   const uploadMode: "hr" | "me" | null = canUploadHr ? "hr" : canUploadSelf ? "me" : null;
   const queryClient = useQueryClient();
@@ -103,7 +121,12 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   function fileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (file && uploadTarget) setPendingUpload({ requirement: uploadTarget, file });
+    if (!file || !uploadTarget) return;
+    if (!isAllowedDocument(file)) {
+      toast({ variant: "destructive", title: t("common:error"), description: t("documents:requirements.errors.invalidFile") });
+      return;
+    }
+    setPendingUpload({ requirement: uploadTarget, file });
   }
 
   if (isLoading) return <Skeleton h={200} />;
@@ -195,7 +218,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
         </Stack>
       )}
 
-      {uploadMode && <input ref={fileInputRef} type="file" className="hidden" onChange={fileSelected} />}
+      {uploadMode && <input ref={fileInputRef} type="file" accept={DOCUMENT_ACCEPT} className="hidden" onChange={fileSelected} />}
       {waiving && <WaiveDialog requirement={waiving} queryKey={queryKey} onClose={() => setWaiving(null)} />}
       {pendingUpload && (
         <UploadExpiryDialog

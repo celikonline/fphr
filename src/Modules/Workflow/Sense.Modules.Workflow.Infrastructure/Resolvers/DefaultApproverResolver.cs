@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Workflow.Application;
@@ -16,7 +17,8 @@ namespace Sense.Modules.Workflow.Infrastructure.Resolvers;
 public sealed class DefaultApproverResolver(
     IOrgApprovalPolicyResolver orgApprovalPolicyResolver,
     IEmployeeLookup employeeLookup,
-    IApprovalPolicyRepository approvalPolicyRepository) : IApproverResolver
+    IApprovalPolicyRepository approvalPolicyRepository,
+    ILogger<DefaultApproverResolver> logger) : IApproverResolver
 {
     /// <summary>
     /// Mirrors Sense.Modules.Identity.Domain.Roles.SystemRoleCodes.HR - Workflow.Infrastructure cannot reference
@@ -60,7 +62,9 @@ public sealed class DefaultApproverResolver(
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            return Error.Failure(ErrorCodes.InternalError, (nameof(Exception), ex.Message));
+            // Do not propagate the internal exception message to the API caller; it stays in the log.
+            logger.LogError(ex, "Failed to resolve approver for tenant {TenantId}, request type {RequestType}, requester {RequesterEmployeeId}", tenantId, requestType, requesterEmployeeId);
+            return Error.Failure(ErrorCodes.InternalError);
         }
     }
 }
