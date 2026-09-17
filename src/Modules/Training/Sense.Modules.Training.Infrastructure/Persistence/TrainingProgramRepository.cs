@@ -24,4 +24,16 @@ public sealed class TrainingProgramRepository(TrainingDbContext context) : ITrai
             .Where(p => p.TenantId == tenantId)
             .ToListAsync(ct);
     }
+
+    public async Task UpdateAsync(TrainingProgram program, CancellationToken ct = default)
+    {
+        context.TrainingPrograms.Update(program);
+        await Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(TrainingProgram program, CancellationToken ct = default)
+    {
+        context.TrainingPrograms.Remove(program);
+        await Task.CompletedTask;
+    }
 }

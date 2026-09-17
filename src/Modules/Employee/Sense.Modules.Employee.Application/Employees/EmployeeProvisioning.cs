@@ -23,15 +23,18 @@ public sealed class EmployeeProvisioning : IEmployeeProvisioning
     private readonly ITenantContext _tenant;
     private readonly IEmployeeRepository _employees;
     private readonly IIntegrationEventOutbox _outbox;
+    private readonly IEmployeeUnitOfWork _unitOfWork;
 
     public EmployeeProvisioning(
         ITenantContext tenant,
         IEmployeeRepository employees,
-        IIntegrationEventOutbox outbox)
+        IIntegrationEventOutbox outbox,
+        IEmployeeUnitOfWork unitOfWork)
     {
         _tenant = tenant;
         _employees = employees;
         _outbox = outbox;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Guid> CreateFromCandidateAsync(
@@ -73,7 +76,7 @@ public sealed class EmployeeProvisioning : IEmployeeProvisioning
 
         var employee = result.Value;
         _employees.Add(employee);
-        await _employees.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await _unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // If NationalId was present and hire date was set, the employee transitioned to Active.
         // The Application layer raises EmployeeHired exactly once for that transition.

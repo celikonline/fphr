@@ -31,4 +31,16 @@ public sealed class AnnouncementRepository(AnnouncementsDbContext context) : IAn
             .Where(a => a.TenantId == tenantId && a.Status == AnnouncementStatus.Published)
             .ToListAsync(ct);
     }
+
+    public async Task UpdateAsync(Announcement announcement, CancellationToken ct = default)
+    {
+        context.Announcements.Update(announcement);
+        await Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Announcement announcement, CancellationToken ct = default)
+    {
+        context.Announcements.Remove(announcement);
+        await Task.CompletedTask;
+    }
 }

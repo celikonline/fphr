@@ -11,9 +11,9 @@ public interface IAnnouncementRepository
 {
     Task AddAsync(Announcement announcement, CancellationToken cancellationToken = default);
 
-    Task<Announcement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Announcement?> GetByIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Announcement>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(Announcement announcement, CancellationToken cancellationToken = default);
 

@@ -29,12 +29,13 @@ public sealed class TrainingModule : IModule
     {
         services.AddModuleDbContext<TrainingDbContext>(configuration, TrainingDbContext.SchemaName);
 
-        // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor
+        // Domain + Contracts + Application assemblies: handlers/commands/queries + domain/integration event types must resolve in OutboxProcessor
         services.AddModuleHandlers(
             TrainingDbContext.SchemaName,
-            typeof(TrainingErrors).Assembly,
-            typeof(TrainingDbContext).Assembly,
-            typeof(TrainingPermissions).Assembly);
+            typeof(ITrainingProgramRepository).Assembly, // Application
+            typeof(TrainingErrors).Assembly, // Domain
+            typeof(TrainingDbContext).Assembly, // Infrastructure
+            typeof(TrainingPermissions).Assembly); // Contracts
 
         services.AddScoped<ITrainingUnitOfWork>(sp => sp.GetRequiredService<TrainingDbContext>());
         services.AddScoped<ITrainingProgramRepository, TrainingProgramRepository>();

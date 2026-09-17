@@ -17,6 +17,7 @@ public sealed class EmployeeCostCenterReader(OrganizationDbContext context) : IE
         IReadOnlyCollection<Guid> employeeIds,
         CancellationToken cancellationToken = default)
     {
+        _ = context;
         if (employeeIds.Count == 0)
         {
             return new Dictionary<Guid, Guid>();

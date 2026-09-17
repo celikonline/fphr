@@ -29,12 +29,13 @@ public sealed class AnnouncementsModule : IModule
     {
         services.AddModuleDbContext<AnnouncementsDbContext>(configuration, AnnouncementsDbContext.SchemaName);
 
-        // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor
+        // Domain + Contracts + Application assemblies: handlers/commands/queries + domain/integration event types must resolve in OutboxProcessor
         services.AddModuleHandlers(
             AnnouncementsDbContext.SchemaName,
-            typeof(AnnouncementsErrors).Assembly,
-            typeof(AnnouncementsDbContext).Assembly,
-            typeof(AnnouncementsPermissions).Assembly);
+            typeof(IAnnouncementRepository).Assembly, // Application
+            typeof(AnnouncementsErrors).Assembly, // Domain
+            typeof(AnnouncementsDbContext).Assembly, // Infrastructure
+            typeof(AnnouncementsPermissions).Assembly); // Contracts
 
         services.AddScoped<IAnnouncementsUnitOfWork>(sp => sp.GetRequiredService<AnnouncementsDbContext>());
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();

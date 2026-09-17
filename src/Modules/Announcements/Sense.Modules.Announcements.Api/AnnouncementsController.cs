@@ -49,4 +49,16 @@ public class AnnouncementsController : ControllerBase
 
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
+
+    [HttpGet("{id}")]
+    [Authorize("announcements.view")]
+    public async Task<ActionResult<AnnouncementDto>> GetAnnouncement(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetAnnouncementQuery(id, _tenantContext.TenantId);
+        var result = await _queryDispatcher.DispatchAsync(query, cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
 }

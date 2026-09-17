@@ -11,9 +11,9 @@ public interface ITrainingProgramRepository
 {
     Task AddAsync(TrainingProgram program, CancellationToken cancellationToken = default);
 
-    Task<TrainingProgram?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<TrainingProgram?> GetByIdAsync(Guid tenantId, Guid programId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<TrainingProgram>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<TrainingProgram>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     Task UpdateAsync(TrainingProgram program, CancellationToken cancellationToken = default);
 

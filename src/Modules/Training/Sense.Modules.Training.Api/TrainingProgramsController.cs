@@ -49,4 +49,16 @@ public class TrainingProgramsController : ControllerBase
 
         return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
     }
+
+    [HttpGet("{id}")]
+    [Authorize("training.programs.view")]
+    public async Task<ActionResult<TrainingProgramDto>> GetTrainingProgram(
+        [FromRoute] Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetTrainingProgramQuery(id, _tenantContext.TenantId);
+        var result = await _queryDispatcher.DispatchAsync(query, cancellationToken);
+
+        return result.IsSuccess ? Ok(result.Value) : BadRequest(result.Error);
+    }
 }
