@@ -18,14 +18,14 @@ public sealed class EnrollmentRepository(TrainingDbContext context) : IEnrollmen
             .FirstOrDefaultAsync(e => e.Id == enrollmentId && e.TenantId == tenantId, ct);
     }
 
-    public async Task<IReadOnlyList<Enrollment>> GetByProgramAsync(Guid tenantId, Guid programId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Enrollment>> GetByTrainingProgramIdAsync(Guid tenantId, Guid programId, CancellationToken ct = default)
     {
         return await context.Enrollments
             .Where(e => e.TenantId == tenantId && e.TrainingProgramId == programId)
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<Enrollment>> GetByEmployeeAsync(Guid tenantId, Guid employeeId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Enrollment>> GetByEmployeeIdAsync(Guid tenantId, Guid employeeId, CancellationToken ct = default)
     {
         return await context.Enrollments
             .Where(e => e.TenantId == tenantId && e.EmployeeId == employeeId)

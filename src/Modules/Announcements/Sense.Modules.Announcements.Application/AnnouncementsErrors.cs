@@ -1,10 +1,26 @@
-using Sense.Shared.Contracts.Results;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Announcements.Application;
 
 public static class AnnouncementsErrors
 {
-    public static readonly Error AnnouncementNotFound = new("announcements.not_found", "Announcement not found.");
-    public static readonly Error TitleRequired = new("announcements.title_required", "Title is required.");
-    public static readonly Error ContentRequired = new("announcements.content_required", "Content is required.");
+    public static readonly Error TitleRequired = Error.Validation(
+        "announcements.announcement.title_required",
+        "Duyuru başlığı gereklidir ve 200 karakteri aşamaz.");
+
+    public static readonly Error ContentRequired = Error.Validation(
+        "announcements.announcement.content_required",
+        "Duyuru içeriği gereklidir.");
+
+    public static readonly Error CannotPublish = Error.Conflict(
+        "announcements.announcement.cannot_publish",
+        "Yalnızca taslak duyurular yayınlanabilir.");
+
+    public static readonly Error AlreadyArchived = Error.Conflict(
+        "announcements.announcement.already_archived",
+        "Duyuru zaten arşivlenmiş.");
+
+    public static readonly Error AnnouncementNotFound = Error.NotFound(
+        "announcements.announcement.not_found",
+        "Duyuru bulunamadı.");
 }

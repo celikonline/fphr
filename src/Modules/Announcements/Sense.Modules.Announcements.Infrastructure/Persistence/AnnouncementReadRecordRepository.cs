@@ -19,10 +19,17 @@ public sealed class AnnouncementReadRecordRepository(AnnouncementsDbContext cont
             .ToListAsync(ct);
     }
 
-    public async Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementAsync(Guid tenantId, Guid announcementId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken ct = default)
     {
         return await context.AnnouncementReadRecords
             .Where(r => r.TenantId == tenantId && r.AnnouncementId == announcementId)
             .ToListAsync(ct);
+    }
+
+    public async Task<int> CountByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken ct = default)
+    {
+        return await context.AnnouncementReadRecords
+            .Where(r => r.TenantId == tenantId && r.AnnouncementId == announcementId)
+            .CountAsync(ct);
     }
 }

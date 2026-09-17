@@ -1,18 +1,24 @@
-using Sense.Shared.Contracts.Commands;
 using FluentValidation;
+using Sense.Modules.Training.Domain;
+using Sense.Shared.Contracts.Commands;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Security;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Training.Application.Programs;
 
-public record CreateTrainingProgramCommand(
-    Guid TenantId,
+/// <summary>Eğitim programı oluştur (İK tarafından).</summary>
+[RequiresPermission("training.programs.manage")]
+public sealed record CreateTrainingProgramCommand(
     string Title,
     string? Description,
+    TrainingCategory Category,
     DateTime StartDate,
     DateTime EndDate,
-    int? MaxParticipants
+    int? MaxCapacity
 ) : ICommand<Guid>;
 
-public class CreateTrainingProgramValidator : AbstractValidator<CreateTrainingProgramCommand>
+public sealed class CreateTrainingProgramValidator : AbstractValidator<CreateTrainingProgramCommand>
 {
     public CreateTrainingProgramValidator()
     {
@@ -25,12 +31,27 @@ public class CreateTrainingProgramValidator : AbstractValidator<CreateTrainingPr
     }
 }
 
-public class CreateTrainingProgramHandler : ICommandHandler<CreateTrainingProgramCommand, Guid>
+/// <summary>Eğitim programı oluştur — İK/HR tarafından (training.programs.manage izni gerekir).</summary>
+public sealed class CreateTrainingProgramHandler(ITenantContext tenant, ITrainingProgramRepository programs)
+    : ICommandHandler<CreateTrainingProgramCommand, Guid>
 {
-    public async Task<Guid> Handle(CreateTrainingProgramCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(CreateTrainingProgramCommand command, CancellationToken cancellationToken)
     {
-        // Placeholder: training program creation logic will be implemented
-        // when Infrastructure/DbContext is available
-        return Guid.NewGuid();
+        var created = TrainingProgram.Create(
+            tenant.TenantId,
+            command.Title,
+            command.Description,
+            command.Category,
+            command.StartDate,
+            command.EndDate,
+            command.MaxCapacity);
+
+        if (created.IsFailure)
+        {
+            return created.Error;
+        }
+
+        await programs.AddAsync(created.Value, cancellationToken);
+        return created.Value.Id;
     }
 }
