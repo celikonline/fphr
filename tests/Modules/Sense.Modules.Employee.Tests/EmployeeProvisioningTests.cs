@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -90,7 +91,8 @@ public sealed class EmployeeProvisioningTests : TestFixture
         tenant.TenantId.Returns(tenantId);
 
         var repo = new EmployeeRepository(db);
-        var provisioning = new EmployeeProvisioning(tenant, repo, outbox);
+        var unitOfWork = new EmployeeUnitOfWork(db);
+        var provisioning = new EmployeeProvisioning(tenant, repo, outbox, unitOfWork);
 
         var request = new CandidateHireRequest(
             FirstName: "Fatima",
@@ -138,7 +140,8 @@ public sealed class EmployeeProvisioningTests : TestFixture
         Guid employee1Id;
         using (TenantContextSetter!.BeginScope(tenantId1))
         {
-            var provisioning1 = new EmployeeProvisioning(tenant1, repo, outbox);
+            var unitOfWork1 = new EmployeeUnitOfWork(db);
+            var provisioning1 = new EmployeeProvisioning(tenant1, repo, outbox, unitOfWork1);
             var request1 = new CandidateHireRequest(
                 FirstName: "Ali",
                 LastName: "Demir",
@@ -155,7 +158,8 @@ public sealed class EmployeeProvisioningTests : TestFixture
         Guid employee2Id;
         using (TenantContextSetter!.BeginScope(tenantId2))
         {
-            var provisioning2 = new EmployeeProvisioning(tenant2, repo, outbox);
+            var unitOfWork2 = new EmployeeUnitOfWork(db);
+            var provisioning2 = new EmployeeProvisioning(tenant2, repo, outbox, unitOfWork2);
             var request2 = new CandidateHireRequest(
                 FirstName: "Zeynep",
                 LastName: "Çetin",

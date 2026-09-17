@@ -67,7 +67,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_UnknownOrOtherTenantPeriod_ReturnsNotFound()
     {
-        var handler = BuildHandler(out var periods, out _, out _, out _, out _, out _, out _);
+        var handler = BuildHandler(out var periods, out _, out _, out _, out _, out _, out _, out _);
         periods.FindByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(null));
 
         var result = await handler.Handle(new ExportPayrollPeriodQuery(Guid.NewGuid()), CancellationToken.None);
@@ -79,7 +79,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_BuildsOneRowPerPayslip_WithAfterExemptionTaxAndExpenseReimbursement()
     {
-        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var exporter);
+        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var costCenterReader, out var exporter);
         var period = OpenPeriod();
         var employeeId = Guid.NewGuid();
         var payslip = Payslip.CreateFirstVersion(TenantId, employeeId, period.Id, "{}", "hash", grossAmount: 100_000m, netAmount: 84_000m, employerCost: 130_000m);
@@ -134,7 +134,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_ReportsMissingSicilCount_InSummarySheet()
     {
-        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var exporter);
+        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var costCenterReader, out var exporter);
         var period = OpenPeriod();
         var employeeId = Guid.NewGuid();
         var payslip = Payslip.CreateFirstVersion(TenantId, employeeId, period.Id, "{}", "hash", grossAmount: 50_000m, netAmount: 42_000m, employerCost: 65_000m);

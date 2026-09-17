@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
@@ -10,6 +11,7 @@ using Sense.Modules.Recruitment.Application.Applications;
 using Sense.Modules.Recruitment.Application.Candidates;
 using Sense.Modules.Recruitment.Application.Public;
 using Sense.Modules.Recruitment.Contracts;
+using Sense.Modules.Recruitment.Contracts.Events;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
@@ -922,7 +924,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         public Dictionary<Guid, JobApplication> ApplicationsById { get; } = [];
 
         public Task<Result<JobApplication>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(ApplicationsById.TryGetValue(id, out var app) ? Result.Success(app) : Result.Failure<JobApplication>(RecruitmentDomainErrors.ApplicationNotFound));
+            Task.FromResult(ApplicationsById.TryGetValue(id, out var app) ? Result.Success(app) : Result.Failure<JobApplication>(Error.NotFound(RecruitmentDomainErrors.ApplicationNotFound)));
 
         public void Add(JobApplication application) => ApplicationsById[application.Id] = application;
         public void Remove(JobApplication application) => ApplicationsById.Remove(application.Id);
@@ -949,7 +951,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         public Dictionary<Guid, Candidate> CandidatesById { get; } = [];
 
         public Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
-            Task.FromResult(CandidatesById.TryGetValue(id, out var candidate) ? Result.Success(candidate) : Result.Failure<Candidate>(RecruitmentDomainErrors.CandidateNotFound));
+            Task.FromResult(CandidatesById.TryGetValue(id, out var candidate) ? Result.Success(candidate) : Result.Failure<Candidate>(Error.NotFound(RecruitmentDomainErrors.CandidateNotFound)));
 
         public void Add(Candidate candidate) => CandidatesById[candidate.Id] = candidate;
         public void Remove(Candidate candidate) => CandidatesById.Remove(candidate.Id);
@@ -963,7 +965,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         private IEnumerable<Candidate> FilterCandidates(string? search) =>
             string.IsNullOrEmpty(search)
                 ? CandidatesById.Values
-                : CandidatesById.Values.Where(c => c.Email.Contains(search, StringComparison.OrdinalIgnoreCase) || c.FullName.Contains(search, StringComparison.OrdinalIgnoreCase));
+                : CandidatesById.Values.Where(c => c.Email.Contains(search, StringComparison.OrdinalIgnoreCase) || $"{c.FirstName} {c.LastName}".Contains(search, StringComparison.OrdinalIgnoreCase));
 
         public Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
         {

@@ -802,7 +802,7 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
 
         result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
         // Main employee sees peer1 and peer2 on the same date
-        result.Value.ShouldHaveCountGreaterThanOrEqualTo(2);
+        result.Value.Count.ShouldBeGreaterThanOrEqualTo(2);
         var peerEntry1 = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved1);
         var peerEntry2 = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved2);
         peerEntry1.ShouldNotBeNull();
@@ -871,7 +871,7 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var result = await handler.Handle(new GetLeaveCalendarQuery(calendarFrom, calendarTo, orgUnitId), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue(result.IsFailure ? result.Error.Code : null);
-        result.Value.ShouldHaveCountGreaterThanOrEqualTo(1);
+        result.Value.Count.ShouldBeGreaterThanOrEqualTo(1);
         var peerEntry = result.Value.FirstOrDefault(e => e.EmployeeId == peerApproved);
         peerEntry.ShouldNotBeNull();
         // Peer's leave is on a different date, so no overlapping approved

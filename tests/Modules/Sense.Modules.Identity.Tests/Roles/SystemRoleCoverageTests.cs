@@ -48,7 +48,7 @@ public sealed class SystemRoleCoverageTests
             var role = SystemRoleDefinitions.Get(roleCode);
             var permissions = role.Resolve(Guid.NewGuid(), AllPermissions);
 
-            if (permissions.Count == 0)
+            if (!permissions.Any())
             {
                 emptyRoles.Add(roleCode);
             }
@@ -106,7 +106,7 @@ public sealed class SystemRoleCoverageTests
 
         var ownerRole = SystemRoleDefinitions.Get(SystemRoleCodes.Owner);
         var ownerPermissions = ownerRole.Resolve(Guid.NewGuid(), AllPermissions)
-            .Select(p => p.Key)
+            .Select(p => p.Permission)
             .ToHashSet();
 
         var gaps = new List<(string Role, string Permission)>();
@@ -115,7 +115,7 @@ public sealed class SystemRoleCoverageTests
         {
             var role = SystemRoleDefinitions.Get(roleCode);
             var rolePermissions = role.Resolve(Guid.NewGuid(), AllPermissions)
-                .Select(p => p.Key)
+                .Select(p => p.Permission)
                 .ToList();
 
             foreach (var perm in rolePermissions)
