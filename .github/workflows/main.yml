@@ -138,7 +138,7 @@ jobs:
       # repository variable (see the file header) so nothing publishes by accident.
       - name: Log in to GHCR
         if: vars.ENABLE_IMAGE_PUSH == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
