@@ -369,7 +369,8 @@
     "today": "Bugün",
     "employee": "Çalışan",
     "empty": "Bu dönemde izin kaydı yok.",
-    "masked": "İzinli"
+    "masked": "İzinli",
+    "overlappingCount": "Bu günde {{count}} onaylı izin çakışıyor"
   },
   "overtime": {
     "myTitle": "Fazla mesailerim",

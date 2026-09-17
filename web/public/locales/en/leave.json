@@ -369,7 +369,8 @@
     "today": "Today",
     "employee": "Employee",
     "empty": "No leave in this period.",
-    "masked": "On leave"
+    "masked": "On leave",
+    "overlappingCount": "{{count}} approved leave requests overlap on this day"
   },
   "overtime": {
     "myTitle": "My overtime",

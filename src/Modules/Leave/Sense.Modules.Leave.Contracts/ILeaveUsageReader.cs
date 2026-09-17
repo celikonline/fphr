@@ -17,7 +17,10 @@ public sealed record LeaveUsageSummary(decimal TotalEntitledDays, decimal UsedDa
 /// </summary>
 public interface ILeaveUsageReader
 {
-    /// <summary><paramref name="employeeIds"/> null = every employee of the tenant.</summary>
+    /// <summary>
+    /// <paramref name="employeeIds"/> null = every employee of the tenant.
+    /// Year-spanning requests (e.g. Dec 27 - Jan 5) are counted entirely in the start year (first version; day-based split not implemented).
+    /// </summary>
     Task<LeaveUsageSummary> GetAnnualUsageAsync(
         Guid tenantId, int year, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
 }

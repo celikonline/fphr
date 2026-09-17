@@ -1,8 +1,8 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Box, Button, Group, Paper, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { ActionIcon, Box, Button, Group, Paper, Skeleton, Stack, Text, Title, Tooltip, Badge } from "@mantine/core";
+import { CalendarDays, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
@@ -101,6 +101,25 @@ function LeaveCalendar() {
     </Stack>
   );
 
+  // Calculate overlapping approved leave counts for each day
+  const overlappingCountByDay = useMemo<Map<string, number>>(() => {
+    const counts = new Map<string, number>();
+    if (!query.data) return counts;
+    for (let i = 0; i < dates.length; i++) {
+      const dateStr = toDateOnly(dates[i]);
+      let maxOverlap = 0;
+      for (const entry of query.data) {
+        if (entry.startDate <= dateStr && entry.endDate >= dateStr && entry.overlappingApprovedCount) {
+          maxOverlap = Math.max(maxOverlap, entry.overlappingApprovedCount);
+        }
+      }
+      if (maxOverlap > 0) {
+        counts.set(dateStr, maxOverlap);
+      }
+    }
+    return counts;
+  }, [query.data, dates]);
+
   return (
     <div className={`${classes.root} mx-auto flex max-w-[96rem] flex-col gap-6 p-6 md:p-10`}>
       <div>
@@ -179,6 +198,7 @@ function LeaveCalendar() {
                     <div className={`${classes.nameHeader} sticky left-0 z-20 px-3 py-2`}>{t("leave:calendar.employee")}</div>
                     {dates.map((date) => {
                       const key = toDateOnly(date);
+                      const overlapCount = overlappingCountByDay.get(key);
                       return (
                         <div
                           key={key}
@@ -188,6 +208,11 @@ function LeaveCalendar() {
                         >
                           <span>{weekday.format(date)}</span>
                           <span>{date.getDate()}</span>
+                          {overlapCount && overlapCount > 0 && (
+                            <Tooltip label={t("leave:calendar.overlappingCount", { count: overlapCount })}>
+                              <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-500" />
+                            </Tooltip>
+                          )}
                         </div>
                       );
                     })}
@@ -234,15 +259,23 @@ function LeaveCalendar() {
               <div className={`${classes.dayList} md:hidden`}>
                 {dates.map((date) => {
                   const key = toDateOnly(date);
+                  const overlapCount = overlappingCountByDay.get(key);
                   const entries = (query.data ?? [])
                     .filter((entry) => entry.startDate <= key && entry.endDate >= key)
                     .sort((a, b) => a.employeeName.localeCompare(b.employeeName, i18n.language));
                   if (entries.length === 0) return null;
                   return (
                     <div key={key} className={`${classes.dayGroup} flex flex-col gap-2 p-3`} data-weekend={isWeekend(date) || undefined}>
-                      <Text size="sm" fw={600} c={key === today ? "var(--mantine-primary-color-filled)" : undefined}>
-                        {formatDateOnly(key, i18n.language, { weekday: "long", day: "numeric", month: "long" })}
-                      </Text>
+                      <div className="flex items-center gap-2">
+                        <Text size="sm" fw={600} c={key === today ? "var(--mantine-primary-color-filled)" : undefined}>
+                          {formatDateOnly(key, i18n.language, { weekday: "long", day: "numeric", month: "long" })}
+                        </Text>
+                        {overlapCount && overlapCount > 0 && (
+                          <Tooltip label={t("leave:calendar.overlappingCount", { count: overlapCount })}>
+                            <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0" />
+                          </Tooltip>
+                        )}
+                      </div>
                       <ul className="flex flex-col gap-1.5">
                         {entries.map((entry) => (
                           <li key={entry.requestId} className="flex items-center gap-2">

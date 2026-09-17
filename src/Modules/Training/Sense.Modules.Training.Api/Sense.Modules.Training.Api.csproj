@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Training.Application/Sense.Modules.Training.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.Training.Contracts/Sense.Modules.Training.Contracts.csproj" />
+    <ProjectReference Include="../Sense.Modules.Training.Infrastructure/Sense.Modules.Training.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Web/Sense.Shared.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" />
+  </ItemGroup>
+
+</Project>

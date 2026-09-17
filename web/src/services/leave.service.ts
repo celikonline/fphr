@@ -151,6 +151,7 @@ export interface LeaveCalendarEntry {
   isMasked: boolean;
   leaveTypeCode?: LeaveTypeCode | null;
   leaveTypeName?: string | null;
+  overlappingApprovedCount?: number | null;
 }
 
 export interface LeaveCalendarQuery {

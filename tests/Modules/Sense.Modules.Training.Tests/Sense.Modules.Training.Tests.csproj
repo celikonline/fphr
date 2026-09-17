@@ -16,6 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Modules/Training/Sense.Modules.Training.Domain/Sense.Modules.Training.Domain.csproj" />
     <ProjectReference Include="../../../src/Modules/Training/Sense.Modules.Training.Application/Sense.Modules.Training.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Training/Sense.Modules.Training.Infrastructure/Sense.Modules.Training.Infrastructure.csproj" />
     <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
   </ItemGroup>
 

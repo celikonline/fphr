@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Announcements.Domain/Sense.Modules.Announcements.Domain.csproj" />
+    <ProjectReference Include="../Sense.Modules.Announcements.Application/Sense.Modules.Announcements.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.Announcements.Contracts/Sense.Modules.Announcements.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+  </ItemGroup>
+
+</Project>

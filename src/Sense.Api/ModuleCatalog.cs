@@ -1,3 +1,4 @@
+using Sense.Modules.Announcements.Api;
 using Sense.Modules.Analytics.Api;
 using Sense.Modules.Assets.Api;
 using Sense.Modules.Attendance.Api;
@@ -14,6 +15,7 @@ using Sense.Modules.Payroll.Api;
 using Sense.Modules.Performance.Api;
 using Sense.Modules.Recruitment.Api;
 using Sense.Modules.Reporting.Api;
+using Sense.Modules.Training.Api;
 using Sense.Modules.Workflow.Api;
 using Sense.Shared.Contracts.Modules;
 
@@ -41,5 +43,7 @@ public static class ModuleCatalog
         new AssetsModule(),
         new ReportingModule(),
         new PerformanceModule(),
+        new TrainingModule(),
+        new AnnouncementsModule(),
     ];
 }

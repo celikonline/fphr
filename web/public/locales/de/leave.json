@@ -369,7 +369,8 @@
     "today": "Heute",
     "employee": "Mitarbeitende",
     "empty": "In diesem Zeitraum gibt es keine Urlaube.",
-    "masked": "Im Urlaub"
+    "masked": "Im Urlaub",
+    "overlappingCount": "[DE] {{count}} approved leave requests overlap on this day"
   },
   "overtime": {
     "myTitle": "Meine Überstunden",
