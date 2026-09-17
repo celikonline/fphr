@@ -69,7 +69,7 @@ public sealed class ApprovalRequestTypeCatalogTests
             .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             .Where(f => f.FieldType == typeof(string) && f.IsLiteral)
             .Select(f => (string?)f.GetValue(null))
-            .Where(v => v != null && v != ApprovalRequestTypes.All) // All array'i kendisi değil
+            .Where(v => v != null) // Yalnız const string alanları (All dizi olduğu için bu filtre tarafından zaten excluded)
             .Cast<string>()
             .ToList();
 

@@ -8,6 +8,7 @@ using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Application;
+using Sense.Modules.Leave.Application.Calendar;
 using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
 using Sense.Modules.Leave.Contracts;

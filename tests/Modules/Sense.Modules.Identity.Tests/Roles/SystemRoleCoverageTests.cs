@@ -26,18 +26,19 @@ public sealed class SystemRoleCoverageTests
             SystemRoleCodes.Admin,
             SystemRoleCodes.HR,
             SystemRoleCodes.HRSpecialist,
-            SystemRoleCodes.Manager,
             SystemRoleCodes.PayrollSpecialist,
-            SystemRoleCodes.Accountant,
-            SystemRoleCodes.Auditor,
-            SystemRoleCodes.TrainingCoordinator,
+            SystemRoleCodes.Finance,
+            SystemRoleCodes.Manager,
+            SystemRoleCodes.Timekeeper,
             SystemRoleCodes.Recruiter,
-            SystemRoleCodes.DataAnalyst,
+            SystemRoleCodes.Interviewer,
+            SystemRoleCodes.Auditor,
+            SystemRoleCodes.ExternalAccountant,
+            SystemRoleCodes.ITAdmin,
             SystemRoleCodes.Employee,
             SystemRoleCodes.Intern,
             SystemRoleCodes.Contractor,
-            SystemRoleCodes.Guest,
-            SystemRoleCodes.Supervisor,
+            SystemRoleCodes.ApiIntegration,
         };
 
         var emptyRoles = new List<string>();
@@ -66,7 +67,7 @@ public sealed class SystemRoleCoverageTests
     public void WildcardPatterns_AreEitherResolvedOrDeliberatelyReserved()
     {
         var wildcardPatterns = new[] { "performance.*", "training.*", "billing.*", "integrations.*", "announcements.*" };
-        var allPermissionKeys = AllPermissions.Select(p => p.Permission).ToList();
+        var allPermissionKeys = AllPermissions.Select(p => p.Key).ToList();
 
         var unresolved = new List<string>();
 
@@ -96,15 +97,16 @@ public sealed class SystemRoleCoverageTests
         var otherRoleCodes = new[]
         {
             SystemRoleCodes.Admin, SystemRoleCodes.HR, SystemRoleCodes.HRSpecialist,
-            SystemRoleCodes.Manager, SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Accountant,
-            SystemRoleCodes.Auditor, SystemRoleCodes.TrainingCoordinator, SystemRoleCodes.Recruiter,
-            SystemRoleCodes.DataAnalyst, SystemRoleCodes.Employee, SystemRoleCodes.Intern,
-            SystemRoleCodes.Contractor, SystemRoleCodes.Guest, SystemRoleCodes.Supervisor,
+            SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Finance, SystemRoleCodes.Manager,
+            SystemRoleCodes.Timekeeper, SystemRoleCodes.Recruiter, SystemRoleCodes.Interviewer,
+            SystemRoleCodes.Auditor, SystemRoleCodes.ExternalAccountant, SystemRoleCodes.ITAdmin,
+            SystemRoleCodes.Employee, SystemRoleCodes.Intern, SystemRoleCodes.Contractor,
+            SystemRoleCodes.ApiIntegration,
         };
 
         var ownerRole = SystemRoleDefinitions.Get(SystemRoleCodes.Owner);
         var ownerPermissions = ownerRole.Resolve(Guid.NewGuid(), AllPermissions)
-            .Select(p => p.Permission)
+            .Select(p => p.Key)
             .ToHashSet();
 
         var gaps = new List<(string Role, string Permission)>();
@@ -113,7 +115,7 @@ public sealed class SystemRoleCoverageTests
         {
             var role = SystemRoleDefinitions.Get(roleCode);
             var rolePermissions = role.Resolve(Guid.NewGuid(), AllPermissions)
-                .Select(p => p.Permission)
+                .Select(p => p.Key)
                 .ToList();
 
             foreach (var perm in rolePermissions)

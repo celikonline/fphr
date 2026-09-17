@@ -1,6 +1,7 @@
 using System.Text.Json;
 using NSubstitute;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
@@ -30,7 +31,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     private static ExportPayrollPeriodHandler BuildHandler(
         out IPayrollPeriodRepository periods, out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IEmployeeDirectory employeeDirectory, out IExpensePayoutReader expensePayoutReader,
-        out IReportExporter exporter)
+        out IEmployeeCostCenterReader costCenterReader, out IReportExporter exporter)
     {
         periods = Substitute.For<IPayrollPeriodRepository>();
         payslips = Substitute.For<IPayslipRepository>();
@@ -38,12 +39,13 @@ public sealed class ExportPayrollPeriodHandlerTests
         profiles = Substitute.For<IEmployeePayrollProfileRepository>();
         employeeDirectory = Substitute.For<IEmployeeDirectory>();
         expensePayoutReader = Substitute.For<IExpensePayoutReader>();
+        costCenterReader = Substitute.For<IEmployeeCostCenterReader>();
         exporter = Substitute.For<IReportExporter>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        return new ExportPayrollPeriodHandler(periods, payslips, traces, profiles, employeeDirectory, expensePayoutReader, tenant, exporter);
+        return new ExportPayrollPeriodHandler(periods, payslips, traces, profiles, employeeDirectory, expensePayoutReader, costCenterReader, tenant, exporter);
     }
 
     private static string StepsJson(

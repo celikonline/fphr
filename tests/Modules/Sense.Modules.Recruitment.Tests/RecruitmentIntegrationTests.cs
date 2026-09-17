@@ -21,8 +21,10 @@ using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Persistence;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
 using Xunit;
@@ -924,17 +926,21 @@ public sealed class RecruitmentIntegrationTests : TestFixture
 
         public void Add(JobApplication application) => ApplicationsById[application.Id] = application;
         public void Remove(JobApplication application) => ApplicationsById.Remove(application.Id);
-        public Task<IReadOnlyList<JobApplication>> ListByPostingAsync(Guid postingId, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == postingId).ToList());
+
+        public Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == jobPostingId).ToList());
+
+        public Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == jobPostingId).Take(take).ToList());
+
         public Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.CandidateId == candidateId).ToList());
-        public Task<Result<JobApplication>> FindByPostingAndCandidateAsync(Guid postingId, Guid candidateId, CancellationToken cancellationToken = default)
-        {
-            var app = ApplicationsById.Values.FirstOrDefault(a => a.JobPostingId == postingId && a.CandidateId == candidateId);
-            return Task.FromResult(app != null ? Result.Success(app) : Result.Failure<JobApplication>(RecruitmentDomainErrors.ApplicationNotFound));
-        }
-        public Task<IReadOnlyList<JobApplication>> ListByStageAsync(string stage, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<JobApplication>>([]);
+
+        public Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.CandidateId == candidateId).Take(take).ToList());
+
+        public Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApplicationsById.Values.Any(a => a.JobPostingId == jobPostingId && a.CandidateId == candidateId));
     }
 
     /// <summary>In-memory <see cref="ICandidateRepository"/> for unit testing.</summary>
@@ -947,17 +953,26 @@ public sealed class RecruitmentIntegrationTests : TestFixture
 
         public void Add(Candidate candidate) => CandidatesById[candidate.Id] = candidate;
         public void Remove(Candidate candidate) => CandidatesById.Remove(candidate.Id);
-        public Task<IReadOnlyList<Candidate>> ListAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.ToList());
-        public Task<Result<Candidate>> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+
+        public Task<IReadOnlyList<Candidate>> ListAsync(string? search = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(FilterCandidates(search).ToList());
+
+        public Task<IReadOnlyList<Candidate>> ListAsync(string? search, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(FilterCandidates(search).Take(take).ToList());
+
+        private IEnumerable<Candidate> FilterCandidates(string? search) =>
+            string.IsNullOrEmpty(search)
+                ? CandidatesById.Values
+                : CandidatesById.Values.Where(c => c.Email.Contains(search, StringComparison.OrdinalIgnoreCase) || c.FullName.Contains(search, StringComparison.OrdinalIgnoreCase));
+
+        public Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
         {
             var candidate = CandidatesById.Values.FirstOrDefault(c => c.Email == email);
-            return Task.FromResult(candidate != null ? Result.Success(candidate) : Result.Failure<Candidate>(RecruitmentDomainErrors.CandidateNotFound));
+            return Task.FromResult(candidate);
         }
-        public Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime cutoffDateUtc, CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Candidate>>([]);
-        public Task<IReadOnlyList<Candidate>> ListAnonymizedAsync(CancellationToken cancellationToken = default) =>
-            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.Where(c => c.IsAnonymized).ToList());
+
+        public Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.Where(c => !c.IsAnonymized && c.CreatedAt < createdBefore).ToList());
     }
 
     /// <summary>In-memory <see cref="IRecruitmentUnitOfWork"/> for unit testing.</summary>
@@ -965,16 +980,15 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     {
         public bool SaveChangesCalled { get; private set; }
 
-        public Task SaveChangesAsync(CancellationToken cancellationToken = default)
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             SaveChangesCalled = true;
-            return Task.CompletedTask;
+            return Task.FromResult(1);
         }
 
-        public Task BeginTransactionAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task CommitAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task RollbackAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public void Dispose() { }
-        public ValueTask DisposeAsync() => default;
+        public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default)
+        {
+            await action(cancellationToken);
+        }
     }
 }

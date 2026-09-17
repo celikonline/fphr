@@ -75,24 +75,21 @@ public sealed class LeaveUsageReaderTests : TestFixture
             await db.SaveChangesAsync();
 
             // Manually add Accrual for 2025 (10 days)
-            var accrual2025 = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Accrual, 10m,
-                new DateOnly(2025, 1, 15), "Manual 2025 accrual", null);
+            var accrual2025 = LeaveLedgerEntry.Accrual(
+                tenantId, employeeId, annualType.Id, 10m,
+                new DateOnly(2025, 1, 15));
             db.LedgerEntries.Add(accrual2025);
 
             // Manually add Accrual for 2026 (15 days)
-            var accrual2026 = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Accrual, 15m,
-                new DateOnly(2026, 1, 15), "Manual 2026 accrual", null);
+            var accrual2026 = LeaveLedgerEntry.Accrual(
+                tenantId, employeeId, annualType.Id, 15m,
+                new DateOnly(2026, 1, 15));
             db.LedgerEntries.Add(accrual2026);
 
             // Add CarryOver from 2025 to 2026 (5 days carried over)
-            var carryOver2026 = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.CarryOver, 5m,
-                new DateOnly(2026, 1, 1), "CarryOver from 2025", null);
+            var carryOver2026 = LeaveLedgerEntry.CarryOver(
+                tenantId, employeeId, annualType.Id, 5m,
+                new DateOnly(2026, 1, 1));
             db.LedgerEntries.Add(carryOver2026);
 
             await db.SaveChangesAsync();
@@ -133,24 +130,19 @@ public sealed class LeaveUsageReaderTests : TestFixture
             await db.SaveChangesAsync();
 
             // Add Accrual (20 days)
-            var accrual = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Accrual, 20m,
-                new DateOnly(2026, 1, 15), "Annual accrual", null);
+            var accrual = LeaveLedgerEntry.Accrual(
+                tenantId, employeeId, annualType.Id, 20m,
+                new DateOnly(2026, 1, 15));
             db.LedgerEntries.Add(accrual);
 
             // Add Usage (5 days used)
-            var usage = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Usage, -5m,
-                new DateOnly(2026, 3, 15), "Usage", null);
+            var usage = LeaveLedgerEntry.Usage(
+                tenantId, employeeId, annualType.Id, 5m,
+                new DateOnly(2026, 3, 15), LeaveLedgerSource.System, null);
             db.LedgerEntries.Add(usage);
 
             // Add Reversal (cancel that 5-day usage)
-            var reversal = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Reversal, 5m,
-                new DateOnly(2026, 3, 20), "Reversal", null);
+            var reversal = LeaveLedgerEntry.Reversal(usage, "Reversal");
             db.LedgerEntries.Add(reversal);
 
             await db.SaveChangesAsync();
@@ -192,18 +184,16 @@ public sealed class LeaveUsageReaderTests : TestFixture
             await db.SaveChangesAsync();
 
             // Add Accrual for 2025 (20 days)
-            var accrual2025 = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Accrual, 20m,
-                new DateOnly(2025, 1, 15), "Accrual 2025", null);
+            var accrual2025 = LeaveLedgerEntry.Accrual(
+                tenantId, employeeId, annualType.Id, 20m,
+                new DateOnly(2025, 1, 15));
             db.LedgerEntries.Add(accrual2025);
 
             // Usage entry dated 2025-12-27 (spanning request Dec 27 - Jan 5 = 7 days)
             // In the initial version, all days are counted in the start year (2025)
-            var usage = new LeaveLedgerEntry(
-                Guid.NewGuid(), tenantId, employeeId, annualType.Id,
-                LeaveLedgerEntryType.Usage, -7m,
-                new DateOnly(2025, 12, 27), "Spanning leave Dec-Jan", null);
+            var usage = LeaveLedgerEntry.Usage(
+                tenantId, employeeId, annualType.Id, 7m,
+                new DateOnly(2025, 12, 27), LeaveLedgerSource.System, null);
             db.LedgerEntries.Add(usage);
 
             await db.SaveChangesAsync();
