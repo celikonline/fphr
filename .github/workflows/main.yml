@@ -46,7 +46,7 @@ jobs:
         image: redis:7-alpine
         ports: ["6379:6379"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -69,7 +69,7 @@ jobs:
           ConnectionStrings__Database: Host=127.0.0.1;Port=5432;Database=senseik_test;Username=postgres;Password=postgres
           ConnectionStrings__Redis: 127.0.0.1:6379,abortConnect=false
         run: dotnet test Sense.slnx -c Release --no-build --filter "Category=Integration" --logger "trx;LogFileName=integration-tests.trx"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: backend-test-results
@@ -78,9 +78,9 @@ jobs:
   web-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: ".nvmrc"
           cache: pnpm
@@ -93,9 +93,9 @@ jobs:
   mobile-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: "apps/senseik-mobile/.nvmrc"
           cache: pnpm
@@ -120,13 +120,13 @@ jobs:
             context: .
             dockerfile: web/Dockerfile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
 
       - name: Derive image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.image }}
           tags: |
@@ -138,14 +138,14 @@ jobs:
       # repository variable (see the file header) so nothing publishes by accident.
       - name: Log in to GHCR
         if: vars.ENABLE_IMAGE_PUSH == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build (and push if enabled)
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: ${{ matrix.context }}
           file: ${{ matrix.dockerfile }}

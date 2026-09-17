@@ -11,7 +11,7 @@
 # SDK's default Roslyn analyzer set changes between patches, and a newer patch than what
 # global.json pins can turn on new CA rules that break `TreatWarningsAsErrors` builds that
 # were never validated against them.
-FROM mcr.microsoft.com/dotnet/sdk:10.0.100 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.401 AS build
 WORKDIR /src
 
 # Repo-root MSBuild config first: these rarely change, so they cache well independently

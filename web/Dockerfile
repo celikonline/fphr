@@ -5,7 +5,7 @@
 # (web depends on the workspace package @senseik/api-client via pnpm, so the whole
 # monorepo manifest - not just web/ - is needed to resolve and install it.)
 
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /repo
 
 RUN corepack enable
