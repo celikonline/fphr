@@ -141,6 +141,33 @@
   "shiftLock": {
     "scheduledLockDate": "[DE] Scheduled lock date"
   },
+  "shiftPlan": {
+    "title": "[DE] Shift plan",
+    "subtitle": "[DE] Weekly shift plan for the employees you're authorized to view.",
+    "allUnits": "[DE] All units",
+    "previousWeek": "[DE] Previous week",
+    "nextWeek": "[DE] Next week",
+    "employee": "[DE] Employee",
+    "empty": "[DE] No employees to display for this week.",
+    "night": "[DE] Night",
+    "draft": "[DE] Draft",
+    "unpublishedCount": "[DE] {{count}} unpublished shifts",
+    "publish": "[DE] Publish",
+    "publishTitle": "[DE] Publish shifts",
+    "publishDescription": "[DE] {{count}} draft shifts will be published to this week's employees. Do you want to continue?",
+    "published": "[DE] Shifts published.",
+    "lockedBadge": "[DE] Locked ({{date}})",
+    "scheduledLock": "[DE] Auto-lock: {{date}}",
+    "lock": "[DE] Lock period",
+    "lockTitle": "[DE] Lock period",
+    "lockDescription": "[DE] The {{month}} period will be locked; shifts can't be published while locked. Do you want to continue?",
+    "locked": "[DE] Period locked.",
+    "unlock": "[DE] Unlock",
+    "unlockTitle": "[DE] Unlock period",
+    "unlockReasonLabel": "[DE] Reason",
+    "unlockReasonRequired": "[DE] A reason is required to unlock the period.",
+    "unlocked": "[DE] Period unlocked."
+  },
   "myAvailability": {
     "title": "[DE] My Availability",
     "addButton": "[DE] Report unavailability",

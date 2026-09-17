@@ -203,4 +203,70 @@ public sealed class ImportDeviceLogsHandlerTests
         result.Value.Skipped.ShouldBe(0);
         _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.Date == Date && d.CheckIn == null && d.CheckOut == new TimeOnly(6, 10)));
     }
+
+    // G-6-22/23 (data-loss regression, PO analysis 18:52): PDKS exports commonly arrive as separate partial
+    // batches - the previous evening's "in" punch landed in an *earlier* import and is already on the existing
+    // AttendanceDay record, not in this batch's own "ins" list. The handler must merge it in instead of
+    // overwriting CheckIn with null when it recomputes the night-shift record.
+    [Fact]
+    public async Task Handle_CrossBatchNightShiftOutPunch_PreservesCheckInFromEarlierImport()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        var existingFromEarlierBatch = AttendanceDay.Record(
+            _tenantId, _employeeId, Date, new TimeOnly(23, 50), null, new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.Device);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns(existingFromEarlierBatch);
+        // This second batch only carries the next calendar day's "out" - the "in" is not in this file at all.
+        const string csv = "employeeCode;timestamp;direction\n10000000146;2026-09-17T06:10:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Imported.ShouldBe(1);
+        result.Value.Skipped.ShouldBe(0);
+        existingFromEarlierBatch.CheckIn.ShouldBe(new TimeOnly(23, 50));
+        existingFromEarlierBatch.CheckOut.ShouldBe(new TimeOnly(6, 10));
+        existingFromEarlierBatch.WorkedMinutes.ShouldBe(380);
+        existingFromEarlierBatch.Anomalies.HasFlag(AttendanceAnomaly.MissingCheckIn).ShouldBeFalse();
+        _days.DidNotReceive().Add(Arg.Any<AttendanceDay>());
+    }
+
+    // Symmetric case: this batch only carries the "in" - the day's already-recorded CheckOut must survive.
+    [Fact]
+    public async Task Handle_BatchWithOnlyCheckIn_PreservesExistingCheckOut()
+    {
+        var existing = AttendanceDay.Record(
+            _tenantId, _employeeId, Date, null, new TimeOnly(18, 5), new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.Device);
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns(existing);
+        const string csv = "employeeCode;timestamp;direction\n10000000146;2026-09-16T08:55:00;in\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        existing.CheckIn.ShouldBe(new TimeOnly(8, 55));
+        existing.CheckOut.ShouldBe(new TimeOnly(18, 5));
+        existing.WorkedMinutes.ShouldBe(550);
+    }
+
+    // G-6-24 (idempotency, PO analysis 18:52): re-importing the exact same "out" row a second time must not create
+    // a second day record or a second update - the existing DuplicateTimestamp/seenTimestamps guard already covers
+    // this within a single Handle call; this locks that behavior in for the device-log path specifically.
+    [Fact]
+    public async Task Handle_SameOutRowImportedTwiceInOneBatch_SkipsSecondOccurrenceAndUpdatesOnce()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T18:05:00;out\n" +
+                            "10000000146;2026-09-16T18:05:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Imported.ShouldBe(1);
+        result.Value.Skipped.ShouldBe(1);
+        result.Value.Errors.ShouldContain(e => e.Line == 3 && e.Code == DeviceLogErrorCodes.DuplicateTimestamp);
+        _days.Received(1).Add(Arg.Any<AttendanceDay>());
+        await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
 }

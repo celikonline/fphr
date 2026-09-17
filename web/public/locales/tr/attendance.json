@@ -141,6 +141,33 @@
   "shiftLock": {
     "scheduledLockDate": "Otomatik kilit tarihi"
   },
+  "shiftPlan": {
+    "title": "Vardiya planı",
+    "subtitle": "Yetkili olduğunuz çalışanların haftalık vardiya planı.",
+    "allUnits": "Tüm birimler",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "employee": "Çalışan",
+    "empty": "Bu haftada görüntüleyebileceğiniz çalışan yok.",
+    "night": "Gece",
+    "draft": "Taslak",
+    "unpublishedCount": "{{count}} yayınlanmamış vardiya",
+    "publish": "Yayınla",
+    "publishTitle": "Vardiyaları yayınla",
+    "publishDescription": "{{count}} taslak vardiya bu haftaki çalışanlara yayınlanacak. Onaylıyor musunuz?",
+    "published": "Vardiyalar yayınlandı.",
+    "lockedBadge": "Kilitli ({{date}})",
+    "scheduledLock": "Otomatik kilit: {{date}}",
+    "lock": "Dönemi kilitle",
+    "lockTitle": "Dönemi kilitle",
+    "lockDescription": "{{month}} dönemi kilitlenecek; kilitli dönemde vardiya yayınlanamaz. Onaylıyor musunuz?",
+    "locked": "Dönem kilitlendi.",
+    "unlock": "Kilidi aç",
+    "unlockTitle": "Dönem kilidini aç",
+    "unlockReasonLabel": "Gerekçe",
+    "unlockReasonRequired": "Kilidi açma gerekçesi zorunludur.",
+    "unlocked": "Dönem kilidi açıldı."
+  },
   "myAvailability": {
     "title": "Müsaitliğim",
     "addButton": "Müsait değilim bildir",

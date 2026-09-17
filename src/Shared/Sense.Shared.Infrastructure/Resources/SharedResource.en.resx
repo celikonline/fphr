@@ -364,6 +364,8 @@ Your SenseİK account is active. Sign in: {url}</value></data>
 
 The report you requested has been generated. Click the link to view and download it:
 {url}</value></data>
+  <data name="email.mfa_reset_notice.subject" xml:space="preserve"><value>Your two-factor authentication has been reset</value></data>
+  <data name="email.mfa_reset_notice.body" xml:space="preserve"><value>{name}, two-factor authentication on your {tenant} account was reset by an administrator. If you did not expect this, change your password immediately and notify your administrator.</value></data>
   <!-- Field names used in validation messages (field.{snake_case}) -->
   <data name="field.code" xml:space="preserve"><value>Code</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Company name</value></data>

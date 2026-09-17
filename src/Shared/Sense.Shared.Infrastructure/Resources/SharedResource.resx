@@ -373,6 +373,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
 İstediğiniz rapor oluşturuldu. Görüntülemek ve indirmek için bağlantıya tıklayın:
 {url}</value></data>
+  <data name="email.mfa_reset_notice.subject" xml:space="preserve"><value>İki adımlı doğrulamanız sıfırlandı</value></data>
+  <data name="email.mfa_reset_notice.body" xml:space="preserve"><value>{name}, {tenant} hesabınızdaki iki adımlı doğrulama bir yönetici tarafından sıfırlandı. Bu işlemden haberiniz yoksa derhal parolanızı değiştirin ve yöneticinize bildirin.</value></data>
   <!-- Doğrulama mesajlarındaki alan adları (field.{snake_case}) -->
   <data name="field.code" xml:space="preserve"><value>Kod</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Şirket adı</value></data>

@@ -19,7 +19,8 @@ describe("ApprovalsService", () => {
             subjectId: "subject-1",
             requesterName: "Ayşe Yılmaz",
             stepNumber: 1,
-            isFallbackRoleTask: false
+            isFallbackRoleTask: false,
+            submittedAt: "2026-09-15T08:30:00Z"
           }
         ]
       };

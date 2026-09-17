@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMediaQuery } from "@mantine/hooks";
 import { Badge, Button, Card, Group, Skeleton, Stack, Switch, Table, Text, Title } from "@mantine/core";
 import { BellRing } from "lucide-react";
 import NoAccess from "@/components/no-access";
@@ -33,6 +34,8 @@ function NotificationPreferences() {
   const { t } = useTranslation(["notifications", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("notifications.my.manage");
+  // ≤390px: kaydet butonu tam genişlik (Faz 1 tur 3 FE, bildirim tercihleri mobil uyumu).
+  const isMobile = useMediaQuery("(max-width: 390px)");
   const query = useQuery({ queryKey: NOTIFICATION_PREFERENCES_KEY, queryFn: getNotificationPreferences });
   const [draft, setDraft] = useState<Record<string, NotificationPreferenceInput>>({});
 
@@ -89,68 +92,117 @@ function NotificationPreferences() {
             {t("notifications:preferences.empty")}
           </Text>
         ) : (
-          <Table.ScrollContainer minWidth={480}>
-            <Table verticalSpacing="sm" horizontalSpacing="md">
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>{t("notifications:preferences.notification")}</Table.Th>
-                  {CHANNELS.map(({ channel, labelKey }) => (
-                    <Table.Th key={channel} w={112} ta="center">
-                      {t(labelKey)}
-                    </Table.Th>
-                  ))}
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {rows.map((row) => (
-                  <Table.Tr key={row.templateKey}>
-                    <Table.Td>
-                      <Text size="sm" fw={500}>
-                        {t(`notifications:template.${row.templateKey}`, { defaultValue: row.templateKey })}
-                      </Text>
-                      <Group gap="xs">
-                        <Text size="xs" c="dimmed">
-                          {t(`notifications:category.${row.category}`, { defaultValue: row.category })}
-                        </Text>
-                        {row.isMandatory && (
-                          <Badge variant="light" color="gray" size="sm">
-                            {t("notifications:preferences.mandatory")}
-                          </Badge>
-                        )}
-                      </Group>
-                    </Table.Td>
-                    {CHANNELS.map(({ channel, labelKey }) => {
-                      const setting = row.channels.find((c) => c.channel === channel);
-                      return (
-                        <Table.Td key={channel}>
-                          {setting ? (
-                            <Group justify="center">
-                              <Switch
-                                checked={isEnabled(row, channel, setting.enabled)}
-                                disabled={!canManage || setting.locked || row.isMandatory}
-                                onChange={(event) => toggle(row, channel, event.currentTarget.checked)}
-                                aria-label={t(labelKey)}
-                              />
-                            </Group>
-                          ) : (
-                            <Text span c="dimmed" display="block" ta="center">
-                              -
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table.ScrollContainer minWidth={480}>
+                <Table verticalSpacing="sm" horizontalSpacing="md">
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>{t("notifications:preferences.notification")}</Table.Th>
+                      {CHANNELS.map(({ channel, labelKey }) => (
+                        <Table.Th key={channel} w={112} ta="center">
+                          {t(labelKey)}
+                        </Table.Th>
+                      ))}
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {rows.map((row) => (
+                      <Table.Tr key={row.templateKey}>
+                        <Table.Td>
+                          <Text size="sm" fw={500}>
+                            {t(`notifications:template.${row.templateKey}`, { defaultValue: row.templateKey })}
+                          </Text>
+                          <Group gap="xs">
+                            <Text size="xs" c="dimmed">
+                              {t(`notifications:category.${row.category}`, { defaultValue: row.category })}
                             </Text>
-                          )}
+                            {row.isMandatory && (
+                              <Badge variant="light" color="gray" size="sm">
+                                {t("notifications:preferences.mandatory")}
+                              </Badge>
+                            )}
+                          </Group>
                         </Table.Td>
-                      );
-                    })}
-                  </Table.Tr>
+                        {CHANNELS.map(({ channel, labelKey }) => {
+                          const setting = row.channels.find((c) => c.channel === channel);
+                          return (
+                            <Table.Td key={channel}>
+                              {setting ? (
+                                <Group justify="center">
+                                  <Switch
+                                    checked={isEnabled(row, channel, setting.enabled)}
+                                    disabled={!canManage || setting.locked || row.isMandatory}
+                                    onChange={(event) => toggle(row, channel, event.currentTarget.checked)}
+                                    aria-label={t(labelKey)}
+                                  />
+                                </Group>
+                              ) : (
+                                <Text span c="dimmed" display="block" ta="center">
+                                  -
+                                </Text>
+                              )}
+                            </Table.Td>
+                          );
+                        })}
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
+            </div>
+
+            {/* Dar ekran (≤390px dahil): olay türü başına kart */}
+            <div className="md:hidden">
+              <Stack gap="sm" p="md">
+                {rows.map((row) => (
+                  <Card key={row.templateKey} withBorder padding="sm" radius="md">
+                    <Text size="sm" fw={500}>
+                      {t(`notifications:template.${row.templateKey}`, { defaultValue: row.templateKey })}
+                    </Text>
+                    <Group gap="xs" mb="xs">
+                      <Text size="xs" c="dimmed">
+                        {t(`notifications:category.${row.category}`, { defaultValue: row.category })}
+                      </Text>
+                      {row.isMandatory && (
+                        <Badge variant="light" color="gray" size="sm">
+                          {t("notifications:preferences.mandatory")}
+                        </Badge>
+                      )}
+                    </Group>
+                    <Stack gap={0}>
+                      {CHANNELS.map(({ channel, labelKey }) => {
+                        const setting = row.channels.find((c) => c.channel === channel);
+                        if (!setting) return null;
+                        return (
+                          <Group key={channel} justify="space-between" wrap="nowrap" style={{ minHeight: 40 }}>
+                            <Text size="sm">{t(labelKey)}</Text>
+                            <Switch
+                              checked={isEnabled(row, channel, setting.enabled)}
+                              disabled={!canManage || setting.locked || row.isMandatory}
+                              onChange={(event) => toggle(row, channel, event.currentTarget.checked)}
+                              aria-label={t(labelKey)}
+                            />
+                          </Group>
+                        );
+                      })}
+                    </Stack>
+                  </Card>
                 ))}
-              </Table.Tbody>
-            </Table>
-          </Table.ScrollContainer>
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 
       {canManage && (
         <Group justify="flex-end">
-          <Button onClick={() => save.mutate()} disabled={changes.length === 0 || save.isPending}>
+          <Button
+            fullWidth={isMobile}
+            onClick={() => save.mutate()}
+            disabled={changes.length === 0 || save.isPending}
+          >
             {t("notifications:preferences.save")}
           </Button>
         </Group>

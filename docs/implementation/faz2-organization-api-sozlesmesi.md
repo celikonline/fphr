@@ -78,12 +78,11 @@ logo_document_id uuid nullable).
 
 ## Maliyet merkezleri (S-4, roadmap Faz 2 item #2)
 
-**Durum (gün açılışı tur 1, ADR-0013):** Domain aggregate (`CostCenter`) + Application katmanı (komut/
-sorgu handler'ları) + `CostCentersController` + **EF config/repository/lookup/DI kaydı** (bu tur, tek
-izole grup) yazıldı; yalnız **migration henüz üretilmedi** (`status/faz-02/MIGRATION-ISTEGI.md`,
-ADR-0005/0013 — komut çalıştırılana kadar PO push etmez, Testcontainers entegrasyon testleri "pending
-model changes" ile kırılabilir, bilinçli geçici durum). Uç şekli aşağıda **donmuştur**, FE bu sözleşmeyle
-geliştirir; migration landınca davranış değişmez, yalnız 500 yerine gerçek veri döner.
+**Durum (2026-09-17 itibarıyla ✅ tamamlandı, ADR-0013 kapandı):** Domain aggregate (`CostCenter`) +
+Application katmanı (komut/sorgu handler'ları) + `CostCentersController` + EF config/repository/lookup/
+DI kaydı + `20260916145457_AddCostCenters` migration'ı (insan commit `8b3b34b`) hepsi main'de. Uçlar
+gerçek veriye bağlı, "pending model changes" geçici durumu kapandı. Uç şekli aşağıda donmuştur, davranış
+migration öncesiyle aynı.
 
 ### `GET /api/v{version}/organization/cost-centers?includeInactive=false`
 - Yetki: `organization.cost_centers.view`
@@ -154,6 +153,5 @@ sonuç sözlüğünde **yok** — çağıran her istediği id'nin geri geleceği
 ## Bilinen açık işler (bu fazın kapsamı dışında bırakıldı, not düşüldü)
 - Logo için kalıcı görüntüleme URL'i (Documents.Contracts lookup).
 - Çoklu şirket (`JointEmploymentGroupCode`) senaryosunda `PrimaryCompanyResolver`'ın genişletilmesi.
-- Maliyet merkezleri: `AddCostCenters` migration'ının üretilmesi bekliyor (`status/faz-02/
-  MIGRATION-ISTEGI.md`); EF config/repository/lookup/DI kaydı artık kodda, uçlar derleniyor ama migration
-  landana kadar DB'ye bağlanamaz.
+- Maliyet merkezi — birim/pozisyon bazlı atama (etkin tarihli) henüz yok; roadmap G-2-06/08, Faz 7 ile
+  ortak, atama dilimi yazılmadan PO kararı bekliyor (bkz. PANO backlog).

@@ -12,17 +12,14 @@ namespace Sense.Modules.Identity.Tests.AuditLog;
 
 /// <summary>
 /// TALIMAT (faz-01 BE tur 1, md.5): IdentityAuditLogInterceptor round-trips a real AuditLogEntry row through
-/// PostgreSQL for an IAuditLogged aggregate's Added state. Skipped until the AddAuditLog migration lands
-/// (status/faz-01/MIGRATION-ISTEGI.md, ADR-0005/ADR-0011) - identity.audit_log_entries does not exist in the
-/// database yet, only in the EF model, so MigrateAsync() would not create it and the insert would fail with
-/// "relation does not exist".
+/// PostgreSQL for an IAuditLogged aggregate's Added state. Un-skipped in tur 3 - the AddAuditLogEntries
+/// migration (20260916142651) landed on main, so identity.audit_log_entries now exists after MigrateAsync()
+/// (status/faz-01/MIGRATION-ISTEGI.md, ADR-0005/ADR-0011).
 /// </summary>
 [Collection("PostgreSQL")]
 [Trait("Category", "Integration")]
 public sealed class IdentityAuditLogInterceptorIntegrationTests : TestFixture
 {
-    private const string NoMigrationYet = "identity.audit_log_entries not migrated yet (AddAuditLog queued, see status/faz-01/MIGRATION-ISTEGI.md)";
-
     protected override void ConfigureServices(IServiceCollection services)
     {
         var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
@@ -32,7 +29,7 @@ public sealed class IdentityAuditLogInterceptorIntegrationTests : TestFixture
             (sp, options) => options.AddInterceptors(sp.GetRequiredService<IdentityAuditLogInterceptor>()));
     }
 
-    [Fact(Skip = NoMigrationYet)]
+    [Fact]
     public async Task AddingARole_WritesAnAuditLogEntry_InTheSameTransaction()
     {
         var db = ServiceProvider!.GetRequiredService<IdentityDbContext>();

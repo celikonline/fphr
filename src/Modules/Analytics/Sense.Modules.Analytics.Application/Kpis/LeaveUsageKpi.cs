@@ -26,6 +26,10 @@ public sealed record LeaveUsageKpiDto(decimal TotalEntitledDays, decimal UsedDay
 [RequiresPermission("analytics.kpi.view")]
 public sealed record GetLeaveUsageKpiQuery(int? Year = null, Guid? OrgUnitId = null) : IQuery<LeaveUsageKpiDto>;
 
+/// <summary>
+/// G-10-17: yalnız sorgu anında <c>Active</c> ve kapsam dahilindeki çalışanları sayar; dönem içinde
+/// ayrılan/askıya alınan çalışanın o dönemdeki verisi dahil edilmez (dönem-farkındalıklı sorgu backlog B-10-03).
+/// </summary>
 public sealed class GetLeaveUsageKpiHandler(
     ITenantContext tenant, ILeaveUsageReader leaveUsage, IEmployeeDirectory employeeDirectory, IDataScopeService dataScope, TimeProvider clock)
     : IQueryHandler<GetLeaveUsageKpiQuery, LeaveUsageKpiDto>
@@ -41,8 +45,14 @@ public sealed class GetLeaveUsageKpiHandler(
         IReadOnlyCollection<Guid>? employeeIds = visibleEmployeeIds;
         if (query.OrgUnitId is { } orgUnitId)
         {
+            // G-10-16: ListActiveEmployeeIdsInOrgUnitsAsync is broader than "Active" (excludes only Terminated),
+            // unlike ListActiveEmployeeIdsAsync - intersect so the org-unit branch counts the same "Active" set
+            // as the company-wide branch (one extra query, at most once per call).
             var orgUnitEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
-            employeeIds = visibleEmployeeIds is null ? orgUnitEmployeeIds : orgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
+            var activeEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
+            var active = new HashSet<Guid>(activeEmployeeIds);
+            var activeOrgUnitEmployeeIds = orgUnitEmployeeIds.Where(active.Contains);
+            employeeIds = visibleEmployeeIds is null ? activeOrgUnitEmployeeIds.ToList() : activeOrgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
         }
 
         var summary = await leaveUsage.GetAnnualUsageAsync(tenant.TenantId, year, employeeIds, cancellationToken);

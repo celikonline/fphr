@@ -187,6 +187,8 @@ public sealed class RecordingIdentityMailer : IIdentityMailer
 
     public List<(string To, string Url)> PasswordResets { get; } = [];
 
+    public List<string> MfaResetNotices { get; } = [];
+
     public Task SendInvitationAsync(string toEmail, string toName, string tenantName, string inviteUrl, DateTime expiresAtUtc, CancellationToken ct)
     {
         Invitations.Add((toEmail, inviteUrl));
@@ -200,6 +202,12 @@ public sealed class RecordingIdentityMailer : IIdentityMailer
     }
 
     public Task SendWelcomeAsync(string toEmail, string toName, string tenantName, string loginUrl, CancellationToken ct) => Task.CompletedTask;
+
+    public Task SendMfaResetNoticeAsync(string toEmail, string toName, string tenantName, CancellationToken ct)
+    {
+        MfaResetNotices.Add(toEmail);
+        return Task.CompletedTask;
+    }
 }
 
 public sealed class NoopNotificationService : INotificationService

@@ -75,8 +75,16 @@ public sealed class ImportDeviceLogsHandler(
             var isOvernight = overnightDates.Contains(group.Key);
             var ins = group.Where(p => p.Direction == DeviceLogDirection.In).ToList();
             var outs = group.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
-            var checkIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : (TimeOnly?)null;
-            var checkOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : (TimeOnly?)null;
+            var batchCheckIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : (TimeOnly?)null;
+            var batchCheckOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : (TimeOnly?)null;
+
+            var existing = await days.FindByEmployeeAndDateAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
+
+            // G-6-22: PDKS exports commonly arrive in separate partial batches (e.g. only the "out" punch, the "in"
+            // having already landed in an earlier import). A direction missing from *this* batch must not erase the
+            // day's already-recorded field - fall back to the existing value instead of writing null over it.
+            var checkIn = batchCheckIn ?? existing?.CheckIn;
+            var checkOut = batchCheckOut ?? existing?.CheckOut;
 
             if (!isOvernight && checkIn is not null && checkOut is not null && checkOut <= checkIn)
             {
@@ -89,7 +97,6 @@ public sealed class ImportDeviceLogsHandler(
             }
 
             var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
-            var existing = await days.FindByEmployeeAndDateAsync(group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
                 existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight);

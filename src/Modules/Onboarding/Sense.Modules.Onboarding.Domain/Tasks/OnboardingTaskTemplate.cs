@@ -20,20 +20,9 @@ public sealed class OnboardingTaskTemplate : TenantAggregateRoot<Guid>, IAuditLo
     {
     }
 
-    private OnboardingTaskTemplate(
-        Guid id,
-        Guid tenantId,
-        OnboardingStage stage,
-        string title,
-        string responsibleRoleCode,
-        int dueDateOffsetDays,
-        bool isMandatory) : base(id, tenantId)
+    private OnboardingTaskTemplate(Guid id, Guid tenantId, OnboardingStage stage) : base(id, tenantId)
     {
         Stage = stage;
-        Title = title;
-        ResponsibleRoleCode = responsibleRoleCode;
-        DueDateOffsetDays = dueDateOffsetDays;
-        IsMandatory = isMandatory;
         IsActive = true;
     }
 
@@ -57,6 +46,21 @@ public sealed class OnboardingTaskTemplate : TenantAggregateRoot<Guid>, IAuditLo
     public static Result<OnboardingTaskTemplate> Create(
         Guid tenantId, OnboardingStage stage, string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory)
     {
+        var template = new OnboardingTaskTemplate(Guid.CreateVersion7(), tenantId, stage);
+        var applied = template.Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory);
+        return applied.IsFailure ? applied.Error : template;
+    }
+
+    /// <summary>Editable fields only - <see cref="Stage"/> is fixed at creation (a template's aşaması doesn't change).</summary>
+    public Result Update(string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory) =>
+        Apply(title, responsibleRoleCode, dueDateOffsetDays, isMandatory);
+
+    public void Activate() => IsActive = true;
+
+    public void Deactivate() => IsActive = false;
+
+    private Result Apply(string title, string responsibleRoleCode, int dueDateOffsetDays, bool isMandatory)
+    {
         if (string.IsNullOrWhiteSpace(title))
         {
             return Error.Validation(OnboardingDomainErrors.TaskTemplateTitleRequired);
@@ -72,7 +76,10 @@ public sealed class OnboardingTaskTemplate : TenantAggregateRoot<Guid>, IAuditLo
             return Error.Validation(OnboardingDomainErrors.TaskTemplateResponsibleRoleRequired);
         }
 
-        return new OnboardingTaskTemplate(
-            Guid.CreateVersion7(), tenantId, stage, title.Trim(), responsibleRoleCode.Trim(), dueDateOffsetDays, isMandatory);
+        Title = title.Trim();
+        ResponsibleRoleCode = responsibleRoleCode.Trim();
+        DueDateOffsetDays = dueDateOffsetDays;
+        IsMandatory = isMandatory;
+        return Result.Success();
     }
 }

@@ -106,6 +106,10 @@ public sealed record OvertimeCostKpiDto(int Year, int Month, IReadOnlyList<Overt
 [RequiresPermission(EmployeePermissions.SalaryViewKey)]
 public sealed record GetOvertimeCostKpiQuery(int Year, int Month, Guid? OrgUnitId = null) : IQuery<OvertimeCostKpiDto>;
 
+/// <summary>
+/// G-10-17: yalnız sorgu anında <c>Active</c> ve kapsam dahilindeki çalışanları sayar; dönem içinde
+/// ayrılan/askıya alınan çalışanın o dönemdeki verisi dahil edilmez (dönem-farkındalıklı sorgu backlog B-10-03).
+/// </summary>
 public sealed class GetOvertimeCostKpiHandler(
     ITenantContext tenant,
     IAttendanceMonthlySummaryReader attendanceSummaries,
@@ -127,13 +131,13 @@ public sealed class GetOvertimeCostKpiHandler(
         if (visibleEmployeeIds is null)
         {
             employeeIds = query.OrgUnitId is { } orgUnitId
-                ? await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken)
+                ? await ListActiveEmployeeIdsInUnitAsync(orgUnitId, cancellationToken)
                 : await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
         }
         else if (query.OrgUnitId is { } orgUnitId)
         {
-            var orgUnitEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
-            employeeIds = orgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
+            var activeOrgUnitEmployeeIds = await ListActiveEmployeeIdsInUnitAsync(orgUnitId, cancellationToken);
+            employeeIds = activeOrgUnitEmployeeIds.Where(visibleEmployeeIds.Contains).ToList();
         }
         else
         {
@@ -156,5 +160,19 @@ public sealed class GetOvertimeCostKpiHandler(
 
         var result = OvertimeCostCalculator.Calculate(inputs);
         return Result.Success(new OvertimeCostKpiDto(query.Year, query.Month, result.Totals, result.EmployeeCount, result.ExcludedEmployeeCount));
+    }
+
+    /// <summary>
+    /// G-10-16: <see cref="IEmployeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync"/> is broader than "Active"
+    /// (it excludes only <c>Terminated</c>, so <c>Draft</c>/<c>Suspended</c> employees are included) - unlike
+    /// <see cref="IEmployeeDirectory.ListActiveEmployeeIdsAsync"/>. Intersecting with the latter keeps the
+    /// org-unit branch on the same "Active" set as the company-wide branch, so per-unit totals stay comparable.
+    /// </summary>
+    private async Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsInUnitAsync(Guid orgUnitId, CancellationToken cancellationToken)
+    {
+        var orgUnitEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
+        var activeEmployeeIds = await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
+        var active = new HashSet<Guid>(activeEmployeeIds);
+        return orgUnitEmployeeIds.Where(active.Contains).ToList();
     }
 }

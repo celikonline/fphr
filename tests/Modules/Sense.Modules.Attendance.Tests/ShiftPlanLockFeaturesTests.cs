@@ -109,4 +109,78 @@ public sealed class ShiftPlanLockFeaturesTests
 
         result.Value.ScheduledLockDate.ShouldBe(new DateOnly(2026, 10, 26));
     }
+
+    // TALIMAT faz-06 backend "aylık puantaj kapanışı" md.8: LockDueShiftPeriodsCommand - system command, no
+    // scheduler wired yet, called once per tenant with "today" by a future recurring job.
+    private static ShiftSettings AutoLockSettings(Guid tenantId, int autoLockDayOfMonth = 26)
+    {
+        var settings = ShiftSettings.CreateDefault(tenantId);
+        settings.Update(
+            ShiftSettings.DefaultMaxDailyMinutes, ShiftSettings.DefaultMaxWeeklyDays, ShiftSettings.DefaultMaxWeeklyMinutes,
+            nightWorkEnabled: false, null, null, null, ShiftSettings.DefaultBreakMinMinutes, breakIsPaid: false,
+            autoLockEnabled: true, autoLockDayOfMonth: autoLockDayOfMonth, autoLockNotifyDaysBefore: 3);
+        return settings;
+    }
+
+    [Fact]
+    public async Task LockDuePeriods_NotYetDue_DoesNothing()
+    {
+        var settings = AutoLockSettings(_tenantId);
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        // Previous month is August; auto-lock day 26 → scheduled for 26 September, today is one day short.
+        var handler = new LockDueShiftPeriodsHandler(_locks, _settings, _tenant, TimeProvider.System);
+
+        var result = await handler.Handle(new LockDueShiftPeriodsCommand(new DateOnly(2026, 9, 25)), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeFalse();
+        _locks.DidNotReceive().Add(Arg.Any<ShiftPlanLock>());
+    }
+
+    [Fact]
+    public async Task LockDuePeriods_Due_LocksPreviousMonthAsAuto()
+    {
+        var settings = AutoLockSettings(_tenantId);
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        _locks.FindByPeriodAsync(new DateOnly(2026, 8, 1), Arg.Any<CancellationToken>()).Returns((ShiftPlanLock?)null);
+        var handler = new LockDueShiftPeriodsHandler(_locks, _settings, _tenant, TimeProvider.System);
+
+        var result = await handler.Handle(new LockDueShiftPeriodsCommand(new DateOnly(2026, 9, 26)), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeTrue();
+        _locks.Received(1).Add(Arg.Is<ShiftPlanLock>(p =>
+            p.PeriodMonth == new DateOnly(2026, 8, 1) && p.IsLocked && p.Source == ShiftPlanLockSource.Auto && p.LockedByUserId == null));
+    }
+
+    [Fact]
+    public async Task LockDuePeriods_AlreadyManuallyUnlocked_NeverReLocks()
+    {
+        var settings = AutoLockSettings(_tenantId);
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        var existing = ShiftPlanLock.Lock(_tenantId, new DateOnly(2026, 8, 1), DateTime.UtcNow, _userId, ShiftPlanLockSource.Auto);
+        existing.Unlock(DateTime.UtcNow, _userId, "İK düzeltmesi için açıldı");
+        _locks.FindByPeriodAsync(new DateOnly(2026, 8, 1), Arg.Any<CancellationToken>()).Returns(existing);
+        var handler = new LockDueShiftPeriodsHandler(_locks, _settings, _tenant, TimeProvider.System);
+
+        var result = await handler.Handle(new LockDueShiftPeriodsCommand(new DateOnly(2026, 9, 26)), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeFalse();
+        existing.IsLocked.ShouldBeFalse();
+        _locks.DidNotReceive().Add(Arg.Any<ShiftPlanLock>());
+    }
+
+    [Fact]
+    public async Task LockDuePeriods_AutoLockDisabled_DoesNothing()
+    {
+        _settings.FindAsync(Arg.Any<CancellationToken>()).Returns(ShiftSettings.CreateDefault(_tenantId));
+        var handler = new LockDueShiftPeriodsHandler(_locks, _settings, _tenant, TimeProvider.System);
+
+        var result = await handler.Handle(new LockDueShiftPeriodsCommand(new DateOnly(2026, 9, 26)), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.ShouldBeFalse();
+        _locks.DidNotReceive().Add(Arg.Any<ShiftPlanLock>());
+    }
 }

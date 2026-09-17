@@ -19,6 +19,7 @@ import {
   Title,
   Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ import {
   FORM_TEMPLATE_TYPES,
   type FormFieldInput,
   type FormFieldType,
+  type FormTemplate,
   type FormTemplateType,
 } from "@/services/recruitment.service";
 
@@ -61,6 +63,7 @@ function RecruitmentFormTemplates() {
   const { t } = useTranslation(["recruitment", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("recruitment.form_templates.manage");
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const { data, isLoading, isError, error } = useQuery({ queryKey: TEMPLATES_KEY, queryFn: () => listFormTemplates() });
 
@@ -116,6 +119,18 @@ function RecruitmentFormTemplates() {
 
   const weightSum = fields.filter((f) => f.fieldType === "scoreCard").reduce((sum, f) => sum + (f.weight ?? 0), 0);
 
+  function templateActions(template: FormTemplate) {
+    return template.isActive ? (
+      <Button size="xs" variant="subtle" color="red" onClick={() => deactivateMutation.mutate(template.id)}>
+        {t("recruitment:formTemplates.deactivate")}
+      </Button>
+    ) : (
+      <Button size="xs" variant="subtle" onClick={() => reactivateMutation.mutate(template.id)}>
+        {t("recruitment:formTemplates.reactivate")}
+      </Button>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
@@ -146,52 +161,78 @@ function RecruitmentFormTemplates() {
             {t("recruitment:formTemplates.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:formTemplates.name")}</Table.Th>
-                <Table.Th>{t("recruitment:formTemplates.type")}</Table.Th>
-                <Table.Th>{t("recruitment:formTemplates.fieldCount")}</Table.Th>
-                <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
-                {canManage && <Table.Th ta="right">{t("common:actions")}</Table.Th>}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((template) => (
-                <Table.Tr key={template.id}>
-                  <Table.Td>
-                    <Text fw={500}>{template.name}</Text>
-                  </Table.Td>
-                  <Table.Td>{t(`recruitment:formTemplates.types.${template.templateType}`)}</Table.Td>
-                  <Table.Td>{template.fields.length}</Table.Td>
-                  <Table.Td>
-                    <Badge color={template.isActive ? "green" : "gray"} variant="light">
-                      {template.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
-                    </Badge>
-                  </Table.Td>
-                  {canManage && (
-                    <Table.Td>
-                      <Group justify="flex-end">
-                        {template.isActive ? (
-                          <Button size="xs" variant="subtle" color="red" onClick={() => deactivateMutation.mutate(template.id)}>
-                            {t("recruitment:formTemplates.deactivate")}
-                          </Button>
-                        ) : (
-                          <Button size="xs" variant="subtle" onClick={() => reactivateMutation.mutate(template.id)}>
-                            {t("recruitment:formTemplates.reactivate")}
-                          </Button>
-                        )}
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:formTemplates.name")}</Table.Th>
+                    <Table.Th>{t("recruitment:formTemplates.type")}</Table.Th>
+                    <Table.Th>{t("recruitment:formTemplates.fieldCount")}</Table.Th>
+                    <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
+                    {canManage && <Table.Th ta="right">{t("common:actions")}</Table.Th>}
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.map((template) => (
+                    <Table.Tr key={template.id}>
+                      <Table.Td>
+                        <Text fw={500}>{template.name}</Text>
+                      </Table.Td>
+                      <Table.Td>{t(`recruitment:formTemplates.types.${template.templateType}`)}</Table.Td>
+                      <Table.Td>{template.fields.length}</Table.Td>
+                      <Table.Td>
+                        <Badge color={template.isActive ? "green" : "gray"} variant="light">
+                          {template.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
+                        </Badge>
+                      </Table.Td>
+                      {canManage && (
+                        <Table.Td>
+                          <Group justify="flex-end">{templateActions(template)}</Group>
+                        </Table.Td>
+                      )}
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {data.map((template) => (
+                  <Card key={template.id} withBorder padding="sm" radius="md">
+                    <Stack gap={6}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Text size="sm" fw={500}>
+                          {template.name}
+                        </Text>
+                        <Badge color={template.isActive ? "green" : "gray"} variant="light">
+                          {template.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
+                        </Badge>
                       </Group>
-                    </Table.Td>
-                  )}
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+                      <Text size="xs" c="dimmed">
+                        {t(`recruitment:formTemplates.types.${template.templateType}`)} · {t("recruitment:formTemplates.fieldCount")}:{" "}
+                        {template.fields.length}
+                      </Text>
+                      {canManage && <Group justify="flex-end">{templateActions(template)}</Group>}
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title={t("recruitment:formTemplates.dialogCreateTitle")} size="lg">
+      <Modal
+        opened={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t("recruitment:formTemplates.dialogCreateTitle")}
+        size="lg"
+        fullScreen={Boolean(isMobile)}
+      >
         <Stack gap="md">
           <TextInput label={t("recruitment:formTemplates.name")} value={name} onChange={(e) => setName(e.currentTarget.value)} data-autofocus />
           <Select

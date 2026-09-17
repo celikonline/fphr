@@ -20,6 +20,7 @@
     "exportError": "[DE] The payroll summary could not be downloaded.",
     "exportButton": "[DE] Download Excel",
     "empty": "[DE] This period has no payslip lines yet.",
+    "workedDays": "[DE] Worked days",
     "columns": {
       "employee": "[DE] Employee",
       "gross": "[DE] Gross",

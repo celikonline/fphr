@@ -24,12 +24,18 @@ export interface PayrollPeriod {
   status: PayrollPeriodStatus;
 }
 
-/** One employee's payslip line within a period (gross/net only - see the contract-first note above). */
+/**
+ * One employee's payslip line within a period (gross/net only - see the contract-first note above).
+ * `workedDays`/`calendarDaysInMonth` (Faz 7 tur 2 dinamik ek, BE md.6): read from the payslip's persisted
+ * calculation trace (`PayslipCalculationTrace`) - undefined/missing when no trace exists yet, never `0`.
+ */
 export interface PayslipLine {
   employeeId: string;
   employeeName: string;
   grossAmount: number;
   netAmount: number;
+  workedDays?: number | null;
+  calendarDaysInMonth?: number | null;
 }
 
 export interface PayrollPeriodDetail extends PayrollPeriod {

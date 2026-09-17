@@ -2,6 +2,7 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Kernel.Results;
 
@@ -15,7 +16,8 @@ namespace Sense.Modules.Recruitment.Application.Public;
 /// </summary>
 public sealed record GetPublicJobPostingQuery(string ApplySlug) : IQuery<PublicJobPostingDto>;
 
-public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
+public sealed class GetPublicJobPostingHandler(
+    IJobPostingRepository postings, ILocationLookup locations, ITenantContextSetter tenantSetter, TimeProvider timeProvider)
     : IQueryHandler<GetPublicJobPostingQuery, PublicJobPostingDto>
 {
     public async Task<Result<PublicJobPostingDto>> Handle(GetPublicJobPostingQuery query, CancellationToken cancellationToken)
@@ -31,6 +33,10 @@ public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, I
         string? location = null;
         if (posting.LocationId is { } locationId)
         {
+            // Anonymous request: no tenant claim resolved by RequestContextMiddleware. Organization's
+            // LocationLookup filters by the ambient ITenantContext, so it needs an explicit scope here (mirrors
+            // SubmitCareerApplicationHandler) - without it the lookup always misses and location stays null.
+            using var scope = tenantSetter.BeginScope(posting.TenantId);
             var names = await locations.GetNamesAsync(posting.TenantId, [locationId], cancellationToken);
             names.TryGetValue(locationId, out location);
         }
@@ -45,7 +51,8 @@ public sealed class GetPublicJobPostingHandler(IJobPostingRepository postings, I
 /// <summary>Other Open postings of the same company (R3 "diğer açık pozisyonlar"), reached by anchoring on one posting's slug.</summary>
 public sealed record ListRelatedPublicJobPostingsQuery(string ApplySlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
-public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
+public sealed class ListRelatedPublicJobPostingsHandler(
+    IJobPostingRepository postings, ILocationLookup locations, ITenantContextSetter tenantSetter, TimeProvider timeProvider)
     : IQueryHandler<ListRelatedPublicJobPostingsQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
@@ -59,25 +66,35 @@ public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository po
         }
 
         var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, today, cancellationToken);
-        var locationNames = await ResolveLocationNamesAsync(anchor.Value.TenantId, related, locations, cancellationToken);
+        var locationNames = await ResolveLocationNamesAsync(anchor.Value.TenantId, related, locations, tenantSetter, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = related
             .Select(p => ToSummaryDto(p, locationNames))
             .ToList();
         return Result.Success(dtos);
     }
 
-    /// <summary>Resolves the distinct, non-null <c>LocationId</c>s of a posting batch in a single lookup call (no N+1).</summary>
+    /// <summary>
+    /// Resolves the distinct, non-null <c>LocationId</c>s of a posting batch in a single lookup call (no N+1).
+    /// Anonymous request: no tenant claim resolved by <c>RequestContextMiddleware</c>, so the lookup call - which
+    /// filters by the ambient <see cref="ITenantContext"/> inside Organization - is wrapped in an explicit scope
+    /// (mirrors <c>SubmitCareerApplicationHandler</c>); without it the lookup always misses and names stay null.
+    /// </summary>
     internal static async Task<IReadOnlyDictionary<Guid, string>> ResolveLocationNamesAsync(
-        Guid tenantId, IReadOnlyCollection<JobPosting> postingBatch, ILocationLookup locations, CancellationToken cancellationToken)
+        Guid tenantId, IReadOnlyCollection<JobPosting> postingBatch, ILocationLookup locations,
+        ITenantContextSetter tenantSetter, CancellationToken cancellationToken)
     {
         var locationIds = postingBatch
             .Where(p => p.LocationId is not null)
             .Select(p => p.LocationId!.Value)
             .Distinct()
             .ToList();
-        return locationIds.Count == 0
-            ? new Dictionary<Guid, string>()
-            : await locations.GetNamesAsync(tenantId, locationIds, cancellationToken);
+        if (locationIds.Count == 0)
+        {
+            return new Dictionary<Guid, string>();
+        }
+
+        using var scope = tenantSetter.BeginScope(tenantId);
+        return await locations.GetNamesAsync(tenantId, locationIds, cancellationToken);
     }
 
     internal static PublicJobPostingSummaryDto ToSummaryDto(JobPosting p, IReadOnlyDictionary<Guid, string> locationNames)
@@ -96,7 +113,8 @@ public sealed class ListRelatedPublicJobPostingsHandler(IJobPostingRepository po
 public sealed record ListPublicJobPostingsByTenantSlugQuery(string? TenantSlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
 public sealed class ListPublicJobPostingsByTenantSlugHandler(
-    ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, ILocationLookup locations, TimeProvider timeProvider)
+    ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, ILocationLookup locations,
+    ITenantContextSetter tenantSetter, TimeProvider timeProvider)
     : IQueryHandler<ListPublicJobPostingsByTenantSlugQuery, IReadOnlyList<PublicJobPostingSummaryDto>>
 {
     public async Task<Result<IReadOnlyList<PublicJobPostingSummaryDto>>> Handle(
@@ -116,7 +134,8 @@ public sealed class ListPublicJobPostingsByTenantSlugHandler(
 
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
         var open = await postings.ListPublicByTenantAsync(tenantId.Value, today, cancellationToken);
-        var locationNames = await ListRelatedPublicJobPostingsHandler.ResolveLocationNamesAsync(tenantId.Value, open, locations, cancellationToken);
+        var locationNames = await ListRelatedPublicJobPostingsHandler.ResolveLocationNamesAsync(
+            tenantId.Value, open, locations, tenantSetter, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = open
             .Select(p => ListRelatedPublicJobPostingsHandler.ToSummaryDto(p, locationNames))
             .ToList();

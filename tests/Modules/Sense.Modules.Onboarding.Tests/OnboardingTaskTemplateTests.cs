@@ -59,4 +59,55 @@ public sealed class OnboardingTaskTemplateTests
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(OnboardingDomainErrors.TaskTemplateResponsibleRoleRequired);
     }
+
+    [Fact]
+    public void Update_ValidInput_ChangesEditableFields()
+    {
+        var template = OnboardingTaskTemplate.Create(TenantId, OnboardingStage.Onboarding, "Oryantasyon", "hr", 3, true).Value;
+
+        var result = template.Update("Oryantasyon (güncel)", "it", -2, false);
+
+        result.IsSuccess.ShouldBeTrue();
+        template.Title.ShouldBe("Oryantasyon (güncel)");
+        template.ResponsibleRoleCode.ShouldBe("it");
+        template.DueDateOffsetDays.ShouldBe(-2);
+        template.IsMandatory.ShouldBeFalse();
+        template.Stage.ShouldBe(OnboardingStage.Onboarding);
+    }
+
+    [Fact]
+    public void Update_EmptyTitle_FailsAndLeavesFieldsUnchanged()
+    {
+        var template = OnboardingTaskTemplate.Create(TenantId, OnboardingStage.Onboarding, "Oryantasyon", "hr", 3, true).Value;
+
+        var result = template.Update("  ", "it", -2, false);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(OnboardingDomainErrors.TaskTemplateTitleRequired);
+        template.Title.ShouldBe("Oryantasyon");
+        template.ResponsibleRoleCode.ShouldBe("hr");
+        template.DueDateOffsetDays.ShouldBe(3);
+        template.IsMandatory.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Deactivate_SetsIsActiveFalse()
+    {
+        var template = OnboardingTaskTemplate.Create(TenantId, OnboardingStage.Onboarding, "Oryantasyon", "hr", 3, true).Value;
+
+        template.Deactivate();
+
+        template.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Deactivate_Twice_DoesNotFail()
+    {
+        var template = OnboardingTaskTemplate.Create(TenantId, OnboardingStage.Onboarding, "Oryantasyon", "hr", 3, true).Value;
+
+        template.Deactivate();
+        template.Deactivate();
+
+        template.IsActive.ShouldBeFalse();
+    }
 }

@@ -141,6 +141,33 @@
   "shiftLock": {
     "scheduledLockDate": "Scheduled lock date"
   },
+  "shiftPlan": {
+    "title": "Shift plan",
+    "subtitle": "Weekly shift plan for the employees you're authorized to view.",
+    "allUnits": "All units",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "employee": "Employee",
+    "empty": "No employees to display for this week.",
+    "night": "Night",
+    "draft": "Draft",
+    "unpublishedCount": "{{count}} unpublished shifts",
+    "publish": "Publish",
+    "publishTitle": "Publish shifts",
+    "publishDescription": "{{count}} draft shifts will be published to this week's employees. Do you want to continue?",
+    "published": "Shifts published.",
+    "lockedBadge": "Locked ({{date}})",
+    "scheduledLock": "Auto-lock: {{date}}",
+    "lock": "Lock period",
+    "lockTitle": "Lock period",
+    "lockDescription": "The {{month}} period will be locked; shifts can't be published while locked. Do you want to continue?",
+    "locked": "Period locked.",
+    "unlock": "Unlock",
+    "unlockTitle": "Unlock period",
+    "unlockReasonLabel": "Reason",
+    "unlockReasonRequired": "A reason is required to unlock the period.",
+    "unlocked": "Period unlocked."
+  },
   "myAvailability": {
     "title": "My Availability",
     "addButton": "Report unavailability",

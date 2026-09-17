@@ -125,7 +125,7 @@ bir uzman/hukuk danışmanı tarafından **doğrulanmalı**, burada yalnız yön
 |---|---|---|---|---|
 | SGK işe giriş bildirgesi | Onboarding | **-1** (referans = HireDate, bildirge işe başlamadan **önce** SGK'ya ulaşmalı) | 5510 sayılı Kanun md.8 - sigortalılığın işe başlamadan önce bildirilmesi zorunlu | Evet - istisnai haller (aynı gün bildirim vb.) mevzuatta ayrıca düzenleniyor, tek bir sabit ofset her sektöre uymayabilir |
 | SGK işten ayrılış bildirgesi | Offboarding | **+10** (referans = TerminationDate) | 5510 sayılı Kanun - işten ayrılışın 10 gün içinde bildirilmesi | Evet - süre bazı istisnai fesih türlerinde değişebilir |
-| Deneme süresi değerlendirmesi | Onboarding | **+60** (referans = HireDate, 4857 sayılı İş Kanunu md.15 azami 2 ay) | Deneme süresi dolmadan önce yöneticinin değerlendirme yapması için hatırlatma | Evet - toplu iş sözleşmesiyle azami 4 aya çıkabilir (md.15), tenant bazlı ayarlanabilir olması gerekebilir |
+| Deneme süresi değerlendirmesi | Onboarding | **+53** (referans = HireDate, 4857 sayılı İş Kanunu md.15 azami 2 ay = 60 gün; süre dolmadan ~1 hafta önce yöneticiye hatırlatma amacıyla -7 uygulandı) | Deneme süresi dolmadan önce yöneticinin değerlendirme yapması için hatırlatma | Evet - toplu iş sözleşmesiyle azami 4 aya çıkabilir (md.15), tenant bazlı ayarlanabilir olması gerekebilir |
 | İSG işe giriş sağlık muayenesi | Onboarding | **-1** (referans = HireDate, muayene işe başlamadan **önce** tamamlanmalı) | 6331 sayılı İş Sağlığı ve Güvenliği Kanunu md.15 - işveren, işçiyi işe başlamadan önce sağlık gözetiminden geçirmekle yükümlü | Evet - tehlike sınıfına göre periyodik muayene aralığı değişir (İSG Yönetmeliği eki), tek şablonun her tehlike sınıfına uyup uymadığı doğrulanmalı |
 | Yazılı çalışma koşulları belgesi | Onboarding | **+60** (referans = HireDate, 4857 sayılı İş Kanunu md.8 en geç iki ay içinde) | İşveren, genel ve özel çalışma koşullarını gösteren yazılı belgeyi en geç iki ay içinde işçiye vermekle yükümlü | Evet - belirli süreli/kısa süreli sözleşmelerde farklı üst sınır uygulanabilir, süre tenant/sözleşme türüne göre değişebilir |
 
@@ -145,3 +145,14 @@ Kod, migration, DI kaydı, modül iskeleti — hepsi PO'nun K-4 kararından sonr
 `EmployeeHired`/`EmployeeTerminated` tüketicileri, (3) `me/tasks` self-servis ucu, (4) `pending` İK paneli raporu
 — her biri Documents'ın koşullu-belge motorunda izlenen sırayla (önce şablon CRUD, sonra event-driven
 materialize, sonra rapor).
+
+**PO kararı (G-4-26, Kapı B için not):** `EmployeeHired`/`EmployeeTerminated` integration event tüketicisi otomatik
+görev üretimini Kapı A'daki `[RequiresPermission("onboarding.tasks.manage")]`'lı `MaterializeTasksForEmployeeCommand`
+üzerinden **yapmaz** — event handler'ların arkasında kullanıcı/izin bağlamı yoktur. Bunun yerine Documents'ın
+`DocumentRequirementMaterializationService` kalıbı izlenir: izin kontrolsüz, düz bir uygulama servisi (ör.
+`OnboardingTaskMaterializationService`) hem `EmployeeHiredOnboardingTaskHandler`/`EmployeeTerminatedOnboardingTaskHandler`
+integration event tüketicilerinden hem de gerekirse ileride manuel bir komuttan çağrılır; kendi
+`IOnboardingUnitOfWork.SaveChangesAsync`'ini çağırmaz, çağıran sahiplenir (`DocumentRequirementMaterializationService`
+XML doc'undaki "Does not save" kuralıyla aynı). `MaterializeTasksForEmployeeCommand` (Kapı A'da zaten var) yalnız
+İK'nın elle tetiklemesi için (ör. geç eklenen bir şablonu mevcut bir çalışana uygulamak) kalır, event akışından
+çıkarılmaz - iki çağıran da aynı servisi kullanır.

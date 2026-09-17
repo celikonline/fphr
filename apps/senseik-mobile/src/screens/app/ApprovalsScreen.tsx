@@ -27,6 +27,13 @@ function requestTypeLabel(requestType: string): string {
   return REQUEST_TYPE_LABELS[requestType] ?? requestType;
 }
 
+/** Web `home.tsx`'teki `SUBMITTED_DATE` biçimiyle aynı: `gg.aa.yyyy`. */
+const SUBMITTED_DATE_FORMAT: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
+
+function formatSubmittedAt(submittedAt: string): string {
+  return new Intl.DateTimeFormat("tr-TR", SUBMITTED_DATE_FORMAT).format(new Date(submittedAt));
+}
+
 export default function ApprovalsScreen() {
   const [tasks, setTasks] = useState<InboxTask[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +145,9 @@ export default function ApprovalsScreen() {
               <Text style={styles.cardSubtext}>
                 {task.requesterName ?? "Bilinmiyor"} · Adım {task.stepNumber}
               </Text>
+              {task.submittedAt && (
+                <Text style={styles.cardSubtext}>{formatSubmittedAt(task.submittedAt)}</Text>
+              )}
 
               {isRejecting ? (
                 <>

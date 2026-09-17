@@ -1,11 +1,13 @@
 # Faz 8 — Performance API sözleşmesi (Hedef/OKR + değerlendirme dönemi, R0 iskeleti)
 
-Bu doküman FE ikizinin `performance.service.ts` ve `pages/performance/*` için ihtiyaç duyduğu 14
+Bu doküman FE ikizinin `performance.service.ts` ve `pages/performance/*` için ihtiyaç duyduğu 15
 ucu, koddaki **mevcut** şekliyle belgeler (§1-6 tur 3'ten, §7-14 tur 4'te eklendi; kod §1-6 için
 değiştirilmedi, §14'ün `performance.review.immutable` hatası tur 4'te eklenen gerçek bir kod
 değişikliğini yansıtıyor — bkz. "Değiştirilemezlik" bölümü). **Tur 5:** §2/§3/§5'e G-8-19/G-8-20
 hataları eklendi (`performance.review.immutable`, `performance.goal.target_date_outside_cycle`) —
-`GoalDto`/uç şekli değişmedi, yalnızca yeni hata kodları. Kaynak:
+`GoalDto`/uç şekli değişmedi, yalnızca yeni hata kodları. **Tur 6:** §15 eklendi (`POST goals` —
+kod değişmedi, yalnızca FE artık `team-goals.tsx` "Hedef ata" ile bu ucu tükettiği için belgeye girdi).
+Kaynak:
 `Sense.Modules.Performance.Api.Controllers.{GoalsController, ReviewCyclesController,
 ReviewFormsController}`, `Sense.Modules.Performance.Application.{Goals,ReviewCycles,ReviewForms}`.
 
@@ -117,6 +119,21 @@ FE tarafı eksik alanı `null` gibi ele almalı.
 - `Draft -> Published`, formun soru/ağırlık yapısı için terminal (yeni soru gerekiyorsa yeni form oluşturulur,
   bu form güncellenmez — `performance.form.not_editable`).
 
+## 15. `POST /api/v1/performance/goals`
+- **Yetki:** `performance.goals.manage`
+- **Gövde:** `{ employeeId: string (guid), title: string, description?: string, targetDate: "yyyy-MM-dd", reviewCycleId?: string (guid) }`
+- **Yanıt:** `200 { id: string (guid) }` (ham `Guid`, sarmalayıcı yok — `POST goals/me`, §2 ile aynı stil)
+- Hatalar: `performance.goal.title_required` (400, boş başlık), `performance.goal.employee_invalid` (400,
+  `employeeId` bulunamadı veya çalışan pasif — `IEmployeeLookup.ExistsActiveAsync`). `reviewCycleId`
+  verilmişse (aynı `GoalReviewCycleGuard.EnsureOpenAndInRangeAsync`, G-8-20): dönem bulunamazsa
+  `performance.cycle.not_found` (404, karar a), dönem `Closed` ise `performance.review.immutable` (409),
+  `targetDate` dönemin `[startDate, endDate]` aralığı dışındaysa `performance.goal.target_date_outside_cycle`
+  (400). `reviewCycleId` boşsa dönem kontrolü atlanır.
+- Yeni hedef her zaman `Open` durumunda oluşur. Tüketen: `team-goals.tsx` "Hedef ata" (İK/yönetici çalışan
+  adına hedef oluşturur) — `POST goals/me`'den (§2) tek farkı gövdedeki `employeeId` ve buna bağlı
+  `employee_invalid` kontrolüdür; kalan domain kuralları birebir aynıdır (`CreateGoalHandler`/`CreateMyGoalHandler`
+  ortak `GoalReviewCycleGuard`'ı çağırır).
+
 ---
 
 ## DTO'lar
@@ -189,11 +206,13 @@ bu durumu "düzenlenemez, salt-okunur" göstermesi yeterli, ayrı bir aksiyon su
 | `GET review-forms` | `performance.reviews.view` | — |
 | `POST review-forms` | `performance.reviews.manage` | `performance.cycle.not_found`, `performance.form.cycle_closed`, `performance.form.title_required`, `performance.form.questions_required`, `performance.form.question_text_required`, `performance.form.weights_must_sum_to_100` |
 | `POST review-forms/{id}/publish` | `performance.reviews.manage` | `performance.form.not_found`, `performance.form.questions_required`, `performance.form.not_publishable`, `performance.review.immutable` |
+| `POST goals` | `performance.goals.manage` | `performance.goal.title_required`, `performance.goal.employee_invalid`, `performance.cycle.not_found`, `performance.review.immutable`, `performance.goal.target_date_outside_cycle` |
 
-Diğer (bu turda FE'nin kullanmadığı ama modülde var olan) uçlar: `GET/POST goals` ve
-`GET goals/employee/{id}` (`performance.goals.manage`/`performance.goals.view`),
-`POST goals/{id}/progress` (`performance.goals.manage`). Hata metinleri `SharedResource{,.en}.resx`'te
-`performance.*` anahtarlarıyla lokalize edilir.
+Diğer (bu turda FE'nin kullanmadığı ama modülde var olan) uçlar: `GET goals/employee/{id}`
+(`performance.goals.view`), `POST goals/{id}/progress` (`performance.goals.manage`, `goals/{id}/progress/me`
+ile aynı hata kümesi ama sahiplik/403 kontrolü yok — çağıran zaten `performance.goals.manage` ile herhangi
+bir hedefi güncelleyebilir). Hata metinleri `SharedResource{,.en}.resx`'te `performance.*` anahtarlarıyla
+lokalize edilir.
 
 ## Değiştirilemezlik ve çıkış senaryosu
 

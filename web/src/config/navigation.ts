@@ -34,6 +34,7 @@ import {
   Wallet,
   Workflow,
   CalendarClock,
+  CalendarCheck,
   Stamp,
   FileStack,
   FileWarning,
@@ -224,6 +225,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Users,
     permissions: ["attendance.timesheet.view"],
     iconColor: "navy",
+  },
+  {
+    key: "shiftPlan",
+    labelKey: "apps.shiftPlan",
+    path: "/app/attendance/shift-plan",
+    icon: CalendarCheck,
+    permissions: ["attendance.shift.view"],
+    iconColor: "teal",
   },
   {
     key: "deviceLogImport",

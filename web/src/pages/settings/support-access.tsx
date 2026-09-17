@@ -3,10 +3,11 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Check, ShieldCheck, ShieldOff } from "lucide-react";
-import { Alert, Badge, Button, Card, Group, Select, Text, Title, type BadgeProps } from "@mantine/core";
+import { Alert, Badge, Button, Card, Group, Select, Skeleton, Stack, Text, Title, type BadgeProps } from "@mantine/core";
 import { usePermission } from "@/components/permission-guard";
 import NoAccess from "@/components/no-access";
 import ConfirmDialog from "@/components/confirm-dialog";
+import PaginationFooter from "@/components/pagination-footer";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -197,6 +198,8 @@ function SupportAccessList() {
     columnVisibilityKey: COLUMN_VISIBILITY_KEY,
     pageSize: PAGE_SIZE,
   });
+  // Masaüstü tablosuyla aynı sayfalama/sıralama durumunu paylaşır (mobil kart listesi bunun üzerinden çizilir).
+  const mobileRows = table.getRowModel().rows.map((row) => row.original);
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
@@ -231,7 +234,9 @@ function SupportAccessList() {
             })),
           ]}
         />
-        <DataTableViewOptions table={table} className="ml-auto" />
+        <div className="hidden md:flex ml-auto">
+          <DataTableViewOptions table={table} />
+        </div>
       </Group>
 
       <Card withBorder padding={0}>
@@ -240,7 +245,93 @@ function SupportAccessList() {
             {t("settings:supportAccess.loadError")}
           </Text>
         ) : (
-          <DataTable table={table} isLoading={isLoading} emptyMessage={t("settings:supportAccess.empty")} />
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <DataTable table={table} isLoading={isLoading} emptyMessage={t("settings:supportAccess.empty")} />
+            </div>
+
+            {/* Dar ekran (≤390px dahil): kart listesi */}
+            <div className="md:hidden">
+              {isLoading ? (
+                <Stack gap="sm" p="sm">
+                  <Skeleton h={96} />
+                  <Skeleton h={96} />
+                  <Skeleton h={96} />
+                </Stack>
+              ) : mobileRows.length === 0 ? (
+                <Text size="sm" c="dimmed" ta="center" p="lg">
+                  {t("settings:supportAccess.empty")}
+                </Text>
+              ) : (
+                <Stack gap="sm" p="sm">
+                  {mobileRows.map((grant) => (
+                    <Card key={grant.id} withBorder padding="sm" radius="md">
+                      <Stack gap={4}>
+                        <Group justify="space-between" wrap="nowrap" align="flex-start">
+                          <Text size="sm" fw={500} className="min-w-0" truncate>
+                            {requesterOf(grant)}
+                          </Text>
+                          <Badge {...(STATUS_BADGE[grant.status] ?? FALLBACK_BADGE)}>
+                            {t(`settings:supportAccess.statuses.${grant.status}`, grant.status)}
+                          </Badge>
+                        </Group>
+                        <Text size="sm" c="dimmed" className="whitespace-pre-wrap break-words">
+                          {grant.reason}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {t("settings:supportAccess.requestedAt")}: {formatDateTime(grant.requestedAt, locale)}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {t("settings:supportAccess.expiresAt")}: {formatDateTime(grant.expiresAt, locale)}
+                        </Text>
+                        {REVOCABLE.includes(grant.status) && (
+                          <Stack gap={6} mt="xs">
+                            {grant.status === "Pending" && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                fullWidth
+                                leftSection={<Check className="h-4 w-4" />}
+                                onClick={() => setPending({ kind: "approve", grant })}
+                              >
+                                {t("settings:supportAccess.approve")}
+                              </Button>
+                            )}
+                            {REVOCABLE.includes(grant.status) && (
+                              <Button
+                                type="button"
+                                size="sm"
+                                fullWidth
+                                variant="outline"
+                                color="red"
+                                leftSection={<ShieldOff className="h-4 w-4" />}
+                                onClick={() => setPending({ kind: "revoke", grant })}
+                              >
+                                {t("settings:supportAccess.revoke")}
+                              </Button>
+                            )}
+                          </Stack>
+                        )}
+                      </Stack>
+                    </Card>
+                  ))}
+                </Stack>
+              )}
+              {!isLoading && table.getPageCount() > 1 && (
+                <PaginationFooter
+                  result={{
+                    page: table.getState().pagination.pageIndex + 1,
+                    totalPages: table.getPageCount(),
+                    totalCount: table.getPrePaginationRowModel().rows.length,
+                    hasNext: table.getCanNextPage(),
+                    hasPrevious: table.getCanPreviousPage(),
+                  }}
+                  onPageChange={(page) => table.setPageIndex(page - 1)}
+                />
+              )}
+            </div>
+          </>
         )}
       </Card>
 

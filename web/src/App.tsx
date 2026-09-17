@@ -61,6 +61,7 @@ import MyTimesheetPage from "@/pages/attendance/my-timesheet";
 import MyShiftsPage from "@/pages/attendance/my-shifts";
 import TeamTimesheetPage from "@/pages/attendance/team-timesheet";
 import DeviceLogImportPage from "@/pages/attendance/device-log-import";
+import ShiftPlanPage from "@/pages/attendance/shift-plan";
 import WorkSchedulesPage from "@/pages/settings/work-schedules";
 import MyGoalsPage from "@/pages/performance/my-goals";
 import TeamGoalsPage from "@/pages/performance/team-goals";
@@ -127,6 +128,7 @@ export default function App() {
           <Route path="attendance/shifts" element={<MyShiftsPage />} />
           <Route path="attendance/team-timesheet" element={<TeamTimesheetPage />} />
           <Route path="attendance/device-logs/import" element={<DeviceLogImportPage />} />
+          <Route path="attendance/shift-plan" element={<ShiftPlanPage />} />
 
           <Route path="performance/goals" element={<MyGoalsPage />} />
           <Route path="performance/team-goals" element={<TeamGoalsPage />} />

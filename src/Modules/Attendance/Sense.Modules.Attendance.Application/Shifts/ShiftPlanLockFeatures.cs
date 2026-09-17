@@ -78,3 +78,44 @@ public sealed class UnlockShiftPeriodHandler(IShiftPlanLockRepository locks, ICu
             : existing.Unlock(clock.GetUtcNow().UtcDateTime, currentUser.UserId, command.Reason);
     }
 }
+
+/// <summary>
+/// Aylık puantaj kapanışı, otomatik kilit (PO tur 1 kapanışı 17:45 "aylık puantaj kapanışı önce" + TALIMAT
+/// faz-06 md.8, <see cref="ShiftPlanLockSource.Auto"/> - şimdiye dek "package A4 scope" olarak ayrılmıştı):
+/// önceki takvim ayı, ayarın <see cref="ShiftSettings.GetScheduledLockDate"/>'ine göre vadesi gelmişse kilitlenir. Sistem komutu - kasıtlı
+/// olarak [RequiresPermission] yok (job/tenant döngüsünden çağrılır, AuthorizationBehaviour attribute'suz istekleri
+/// olduğu gibi geçirir). Zamanlayıcı kaydı bu turun kapsamı dışında (BackgroundJobSeeding.cs/JobTypes.cs sıcak
+/// dosya, yalnız faz-01 BE) - bu handler'ı hangi recurring job'un ne zaman çağıracağı PO/faz-01 kararı.
+/// İdempotent: dönem için satır zaten varsa (otomatik/elle kilitli ya da elle açılmış) dokunmaz - elle açılan bir
+/// dönemi asla kendiliğinden yeniden kilitlemez.
+/// </summary>
+public sealed record LockDueShiftPeriodsCommand(DateOnly Today) : ICommand<bool>;
+
+public sealed class LockDueShiftPeriodsHandler(IShiftPlanLockRepository locks, IShiftSettingsRepository settings, ITenantContext tenant, TimeProvider clock)
+    : ICommandHandler<LockDueShiftPeriodsCommand, bool>
+{
+    public async Task<Result<bool>> Handle(LockDueShiftPeriodsCommand command, CancellationToken cancellationToken)
+    {
+        var settingsRow = await settings.FindAsync(cancellationToken);
+        if (settingsRow is null || !settingsRow.AutoLockEnabled)
+        {
+            return false;
+        }
+
+        var previousMonth = ShiftPlanLock.NormalizeToMonthStart(command.Today).AddMonths(-1);
+        var scheduledLockDate = settingsRow.GetScheduledLockDate(previousMonth);
+        if (scheduledLockDate is null || command.Today < scheduledLockDate.Value)
+        {
+            return false;
+        }
+
+        var existing = await locks.FindByPeriodAsync(previousMonth, cancellationToken);
+        if (existing is not null)
+        {
+            return false;
+        }
+
+        locks.Add(ShiftPlanLock.Lock(tenant.TenantId, previousMonth, clock.GetUtcNow().UtcDateTime, null, ShiftPlanLockSource.Auto));
+        return true;
+    }
+}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
+  ActionIcon,
   Button,
   Checkbox,
   Divider,
@@ -491,7 +492,7 @@ function SeniorityTiersEditor({
       ) : (
         <Stack gap="xs">
           {tiers.map((tier, index) => (
-            <Group key={index} align="flex-end" gap="sm" wrap="nowrap">
+            <Group key={index} align="flex-end" gap="sm" wrap="wrap">
               <NumberInput
                 label={t("leave:types.tierAfterYears")}
                 min={0}
@@ -499,7 +500,7 @@ function SeniorityTiersEditor({
                 value={tier.afterYears}
                 disabled={disabled}
                 onChange={(value) => update(index, { afterYears: typeof value === "number" ? value : 0 })}
-                className="w-32"
+                className="w-full sm:w-32"
               />
               <Select
                 label={t("leave:types.tierComparison")}
@@ -511,7 +512,7 @@ function SeniorityTiersEditor({
                 onChange={(value) => value && update(index, { comparison: value as LeaveSeniorityTier["comparison"] })}
                 allowDeselect={false}
                 disabled={disabled}
-                className="w-48"
+                className="w-full sm:w-48"
               />
               <NumberInput
                 label={t("leave:types.tierExtraDays")}
@@ -521,19 +522,20 @@ function SeniorityTiersEditor({
                 value={tier.extraDays}
                 disabled={disabled}
                 onChange={(value) => update(index, { extraDays: typeof value === "number" ? value : 0 })}
-                className="w-32"
+                className="w-full sm:w-32"
               />
-              <Button
+              <ActionIcon
                 type="button"
                 variant="subtle"
                 color="red"
-                size="sm"
-                mb={4}
+                size="lg"
+                className="ml-auto sm:ml-0"
+                aria-label={t("common:delete")}
                 disabled={disabled}
                 onClick={() => onChange(tiers.filter((_, i) => i !== index))}
               >
                 <Trash2 size={16} />
-              </Button>
+              </ActionIcon>
             </Group>
           ))}
         </Stack>

@@ -72,6 +72,10 @@ public interface IIdentityMailer
     Task SendPasswordResetAsync(string toEmail, string toName, string resetUrl, DateTime expiresAtUtc, CancellationToken ct);
 
     Task SendWelcomeAsync(string toEmail, string toName, string tenantName, string loginUrl, CancellationToken ct);
+
+    /// <summary>Yönetici MFA'yı sıfırladığında hedef kullanıcıya güvenlik bildirimi (G-3-19). Yalnız MFA gerçekten
+    /// açıkken gönderilir - <see cref="Users.ResetUserMfaHandler"/>.</summary>
+    Task SendMfaResetNoticeAsync(string toEmail, string toName, string tenantName, CancellationToken ct);
 }
 
 /// <summary>Ön yüz bağlantıları (davet kabul, parola sıfırlama).</summary>

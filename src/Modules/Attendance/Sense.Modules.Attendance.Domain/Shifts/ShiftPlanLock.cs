@@ -12,8 +12,10 @@ public enum ShiftPlanLockSource
 /// <summary>
 /// Records that a calendar month's shift plan is locked (11.3.6 "26 Ağustos tarihinde kilitlenecek" / plan kilidi):
 /// one row per (tenant, <see cref="PeriodMonth"/>) once it has been locked at least once. No row = the period was
-/// never locked. <see cref="Source.Auto"/> is reserved for a future scheduled job (none exists yet, package A4
-/// scope); today only manual lock/unlock (attendance.shift.lock/.unlock) creates or flips these rows.
+/// never locked. <see cref="ShiftPlanLockSource.Auto"/> is written by <c>LockDueShiftPeriodsCommand</c> (Application
+/// layer, called from a tenant-scoped job context) once a recurring job schedule calls it (job registration is
+/// faz-01 BE's `BackgroundJobSeeding.cs`/`JobTypes.cs`, not yet wired); manual lock/unlock (attendance.shift.lock/.unlock)
+/// creates or flips these rows the rest of the time.
 /// </summary>
 public sealed class ShiftPlanLock : TenantAggregateRoot<Guid>
 {

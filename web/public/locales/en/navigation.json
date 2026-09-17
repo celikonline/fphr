@@ -33,6 +33,7 @@
     "timesheet": "Timesheets",
     "shifts": "Shift management",
     "teamTimesheet": "Team timesheet",
+    "shiftPlan": "Shift plan",
     "deviceLogImport": "Import PDKS device log",
     "payroll": "Payroll & compensation",
     "expenses": "Expenses & advances",

@@ -50,3 +50,10 @@ durur (`late` türünde "kaç saat geç kaldı" bilgisi). Faz 7 devamsızlığı
 `Leave.Contracts.IAbsenceReader` üzerinden `Kind`/`Hours`/`Date` alır, kendi gün dönüşümünü kendisi yapar —
 Leave modülü bu dönüşümü yapmıyor (kapsam dışı, `docs/implementation/leave-kesirli-gun.md` bu notu Faz 7 için
 burada bırakıyor).
+
+**S-21 (ADR-0020, 2026-09-17):** `Leave.Absence` (`AbsenceRecord`), "devamsızlık günü"nün **tek otoriter
+kaynağıdır**; Attendance modülünün `AttendanceAnomaly`'si yalnız operasyonel bir sinyaldir, hiçbir raporda
+devamsızlık olarak sayılmaz ve **otomatik olarak `AbsenceRecord`'a dönüşmez** — anomaliden devamsızlık kaydına
+geçiş yalnız İK'nın elle `POST .../absences` çağrısıyla olur. Faz 7/10 gibi tüketiciler devamsızlık sayısını
+her zaman `Leave.Contracts.IAbsenceReader` üzerinden okumalı, Attendance anomali kayıtlarını devamsızlık
+sinyali olarak kullanmamalıdır.

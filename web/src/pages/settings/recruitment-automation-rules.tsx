@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Workflow } from "lucide-react";
 import { Badge, Button, Card, Group, Modal, Select, Stack, Table, Text, Title } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -27,6 +28,7 @@ function RecruitmentAutomationRules() {
   const { t } = useTranslation(["recruitment", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("recruitment.automation_rules.manage");
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   const { data, isLoading, isError, error } = useQuery({ queryKey: RULES_KEY, queryFn: () => listAutomationRules() });
   const { data: templates } = useQuery({ queryKey: ["recruitment", "form-templates", "active"], queryFn: () => listFormTemplates(true) });
@@ -89,34 +91,67 @@ function RecruitmentAutomationRules() {
             {t("recruitment:automationRules.empty")}
           </Text>
         ) : (
-          <Table striped highlightOnHover verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>{t("recruitment:automationRules.transition")}</Table.Th>
-                <Table.Th>{t("recruitment:automationRules.requiredForm")}</Table.Th>
-                <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {data.map((rule) => (
-                <Table.Tr key={rule.id}>
-                  <Table.Td>
-                    {t(`recruitment:applications.stages.${rule.fromStage}`)} → {t(`recruitment:applications.stages.${rule.toStage}`)}
-                  </Table.Td>
-                  <Table.Td>{templateNameById.get(rule.requiredFormTemplateId) ?? "—"}</Table.Td>
-                  <Table.Td>
-                    <Badge color={rule.isActive ? "green" : "gray"} variant="light">
-                      {rule.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
-                    </Badge>
-                  </Table.Td>
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+          <>
+            {/* Geniş ekran: tablo */}
+            <div className="hidden md:block">
+              <Table striped highlightOnHover verticalSpacing="sm">
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>{t("recruitment:automationRules.transition")}</Table.Th>
+                    <Table.Th>{t("recruitment:automationRules.requiredForm")}</Table.Th>
+                    <Table.Th>{t("recruitment:requisitions.status")}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {data.map((rule) => (
+                    <Table.Tr key={rule.id}>
+                      <Table.Td>
+                        {t(`recruitment:applications.stages.${rule.fromStage}`)} → {t(`recruitment:applications.stages.${rule.toStage}`)}
+                      </Table.Td>
+                      <Table.Td>{templateNameById.get(rule.requiredFormTemplateId) ?? "—"}</Table.Td>
+                      <Table.Td>
+                        <Badge color={rule.isActive ? "green" : "gray"} variant="light">
+                          {rule.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
+                        </Badge>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
+
+            {/* Dar ekran: kart listesi */}
+            <div className="md:hidden p-3">
+              <Stack gap="sm">
+                {data.map((rule) => (
+                  <Card key={rule.id} withBorder padding="sm" radius="md">
+                    <Stack gap={6}>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Text size="sm" fw={500}>
+                          {t(`recruitment:applications.stages.${rule.fromStage}`)} → {t(`recruitment:applications.stages.${rule.toStage}`)}
+                        </Text>
+                        <Badge color={rule.isActive ? "green" : "gray"} variant="light">
+                          {rule.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}
+                        </Badge>
+                      </Group>
+                      <Text size="xs" c="dimmed">
+                        {t("recruitment:automationRules.requiredForm")}: {templateNameById.get(rule.requiredFormTemplateId) ?? "—"}
+                      </Text>
+                    </Stack>
+                  </Card>
+                ))}
+              </Stack>
+            </div>
+          </>
         )}
       </Card>
 
-      <Modal opened={createOpen} onClose={() => setCreateOpen(false)} title={t("recruitment:automationRules.dialogCreateTitle")}>
+      <Modal
+        opened={createOpen}
+        onClose={() => setCreateOpen(false)}
+        title={t("recruitment:automationRules.dialogCreateTitle")}
+        fullScreen={Boolean(isMobile)}
+      >
         <Stack gap="md">
           <Select
             label={t("recruitment:automationRules.fromStage")}

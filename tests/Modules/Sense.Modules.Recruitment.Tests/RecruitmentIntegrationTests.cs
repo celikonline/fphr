@@ -361,6 +361,38 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     }
 
     /// <summary>
+    /// Faz 9 tur 2 "tur içi ek iş" BE madde 7/8: <see cref="ILocationLookup.GetNamesAsync"/> gerçek ortamda
+    /// Organization'ın ambient <c>ITenantContext</c>'ine göre filtrelendiği için, anonim (JWT'siz) bir istekte
+    /// public query handler'larının çağrı sırasında bir <c>ITenantContextSetter.BeginScope</c> açmış olması gerekir
+    /// - yalnızca <c>GetNamesAsync</c>'e doğru <c>tenantId</c> parametresinin geçmesi yeterli değildir, çünkü fake
+    /// bunu zaten yok sayıp yalnızca <c>locationId</c>'ye bakıyor. Bu test ambient bağlamı doğrudan gözlemliyor.
+    /// </summary>
+    [Fact]
+    public async Task PublicCareerFlow_LocationLookup_ObservesAmbientTenantScope_ForAnonymousRequest()
+    {
+        var tenantId = Guid.NewGuid();
+        var locationId = Guid.NewGuid();
+        var locations = ServiceProvider!.GetRequiredService<FakeLocationLookup>();
+        locations.Map(locationId, "Ankara - Şube");
+
+        var postingId = await CreatePublishedPostingAsync(tenantId, "Ambient Bağlamlı İlan", locationId);
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        var detail = await ExecuteQueryAsync(new GetPublicJobPostingQuery(applySlug));
+        detail.IsSuccess.ShouldBeTrue();
+        locations.LastObservedAmbientTenantId.ShouldBe(tenantId);
+
+        var related = await ExecuteQueryAsync(new ListRelatedPublicJobPostingsQuery(applySlug));
+        related.IsSuccess.ShouldBeTrue();
+
+        var slugLookup = ServiceProvider!.GetRequiredService<FakeTenantSlugLookup>();
+        slugLookup.Map("ambient-kiraci", tenantId);
+        var list = await ExecuteQueryAsync(new ListPublicJobPostingsByTenantSlugQuery("ambient-kiraci"));
+        list.IsSuccess.ShouldBeTrue();
+        locations.LastObservedAmbientTenantId.ShouldBe(tenantId);
+    }
+
+    /// <summary>
     /// Faz 9 tur 2 "tur içi ek iş" BE madde 6: <see cref="ILocationLookup"/>'ta karşılığı olmayan bir
     /// <c>LocationId</c> (ör. anonim istek bağlamında sözlük boş dönerse) sessizce <c>null</c>'a düşer - hata
     /// fırlatmaz, konumsuz ilanla aynı davranır.
@@ -707,6 +739,16 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     {
         private readonly Dictionary<Guid, string> _byId = [];
 
+        /// <summary>
+        /// Ambient <c>ITenantContext.TenantId</c> observed during the most recent <see cref="GetNamesAsync"/> call
+        /// (Faz 9 tur 2 "tur içi ek iş" BE madde 7/8): the real Organization <c>LocationLookup</c> filters by this
+        /// ambient tenant, so the public query handlers must open an explicit <c>ITenantContextSetter.BeginScope</c>
+        /// before calling this port for an anonymous (no JWT tenant claim) request - a test reads this property to
+        /// prove the scope was actually open at call time, not just that the right <c>tenantId</c> parameter was
+        /// passed.
+        /// </summary>
+        public Guid? LastObservedAmbientTenantId { get; private set; }
+
         public void Map(Guid locationId, string name) => _byId[locationId] = name;
 
         public Task<bool> ExistsActiveAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default) =>
@@ -715,6 +757,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         public Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(
             Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default)
         {
+            LastObservedAmbientTenantId = Sense.Shared.Infrastructure.Context.TenantContext.CurrentTenantIdOrNull;
             IReadOnlyDictionary<Guid, string> result = locationIds
                 .Where(id => _byId.ContainsKey(id))
                 .ToDictionary(id => id, id => _byId[id]);

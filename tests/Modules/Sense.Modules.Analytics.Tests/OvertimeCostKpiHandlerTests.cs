@@ -72,6 +72,34 @@ public sealed class OvertimeCostKpiHandlerTests
         await _employeeDirectory.Received(1).ListActiveEmployeeIdsAsync(_tenantId, Arg.Any<CancellationToken>());
     }
 
+    /// <summary>G-10-16: the org-unit branch must only count employees that are also in the tenant's Active set
+    /// (<c>ListActiveEmployeeIdsInOrgUnitsAsync</c> is broader - it excludes only Terminated, so a Suspended
+    /// employee id would otherwise slip in and unit totals would stop matching the company-wide total).</summary>
+    [Fact]
+    public async Task Handle_OrgUnitId_ExcludesEmployeeNotInActiveSet_ForCompanyScopeCaller()
+    {
+        var orgUnitId = Guid.NewGuid();
+        var activeEmployeeId = Guid.NewGuid();
+        var suspendedEmployeeId = Guid.NewGuid();
+        _dataScope.GetVisibleEmployeeIdsAsync(AnalyticsPermissions.KpiView.Key, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)null);
+        _employeeDirectory.ListActiveEmployeeIdsInOrgUnitsAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { orgUnitId })), Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { activeEmployeeId, suspendedEmployeeId });
+        _employeeDirectory.ListActiveEmployeeIdsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<Guid> { activeEmployeeId });
+        _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), Arg.Any<CancellationToken>())
+            .Returns(new List<AttendanceMonthlySummary> { new(activeEmployeeId, 20m, 160m, 0m, 5m, false) });
+        _salaryLookup.GetCurrentSalaryAsync(_tenantId, activeEmployeeId, Arg.Any<CancellationToken>())
+            .Returns(new EmployeeCurrentSalary(22_500m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)));
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(new GetOvertimeCostKpiQuery(2026, 9, orgUnitId), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.EmployeeCount.ShouldBe(1);
+        await _salaryLookup.DidNotReceive().GetCurrentSalaryAsync(_tenantId, suspendedEmployeeId, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task Handle_NoVisibleEmployees_ReturnsEmptyResult_WithoutCallingAttendanceReader()
     {

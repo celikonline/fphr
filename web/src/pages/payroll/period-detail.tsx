@@ -14,6 +14,7 @@ import {
   getPayrollPeriod,
   saveDownloadedPayrollFile,
   type PayrollPeriodStatus,
+  type PayslipLine,
 } from "@/services/payroll.service";
 
 const STATUS_COLOR: Record<PayrollPeriodStatus, string> = {
@@ -22,6 +23,21 @@ const STATUS_COLOR: Record<PayrollPeriodStatus, string> = {
   paid: "green",
   locked: "gray",
 };
+
+/**
+ * "27/30" gösterimi; ikisi de yoksa "—". `workedDays < calendarDaysInMonth` ise turuncu (eksik gün uyarısı,
+ * Faz 7 tur 2 dinamik ek md.8) - bordro rakamını değiştirmez, yalnız bilgilendirme.
+ */
+function formatWorkedDays(line: PayslipLine): { text: string; color?: string } {
+  const { workedDays, calendarDaysInMonth } = line;
+  if (workedDays == null || calendarDaysInMonth == null) {
+    return { text: "—" };
+  }
+  return {
+    text: `${workedDays}/${calendarDaysInMonth}`,
+    color: workedDays < calendarDaysInMonth ? "orange" : undefined,
+  };
+}
 
 /**
  * Bordro dönemi detayı - salt okunur (Faz 7 tur 1 web dilimi). Dönem başlığı + bordro satırları (brüt/net;
@@ -122,45 +138,65 @@ function PayrollPeriodDetail() {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>{t("payroll:periodDetail.columns.employee")}</Table.Th>
+                    <Table.Th ta="right">{t("payroll:periodDetail.workedDays")}</Table.Th>
                     <Table.Th ta="right">{t("payroll:periodDetail.columns.gross")}</Table.Th>
                     <Table.Th ta="right">{t("payroll:periodDetail.columns.net")}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {payslips.map((line) => (
-                    <Table.Tr key={line.employeeId}>
-                      <Table.Td>{line.employeeName}</Table.Td>
-                      <Table.Td ta="right">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Table.Td>
-                      <Table.Td ta="right">{formatMoney(line.netAmount, "TRY", i18n.language)}</Table.Td>
-                    </Table.Tr>
-                  ))}
+                  {payslips.map((line) => {
+                    const workedDays = formatWorkedDays(line);
+                    return (
+                      <Table.Tr key={line.employeeId}>
+                        <Table.Td>{line.employeeName}</Table.Td>
+                        <Table.Td ta="right">
+                          <Text size="sm" c={workedDays.color}>
+                            {workedDays.text}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td ta="right">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Table.Td>
+                        <Table.Td ta="right">{formatMoney(line.netAmount, "TRY", i18n.language)}</Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
                 </Table.Tbody>
               </Table>
             </div>
 
             {/* Dar ekran (≤390px dahil): kart listesi */}
             <Stack gap="sm" className="md:hidden">
-              {payslips.map((line) => (
-                <Card key={line.employeeId} withBorder padding="sm" radius="md">
-                  <Text fw={500} size="sm">
-                    {line.employeeName}
-                  </Text>
-                  <Group justify="space-between" mt={4}>
-                    <Text size="xs" c="dimmed">
-                      {t("payroll:periodDetail.columns.gross")}
+              {payslips.map((line) => {
+                const workedDays = formatWorkedDays(line);
+                return (
+                  <Card key={line.employeeId} withBorder padding="sm" radius="md">
+                    <Text fw={500} size="sm">
+                      {line.employeeName}
                     </Text>
-                    <Text size="sm">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Text>
-                  </Group>
-                  <Group justify="space-between">
-                    <Text size="xs" c="dimmed">
-                      {t("payroll:periodDetail.columns.net")}
-                    </Text>
-                    <Text size="sm" fw={500}>
-                      {formatMoney(line.netAmount, "TRY", i18n.language)}
-                    </Text>
-                  </Group>
-                </Card>
-              ))}
+                    <Group justify="space-between" mt={4}>
+                      <Text size="xs" c="dimmed">
+                        {t("payroll:periodDetail.workedDays")}
+                      </Text>
+                      <Text size="sm" c={workedDays.color}>
+                        {workedDays.text}
+                      </Text>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="xs" c="dimmed">
+                        {t("payroll:periodDetail.columns.gross")}
+                      </Text>
+                      <Text size="sm">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Text>
+                    </Group>
+                    <Group justify="space-between">
+                      <Text size="xs" c="dimmed">
+                        {t("payroll:periodDetail.columns.net")}
+                      </Text>
+                      <Text size="sm" fw={500}>
+                        {formatMoney(line.netAmount, "TRY", i18n.language)}
+                      </Text>
+                    </Group>
+                  </Card>
+                );
+              })}
             </Stack>
           </>
         )}

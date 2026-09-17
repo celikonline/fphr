@@ -345,11 +345,19 @@ public sealed class SetPlatformStaffHandler(IUserRepository users) : ICommandHan
 
 /// <summary>Yönetici MFA sıfırlama (Faz 3 Tur 1, S-12): secret temizlenir + MfaEnabled=false. Kendi hesabına 409
 /// (<see cref="IdentityErrors.MfaSelfResetForbidden"/>); farklı kiracı kullanıcısı normal tenant filtresiyle 404
-/// olur (<see cref="IUserRepository.GetByIdAsync"/> zaten kiracı bağlamına göre filtreler).</summary>
+/// olur (<see cref="IUserRepository.GetByIdAsync"/> zaten kiracı bağlamına göre filtreler).
+/// G-3-19: MFA gerçekten açıksa (<see cref="User.MfaEnabled"/> veya secret dolu) hedef kullanıcıya güvenlik
+/// bildirimi gönderilir - gönderim hatası sıfırlamayı düşürmez, yalnız loglanır.</summary>
 [RequiresPermission(IdentityPermissions.UsersManage)]
 public sealed record ResetUserMfaCommand(Guid UserId) : ICommand;
 
-public sealed class ResetUserMfaHandler(IUserRepository users, ICurrentUser currentUser) : ICommandHandler<ResetUserMfaCommand>
+public sealed class ResetUserMfaHandler(
+    IUserRepository users,
+    ITenantRepository tenants,
+    ITenantContext tenant,
+    ICurrentUser currentUser,
+    IIdentityMailer mailer,
+    ILogger<ResetUserMfaHandler> logger) : ICommandHandler<ResetUserMfaCommand>
 {
     public async Task<Result> Handle(ResetUserMfaCommand command, CancellationToken cancellationToken)
     {
@@ -364,7 +372,22 @@ public sealed class ResetUserMfaHandler(IUserRepository users, ICurrentUser curr
             return Error.NotFound(IdentityErrors.UserNotFound);
         }
 
+        var wasMfaActive = user.MfaEnabled || user.TotpSecretEncrypted is not null;
         user.DisableMfa();
+
+        if (wasMfaActive)
+        {
+            try
+            {
+                var tenantEntity = await tenants.GetByIdAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
+                await mailer.SendMfaResetNoticeAsync(user.Email, user.FullName, tenantEntity?.Name ?? tenant.TenantSlug ?? string.Empty, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "MFA sıfırlama bildirimi gönderilemedi: kullanıcı {UserId}.", user.Id);
+            }
+        }
+
         return Result.Success();
     }
 }

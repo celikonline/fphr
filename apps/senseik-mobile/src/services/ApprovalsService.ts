@@ -19,6 +19,8 @@ export interface InboxTask {
   requesterName?: string | null;
   stepNumber: number;
   isFallbackRoleTask: boolean;
+  /** BE ekliyor (faz-10 tur 2 sözleşmesi); eski yanıtlarda gelmeyebilir. */
+  submittedAt?: string | null;
 }
 
 export type DecisionOutcome = "approved" | "rejected";

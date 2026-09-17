@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Badge, type BadgeProps, Button, Group, Modal, Paper, SimpleGrid, Stack, Table, Text } from "@mantine/core";
+import { Badge, type BadgeProps, Button, Card, Group, Modal, Paper, SimpleGrid, Stack, Table, Text } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { CheckCircle2, CircleSlash, XCircle } from "lucide-react";
 import type { BulkItemOutcome, BulkOperationResult } from "@/types";
 import { bulkCodeKey } from "./bulk-actions";
@@ -23,9 +24,10 @@ const OUTCOME_BADGE: Record<BulkItemOutcome, Pick<BadgeProps, "variant" | "color
 export default function BulkResultDialog({ open, onOpenChange, title, result, nameById }: BulkResultDialogProps) {
   const { t } = useTranslation(["employees", "common"]);
   const problems = (result?.items ?? []).filter((item) => item.outcome !== "succeeded");
+  const isMobile = useMediaQuery("(max-width: 390px)");
 
   return (
-    <Modal opened={open} onClose={() => onOpenChange(false)} title={title} size="lg">
+    <Modal opened={open} onClose={() => onOpenChange(false)} title={title} size="lg" fullScreen={isMobile}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {t("employees:bulk.result.requested", { count: result?.requested ?? 0 })}
@@ -53,30 +55,54 @@ export default function BulkResultDialog({ open, onOpenChange, title, result, na
 
             {problems.length > 0 && (
               <Paper withBorder>
-                <Table.ScrollContainer minWidth={420}>
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>{t("employees:columns.name")}</Table.Th>
-                        <Table.Th>{t("employees:bulk.result.outcome")}</Table.Th>
-                        <Table.Th>{t("employees:bulk.result.reason")}</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {problems.map((item) => (
-                        <Table.Tr key={item.employeeId}>
-                          <Table.Td fw={500}>{nameById.get(item.employeeId) ?? `#${item.employeeId.slice(0, 8)}`}</Table.Td>
-                          <Table.Td>
-                            <Badge {...OUTCOME_BADGE[item.outcome]}>
-                              {t(`employees:bulk.outcome.${item.outcome}`)}
-                            </Badge>
-                          </Table.Td>
-                          <Table.Td fz="sm">{item.code ? t(bulkCodeKey(item.code), { defaultValue: item.code }) : "—"}</Table.Td>
+                {/* Geniş ekran: tablo */}
+                <div className="hidden md:block">
+                  <Table.ScrollContainer minWidth={420}>
+                    <Table>
+                      <Table.Thead>
+                        <Table.Tr>
+                          <Table.Th>{t("employees:columns.name")}</Table.Th>
+                          <Table.Th>{t("employees:bulk.result.outcome")}</Table.Th>
+                          <Table.Th>{t("employees:bulk.result.reason")}</Table.Th>
                         </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </Table.ScrollContainer>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {problems.map((item) => (
+                          <Table.Tr key={item.employeeId}>
+                            <Table.Td fw={500}>{nameById.get(item.employeeId) ?? `#${item.employeeId.slice(0, 8)}`}</Table.Td>
+                            <Table.Td>
+                              <Badge {...OUTCOME_BADGE[item.outcome]}>
+                                {t(`employees:bulk.outcome.${item.outcome}`)}
+                              </Badge>
+                            </Table.Td>
+                            <Table.Td fz="sm">{item.code ? t(bulkCodeKey(item.code), { defaultValue: item.code }) : "—"}</Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </Table.ScrollContainer>
+                </div>
+
+                {/* Dar ekran (≤390px dahil): kart listesi */}
+                <div className="md:hidden">
+                  <Stack gap="sm" p="sm">
+                    {problems.map((item) => (
+                      <Card key={item.employeeId} withBorder padding="sm" radius="md">
+                        <Group justify="space-between" align="flex-start" wrap="nowrap">
+                          <Text fw={500} size="sm">
+                            {nameById.get(item.employeeId) ?? `#${item.employeeId.slice(0, 8)}`}
+                          </Text>
+                          <Badge {...OUTCOME_BADGE[item.outcome]}>{t(`employees:bulk.outcome.${item.outcome}`)}</Badge>
+                        </Group>
+                        {item.code && (
+                          <Text size="sm" c="red" mt={4}>
+                            {t(bulkCodeKey(item.code), { defaultValue: item.code })}
+                          </Text>
+                        )}
+                      </Card>
+                    ))}
+                  </Stack>
+                </div>
               </Paper>
             )}
           </>

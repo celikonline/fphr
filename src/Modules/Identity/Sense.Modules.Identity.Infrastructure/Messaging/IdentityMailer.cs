@@ -21,6 +21,9 @@ public sealed class IdentityMailer(IEmailSender sender, IStringLocalizer<SharedR
     public Task SendWelcomeAsync(string toEmail, string toName, string tenantName, string loginUrl, CancellationToken ct) =>
         SendAsync(toEmail, toName, EmailTemplateKeys.WelcomeSubject, EmailTemplateKeys.WelcomeBody, tenantName, loginUrl, null, ct);
 
+    public Task SendMfaResetNoticeAsync(string toEmail, string toName, string tenantName, CancellationToken ct) =>
+        SendAsync(toEmail, toName, EmailTemplateKeys.MfaResetNoticeSubject, EmailTemplateKeys.MfaResetNoticeBody, tenantName, string.Empty, null, ct);
+
     private Task SendAsync(string toEmail, string toName, string subjectKey, string bodyKey, string tenantName, string url, DateTime? expiresAtUtc, CancellationToken ct)
     {
         var subject = Render(localizer[subjectKey], toName, tenantName, url, expiresAtUtc);

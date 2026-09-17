@@ -11,6 +11,8 @@ public static class EmailTemplateKeys
     public const string WelcomeBody = "email.welcome.body";
     public const string ReportReadySubject = "email.report_ready.subject";
     public const string ReportReadyBody = "email.report_ready.body";
+    public const string MfaResetNoticeSubject = "email.mfa_reset_notice.subject";
+    public const string MfaResetNoticeBody = "email.mfa_reset_notice.body";
 
     public static class Placeholders
     {
