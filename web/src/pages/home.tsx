@@ -1,9 +1,8 @@
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import { Suspense, lazy, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
-import { DonutChart } from "@mantine/charts";
 import { BarChart3, Cake, CalendarDays, Check, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
@@ -15,6 +14,10 @@ import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, getTeamLeaveR
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
+
+// The charting library is the single heaviest dependency on this screen and only one widget needs it,
+// so it loads after the dashboard paints instead of holding up the first screen after sign-in.
+const DonutChart = lazy(() => import("@mantine/charts").then((m) => ({ default: m.DonutChart })));
 
 const HOLIDAY_DAYS = 90;
 const BIRTHDAY_DAYS = 30;
@@ -754,7 +757,9 @@ function DepartmentDistributionWidget() {
         <>
           <Group justify="center" py="md">
             <Box pos="relative" w={230} h={230}>
-              <DonutChart data={chartData} size={230} thickness={48} startAngle={90} endAngle={-270} withTooltip={false} strokeWidth={0} />
+              <Suspense fallback={<Skeleton circle height={230} />}>
+                <DonutChart data={chartData} size={230} thickness={48} startAngle={90} endAngle={-270} withTooltip={false} strokeWidth={0} />
+              </Suspense>
               <Stack gap={0} align="center" justify="center" pos="absolute" top={0} left={0} right={0} bottom={0}>
                 <Text size="sm" c="dimmed" truncate maw={120} ta="center">
                   {largest?.name}

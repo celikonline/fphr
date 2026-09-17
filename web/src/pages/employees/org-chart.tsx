@@ -8,7 +8,9 @@ import {
   Avatar,
   Button,
   Card,
+  Divider,
   Group,
+  Popover,
   Select,
   Skeleton,
   Stack,
@@ -16,21 +18,24 @@ import {
   TextInput,
   Title,
   Tooltip,
+  UnstyledButton,
 } from "@mantine/core";
 import {
   ChevronDown,
   ChevronUp,
   EyeOff,
   GitBranch,
+  Mail,
   Minus,
+  Phone,
   Plus,
   Printer,
   Search,
 } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
-import { avatarColor } from "@/components/employees/employee-badges";
+import { avatarColor, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
-import { getOrgChart, type OrgChartNode } from "@/services/employees.service";
+import { getEmployee, getOrgChart, type OrgChartNode } from "@/services/employees.service";
 import classes from "./org-chart.module.css";
 
 const ALL_COMPANIES = "all";
@@ -377,6 +382,94 @@ export default function OrgChartPage() {
   );
 }
 
+/** Popover content for a clicked node: fetched lazily so collapsed/unopened nodes never hit the API. */
+function OrgChartPersonCard({ employeeId, opened }: { employeeId: string; opened: boolean }) {
+  const { t } = useTranslation(["employees"]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["employees", "card", employeeId],
+    queryFn: () => getEmployee(employeeId),
+    enabled: opened,
+    staleTime: 60_000,
+  });
+
+  if (isLoading) {
+    return (
+      <Stack gap="xs" miw={220} maw={280}>
+        <Group gap="sm" wrap="nowrap">
+          <Skeleton height={48} circle />
+          <Stack gap={6} flex={1}>
+            <Skeleton height={10} width="70%" />
+            <Skeleton height={8} width="50%" />
+          </Stack>
+        </Group>
+        <Skeleton height={8} />
+        <Skeleton height={8} width="80%" />
+      </Stack>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Text size="sm" c="red" miw={220} maw={280}>
+        {t("employees:orgChart.cardError")}
+      </Text>
+    );
+  }
+
+  const contact = data.workEmail
+    ? { icon: <Mail size={14} />, value: data.workEmail }
+    : data.workPhone || data.mobilePhone
+      ? { icon: <Phone size={14} />, value: data.workPhone ?? data.mobilePhone }
+      : null;
+
+  return (
+    <Stack gap="xs" miw={220} maw={280}>
+      <Group gap="sm" wrap="nowrap">
+        <Avatar size={48} radius="md" color={avatarColor(data.id)}>
+          {initials(data.firstName, data.lastName)}
+        </Avatar>
+        <div>
+          <Text fw={600} size="sm">
+            {data.displayName}
+          </Text>
+          {data.titleName && (
+            <Text size="xs" c="dimmed">
+              {data.titleName}
+            </Text>
+          )}
+        </div>
+      </Group>
+      <Group gap={6}>
+        <EmployeeStatusBadge status={data.status} />
+      </Group>
+      <Divider />
+      <Stack gap={4}>
+        {data.departmentName && (
+          <Text size="xs" c="dimmed">
+            {data.departmentName}
+          </Text>
+        )}
+        {data.managerDisplayName && (
+          <Text size="xs" c="dimmed">
+            {t("employees:fields.manager")}: {data.managerDisplayName}
+          </Text>
+        )}
+        {contact && (
+          <Group gap={6} wrap="nowrap">
+            {contact.icon}
+            <Text size="xs" style={{ overflowWrap: "anywhere" }}>
+              {contact.value}
+            </Text>
+          </Group>
+        )}
+      </Stack>
+      <Anchor component={Link} to={`/app/employees/${data.id}`} size="xs">
+        {t("employees:orgChart.viewProfile")}
+      </Anchor>
+    </Stack>
+  );
+}
+
 interface OrgChartItemProps {
   node: OrgChartNode;
   expanded: ReadonlySet<string>;
@@ -402,6 +495,9 @@ function OrgChartItem({
   const isMatch = Boolean(matches?.has(node.id));
   const [first = "", ...rest] = node.displayName.split(" ");
   const toggleLabel = `${isOpen ? t("employees:orgChart.collapse") : t("employees:orgChart.expand")} · ${t("employees:orgChart.reports", { count: node.children.length })}`;
+  const [cardOpened, setCardOpened] = useState(false);
+  const avatarInitials =
+    `${first.charAt(0)}${rest[rest.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr");
 
   return (
     <li
@@ -416,9 +512,36 @@ function OrgChartItem({
         data-dimmed={(matches !== undefined && !isMatch) || undefined}
       >
         <div className={classes.avatar}>
-          <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
-            {`${first.charAt(0)}${rest[rest.length - 1]?.charAt(0) ?? ""}`.toLocaleUpperCase("tr")}
-          </Avatar>
+          {canOpenCard ? (
+            <Popover
+              opened={cardOpened}
+              onChange={setCardOpened}
+              position="right-start"
+              withArrow
+              shadow="md"
+              trapFocus
+            >
+              <Popover.Target>
+                <UnstyledButton
+                  type="button"
+                  className={classes.avatarButton}
+                  aria-label={t("employees:orgChart.viewCard", { name: node.displayName })}
+                  onClick={() => setCardOpened((o) => !o)}
+                >
+                  <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
+                    {avatarInitials}
+                  </Avatar>
+                </UnstyledButton>
+              </Popover.Target>
+              <Popover.Dropdown>
+                <OrgChartPersonCard employeeId={node.id} opened={cardOpened} />
+              </Popover.Dropdown>
+            </Popover>
+          ) : (
+            <Avatar size={64} radius="md" fz="lg" color={avatarColor(node.id)}>
+              {avatarInitials}
+            </Avatar>
+          )}
           {hasChildren && (
             <Tooltip label={toggleLabel} openDelay={400}>
               <ActionIcon

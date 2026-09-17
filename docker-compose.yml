@@ -30,6 +30,9 @@ services:
       ConnectionStrings__Redis: redis:6379,abortConnect=false
       Storage__Provider: MinIO
       MinIO__Endpoint: minio:9000
+      # Presigned URLs are signed with this endpoint instead, since they're consumed by the browser
+      # (outside the compose network) which can't resolve the "minio" hostname above.
+      MinIO__PublicEndpoint: localhost:${MINIO_PORT:-9000}
       MinIO__AccessKey: ${MINIO_ROOT_USER:-minio}
       MinIO__SecretKey: ${MINIO_ROOT_PASSWORD:-minio12345}
       MinIO__UseHttps: "false"

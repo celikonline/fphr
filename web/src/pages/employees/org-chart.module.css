@@ -127,6 +127,21 @@
   margin-bottom: 6px;
 }
 
+.avatarButton {
+  display: block;
+  border-radius: var(--mantine-radius-md);
+  transition: transform 120ms ease;
+}
+
+.avatarButton:hover {
+  transform: scale(1.04);
+}
+
+.avatarButton:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
 .toggle {
   position: absolute;
   right: -6px;

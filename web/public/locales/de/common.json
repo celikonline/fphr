@@ -63,5 +63,6 @@
   "noAccessDescription": "[DE] Contact your company administrator for the required permission.",
   "errors": {
     "rateLimited": "[DE] Too many requests. Please try again in {{seconds}} seconds."
-  }
+  },
+  "reload": "[DE] Reload page"
 }

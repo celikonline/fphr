@@ -8,6 +8,7 @@ import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
+import RouteBoundary from "@/components/route-boundary";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -262,7 +263,10 @@ export default function AppLayout() {
             </aside>
 
             <main className="min-w-0 flex-1 overflow-auto">
-              <Outlet />
+              {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
+              <RouteBoundary>
+                <Outlet />
+              </RouteBoundary>
             </main>
           </div>
         </div>
