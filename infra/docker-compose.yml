@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-senseik}
       TZ: Europe/Istanbul
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "${POSTGRES_PORT:-15432}:5432"
     volumes:
       - senseik_pg:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/10-init.sql:ro
