@@ -71,7 +71,7 @@ public sealed class GetLeaveCalendarHandler(
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
         var entries = new List<LeaveCalendarEntryDto>();
-        foreach (var leave in leaves.OrderBy(l => l.StartDate).ThenBy(l => l.EmployeeName ?? string.Empty))
+        foreach (var leave in leaves.OrderBy(l => l.StartDate).ThenBy(l => names.GetValueOrDefault(l.EmployeeId) ?? string.Empty))
         {
             var overlappingCount = await GetApprovedOverlapCountAsync(leave.EmployeeId, leave.StartDate, cancellationToken);
             var type = types.GetValueOrDefault(leave.LeaveTypeId);
@@ -83,7 +83,7 @@ public sealed class GetLeaveCalendarHandler(
                 overlappingCount));
         }
 
-        return Result.Success(entries);
+        return Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>(entries);
     }
 
     private async Task<IReadOnlyCollection<Guid>?> VisibleEmployeeIdsAsync(CancellationToken cancellationToken)
@@ -158,7 +158,7 @@ public sealed class ListTeamLeaveRequestsHandler(
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
         var entries = new List<LeaveCalendarEntryDto>();
-        foreach (var leave in pending.OrderBy(r => r.StartDate).ThenBy(r => r.EmployeeName ?? string.Empty))
+        foreach (var leave in pending.OrderBy(r => r.StartDate).ThenBy(r => names.GetValueOrDefault(r.EmployeeId) ?? string.Empty))
         {
             var overlappingCount = await GetApprovedOverlapCountAsync(leave.EmployeeId, leave.StartDate, cancellationToken);
             var type = types.GetValueOrDefault(leave.LeaveTypeId);
@@ -170,7 +170,7 @@ public sealed class ListTeamLeaveRequestsHandler(
                 overlappingCount));
         }
 
-        return Result.Success(entries);
+        return Result.Success<IReadOnlyList<LeaveCalendarEntryDto>>(entries);
     }
 
     /// <summary>Count of approved leave requests on the same start date from the same org unit, excluding the caller.</summary>

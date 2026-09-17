@@ -1,4 +1,5 @@
-using Sense.Shared.Kernel;
+using Sense.Shared.Kernel.Domain;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Announcements.Domain;
 

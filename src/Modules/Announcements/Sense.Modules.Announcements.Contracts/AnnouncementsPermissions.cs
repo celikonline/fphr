@@ -4,12 +4,15 @@ namespace Sense.Modules.Announcements.Contracts;
 
 public static class AnnouncementsPermissions
 {
-    public const string View = "announcements.view";
-    public const string Manage = "announcements.manage";
+    private const string Module = "announcements";
+    private const string Group = "Duyurular";
 
-    public static readonly IReadOnlyList<Permission> All =
-    [
-        new Permission(View, "View announcements"),
-        new Permission(Manage, "Create and edit announcements"),
-    ];
+    public static readonly Permission View = new(
+        "announcements.view", Module, "Duyuruları Görüntüleme", Group, "Kurumsal duyuruları görüntüleme");
+
+    public static readonly Permission Manage = new(
+        "announcements.manage", Module, "Duyuru Yönetimi", Group, "Duyuru oluşturma, yayınlama ve arşivleme");
+
+    public static IEnumerable<Permission> All =>
+        [View, Manage];
 }

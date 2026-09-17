@@ -4,6 +4,7 @@ using Sense.Modules.Analytics.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Security;
 using Shouldly;
 using Xunit;
 
