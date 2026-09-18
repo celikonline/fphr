@@ -10,10 +10,10 @@ WORKDIR /src
 COPY Directory.Build.props Directory.Packages.props global.json .editorconfig ./
 COPY src/ src/
 
-RUN --mount=type=cache,target=/root/.nuget/packages \
+RUN --mount=type=cache,target=/root/.nuget/packages,sharing=locked \
     dotnet restore src/Sense.Worker/Sense.Worker.csproj
 
-RUN --mount=type=cache,target=/root/.nuget/packages \
+RUN --mount=type=cache,target=/root/.nuget/packages,sharing=locked \
     dotnet publish src/Sense.Worker/Sense.Worker.csproj \
       --configuration Release \
       --no-restore \

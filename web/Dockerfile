@@ -8,7 +8,9 @@
 FROM node:26-alpine AS build
 WORKDIR /repo
 
-RUN corepack enable
+# Node >= 25 images no longer bundle corepack; install it explicitly so the
+# `packageManager` pin in package.json (pnpm@x.y.z) is still what gets used.
+RUN npm install -g corepack@latest && corepack enable
 
 # Copy only the manifests first so `pnpm install` is cached until a dependency actually
 # changes. pnpm needs every workspace member's package.json to resolve the workspace

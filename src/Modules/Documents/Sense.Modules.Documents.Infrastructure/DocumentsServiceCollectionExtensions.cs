@@ -4,9 +4,7 @@ using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Infrastructure.Persistence;
-using Sense.Modules.Documents.Infrastructure.Reporting;
 using Sense.Modules.Employee.Contracts.Events;
-using Sense.Modules.Reporting.Contracts;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Documents.Infrastructure;
@@ -25,7 +23,8 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IEmployeeDocumentRequirementRepository, EmployeeDocumentRequirementRepository>();
         services.AddScoped<DocumentTypeProvisioningService>();
         services.AddScoped<DocumentRequirementMaterializationService>();
-        services.AddScoped<IReportProvider, MissingDocumentReportProvider>();
+        // IReportProvider (MissingDocumentReportProvider) is registered in DocumentsModule.AddModule, not here: it
+        // needs IStringLocalizer<SharedResource>, which only the API host (AddSenseWeb -> AddLocalization) provides.
         return services;
     }
 
