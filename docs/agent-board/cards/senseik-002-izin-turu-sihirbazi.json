@@ -1,0 +1,17 @@
+{
+  "id": "senseik-002",
+  "title": "İzin türü sihirbazı seçenek seti + kural setleri (Faz 1b)",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/leave-rule-sets",
+  "worktree": ".claude/worktrees/leave",
+  "acceptance": [
+    "Limit tipi, eksi bakiye, hak ediş sıklığı, devretme tipi, bekleme süresi, min/max gün, hesaplama birimi alanları uçtan uca çalışıyor",
+    "Kural seti kopyalama, varsayılan atama, toplu atama + yeniden hesaplama çalışıyor",
+    "Demo seed'i sonrası izin talebi formunda 'talep edilebilir izin türü yok' hatası çıkmıyor",
+    "Kıdem kademeleri ve kümülatif tahakkuk için birim testleri var"
+  ],
+  "merge_gate": "dotnet test (Leave modülü) + temiz DB'de migrate+seed --profile demo + web typecheck",
+  "handoff": "docs/handoffs/leave-rule-sets.md",
+  "source": "11.7-yol-haritasi.md Faz 1; Comprehensive_Form_Testing_Results (izin türü konfigürasyon blokajı)"
+}

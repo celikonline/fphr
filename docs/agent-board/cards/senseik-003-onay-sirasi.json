@@ -1,0 +1,17 @@
+{
+  "id": "senseik-003",
+  "title": "Onay süreci birim ataması, devralma ve 'onay sırası kimde' (Faz 1)",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/workflow-approval-assignment",
+  "worktree": ".claude/worktrees/workflow",
+  "acceptance": [
+    "Onay süreci birim/kapsam bazında atanabiliyor; devralma (delegation) kuralı çalışıyor",
+    "Talep detayında 'onay sırası kimde' görünüyor",
+    "Zorunlu/opsiyonel onaycı ayrımı ve e-postadan onay akışı test kapsamında",
+    "LV-05 onay senaryosu uçtan uca geçiyor"
+  ],
+  "merge_gate": "dotnet test (Workflow + Leave) + LV-05 E2E senaryosu yeşil",
+  "handoff": "docs/handoffs/workflow-approval-assignment.md",
+  "source": "11.7-yol-haritasi.md Faz 1; LV-05_Approval_Workflow_Test_Report"
+}

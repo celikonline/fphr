@@ -1,0 +1,17 @@
+{
+  "id": "senseik-005",
+  "title": "Yerel ortamı tek komutla ayağa kaldırma (infra)",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/local-env-bootstrap",
+  "worktree": ".",
+  "acceptance": [
+    "Tek script: docker compose up + migrate + seed --profile demo + api/worker/web",
+    "Windows (PowerShell) ve bash için doğrulandı",
+    "Port çakışması durumunda .env üzerinden yönlendirme dokümante",
+    "Backend_Setup_Troubleshooting adımları scriptle birebir örtüşüyor"
+  ],
+  "merge_gate": "Temiz makinede script baştan sona hatasız; demo kullanıcılarla login çalışıyor",
+  "handoff": "docs/handoffs/local-env-bootstrap.md",
+  "source": "Backend_Setup_Troubleshooting.md (Network Error / seed eksikliği)"
+}

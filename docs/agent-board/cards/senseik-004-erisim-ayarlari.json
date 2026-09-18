@@ -1,0 +1,17 @@
+{
+  "id": "senseik-004",
+  "title": "Erişim ayarları + birim yetkilendirme (Faz 0 kalanı)",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/access-settings",
+  "worktree": ".claude/worktrees/access",
+  "acceptance": [
+    "Çalışan görünürlük anahtarları TenantSettings üzerinden yönetiliyor",
+    "Manager rolü + Department kapsamı; maaş/rapor anahtarları ayrı ayrı kontrol ediliyor",
+    "Yeni izin anahtarları SystemRoleDefinitions include listesine eklendi ve mevcut kiracılara senkronize oluyor",
+    "Yetkisiz erişim için negatif testler var"
+  ],
+  "merge_gate": "dotnet test + security-reviewer bulgusu yok/kabul edilmiş + web typecheck",
+  "handoff": "docs/handoffs/access-settings.md",
+  "source": "11.7-yol-haritasi.md Faz 0 (erişim ayarları, birim yetkilendirme)"
+}

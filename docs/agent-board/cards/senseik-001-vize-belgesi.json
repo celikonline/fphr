@@ -1,0 +1,17 @@
+{
+  "id": "senseik-001",
+  "title": "Vize belgesi talebi ve süreci (Faz 1)",
+  "owner": "pc-a",
+  "state": "running",
+  "branch": "a/visa-document-request",
+  "worktree": ".claude/worktrees/visa",
+  "acceptance": [
+    "Çalışan vize belgesi talebi oluşturabiliyor; talep Documents modülünde kalıcı",
+    "Onay akışı Workflow motorunun mevcut state machine'ini kullanıyor (yeni motor yazılmıyor)",
+    "Web formu tr/en/de locale dosyalarıyla eksiksiz render oluyor",
+    "İlgili fazN-durum-takibi.md kaleminin durumu koda göre güncellendi"
+  ],
+  "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck + eslint temiz",
+  "handoff": "docs/handoffs/visa-document-request.md",
+  "source": "11.7-yol-haritasi.md Faz 1 (vize belgesi); form testi raporunda 'Vize Belge Talebi' eksik işaretli"
+}
