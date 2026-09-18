@@ -4,6 +4,7 @@ using Sense.Modules.Attendance.Application.DeviceLogs;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Shouldly;
@@ -19,6 +20,7 @@ public sealed class ImportDeviceLogsHandlerTests
     private readonly IEmployeeLookup _employeeLookup = Substitute.For<IEmployeeLookup>();
     private readonly IWorkScheduleReadService _schedules = Substitute.For<IWorkScheduleReadService>();
     private readonly IAttendanceDayRepository _days = Substitute.For<IAttendanceDayRepository>();
+    private readonly IShiftSettingsRepository _shiftSettings = Substitute.For<IShiftSettingsRepository>();
     private readonly IAttendanceUnitOfWork _unitOfWork = Substitute.For<IAttendanceUnitOfWork>();
 
     private const string EmployeeCode = "10000000146";
@@ -31,7 +33,7 @@ public sealed class ImportDeviceLogsHandlerTests
             .Returns(new EmployeeScheduleDay(true, new TimeOnly(9, 0), new TimeOnly(18, 0), null, null, true));
     }
 
-    private ImportDeviceLogsHandler CreateHandler() => new(_tenant, _employeeLookup, _schedules, _days, _unitOfWork);
+    private ImportDeviceLogsHandler CreateHandler() => new(_tenant, _employeeLookup, _schedules, _days, _shiftSettings, _unitOfWork);
 
     [Fact]
     public async Task Handle_InAndOutPunchesSameDay_UpsertsSingleAttendanceDay()
@@ -268,5 +270,62 @@ public sealed class ImportDeviceLogsHandlerTests
         result.Value.Errors.ShouldContain(e => e.Line == 3 && e.Code == DeviceLogErrorCodes.DuplicateTimestamp);
         _days.Received(1).Add(Arg.Any<AttendanceDay>());
         await _unitOfWork.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
+    }
+
+    // Kart senseik-014 §1: an intermediate Out→In pair between the first "in" and the last "out" (öğle çıkışı) is a
+    // real observed break - it should feed AttendanceDay.ActualBreakMinutes, not be lost as just "another punch".
+    [Fact]
+    public async Task Handle_LunchOutInBetweenFirstInAndLastOut_RecordsActualBreakMinutes()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T08:55:00;in\n" +
+                            "10000000146;2026-09-16T12:00:00;out\n" +
+                            "10000000146;2026-09-16T12:45:00;in\n" +
+                            "10000000146;2026-09-16T18:05:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.CheckIn == new TimeOnly(8, 55) && d.CheckOut == new TimeOnly(18, 5) && d.ActualBreakMinutes == 45));
+    }
+
+    // Same scenario but the observed lunch break (20 dk) is shorter than the m.68 legal minimum for a >7.5s gross
+    // span (1 saat) - BreakMinutesApplied must use the legal minimum, not the shorter observed value.
+    [Fact]
+    public async Task Handle_ObservedBreakShorterThanLegalMinimum_AppliesLegalMinimum()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T08:00:00;in\n" +
+                            "10000000146;2026-09-16T12:00:00;out\n" +
+                            "10000000146;2026-09-16T12:20:00;in\n" +
+                            "10000000146;2026-09-16T18:00:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.ActualBreakMinutes == 20 && d.BreakMinutesApplied == 60 && d.NetWorkedMinutes == 540));
+    }
+
+    // Kart senseik-014 §3: tenant ShiftSettings enforces m.63 (11s) and m.69 (7,5s gece) once resolved.
+    [Fact]
+    public async Task Handle_DayExceedsDailyAndNightLimits_FlagsBothOnAttendanceDay()
+    {
+        _employeeLookup.FindActiveByNationalIdAsync(_tenantId, EmployeeCode, Arg.Any<CancellationToken>()).Returns(_employeeId);
+        _days.FindByEmployeeAndDateAsync(_employeeId, Date, Arg.Any<CancellationToken>()).Returns((AttendanceDay?)null);
+        _shiftSettings.FindAsync(Arg.Any<CancellationToken>()).Returns(ShiftSettings.CreateDefault(_tenantId));
+        // 18:00 → next day 08:00 (overnight): 14 saat brüt (m.68 asgari mola 1sa → 13s net, m.63'ü aşar), gece
+        // penceresiyle (20:00-06:00) 10 saat kesişir (m.69'un 7,5 saatini aşar).
+        const string csv = "employeeCode;timestamp;direction\n" +
+                            "10000000146;2026-09-16T18:00:00;in\n" +
+                            "10000000146;2026-09-17T08:00:00;out\n";
+
+        var result = await CreateHandler().Handle(new ImportDeviceLogsCommand(csv), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        _days.Received(1).Add(Arg.Is<AttendanceDay>(d => d.DailyLimitExceeded && d.NightLimitExceeded && d.NightMinutes == 600 && d.NetWorkedMinutes == 780));
     }
 }

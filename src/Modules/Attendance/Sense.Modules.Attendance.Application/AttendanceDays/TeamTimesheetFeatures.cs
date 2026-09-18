@@ -9,8 +9,14 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Attendance.Application.AttendanceDays;
 
-/// <summary>One employee's one day in the team weekly grid (S-8 archive, FE tur 3 sözleşmesi). No record on a working day still reports it as <see cref="AttendanceAnomaly.NoData"/>/Unresolved so the grid can flag it without a stored row.</summary>
-public sealed record TeamWeekDayDto(DateOnly Date, Guid? AttendanceDayId, int WorkedMinutes, AttendanceResolutionState Status, IReadOnlyList<AttendanceAnomaly> Anomalies);
+/// <summary>
+/// One employee's one day in the team weekly grid (S-8 archive, FE tur 3 sözleşmesi). No record on a working day still
+/// reports it as <see cref="AttendanceAnomaly.NoData"/>/Unresolved so the grid can flag it without a stored row - the
+/// G-02 fields (<see cref="BreakMinutesApplied"/>/<see cref="NightMinutes"/>/limit flags) are all zero/false then too.
+/// </summary>
+public sealed record TeamWeekDayDto(
+    DateOnly Date, Guid? AttendanceDayId, int WorkedMinutes, AttendanceResolutionState Status, IReadOnlyList<AttendanceAnomaly> Anomalies,
+    int BreakMinutesApplied, int NightMinutes, bool DailyLimitExceeded, bool NightLimitExceeded);
 
 public sealed record TeamWeekRowDto(Guid EmployeeId, string EmployeeName, IReadOnlyList<TeamWeekDayDto> Days);
 
@@ -91,14 +97,16 @@ internal static class TeamRangeBuilder
             {
                 if (byDate.TryGetValue(date, out var record))
                 {
-                    dayDtos.Add(new TeamWeekDayDto(date, record.Id, record.OverrideWorkedMinutes ?? record.WorkedMinutes, record.ResolutionState, SetFlags(record.Anomalies)));
+                    dayDtos.Add(new TeamWeekDayDto(
+                        date, record.Id, record.OverrideWorkedMinutes ?? record.WorkedMinutes, record.ResolutionState, SetFlags(record.Anomalies),
+                        record.BreakMinutesApplied, record.NightMinutes, record.DailyLimitExceeded, record.NightLimitExceeded));
                     continue;
                 }
 
                 var isWorkingDay = await schedules.IsWorkingDayAsync(employeeId, date, cancellationToken);
                 dayDtos.Add(isWorkingDay
-                    ? new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Unresolved, [AttendanceAnomaly.NoData])
-                    : new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Resolved, []));
+                    ? new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Unresolved, [AttendanceAnomaly.NoData], 0, 0, false, false)
+                    : new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Resolved, [], 0, 0, false, false));
             }
 
             rows.Add(new TeamWeekRowDto(employeeId, names.GetValueOrDefault(employeeId, string.Empty), dayDtos));

@@ -2,6 +2,7 @@ using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -25,7 +26,7 @@ public sealed record ImportDeviceLogsCommand(string FileContent) : ICommand<Devi
 
 public sealed class ImportDeviceLogsHandler(
     ITenantContext tenant, IEmployeeLookup employeeLookup, IWorkScheduleReadService schedules,
-    IAttendanceDayRepository days, IAttendanceUnitOfWork unitOfWork)
+    IAttendanceDayRepository days, IShiftSettingsRepository shiftSettings, IAttendanceUnitOfWork unitOfWork)
     : ICommandHandler<ImportDeviceLogsCommand, DeviceLogImportResultDto>
 {
     private sealed record Plan(int Line, Guid EmployeeId, DateOnly Date, DateTime Timestamp, DeviceLogDirection Direction);
@@ -67,14 +68,16 @@ public sealed class ImportDeviceLogsHandler(
         }
 
         var overnightDates = await ReassignNightShiftPunchesAsync(plans, days, cancellationToken).ConfigureAwait(false);
+        var limits = ToShiftLimits(await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false));
 
         var imported = 0;
         var anyChange = false;
         foreach (var group in plans.GroupBy(p => (p.EmployeeId, p.Date)))
         {
             var isOvernight = overnightDates.Contains(group.Key);
-            var ins = group.Where(p => p.Direction == DeviceLogDirection.In).ToList();
-            var outs = group.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
+            var groupList = group.ToList();
+            var ins = groupList.Where(p => p.Direction == DeviceLogDirection.In).ToList();
+            var outs = groupList.Where(p => p.Direction == DeviceLogDirection.Out).ToList();
             var batchCheckIn = ins.Count > 0 ? TimeOnly.FromDateTime(ins.Min(p => p.Timestamp)) : (TimeOnly?)null;
             var batchCheckOut = outs.Count > 0 ? TimeOnly.FromDateTime(outs.Max(p => p.Timestamp)) : (TimeOnly?)null;
 
@@ -96,14 +99,22 @@ public sealed class ImportDeviceLogsHandler(
                 continue;
             }
 
+            // G-02 mola tespiti (kart senseik-014 §1): ilk "in" ile son "out" arasındaki ara Out→In çiftleri gerçek
+            // moladır. Bu batch tek yönlü bir kısmi import ise (yalnız "out") 0 çıkar - önceki gözlemi ezmesin diye
+            // daha önce kaydedilmiş değere düşülür (aynı G-6-22 kalıbı).
+            var computedBreak = ComputeActualBreakMinutes(groupList);
+            var actualBreakMinutes = computedBreak > 0 ? computedBreak : existing?.ActualBreakMinutes ?? 0;
+
             var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
             if (existing is not null)
             {
-                existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight);
+                existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight, actualBreakMinutes, limits);
             }
             else
             {
-                var day = AttendanceDay.Record(tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight);
+                var day = AttendanceDay.Record(
+                    tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device,
+                    isOvernight, actualBreakMinutes, limits);
                 days.Add(day);
             }
 
@@ -176,4 +187,37 @@ public sealed class ImportDeviceLogsHandler(
 
         return overnightDates;
     }
+
+    /// <summary>
+    /// G-02 mola tespiti (kart senseik-014 §1): sorts the group chronologically, then sums every Out→In gap strictly
+    /// between the first "in" and the last "out" - the same "ilk in / son out" window the check-in/check-out derivation
+    /// above already uses. Punches outside that window (duplicates, stray badges) don't contribute.
+    /// </summary>
+    private static int ComputeActualBreakMinutes(List<Plan> group)
+    {
+        var ordered = group.OrderBy(p => p.Timestamp).ToList();
+        var firstIn = ordered.FirstOrDefault(p => p.Direction == DeviceLogDirection.In);
+        var lastOut = ordered.LastOrDefault(p => p.Direction == DeviceLogDirection.Out);
+        if (firstIn is null || lastOut is null || lastOut.Timestamp <= firstIn.Timestamp)
+        {
+            return 0;
+        }
+
+        var inner = ordered.Where(p => p.Timestamp > firstIn.Timestamp && p.Timestamp < lastOut.Timestamp).ToList();
+        var total = 0;
+        for (var i = 0; i < inner.Count - 1; i++)
+        {
+            if (inner[i].Direction == DeviceLogDirection.Out && inner[i + 1].Direction == DeviceLogDirection.In)
+            {
+                total += (int)(inner[i + 1].Timestamp - inner[i].Timestamp).TotalMinutes;
+            }
+        }
+
+        return total;
+    }
+
+    private static ShiftLimits ToShiftLimits(ShiftSettings? settings) =>
+        settings is null
+            ? ShiftLimits.None
+            : new ShiftLimits(settings.MaxDailyMinutes, settings.NightWorkEnabled, settings.NightWorkStart, settings.NightWorkEnd, settings.NightWorkMaxMinutes);
 }

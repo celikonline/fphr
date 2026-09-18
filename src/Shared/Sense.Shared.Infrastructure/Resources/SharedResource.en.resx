@@ -824,6 +824,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
   <data name="attendance.compensatory.not_open" xml:space="preserve"><value>This compensatory work ledger entry is not open.</value></data>
   <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Compensatory minutes must be positive.</value></data>
+  <data name="attendance.equalization.period_months_invalid" xml:space="preserve"><value>The equalization period must be 2 or 4 months.</value></data>
+  <data name="attendance.equalization.written_agreement_required" xml:space="preserve"><value>A written agreement is required for a 4-month equalization period.</value></data>
+  <data name="attendance.equalization.anchor_month_invalid" xml:space="preserve"><value>The anchor month must be between 1 and 12.</value></data>
+  <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>This equalization period is not open.</value></data>
+  <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>The equalization period has not ended yet.</value></data>
+  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>

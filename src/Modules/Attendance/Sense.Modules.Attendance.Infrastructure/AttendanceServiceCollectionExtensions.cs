@@ -40,9 +40,11 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IShiftPlanLockRepository, ShiftPlanLockRepository>();
         services.AddScoped<IEmployeeAvailabilityRepository, EmployeeAvailabilityRepository>();
         services.AddScoped<ICompensatoryWorkLedgerRepository, CompensatoryWorkLedgerRepository>();
+        services.AddScoped<IEqualizationPeriodRepository, EqualizationPeriodRepository>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         services.AddScoped<IAttendanceMonthlySummaryReader, AttendanceMonthlySummaryReader>();
+        services.AddScoped<IAttendanceOvertimePayrollReader, AttendanceOvertimePayrollReader>();
         return services;
     }
 

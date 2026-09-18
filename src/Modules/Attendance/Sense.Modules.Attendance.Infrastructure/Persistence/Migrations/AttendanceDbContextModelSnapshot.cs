@@ -98,6 +98,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<int>("ActualBreakMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("actual_break_minutes");
+
                     b.Property<string>("Anomalies")
                         .IsRequired()
                         .HasColumnType("text")
@@ -106,6 +110,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.Property<int>("BreakMinutes")
                         .HasColumnType("integer")
                         .HasColumnName("break_minutes");
+
+                    b.Property<int>("BreakMinutesApplied")
+                        .HasColumnType("integer")
+                        .HasColumnName("break_minutes_applied");
 
                     b.Property<TimeOnly?>("CheckIn")
                         .HasColumnType("time without time zone")
@@ -123,6 +131,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
 
+                    b.Property<bool>("DailyLimitExceeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("daily_limit_exceeded");
+
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date")
                         .HasColumnName("date");
@@ -139,6 +151,18 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
 
+                    b.Property<int>("NetWorkedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("net_worked_minutes");
+
+                    b.Property<bool>("NightLimitExceeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("night_limit_exceeded");
+
+                    b.Property<int>("NightMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("night_minutes");
+
                     b.Property<string>("OverrideReason")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
@@ -147,6 +171,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.Property<int?>("OverrideWorkedMinutes")
                         .HasColumnType("integer")
                         .HasColumnName("override_worked_minutes");
+
+                    b.Property<int>("OvertimeMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("overtime_minutes");
 
                     b.Property<TimeOnly?>("PlannedEnd")
                         .HasColumnType("time without time zone")
@@ -322,6 +350,129 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_compensatory_work_ledgers_tenant_id_employee_id_week_start");
 
                     b.ToTable("compensatory_work_ledgers", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.Equalization.EqualizationPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("BudgetMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("budget_minutes");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly>("PeriodEnd")
+                        .HasColumnType("date")
+                        .HasColumnName("period_end");
+
+                    b.Property<DateOnly>("PeriodStart")
+                        .HasColumnType("date")
+                        .HasColumnName("period_start");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<int>("TotalWorkedMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_worked_minutes");
+
+                    b.Property<int>("TrueUpOvertimeMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("true_up_overtime_minutes");
+
+                    b.HasKey("Id")
+                        .HasName("pk_equalization_periods");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_equalization_periods_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "PeriodStart")
+                        .IsUnique()
+                        .HasDatabaseName("ix_equalization_periods_tenant_id_employee_id_period_start");
+
+                    b.HasIndex("TenantId", "EmployeeId", "Status", "PeriodEnd")
+                        .HasDatabaseName("ix_equalization_periods_tenant_id_employee_id_status_period_end");
+
+                    b.ToTable("equalization_periods", "attendance");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.MonthlyTimesheet.MonthlyTimesheetApproval", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approved_by_user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly>("PeriodMonth")
+                        .HasColumnType("date")
+                        .HasColumnName("period_month");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_monthly_timesheet_approvals");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_monthly_timesheet_approvals_tenant_id");
+
+                    b.ToTable("monthly_timesheet_approvals", "attendance");
                 });
 
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftAssignment", b =>
@@ -503,6 +654,22 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
+
+                    b.Property<int>("EqualizationAnchorMonth")
+                        .HasColumnType("integer")
+                        .HasColumnName("equalization_anchor_month");
+
+                    b.Property<bool>("EqualizationEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("equalization_enabled");
+
+                    b.Property<int>("EqualizationPeriodMonths")
+                        .HasColumnType("integer")
+                        .HasColumnName("equalization_period_months");
+
+                    b.Property<bool>("HasWrittenEqualizationAgreement")
+                        .HasColumnType("boolean")
+                        .HasColumnName("has_written_equalization_agreement");
 
                     b.Property<int>("MaxDailyMinutes")
                         .HasColumnType("integer")
