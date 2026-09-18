@@ -25,7 +25,6 @@ public sealed class VisaDocumentProcess : TenantAggregateRoot<Guid>, IAuditLogge
         Name = name;
         CountryCode = countryCode;
         IsActive = isActive;
-        CreatedAt = DateTime.UtcNow;
     }
 
     /// <summary>Name of the visa process (e.g., "Schengen Business", "Turkish Work Permit").</summary>
@@ -36,9 +35,6 @@ public sealed class VisaDocumentProcess : TenantAggregateRoot<Guid>, IAuditLogge
 
     /// <summary>Whether this process is active and available for new requests.</summary>
     public bool IsActive { get; private set; }
-
-    /// <summary>Timestamp of process creation.</summary>
-    public DateTime CreatedAt { get; private set; }
 
     /// <summary>Timestamp of last modification, if any.</summary>
     public DateTime? ModifiedAt { get; private set; }
@@ -55,13 +51,13 @@ public sealed class VisaDocumentProcess : TenantAggregateRoot<Guid>, IAuditLogge
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Failure<VisaDocumentProcess>(
-                new Error(VisaDomainErrors.VisaDocumentProcessNameRequired, "Process name is required"));
+                Error.Validation(VisaDomainErrors.VisaDocumentProcessNameRequired));
         }
 
         if (name.Length > VisaLimits.ProcessNameMaxLength)
         {
             return Result.Failure<VisaDocumentProcess>(
-                new Error(VisaDomainErrors.VisaDocumentProcessNameTooLong, $"Process name cannot exceed {VisaLimits.ProcessNameMaxLength} characters"));
+                Error.Validation(VisaDomainErrors.VisaDocumentProcessNameTooLong));
         }
 
         var process = new VisaDocumentProcess(
@@ -100,13 +96,13 @@ public sealed class VisaDocumentProcess : TenantAggregateRoot<Guid>, IAuditLogge
         if (string.IsNullOrWhiteSpace(name))
         {
             return Result.Failure(
-                new Error(VisaDomainErrors.VisaDocumentProcessNameRequired, "Process name is required"));
+                Error.Validation(VisaDomainErrors.VisaDocumentProcessNameRequired));
         }
 
         if (name.Length > VisaLimits.ProcessNameMaxLength)
         {
             return Result.Failure(
-                new Error(VisaDomainErrors.VisaDocumentProcessNameTooLong, $"Process name cannot exceed {VisaLimits.ProcessNameMaxLength} characters"));
+                Error.Validation(VisaDomainErrors.VisaDocumentProcessNameTooLong));
         }
 
         Name = name;

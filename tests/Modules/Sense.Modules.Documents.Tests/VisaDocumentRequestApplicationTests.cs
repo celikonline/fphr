@@ -106,7 +106,7 @@ public sealed class VisaDocumentRequestApplicationTests
         _workflow.StartAsync(
                 Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(),
                 Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<Guid>(new Error("workflow.no_approver_resolved", "onayci bulunamadi")));
+            .Returns(Result.Failure<Guid>(Error.Failure("workflow.no_approver_resolved")));
 
         var result = await SubmitHandler().Handle(SubmitCommand(), CancellationToken.None);
 
@@ -141,7 +141,7 @@ public sealed class VisaDocumentRequestApplicationTests
         var request = AwaitingApprovalRequest();
         _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(request);
         _delivery.DeliverVisaDocumentsAsync(TenantId, EmployeeId, request.Id, Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<int>(new Error("storage.unavailable", "depolama erisilemez")));
+            .Returns(Result.Failure<int>(Error.Failure("storage.unavailable")));
 
         var handler = new ApproveVisaDocumentRequestHandler(
             _tenant, _requests, _delivery, NullLogger<ApproveVisaDocumentRequestHandler>.Instance);

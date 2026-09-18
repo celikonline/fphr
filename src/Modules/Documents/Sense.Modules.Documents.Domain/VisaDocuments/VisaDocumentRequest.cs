@@ -54,7 +54,6 @@ public sealed class VisaDocumentRequest : TenantAggregateRoot<Guid>, IAuditLogge
         VisaType = visaType;
         Description = description;
         Status = VisaDocumentRequestStatus.Pending;
-        CreatedAt = DateTime.UtcNow;
     }
 
     /// <summary>Employee who initiated the visa document request.</summary>
@@ -93,9 +92,6 @@ public sealed class VisaDocumentRequest : TenantAggregateRoot<Guid>, IAuditLogge
     /// <summary>Timestamp of rejection, if applicable.</summary>
     public DateTime? RejectedAt { get; private set; }
 
-    /// <summary>Timestamp of request creation.</summary>
-    public DateTime CreatedAt { get; private set; }
-
     /// <summary>Timestamp of when request was approved (if approved).</summary>
     public DateTime? ApprovedAt { get; private set; }
 
@@ -119,20 +115,20 @@ public sealed class VisaDocumentRequest : TenantAggregateRoot<Guid>, IAuditLogge
         if (travelEnd < travelStart)
         {
             return Result.Failure<VisaDocumentRequest>(
-                new Error(VisaDomainErrors.VisaDocumentRequestInvalidTravelDates, "Travel end date must be after or equal to travel start date"));
+                Error.Validation(VisaDomainErrors.VisaDocumentRequestInvalidTravelDates));
         }
 
         // Validate required fields
         if (string.IsNullOrWhiteSpace(countryCode))
         {
             return Result.Failure<VisaDocumentRequest>(
-                new Error(VisaDomainErrors.VisaDocumentRequestCountryCodeRequired, "Country code is required"));
+                Error.Validation(VisaDomainErrors.VisaDocumentRequestCountryCodeRequired));
         }
 
         if (string.IsNullOrWhiteSpace(visaType))
         {
             return Result.Failure<VisaDocumentRequest>(
-                new Error(VisaDomainErrors.VisaDocumentRequestVisaTypeRequired, "Visa type is required"));
+                Error.Validation(VisaDomainErrors.VisaDocumentRequestVisaTypeRequired));
         }
 
         var request = new VisaDocumentRequest(

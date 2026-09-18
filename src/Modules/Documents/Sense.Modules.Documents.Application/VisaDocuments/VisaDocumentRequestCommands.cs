@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
+using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.VisaDocuments;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -57,9 +58,7 @@ public sealed class SubmitVisaDocumentRequestHandler(
         {
             logger.LogWarning("Visa approver not configured for tenant {TenantId}", tenant.TenantId);
             return Result.Failure<SubmitVisaDocumentRequestResponse>(
-                new Error(
-                    VisaDomainErrors.VisaDocumentRequestApproverNotConfigured,
-                    "Vize belgesi onaycisi tenant ayarlarinda tanimli degil."));
+                Error.Validation(VisaDomainErrors.VisaDocumentRequestApproverNotConfigured));
         }
 
         var requestResult = VisaDocumentRequest.Create(
@@ -150,14 +149,14 @@ public sealed class ApproveVisaDocumentRequestHandler(
         if (request is null)
         {
             return Result.Failure<ApproveVisaDocumentRequestResponse>(
-                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Vize belgesi talebi bulunamadi."));
+                Error.NotFound(VisaDomainErrors.VisaDocumentRequestNotFound));
         }
 
         if (request.TenantId != tenant.TenantId)
         {
             logger.LogWarning("Cross-tenant visa request access blocked for request {RequestId}", command.RequestId);
             return Result.Failure<ApproveVisaDocumentRequestResponse>(
-                new Error(DocumentsDomainErrors.TenantNotAuthorized, "Bu talebe erisim yetkiniz yok."));
+                Error.Forbidden(DocumentsDomainErrors.TenantNotAuthorized));
         }
 
         request.Approve();
@@ -219,13 +218,13 @@ public sealed class RejectVisaDocumentRequestHandler(
         if (request is null)
         {
             return Result.Failure<RejectVisaDocumentRequestResponse>(
-                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Vize belgesi talebi bulunamadi."));
+                Error.NotFound(VisaDomainErrors.VisaDocumentRequestNotFound));
         }
 
         if (request.TenantId != tenant.TenantId)
         {
             return Result.Failure<RejectVisaDocumentRequestResponse>(
-                new Error(DocumentsDomainErrors.TenantNotAuthorized, "Bu talebe erisim yetkiniz yok."));
+                Error.Forbidden(DocumentsDomainErrors.TenantNotAuthorized));
         }
 
         request.Reject(command.RejectionReason, command.RejectedBy);
