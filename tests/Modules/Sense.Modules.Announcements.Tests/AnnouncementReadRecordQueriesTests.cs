@@ -1,21 +1,18 @@
 using NSubstitute;
-using Sense.Shared.Contracts.Tenants;
 using Sense.Modules.Announcements.Application.ReadRecords;
 using Sense.Modules.Announcements.Domain;
+using Sense.Shared.Contracts.Context;
 using Xunit;
 
 namespace Sense.Modules.Announcements.Tests;
 
-[Trait("Category", "Integration")]
 public class AnnouncementReadRecordQueriesTests
 {
     [Fact]
     public async Task ListAnnouncementReadRecordsQuery_WithValidQuery_ShouldSucceed()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
         var announcementId = Guid.NewGuid();
-        var query = new ListAnnouncementReadRecordsQuery(tenantId, announcementId);
 
         var repository = Substitute.For<IAnnouncementReadRecordRepository>();
         repository.GetByAnnouncementIdAsync(tenantId, announcementId, Arg.Any<CancellationToken>())
@@ -25,66 +22,70 @@ public class AnnouncementReadRecordQueriesTests
         tenantContext.TenantId.Returns(tenantId);
 
         var handler = new ListAnnouncementReadRecordsHandler(repository, tenantContext);
+        var result = await handler.Handle(new ListAnnouncementReadRecordsQuery(announcementId), CancellationToken.None);
 
-        // Act
-        var result = await handler.Handle(query, CancellationToken.None);
-
-        // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.IsType<List<AnnouncementReadRecordDto>>(result.Value);
+        Assert.Empty(result.Value);
     }
 
     [Fact]
     public async Task CountAnnouncementReadersQuery_WithValidQuery_ShouldSucceed()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
         var announcementId = Guid.NewGuid();
-        var query = new CountAnnouncementReadersQuery(tenantId, announcementId);
 
         var repository = Substitute.For<IAnnouncementReadRecordRepository>();
-        repository.CountByAnnouncementIdAsync(tenantId, announcementId, Arg.Any<CancellationToken>())
-            .Returns(5);
+        repository.CountByAnnouncementIdAsync(tenantId, announcementId, Arg.Any<CancellationToken>()).Returns(5);
 
         var tenantContext = Substitute.For<ITenantContext>();
         tenantContext.TenantId.Returns(tenantId);
 
         var handler = new CountAnnouncementReadersHandler(repository, tenantContext);
+        var result = await handler.Handle(new CountAnnouncementReadersQuery(announcementId), CancellationToken.None);
 
-        // Act
-        var result = await handler.Handle(query, CancellationToken.None);
-
-        // Assert
         Assert.True(result.IsSuccess);
         Assert.Equal(5, result.Value);
     }
 
     [Fact]
-    public void ListAnnouncementReadRecordsValidator_WithEmptyTenantId_ShouldFail()
+    public async Task MarkAnnouncementRead_WhenNotYetRead_AddsRecord()
     {
-        // Arrange
-        var query = new ListAnnouncementReadRecordsQuery(Guid.Empty, Guid.NewGuid());
-        var validator = new ListAnnouncementReadRecordsValidator();
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var announcementId = Guid.NewGuid();
 
-        // Act
-        var result = validator.Validate(query);
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(employeeId);
+        var repository = Substitute.For<IAnnouncementReadRecordRepository>();
+        repository.ExistsAsync(tenantId, announcementId, employeeId, Arg.Any<CancellationToken>()).Returns(false);
 
-        // Assert
-        Assert.False(result.IsValid);
+        var handler = new MarkAnnouncementReadHandler(tenant, currentUser, repository);
+        var result = await handler.Handle(new MarkAnnouncementReadCommand(announcementId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        repository.Received(1).Add(Arg.Is<AnnouncementReadRecord>(r => r.AnnouncementId == announcementId && r.EmployeeId == employeeId));
     }
 
     [Fact]
-    public void CountAnnouncementReadersValidator_WithEmptyAnnouncementId_ShouldFail()
+    public async Task MarkAnnouncementRead_WhenAlreadyRead_IsIdempotent()
     {
-        // Arrange
-        var query = new CountAnnouncementReadersQuery(Guid.NewGuid(), Guid.Empty);
-        var validator = new CountAnnouncementReadersValidator();
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var announcementId = Guid.NewGuid();
 
-        // Act
-        var result = validator.Validate(query);
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.EmployeeId.Returns(employeeId);
+        var repository = Substitute.For<IAnnouncementReadRecordRepository>();
+        repository.ExistsAsync(tenantId, announcementId, employeeId, Arg.Any<CancellationToken>()).Returns(true);
 
-        // Assert
-        Assert.False(result.IsValid);
+        var handler = new MarkAnnouncementReadHandler(tenant, currentUser, repository);
+        var result = await handler.Handle(new MarkAnnouncementReadCommand(announcementId), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        repository.DidNotReceive().Add(Arg.Any<AnnouncementReadRecord>());
     }
 }

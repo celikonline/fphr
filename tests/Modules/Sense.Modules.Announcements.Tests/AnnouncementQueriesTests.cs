@@ -1,97 +1,64 @@
 using NSubstitute;
-using Sense.Shared.Contracts.Tenants;
 using Sense.Modules.Announcements.Application.Announcements;
 using Sense.Modules.Announcements.Domain;
+using Sense.Shared.Contracts.Context;
 using Xunit;
 
 namespace Sense.Modules.Announcements.Tests;
 
-[Trait("Category", "Integration")]
 public class AnnouncementQueriesTests
 {
     [Fact]
     public async Task GetAnnouncementQuery_WithValidId_ShouldSucceed()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var announcementId = Guid.NewGuid();
-        var query = new GetAnnouncementQuery(announcementId, tenantId);
-
-        var announcement = Announcement.Create(
-            tenantId,
-            "Test Announcement",
-            "This is test content",
-            AnnouncementType.General,
-            AnnouncementPriority.Normal
-        ).Value;
+        var announcement = Announcement.Create(tenantId, "Test Announcement", "This is test content", AnnouncementType.General, AnnouncementPriority.Normal).Value;
 
         var repository = Substitute.For<IAnnouncementRepository>();
-        repository.GetByIdAsync(tenantId, announcementId, Arg.Any<CancellationToken>())
-            .Returns(announcement);
+        repository.GetByIdAsync(tenantId, announcement.Id, Arg.Any<CancellationToken>()).Returns(announcement);
 
         var tenantContext = Substitute.For<ITenantContext>();
         tenantContext.TenantId.Returns(tenantId);
 
         var handler = new GetAnnouncementHandler(repository, tenantContext);
+        var result = await handler.Handle(new GetAnnouncementQuery(announcement.Id), CancellationToken.None);
 
-        // Act
-        var result = await handler.Handle(query, CancellationToken.None);
-
-        // Assert
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
         Assert.Equal(announcement.Id, result.Value.Id);
     }
 
     [Fact]
     public async Task GetAnnouncementQuery_WithInvalidId_ShouldFail()
     {
-        // Arrange
         var tenantId = Guid.NewGuid();
-        var announcementId = Guid.NewGuid();
-        var query = new GetAnnouncementQuery(announcementId, tenantId);
-
         var repository = Substitute.For<IAnnouncementRepository>();
-        repository.GetByIdAsync(tenantId, announcementId, Arg.Any<CancellationToken>())
-            .Returns((Announcement?)null);
+        repository.GetByIdAsync(tenantId, Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns((Announcement?)null);
 
         var tenantContext = Substitute.For<ITenantContext>();
         tenantContext.TenantId.Returns(tenantId);
 
         var handler = new GetAnnouncementHandler(repository, tenantContext);
+        var result = await handler.Handle(new GetAnnouncementQuery(Guid.NewGuid()), CancellationToken.None);
 
-        // Act
-        var result = await handler.Handle(query, CancellationToken.None);
-
-        // Assert
         Assert.False(result.IsSuccess);
     }
 
     [Fact]
-    public void GetAnnouncementValidator_WithEmptyAnnouncementId_ShouldFail()
+    public async Task ListAnnouncementsQuery_PublishedOnly_ReturnsOnlyPublished()
     {
-        // Arrange
-        var query = new GetAnnouncementQuery(Guid.Empty, Guid.NewGuid());
-        var validator = new GetAnnouncementValidator();
+        var tenantId = Guid.NewGuid();
+        var published = Announcement.Create(tenantId, "Published", "Content", AnnouncementType.General, AnnouncementPriority.Normal).Value;
 
-        // Act
-        var result = validator.Validate(query);
+        var repository = Substitute.For<IAnnouncementRepository>();
+        repository.GetPublishedAsync(tenantId, Arg.Any<CancellationToken>()).Returns([published]);
 
-        // Assert
-        Assert.False(result.IsValid);
-    }
+        var tenantContext = Substitute.For<ITenantContext>();
+        tenantContext.TenantId.Returns(tenantId);
 
-    [Fact]
-    public void GetAnnouncementValidator_WithEmptyTenantId_ShouldFail()
-    {
-        // Arrange
-        var query = new GetAnnouncementQuery(Guid.NewGuid(), Guid.Empty);
-        var validator = new GetAnnouncementValidator();
+        var handler = new ListAnnouncementsHandler(repository, tenantContext);
+        var result = await handler.Handle(new ListAnnouncementsQuery(PublishedOnly: true), CancellationToken.None);
 
-        // Act
-        var result = validator.Validate(query);
-
-        // Assert
-        Assert.False(result.IsValid);
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value);
     }
 }

@@ -1,26 +1,8 @@
-using Sense.Shared.Kernel.Results;
-
 namespace Sense.Modules.Announcements.Application;
 
+/// <summary>Application-layer error codes (handler-level checks not owned by the domain model).</summary>
 public static class AnnouncementsErrors
 {
-    public static readonly Error TitleRequired = Error.Validation(
-        "announcements.announcement.title_required",
-        "Duyuru başlığı gereklidir ve 200 karakteri aşamaz.");
-
-    public static readonly Error ContentRequired = Error.Validation(
-        "announcements.announcement.content_required",
-        "Duyuru içeriği gereklidir.");
-
-    public static readonly Error CannotPublish = Error.Conflict(
-        "announcements.announcement.cannot_publish",
-        "Yalnızca taslak duyurular yayınlanabilir.");
-
-    public static readonly Error AlreadyArchived = Error.Conflict(
-        "announcements.announcement.already_archived",
-        "Duyuru zaten arşivlenmiş.");
-
-    public static readonly Error AnnouncementNotFound = Error.NotFound(
-        "announcements.announcement.not_found",
-        "Duyuru bulunamadı.");
+    /// <summary>Bir kullanıcı başkasının açtığı destek talebini görmeye çalıştığında (varlık sızıntısı olmasın diye NotFound olarak dönülür).</summary>
+    public const string TicketNotFound = "support_ticket.not_found";
 }

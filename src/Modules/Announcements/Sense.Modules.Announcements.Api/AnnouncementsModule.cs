@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Announcements.Application;
 using Sense.Modules.Announcements.Contracts;
-using Sense.Modules.Announcements.Domain;
+using Sense.Modules.Announcements.Infrastructure;
 using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -11,7 +11,11 @@ using Sense.Shared.Infrastructure.DependencyInjection;
 
 namespace Sense.Modules.Announcements.Api;
 
-/// <summary>Announcements (Duyurular) module composition root.</summary>
+/// <summary>
+/// Announcements module composition root: kurumsal duyurular + Support alt alanı ("Yardım Merkezi + Desteğe
+/// bağlan", roadmap #69 — 11.7 kararı: ayrı modül değil, Announcements içinde alt alan; şema "announcements",
+/// spesifikasyondaki ayrı "support" şeması bu kararla düşer, bkz. 11.3.13).
+/// </summary>
 public sealed class AnnouncementsModule : IModule
 {
     public string Name => AnnouncementsDbContext.SchemaName;
@@ -19,8 +23,9 @@ public sealed class AnnouncementsModule : IModule
     public IReadOnlyList<Assembly> Assemblies { get; } =
     [
         typeof(AnnouncementsModule).Assembly,
-        typeof(AnnouncementsPermissions).Assembly,
+        typeof(AnnouncementsErrors).Assembly,
         typeof(AnnouncementsDbContext).Assembly,
+        typeof(AnnouncementsPermissions).Assembly,
     ];
 
     public IEnumerable<Permission> Permissions => AnnouncementsPermissions.All;
@@ -29,16 +34,17 @@ public sealed class AnnouncementsModule : IModule
     {
         services.AddModuleDbContext<AnnouncementsDbContext>(configuration, AnnouncementsDbContext.SchemaName);
 
-        // Domain + Contracts + Application assemblies: handlers/commands/queries + domain/integration event types must resolve in OutboxProcessor
+        // Application + Contracts assemblies: Contracts' SupportTicketCreated/Answered integration event types
+        // must resolve in OutboxProcessor, see CLAUDE.md's AddModuleHandlers note (Domain raises no domain events
+        // here, so it doesn't need its own assembly reference — mirrors AssetsModule.AddModule).
         services.AddModuleHandlers(
             AnnouncementsDbContext.SchemaName,
-            typeof(IAnnouncementRepository).Assembly, // Application
-            typeof(AnnouncementsErrors).Assembly, // Domain
-            typeof(AnnouncementsDbContext).Assembly, // Infrastructure
-            typeof(AnnouncementsPermissions).Assembly); // Contracts
+            typeof(AnnouncementsErrors).Assembly,
+            typeof(AnnouncementsDbContext).Assembly,
+            typeof(AnnouncementsPermissions).Assembly);
 
-        services.AddScoped<IAnnouncementsUnitOfWork>(sp => sp.GetRequiredService<AnnouncementsDbContext>());
-        services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
-        services.AddScoped<IAnnouncementReadRecordRepository, AnnouncementReadRecordRepository>();
+        // Integration event handlers (SupportTicketCreated/Answered -> e-mail) run in Sense.Worker only, which
+        // polls the outbox and publishes via IEventBus; the Api host never does (mirrors every other module).
+        services.AddAnnouncementsCoreServices(configuration);
     }
 }

@@ -1,54 +1,45 @@
+using Sense.Modules.Announcements.Domain.Support;
+
 namespace Sense.Modules.Announcements.Domain;
 
-/// <summary>
-/// Duyuru repository.
-/// </summary>
+/// <summary>Duyuru repository.</summary>
 public interface IAnnouncementRepository
 {
-    /// <summary>
-    /// Duyuru ekle.
-    /// </summary>
-    Task AddAsync(Announcement announcement, CancellationToken ct = default);
+    void Add(Announcement announcement);
 
-    /// <summary>
-    /// Duyuru ID ile getir.
-    /// </summary>
-    Task<Announcement?> GetByIdAsync(Guid tenantId, Guid announcementId, CancellationToken ct = default);
+    Task<Announcement?> GetByIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Tüm duyuruları getir (tenant tarafından filtrelenmesi repository'de).
-    /// </summary>
-    Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken ct = default);
+    Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Yayınlanmış duyuruları getir (geçerliler).
-    /// </summary>
-    Task<IReadOnlyList<Announcement>> GetPublishedAsync(Guid tenantId, CancellationToken ct = default);
+    Task<IReadOnlyList<Announcement>> GetPublishedAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }
 
-/// <summary>
-/// Duyuru okunma kaydı repository.
-/// </summary>
+/// <summary>Duyuru okunma kaydı repository (analytics).</summary>
 public interface IAnnouncementReadRecordRepository
 {
-    /// <summary>
-    /// Okunma kaydı ekle.
-    /// </summary>
-    Task AddAsync(AnnouncementReadRecord record, CancellationToken ct = default);
+    void Add(AnnouncementReadRecord record);
 
-    /// <summary>
-    /// Çalışan'ın duyuru okunma kayıtlarını getir.
-    /// </summary>
-    Task<IReadOnlyList<AnnouncementReadRecord>> GetByEmployeeAsync(
-        Guid tenantId,
-        Guid employeeId,
-        CancellationToken ct = default);
+    Task<bool> ExistsAsync(Guid tenantId, Guid announcementId, Guid employeeId, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Duyurunun okunma kayıtlarını getir (analytics).
-    /// </summary>
-    Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementAsync(
-        Guid tenantId,
-        Guid announcementId,
-        CancellationToken ct = default);
+    Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
+
+    Task<int> CountByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Support ticket repository ("Desteğe bağlan", roadmap #69).</summary>
+public interface ISupportTicketRepository
+{
+    void Add(SupportTicket ticket);
+
+    Task<SupportTicket?> GetByIdAsync(Guid tenantId, Guid ticketId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SupportTicket>> ListByRequesterAsync(Guid tenantId, Guid requestedByUserId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<SupportTicket>> ListAsync(Guid tenantId, SupportTicketStatus? status, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Yardım Merkezi arama günlüğü repository (content-as-code geri besleme sinyali).</summary>
+public interface IHelpSearchLogRepository
+{
+    void Add(HelpSearchLog log);
 }

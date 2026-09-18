@@ -1,35 +1,24 @@
 using Sense.Shared.Kernel.Domain;
-using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Announcements.Domain;
 
-/// <summary>
-/// Duyuru okunma kaydı (analytics).
-/// </summary>
-public sealed class AnnouncementReadRecord : DomainEntity
+/// <summary>Bir çalışanın bir duyuruyu okuduğu kayıt (analytics: kaç kişi okudu).</summary>
+public sealed class AnnouncementReadRecord : TenantEntity<Guid>
 {
-    // ReSharper disable UnusedMember.Local
+    // ReSharper disable once UnusedMember.Local
     private AnnouncementReadRecord() { }
 
     public Guid AnnouncementId { get; private set; }
-    public Guid TenantId { get; private set; }
     public Guid EmployeeId { get; private set; }
     public DateTime ReadAt { get; private set; }
 
-    public static Result<AnnouncementReadRecord> Create(
-        Guid announcementId,
-        Guid tenantId,
-        Guid employeeId)
-    {
-        var record = new AnnouncementReadRecord
+    public static AnnouncementReadRecord Create(Guid tenantId, Guid announcementId, Guid employeeId) =>
+        new()
         {
             Id = Guid.NewGuid(),
-            AnnouncementId = announcementId,
             TenantId = tenantId,
+            AnnouncementId = announcementId,
             EmployeeId = employeeId,
-            ReadAt = DateTime.UtcNow
+            ReadAt = DateTime.UtcNow,
         };
-
-        return record;
-    }
 }

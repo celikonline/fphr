@@ -1,4 +1,4 @@
-namespace Sense.Modules.Announcements.Contracts;
+namespace Sense.Modules.Announcements.Application.Announcements;
 
 public sealed record AnnouncementDto(
     Guid Id,
@@ -8,6 +8,7 @@ public sealed record AnnouncementDto(
     string Priority,
     string Status,
     Guid PublishedBy,
-    DateTime PublishedAt,
+    DateTime? PublishedAt,
     DateTime? ExpiresAt,
-    string? TargetAudience);
+    string? TargetAudience,
+    DateTime CreatedAt);

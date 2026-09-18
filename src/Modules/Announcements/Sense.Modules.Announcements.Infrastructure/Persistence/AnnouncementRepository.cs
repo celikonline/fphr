@@ -3,44 +3,45 @@ using Sense.Modules.Announcements.Domain;
 
 namespace Sense.Modules.Announcements.Infrastructure.Persistence;
 
-/// <summary>EF Core-backed Announcement repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
+/// <summary>EF Core-backed Announcement repository (tenant isolation via ModuleDbContext's global query filter; TenantId kept explicit for clarity).</summary>
 public sealed class AnnouncementRepository(AnnouncementsDbContext context) : IAnnouncementRepository
 {
-    public async Task AddAsync(Announcement announcement, CancellationToken ct = default)
-    {
-        context.Announcements.Add(announcement);
-        await Task.CompletedTask;
-    }
+    public void Add(Announcement announcement) => context.Announcements.Add(announcement);
 
-    public async Task<Announcement?> GetByIdAsync(Guid tenantId, Guid announcementId, CancellationToken ct = default)
-    {
-        return await context.Announcements
-            .FirstOrDefaultAsync(a => a.Id == announcementId && a.TenantId == tenantId, ct);
-    }
+    public async Task<Announcement?> GetByIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default) =>
+        await context.Announcements.FirstOrDefaultAsync(a => a.Id == announcementId && a.TenantId == tenantId, cancellationToken);
 
-    public async Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken ct = default)
-    {
-        return await context.Announcements
+    public async Task<IReadOnlyList<Announcement>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken = default) =>
+        await context.Announcements
             .Where(a => a.TenantId == tenantId)
-            .ToListAsync(ct);
-    }
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Announcement>> GetPublishedAsync(Guid tenantId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<Announcement>> GetPublishedAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        var now = DateTime.UtcNow;
         return await context.Announcements
-            .Where(a => a.TenantId == tenantId && a.Status == AnnouncementStatus.Published)
-            .ToListAsync(ct);
+            .Where(a => a.TenantId == tenantId && a.Status == AnnouncementStatus.Published && (a.ExpiresAt == null || a.ExpiresAt > now))
+            .OrderByDescending(a => a.PublishedAt)
+            .ToListAsync(cancellationToken);
     }
+}
 
-    public async Task UpdateAsync(Announcement announcement, CancellationToken ct = default)
-    {
-        context.Announcements.Update(announcement);
-        await Task.CompletedTask;
-    }
+/// <summary>EF Core-backed AnnouncementReadRecord repository.</summary>
+public sealed class AnnouncementReadRecordRepository(AnnouncementsDbContext context) : IAnnouncementReadRecordRepository
+{
+    public void Add(AnnouncementReadRecord record) => context.AnnouncementReadRecords.Add(record);
 
-    public async Task DeleteAsync(Announcement announcement, CancellationToken ct = default)
-    {
-        context.Announcements.Remove(announcement);
-        await Task.CompletedTask;
-    }
+    public async Task<bool> ExistsAsync(Guid tenantId, Guid announcementId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.AnnouncementReadRecords.AnyAsync(
+            r => r.TenantId == tenantId && r.AnnouncementId == announcementId && r.EmployeeId == employeeId, cancellationToken);
+
+    public async Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default) =>
+        await context.AnnouncementReadRecords
+            .Where(r => r.TenantId == tenantId && r.AnnouncementId == announcementId)
+            .ToListAsync(cancellationToken);
+
+    public async Task<int> CountByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default) =>
+        await context.AnnouncementReadRecords
+            .CountAsync(r => r.TenantId == tenantId && r.AnnouncementId == announcementId, cancellationToken);
 }

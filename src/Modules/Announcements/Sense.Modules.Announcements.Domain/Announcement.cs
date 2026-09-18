@@ -3,13 +3,10 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Announcements.Domain;
 
-/// <summary>
-/// Kurumsal duyuru agregat kökü.
-/// Duyuru başlığı, içeriği, hedef kitle ve yayın yönetimi.
-/// </summary>
-public sealed class Announcement : TenantAggregateRoot, IAuditLogged
+/// <summary>Kurumsal duyuru agregat kökü: başlık, içerik, hedef kitle ve yayın yönetimi.</summary>
+public sealed class Announcement : TenantAggregateRoot<Guid>, IAuditLogged
 {
-    // ReSharper disable UnusedMember.Local
+    // ReSharper disable once UnusedMember.Local
     private Announcement() { }
 
     public string Title { get; private set; } = null!;
@@ -18,28 +15,24 @@ public sealed class Announcement : TenantAggregateRoot, IAuditLogged
     public AnnouncementPriority Priority { get; private set; }
     public AnnouncementStatus Status { get; private set; }
     public Guid PublishedBy { get; private set; }
-    public DateTime PublishedAt { get; private set; }
+    public DateTime? PublishedAt { get; private set; }
     public DateTime? ExpiresAt { get; private set; }
     public string? TargetAudience { get; private set; }
 
-    /// <summary>
-    /// Duyuru oluştur (taslak).
-    /// </summary>
     public static Result<Announcement> Create(
-        Guid tenantId,
-        string title,
-        string content,
-        AnnouncementType type,
-        AnnouncementPriority priority,
-        string? targetAudience = null)
+        Guid tenantId, string title, string content, AnnouncementType type, AnnouncementPriority priority, string? targetAudience = null)
     {
         if (string.IsNullOrWhiteSpace(title) || title.Length > 200)
-            return AnnouncementDomainErrors.TitleRequired;
+        {
+            return Error.Validation(AnnouncementDomainErrors.TitleRequired);
+        }
 
-        if (string.IsNullOrWhiteSpace(content))
-            return AnnouncementDomainErrors.ContentRequired;
+        if (string.IsNullOrWhiteSpace(content) || content.Length > AnnouncementsLimits.ContentMaxLength)
+        {
+            return Error.Validation(AnnouncementDomainErrors.ContentRequired);
+        }
 
-        var announcement = new Announcement
+        return new Announcement
         {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
@@ -49,36 +42,31 @@ public sealed class Announcement : TenantAggregateRoot, IAuditLogged
             Priority = priority,
             Status = AnnouncementStatus.Draft,
             TargetAudience = targetAudience,
-            PublishedBy = Guid.Empty,
-            PublishedAt = DateTime.UtcNow
         };
-
-        return announcement;
     }
 
-    /// <summary>
-    /// Duyuruyu yayınla.
-    /// </summary>
+    /// <summary>Taslak duyuruyu yayınla.</summary>
     public Result Publish(Guid publishedBy, DateTime? expiresAt = null)
     {
         if (Status != AnnouncementStatus.Draft)
-            return AnnouncementDomainErrors.CannotPublish;
+        {
+            return Error.Conflict(AnnouncementDomainErrors.CannotPublish);
+        }
 
         Status = AnnouncementStatus.Published;
         PublishedBy = publishedBy;
         PublishedAt = DateTime.UtcNow;
         ExpiresAt = expiresAt;
-
         return Result.Success();
     }
 
-    /// <summary>
-    /// Duyuruyu arşivle.
-    /// </summary>
+    /// <summary>Yayınlanmış veya taslak duyuruyu arşivle.</summary>
     public Result Archive()
     {
         if (Status == AnnouncementStatus.Archived)
-            return AnnouncementDomainErrors.AlreadyArchived;
+        {
+            return Error.Conflict(AnnouncementDomainErrors.AlreadyArchived);
+        }
 
         Status = AnnouncementStatus.Archived;
         return Result.Success();

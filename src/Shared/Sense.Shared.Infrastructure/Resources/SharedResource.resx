@@ -980,4 +980,116 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="performance.goal.employee_invalid" xml:space="preserve"><value>Seçilen çalışan bulunamadı veya pasif.</value></data>
   <data name="performance.goal.target_date_outside_cycle" xml:space="preserve"><value>Hedef tarihi değerlendirme dönemi aralığında olmalıdır.</value></data>
   <data name="performance.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="report.col.firstName" xml:space="preserve"><value>Ad</value></data>
+  <data name="report.col.lastName" xml:space="preserve"><value>Soyad</value></data>
+  <data name="report.col.nationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="report.col.hireDate" xml:space="preserve"><value>İşe giriş tarihi</value></data>
+  <data name="report.col.status" xml:space="preserve"><value>Çalışma durumu</value></data>
+  <data name="report.col.orgUnit" xml:space="preserve"><value>Birim</value></data>
+  <data name="report.col.manager" xml:space="preserve"><value>Yönetici</value></data>
+  <data name="report.col.workEmail" xml:space="preserve"><value>İş e-postası</value></data>
+  <data name="report.col.mobilePhone" xml:space="preserve"><value>Cep telefonu</value></data>
+  <data name="report.col.employmentType" xml:space="preserve"><value>Çalışma şekli</value></data>
+  <data name="report.col.contractType" xml:space="preserve"><value>Sözleşme türü</value></data>
+  <data name="report.col.gender" xml:space="preserve"><value>Cinsiyet</value></data>
+  <data name="report.col.birthDate" xml:space="preserve"><value>Doğum tarihi</value></data>
+  <data name="report.col.terminationDate" xml:space="preserve"><value>Ayrılış tarihi</value></data>
+  <data name="report.col.leaveAccrualStartDate" xml:space="preserve"><value>İzne esas hak ediş tarihi</value></data>
+  <data name="report.col.remainingBalance" xml:space="preserve"><value>Kalan</value></data>
+  <data name="report.col.totalEntitled" xml:space="preserve"><value>Toplam hak edilen</value></data>
+  <data name="report.col.carryOverLoss" xml:space="preserve"><value>Devir kayıpları</value></data>
+  <data name="report.col.totalUsed" xml:space="preserve"><value>Kullanılan</value></data>
+  <data name="report.col.currentPeriod" xml:space="preserve"><value>Güncel hak ediş dönemi</value></data>
+  <data name="report.col.futureApproved" xml:space="preserve"><value>Güncel dönemdeki ileri tarihli izinler</value></data>
+  <data name="report.col.leaveType" xml:space="preserve"><value>İzin türü</value></data>
+  <data name="report.col.startDate" xml:space="preserve"><value>Başlangıç</value></data>
+  <data name="report.col.endDate" xml:space="preserve"><value>Bitiş</value></data>
+  <data name="report.col.days" xml:space="preserve"><value>Gün</value></data>
+  <data name="report.col.description" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="report.col.submittedAt" xml:space="preserve"><value>Talep tarihi</value></data>
+  <data name="report.col.decidedAt" xml:space="preserve"><value>Karar tarihi</value></data>
+  <data name="report.col.source" xml:space="preserve"><value>Kaynak</value></data>
+  <data name="report.col.requestStatus" xml:space="preserve"><value>Durum</value></data>
+  <data name="report.col.documentType" xml:space="preserve"><value>Belge türü</value></data>
+  <data name="report.col.documentStage" xml:space="preserve"><value>Aşama</value></data>
+  <data name="report.col.requirementStatus" xml:space="preserve"><value>Durum</value></data>
+  <data name="report.col.dueDate" xml:space="preserve"><value>Son tarih</value></data>
+  <data name="report.col.salaryAmount" xml:space="preserve"><value>Maaş</value></data>
+  <data name="report.col.currency" xml:space="preserve"><value>Para birimi</value></data>
+  <data name="report.col.salaryType" xml:space="preserve"><value>Maaş türü</value></data>
+  <data name="report.col.payFrequency" xml:space="preserve"><value>Ödeme düzeni</value></data>
+  <data name="report.col.effectiveFrom" xml:space="preserve"><value>Geçerlilik başlangıcı</value></data>
+  <data name="report.col.transportAllowance" xml:space="preserve"><value>Yol yardımı</value></data>
+  <data name="report.col.mealAllowance" xml:space="preserve"><value>Yemek yardımı</value></data>
+  <data name="report.sheet.employeeList" xml:space="preserve"><value>Çalışan listesi</value></data>
+  <data name="report.sheet.leaveBalanceSummary" xml:space="preserve"><value>İzin bakiye</value></data>
+  <data name="report.sheet.leaveRequests" xml:space="preserve"><value>İzin raporu</value></data>
+  <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Eksik belgeler</value></data>
+  <data name="report.sheet.salaries" xml:space="preserve"><value>Maaş listesi</value></data>
+  <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Taslak</value></data>
+  <data name="report.enum.EmployeeStatus.Active" xml:space="preserve"><value>Aktif</value></data>
+  <data name="report.enum.EmployeeStatus.Suspended" xml:space="preserve"><value>Askıda</value></data>
+  <data name="report.enum.EmployeeStatus.Terminated" xml:space="preserve"><value>İşten ayrıldı</value></data>
+  <data name="report.enum.Gender.Unspecified" xml:space="preserve"><value>Belirtilmemiş</value></data>
+  <data name="report.enum.Gender.Male" xml:space="preserve"><value>Erkek</value></data>
+  <data name="report.enum.Gender.Female" xml:space="preserve"><value>Kadın</value></data>
+  <data name="report.enum.Gender.Other" xml:space="preserve"><value>Diğer</value></data>
+  <data name="report.enum.EmploymentType.FullTime" xml:space="preserve"><value>Tam zamanlı</value></data>
+  <data name="report.enum.EmploymentType.PartTime" xml:space="preserve"><value>Yarı zamanlı</value></data>
+  <data name="report.enum.EmploymentType.Temporary" xml:space="preserve"><value>Geçici</value></data>
+  <data name="report.enum.EmploymentType.Contract" xml:space="preserve"><value>Sözleşmeli</value></data>
+  <data name="report.enum.EmploymentType.Freelance" xml:space="preserve"><value>Serbest</value></data>
+  <data name="report.enum.EmploymentType.Intern" xml:space="preserve"><value>Stajyer</value></data>
+  <data name="report.enum.EmploymentType.Mobile" xml:space="preserve"><value>Mobil</value></data>
+  <data name="report.enum.EmploymentType.Apprentice" xml:space="preserve"><value>Çırak</value></data>
+  <data name="report.enum.EmploymentType.Seasonal" xml:space="preserve"><value>Mevsimlik</value></data>
+  <data name="report.enum.EmploymentType.AgencyWorker" xml:space="preserve"><value>Ajans çalışanı</value></data>
+  <data name="report.enum.EmploymentType.Subcontractor" xml:space="preserve"><value>Alt işveren</value></data>
+  <data name="report.enum.ContractType.Indefinite" xml:space="preserve"><value>Belirsiz süreli</value></data>
+  <data name="report.enum.ContractType.FixedTerm" xml:space="preserve"><value>Belirli süreli</value></data>
+  <data name="report.enum.LeaveRequestStatus.Pending" xml:space="preserve"><value>Onay bekliyor</value></data>
+  <data name="report.enum.LeaveRequestStatus.Approved" xml:space="preserve"><value>Onaylandı</value></data>
+  <data name="report.enum.LeaveRequestStatus.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
+  <data name="report.enum.LeaveRequestStatus.Withdrawn" xml:space="preserve"><value>Geri çekildi</value></data>
+  <data name="report.enum.LeaveRequestStatus.Cancelled" xml:space="preserve"><value>İptal edildi</value></data>
+  <data name="report.enum.LeaveRequestSource.SelfService" xml:space="preserve"><value>Çalışan talebi</value></data>
+  <data name="report.enum.LeaveRequestSource.OnBehalf" xml:space="preserve"><value>Adına eklendi</value></data>
+  <data name="report.enum.LeaveRequestSource.Import" xml:space="preserve"><value>Aktarım</value></data>
+  <data name="report.enum.LeaveRequestSource.Attendance" xml:space="preserve"><value>PDKS</value></data>
+  <data name="report.enum.LeaveRequestSource.Resubmission" xml:space="preserve"><value>Yeniden gönderim</value></data>
+  <data name="report.enum.SalaryType.Net" xml:space="preserve"><value>Net</value></data>
+  <data name="report.enum.SalaryType.Gross" xml:space="preserve"><value>Brüt</value></data>
+  <data name="report.enum.PayFrequency.Monthly" xml:space="preserve"><value>Aylık</value></data>
+  <data name="report.enum.PayFrequency.Daily" xml:space="preserve"><value>Günlük</value></data>
+  <data name="report.enum.PayFrequency.Yearly" xml:space="preserve"><value>Yıllık</value></data>
+  <data name="report.enum.PayFrequency.Weekly" xml:space="preserve"><value>Haftalık</value></data>
+  <data name="report.enum.PayFrequency.Hourly" xml:space="preserve"><value>Saatlik</value></data>
+  <data name="report.enum.DocumentTypeStage.Onboarding" xml:space="preserve"><value>İşe giriş</value></data>
+  <data name="report.enum.DocumentTypeStage.Conditional" xml:space="preserve"><value>Koşullu</value></data>
+  <data name="report.enum.DocumentTypeStage.DuringEmployment" xml:space="preserve"><value>Çalışırken</value></data>
+  <data name="report.enum.DocumentTypeStage.Offboarding" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="report.enum.DocumentTypeStage.Recommended" xml:space="preserve"><value>Faydalı</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Missing" xml:space="preserve"><value>Eksik</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Uploaded" xml:space="preserve"><value>Yüklendi</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Waived" xml:space="preserve"><value>Muaf</value></data>
+  <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
+  <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
+  <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
+  <!-- Announcements + Support (Yardım Merkezi + Desteğe bağlan - roadmap #69) -->
+  <data name="announcements.announcements.view" xml:space="preserve"><value>Duyuruları görüntüleme</value></data>
+  <data name="announcements.announcements.manage" xml:space="preserve"><value>Duyuru yönetimi</value></data>
+  <data name="announcements.my.support_tickets" xml:space="preserve"><value>Destek taleplerim</value></data>
+  <data name="announcements.support_tickets.manage" xml:space="preserve"><value>Destek taleplerini yönetme</value></data>
+  <data name="announcement.title_required" xml:space="preserve"><value>Duyuru başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
+  <data name="announcement.content_required" xml:space="preserve"><value>Duyuru içeriği gereklidir.</value></data>
+  <data name="announcement.cannot_publish" xml:space="preserve"><value>Yalnızca taslak duyurular yayınlanabilir.</value></data>
+  <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
+  <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
+  <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
+  <data name="support_ticket.subject_required" xml:space="preserve"><value>Talep konusu gereklidir ve 200 karakteri aşamaz.</value></data>
+  <data name="support_ticket.body_required" xml:space="preserve"><value>Talep içeriği gereklidir.</value></data>
+  <data name="support_ticket.not_found" xml:space="preserve"><value>Destek talebi bulunamadı.</value></data>
+  <data name="support_ticket.already_closed" xml:space="preserve"><value>Talep zaten kapatılmış.</value></data>
+  <data name="support_ticket.resolution_required" xml:space="preserve"><value>Yanıt metni gereklidir.</value></data>
+  <data name="help_article.not_found" xml:space="preserve"><value>Yardım Merkezi makalesi bulunamadı.</value></data>
 </root>
