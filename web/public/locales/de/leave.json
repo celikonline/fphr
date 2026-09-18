@@ -327,7 +327,8 @@
     "remainingBalance": "Verbleibendes Urlaubsguthaben",
     "overlappingLeaves": {
       "title": "Überschneidende Urlaube ({{count}})",
-      "more": "+{{count}} weitere"
+      "more": "+{{count}} weitere (nicht aufgeführt)",
+      "viewAll": "Alle anzeigen ({{count}})"
     }
   },
   "request": {

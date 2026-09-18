@@ -6,6 +6,7 @@ using Sense.Modules.Leave.Contracts.Events;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Requests;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
@@ -129,7 +130,8 @@ public sealed class LeaveRequestDetailBuilder(
     IEmployeeLookup employeeLookup,
     ILeaveRequestRepository requests,
     LeaveBalanceService balances,
-    IApprovalRequestLookup approvals)
+    IApprovalRequestLookup approvals,
+    IOrgUnitLookup orgUnits)
 {
     private const string PendingStepStatus = "Pending";
 
@@ -211,17 +213,19 @@ public sealed class LeaveRequestDetailBuilder(
             return null;
         }
 
+        var orgUnitName = await ResolveOrgUnitNameAsync(orgUnitId.Value, cancellationToken);
+
         var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
             .Where(id => id != request.EmployeeId).ToList();
         if (peers.Count == 0)
         {
-            return new TeamOverlapDto(0, []);
+            return new TeamOverlapDto(0, [], orgUnitName);
         }
 
         var overlapping = await requests.ListActiveInRangeAsync(request.StartDate, request.EndDate, peers, cancellationToken);
         if (overlapping.Count == 0)
         {
-            return new TeamOverlapDto(0, []);
+            return new TeamOverlapDto(0, [], orgUnitName);
         }
 
         var overlapNames = (await employees.GetContactsAsync(tenant.TenantId, overlapping.Select(r => r.EmployeeId).Distinct().ToList(), cancellationToken))
@@ -232,7 +236,14 @@ public sealed class LeaveRequestDetailBuilder(
             .Take(TeamOverlapMaxEmployees)
             .Select(r => new TeamOverlapEmployeeDto(r.EmployeeId, overlapNames.GetValueOrDefault(r.EmployeeId, string.Empty), r.StartDate, r.EndDate))
             .ToList();
-        return new TeamOverlapDto(overlapping.Count, shown);
+        return new TeamOverlapDto(overlapping.Count, shown, orgUnitName);
+    }
+
+    /// <summary>Best-effort org unit display name (S-8, senseik-026 calendar grid header) - null on any lookup miss, never fails the request.</summary>
+    private async Task<string?> ResolveOrgUnitNameAsync(Guid orgUnitId, CancellationToken cancellationToken)
+    {
+        var units = await orgUnits.ListActiveUnitsAsync(tenant.TenantId, cancellationToken);
+        return units.FirstOrDefault(u => u.Id == orgUnitId)?.Name;
     }
 
     /// <summary>Workflow status strings ("InProgress") in the API's camelCase enum style ("inProgress").</summary>

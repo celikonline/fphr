@@ -27,8 +27,11 @@ public sealed record TeamOverlapEmployeeDto(Guid EmployeeId, string Name, DateOn
 /// "Ekip çakışma bilgisi" (faz-05 tur 3, S-7): non-blocking - the caller's own submit is never rejected because of
 /// this, it is informational only ("takımınızdan N kişi bu tarihlerde izinli"). Only computed for the self-service
 /// preview (<see cref="PreviewMyLeaveRequestQuery"/>); on-behalf preview leaves it null.
+/// <see cref="OrgUnitName"/> (S-8, senseik-026) is the requester's org unit at resolve time - only populated for the
+/// request-detail view (<see cref="Sense.Modules.Leave.Application.Requests.LeaveRequestDetailBuilder"/>); the preview
+/// handlers above leave it null since the calendar grid there has no group heading to show.
 /// </summary>
-public sealed record TeamOverlapDto(int Count, IReadOnlyList<TeamOverlapEmployeeDto> Employees);
+public sealed record TeamOverlapDto(int Count, IReadOnlyList<TeamOverlapEmployeeDto> Employees, string? OrgUnitName = null);
 
 /// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing.</summary>
 public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null, int OverlappingApprovedCount = 0);

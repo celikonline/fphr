@@ -189,6 +189,8 @@ export interface RequestableLeaveType {
 export interface LeaveTeamOverlap {
   count: number;
   employees: { employeeId: string; name: string; startDate: string; endDate: string }[];
+  /** The requester's org unit name (S-8, senseik-026); best-effort, absent when the lookup misses. */
+  orgUnitName?: string | null;
 }
 
 /** `LeaveRequestPreviewResponse`: day count of a draft; rule violations come back as localized warnings. */
