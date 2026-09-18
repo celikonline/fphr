@@ -46,6 +46,10 @@ public sealed class UserRepository(IdentityDbContext db) : IUserRepository
         return users.Select(u => (u, u.TenantId)).ToList();
     }
 
+    /// <summary>GetMeHandler'ın impersonation dalı: kiracı filtresi bilinçli olarak kaldırılır (Id globalde tekil, en fazla 1 satır döner).</summary>
+    public Task<User?> GetByIdAcrossTenantsAsync(Guid id, CancellationToken ct) =>
+        db.Users.IgnoreQueryFilters([IdentityDbContext.TenantFilter]).FirstOrDefaultAsync(u => u.Id == id, ct);
+
     public Task<bool> EmailExistsAsync(string email, Guid? excludeUserId, CancellationToken ct)
     {
         var normalized = email.Trim().ToUpperInvariant();

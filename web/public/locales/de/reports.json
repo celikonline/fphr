@@ -1,77 +1,163 @@
 {
-  "title": "[DE] Reports",
-  "subtitle": "[DE] View company-wide workforce KPIs.",
-  "empty": "[DE] No KPI data for the selected period.",
-  "filters": {
-    "from": "[DE] From",
-    "to": "[DE] To",
-    "clear": "[DE] Clear filters"
+  "title": "Berichte",
+  "subtitle": "Erstellen Sie vordefinierte Berichte mit Einheiten-, Zeitraum- und Datumsfiltern und laden Sie sie als Excel herunter. Ihre letzten Berichte finden Sie unten.",
+  "tabs": {
+    "reports": "Berichte",
+    "kpis": "HR-Kennzahlen"
   },
-  "breakdown": {
-    "columns": {
-      "kpi": "[DE] KPI",
-      "dimension": "[DE] Breakdown",
-      "count": "[DE] Count",
-      "share": "[DE] Share"
-    },
-    "empty": "[DE] No breakdown data."
-  },
-  "kpiSection": {
-    "title": "[DE] Workforce KPIs"
-  },
-  "kpi": {
-    "CAREER_PATH_RATIO": {
-      "label": "[DE] Career Path Ratio"
-    },
-    "GENDER_RATIO": {
-      "label": "[DE] Gender Ratio"
-    },
-    "TURNOVER_RATE": {
-      "label": "[DE] Turnover Rate"
-    },
-    "EARLY_TURNOVER_RATE": {
-      "label": "[DE] Early Turnover Rate"
-    },
-    "GENDER_RATIO_BY_UNIT": {
-      "label": "[DE] Gender Ratio by Unit"
-    },
-    "leaveUsage": {
-      "label": "[DE] Leave Usage Rate",
-      "detail": "[DE] {{used}} / {{total}} days used"
-    },
-    "overtimeCost": {
-      "label": "[DE] Overtime Cost",
-      "detail": "[DE] {{employeeCount}} employees · {{excludedCount}} excluded"
-    }
+  "categories": {
+    "administrative": "Administrativ",
+    "employee": "Mitarbeiter",
+    "leave": "Urlaub",
+    "finance": "Finanzen",
+    "other": "Sonstige"
   },
   "catalog": {
-    "title": "[DE] Generate a Report",
-    "selectLabel": "[DE] Report",
-    "selectPlaceholder": "[DE] Choose a report",
-    "generate": "[DE] Generate",
-    "generateSuccess": "[DE] Report generated.",
-    "generateError": "[DE] Could not generate the report.",
-    "empty": "[DE] There are no reports you can view.",
+    "title": "Berichtstypen",
+    "empty": "Es gibt keine vordefinierten Berichte, auf die Sie zugreifen können.",
+    "selectHint": "Wählen Sie einen Berichtstyp; die Filter öffnen sich daneben.",
     "documents": {
       "missingDocuments": {
-        "label": "[DE] Missing Documents Report"
+        "label": "Bericht fehlende Dokumente",
+        "description": "Status der Pflichtdokumente pro Mitarbeiter (fehlend, hochgeladen, befreit) mit Fälligkeitsdaten."
+      }
+    },
+    "employee": {
+      "list": {
+        "label": "Mitarbeiterliste",
+        "description": "Personalliste: Karrierezuordnung, Eintrittsdatum, Beschäftigungsstatus, Kontaktdaten und Beschäftigungsart."
+      }
+    },
+    "leave": {
+      "balance": {
+        "summary": {
+          "label": "Urlaubssaldo-Bericht",
+          "description": "Jahresurlaubssalden zum heutigen Tag: Rest, Gesamtanspruch, Übertragsverluste, genommen und künftig genehmigt."
+        }
+      },
+      "requests": {
+        "label": "Urlaubsbericht",
+        "description": "Urlaubsanträge im gewählten Zeitraum: Art, Dauer, Status, Antrags- und Entscheidungsdatum."
+      }
+    },
+    "finance": {
+      "salaries": {
+        "label": "Gehaltsliste",
+        "description": "Heute gültige Gehaltsdatensätze: Betrag, Währung, netto/brutto, Zahlungsrhythmus sowie Fahrt- und Essenszuschuss."
       }
     }
   },
+  "run": {
+    "title": "Bericht erstellen",
+    "generate": "Bericht erstellen",
+    "success": "Bericht erstellt; der Download wurde gestartet.",
+    "successNoDownload": "Bericht erstellt. Sie können ihn aus der Liste der letzten Berichte herunterladen.",
+    "error": "Der Bericht konnte nicht erstellt werden.",
+    "requiredHint": "* Pflichtfilter",
+    "emailNote": "Sobald der Bericht bereit ist, erhalten Sie einen Link an Ihre hinterlegte E-Mail-Adresse.",
+    "format": "Excel (.xlsx)",
+    "noFilters": "Dieser Bericht hat keine Filter; Sie können ihn direkt erstellen."
+  },
+  "params": {
+    "orgUnitIds": "Einheiten",
+    "orgUnitIdsPlaceholder": "Alle Einheiten",
+    "orgUnitIdsHint": "Ausgewählte Einheiten und ihre Untereinheiten werden einbezogen.",
+    "year": "Jahr",
+    "month": "Monat",
+    "monthPlaceholder": "Ganzes Jahr",
+    "dateRange": "Zeitraum",
+    "from": "Von",
+    "to": "Bis",
+    "includeTerminated": "Ausgeschiedene Mitarbeiter einbeziehen",
+    "presets": {
+      "thisMonth": "Dieser Monat",
+      "lastMonth": "Letzter Monat",
+      "thisYear": "Dieses Jahr"
+    }
+  },
   "history": {
+    "title": "Letzte Berichte",
     "columns": {
-      "report": "[DE] Report",
-      "status": "[DE] Status",
-      "requestedAt": "[DE] Requested At"
+      "report": "Bericht",
+      "status": "Status",
+      "requestedAt": "Angefordert am",
+      "file": "Datei"
     },
     "status": {
-      "queued": "[DE] Queued",
-      "running": "[DE] Running",
-      "succeeded": "[DE] Succeeded",
-      "failed": "[DE] Failed"
+      "queued": "In Warteschlange",
+      "running": "Wird erstellt",
+      "succeeded": "Abgeschlossen",
+      "failed": "Fehlgeschlagen"
     },
-    "download": "[DE] Download",
-    "downloadError": "[DE] Could not download the file.",
-    "empty": "[DE] No reports have been generated yet."
+    "download": "Herunterladen",
+    "downloadError": "Die Berichtsdatei konnte nicht heruntergeladen werden.",
+    "empty": "Es wurden noch keine Berichte erstellt.",
+    "fromEmail": "Der Bericht aus Ihrer E-Mail ist bereit; der Download wurde gestartet."
+  },
+  "kpis": {
+    "title": "HR-Kennzahlen",
+    "subtitle": "Live aus den aktuellen Mitarbeiterdaten berechnet. Der Zeitraumfilter wirkt auf Fluktuations- und Karrierequoten; Verteilungen zeigen den heutigen Personalstand.",
+    "filters": {
+      "from": "Von",
+      "to": "Bis",
+      "clear": "Zurücksetzen",
+      "currentYear": "Laufendes Jahr"
+    },
+    "empty": "Keine Kennzahlen für den gewählten Zeitraum.",
+    "scopedNote": "Ihre Berechtigung ist auf Einheiten beschränkt, daher wird nur die Verteilung je Einheit angezeigt.",
+    "cards": {
+      "headcount": "Aktiver Personalstand",
+      "turnover": "Fluktuationsrate",
+      "turnoverHint": "Austritte im Zeitraum / aktiver Personalstand",
+      "earlyTurnover": "Frühfluktuation",
+      "earlyTurnoverHint": "Austritte im Zeitraum mit weniger als 6 Monaten Zugehörigkeit",
+      "careerPath": "Karrieremobilität",
+      "careerPathHint": "Beförderungen, Wechsel und Titeländerungen im Zeitraum / aktiver Personalstand",
+      "leaveUsage": "Jahresurlaubsnutzung",
+      "leaveUsageHint": "{{used}} / {{total}} Tage ({{year}})",
+      "overtimeCost": "Überstundenkosten",
+      "overtimeCostHint": "{{month}} · {{employeeCount}} Mitarbeiter"
+    },
+    "charts": {
+      "gender": "Geschlechterverteilung",
+      "genderByUnit": "Personalstand nach Einheit und Geschlecht",
+      "department": "Personalstand nach Einheit",
+      "leaveByType": "Urlaubsnutzung nach Art ({{year}})",
+      "careerMoves": "Arten von Karriereänderungen",
+      "noData": "Keine Daten vorhanden",
+      "count": "Personen",
+      "days": "Tage",
+      "suppressed": "Ausgeblendet (< 5)",
+      "suppressedCount": "{{count}} Aufschlüsselung(en) wegen weniger als 5 Personen ausgeblendet - Details siehe Aufschlüsselungstabelle"
+    },
+    "breakdown": {
+      "title": "Aufschlüsselung",
+      "columns": {
+        "kpi": "Kennzahl",
+        "dimension": "Aufschlüsselung",
+        "count": "Anzahl",
+        "share": "Anteil"
+      },
+      "empty": "Keine Aufschlüsselungsdaten vorhanden."
+    }
+  },
+  "kpi": {
+    "CAREER_PATH_RATIO": { "label": "Karrierepfad-Quote" },
+    "GENDER_RATIO": { "label": "Geschlechterverteilung" },
+    "TURNOVER_RATE": { "label": "Fluktuationsrate" },
+    "EARLY_TURNOVER_RATE": { "label": "Frühfluktuation (erste 6 Monate)" },
+    "GENDER_RATIO_BY_UNIT": { "label": "Geschlechterverteilung nach Einheit" },
+    "dimensions": {
+      "Promotion": "Beförderung",
+      "LateralMove": "Lateraler Wechsel",
+      "Demotion": "Herabstufung",
+      "TitleChange": "Titeländerung",
+      "WithinFirstSixMonths": "In den ersten 6 Monaten ausgeschieden",
+      "Male": "Männlich",
+      "Female": "Weiblich",
+      "Unspecified": "Nicht angegeben",
+      "Other": "Divers",
+      "Unassigned": "Keine Einheit"
+    }
   }
 }

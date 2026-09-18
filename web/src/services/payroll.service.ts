@@ -53,9 +53,10 @@ export async function listPayrollPeriods(): Promise<PayrollPeriod[]> {
   return data;
 }
 
-/** One period's header + its payslip lines (dönem detayı, salt okunur). 404 on another tenant's/unknown period. */
-export async function getPayrollPeriod(id: string): Promise<PayrollPeriodDetail> {
-  const { data } = await apiClient.get<PayrollPeriodDetail>(`${PAYROLL_BASE}/periods/${id}`);
+/** One period's header + its payslip lines (dönem detayı, salt okunur). 404 on another tenant's/unknown period. Optional costCenterId filter reduces payslips to matching cost center only (DTO shape unchanged). */
+export async function getPayrollPeriod(id: string, costCenterId?: string): Promise<PayrollPeriodDetail> {
+  const params = costCenterId ? { costCenterId } : undefined;
+  const { data } = await apiClient.get<PayrollPeriodDetail>(`${PAYROLL_BASE}/periods/${id}`, { params });
   return data;
 }
 

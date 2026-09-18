@@ -32,6 +32,13 @@ public interface IUserRepository
     /// <summary>Kiracı filtresi olmadan: giriş ekranında e-posta → kiracı listesi.</summary>
     Task<IReadOnlyList<(User User, Guid TenantId)>> FindAcrossTenantsByEmailAsync(string email, CancellationToken ct);
 
+    /// <summary>
+    /// Kiracı filtresi olmadan, id ile: impersonation oturumunda JWT'nin `sub`'ı platform kullanıcısının
+    /// PLATFORM kiracısındaki satırıdır, hedef (impersonate edilen) kiracının filtresiyle bulunamaz
+    /// (GetMeHandler'ın bu yüzden 401 döndüğü, faz0-durum-takibi.md #11'de belgelenen boşluk).
+    /// </summary>
+    Task<User?> GetByIdAcrossTenantsAsync(Guid id, CancellationToken ct);
+
     Task<bool> EmailExistsAsync(string email, Guid? excludeUserId, CancellationToken ct);
 
     Task<int> CountByRoleAsync(Guid roleId, CancellationToken ct);

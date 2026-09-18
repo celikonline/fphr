@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
@@ -45,13 +46,14 @@ public sealed record PayslipLineDto(Guid EmployeeId, string EmployeeName, decima
 public sealed record PayrollPeriodDetailDto(Guid Id, int Year, int Month, PayrollPeriodStatus Status, IReadOnlyList<PayslipLineDto> Payslips);
 
 [RequiresPermission("payroll.trace.view")]
-public sealed record GetPayrollPeriodQuery(Guid PeriodId) : IQuery<PayrollPeriodDetailDto>;
+public sealed record GetPayrollPeriodQuery(Guid PeriodId, Guid? CostCenterId = null) : IQuery<PayrollPeriodDetailDto>;
 
 public sealed class GetPayrollPeriodHandler(
     IPayrollPeriodRepository periods,
     IPayslipRepository payslips,
     IPayslipCalculationTraceRepository traces,
     IEmployeeDirectory employeeDirectory,
+    IEmployeeCostCenterReader costCenterReader,
     ITenantContext tenant)
     : IQueryHandler<GetPayrollPeriodQuery, PayrollPeriodDetailDto>
 {
@@ -64,6 +66,20 @@ public sealed class GetPayrollPeriodHandler(
         }
 
         var periodPayslips = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
+
+        // Filter by cost center if requested (faz-07 tur 1 md.1)
+        if (query.CostCenterId.HasValue)
+        {
+            var costCenterMapping = await costCenterReader.GetEmployeeCostCenterMappingAsync(
+                tenant.TenantId,
+                periodPayslips.Select(p => p.EmployeeId).ToList(),
+                cancellationToken);
+
+            periodPayslips = periodPayslips
+                .Where(p => costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
+                .ToList();
+        }
+
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId);
 
@@ -201,7 +217,7 @@ public sealed class ListDirtyFlagsHandler(IPayrollPeriodRepository periods, IPay
 /// <see cref="IPayrollPeriodRepository.FindByIdAsync"/> is already tenant-filtered.
 /// </summary>
 [RequiresPermission("payroll.trace.view")]
-public sealed record ExportPayrollPeriodQuery(Guid PeriodId) : IQuery<ExportFileResult>;
+public sealed record ExportPayrollPeriodQuery(Guid PeriodId, Guid? CostCenterId = null) : IQuery<ExportFileResult>;
 
 public sealed class ExportPayrollPeriodHandler(
     IPayrollPeriodRepository periods,
@@ -210,6 +226,7 @@ public sealed class ExportPayrollPeriodHandler(
     IEmployeePayrollProfileRepository profiles,
     IEmployeeDirectory employeeDirectory,
     IExpensePayoutReader expensePayoutReader,
+    IEmployeeCostCenterReader costCenterReader,
     ITenantContext tenant,
     IReportExporter exporter) : IQueryHandler<ExportPayrollPeriodQuery, ExportFileResult>
 {
@@ -223,6 +240,19 @@ public sealed class ExportPayrollPeriodHandler(
 
         var periodStart = new DateOnly(period.Year, period.Month, 1);
         var periodPayslips = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
+
+        // Filter by cost center if requested (faz-07 tur 1 md.1)
+        if (query.CostCenterId.HasValue)
+        {
+            var costCenterMapping = await costCenterReader.GetEmployeeCostCenterMappingAsync(
+                tenant.TenantId,
+                periodPayslips.Select(p => p.EmployeeId).ToList(),
+                cancellationToken);
+
+            periodPayslips = periodPayslips
+                .Where(p => costCenterMapping.TryGetValue(p.EmployeeId, out var cc) && cc == query.CostCenterId.Value)
+                .ToList();
+        }
         var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, periodPayslips.Select(p => p.EmployeeId).ToList(), cancellationToken))
             .ToDictionary(c => c.EmployeeId);
 

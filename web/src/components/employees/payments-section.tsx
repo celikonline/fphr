@@ -263,6 +263,8 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
                   <Table.Th>{t("employees:payments.salary.payFrequency")}</Table.Th>
                   <Table.Th ta="right">{t("employees:payments.salary.transportAllowance")}</Table.Th>
                   <Table.Th ta="right">{t("employees:payments.salary.mealAllowance")}</Table.Th>
+                  <Table.Th>{t("employees:payments.salary.createdBy")}</Table.Th>
+                  <Table.Th>{t("employees:payments.salary.createdAt")}</Table.Th>
                   {editable && <Table.Th w={0} />}
                 </Table.Tr>
               </Table.Thead>
@@ -292,6 +294,8 @@ function SalarySection({ employee, isOwnCard }: { employee: EmployeeDetail; isOw
                     <Table.Td ta="right" className="whitespace-nowrap">
                       {money(record.mealAllowance, record.currency)}
                     </Table.Td>
+                    <Table.Td className="whitespace-nowrap">{record.createdByName ?? "—"}</Table.Td>
+                    <Table.Td className="whitespace-nowrap">{date(record.createdAt.slice(0, 10))}</Table.Td>
                     {editable && (
                       <Table.Td>
                         <Group gap={4} justify="flex-end" wrap="nowrap">
@@ -396,6 +400,10 @@ function SalaryHistoryMobileList({
               {record.note}
             </Text>
           )}
+          <Text size="xs" c="dimmed" mt={6}>
+            {t("employees:payments.salary.createdBy")}: {record.createdByName ?? "—"} · {t("employees:payments.salary.createdAt")}:{" "}
+            {date(record.createdAt.slice(0, 10))}
+          </Text>
         </Card>
       ))}
     </Stack>

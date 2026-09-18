@@ -3,6 +3,7 @@ using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.RuleSets;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -24,7 +25,7 @@ internal static class LeaveRuleSetMapper
 
 /// <summary>Rule sets with their types; seeds the tenant's default set on first read.</summary>
 [RequiresPermission("leave.rule_sets.read")]
-public sealed record ListLeaveRuleSetsQuery : IQuery<IReadOnlyList<LeaveRuleSetDto>>;
+public sealed record ListLeaveRuleSetsQuery(int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<LeaveRuleSetDto>>;
 
 public sealed class ListLeaveRuleSetsHandler(
     ITenantContext tenant, ILeaveRuleSetRepository ruleSets, Balances.LeaveBalanceService balances, ILeaveUnitOfWork unitOfWork)
@@ -38,7 +39,7 @@ public sealed class ListLeaveRuleSetsHandler(
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
 
-        var list = await ruleSets.ListAsync(cancellationToken);
+        var list = await ruleSets.ListAsync(query.Take, cancellationToken);
         var result = new List<LeaveRuleSetDto>(list.Count);
         foreach (var set in list)
         {

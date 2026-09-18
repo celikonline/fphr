@@ -2,6 +2,7 @@ using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobPostings;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Kernel.Results;
@@ -49,7 +50,7 @@ public sealed class GetPublicJobPostingHandler(
 }
 
 /// <summary>Other Open postings of the same company (R3 "diğer açık pozisyonlar"), reached by anchoring on one posting's slug.</summary>
-public sealed record ListRelatedPublicJobPostingsQuery(string ApplySlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
+public sealed record ListRelatedPublicJobPostingsQuery(string ApplySlug, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
 public sealed class ListRelatedPublicJobPostingsHandler(
     IJobPostingRepository postings, ILocationLookup locations, ITenantContextSetter tenantSetter, TimeProvider timeProvider)
@@ -65,7 +66,7 @@ public sealed class ListRelatedPublicJobPostingsHandler(
             return anchor.Error;
         }
 
-        var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, today, cancellationToken);
+        var related = await postings.ListPublicOpenAsync(anchor.Value.TenantId, anchor.Value.Id, today, query.Take, cancellationToken);
         var locationNames = await ResolveLocationNamesAsync(anchor.Value.TenantId, related, locations, tenantSetter, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = related
             .Select(p => ToSummaryDto(p, locationNames))
@@ -110,7 +111,7 @@ public sealed class ListRelatedPublicJobPostingsHandler(
 /// lists that tenant's Open, not-yet-expired postings. Deliberately returns an **empty list**, never 404, when the
 /// slug doesn't resolve - a 404 would let a caller enumerate which tenant slugs exist (tenant sızıntısı).
 /// </summary>
-public sealed record ListPublicJobPostingsByTenantSlugQuery(string? TenantSlug) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
+public sealed record ListPublicJobPostingsByTenantSlugQuery(string? TenantSlug, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<PublicJobPostingSummaryDto>>;
 
 public sealed class ListPublicJobPostingsByTenantSlugHandler(
     ITenantSlugLookup tenantSlugLookup, IJobPostingRepository postings, ILocationLookup locations,
@@ -133,7 +134,7 @@ public sealed class ListPublicJobPostingsByTenantSlugHandler(
         }
 
         var today = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
-        var open = await postings.ListPublicByTenantAsync(tenantId.Value, today, cancellationToken);
+        var open = await postings.ListPublicByTenantAsync(tenantId.Value, today, query.Take, cancellationToken);
         var locationNames = await ListRelatedPublicJobPostingsHandler.ResolveLocationNamesAsync(
             tenantId.Value, open, locations, tenantSetter, cancellationToken);
         IReadOnlyList<PublicJobPostingSummaryDto> dtos = open

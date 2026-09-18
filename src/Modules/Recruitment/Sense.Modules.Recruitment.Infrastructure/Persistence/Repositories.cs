@@ -8,9 +8,17 @@ using Sense.Modules.Recruitment.Domain.FormTemplates;
 using Sense.Modules.Recruitment.Domain.JobPostings;
 using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Modules.Recruitment.Domain.Tags;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Recruitment.Infrastructure.Persistence;
+
+/// <summary>Clamps API-facing list caps to the shared page-size ceiling.</summary>
+internal static class ListTake
+{
+    public static IQueryable<T> Apply<T>(IQueryable<T> query, int take) =>
+        query.Take(Math.Clamp(take, 1, PagingDefaults.MaxPageSize));
+}
 
 /// <summary>EF Core-backed JobPosting repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
 public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPostingRepository
@@ -34,6 +42,17 @@ public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPos
         return await query.OrderByDescending(p => p.CreatedAt).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<JobPosting>> ListAsync(JobPostingStatus? status, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.JobPostings.AsQueryable();
+        if (status is not null)
+        {
+            query = query.Where(p => p.Status == status);
+        }
+
+        return await ListTake.Apply(query.OrderByDescending(p => p.CreatedAt), take).ToListAsync(cancellationToken);
+    }
+
     public async Task<Result<JobPosting>> GetPublicByApplySlugAsync(string applySlug, DateOnly asOf, CancellationToken cancellationToken = default)
     {
         var posting = await context.JobPostings
@@ -51,12 +70,28 @@ public sealed class JobPostingRepository(RecruitmentDbContext context) : IJobPos
             .OrderByDescending(p => p.PublishedAt)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, DateOnly asOf, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.JobPostings
+            .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
+            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open && p.Id != excludePostingId
+                && (p.ClosingDate == null || p.ClosingDate >= asOf))
+            .OrderByDescending(p => p.PublishedAt), take)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, CancellationToken cancellationToken = default) =>
         await context.JobPostings
             .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
             .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open
                 && (p.ClosingDate == null || p.ClosingDate >= asOf))
             .OrderByDescending(p => p.PublishedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.JobPostings
+            .IgnoreQueryFilters([RecruitmentDbContext.TenantFilter])
+            .Where(p => p.TenantId == tenantId && p.Status == JobPostingStatus.Open
+                && (p.ClosingDate == null || p.ClosingDate >= asOf))
+            .OrderByDescending(p => p.PublishedAt), take)
             .ToListAsync(cancellationToken);
 }
 
@@ -81,6 +116,18 @@ public sealed class CandidateRepository(RecruitmentDbContext context) : ICandida
         }
 
         return await query.OrderByDescending(c => c.CreatedAt).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Candidate>> ListAsync(string? search, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.Candidates.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = $"%{search.Trim()}%";
+            query = query.Where(c => EF.Functions.ILike(c.FirstName, term) || EF.Functions.ILike(c.LastName, term) || EF.Functions.ILike(c.Email, term));
+        }
+
+        return await ListTake.Apply(query.OrderByDescending(c => c.CreatedAt), take).ToListAsync(cancellationToken);
     }
 
     public async Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
@@ -111,10 +158,22 @@ public sealed class JobApplicationRepository(RecruitmentDbContext context) : IJo
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.JobApplications
+            .Where(a => a.JobPostingId == jobPostingId)
+            .OrderByDescending(a => a.AppliedAt), take)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default) =>
         await context.JobApplications
             .Where(a => a.CandidateId == candidateId)
             .OrderByDescending(a => a.AppliedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.JobApplications
+            .Where(a => a.CandidateId == candidateId)
+            .OrderByDescending(a => a.AppliedAt), take)
             .ToListAsync(cancellationToken);
 
     public async Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default) =>
@@ -145,6 +204,17 @@ public sealed class JobRequisitionRepository(RecruitmentDbContext context) : IJo
 
         return await query.OrderByDescending(r => r.CreatedAt).ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.JobRequisitions.AsQueryable();
+        if (status is not null)
+        {
+            query = query.Where(r => r.Status == status);
+        }
+
+        return await ListTake.Apply(query.OrderByDescending(r => r.CreatedAt), take).ToListAsync(cancellationToken);
+    }
 }
 
 /// <summary>EF Core-backed Tag repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
@@ -171,6 +241,17 @@ public sealed class TagRepository(RecruitmentDbContext context) : ITagRepository
 
         return await query.OrderBy(t => t.Name).ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Tag>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.Tags.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(t => t.IsActive);
+        }
+
+        return await ListTake.Apply(query.OrderBy(t => t.Name), take).ToListAsync(cancellationToken);
+    }
 }
 
 /// <summary>EF Core-backed RecruitmentFormTemplate repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
@@ -194,6 +275,17 @@ public sealed class RecruitmentFormTemplateRepository(RecruitmentDbContext conte
 
         return await query.OrderBy(t => t.Name).ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<RecruitmentFormTemplate>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.FormTemplates.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(t => t.IsActive);
+        }
+
+        return await ListTake.Apply(query.OrderBy(t => t.Name), take).ToListAsync(cancellationToken);
+    }
 }
 
 /// <summary>EF Core-backed RecruitmentFormResponse repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
@@ -205,6 +297,12 @@ public sealed class RecruitmentFormResponseRepository(RecruitmentDbContext conte
         await context.FormResponses
             .Where(r => r.JobApplicationId == jobApplicationId)
             .OrderByDescending(r => r.SubmittedAt)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<RecruitmentFormResponse>> ListByJobApplicationAsync(Guid jobApplicationId, int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.FormResponses
+            .Where(r => r.JobApplicationId == jobApplicationId)
+            .OrderByDescending(r => r.SubmittedAt), take)
             .ToListAsync(cancellationToken);
 
     public async Task<bool> ExistsForTemplateAsync(Guid jobApplicationId, Guid templateId, CancellationToken cancellationToken = default) =>
@@ -230,7 +328,18 @@ public sealed class AutomationRuleRepository(RecruitmentDbContext context) : IAu
             query = query.Where(r => r.IsActive);
         }
 
-        return await query.ToListAsync(cancellationToken);
+        return await query.OrderBy(r => r.CreatedAt).ToListAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<AutomationRule>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default)
+    {
+        var query = context.AutomationRules.AsQueryable();
+        if (activeOnly)
+        {
+            query = query.Where(r => r.IsActive);
+        }
+
+        return await ListTake.Apply(query.OrderBy(r => r.CreatedAt), take).ToListAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<AutomationRule>> FindActiveForTransitionAsync(ApplicationStage fromStage, ApplicationStage toStage, CancellationToken cancellationToken = default) =>

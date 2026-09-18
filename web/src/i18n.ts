@@ -9,8 +9,8 @@ i18n
   .use(initReactI18next)
   .init({
     fallbackLng: "tr",
-    // Item 13 (Faz 0): i18n readiness for a third language ahead of ATS. `de` ships as a structural
-    // placeholder namespace set ("[DE] ..." markers), not a real translation yet.
+    // Item 13 (Faz 0): i18n readiness for a third language ahead of ATS. `de` is a full translation:
+    // every namespace has key parity with `tr`/`en`, no "[DE] ..." placeholders remain.
     supportedLngs: ["tr", "en", "de"],
     defaultNS: "common",
     ns: [
@@ -40,6 +40,7 @@ i18n
       "reports",
       "performance",
       "payroll",
+      "support",
     ],
     interpolation: {
       escapeValue: false,

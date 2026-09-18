@@ -1,6 +1,7 @@
 using Sense.Modules.Integrations.Contracts;
 using Sense.Modules.Integrations.Domain;
 using Sense.Modules.Integrations.Domain.Webhooks;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -9,14 +10,14 @@ namespace Sense.Modules.Integrations.Application.Webhooks;
 
 /// <summary>Lists the tenant's webhook subscriptions (never includes the secret).</summary>
 [RequiresPermission(IntegrationsPermissions.WebhooksViewKey)]
-public sealed record ListWebhookSubscriptionsQuery : IQuery<IReadOnlyList<WebhookSubscriptionDto>>;
+public sealed record ListWebhookSubscriptionsQuery(int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<WebhookSubscriptionDto>>;
 
 public sealed class ListWebhookSubscriptionsHandler(IWebhookSubscriptionRepository subscriptions)
     : IQueryHandler<ListWebhookSubscriptionsQuery, IReadOnlyList<WebhookSubscriptionDto>>
 {
     public async Task<Result<IReadOnlyList<WebhookSubscriptionDto>>> Handle(ListWebhookSubscriptionsQuery query, CancellationToken cancellationToken)
     {
-        var list = await subscriptions.ListAsync(cancellationToken);
+        var list = await subscriptions.ListAsync(query.Take, cancellationToken);
         IReadOnlyList<WebhookSubscriptionDto> dtos = list.Select(ToDto).ToList();
         return Result.Success(dtos);
     }

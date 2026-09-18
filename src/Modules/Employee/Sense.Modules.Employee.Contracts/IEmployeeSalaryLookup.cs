@@ -46,4 +46,12 @@ public interface IEmployeeSalaryLookup
     /// (11.3.07 P3) - amounts are sensitive (employee.salary.view) so this is a Contracts-port read, never carried on
     /// an event. Null if the employee has no salary record yet.</summary>
     Task<EmployeeCurrentSalary?> GetCurrentSalaryAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Batched form of <see cref="GetCurrentSalaryAsync"/> for callers resolving many employees at once (Analytics'
+    /// S-17 overtime-cost KPI, G-10-19) - one round trip instead of one per employee. Employees with no salary
+    /// record yet are simply absent from the result.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, EmployeeCurrentSalary>> GetCurrentSalariesAsync(
+        Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default);
 }

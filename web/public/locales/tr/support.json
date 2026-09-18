@@ -1,0 +1,52 @@
+{
+  "title": "Destek",
+  "helpCenter": {
+    "title": "Yardım Merkezi",
+    "searchPlaceholder": "Ne aramıştınız? Örn. \"veri aktarımı\"",
+    "empty": "Bu aramayla eşleşen bir makale bulunamadı.",
+    "backToList": "Listeye dön",
+    "categories": {
+      "general": "Genel",
+      "data_transfer": "Veri aktarımı",
+      "leave_and_overtime": "İzin ve fazla mesai",
+      "approvals": "Onay süreçleri",
+      "access_and_permissions": "Erişim ve yetkiler",
+      "payroll": "Bordro",
+      "billing": "Faturalama",
+      "other": "Diğer"
+    }
+  },
+  "contact": {
+    "title": "Desteğe bağlan",
+    "description": "Aradığınızı bulamadınız mı? Kısa bir talep açın, ekibimiz size dönsün.",
+    "subject": "Konu",
+    "subjectPlaceholder": "Talebinizi kısaca özetleyin",
+    "body": "Ayrıntı",
+    "bodyPlaceholder": "Ne yapmaya çalışıyordunuz, ne bekliyordunuz, ne oldu?",
+    "category": "Kategori",
+    "categories": {
+      "general": "Genel",
+      "dataTransfer": "Veri aktarımı",
+      "leaveAndOvertime": "İzin ve fazla mesai",
+      "approvals": "Onay süreçleri",
+      "accessAndPermissions": "Erişim ve yetkiler",
+      "payroll": "Bordro",
+      "billing": "Faturalama",
+      "other": "Diğer"
+    },
+    "submit": "Talep gönder",
+    "submitSuccess": "Talebiniz alındı. Destek ekibimiz size dönecek.",
+    "submitError": "Talep gönderilemedi, lütfen tekrar deneyin."
+  },
+  "myTickets": {
+    "title": "Taleplerim",
+    "empty": "Henüz bir destek talebiniz yok.",
+    "status": {
+      "open": "Açık",
+      "answered": "Yanıtlandı",
+      "closed": "Kapandı"
+    },
+    "resolution": "Yanıt",
+    "createdAt": "Oluşturulma"
+  }
+}

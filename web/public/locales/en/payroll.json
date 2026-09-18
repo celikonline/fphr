@@ -21,6 +21,7 @@
     "exportButton": "Download Excel",
     "empty": "This period has no payslip lines yet.",
     "workedDays": "Worked days",
+    "costCenterFilter": "Select cost center...",
     "columns": {
       "employee": "Employee",
       "gross": "Gross",

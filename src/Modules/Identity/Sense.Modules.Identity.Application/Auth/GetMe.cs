@@ -16,7 +16,8 @@ public sealed class GetMeHandler(
     IUserRepository users,
     ITenantRepository tenants,
     IRoleRepository roles,
-    IPermissionService permissions) : IQueryHandler<GetMeQuery, MeDto>
+    IPermissionService permissions,
+    IImpersonationSessionValidator? impersonationSessions = null) : IQueryHandler<GetMeQuery, MeDto>
 {
     public async Task<Result<MeDto>> Handle(GetMeQuery query, CancellationToken cancellationToken)
     {
@@ -25,9 +26,40 @@ public sealed class GetMeHandler(
             return Error.Unauthorized(Shared.Kernel.Results.ErrorCodes.Unauthenticated);
         }
 
-        var user = await users.GetByIdAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
         var tenant = await tenants.GetByIdAsync(tenantContext.TenantId, cancellationToken).ConfigureAwait(false);
-        if (user is null || tenant is null)
+        if (tenant is null)
+        {
+            return Error.Unauthorized(Shared.Kernel.Results.ErrorCodes.Unauthenticated);
+        }
+
+        // Impersonation (faz0-durum-takibi.md #11): the JWT's `sub` is the platform user's id, a row that only
+        // exists in the PLATFORM tenant. Looking it up under the impersonated tenant's query filter (the normal
+        // path below) always returns null and used to 401 here — the only reason a platform console could never
+        // actually load the app shell. AuthorizationBehaviour already bypasses every [RequiresPermission] check
+        // for the duration of an active session, so this branch mirrors that instead of resolving this tenant's
+        // roles/permissions for a user row that was never in it to begin with.
+        if (currentUser.ImpersonatorUserId is not null
+            && impersonationSessions is not null
+            && await impersonationSessions.IsActiveAsync(cancellationToken).ConfigureAwait(false))
+        {
+            var platformUser = await users.GetByIdAcrossTenantsAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
+            if (platformUser is null)
+            {
+                return Error.Unauthorized(Shared.Kernel.Results.ErrorCodes.Unauthenticated);
+            }
+
+            return new MeDto(
+                platformUser.Id, platformUser.Email, platformUser.FirstName, platformUser.LastName, EmployeeId: null,
+                platformUser.PreferredLanguage, platformUser.MfaEnabled,
+                new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone),
+                Roles: [],
+                Permissions: [],
+                Scopes: new Dictionary<string, DataScope>(StringComparer.Ordinal),
+                new FeaturesDto(AccessSettingsDto.AllEnabled, AccessSettingsBypass: true));
+        }
+
+        var user = await users.GetByIdAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
+        if (user is null)
         {
             return Error.Unauthorized(Shared.Kernel.Results.ErrorCodes.Unauthenticated);
         }

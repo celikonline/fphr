@@ -8,21 +8,25 @@ import dayjs from "dayjs";
 import "dayjs/locale/tr";
 import "dayjs/locale/de";
 import customParseFormat from "dayjs/plugin/customParseFormat";
-import { mantineTheme } from "@/lib/mantine-theme";
+import { mantineThemeForPalette } from "@/lib/mantine-theme";
 import { useUIStore } from "@/store/ui.store";
 
 dayjs.extend(customParseFormat);
 
-/** Mantine providers: theme, color scheme from the UI store (light/dark/system), date locale from i18n, notifications. */
+/**
+ * Mantine providers: theme (primary color from the UI store's palette), color scheme from the UI store
+ * (light/dark/system), date locale from i18n, notifications.
+ */
 export function MantineRoot({ children }: { children: ReactNode }) {
   const theme = useUIStore((state) => state.theme);
+  const palette = useUIStore((state) => state.palette);
   const systemScheme = useColorScheme();
   const { i18n } = useTranslation();
   const colorScheme = theme === "system" ? systemScheme : theme;
   const locale = (i18n.resolvedLanguage ?? i18n.language ?? "tr").split("-")[0];
 
   return (
-    <MantineProvider theme={mantineTheme} forceColorScheme={colorScheme}>
+    <MantineProvider theme={mantineThemeForPalette(palette)} forceColorScheme={colorScheme}>
       <DatesProvider settings={{ locale, firstDayOfWeek: 1, weekendDays: [0, 6] }}>
         <Notifications position="top-right" limit={3} />
         {children}

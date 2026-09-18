@@ -29,6 +29,10 @@ export interface SalaryRecord {
   source: SalarySource;
   note?: string | null;
   isCurrent: boolean;
+  /** "Oluşturan"/"Oluşturulma Tarihi" columns; `createdByName` is null when the creator's account could not be resolved. */
+  createdByUserId?: string | null;
+  createdByName?: string | null;
+  createdAt: string;
 }
 
 /** `SalaryRecordRequest` body: effectiveFrom + amount are mandatory ("Maaş bloğu bütünlüğü"). */

@@ -191,7 +191,12 @@
     "days": "Days",
     "status": "Status",
     "source": "Source",
-    "description": "Description"
+    "description": "Description",
+    "submittedAt": "Created On",
+    "filterType": "Leave Type",
+    "filterStatus": "Status",
+    "allTypes": "All",
+    "allStatuses": "All"
   },
   "my": {
     "title": "My leave",
@@ -318,7 +323,12 @@
     "resubmissionOf": "This request is a resubmission of a rejected request.",
     "cancelledAt": "Cancelled: {{at}}",
     "halfDayPeriod": "Half-day period",
-    "timeRange": "Time range"
+    "timeRange": "Time range",
+    "remainingBalance": "Remaining leave balance",
+    "overlappingLeaves": {
+      "title": "Overlapping leaves ({{count}})",
+      "more": "+{{count}} more"
+    }
   },
   "request": {
     "halfDayPeriod": {
@@ -369,7 +379,8 @@
     "today": "Today",
     "employee": "Employee",
     "empty": "No leave in this period.",
-    "masked": "On leave"
+    "masked": "On leave",
+    "overlappingCount": "{{count}} approved leave requests overlap on this day"
   },
   "overtime": {
     "myTitle": "My overtime",

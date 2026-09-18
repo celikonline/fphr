@@ -34,6 +34,30 @@ public sealed class EmployeeSalaryLookup(EmployeeDbContext context) : IEmployeeS
             : new EmployeeCurrentSalary(current.Amount, current.Currency, MapSalaryType(current.SalaryType), Map(current.PayFrequency), current.EffectiveFrom);
     }
 
+    public async Task<IReadOnlyDictionary<Guid, EmployeeCurrentSalary>> GetCurrentSalariesAsync(
+        Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return new Dictionary<Guid, EmployeeCurrentSalary>();
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var records = await context.Set<SalaryRecord>().AsNoTracking()
+            .Where(r => r.TenantId == tenantId && employeeIds.Contains(r.EmployeeId) && r.EffectiveFrom <= today)
+            .ToListAsync(cancellationToken);
+
+        return records
+            .GroupBy(r => r.EmployeeId)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var current = g.OrderByDescending(r => r.EffectiveFrom).First();
+                    return new EmployeeCurrentSalary(current.Amount, current.Currency, MapSalaryType(current.SalaryType), Map(current.PayFrequency), current.EffectiveFrom);
+                });
+    }
+
     private static EmployeeSalaryType MapSalaryType(SalaryType salaryType) => salaryType switch
     {
         SalaryType.Net => EmployeeSalaryType.Net,

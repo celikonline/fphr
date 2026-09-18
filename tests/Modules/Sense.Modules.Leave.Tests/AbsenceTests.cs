@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Identity.Contracts;
@@ -46,9 +47,12 @@ public sealed class AbsenceIntegrationTests : TestFixture
         // AddLeaveServices' IWorkScheduleReader adapts Attendance.Contracts.IWorkScheduleReadService (roadmap #23).
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceCoreServices(configuration);
+        // roadmap #23 (A1): EmployeeHired -> default schedule assignment must run here too, otherwise the
+        // real IWorkScheduleReadService reports every day closed and all submits fail with zero_days.
+        services.AddAttendanceIntegrationEventHandlers();
         services.AddLeaveServices(configuration);
         services.AddModuleHandlers(
-            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly);
+            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly, typeof(Attendance.Contracts.IWorkScheduleReadService).Assembly);
 
         _currentUser.UserId.Returns(Guid.NewGuid());
         _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);

@@ -5,7 +5,7 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Shared.Infrastructure.Messaging;
 
-/// <summary>Hafif command/query dispatcher (ADR 0004). Handler ve pipeline davranışlarını DI'dan çözer.</summary>
+/// <summary>Lightweight command/query dispatcher (ADR 0004). Resolves handlers and pipeline behaviours from DI.</summary>
 public sealed class Dispatcher(IServiceProvider provider) : IDispatcher
 {
     private static readonly ConcurrentDictionary<Type, Type> HandlerTypeCache = new();
@@ -22,10 +22,10 @@ public sealed class Dispatcher(IServiceProvider provider) : IDispatcher
     private Task<TResponse> Execute<TResponse>(object request, Type handlerInterface, CancellationToken cancellationToken)
     {
         var handler = provider.GetService(handlerInterface)
-            ?? throw new InvalidOperationException($"'{request.GetType().Name}' için handler kayıtlı değil ({handlerInterface.Name}).");
+            ?? throw new InvalidOperationException($"No handler registered for '{request.GetType().Name}' ({handlerInterface.Name}).");
 
         var handleMethod = HandlerTypeCache.GetOrAdd(handlerInterface, t => t).GetMethod("Handle")
-            ?? throw new InvalidOperationException("Handle metodu bulunamadı.");
+            ?? throw new InvalidOperationException("Handle method not found.");
 
         RequestHandlerDelegate<TResponse> invokeHandler = () =>
             (Task<TResponse>)handleMethod.Invoke(handler, [request, cancellationToken])!;

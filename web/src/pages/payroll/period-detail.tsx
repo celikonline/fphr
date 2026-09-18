@@ -1,14 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Download, Wallet } from "lucide-react";
-import { Badge, Button, Card, Group, Stack, Table, Text, Title } from "@mantine/core";
+import { Badge, Button, Card, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
+import { getCostCenters } from "@/services/organization.service";
 import {
   downloadPayrollPeriodExport,
   getPayrollPeriod,
@@ -53,10 +54,16 @@ export default function PayrollPeriodDetailPage() {
 function PayrollPeriodDetail() {
   const { id } = useParams<{ id: string }>();
   const { t, i18n } = useTranslation(["payroll", "common"]);
+  const [selectedCostCenterId, setSelectedCostCenterId] = useState<string | null>(null);
+
+  const costCentersQuery = useQuery({
+    queryKey: ["organization", "cost-centers"],
+    queryFn: () => getCostCenters(),
+  });
 
   const periodQuery = useQuery({
-    queryKey: ["payroll", "periods", id],
-    queryFn: () => getPayrollPeriod(id!),
+    queryKey: ["payroll", "periods", id, selectedCostCenterId],
+    queryFn: () => getPayrollPeriod(id!, selectedCostCenterId ?? undefined),
     enabled: Boolean(id),
   });
 
@@ -112,7 +119,22 @@ function PayrollPeriodDetail() {
             {t(`payroll:periods.status.${period.status}`, { defaultValue: period.status })}
           </Badge>
         </div>
-        <Group gap="xs">
+        <Group gap="xs" wrap="wrap">
+          <Select
+            placeholder={t("payroll:periodDetail.costCenterFilter", { defaultValue: "Maliyet merkezi seçin..." })}
+            data={
+              costCentersQuery.data?.map((cc) => ({
+                value: cc.id,
+                label: cc.name,
+              })) ?? []
+            }
+            value={selectedCostCenterId}
+            onChange={setSelectedCostCenterId}
+            searchable
+            clearable
+            loading={costCentersQuery.isLoading}
+            className="min-w-48"
+          />
           <Button
             type="button"
             variant="default"

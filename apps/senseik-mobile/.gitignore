@@ -3,7 +3,8 @@
 dist/
 npm-debug.*
 .env
-.env.local
+.env.*
+!.env.example
 
 # Dependencies
 node_modules/

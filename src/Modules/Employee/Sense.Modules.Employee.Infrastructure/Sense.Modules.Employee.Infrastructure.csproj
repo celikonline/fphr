@@ -10,6 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Employee.Application/Sense.Modules.Employee.Application.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <!-- Implements IReportProvider (Reporting.Contracts): "Çalışan listesi" and "Maaş listesi" reports in the Raporlar menu (roadmap #70). -->
+    <ProjectReference Include="../../Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

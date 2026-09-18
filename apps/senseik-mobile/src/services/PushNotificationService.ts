@@ -18,11 +18,13 @@ export class PushNotificationService {
 
   async registerPushToken(): Promise<string> {
     try {
-      const token = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_PROJECT_ID
-      });
+      const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
+      if (!projectId) {
+        throw new Error("EXPO_PUBLIC_PROJECT_ID is not configured.");
+      }
+      const token = await Notifications.getExpoPushTokenAsync({ projectId });
 
-      console.log("Push token:", token.data);
+      // Never log the push token: it addresses this device and is readable via logcat.
 
       // Send to backend
       const userId = await SecureStorage.getUserId();
@@ -32,19 +34,23 @@ export class PushNotificationService {
 
       return token.data;
     } catch (error) {
-      console.error("Failed to register push token:", error);
+      if (__DEV__) {
+        console.error("Failed to register push token:", error);
+      }
       throw error;
     }
   }
 
   private async uploadPushToken(userId: string, token: string): Promise<void> {
     try {
-      await apiClient.post(`/api/users/${userId}/push-tokens`, {
+      await apiClient.post(`/api/users/${encodeURIComponent(userId)}/push-tokens`, {
         token,
         type: "expo"
       });
     } catch (error) {
-      console.error("Failed to upload push token to backend:", error);
+      if (__DEV__) {
+        console.error("Failed to upload push token to backend:", error);
+      }
       // Don't throw - continue even if backend upload fails
     }
   }
@@ -55,13 +61,12 @@ export class PushNotificationService {
   ): void {
     // Listener for notifications received while app is in foreground
     this.listenerRef = Notifications.addNotificationReceivedListener(notification => {
-      console.log("Notification received:", notification);
+      // Never log the notification body: it can contain payroll/leave PII.
       onNotificationReceived?.(notification);
     });
 
     // Listener for user interactions with notifications
     this.responseListenerRef = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log("Notification response:", response);
       onNotificationResponse?.(response);
     });
   }
@@ -80,7 +85,9 @@ export class PushNotificationService {
       const { status } = await Notifications.requestPermissionsAsync();
       return status === "granted";
     } catch (error) {
-      console.error("Failed to request notification permissions:", error);
+      if (__DEV__) {
+        console.error("Failed to request notification permissions:", error);
+      }
       return false;
     }
   }
@@ -96,7 +103,9 @@ export class PushNotificationService {
         trigger: { seconds: 1 }
       });
     } catch (error) {
-      console.error("Failed to send local notification:", error);
+      if (__DEV__) {
+        console.error("Failed to send local notification:", error);
+      }
     }
   }
 }

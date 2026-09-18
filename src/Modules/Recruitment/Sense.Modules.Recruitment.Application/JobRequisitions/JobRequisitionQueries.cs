@@ -1,5 +1,6 @@
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.JobRequisitions;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -8,15 +9,25 @@ namespace Sense.Modules.Recruitment.Application.JobRequisitions;
 
 /// <summary>Lists job requisitions, optionally filtered to one status.</summary>
 [RequiresPermission("recruitment.requisitions.read")]
-public sealed record ListJobRequisitionsQuery(string? Status) : IQuery<IReadOnlyList<JobRequisitionDto>>;
+public sealed record ListJobRequisitionsQuery(string? Status, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<JobRequisitionDto>>;
 
 public sealed class ListJobRequisitionsHandler(IJobRequisitionRepository requisitions)
     : IQueryHandler<ListJobRequisitionsQuery, IReadOnlyList<JobRequisitionDto>>
 {
     public async Task<Result<IReadOnlyList<JobRequisitionDto>>> Handle(ListJobRequisitionsQuery query, CancellationToken cancellationToken)
     {
-        RequisitionStatus? status = string.IsNullOrWhiteSpace(query.Status) ? null : Enum.Parse<RequisitionStatus>(query.Status);
-        var list = await requisitions.ListAsync(status, cancellationToken);
+        RequisitionStatus? status = null;
+        if (!string.IsNullOrWhiteSpace(query.Status))
+        {
+            if (!Enum.TryParse<RequisitionStatus>(query.Status, ignoreCase: true, out var parsed))
+            {
+                return Error.Validation(ErrorCodes.ValidationError, ("Status", query.Status));
+            }
+
+            status = parsed;
+        }
+
+        var list = await requisitions.ListAsync(status, query.Take, cancellationToken);
         IReadOnlyList<JobRequisitionDto> dtos = list.Select(JobRequisitionMapper.ToDto).ToList();
         return Result.Success(dtos);
     }

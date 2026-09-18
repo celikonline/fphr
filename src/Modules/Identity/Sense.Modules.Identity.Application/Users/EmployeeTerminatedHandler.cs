@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Identity.Domain.Users;

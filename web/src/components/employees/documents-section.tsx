@@ -1,8 +1,8 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Card, Group, Input, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
-import { RefreshCw, Upload } from "lucide-react";
+import { Badge, Button, Card, Group, Input, Modal, Skeleton, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import { Folder, RefreshCw, Search, Upload } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
@@ -20,10 +20,32 @@ import {
   uploadDocumentFile,
   waiveDocumentRequirement,
   type DocumentRequirementStatus,
+  type DocumentTypeStage,
   type EmployeeDocumentRequirement,
 } from "@/services/documents.service";
 
+/** Display order of the "klasör" groups (Kolay İK "Dosyalar" ekranındaki gibi aşamaya göre gruplanmış liste). */
+const STAGE_ORDER: DocumentTypeStage[] = ["onboarding", "conditional", "duringEmployment", "offboarding", "recommended"];
+
 export const DOCUMENTS_CARD_TAB_PERMISSIONS = ["documents.requirements.view", "documents.my.requirements"];
+
+/** Client-side upload guard (defense in depth - the server re-validates size/type). */
+const DOCUMENT_ACCEPT =
+  ".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx,image/png,image/jpeg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const DOCUMENT_MAX_BYTES = 10 * 1024 * 1024;
+
+function isAllowedDocument(file: File): boolean {
+  if (file.size > DOCUMENT_MAX_BYTES) return false;
+  const name = file.name.toLowerCase();
+  const type = file.type.toLowerCase();
+  return DOCUMENT_ACCEPT.split(",")
+    .map((token) => token.trim().toLowerCase())
+    .filter(Boolean)
+    .some((token) => {
+      if (token.startsWith(".")) return name.endsWith(token);
+      return type === token;
+    });
+}
 
 const STATUS_COLOR: Record<DocumentRequirementStatus, string> = {
   missing: "red",
@@ -37,7 +59,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   const canManage = usePermission("documents.requirements.manage");
   const canViewAny = usePermission("documents.requirements.view");
   const canUploadHr = usePermission("documents.files.create") && canManage;
-  const canUploadSelf = usePermission("documents.my.files.create");
+  const canUploadSelf = usePermission("documents.my.files");
   // A plain employee has "me" only; HR/admin roles' "documents.*" wildcard covers both, so "hr" wins.
   const uploadMode: "hr" | "me" | null = canUploadHr ? "hr" : canUploadSelf ? "me" : null;
   const queryClient = useQueryClient();
@@ -45,6 +67,7 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadTarget, setUploadTarget] = useState<EmployeeDocumentRequirement | null>(null);
   const [pendingUpload, setPendingUpload] = useState<{ requirement: EmployeeDocumentRequirement; file: File } | null>(null);
+  const [search, setSearch] = useState("");
 
   const queryKey = ["documents", "employee-requirements", employee.id, canViewAny] as const;
   const { data: requirements = [], isLoading, isError } = useQuery({
@@ -103,29 +126,57 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
   function fileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (file && uploadTarget) setPendingUpload({ requirement: uploadTarget, file });
+    if (!file || !uploadTarget) return;
+    if (!isAllowedDocument(file)) {
+      toast({ variant: "destructive", title: t("common:error"), description: t("documents:requirements.errors.invalidFile") });
+      return;
+    }
+    setPendingUpload({ requirement: uploadTarget, file });
   }
-
-  if (isLoading) return <Skeleton h={200} />;
 
   const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
 
+  const filtered = useMemo(() => {
+    const term = search.trim().toLocaleLowerCase();
+    return term ? requirements.filter((r) => r.documentTypeName.toLocaleLowerCase().includes(term)) : requirements;
+  }, [requirements, search]);
+
+  const grouped = useMemo(() => {
+    const byStage = new Map<DocumentTypeStage, EmployeeDocumentRequirement[]>();
+    for (const requirement of filtered) {
+      (byStage.get(requirement.stage) ?? byStage.set(requirement.stage, []).get(requirement.stage)!).push(requirement);
+    }
+    return STAGE_ORDER.map((stage) => ({ stage, items: byStage.get(stage) ?? [] })).filter((group) => group.items.length > 0);
+  }, [filtered]);
+
+  if (isLoading) return <Skeleton h={200} />;
+
   return (
     <Card withBorder padding="lg">
-      <Group justify="space-between" wrap="nowrap" mb="md">
+      <Group justify="space-between" wrap="wrap" mb="md" gap="sm">
         <Title order={4}>{t("documents:requirements.title")}</Title>
-        {canManage && (
-          <Button
-            type="button"
-            variant="default"
-            size="sm"
-            leftSection={<RefreshCw size={16} />}
-            loading={reevaluateMutation.isPending}
-            onClick={() => reevaluateMutation.mutate()}
-          >
-            {t("documents:requirements.reevaluate")}
-          </Button>
-        )}
+        <Group gap="sm" wrap="wrap">
+          <TextInput
+            id="documents-search"
+            placeholder={t("documents:requirements.searchPlaceholder")}
+            leftSection={<Search size={14} />}
+            value={search}
+            onChange={(event) => setSearch(event.currentTarget.value)}
+            w={220}
+          />
+          {canManage && (
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              leftSection={<RefreshCw size={16} />}
+              loading={reevaluateMutation.isPending}
+              onClick={() => reevaluateMutation.mutate()}
+            >
+              {t("documents:requirements.reevaluate")}
+            </Button>
+          )}
+        </Group>
       </Group>
 
       {isError ? (
@@ -136,66 +187,84 @@ export function DocumentsSection({ employee }: EmployeeCardTabProps) {
         <Text size="sm" c="dimmed">
           {t("documents:requirements.empty")}
         </Text>
+      ) : grouped.length === 0 ? (
+        <Text size="sm" c="dimmed">
+          {t("documents:requirements.searchEmpty")}
+        </Text>
       ) : (
-        <Stack gap="md">
-          {requirements.map((requirement) => (
-            <div key={requirement.id} className="flex flex-wrap items-start justify-between gap-2">
-              <Stack gap={4} className="min-w-0">
-                <Group gap="xs" wrap="wrap">
-                  <Text size="sm" fw={500}>
-                    {requirement.documentTypeName}
-                  </Text>
-                  <Badge variant="light">{t(`documents:enum.stage.${requirement.stage}`)}</Badge>
-                  <Badge variant="filled" color={STATUS_COLOR[requirement.status]}>
-                    {t(`documents:enum.status.${requirement.status}`)}
-                  </Badge>
-                  <ExpiryBadge expiryDate={requirement.expiryDate} />
-                </Group>
-                <Text size="xs" c="dimmed">
-                  {requirement.dueDate && `${t("documents:requirements.dueDate")}: ${date(requirement.dueDate)}`}
-                  {requirement.status === "waived" &&
-                    requirement.waivedReason &&
-                    `${requirement.dueDate ? " · " : ""}${t("documents:requirements.waivedReason")}: ${requirement.waivedReason}`}
+        <Stack gap="lg">
+          {grouped.map((group) => (
+            <div key={group.stage}>
+              <Group gap="xs" mb="sm">
+                <Folder size={14} color="var(--mantine-color-dimmed)" />
+                <Text size="sm" fw={600} c="dimmed">
+                  {t(`documents:enum.stage.${group.stage}`)}
                 </Text>
+                <Badge variant="light" size="sm">
+                  {group.items.length}
+                </Badge>
+              </Group>
+              <Stack gap="md">
+                {group.items.map((requirement) => (
+                  <div key={requirement.id} className="flex flex-wrap items-start justify-between gap-2">
+                    <Stack gap={4} className="min-w-0">
+                      <Group gap="xs" wrap="wrap">
+                        <Text size="sm" fw={500}>
+                          {requirement.documentTypeName}
+                        </Text>
+                        <Badge variant="filled" color={STATUS_COLOR[requirement.status]}>
+                          {t(`documents:enum.status.${requirement.status}`)}
+                        </Badge>
+                        <ExpiryBadge expiryDate={requirement.expiryDate} />
+                      </Group>
+                      <Text size="xs" c="dimmed">
+                        {requirement.dueDate && `${t("documents:requirements.dueDate")}: ${date(requirement.dueDate)}`}
+                        {requirement.status === "waived" &&
+                          requirement.waivedReason &&
+                          `${requirement.dueDate ? " · " : ""}${t("documents:requirements.waivedReason")}: ${requirement.waivedReason}`}
+                      </Text>
+                    </Stack>
+                    {requirement.status !== "uploaded" && (canManage || uploadMode === "me") && (
+                      <Group gap={4}>
+                        {uploadMode && (uploadMode === "hr" || requirement.status === "missing") && (
+                          <Button
+                            type="button"
+                            variant="subtle"
+                            size="sm"
+                            leftSection={<Upload size={14} />}
+                            loading={uploadMutation.isPending && uploadMutation.variables?.requirement.id === requirement.id}
+                            onClick={() => pickFileFor(requirement)}
+                          >
+                            {t("documents:requirements.upload")}
+                          </Button>
+                        )}
+                        {canManage && requirement.status === "missing" && (
+                          <Button type="button" variant="subtle" size="sm" onClick={() => setWaiving(requirement)}>
+                            {t("documents:requirements.waive")}
+                          </Button>
+                        )}
+                        {canManage && requirement.status === "waived" && (
+                          <Button
+                            type="button"
+                            variant="subtle"
+                            size="sm"
+                            loading={clearWaiveMutation.isPending && clearWaiveMutation.variables?.id === requirement.id}
+                            onClick={() => clearWaiveMutation.mutate(requirement)}
+                          >
+                            {t("documents:requirements.clearWaive")}
+                          </Button>
+                        )}
+                      </Group>
+                    )}
+                  </div>
+                ))}
               </Stack>
-              {requirement.status !== "uploaded" && (canManage || uploadMode === "me") && (
-                <Group gap={4}>
-                  {uploadMode && (uploadMode === "hr" || requirement.status === "missing") && (
-                    <Button
-                      type="button"
-                      variant="subtle"
-                      size="sm"
-                      leftSection={<Upload size={14} />}
-                      loading={uploadMutation.isPending && uploadMutation.variables?.requirement.id === requirement.id}
-                      onClick={() => pickFileFor(requirement)}
-                    >
-                      {t("documents:requirements.upload")}
-                    </Button>
-                  )}
-                  {canManage && requirement.status === "missing" && (
-                    <Button type="button" variant="subtle" size="sm" onClick={() => setWaiving(requirement)}>
-                      {t("documents:requirements.waive")}
-                    </Button>
-                  )}
-                  {canManage && requirement.status === "waived" && (
-                    <Button
-                      type="button"
-                      variant="subtle"
-                      size="sm"
-                      loading={clearWaiveMutation.isPending && clearWaiveMutation.variables?.id === requirement.id}
-                      onClick={() => clearWaiveMutation.mutate(requirement)}
-                    >
-                      {t("documents:requirements.clearWaive")}
-                    </Button>
-                  )}
-                </Group>
-              )}
             </div>
           ))}
         </Stack>
       )}
 
-      {uploadMode && <input ref={fileInputRef} type="file" className="hidden" onChange={fileSelected} />}
+      {uploadMode && <input ref={fileInputRef} type="file" accept={DOCUMENT_ACCEPT} className="hidden" onChange={fileSelected} />}
       {waiving && <WaiveDialog requirement={waiving} queryKey={queryKey} onClose={() => setWaiving(null)} />}
       {pendingUpload && (
         <UploadExpiryDialog

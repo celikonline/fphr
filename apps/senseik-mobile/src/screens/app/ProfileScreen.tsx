@@ -1,9 +1,19 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import type { CompositeNavigationProp } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
 import { profileService, type MyProfile } from "@/services/ProfileService";
+import type { AppStackParamList, MainTabsParamList } from "@/types/navigation";
+
+type ProfileNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabsParamList, "Profile">,
+  NativeStackNavigationProp<AppStackParamList>
+>;
 
 function formatDateOnly(value: string): string {
   const date = new Date(`${value}T00:00:00`);
@@ -28,6 +38,7 @@ function buildFields(profile: MyProfile): ProfileField[] {
 }
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<ProfileNavigationProp>();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -96,6 +107,11 @@ export default function ProfileScreen() {
           ))}
         </View>
       ) : null}
+
+      <TouchableOpacity style={styles.supportRow} onPress={() => navigation.navigate("Support")}>
+        <Text style={styles.supportRowText}>Destek</Text>
+        <Text style={styles.supportRowChevron}>›</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -157,5 +173,24 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.bodySm,
     color: colors.error
+  },
+  supportRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 12,
+    padding: spacing.lg,
+    marginTop: spacing.lg
+  },
+  supportRowText: {
+    ...typography.body,
+    color: colors.text
+  },
+  supportRowChevron: {
+    ...typography.h4,
+    color: colors.textTertiary
   }
 });

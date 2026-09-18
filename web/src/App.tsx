@@ -23,6 +23,7 @@ const UsersRolesPage = lazy(() => import("@/pages/users-roles"));
 const AuditLogPage = lazy(() => import("@/pages/audit-log"));
 const AppsPage = lazy(() => import("@/pages/apps"));
 const AccountPage = lazy(() => import("@/pages/account"));
+const SupportPage = lazy(() => import("@/pages/support"));
 const EmployeeListPage = lazy(() => import("@/pages/employees/employee-list"));
 const OrgChartPage = lazy(() => import("@/pages/employees/org-chart"));
 const EmployeeCardPage = lazy(() => import("@/pages/employees/employee-card"));
@@ -119,7 +120,7 @@ export default function App() {
             <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
             <Route path="requests" element={<RequestsPage />} />
             <Route path="reports" element={<ReportsPage />} />
-            <Route path="support" element={<ComingSoonPage titleKey="nav.support" phase={4} />} />
+            <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />
             <Route path="account" element={<AccountPage />} />
             <Route path="trust" element={<TrustPage />} />

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Recruitment.Application.Applications;
 using Sense.Modules.Recruitment.Application.Candidates;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -22,8 +23,8 @@ public sealed class CandidatesController : ApiControllerBase
     /// <summary>Lists candidates, optionally filtered by a name/email search term.</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<CandidateDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] string? search, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListCandidatesQuery(search), ct));
+    public async Task<IActionResult> List([FromQuery] string? search, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListCandidatesQuery(search, take), ct));
 
     /// <summary>A single candidate by id.</summary>
     [HttpGet(ApiRoutes.IdParam)]
@@ -46,8 +47,8 @@ public sealed class CandidatesController : ApiControllerBase
     /// <summary>Lists a candidate's applications (their history across postings).</summary>
     [HttpGet(ApiRoutes.IdParam + "/applications")]
     [ProducesResponseType<IReadOnlyList<JobApplicationDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ListApplications(Guid id, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListApplicationsByCandidateQuery(id), ct));
+    public async Task<IActionResult> ListApplications(Guid id, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListApplicationsByCandidateQuery(id, take), ct));
 
     /// <summary>Replaces a candidate's tag set.</summary>
     [HttpPut(ApiRoutes.IdParam + "/tags")]

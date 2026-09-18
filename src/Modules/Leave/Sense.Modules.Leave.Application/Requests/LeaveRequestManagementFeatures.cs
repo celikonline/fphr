@@ -107,21 +107,34 @@ public sealed record LeaveApprovalStepDto(
 
 public sealed record LeaveApprovalDto(string Status, int? CurrentStepNumber, IReadOnlyList<LeaveApprovalStepDto> Steps);
 
-/// <summary>Leave request detail: every <see cref="LeaveRequestDto"/> field plus the employee name and the approval chain (omitted without approval).</summary>
+/// <summary>
+/// Leave request detail: every <see cref="LeaveRequestDto"/> field plus the employee name and the approval chain
+/// (omitted without approval). <see cref="RemainingBalance"/>/<see cref="TeamOverlap"/> mirror
+/// <see cref="LeaveRequestPreviewDto"/>'s "İzin Talebi" modal fields ("Kalan İzin Bakiyesi"/"Çakışan İzinler") so an
+/// approver reviewing an already-submitted request sees the same context the requester saw before submitting;
+/// both are best-effort (null/empty on any lookup miss) and never fail the request.
+/// </summary>
 public sealed record LeaveRequestDetailDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
     string? LeaveTypeName, Guid? PreviousRequestId, DateTime? CancelledAt, string? CancellationReason, string EmployeeName, LeaveApprovalDto? Approval,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null,
+    decimal? RemainingBalance = null, TeamOverlapDto? TeamOverlap = null);
 
 public sealed class LeaveRequestDetailBuilder(
     ITenantContext tenant,
     IEmployeeLeaveProfileRepository profiles,
     ILeaveRuleSetRepository ruleSets,
     IEmployeeDirectory employees,
+    IEmployeeLookup employeeLookup,
+    ILeaveRequestRepository requests,
+    LeaveBalanceService balances,
     IApprovalRequestLookup approvals)
 {
     private const string PendingStepStatus = "Pending";
+
+    /// <summary>Display cap only, matches <see cref="LeaveRequestPreview"/>'s own cap - the caller still sees the true total in <c>Count</c>.</summary>
+    private const int TeamOverlapMaxEmployees = 20;
 
     public async Task<LeaveRequestDetailDto> BuildAsync(LeaveRequest request, bool forRequester, CancellationToken cancellationToken)
     {
@@ -157,10 +170,69 @@ public sealed class LeaveRequestDetailBuilder(
                 }).ToList());
         }
 
+        var remainingBalance = await ResolveRemainingBalanceAsync(request, cancellationToken);
+        var teamOverlap = await ResolveTeamOverlapAsync(request, cancellationToken);
+
         return new LeaveRequestDetailDto(
             dto.Id, dto.EmployeeId, dto.LeaveTypeId, dto.LeaveTypeCode, dto.StartDate, dto.EndDate, dto.CalculatedDays, dto.Description, dto.Status, dto.Source,
             dto.ApprovalRequestId, dto.RevisionNo, dto.SubmittedAt, dto.DecidedAt, dto.LeaveTypeName, dto.PreviousRequestId, dto.CancelledAt, dto.CancellationReason,
-            names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval, dto.StartTime, dto.EndTime, dto.HalfDayPeriod);
+            names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval, dto.StartTime, dto.EndTime, dto.HalfDayPeriod,
+            remainingBalance, teamOverlap);
+    }
+
+    /// <summary>"Kalan İzin Bakiyesi": the employee's current available balance for this request's leave type (PerYear types only, else null).</summary>
+    private async Task<decimal?> ResolveRemainingBalanceAsync(LeaveRequest request, CancellationToken cancellationToken)
+    {
+        var profile = await profiles.FindByEmployeeIdAsync(request.EmployeeId, cancellationToken);
+        if (profile is null)
+        {
+            return null;
+        }
+
+        var set = await ruleSets.GetByIdAsync(profile.RuleSetId, cancellationToken);
+        if (set.IsFailure)
+        {
+            return null;
+        }
+
+        var projected = await balances.ProjectAsync(profile, set.Value, cancellationToken);
+        return projected.FirstOrDefault(b => b.LeaveTypeId == request.LeaveTypeId)?.AvailableBalance;
+    }
+
+    /// <summary>
+    /// "Çakışan İzinler": same org unit, active (Pending/Approved) leave overlapping [StartDate, EndDate], excluding
+    /// the requester - mirrors <see cref="LeaveRequestPreview"/>'s pre-submit team overlap for consistency.
+    /// </summary>
+    private async Task<TeamOverlapDto?> ResolveTeamOverlapAsync(LeaveRequest request, CancellationToken cancellationToken)
+    {
+        var orgUnitId = await employeeLookup.GetOrgUnitIdAsync(tenant.TenantId, request.EmployeeId, cancellationToken);
+        if (orgUnitId is null)
+        {
+            return null;
+        }
+
+        var peers = (await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId.Value], cancellationToken))
+            .Where(id => id != request.EmployeeId).ToList();
+        if (peers.Count == 0)
+        {
+            return new TeamOverlapDto(0, []);
+        }
+
+        var overlapping = await requests.ListActiveInRangeAsync(request.StartDate, request.EndDate, peers, cancellationToken);
+        if (overlapping.Count == 0)
+        {
+            return new TeamOverlapDto(0, []);
+        }
+
+        var overlapNames = (await employees.GetContactsAsync(tenant.TenantId, overlapping.Select(r => r.EmployeeId).Distinct().ToList(), cancellationToken))
+            .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+
+        var shown = overlapping
+            .OrderBy(r => r.StartDate)
+            .Take(TeamOverlapMaxEmployees)
+            .Select(r => new TeamOverlapEmployeeDto(r.EmployeeId, overlapNames.GetValueOrDefault(r.EmployeeId, string.Empty), r.StartDate, r.EndDate))
+            .ToList();
+        return new TeamOverlapDto(overlapping.Count, shown);
     }
 
     /// <summary>Workflow status strings ("InProgress") in the API's camelCase enum style ("inProgress").</summary>

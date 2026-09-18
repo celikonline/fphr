@@ -72,6 +72,7 @@ public sealed class OrgUnitApprovalPolicyIntegrationTests : TestFixture
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Advance, null, p2, root.Id),
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Expense, null, null, null),
             new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Overtime, null, null, null),
+            new OrgUnitApprovalPolicyDto(ApprovalRequestTypes.Requisition, null, null, null),
         ]);
 
         var own = await Set(team.Id, (ApprovalRequestTypes.Leave, p4));

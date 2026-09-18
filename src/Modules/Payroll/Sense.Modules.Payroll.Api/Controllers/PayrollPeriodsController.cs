@@ -27,11 +27,11 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     public async Task<IActionResult> List(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListPayrollPeriodsQuery(), ct));
 
-    /// <summary>One period's header + its payslip lines (read-only "Dönem detayı" screen). 404 on another tenant's/unknown period.</summary>
+    /// <summary>One period's header + its payslip lines (read-only "Dönem detayı" screen). 404 on another tenant's/unknown period. Optional costCenterId query parameter filters payslips to only the specified cost center.</summary>
     [HttpGet("{id:guid}")]
     [ProducesResponseType<PayrollPeriodDetailDto>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new GetPayrollPeriodQuery(id), ct));
+    public async Task<IActionResult> Get(Guid id, Guid? costCenterId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetPayrollPeriodQuery(id, costCenterId), ct));
 
     /// <summary>Opens a new period ("Dönem aç", akış §2).</summary>
     [HttpPost]
@@ -57,11 +57,11 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     public async Task<IActionResult> DirtyFlags(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListDirtyFlagsQuery(id), ct));
 
-    /// <summary>Downloads the period's payroll summary workbook (K-7: Excel özet, SGK/banka dosyası ilk sürüm dışı).</summary>
+    /// <summary>Downloads the period's payroll summary workbook (K-7: Excel özet, SGK/banka dosyası ilk sürüm dışı). Optional costCenterId query parameter filters the export to only the specified cost center.</summary>
     [HttpGet("{id:guid}/export")]
-    public async Task<IActionResult> Export(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Export(Guid id, Guid? costCenterId, CancellationToken ct)
     {
-        var result = await Dispatcher.Query(new ExportPayrollPeriodQuery(id), ct);
+        var result = await Dispatcher.Query(new ExportPayrollPeriodQuery(id, costCenterId), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
 }

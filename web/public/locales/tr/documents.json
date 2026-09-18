@@ -67,8 +67,11 @@
       "generic": "İşlem gerçekleştirilemedi.",
       "loadFailed": "Belge gereksinimleri yüklenemedi.",
       "reasonRequired": "Muafiyet nedeni zorunludur.",
-      "uploadFailed": "Belge yüklenemedi."
-    }
+      "uploadFailed": "Belge yüklenemedi.",
+      "invalidFile": "Desteklenmeyen dosya türü veya boyutu (en fazla 10 MB: PDF, resim, Word, Excel)."
+    },
+    "searchPlaceholder": "Belge ara",
+    "searchEmpty": "Aramayla eşleşen belge bulunamadı."
   },
   "expiry": {
     "expiredBadge": "Süresi doldu: {{date}}",

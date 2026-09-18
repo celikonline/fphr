@@ -29,9 +29,10 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       await login(email, password);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Bir hata oluştu";
-      Alert.alert("Giriş başarısız", message);
+    } catch {
+      // Generic message: backend/axios errors can leak status codes, hosts or endpoint
+      // details into screenshots, and precise messages enable user enumeration.
+      Alert.alert("Giriş başarısız", "E-posta veya şifre hatalı. Lütfen tekrar deneyin.");
     }
   };
 

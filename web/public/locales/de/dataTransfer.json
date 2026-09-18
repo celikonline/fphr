@@ -1,163 +1,163 @@
 {
-  "title": "[DE] Data transfer center",
-  "subtitle": "[DE] Download a template, upload your completed file, map the columns and run the import.",
+  "title": "Datentransfer-Center",
+  "subtitle": "Laden Sie eine Vorlage herunter, laden Sie Ihre ausgefüllte Datei hoch, ordnen Sie die Spalten zu und starten Sie den Import.",
   "tabs": {
-    "import": "[DE] Import",
-    "history": "[DE] History"
+    "import": "Import",
+    "history": "Verlauf"
   },
   "rules": {
-    "title": "[DE] Template rules",
-    "headers": "[DE] Do not change the headers; if you do, map those columns manually in the column mapping step.",
-    "deleteColumns": "[DE] You can delete columns you don't need; data in deleted columns is left unchanged.",
-    "dates": "[DE] Write dates as DD.MM.YYYY or DD/MM/YYYY (e.g. 01.06.2026); textual dates are not accepted.",
-    "lookups": "[DE] Option values as well as unit and manager values must already exist in the system.",
-    "matching": "[DE] Employees are matched by National ID + First name + Last name."
+    "title": "Vorlagenregeln",
+    "headers": "Ändern Sie die Spaltenüberschriften nicht; falls doch, ordnen Sie diese Spalten im Schritt „Spaltenzuordnung“ manuell zu.",
+    "deleteColumns": "Nicht benötigte Spalten können Sie löschen; Daten in gelöschten Spalten bleiben unverändert.",
+    "dates": "Schreiben Sie Datumsangaben als TT.MM.JJJJ oder TT/MM/JJJJ (z. B. 01.06.2026); ausgeschriebene Datumsangaben werden nicht akzeptiert.",
+    "lookups": "Auswahlwerte sowie Einheits- und Führungskraftwerte müssen bereits im System vorhanden sein.",
+    "matching": "Mitarbeitende werden über Ausweisnummer + Vorname + Nachname zugeordnet."
   },
   "templates": {
-    "columns": "[DE] Columns",
-    "matchKey": "[DE] Match key",
-    "requiredLegend": "[DE] Required",
-    "matchKeyLegend": "[DE] Match key",
-    "download": "[DE] Download template",
-    "upload": "[DE] Upload file",
-    "downloadError": "[DE] The template could not be downloaded.",
-    "loadError": "[DE] Templates could not be loaded.",
-    "empty": "[DE] No import templates are available."
+    "columns": "Spalten",
+    "matchKey": "Abgleichsschlüssel",
+    "requiredLegend": "Erforderlich",
+    "matchKeyLegend": "Abgleichsschlüssel",
+    "download": "Vorlage herunterladen",
+    "upload": "Datei hochladen",
+    "downloadError": "Die Vorlage konnte nicht heruntergeladen werden.",
+    "loadError": "Die Vorlagen konnten nicht geladen werden.",
+    "empty": "Es sind keine Importvorlagen verfügbar."
   },
   "upload": {
-    "dropHint": "[DE] Drag the file here or click to choose",
-    "limits": "[DE] .xlsx or .csv, up to 10 MB",
-    "uploading": "[DE] Uploading file…",
-    "invalidType": "[DE] Only .xlsx or .csv files can be uploaded.",
-    "tooLarge": "[DE] The file size cannot exceed 10 MB.",
-    "error": "[DE] The file could not be uploaded."
+    "dropHint": "Datei hierher ziehen oder zum Auswählen klicken",
+    "limits": ".xlsx oder .csv, bis zu 10 MB",
+    "uploading": "Datei wird hochgeladen…",
+    "invalidType": "Es können nur .xlsx- oder .csv-Dateien hochgeladen werden.",
+    "tooLarge": "Die Dateigröße darf 10 MB nicht überschreiten.",
+    "error": "Die Datei konnte nicht hochgeladen werden."
   },
   "history": {
-    "template": "[DE] Template",
-    "file": "[DE] File",
-    "mode": "[DE] Mode",
-    "status": "[DE] Status",
-    "date": "[DE] Date",
-    "user": "[DE] User",
-    "empty": "[DE] No imports yet.",
-    "loadError": "[DE] Import history could not be loaded."
+    "template": "Vorlage",
+    "file": "Datei",
+    "mode": "Modus",
+    "status": "Status",
+    "date": "Datum",
+    "user": "Benutzer",
+    "empty": "Noch keine Importe vorhanden.",
+    "loadError": "Der Importverlauf konnte nicht geladen werden."
   },
   "counts": {
-    "total": "[DE] Total rows",
-    "inserted": "[DE] Inserted",
-    "updated": "[DE] Updated",
-    "skipped": "[DE] Skipped",
-    "errors": "[DE] Errors"
+    "total": "Zeilen gesamt",
+    "inserted": "Eingefügt",
+    "updated": "Aktualisiert",
+    "skipped": "Übersprungen",
+    "errors": "Fehler"
   },
   "mode": {
-    "Upsert": "[DE] Insert / update",
-    "UpdateOnly": "[DE] Update only"
+    "Upsert": "Einfügen / aktualisieren",
+    "UpdateOnly": "Nur aktualisieren"
   },
   "status": {
-    "Uploaded": "[DE] Uploaded",
-    "Mapped": "[DE] Mapped",
-    "Completed": "[DE] Completed",
-    "CompletedWithErrors": "[DE] Completed with errors",
-    "Failed": "[DE] Failed"
+    "Uploaded": "Hochgeladen",
+    "Mapped": "Zugeordnet",
+    "Completed": "Abgeschlossen",
+    "CompletedWithErrors": "Mit Fehlern abgeschlossen",
+    "Failed": "Fehlgeschlagen"
   },
   "outcome": {
-    "Inserted": "[DE] Inserted",
-    "Updated": "[DE] Updated",
-    "Skipped": "[DE] Skipped",
-    "Error": "[DE] Error"
+    "Inserted": "Eingefügt",
+    "Updated": "Aktualisiert",
+    "Skipped": "Übersprungen",
+    "Error": "Fehler"
   },
   "outcomeFilter": {
-    "all": "[DE] All",
-    "Inserted": "[DE] Inserted",
-    "Updated": "[DE] Updated",
-    "Skipped": "[DE] Skipped",
-    "Error": "[DE] Error"
+    "all": "Alle",
+    "Inserted": "Eingefügt",
+    "Updated": "Aktualisiert",
+    "Skipped": "Übersprungen",
+    "Error": "Fehler"
   },
   "steps": {
-    "file": "[DE] File",
-    "mapping": "[DE] Column mapping",
-    "options": "[DE] Options",
-    "run": "[DE] Run",
-    "result": "[DE] Result"
+    "file": "Datei",
+    "mapping": "Spaltenzuordnung",
+    "options": "Optionen",
+    "run": "Ausführen",
+    "result": "Ergebnis"
   },
   "mapping": {
-    "title": "[DE] Column mapping",
-    "subtitle": "[DE] Choose the field each file column should be imported into, or ignore it. {{mapped}} of {{total}} columns mapped.",
-    "sourceColumn": "[DE] File column",
-    "samples": "[DE] Sample values",
-    "target": "[DE] Import into",
-    "untitledColumn": "[DE] Untitled column {{index}}",
-    "ignore": "[DE] Ignore",
-    "ignored": "[DE] Ignored",
-    "alreadyMapped": "[DE] mapped",
-    "autoMatched": "[DE] matched",
-    "missingRequiredTitle": "[DE] Map these columns to continue",
-    "allRequiredMapped": "[DE] All required and match key columns are mapped.",
-    "onInsertHint": "[DE] Unmapped columns that may be needed when new records are created: {{columns}}",
-    "saveAndContinue": "[DE] Save and continue",
-    "saveError": "[DE] The mapping could not be saved."
+    "title": "Spaltenzuordnung",
+    "subtitle": "Wählen Sie für jede Dateispalte das Zielfeld aus oder ignorieren Sie sie. {{mapped}} von {{total}} Spalten zugeordnet.",
+    "sourceColumn": "Dateispalte",
+    "samples": "Beispielwerte",
+    "target": "Importieren in",
+    "untitledColumn": "Unbenannte Spalte {{index}}",
+    "ignore": "Ignorieren",
+    "ignored": "Ignoriert",
+    "alreadyMapped": "zugeordnet",
+    "autoMatched": "erkannt",
+    "missingRequiredTitle": "Ordnen Sie diese Spalten zu, um fortzufahren",
+    "allRequiredMapped": "Alle erforderlichen Spalten und Abgleichsschlüssel sind zugeordnet.",
+    "onInsertHint": "Nicht zugeordnete Spalten, die beim Anlegen neuer Datensätze benötigt werden können: {{columns}}",
+    "saveAndContinue": "Speichern und fortfahren",
+    "saveError": "Die Zuordnung konnte nicht gespeichert werden."
   },
   "options": {
-    "title": "[DE] Options",
-    "updateOnly": "[DE] Update only mode",
+    "title": "Optionen",
+    "updateOnly": "Modus „Nur aktualisieren“",
     "updateOnlyHelp": {
-      "updates": "[DE] Existing records are updated.",
-      "noInsert": "[DE] No new records are created.",
-      "noMatchError": "[DE] Rows that don't match an existing record are reported as errors.",
-      "mappedOnly": "[DE] Only mapped columns are written; empty cells leave existing data unchanged."
+      "updates": "Bestehende Datensätze werden aktualisiert.",
+      "noInsert": "Es werden keine neuen Datensätze angelegt.",
+      "noMatchError": "Zeilen ohne passenden Datensatz werden als Fehler gemeldet.",
+      "mappedOnly": "Es werden nur zugeordnete Spalten geschrieben; leere Zellen lassen bestehende Daten unverändert."
     },
-    "updateOnlyUnsupported": "[DE] This template does not support update only mode.",
-    "failurePolicy": "[DE] Invalid rows"
+    "updateOnlyUnsupported": "Diese Vorlage unterstützt den Modus „Nur aktualisieren“ nicht.",
+    "failurePolicy": "Ungültige Zeilen"
   },
   "failurePolicy": {
-    "SkipInvalidRows": "[DE] Skip invalid rows",
-    "SkipInvalidRowsHelp": "[DE] Valid rows are imported; invalid rows are reported in the result file.",
-    "AllOrNothing": "[DE] All or nothing",
-    "AllOrNothingHelp": "[DE] If any row is invalid, nothing is imported."
+    "SkipInvalidRows": "Ungültige Zeilen überspringen",
+    "SkipInvalidRowsHelp": "Gültige Zeilen werden importiert; ungültige Zeilen werden in der Ergebnisdatei aufgeführt.",
+    "AllOrNothing": "Alles oder nichts",
+    "AllOrNothingHelp": "Ist eine Zeile ungültig, wird nichts importiert."
   },
   "run": {
-    "running": "[DE] Importing…",
-    "runningHint": "[DE] Please don't leave this page.",
-    "error": "[DE] The import could not be run.",
-    "noPermission": "[DE] You don't have permission to run imports."
+    "running": "Import läuft…",
+    "runningHint": "Bitte verlassen Sie diese Seite nicht.",
+    "error": "Der Import konnte nicht ausgeführt werden.",
+    "noPermission": "Sie haben keine Berechtigung, Importe auszuführen."
   },
   "result": {
-    "completed": "[DE] The import completed successfully",
-    "rowsWithErrors_one": "[DE] {{count}} row has errors",
-    "rowsWithErrors_other": "[DE] {{count}} rows have errors",
-    "completedWithErrorsHint": "[DE] Valid rows were imported. Fix the invalid rows in the result file and upload it again.",
-    "failed": "[DE] The import could not be completed",
-    "failedAllOrNothingHint": "[DE] Because “All or nothing” was selected, no records were imported.",
-    "failedHint": "[DE] No records were imported.",
-    "download": "[DE] Download result file",
-    "downloadError": "[DE] The result file could not be downloaded.",
-    "fileSuffix": "result",
-    "newUpload": "[DE] Upload a new file",
-    "rowsTitle": "[DE] Row results",
-    "rowsEmpty": "[DE] No rows match this filter.",
-    "rowsLoadError": "[DE] Row results could not be loaded.",
-    "rowNumber": "[DE] Row",
-    "matchKey": "[DE] Match key",
-    "outcome": "[DE] Outcome",
-    "errorDescription": "[DE] Error description"
+    "completed": "Der Import wurde erfolgreich abgeschlossen",
+    "rowsWithErrors_one": "{{count}} Zeile ist fehlerhaft",
+    "rowsWithErrors_other": "{{count}} Zeilen sind fehlerhaft",
+    "completedWithErrorsHint": "Gültige Zeilen wurden importiert. Korrigieren Sie die ungültigen Zeilen in der Ergebnisdatei und laden Sie sie erneut hoch.",
+    "failed": "Der Import konnte nicht abgeschlossen werden",
+    "failedAllOrNothingHint": "Da „Alles oder nichts“ gewählt wurde, wurden keine Datensätze importiert.",
+    "failedHint": "Es wurden keine Datensätze importiert.",
+    "download": "Ergebnisdatei herunterladen",
+    "downloadError": "Die Ergebnisdatei konnte nicht heruntergeladen werden.",
+    "fileSuffix": "ergebnis",
+    "newUpload": "Neue Datei hochladen",
+    "rowsTitle": "Zeilenergebnisse",
+    "rowsEmpty": "Keine Zeilen entsprechen diesem Filter.",
+    "rowsLoadError": "Die Zeilenergebnisse konnten nicht geladen werden.",
+    "rowNumber": "Zeile",
+    "matchKey": "Abgleichsschlüssel",
+    "outcome": "Ergebnis",
+    "errorDescription": "Fehlerbeschreibung"
   },
   "job": {
-    "back": "[DE] Back to data transfer center",
-    "uploadedAt": "[DE] Uploaded:",
-    "rowCount_one": "[DE] {{count}} row",
-    "rowCount_other": "[DE] {{count}} rows",
-    "notFound": "[DE] Import job not found.",
-    "loadError": "[DE] The import job could not be loaded.",
-    "templateUnavailable": "[DE] Template \"{{code}}\" is not available."
+    "back": "Zurück zum Datentransfer-Center",
+    "uploadedAt": "Hochgeladen:",
+    "rowCount_one": "{{count}} Zeile",
+    "rowCount_other": "{{count}} Zeilen",
+    "notFound": "Importvorgang nicht gefunden.",
+    "loadError": "Der Importvorgang konnte nicht geladen werden.",
+    "templateUnavailable": "Die Vorlage \"{{code}}\" ist nicht verfügbar."
   },
   "errorCodes": {
-    "IMPORT_UNMAPPED_REQUIRED": "[DE] Required columns are not mapped",
-    "IMPORT_NO_MATCH": "[DE] No matching record found (update only mode does not create new records).",
-    "IMPORT_NAME_MISMATCH": "[DE] The national ID matched, but the first or last name differs from the existing record.",
-    "IMPORT_DUPLICATE_ROW": "[DE] The same national ID appears in more than one row of the file.",
-    "IMPORT_INVALID_DATE": "[DE] Invalid date; use DD.MM.YYYY or DD/MM/YYYY.",
-    "IMPORT_INVALID_NATIONAL_ID": "[DE] Invalid national ID.",
-    "IMPORT_LOOKUP_NOT_FOUND": "[DE] The value is not defined in the system; create the related record first.",
-    "IMPORT_REQUIRED_MISSING": "[DE] A required field is empty."
+    "IMPORT_UNMAPPED_REQUIRED": "Erforderliche Spalten sind nicht zugeordnet",
+    "IMPORT_NO_MATCH": "Kein passender Datensatz gefunden (im Modus „Nur aktualisieren“ werden keine neuen Datensätze angelegt).",
+    "IMPORT_NAME_MISMATCH": "Die Ausweisnummer stimmt überein, aber Vor- oder Nachname weicht vom bestehenden Datensatz ab.",
+    "IMPORT_DUPLICATE_ROW": "Dieselbe Ausweisnummer kommt in mehreren Zeilen der Datei vor.",
+    "IMPORT_INVALID_DATE": "Ungültiges Datum; verwenden Sie TT.MM.JJJJ oder TT/MM/JJJJ.",
+    "IMPORT_INVALID_NATIONAL_ID": "Ungültige Ausweisnummer.",
+    "IMPORT_LOOKUP_NOT_FOUND": "Der Wert ist im System nicht definiert; legen Sie zuerst den zugehörigen Datensatz an.",
+    "IMPORT_REQUIRED_MISSING": "Ein Pflichtfeld ist leer."
   }
 }

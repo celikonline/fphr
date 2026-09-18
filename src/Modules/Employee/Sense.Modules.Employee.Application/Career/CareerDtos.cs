@@ -37,7 +37,7 @@ public sealed class CareerReader(IEmployeeReadStore store, CareerService career)
 
         var managerIds = records.Count == 0
             ? (employee.ManagerEmployeeId is { } own ? [own] : new List<Guid>())
-            : records.Where(r => r.ManagerEmployeeId is not null).Select(r => r.ManagerEmployeeId!.Value).Distinct().ToList();
+            : records.Select(r => r.ManagerEmployeeId).OfType<Guid>().Distinct().ToList();
         var names = await store.GetDisplayNamesAsync(managerIds, ct).ConfigureAwait(false);
 
         if (records.Count == 0)

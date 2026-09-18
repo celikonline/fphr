@@ -33,6 +33,7 @@ import { formatDateOnly, toDateOnly } from "@/lib/dates";
 import { getEmployeeLeaveBalances } from "@/services/leave.service";
 import {
   getEmployeeAttendanceDays,
+  getTeamMonth,
   getTeamTimesheet,
   ignoreAnomaly,
   parseAnomalyFlags,
@@ -54,6 +55,17 @@ function mondayOf(date: Date): Date {
   const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   monday.setDate(monday.getDate() + diff);
   return monday;
+}
+
+/** First day of the calendar month that contains `date` (local time). */
+function monthStartOf(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+/** Every date ("yyyy-MM-dd") in the calendar month that starts at `monthStart`. */
+function datesInMonth(monthStart: Date): string[] {
+  const daysCount = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  return Array.from({ length: daysCount }, (_, i) => toDateOnly(new Date(monthStart.getFullYear(), monthStart.getMonth(), i + 1)));
 }
 
 /** TimeOnly "HH:mm:ss(.fff)" → "HH:mm". */
@@ -85,22 +97,27 @@ interface SelectedCell {
 
 function TeamTimesheet() {
   const { t, i18n } = useTranslation(["attendance", "common"]);
+  const [granularity, setGranularity] = useState<"week" | "month">("week");
   const [weekStart, setWeekStart] = useState(() => mondayOf(new Date()));
+  const [monthStart, setMonthStart] = useState(() => monthStartOf(new Date()));
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedCell | null>(null);
-  // Mobile (dar viewport, ≤~576px): 7 kolonlu ızgara yerine gün seçici + çalışan kart listesi (bkz. TeamDayCard).
+  // Mobile (dar viewport, ≤~576px): 7 kolonlu ızgara yerine gün seçici + çalışan kart listesi (bkz. TeamDayCard); Ay görünümünde kullanılmaz.
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
     const day = new Date().getDay(); // 0 = Pazar
     return day === 0 ? 6 : day - 1; // Pazartesi-ilk index
   });
 
   const weekStartIso = toDateOnly(weekStart);
+  const monthStartIso = toDateOnly(monthStart);
   const query = useQuery({
-    queryKey: [...TEAM_KEY_PREFIX, weekStartIso, orgUnitId],
-    queryFn: () => getTeamTimesheet(weekStartIso, orgUnitId),
+    queryKey: granularity === "week" ? [...TEAM_KEY_PREFIX, "week", weekStartIso, orgUnitId] : [...TEAM_KEY_PREFIX, "month", monthStartIso, orgUnitId],
+    queryFn: () => (granularity === "week" ? getTeamTimesheet(weekStartIso, orgUnitId) : getTeamMonth(monthStartIso, orgUnitId)),
   });
 
   const weekDates = useMemo(() => WEEK_DAYS_MONDAY_FIRST.map((_, i) => toDateOnly(new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i))), [weekStart]);
+  const monthDates = useMemo(() => datesInMonth(monthStart), [monthStart]);
+  const rangeDates = granularity === "week" ? weekDates : monthDates;
   const weekEnd = weekDates[weekDates.length - 1];
   const selectedDate = weekDates[selectedDayIndex];
 
@@ -118,30 +135,50 @@ function TeamTimesheet() {
       </Group>
 
       <Group justify="space-between" align="center" wrap="wrap" gap="sm">
-        <OrgUnitSelect
-          value={orgUnitId}
-          onChange={setOrgUnitId}
-          emptyLabel={t("attendance:teamTimesheet.allUnits")}
-          className="w-64"
-        />
+        <Group gap="sm" wrap="wrap">
+          <OrgUnitSelect
+            value={orgUnitId}
+            onChange={setOrgUnitId}
+            emptyLabel={t("attendance:teamTimesheet.allUnits")}
+            className="w-64"
+          />
+          <SegmentedControl
+            value={granularity}
+            onChange={(value) => setGranularity(value as "week" | "month")}
+            data={[
+              { value: "week", label: t("attendance:teamTimesheet.week") },
+              { value: "month", label: t("attendance:teamTimesheet.month") },
+            ]}
+          />
+        </Group>
         <Group gap="xs" wrap="nowrap">
-          <Tooltip label={t("attendance:teamTimesheet.previousWeek")}>
+          <Tooltip label={granularity === "week" ? t("attendance:teamTimesheet.previousWeek") : t("attendance:previousMonth")}>
             <ActionIcon
               variant="default"
-              aria-label={t("attendance:teamTimesheet.previousWeek")}
-              onClick={() => setWeekStart((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7))}
+              aria-label={granularity === "week" ? t("attendance:teamTimesheet.previousWeek") : t("attendance:previousMonth")}
+              onClick={() =>
+                granularity === "week"
+                  ? setWeekStart((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() - 7))
+                  : setMonthStart((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1))
+              }
             >
               <ChevronLeft className="h-4 w-4" />
             </ActionIcon>
           </Tooltip>
           <Text fw={500} miw={200} ta="center">
-            {formatDateOnly(weekStartIso, i18n.language, { day: "2-digit", month: "short" })} – {formatDateOnly(weekEnd, i18n.language, { day: "2-digit", month: "short", year: "numeric" })}
+            {granularity === "week"
+              ? `${formatDateOnly(weekStartIso, i18n.language, { day: "2-digit", month: "short" })} – ${formatDateOnly(weekEnd, i18n.language, { day: "2-digit", month: "short", year: "numeric" })}`
+              : formatDateOnly(monthStartIso, i18n.language, { month: "long", year: "numeric" })}
           </Text>
-          <Tooltip label={t("attendance:teamTimesheet.nextWeek")}>
+          <Tooltip label={granularity === "week" ? t("attendance:teamTimesheet.nextWeek") : t("attendance:nextMonth")}>
             <ActionIcon
               variant="default"
-              aria-label={t("attendance:teamTimesheet.nextWeek")}
-              onClick={() => setWeekStart((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7))}
+              aria-label={granularity === "week" ? t("attendance:teamTimesheet.nextWeek") : t("attendance:nextMonth")}
+              onClick={() =>
+                granularity === "week"
+                  ? setWeekStart((d) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7))
+                  : setMonthStart((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1))
+              }
             >
               <ChevronRight className="h-4 w-4" />
             </ActionIcon>
@@ -165,45 +202,53 @@ function TeamTimesheet() {
         </Text>
       ) : (
         <>
-          {/* Dar viewport (≤~576px): 7 kolonlu ızgara sığmaz; gün seçici + tek günlük çalışan kart listesi. */}
-          <Stack gap="sm" hiddenFrom="xs">
-            <SegmentedControl
-              fullWidth
-              value={String(selectedDayIndex)}
-              onChange={(value) => setSelectedDayIndex(Number(value))}
-              data={weekDates.map((date, i) => ({
-                value: String(i),
-                label: formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" }),
-              }))}
-            />
-            <Stack gap="xs">
-              {rows.map((row) => {
-                const day = row.days.find((d) => d.date === selectedDate);
-                if (!day) return null;
-                return (
-                  <TeamDayCard
-                    key={row.employeeId}
-                    employeeName={row.employeeName}
-                    day={day}
-                    onClick={
-                      day.attendanceDayId
-                        ? () => setSelected({ employeeId: row.employeeId, employeeName: row.employeeName, date: day.date, attendanceDayId: day.attendanceDayId! })
-                        : undefined
-                    }
-                  />
-                );
-              })}
+          {/* Dar viewport (≤~576px), yalnız Hafta görünümünde: 7 kolonlu ızgara sığmaz; gün seçici + tek günlük çalışan kart listesi. Ay görünümünde (28-31 kolon) mobilde de kaydırmalı tablo kullanılır. */}
+          {granularity === "week" && (
+            <Stack gap="sm" hiddenFrom="xs">
+              <SegmentedControl
+                fullWidth
+                value={String(selectedDayIndex)}
+                onChange={(value) => setSelectedDayIndex(Number(value))}
+                data={weekDates.map((date, i) => ({
+                  value: String(i),
+                  label: formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" }),
+                }))}
+              />
+              <Stack gap="xs">
+                {rows.map((row) => {
+                  const day = row.days.find((d) => d.date === selectedDate);
+                  if (!day) return null;
+                  return (
+                    <TeamDayCard
+                      key={row.employeeId}
+                      employeeName={row.employeeName}
+                      day={day}
+                      onClick={
+                        day.attendanceDayId
+                          ? () => setSelected({ employeeId: row.employeeId, employeeName: row.employeeName, date: day.date, attendanceDayId: day.attendanceDayId! })
+                          : undefined
+                      }
+                    />
+                  );
+                })}
+              </Stack>
             </Stack>
-          </Stack>
+          )}
 
           <div className="overflow-x-auto">
-            <Table withTableBorder withColumnBorders verticalSpacing="xs" miw={800} visibleFrom="xs">
+            <Table
+              withTableBorder
+              withColumnBorders
+              verticalSpacing="xs"
+              miw={granularity === "week" ? 800 : rangeDates.length * 44 + 160}
+              visibleFrom={granularity === "week" ? "xs" : undefined}
+            >
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>{t("attendance:teamTimesheet.employee")}</Table.Th>
-                  {weekDates.map((date) => (
+                  {rangeDates.map((date) => (
                     <Table.Th key={date} ta="center">
-                      {formatDateOnly(date, i18n.language, { weekday: "short", day: "2-digit" })}
+                      {formatDateOnly(date, i18n.language, granularity === "week" ? { weekday: "short", day: "2-digit" } : { day: "2-digit" })}
                     </Table.Th>
                   ))}
                 </Table.Tr>

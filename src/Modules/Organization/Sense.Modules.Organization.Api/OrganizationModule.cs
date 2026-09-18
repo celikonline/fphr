@@ -60,6 +60,7 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IHolidayCalendarLookup, HolidayCalendarLookup>();
         services.AddScoped<ILocationLookup, LocationLookup>();
         services.AddScoped<ICostCenterLookup, CostCenterLookup>();
+        services.AddScoped<IEmployeeCostCenterReader, EmployeeCostCenterReader>();
 
         // Unit-based approval policy resolution for Workflow (11.3.02 "Birime onay süreci ataması")
         services.AddScoped<IOrgApprovalPolicyResolver, OrgApprovalPolicyResolver>();

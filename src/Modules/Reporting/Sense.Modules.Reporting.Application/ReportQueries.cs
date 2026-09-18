@@ -8,7 +8,12 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Reporting.Application;
 
-/// <summary>Reports the caller may generate - every registered IReportProvider whose RequiredPermission (if any) the caller holds.</summary>
+/// <summary>
+/// Reports the caller may generate - every registered IReportProvider whose RequiredPermission (if any) the caller
+/// holds, ordered by menu category (İdari / Çalışan / İzinler / Finans) then key. Kolay İK's unit-manager rule
+/// ("maaş anahtarı kapalıysa Finans raporları listelenmez") falls out of the permission check: a caller without
+/// employee.salary.view simply never sees the salary report.
+/// </summary>
 [RequiresPermission("reports.catalog.view")]
 public sealed record ListReportCatalogQuery : IQuery<IReadOnlyList<ReportCatalogItemDto>>;
 
@@ -23,11 +28,12 @@ public sealed class ListReportCatalogHandler(IEnumerable<IReportProvider> provid
         {
             if (provider.RequiredPermission is null || await permissions.HasAsync(userId, provider.RequiredPermission, cancellationToken))
             {
-                visible.Add(new ReportCatalogItemDto(provider.Key));
+                visible.Add(new ReportCatalogItemDto(provider.Key, provider.CategoryKey, provider.Parameters));
             }
         }
 
-        return Result.Success<IReadOnlyList<ReportCatalogItemDto>>(visible);
+        return Result.Success<IReadOnlyList<ReportCatalogItemDto>>(
+            visible.OrderBy(v => ReportCategories.SortOrder(v.CategoryKey)).ThenBy(v => v.Key, StringComparer.Ordinal).ToList());
     }
 }
 

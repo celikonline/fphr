@@ -10,6 +10,7 @@
     <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Attendance/Sense.Modules.Attendance.Contracts/Sense.Modules.Attendance.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

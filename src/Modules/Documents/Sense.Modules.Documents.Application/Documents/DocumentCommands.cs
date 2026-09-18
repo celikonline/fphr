@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.Extensions.Logging;
 using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.Documents;
@@ -35,14 +36,15 @@ public sealed class InitiateUploadHandler(
     IFileStorage fileStorage,
     ITenantContext tenant,
     ICurrentUser currentUser,
-    IDocumentRepository documents) : ICommandHandler<InitiateUploadCommand, InitiateUploadResponse>
+    IDocumentRepository documents,
+    ILogger<InitiateUploadHandler> logger) : ICommandHandler<InitiateUploadCommand, InitiateUploadResponse>
 {
     public Task<Result<InitiateUploadResponse>> Handle(InitiateUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.InitiateAsync(fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
+        UploadCore.InitiateAsync(logger, fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
 }
 
 /// <summary>Self-service: initiates a file upload for the caller's own use (e.g. to satisfy their own document requirement).</summary>
-[RequiresPermission("documents.my.files.create")]
+[RequiresPermission("documents.my.files")]
 public sealed record InitiateMyUploadCommand(
     string FileName,
     string ContentType,
@@ -66,10 +68,11 @@ public sealed class InitiateMyUploadHandler(
     IFileStorage fileStorage,
     ITenantContext tenant,
     ICurrentUser currentUser,
-    IDocumentRepository documents) : ICommandHandler<InitiateMyUploadCommand, InitiateUploadResponse>
+    IDocumentRepository documents,
+    ILogger<InitiateMyUploadHandler> logger) : ICommandHandler<InitiateMyUploadCommand, InitiateUploadResponse>
 {
     public Task<Result<InitiateUploadResponse>> Handle(InitiateMyUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.InitiateAsync(fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
+        UploadCore.InitiateAsync(logger, fileStorage, tenant, currentUser, documents, command.FileName, command.ContentType, command.FileSizeBytes, command.BucketName, cancellationToken);
 }
 
 /// <summary>Confirms an upload and validates the ETag (content hash). <paramref name="ExpiryDate"/> is optional
@@ -94,14 +97,15 @@ public sealed class ConfirmUploadValidator : AbstractValidator<ConfirmUploadComm
 public sealed class ConfirmUploadHandler(
     IFileStorage fileStorage,
     ITenantContext tenant,
-    IDocumentRepository documents) : ICommandHandler<ConfirmUploadCommand, ConfirmUploadResponse>
+    IDocumentRepository documents,
+    ILogger<ConfirmUploadHandler> logger) : ICommandHandler<ConfirmUploadCommand, ConfirmUploadResponse>
 {
     public Task<Result<ConfirmUploadResponse>> Handle(ConfirmUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
+        UploadCore.ConfirmAsync(logger, fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
 }
 
 /// <summary>Self-service: confirms an upload initiated via <see cref="InitiateMyUploadCommand"/>.</summary>
-[RequiresPermission("documents.my.files.create")]
+[RequiresPermission("documents.my.files")]
 public sealed record ConfirmMyUploadCommand(
     Guid DocumentId,
     string ETag,
@@ -121,16 +125,18 @@ public sealed class ConfirmMyUploadValidator : AbstractValidator<ConfirmMyUpload
 public sealed class ConfirmMyUploadHandler(
     IFileStorage fileStorage,
     ITenantContext tenant,
-    IDocumentRepository documents) : ICommandHandler<ConfirmMyUploadCommand, ConfirmUploadResponse>
+    IDocumentRepository documents,
+    ILogger<ConfirmMyUploadHandler> logger) : ICommandHandler<ConfirmMyUploadCommand, ConfirmUploadResponse>
 {
     public Task<Result<ConfirmUploadResponse>> Handle(ConfirmMyUploadCommand command, CancellationToken cancellationToken) =>
-        UploadCore.ConfirmAsync(fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
+        UploadCore.ConfirmAsync(logger, fileStorage, tenant, documents, command.DocumentId, command.ETag, command.ActualFileSizeBytes, command.ExpiryDate, cancellationToken);
 }
 
-/// <summary>Shared by the HR and self-service upload commands; the raw upload isn't employee-scoped (see documents.my.files.create's remark).</summary>
+/// <summary>Shared by the HR and self-service upload commands; the raw upload isn't employee-scoped (see the self-service commands' remark).</summary>
 internal static class UploadCore
 {
     public static async Task<Result<InitiateUploadResponse>> InitiateAsync(
+        ILogger logger,
         IFileStorage fileStorage,
         ITenantContext tenant,
         ICurrentUser currentUser,
@@ -177,13 +183,15 @@ internal static class UploadCore
                 presignedRequest.RequestId,
                 presignedRequest.ExpiresAt);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            logger.LogError(ex, "Failed to initiate upload for file {FileName} in bucket {BucketName}.", fileName, bucketName ?? "documents");
             return Error.Failure(DocumentsErrors.UploadInitiationFailed);
         }
     }
 
     public static async Task<Result<ConfirmUploadResponse>> ConfirmAsync(
+        ILogger logger,
         IFileStorage fileStorage,
         ITenantContext tenant,
         IDocumentRepository documents,
@@ -222,8 +230,9 @@ internal static class UploadCore
                 doc.Value.UploadedAt,
                 doc.Value.ExpiryDate);
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            logger.LogError(ex, "Failed to confirm upload for document {DocumentId}.", documentId);
             return Error.Failure(DocumentsErrors.ConfirmationFailed);
         }
     }
@@ -245,7 +254,8 @@ public sealed class DeleteDocumentHandler(
     IFileStorage fileStorage,
     ITenantContext tenant,
     ICurrentUser currentUser,
-    IDocumentRepository documents) : ICommandHandler<DeleteDocumentCommand>
+    IDocumentRepository documents,
+    ILogger<DeleteDocumentHandler> logger) : ICommandHandler<DeleteDocumentCommand>
 {
     public async Task<Result> Handle(DeleteDocumentCommand command, CancellationToken cancellationToken)
     {
@@ -269,8 +279,9 @@ public sealed class DeleteDocumentHandler(
 
             return Result.Success();
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            logger.LogError(ex, "Failed to delete document {DocumentId}.", command.DocumentId);
             return Error.Failure(DocumentsErrors.DeletionFailed);
         }
     }

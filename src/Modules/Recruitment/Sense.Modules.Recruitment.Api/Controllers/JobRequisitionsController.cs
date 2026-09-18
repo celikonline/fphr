@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Recruitment.Application.JobRequisitions;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -18,8 +19,8 @@ public sealed class JobRequisitionsController : ApiControllerBase
     /// <summary>Lists job requisitions, optionally filtered to one status.</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<JobRequisitionDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] string? status, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListJobRequisitionsQuery(status), ct));
+    public async Task<IActionResult> List([FromQuery] string? status, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListJobRequisitionsQuery(status, take), ct));
 
     /// <summary>A single job requisition by id.</summary>
     [HttpGet(ApiRoutes.IdParam)]

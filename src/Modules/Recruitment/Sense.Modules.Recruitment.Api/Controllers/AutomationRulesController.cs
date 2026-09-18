@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Recruitment.Application.AutomationRules;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -18,8 +19,8 @@ public sealed class AutomationRulesController : ApiControllerBase
     /// <summary>Lists pipeline automation rules, optionally active only.</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<AutomationRuleDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] bool activeOnly, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListAutomationRulesQuery(activeOnly), ct));
+    public async Task<IActionResult> List([FromQuery] bool activeOnly, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListAutomationRulesQuery(activeOnly, take), ct));
 
     /// <summary>Creates a pipeline automation rule.</summary>
     [HttpPost]

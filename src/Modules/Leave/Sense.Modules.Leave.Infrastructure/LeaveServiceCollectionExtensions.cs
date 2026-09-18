@@ -32,6 +32,9 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<OvertimeRequestRules>();
         services.AddScoped<LeaveRequestDetailBuilder>();
         services.AddScoped<ILeaveCommandService, LeaveCommandService>();
+        // Raporlar menüsü katkıları (roadmap #44/#70) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveBalanceSummaryReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveRequestsReportProvider>();
         return services;
     }
 
@@ -54,6 +57,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceRecordRepository, AbsenceRecordRepository>();
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
+        services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
         return services;
     }
 

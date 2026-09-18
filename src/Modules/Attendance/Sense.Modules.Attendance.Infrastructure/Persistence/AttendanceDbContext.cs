@@ -5,6 +5,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
@@ -37,6 +38,8 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<EmployeeAvailability> EmployeeAvailabilities => Set<EmployeeAvailability>();
 
     public DbSet<CompensatoryWorkLedger> CompensatoryWorkLedgers => Set<CompensatoryWorkLedger>();
+
+    public DbSet<MonthlyTimesheetApproval> MonthlyTimesheetApprovals => Set<MonthlyTimesheetApproval>();
 }
 
 internal static class AttendanceTables
@@ -50,6 +53,7 @@ internal static class AttendanceTables
     public const string ShiftPlanLocks = "shift_plan_locks";
     public const string EmployeeAvailabilities = "employee_availabilities";
     public const string CompensatoryWorkLedgers = "compensatory_work_ledgers";
+    public const string MonthlyTimesheetApprovals = "monthly_timesheet_approvals";
     public const int OverrideReasonMaxLength = 1000;
     public const int LinkedEntityTypeMaxLength = 50;
     public const int NoteMaxLength = 1000;

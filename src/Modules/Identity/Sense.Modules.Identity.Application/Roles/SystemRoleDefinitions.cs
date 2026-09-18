@@ -68,7 +68,12 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.HRSpecialist, DataScope.Company,
             ["organization.*.view", "employee.*", "leave.*", "workflow.*", "attendance.*", "assets.*", "expense.*.view", "training.*", "documents.*",
-             "announcements.*", "recruitment.*", "reports.*", "datatransfer.*", .. PermissionPatterns.SelfService],
+             "announcements.*", "recruitment.*", "reports.*", "datatransfer.*",
+             // G-10-18: HR role (line above) already had analytics.* - HRSpecialist (the day-to-day HR persona) had
+             // reports.* (Reporting catalog) but not this, so the workforce KPI dashboard (/app/reports "İK
+             // göstergeleri") was invisible to them despite being exactly who'd use it.
+             "analytics.*",
+             .. PermissionPatterns.SelfService],
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,

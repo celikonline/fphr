@@ -1,5 +1,6 @@
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.FormTemplates;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -8,14 +9,14 @@ namespace Sense.Modules.Recruitment.Application.FormTemplates;
 
 /// <summary>Lists form templates, optionally active only.</summary>
 [RequiresPermission("recruitment.form_templates.read")]
-public sealed record ListFormTemplatesQuery(bool ActiveOnly) : IQuery<IReadOnlyList<FormTemplateDto>>;
+public sealed record ListFormTemplatesQuery(bool ActiveOnly, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<FormTemplateDto>>;
 
 public sealed class ListFormTemplatesHandler(IRecruitmentFormTemplateRepository templates)
     : IQueryHandler<ListFormTemplatesQuery, IReadOnlyList<FormTemplateDto>>
 {
     public async Task<Result<IReadOnlyList<FormTemplateDto>>> Handle(ListFormTemplatesQuery query, CancellationToken cancellationToken)
     {
-        var list = await templates.ListAsync(query.ActiveOnly, cancellationToken);
+        var list = await templates.ListAsync(query.ActiveOnly, query.Take, cancellationToken);
         IReadOnlyList<FormTemplateDto> dtos = list.Select(FormTemplateMapper.ToDto).ToList();
         return Result.Success(dtos);
     }

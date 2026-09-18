@@ -74,7 +74,8 @@ public sealed class DocumentRequirementMaterializationService(
             HasOpenAssets: hasOpenAssets,
             IsVeryHazardousJob: false,
             HasOvertimeConsent: false,
-            IsShiftWorker: false);
+            IsShiftWorker: false,
+            IsUndergroundWorker: signals?.IsUndergroundWorker ?? false);
 
         var activeTypes = await types.ListAsync(stage: null, isActive: true, cancellationToken);
         var resolved = DocumentRequirementEvaluator.ResolveAtHire(activeTypes, context);

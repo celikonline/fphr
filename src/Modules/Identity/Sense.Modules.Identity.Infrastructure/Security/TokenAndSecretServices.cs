@@ -88,6 +88,8 @@ public sealed class AspNetPasswordHasher : IPasswordHasher
 {
     private readonly PasswordHasher<User> _hasher = new();
 
+    // Intentional null suppression: PasswordHasher<TUser> declares a non-nullable user but never
+    // dereferences it (hash/verify depend only on the password string); no User exists at this layer.
     public string Hash(string password) => _hasher.HashPassword(null!, password);
 
     public bool Verify(string hash, string password)

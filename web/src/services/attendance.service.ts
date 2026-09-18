@@ -168,6 +168,14 @@ export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | n
   return data;
 }
 
+/** Same row/day shape as {@link getTeamTimesheet}, one column per day of the calendar month ("Ay" görünümü, 11.7 yol haritası). */
+export async function getTeamMonth(monthStart: string, orgUnitId?: string | null): Promise<TeamWeekRow[]> {
+  const { data } = await apiClient.get<TeamWeekRow[]>(`${ATTENDANCE_BASE}/timesheet/team/month`, {
+    params: { monthStart, orgUnitId: orgUnitId || undefined },
+  });
+  return data;
+}
+
 // ---------------------------------------------------------------- Müsaitlik / Availability
 
 /** `AvailabilityKind` (package A5, 11.3.6 "müsait değilim"). */
@@ -435,4 +443,34 @@ export async function deleteWorkSchedule(id: string): Promise<void> {
 /** "Çalışanlara ata" (attendance.workschedule.assign); each employee gets a new dated assignment. */
 export async function assignWorkSchedule(id: string, employeeIds: string[], effectiveFrom: string): Promise<void> {
   await apiClient.post(`${ATTENDANCE_BASE}/work-schedules/${id}/assign`, { employeeIds, effectiveFrom });
+}
+
+/** `WorkScheduleAssignmentSource` (11.3.6: tekil atama / toplu işlem / işe alım varsayılanı). */
+export type WorkScheduleAssignmentSource = "manual" | "bulk" | "hire";
+
+/**
+ * `EmployeeWorkScheduleAssignmentDto`: one dated row in the çalışan kartı "Kariyer &gt; Çalışma Takvimi" history.
+ * `effectiveTo` is derived server-side (the next assignment's start minus one day); null on the ongoing row.
+ */
+export interface EmployeeWorkScheduleAssignment {
+  id: string;
+  workScheduleId: string;
+  workScheduleName: string;
+  effectiveFrom: string;
+  effectiveTo?: string | null;
+  isCurrent: boolean;
+  source: WorkScheduleAssignmentSource;
+  assignedAt: string;
+}
+
+/** Çalışan kartı "Kariyer &gt; Çalışma Takvimi" (attendance.workschedule.view), newest first. */
+export async function getEmployeeWorkScheduleAssignments(employeeId: string): Promise<EmployeeWorkScheduleAssignment[]> {
+  const { data } = await apiClient.get<EmployeeWorkScheduleAssignment[]>(`${ATTENDANCE_BASE}/work-schedules/employees/${employeeId}/assignments`);
+  return data;
+}
+
+/** Own card, self-service (attendance.my.workschedule). */
+export async function getMyWorkScheduleAssignments(): Promise<EmployeeWorkScheduleAssignment[]> {
+  const { data } = await apiClient.get<EmployeeWorkScheduleAssignment[]>(`${ATTENDANCE_BASE}/work-schedules/me/assignments`);
+  return data;
 }

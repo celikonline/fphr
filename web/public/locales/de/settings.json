@@ -1,263 +1,263 @@
 {
   "hub": {
-    "title": "[DE] Settings",
-    "subtitle": "[DE] Company information, rules, system settings and data transfer."
+    "title": "Einstellungen",
+    "subtitle": "Unternehmensdaten, Regeln, Systemeinstellungen und Datentransfer."
   },
   "access": {
-    "title": "[DE] Access settings",
-    "subtitle": "[DE] Decide what employees can see on their home page, in their account and in the calendar.",
-    "scopeNotice": "[DE] Access settings only restrict users with the Employee access type; Account owners, Administrators and HR users are not affected. Changes take effect as soon as they are saved.",
-    "readOnly": "[DE] You can view access settings but are not allowed to change them.",
-    "loadError": "[DE] Access settings could not be loaded.",
-    "saveSuccess": "[DE] Access settings saved.",
-    "saveError": "[DE] Access settings could not be saved.",
+    "title": "Zugriffseinstellungen",
+    "subtitle": "Legen Sie fest, was Mitarbeitende auf ihrer Startseite, in ihrem Konto und im Kalender sehen.",
+    "scopeNotice": "Zugriffseinstellungen schränken nur Benutzer mit der Zugriffsart „Mitarbeitende:r“ ein; Kontoinhaber:innen, Administrator:innen und HR-Benutzer sind nicht betroffen. Änderungen werden unmittelbar nach dem Speichern wirksam.",
+    "readOnly": "Sie können die Zugriffseinstellungen einsehen, aber nicht ändern.",
+    "loadError": "Die Zugriffseinstellungen konnten nicht geladen werden.",
+    "saveSuccess": "Zugriffseinstellungen gespeichert.",
+    "saveError": "Die Zugriffseinstellungen konnten nicht gespeichert werden.",
     "groups": {
-      "home": "[DE] Home",
-      "account": "[DE] Account",
-      "calendar": "[DE] Calendar"
+      "home": "Start",
+      "account": "Konto",
+      "calendar": "Kalender"
     },
     "keys": {
       "showOrgInfo": {
-        "label": "[DE] Employee and unit information",
-        "help": "[DE] Information about units (unit, manager, team) is visible to employees on the home page."
+        "label": "Mitarbeiter- und Einheitsinformationen",
+        "help": "Informationen zu Einheiten (Einheit, Führungskraft, Team) sind für Mitarbeitende auf der Startseite sichtbar."
       },
       "showUpcomingLeaves": {
-        "label": "[DE] Upcoming leave",
-        "help": "[DE] People who will be on leave are listed on the home page. The leave type is not shown."
+        "label": "Anstehender Urlaub",
+        "help": "Personen, die im Urlaub sein werden, werden auf der Startseite aufgeführt. Die Urlaubsart wird nicht angezeigt."
       },
       "showUpcomingBirthdays": {
-        "label": "[DE] Upcoming birthdays",
-        "help": "[DE] Employees see their colleagues' upcoming birthdays on the home page."
+        "label": "Anstehende Geburtstage",
+        "help": "Mitarbeitende sehen die anstehenden Geburtstage ihrer Kolleg:innen auf der Startseite."
       },
       "showEventCalendar": {
-        "label": "[DE] Event calendar",
-        "help": "[DE] Meetings and similar events added in the app are listed on the home page."
+        "label": "Veranstaltungskalender",
+        "help": "In der App eingetragene Besprechungen und ähnliche Termine werden auf der Startseite aufgeführt."
       },
       "showFiles": {
-        "label": "[DE] Files",
-        "help": "[DE] Employees can see the files on their own profile."
+        "label": "Dateien",
+        "help": "Mitarbeitende können die Dateien in ihrem eigenen Profil sehen."
       },
       "showAssets": {
-        "label": "[DE] Assets",
-        "help": "[DE] Employees can see the assets assigned to them."
+        "label": "Arbeitsmittel",
+        "help": "Mitarbeitende können die ihnen zugewiesenen Arbeitsmittel sehen."
       },
       "showWorkPhoneNumbers": {
-        "label": "[DE] Employees' phone numbers",
-        "help": "[DE] If a work phone is set, it is visible to other employees."
+        "label": "Telefonnummern der Mitarbeitenden",
+        "help": "Ist eine dienstliche Telefonnummer hinterlegt, ist sie für andere Mitarbeitende sichtbar."
       },
       "showOrgChart": {
-        "label": "[DE] Org chart",
-        "help": "[DE] The org chart under Employees is opened to employees."
+        "label": "Organigramm",
+        "help": "Das Organigramm unter „Mitarbeitende“ wird für Mitarbeitende freigegeben."
       },
       "showCustomFields": {
-        "label": "[DE] Custom fields",
-        "help": "[DE] Unit authorized users can see custom fields on employee profiles. Employees cannot."
+        "label": "Benutzerdefinierte Felder",
+        "help": "Für Einheiten berechtigte Personen sehen benutzerdefinierte Felder in Mitarbeiterprofilen. Mitarbeitende selbst nicht."
       },
       "showCalendarMenu": {
-        "label": "[DE] Calendar menu",
-        "help": "[DE] Calendar is shown in the left menu."
+        "label": "Kalendermenü",
+        "help": "„Kalender“ wird im linken Menü angezeigt."
       },
       "showAllLeavesInCalendar": {
-        "label": "[DE] All leave in the calendar",
-        "help": "[DE] When off, employees only see leave in their own department; when on, they see leave across the whole company. Only \"on leave\" is shown, never the leave type."
+        "label": "Gesamter Urlaub im Kalender",
+        "help": "Ist die Option aus, sehen Mitarbeitende nur den Urlaub in ihrer eigenen Abteilung; ist sie an, sehen sie den Urlaub im gesamten Unternehmen. Angezeigt wird nur „im Urlaub“, niemals die Urlaubsart."
       }
     }
   },
   "supportAccess": {
-    "title": "[DE] Support access",
-    "subtitle": "[DE] Approve or revoke requests from the Sense support team to access your company account.",
-    "privacyTitle": "[DE] Your data stays under your control",
-    "privacyText": "[DE] Sense staff cannot access your company's data without a time-limited access grant that you approve. An approved grant closes automatically when it expires, can be revoked at any time, and every action is recorded in the audit log.",
-    "status": "[DE] Status",
-    "allStatuses": "[DE] All statuses",
+    "title": "Support-Zugriff",
+    "subtitle": "Genehmigen oder widerrufen Sie Anfragen des Sense-Support-Teams auf Zugriff auf Ihr Unternehmenskonto.",
+    "privacyTitle": "Ihre Daten bleiben unter Ihrer Kontrolle",
+    "privacyText": "Sense-Mitarbeitende können ohne eine von Ihnen genehmigte, zeitlich begrenzte Zugriffsfreigabe nicht auf die Daten Ihres Unternehmens zugreifen. Eine genehmigte Freigabe endet nach Ablauf automatisch, kann jederzeit widerrufen werden, und jede Aktion wird im Audit-Protokoll erfasst.",
+    "status": "Status",
+    "allStatuses": "Alle Status",
     "statuses": {
-      "Pending": "[DE] Pending approval",
-      "Approved": "[DE] Approved",
-      "Active": "[DE] In use",
-      "Expired": "[DE] Expired",
-      "Revoked": "[DE] Revoked"
+      "Pending": "Wartet auf Genehmigung",
+      "Approved": "Genehmigt",
+      "Active": "In Verwendung",
+      "Expired": "Abgelaufen",
+      "Revoked": "Widerrufen"
     },
-    "requestedBy": "[DE] Requested by",
-    "reason": "[DE] Reason",
-    "requestedAt": "[DE] Requested at",
-    "expiresAt": "[DE] Valid until",
-    "approve": "[DE] Approve",
-    "revoke": "[DE] Revoke",
-    "approveTitle": "[DE] Approve support access",
-    "approveConfirm": "[DE] Approve time-limited support access for {{requester}}? Access stays valid until it expires or you revoke it.",
-    "revokeTitle": "[DE] Revoke support access",
-    "revokeConfirm": "[DE] Revoke this support access? Any ongoing session will be closed.",
-    "approveSuccess": "[DE] Support access approved.",
-    "revokeSuccess": "[DE] Support access revoked.",
-    "actionError": "[DE] The action could not be completed.",
-    "loadError": "[DE] Support access requests could not be loaded.",
-    "empty": "[DE] No support access requests.",
-    "senseStaff": "[DE] Sense support team"
+    "requestedBy": "Angefordert von",
+    "reason": "Grund",
+    "requestedAt": "Angefordert am",
+    "expiresAt": "Gültig bis",
+    "approve": "Genehmigen",
+    "revoke": "Widerrufen",
+    "approveTitle": "Support-Zugriff genehmigen",
+    "approveConfirm": "Zeitlich begrenzten Support-Zugriff für {{requester}} genehmigen? Der Zugriff bleibt gültig, bis er abläuft oder Sie ihn widerrufen.",
+    "revokeTitle": "Support-Zugriff widerrufen",
+    "revokeConfirm": "Diesen Support-Zugriff widerrufen? Eine laufende Sitzung wird beendet.",
+    "approveSuccess": "Support-Zugriff genehmigt.",
+    "revokeSuccess": "Support-Zugriff widerrufen.",
+    "actionError": "Die Aktion konnte nicht abgeschlossen werden.",
+    "loadError": "Die Support-Zugriffsanfragen konnten nicht geladen werden.",
+    "empty": "Keine Support-Zugriffsanfragen.",
+    "senseStaff": "Sense-Support-Team"
   },
   "subcontractors": {
-    "title": "[DE] Subcontractors",
-    "subtitle": "[DE] Manage the subcontractor companies working at your worksite.",
-    "add": "[DE] Add company",
-    "editTitle": "[DE] Edit company",
-    "showInactive": "[DE] Show inactive companies",
-    "active": "[DE] Active",
-    "inactive": "[DE] Inactive",
-    "deactivate": "[DE] Deactivate",
-    "reactivate": "[DE] Reactivate",
-    "empty": "[DE] No subcontractors recorded.",
-    "saved": "[DE] The company is saved.",
-    "statusSaved": "[DE] The company's status is updated.",
-    "contactName": "[DE] Contact person",
-    "contactEmail": "[DE] Contact email",
-    "contactPhone": "[DE] Contact phone",
-    "contractStart": "[DE] Contract start",
-    "contractEnd": "[DE] Contract end",
+    "title": "Subunternehmen",
+    "subtitle": "Verwalten Sie die Subunternehmen, die an Ihrem Standort tätig sind.",
+    "add": "Unternehmen hinzufügen",
+    "editTitle": "Unternehmen bearbeiten",
+    "showInactive": "Inaktive Unternehmen anzeigen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "empty": "Keine Subunternehmen erfasst.",
+    "saved": "Das Unternehmen wurde gespeichert.",
+    "statusSaved": "Der Status des Unternehmens wurde aktualisiert.",
+    "contactName": "Ansprechpartner:in",
+    "contactEmail": "Kontakt-E-Mail",
+    "contactPhone": "Kontakttelefon",
+    "contractStart": "Vertragsbeginn",
+    "contractEnd": "Vertragsende",
     "columns": {
-      "name": "[DE] Company name",
-      "taxNumber": "[DE] Tax number",
-      "contact": "[DE] Contact",
-      "contract": "[DE] Contract",
-      "status": "[DE] Status"
+      "name": "Firmenname",
+      "taxNumber": "Steuernummer",
+      "contact": "Kontakt",
+      "contract": "Vertrag",
+      "status": "Status"
     },
     "errors": {
-      "generic": "[DE] The company could not be saved.",
-      "loadFailed": "[DE] The companies could not be loaded.",
-      "nameRequired": "[DE] The company name is required."
+      "generic": "Das Unternehmen konnte nicht gespeichert werden.",
+      "loadFailed": "Die Unternehmen konnten nicht geladen werden.",
+      "nameRequired": "Der Firmenname ist erforderlich."
     }
   },
   "terminationReasons": {
-    "title": "[DE] Termination reasons",
-    "subtitle": "[DE] Manage the reason list the termination wizard offers.",
-    "add": "[DE] Add reason",
-    "editTitle": "[DE] Edit reason",
-    "showInactive": "[DE] Show inactive reasons",
-    "active": "[DE] Active",
-    "inactive": "[DE] Inactive",
-    "system": "[DE] System",
-    "custom": "[DE] Tenant",
-    "deactivate": "[DE] Deactivate",
-    "reactivate": "[DE] Reactivate",
-    "empty": "[DE] No reasons recorded.",
-    "saved": "[DE] The reason is saved.",
-    "statusSaved": "[DE] The reason's status is updated.",
-    "codeHint": "[DE] The stable code imports and reports match on; it cannot be changed later.",
-    "codeLocked": "[DE] The code cannot be changed after creation.",
-    "typeHint": "[DE] Pre-fills the wizard; every termination can override it.",
+    "title": "Austrittsgründe",
+    "subtitle": "Verwalten Sie die Gründeliste, die der Austrittsassistent anbietet.",
+    "add": "Grund hinzufügen",
+    "editTitle": "Grund bearbeiten",
+    "showInactive": "Inaktive Gründe anzeigen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "system": "System",
+    "custom": "Mandant",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "empty": "Keine Gründe erfasst.",
+    "saved": "Der Grund wurde gespeichert.",
+    "statusSaved": "Der Status des Grundes wurde aktualisiert.",
+    "codeHint": "Der feste Code, über den Importe und Berichte abgleichen; er kann später nicht geändert werden.",
+    "codeLocked": "Der Code kann nach dem Anlegen nicht mehr geändert werden.",
+    "typeHint": "Füllt den Assistenten vor; bei jedem Austritt kann davon abgewichen werden.",
     "columns": {
-      "name": "[DE] Name",
-      "code": "[DE] Code",
-      "type": "[DE] Default termination type",
-      "sgkExitCode": "[DE] SGK exit code",
-      "origin": "[DE] Origin",
-      "status": "[DE] Status",
-      "sortOrder": "[DE] Order"
+      "name": "Name",
+      "code": "Code",
+      "type": "Standard-Austrittsart",
+      "sgkExitCode": "SGK-Austrittscode",
+      "origin": "Herkunft",
+      "status": "Status",
+      "sortOrder": "Reihenfolge"
     },
     "errors": {
-      "generic": "[DE] The reason could not be saved.",
-      "loadFailed": "[DE] The reasons could not be loaded.",
-      "codeTaken": "[DE] A reason with this code already exists.",
-      "codeRequired": "[DE] The code is required.",
-      "nameRequired": "[DE] The name is required."
+      "generic": "Der Grund konnte nicht gespeichert werden.",
+      "loadFailed": "Die Gründe konnten nicht geladen werden.",
+      "codeTaken": "Ein Grund mit diesem Code existiert bereits.",
+      "codeRequired": "Der Code ist erforderlich.",
+      "nameRequired": "Der Name ist erforderlich."
     }
   },
   "costCenters": {
-    "title": "[DE] Cost centers",
-    "subtitle": "[DE] Manage the cost center catalog used for budgeting and reporting.",
-    "add": "[DE] Add cost center",
-    "editTitle": "[DE] Edit cost center",
-    "showInactive": "[DE] Show inactive cost centers",
-    "active": "[DE] Active",
-    "inactive": "[DE] Inactive",
-    "deactivate": "[DE] Deactivate",
-    "reactivate": "[DE] Reactivate",
-    "empty": "[DE] No cost centers recorded.",
-    "saved": "[DE] The cost center is saved.",
-    "statusSaved": "[DE] The cost center's status is updated.",
-    "codeHint": "[DE] The stable code reports match on; it cannot be changed later.",
-    "codeLocked": "[DE] The code cannot be changed after creation.",
+    "title": "Kostenstellen",
+    "subtitle": "Verwalten Sie den Kostenstellenkatalog für Budgetierung und Berichtswesen.",
+    "add": "Kostenstelle hinzufügen",
+    "editTitle": "Kostenstelle bearbeiten",
+    "showInactive": "Inaktive Kostenstellen anzeigen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "empty": "Keine Kostenstellen erfasst.",
+    "saved": "Die Kostenstelle wurde gespeichert.",
+    "statusSaved": "Der Status der Kostenstelle wurde aktualisiert.",
+    "codeHint": "Der feste Code, über den Berichte abgleichen; er kann später nicht geändert werden.",
+    "codeLocked": "Der Code kann nach dem Anlegen nicht mehr geändert werden.",
     "columns": {
-      "name": "[DE] Name",
-      "code": "[DE] Code",
-      "status": "[DE] Status"
+      "name": "Name",
+      "code": "Code",
+      "status": "Status"
     },
     "errors": {
-      "generic": "[DE] The cost center could not be saved.",
-      "loadFailed": "[DE] The cost centers could not be loaded.",
-      "codeTaken": "[DE] A cost center with this code already exists.",
-      "codeRequired": "[DE] The code is required.",
-      "nameRequired": "[DE] The name is required."
+      "generic": "Die Kostenstelle konnte nicht gespeichert werden.",
+      "loadFailed": "Die Kostenstellen konnten nicht geladen werden.",
+      "codeTaken": "Eine Kostenstelle mit diesem Code existiert bereits.",
+      "codeRequired": "Der Code ist erforderlich.",
+      "nameRequired": "Der Name ist erforderlich."
     }
   },
   "customFields": {
-    "title": "[DE] Custom fields",
-    "subtitle": "[DE] Manage the custom field definitions shown on employee cards.",
-    "add": "[DE] Add custom field",
-    "addTitle": "[DE] Add custom field",
-    "editTitle": "[DE] Edit custom field",
-    "showInactive": "[DE] Show inactive fields too",
-    "active": "[DE] Active",
-    "inactive": "[DE] Inactive",
-    "deactivate": "[DE] Deactivate",
-    "reactivate": "[DE] Reactivate",
-    "saved": "[DE] Custom field saved.",
-    "statusSaved": "[DE] Custom field status updated.",
-    "empty": "[DE] No custom fields defined yet.",
+    "title": "Benutzerdefinierte Felder",
+    "subtitle": "Verwalten Sie die Definitionen der benutzerdefinierten Felder auf Mitarbeiterkarten.",
+    "add": "Benutzerdefiniertes Feld hinzufügen",
+    "addTitle": "Benutzerdefiniertes Feld hinzufügen",
+    "editTitle": "Benutzerdefiniertes Feld bearbeiten",
+    "showInactive": "Auch inaktive Felder anzeigen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "saved": "Benutzerdefiniertes Feld gespeichert.",
+    "statusSaved": "Status des benutzerdefinierten Feldes aktualisiert.",
+    "empty": "Es sind noch keine benutzerdefinierten Felder definiert.",
     "columns": {
-      "key": "[DE] Key",
-      "name": "[DE] Name",
-      "dataType": "[DE] Data type",
-      "section": "[DE] Section",
-      "flags": "[DE] Flags",
-      "sortOrder": "[DE] Order",
-      "status": "[DE] Status"
+      "key": "Schlüssel",
+      "name": "Name",
+      "dataType": "Datentyp",
+      "section": "Bereich",
+      "flags": "Merkmale",
+      "sortOrder": "Reihenfolge",
+      "status": "Status"
     },
     "flags": {
-      "required": "[DE] Required",
-      "employeeEditable": "[DE] Employee editable",
-      "requiresApproval": "[DE] Requires approval",
-      "sensitive": "[DE] Sensitive",
-      "notReportable": "[DE] Not reportable"
+      "required": "Erforderlich",
+      "employeeEditable": "Von Mitarbeitenden bearbeitbar",
+      "requiresApproval": "Genehmigungspflichtig",
+      "sensitive": "Sensibel",
+      "notReportable": "Nicht berichtsfähig"
     },
     "dataType": {
-      "text": "[DE] Text",
-      "number": "[DE] Number",
-      "date": "[DE] Date",
-      "boolean": "[DE] Yes/No",
-      "singleSelect": "[DE] Single select",
-      "multiSelect": "[DE] Multi select"
+      "text": "Text",
+      "number": "Zahl",
+      "date": "Datum",
+      "boolean": "Ja/Nein",
+      "singleSelect": "Einfachauswahl",
+      "multiSelect": "Mehrfachauswahl"
     },
     "section": {
-      "personal": "[DE] Personal",
-      "career": "[DE] Career",
-      "other": "[DE] Other"
+      "personal": "Persönlich",
+      "career": "Karriere",
+      "other": "Sonstiges"
     },
     "fields": {
-      "key": "[DE] Key",
-      "keyHint": "[DE] Lowercase letters, digits and underscores; must start with a letter. Cannot be changed after creation.",
-      "keyImmutable": "[DE] The key cannot be changed after creation.",
-      "keyInvalid": "[DE] The key must start with a lowercase letter and contain only lowercase letters, digits and underscores.",
-      "name": "[DE] Name",
-      "dataType": "[DE] Data type",
-      "dataTypeImmutable": "[DE] The data type cannot be changed after creation.",
-      "section": "[DE] Section",
-      "options": "[DE] Options",
-      "optionsHint": "[DE] Type a value and press Enter to add an option.",
-      "optionsPlaceholder": "[DE] Add an option...",
-      "optionsRequired": "[DE] Select-type fields require at least one option.",
-      "sortOrder": "[DE] Order",
-      "isRequired": "[DE] Required field",
-      "isEmployeeEditable": "[DE] Employee can edit from their own card",
-      "isEmployeeEditableHint": "[DE] When on, the employee may edit this field from their own card (self-service).",
-      "employeeEditRequiresApproval": "[DE] Employee edit requires approval",
-      "employeeEditRequiresApprovalHint": "[DE] For now the change is applied directly; an approval flow will be added in a later package.",
-      "isSensitive": "[DE] Sensitive field",
-      "isSensitiveHint": "[DE] Only callers with 'View sensitive fields' can see/change the value.",
-      "isReportable": "[DE] Reportable"
+      "key": "Schlüssel",
+      "keyHint": "Kleinbuchstaben, Ziffern und Unterstriche; muss mit einem Buchstaben beginnen. Nach dem Anlegen nicht mehr änderbar.",
+      "keyImmutable": "Der Schlüssel kann nach dem Anlegen nicht mehr geändert werden.",
+      "keyInvalid": "Der Schlüssel muss mit einem Kleinbuchstaben beginnen und darf nur Kleinbuchstaben, Ziffern und Unterstriche enthalten.",
+      "name": "Name",
+      "dataType": "Datentyp",
+      "dataTypeImmutable": "Der Datentyp kann nach dem Anlegen nicht mehr geändert werden.",
+      "section": "Bereich",
+      "options": "Optionen",
+      "optionsHint": "Geben Sie einen Wert ein und drücken Sie die Eingabetaste, um eine Option hinzuzufügen.",
+      "optionsPlaceholder": "Option hinzufügen...",
+      "optionsRequired": "Auswahlfelder benötigen mindestens eine Option.",
+      "sortOrder": "Reihenfolge",
+      "isRequired": "Pflichtfeld",
+      "isEmployeeEditable": "Mitarbeitende können es in der eigenen Karte bearbeiten",
+      "isEmployeeEditableHint": "Ist die Option an, dürfen Mitarbeitende dieses Feld in ihrer eigenen Karte bearbeiten (Self-Service).",
+      "employeeEditRequiresApproval": "Bearbeitung durch Mitarbeitende ist genehmigungspflichtig",
+      "employeeEditRequiresApprovalHint": "Vorerst wird die Änderung direkt übernommen; ein Genehmigungsablauf folgt in einem späteren Paket.",
+      "isSensitive": "Sensibles Feld",
+      "isSensitiveHint": "Nur Aufrufende mit „Sensible Felder anzeigen“ können den Wert sehen/ändern.",
+      "isReportable": "Berichtsfähig"
     },
     "errors": {
-      "generic": "[DE] The action could not be completed. Please try again.",
-      "loadFailed": "[DE] Custom field definitions could not be loaded.",
-      "keyTaken": "[DE] This key is already used by another custom field definition."
+      "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+      "loadFailed": "Die Definitionen der benutzerdefinierten Felder konnten nicht geladen werden.",
+      "keyTaken": "Dieser Schlüssel wird bereits von einer anderen Definition eines benutzerdefinierten Feldes verwendet."
     }
   }
 }

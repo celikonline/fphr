@@ -1,0 +1,52 @@
+{
+  "title": "Support",
+  "helpCenter": {
+    "title": "Help Center",
+    "searchPlaceholder": "What are you looking for? e.g. \"data import\"",
+    "empty": "No articles matched this search.",
+    "backToList": "Back to list",
+    "categories": {
+      "general": "General",
+      "data_transfer": "Data import",
+      "leave_and_overtime": "Leave and overtime",
+      "approvals": "Approval flows",
+      "access_and_permissions": "Access and permissions",
+      "payroll": "Payroll",
+      "billing": "Billing",
+      "other": "Other"
+    }
+  },
+  "contact": {
+    "title": "Contact support",
+    "description": "Couldn't find what you needed? Open a short ticket and our team will get back to you.",
+    "subject": "Subject",
+    "subjectPlaceholder": "Briefly summarize your request",
+    "body": "Details",
+    "bodyPlaceholder": "What were you trying to do, what did you expect, what happened?",
+    "category": "Category",
+    "categories": {
+      "general": "General",
+      "dataTransfer": "Data import",
+      "leaveAndOvertime": "Leave and overtime",
+      "approvals": "Approval flows",
+      "accessAndPermissions": "Access and permissions",
+      "payroll": "Payroll",
+      "billing": "Billing",
+      "other": "Other"
+    },
+    "submit": "Send request",
+    "submitSuccess": "Your request has been received. Our support team will get back to you.",
+    "submitError": "Could not send your request, please try again."
+  },
+  "myTickets": {
+    "title": "My tickets",
+    "empty": "You have no support tickets yet.",
+    "status": {
+      "open": "Open",
+      "answered": "Answered",
+      "closed": "Closed"
+    },
+    "resolution": "Response",
+    "createdAt": "Created"
+  }
+}

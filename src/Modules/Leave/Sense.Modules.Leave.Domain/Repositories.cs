@@ -18,7 +18,11 @@ public interface ILeaveRuleSetRepository
 
     Task<LeaveRuleSet?> FindDefaultAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>All rule sets (internal computation). API-facing reads use the bounded overload.</summary>
     Task<IReadOnlyList<LeaveRuleSet>> ListAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> rule sets (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<LeaveRuleSet>> ListAsync(int take, CancellationToken cancellationToken = default);
 
     Task<int> CountAssignedEmployeesAsync(Guid ruleSetId, CancellationToken cancellationToken = default);
 }
@@ -45,7 +49,11 @@ public interface ILeaveRequestRepository
 
     Task<LeaveRequest?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>All of the employee's requests (internal computation). API-facing reads use the bounded overload.</summary>
     Task<IReadOnlyList<LeaveRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> of the employee's requests (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<LeaveRequest>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default);
 
     /// <summary>Pending/approved requests of the employee intersecting [start, end].</summary>
     Task<IReadOnlyList<LeaveRequest>> ListActiveOverlappingAsync(Guid employeeId, DateOnly start, DateOnly end, CancellationToken cancellationToken = default);
@@ -66,6 +74,9 @@ public interface IOvertimeRequestRepository
 
     Task<IReadOnlyList<OvertimeRequest>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
+    /// <summary>At most <paramref name="take"/> of the employee's requests (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<OvertimeRequest>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default);
+
     /// <summary>Pending/approved requests of the employee whose work date is inside [from, to].</summary>
     Task<IReadOnlyList<OvertimeRequest>> ListActiveAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
@@ -77,6 +88,9 @@ public interface IOvertimeConsentRepository
     Task<OvertimeConsent?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> of the employee's consents (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<OvertimeConsent>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default);
 }
 
 public interface IOvertimeConversionRepository
@@ -84,6 +98,9 @@ public interface IOvertimeConversionRepository
     void Add(OvertimeConversion conversion);
 
     Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> of the employee's conversions (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<OvertimeConversion>> ListByEmployeeAsync(Guid employeeId, int take, CancellationToken cancellationToken = default);
 }
 
 public interface IAbsenceRecordRepository

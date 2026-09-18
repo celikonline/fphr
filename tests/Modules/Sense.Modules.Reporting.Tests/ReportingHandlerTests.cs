@@ -205,13 +205,117 @@ public sealed class ReportingHandlerTests
         result.Value.Items[0].Id.ShouldBe(execution.Id);
     }
 
-    private sealed class FakeReportProvider(string key, string? requiredPermission, ReportFileResult result) : IReportProvider
+    [Fact]
+    public async Task RequestReportHandler_WhenRequiredParameterMissing_FailsBeforeCreatingExecution()
+    {
+        var provider = new FakeReportProvider(
+            "leave.requests", null, new ReportFileResult("r.xlsx", "x", [1]), ReportCategories.Leave,
+            [new ReportParameterDescriptor(ReportParameterKeys.DateRange, ReportParameterKind.DateRange, IsRequired: true)]);
+        var executions = Substitute.For<IReportExecutionRepository>();
+        var handler = new RequestReportHandler([provider], executions, Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(new RequestReportCommand("leave.requests", new Dictionary<string, string> { ["from"] = " " }), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ParameterRequired);
+        executions.DidNotReceive().Add(Arg.Any<ReportExecution>());
+    }
+
+    [Theory]
+    [InlineData("orgUnitIds", "not-a-guid")]
+    [InlineData("year", "20x6")]
+    [InlineData("month", "13")]
+    [InlineData("includeTerminated", "evet")]
+    public async Task RequestReportHandler_WhenParameterMalformed_FailsInvalid(string key, string value)
+    {
+        var provider = new FakeReportProvider(
+            "employee.list", null, new ReportFileResult("r.xlsx", "x", [1]), ReportCategories.Employee,
+            [
+                new ReportParameterDescriptor(ReportParameterKeys.OrgUnitIds, ReportParameterKind.OrgUnits),
+                new ReportParameterDescriptor(ReportParameterKeys.Year, ReportParameterKind.Year),
+                new ReportParameterDescriptor(ReportParameterKeys.Month, ReportParameterKind.Month),
+                new ReportParameterDescriptor(ReportParameterKeys.IncludeTerminated, ReportParameterKind.Boolean),
+            ]);
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(new RequestReportCommand("employee.list", new Dictionary<string, string> { [key] = value }), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ParameterInvalid);
+    }
+
+    [Fact]
+    public async Task RequestReportHandler_WhenDateRangeInverted_FailsInvalid()
+    {
+        var provider = new FakeReportProvider(
+            "leave.requests", null, new ReportFileResult("r.xlsx", "x", [1]), ReportCategories.Leave,
+            [new ReportParameterDescriptor(ReportParameterKeys.DateRange, ReportParameterKind.DateRange, IsRequired: true)]);
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(
+            new RequestReportCommand("leave.requests", new Dictionary<string, string> { ["from"] = "2026-02-01", ["to"] = "2026-01-01" }), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(ReportingErrors.ParameterInvalid);
+    }
+
+    [Fact]
+    public async Task RequestReportHandler_TrimsAndDropsBlankParametersBeforeCallingProvider()
+    {
+        var provider = new FakeReportProvider(
+            "employee.list", null, new ReportFileResult("r.xlsx", "x", [1]), ReportCategories.Employee,
+            [new ReportParameterDescriptor(ReportParameterKeys.OrgUnitIds, ReportParameterKind.OrgUnits)]);
+        var unitId = Guid.NewGuid();
+        var handler = new RequestReportHandler([provider], Substitute.For<IReportExecutionRepository>(), Substitute.For<IReportMailer>(), TenantContext(), CurrentUser(), Substitute.For<IPermissionService>(), TimeProvider.System);
+
+        var result = await handler.Handle(
+            new RequestReportCommand("employee.list", new Dictionary<string, string> { ["orgUnitIds"] = $" {unitId} ", ["includeTerminated"] = "" }), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Status.ShouldBe(ReportExecutionStatus.Succeeded);
+        provider.ReceivedParameters.ShouldNotBeNull();
+        provider.ReceivedParameters.Keys.ShouldBe(["orgUnitIds"]);
+        provider.ReceivedParameters["orgUnitIds"].ShouldBe(unitId.ToString());
+    }
+
+    [Fact]
+    public async Task ListReportCatalogHandler_OrdersByMenuCategoryThenKey_AndCarriesParameters()
+    {
+        var finance = new FakeReportProvider("finance.salaries", null, new ReportFileResult("r", "x", [1]), ReportCategories.Finance);
+        var leave = new FakeReportProvider(
+            "leave.requests", null, new ReportFileResult("r", "x", [1]), ReportCategories.Leave,
+            [new ReportParameterDescriptor(ReportParameterKeys.DateRange, ReportParameterKind.DateRange, IsRequired: true)]);
+        var adminB = new FakeReportProvider("leave.balance.summary", null, new ReportFileResult("r", "x", [1]), ReportCategories.Administrative);
+        var adminA = new FakeReportProvider("documents.missingDocuments", null, new ReportFileResult("r", "x", [1]), ReportCategories.Administrative);
+        var handler = new ListReportCatalogHandler([finance, leave, adminB, adminA], CurrentUser(), Substitute.For<IPermissionService>());
+
+        var result = await handler.Handle(new ListReportCatalogQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Select(v => v.Key).ShouldBe(["documents.missingDocuments", "leave.balance.summary", "leave.requests", "finance.salaries"]);
+        result.Value[2].CategoryKey.ShouldBe(ReportCategories.Leave);
+        result.Value[2].Parameters.Single().Kind.ShouldBe(ReportParameterKind.DateRange);
+        result.Value[2].Parameters.Single().IsRequired.ShouldBeTrue();
+    }
+
+    private sealed class FakeReportProvider(
+        string key, string? requiredPermission, ReportFileResult result, string categoryKey = ReportCategories.Administrative,
+        IReadOnlyList<ReportParameterDescriptor>? parameters = null) : IReportProvider
     {
         public string Key { get; } = key;
 
+        public string CategoryKey { get; } = categoryKey;
+
         public string? RequiredPermission { get; } = requiredPermission;
 
-        public Task<ReportFileResult> GenerateAsync(Guid tenantId, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken) =>
-            Task.FromResult(result);
+        public IReadOnlyList<ReportParameterDescriptor> Parameters { get; } = parameters ?? [];
+
+        public IReadOnlyDictionary<string, string>? ReceivedParameters { get; private set; }
+
+        public Task<ReportFileResult> GenerateAsync(Guid tenantId, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken)
+        {
+            ReceivedParameters = parameters;
+            return Task.FromResult(result);
+        }
     }
 }

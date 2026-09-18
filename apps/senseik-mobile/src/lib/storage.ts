@@ -1,13 +1,31 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 
+/**
+ * Release builds must not write tokens, PII or error payloads to logcat.
+ * All storage diagnostics go through this dev-only helper.
+ */
+function logError(...args: unknown[]): void {
+  if (__DEV__) {
+    logError(...args);
+  }
+}
+
+/**
+ * iOS keychain items stay on this device only (no iCloud/backup extraction).
+ * Android uses the default encrypted SharedPreferences backend.
+ */
+const TOKEN_STORE_OPTIONS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY
+};
+
 // Secure Storage for sensitive data (tokens)
 export const SecureStorage = {
   async setAccessToken(token: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync("accessToken", token);
+      await SecureStore.setItemAsync("accessToken", token, TOKEN_STORE_OPTIONS);
     } catch (error) {
-      console.error("Failed to store access token:", error);
+      logError("Failed to store access token:", error);
       throw error;
     }
   },
@@ -16,16 +34,16 @@ export const SecureStorage = {
     try {
       return await SecureStore.getItemAsync("accessToken");
     } catch (error) {
-      console.error("Failed to retrieve access token:", error);
+      logError("Failed to retrieve access token:", error);
       return null;
     }
   },
 
   async setRefreshToken(token: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync("refreshToken", token);
+      await SecureStore.setItemAsync("refreshToken", token, TOKEN_STORE_OPTIONS);
     } catch (error) {
-      console.error("Failed to store refresh token:", error);
+      logError("Failed to store refresh token:", error);
       throw error;
     }
   },
@@ -34,16 +52,16 @@ export const SecureStorage = {
     try {
       return await SecureStore.getItemAsync("refreshToken");
     } catch (error) {
-      console.error("Failed to retrieve refresh token:", error);
+      logError("Failed to retrieve refresh token:", error);
       return null;
     }
   },
 
   async setTenantId(tenantId: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync("tenantId", tenantId);
+      await SecureStore.setItemAsync("tenantId", tenantId, TOKEN_STORE_OPTIONS);
     } catch (error) {
-      console.error("Failed to store tenant ID:", error);
+      logError("Failed to store tenant ID:", error);
       throw error;
     }
   },
@@ -52,16 +70,16 @@ export const SecureStorage = {
     try {
       return await SecureStore.getItemAsync("tenantId");
     } catch (error) {
-      console.error("Failed to retrieve tenant ID:", error);
+      logError("Failed to retrieve tenant ID:", error);
       return null;
     }
   },
 
   async setUserId(userId: string): Promise<void> {
     try {
-      await SecureStore.setItemAsync("userId", userId);
+      await SecureStore.setItemAsync("userId", userId, TOKEN_STORE_OPTIONS);
     } catch (error) {
-      console.error("Failed to store user ID:", error);
+      logError("Failed to store user ID:", error);
       throw error;
     }
   },
@@ -70,16 +88,16 @@ export const SecureStorage = {
     try {
       return await SecureStore.getItemAsync("userId");
     } catch (error) {
-      console.error("Failed to retrieve user ID:", error);
+      logError("Failed to retrieve user ID:", error);
       return null;
     }
   },
 
   async setBiometricEnabled(enabled: boolean): Promise<void> {
     try {
-      await SecureStore.setItemAsync("biometricEnabled", String(enabled));
+      await SecureStore.setItemAsync("biometricEnabled", String(enabled), TOKEN_STORE_OPTIONS);
     } catch (error) {
-      console.error("Failed to store biometric enabled state:", error);
+      logError("Failed to store biometric enabled state:", error);
       throw error;
     }
   },
@@ -89,7 +107,7 @@ export const SecureStorage = {
       const value = await SecureStore.getItemAsync("biometricEnabled");
       return value === "true";
     } catch (error) {
-      console.error("Failed to retrieve biometric enabled state:", error);
+      logError("Failed to retrieve biometric enabled state:", error);
       return false;
     }
   },
@@ -102,7 +120,7 @@ export const SecureStorage = {
       await SecureStore.deleteItemAsync("userId");
       await SecureStore.deleteItemAsync("biometricEnabled");
     } catch (error) {
-      console.error("Failed to clear secure storage:", error);
+      logError("Failed to clear secure storage:", error);
       throw error;
     }
   }
@@ -114,7 +132,7 @@ export const PreferenceStorage = {
     try {
       await AsyncStorage.setItem("theme", theme);
     } catch (error) {
-      console.error("Failed to store theme preference:", error);
+      logError("Failed to store theme preference:", error);
     }
   },
 
@@ -123,7 +141,7 @@ export const PreferenceStorage = {
       const theme = await AsyncStorage.getItem("theme");
       return (theme as "light" | "dark" | "auto" | null) || "auto";
     } catch (error) {
-      console.error("Failed to retrieve theme preference:", error);
+      logError("Failed to retrieve theme preference:", error);
       return "auto";
     }
   },
@@ -132,7 +150,7 @@ export const PreferenceStorage = {
     try {
       await AsyncStorage.setItem("language", language);
     } catch (error) {
-      console.error("Failed to store language preference:", error);
+      logError("Failed to store language preference:", error);
     }
   },
 
@@ -141,7 +159,7 @@ export const PreferenceStorage = {
       const language = await AsyncStorage.getItem("language");
       return language || "tr";
     } catch (error) {
-      console.error("Failed to retrieve language preference:", error);
+      logError("Failed to retrieve language preference:", error);
       return "tr";
     }
   },
@@ -150,7 +168,7 @@ export const PreferenceStorage = {
     try {
       await AsyncStorage.setItem("lastLoginEmail", email);
     } catch (error) {
-      console.error("Failed to store last login email:", error);
+      logError("Failed to store last login email:", error);
     }
   },
 
@@ -158,7 +176,7 @@ export const PreferenceStorage = {
     try {
       return await AsyncStorage.getItem("lastLoginEmail");
     } catch (error) {
-      console.error("Failed to retrieve last login email:", error);
+      logError("Failed to retrieve last login email:", error);
       return null;
     }
   },
@@ -167,7 +185,7 @@ export const PreferenceStorage = {
     try {
       await AsyncStorage.setItem("appState", JSON.stringify(state));
     } catch (error) {
-      console.error("Failed to store app state:", error);
+      logError("Failed to store app state:", error);
     }
   },
 
@@ -176,7 +194,7 @@ export const PreferenceStorage = {
       const state = await AsyncStorage.getItem("appState");
       return state ? JSON.parse(state) : null;
     } catch (error) {
-      console.error("Failed to retrieve app state:", error);
+      logError("Failed to retrieve app state:", error);
       return null;
     }
   },
@@ -188,7 +206,7 @@ export const PreferenceStorage = {
       await AsyncStorage.removeItem("lastLoginEmail");
       await AsyncStorage.removeItem("appState");
     } catch (error) {
-      console.error("Failed to clear preference storage:", error);
+      logError("Failed to clear preference storage:", error);
     }
   }
 };

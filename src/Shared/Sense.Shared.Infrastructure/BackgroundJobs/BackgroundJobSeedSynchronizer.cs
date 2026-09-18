@@ -28,10 +28,17 @@ public sealed partial class BackgroundJobSeedSynchronizer(
 
         foreach (var tenantId in tenantIds)
         {
-            foreach (var seed in seeds)
+            try
             {
-                await jobs.RecurringAsync(seed.JobName, seed.JobType, tenantId, seed.CronExpression, seed.Payload).ConfigureAwait(false);
-                registered++;
+                foreach (var seed in seeds)
+                {
+                    await jobs.RecurringAsync(seed.JobName, seed.JobType, tenantId, seed.CronExpression, seed.Payload).ConfigureAwait(false);
+                    registered++;
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                LogTenantSyncFailed(logger, tenantId, ex);
             }
         }
 
@@ -42,6 +49,10 @@ public sealed partial class BackgroundJobSeedSynchronizer(
     [LoggerMessage(EventId = 2110, Level = LogLevel.Information,
         Message = "Background job seeds synchronized: {TenantCount} tenant(s) x {SeedCount} seed(s) = {TotalRegistered} recurring job(s) registered/updated")]
     private static partial void LogSynced(ILogger logger, int tenantCount, int seedCount, int totalRegistered);
+
+    [LoggerMessage(EventId = 2112, Level = LogLevel.Error,
+        Message = "Background job seed synchronization failed for tenant {TenantId}; continuing with other tenants")]
+    private static partial void LogTenantSyncFailed(ILogger logger, Guid tenantId, Exception exception);
 }
 
 /// <summary>API başlangıcında (seed'den sonra) arka plan işi tohumlarını bir kez senkronize eder; hata başlatmayı durdurmaz.</summary>

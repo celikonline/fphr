@@ -867,7 +867,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="documents.requirements.view" xml:space="preserve"><value>View personnel document requirements</value></data>
   <data name="documents.requirements.manage" xml:space="preserve"><value>Manage personnel document requirements</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>View and satisfy own personnel document requirements</value></data>
-  <data name="documents.my.files.create" xml:space="preserve"><value>Upload own document</value></data>
+  <data name="documents.my.files" xml:space="preserve"><value>Upload own document</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>This document requirement does not belong to you.</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->
@@ -971,4 +971,116 @@ The report you requested has been generated. Click the link to view and download
   <data name="performance.goal.employee_invalid" xml:space="preserve"><value>The selected employee was not found or is inactive.</value></data>
   <data name="performance.goal.target_date_outside_cycle" xml:space="preserve"><value>The target date must fall within the review cycle's date range.</value></data>
   <data name="performance.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
+  <data name="report.col.firstName" xml:space="preserve"><value>First name</value></data>
+  <data name="report.col.lastName" xml:space="preserve"><value>Last name</value></data>
+  <data name="report.col.nationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="report.col.hireDate" xml:space="preserve"><value>Hire date</value></data>
+  <data name="report.col.status" xml:space="preserve"><value>Employment status</value></data>
+  <data name="report.col.orgUnit" xml:space="preserve"><value>Unit</value></data>
+  <data name="report.col.manager" xml:space="preserve"><value>Manager</value></data>
+  <data name="report.col.workEmail" xml:space="preserve"><value>Work email</value></data>
+  <data name="report.col.mobilePhone" xml:space="preserve"><value>Mobile phone</value></data>
+  <data name="report.col.employmentType" xml:space="preserve"><value>Employment type</value></data>
+  <data name="report.col.contractType" xml:space="preserve"><value>Contract type</value></data>
+  <data name="report.col.gender" xml:space="preserve"><value>Gender</value></data>
+  <data name="report.col.birthDate" xml:space="preserve"><value>Birth date</value></data>
+  <data name="report.col.terminationDate" xml:space="preserve"><value>Termination date</value></data>
+  <data name="report.col.leaveAccrualStartDate" xml:space="preserve"><value>Leave accrual start date</value></data>
+  <data name="report.col.remainingBalance" xml:space="preserve"><value>Remaining</value></data>
+  <data name="report.col.totalEntitled" xml:space="preserve"><value>Total entitled</value></data>
+  <data name="report.col.carryOverLoss" xml:space="preserve"><value>Carry-over losses</value></data>
+  <data name="report.col.totalUsed" xml:space="preserve"><value>Used</value></data>
+  <data name="report.col.currentPeriod" xml:space="preserve"><value>Current accrual period</value></data>
+  <data name="report.col.futureApproved" xml:space="preserve"><value>Future approved leave (current period)</value></data>
+  <data name="report.col.leaveType" xml:space="preserve"><value>Leave type</value></data>
+  <data name="report.col.startDate" xml:space="preserve"><value>Start</value></data>
+  <data name="report.col.endDate" xml:space="preserve"><value>End</value></data>
+  <data name="report.col.days" xml:space="preserve"><value>Days</value></data>
+  <data name="report.col.description" xml:space="preserve"><value>Description</value></data>
+  <data name="report.col.submittedAt" xml:space="preserve"><value>Requested at</value></data>
+  <data name="report.col.decidedAt" xml:space="preserve"><value>Decided at</value></data>
+  <data name="report.col.source" xml:space="preserve"><value>Source</value></data>
+  <data name="report.col.requestStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="report.col.documentType" xml:space="preserve"><value>Document type</value></data>
+  <data name="report.col.documentStage" xml:space="preserve"><value>Stage</value></data>
+  <data name="report.col.requirementStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="report.col.dueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="report.col.salaryAmount" xml:space="preserve"><value>Salary</value></data>
+  <data name="report.col.currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="report.col.salaryType" xml:space="preserve"><value>Salary type</value></data>
+  <data name="report.col.payFrequency" xml:space="preserve"><value>Pay frequency</value></data>
+  <data name="report.col.effectiveFrom" xml:space="preserve"><value>Effective from</value></data>
+  <data name="report.col.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
+  <data name="report.col.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
+  <data name="report.sheet.employeeList" xml:space="preserve"><value>Employee list</value></data>
+  <data name="report.sheet.leaveBalanceSummary" xml:space="preserve"><value>Leave balance</value></data>
+  <data name="report.sheet.leaveRequests" xml:space="preserve"><value>Leave report</value></data>
+  <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
+  <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
+  <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>
+  <data name="report.enum.EmployeeStatus.Active" xml:space="preserve"><value>Active</value></data>
+  <data name="report.enum.EmployeeStatus.Suspended" xml:space="preserve"><value>Suspended</value></data>
+  <data name="report.enum.EmployeeStatus.Terminated" xml:space="preserve"><value>Terminated</value></data>
+  <data name="report.enum.Gender.Unspecified" xml:space="preserve"><value>Unspecified</value></data>
+  <data name="report.enum.Gender.Male" xml:space="preserve"><value>Male</value></data>
+  <data name="report.enum.Gender.Female" xml:space="preserve"><value>Female</value></data>
+  <data name="report.enum.Gender.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.EmploymentType.FullTime" xml:space="preserve"><value>Full-time</value></data>
+  <data name="report.enum.EmploymentType.PartTime" xml:space="preserve"><value>Part-time</value></data>
+  <data name="report.enum.EmploymentType.Temporary" xml:space="preserve"><value>Temporary</value></data>
+  <data name="report.enum.EmploymentType.Contract" xml:space="preserve"><value>Contract</value></data>
+  <data name="report.enum.EmploymentType.Freelance" xml:space="preserve"><value>Freelance</value></data>
+  <data name="report.enum.EmploymentType.Intern" xml:space="preserve"><value>Intern</value></data>
+  <data name="report.enum.EmploymentType.Mobile" xml:space="preserve"><value>Mobile</value></data>
+  <data name="report.enum.EmploymentType.Apprentice" xml:space="preserve"><value>Apprentice</value></data>
+  <data name="report.enum.EmploymentType.Seasonal" xml:space="preserve"><value>Seasonal</value></data>
+  <data name="report.enum.EmploymentType.AgencyWorker" xml:space="preserve"><value>Agency worker</value></data>
+  <data name="report.enum.EmploymentType.Subcontractor" xml:space="preserve"><value>Subcontractor</value></data>
+  <data name="report.enum.ContractType.Indefinite" xml:space="preserve"><value>Indefinite</value></data>
+  <data name="report.enum.ContractType.FixedTerm" xml:space="preserve"><value>Fixed-term</value></data>
+  <data name="report.enum.LeaveRequestStatus.Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="report.enum.LeaveRequestStatus.Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="report.enum.LeaveRequestStatus.Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="report.enum.LeaveRequestStatus.Withdrawn" xml:space="preserve"><value>Withdrawn</value></data>
+  <data name="report.enum.LeaveRequestStatus.Cancelled" xml:space="preserve"><value>Cancelled</value></data>
+  <data name="report.enum.LeaveRequestSource.SelfService" xml:space="preserve"><value>Self-service</value></data>
+  <data name="report.enum.LeaveRequestSource.OnBehalf" xml:space="preserve"><value>On behalf</value></data>
+  <data name="report.enum.LeaveRequestSource.Import" xml:space="preserve"><value>Import</value></data>
+  <data name="report.enum.LeaveRequestSource.Attendance" xml:space="preserve"><value>Attendance</value></data>
+  <data name="report.enum.LeaveRequestSource.Resubmission" xml:space="preserve"><value>Resubmission</value></data>
+  <data name="report.enum.SalaryType.Net" xml:space="preserve"><value>Net</value></data>
+  <data name="report.enum.SalaryType.Gross" xml:space="preserve"><value>Gross</value></data>
+  <data name="report.enum.PayFrequency.Monthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="report.enum.PayFrequency.Daily" xml:space="preserve"><value>Daily</value></data>
+  <data name="report.enum.PayFrequency.Yearly" xml:space="preserve"><value>Yearly</value></data>
+  <data name="report.enum.PayFrequency.Weekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="report.enum.PayFrequency.Hourly" xml:space="preserve"><value>Hourly</value></data>
+  <data name="report.enum.DocumentTypeStage.Onboarding" xml:space="preserve"><value>Onboarding</value></data>
+  <data name="report.enum.DocumentTypeStage.Conditional" xml:space="preserve"><value>Conditional</value></data>
+  <data name="report.enum.DocumentTypeStage.DuringEmployment" xml:space="preserve"><value>During employment</value></data>
+  <data name="report.enum.DocumentTypeStage.Offboarding" xml:space="preserve"><value>Offboarding</value></data>
+  <data name="report.enum.DocumentTypeStage.Recommended" xml:space="preserve"><value>Recommended</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Missing" xml:space="preserve"><value>Missing</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Uploaded" xml:space="preserve"><value>Uploaded</value></data>
+  <data name="report.enum.DocumentRequirementStatus.Waived" xml:space="preserve"><value>Waived</value></data>
+  <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
+  <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
+  <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
+  <!-- Announcements + Support (Help Center + Contact support - roadmap #69) -->
+  <data name="announcements.announcements.view" xml:space="preserve"><value>View announcements</value></data>
+  <data name="announcements.announcements.manage" xml:space="preserve"><value>Manage announcements</value></data>
+  <data name="announcements.my.support_tickets" xml:space="preserve"><value>My support tickets</value></data>
+  <data name="announcements.support_tickets.manage" xml:space="preserve"><value>Manage support tickets</value></data>
+  <data name="announcement.title_required" xml:space="preserve"><value>An announcement title is required and cannot exceed 200 characters.</value></data>
+  <data name="announcement.content_required" xml:space="preserve"><value>Announcement content is required.</value></data>
+  <data name="announcement.cannot_publish" xml:space="preserve"><value>Only draft announcements can be published.</value></data>
+  <data name="announcement.already_archived" xml:space="preserve"><value>This announcement is already archived.</value></data>
+  <data name="announcement.not_found" xml:space="preserve"><value>Announcement not found.</value></data>
+  <data name="announcement_read_record.not_found" xml:space="preserve"><value>Read record not found.</value></data>
+  <data name="support_ticket.subject_required" xml:space="preserve"><value>A ticket subject is required and cannot exceed 200 characters.</value></data>
+  <data name="support_ticket.body_required" xml:space="preserve"><value>Ticket content is required.</value></data>
+  <data name="support_ticket.not_found" xml:space="preserve"><value>Support ticket not found.</value></data>
+  <data name="support_ticket.already_closed" xml:space="preserve"><value>This ticket is already closed.</value></data>
+  <data name="support_ticket.resolution_required" xml:space="preserve"><value>A response is required.</value></data>
+  <data name="help_article.not_found" xml:space="preserve"><value>Help Center article not found.</value></data>
 </root>

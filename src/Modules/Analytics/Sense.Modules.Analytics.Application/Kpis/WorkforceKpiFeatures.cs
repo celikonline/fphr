@@ -18,8 +18,12 @@ public static class KpiKeys
     public const string GenderRatioByUnit = "GENDER_RATIO_BY_UNIT";
 }
 
-/// <summary>One dimension of a KPI's breakdown, e.g. one gender's share of <see cref="KpiKeys.GenderRatio"/>.</summary>
-public sealed record KpiBreakdownDto(string Dimension, int Count, decimal Share);
+/// <summary>
+/// One dimension of a KPI's breakdown, e.g. one gender's share of <see cref="KpiKeys.GenderRatio"/>. <see cref="Count"/>/
+/// <see cref="Share"/> are null exactly when <see cref="IsSuppressed"/> is true (G-10-21, 11.3.12 "Küçük hücre
+/// gizleme") - the dimension label still tells the caller the category exists, just not how many people are in it.
+/// </summary>
+public sealed record KpiBreakdownDto(string Dimension, int? Count, decimal? Share, bool IsSuppressed = false);
 
 /// <summary>One computed KPI value for the requested period.</summary>
 public sealed record KpiResultDto(string Key, string Label, decimal Value, string Unit, DateOnly PeriodStart, DateOnly PeriodEnd, IReadOnlyList<KpiBreakdownDto> Breakdown);
@@ -63,7 +67,7 @@ public sealed class GetWorkforceKpisHandler(
             var genderHeadcount = await employeeAnalytics.GetGenderHeadcountAsync(tenant.TenantId, cancellationToken);
             var terminations = await employeeAnalytics.GetTerminationCountsAsync(tenant.TenantId, from, to, cancellationToken);
 
-            results.Insert(0, BuildCareerPathRatio(from, to, careerChanges, activeHeadcount));
+            results.Insert(0, BuildCareerPathRatio(from, to, careerChanges));
             results.Insert(1, BuildGenderRatio(from, to, genderHeadcount));
             results.Insert(2, BuildTurnoverRate(from, to, terminations, activeHeadcount));
             results.Insert(3, BuildEarlyTurnoverRate(from, to, terminations));
@@ -72,9 +76,16 @@ public sealed class GetWorkforceKpisHandler(
         return Result.Success<IReadOnlyList<KpiResultDto>>(results);
     }
 
-    private static KpiResultDto BuildCareerPathRatio(DateOnly from, DateOnly to, CareerPathChangeCounts changes, int activeHeadcount)
+    /// <summary>
+    /// G-10-20: 11.3.12'nin tanımı terfi / (terfi + yatay geçiş) - kademe düşürme ve unvan değişikliği paya
+    /// katılmaz (TitleChange'in yatay sayılması `Analytics.CareerPath.CountTitleChangeAsLateral` tenant ayarına
+    /// bağlıydı; o ayar hiç eklenmedi, varsayılan false ile tutarlı kalınıp dışarıda bırakıldı). Önceki sürüm yanlışlıkla
+    /// dört değişiklik türünün toplamını payda alıyordu - kırılım (hâlâ dört türün de dönem içi payını gösterir) değişmedi.
+    /// </summary>
+    private static KpiResultDto BuildCareerPathRatio(DateOnly from, DateOnly to, CareerPathChangeCounts changes)
     {
-        var value = activeHeadcount == 0 ? 0m : Math.Round((decimal)changes.Total / activeHeadcount, 4);
+        var promotionAndLateral = changes.Promotion + changes.LateralMove;
+        var value = promotionAndLateral == 0 ? 0m : Math.Round((decimal)changes.Promotion / promotionAndLateral, 4);
         var breakdown = new List<KpiBreakdownDto>
         {
             ShareOf(nameof(changes.Promotion), changes.Promotion, changes.Total),
@@ -130,6 +141,23 @@ public sealed class GetWorkforceKpisHandler(
     private static string UnitLabel(Guid? orgUnitId, IReadOnlyDictionary<Guid, string> unitNames) =>
         orgUnitId is { } id && unitNames.TryGetValue(id, out var name) ? name : "Unassigned";
 
-    private static KpiBreakdownDto ShareOf(string dimension, int count, int total) =>
-        new(dimension, count, total == 0 ? 0m : Math.Round((decimal)count / total, 4));
+    /// <summary>
+    /// G-10-21 (11.3.12 "Küçük hücre gizleme"): a non-zero count under <see cref="MinCellSize"/> is precise enough to
+    /// point at a specific person (e.g. "Demotion: 1", "Muğla Şubesi / Kadın: 2") - its exact count/share never
+    /// leaves the API, only that the dimension exists and was suppressed. Zero stays visible (identifies no one).
+    /// Every KPI breakdown goes through this, not just gender-by-unit - career/turnover cells are just as
+    /// identifying in a small team. Hard-coded default until a tenant-configurable
+    /// <c>TenantSettings.Analytics.MinCellSize</c> exists.
+    /// </summary>
+    private const int MinCellSize = 5;
+
+    private static KpiBreakdownDto ShareOf(string dimension, int count, int total)
+    {
+        if (count > 0 && count < MinCellSize)
+        {
+            return new KpiBreakdownDto(dimension, Count: null, Share: null, IsSuppressed: true);
+        }
+
+        return new KpiBreakdownDto(dimension, count, total == 0 ? 0m : Math.Round((decimal)count / total, 4));
+    }
 }

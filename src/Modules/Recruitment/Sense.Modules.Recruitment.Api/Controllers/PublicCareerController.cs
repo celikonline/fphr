@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Sense.Modules.Recruitment.Application.Public;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -35,8 +36,8 @@ public sealed class PublicCareerController : ApiControllerBase
     [AllowAnonymous]
     [EnableRateLimiting("public-anonymous")]
     [ProducesResponseType<IReadOnlyList<PublicJobPostingSummaryDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] string? tenant, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListPublicJobPostingsByTenantSlugQuery(tenant), ct));
+    public async Task<IActionResult> List([FromQuery] string? tenant, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListPublicJobPostingsByTenantSlugQuery(tenant, take), ct));
 
     /// <summary>An Open posting's public detail by its apply slug.</summary>
     [HttpGet("{applySlug}")]
@@ -51,8 +52,8 @@ public sealed class PublicCareerController : ApiControllerBase
     [AllowAnonymous]
     [EnableRateLimiting("public-anonymous")]
     [ProducesResponseType<IReadOnlyList<PublicJobPostingSummaryDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Related(string applySlug, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListRelatedPublicJobPostingsQuery(applySlug), ct));
+    public async Task<IActionResult> Related(string applySlug, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListRelatedPublicJobPostingsQuery(applySlug, take), ct));
 
     /// <summary>
     /// Submits a candidate's application for one posting. Rate limit policy name ("public-anonymous-write") is

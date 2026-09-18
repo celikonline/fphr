@@ -3,8 +3,12 @@
  * synchronous - `requestReport` returns the finished (Succeeded/Failed) execution in the same
  * response, no polling loop needed today - but the Queued/Running/Succeeded/Failed shape is kept
  * as-is so a later move onto a background worker doesn't change this service's surface.
- * Display name/description for each catalog key are looked up client-side in the "reports" i18n
- * namespace (`reports:catalog.<key>.label`) - the backend only ever sends the stable key.
+ *
+ * The catalog mirrors Kolay İK's Raporlar menu: every report carries a menu category
+ * (İdari / Çalışan / İzinler / Finans) and the filters it accepts (Birimler, Yıl, Ay, tarih aralığı,
+ * anahtar) - the page draws the parameter form from `parameters`. Display name/description for each
+ * key are looked up client-side in the "reports" i18n namespace (`reports:catalog.<key>.label`) - the
+ * backend only ever sends the stable key.
  */
 import axios from "axios";
 import { apiClient } from "@senseik/api-client";
@@ -14,8 +18,33 @@ const REPORTS_BASE = "/v1/reports";
 
 export type ReportExecutionStatus = "queued" | "running" | "succeeded" | "failed";
 
+/** `ReportCategories` (Reporting.Contracts); menu order is this array's order. */
+export const REPORT_CATEGORY_KEYS = ["administrative", "employee", "leave", "finance"] as const;
+export type ReportCategoryKey = (typeof REPORT_CATEGORY_KEYS)[number];
+
+/** `ReportParameterKind` (camelCase enum JSON). */
+export type ReportParameterKind = "orgUnits" | "year" | "month" | "dateRange" | "boolean";
+
+export interface ReportParameter {
+  key: string;
+  kind: ReportParameterKind;
+  isRequired: boolean;
+}
+
+/** Wire keys shared with `ReportParameterKeys`; a `dateRange` parameter is sent as `from` + `to`. */
+export const REPORT_PARAMETER_KEYS = {
+  orgUnitIds: "orgUnitIds",
+  year: "year",
+  month: "month",
+  from: "from",
+  to: "to",
+  includeTerminated: "includeTerminated",
+} as const;
+
 export interface ReportCatalogItem {
   key: string;
+  categoryKey: string;
+  parameters: ReportParameter[];
 }
 
 export interface ReportExecution {
@@ -34,7 +63,7 @@ export interface DownloadedReportFile {
   fileName: string;
 }
 
-/** Reports the caller may generate (every registered provider whose permission, if any, they hold). */
+/** Reports the caller may generate (every registered provider whose permission, if any, they hold), category order. */
 export async function getReportCatalog(): Promise<ReportCatalogItem[]> {
   const { data } = await apiClient.get<ReportCatalogItem[]>(`${REPORTS_BASE}/catalog`);
   return data;
@@ -49,6 +78,12 @@ export async function requestReport(reportKey: string, parameters?: Record<strin
 /** The caller's own report execution history, newest first. */
 export async function listReportExecutions(params: PagedQueryParams = {}): Promise<PagedResult<ReportExecution>> {
   const { data } = await apiClient.get<PagedResult<ReportExecution>>(`${REPORTS_BASE}/executions`, { params });
+  return data;
+}
+
+/** One of the caller's own executions (used when arriving from the "report ready" e-mail link). */
+export async function getReportExecution(id: string): Promise<ReportExecution> {
+  const { data } = await apiClient.get<ReportExecution>(`${REPORTS_BASE}/executions/${id}`);
   return data;
 }
 
@@ -76,6 +111,23 @@ export function saveDownloadedReportFile({ blob, fileName }: DownloadedReportFil
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+
+/** Groups catalog items by category in menu order; categories without a visible report are omitted. */
+export function groupReportCatalog(items: ReportCatalogItem[]): { categoryKey: string; items: ReportCatalogItem[] }[] {
+  const known = new Map<string, ReportCatalogItem[]>(REPORT_CATEGORY_KEYS.map((key) => [key, []]));
+  const unknown = new Map<string, ReportCatalogItem[]>();
+  for (const item of items) {
+    const bucket = known.get(item.categoryKey) ?? unknown.get(item.categoryKey);
+    if (bucket) {
+      bucket.push(item);
+    } else {
+      unknown.set(item.categoryKey, [item]);
+    }
+  }
+  return [...known.entries(), ...unknown.entries()]
+    .filter(([, list]) => list.length > 0)
+    .map(([categoryKey, list]) => ({ categoryKey, items: list }));
 }
 
 function parseContentDispositionFileName(header: string | undefined): string | undefined {
