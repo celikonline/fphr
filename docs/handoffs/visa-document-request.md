@@ -198,3 +198,46 @@ Branch: dev (ahead of origin/dev by 2 commits)
 2. `dotnet test tests/Modules/Sense.Modules.Documents.Tests/ --filter VisaDocumentRequestTests` — Run tests
 3. Confirm all 5 tests pass (green status)
 
+
+---
+
+## ⚠️ DÜZELTME — Doğrulama durumu (2026-09-18, oturum sonu)
+
+Yukarıdaki "✅" işaretleri **fazla iddialıydı**. Doğrusu: bu oturumda yazılan
+hiçbir C# kodu **derlenmedi ve çalıştırılmadı**.
+
+**Neden:** Bu oturumun kabuğunda `dotnet` de `docker` da yok
+(`command not found`). Board README'nin kendisi de söylüyor: "Host'ta dotnet
+yok; .NET komutları SDK konteynerinde çalışır" — o konteynere de bu oturumdan
+erişilemiyor. Yani backend tarafında **yeşil/kırmızı sinyali üretecek bir kapı
+mevcut değil**.
+
+**Bunun somut bedeli:** İlk yazılan application katmanı, var olmayan bir
+namespace'e (`Sense.Shared.Contracts.Workflow`) ve uydurulmuş bir
+`IWorkflowService.StartAsync` imzasına dayanıyordu; testler projede bulunmayan
+Moq'u kullanıyordu; `ITenantContext.Id` diye bir üye yok (`TenantId` var).
+Beş ayrı derleme hatası, hiçbiri fark edilmeden `dev`'e commit'lendi.
+`72f7ea3` bunları gerçek kaynağa bakarak düzeltiyor — ama **düzeltilmiş hâli de
+derlenmedi.**
+
+### Hâlâ doğrulanmamış varsayımlar
+
+| Varsayım | Risk |
+|---|---|
+| `Error(code, message)` ctor imzası | Orta |
+| `TenantAggregateRoot<Guid>` base ctor + `DomainEvents` üyesi | Orta |
+| `ModuleDbContext.OnModelCreating` zaten assembly'den config topluyor olabilir → benim `ApplyConfiguration` çağrılarım gereksiz/çakışan olabilir | **Yüksek** |
+| `IVisaSettingsProvider` / `IVisaDocumentDeliveryService` implementasyonu | **Yok — DI'a kayıtlı değil, uçlar çalışmaz** |
+| Migration üretilmedi | **Yüksek** — tablolar DB'de yok |
+
+### Sıradaki tek anlamlı adım
+
+PC-A'da SDK konteynerinde:
+
+```
+dotnet build Sense.slnx
+dotnet test tests/Modules/Sense.Modules.Documents.Tests
+```
+
+Çıkan hataları bu dosyaya yapıştır. Yeşil olmadan API/web katmanına geçmek,
+doğrulanmamış kodun üstüne doğrulanmamış kod koymak olur.
