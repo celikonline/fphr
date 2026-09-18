@@ -187,8 +187,9 @@ export interface OrgChartNode {
   displayName: string;
   orgUnitId: string | null;
   children: OrgChartNode[];
-  /** "Title"/"Company" level units of the placement chain; resolved server-side, missing when unplaced. */
+  /** "Title"/"Department"/"Company" level units of the placement chain; resolved server-side, missing when unplaced. */
   titleName?: string | null;
+  departmentName?: string | null;
   companyId?: string | null;
   companyName?: string | null;
 }

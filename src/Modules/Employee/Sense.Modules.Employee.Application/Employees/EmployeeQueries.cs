@@ -317,8 +317,10 @@ public static class OrgChartBuilder
             .Select(c => BuildNode(c, children, visited, placement))
             .ToList();
         var company = placement?.LevelUnitFor(row.OrgUnitId, "Company");
+        var department = placement?.LevelUnitFor(row.OrgUnitId, "Department");
         return new OrgChartNodeDto(
-            row.Id, row.DisplayName, row.OrgUnitId, childNodes, placement?.LevelUnitFor(row.OrgUnitId, "Title")?.Name, company?.Id, company?.Name);
+            row.Id, row.DisplayName, row.OrgUnitId, childNodes,
+            placement?.LevelUnitFor(row.OrgUnitId, "Title")?.Name, department?.Name, company?.Id, company?.Name);
     }
 }
 
