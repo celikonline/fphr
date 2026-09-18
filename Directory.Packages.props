@@ -34,8 +34,12 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.*" />
     <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="10.10.*" />
     <PackageVersion Include="Microsoft.FeatureManagement.AspNetCore" Version="4.*" />
-    <PackageVersion Include="Asp.Versioning.Mvc" Version="10.*" />
-    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.*" />
+    <!-- Pinned to 8.*: 10.x ships analyzer AV0029, which rejects a bare services.AddOpenApi() and requires the
+         OpenAPI document to be registered through AddApiVersioning().AddOpenApi(). That builder extension lives in
+         a package this solution does not reference yet, so the upgrade needs its own change (new package + call
+         site in Sense.Shared.Web) rather than riding along with a dependency batch. -->
+    <PackageVersion Include="Asp.Versioning.Mvc" Version="8.*" />
+    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.*" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.*" />
     <!-- Pinned to 2.*: Microsoft.AspNetCore.OpenApi 10.x requires Microsoft.OpenApi >= 2.12 && < 3.0 (3.* breaks restore with NU1608 and the OpenAPI source generator with CS0200). -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.*" />
