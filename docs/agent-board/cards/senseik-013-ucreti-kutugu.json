@@ -1,0 +1,17 @@
+{
+  "id": "senseik-013",
+  "title": "Ücret kütüğü + maaş/banka hesabı ekranları (G-01 Aşama 1)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/payroll-salary-registry",
+  "worktree": ".claude/worktrees/payroll-stage1",
+  "acceptance": [
+    "Çalışan kartında 'Maaş Kayıtları' sekmesi: maaş tutar, para birimi, maaş türü (brüt/net), ödeme düzeni, yol/yemek yardımı",
+    "Lokasyon/Pozisyon bazında maaş atama; geçerlilik tarihleri (tarih aralığı) tutulmuş",
+    "Çalışan kartında 'Banka Hesapları' sekmesi: IBAN, hesap sahibi, banka adı, hesap türü (maaş/geri ödeme)",
+    "Veri aktarım merkezi: 'Çalışanlar' şablonunda maaş ve banka alanları tanımlı; örnekler yüklü"
+  ],
+  "merge_gate": "dotnet build + pnpm --filter web typecheck + demo seed maaş/banka verileri yüklü",
+  "handoff": "docs/handoffs/payroll-salary-registry.md",
+  "source": "2. Tur § G-01 Aşama 1 (Bordronun en hızlı kazanımı; aktarım şablonunda alanlar hazır)"
+}

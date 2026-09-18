@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Briefcase, MapPin } from "lucide-react";
 import { Badge, Card, Container, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { formatDateOnly } from "@/lib/dates";
+import { enumLabel } from "@/lib/i18n-enum";
 import { listPublicJobPostingsByTenant, type PublicJobPostingListItem } from "@/services/recruitment.service";
 import classes from "./job-posting.module.css";
 import listClasses from "./postings.module.css";
@@ -40,7 +41,7 @@ function PostingCard({ item }: { item: PublicJobPostingListItem }) {
           <Title order={4}>{item.title}</Title>
           {item.employmentType && (
             <Badge variant="light" size="sm">
-              {t(`recruitment:employmentTypes.${item.employmentType}`)}
+              {enumLabel(t, "recruitment:employmentTypes", item.employmentType)}
             </Badge>
           )}
         </Group>

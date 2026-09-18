@@ -1,0 +1,15 @@
+{
+  "id": "senseik-card-000",
+  "title": "<tek cümlelik iş kalemi>",
+  "owner": "pc-a | pc-b | <ajan adı>",
+  "state": "backlog",
+  "branch": "a/<konu> veya b/<modül>-<konu>",
+  "worktree": ".",
+  "acceptance": [
+    "<gözlemlenebilir kriter 1>",
+    "<gözlemlenebilir kriter 2>"
+  ],
+  "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck yeşil",
+  "handoff": "docs/handoffs/<konu>.md",
+  "source": "<roadmap veya rapor referansı>"
+}

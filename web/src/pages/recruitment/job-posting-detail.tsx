@@ -29,6 +29,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import { formatDateTime } from "@/lib/dates";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import {
@@ -211,10 +212,10 @@ function JobPostingDetail() {
           </Title>
           <Group gap="xs" mt={4}>
             <Badge color={STATUS_COLOR[posting.status]} variant="light">
-              {t(`recruitment:postings.statuses.${posting.status}`)}
+              {enumLabel(t, "recruitment:postings.statuses", posting.status)}
             </Badge>
             <Text c="dimmed" size="sm">
-              {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {t(`recruitment:employmentTypes.${posting.employmentType}`)}
+              {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}
             </Text>
           </Group>
           {posting.status === "open" && (
@@ -249,7 +250,7 @@ function JobPostingDetail() {
       {requisitionQuery.data && requisitionQuery.data.status !== "approved" && (
         <Card withBorder bg="var(--mantine-color-yellow-0)">
           <Text size="sm">
-            {t("recruitment:postings.requisitionPendingWarning", { status: t(`recruitment:requisitions.statuses.${requisitionQuery.data.status}`) })}
+            {t("recruitment:postings.requisitionPendingWarning", { status: enumLabel(t, "recruitment:requisitions.statuses", requisitionQuery.data.status) })}
           </Text>
         </Card>
       )}
@@ -315,7 +316,7 @@ function JobPostingDetail() {
                         <Table.Td className="max-w-[220px]">
                           {isAnonymized ? (
                             <Text size="sm" c="dimmed">
-                              {t(`recruitment:applications.stages.${application.stage}`)}
+                              {enumLabel(t, "recruitment:applications.stages", application.stage)}
                             </Text>
                           ) : (
                             <Select
@@ -375,7 +376,7 @@ function JobPostingDetail() {
                         </Text>
                         {isAnonymized ? (
                           <Badge size="sm" variant="light">
-                            {t(`recruitment:applications.stages.${application.stage}`)}
+                            {enumLabel(t, "recruitment:applications.stages", application.stage)}
                           </Badge>
                         ) : (
                           <Select

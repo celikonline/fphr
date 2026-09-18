@@ -164,3 +164,11 @@
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
+
+.department {
+  max-width: 100%;
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.3;
+  color: var(--mantine-color-dimmed);
+  overflow-wrap: anywhere;
+}

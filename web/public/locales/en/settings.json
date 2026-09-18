@@ -143,6 +143,7 @@
     "codeHint": "The stable code imports and reports match on; it cannot be changed later.",
     "codeLocked": "The code cannot be changed after creation.",
     "typeHint": "Pre-fills the wizard; every termination can override it.",
+    "sgkExitCodeHint": "SGK-allowed codes for this termination type: {{codes}}.",
     "columns": {
       "name": "Name",
       "code": "Code",

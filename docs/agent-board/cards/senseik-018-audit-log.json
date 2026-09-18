@@ -1,0 +1,16 @@
+{
+  "id": "senseik-018",
+  "title": "Denetim kaydı: gerçek kullanıcı ve kaynak kaydedilmesi (E-01)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/audit-log-fix",
+  "worktree": ".claude/worktrees/audit-real-users",
+  "acceptance": [
+    "Denetim kaydı (Audit log) ekranı 83 kaydın tamamında 'system' yerine gerçek kullanıcı adını gösteriyor",
+    "Eylem kaynağı (Talep, Web, API, İçe Aktarım, vb.) tanımlı ve kaydediliyor",
+    "Alan bazlı maskeleme (KVKK m.12) demo verinde çalışıyor — hassas alanlar gizleniyor"
+  ],
+  "merge_gate": "dotnet build + denetim kaydı entegrasyon testi: test action 3+, kullanıcı adı ve kaynak doğru kaydediliyor",
+  "handoff": "docs/handoffs/demo-data-hygiene.md",
+  "source": "1. Tur E-01; 2. Tur Regresyon §5 (Sürekli) — KVKK uyumu"
+}

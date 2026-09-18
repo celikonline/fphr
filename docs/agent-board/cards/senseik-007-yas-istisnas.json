@@ -1,0 +1,16 @@
+{
+  "id": "senseik-007",
+  "title": "50 yaş istisnası / ek kıdem günü (A-01 Regresyon)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/age-50-exception",
+  "worktree": ".claude/worktrees/age-exception",
+  "acceptance": [
+    "50 yaşına giren çalışan için ek 15 gün kıdem izni hakkı doğru hesaplanıyor",
+    "Demo veri 'Test Yas' (56 yaş, 2 yıl kıdem): 40 gün izin (14 kıdem + 14 dönem + 12 statüso = beklenen değer) görünüyor",
+    "Kıdem tablosunda 50+ için ayrı satır açık şekilde tanımlı"
+  ],
+  "merge_gate": "dotnet test (Leave modülü) — Test Yas çalışanında izin bakiyesi doğru",
+  "handoff": "docs/handoffs/age-50-exception.md",
+  "source": "1. Tur Regression (A-01); 2. Tur Kontrolü §5"
+}

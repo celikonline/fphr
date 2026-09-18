@@ -1,0 +1,17 @@
+{
+  "id": "senseik-011",
+  "title": "İşten çıkışta tazminat hesabı: kıdem + ihbar + yıllık izin (F-06)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/exit-severance-calc",
+  "worktree": ".claude/worktrees/exit-severance",
+  "acceptance": [
+    "İşten ayrılış sihirbazı tutar hesaplarını otomatik olarak gösteriyor: kıdem tazminatı (30 gün/yıl brüt + tavan), ihbar tazminatı (2–8 hafta)",
+    "Kullanılmamış yıllık izin ücreti (İş K. m.59) ve izin karşılığı (yükümlülük) hesaplanıyor",
+    "Kötüniyet / sendikal tazminat koşulları tanımlı (henüz hesap kapsam dışı olabilir)",
+    "Kariyer sekmesindeki 'Kıdem tazminatı kıdemi' sayaç doğru (2485 gün, vb.)"
+  ],
+  "merge_gate": "dotnet test (Employee/Payroll) — exit wizard test case 3+ skenaryosu, tutar doğrulama)",
+  "handoff": "docs/handoffs/payroll-salary-registry.md",
+  "source": "2. Tur § F-06 (ORTA — Bordro modülünün ilk teslim edilebilir parçası)"
+}

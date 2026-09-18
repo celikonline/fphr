@@ -1,0 +1,17 @@
+{
+  "id": "senseik-010",
+  "title": "SGK işyeri sicil no, meslek kodu, teşvik kodu (F-03)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/sgk-workplace-codes",
+  "worktree": ".claude/worktrees/sgk-workplace",
+  "acceptance": [
+    "Lokasyonlar ekranında 'SGK işyeri sicil numarası' alanı var ve çok işyerli şirketler per-location tanımlanabiliyor",
+    "Çalışan kartında 'SGK meslek kodu' alanı tanımlı; veri aktarım şablonunda var",
+    "Organizasyon/Şirket profil ekranında teşvik türü (5510, 6111, 7103, 27103 vb.) ve teşvik belgesi yer tutuşu bağlantılı",
+    "Bordro test: APHB/e-Bildirge çıktısında bu alanlar önceden doldurulabiliyor"
+  ],
+  "merge_gate": "dotnet build + aktarım şablonunda alanlar + demo seed lokasyon doğru kaydediliyor",
+  "handoff": "docs/handoffs/employee-sicil-uyruk.md",
+  "source": "2. Tur § F-03 (YÜKSEK — e-Bildirge çıktısının ön koşulu)"
+}

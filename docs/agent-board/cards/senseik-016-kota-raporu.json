@@ -1,0 +1,17 @@
+{
+  "id": "senseik-016",
+  "title": "Engelli/eski hükümlü kota raporu ve uyarı (F-04)",
+  "owner": "pc-a",
+  "state": "blocked",
+  "branch": "a/quota-compliance-report",
+  "worktree": ".claude/worktrees/quota-report",
+  "acceptance": [
+    "Raporlama modülünde '%3 engelli çalıştırma (50+ işçi)' raporu: kota sayısı, çalıştırılan, eksik istihdam hesaplanıyor",
+    "Engelli işçi (derece), eski hükümlü / terör mağduru belgeleri sayısal takip ediliyor",
+    "Her ay başında eksik istihdam sayısı ekranda uyarı gösteriyor (idari para cezası riski)",
+    "Emeklilik durumu (SGDP) ve sendika üyeliği özlük modelinde tanımlı"
+  ],
+  "merge_gate": "dotnet test (Reporting) — %3 quota calculation test case (50+ işçi, engelli sayısı değişimleri)",
+  "handoff": "docs/handoffs/quota-compliance-report.md",
+  "source": "2. Tur § F-04 (ORTA — Yasal kota takibi)"
+}

@@ -187,8 +187,9 @@ export interface OrgChartNode {
   displayName: string;
   orgUnitId: string | null;
   children: OrgChartNode[];
-  /** "Title"/"Company" level units of the placement chain; resolved server-side, missing when unplaced. */
+  /** "Title"/"Department"/"Company" level units of the placement chain; resolved server-side, missing when unplaced. */
   titleName?: string | null;
+  departmentName?: string | null;
   companyId?: string | null;
   companyName?: string | null;
 }
@@ -475,6 +476,8 @@ export interface TerminationReason {
   defaultTerminationType: TerminationType | null;
   isSystem: boolean;
   isActive: boolean;
+  /** SGK codes valid for defaultTerminationType (senseik-006/F-01); null when the type is unset or unrestricted (Other). */
+  allowedSgkExitCodes: string[] | null;
 }
 
 export interface TerminationReasonInput {

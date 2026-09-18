@@ -176,6 +176,10 @@ public sealed class TerminationReasonRepository(EmployeeDbContext context) : ITe
 
     public async Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default) =>
         await context.TerminationReasons.AnyAsync(r => r.Code == code && (exceptId == null || r.Id != exceptId), cancellationToken);
+
+    /// <summary>Tracked (no AsNoTracking) so the correction service's <see cref="TerminationReason.Update"/> calls persist.</summary>
+    public async Task<IReadOnlyList<TerminationReason>> ListSystemRowsAsync(CancellationToken cancellationToken = default) =>
+        await context.TerminationReasons.Where(r => r.IsSystem).ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed subcontractor catalog with tenant isolation (via ModuleDbContext's global query filter).</summary>

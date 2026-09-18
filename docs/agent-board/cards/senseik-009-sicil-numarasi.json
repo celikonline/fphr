@@ -1,0 +1,17 @@
+{
+  "id": "senseik-009",
+  "title": "Sicil numarası alanı + uyruk/yabancı kimlik (F-02)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/employee-sicil-uyruk",
+  "worktree": ".claude/worktrees/employee-fields",
+  "acceptance": [
+    "Çalışan veri modeline 'Sicil Numarası' alanı eklendi; veri aktarım şablonunda tanımlı",
+    "Dış katmanlara (PDKS CSV, Excel aktarım) TCKN yerine sicil numarası iş anahtarı olarak aktarılıyor",
+    "Özlük modeline Uyruk (enum: Türk/Yabancı), Yabancı Kimlik No, Pasaport No alanları eklendi",
+    "TCKN algoritma doğrulaması uyruğa göre koşullandırıldı (Türk → TCKN doğru, Yabancı → yabancı kimlik numarası)"
+  ],
+  "merge_gate": "dotnet test + veri aktarım şablonu migration + demo seed çalışanı doğru aktarılıyor",
+  "handoff": "docs/handoffs/employee-sicil-uyruk.md",
+  "source": "2. Tur § F-02 (YÜKSEK — Sicil numarası yok; KVKK/veri minimizasyonu + yabancı çalışan senaryosu)"
+}

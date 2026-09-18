@@ -233,12 +233,23 @@ function TerminationReasonsAdmin() {
         )}
       </Card>
 
-      {dialogTarget && <ReasonDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />}
+      {dialogTarget && <ReasonDialog target={dialogTarget} reasons={reasons} onClose={() => setDialogTarget(null)} />}
     </div>
   );
 }
 
-function ReasonDialog({ target, onClose }: { target: TerminationReason | "new"; onClose: () => void }) {
+function ReasonDialog({
+  target,
+  reasons,
+  onClose,
+}: {
+  target: TerminationReason | "new";
+  /** Full catalog (system + tenant rows), used only to look up the allowed SGK code list for the type currently
+   * selected in the form below - senseik-006/F-01 wants that family derived from the backend (any existing row
+   * with the same defaultTerminationType carries the same allowedSgkExitCodes), never redefined on the frontend. */
+  reasons: TerminationReason[];
+  onClose: () => void;
+}) {
   const { t } = useTranslation(["settings", "employees", "common"]);
   const queryClient = useQueryClient();
   const editing = target === "new" ? null : target;
@@ -249,6 +260,8 @@ function ReasonDialog({ target, onClose }: { target: TerminationReason | "new"; 
   const [type, setType] = useState<TerminationType | null>(editing?.defaultTerminationType ?? null);
   const [sortOrder, setSortOrder] = useState(String(editing ? 0 : 500));
   const [error, setError] = useState<string | null>(null);
+
+  const allowedCodesForType = type ? (reasons.find((r) => r.defaultTerminationType === type)?.allowedSgkExitCodes ?? null) : null;
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -314,14 +327,20 @@ function ReasonDialog({ target, onClose }: { target: TerminationReason | "new"; 
             disabled={mutation.isPending}
             inputWrapperOrder={["label", "input", "description"]}
           />
-          <Group grow>
+          <Group grow align="flex-start">
             <TextInput
               id="reason-sgk"
               label={t("settings:terminationReasons.columns.sgkExitCode")}
+              description={
+                allowedCodesForType && allowedCodesForType.length > 0
+                  ? t("settings:terminationReasons.sgkExitCodeHint", { codes: allowedCodesForType.join(", ") })
+                  : undefined
+              }
               value={sgkExitCode}
               maxLength={20}
               onChange={(event) => setSgkExitCode(event.currentTarget.value)}
               disabled={mutation.isPending}
+              inputWrapperOrder={["label", "input", "description"]}
             />
             <NumberInput
               id="reason-sort"

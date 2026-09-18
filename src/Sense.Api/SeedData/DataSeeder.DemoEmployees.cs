@@ -40,12 +40,14 @@ public partial class DataSeeder
 {
     /// <summary>
     /// Creates one Employee record per demo user (names/work e-mail from the user, deterministic valid TCKN,
-    /// phone, hire/birth dates), round-robin-assigned to the given department units (executives/HR go to
-    /// Headquarters instead), links each Identity user back to its employee record, and builds a manager
-    /// hierarchy: first executive (Owner) at the top, each department's first Manager-role employee
-    /// reporting to it and managing the rest of that department. Each employee is placed on a Title-level unit under
-    /// its department/Headquarters (see <see cref="DemoTitleFor"/>); department headcounts are unaffected because the
-    /// department stays the title's parent. Returns the created employees with their user's e-mail.
+    /// phone, hire/birth dates), round-robin-assigned to the given department units (Owner/Admin go to Headquarters
+    /// instead; only the first HR-role user does too, as the HR director — every other HR-role user lands in the
+    /// real HR department so they don't collide on the same Headquarters title node), links each Identity user
+    /// back to its employee record, and builds a manager hierarchy: first executive (Owner) at the top, each
+    /// department's first Manager-role employee reporting to it and managing the rest of that department. Each
+    /// employee is placed on a Title-level unit under its department/Headquarters (see <see cref="DemoTitleFor"/>);
+    /// department headcounts are unaffected because the department stays the title's parent. Returns the created
+    /// employees with their user's e-mail.
     /// </summary>
     private List<DemoEmployee> SeedDemoEmployees(
         Guid tenantId,
@@ -61,11 +63,22 @@ public partial class DataSeeder
         var result = new List<DemoEmployee>();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
+        // Only the first HR-role user becomes the HR director at Headquarters; every additional one (the demo
+        // pool seeds several HR/HRSpecialist accounts) lands in the real HR department like any other HR staff,
+        // instead of collapsing onto the same Headquarters title node (H-04: "Ayşe Demir" vs "Deniz Balci").
+        var hrDirectorAssigned = false;
+        var hrDepartment = departments.FirstOrDefault(d => d.Name == "HR");
+
         foreach (var user in users)
         {
             var userRoles = roleAssignments.TryGetValue(user.Id, out var r) ? r : [];
-            var isExecutive = userRoles.Any(role => role.Code is SystemRoleCodes.Owner or SystemRoleCodes.Admin or SystemRoleCodes.HR);
-            var orgUnit = isExecutive || departments.Count == 0 ? headquarters : departments[deptCursor++ % departments.Count];
+            var isOwnerOrAdmin = userRoles.Any(role => role.Code is SystemRoleCodes.Owner or SystemRoleCodes.Admin);
+            var isHr = userRoles.Any(role => role.Code == SystemRoleCodes.HR);
+            var isFirstHrDirector = isHr && !hrDirectorAssigned;
+            hrDirectorAssigned = hrDirectorAssigned || isHr;
+
+            var isExecutive = isOwnerOrAdmin || isFirstHrDirector;
+            var orgUnit = ResolveDemoOrgUnit(headquarters, departments, hrDepartment, isExecutive, isHr, ref deptCursor);
 
             var titleName = DemoTitleFor(orgUnit, headquarters, userRoles, titleCursors);
             var placementUnit = titleName is null ? orgUnit : titles.GetOrCreate(orgUnit, titleName);
@@ -76,6 +89,11 @@ public partial class DataSeeder
                 // Fixed login accounts get a hire date whose anniversary is a few months back, so the current annual leave
                 // period has room for both past and future leave in SeedDemoLeaveAsync (random dates are still consumed above).
                 info = info with { HireDate = today.AddYears(-tenure.Years).AddDays(-tenure.DaysIntoPeriod) };
+            }
+
+            if (FixedDemoAccountAgeYears.TryGetValue(user.Email, out var ageYears))
+            {
+                info = info with { BirthDate = today.AddYears(-ageYears) };
             }
 
             var employee = CreateEmployeeOrThrow(tenantId, info, user.Id, placementUnit.Id);
@@ -117,11 +135,39 @@ public partial class DataSeeder
     }
 
     /// <summary>
+    /// Which unit a demo employee's placement anchors on before <see cref="DemoTitleFor"/> picks a title under it:
+    /// Owner/Admin executives and the first HR-role user (the HR director) go to Headquarters; every other HR-role
+    /// user goes to the real HR department instead of colliding with the director on the same title node (H-04);
+    /// everyone else round-robins across <paramref name="departments"/>. Internal (not private) so
+    /// <see cref="DemoTitleFor"/>'s per-unit title selection can be exercised together with it in tests.
+    /// </summary>
+    internal static OrgUnit ResolveDemoOrgUnit(
+        OrgUnit headquarters,
+        IReadOnlyList<OrgUnit> departments,
+        OrgUnit? hrDepartment,
+        bool isExecutive,
+        bool isHr,
+        ref int deptCursor)
+    {
+        if (isExecutive || departments.Count == 0)
+        {
+            return headquarters;
+        }
+
+        if (isHr && hrDepartment is not null)
+        {
+            return hrDepartment;
+        }
+
+        return departments[deptCursor++ % departments.Count];
+    }
+
+    /// <summary>
     /// Job title for a demo employee: executives at Headquarters by role; in a department the (future) unit manager gets
     /// the manager title, other Manager-role employees the lead title, interns "Stajyer", the rest cycle through the
     /// department's titles. Must be called before the unit's manager is assigned (mirrors the assignment rule below it).
     /// </summary>
-    private static string? DemoTitleFor(OrgUnit unit, OrgUnit headquarters, List<Role> roles, Dictionary<Guid, int> cursors)
+    internal static string? DemoTitleFor(OrgUnit unit, OrgUnit headquarters, List<Role> roles, Dictionary<Guid, int> cursors)
     {
         bool Has(string code) => roles.Any(role => role.Code == code);
 
@@ -231,6 +277,9 @@ public partial class DataSeeder
         ("yonetici@demo.local", "Fatma", "Çelik", SystemRoleCodes.Manager),
         ("calisan@demo.local", "Ali", "Şahin", SystemRoleCodes.Employee),
         ("denetci@demo.local", "Zeynep", "Arslan", SystemRoleCodes.Auditor),
+        // senseik-007 (A-01 regresyon): 4857 md.53/IV 50+ yaş istisnasının demo'da görünür kanıtı - 56 yaş, 2 yıl
+        // kıdem, varsayılan kural setiyle (AnnualDays=14, AgeExceptionMinDays=20) 2 tam dönem x 20 gün = 40 gün.
+        ("testyas@demo.local", "Test", "Yaş", SystemRoleCodes.Employee),
     ];
 
     /// <summary>
@@ -245,6 +294,17 @@ public partial class DataSeeder
         ["yonetici@demo.local"] = (7, 110),
         ["calisan@demo.local"] = (4, 80),
         ["denetci@demo.local"] = (3, 130),
+        ["testyas@demo.local"] = (2, 0),
+    };
+
+    /// <summary>
+    /// Explicit BirthDate override (as an age in years, computed from today) for fixed demo accounts where the
+    /// account's whole purpose is to demonstrate an age-dependent rule - senseik-007's "Test Yaş" needs exactly 56,
+    /// not <see cref="NextDemoEmployeeInfo"/>'s random 1970-2003 birth date range.
+    /// </summary>
+    private static readonly Dictionary<string, int> FixedDemoAccountAgeYears = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["testyas@demo.local"] = 56,
     };
 
     /// <summary>Upcoming leave of colleagues (non-fixed employees): days from today to the start, working days, approved or pending.</summary>

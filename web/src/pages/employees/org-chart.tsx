@@ -47,7 +47,8 @@ function normalize(value: string): string {
   return value.toLocaleLowerCase("tr").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
-function collectIds(
+/** Exported for unit testing the expand-depth semantics (H-05); not used outside this module otherwise. */
+export function collectIds(
   nodes: OrgChartNode[],
   into: Set<string>,
   maxDepth = Infinity,
@@ -154,6 +155,8 @@ export default function OrgChartPage() {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [zoomIndex, setZoomIndex] = useState(ZOOM_STEPS.indexOf(1));
+  /** Bumped after "expand all" so the root-centering effect below re-runs even though `roots` itself didn't change. */
+  const [centerToken, setCenterToken] = useState(0);
   const treeRef = useRef<HTMLUListElement>(null);
   /** Node DOM ref by id, so a search match can be scrolled into the scrollable chart area. */
   const nodeRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -168,11 +171,13 @@ export default function OrgChartPage() {
     retry: (count, err) => getApiErrorStatus(err) !== 403 && count < 1,
   });
 
-  // Fresh chart data opens the first two levels (adjusted during render, not in an effect).
+  // Fresh chart data opens only the root level (adjusted during render, not in an effect) — a depth-2 default
+  // pulled in the whole first department's team, which made the widest possible subtree the initial view and
+  // pushed the root off-center (H-04/H-05).
   const [expandedFor, setExpandedFor] = useState<typeof data>(undefined);
   if (expandedFor !== data) {
     setExpandedFor(data);
-    if (data) setExpanded(collectIds(data, new Set(), 2));
+    if (data) setExpanded(collectIds(data, new Set(), 1));
   }
 
   const { companies, hasUnplaced } = useMemo(() => companyOptions(data ?? []), [data]);
@@ -194,6 +199,16 @@ export default function OrgChartPage() {
     const el = firstMatchId ? nodeRefs.current.get(firstMatchId) : undefined;
     el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
   }, [found]);
+
+  // The tree's flex layout shrinks to its content width, so the root node lands wherever the widest subtree
+  // happens to be rather than under the scroll container's center. Re-center it whenever the chart (re)loads,
+  // the company filter changes what's rendered, or "Tümünü aç" reflows the width.
+  useEffect(() => {
+    if (found) return;
+    const rootId = roots[0]?.id;
+    const el = rootId ? nodeRefs.current.get(rootId) : undefined;
+    el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  }, [roots, centerToken, found]);
 
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -274,7 +289,10 @@ export default function OrgChartPage() {
               type="button"
               variant="default"
               size="sm"
-              onClick={() => setExpanded(collectIds(roots, new Set()))}
+              onClick={() => {
+                setExpanded(collectIds(roots, new Set()));
+                setCenterToken((token: number) => token + 1);
+              }}
             >
               {t("employees:orgChart.expandAll")}
             </Button>
@@ -576,6 +594,11 @@ function OrgChartItem({
         {node.titleName && (
           <Text component="span" className={classes.title}>
             {node.titleName}
+          </Text>
+        )}
+        {node.departmentName && (
+          <Text component="span" className={classes.department}>
+            {node.departmentName}
           </Text>
         )}
       </div>

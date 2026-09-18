@@ -11,6 +11,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
+import { enumLabel } from "@/lib/i18n-enum";
 import {
   anonymizeCandidate,
   anonymizeExpiredCandidates,
@@ -293,7 +294,7 @@ function Candidates() {
                       </Table.Td>
                       <Table.Td>{candidate.email}</Table.Td>
                       <Table.Td>{candidate.phone ?? "—"}</Table.Td>
-                      <Table.Td>{t(`recruitment:candidates.sources.${candidate.source}`)}</Table.Td>
+                      <Table.Td>{enumLabel(t, "recruitment:candidates.sources", candidate.source)}</Table.Td>
                       <Table.Td>
                         <Group gap={4}>
                           {candidate.tagIds.length === 0 ? (
@@ -342,7 +343,7 @@ function Candidates() {
                         {candidate.email} · {candidate.phone ?? "—"}
                       </Text>
                       <Text size="xs" c="dimmed">
-                        {t(`recruitment:candidates.sources.${candidate.source}`)}
+                        {enumLabel(t, "recruitment:candidates.sources", candidate.source)}
                       </Text>
                       {candidate.tagIds.length > 0 && (
                         <Group gap={4}>

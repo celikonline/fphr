@@ -1,0 +1,17 @@
+{
+  "id": "senseik-017",
+  "title": "Demo verisi hijyeni ve org şeması görüntüleme (H-02, H-04, H-05)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/demo-data-hygiene",
+  "worktree": ".claude/worktrees/demo-cleanup",
+  "acceptance": [
+    "Demo veri taraması: rastgele/test kayıtları (H-02 çöp: 'juıouıouıuou'), Türkçe karakterli e-postalar, İngilizce departman adları temizlendi",
+    "Organizasyon şeması: kök düğümü (Ahmet Yılmaz / Genel Müdür) gösteriyor; en üst seviye boş kalmıyor",
+    "Şema yatay kaydırması düzeltildi, 'Tümünü aç' sonrası tüm node'lar okunabilir",
+    "Aynı ünvanda iki kişi (Ayşe Demir, Deniz Balci) departman ayrımıyla görüntüsüz ayırt ediliyor (ünvan değil birim)"
+  ],
+  "merge_gate": "Manual tarama: 3+ ekran müşteri demosunda uygun görünüyor; organizasyon şeması responsive",
+  "handoff": "docs/handoffs/demo-data-hygiene.md",
+  "source": "2. Tur § H-02, H-04, H-05 (Müşteri demosunda izlenim)"
+}

@@ -59,6 +59,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.TryAddScoped<CurrentUserAccessor>();
         services.TryAddScoped<ICurrentUser>(sp => sp.GetRequiredService<CurrentUserAccessor>());
 
+        services.TryAddScoped<AuditSourceContext>();
+        services.TryAddScoped<IAuditSourceAccessor>(sp => sp.GetRequiredService<AuditSourceContext>());
+
         services.TryAddScoped<CorrelationIdContext>();
         services.TryAddScoped<ICorrelationIdContext>(sp => sp.GetRequiredService<CorrelationIdContext>());
         services.TryAddScoped<ICorrelationIdContextSetter>(sp => sp.GetRequiredService<CorrelationIdContext>());

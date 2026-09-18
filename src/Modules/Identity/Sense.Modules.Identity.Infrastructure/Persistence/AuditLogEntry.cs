@@ -33,6 +33,12 @@ public sealed class AuditLogEntry : ITenantEntity
 
     /// <summary>İnsan tarafından okunabilir özet; <c>identity.audit.sensitive_view</c> yoksa API katmanında maskelenir.</summary>
     public required string Details { get; set; }
+
+    /// <summary>
+    /// Eylemin sisteme hangi yoldan ulaştığı (<see cref="Sense.Shared.Contracts.Context.AuditSources"/> - Web/Api/Import/System),
+    /// KVKK m.12 "kim yaptı" bilgisini tamamlar. Actor/ActorUserId gibi maskelenmez (E-01).
+    /// </summary>
+    public string? Source { get; set; }
 }
 
 /// <summary>Sözleşmede (S-1) sabitlenen eylem adları — FE bu tam string'leri bekler, değiştirilmez.</summary>
@@ -54,6 +60,7 @@ internal static class AuditLogTables
     public const int ResourceMaxLength = 100;
     public const int ResourceIdMaxLength = 64;
     public const int DetailsMaxLength = 2000;
+    public const int SourceMaxLength = 30;
 }
 
 public sealed class AuditLogEntryConfiguration : IEntityTypeConfiguration<AuditLogEntry>
@@ -67,6 +74,7 @@ public sealed class AuditLogEntryConfiguration : IEntityTypeConfiguration<AuditL
         b.Property(x => x.Resource).HasMaxLength(AuditLogTables.ResourceMaxLength).IsRequired();
         b.Property(x => x.ResourceId).HasMaxLength(AuditLogTables.ResourceIdMaxLength);
         b.Property(x => x.Details).HasMaxLength(AuditLogTables.DetailsMaxLength).IsRequired();
+        b.Property(x => x.Source).HasMaxLength(AuditLogTables.SourceMaxLength);
 
         // Grid standart sıralaması "en yeni önce"; (tenant_id, occurred_at desc) tek indeksle hem tenant
         // izolasyonunu hem de sıralamayı karşılar.

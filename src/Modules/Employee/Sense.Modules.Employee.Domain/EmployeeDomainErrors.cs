@@ -61,6 +61,9 @@ public static class EmployeeDomainErrors
     public const string TerminationReasonNameRequired = "employee.termination_reason_name_required";
     public const string TerminationReasonNameTooLong = "employee.termination_reason_name_too_long";
 
+    /// <summary>The (TerminationType, SgkExitCode) pair does not match SGK's family for that type - see <see cref="Terminations.SgkExitCodeRules"/>.</summary>
+    public const string TerminationSgkExitCodeInconsistent = "employee.termination_sgk_exit_code_inconsistent";
+
     public const string CareerRecordNotFound = "employee.career_record_not_found";
 
     /// <summary>A new/edited record must start after the previous record's ValidFrom.</summary>

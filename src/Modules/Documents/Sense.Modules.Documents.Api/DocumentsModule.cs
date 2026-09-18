@@ -41,6 +41,10 @@ public sealed class DocumentsModule : IModule
         // Document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();
 
+        // Reporting catalog provider (API host only, mirrors EmployeeModule): it takes IStringLocalizer<SharedResource>,
+        // which Sense.Worker never registers, so it must stay out of AddDocumentsCoreServices.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.MissingDocumentReportProvider>();
+
         // ADR-0004: Hangfire (BackgroundJobExecutor) runs in Sense.Api, so scheduled-job handlers are registered
         // here, not in AddDocumentsIntegrationEventHandlers (Sense.Worker-only, for outbox event consumers).
         services.AddScoped<IScheduledJobHandler, DocumentExpiryReminderJobHandler>();

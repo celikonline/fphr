@@ -31,6 +31,7 @@ import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
 import { getApiProblem } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import {
   bulkAssignRole,
   deriveAccessType,
@@ -378,7 +379,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
         const accessType = deriveAccessType(row.original.roles);
         return (
           <Badge variant="outline" color="gray">
-            {accessType ? t(`users:accessType.${accessType.toLowerCase()}`) : t("users:accessType.none")}
+            {accessType ? enumLabel(t, "users:accessType", accessType) : t("users:accessType.none")}
           </Badge>
         );
       },
@@ -707,7 +708,7 @@ function EditAccessTypeDialog({
           value={selected}
           onChange={(value) => value && setSelected(value as AccessType)}
           allowDeselect={false}
-          data={ACCESS_TYPES.map((type) => ({ value: type, label: t(`users:accessType.${type.toLowerCase()}`) }))}
+          data={ACCESS_TYPES.map((type) => ({ value: type, label: enumLabel(t, "users:accessType", type) }))}
         />
         <Group justify="flex-end">
           <Button type="button" variant="default" onClick={onClose} disabled={isSaving}>

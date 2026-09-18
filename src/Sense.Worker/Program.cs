@@ -114,6 +114,9 @@ builder.Services.AddHostedService<EmailDeliveryPollingService>();
 // Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
 // (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
 // Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
+// EmployeeHiredHandler and LeaveBalanceRecalculationJob both read BirthDate through this Contracts port (4857
+// md.53/IV yaş istisnası) - never carried on EmployeeHired itself, mirroring IEmployeeDocumentEligibilityLookup above.
+builder.Services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
 builder.Services.AddModuleDbContext<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>(builder.Configuration, Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName);
 builder.Services.AddLeaveCoreServices(builder.Configuration);
 builder.Services.AddLeaveIntegrationEventHandlers();
@@ -229,16 +232,18 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Integrations.Domain.IWebhookSubscriptionRepository).Assembly,
     typeof(Sense.Modules.Integrations.Contracts.IntegrationsPermissions).Assembly);
 
-// Announcements/Support (11.3.13, roadmap #69): writes SupportTicketCreated/Answered to its own outbox;
+// Announcements/Support (11.3.13, roadmap #69): writes SupportTicketCreated/Answered (Contracts) to its own outbox;
 // AddAnnouncementsIntegrationEventHandlers resolves ISupportChannel's default e-mail adapter, which in turn
 // needs Identity's IUserProfileLookup (registered above, near the Notifications block) for the ticket-answered
-// notification recipient's e-mail.
+// notification recipient's e-mail. The Application assembly is deliberately not scanned: its query handlers
+// (GetSupportTicketHandler) take Identity's IPermissionService, which only the API host registers - same
+// "explicit handlers, no Application scan" pattern as Leave/Attendance/Documents above.
 builder.Services.AddModuleDbContext<AnnouncementsDbContext>(builder.Configuration, AnnouncementsDbContext.SchemaName);
 builder.Services.AddAnnouncementsCoreServices(builder.Configuration);
 builder.Services.AddAnnouncementsIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     AnnouncementsDbContext.SchemaName,
-    typeof(Sense.Modules.Announcements.Application.AnnouncementsErrors).Assembly,
+    typeof(Sense.Modules.Announcements.Domain.Announcement).Assembly,
     typeof(AnnouncementsDbContext).Assembly,
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();

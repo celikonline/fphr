@@ -1,0 +1,17 @@
+{
+  "id": "senseik-006",
+  "title": "SGK işten çıkış kodları tablosu doğrulaması ve düzeltme (F-01)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/sgk-exit-codes-fix",
+  "worktree": ".claude/worktrees/sgk-codes",
+  "acceptance": [
+    "13 işten ayrılma nedeni için SGK çıkış kodları 5510 kanunu uyarınca doğrulandı (Ölüm=10, Askerlik=12, İstifa=03, Belirli süreli sözleşme sonu=05, Emeklilik=08, Kadın işçinin evlenmesi=13, Aynı işverenin başka işyerine nakil=16)",
+    "İşten çıkış sihirbazında koddaki hata düzeltildi ve kod salt okunur gösterildi",
+    "Onay adımında sihirbaz kodu onaylatan bir ekran eklendi",
+    "Fesih türü ↔ SGK kodu tutarlılık denetimi motora eklendi"
+  ],
+  "merge_gate": "dotnet build + dotnet test (Employee modülü) + security-reviewer (veri doğruluk kontrolü)",
+  "handoff": "docs/handoffs/sgk-exit-codes.md",
+  "source": "2. Tur Test Bulgularına Dokümanı § F-01 (KRİTİK — SGK işten çıkış kodları hatalı eşlenmiş)"
+}
