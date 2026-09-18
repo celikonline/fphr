@@ -114,6 +114,9 @@ builder.Services.AddHostedService<EmailDeliveryPollingService>();
 // Leave consumes EmployeeHired (leave profile + default rule set + accruals) and Workflow's ApprovalCompleted/Rejected
 // (leave request decisions); OutboxProcessor publishes through this process's IEventBus, so the handlers live here.
 // Handlers are registered explicitly (not the whole Application assembly) so API-only handler dependencies stay out.
+// EmployeeHiredHandler and LeaveBalanceRecalculationJob both read BirthDate through this Contracts port (4857
+// md.53/IV yaş istisnası) - never carried on EmployeeHired itself, mirroring IEmployeeDocumentEligibilityLookup above.
+builder.Services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
 builder.Services.AddModuleDbContext<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>(builder.Configuration, Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext.SchemaName);
 builder.Services.AddLeaveCoreServices(builder.Configuration);
 builder.Services.AddLeaveIntegrationEventHandlers();
