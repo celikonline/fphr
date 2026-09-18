@@ -22,5 +22,9 @@ public static class PayrollPermissions
     public static readonly Permission PeriodRecalculate = new(
         "payroll.period.recalculate", Module, "Recalculate Payroll Period", Group, "Recalculate payslips for an open payroll period");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate];
+    /// <summary>senseik-011 (F-06 "İşten ayrılış sihirbazı"): read-only kıdem/ihbar/kullanılmamış izin ücreti tahmini.</summary>
+    public static readonly Permission SeveranceEstimate = new(
+        "payroll.severance.estimate", Module, "Estimate Severance", Group, "View a read-only severance/notice estimate for an employee");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate];
 }

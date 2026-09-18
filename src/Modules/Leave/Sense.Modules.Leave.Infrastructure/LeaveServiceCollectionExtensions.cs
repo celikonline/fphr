@@ -58,6 +58,10 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+
+        // Cross-module contract consumed by Payroll (severance/notice estimate, senseik-011 F-06); API-only (no
+        // Worker consumer), same pattern as ILeaveUsageReader/ILeaveDayReader above.
+        services.AddScoped<ILeaveBalanceLookup, Lookups.LeaveBalanceLookup>();
         return services;
     }
 

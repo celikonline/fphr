@@ -638,6 +638,26 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Meal.MarketCard.ExemptionApplies",
                             Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000040"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 55000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Severance.CeilingGross",
+                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - kıdem tazminatı tavanı (bir hizmet yılı için azami brüt tutar, İş K. m.14)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000041"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Notice.WeeksBySeniorityTiers",
+                            Source = "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)",
+                            ValueJson = "[{\"upperBoundDays\":183,\"weeks\":2},{\"upperBoundDays\":548,\"weeks\":4},{\"upperBoundDays\":1095,\"weeks\":6},{\"upperBoundDays\":null,\"weeks\":8}]"
                         });
                 });
 

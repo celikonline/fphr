@@ -1,5 +1,50 @@
 # senseik-011 + senseik-013 — Tazminat Hesabı + Ücret Kütüğü (Bordro Aşama 1) — UYGULAMA PLANI
 
+## Implementasyon Notu
+
+**Durum: GATE 1/GATE 2 onaylandı, her iki kart da uygulandı (dallar: `a/payroll-salary-registry`, `a/exit-severance-calc`).**
+
+- **Kart 013** (`a/payroll-salary-registry`, tek commit): `SalaryRecordData`/`SalaryRecord`'a opsiyonel `OrgUnitId`
+  eklendi (yeni Employee migration'ı `AddSalaryRecordOrgUnit`, `employee.salary_records.org_unit_id` nullable
+  kolon); `AddSalaryRecordCommand`/`UpdateSalaryRecordCommand`/DTO'lar bu alanı taşıyor. `BankAccountType` kod
+  değişikliği yapılmadı - plandaki karar (`EmployeePayrollProfile.BankAccountId` zaten "hangi hesaba maaş"
+  sorusunu çözüyor) doğrulandı. `EmployeeMasterImportTemplate`'e banka bloğu eklendi
+  (`bankIban`/`bankAccountType`/`bankName`/`bankCurrency`), maaş bloğuyla simetrik bütünlük kuralıyla (IBAN
+  doluysa hesap türü zorunlu, IBAN `BankAccount.ParseIban` ile doğrulanır). Bu arada bir mevcut boşluk da
+  düzeltildi: `IEmployeeRepository.ListByIdsWithPaymentsAndCustomFieldsAsync` adına rağmen `BankAccounts`
+  koleksiyonunu yüklemiyordu (yalnızca `SalaryRecords`); artık üçü de yükleniyor, aksi halde ithalat satır
+  işleyicisi güncelleme satırlarında banka hesabı ekleyemezdi.
+- **Kart 011** (`a/exit-severance-calc`, 013 commit'inin üstünde): planın §4 imzalarıyla birebir -
+  `Employee.Contracts.IEmployeeSeniorityLookup` (yeni, `EmployeeSeniorityPurpose` mirror'lanmış enum) ve
+  `Leave.Contracts.ILeaveBalanceLookup` (yeni, `LeaveBalanceService.ProjectAsync`'i sarmalıyor, Annual-coded
+  tiplerin `CurrentBalance` toplamı) eklendi - ikisi de API-only, Sense.Worker'a kayıt gerekmiyor (arka plan
+  tüketicisi yok). `Payroll.Domain.Calculation.SeveranceCalculator` (`IncomeTaxMath`/`PayrollCalculator` ile
+  aynı stil: statik, saf, `TraceStep` izlenebilir) yeni bir `SeveranceCauseCategory` enum'u kullanıyor -
+  `Employee.Domain.Employees.TerminationType`'tan daha ince taneli, çünkü İş K. m.25/II (ahlak/iyiniyet -
+  kıdem ve ihbarın ikisini de sıfırlayan tek sebep) o enumda ayrı bir değer değil. Web tarafı bu farkı
+  `lifecycle-actions.tsx`'teki `mapCauseCategory` ile kapatıyor: sihirbazın seçtiği `TerminationType`'ı
+  `SeveranceCauseCategory`'ye eşliyor, yalnızca `employerJustCause_Art25` seçiliyken panelin kendi (tahmine
+  özel, komutu etkilemeyen) checkbox'ıyla ahlak/iyiniyet ayrımını soruyor. Yeni legislation parametreleri
+  `Severance.CeilingGross` (55.000,00 TL taslak) ve `Notice.WeeksBySeniorityTiers` (JSON dizi, İş K. m.17
+  eşikleri: 183/548/1095 gün) `LegislationParameterSeed.All`'a (id 40-41) eklendi ve gerçek bir EF migration'la
+  (`SeveranceLegislationParameters`, `dotnet ef migrations add` ile Docker SDK konteynerinde üretildi) seed'lendi
+  - ADR 0008 desenine göre. Yeni salt-okunur query `GetSeveranceEstimateQuery` + `GetSeveranceEstimateHandler`
+  (`Sense.Modules.Payroll.Application.Severance`), yeni `payroll.severance.estimate` izni (HR/PayrollSpecialist
+  rollerine `payroll.*` joker karakteriyle zaten ulaşıyor, `SystemRoleDefinitions.cs`'e ayrı satır eklenmedi),
+  yeni `GET /api/v{version}/payroll/employees/{employeeId}/severance-estimate` endpoint'i
+  (`SeveranceEstimateController`). Günlük brüt ücret, çalışanın güncel maaş kaydından (`IEmployeeSalaryLookup`)
+  `PayFrequency`'ye göre türetiliyor; **TODO**: Net tipi maaş kayıtları net-brüt dönüşümü yapılmadan olduğu gibi
+  kullanılıyor (bu dilimin kapsamı dışında, kod içinde işaretli). Web: `SeveranceEstimatePanel`
+  (`lifecycle-actions.tsx`) + `payroll-severance.service.ts`; mevcut `severancePaid`/`leaveSettledAtExit`
+  checkbox'larına dokunulmadı, panel adım 1'in altına, o checkbox'ların hemen üstüne eklendi. Golden-set: 10 test
+  (`SeveranceCalculatorGoldenSetTests.cs`, plan §8'deki 8 senaryo + adım sırası + bilinmeyen kategori testi),
+  tamamı yeşil; ayrıca tüm Payroll modülü test paketi (60 test) yeşil.
+- **Doğrulanmadı/kapsam dışı (plandaki gibi kaldı)**: kötüniyet/sendikal tazminat hesaba katılmadı; kıdem
+  tazminatı tavanı değeri taslak (mali müşavirle doğrulanmalı, `PayrollDraft2026` çekincesiyle aynı); denetim
+  kaydı/saklama eklenmedi (tahmin yalnızca ekranda, kalıcı kayıt yok - risk #6'daki karar).
+
+---
+
 **Durum: GATE 1 onayı bekliyor. Hiçbir dosya değiştirilmedi/oluşturulmadı.**
 
 ## ⚠️ Kart Metni Güncel Değil — Kritik Düzeltme

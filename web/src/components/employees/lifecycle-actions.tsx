@@ -8,6 +8,7 @@ import { OpenAssetsWarning } from "@/components/assets/open-assets-warning";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { formatMoney } from "@/lib/money";
 import {
   getCollectiveDismissalStatus,
   getEmploymentPeriods,
@@ -23,6 +24,7 @@ import {
   type SuspensionReason,
   type TerminationType,
 } from "@/services/employees.service";
+import { getSeveranceEstimate, type SeveranceCauseCategory } from "@/services/payroll-severance.service";
 
 /** Lifecycle transitions offered on the employee card ("İşten ayrılış sihirbazı" and friends, E5a). */
 export type LifecycleAction = "suspend" | "reactivate" | "terminate" | "rehire";
@@ -310,6 +312,7 @@ function TerminateDialog({ employee, onClose, onDone }: StepProps) {
                 />
               )}
             </div>
+            <SeveranceEstimatePanel employeeId={employee.id} terminationDate={terminationDate} terminationType={type} />
             <Checkbox
               label={t("employees:lifecycle.terminate.severancePaid")}
               description={t("employees:lifecycle.terminate.severancePaidHint")}
@@ -383,6 +386,98 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
         {value}
       </Text>
     </Group>
+  );
+}
+
+/**
+ * Coarser than {@link TerminationType}: the wizard has no field for İş K. m.25/II (ahlak ve iyiniyet kurallarına
+ * aykırılık, the one cause that forfeits both kıdem and ihbar tazminatı), so the panel asks for it locally only
+ * when the picked type is employerJustCause_Art25 - the answer feeds this read-only estimate only, never the
+ * termination command itself.
+ */
+function mapCauseCategory(type: TerminationType | null, art25IsImmoral: boolean): SeveranceCauseCategory {
+  switch (type) {
+    case "validCause_Art18":
+      return "employerNoticeBased";
+    case "employeeJustCause_Art24":
+      return "employeeJustCause";
+    case "employerJustCause_Art25":
+      return art25IsImmoral ? "immoralOrBadFaith" : "employerJustCauseOther";
+    case "mutualRescission":
+    case "resignation":
+    case "fixedTermExpiry":
+      return "employeeResignation";
+    case "other":
+    default:
+      return "employerNoticeBased";
+  }
+}
+
+/**
+ * "İşten ayrılış sihirbazı" salt-okunur özet blok (senseik-011, F-06): kıdem/ihbar/kullanılmamış izin ücreti
+ * tahmini. Nothing here is submitted with the termination - a preview only, recomputed as the date/type change.
+ */
+function SeveranceEstimatePanel({
+  employeeId,
+  terminationDate,
+  terminationType,
+}: {
+  employeeId: string;
+  terminationDate: string;
+  terminationType: TerminationType | null;
+}) {
+  const { t, i18n } = useTranslation(["employees", "common"]);
+  const [art25IsImmoral, setArt25IsImmoral] = useState(false);
+  const causeCategory = mapCauseCategory(terminationType, art25IsImmoral);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["severance-estimate", employeeId, terminationDate, causeCategory],
+    queryFn: () => getSeveranceEstimate(employeeId, terminationDate, causeCategory),
+    enabled: Boolean(employeeId && terminationDate),
+    retry: false,
+  });
+
+  if (!terminationDate) {
+    return null;
+  }
+
+  const money = (amount: number) => (data ? formatMoney(amount, data.currency, i18n.language) : "—");
+
+  return (
+    <Stack gap="xs" p="sm" style={{ border: "1px solid var(--mantine-color-gray-3)", borderRadius: "var(--mantine-radius-sm)" }}>
+      <Text size="sm" fw={600}>
+        {t("employees:lifecycle.terminate.severanceEstimate.title")}
+      </Text>
+      {terminationType === "employerJustCause_Art25" && (
+        <Checkbox
+          size="sm"
+          label={t("employees:lifecycle.terminate.severanceEstimate.immoralOrBadFaith")}
+          checked={art25IsImmoral}
+          onChange={(event) => setArt25IsImmoral(event.currentTarget.checked)}
+        />
+      )}
+      {isLoading && (
+        <Text size="xs" c="dimmed">
+          {t("common:loading")}
+        </Text>
+      )}
+      {isError && (
+        <Text size="xs" c="dimmed">
+          {t("employees:lifecycle.terminate.severanceEstimate.unavailable")}
+        </Text>
+      )}
+      {data && (
+        <Stack gap={4}>
+          <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.severance")} value={money(data.severanceAmount)} />
+          <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.notice")} value={money(data.noticeAmount)} />
+          <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.unusedLeave")} value={money(data.unusedLeaveAmount)} />
+          <SummaryRow label={t("employees:lifecycle.terminate.severanceEstimate.total")} value={money(data.totalAmount)} />
+        </Stack>
+      )}
+      <Text size="xs" c="dimmed">
+        {t("employees:lifecycle.terminate.severanceEstimate.disclaimer")}
+      </Text>
+    </Stack>
   );
 }
 
