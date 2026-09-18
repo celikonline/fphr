@@ -36,6 +36,7 @@ public abstract class TestFixture : IAsyncLifetime
     protected ITenantContextSetter? TenantContextSetter { get; private set; }
     protected ITenantContext? TenantContextAccessor { get; private set; }
     protected ICurrentUser? CurrentUser { get; private set; }
+    protected IAuditSourceAccessor? AuditSource { get; private set; }
     protected TimeProvider? Clock { get; private set; }
 
     /// <summary>Override to configure services. Called after base services are registered.</summary>
@@ -98,6 +99,7 @@ public abstract class TestFixture : IAsyncLifetime
         TenantContextSetter = ServiceProvider.GetRequiredService<ITenantContextSetter>();
         TenantContextAccessor = ServiceProvider.GetRequiredService<ITenantContext>();
         CurrentUser = ServiceProvider.GetRequiredService<ICurrentUser>();
+        AuditSource = ServiceProvider.GetRequiredService<IAuditSourceAccessor>();
 
         // Runs pending module migrations (if a test's ConfigureServices registered a real module DbContext);
         // must happen before the respawner is created, otherwise there are no tables yet to track/reset.
@@ -233,8 +235,12 @@ public abstract class TestFixture : IAsyncLifetime
         return new List<OutboxMessage>();
     }
 
-    /// <summary>Set the current user context for tests.</summary>
-    public void SetCurrentUser(Guid tenantId, Guid userId, string email, IReadOnlySet<string> roles)
+    /// <summary>
+    /// Set the current user context for tests. <paramref name="apiKeyId"/> mirrors an API-key-authenticated call
+    /// (RequestContextMiddleware's Web vs Api audit-log Source split, senseik-018/E-01) - leave null for a normal
+    /// browser session.
+    /// </summary>
+    public void SetCurrentUser(Guid tenantId, Guid userId, string email, IReadOnlySet<string> roles, Guid? apiKeyId = null)
     {
         if (CurrentUser is not CurrentUserAccessor accessor)
             throw new InvalidOperationException("CurrentUser is not a CurrentUserAccessor.");
@@ -247,7 +253,7 @@ public abstract class TestFixture : IAsyncLifetime
             Roles: roles,
             IsPlatformAdmin: false,
             ImpersonatorUserId: null,
-            ApiKeyId: null,
+            ApiKeyId: apiKeyId,
             CorrelationId: Guid.NewGuid().ToString(),
             IpAddress: "127.0.0.1");
 

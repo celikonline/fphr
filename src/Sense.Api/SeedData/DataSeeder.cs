@@ -32,6 +32,7 @@ using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Infrastructure.Context;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Api.SeedData;
@@ -61,6 +62,14 @@ public partial class DataSeeder(
     public async Task SeedAsync(SeedProfile profile, CancellationToken cancellationToken = default)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        // senseik-018 (E-01): nothing sets ICurrentUser for a startup seeder (no HTTP request, no
+        // RequestContextMiddleware), so every SaveChangesAsync below used to fall through to AnonymousUser and
+        // IdentityAuditLogInterceptor wrote the raw lowercase "system" placeholder as Actor for all 83+ demo audit
+        // rows - indistinguishable from a genuine "nobody was logged in" bug. UseSystem() makes the actor the
+        // deliberate SystemUser instead, spanning every save this call tree makes (SeedDemoAsync, SeedDemoLeaveAsync,
+        // SeedSampleDocumentsAsync, ...) via the same AsyncLocal scoping RequestContextMiddleware uses per request.
+        using var systemActorScope = CurrentUserAccessor.UseSystem();
 
         try
         {
@@ -302,6 +311,10 @@ public partial class DataSeeder(
         var titles = new DemoTitleCatalog(tenant.Id, orgUnitTypes.Title, organizationCtx);
         var employees = SeedDemoEmployees(tenant.Id, demoUsers, roleAssignments, headquarters, departments, titles);
         _demoLeaveSeed = new DemoLeaveSeed(tenant.Id, tenant.Slug, employees);
+
+        // senseik-018 (E-01): hand-authored audit trail (see SeedDemoAuditLog) - the seeder's own SaveChanges
+        // cannot produce per-person attribution through the interceptor (single SystemUser actor for the batch).
+        SeedDemoAuditLog(tenant.Id, demoUsers, roles, employees);
 
         // Create sample documents
         await SeedSampleDocumentsAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);

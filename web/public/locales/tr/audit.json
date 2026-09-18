@@ -6,6 +6,7 @@
   "action": "İşlem",
   "resource": "Kaynak",
   "details": "Detaylar",
+  "source": "Eylem Kaynağı",
   "allActors": "Tüm kullanıcılar",
   "actorPlaceholder": "kullanici@sirket.com",
   "allActions": "Tüm işlemler",
@@ -24,5 +25,11 @@
     "login": "Giriş",
     "invite": "Davet",
     "role_change": "Rol değişikliği"
+  },
+  "sourceTypes": {
+    "Web": "Web",
+    "Api": "API",
+    "Import": "İçe Aktarım",
+    "System": "Sistem"
   }
 }

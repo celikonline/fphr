@@ -38,6 +38,6 @@ public sealed class AuditLogReadStore(IdentityDbContext db) : IAuditLogReadStore
 
         var paging = new PagedQuery { Page = page, PageSize = pageSize };
         var result = await query.ToPagedResultAsync(paging, ct).ConfigureAwait(false);
-        return result.Map(e => new AuditLogEntryDto(e.Id, e.OccurredAt, e.Actor, e.Action, e.Resource, e.ResourceId, e.Details));
+        return result.Map(e => new AuditLogEntryDto(e.Id, e.OccurredAt, e.Actor, e.Action, e.Resource, e.ResourceId, e.Details, e.Source));
     }
 }

@@ -25,6 +25,9 @@ import type { PagedResult, PagedQueryParams } from "@/types";
 
 export type AuditActionType = "create" | "update" | "delete" | "login" | "invite" | "role_change";
 
+/** Free string on the backend (AuditSources - not a closed enum), but these are the only values it writes today. */
+export type AuditSourceType = "Web" | "Api" | "Import" | "System";
+
 export interface AuditEvent {
   id: string;
   occurredAt: string;
@@ -34,6 +37,8 @@ export interface AuditEvent {
   /** Present on the real DTO (`AuditLogEntryDto.resourceId`); the grid doesn't render it (yet). */
   resourceId?: string;
   details: string;
+  /** How the action reached the system (senseik-018/E-01); null for rows written before this field existed. */
+  source: AuditSourceType | null;
 }
 
 const AUDIT_LOG_BASE = "/v1/identity/audit-log";
@@ -67,11 +72,13 @@ const EXPORT_MAX_PAGES = 50;
  * a CSV blob - the full filtered result set, not just the page currently rendered on screen.
  */
 export async function exportAuditEventsCsv(filters: AuditLogFilters = {}): Promise<Blob> {
-  const rows = ["Timestamp,Actor,Action,Resource,Details"];
+  const rows = ["Timestamp,Actor,Action,Resource,Source,Details"];
   for (let page = 1; page <= EXPORT_MAX_PAGES; page += 1) {
     const result = await listAuditEvents({ ...filters, page, pageSize: EXPORT_PAGE_SIZE });
     for (const e of result.items) {
-      rows.push(`${e.occurredAt},${e.actor},${e.action},${e.resource},"${e.details.replace(/"/g, '""')}"`);
+      rows.push(
+        `${e.occurredAt},${e.actor},${e.action},${e.resource},${e.source ?? ""},"${e.details.replace(/"/g, '""')}"`
+      );
     }
     if (!result.hasNext || result.items.length === 0) break;
   }

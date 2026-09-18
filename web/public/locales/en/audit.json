@@ -6,6 +6,7 @@
   "action": "Action",
   "resource": "Resource",
   "details": "Details",
+  "source": "Action Source",
   "allActors": "All actors",
   "actorPlaceholder": "user@company.com",
   "allActions": "All actions",
@@ -24,5 +25,11 @@
     "login": "Login",
     "invite": "Invite",
     "role_change": "Role change"
+  },
+  "sourceTypes": {
+    "Web": "Web",
+    "Api": "API",
+    "Import": "Import",
+    "System": "System"
   }
 }

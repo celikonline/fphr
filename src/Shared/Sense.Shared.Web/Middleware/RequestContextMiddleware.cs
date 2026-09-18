@@ -13,16 +13,18 @@ namespace Sense.Shared.Web.Middleware;
 /// </summary>
 public sealed class RequestContextMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context, CurrentUserAccessor userAccessor, ITenantContextSetter tenantSetter)
+    public async Task InvokeAsync(HttpContext context, CurrentUserAccessor userAccessor, ITenantContextSetter tenantSetter, IAuditSourceAccessor auditSource)
     {
         var correlationId = context.Items[CorrelationIdContext.HttpContextItemKey] as string ?? context.TraceIdentifier;
 
         var principal = context.User;
         IDisposable? tenantScope = null;
+        IDisposable? sourceScope = null;
 
         if (principal.Identity?.IsAuthenticated == true)
         {
             var roles = principal.FindAll(ClaimNames.Roles).Select(c => c.Value).ToHashSet(StringComparer.Ordinal);
+            var apiKeyId = ParseGuid(principal.FindFirst(ClaimNames.ApiKey)?.Value);
 
             var user = new AuthenticatedUser(
                 UserId: ParseGuid(principal.FindFirst(ClaimNames.Subject)?.Value) ?? Guid.Empty,
@@ -32,7 +34,7 @@ public sealed class RequestContextMiddleware(RequestDelegate next)
                 Roles: roles,
                 IsPlatformAdmin: principal.HasClaim(c => c.Type == ClaimNames.PlatformAdmin && c.Value == ClaimNames.TrueValue),
                 ImpersonatorUserId: ParseGuid(principal.FindFirst(ClaimNames.Impersonator)?.Value),
-                ApiKeyId: ParseGuid(principal.FindFirst(ClaimNames.ApiKey)?.Value),
+                ApiKeyId: apiKeyId,
                 CorrelationId: correlationId,
                 IpAddress: context.Connection.RemoteIpAddress?.ToString());
 
@@ -42,6 +44,11 @@ public sealed class RequestContextMiddleware(RequestDelegate next)
             {
                 tenantScope = tenantSetter.BeginScope(tid, principal.FindFirst(ClaimNames.TenantSlug)?.Value);
             }
+
+            // senseik-018 (E-01): audit log Source - an API key claim means the call came in through the API
+            // integration surface rather than a browser session, even though both are otherwise indistinguishable
+            // "authenticated user" requests to IdentityAuditLogInterceptor.
+            sourceScope = auditSource.BeginScope(apiKeyId is not null ? AuditSources.Api : AuditSources.Web);
         }
 
         try
@@ -50,6 +57,7 @@ public sealed class RequestContextMiddleware(RequestDelegate next)
         }
         finally
         {
+            sourceScope?.Dispose();
             tenantScope?.Dispose();
         }
     }
