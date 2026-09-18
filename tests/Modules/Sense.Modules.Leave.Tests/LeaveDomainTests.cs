@@ -312,6 +312,62 @@ public sealed class LeaveBalanceEngineTests
             .ShouldBe(20m); // kıdem 1 yılı doldurunca yaş istisnası tabanı devreye girer
     }
 
+    /// <summary>senseik-007 (A-01 regresyon): 50+ yaş istisnası, 18- istisnasıyla simetrik olarak md.53/IV tabanını
+    /// (AgeExceptionMinDays=20) tetiklemeli - kademe tabanı (Tier1=14) düşük kaldığında.</summary>
+    [Fact]
+    public void AnnualType_Age50OrOlder_AppliesTwentyDayFloor()
+    {
+        var start = new DateOnly(2020, 1, 1);
+        var type = AnnualType();
+        var accrualDate = start.AddYears(1);
+        var oldBirthDate = accrualDate.AddYears(-55);
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, oldBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(20m);
+    }
+
+    /// <summary>Symmetric negative case: below the 50 floor (and below the tier2 threshold) the type's own
+    /// seniority tiers alone decide the day count - the age exception must not fire.</summary>
+    [Fact]
+    public void AnnualType_UnderFifty_UsesSeniorityTiersOnly()
+    {
+        var start = new DateOnly(2020, 1, 1);
+        var type = AnnualType();
+        var accrualDate = start.AddYears(1);
+        var underFiftyBirthDate = accrualDate.AddYears(-49);
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, underFiftyBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(14m);
+    }
+
+    /// <summary>Boundary: age == OldAgeMin (50) is inclusive ("age &gt;= OldAgeMin" in LeaveBalanceEngine), so the
+    /// floor must already apply at exactly 50, not only strictly above it.</summary>
+    [Fact]
+    public void AnnualType_AgeExactlyOldAgeMin_AppliesTwentyDayFloor()
+    {
+        var start = new DateOnly(2020, 1, 1);
+        var type = AnnualType();
+        var accrualDate = start.AddYears(1);
+        var exactlyFiftyBirthDate = accrualDate.AddYears(-StatutoryAnnualLeave.Turkey2026.OldAgeMin);
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, exactlyFiftyBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(20m);
+    }
+
+    /// <summary>When seniority alone already exceeds the age-exception floor (tier3, 26 &gt; 20), the tier wins -
+    /// the floor never pulls the entitlement DOWN, only up.</summary>
+    [Fact]
+    public void AnnualType_SeniorityTierAboveFloor_TierWinsOverAgeFloor()
+    {
+        var start = new DateOnly(2005, 1, 1);
+        var type = AnnualType();
+        var accrualDate = start.AddYears(15);
+        var fiftyBirthDate = accrualDate.AddYears(-50);
+
+        LeaveBalanceEngine.YearlyEntitlement(type, start, accrualDate, fiftyBirthDate, StatutoryAnnualLeave.Turkey2026)
+            .ShouldBe(26m);
+    }
+
     [Fact]
     public void CarryOver_Modes_IncludingNegativeBalance()
     {

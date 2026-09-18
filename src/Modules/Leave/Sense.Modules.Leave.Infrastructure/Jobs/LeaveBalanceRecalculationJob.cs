@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Domain;
@@ -17,6 +18,11 @@ namespace Sense.Modules.Leave.Infrastructure.Jobs;
 /// today, tenant by tenant (each tenant in its own tenant scope, DI scope and transaction). Idempotent — generated rows are
 /// replaced, Usage/ExtraGrant/Adjustment/OpeningBalance rows are kept — so running it daily moves accruals and period
 /// roll-overs forward without an event.
+/// Also backfills/resyncs EmployeeLeaveProfile.BirthDate from Employee.Contracts.IEmployeeBirthDateLookup in bulk
+/// (one batched call per tenant, never one lookup per employee) before regenerating: this is what makes the ≤18/≥50
+/// statutory age exception (4857 md.53/IV) apply retroactively to profiles created before the exception was wired up.
+/// NOTE (senseik-007): the very first nightly run after this ships will therefore raise the balances of every
+/// existing ≤18/≥50-year-old employee across every tenant, retroactively - see docs/handoffs/age-50-exception.md §5.
 /// </summary>
 public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory scopes, ILogger<LeaveBalanceRecalculationJob> logger)
 {
@@ -55,8 +61,19 @@ public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory sc
         var ruleSets = scope.ServiceProvider.GetRequiredService<ILeaveRuleSetRepository>();
         var balances = scope.ServiceProvider.GetRequiredService<LeaveBalanceService>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<ILeaveUnitOfWork>();
+        var birthDateLookup = scope.ServiceProvider.GetRequiredService<IEmployeeBirthDateLookup>();
 
         var profiles = await db.Profiles.ToListAsync(cancellationToken);
+
+        // Batched (not one lookup per employee - N+1) so this stays cheap on large tenants; also the retroactive
+        // backfill for profiles created before BirthDate was wired up (see the class remark and the handoff doc).
+        var birthDates = await birthDateLookup.GetBirthDatesAsync(tenantId, profiles.Select(p => p.EmployeeId).ToList(), cancellationToken);
+        foreach (var profile in profiles)
+        {
+            var birthDate = birthDates.TryGetValue(profile.EmployeeId, out var b) ? (DateOnly?)b : null;
+            profile.SetDates(profile.HireDate, profile.LeaveAccrualStartDate, birthDate);
+        }
+
         var sets = new Dictionary<Guid, LeaveRuleSet?>();
         var count = 0;
         foreach (var profile in profiles)

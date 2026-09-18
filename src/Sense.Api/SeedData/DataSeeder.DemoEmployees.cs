@@ -78,6 +78,11 @@ public partial class DataSeeder
                 info = info with { HireDate = today.AddYears(-tenure.Years).AddDays(-tenure.DaysIntoPeriod) };
             }
 
+            if (FixedDemoAccountAgeYears.TryGetValue(user.Email, out var ageYears))
+            {
+                info = info with { BirthDate = today.AddYears(-ageYears) };
+            }
+
             var employee = CreateEmployeeOrThrow(tenantId, info, user.Id, placementUnit.Id);
             employeeCtx.Employees.Add(employee);
             user.LinkEmployee(employee.Id);
@@ -231,6 +236,9 @@ public partial class DataSeeder
         ("yonetici@demo.local", "Fatma", "Çelik", SystemRoleCodes.Manager),
         ("calisan@demo.local", "Ali", "Şahin", SystemRoleCodes.Employee),
         ("denetci@demo.local", "Zeynep", "Arslan", SystemRoleCodes.Auditor),
+        // senseik-007 (A-01 regresyon): 4857 md.53/IV 50+ yaş istisnasının demo'da görünür kanıtı - 56 yaş, 2 yıl
+        // kıdem, varsayılan kural setiyle (AnnualDays=14, AgeExceptionMinDays=20) 2 tam dönem x 20 gün = 40 gün.
+        ("testyas@demo.local", "Test", "Yaş", SystemRoleCodes.Employee),
     ];
 
     /// <summary>
@@ -245,6 +253,17 @@ public partial class DataSeeder
         ["yonetici@demo.local"] = (7, 110),
         ["calisan@demo.local"] = (4, 80),
         ["denetci@demo.local"] = (3, 130),
+        ["testyas@demo.local"] = (2, 0),
+    };
+
+    /// <summary>
+    /// Explicit BirthDate override (as an age in years, computed from today) for fixed demo accounts where the
+    /// account's whole purpose is to demonstrate an age-dependent rule - senseik-007's "Test Yaş" needs exactly 56,
+    /// not <see cref="NextDemoEmployeeInfo"/>'s random 1970-2003 birth date range.
+    /// </summary>
+    private static readonly Dictionary<string, int> FixedDemoAccountAgeYears = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["testyas@demo.local"] = 56,
     };
 
     /// <summary>Upcoming leave of colleagues (non-fixed employees): days from today to the start, working days, approved or pending.</summary>

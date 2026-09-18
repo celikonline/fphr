@@ -84,7 +84,11 @@ public partial class DataSeeder
         foreach (var (employee, email) in active)
         {
             var hireDate = employee.HireDate!.Value;
-            var profile = EmployeeLeaveProfile.Create(seed.TenantId, employee.Id, ruleSet.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate);
+            var accrualStart = employee.LeaveAccrualStartDate ?? hireDate;
+            var profile = EmployeeLeaveProfile.Create(seed.TenantId, employee.Id, ruleSet.Id, hireDate, accrualStart);
+            // Mirrors what Leave's EmployeeHiredHandler now does on the real EmployeeHired path (senseik-007): without
+            // this, every demo profile's BirthDate stays null and the ≤18/≥50 statutory age exception never fires here.
+            profile.SetDates(hireDate, accrualStart, employee.BirthDate);
             leaveCtx.Profiles.Add(profile);
 
             var usage = new List<LeaveLedgerEntry>();
