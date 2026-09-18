@@ -36,6 +36,8 @@ using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
+using Sense.Modules.OccupationalSafety.Infrastructure;
+using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence.Outbox;
@@ -247,6 +249,18 @@ builder.Services.AddModuleHandlers(
     typeof(AnnouncementsDbContext).Assembly,
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
+
+// Occupational Safety (İSG, senseik-015, Faz 0-1): hazard classification + risk assessments only - no cross-module
+// consumers or own-outbox writes yet (Documents' materialization hooks, committee/accident events, PPE zimmet are
+// later phases per the handoff doc), so just DbContext + handler scanning so its query/command handlers resolve -
+// mirrors Integrations' "no OutboxPollingService yet" note above.
+builder.Services.AddModuleDbContext<OhsDbContext>(builder.Configuration, OhsDbContext.SchemaName);
+builder.Services.AddOhsCoreServices();
+builder.Services.AddModuleHandlers(
+    OhsDbContext.SchemaName,
+    typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
+    typeof(OhsDbContext).Assembly,
+    typeof(Sense.Modules.OccupationalSafety.Contracts.OhsPermissions).Assembly);
 
 await builder.Build().RunAsync();
 

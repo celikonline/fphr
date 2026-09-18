@@ -43,6 +43,8 @@ const DocumentTypesPage = lazy(() => import("@/pages/settings/document-types"));
 const MissingDocumentsReportPage = lazy(() => import("@/pages/settings/missing-documents-report"));
 const AssetCategoriesPage = lazy(() => import("@/pages/settings/asset-categories"));
 const ExpenseCategoriesPage = lazy(() => import("@/pages/settings/expense-categories"));
+const OhsHazardClassificationPage = lazy(() => import("@/pages/settings/ohs-hazard-classification"));
+const OhsRiskAssessmentsPage = lazy(() => import("@/pages/settings/ohs-risk-assessments"));
 const PayrollPeriodsPage = lazy(() => import("@/pages/payroll/periods"));
 const PayrollPeriodDetailPage = lazy(() => import("@/pages/payroll/period-detail"));
 const WorkflowInboxPage = lazy(() => import("@/pages/inbox"));
@@ -164,6 +166,8 @@ export default function App() {
             <Route path="settings/company/missing-documents" element={<MissingDocumentsReportPage />} />
             <Route path="settings/company/asset-categories" element={<AssetCategoriesPage />} />
             <Route path="settings/company/expense-categories" element={<ExpenseCategoriesPage />} />
+            <Route path="settings/company/ohs-hazard-classification" element={<OhsHazardClassificationPage />} />
+            <Route path="settings/company/ohs-risk-assessments" element={<OhsRiskAssessmentsPage />} />
             <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
             <Route
               path="settings/rules/*"

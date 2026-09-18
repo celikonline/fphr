@@ -41,6 +41,7 @@ i18n
       "performance",
       "payroll",
       "support",
+      "ohs",
     ],
     interpolation: {
       escapeValue: false,

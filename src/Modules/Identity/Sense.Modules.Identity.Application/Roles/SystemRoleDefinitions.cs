@@ -63,7 +63,11 @@ public static class SystemRoleDefinitions
             ["identity.users.*", "identity.roles.view", "identity.audit.view", "organization.*", "employee.*", "leave.*", "workflow.*", "attendance.*",
              "assets.*", "expense.*", "training.*", "documents.*", "announcements.*", "performance.*", "compensation.*", "recruitment.*",
              "analytics.*", "reports.*", "notifications.*", "payroll.payslips.view", "payroll.periods.view", "ai.*", "datatransfer.*", AccessSettingPermissions.Bypass,
-             .. PermissionPatterns.SelfService],
+             .. PermissionPatterns.SelfService,
+             // senseik-015 (İSG modülü, Faz 0-1): hazard classification + risk assessments are HR/safety-compliance
+             // territory, same tier as assets.*/documents.* above - appended rather than inserted to keep this a
+             // pure addition (hot file, append-only).
+             "ohs.*"],
             ["identity.users.impersonate", "identity.security.manage", "identity.api_keys.manage", "payroll.periods.lock", "billing.*"]),
 
         new(SystemRoleCodes.HRSpecialist, DataScope.Company,
@@ -73,7 +77,9 @@ public static class SystemRoleDefinitions
              // reports.* (Reporting catalog) but not this, so the workforce KPI dashboard (/app/reports "İK
              // göstergeleri") was invisible to them despite being exactly who'd use it.
              "analytics.*",
-             .. PermissionPatterns.SelfService],
+             .. PermissionPatterns.SelfService,
+             // senseik-015 (İSG modülü, Faz 0-1): same reasoning as the HR role above.
+             "ohs.*"],
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
