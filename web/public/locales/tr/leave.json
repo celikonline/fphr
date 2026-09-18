@@ -191,7 +191,12 @@
     "days": "Gün",
     "status": "Durum",
     "source": "Kaynak",
-    "description": "Açıklama"
+    "description": "Açıklama",
+    "submittedAt": "Oluşturulma Tarihi",
+    "filterType": "İzin Türü",
+    "filterStatus": "Durum",
+    "allTypes": "Tümü",
+    "allStatuses": "Tümü"
   },
   "my": {
     "title": "İzinlerim",
@@ -318,7 +323,12 @@
     "resubmissionOf": "Bu talep, reddedilen bir talebin yeniden gönderimidir.",
     "cancelledAt": "İptal edildi: {{at}}",
     "halfDayPeriod": "Gün dilimi",
-    "timeRange": "Saat aralığı"
+    "timeRange": "Saat aralığı",
+    "remainingBalance": "Kalan izin bakiyesi",
+    "overlappingLeaves": {
+      "title": "Çakışan izinler ({{count}})",
+      "more": "+{{count}} kişi daha"
+    }
   },
   "request": {
     "halfDayPeriod": {

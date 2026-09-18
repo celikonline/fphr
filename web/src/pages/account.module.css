@@ -8,3 +8,32 @@
   width: 100%;
   justify-content: space-between;
 }
+
+/* Palette picker swatches: clickable, with a focus ring; the selected one gets an outline in its own color. */
+.paletteSwatch,
+.paletteSwatchSelected {
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+  transition:
+    transform 100ms ease,
+    box-shadow 100ms ease;
+}
+
+.paletteSwatch:hover,
+.paletteSwatchSelected:hover {
+  transform: scale(1.08);
+}
+
+.paletteSwatch:focus-visible,
+.paletteSwatchSelected:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+.paletteSwatchSelected {
+  box-shadow:
+    0 0 0 2px var(--mantine-color-body),
+    0 0 0 4px currentColor;
+  color: var(--mantine-primary-color-filled);
+}

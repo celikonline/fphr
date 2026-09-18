@@ -1,118 +1,118 @@
 {
-  "genericError": "[DE] The action could not be completed.",
+  "genericError": "Die Aktion konnte nicht abgeschlossen werden.",
   "payments": {
-    "title": "[DE] My Payments",
-    "subtitle": "[DE] Status of your expense and advance requests.",
-    "empty": "[DE] You have no expense or advance requests yet.",
+    "title": "Meine Zahlungen",
+    "subtitle": "Status Ihrer Spesen- und Vorschussanträge.",
+    "empty": "Sie haben noch keine Spesen- oder Vorschussanträge.",
     "col": {
-      "kind": "[DE] Type",
-      "date": "[DE] Date",
-      "description": "[DE] Description",
-      "amount": "[DE] Amount",
-      "status": "[DE] Status"
+      "kind": "Art",
+      "date": "Datum",
+      "description": "Beschreibung",
+      "amount": "Betrag",
+      "status": "Status"
     },
     "kind": {
-      "expense": "[DE] Expense",
-      "advance": "[DE] Advance",
-      "overtime": "[DE] Overtime payment",
-      "adjustment": "[DE] Adjustment"
+      "expense": "Spesen",
+      "advance": "Vorschuss",
+      "overtime": "Überstundenvergütung",
+      "adjustment": "Korrektur"
     }
   },
   "status": {
-    "draft": "[DE] Draft",
-    "submitted": "[DE] Pending approval",
-    "approved": "[DE] Approved",
-    "rejected": "[DE] Rejected",
-    "paid": "[DE] Paid"
+    "draft": "Entwurf",
+    "submitted": "Wartet auf Genehmigung",
+    "approved": "Genehmigt",
+    "rejected": "Abgelehnt",
+    "paid": "Ausgezahlt"
   },
   "claim": {
-    "newButton": "[DE] + Expense",
-    "dialogTitle": "[DE] Expense claim",
-    "description": "[DE] General description",
-    "descriptionPlaceholder": "[DE] E.g. client visit",
-    "continue": "[DE] Continue",
-    "addItem": "[DE] Add receipt",
-    "noItems": "[DE] No receipts added yet.",
-    "total": "[DE] Total amount",
-    "submit": "[DE] Submit",
-    "submitted": "[DE] Your claim has been submitted."
+    "newButton": "+ Spesen",
+    "dialogTitle": "Spesenabrechnung",
+    "description": "Allgemeine Beschreibung",
+    "descriptionPlaceholder": "z. B. Kundenbesuch",
+    "continue": "Weiter",
+    "addItem": "Beleg hinzufügen",
+    "noItems": "Noch keine Belege hinzugefügt.",
+    "total": "Gesamtbetrag",
+    "submit": "Einreichen",
+    "submitted": "Ihre Abrechnung wurde eingereicht."
   },
   "item": {
-    "category": "[DE] Category",
-    "categoryPlaceholder": "[DE] Select a category",
-    "amount": "[DE] Amount",
-    "taxRate": "[DE] Tax rate",
-    "description": "[DE] Receipt description",
-    "exceedsLimit": "[DE] Over limit",
-    "exceedsLimitTooltip": "[DE] This receipt's amount exceeds its category's maximum.",
-    "limitWarning": "[DE] This amount exceeds the selected category's {{limit}} limit. You can still add the receipt.",
-    "noReceiptWarning": "[DE] Items without a receipt are not paid tax-free in payroll."
+    "category": "Kategorie",
+    "categoryPlaceholder": "Kategorie auswählen",
+    "amount": "Betrag",
+    "taxRate": "Steuersatz",
+    "description": "Belegbeschreibung",
+    "exceedsLimit": "Über dem Limit",
+    "exceedsLimitTooltip": "Der Betrag dieses Belegs überschreitet das Maximum seiner Kategorie.",
+    "limitWarning": "Dieser Betrag überschreitet das Limit von {{limit}} der gewählten Kategorie. Sie können den Beleg trotzdem hinzufügen.",
+    "noReceiptWarning": "Positionen ohne Beleg werden in der Lohnabrechnung nicht steuerfrei ausgezahlt."
   },
   "advance": {
-    "newButton": "[DE] + Advance",
-    "dialogTitle": "[DE] Advance request",
-    "amount": "[DE] Amount",
-    "installmentRequested": "[DE] I want installments",
-    "installmentCount": "[DE] Installment count",
-    "description": "[DE] Description",
-    "submit": "[DE] Submit",
-    "submitted": "[DE] Your request has been submitted."
+    "newButton": "+ Vorschuss",
+    "dialogTitle": "Vorschussantrag",
+    "amount": "Betrag",
+    "installmentRequested": "Ich möchte Ratenzahlung",
+    "installmentCount": "Anzahl der Raten",
+    "description": "Beschreibung",
+    "submit": "Einreichen",
+    "submitted": "Ihr Antrag wurde eingereicht."
   },
   "categories": {
-    "travel": "[DE] Travel and Transportation",
-    "food": "[DE] Food and Beverage"
+    "travel": "Reise und Transport",
+    "food": "Verpflegung"
   },
   "admin": {
-    "title": "[DE] Expense & Advance Payments",
-    "subtitle": "[DE] View approved expense and advance requests, and mark them as paid.",
+    "title": "Spesen- & Vorschusszahlungen",
+    "subtitle": "Sehen Sie genehmigte Spesen- und Vorschussanträge ein und markieren Sie sie als ausgezahlt.",
     "tabs": {
-      "claims": "[DE] Expense Claims",
-      "advances": "[DE] Advance Requests"
+      "claims": "Spesenabrechnungen",
+      "advances": "Vorschussanträge"
     },
     "col": {
-      "description": "[DE] Description",
-      "submittedAt": "[DE] Submitted on",
-      "requestedDate": "[DE] Requested on",
-      "amount": "[DE] Amount",
-      "status": "[DE] Status"
+      "description": "Beschreibung",
+      "submittedAt": "Eingereicht am",
+      "requestedDate": "Beantragt am",
+      "amount": "Betrag",
+      "status": "Status"
     },
-    "empty": "[DE] No requests found for this status.",
-    "pay": "[DE] Pay",
-    "payDialogTitle": "[DE] Confirm payment",
-    "payAmount": "[DE] Amount to pay",
-    "paymentNote": "[DE] Payment note",
-    "paymentNotePlaceholder": "[DE] E.g. bank transfer reference",
-    "confirmPay": "[DE] Mark as paid",
-    "paidSuccess": "[DE] Payment recorded."
+    "empty": "Für diesen Status wurden keine Anträge gefunden.",
+    "pay": "Auszahlen",
+    "payDialogTitle": "Zahlung bestätigen",
+    "payAmount": "Auszuzahlender Betrag",
+    "paymentNote": "Zahlungsnotiz",
+    "paymentNotePlaceholder": "z. B. Überweisungsreferenz",
+    "confirmPay": "Als ausgezahlt markieren",
+    "paidSuccess": "Zahlung erfasst."
   },
   "categoriesAdmin": {
-    "title": "[DE] Expense Categories",
-    "subtitle": "[DE] Manage the expense category catalog employees pick from when adding receipts.",
-    "add": "[DE] Add category",
-    "addTitle": "[DE] Add category",
-    "editTitle": "[DE] Edit category",
-    "maxAmountHint": "[DE] Highest amount a receipt in this category may have; leave blank for no limit.",
-    "showInactive": "[DE] Show inactive categories too",
-    "active": "[DE] Active",
-    "inactive": "[DE] Inactive",
-    "deactivate": "[DE] Deactivate",
-    "reactivate": "[DE] Reactivate",
-    "empty": "[DE] No categories yet.",
-    "saved": "[DE] Category saved.",
-    "statusSaved": "[DE] Category status updated.",
-    "codeHint": "[DE] Fixed code used in exports and reports; cannot be changed later.",
+    "title": "Spesenkategorien",
+    "subtitle": "Verwalten Sie den Katalog der Spesenkategorien, aus dem Mitarbeitende beim Hinzufügen von Belegen wählen.",
+    "add": "Kategorie hinzufügen",
+    "addTitle": "Kategorie hinzufügen",
+    "editTitle": "Kategorie bearbeiten",
+    "maxAmountHint": "Höchstbetrag, den ein Beleg dieser Kategorie haben darf; für kein Limit leer lassen.",
+    "showInactive": "Auch inaktive Kategorien anzeigen",
+    "active": "Aktiv",
+    "inactive": "Inaktiv",
+    "deactivate": "Deaktivieren",
+    "reactivate": "Reaktivieren",
+    "empty": "Noch keine Kategorien vorhanden.",
+    "saved": "Kategorie gespeichert.",
+    "statusSaved": "Kategoriestatus aktualisiert.",
+    "codeHint": "Fester Code für Exporte und Berichte; er kann später nicht geändert werden.",
     "columns": {
-      "name": "[DE] Name",
-      "code": "[DE] Code",
-      "defaultTaxRate": "[DE] Default VAT rate",
-      "maxAmount": "[DE] Limit (₺)",
-      "status": "[DE] Status"
+      "name": "Name",
+      "code": "Code",
+      "defaultTaxRate": "Standard-MwSt.-Satz",
+      "maxAmount": "Limit (₺)",
+      "status": "Status"
     },
     "errors": {
-      "generic": "[DE] Category could not be saved.",
-      "loadFailed": "[DE] Categories could not be loaded.",
-      "codeRequired": "[DE] Code is required.",
-      "nameRequired": "[DE] Name is required."
+      "generic": "Die Kategorie konnte nicht gespeichert werden.",
+      "loadFailed": "Die Kategorien konnten nicht geladen werden.",
+      "codeRequired": "Code ist erforderlich.",
+      "nameRequired": "Name ist erforderlich."
     }
   }
 }

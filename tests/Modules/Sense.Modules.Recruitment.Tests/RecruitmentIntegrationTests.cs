@@ -670,7 +670,6 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     {
         var tenantId = Guid.NewGuid();
         var candidateId = Guid.NewGuid();
-        var applicationId = Guid.NewGuid();
         var postingId = Guid.NewGuid();
 
         var fake = new FakeJobApplicationRepository();
@@ -686,7 +685,10 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         var logger = new NullLogger<JobApplicationStageChangedHandler>();
         var handler = new JobApplicationStageChangedHandler(fake, fakeCandidate, fakeProvisioning, fakeUnitOfWork, logger);
 
-        var @event = new JobApplicationStageChanged(tenantId, applicationId, postingId, candidateId, nameof(ApplicationStage.Hired));
+        // Tur 11 kapanışı: event artık gerçekte kaydedilen application.Id'yi taşıyor - önceden ilgisiz, ayrı bir
+        // Guid.NewGuid() kullanılıyordu, handler @event.JobApplicationId ile fake repoda hiçbir zaman eşleşen bir
+        // kayıt bulamıyor ve sessizce erken çıkıyordu (bu test hiçbir zaman geçmemişti).
+        var @event = new JobApplicationStageChanged(tenantId, application.Id, postingId, candidateId, nameof(ApplicationStage.Hired));
 
         await handler.Handle(@event, CancellationToken.None);
 
@@ -699,7 +701,7 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         request.NationalId.ShouldBeNull();
         request.OrgUnitId.ShouldBeNull();
         request.PositionTitle.ShouldBeNull();
-        request.SourceApplicationId.ShouldBe(applicationId);
+        request.SourceApplicationId.ShouldBe(application.Id);
         fakeUnitOfWork.SaveChangesCalled.ShouldBeTrue();
     }
 

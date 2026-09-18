@@ -168,6 +168,14 @@ export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | n
   return data;
 }
 
+/** Same row/day shape as {@link getTeamTimesheet}, one column per day of the calendar month ("Ay" görünümü, 11.7 yol haritası). */
+export async function getTeamMonth(monthStart: string, orgUnitId?: string | null): Promise<TeamWeekRow[]> {
+  const { data } = await apiClient.get<TeamWeekRow[]>(`${ATTENDANCE_BASE}/timesheet/team/month`, {
+    params: { monthStart, orgUnitId: orgUnitId || undefined },
+  });
+  return data;
+}
+
 // ---------------------------------------------------------------- Müsaitlik / Availability
 
 /** `AvailabilityKind` (package A5, 11.3.6 "müsait değilim"). */

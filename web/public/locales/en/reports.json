@@ -1,161 +1,163 @@
 {
-  "title": "HR Analytics and Reports",
-  "subtitle": "Track company workforce metrics and real-time trends to base strategic decisions on concrete data.",
-  "empty": "No KPI data for the selected period.",
-  "filters": {
-    "from": "Start Date",
-    "to": "End Date",
-    "clear": "Clear Filters",
-    "periodYear": "Year",
-    "unitFilter": "Department / Unit",
-    "allUnits": "All Units"
-  },
+  "title": "Reports",
+  "subtitle": "Generate ready-made reports with unit, period and date filters and download them as Excel. Your recent reports are listed below.",
   "tabs": {
-    "overview": "Overview & Smart Insights",
-    "demographics": "Company Profile & Demographics",
-    "turnover": "Turnover & Retention",
-    "productivity": "Productivity, Leaves & Overtime",
-    "career": "Career & Mobility",
-    "breakdown": "Detailed Data Table"
+    "reports": "Reports",
+    "kpis": "HR indicators"
   },
-  "insights": {
-    "title": "Digital HR Analyst Ready for Action",
-    "subtitle": "AI-powered analytics engine automatically detects anomalies, trend deviations, and opportunities for workforce optimization.",
-    "badgeAi": "AI Powered Analytics",
-    "anomalyTitle": "Outlier / Trend Deviation",
-    "anomalyDesc": "Early turnover (within the first 6 months) has exceeded company targets by 18% in the last quarter. Reviewing onboarding and orientation checkpoints is recommended.",
-    "recommendationTitle": "Leave Utilization & Balancing Recommendation",
-    "recommendationDesc": "Annual leave usage is currently at 42%. To prevent end-of-year leave accumulation and operational bottlenecks, department-based scheduling can be initiated.",
-    "correlationTitle": "Cross-Metric Correlation",
-    "correlationDesc": "Employees who received an internal promotion or role progression display a 94% retention rate. Internal career ladders directly reduce turnover."
-  },
-  "charts": {
-    "monthlyTurnoverTitle": "Monthly Turnover Trend (Last 12 Months)",
-    "monthlyTurnoverSubtitle": "Monthly employee turnover rate (%) vs target benchmark",
-    "monthlyMovementTitle": "Workforce Movement (Hires vs Exits)",
-    "monthlyMovementSubtitle": "Hired employees, terminations, and net headcount change",
-    "hires": "Hires",
-    "terminations": "Terminations",
-    "netChange": "Net Change",
-    "turnoverRate": "Turnover Rate (%)",
-    "genderTitle": "Gender Distribution",
-    "genderSubtitle": "Company-wide workforce gender proportions and counts",
-    "generationTitle": "Generations & Age Groups",
-    "generationSubtitle": "Gen Z, Millennials (Gen Y), Gen X, and Baby Boomers",
-    "tenureTitle": "Tenure / Seniority Distribution",
-    "tenureSubtitle": "Employee count by length of service",
-    "departmentTitle": "Headcount by Department",
-    "departmentSubtitle": "Active employee concentration per department",
-    "employmentTypeTitle": "Employment & Work Model",
-    "employmentTypeSubtitle": "Full-time, hybrid, remote, and intern distributions",
-    "exitReasonsTitle": "Reasons for Leaving",
-    "exitReasonsSubtitle": "Reported exit reasons and percentage breakdown",
-    "leaveByTypeTitle": "Leave Usage by Type",
-    "leaveByTypeSubtitle": "Annual, casual, medical, and other leave categories",
-    "leaveByDeptTitle": "Leave Usage Rate by Department",
-    "leaveByDeptSubtitle": "Percentage of entitled leave days used (%)",
-    "overtimeTrendTitle": "Overtime Cost & Affected Employee Trend",
-    "overtimeTrendSubtitle": "Monthly overtime cost and employee participation",
-    "careerMovesTitle": "Career Change Types",
-    "careerMovesSubtitle": "Promotions, lateral moves, and title adjustments",
-    "earlyTurnoverComparison": "Early Turnover (First 6 Months)",
-    "earlyTurnoverComparisonSubtitle": "Share of early exits among total terminations",
-    "tenureUnder1": "< 1 Year",
-    "tenure1to2": "1 - 2 Years",
-    "tenure3to5": "3 - 5 Years",
-    "tenure5to10": "5 - 10 Years",
-    "tenureOver10": "10+ Years"
-  },
-  "summary": {
-    "activeHeadcount": "Active Headcount",
-    "activeHeadcountHint": "Total active employees across the company",
-    "turnover": "Annual Turnover Rate",
-    "turnoverHint": "Trailing 12-month turnover rate",
-    "earlyTurnover": "First 6-Month Attrition",
-    "earlyTurnoverHint": "Share of early career exits",
-    "femaleRatio": "Female Employee Ratio",
-    "femaleRatioHint": "Workforce gender balance",
-    "leaveUsage": "Leave Usage Rate",
-    "leaveUsageHint": "Proportion of entitled leave utilized",
-    "promotions": "Career Mobility",
-    "promotionsHint": "Period promotions and internal movements"
-  },
-  "breakdown": {
-    "columns": {
-      "kpi": "KPI Name",
-      "dimension": "Dimension / Breakdown",
-      "count": "Count",
-      "share": "Share (%)"
-    },
-    "empty": "No breakdown data available."
-  },
-  "kpiSection": {
-    "title": "Workforce KPIs and Analytics"
-  },
-  "visuals": {
-    "eyebrow": "Strategic HR Analytics",
-    "title": "Transform Data into Strategic Decisions",
-    "caption": "Derived from real-time workforce metrics",
-    "snapshot": "Current Snapshot",
-    "total": "Total Headcount",
-    "distribution": "Distribution View",
-    "distributionHint": "Employee count by category",
-    "shareTitle": "Percentage Share",
-    "shareHint": "Proportion of total"
-  },
-  "kpi": {
-    "CAREER_PATH_RATIO": {
-      "label": "Career Path Ratio"
-    },
-    "GENDER_RATIO": {
-      "label": "Gender Ratio"
-    },
-    "TURNOVER_RATE": {
-      "label": "Turnover Rate"
-    },
-    "EARLY_TURNOVER_RATE": {
-      "label": "Early Turnover Rate"
-    },
-    "GENDER_RATIO_BY_UNIT": {
-      "label": "Gender Ratio by Unit"
-    },
-    "leaveUsage": {
-      "label": "Leave Usage Rate",
-      "detail": "{{used}} / {{total}} days used"
-    },
-    "overtimeCost": {
-      "label": "Overtime Cost",
-      "detail": "{{employeeCount}} employees · {{excludedCount}} excluded"
-    }
+  "categories": {
+    "administrative": "Administrative",
+    "employee": "Employee",
+    "leave": "Leave",
+    "finance": "Finance",
+    "other": "Other"
   },
   "catalog": {
-    "title": "Generate a Report",
-    "selectLabel": "Report Template",
-    "selectPlaceholder": "Select a report...",
-    "generate": "Generate",
-    "generateSuccess": "Report generated successfully.",
-    "generateError": "Could not generate the report.",
-    "empty": "There are no reports you can view.",
+    "title": "Report types",
+    "empty": "There are no ready-made reports you can access.",
+    "selectHint": "Pick a report type; its filters open alongside.",
     "documents": {
       "missingDocuments": {
-        "label": "Missing Documents Report"
+        "label": "Missing documents report",
+        "description": "Required document status per employee (missing, uploaded, waived) with due dates."
+      }
+    },
+    "employee": {
+      "list": {
+        "label": "Employee list report",
+        "description": "Headcount list: career placement, hire date, employment status, contact details and employment type."
+      }
+    },
+    "leave": {
+      "balance": {
+        "summary": {
+          "label": "Employee leave balance report",
+          "description": "Annual leave balances as of today: remaining, total entitled, carry-over losses, used and future approved leave."
+        }
+      },
+      "requests": {
+        "label": "Leave report",
+        "description": "Leave requests in the selected date range: type, duration, status, request and decision dates."
+      }
+    },
+    "finance": {
+      "salaries": {
+        "label": "Salary list report",
+        "description": "Salary records in effect today: amount, currency, net/gross, pay frequency and transport/meal allowances."
       }
     }
   },
+  "run": {
+    "title": "Generate report",
+    "generate": "Generate report",
+    "success": "Report generated; the download has started.",
+    "successNoDownload": "Report generated. You can download it from the recent reports list.",
+    "error": "The report could not be generated.",
+    "requiredHint": "* required filter",
+    "emailNote": "A link is sent to your registered e-mail address when the report is ready.",
+    "format": "Excel (.xlsx)",
+    "noFilters": "This report takes no filters; you can generate it right away."
+  },
+  "params": {
+    "orgUnitIds": "Units",
+    "orgUnitIdsPlaceholder": "All units",
+    "orgUnitIdsHint": "Selected units and their sub-units are included.",
+    "year": "Year",
+    "month": "Month",
+    "monthPlaceholder": "Whole year",
+    "dateRange": "Date range",
+    "from": "From",
+    "to": "To",
+    "includeTerminated": "Include terminated employees",
+    "presets": {
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisYear": "This year"
+    }
+  },
   "history": {
+    "title": "Recent reports",
     "columns": {
       "report": "Report",
       "status": "Status",
-      "requestedAt": "Requested At"
+      "requestedAt": "Requested at",
+      "file": "File"
     },
     "status": {
       "queued": "Queued",
-      "running": "Running",
-      "succeeded": "Succeeded",
+      "running": "Preparing",
+      "succeeded": "Completed",
       "failed": "Failed"
     },
     "download": "Download",
-    "downloadError": "Could not download the report file.",
-    "empty": "No reports have been generated yet."
+    "downloadError": "The report file could not be downloaded.",
+    "empty": "No reports have been generated yet.",
+    "fromEmail": "The report from your e-mail is ready; the download has started."
+  },
+  "kpis": {
+    "title": "HR indicators",
+    "subtitle": "Computed live from current employee data. The period filter affects turnover and career ratios; distributions show today's headcount.",
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "clear": "Clear",
+      "currentYear": "Current year"
+    },
+    "empty": "No indicator data for the selected period.",
+    "scopedNote": "Your permission is unit-scoped, so only the per-unit distribution is shown.",
+    "cards": {
+      "headcount": "Active headcount",
+      "turnover": "Turnover rate",
+      "turnoverHint": "Terminations in period / active headcount",
+      "earlyTurnover": "Early attrition share",
+      "earlyTurnoverHint": "Terminations in period with tenure under 6 months",
+      "careerPath": "Career mobility",
+      "careerPathHint": "Promotions, lateral moves and title changes in period / active headcount",
+      "leaveUsage": "Annual leave usage",
+      "leaveUsageHint": "{{used}} / {{total}} days ({{year}})",
+      "overtimeCost": "Overtime cost",
+      "overtimeCostHint": "{{month}} · {{employeeCount}} employees"
+    },
+    "charts": {
+      "gender": "Gender distribution",
+      "genderByUnit": "Headcount by unit and gender",
+      "department": "Headcount by unit",
+      "leaveByType": "Leave usage by type ({{year}})",
+      "careerMoves": "Career change types",
+      "noData": "No data to show",
+      "count": "People",
+      "days": "Days",
+      "suppressed": "Hidden (< 5)",
+      "suppressedCount": "{{count}} breakdown row(s) hidden for having fewer than 5 people - see the breakdown table for detail"
+    },
+    "breakdown": {
+      "title": "Breakdown table",
+      "columns": {
+        "kpi": "Indicator",
+        "dimension": "Breakdown",
+        "count": "Count",
+        "share": "Share"
+      },
+      "empty": "No breakdown data to show."
+    }
+  },
+  "kpi": {
+    "CAREER_PATH_RATIO": { "label": "Career path ratio" },
+    "GENDER_RATIO": { "label": "Gender distribution" },
+    "TURNOVER_RATE": { "label": "Turnover rate" },
+    "EARLY_TURNOVER_RATE": { "label": "Early attrition share (first 6 months)" },
+    "GENDER_RATIO_BY_UNIT": { "label": "Gender distribution by unit" },
+    "dimensions": {
+      "Promotion": "Promotion",
+      "LateralMove": "Lateral move",
+      "Demotion": "Demotion",
+      "TitleChange": "Title change",
+      "WithinFirstSixMonths": "Left within first 6 months",
+      "Male": "Male",
+      "Female": "Female",
+      "Unspecified": "Unspecified",
+      "Other": "Other",
+      "Unassigned": "No unit"
+    }
   }
 }

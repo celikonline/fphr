@@ -393,6 +393,33 @@
       "validFromRequired": "Position start date is required.",
       "validFromAfterPrevious": "The date must be after the previous record's start ({{date}}).",
       "validFromBeforeHire": "The date cannot be before the hire date ({{date}})."
+    },
+    "tabs": {
+      "position": "Position",
+      "workSchedule": "Work Schedule"
+    },
+    "workSchedule": {
+      "title": "Work schedule history",
+      "empty": "No work schedule assignment yet.",
+      "assign": "Assign Work Schedule",
+      "assignTitle": "Assign work schedule",
+      "assignDescription": "Add a new work schedule assignment for {{name}}. The previous assignment ends one day before this date.",
+      "assigned": "Work schedule assigned.",
+      "scheduleRequired": "A work schedule must be selected.",
+      "effectiveFromRequired": "Start date is required.",
+      "selectPlaceholder": "Select",
+      "col": {
+        "start": "Start",
+        "end": "End",
+        "duration": "Duration",
+        "schedule": "Work Schedule",
+        "assignedAt": "Assigned On"
+      },
+      "duration": {
+        "years": "{{count}} yr",
+        "months": "{{count}} mo",
+        "days": "{{count}} d"
+      }
     }
   },
   "payments": {
@@ -426,7 +453,9 @@
         "amountInvalid": "The salary amount must be a number greater than zero with at most two decimals.",
         "allowanceInvalid": "Transport and meal allowances must be zero or positive numbers with at most two decimals.",
         "duplicateDate": "A salary record effective {{date}} already exists."
-      }
+      },
+      "createdBy": "Created By",
+      "createdAt": "Created On"
     },
     "bank": {
       "title": "Bank accounts",

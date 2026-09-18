@@ -69,7 +69,9 @@
       "reasonRequired": "A waiver reason is required.",
       "uploadFailed": "The document could not be uploaded.",
       "invalidFile": "Unsupported file type or size (max 10 MB: PDF, image, Word, Excel)."
-    }
+    },
+    "searchPlaceholder": "Search documents",
+    "searchEmpty": "No documents match the search."
   },
   "expiry": {
     "expiredBadge": "Expired: {{date}}",

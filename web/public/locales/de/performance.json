@@ -1,132 +1,132 @@
 {
-  "genericError": "[DE] Something went wrong.",
+  "genericError": "Etwas ist schiefgelaufen.",
   "status": {
-    "open": "[DE] Open",
-    "inProgress": "[DE] In progress",
-    "completed": "[DE] Completed",
-    "cancelled": "[DE] Cancelled",
-    "archived": "[DE] Archived"
+    "open": "Offen",
+    "inProgress": "In Bearbeitung",
+    "completed": "Abgeschlossen",
+    "cancelled": "Storniert",
+    "archived": "Archiviert"
   },
   "my": {
-    "title": "[DE] My goals",
-    "subtitle": "[DE] View this period's goals and update your progress.",
-    "addGoal": "[DE] Add goal",
-    "empty": "[DE] You don't have any goals yet.",
-    "emptyCta": "[DE] Add your first goal",
-    "created": "[DE] Goal added.",
-    "targetDate": "[DE] Target date: {{date}}",
-    "progressLabel": "[DE] Progress: {{progress}}%",
-    "updateProgress": "[DE] Update progress",
-    "progressUpdated": "[DE] Progress updated."
+    "title": "Meine Ziele",
+    "subtitle": "Sehen Sie die Ziele dieser Periode ein und aktualisieren Sie Ihren Fortschritt.",
+    "addGoal": "Ziel hinzufügen",
+    "empty": "Sie haben noch keine Ziele.",
+    "emptyCta": "Ihr erstes Ziel hinzufügen",
+    "created": "Ziel hinzugefügt.",
+    "targetDate": "Zieldatum: {{date}}",
+    "progressLabel": "Fortschritt: {{progress}} %",
+    "updateProgress": "Fortschritt aktualisieren",
+    "progressUpdated": "Fortschritt aktualisiert."
   },
   "form": {
-    "newTitle": "[DE] New goal",
-    "title": "[DE] Title",
-    "description": "[DE] Description",
-    "targetDate": "[DE] Target date",
-    "targetDateCycleHint": "[DE] Cycle range: {{start}} – {{end}}",
-    "reviewCycle": "[DE] Review cycle",
-    "reviewCycleNone": "[DE] No cycle selected",
-    "submit": "[DE] Add"
+    "newTitle": "Neues Ziel",
+    "title": "Titel",
+    "description": "Beschreibung",
+    "targetDate": "Zieldatum",
+    "targetDateCycleHint": "Zyklusbereich: {{start}} – {{end}}",
+    "reviewCycle": "Beurteilungszyklus",
+    "reviewCycleNone": "Kein Zyklus ausgewählt",
+    "submit": "Hinzufügen"
   },
   "goals": {
     "errors": {
-      "targetDateOutsideCycle": "[DE] The target date must fall within the review cycle's date range.",
-      "reviewImmutable": "[DE] This goal belongs to a closed review cycle and can no longer be changed."
+      "targetDateOutsideCycle": "Das Zieldatum muss innerhalb des Zeitraums des Beurteilungszyklus liegen.",
+      "reviewImmutable": "Dieses Ziel gehört zu einem geschlossenen Beurteilungszyklus und kann nicht mehr geändert werden."
     }
   },
   "team": {
-    "title": "[DE] Team goals",
-    "subtitle": "[DE] View the goals of the employees on your team.",
-    "empty": "[DE] No goals recorded for your team.",
+    "title": "Teamziele",
+    "subtitle": "Sehen Sie die Ziele der Mitarbeitenden in Ihrem Team ein.",
+    "empty": "Für Ihr Team sind keine Ziele erfasst.",
     "col": {
-      "employee": "[DE] Employee",
-      "title": "[DE] Title",
-      "targetDate": "[DE] Target date",
-      "progress": "[DE] Progress",
-      "status": "[DE] Status"
+      "employee": "Mitarbeitende:r",
+      "title": "Titel",
+      "targetDate": "Zieldatum",
+      "progress": "Fortschritt",
+      "status": "Status"
     },
-    "cancel": "[DE] Cancel",
-    "cancelConfirmTitle": "[DE] Cancel goal",
-    "cancelConfirmDescription": "[DE] Are you sure you want to cancel \"{{title}}\"?",
-    "cancelled": "[DE] Goal cancelled.",
+    "cancel": "Stornieren",
+    "cancelConfirmTitle": "Ziel stornieren",
+    "cancelConfirmDescription": "Möchten Sie \"{{title}}\" wirklich stornieren?",
+    "cancelled": "Ziel storniert.",
     "assign": {
-      "action": "[DE] Assign goal",
-      "title": "[DE] Assign goal to employee",
-      "employee": "[DE] Employee",
-      "submit": "[DE] Assign",
-      "assigned": "[DE] Goal assigned."
+      "action": "Ziel zuweisen",
+      "title": "Ziel einer mitarbeitenden Person zuweisen",
+      "employee": "Mitarbeitende:r",
+      "submit": "Zuweisen",
+      "assigned": "Ziel zugewiesen."
     }
   },
   "reviewCycles": {
-    "title": "[DE] Review cycles",
-    "subtitle": "[DE] View the review cycles you are part of.",
-    "empty": "[DE] You don't have any review cycles assigned right now.",
-    "dateRange": "[DE] {{start}} – {{end}}",
+    "title": "Beurteilungszyklen",
+    "subtitle": "Sehen Sie die Beurteilungszyklen ein, an denen Sie beteiligt sind.",
+    "empty": "Ihnen ist derzeit kein Beurteilungszyklus zugeordnet.",
+    "dateRange": "{{start}} – {{end}}",
     "status": {
-      "draft": "[DE] Draft",
-      "active": "[DE] Active",
-      "closed": "[DE] Closed"
+      "draft": "Entwurf",
+      "active": "Aktiv",
+      "closed": "Geschlossen"
     },
     "tabs": {
-      "mine": "[DE] My cycles",
-      "all": "[DE] All cycles"
+      "mine": "Meine Zyklen",
+      "all": "Alle Zyklen"
     },
     "admin": {
       "filter": {
-        "label": "[DE] Filter by status",
-        "all": "[DE] All"
+        "label": "Nach Status filtern",
+        "all": "Alle"
       },
-      "empty": "[DE] No review cycles defined.",
-      "create": "[DE] Create cycle",
-      "createTitle": "[DE] New review cycle",
-      "createSubmit": "[DE] Create",
-      "created": "[DE] Review cycle created.",
+      "empty": "Es sind keine Beurteilungszyklen definiert.",
+      "create": "Zyklus anlegen",
+      "createTitle": "Neuer Beurteilungszyklus",
+      "createSubmit": "Anlegen",
+      "created": "Beurteilungszyklus angelegt.",
       "fields": {
-        "name": "[DE] Cycle name",
-        "startDate": "[DE] Start date",
-        "endDate": "[DE] End date"
+        "name": "Zyklusname",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum"
       },
       "errors": {
-        "invalidDateRange": "[DE] The end date must be after the start date.",
-        "nameRequired": "[DE] Cycle name is required."
+        "invalidDateRange": "Das Enddatum muss nach dem Startdatum liegen.",
+        "nameRequired": "Der Zyklusname ist erforderlich."
       },
-      "activate": "[DE] Activate",
-      "activated": "[DE] Cycle activated.",
-      "close": "[DE] Close",
-      "closed": "[DE] Cycle closed.",
-      "closeConfirmTitle": "[DE] Close cycle",
-      "closeConfirmDescription": "[DE] Are you sure you want to close \"{{name}}\"? This cannot be undone; once closed, no forms linked to this cycle can be published."
+      "activate": "Aktivieren",
+      "activated": "Zyklus aktiviert.",
+      "close": "Schließen",
+      "closed": "Zyklus geschlossen.",
+      "closeConfirmTitle": "Zyklus schließen",
+      "closeConfirmDescription": "Möchten Sie \"{{name}}\" wirklich schließen? Das kann nicht rückgängig gemacht werden; nach dem Schließen können keine mit diesem Zyklus verknüpften Formulare mehr veröffentlicht werden."
     }
   },
   "reviewForms": {
-    "openButton": "[DE] Forms",
-    "title": "[DE] {{name}} - Review forms",
-    "create": "[DE] Create form",
-    "createTitle": "[DE] New review form",
-    "createSubmit": "[DE] Create",
-    "created": "[DE] Review form created.",
-    "empty": "[DE] No review forms for this cycle.",
-    "questionCount": "[DE] {{count}} questions",
+    "openButton": "Formulare",
+    "title": "{{name}} – Beurteilungsformulare",
+    "create": "Formular anlegen",
+    "createTitle": "Neues Beurteilungsformular",
+    "createSubmit": "Anlegen",
+    "created": "Beurteilungsformular angelegt.",
+    "empty": "Für diesen Zyklus gibt es keine Beurteilungsformulare.",
+    "questionCount": "{{count}} Fragen",
     "status": {
-      "draft": "[DE] Draft",
-      "published": "[DE] Published"
+      "draft": "Entwurf",
+      "published": "Veröffentlicht"
     },
-    "publish": "[DE] Publish",
-    "published": "[DE] Form published.",
+    "publish": "Veröffentlichen",
+    "published": "Formular veröffentlicht.",
     "fields": {
-      "title": "[DE] Form title",
-      "questions": "[DE] Questions",
-      "questionText": "[DE] Question text"
+      "title": "Formulartitel",
+      "questions": "Fragen",
+      "questionText": "Fragetext"
     },
-    "addQuestion": "[DE] Add question",
-    "removeQuestion": "[DE] Remove question",
-    "totalWeight": "[DE] Total weight: {{total}}%",
+    "addQuestion": "Frage hinzufügen",
+    "removeQuestion": "Frage entfernen",
+    "totalWeight": "Gesamtgewichtung: {{total}} %",
     "errors": {
-      "weightsMustSumTo100": "[DE] The question weights must add up to 100%.",
-      "titleRequired": "[DE] Form title is required.",
-      "questionTextRequired": "[DE] Question text is required.",
-      "cycleImmutable": "[DE] This cycle is closed, so the form can no longer be published."
+      "weightsMustSumTo100": "Die Gewichtungen der Fragen müssen in Summe 100 % ergeben.",
+      "titleRequired": "Der Formulartitel ist erforderlich.",
+      "questionTextRequired": "Der Fragetext ist erforderlich.",
+      "cycleImmutable": "Dieser Zyklus ist geschlossen, das Formular kann nicht mehr veröffentlicht werden."
     }
   }
 }

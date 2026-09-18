@@ -512,6 +512,8 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         var directory = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeDirectory>();
         directory.GetContactsAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(ci => ci.ArgAt<IReadOnlyCollection<Guid>>(1).Select(id => new Sense.Modules.Employee.Contracts.EmployeeContact(id, "Ada", "Lovelace", null, null, null, "Active")).ToList());
-        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(services, directory, Substitute.For<IApprovalRequestLookup>());
+        // GetOrgUnitIdAsync defaults to null (unconfigured), so ResolveTeamOverlapAsync short-circuits to an empty overlap.
+        var employeeLookup = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeLookup>();
+        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(services, directory, employeeLookup, Substitute.For<IApprovalRequestLookup>());
     }
 }

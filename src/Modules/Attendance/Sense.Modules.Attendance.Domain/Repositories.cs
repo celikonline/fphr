@@ -1,6 +1,7 @@
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -92,6 +93,17 @@ public interface IEmployeeAvailabilityRepository
     Task<Result<EmployeeAvailability>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<EmployeeAvailability>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface IMonthlyTimesheetApprovalRepository
+{
+    void Add(MonthlyTimesheetApproval approval);
+
+    Task<MonthlyTimesheetApproval?> FindAsync(Guid employeeId, DateOnly periodMonth, CancellationToken cancellationToken = default);
+
+    /// <summary>Aylık puantaj ızgarası (S-11): every existing approval row for these employees in this period, in one query.</summary>
+    Task<IReadOnlyList<MonthlyTimesheetApproval>> ListForPeriodAsync(
+        IReadOnlyCollection<Guid> employeeIds, DateOnly periodMonth, CancellationToken cancellationToken = default);
 }
 
 public interface ICompensatoryWorkLedgerRepository

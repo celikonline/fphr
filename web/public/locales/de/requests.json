@@ -1,26 +1,26 @@
 {
-  "subtitle": "[DE] What would you like to request?",
-  "empty": "[DE] There is no request type available to you right now.",
+  "subtitle": "Was möchten Sie beantragen?",
+  "empty": "Derzeit steht Ihnen keine Antragsart zur Verfügung.",
   "types": {
     "leave": {
-      "title": "[DE] Leave request",
-      "description": "[DE] Annual, excuse, sick and other leave types."
+      "title": "Urlaubsantrag",
+      "description": "Jahresurlaub, Sonderurlaub, Krankheit und weitere Urlaubsarten."
     },
     "overtime": {
-      "title": "[DE] Overtime request",
-      "description": "[DE] Record the overtime you worked."
+      "title": "Überstundenantrag",
+      "description": "Erfassen Sie die von Ihnen geleisteten Überstunden."
     },
     "advance": {
-      "title": "[DE] Advance request",
-      "description": "[DE] An advance to be deducted from your salary."
+      "title": "Vorschussantrag",
+      "description": "Ein Vorschuss, der von Ihrem Gehalt einbehalten wird."
     },
     "expense": {
-      "title": "[DE] Expense claim",
-      "description": "[DE] Reimbursement for your business expenses."
+      "title": "Spesenabrechnung",
+      "description": "Erstattung Ihrer geschäftlichen Auslagen."
     },
     "visa": {
-      "title": "[DE] Visa document request",
-      "description": "[DE] Start a visa document process for travel."
+      "title": "Antrag auf Visumsunterlagen",
+      "description": "Starten Sie einen Visumsprozess für eine Reise."
     }
   }
 }

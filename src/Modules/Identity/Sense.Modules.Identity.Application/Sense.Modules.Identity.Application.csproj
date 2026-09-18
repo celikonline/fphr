@@ -9,6 +9,8 @@
     <!-- Cross-module contracts only (IOrgUnitLookup, IEmployeeDirectory/IEmployeeUserLinker), per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../Analytics/Sense.Modules.Analytics.Contracts/Sense.Modules.Analytics.Contracts.csproj" />
+    <ProjectReference Include="../../Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 
 namespace Sense.Modules.Leave.Infrastructure.Lookups;

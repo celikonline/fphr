@@ -136,7 +136,9 @@
       "startTimeRequired": "Başlangıç saatini girin.",
       "durationRequired": "Süreyi girin.",
       "leaveTypeRequired": "İzin türü seçin."
-    }
+    },
+    "week": "Hafta",
+    "month": "Ay"
   },
   "shiftLock": {
     "scheduledLockDate": "Otomatik kilit tarihi"

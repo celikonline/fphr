@@ -163,6 +163,54 @@ public sealed class NotificationPublishingIntegrationTests : TestFixture
         broken.NextAttemptAt.Value.ShouldBeGreaterThan(DateTime.UtcNow);
     }
 
+    [Fact]
+    public async Task Processor_AbortedMidBatch_KeepsTheDeliveryItAlreadySent_SoItIsNotSentTwice()
+    {
+        var tenantId = Guid.NewGuid();
+        _emailSender.CancelFor.Add("aborts@acme.test");
+
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            await PublishAsync(tenantId, RequestCreated("first@acme.test"));
+            await PublishAsync(tenantId, RequestCreated("aborts@acme.test"));
+        }
+
+        using (var scope = ServiceProvider!.CreateScope())
+        {
+            var processor = scope.ServiceProvider.GetRequiredService<EmailDeliveryProcessor>();
+            await Should.ThrowAsync<OperationCanceledException>(() => processor.ProcessAsync());
+        }
+
+        // An SMTP send cannot be rolled back: the first row must stay Sent even though the batch aborted after it.
+        using (var verify = ServiceProvider!.CreateScope())
+        {
+            var deliveries = await verify.ServiceProvider.GetRequiredService<NotificationsDbContext>().Deliveries
+                .IgnoreQueryFilters().AsNoTracking().ToDictionaryAsync(d => d.RecipientAddress);
+            deliveries["first@acme.test"].Status.ShouldBe(NotificationDeliveryStatus.Sent);
+            deliveries["aborts@acme.test"].Status.ShouldBe(NotificationDeliveryStatus.Pending);
+            deliveries["aborts@acme.test"].Attempts.ShouldBe(0);
+        }
+
+        _emailSender.CancelFor.Clear();
+        using (var scope = ServiceProvider!.CreateScope())
+        {
+            (await scope.ServiceProvider.GetRequiredService<EmailDeliveryProcessor>().ProcessAsync()).ShouldBe(1);
+        }
+
+        _emailSender.Sent.Select(m => m.ToAddress).ShouldBe(["first@acme.test", "aborts@acme.test"]);
+    }
+
+    private static NotificationRequest RequestCreated(string email) => new(
+        Guid.NewGuid(),
+        NotificationTemplateKeys.RequestCreated,
+        [new NotificationRecipient(Guid.NewGuid(), null, "Mehmet Demir", email, AddressSources.WorkEmail, "en")],
+        new Dictionary<string, string?>
+        {
+            [WorkflowTemplateModel.RequestType] = "Leave",
+            [WorkflowTemplateModel.RequesterName] = "Ayşe Yılmaz",
+        },
+        ActionPath: null);
+
     private static NotificationRequest TaskAssigned(Guid taskId, string email) => new(
         Guid.NewGuid(),
         NotificationTemplateKeys.ApprovalTaskAssigned,
@@ -191,8 +239,16 @@ public sealed class NotificationPublishingIntegrationTests : TestFixture
 
         public HashSet<string> FailFor { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+        /// <summary>Aborts the send the way a worker shutdown does - EmailDeliverySender lets this one escape.</summary>
+        public HashSet<string> CancelFor { get; } = new(StringComparer.OrdinalIgnoreCase);
+
         public Task SendAsync(EmailMessage message, CancellationToken cancellationToken = default)
         {
+            if (CancelFor.Contains(message.ToAddress))
+            {
+                throw new OperationCanceledException("worker stopping");
+            }
+
             if (FailFor.Contains(message.ToAddress))
             {
                 throw new InvalidOperationException("SMTP down");

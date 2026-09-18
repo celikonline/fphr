@@ -136,7 +136,9 @@
       "startTimeRequired": "Enter the start time.",
       "durationRequired": "Enter the duration.",
       "leaveTypeRequired": "Select a leave type."
-    }
+    },
+    "week": "Week",
+    "month": "Month"
   },
   "shiftLock": {
     "scheduledLockDate": "Scheduled lock date"
