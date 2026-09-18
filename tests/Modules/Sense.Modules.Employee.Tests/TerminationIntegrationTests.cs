@@ -1,3 +1,4 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,7 +96,7 @@ public sealed class TerminationIntegrationTests : TestFixture
         var active = await ExecuteCommandAsync(new CreateEmployeeCommand("Ela", "Active", null, null, null, null, hireDate, null, null, null));
         var resignation = (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.Single(r => r.Code == "Resignation");
         resignation.DefaultTerminationType.ShouldBe(TerminationType.Resignation);
-        resignation.DefaultSgkExitCode.ShouldBe("29");
+        resignation.DefaultSgkExitCode.ShouldBe("03");
 
         var terminated = await ExecuteCommandAsync(new TerminateEmployeeCommand(active.Value.Id, terminationDate, resignation.Id));
         terminated.IsSuccess.ShouldBeTrue();
@@ -103,7 +104,7 @@ public sealed class TerminationIntegrationTests : TestFixture
         terminated.Value.Employee.TerminationDate.ShouldBe(terminationDate);
         terminated.Value.Employee.TerminationReasonId.ShouldBe(resignation.Id);
         terminated.Value.Employee.TerminationType.ShouldBe(TerminationType.Resignation);
-        terminated.Value.Employee.SgkExitCode.ShouldBe("29");
+        terminated.Value.Employee.SgkExitCode.ShouldBe("03");
 
         // Already Terminated cannot be terminated again.
         (await ExecuteCommandAsync(new TerminateEmployeeCommand(active.Value.Id, terminationDate, resignation.Id)))
@@ -113,11 +114,11 @@ public sealed class TerminationIntegrationTests : TestFixture
         var suspendedTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Kaan", "Suspended", null, null, null, null, hireDate, null, null, null));
         (await ExecuteCommandAsync(new SuspendEmployeeCommand(suspendedTarget.Value.Id, SuspensionReason.Other))).IsSuccess.ShouldBeTrue();
         var terminatedFromSuspended = await ExecuteCommandAsync(new TerminateEmployeeCommand(
-            suspendedTarget.Value.Id, terminationDate, resignation.Id, TerminationType.EmployerJustCause_Art25, "99"));
+            suspendedTarget.Value.Id, terminationDate, resignation.Id, TerminationType.EmployerJustCause_Art25, "26"));
         terminatedFromSuspended.IsSuccess.ShouldBeTrue();
         terminatedFromSuspended.Value.Employee.Status.ShouldBe(nameof(EmployeeStatus.Terminated));
         terminatedFromSuspended.Value.Employee.TerminationType.ShouldBe(TerminationType.EmployerJustCause_Art25);
-        terminatedFromSuspended.Value.Employee.SgkExitCode.ShouldBe("99");
+        terminatedFromSuspended.Value.Employee.SgkExitCode.ShouldBe("26");
 
         // Termination date before hire date is rejected.
         var lateHire = await ExecuteCommandAsync(new CreateEmployeeCommand("Su", "LateHire", null, null, null, null, hireDate, null, null, null));
@@ -133,12 +134,12 @@ public sealed class TerminationIntegrationTests : TestFixture
         var first = _terminated.Received.Single(e => e.EmployeeId == active.Value.Id);
         first.TerminationType.ShouldBe(ContractEvents.TerminationType.Resignation);
         first.ReasonCode.ShouldBe("Resignation");
-        first.SgkExitCode.ShouldBe("29");
+        first.SgkExitCode.ShouldBe("03");
         first.TerminationDate.ShouldBe(terminationDate, "S-20: published event carries the command's termination date");
 
         var second = _terminated.Received.Single(e => e.EmployeeId == suspendedTarget.Value.Id);
         second.TerminationType.ShouldBe(ContractEvents.TerminationType.EmployerJustCause_Art25);
-        second.SgkExitCode.ShouldBe("99");
+        second.SgkExitCode.ShouldBe("26");
         second.TerminationDate.ShouldBe(terminationDate);
     }
 
@@ -227,17 +228,17 @@ public sealed class TerminationIntegrationTests : TestFixture
             .Error.Code.ShouldBe(EmployeeDomainErrors.TerminationReasonCodeTaken);
 
         var renamed = await ExecuteCommandAsync(new UpdateTerminationReasonCommand(
-            created.Value.Id, "Proje bitişi", "23", TerminationType.FixedTermExpiry, 210));
+            created.Value.Id, "Proje bitişi", "05", TerminationType.FixedTermExpiry, 210));
         renamed.Value.Name.ShouldBe("Proje bitişi");
         renamed.Value.Code.ShouldBe("ProjectEnded", "the code never changes");
-        renamed.Value.DefaultSgkExitCode.ShouldBe("23");
+        renamed.Value.DefaultSgkExitCode.ShouldBe("05");
 
         // The custom reason pre-fills the wizard just like a system one.
         var hireDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1);
         var employee = await ExecuteCommandAsync(new CreateEmployeeCommand("Özel", "Neden", null, null, null, null, hireDate, null, null, null));
         var terminated = await ExecuteCommandAsync(new TerminateEmployeeCommand(employee.Value.Id, hireDate.AddMonths(6), created.Value.Id));
         terminated.Value.Employee.TerminationType.ShouldBe(TerminationType.FixedTermExpiry);
-        terminated.Value.Employee.SgkExitCode.ShouldBe("23");
+        terminated.Value.Employee.SgkExitCode.ShouldBe("05");
 
         // Deactivating hides it from the wizard's dropdown but keeps it for the terminated employee.
         (await ExecuteCommandAsync(new DeactivateTerminationReasonCommand(created.Value.Id))).Value.IsActive.ShouldBeFalse();
@@ -246,6 +247,92 @@ public sealed class TerminationIntegrationTests : TestFixture
 
         (await ExecuteCommandAsync(new ReactivateTerminationReasonCommand(created.Value.Id))).Value.IsActive.ShouldBeTrue();
         (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.ShouldContain(r => r.Id == created.Value.Id);
+    }
+
+    /// <summary>
+    /// SGK exit code <-> termination type consistency (senseik-006/F-01, SgkExitCodeRules): a mismatched catalog
+    /// row is rejected by FluentValidation (400), a mismatched termination-time override is rejected by the handler
+    /// after resolving the reason's defaults, and a correct family sub-code (md.24: 23/24/25) is accepted.
+    /// </summary>
+    [Fact]
+    public async Task SgkExitCodeConsistency_RejectsMismatchedPairsAndAcceptsFamilyMembers()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+
+        // Catalog time: FixedTermExpiry's only valid code is "05" - "99" is rejected before the handler ever runs.
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new CreateTerminationReasonCommand("BadCatalogRow", "Kötü satır", "99", TerminationType.FixedTermExpiry, 300)));
+
+        // Catalog time: leaving the code unset for an ambiguous family (md.24) is fine - the wizard defers the pick.
+        var familyReason = await ExecuteCommandAsync(
+            new CreateTerminationReasonCommand("CustomJustCause", "Özel haklı neden", null, TerminationType.EmployeeJustCause_Art24, 310));
+        familyReason.IsSuccess.ShouldBeTrue();
+
+        var hireDate = DateOnly.FromDateTime(DateTime.UtcNow).AddYears(-1);
+        var exitDate = hireDate.AddMonths(6);
+
+        // Termination time, both overrides given and inconsistent: rejected by the validator (400), handler never runs.
+        var mismatchTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Uyumsuz", "Kod", null, null, null, null, hireDate, null, null, null));
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new TerminateEmployeeCommand(mismatchTarget.Value.Id, exitDate, familyReason.Value.Id, TerminationType.FixedTermExpiry, "26")));
+
+        // Termination time, resolved-from-reason-defaults pair is incomplete: the family reason's default code is
+        // null, and md.24 has no safe single default - the handler rejects it (the validator alone cannot see this,
+        // it doesn't know the reason's defaults).
+        var noSubCodeTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Alt", "Kodsuz", null, null, null, null, hireDate, null, null, null));
+        (await ExecuteCommandAsync(new TerminateEmployeeCommand(noSubCodeTarget.Value.Id, exitDate, familyReason.Value.Id)))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
+
+        // Termination time, explicit family member supplied: accepted.
+        var validSubCodeTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Alt", "Kodlu", null, null, null, null, hireDate, null, null, null));
+        var terminated = await ExecuteCommandAsync(new TerminateEmployeeCommand(
+            validSubCodeTarget.Value.Id, exitDate, familyReason.Value.Id, TerminationType.EmployeeJustCause_Art24, "24"));
+        terminated.IsSuccess.ShouldBeTrue();
+        terminated.Value.Employee.SgkExitCode.ShouldBe("24");
+    }
+
+    /// <summary>
+    /// TerminationReasonCorrectionService (senseik-006/F-01 backfill): only touches a system row that still carries
+    /// the old known-wrong code, leaves a tenant's own customization untouched, and is idempotent.
+    /// </summary>
+    [Fact]
+    public async Task CorrectionService_FixesOnlyUntouchedSystemRowsAndIsIdempotent()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+
+        // Seeds the catalog with today's (already-correct) values, then roll two system rows back to simulate a
+        // tenant whose DB was seeded before senseik-006/F-01 shipped: one to the old wrong value (should be fixed),
+        // one to a value the tenant chose themselves that happens to differ from both old and new (must survive).
+        await ExecuteQueryAsync(new ListTerminationReasonsQuery());
+        using (var scope = ServiceProvider!.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EmployeeDbContext>();
+            var death = await db.TerminationReasons.FirstAsync(r => r.Code == "Death");
+            death.Update(death.Name, "21", death.DefaultTerminationType, death.SortOrder);
+            var resignation = await db.TerminationReasons.FirstAsync(r => r.Code == "Resignation");
+            resignation.Update(resignation.Name, "05", resignation.DefaultTerminationType, resignation.SortOrder);
+            await db.SaveChangesAsync();
+        }
+
+        using (var scope = ServiceProvider!.CreateScope())
+        {
+            var correctionService = scope.ServiceProvider.GetRequiredService<TerminationReasonCorrectionService>();
+            var correctedCount = await correctionService.CorrectKnownWrongSystemCodesAsync();
+            correctedCount.ShouldBe(1, "only Death still carries the old known-wrong value");
+            await scope.ServiceProvider.GetRequiredService<EmployeeDbContext>().SaveChangesAsync();
+        }
+
+        var reasons = (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value;
+        reasons.Single(r => r.Code == "Death").DefaultSgkExitCode.ShouldBe("10");
+        reasons.Single(r => r.Code == "Resignation").DefaultSgkExitCode.ShouldBe("05", "the tenant's own customization must survive the backfill");
+
+        using (var scope = ServiceProvider!.CreateScope())
+        {
+            var correctionService = scope.ServiceProvider.GetRequiredService<TerminationReasonCorrectionService>();
+            (await correctionService.CorrectKnownWrongSystemCodesAsync()).ShouldBe(0, "a second run must be a no-op");
+        }
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Checkbox, Group, Input, Modal, Select, Stack, Text, TextInput } from "@mantine/core";
+import { Alert, Button, Checkbox, Group, Input, Modal, Select, Stack, Text } from "@mantine/core";
 import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OpenAssetsWarning } from "@/components/assets/open-assets-warning";
@@ -156,15 +156,22 @@ function ReactivateDialog({ employee, onClose, onDone }: StepProps) {
   );
 }
 
-/** "İşten ayrılış sihirbazı": reason pre-fills the type and SGK code, and the exit settlement flags close the period. */
+/**
+ * "İşten ayrılış sihirbazı": reason pre-fills the type and SGK code. The code is shown read-only (senseik-006/F-01 -
+ * it must come from the verified reason catalog, not free text); a reason whose type covers more than one SGK code
+ * (md.24/md.25 families) requires an explicit second pick instead of a silently-wrong default. Step 2 makes the
+ * resolved code part of an explicit confirmation before the exit is submitted.
+ */
 function TerminateDialog({ employee, onClose, onDone }: StepProps) {
   const { t, i18n } = useTranslation(["employees", "common"]);
+  const [step, setStep] = useState<1 | 2>(1);
   const [terminationDate, setTerminationDate] = useState(todayDateOnly());
   const [reasonId, setReasonId] = useState<string | null>(null);
   const [type, setType] = useState<TerminationType | null>(null);
   const [sgkExitCode, setSgkExitCode] = useState("");
   const [severancePaid, setSeverancePaid] = useState(false);
   const [leaveSettledAtExit, setLeaveSettledAtExit] = useState(false);
+  const [sgkExitCodeConfirmed, setSgkExitCodeConfirmed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data: reasons = [] } = useQuery({ queryKey: ["termination-reasons"], queryFn: () => getTerminationReasons() });
@@ -174,14 +181,22 @@ function TerminateDialog({ employee, onClose, onDone }: StepProps) {
     enabled: Boolean(terminationDate),
   });
 
-  /** Picking a reason pre-fills the type and SGK code; both stay editable afterwards. */
+  const selectedReason = reasons.find((candidate) => candidate.id === reasonId) ?? null;
+  const subCodeOptions = selectedReason?.allowedSgkExitCodes ?? null;
+  const requiresSubCodePick = Boolean(subCodeOptions && subCodeOptions.length > 1);
+
+  /**
+   * Picking a reason pre-fills the type; the SGK code follows the reason's family (backend-derived
+   * allowedSgkExitCodes, never redefined here) - a single-code family fills it in automatically, an ambiguous one
+   * (md.24/md.25) is left blank until the mandatory sub-code select below is used.
+   */
   function chooseReason(value: string | null) {
     setReasonId(value);
     const picked = reasons.find((candidate) => candidate.id === value);
-    if (picked) {
-      setType(picked.defaultTerminationType);
-      setSgkExitCode(picked.defaultSgkExitCode ?? "");
-    }
+    if (!picked) return;
+    setType(picked.defaultTerminationType);
+    const allowed = picked.allowedSgkExitCodes;
+    setSgkExitCode(allowed && allowed.length === 1 ? allowed[0] : (picked.defaultSgkExitCode ?? ""));
   }
 
   const mutation = useMutation({
@@ -213,82 +228,161 @@ function TerminateDialog({ employee, onClose, onDone }: StepProps) {
     onError: (err) => setError(getApiErrorMessage(err, t("employees:genericError"))),
   });
 
-  function submit(event: FormEvent) {
+  function goToReview(event: FormEvent) {
     event.preventDefault();
     if (!terminationDate) return setError(t("employees:lifecycle.terminate.dateRequired"));
     if (!reasonId) return setError(t("employees:lifecycle.terminate.reasonRequired"));
     if (employee.hireDate && terminationDate < employee.hireDate)
       return setError(t("employees:lifecycle.terminate.dateBeforeHire", { date: formatDateOnly(employee.hireDate, i18n.language) }));
+    if (requiresSubCodePick && !sgkExitCode) return setError(t("employees:lifecycle.terminate.sgkSubCodeRequired"));
 
+    setError(null);
+    setStep(2);
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!sgkExitCodeConfirmed) return;
     setError(null);
     mutation.mutate();
   }
 
   return (
     <Modal opened onClose={onClose} title={t("employees:lifecycle.terminate.title")} size="42rem">
-      <form onSubmit={submit}>
-        <Stack gap="md">
-          <Text size="sm" c="dimmed">
-            {t("employees:lifecycle.terminate.description")}
-          </Text>
-          {collective?.showWarning && collective.warningMessage && (
-            <Alert color="orange" icon={<AlertTriangle size={16} />} title={t("employees:lifecycle.terminate.collectiveTitle")}>
-              {collective.warningMessage}
-            </Alert>
-          )}
-          <OpenAssetsWarning employeeId={employee.id} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input.Wrapper id="terminate-date" label={t("employees:lifecycle.terminate.date")} withAsterisk>
-              <DatePicker id="terminate-date" value={terminationDate} onChange={setTerminationDate} disabled={mutation.isPending} />
-            </Input.Wrapper>
-            <Select
-              id="terminate-reason"
-              label={t("employees:lifecycle.terminate.reason")}
-              withAsterisk
-              searchable
-              data={reasons.map((option) => ({ value: option.id, label: option.name }))}
-              value={reasonId}
-              onChange={chooseReason}
+      {step === 1 ? (
+        <form onSubmit={goToReview}>
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              {t("employees:lifecycle.terminate.description")}
+            </Text>
+            {collective?.showWarning && collective.warningMessage && (
+              <Alert color="orange" icon={<AlertTriangle size={16} />} title={t("employees:lifecycle.terminate.collectiveTitle")}>
+                {collective.warningMessage}
+              </Alert>
+            )}
+            <OpenAssetsWarning employeeId={employee.id} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input.Wrapper id="terminate-date" label={t("employees:lifecycle.terminate.date")} withAsterisk>
+                <DatePicker id="terminate-date" value={terminationDate} onChange={setTerminationDate} disabled={mutation.isPending} />
+              </Input.Wrapper>
+              <Select
+                id="terminate-reason"
+                label={t("employees:lifecycle.terminate.reason")}
+                withAsterisk
+                searchable
+                data={reasons.map((option) => ({ value: option.id, label: option.name }))}
+                value={reasonId}
+                onChange={chooseReason}
+                disabled={mutation.isPending}
+              />
+              <Select
+                id="terminate-type"
+                label={t("employees:lifecycle.terminate.type")}
+                description={t("employees:lifecycle.terminate.typeHint")}
+                data={TERMINATION_TYPES.map((option) => ({ value: option, label: t(`employees:enum.terminationType.${option}`) }))}
+                value={type}
+                onChange={(value) => setType(value as TerminationType | null)}
+                disabled={mutation.isPending}
+                inputWrapperOrder={["label", "input", "description"]}
+              />
+              <Input.Wrapper
+                id="terminate-sgk"
+                label={t("employees:lifecycle.terminate.sgkExitCode")}
+                description={t("employees:lifecycle.terminate.sgkExitCodeHint")}
+                inputWrapperOrder={["label", "input", "description"]}
+              >
+                <Text size="sm" fw={500} py={6}>
+                  {sgkExitCode || "—"}
+                </Text>
+              </Input.Wrapper>
+              {requiresSubCodePick && (
+                <Select
+                  id="terminate-sgk-subcode"
+                  label={t("employees:lifecycle.terminate.sgkSubCode")}
+                  description={t("employees:lifecycle.terminate.sgkSubCodeHint")}
+                  withAsterisk
+                  data={(subCodeOptions ?? []).map((code) => ({ value: code, label: code }))}
+                  value={sgkExitCode || null}
+                  onChange={(value) => setSgkExitCode(value ?? "")}
+                  allowDeselect={false}
+                  disabled={mutation.isPending}
+                  inputWrapperOrder={["label", "input", "description"]}
+                />
+              )}
+            </div>
+            <Checkbox
+              label={t("employees:lifecycle.terminate.severancePaid")}
+              description={t("employees:lifecycle.terminate.severancePaidHint")}
+              checked={severancePaid}
+              onChange={(event) => setSeverancePaid(event.currentTarget.checked)}
               disabled={mutation.isPending}
             />
-            <Select
-              id="terminate-type"
-              label={t("employees:lifecycle.terminate.type")}
-              description={t("employees:lifecycle.terminate.typeHint")}
-              data={TERMINATION_TYPES.map((option) => ({ value: option, label: t(`employees:enum.terminationType.${option}`) }))}
-              value={type}
-              onChange={(value) => setType(value as TerminationType | null)}
-              disabled={mutation.isPending}
-              inputWrapperOrder={["label", "input", "description"]}
-            />
-            <TextInput
-              id="terminate-sgk"
-              label={t("employees:lifecycle.terminate.sgkExitCode")}
-              value={sgkExitCode}
-              maxLength={20}
-              onChange={(event) => setSgkExitCode(event.currentTarget.value)}
+            <Checkbox
+              label={t("employees:lifecycle.terminate.leaveSettled")}
+              description={t("employees:lifecycle.terminate.leaveSettledHint")}
+              checked={leaveSettledAtExit}
+              onChange={(event) => setLeaveSettledAtExit(event.currentTarget.checked)}
               disabled={mutation.isPending}
             />
-          </div>
-          <Checkbox
-            label={t("employees:lifecycle.terminate.severancePaid")}
-            description={t("employees:lifecycle.terminate.severancePaidHint")}
-            checked={severancePaid}
-            onChange={(event) => setSeverancePaid(event.currentTarget.checked)}
-            disabled={mutation.isPending}
-          />
-          <Checkbox
-            label={t("employees:lifecycle.terminate.leaveSettled")}
-            description={t("employees:lifecycle.terminate.leaveSettledHint")}
-            checked={leaveSettledAtExit}
-            onChange={(event) => setLeaveSettledAtExit(event.currentTarget.checked)}
-            disabled={mutation.isPending}
-          />
-          {error && <ErrorAlert message={error} />}
-          <Actions onClose={onClose} pending={mutation.isPending} submitLabel={t("employees:lifecycle.terminate.submit")} danger />
-        </Stack>
-      </form>
+            {error && <ErrorAlert message={error} />}
+            <Group justify="flex-end" gap="sm">
+              <Button type="button" variant="default" onClick={onClose}>
+                {t("common:cancel")}
+              </Button>
+              <Button type="submit" color="red">
+                {t("employees:lifecycle.terminate.next")}
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      ) : (
+        <form onSubmit={submit}>
+          <Stack gap="md">
+            <Text size="sm" c="dimmed">
+              {t("employees:lifecycle.terminate.reviewDescription")}
+            </Text>
+            <Stack gap={4}>
+              <SummaryRow label={t("employees:lifecycle.terminate.date")} value={formatDateOnly(terminationDate, i18n.language)} />
+              <SummaryRow label={t("employees:lifecycle.terminate.reason")} value={selectedReason?.name ?? "—"} />
+              <SummaryRow
+                label={t("employees:lifecycle.terminate.type")}
+                value={type ? t(`employees:enum.terminationType.${type}`) : "—"}
+              />
+              <SummaryRow label={t("employees:lifecycle.terminate.sgkExitCode")} value={sgkExitCode || "—"} />
+            </Stack>
+            <Checkbox
+              id="terminate-confirm-sgk"
+              label={t("employees:lifecycle.terminate.confirmSgkExitCode")}
+              checked={sgkExitCodeConfirmed}
+              onChange={(event) => setSgkExitCodeConfirmed(event.currentTarget.checked)}
+              disabled={mutation.isPending}
+            />
+            {error && <ErrorAlert message={error} />}
+            <Group justify="flex-end" gap="sm">
+              <Button type="button" variant="default" onClick={() => setStep(1)} disabled={mutation.isPending}>
+                {t("common:back")}
+              </Button>
+              <Button type="submit" loading={mutation.isPending} color="red" disabled={!sgkExitCodeConfirmed}>
+                {t("employees:lifecycle.terminate.submit")}
+              </Button>
+            </Group>
+          </Stack>
+        </form>
+      )}
     </Modal>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Group justify="space-between" gap="sm" wrap="nowrap">
+      <Text size="sm" c="dimmed">
+        {label}
+      </Text>
+      <Text size="sm" fw={500} ta="right">
+        {value}
+      </Text>
+    </Group>
   );
 }
 

@@ -46,7 +46,9 @@ public sealed class CreateTerminationReasonValidator : AbstractValidator<CreateT
             .MaximumLength(TerminationReasonLimits.CodeMaxLength).WithMessage(EmployeeDomainErrors.TerminationReasonCodeTooLong);
         RuleFor(x => x.Name).NotEmpty().WithMessage(EmployeeDomainErrors.TerminationReasonNameRequired)
             .MaximumLength(TerminationReasonLimits.NameMaxLength).WithMessage(EmployeeDomainErrors.TerminationReasonNameTooLong);
-        RuleFor(x => x.DefaultSgkExitCode).MaximumLength(TerminationReasonLimits.SgkExitCodeMaxLength);
+        RuleFor(x => x.DefaultSgkExitCode).MaximumLength(TerminationReasonLimits.SgkExitCodeMaxLength)
+            .Must((command, code) => SgkExitCodeRules.IsCatalogConsistent(command.DefaultTerminationType, code))
+            .WithMessage(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
     }
 }
 
@@ -57,7 +59,9 @@ public sealed class UpdateTerminationReasonValidator : AbstractValidator<UpdateT
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().WithMessage(EmployeeDomainErrors.TerminationReasonNameRequired)
             .MaximumLength(TerminationReasonLimits.NameMaxLength).WithMessage(EmployeeDomainErrors.TerminationReasonNameTooLong);
-        RuleFor(x => x.DefaultSgkExitCode).MaximumLength(TerminationReasonLimits.SgkExitCodeMaxLength);
+        RuleFor(x => x.DefaultSgkExitCode).MaximumLength(TerminationReasonLimits.SgkExitCodeMaxLength)
+            .Must((command, code) => SgkExitCodeRules.IsCatalogConsistent(command.DefaultTerminationType, code))
+            .WithMessage(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
     }
 }
 

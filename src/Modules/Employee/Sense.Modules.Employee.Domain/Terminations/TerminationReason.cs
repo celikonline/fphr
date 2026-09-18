@@ -32,7 +32,11 @@ public sealed class TerminationReason : TenantAggregateRoot<Guid>
 
     public string Name { get; private set; } = string.Empty;
 
-    /// <summary>Pre-fills the wizard's SGK exit code field; placeholder values for the system seed (11.3.03: "doğrulanmalı").</summary>
+    /// <summary>
+    /// Pre-fills the wizard's SGK exit code field; system seed values are verified against SGK's official
+    /// "İşten Ayrılış Nedenleri" table (senseik-006/F-01). Null for two system rows on purpose - see
+    /// <see cref="TerminationReasonSeed"/>'s doc comment.
+    /// </summary>
     public string? DefaultSgkExitCode { get; private set; }
 
     /// <summary>Pre-fills the wizard's termination type field; null when the reason doesn't imply one (e.g. Ölüm, Emeklilik).</summary>

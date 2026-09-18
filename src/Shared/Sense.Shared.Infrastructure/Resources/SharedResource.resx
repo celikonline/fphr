@@ -195,6 +195,7 @@
   <data name="employee.termination_reason_code_taken" xml:space="preserve"><value>Bu kod ile zaten bir işten ayrılma nedeni var.</value></data>
   <data name="employee.termination_reason_code_required" xml:space="preserve"><value>İşten ayrılma nedeni kodu zorunludur.</value></data>
   <data name="employee.termination_reason_name_required" xml:space="preserve"><value>İşten ayrılma nedeni adı zorunludur.</value></data>
+  <data name="employee.termination_sgk_exit_code_inconsistent" xml:space="preserve"><value>Seçilen SGK çıkış kodu, fesih türü ile uyumlu değil.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Alt işveren firma bulunamadı.</value></data>
