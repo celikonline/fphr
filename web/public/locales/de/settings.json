@@ -143,6 +143,7 @@
     "codeHint": "Der feste Code, über den Importe und Berichte abgleichen; er kann später nicht geändert werden.",
     "codeLocked": "Der Code kann nach dem Anlegen nicht mehr geändert werden.",
     "typeHint": "Füllt den Assistenten vor; bei jedem Austritt kann davon abgewichen werden.",
+    "sgkExitCodeHint": "Für diese Austrittsart von der SGK zugelassene Codes: {{codes}}.",
     "columns": {
       "name": "Name",
       "code": "Code",

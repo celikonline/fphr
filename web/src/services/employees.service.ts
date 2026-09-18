@@ -475,6 +475,8 @@ export interface TerminationReason {
   defaultTerminationType: TerminationType | null;
   isSystem: boolean;
   isActive: boolean;
+  /** SGK codes valid for defaultTerminationType (senseik-006/F-01); null when the type is unset or unrestricted (Other). */
+  allowedSgkExitCodes: string[] | null;
 }
 
 export interface TerminationReasonInput {

@@ -143,6 +143,7 @@
     "codeHint": "Aktarım ve raporlarda eşleşen sabit kod; sonradan değiştirilemez.",
     "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
     "typeHint": "Sihirbazda ön-dolu gelir; her fesihte değiştirilebilir.",
+    "sgkExitCodeHint": "Bu fesih türü için SGK'nın izin verdiği kodlar: {{codes}}.",
     "columns": {
       "name": "Ad",
       "code": "Kod",
