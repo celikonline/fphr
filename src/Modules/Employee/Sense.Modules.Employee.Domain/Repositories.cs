@@ -91,6 +91,12 @@ public interface ITerminationReasonRepository
 
     /// <summary>True if another reason of the tenant already uses this code.</summary>
     Task<bool> CodeTakenAsync(string code, Guid? exceptId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// All system rows (active and inactive), tracked - for the Application layer's one-time SGK exit code
+    /// reconciliation service only. Not for the wizard's dropdown (use <see cref="ListAsync"/>).
+    /// </summary>
+    Task<IReadOnlyList<TerminationReason>> ListSystemRowsAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>Subcontractor ("alt işveren") catalog repository; rows are deactivated, never deleted (employees reference them).</summary>

@@ -9,6 +9,7 @@ using Sense.Modules.Employee.Contracts;
 // referenced as Contracts.Events.* instead.
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Bulk;
 using Sense.Shared.Contracts.Context;
@@ -48,6 +49,13 @@ public sealed class TerminateEmployeeValidator : AbstractValidator<TerminateEmpl
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.TerminationReasonId).NotEmpty();
         RuleFor(x => x.TerminationType).IsInEnum().When(x => x.TerminationType is not null);
+
+        // Catches the case where the caller overrides both fields inconsistently. This is a partial check only -
+        // when either override is omitted the effective value comes from the chosen reason's defaults, which this
+        // validator cannot see; TerminateEmployeeHandler re-checks the fully resolved pair before writing.
+        RuleFor(x => x.SgkExitCode)
+            .Must((command, sgkExitCode) => command.TerminationType is null || SgkExitCodeRules.IsCatalogConsistent(command.TerminationType, sgkExitCode))
+            .WithMessage(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
     }
 }
 
@@ -87,6 +95,14 @@ public sealed class TerminateEmployeeHandler(
         var reason = foundReason.Value;
         var terminationType = command.TerminationType ?? reason.DefaultTerminationType ?? Domain.Employees.TerminationType.Other;
         var sgkExitCode = command.SgkExitCode ?? reason.DefaultSgkExitCode;
+
+        // Final resolved pair, re-checked here because either half may have come from the reason's own defaults
+        // rather than the command - TerminateEmployeeValidator only sees the command's overrides. A family with
+        // more than one valid code (md.24/md.25) has no safe default, so a null code is rejected too.
+        if (!SgkExitCodeRules.IsTerminationConsistent(terminationType, sgkExitCode))
+        {
+            return Error.Validation(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
+        }
 
         var evaluation = await jobSecurity.EvaluateAsync(employee, terminationType, cancellationToken);
 

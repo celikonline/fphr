@@ -63,6 +63,9 @@ public sealed class EmployeeModule : IModule
         // consumes it here, no registration needed on this side.
         services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
         services.AddScoped<TerminationReasonProvisioningService>();
+
+        // senseik-006/F-01: one-time SGK exit code backfill (not auto-run - see TerminationReasonCorrectionService's doc comment).
+        services.AddScoped<TerminationReasonCorrectionService>();
         services.AddScoped<JobSecurityEvaluator>();
         services.AddScoped<CollectiveDismissalEvaluator>();
 
