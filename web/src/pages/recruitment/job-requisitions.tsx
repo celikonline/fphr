@@ -10,6 +10,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import {
   cancelJobRequisition,
@@ -179,7 +180,7 @@ function JobRequisitions() {
                       <Table.Td>{requisition.headcountRequested}</Table.Td>
                       <Table.Td>
                         <Badge color={STATUS_COLOR[requisition.status]} variant="light">
-                          {t(`recruitment:requisitions.statuses.${requisition.status}`)}
+                          {enumLabel(t, "recruitment:requisitions.statuses", requisition.status)}
                         </Badge>
                       </Table.Td>
                       <Table.Td>
@@ -204,7 +205,7 @@ function JobRequisitions() {
                           {requisition.title}
                         </Text>
                         <Badge color={STATUS_COLOR[requisition.status]} variant="light">
-                          {t(`recruitment:requisitions.statuses.${requisition.status}`)}
+                          {enumLabel(t, "recruitment:requisitions.statuses", requisition.status)}
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">

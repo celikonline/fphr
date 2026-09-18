@@ -18,6 +18,7 @@ import {
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Plus, Trash2 } from "lucide-react";
+import { useLeaveName } from "@/components/leave/leave-shared";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -108,6 +109,7 @@ function defaultSettings(): LeaveTypeSettings {
  */
 export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveRuleSet; editing: LeaveType | null; onClose: () => void }) {
   const { t } = useTranslation(["leave", "common"]);
+  const leaveName = useLeaveName();
   const queryClient = useQueryClient();
   const isMobile = useMediaQuery("(max-width: 390px)");
   const [settings, setSettings] = useState<LeaveTypeSettings>(editing?.settings ?? defaultSettings());
@@ -116,10 +118,16 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
   const set = <K extends keyof LeaveTypeSettings>(key: K, value: LeaveTypeSettings[K]) =>
     setSettings((current) => ({ ...current, [key]: value }));
 
+  // `settings.name` may still be a seed resource key (e.g. "leave.type.annual") until the user edits the field;
+  // the input always shows the resolved display value, and saving sends that resolved value (never the raw key) —
+  // `leaveName` is a no-op once the user has typed a free-form name, so this is safe on every submit.
+  const displayName = leaveName(settings.name);
+
   const mutation = useMutation({
     mutationFn: async () => {
-      if (editing) await updateLeaveType(ruleSet.id, editing.id, settings);
-      else await addLeaveType(ruleSet.id, settings);
+      const payload = { ...settings, name: displayName };
+      if (editing) await updateLeaveType(ruleSet.id, editing.id, payload);
+      else await addLeaveType(ruleSet.id, payload);
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["leave", "rule-sets"] });
@@ -131,7 +139,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!settings.name.trim()) return setError(t("leave:ruleSets.nameRequired"));
+    if (!displayName.trim()) return setError(t("leave:ruleSets.nameRequired"));
     setError(null);
     mutation.mutate();
   }
@@ -162,7 +170,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 id="leave-type-name"
                 label={t("leave:types.name")}
                 withAsterisk
-                value={settings.name}
+                value={displayName}
                 maxLength={NAME_MAX_LENGTH}
                 disabled={busy}
                 onChange={(event) => set("name", event.currentTarget.value)}

@@ -11,6 +11,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import { useAuthStore } from "@/store/auth.store";
 import { formatDateOnly } from "@/lib/dates";
 import { useOrgUnits } from "@/components/employees/use-org-units";
@@ -233,10 +234,10 @@ function JobPostings() {
                         </Link>
                       </Table.Td>
                       <Table.Td>{orgUnitNameById.get(posting.orgUnitId) ?? "—"}</Table.Td>
-                      <Table.Td>{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Table.Td>
+                      <Table.Td>{enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}</Table.Td>
                       <Table.Td>
                         <Badge color={STATUS_COLOR[posting.status]} variant="light">
-                          {t(`recruitment:postings.statuses.${posting.status}`)}
+                          {enumLabel(t, "recruitment:postings.statuses", posting.status)}
                         </Badge>
                       </Table.Td>
                       <Table.Td>
@@ -261,11 +262,11 @@ function JobPostings() {
                           {posting.title}
                         </Link>
                         <Badge color={STATUS_COLOR[posting.status]} variant="light">
-                          {t(`recruitment:postings.statuses.${posting.status}`)}
+                          {enumLabel(t, "recruitment:postings.statuses", posting.status)}
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {t(`recruitment:employmentTypes.${posting.employmentType}`)}
+                        {orgUnitNameById.get(posting.orgUnitId) ?? "—"} · {enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}
                       </Text>
                       {posting.closingDate && (
                         <Text size="xs" c="dimmed">
