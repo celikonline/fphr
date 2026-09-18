@@ -376,11 +376,20 @@
     "subtitle": "Approved and pending leave.",
     "previous": "Previous month",
     "next": "Next month",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
     "today": "Today",
     "employee": "Employee",
     "empty": "No leave in this period.",
     "masked": "On leave",
-    "overlappingCount": "{{count}} approved leave requests overlap on this day"
+    "overlappingCount": "{{count}} approved leave requests overlap on this day",
+    "view": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    }
   },
   "overtime": {
     "myTitle": "My overtime",
