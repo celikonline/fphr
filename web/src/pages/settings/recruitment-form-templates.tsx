@@ -24,6 +24,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import {
   createFormTemplate,
   deactivateFormTemplate,
@@ -180,7 +181,7 @@ function RecruitmentFormTemplates() {
                       <Table.Td>
                         <Text fw={500}>{template.name}</Text>
                       </Table.Td>
-                      <Table.Td>{t(`recruitment:formTemplates.types.${template.templateType}`)}</Table.Td>
+                      <Table.Td>{enumLabel(t, "recruitment:formTemplates.types", template.templateType)}</Table.Td>
                       <Table.Td>{template.fields.length}</Table.Td>
                       <Table.Td>
                         <Badge color={template.isActive ? "green" : "gray"} variant="light">
@@ -213,7 +214,7 @@ function RecruitmentFormTemplates() {
                         </Badge>
                       </Group>
                       <Text size="xs" c="dimmed">
-                        {t(`recruitment:formTemplates.types.${template.templateType}`)} · {t("recruitment:formTemplates.fieldCount")}:{" "}
+                        {enumLabel(t, "recruitment:formTemplates.types", template.templateType)} · {t("recruitment:formTemplates.fieldCount")}:{" "}
                         {template.fields.length}
                       </Text>
                       {canManage && <Group justify="flex-end">{templateActions(template)}</Group>}

@@ -26,6 +26,7 @@ import {
 } from "@mantine/core";
 import { getApiProblem } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
+import { enumLabel } from "@/lib/i18n-enum";
 import {
   getPublicJobPosting,
   listRelatedPublicJobPostings,
@@ -99,7 +100,7 @@ function RelatedPostings({ items }: { items: PublicJobPostingSummary[] }) {
                 )}
               </Stack>
               <Badge variant="light" size="sm">
-                {t(`recruitment:employmentTypes.${item.employmentType}`)}
+                {enumLabel(t, "recruitment:employmentTypes", item.employmentType)}
               </Badge>
             </Group>
           ))}
@@ -310,7 +311,7 @@ export default function CareerJobPostingPage() {
           <Stack gap="xs">
             <Group gap="xs">
               <Briefcase size={20} />
-              <Badge variant="light">{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Badge>
+              <Badge variant="light">{enumLabel(t, "recruitment:employmentTypes", posting.employmentType)}</Badge>
             </Group>
             <Title order={2}>{posting.title}</Title>
             <Stack gap="xs" c="dimmed">

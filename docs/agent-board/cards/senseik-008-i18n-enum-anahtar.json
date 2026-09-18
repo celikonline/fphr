@@ -1,0 +1,16 @@
+{
+  "id": "senseik-008",
+  "title": "i18n enum anahtarı sızıntılarının tamamı (B-02, H-03)",
+  "owner": "pc-b",
+  "state": "ready",
+  "branch": "b/i18n-enum-leaks",
+  "worktree": ".claude/worktrees/i18n-fix",
+  "acceptance": [
+    "Web'de tüm enum alanları (leave.type.annual, candidates.sources.Manual, vb.) yerelleştirilmiş metinle render ediliyor",
+    "Ham 'leave.type.annual' anahtarı hiçbir ekranda görünmüyor",
+    "Demo veri tarama: enum sözlükleri kontrol listetildi ve tamamı çözümleniyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint (enum render kodu) + manuel tarama ≥3 screen sayfası",
+  "handoff": "docs/handoffs/i18n-enum-leaks.md",
+  "source": "2. Tur § H-03 (üçüncü bağımsız konum) ve 1. Tur B-02"
+}

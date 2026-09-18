@@ -8,6 +8,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { enumLabel } from "@/lib/i18n-enum";
 import {
   createAutomationRule,
   listAutomationRules,
@@ -106,7 +107,7 @@ function RecruitmentAutomationRules() {
                   {data.map((rule) => (
                     <Table.Tr key={rule.id}>
                       <Table.Td>
-                        {t(`recruitment:applications.stages.${rule.fromStage}`)} → {t(`recruitment:applications.stages.${rule.toStage}`)}
+                        {enumLabel(t, "recruitment:applications.stages", rule.fromStage)} → {enumLabel(t, "recruitment:applications.stages", rule.toStage)}
                       </Table.Td>
                       <Table.Td>{templateNameById.get(rule.requiredFormTemplateId) ?? "—"}</Table.Td>
                       <Table.Td>
@@ -128,7 +129,7 @@ function RecruitmentAutomationRules() {
                     <Stack gap={6}>
                       <Group justify="space-between" align="flex-start" wrap="nowrap">
                         <Text size="sm" fw={500}>
-                          {t(`recruitment:applications.stages.${rule.fromStage}`)} → {t(`recruitment:applications.stages.${rule.toStage}`)}
+                          {enumLabel(t, "recruitment:applications.stages", rule.fromStage)} → {enumLabel(t, "recruitment:applications.stages", rule.toStage)}
                         </Text>
                         <Badge color={rule.isActive ? "green" : "gray"} variant="light">
                           {rule.isActive ? t("recruitment:formTemplates.active") : t("recruitment:formTemplates.inactive")}

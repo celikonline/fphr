@@ -33,6 +33,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { enumLabel } from "@/lib/i18n-enum";
 import { formatMoney } from "@/lib/money";
 import {
   addExpenseItem,
@@ -198,7 +199,7 @@ function PaymentsTable({
               <Table.Td>{formatAmount(row.amount, row.currency)}</Table.Td>
               <Table.Td>
                 <Badge color={STATUS_COLOR[row.status.toLowerCase()] ?? "gray"} variant="light">
-                  {t(`expense:status.${row.status.toLowerCase()}`, { defaultValue: row.status })}
+                  {enumLabel(t, "expense:status", row.status)}
                 </Badge>
               </Table.Td>
             </Table.Tr>
@@ -230,7 +231,7 @@ function PaymentsMobileList({
               {t(`expense:payments.kind.${row.kind}`)}
             </Badge>
             <Badge color={STATUS_COLOR[row.status.toLowerCase()] ?? "gray"} variant="light">
-              {t(`expense:status.${row.status.toLowerCase()}`, { defaultValue: row.status })}
+              {enumLabel(t, "expense:status", row.status)}
             </Badge>
           </Group>
           <Text size="sm" truncate="end" mt={6}>

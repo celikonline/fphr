@@ -38,6 +38,6 @@ internal static class CandidateMapper
 {
     public static CandidateDto ToDto(Candidate candidate) =>
         new(
-            candidate.Id, candidate.FirstName, candidate.LastName, candidate.Email, candidate.Phone, candidate.Source.ToString(),
+            candidate.Id, candidate.FirstName, candidate.LastName, candidate.Email, candidate.Phone, candidate.Source,
             candidate.Tags.Select(t => t.TagId).ToList(), candidate.IsAnonymized);
 }
