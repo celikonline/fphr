@@ -1,0 +1,18 @@
+{
+  "id": "senseik-019",
+  "title": "Bordro motoru: Aşama 2–3 (brüt→net, vergi, e-Bildirge, banka ödeme) (G-01 Aşama 2–3)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/payroll-full-engine",
+  "worktree": ".claude/worktrees/payroll-full-calc",
+  "acceptance": [
+    "Brüt → net hesabı: SGK işçi %14+%1 + işveren %20,5+%2 (teşvik ile %15,5), SPEK taban/tavan",
+    "Gelir vergisi dilimleri ve kümülatif matrah devri (yıl içinde işe girende), Damga vergisi ‰7,59",
+    "Asgari ücret gelir vergisi + damga vergisi istisnası (2022+), Engelli vergi indirimi (GVK m.31)",
+    "İcra/nafaka kesintileri, avans mahsubu, Fazla mesai %25/%50, Hafta tatili ve resmî tatil ücreti",
+    "Ücret bordrosu (İş K. m.37), ücret pusulası, e-Bildirge/APHB, banka ödeme talimat dosyası, Muhasebe entegrasyon fişi"
+  ],
+  "merge_gate": "dotnet test (Payroll) — golden set: 5+ senaryo (farklı ücret, engelli, teşvik, fazla mesai, tarih aralığı çalışanı), APHB başarıyla üretilebiliyor",
+  "handoff": "docs/handoffs/payroll-full-engine.md",
+  "source": "2. Tur § G-01 Aşama 2–3 (En uzun ve riskli faz; Payroll modülü ❌ durumdan başlıyor)"
+}

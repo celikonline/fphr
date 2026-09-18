@@ -1,0 +1,18 @@
+{
+  "id": "senseik-015",
+  "title": "İSG modülü: risk değerlendirmesi, kaza/ramak kala kaydı, KKD zimmeti (G-03)",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/occupational-safety",
+  "worktree": ".claude/worktrees/ohs-module",
+  "acceptance": [
+    "İşyeri tehlike sınıfı tanımı ve aylık güncelleme; periyodik sağlık kontrolü takvimi",
+    "İSG kurulu, işyeri hekimi/İSG uzmanı görevlendirme (yasal süreler)",
+    "Kaza (ÇEREZH) ve ramak kala kaydı; SGK'ya 3 iş günü içinde bildirim hazırlığı",
+    "KKD (Kişisel Koruyucu Donanım) zimmeti modülüne eklendi",
+    "İSG eğitimi kaydı, periyodik sağlık kontrol raporu, personel bilgi formu belge tipleri hayata geçti"
+  ],
+  "merge_gate": "dotnet build + belge tipleri tanımlı + demo seed: tehlike sınıfı ve periyodlar yüklü",
+  "handoff": "docs/handoffs/occupational-safety-module.md",
+  "source": "2. Tur § G-03 (YÜKSEK, Türkiye'ye özgü; en düşük maliyetli farklılaşma — altyapı hazır)"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "senseik-014",
+  "title": "Puantaj motoru: ara dinlenme, gece çalışması, denkleştirme, anomali (G-02)",
+  "owner": "pc-b",
+  "state": "ready",
+  "branch": "b/attendance-timesheet-engine",
+  "worktree": ".claude/worktrees/timesheet-engine",
+  "acceptance": [
+    "Günlük giriş-çıkış ve çoklu hareket (öğle çıkışı) CSV şemasında tanımlı; PDKS içe aktarım çalışıyor",
+    "Ara dinlenme kuralı (İş K. m.68): 4–7.5 saat → 30 dk, 7.5+ saat → 1 sa, otomatik hesaplanıyor",
+    "Günlük 11 saat sınırı (m.63) ve gece çalışması 7.5 saat limiti (m.69) denetleniyor",
+    "Denkleştirme (2 ay, yazılı anlaşmayla 4 ay) puantajdan bordro aktarımında uygulanıyor",
+    "Anomali (geç gelme, erken çıkma, devamsızlık) taraması, Resolve Timesheet Anomalies arayüzünde çalışıyor"
+  ],
+  "merge_gate": "dotnet test (Attendance) + PDKS CSV test yüklemesi + Puantaj ↔ Bordro aktarım (senseik-015)",
+  "handoff": "docs/handoffs/attendance-timesheet-engine.md",
+  "source": "2. Tur § G-02 (YÜKSEK — Motor yok, yetki tanımlı, Türkiye mevzuatı sabaları dahil)"
+}

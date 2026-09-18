@@ -1,0 +1,17 @@
+{
+  "id": "senseik-012",
+  "title": "Fazla mesai: ücret oranları + 270 saat sayacı + serbest zaman takibi (F-05)",
+  "owner": "pc-b",
+  "state": "ready",
+  "branch": "b/overtime-rates-limit",
+  "worktree": ".claude/worktrees/overtime-calc",
+  "acceptance": [
+    "Fazla mesai onay formunda ücret oranı (%25 veya %50, İş K. m.41) seçimi var",
+    "Yıllık 270 saat üst sınırı sayacı çalışıyor ve uyarı gösteriyor",
+    "Serbest zaman 1.5:1 oranıyla hesaplanıyor ve 6 ay içinde kullandırılması denetleniyor",
+    "Gece çalışması sınırı (m.69: max 7,5 saat) ekip puantajı altyapısına eklendi"
+  ],
+  "merge_gate": "dotnet test (Leave/Attendance) — 270 saat sınırı test case + Puantaj motoru (G-02) bağlantısı",
+  "handoff": "docs/handoffs/attendance-timesheet-engine.md",
+  "source": "2. Tur § F-05 (YÜKSEK — Fazla mesaide mevzuat bilinci var, sayısal denetim yok)"
+}
