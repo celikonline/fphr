@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as reportsService from "./reports.service";
 
 // Mock apiClient
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked value must be created with vi.hoisted() to avoid a TDZ error.
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
@@ -18,9 +20,9 @@ describe("reports.service", () => {
 
   describe("getReportCatalog", () => {
     it("fetches catalog from correct endpoint", async () => {
-      const mockCatalog = [
-        { key: "attendance-summary" },
-        { key: "payroll-report" },
+      const mockCatalog: reportsService.ReportCatalogItem[] = [
+        { key: "employee.list", categoryKey: "employee", parameters: [{ key: "orgUnitIds", kind: "orgUnits", isRequired: false }] },
+        { key: "leave.requests", categoryKey: "leave", parameters: [{ key: "dateRange", kind: "dateRange", isRequired: true }] },
       ];
 
       mockApiClient.get.mockResolvedValueOnce({ data: mockCatalog });
@@ -38,6 +40,24 @@ describe("reports.service", () => {
 
       expect(result).toEqual([]);
       expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe("groupReportCatalog", () => {
+    it("groups by category in menu order and drops empty categories", () => {
+      const grouped = reportsService.groupReportCatalog([
+        { key: "finance.salaries", categoryKey: "finance", parameters: [] },
+        { key: "leave.requests", categoryKey: "leave", parameters: [] },
+        { key: "documents.missingDocuments", categoryKey: "administrative", parameters: [] },
+        { key: "custom.thing", categoryKey: "unknownCategory", parameters: [] },
+      ]);
+
+      expect(grouped.map((g) => g.categoryKey)).toEqual(["administrative", "leave", "finance", "unknownCategory"]);
+      expect(grouped[1].items.map((i) => i.key)).toEqual(["leave.requests"]);
+    });
+
+    it("returns an empty list for an empty catalog", () => {
+      expect(reportsService.groupReportCatalog([])).toEqual([]);
     });
   });
 
@@ -142,10 +162,10 @@ describe("reports.service", () => {
         data: { items: [], totalCount: 0, pageIndex: 1 },
       });
 
-      await reportsService.listReportExecutions({ pageIndex: 1, pageSize: 20 });
+      await reportsService.listReportExecutions({ page: 1, pageSize: 20 });
 
       expect(mockApiClient.get).toHaveBeenCalledWith("/v1/reports/executions", {
-        params: { pageIndex: 1, pageSize: 20 },
+        params: { page: 1, pageSize: 20 },
       });
     });
   });

@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as mfaService from "./mfa.service";
 
 // Mock apiClient
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked value must be created with vi.hoisted() to avoid a TDZ error.
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,

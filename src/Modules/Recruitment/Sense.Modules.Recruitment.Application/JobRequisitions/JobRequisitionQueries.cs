@@ -19,7 +19,7 @@ public sealed class ListJobRequisitionsHandler(IJobRequisitionRepository requisi
         RequisitionStatus? status = null;
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
-            if (!Enum.TryParse<RequisitionStatus>(query.Status, out var parsed))
+            if (!Enum.TryParse<RequisitionStatus>(query.Status, ignoreCase: true, out var parsed))
             {
                 return Error.Validation(ErrorCodes.ValidationError, ("Status", query.Status));
             }

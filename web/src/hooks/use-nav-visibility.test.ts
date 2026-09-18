@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useVisibleItems } from "./use-nav-visibility";
 import { useAuthStore } from "@/store/auth.store";
+import type { AccessSettingKey } from "@/types";
 
 // Mock the auth store
 vi.mock("@/store/auth.store", () => ({
@@ -14,7 +15,7 @@ interface TestItem {
   id: string;
   label: string;
   permissions?: readonly string[];
-  accessSetting?: "feature1" | "feature2";
+  accessSetting?: AccessSettingKey;
 }
 
 describe("useVisibleItems", () => {
@@ -97,8 +98,8 @@ describe("useVisibleItems", () => {
           features: {
             accessSettingsBypass: false,
             access: {
-              feature1: true,
-              feature2: false,
+              showOrgInfo: true,
+              showUpcomingLeaves: false,
             },
           },
         });
@@ -107,8 +108,8 @@ describe("useVisibleItems", () => {
     });
 
     const items: TestItem[] = [
-      { id: "1", label: "Feature 1", accessSetting: "feature1" },
-      { id: "2", label: "Feature 2", accessSetting: "feature2" },
+      { id: "1", label: "Feature 1", accessSetting: "showOrgInfo" },
+      { id: "2", label: "Feature 2", accessSetting: "showUpcomingLeaves" },
       { id: "3", label: "No Restriction" },
     ];
 
@@ -133,7 +134,7 @@ describe("useVisibleItems", () => {
     });
 
     const items: TestItem[] = [
-      { id: "1", label: "Feature", accessSetting: "feature1" },
+      { id: "1", label: "Feature", accessSetting: "showOrgInfo" },
     ];
 
     const { result } = renderHook(() => useVisibleItems(items));
@@ -149,7 +150,7 @@ describe("useVisibleItems", () => {
           features: {
             accessSettingsBypass: false,
             access: {
-              feature1: false,
+              showOrgInfo: false,
             },
           },
         });
@@ -158,7 +159,7 @@ describe("useVisibleItems", () => {
     });
 
     const items: TestItem[] = [
-      { id: "1", label: "Feature", accessSetting: "feature1" },
+      { id: "1", label: "Feature", accessSetting: "showOrgInfo" },
     ];
 
     const { result } = renderHook(() => useVisibleItems(items));
@@ -213,7 +214,7 @@ describe("useVisibleItems", () => {
           user: { permissions: ["feature.view"] },
           features: {
             accessSettingsBypass: false,
-            access: { featureAccess: true },
+            access: { showOrgInfo: true },
           },
         });
       }
@@ -221,7 +222,7 @@ describe("useVisibleItems", () => {
     });
 
     const items: TestItem[] = [
-      { id: "1", label: "Feature", permissions: ["feature.view"], accessSetting: "featureAccess" },
+      { id: "1", label: "Feature", permissions: ["feature.view"], accessSetting: "showOrgInfo" },
       { id: "2", label: "Dashboard" },
     ];
 

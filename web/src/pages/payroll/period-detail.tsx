@@ -9,7 +9,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
-import { getCostCenters, type CostCenter } from "@/services/organization.service";
+import { getCostCenters } from "@/services/organization.service";
 import {
   downloadPayrollPeriodExport,
   getPayrollPeriod,

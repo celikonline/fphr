@@ -1,3 +1,4 @@
+using Sense.Modules.Reporting.Contracts;
 using Sense.Modules.Reporting.Domain;
 
 namespace Sense.Modules.Reporting.Application;
@@ -21,7 +22,11 @@ public sealed record ReportExecutionDto(
         execution.ErrorMessage);
 }
 
-/// <summary>One report a caller may generate; display name/description are looked up client-side by Key (i18n "reports" namespace).</summary>
-public sealed record ReportCatalogItemDto(string Key);
+/// <summary>
+/// One report the caller may generate (Kolay İK "rapor türü"): the stable key (web resolves the display name/description
+/// from the "reports" i18n namespace), its menu category (<see cref="ReportCategories"/>) and the filters it accepts -
+/// the web draws the parameter form from <see cref="Parameters"/> (birim ağacı, yıl, ay, tarih aralığı, anahtar).
+/// </summary>
+public sealed record ReportCatalogItemDto(string Key, string CategoryKey, IReadOnlyList<ReportParameterDescriptor> Parameters);
 
 public sealed record ReportExecutionFileDto(string FileName, string ContentType, byte[] Content);

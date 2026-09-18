@@ -18,7 +18,7 @@ public sealed class ListJobPostingsHandler(IJobPostingRepository postings) : IQu
         JobPostingStatus? status = null;
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
-            if (!Enum.TryParse<JobPostingStatus>(query.Status, out var parsed))
+            if (!Enum.TryParse<JobPostingStatus>(query.Status, ignoreCase: true, out var parsed))
             {
                 return Error.Validation(ErrorCodes.ValidationError, ("Status", query.Status));
             }

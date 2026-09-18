@@ -176,7 +176,7 @@ function ReturnAssetForm({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
           <Text size="sm" fw={500}>
             {t("assets:section.returnedAt")}
           </Text>
-          <DatePicker label={t("assets:section.returnedAt")} id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
+          <DatePicker id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
         </Stack>
         <Group justify="flex-end" gap="sm">
           <Button type="button" variant="default" onClick={onCancel} disabled={busy}>

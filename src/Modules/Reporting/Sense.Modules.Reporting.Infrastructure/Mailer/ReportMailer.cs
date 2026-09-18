@@ -14,7 +14,8 @@ public sealed class ReportMailer(IEmailSender sender, IStringLocalizer<SharedRes
     public Task SendReportReadyAsync(string toEmail, string? toName, Guid executionId, string reportKey, CancellationToken cancellationToken)
     {
         var baseUrl = configuration["Frontend:BaseUrl"]?.TrimEnd('/') ?? string.Empty;
-        var url = $"{baseUrl}/app/reports/executions/{executionId}";
+        // The Raporlar page reads ?execution= and offers that file first ("Son oluşturduklarım"); there is no per-execution route.
+        var url = $"{baseUrl}/app/reports?execution={executionId}";
         var name = toName ?? string.Empty;
 
         var subject = Render(localizer[EmailTemplateKeys.ReportReadySubject], name, url);

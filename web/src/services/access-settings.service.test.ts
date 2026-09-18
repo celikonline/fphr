@@ -3,10 +3,12 @@ import * as accessSettingsService from "./access-settings.service";
 import type { AccessSettings } from "@/types";
 
 // Mock apiClient
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked value must be created with vi.hoisted() to avoid a TDZ error.
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   put: vi.fn(),
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,

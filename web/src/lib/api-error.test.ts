@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { getApiErrorStatus, getApiProblem, getApiErrorMessage, type ApiProblem } from "./api-error";
-import axios from "axios";
 
 // Create mock axios error
-function createAxiosError(status: number, data: any): any {
+function createAxiosError(status: number, data: unknown): unknown {
   return {
     isAxiosError: true,
     response: {

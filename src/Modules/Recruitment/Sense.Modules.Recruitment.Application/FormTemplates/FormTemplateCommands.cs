@@ -17,12 +17,12 @@ public sealed class CreateFormTemplateValidator : AbstractValidator<CreateFormTe
     public CreateFormTemplateValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
-        RuleFor(x => x.TemplateType).IsEnumName(typeof(RecruitmentFormTemplateType));
+        RuleFor(x => x.TemplateType).IsEnumName(typeof(RecruitmentFormTemplateType), caseSensitive: false);
         RuleFor(x => x.Fields).NotEmpty();
         RuleForEach(x => x.Fields).ChildRules(field =>
         {
             field.RuleFor(f => f.Label).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
-            field.RuleFor(f => f.FieldType).IsEnumName(typeof(FormFieldType));
+            field.RuleFor(f => f.FieldType).IsEnumName(typeof(FormFieldType), caseSensitive: false);
         });
     }
 }
@@ -57,7 +57,7 @@ public sealed class ReplaceFormTemplateFieldsValidator : AbstractValidator<Repla
         RuleForEach(x => x.Fields).ChildRules(field =>
         {
             field.RuleFor(f => f.Label).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
-            field.RuleFor(f => f.FieldType).IsEnumName(typeof(FormFieldType));
+            field.RuleFor(f => f.FieldType).IsEnumName(typeof(FormFieldType), caseSensitive: false);
         });
     }
 }
@@ -121,12 +121,12 @@ internal static class FormFieldMapper
         fields.Select(f => new FormFieldInput(f.Id, f.Label, ParseFieldType(f.FieldType, f.Label), f.IsRequired, f.IsSensitive, f.Options, f.Weight)).ToList();
 
     public static RecruitmentFormTemplateType ParseTemplateType(string value) =>
-        Enum.TryParse<RecruitmentFormTemplateType>(value, out var parsed)
+        Enum.TryParse<RecruitmentFormTemplateType>(value, ignoreCase: true, out var parsed)
             ? parsed
             : throw new ArgumentException($"Invalid template type: '{value}'.", nameof(value));
 
     private static FormFieldType ParseFieldType(string value, string label) =>
-        Enum.TryParse<FormFieldType>(value, out var parsed)
+        Enum.TryParse<FormFieldType>(value, ignoreCase: true, out var parsed)
             ? parsed
             : throw new ArgumentException($"Invalid field type: '{value}' (field '{label}').", nameof(value));
 }

@@ -1,18 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as leaveService from "./leave.service";
-import type {
-  EmployeeLeaveBalances,
-  LeaveBalance,
-  LeaveRequest,
-  LeaveRequestStatus,
-} from "./leave.service";
+import type { EmployeeLeaveBalances, LeaveRequest } from "./leave.service";
 
 // Mock @senseik/api-client
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked value must be created with vi.hoisted() to avoid a TDZ error.
+const mockApiClient = vi.hoisted(() => ({
   get: vi.fn(),
   post: vi.fn(),
   patch: vi.fn(),
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
@@ -52,7 +49,7 @@ describe("leaveService", () => {
       };
       mockApiClient.get.mockResolvedValue({ data: mockBalances });
 
-      await leaveService.getLeaveBalances(employeeId);
+      await leaveService.getEmployeeLeaveBalances(employeeId);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         `/v1/leave/employees/${employeeId}/balances`
@@ -73,7 +70,7 @@ describe("leaveService", () => {
       const employeeId = "emp-456";
       mockApiClient.get.mockResolvedValue({ data: [] });
 
-      await leaveService.getLeaveRequests(employeeId);
+      await leaveService.getEmployeeLeaveRequests(employeeId);
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
         `/v1/leave/employees/${employeeId}/requests`
@@ -91,13 +88,14 @@ describe("leaveService", () => {
         startDate: "2026-01-01", // YYYY-MM-DD format (DateOnly equivalent)
         endDate: "2026-01-03",
         description: "Test leave",
+        bypassApproval: false,
       };
 
       mockApiClient.post.mockResolvedValue({
         data: { id: "req-1", status: "pending" as const },
       });
 
-      await leaveService.submitLeaveRequestOnBehalf(employeeId, requestInput);
+      await leaveService.createLeaveRequestOnBehalf(employeeId, requestInput);
 
       // Verify that the dates are passed as-is, not converted via toISOString()
       const callArgs = mockApiClient.post.mock.calls[0];
@@ -121,6 +119,8 @@ describe("leaveService", () => {
         calculatedDays: 3,
         status: "pending",
         source: "selfService",
+        revisionNo: 1,
+        submittedAt: new Date().toISOString(),
       };
 
       mockApiClient.get.mockResolvedValue({ data: [mockRequest] });
@@ -165,7 +165,7 @@ describe("leaveService", () => {
           },
           {
             leaveTypeName: "Future Type",
-            leaveTypeCode: "futureType" as any, // Simulate new API type not in our enum
+            leaveTypeCode: "futureType" as unknown as EmployeeLeaveBalances["balances"][number]["leaveTypeCode"], // Simulate new API type not in our enum
             balance: {
               leaveTypeId: "type-2",
               currentPeriodFrom: "2026-01-01",
@@ -203,12 +203,14 @@ describe("leaveService", () => {
         id: "req-1",
         employeeId: "emp-1",
         leaveTypeId: "type-1",
-        leaveTypeCode: "customNewType" as any,
+        leaveTypeCode: "customNewType" as unknown as LeaveRequest["leaveTypeCode"],
         startDate: "2026-03-15",
         endDate: "2026-03-17",
         calculatedDays: 3,
         status: "pending",
         source: "selfService",
+        revisionNo: 1,
+        submittedAt: new Date().toISOString(),
       };
 
       mockApiClient.get.mockResolvedValue({ data: [mockRequest] });
@@ -217,13 +219,13 @@ describe("leaveService", () => {
       const result = await leaveService.getMyLeaveRequests();
 
       expect(result).toHaveLength(1);
-      expect((result[0] as any).leaveTypeCode).toBe("customNewType");
+      expect((result[0] as unknown as { leaveTypeCode: string }).leaveTypeCode).toBe("customNewType");
     });
   });
 
   describe("null field handling (API omits nulls via WhenWritingNull)", () => {
     it("handles missing optional fields gracefully", async () => {
-      const mockBalanceWithoutOptionals: any = {
+      const mockBalanceWithoutOptionals: EmployeeLeaveBalances["balances"][number] = {
         leaveTypeName: "Sick Leave",
         leaveTypeCode: "sick",
         balance: {

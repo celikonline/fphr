@@ -1,21 +1,32 @@
-using System.Text;
+using Microsoft.Extensions.Localization;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Reporting.Contracts;
+using Sense.Shared.Contracts.Export;
+using Sense.Shared.Infrastructure;
+using Sense.Shared.Infrastructure.Export;
 
 namespace Sense.Modules.Documents.Infrastructure.Reporting;
 
 /// <summary>
-/// Reporting module provider (Faz 4 #70) over the same data as D2's missing-document report page
-/// (GetMissingDocumentReportQuery/ListReportAsync) - a full CSV export across every status, not paged.
+/// Reporting module provider (Faz 4 #70, Raporlar → İdari) over the same data as D2's missing-document report page
+/// (GetMissingDocumentReportQuery/ListReportAsync) - every requirement across every status, not paged, as an Excel
+/// workbook with localized headers (previously an English-only CSV). Rows whose document type no longer exists are skipped.
 /// </summary>
 public sealed class MissingDocumentReportProvider(
     IEmployeeDocumentRequirementRepository requirements,
     IDocumentTypeDefinitionRepository types,
-    IEmployeeContactLookup employeeContacts) : IReportProvider
+    IEmployeeContactLookup employeeContacts,
+    IReportExporter exporter,
+    IStringLocalizer<SharedResource> localizer,
+    TimeProvider clock) : IReportProvider
 {
-    public string Key => "documents.missingDocuments";
+    public const string ReportKey = "documents.missingDocuments";
+
+    public string Key => ReportKey;
+
+    public string CategoryKey => ReportCategories.Administrative;
 
     public string? RequiredPermission => "documents.requirements.view";
 
@@ -34,10 +45,20 @@ public sealed class MissingDocumentReportProvider(
         }
 
         var employeeIds = items.Select(i => i.EmployeeId).Distinct().ToList();
-        var contacts = await employeeContacts.GetContactsAsync(tenantId, employeeIds, cancellationToken);
-        var nameByEmployeeId = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
+        var contacts = (await employeeContacts.GetContactsAsync(tenantId, employeeIds, cancellationToken)).ToDictionary(c => c.EmployeeId);
 
-        var csv = new StringBuilder("Employee,DocumentType,Stage,Status,DueDate\n");
+        var columns = new List<ExportColumn>
+        {
+            new(localizer.Column("firstName")),
+            new(localizer.Column("lastName")),
+            new(localizer.Column("status")),
+            new(localizer.Column("documentType")),
+            new(localizer.Column("documentStage")),
+            new(localizer.Column("requirementStatus")),
+            new(localizer.Column("dueDate"), ExportColumnType.Date),
+        };
+
+        var rows = new List<IReadOnlyList<object?>>(items.Count);
         foreach (var item in items)
         {
             if (!typeMap.TryGetValue(item.DocumentTypeId, out var type))
@@ -45,18 +66,21 @@ public sealed class MissingDocumentReportProvider(
                 continue;
             }
 
-            var name = nameByEmployeeId.GetValueOrDefault(item.EmployeeId, string.Empty);
-            csv.Append(CsvField(name)).Append(',')
-               .Append(CsvField(type.Name)).Append(',')
-               .Append(type.Stage).Append(',')
-               .Append(item.Status).Append(',')
-               .Append(item.DueDate?.ToString("yyyy-MM-dd") ?? string.Empty)
-               .Append('\n');
+            var contact = contacts.GetValueOrDefault(item.EmployeeId);
+            rows.Add(
+            [
+                contact?.FirstName,
+                contact?.LastName,
+                localizer.EnumText("EmployeeStatus", contact?.Status),
+                type.Name,
+                localizer.EnumText<DocumentTypeStage>(type.Stage),
+                localizer.EnumText<DocumentRequirementStatus>(item.Status),
+                item.DueDate,
+            ]);
         }
 
-        var content = Encoding.UTF8.GetBytes(csv.ToString());
-        return new ReportFileResult($"missing-documents-{DateTime.UtcNow:yyyyMMdd}.csv", "text/csv", content);
+        var sheet = localizer.Sheet("missingDocuments");
+        var file = exporter.ExportToExcel($"{sheet} {clock.GetUtcNow():yyyy-MM-dd}.xlsx", [new ExportTable(sheet, columns, rows)], cancellationToken);
+        return new ReportFileResult(file.FileName, file.ContentType, file.Content);
     }
-
-    private static string CsvField(string value) => $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
 }

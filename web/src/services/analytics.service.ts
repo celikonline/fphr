@@ -9,10 +9,17 @@ import { apiClient } from "@senseik/api-client";
 
 const ANALYTICS_BASE = "/v1/analytics";
 
+/**
+ * One breakdown row. `count`/`share` are omitted by the API (`WhenWritingNull`) exactly when `isSuppressed` is
+ * true (G-10-21, 11.3.12 "Küçük hücre gizleme"): a non-zero cell under the backend's minimum cell size (5) never
+ * carries its exact number - `dimension` still names the category, callers must show a "gizli" state instead of
+ * the value.
+ */
 export interface KpiBreakdown {
   dimension: string;
-  count: number;
-  share: number;
+  count?: number;
+  share?: number;
+  isSuppressed: boolean;
 }
 
 export interface KpiResult {

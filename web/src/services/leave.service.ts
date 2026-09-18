@@ -137,6 +137,10 @@ export interface LeaveRequestApproval {
 export interface LeaveRequestDetail extends LeaveRequest {
   employeeName: string;
   approval?: LeaveRequestApproval | null;
+  /** "Kalan İzin Bakiyesi": null for non-PerYear types or when the employee has no leave profile. */
+  remainingBalance?: number | null;
+  /** "Çakışan İzinler": same org unit, active leave over this request's dates, excluding the requester. */
+  teamOverlap?: LeaveTeamOverlap | null;
 }
 
 /** `LeaveCalendarEntryDto`: masked entries (sensitive type or hidden type name) carry no type fields. */
@@ -181,17 +185,20 @@ export interface RequestableLeaveType {
   countsNonWorkingDays: boolean;
 }
 
+/** `TeamOverlapDto`: other approved/pending leaves in the same org unit over a date range (S-7), non-blocking info. */
+export interface LeaveTeamOverlap {
+  count: number;
+  employees: { employeeId: string; name: string; startDate: string; endDate: string }[];
+}
+
 /** `LeaveRequestPreviewResponse`: day count of a draft; rule violations come back as localized warnings. */
 export interface LeaveRequestPreview {
   days: number;
   weeklyRestDays: number;
   publicHolidayDays: number;
   warnings: { code: string; message: string }[];
-  /** Non-blocking info: other approved/pending leaves in the same org unit over these dates (S-7); absent on older API builds. */
-  teamOverlap?: {
-    count: number;
-    employees: { employeeId: string; name: string; startDate: string; endDate: string }[];
-  } | null;
+  /** Absent on older API builds. */
+  teamOverlap?: LeaveTeamOverlap | null;
 }
 
 export interface LeaveRequestPreviewInput {

@@ -70,6 +70,18 @@ public sealed class WorkSchedulesController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Assign(Guid id, [FromBody] AssignWorkScheduleRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new AssignWorkScheduleCommand(id, request.EmployeeIds, request.EffectiveFrom), ct));
+
+    /// <summary>Çalışan kartı "Kariyer &gt; Çalışma Takvimi": dated assignment history (HR/yönetici tarafı).</summary>
+    [HttpGet("employees/{employeeId:guid}/assignments")]
+    [ProducesResponseType<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListAssignments(Guid employeeId, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new ListEmployeeWorkScheduleAssignmentsQuery(employeeId), ct)).LocalizeAssignments(localizer));
+
+    /// <summary>Çalışan kartı "Kariyer &gt; Çalışma Takvimi": own card (self-service).</summary>
+    [HttpGet("me/assignments")]
+    [ProducesResponseType<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyAssignments([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
+        FromResult((await Dispatcher.Query(new GetMyWorkScheduleAssignmentsQuery(), ct)).LocalizeAssignments(localizer));
 }
 
 /// <summary>The seeded default schedule stores a resource key as its name ("attendance.work_schedule.default.name"); the API returns it translated.</summary>
@@ -82,4 +94,11 @@ internal static class WorkScheduleTextLocalizer
 
     public static Result<WorkScheduleDto> Localize(this Result<WorkScheduleDto> result, IErrorLocalizer localizer) =>
         result.IsFailure ? result : result.Value with { Name = localizer.MessageOrText(result.Value.Name) };
+
+    public static Result<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>> LocalizeAssignments(
+        this Result<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result
+            : Result.Success<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(
+                result.Value.Select(a => a with { WorkScheduleName = localizer.MessageOrText(a.WorkScheduleName) }).ToList());
 }

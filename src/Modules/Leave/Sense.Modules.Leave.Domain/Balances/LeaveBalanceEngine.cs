@@ -138,6 +138,19 @@ public static class LeaveBalanceEngine
     };
 
     /// <summary>
+    /// Kolay İK "Devir kayıpları" (11.3.12 bakiye raporu #7): total entitlement lost at period boundaries before
+    /// <paramref name="currentPeriod"/> - every closed period's closing balance minus what the rule carried forward.
+    /// Derived from the ledger alone: Σ(rows dated before the period) − Σ(CarryOver rows dated up to the period start);
+    /// with unlimited carry-over this is exactly 0. Never negative (a Reset rule "forgiving" a negative closing is not a loss).
+    /// </summary>
+    public static decimal CarryOverLoss(LeavePeriod currentPeriod, IReadOnlyCollection<LeaveLedgerEntry> entries)
+    {
+        var before = entries.Where(e => e.EffectiveDate < currentPeriod.From).Sum(e => e.Amount);
+        var carried = entries.Where(e => e.Type == LeaveLedgerEntryType.CarryOver && e.EffectiveDate <= currentPeriod.From).Sum(e => e.Amount);
+        return Math.Max(0m, before - carried);
+    }
+
+    /// <summary>
     /// Accrual rows attributable to <paramref name="period"/>. StartOfPeriod rows are dated at the period start; EndOfPeriod
     /// rows are dated the day after the period end (so they are usable in - and belong to - the following period).
     /// A partial first calendar-year period is prorated by days.

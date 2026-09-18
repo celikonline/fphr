@@ -114,6 +114,30 @@ function revealDelay(ms: number): CSSProperties {
   return { animationDelay: `${ms}ms` };
 }
 
+/** Survives a reload while the MFA code screen is up (it's session state, not React state) — otherwise a stray
+ * F5 silently drops the user back to the empty email/password form with no indication a challenge was pending. */
+const MFA_TOKEN_STORAGE_KEY = "senseik.mfaToken";
+
+function readStoredMfaToken(): string | null {
+  try {
+    return sessionStorage.getItem(MFA_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredMfaToken(token: string | null) {
+  try {
+    if (token) {
+      sessionStorage.setItem(MFA_TOKEN_STORAGE_KEY, token);
+    } else {
+      sessionStorage.removeItem(MFA_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // Storage unavailable (private mode, blocked cookies, ...) — MFA still works, just won't survive a reload.
+  }
+}
+
 export default function LoginPage() {
   const { t } = useTranslation(["auth"]);
   const navigate = useNavigate();
@@ -126,9 +150,14 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [tenantChoices, setTenantChoices] = useState<TenantChoice[] | null>(null);
-  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [mfaToken, setMfaTokenState] = useState<string | null>(() => readStoredMfaToken());
   const [mfaCode, setMfaCode] = useState("");
   const [mfaError, setMfaError] = useState("");
+
+  const setMfaToken = (token: string | null) => {
+    setMfaTokenState(token);
+    writeStoredMfaToken(token);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -182,6 +211,7 @@ export default function LoginPage() {
 
     try {
       await completeMfaLogin(mfaToken, mfaCode);
+      setMfaToken(null);
       navigate("/app", { replace: true });
     } catch (err) {
       const problem = getApiProblem(err instanceof Error ? err.cause : undefined);

@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, Group, Stack, Text, Divider } from "@mantine/core";
 import { formatMoney } from "../../lib/money";

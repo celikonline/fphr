@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Box, Button, Group, Paper, Skeleton, Stack, Text, Title, Tooltip, Badge } from "@mantine/core";
+import { ActionIcon, Box, Button, Group, Paper, Skeleton, Stack, Text, Title, Tooltip } from "@mantine/core";
 import { CalendarDays, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";

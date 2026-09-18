@@ -9,7 +9,9 @@ import {
   Badge,
   Button,
   Card,
+  CheckIcon,
   Code,
+  ColorSwatch,
   CopyButton,
   DataList,
   Group,
@@ -28,7 +30,8 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { disableMfa, enrollMfa, getMfaStatus, verifyMfaEnrollment, type MfaEnrollment } from "@/services/mfa.service";
 import { useAuthStore } from "@/store/auth.store";
-import { useUIStore, type Theme } from "@/store/ui.store";
+import { PALETTE_SWATCHES } from "@/lib/mantine-theme";
+import { PALETTES, useUIStore, type Palette, type Theme } from "@/store/ui.store";
 import classes from "./account.module.css";
 
 type TFn = (key: string, opts?: Record<string, unknown>) => string;
@@ -40,6 +43,35 @@ const LANGUAGES = [
 ];
 
 const THEMES: Theme[] = ["light", "dark", "system"];
+
+/** Radio-style swatch row for the primary-color palette; the checkmark marks the active choice. */
+function PalettePicker({ value, onChange, t }: { value: Palette; onChange: (palette: Palette) => void; t: TFn }) {
+  return (
+    <Group gap="sm" role="radiogroup" aria-label={t("common:palette")} mt={4}>
+      {PALETTES.map((palette) => {
+        const selected = palette === value;
+        const label = t(`common:palette${palette.charAt(0).toUpperCase()}${palette.slice(1)}`);
+        return (
+          <ColorSwatch
+            key={palette}
+            component="button"
+            type="button"
+            role="radio"
+            aria-checked={selected}
+            aria-label={label}
+            title={label}
+            color={PALETTE_SWATCHES[palette]}
+            size={32}
+            onClick={() => onChange(palette)}
+            className={selected ? classes.paletteSwatchSelected : classes.paletteSwatch}
+          >
+            {selected && <CheckIcon size={14} color="#fff" />}
+          </ColorSwatch>
+        );
+      })}
+    </Group>
+  );
+}
 
 function ProfileRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -228,6 +260,8 @@ export default function AccountPage() {
   const refreshMe = useAuthStore((state) => state.refreshMe);
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
+  const palette = useUIStore((state) => state.palette);
+  const setPalette = useUIStore((state) => state.setPalette);
   const queryClient = useQueryClient();
 
   // S-12 (gün açılışı tur 1): `GET me/mfa` is the security card's source of truth — in particular
@@ -347,6 +381,10 @@ export default function AccountPage() {
                 mt={4}
               />
             </div>
+          </Input.Wrapper>
+
+          <Input.Wrapper label={t("common:palette")} description={t("common:paletteHint")} labelElement="div">
+            <PalettePicker value={palette} onChange={setPalette} t={t} />
           </Input.Wrapper>
         </Stack>
       </Card>

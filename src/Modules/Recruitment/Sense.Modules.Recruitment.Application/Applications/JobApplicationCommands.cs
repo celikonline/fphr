@@ -56,7 +56,7 @@ public sealed class MoveJobApplicationStageValidator : AbstractValidator<MoveJob
     public MoveJobApplicationStageValidator()
     {
         RuleFor(x => x.ApplicationId).NotEmpty();
-        RuleFor(x => x.Stage).IsEnumName(typeof(ApplicationStage));
+        RuleFor(x => x.Stage).IsEnumName(typeof(ApplicationStage), caseSensitive: false);
     }
 }
 
@@ -73,7 +73,7 @@ public sealed class MoveJobApplicationStageHandler(
             return existing.Error;
         }
 
-        var targetStage = Enum.Parse<ApplicationStage>(command.Stage);
+        var targetStage = Enum.Parse<ApplicationStage>(command.Stage, ignoreCase: true);
 
         // AutomationRule gating (roadmap #88): an active rule for this exact (FromStage, ToStage) pair requires at
         // least one submitted form response against its template before the transition is allowed.

@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import axios from "axios";
-import * as httpInterceptorsModule from "./http-interceptors";
+// Imported dynamically per test (see beforeEach below) instead of statically: `vi.resetModules()`
+// cannot reset a module that's already bound via a top-level `import`, since that binding keeps
+// pointing at the first-evaluated instance. Re-importing after resetModules() gives each test a
+// fresh copy of the module, and with it a fresh `lastToastAt` (the throttle window's state).
+type HttpInterceptorsModule = typeof import("./http-interceptors");
 
 // Mock axios
 vi.mock("axios", async () => {
@@ -8,31 +11,32 @@ vi.mock("axios", async () => {
   return {
     default: {
       ...actual,
-      isAxiosError: (error: unknown) => {
-        if (error instanceof Error && "response" in error && "config" in error) {
-          return true;
-        }
-        return false;
-      },
+      // Duck-type on shape rather than `instanceof Error`: the fixtures below are plain
+      // objects (like a JSON-cloned error crossing a worker/serialization boundary), not
+      // real AxiosError instances, mirroring what axios's own isAxiosError checks for.
+      isAxiosError: (error: unknown): boolean =>
+        typeof error === "object" && error !== null && "response" in error && "config" in error,
     },
   };
 });
 
 // Mock @senseik/api-client
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked values referenced inside them must be created with vi.hoisted().
+const mockApiClient = vi.hoisted(() => ({
   interceptors: {
     response: {
       use: vi.fn(),
     },
   },
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
 }));
 
 // Mock toast hook
-const mockToast = vi.fn();
+const mockToast = vi.hoisted(() => vi.fn());
 vi.mock("@/hooks/use-toast", () => ({
   toast: mockToast,
 }));
@@ -46,10 +50,13 @@ vi.mock("@/i18n", () => ({
 }));
 
 describe("http-interceptors", () => {
-  beforeEach(() => {
+  let httpInterceptorsModule: HttpInterceptorsModule;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
-    // Reset module-level state (lastToastAt)
+    // Reset module-level state (lastToastAt) by re-importing a fresh module instance.
     vi.resetModules();
+    httpInterceptorsModule = await import("./http-interceptors");
   });
 
   afterEach(() => {
@@ -62,7 +69,7 @@ describe("http-interceptors", () => {
   });
 
   describe("429 rate limit handling", () => {
-    it("shows toast on 429 response with Retry-After header", () => {
+    it("shows toast on 429 response with Retry-After header", async () => {
       httpInterceptorsModule.registerHttpInterceptors();
       const [, errorHandler] = mockApiClient.interceptors.response.use.mock.calls[0];
 
@@ -86,7 +93,9 @@ describe("http-interceptors", () => {
         variant: "destructive",
         description: expect.stringContaining("30"),
       });
-      expect(result).toEqual(Promise.reject(error));
+      // Awaiting (rather than `toEqual(Promise.reject(error))`, which never attaches a handler
+      // to either promise) confirms the rejection and avoids an unhandled rejection warning.
+      await expect(result).rejects.toBe(error);
     });
 
     it("uses default retry-after when header is missing", () => {
@@ -106,7 +115,9 @@ describe("http-interceptors", () => {
       });
 
       vi.useFakeTimers();
-      errorHandler(error);
+      // .catch() is a no-op here (the test only cares about the toast side effect) but avoids
+      // an unhandled rejection warning, since the interceptor always rejects the promise.
+      errorHandler(error).catch(() => {});
       vi.useRealTimers();
 
       expect(mockToast).toHaveBeenCalledWith({
@@ -133,18 +144,18 @@ describe("http-interceptors", () => {
       });
 
       // First error: toast should show
-      errorHandler(error);
+      errorHandler(error).catch(() => {});
       expect(mockToast).toHaveBeenCalledTimes(1);
 
       // Second error immediately after: toast should NOT show (throttled)
-      errorHandler(error);
+      errorHandler(error).catch(() => {});
       expect(mockToast).toHaveBeenCalledTimes(1);
 
       // Advance time past TOAST_THROTTLE_MS (4000 ms)
       vi.advanceTimersByTime(4001);
 
       // Third error: toast should show again
-      errorHandler(error);
+      errorHandler(error).catch(() => {});
       expect(mockToast).toHaveBeenCalledTimes(2);
 
       vi.useRealTimers();
@@ -169,7 +180,7 @@ describe("http-interceptors", () => {
         value: "AxiosError",
       });
 
-      errorHandler(error);
+      errorHandler(error).catch(() => {});
 
       expect(mockToast).toHaveBeenCalledWith({
         variant: "destructive",
@@ -177,7 +188,7 @@ describe("http-interceptors", () => {
       });
     });
 
-    it("ignores non-429 errors", () => {
+    it("ignores non-429 errors", async () => {
       httpInterceptorsModule.registerHttpInterceptors();
       const [, errorHandler] = mockApiClient.interceptors.response.use.mock.calls[0];
 
@@ -196,10 +207,10 @@ describe("http-interceptors", () => {
       const result = errorHandler(error403);
 
       expect(mockToast).not.toHaveBeenCalled();
-      expect(result).toEqual(Promise.reject(error403));
+      await expect(result).rejects.toBe(error403);
     });
 
-    it("ignores errors that are not axios errors", () => {
+    it("ignores errors that are not axios errors", async () => {
       httpInterceptorsModule.registerHttpInterceptors();
       const [, errorHandler] = mockApiClient.interceptors.response.use.mock.calls[0];
 
@@ -208,7 +219,7 @@ describe("http-interceptors", () => {
       const result = errorHandler(error);
 
       expect(mockToast).not.toHaveBeenCalled();
-      expect(result).toEqual(Promise.reject(error));
+      await expect(result).rejects.toBe(error);
     });
   });
 

@@ -16,6 +16,7 @@ import LeaveScreen from "@/screens/app/LeaveScreen";
 import PayrollScreen from "@/screens/app/PayrollScreen";
 import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
 import ProfileScreen from "@/screens/app/ProfileScreen";
+import SupportScreen from "@/screens/app/SupportScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -111,6 +112,7 @@ function AppNavigator() {
           headerShown: false
         }}
       />
+      <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
     </AppStack.Navigator>
   );
 }

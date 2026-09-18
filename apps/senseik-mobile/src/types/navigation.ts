@@ -15,6 +15,7 @@ export type AuthStackParamList = {
 export type AppStackParamList = {
   MainTabs: NavigatorScreenParams<MainTabsParamList>;
   Settings: undefined;
+  Support: undefined;
 };
 
 export type MainTabsParamList = {

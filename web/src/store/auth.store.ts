@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { AUTH_TOKEN_STORAGE_KEY, apiClient } from "@senseik/api-client";
 import { getMe, type MeResponse } from "@/services/me.service";
+import { getImpersonatorId } from "@/lib/jwt";
 import type { AccessSettingKey, AccessSettings, MeFeatures } from "@/types";
 
 export interface User {
@@ -259,7 +260,11 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       hasPermission: (permission) => {
-        const user = get().user;
+        const { user, token } = get();
+        // Mirrors AuthorizationBehaviour's own rule: a platform user's active impersonation session skips
+        // every [RequiresPermission] check server-side, so the UI must not hide things it can already do
+        // (faz0-durum-takibi.md #11 - `/identity/me` returns an empty permission list during impersonation).
+        if (getImpersonatorId(token)) return true;
         return user?.permissions.includes(permission) ?? false;
       },
 

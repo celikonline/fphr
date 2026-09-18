@@ -415,6 +415,13 @@ export function LeaveRequestsTable({
       cell: ({ row }) => days(row.original.calculatedDays),
     },
     {
+      id: "submittedAt",
+      accessorKey: "submittedAt",
+      header: t("leave:requests.submittedAt"),
+      meta: { label: t("leave:requests.submittedAt"), cellClassName: "whitespace-nowrap" },
+      cell: ({ row }) => formatDateOnly(row.original.submittedAt.slice(0, 10), i18n.language),
+    },
+    {
       id: "status",
       accessorFn: (request) => t(`leave:status.${request.status}`),
       header: t("leave:requests.status"),

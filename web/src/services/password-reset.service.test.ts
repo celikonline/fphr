@@ -2,9 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import * as passwordResetService from "./password-reset.service";
 
 // Mock apiClient
-const mockApiClient = {
+// vi.mock factories are hoisted above regular top-level statements, so the
+// mocked value must be created with vi.hoisted() to avoid a TDZ error.
+const mockApiClient = vi.hoisted(() => ({
   post: vi.fn(),
-};
+}));
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
@@ -45,7 +47,11 @@ describe("password-reset.service", () => {
     });
 
     it("does not leak user enumeration (same response for existing and non-existing email)", async () => {
-      mockApiClient.post.mockResolvedValueOnce({ data: null });
+      // Queue the same resolved value for both calls below; a single mockResolvedValueOnce()
+      // would leave the second call falling through to vi.fn()'s default (a plain `undefined`
+      // return, not a promise), which would make the two mock results look different for a
+      // reason that has nothing to do with the enumeration behavior under test.
+      mockApiClient.post.mockResolvedValueOnce({ data: null }).mockResolvedValueOnce({ data: null });
 
       const result1 = await passwordResetService.forgotPassword("existing@example.com");
       const result2 = await passwordResetService.forgotPassword("nonexisting@example.com");
@@ -173,16 +179,18 @@ describe("password-reset.service", () => {
         newPassword: "weak",
       };
 
+      const codeOf = (error: unknown) => (error as { response: { data: { code: string } } }).response.data.code;
+
       try {
         await passwordResetService.resetPassword(input);
-      } catch (error1: any) {
+      } catch (error1) {
         try {
           await passwordResetService.resetPassword(input);
-        } catch (error2: any) {
+        } catch (error2) {
           // Both errors should propagate with distinct codes
-          expect(error1.response.data.code).toBe("INVALID_TOKEN");
-          expect(error2.response.data.code).toBe("WEAK_PASSWORD");
-          expect(error1.response.data.code).not.toBe(error2.response.data.code);
+          expect(codeOf(error1)).toBe("INVALID_TOKEN");
+          expect(codeOf(error2)).toBe("WEAK_PASSWORD");
+          expect(codeOf(error1)).not.toBe(codeOf(error2));
         }
       }
     });

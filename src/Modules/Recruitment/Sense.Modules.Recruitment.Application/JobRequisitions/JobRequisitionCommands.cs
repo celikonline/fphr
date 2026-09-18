@@ -22,9 +22,9 @@ public sealed class CreateJobRequisitionValidator : AbstractValidator<CreateJobR
     {
         RuleFor(x => x.Title).NotEmpty().MaximumLength(RecruitmentLimits.TitleMaxLength);
         RuleFor(x => x.OrgUnitId).NotEmpty();
-        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType));
+        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType), caseSensitive: false);
         RuleFor(x => x.HeadcountRequested).GreaterThan(0);
-        RuleFor(x => x.Reason).IsEnumName(typeof(RequisitionReason));
+        RuleFor(x => x.Reason).IsEnumName(typeof(RequisitionReason), caseSensitive: false);
     }
 }
 
@@ -44,8 +44,8 @@ public sealed class CreateJobRequisitionHandler(ITenantContext tenant, ICurrentU
         }
 
         var created = JobRequisition.Create(
-            tenant.TenantId, command.Title, command.OrgUnitId, Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType),
-            command.HeadcountRequested, Enum.Parse<RequisitionReason>(command.Reason), command.Justification, employeeId);
+            tenant.TenantId, command.Title, command.OrgUnitId, Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType, ignoreCase: true),
+            command.HeadcountRequested, Enum.Parse<RequisitionReason>(command.Reason, ignoreCase: true), command.Justification, employeeId);
         if (created.IsFailure)
         {
             return created.Error;

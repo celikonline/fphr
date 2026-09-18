@@ -313,7 +313,7 @@ export default function CareerJobPostingPage() {
               <Badge variant="light">{t(`recruitment:employmentTypes.${posting.employmentType}`)}</Badge>
             </Group>
             <Title order={2}>{posting.title}</Title>
-            <Stack gap={{ base: "xs", sm: "md" }} c="dimmed">
+            <Stack gap="xs" c="dimmed">
               {posting.location && (
                 <Group gap={4}>
                   <MapPin size={14} />

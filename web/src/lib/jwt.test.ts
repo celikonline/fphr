@@ -1,6 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { decodeJwtPayload, getImpersonatorId } from "./jwt";
 
+/** UTF-8-safe base64url encode, mirroring how a real JWT payload segment is produced. */
+function encodeJwtSegment(value: string): string {
+  const utf8Bytes = new TextEncoder().encode(value);
+  const binary = Array.from(utf8Bytes, (byte) => String.fromCharCode(byte)).join("");
+  return btoa(binary)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
 describe("jwt", () => {
   describe("decodeJwtPayload", () => {
     it("returns null for null input", () => {
@@ -42,10 +52,7 @@ describe("jwt", () => {
     it("decodes valid JWT payload", () => {
       // Create a valid base64url encoded payload: {"sub":"123","name":"John"}
       const payload = JSON.stringify({ sub: "123", name: "John" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -56,10 +63,7 @@ describe("jwt", () => {
     it("handles base64url padding correctly", () => {
       // Test with payload that needs padding
       const payload = JSON.stringify({ id: "user123" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -70,10 +74,7 @@ describe("jwt", () => {
     it("handles base64url - and _ characters correctly", () => {
       // These characters are replaced in base64url encoding
       const payload = JSON.stringify({ data: "test-with_special_chars" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -83,10 +84,7 @@ describe("jwt", () => {
 
     it("preserves Turkish characters in payload", () => {
       const payload = JSON.stringify({ name: "Şükrü Öztürk", email: "sukru@example.com" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -101,10 +99,7 @@ describe("jwt", () => {
         title: "مهندس",
         emoji: "🚀",
       });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -116,10 +111,7 @@ describe("jwt", () => {
 
     it("returns null for invalid JSON in payload", () => {
       // base64url encoded invalid JSON
-      const invalidJson = btoa("{ invalid json")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const invalidJson = encodeJwtSegment("{ invalid json");
 
       const token = `header.${invalidJson}.signature`;
       expect(decodeJwtPayload(token)).toBeNull();
@@ -135,10 +127,7 @@ describe("jwt", () => {
         isActive: true,
       });
 
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       const result = decodeJwtPayload(token);
@@ -162,10 +151,7 @@ describe("jwt", () => {
 
     it("returns null for token without act claim", () => {
       const payload = JSON.stringify({ sub: "user-123" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBeNull();
@@ -173,10 +159,7 @@ describe("jwt", () => {
 
     it("returns null for empty act claim", () => {
       const payload = JSON.stringify({ act: "" });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBeNull();
@@ -184,10 +167,7 @@ describe("jwt", () => {
 
     it("returns null for non-string act claim", () => {
       const payload = JSON.stringify({ act: 123 });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBeNull();
@@ -196,10 +176,7 @@ describe("jwt", () => {
     it("returns act claim value when present and non-empty string", () => {
       const impersonatorId = "support-user-456";
       const payload = JSON.stringify({ sub: "user-123", act: impersonatorId });
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBe(impersonatorId);
@@ -214,10 +191,7 @@ describe("jwt", () => {
         iat: Date.now(),
       });
 
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBe(supportUserId);
@@ -230,10 +204,7 @@ describe("jwt", () => {
         roles: ["user"],
       });
 
-      const base64url = btoa(payload)
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_")
-        .replace(/=/g, "");
+      const base64url = encodeJwtSegment(payload);
 
       const token = `header.${base64url}.signature`;
       expect(getImpersonatorId(token)).toBeNull();

@@ -45,10 +45,6 @@ public static class PayrollServiceCollectionExtensions
         // data (double-count guard, see PayrollPeriodCalculationService.CalculateOneAsync).
         services.AddScoped<IAbsenceDaysReader, LeaveAbsenceDaysReaderAdapter>();
 
-        // Maliyet merkezi filtresi (faz-07 tur 1 madde 1, ACİL KARAR ADR-0023): period/export queries filter payslips
-        // by cost center if requested. Temporary stub adapter until faz-02 provides real implementation.
-        services.AddScoped<IEmployeeCostCenterReader, EmployeeCostCenterReaderAdapter>();
-
         // P3 "Dönem hesabı" / "Değişti" orchestration (period run, recalc-dirty/all, dirty flagging on profile create/update).
         services.AddScoped<PayrollPeriodCalculationService>();
         services.AddScoped<PayslipDirtyFlagService>();

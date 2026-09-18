@@ -6,11 +6,15 @@ import {
   Fieldset,
   Input,
   InputWrapper,
+  type MantineTheme,
+  mergeThemeOverrides,
   Modal,
   type MantineColorsTuple,
+  type MantineThemeOverride,
   type VariantColorsResolver,
 } from "@mantine/core";
 
+import { DEFAULT_PALETTE, type Palette } from "@/store/ui.store";
 import classes from "./mantine-theme.module.css";
 
 /*
@@ -208,10 +212,35 @@ const variantColorResolver: VariantColorsResolver = (input) => {
   return defaultVariantColorsResolver(input);
 };
 
+/**
+ * Per-palette primary shades. Most corporate colors sit at index 6 (5 in dark for a lighter filled surface);
+ * navy's canonical Lacivert is index 7 and its 6 already reads as the "lighter" variant, so both schemes shift up.
+ */
+const PALETTE_SHADES: Record<Palette, MantineTheme["primaryShade"]> = {
+  brand: { light: 6, dark: 5 },
+  navy: { light: 7, dark: 6 },
+  blue: { light: 6, dark: 5 },
+  teal: { light: 6, dark: 5 },
+  orange: { light: 6, dark: 5 },
+  gold: { light: 6, dark: 5 },
+  steel: { light: 6, dark: 5 },
+};
+
+/** Representative swatch for palette pickers (the shade used for filled components in the light scheme). */
+export const PALETTE_SWATCHES: Record<Palette, string> = {
+  brand: brand[6],
+  navy: navy[7],
+  blue: blue[6],
+  teal: teal[6],
+  orange: orange[6],
+  gold: gold[6],
+  steel: steel[6],
+};
+
 export const mantineTheme = createTheme({
-  primaryColor: "brand",
+  primaryColor: DEFAULT_PALETTE,
   variantColorResolver,
-  primaryShade: { light: 6, dark: 5 },
+  primaryShade: PALETTE_SHADES[DEFAULT_PALETTE],
   colors: { brand, navy, blue, cyan, teal, red, orange, yellow, gold, steel, gray, dark },
   /** Yazı Rengi 1. */
   black: "#0a0028",
@@ -231,3 +260,19 @@ export const mantineTheme = createTheme({
     Modal: Modal.extend({ defaultProps: { radius: "lg" }, classNames: { title: classes.modalTitle } }),
   },
 });
+
+const paletteThemes = new Map<Palette, MantineThemeOverride>();
+
+/**
+ * The base theme with `primaryColor` (and its shade) swapped to the user's palette. Memoized per palette so
+ * MantineProvider gets a stable object and doesn't recompute CSS variables on unrelated re-renders.
+ */
+export function mantineThemeForPalette(palette: Palette): MantineThemeOverride {
+  if (palette === DEFAULT_PALETTE) return mantineTheme;
+  let theme = paletteThemes.get(palette);
+  if (!theme) {
+    theme = mergeThemeOverrides(mantineTheme, { primaryColor: palette, primaryShade: PALETTE_SHADES[palette] });
+    paletteThemes.set(palette, theme);
+  }
+  return theme;
+}
