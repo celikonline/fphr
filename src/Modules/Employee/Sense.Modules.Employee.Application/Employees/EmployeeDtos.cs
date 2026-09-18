@@ -97,6 +97,7 @@ public sealed record OrgChartNodeDto(
     Guid? OrgUnitId,
     IReadOnlyList<OrgChartNodeDto> Children,
     string? TitleName = null,
+    string? DepartmentName = null,
     Guid? CompanyId = null,
     string? CompanyName = null);
 
