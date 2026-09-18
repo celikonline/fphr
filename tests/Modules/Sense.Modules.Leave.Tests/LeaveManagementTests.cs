@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
@@ -219,9 +220,12 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         // AddLeaveServices' IWorkScheduleReader now adapts Attendance.Contracts.IWorkScheduleReadService (roadmap #23).
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceCoreServices(configuration);
+        // roadmap #23 (A1): EmployeeHired -> default schedule assignment must run here too, otherwise the
+        // real IWorkScheduleReadService reports every day closed and all submits fail with zero_days.
+        services.AddAttendanceIntegrationEventHandlers();
         services.AddLeaveServices(configuration);
         services.AddModuleHandlers(
-            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly);
+            LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly, typeof(Attendance.Contracts.IWorkScheduleReadService).Assembly);
 
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
@@ -508,6 +512,8 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         var directory = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeDirectory>();
         directory.GetContactsAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(ci => ci.ArgAt<IReadOnlyCollection<Guid>>(1).Select(id => new Sense.Modules.Employee.Contracts.EmployeeContact(id, "Ada", "Lovelace", null, null, null, "Active")).ToList());
-        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(services, directory, Substitute.For<IApprovalRequestLookup>());
+        // GetOrgUnitIdAsync defaults to null (unconfigured), so ResolveTeamOverlapAsync short-circuits to an empty overlap.
+        var employeeLookup = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeLookup>();
+        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(services, directory, employeeLookup, Substitute.For<IApprovalRequestLookup>());
     }
 }

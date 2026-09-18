@@ -57,8 +57,11 @@ public sealed class OvertimeCostKpiHandlerTests
             .Returns(new List<Guid> { employeeId });
         _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { employeeId })), Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary> { new(employeeId, 20m, 160m, 0m, 10m, false) });
-        _salaryLookup.GetCurrentSalaryAsync(_tenantId, employeeId, Arg.Any<CancellationToken>())
-            .Returns(new EmployeeCurrentSalary(22_500m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)));
+        _salaryLookup.GetCurrentSalariesAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { employeeId })), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, EmployeeCurrentSalary>
+            {
+                [employeeId] = new(22_500m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)),
+            });
 
         var handler = CreateHandler();
         var result = await handler.Handle(new GetOvertimeCostKpiQuery(2026, 9), CancellationToken.None);
@@ -89,15 +92,20 @@ public sealed class OvertimeCostKpiHandlerTests
             .Returns(new List<Guid> { activeEmployeeId });
         _attendanceSummaries.GetAsync(_tenantId, 2026, 9, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceMonthlySummary> { new(activeEmployeeId, 20m, 160m, 0m, 5m, false) });
-        _salaryLookup.GetCurrentSalaryAsync(_tenantId, activeEmployeeId, Arg.Any<CancellationToken>())
-            .Returns(new EmployeeCurrentSalary(22_500m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)));
+        _salaryLookup.GetCurrentSalariesAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.SequenceEqual(new[] { activeEmployeeId })), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, EmployeeCurrentSalary>
+            {
+                [activeEmployeeId] = new(22_500m, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)),
+            });
 
         var handler = CreateHandler();
         var result = await handler.Handle(new GetOvertimeCostKpiQuery(2026, 9, orgUnitId), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.EmployeeCount.ShouldBe(1);
-        await _salaryLookup.DidNotReceive().GetCurrentSalaryAsync(_tenantId, suspendedEmployeeId, Arg.Any<CancellationToken>());
+        // G-10-19: the attendance summary itself already excludes the suspended employee (asserted above via the
+        // GetAsync Arg.Is match) - the batched salary lookup is only ever called with that same, already-filtered set.
+        await _salaryLookup.DidNotReceive().GetCurrentSalariesAsync(_tenantId, Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(suspendedEmployeeId)), Arg.Any<CancellationToken>());
     }
 
     [Fact]

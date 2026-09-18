@@ -48,6 +48,12 @@ public sealed class MinioOptions
 /// <summary>MinIO implementation of IFileStorage with tenant isolation via bucket naming.</summary>
 public sealed class MinioAdapter : IFileStorage
 {
+    private const int SecondsPerMinute = 60;
+    private const int MaxDownloadExpirationMinutes = 7 * 24 * 60; // Max 7 days
+    private const int TenantPrefixLength = 12; // First 12 chars of the tenant id (N format)
+    private const string RequestIdFormat = "N";
+    private const string ContentTypeHeaderName = "Content-Type";
+
     private readonly IMinioClient _client;
     private readonly IMinioClient _publicClient;
     private readonly MinioOptions _options;
@@ -105,11 +111,11 @@ public sealed class MinioAdapter : IFileStorage
             var presignedArgs = new PresignedPutObjectArgs()
                 .WithBucket(isolatedBucket)
                 .WithObject(key)
-                .WithExpiry(_options.UploadExpirationMinutes * 60); // Convert to seconds
+                .WithExpiry(_options.UploadExpirationMinutes * SecondsPerMinute); // Convert to seconds
 
             var uploadUrl = await _publicClient.PresignedPutObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(_options.UploadExpirationMinutes);
-            var requestId = Guid.CreateVersion7().ToString("N");
+            var requestId = Guid.CreateVersion7().ToString(RequestIdFormat);
 
             _logger.LogInformation(
                 "Generated presigned upload URL for {TenantId}/{BucketName}/{Key}, expires at {ExpiresAt}",
@@ -121,7 +127,7 @@ public sealed class MinioAdapter : IFileStorage
                 expiresAt,
                 new Dictionary<string, string>
                 {
-                    { "Content-Type", contentType }
+                    { ContentTypeHeaderName, contentType }
                 });
         }
         catch (Exception ex)
@@ -175,7 +181,7 @@ public sealed class MinioAdapter : IFileStorage
 
             // TODO: Write audit event to outbox (Item 17 will integrate with audit system)
         }
-        catch (Exception ex) when (ex.Message.Contains("NoSuchKey") || ex.Message.Contains("not found"))
+        catch (Exception ex) when (IsObjectNotFound(ex))
         {
             _logger.LogError("Object not found for confirmation: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
             throw new InvalidOperationException("File not found for confirmation", ex);
@@ -201,9 +207,9 @@ public sealed class MinioAdapter : IFileStorage
 
         ValidateParameters(tenantId, bucketName, key);
 
-        if (expirationMinutes < 1 || expirationMinutes > 7 * 24 * 60) // Max 7 days
+        if (expirationMinutes < 1 || expirationMinutes > MaxDownloadExpirationMinutes)
         {
-            throw new ArgumentOutOfRangeException(nameof(expirationMinutes), "Must be between 1 and 10080 minutes");
+            throw new ArgumentOutOfRangeException(nameof(expirationMinutes), $"Must be between 1 and {MaxDownloadExpirationMinutes} minutes");
         }
 
         var isolatedBucket = CreateBucketName(tenantId, bucketName);
@@ -221,7 +227,7 @@ public sealed class MinioAdapter : IFileStorage
             var presignedArgs = new PresignedGetObjectArgs()
                 .WithBucket(isolatedBucket)
                 .WithObject(key)
-                .WithExpiry(expirationMinutes * 60); // Convert to seconds
+                .WithExpiry(expirationMinutes * SecondsPerMinute); // Convert to seconds
 
             var downloadUrl = await _publicClient.PresignedGetObjectAsync(presignedArgs);
             var expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
@@ -232,7 +238,7 @@ public sealed class MinioAdapter : IFileStorage
 
             return new PresignedUrlResponse(downloadUrl, expiresAt);
         }
-        catch (Exception ex) when (ex.Message.Contains("NoSuchKey") || ex.Message.Contains("not found"))
+        catch (Exception ex) when (IsObjectNotFound(ex))
         {
             _logger.LogWarning("Object not found for download: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
             throw new InvalidOperationException("File not found", ex);
@@ -283,8 +289,8 @@ public sealed class MinioAdapter : IFileStorage
     }
 
     /// <summary>
-    /// Belge işlemi için span açar: yalnızca kimlik/metadata etiketlenir (tenant, bucket, key), asla içerik.
-    /// Kiracılar arası veri sızıntısını önlemek amacıyla span'ler bu adaptörün dışına çıkmaz.
+    /// Opens a span for a document operation: only identity/metadata tags are attached (tenant, bucket, key), never content.
+    /// Spans never leave this adapter to prevent cross-tenant data leaks.
     /// </summary>
     private static Activity? StartStorageActivity(string operationName, Guid tenantId, string bucketName, string key)
     {
@@ -299,10 +305,19 @@ public sealed class MinioAdapter : IFileStorage
     private static string CreateBucketName(Guid tenantId, string bucketName)
     {
         // MinIO bucket names must be lowercase, 3-63 chars, start with letter/digit, contain only alphanumeric/dash
-        var tenant = tenantId.ToString("N").ToLowerInvariant()[..12]; // Use first 12 chars of tenant ID
+        var tenant = tenantId.ToString(RequestIdFormat).ToLowerInvariant()[..TenantPrefixLength]; // Use first 12 chars of tenant ID
         var name = bucketName.ToLowerInvariant().Replace('_', '-');
         return $"{tenant}-{name}";
     }
+
+    /// <summary>
+    /// Best-effort object-not-found detection. MinIO surfaces S3 errors with codes like "NoSuchKey" inside the
+    /// exception message, so match on the known markers until the SDK exposes a typed error. Case-insensitive,
+    /// ordinal comparison to avoid culture-dependent behaviour.
+    /// </summary>
+    private static bool IsObjectNotFound(Exception ex) =>
+        ex.Message.Contains("NoSuchKey", StringComparison.OrdinalIgnoreCase)
+        || ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Validates input parameters for security and correctness.</summary>
     private static void ValidateParameters(Guid tenantId, string bucketName, string key)
@@ -323,7 +338,7 @@ public sealed class MinioAdapter : IFileStorage
         }
 
         // Ensure key doesn't try to escape the tenant bucket
-        if (key.Contains("..") || key.StartsWith('/'))
+        if (key.Contains("..", StringComparison.Ordinal) || key.StartsWith('/'))
         {
             throw new ArgumentException("Invalid key format", nameof(key));
         }

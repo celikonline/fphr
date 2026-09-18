@@ -1,32 +1,32 @@
 {
-  "title": "[DE] Trust & security",
-  "subtitle": "[DE] How we protect your data.",
-  "intro": "[DE] Protecting your company's and employees' data is our priority. This page summarizes our security approach; it will be updated as our independent audit and certification work progresses.",
+  "title": "Vertrauen & Sicherheit",
+  "subtitle": "Wie wir Ihre Daten schützen.",
+  "intro": "Der Schutz der Daten Ihres Unternehmens und Ihrer Mitarbeitenden hat für uns Priorität. Diese Seite fasst unseren Sicherheitsansatz zusammen; sie wird mit dem Fortschritt unserer unabhängigen Audit- und Zertifizierungsarbeiten aktualisiert.",
   "sections": {
     "encryption": {
-      "title": "[DE] Encryption",
-      "body": "[DE] Data is encrypted in transit with TLS and at rest at the storage layer. Sensitive personnel fields (national ID, IBAN, health information) are only shown unmasked to authorized users."
+      "title": "Verschlüsselung",
+      "body": "Daten werden bei der Übertragung mit TLS und im Ruhezustand auf Speicherebene verschlüsselt. Sensible Personalfelder (Ausweisnummer, IBAN, Gesundheitsdaten) werden nur berechtigten Personen unmaskiert angezeigt."
     },
     "tenantIsolation": {
-      "title": "[DE] Tenant isolation",
-      "body": "[DE] Each company's data is separated from every other company's by access filters applied on the tenant identifier; a user can only reach their own tenant's data."
+      "title": "Mandantentrennung",
+      "body": "Die Daten jedes Unternehmens werden über Zugriffsfilter auf der Mandantenkennung von denen aller anderen Unternehmen getrennt; Benutzer erreichen ausschließlich die Daten ihres eigenen Mandanten."
     },
     "accessControl": {
-      "title": "[DE] Access control & audit log",
-      "body": "[DE] A role- and permission-based access model defines in detail who can view or change what. User and system actions are written to the audit log and can be viewed from the Audit Log screen."
+      "title": "Zugriffssteuerung & Audit-Protokoll",
+      "body": "Ein rollen- und berechtigungsbasiertes Zugriffsmodell legt detailliert fest, wer was sehen oder ändern darf. Benutzer- und Systemaktionen werden im Audit-Protokoll erfasst und können im Bildschirm „Audit-Protokoll“ eingesehen werden."
     },
     "supportAccess": {
-      "title": "[DE] Support access stays in your control",
-      "body": "[DE] Our support team cannot reach your data without a time-limited access grant that you approve. Access you grant expires automatically and can be revoked at any time."
+      "title": "Support-Zugriff bleibt in Ihrer Hand",
+      "body": "Unser Support-Team kann ohne eine von Ihnen genehmigte, zeitlich begrenzte Zugriffsfreigabe nicht auf Ihre Daten zugreifen. Erteilte Zugriffe laufen automatisch ab und können jederzeit widerrufen werden."
     },
     "continuity": {
-      "title": "[DE] Backups & continuity",
-      "body": "[DE] Data is backed up regularly and recovery processes are in place for unexpected incidents."
+      "title": "Backups & Kontinuität",
+      "body": "Daten werden regelmäßig gesichert, und für unerwartete Vorfälle stehen Wiederherstellungsprozesse bereit."
     },
     "compliance": {
-      "title": "[DE] Compliance & certification",
-      "body": "[DE] Special-category data under KVKK (Turkey's data protection law), such as union membership, is protected with dedicated permissions. Our independent security certification work is ongoing; contact us for current status and reports."
+      "title": "Compliance & Zertifizierung",
+      "body": "Besondere Kategorien personenbezogener Daten nach dem türkischen Datenschutzgesetz KVKK, etwa die Gewerkschaftszugehörigkeit, werden durch eigene Berechtigungen geschützt. Unsere unabhängige Sicherheitszertifizierung läuft; für den aktuellen Stand und Berichte kontaktieren Sie uns gerne."
     }
   },
-  "contactCta": "[DE] Contact Support with security questions."
+  "contactCta": "Wenden Sie sich bei Sicherheitsfragen an den Support."
 }

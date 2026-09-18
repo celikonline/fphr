@@ -81,7 +81,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
 
   return (
     <Card withBorder padding="lg">
-      <Group justify="space-between" wrap="wrap" mb="md">
+      <Group justify="space-between" wrap="nowrap" mb="md">
         <Title order={4}>{t("assets:section.title")}</Title>
         {canManage && (
           <Button type="button" size="sm" leftSection={<PackagePlus size={16} />} onClick={() => setAssigning(true)}>

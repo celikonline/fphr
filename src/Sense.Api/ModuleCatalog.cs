@@ -1,4 +1,5 @@
 using Sense.Modules.Analytics.Api;
+using Sense.Modules.Announcements.Api;
 using Sense.Modules.Assets.Api;
 using Sense.Modules.Attendance.Api;
 using Sense.Modules.DataTransfer.Api;
@@ -41,5 +42,6 @@ public static class ModuleCatalog
         new AssetsModule(),
         new ReportingModule(),
         new PerformanceModule(),
+        new AnnouncementsModule(),
     ];
 }

@@ -1,54 +1,54 @@
 {
   "section": {
-    "title": "[DE] Assets",
-    "assign": "[DE] Assign asset",
-    "assignTitle": "[DE] Assign asset",
-    "return": "[DE] Return",
-    "returnTitle": "[DE] Return \"{{name}}\"",
-    "pickAsset": "[DE] Asset",
-    "newAsset": "[DE] Create a new asset",
-    "category": "[DE] Category",
-    "name": "[DE] Name",
-    "serialNumber": "[DE] Serial number",
-    "description": "[DE] Description",
-    "issuedAt": "[DE] Issued on",
-    "returnedAt": "[DE] Returned on",
-    "empty": "[DE] No assets recorded.",
-    "assigned": "[DE] Asset assigned.",
-    "returned": "[DE] Asset returned.",
-    "noCategories": "[DE] Add a category under Settings > Asset categories first.",
+    "title": "Arbeitsmittel",
+    "assign": "Arbeitsmittel zuweisen",
+    "assignTitle": "Arbeitsmittel zuweisen",
+    "return": "Rückgabe",
+    "returnTitle": "\"{{name}}\" zurückgeben",
+    "pickAsset": "Arbeitsmittel",
+    "newAsset": "Neues Arbeitsmittel anlegen",
+    "category": "Kategorie",
+    "name": "Name",
+    "serialNumber": "Seriennummer",
+    "description": "Beschreibung",
+    "issuedAt": "Ausgegeben am",
+    "returnedAt": "Zurückgegeben am",
+    "empty": "Keine Arbeitsmittel erfasst.",
+    "assigned": "Arbeitsmittel zugewiesen.",
+    "returned": "Arbeitsmittel zurückgegeben.",
+    "noCategories": "Legen Sie zuerst unter Einstellungen > Arbeitsmittelkategorien eine Kategorie an.",
     "errors": {
-      "generic": "[DE] The action could not be completed.",
-      "loadFailed": "[DE] Assets could not be loaded.",
-      "nameAndCategoryRequired": "[DE] A name and category are required for a new asset."
+      "generic": "Die Aktion konnte nicht abgeschlossen werden.",
+      "loadFailed": "Die Arbeitsmittel konnten nicht geladen werden.",
+      "nameAndCategoryRequired": "Für ein neues Arbeitsmittel sind Name und Kategorie erforderlich."
     }
   },
   "categories": {
-    "title": "[DE] Asset categories",
-    "subtitle": "[DE] Manage the equipment category catalog.",
-    "add": "[DE] Add category",
-    "editTitle": "[DE] Edit category",
-    "empty": "[DE] No categories recorded.",
-    "saved": "[DE] Category saved.",
-    "codeHint": "[DE] Fixed code used in import/export and reports; cannot be changed later.",
-    "codeLocked": "[DE] The code cannot be changed after creation.",
+    "title": "Arbeitsmittelkategorien",
+    "subtitle": "Verwalten Sie den Katalog der Ausstattungskategorien.",
+    "add": "Kategorie hinzufügen",
+    "editTitle": "Kategorie bearbeiten",
+    "empty": "Keine Kategorien erfasst.",
+    "saved": "Kategorie gespeichert.",
+    "codeHint": "Fester Code für Import/Export und Berichte; er kann später nicht geändert werden.",
+    "codeLocked": "Der Code kann nach dem Anlegen nicht mehr geändert werden.",
     "columns": {
-      "name": "[DE] Name",
-      "code": "[DE] Code"
+      "name": "Name",
+      "code": "Code"
     },
     "errors": {
-      "generic": "[DE] The category could not be saved.",
-      "loadFailed": "[DE] Categories could not be loaded.",
-      "codeTaken": "[DE] A category with this code already exists.",
-      "codeRequired": "[DE] Code is required.",
-      "nameRequired": "[DE] Name is required."
+      "generic": "Die Kategorie konnte nicht gespeichert werden.",
+      "loadFailed": "Die Kategorien konnten nicht geladen werden.",
+      "codeTaken": "Eine Kategorie mit diesem Code existiert bereits.",
+      "codeRequired": "Code ist erforderlich.",
+      "nameRequired": "Name ist erforderlich."
     }
   },
   "enum": {
     "status": {
-      "unassigned": "[DE] Unassigned",
-      "assigned": "[DE] Assigned",
-      "retired": "[DE] Retired"
+      "unassigned": "Nicht zugewiesen",
+      "assigned": "Zugewiesen",
+      "retired": "Ausgemustert"
     }
   }
 }

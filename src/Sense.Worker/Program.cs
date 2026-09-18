@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Announcements.Infrastructure;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Assets.Infrastructure;
 using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure;
@@ -226,6 +228,20 @@ builder.Services.AddModuleHandlers(
     typeof(IntegrationsDbContext).Assembly,
     typeof(Sense.Modules.Integrations.Domain.IWebhookSubscriptionRepository).Assembly,
     typeof(Sense.Modules.Integrations.Contracts.IntegrationsPermissions).Assembly);
+
+// Announcements/Support (11.3.13, roadmap #69): writes SupportTicketCreated/Answered to its own outbox;
+// AddAnnouncementsIntegrationEventHandlers resolves ISupportChannel's default e-mail adapter, which in turn
+// needs Identity's IUserProfileLookup (registered above, near the Notifications block) for the ticket-answered
+// notification recipient's e-mail.
+builder.Services.AddModuleDbContext<AnnouncementsDbContext>(builder.Configuration, AnnouncementsDbContext.SchemaName);
+builder.Services.AddAnnouncementsCoreServices(builder.Configuration);
+builder.Services.AddAnnouncementsIntegrationEventHandlers();
+builder.Services.AddModuleHandlers(
+    AnnouncementsDbContext.SchemaName,
+    typeof(Sense.Modules.Announcements.Application.AnnouncementsErrors).Assembly,
+    typeof(AnnouncementsDbContext).Assembly,
+    typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
 
 await builder.Build().RunAsync();
 

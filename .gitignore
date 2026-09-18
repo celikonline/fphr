@@ -46,3 +46,8 @@ logs/
 
 # Docker volumes
 infra/.data/
+
+# Agent/tool artifacts (kept out of the repo on purpose; see 6cc399d which had to untrack them
+# after a `git add -A` swept them in). Remove these lines if AGENTS.md ever becomes a real doc.
+.codex/
+AGENTS.md

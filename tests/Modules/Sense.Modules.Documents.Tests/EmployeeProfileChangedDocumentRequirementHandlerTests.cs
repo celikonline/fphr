@@ -56,7 +56,7 @@ public sealed class EmployeeProfileChangedDocumentRequirementHandlerTests
 
         var eligibility = Substitute.For<IEmployeeDocumentEligibilityLookup>();
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: isUnder18, HasDisability: false)));
+            .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: isUnder18, HasDisability: false, IsUndergroundWorker: false)));
 
         var assetLookup = Substitute.For<IAssetLookup>();
         assetLookup.HasOpenAssetsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(false);

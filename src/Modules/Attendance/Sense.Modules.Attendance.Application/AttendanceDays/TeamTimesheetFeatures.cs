@@ -24,10 +24,43 @@ public sealed class GetTeamWeekHandler(
 {
     public async Task<Result<IReadOnlyList<TeamWeekRowDto>>> Handle(GetTeamWeekQuery query, CancellationToken cancellationToken)
     {
+        var weekStart = TimesheetWeekEvaluator.MondayOf(query.WeekStart);
+        return await TeamRangeBuilder.BuildAsync(weekStart, weekStart.AddDays(6), query.OrgUnitId, tenant, dataScope, employees, days, schedules, cancellationToken);
+    }
+}
+
+/// <summary>
+/// Ekip aylık ızgara (11.7 yol haritası satır 183: "haftalık puantaj görünümü → aylık ızgaranın ikinci görünümü"):
+/// same TeamWeekRowDto shape as <see cref="GetTeamWeekQuery"/>, one row per day of the calendar month instead of
+/// one calendar week. Same data-scope/permission as the weekly grid - it is the same screen's other view mode, not
+/// a separate one.
+/// </summary>
+[RequiresPermission("attendance.timesheet.view")]
+public sealed record GetTeamMonthQuery(DateOnly MonthStart, Guid? OrgUnitId) : IQuery<IReadOnlyList<TeamWeekRowDto>>;
+
+public sealed class GetTeamMonthHandler(
+    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, IWorkScheduleReadService schedules)
+    : IQueryHandler<GetTeamMonthQuery, IReadOnlyList<TeamWeekRowDto>>
+{
+    public async Task<Result<IReadOnlyList<TeamWeekRowDto>>> Handle(GetTeamMonthQuery query, CancellationToken cancellationToken)
+    {
+        var monthStart = new DateOnly(query.MonthStart.Year, query.MonthStart.Month, 1);
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        return await TeamRangeBuilder.BuildAsync(monthStart, monthEnd, query.OrgUnitId, tenant, dataScope, employees, days, schedules, cancellationToken);
+    }
+}
+
+/// <summary>Shared by the weekly and monthly team grids - same visible-employees resolution and per-day row shape, only the date range differs.</summary>
+internal static class TeamRangeBuilder
+{
+    public static async Task<Result<IReadOnlyList<TeamWeekRowDto>>> BuildAsync(
+        DateOnly start, DateOnly end, Guid? orgUnitId, ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees,
+        IAttendanceDayRepository days, IWorkScheduleReadService schedules, CancellationToken cancellationToken)
+    {
         var visible = await dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.TimesheetView.Key, cancellationToken);
-        if (query.OrgUnitId is { } orgUnitId)
+        if (orgUnitId is { } unitId)
         {
-            var inUnit = await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [orgUnitId], cancellationToken);
+            var inUnit = await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [unitId], cancellationToken);
             visible = visible is null ? inUnit.ToHashSet() : inUnit.Where(visible.Contains).ToHashSet();
         }
 
@@ -44,9 +77,7 @@ public sealed class GetTeamWeekHandler(
             return Result.Success<IReadOnlyList<TeamWeekRowDto>>([]);
         }
 
-        var weekStart = TimesheetWeekEvaluator.MondayOf(query.WeekStart);
-        var weekEnd = weekStart.AddDays(6);
-        var records = await days.ListForEmployeesAsync(employeeIds, weekStart, weekEnd, cancellationToken);
+        var records = await days.ListForEmployeesAsync(employeeIds, start, end, cancellationToken);
         var recordsByEmployee = records.ToLookup(d => d.EmployeeId);
         var names = (await employees.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
@@ -55,8 +86,8 @@ public sealed class GetTeamWeekHandler(
         foreach (var employeeId in employeeIds)
         {
             var byDate = recordsByEmployee[employeeId].ToDictionary(d => d.Date);
-            var dayDtos = new List<TeamWeekDayDto>(7);
-            for (var date = weekStart; date <= weekEnd; date = date.AddDays(1))
+            var dayDtos = new List<TeamWeekDayDto>();
+            for (var date = start; date <= end; date = date.AddDays(1))
             {
                 if (byDate.TryGetValue(date, out var record))
                 {

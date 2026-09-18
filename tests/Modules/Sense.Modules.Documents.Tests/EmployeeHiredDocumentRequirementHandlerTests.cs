@@ -65,7 +65,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
 
         var eligibility = Substitute.For<IEmployeeDocumentEligibilityLookup>();
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>())
-            .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: true, HasDisability: false)));
+            .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: true, HasDisability: false, IsUndergroundWorker: false)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
         var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), provisioning, Legislation());

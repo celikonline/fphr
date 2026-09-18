@@ -13,7 +13,8 @@ public sealed record EmployeeDocumentContext(
     bool HasOpenAssets,
     bool IsVeryHazardousJob,
     bool HasOvertimeConsent,
-    bool IsShiftWorker)
+    bool IsShiftWorker,
+    bool IsUndergroundWorker)
 {
     public bool Matches(DocumentRequirementCondition condition) => condition switch
     {
@@ -23,7 +24,7 @@ public sealed record EmployeeDocumentContext(
         DocumentRequirementCondition.HasIncentive => HasIncentive,
         DocumentRequirementCondition.UsesDisabilityTaxReduction => UsesDisabilityTaxReduction,
         DocumentRequirementCondition.ExConvictOrTerrorVictim => IsExConvictOrTerrorVictim,
-        DocumentRequirementCondition.RequiresPeriodicHealthCheck => RequiresPeriodicHealthCheck,
+        DocumentRequirementCondition.RequiresPeriodicHealthCheck => IsUndergroundWorker,
         DocumentRequirementCondition.RequiresDriving => RequiresDriving,
         DocumentRequirementCondition.HasOpenAssets => HasOpenAssets,
         DocumentRequirementCondition.VeryHazardousJob => IsVeryHazardousJob,

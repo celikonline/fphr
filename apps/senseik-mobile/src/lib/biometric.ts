@@ -15,7 +15,9 @@ export class BiometricService {
         supportedTypes
       };
     } catch (error) {
-      console.error("Error checking biometric availability:", error);
+      if (__DEV__) {
+        console.error("Error checking biometric availability:", error);
+      }
       return {
         available: false,
         enrolled: false,
@@ -41,22 +43,27 @@ export class BiometricService {
 
       return supported;
     } catch (error) {
-      console.error("Error getting supported biometric types:", error);
+      if (__DEV__) {
+        console.error("Error getting supported biometric types:", error);
+      }
       return [];
     }
   }
 
   async authenticate(reason: string = "Authenticate to access your account"): Promise<boolean> {
     try {
+      // disableDeviceFallback: a stolen device with a known PIN must not bypass
+      // biometrics for payroll/HR data. Users without biometrics log in with password.
       const result = await LocalAuthentication.authenticateAsync({
         promptMessage: reason,
-        fallbackLabel: "Use password instead",
-        disableDeviceFallback: false
+        disableDeviceFallback: true
       });
 
       return result.success;
     } catch (error) {
-      console.error("Biometric authentication failed:", error);
+      if (__DEV__) {
+        console.error("Biometric authentication failed:", error);
+      }
       return false;
     }
   }

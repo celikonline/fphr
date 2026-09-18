@@ -1,5 +1,6 @@
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Candidates;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -8,13 +9,13 @@ namespace Sense.Modules.Recruitment.Application.Candidates;
 
 /// <summary>Lists candidates, optionally filtered by a name/email search term.</summary>
 [RequiresPermission("recruitment.candidates.read")]
-public sealed record ListCandidatesQuery(string? Search) : IQuery<IReadOnlyList<CandidateDto>>;
+public sealed record ListCandidatesQuery(string? Search, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<CandidateDto>>;
 
 public sealed class ListCandidatesHandler(ICandidateRepository candidates) : IQueryHandler<ListCandidatesQuery, IReadOnlyList<CandidateDto>>
 {
     public async Task<Result<IReadOnlyList<CandidateDto>>> Handle(ListCandidatesQuery query, CancellationToken cancellationToken)
     {
-        var list = await candidates.ListAsync(query.Search, cancellationToken);
+        var list = await candidates.ListAsync(query.Search, query.Take, cancellationToken);
         IReadOnlyList<CandidateDto> dtos = list.Select(CandidateMapper.ToDto).ToList();
         return Result.Success(dtos);
     }

@@ -105,7 +105,15 @@ public sealed class EmployeeModule : IModule
         // Cross-module contract consumed by Analytics (workforce KPIs)
         services.AddScoped<IEmployeeAnalyticsQueries, EmployeeAnalyticsQueries>();
 
+        // Raporlar menüsü katkıları (roadmap #70): rapor okuyucu portu + Employee'nin hazır raporları.
+        services.AddScoped<IEmployeeReportReader, EmployeeReportReader>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.EmployeeListReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.SalaryListReportProvider>();
+
         // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
         services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+
+        // Cross-module contract consumed by Recruitment (ATS to HR core bridge: candidate hire -> employee provisioning, Faz 9)
+        services.AddScoped<IEmployeeProvisioning, EmployeeProvisioning>();
     }
 }

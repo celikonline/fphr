@@ -59,6 +59,18 @@ public static class BackgroundJobSeeding
             Description = "Sweep candidate records past their retention window for anonymization",
             Payload = "{}"
         };
+
+        // Faz 6 tur 1: per-tenant daily automatic locking of shift periods that reached their due date
+        // (Attendance.Application.Shifts.LockDueShiftPeriodsCommand / LockDueShiftPeriodsHandler).
+        // 02:00 Europe/Istanbul is the intended wall-clock time; same TimeZoneInfo caveat applies.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "ShiftPeriodAutoLock",
+            JobType = JobType.ShiftPeriodAutoLock,
+            CronExpression = "0 2 * * *", // 02:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Automatically lock shift periods that reached their due date",
+            Payload = "{}"
+        };
     }
 }
 

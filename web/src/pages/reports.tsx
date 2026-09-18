@@ -1,62 +1,55 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, Download, FileText, X } from "lucide-react";
-import { Badge, Button, Card, Group, Input, Select, SimpleGrid, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { BarChart3, CalendarDays, Check, ClipboardList, Download, FileSpreadsheet, Users, Wallet } from "lucide-react";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Input,
+  MultiSelect,
+  Select,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Switch,
+  Tabs,
+  Text,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
+import { useOrgUnits } from "@/components/employees/use-org-units";
+import { WorkforceKpiPanel } from "@/components/reports/workforce-kpi-panel";
 import { toast } from "@/hooks/use-toast";
-import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
-import { formatDateTime } from "@/lib/dates";
-import { getLeaveUsageKpi, getOvertimeCostKpi, getWorkforceKpis, type KpiResult } from "@/services/analytics.service";
+import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateTime, toDateOnly } from "@/lib/dates";
 import {
   downloadReportExecution,
   getReportCatalog,
+  getReportExecution,
+  groupReportCatalog,
   listReportExecutions,
+  REPORT_PARAMETER_KEYS,
   requestReport,
   saveDownloadedReportFile,
   type DownloadedReportFile,
+  type ReportCatalogItem,
   type ReportExecution,
   type ReportExecutionStatus,
+  type ReportParameter,
 } from "@/services/reports.service";
 
-interface BreakdownRow {
-  id: string;
-  kpiKey: string;
-  kpiLabel: string;
-  dimension: string;
-  count: number;
-  share: number;
-}
-
-function formatKpiValue(kpi: KpiResult, locale: string): string {
-  if (kpi.unit === "ratio") {
-    return new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(kpi.value);
-  }
-  return new Intl.NumberFormat(locale).format(kpi.value);
-}
-
-function formatShare(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
-}
-
-/** S-15 isn't deployed everywhere yet (faz-10 R0) - a 404 means "hide the card", not "show an error". */
-function retryUnlessNotFound(failureCount: number, error: unknown): boolean {
-  if (getApiErrorStatus(error) === 404) return false;
-  return failureCount < 1;
-}
-
-/** S-17 overtime-cost: 404 (uç yayılı değil) **or** 403 (maaş görüntüleme izni yok) both mean "hide the card". */
-function retryUnlessNotFoundOrForbidden(failureCount: number, error: unknown): boolean {
-  const status = getApiErrorStatus(error);
-  if (status === 404 || status === 403) return false;
-  return failureCount < 1;
-}
+const EXECUTIONS_PAGE_SIZE = 10;
 
 const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
   queued: "gray",
@@ -65,277 +58,83 @@ const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
   failed: "red",
 };
 
+const CATEGORY_ICON: Record<string, typeof ClipboardList> = {
+  administrative: ClipboardList,
+  employee: Users,
+  leave: CalendarDays,
+  finance: Wallet,
+};
+
+/** Catalog keys are dotted ("leave.balance.summary"); i18n resolves them as a nested path under `catalog`. */
+function reportLabelKey(reportKey: string, field: "label" | "description"): string {
+  return `reports:catalog.${reportKey}.${field}`;
+}
+
+/**
+ * Raporlar (Kolay İK "Raporlar" menüsü, roadmap #70): kategori → rapor türü → filtreler → oluştur → indir, altında
+ * "Son oluşturduklarım". İK göstergeleri (Faz 7 #99 KPI'ları) ayrı bir sekmede, yalnız gerçek veriden.
+ */
 export default function ReportsPage() {
   const { t } = useTranslation(["reports"]);
   const canViewKpis = usePermission("analytics.kpi.view");
   const canUseReports = useAnyPermission(["reports.catalog.view", "reports.my.executions"]);
+  const [tab, setTab] = useState<string | null>(null);
+
   if (!canViewKpis && !canUseReports) return <NoAccess />;
+
+  const showTabs = canViewKpis && canUseReports;
+  const activeTab = tab ?? (canUseReports ? "reports" : "kpis");
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
-          <BarChart3 size={24} /> {t("reports:title")}
+          <BarChart3 size={28} className="text-indigo-600" /> {t("reports:title")}
         </Title>
-        <Text c="dimmed">{t("reports:subtitle")}</Text>
+        <Text c="dimmed" size="sm" mt={4}>
+          {t("reports:subtitle")}
+        </Text>
       </div>
-      {canViewKpis && <WorkforceKpis />}
-      {canUseReports && <ReportCatalogAndHistory />}
+
+      {showTabs ? (
+        <Tabs value={activeTab} onChange={setTab} keepMounted={false}>
+          <Tabs.List>
+            <Tabs.Tab value="reports" leftSection={<FileSpreadsheet size={16} />}>
+              {t("reports:tabs.reports")}
+            </Tabs.Tab>
+            <Tabs.Tab value="kpis" leftSection={<BarChart3 size={16} />}>
+              {t("reports:tabs.kpis")}
+            </Tabs.Tab>
+          </Tabs.List>
+          <Tabs.Panel value="reports" pt="lg">
+            <ReportCatalogAndHistory />
+          </Tabs.Panel>
+          <Tabs.Panel value="kpis" pt="lg">
+            <WorkforceKpiPanel />
+          </Tabs.Panel>
+        </Tabs>
+      ) : canUseReports ? (
+        <ReportCatalogAndHistory />
+      ) : (
+        <WorkforceKpiPanel />
+      )}
     </div>
   );
 }
 
-function WorkforceKpis() {
-  const { t, i18n } = useTranslation(["reports", "common"]);
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["analytics", "workforce-kpis", from, to],
-    queryFn: () => getWorkforceKpis({ from: from || undefined, to: to || undefined }),
-    placeholderData: (previous) => previous,
-  });
-
-  function clearFilters() {
-    setFrom("");
-    setTo("");
-  }
-
-  // `data`/`columns` must keep a stable identity across renders: this table pages on the client, so
-  // `autoResetPageIndex` is on and a fresh array per render would loop reset → re-render forever.
-  const kpis = useMemo(() => data ?? [], [data]);
-  const breakdownRows: BreakdownRow[] = useMemo(
-    () =>
-      kpis.flatMap((kpi) =>
-        kpi.breakdown.map((b, index) => ({
-          id: `${kpi.key}-${index}`,
-          kpiKey: kpi.key,
-          kpiLabel: t(`reports:kpi.${kpi.key}.label`, { defaultValue: kpi.label }),
-          dimension: b.dimension,
-          count: b.count,
-          share: b.share,
-        })),
-      ),
-    [kpis, t],
-  );
-
-  const columns: ColumnDef<BreakdownRow>[] = useMemo(
-    () => [
-      {
-        id: "kpiLabel",
-        accessorKey: "kpiLabel",
-        header: t("reports:breakdown.columns.kpi"),
-        meta: { label: t("reports:breakdown.columns.kpi") },
-      },
-      {
-        id: "dimension",
-        accessorKey: "dimension",
-        header: t("reports:breakdown.columns.dimension"),
-        meta: { label: t("reports:breakdown.columns.dimension") },
-      },
-      {
-        id: "count",
-        accessorKey: "count",
-        header: t("reports:breakdown.columns.count"),
-        meta: { label: t("reports:breakdown.columns.count"), headerClassName: "w-32" },
-        cell: ({ row }) => new Intl.NumberFormat(locale).format(row.original.count),
-      },
-      {
-        id: "share",
-        accessorKey: "share",
-        header: t("reports:breakdown.columns.share"),
-        meta: { label: t("reports:breakdown.columns.share"), headerClassName: "w-32" },
-        cell: ({ row }) => formatShare(row.original.share, locale),
-      },
-    ],
-    [t, locale],
-  );
-
-  const table = useDataTable({ columns, data: breakdownRows, getRowId: (r) => r.id, pageSize: 10 });
-  const hasFilters = from !== "" || to !== "";
-
-  return (
-    <Stack gap="md">
-      <Title order={2} size="h4">
-        {t("reports:kpiSection.title")}
-      </Title>
-
-      <Card withBorder padding="md">
-        <Group align="flex-end" gap="sm">
-          <Input.Wrapper id="reports-from" label={t("reports:filters.from")}>
-            <DatePicker id="reports-from" value={from} max={to || undefined} clearable onChange={setFrom} />
-          </Input.Wrapper>
-          <Input.Wrapper id="reports-to" label={t("reports:filters.to")}>
-            <DatePicker id="reports-to" value={to} min={from || undefined} clearable onChange={setTo} />
-          </Input.Wrapper>
-          {hasFilters && (
-            <Button type="button" variant="subtle" size="sm" leftSection={<X size={16} />} onClick={clearFilters}>
-              {t("reports:filters.clear")}
-            </Button>
-          )}
-        </Group>
-      </Card>
-
-      <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
-        {isLoading
-          ? Array.from({ length: 3 }, (_, i) => (
-              <Card key={i} withBorder padding="lg">
-                <Skeleton h={16} w="60%" />
-                <Skeleton h={28} mt={8} w="40%" />
-              </Card>
-            ))
-          : kpis.map((kpi) => (
-              <Card key={kpi.key} withBorder padding="lg">
-                <Text size="xs" c="dimmed">
-                  {t(`reports:kpi.${kpi.key}.label`, { defaultValue: kpi.label })}
-                </Text>
-                <Text size="xl" fw={700}>
-                  {formatKpiValue(kpi, locale)}
-                </Text>
-              </Card>
-            ))}
-        {!isLoading && kpis.length === 0 && (
-          <Card withBorder padding="lg">
-            <Text c="dimmed" size="sm">
-              {t("reports:empty")}
-            </Text>
-          </Card>
-        )}
-        <LeaveUsageKpiCard />
-        <OvertimeCostKpiCard />
-      </SimpleGrid>
-
-      <Card withBorder padding={0}>
-        <DataTable table={table} isLoading={isLoading} isFetching={isFetching} emptyMessage={t("reports:breakdown.empty")} />
-      </Card>
-    </Stack>
-  );
-}
-
-/** İzin kullanım KPI'ı (S-15, faz-10 R0): backend ucu her ortamda yok - 404 gelirse kartı hiç göstermeyiz. */
-function LeaveUsageKpiCard() {
-  const { t, i18n } = useTranslation(["reports"]);
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
-  const year = new Date().getFullYear();
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["analytics", "leave-usage-kpi", year],
-    queryFn: () => getLeaveUsageKpi({ year }),
-    retry: retryUnlessNotFound,
-  });
-
-  if (getApiErrorStatus(error) === 404) return null;
-
-  return (
-    <Card withBorder padding="lg">
-      <Text size="xs" c="dimmed">
-        {t("reports:kpi.leaveUsage.label")}
-      </Text>
-      {isLoading ? (
-        <Skeleton h={28} mt={8} w="40%" />
-      ) : !data ? (
-        <Text c="dimmed" size="sm" mt={8}>
-          {t("reports:empty")}
-        </Text>
-      ) : (
-        <>
-          <Text size="xl" fw={700}>
-            {new Intl.NumberFormat(locale, { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(data.usageRate)}
-          </Text>
-          <Text size="xs" c="dimmed" mt={4}>
-            {t("reports:kpi.leaveUsage.detail", {
-              used: new Intl.NumberFormat(locale).format(data.usedDays),
-              total: new Intl.NumberFormat(locale).format(data.totalEntitledDays),
-            })}
-          </Text>
-          {data.byLeaveType.length > 0 && (
-            <Stack gap={2} mt="sm">
-              {data.byLeaveType.map((row) => (
-                <Group key={row.leaveTypeName} justify="space-between" gap="xs" wrap="nowrap">
-                  <Text size="xs" c="dimmed" truncate>
-                    {row.leaveTypeName}
-                  </Text>
-                  <Text size="xs">{new Intl.NumberFormat(locale).format(row.usedDays)}</Text>
-                </Group>
-              ))}
-            </Stack>
-          )}
-        </>
-      )}
-    </Card>
-  );
-}
-
-/** Fazla mesai maliyeti KPI'ı (S-17, faz-10): maaş görüntüleme izni olmayana (403) ve uç yayılı
- * olmayan ortamlarda (404) kart hiç gösterilmez - `analytics.kpi.view` yetkisi bu KPI için yeterli değil. */
-function OvertimeCostKpiCard() {
-  const { t, i18n } = useTranslation(["reports"]);
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth() + 1;
-
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["analytics", "overtime-cost-kpi", year, month],
-    queryFn: () => getOvertimeCostKpi({ year, month }),
-    retry: retryUnlessNotFoundOrForbidden,
-  });
-
-  const status = getApiErrorStatus(error);
-  if (status === 404 || status === 403) return null;
-
-  return (
-    <Card withBorder padding="lg">
-      <Text size="xs" c="dimmed">
-        {t("reports:kpi.overtimeCost.label")}
-      </Text>
-      {isLoading ? (
-        <Skeleton h={28} mt={8} w="40%" />
-      ) : !data ? (
-        <Text c="dimmed" size="sm" mt={8}>
-          {t("reports:empty")}
-        </Text>
-      ) : data.totals.length === 0 ? (
-        <Text c="dimmed" size="sm" mt={8}>
-          {t("reports:empty")}
-        </Text>
-      ) : (
-        <>
-          <Stack gap={2} mt={4}>
-            {data.totals.map((total) => (
-              <Text key={total.currency} size="xl" fw={700}>
-                {new Intl.NumberFormat(locale, { style: "currency", currency: total.currency, maximumFractionDigits: 0 }).format(
-                  total.amount,
-                )}
-              </Text>
-            ))}
-          </Stack>
-          <Text size="xs" c="dimmed" mt={4}>
-            {t("reports:kpi.overtimeCost.detail", {
-              employeeCount: new Intl.NumberFormat(locale).format(data.employeeCount),
-              excludedCount: new Intl.NumberFormat(locale).format(data.excludedEmployeeCount),
-            })}
-          </Text>
-        </>
-      )}
-    </Card>
-  );
-}
-
-const EXECUTIONS_PAGE_SIZE = 10;
-
-/** Report catalog (request a report) + the caller's own execution history, R0 synchronous generation. */
+/** Category-grouped catalog + parameter form + the caller's own execution history. */
 function ReportCatalogAndHistory() {
   const { t, i18n } = useTranslation(["reports", "common"]);
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const locale = i18n.language === "tr" ? "tr-TR" : i18n.language === "de" ? "de-DE" : "en-US";
   const canViewCatalog = usePermission("reports.catalog.view");
   const canGenerate = usePermission("reports.executions.generate");
   const canViewHistory = usePermission("reports.my.executions");
   const queryClient = useQueryClient();
-  const [reportKey, setReportKey] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  // Narrow phones (faz-10 FE md.4): a card list reads better than a horizontally-scrolled table (missing-documents-report.tsx emsali).
-  const isMobile = useMediaQuery("(max-width: 390px)");
+  const isMobile = useMediaQuery("(max-width: 640px)");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const emailExecutionHandled = useRef(false);
 
   const { data: catalog, isLoading: catalogLoading } = useQuery({
     queryKey: ["reports", "catalog"],
@@ -350,30 +149,9 @@ function ReportCatalogAndHistory() {
     placeholderData: (previous) => previous,
   });
 
-  const requestMutation = useMutation({
-    mutationFn: (key: string) => requestReport(key),
-    onSuccess: (execution) => {
-      queryClient.invalidateQueries({ queryKey: ["reports", "executions"] });
-      if (execution.status === "failed") {
-        toast({
-          variant: "destructive",
-          title: t("common:error"),
-          description: execution.errorMessage ?? t("reports:catalog.generateError"),
-        });
-      } else {
-        toast({ variant: "success", title: t("reports:catalog.generateSuccess") });
-      }
-    },
-    onError: (error) =>
-      toast({
-        variant: "destructive",
-        title: t("common:error"),
-        description: getApiErrorMessage(error, t("reports:catalog.generateError")),
-      }),
-  });
-
   const downloadMutation = useMutation({
-    mutationFn: (execution: ReportExecution) => downloadReportExecution(execution.id, execution.resultFileName ?? `${execution.reportKey}.dat`),
+    mutationFn: (execution: ReportExecution) =>
+      downloadReportExecution(execution.id, execution.resultFileName ?? `${execution.reportKey}.xlsx`),
     onSuccess: saveDownloadedReportFile,
     onError: (error) =>
       toast({
@@ -383,13 +161,38 @@ function ReportCatalogAndHistory() {
       }),
   });
 
+  // Arrived from the "report ready" e-mail (?execution=<id>): offer that file right away, once.
+  const emailExecutionId = searchParams.get("execution");
+  useEffect(() => {
+    if (!emailExecutionId || !canViewHistory || emailExecutionHandled.current) return;
+    emailExecutionHandled.current = true;
+    getReportExecution(emailExecutionId)
+      .then((execution) => {
+        if (execution.status === "succeeded") {
+          downloadMutation.mutate(execution);
+          toast({ variant: "success", title: t("reports:history.fromEmail") });
+        }
+      })
+      .catch(() => {
+        /* execution gone (retention) or not ours - the history table below is the fallback */
+      })
+      .finally(() => {
+        const next = new URLSearchParams(searchParams);
+        next.delete("execution");
+        setSearchParams(next, { replace: true });
+      });
+  }, [emailExecutionId, canViewHistory, downloadMutation, searchParams, setSearchParams, t]);
+
+  const groups = useMemo(() => groupReportCatalog(catalog ?? []), [catalog]);
+  const selected = useMemo(() => (catalog ?? []).find((c) => c.key === selectedKey) ?? null, [catalog, selectedKey]);
+
   const columns: ColumnDef<ReportExecution>[] = [
     {
       id: "reportKey",
       accessorKey: "reportKey",
       header: t("reports:history.columns.report"),
       meta: { label: t("reports:history.columns.report") },
-      cell: ({ row }) => t(`reports:catalog.${row.original.reportKey}.label`, { defaultValue: row.original.reportKey }),
+      cell: ({ row }) => t(reportLabelKey(row.original.reportKey, "label"), { defaultValue: row.original.reportKey }),
     },
     {
       id: "status",
@@ -397,7 +200,7 @@ function ReportCatalogAndHistory() {
       header: t("reports:history.columns.status"),
       meta: { label: t("reports:history.columns.status"), headerClassName: "w-32" },
       cell: ({ row }) => (
-        <Badge variant="filled" color={EXECUTION_STATUS_COLOR[row.original.status]}>
+        <Badge variant="light" color={EXECUTION_STATUS_COLOR[row.original.status]}>
           {t(`reports:history.status.${row.original.status}`)}
         </Badge>
       ),
@@ -406,13 +209,28 @@ function ReportCatalogAndHistory() {
       id: "requestedAt",
       accessorKey: "requestedAt",
       header: t("reports:history.columns.requestedAt"),
-      meta: { label: t("reports:history.columns.requestedAt"), headerClassName: "w-48" },
+      meta: { label: t("reports:history.columns.requestedAt"), headerClassName: "w-44" },
       cell: ({ row }) => formatDateTime(row.original.requestedAt, locale),
+    },
+    {
+      id: "file",
+      header: t("reports:history.columns.file"),
+      meta: { label: t("reports:history.columns.file") },
+      cell: ({ row }) =>
+        row.original.status === "failed" ? (
+          <Text size="xs" c="red.7" truncate maw={280} title={row.original.errorMessage ?? undefined}>
+            {row.original.errorMessage ?? t("reports:run.error")}
+          </Text>
+        ) : (
+          <Text size="xs" c="dimmed" truncate maw={280}>
+            {row.original.resultFileName ?? ""}
+          </Text>
+        ),
     },
     {
       id: "download",
       header: "",
-      meta: { headerClassName: "w-16" },
+      meta: { headerClassName: "w-24" },
       cell: ({ row }) =>
         row.original.status === "succeeded" ? (
           <Button
@@ -432,67 +250,373 @@ function ReportCatalogAndHistory() {
   const table = useDataTable({ columns, data: executions?.items ?? [], getRowId: (r) => r.id });
 
   return (
-    <Stack gap="md">
-      <Title order={2} size="h4" className="flex items-center gap-2">
-        <FileText size={18} /> {t("reports:catalog.title")}
-      </Title>
-
+    <Stack gap="xl">
       {canViewCatalog && (
-        <Card withBorder padding="md">
-          <Group align="flex-end" gap="sm">
-            <Select
-              w={320}
-              label={t("reports:catalog.selectLabel")}
-              placeholder={t("reports:catalog.selectPlaceholder")}
-              data={(catalog ?? []).map((item) => ({
-                value: item.key,
-                label: t(`reports:catalog.${item.key}.label`, { defaultValue: item.key }),
-              }))}
-              value={reportKey}
-              onChange={setReportKey}
-              disabled={catalogLoading || (catalog ?? []).length === 0}
-              clearable
-            />
-            {canGenerate && (
-              <Button
-                type="button"
-                disabled={!reportKey}
-                loading={requestMutation.isPending}
-                onClick={() => reportKey && requestMutation.mutate(reportKey)}
-              >
-                {t("reports:catalog.generate")}
-              </Button>
+        <div className="grid gap-4 lg:grid-cols-12">
+          <Stack gap="lg" className="lg:col-span-7">
+            <Title order={2} size="h4">
+              {t("reports:catalog.title")}
+            </Title>
+            {catalogLoading ? (
+              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} h={96} radius="md" />
+                ))}
+              </SimpleGrid>
+            ) : groups.length === 0 ? (
+              <Card withBorder padding="lg" radius="md">
+                <Text c="dimmed" size="sm">
+                  {t("reports:catalog.empty")}
+                </Text>
+              </Card>
+            ) : (
+              groups.map((group) => {
+                const Icon = CATEGORY_ICON[group.categoryKey] ?? FileSpreadsheet;
+                return (
+                  <Stack key={group.categoryKey} gap="xs">
+                    <Group gap="xs">
+                      <ThemeIcon variant="light" color="indigo" size="sm" radius="sm">
+                        <Icon size={14} />
+                      </ThemeIcon>
+                      <Text fw={600} size="sm">
+                        {t(`reports:categories.${group.categoryKey}`, { defaultValue: t("reports:categories.other") })}
+                      </Text>
+                      <Badge variant="default" size="xs">
+                        {group.items.length}
+                      </Badge>
+                    </Group>
+                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+                      {group.items.map((item) => (
+                        <ReportCard
+                          key={item.key}
+                          item={item}
+                          selected={item.key === selectedKey}
+                          onSelect={() => setSelectedKey(item.key)}
+                        />
+                      ))}
+                    </SimpleGrid>
+                  </Stack>
+                );
+              })
             )}
-          </Group>
-          {!catalogLoading && (catalog ?? []).length === 0 && (
-            <Text c="dimmed" size="sm" mt="sm">
-              {t("reports:catalog.empty")}
-            </Text>
-          )}
-        </Card>
+          </Stack>
+
+          <div className="lg:col-span-5">
+            {selected ? (
+              <ReportRunPanel
+                key={selected.key}
+                report={selected}
+                canGenerate={canGenerate}
+                onGenerated={() => queryClient.invalidateQueries({ queryKey: ["reports", "executions"] })}
+              />
+            ) : (
+              <Card withBorder padding="lg" radius="md" className="h-full">
+                <Stack align="center" justify="center" gap="xs" className="min-h-40">
+                  <ThemeIcon variant="light" color="gray" size={40} radius="xl">
+                    <FileSpreadsheet size={20} />
+                  </ThemeIcon>
+                  <Text c="dimmed" size="sm" ta="center">
+                    {t("reports:catalog.selectHint")}
+                  </Text>
+                </Stack>
+              </Card>
+            )}
+          </div>
+        </div>
       )}
 
       {canViewHistory && (
-        <>
+        <Stack gap="sm">
+          <Title order={2} size="h4">
+            {t("reports:history.title")}
+          </Title>
           {isMobile ? (
-            <ReportExecutionsMobileList
-              items={executions?.items ?? []}
-              isLoading={executionsLoading}
-              downloadMutation={downloadMutation}
-            />
+            <ReportExecutionsMobileList items={executions?.items ?? []} isLoading={executionsLoading} downloadMutation={downloadMutation} />
           ) : (
-            <Card withBorder padding={0}>
+            <Card withBorder padding={0} radius="md">
               <DataTable table={table} isLoading={executionsLoading} isFetching={executionsFetching} emptyMessage={t("reports:history.empty")} />
             </Card>
           )}
           {executions && <PaginationFooter result={executions} onPageChange={setPage} />}
-        </>
+        </Stack>
       )}
     </Stack>
   );
 }
 
-/** ≤390px kart listesi, masaüstü tablosunun aynı kolonlarını taşır (faz-10 FE md.4). */
+function ReportCard({ item, selected, onSelect }: { item: ReportCatalogItem; selected: boolean; onSelect: () => void }) {
+  const { t } = useTranslation(["reports"]);
+  return (
+    <Card
+      component="button"
+      type="button"
+      withBorder
+      padding="md"
+      radius="md"
+      ta="left"
+      onClick={onSelect}
+      aria-pressed={selected}
+      style={{
+        cursor: "pointer",
+        borderColor: selected ? "var(--mantine-color-indigo-5)" : undefined,
+        boxShadow: selected ? "0 0 0 1px var(--mantine-color-indigo-5)" : undefined,
+      }}
+    >
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <div>
+          <Text fw={600} size="sm">
+            {t(reportLabelKey(item.key, "label"), { defaultValue: item.key })}
+          </Text>
+          <Text size="xs" c="dimmed" mt={4} lh={1.5}>
+            {t(reportLabelKey(item.key, "description"), { defaultValue: "" })}
+          </Text>
+        </div>
+        {selected && (
+          <ThemeIcon variant="light" color="indigo" size="sm" radius="xl">
+            <Check size={12} />
+          </ThemeIcon>
+        )}
+      </Group>
+    </Card>
+  );
+}
+
+type ParameterValues = Record<string, string>;
+
+function defaultValuesFor(parameters: ReportParameter[], today: Date): ParameterValues {
+  const values: ParameterValues = {};
+  for (const parameter of parameters) {
+    if (!parameter.isRequired) continue;
+    if (parameter.kind === "year") values[REPORT_PARAMETER_KEYS.year] = String(today.getFullYear());
+    if (parameter.kind === "dateRange") {
+      values[REPORT_PARAMETER_KEYS.from] = toDateOnly(new Date(today.getFullYear(), today.getMonth(), 1));
+      values[REPORT_PARAMETER_KEYS.to] = toDateOnly(new Date(today.getFullYear(), today.getMonth() + 1, 0));
+    }
+  }
+  return values;
+}
+
+function isSatisfied(parameter: ReportParameter, values: ParameterValues): boolean {
+  if (!parameter.isRequired) return true;
+  if (parameter.kind === "dateRange") return Boolean(values[REPORT_PARAMETER_KEYS.from] && values[REPORT_PARAMETER_KEYS.to]);
+  return Boolean(values[parameter.key]);
+}
+
+/** Kolay İK's "rapor türü → Birimler / Ay / Yıl → oluştur" step, drawn from the report's parameter descriptors. */
+function ReportRunPanel({ report, canGenerate, onGenerated }: { report: ReportCatalogItem; canGenerate: boolean; onGenerated: () => void }) {
+  const { t, i18n } = useTranslation(["reports", "common"]);
+  const today = useMemo(() => new Date(), []);
+  const [values, setValues] = useState<ParameterValues>(() => defaultValuesFor(report.parameters, today));
+  const { options: orgUnitOptions } = useOrgUnits();
+  const hasRequired = report.parameters.some((p) => p.isRequired);
+  const allSatisfied = report.parameters.every((p) => isSatisfied(p, values));
+
+  const set = (key: string, value: string | null | undefined) =>
+    setValues((prev) => {
+      const next = { ...prev };
+      if (value === null || value === undefined || value === "") delete next[key];
+      else next[key] = value;
+      return next;
+    });
+
+  const generateMutation = useMutation({
+    mutationFn: () => requestReport(report.key, values),
+    onSuccess: async (execution) => {
+      onGenerated();
+      if (execution.status === "failed") {
+        toast({ variant: "destructive", title: t("common:error"), description: execution.errorMessage ?? t("reports:run.error") });
+        return;
+      }
+      if (execution.status === "succeeded") {
+        try {
+          saveDownloadedReportFile(await downloadReportExecution(execution.id, execution.resultFileName ?? `${report.key}.xlsx`));
+          toast({ variant: "success", title: t("reports:run.success") });
+        } catch {
+          toast({ variant: "success", title: t("reports:run.successNoDownload") });
+        }
+      } else {
+        toast({ variant: "success", title: t("reports:run.successNoDownload") });
+      }
+    },
+    onError: (error) =>
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("reports:run.error")) }),
+  });
+
+  const monthOptions = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, i) => ({
+        value: String(i + 1),
+        label: new Intl.DateTimeFormat(i18n.language, { month: "long" }).format(new Date(2000, i, 1)),
+      })),
+    [i18n.language],
+  );
+  const yearOptions = useMemo(() => Array.from({ length: 7 }, (_, i) => String(today.getFullYear() + 1 - i)), [today]);
+  const depthById = useMemo(() => new Map(orgUnitOptions.map((u) => [u.id, u.depth])), [orgUnitOptions]);
+
+  const applyPreset = (preset: "thisMonth" | "lastMonth" | "thisYear") => {
+    const y = today.getFullYear();
+    const m = today.getMonth();
+    const [from, to] =
+      preset === "thisMonth"
+        ? [new Date(y, m, 1), new Date(y, m + 1, 0)]
+        : preset === "lastMonth"
+          ? [new Date(y, m - 1, 1), new Date(y, m, 0)]
+          : [new Date(y, 0, 1), new Date(y, 11, 31)];
+    setValues((prev) => ({ ...prev, [REPORT_PARAMETER_KEYS.from]: toDateOnly(from), [REPORT_PARAMETER_KEYS.to]: toDateOnly(to) }));
+  };
+
+  return (
+    <Card withBorder padding="lg" radius="md">
+      <Stack gap="md">
+        <div>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600} lts={0.5}>
+            {t("reports:run.title")}
+          </Text>
+          <Text fw={700} size="md" mt={2}>
+            {t(reportLabelKey(report.key, "label"), { defaultValue: report.key })}
+          </Text>
+          <Text size="xs" c="dimmed" mt={4}>
+            {t(reportLabelKey(report.key, "description"), { defaultValue: "" })}
+          </Text>
+        </div>
+
+        {report.parameters.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            {t("reports:run.noFilters")}
+          </Text>
+        ) : (
+          <Stack gap="sm">
+            {report.parameters.map((parameter) => {
+              const required = parameter.isRequired ? " *" : "";
+              switch (parameter.kind) {
+                case "orgUnits":
+                  return (
+                    <MultiSelect
+                      key={parameter.key}
+                      label={t("reports:params.orgUnitIds") + required}
+                      description={t("reports:params.orgUnitIdsHint")}
+                      placeholder={t("reports:params.orgUnitIdsPlaceholder")}
+                      data={orgUnitOptions.map((u) => ({ value: u.id, label: u.name }))}
+                      value={values[parameter.key] ? values[parameter.key].split(",") : []}
+                      onChange={(ids) => set(parameter.key, ids.join(","))}
+                      searchable
+                      clearable
+                      renderOption={({ option, checked }) => (
+                        <Group gap="xs" wrap="nowrap">
+                          <Check size={14} style={{ opacity: checked ? 1 : 0, flexShrink: 0 }} />
+                          <span style={{ paddingLeft: `${(depthById.get(option.value) ?? 0) * 12}px` }}>{option.label}</span>
+                        </Group>
+                      )}
+                    />
+                  );
+                case "year":
+                  return (
+                    <Select
+                      key={parameter.key}
+                      label={t("reports:params.year") + required}
+                      data={yearOptions}
+                      value={values[parameter.key] ?? null}
+                      onChange={(v) => set(parameter.key, v)}
+                      clearable={!parameter.isRequired}
+                    />
+                  );
+                case "month":
+                  return (
+                    <Select
+                      key={parameter.key}
+                      label={t("reports:params.month") + required}
+                      placeholder={t("reports:params.monthPlaceholder")}
+                      data={monthOptions}
+                      value={values[parameter.key] ?? null}
+                      onChange={(v) => set(parameter.key, v)}
+                      clearable={!parameter.isRequired}
+                    />
+                  );
+                case "dateRange":
+                  return (
+                    <Stack key={parameter.key} gap={6}>
+                      <Text size="sm" fw={500}>
+                        {t("reports:params.dateRange") + required}
+                      </Text>
+                      <Group grow align="flex-end" gap="sm">
+                        <Input.Wrapper id={`${report.key}-from`} label={t("reports:params.from")}>
+                          <DatePicker
+                            id={`${report.key}-from`}
+                            value={values[REPORT_PARAMETER_KEYS.from] ?? ""}
+                            max={values[REPORT_PARAMETER_KEYS.to] || undefined}
+                            clearable={!parameter.isRequired}
+                            onChange={(v) => set(REPORT_PARAMETER_KEYS.from, v)}
+                          />
+                        </Input.Wrapper>
+                        <Input.Wrapper id={`${report.key}-to`} label={t("reports:params.to")}>
+                          <DatePicker
+                            id={`${report.key}-to`}
+                            value={values[REPORT_PARAMETER_KEYS.to] ?? ""}
+                            min={values[REPORT_PARAMETER_KEYS.from] || undefined}
+                            clearable={!parameter.isRequired}
+                            onChange={(v) => set(REPORT_PARAMETER_KEYS.to, v)}
+                          />
+                        </Input.Wrapper>
+                      </Group>
+                      <Group gap={6}>
+                        {(["thisMonth", "lastMonth", "thisYear"] as const).map((preset) => (
+                          <Button key={preset} type="button" size="compact-xs" variant="light" color="gray" onClick={() => applyPreset(preset)}>
+                            {t(`reports:params.presets.${preset}`)}
+                          </Button>
+                        ))}
+                      </Group>
+                    </Stack>
+                  );
+                case "boolean":
+                  return (
+                    <Switch
+                      key={parameter.key}
+                      label={t(`reports:params.${parameter.key}`, { defaultValue: parameter.key })}
+                      checked={values[parameter.key] === "true"}
+                      onChange={(e) => set(parameter.key, e.currentTarget.checked ? "true" : null)}
+                    />
+                  );
+                default:
+                  return null;
+              }
+            })}
+            {hasRequired && (
+              <Text size="xs" c="dimmed">
+                {t("reports:run.requiredHint")}
+              </Text>
+            )}
+          </Stack>
+        )}
+
+        <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+          <Group gap={6}>
+            <Badge variant="light" color="teal" size="sm" leftSection={<FileSpreadsheet size={12} />}>
+              {t("reports:run.format")}
+            </Badge>
+          </Group>
+          {canGenerate && (
+            <Button
+              type="button"
+              leftSection={<Download size={16} />}
+              disabled={!allSatisfied}
+              loading={generateMutation.isPending}
+              onClick={() => generateMutation.mutate()}
+            >
+              {t("reports:run.generate")}
+            </Button>
+          )}
+        </Group>
+        <Alert variant="light" color="gray" p="xs">
+          <Text size="xs" c="dimmed">
+            {t("reports:run.emailNote")}
+          </Text>
+        </Alert>
+      </Stack>
+    </Card>
+  );
+}
+
+/** Mobile report executions list */
 function ReportExecutionsMobileList({
   items,
   isLoading,
@@ -503,13 +627,13 @@ function ReportExecutionsMobileList({
   downloadMutation: UseMutationResult<DownloadedReportFile, Error, ReportExecution>;
 }) {
   const { t, i18n } = useTranslation(["reports", "common"]);
-  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const locale = i18n.language === "tr" ? "tr-TR" : i18n.language === "de" ? "de-DE" : "en-US";
 
   if (isLoading) return <Skeleton h={160} />;
 
   if (items.length === 0) {
     return (
-      <Card withBorder padding="lg">
+      <Card withBorder padding="lg" radius="md">
         <Text size="sm" c="dimmed" ta="center">
           {t("reports:history.empty")}
         </Text>
@@ -520,16 +644,21 @@ function ReportExecutionsMobileList({
   return (
     <Stack gap="sm">
       {items.map((item) => (
-        <Card key={item.id} withBorder padding="md">
+        <Card key={item.id} withBorder padding="md" radius="md">
           <Stack gap={4}>
             <Group justify="space-between" align="center" wrap="nowrap">
               <Text size="sm" fw={500} truncate>
-                {t(`reports:catalog.${item.reportKey}.label`, { defaultValue: item.reportKey })}
+                {t(reportLabelKey(item.reportKey, "label"), { defaultValue: item.reportKey })}
               </Text>
-              <Badge variant="filled" color={EXECUTION_STATUS_COLOR[item.status]}>
+              <Badge variant="light" color={EXECUTION_STATUS_COLOR[item.status]}>
                 {t(`reports:history.status.${item.status}`)}
               </Badge>
             </Group>
+            {item.status === "failed" && item.errorMessage && (
+              <Text size="xs" c="red.7">
+                {item.errorMessage}
+              </Text>
+            )}
             <Group justify="space-between" align="center" wrap="wrap" mt={4}>
               <Text size="xs" c="dimmed">
                 {formatDateTime(item.requestedAt, locale)}

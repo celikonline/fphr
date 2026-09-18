@@ -32,7 +32,7 @@
 .input:focus-within {
   --input-bg: var(--mantine-color-body);
   box-shadow: 0 0 0 calc(0.1875rem * var(--mantine-scale))
-    light-dark(var(--mantine-color-brand-1), rgba(57, 166, 243, 0.25));
+    light-dark(var(--mantine-primary-color-1), color-mix(in srgb, var(--mantine-primary-color-filled) 25%, transparent));
 }
 
 .inputWrapper[data-error] .input:focus,
@@ -60,7 +60,7 @@
   padding: 0;
   margin-bottom: var(--mantine-spacing-sm);
   font-weight: 600;
-  color: light-dark(var(--mantine-color-brand-8), var(--mantine-color-brand-3));
+  color: light-dark(var(--mantine-primary-color-8), var(--mantine-primary-color-3));
 }
 
 /* Inputs on a tinted panel switch to the page surface so they still stand out. */

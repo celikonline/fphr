@@ -54,6 +54,12 @@ public sealed class TimesheetController : ApiControllerBase
     public async Task<IActionResult> Team([FromQuery] DateOnly weekStart, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetTeamWeekQuery(weekStart, orgUnitId), ct));
 
+    /// <summary>Aynı ekranın "Ay" görünümü (11.7 yol haritası): bir haftalık değil, bir aylık ızgara.</summary>
+    [HttpGet("team/month")]
+    [ProducesResponseType<IReadOnlyList<TeamWeekRowDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> TeamMonth([FromQuery] DateOnly monthStart, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetTeamMonthQuery(monthStart, orgUnitId), ct));
+
     /// <summary>Hücre çekmecesindeki hareketler (11.3.6): bir günün uyuşmazlık çözüm geçmişi.</summary>
     [HttpGet("days/{attendanceDayId:guid}/resolutions")]
     [ProducesResponseType<IReadOnlyList<AnomalyResolutionDto>>(StatusCodes.Status200OK)]

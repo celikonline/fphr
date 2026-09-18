@@ -17,8 +17,8 @@ public sealed class CreateAutomationRuleValidator : AbstractValidator<CreateAuto
 {
     public CreateAutomationRuleValidator()
     {
-        RuleFor(x => x.FromStage).IsEnumName(typeof(ApplicationStage));
-        RuleFor(x => x.ToStage).IsEnumName(typeof(ApplicationStage));
+        RuleFor(x => x.FromStage).IsEnumName(typeof(ApplicationStage), caseSensitive: false);
+        RuleFor(x => x.ToStage).IsEnumName(typeof(ApplicationStage), caseSensitive: false);
         RuleFor(x => x.RequiredFormTemplateId).NotEmpty();
     }
 }
@@ -35,7 +35,7 @@ public sealed class CreateAutomationRuleHandler(ITenantContext tenant, IAutomati
         }
 
         var created = AutomationRule.Create(
-            tenant.TenantId, Enum.Parse<ApplicationStage>(command.FromStage), Enum.Parse<ApplicationStage>(command.ToStage), command.RequiredFormTemplateId);
+            tenant.TenantId, Enum.Parse<ApplicationStage>(command.FromStage, ignoreCase: true), Enum.Parse<ApplicationStage>(command.ToStage, ignoreCase: true), command.RequiredFormTemplateId);
         if (created.IsFailure)
         {
             return created.Error;

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Recruitment.Application.Applications;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -21,8 +22,8 @@ public sealed class JobApplicationsController : ApiControllerBase
     /// <summary>Lists a job posting's applications.</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<JobApplicationDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ListByPosting([FromQuery] Guid jobPostingId, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListApplicationsByPostingQuery(jobPostingId), ct));
+    public async Task<IActionResult> ListByPosting([FromQuery] Guid jobPostingId, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListApplicationsByPostingQuery(jobPostingId, take), ct));
 
     /// <summary>Applies a candidate to a job posting.</summary>
     [HttpPost]

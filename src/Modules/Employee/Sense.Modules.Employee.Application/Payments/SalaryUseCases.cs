@@ -22,7 +22,9 @@ public sealed class GetEmployeeSalariesHandler(IEmployeeReadStore store, Payment
     public async Task<Result<IReadOnlyList<SalaryRecordDto>>> Handle(GetEmployeeSalariesQuery query, CancellationToken cancellationToken)
     {
         var employee = await store.GetWithPaymentsAsync(query.EmployeeId, cancellationToken);
-        return employee is null ? Error.NotFound(EmployeeErrors.EmployeeNotFound) : Result.Success(payments.Salaries(employee));
+        return employee is null
+            ? Error.NotFound(EmployeeErrors.EmployeeNotFound)
+            : Result.Success(await payments.SalariesAsync(employee, cancellationToken));
     }
 }
 
@@ -36,7 +38,9 @@ public sealed class GetMySalariesHandler(SelfEmployeeResolver self, IEmployeeRea
     public async Task<Result<IReadOnlyList<SalaryRecordDto>>> Handle(GetMySalariesQuery query, CancellationToken cancellationToken)
     {
         var employee = await self.ResolveAsync(cancellationToken) is { } id ? await store.GetWithPaymentsAsync(id, cancellationToken) : null;
-        return employee is null ? Error.NotFound(EmployeeErrors.EmployeeNotFound) : Result.Success(payments.Salaries(employee));
+        return employee is null
+            ? Error.NotFound(EmployeeErrors.EmployeeNotFound)
+            : Result.Success(await payments.SalariesAsync(employee, cancellationToken));
     }
 }
 
@@ -194,7 +198,7 @@ public sealed class AddSalaryRecordHandler(IEmployeeRepository employees, Paymen
         }
 
         payments.PublishSalaryChanged(employee, outcome.Value);
-        return Result.Success(payments.Salaries(employee));
+        return Result.Success(await payments.SalariesAsync(employee, cancellationToken));
     }
 }
 
@@ -217,7 +221,7 @@ public sealed class UpdateSalaryRecordHandler(IEmployeeRepository employees, Pay
         }
 
         payments.PublishSalaryChanged(employee, outcome.Value);
-        return Result.Success(payments.Salaries(employee));
+        return Result.Success(await payments.SalariesAsync(employee, cancellationToken));
     }
 }
 
@@ -240,6 +244,6 @@ public sealed class DeleteSalaryRecordHandler(IEmployeeRepository employees, Pay
         }
 
         payments.PublishSalaryChanged(employee, outcome.Value);
-        return Result.Success(payments.Salaries(employee));
+        return Result.Success(await payments.SalariesAsync(employee, cancellationToken));
     }
 }

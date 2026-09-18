@@ -15,7 +15,7 @@ public sealed class SystemRoleDefinitionsTests
             "employee.employees.read", "employee.employees.create", "employee.employees.update", "employee.employees.bulk_update",
             "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "employee.salary.edit", "employee.bank_accounts.edit",
             "employee.sensitive.view", "organization.holidays.view", "organization.units.read",
-            "organization.approval_assignments.manage", "billing.invoices.view",
+            "organization.approval_assignments.manage", "billing.invoices.view", "analytics.kpi.view",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -37,6 +37,14 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldContain("employee.employees.update");
         keys.ShouldContain("employee.employees.bulk_update");
         keys.ShouldNotContain("employee.salary.view");
+    }
+
+    /// <summary>G-10-18: HRSpecialist had `reports.*` (Reporting catalog) but not `analytics.*`, so the workforce
+    /// KPI dashboard was invisible to the day-to-day HR persona even though HR (the full-access role) already had it.</summary>
+    [Fact]
+    public void HRSpecialist_CanViewWorkforceKpis()
+    {
+        Resolve(SystemRoleCodes.HRSpecialist).ShouldContain("analytics.kpi.view");
     }
 
     [Fact]

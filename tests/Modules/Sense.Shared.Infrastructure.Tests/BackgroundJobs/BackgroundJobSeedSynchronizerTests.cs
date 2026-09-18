@@ -60,6 +60,41 @@ public sealed class BackgroundJobSeedSynchronizerTests
         jobs.Calls.Count.ShouldBe(2 * seedCount);
     }
 
+    [Fact]
+    public async Task SyncAllTenantsAsync_WithNoActiveTenants_DoesNotCallRecurring()
+    {
+        var tenants = Substitute.For<IActiveTenantDirectory>();
+        tenants.GetActiveTenantIdsAsync(Arg.Any<CancellationToken>()).Returns(new List<Guid>());
+        var jobs = new RecordingBackgroundJobService();
+        var synchronizer = CreateSynchronizer(tenants, jobs);
+
+        var registered = await synchronizer.SyncAllTenantsAsync(CancellationToken.None);
+
+        registered.ShouldBe(0);
+        jobs.Calls.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task SyncAllTenantsAsync_WhenOneTenantsJobFailsItContinuesWithOthers()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var tenantC = Guid.NewGuid();
+        var tenants = Substitute.For<IActiveTenantDirectory>();
+        tenants.GetActiveTenantIdsAsync(Arg.Any<CancellationToken>()).Returns(new List<Guid> { tenantA, tenantB, tenantC });
+        var jobs = new ThrowingBackgroundJobService(tenantB); // tenantB'nin ilk RecurringAsync çağrısında error
+        var synchronizer = CreateSynchronizer(tenants, jobs);
+        var seeds = BackgroundJobSeeding.GetDefaultSeeds().Count();
+
+        var registered = await synchronizer.SyncAllTenantsAsync(CancellationToken.None);
+
+        // tenantA: seeds.Count, tenantB: 0 (hata), tenantC: seeds.Count
+        registered.ShouldBe(2 * seeds);
+        // tenantA'nın tüm seed'leri kaydedilir, tenantB'nin sıfırı (hata yakalarız), tenantC'nin tüm seed'leri kaydedilir
+        jobs.SuccessfulCalls.Count.ShouldBe(2 * seeds);
+        jobs.FailedTenant.ShouldBe(tenantB);
+    }
+
     private static BackgroundJobSeedSynchronizer CreateSynchronizer(IActiveTenantDirectory tenants, IBackgroundJobService jobs) =>
         new(tenants, jobs, NullLogger<BackgroundJobSeedSynchronizer>.Instance);
 
@@ -77,6 +112,42 @@ public sealed class BackgroundJobSeedSynchronizerTests
         {
             Calls.Add((jobName, jobType, tenantId, cronExpression, payload));
             RecurringJobIds.Add($"{jobName}_{tenantId:N}");
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveRecurringAsync(string jobName) => throw new NotSupportedException();
+    }
+
+    private sealed class ThrowingBackgroundJobService : IBackgroundJobService
+    {
+        private readonly Guid _failingTenantId;
+        private int _callCountForFailingTenant = 0;
+
+        public ThrowingBackgroundJobService(Guid failingTenantId)
+        {
+            _failingTenantId = failingTenantId;
+        }
+
+        public List<(string JobName, JobType JobType, Guid TenantId, string CronExpression, string Payload)> SuccessfulCalls { get; } = [];
+
+        public Guid FailedTenant => _failingTenantId;
+
+        public Task<string> EnqueueAsync(JobType jobType, Guid tenantId, string payload) => throw new NotSupportedException();
+
+        public Task<string> ScheduleAsync(JobType jobType, Guid tenantId, string payload, TimeSpan delay) => throw new NotSupportedException();
+
+        public Task RecurringAsync(string jobName, JobType jobType, Guid tenantId, string cronExpression, string payload)
+        {
+            if (tenantId == _failingTenantId)
+            {
+                _callCountForFailingTenant++;
+                if (_callCountForFailingTenant == 1)
+                {
+                    throw new InvalidOperationException($"Simulated error for tenant {tenantId}");
+                }
+            }
+
+            SuccessfulCalls.Add((jobName, jobType, tenantId, cronExpression, payload));
             return Task.CompletedTask;
         }
 

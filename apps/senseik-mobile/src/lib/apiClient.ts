@@ -52,12 +52,44 @@ const processQueue = (error: unknown, token?: string | null) => {
   failedQueue = [];
 };
 
+/**
+ * Never silently fall back to cleartext http: a release build with a missing
+ * `EXPO_PUBLIC_API_BASE_URL` would otherwise send Bearer tokens unencrypted (MITM).
+ */
+function resolveBaseURL(): string {
+  const configured = process.env.EXPO_PUBLIC_API_BASE_URL;
+  if (configured) {
+    if (__DEV__ && configured.startsWith("http://")) {
+      const host = configured.split("/")[2]?.split(":")[0];
+      if (host !== "localhost" && host !== "127.0.0.1" && host !== "10.0.2.2") {
+        console.warn("[apiClient] API base URL uses cleartext http on a non-local host.");
+      }
+    }
+    return configured;
+  }
+  if (!__DEV__) {
+    throw new Error("EXPO_PUBLIC_API_BASE_URL is not configured for this release build.");
+  }
+  return "http://localhost:5000";
+}
+
 class ApiClient {
   private instance: AxiosInstance;
+  private refreshInstance: AxiosInstance;
 
   constructor() {
+    const baseURL = resolveBaseURL();
     this.instance = axios.create({
-      baseURL: process.env.EXPO_PUBLIC_API_BASE_URL || "http://localhost:5000",
+      baseURL,
+      timeout: 30000,
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    // Bare instance for the refresh call itself: it must not carry the expired
+    // Authorization header and must not re-enter the 401 queue.
+    this.refreshInstance = axios.create({
+      baseURL,
       timeout: 30000,
       headers: {
         "Content-Type": "application/json"
@@ -114,12 +146,19 @@ class ApiClient {
               throw new Error("No refresh token available");
             }
 
-            const response = await this.instance.post("/api/auth/refresh", {
+            const response = await this.refreshInstance.post("/api/auth/refresh", {
               refreshToken
             });
 
-            const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-            
+            // Validate the shape before trusting it - a malformed body must not
+            // overwrite good tokens with `undefined` ("Bearer undefined" retries).
+            const data = response.data?.data;
+            const accessToken: unknown = data?.accessToken;
+            const newRefreshToken: unknown = data?.refreshToken;
+            if (typeof accessToken !== "string" || !accessToken || typeof newRefreshToken !== "string" || !newRefreshToken) {
+              throw new Error("Invalid refresh response");
+            }
+
             await SecureStorage.setAccessToken(accessToken);
             await SecureStorage.setRefreshToken(newRefreshToken);
 

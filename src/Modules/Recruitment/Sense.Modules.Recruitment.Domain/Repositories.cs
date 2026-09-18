@@ -19,6 +19,9 @@ public interface IJobPostingRepository
 
     Task<IReadOnlyList<JobPosting>> ListAsync(JobPostingStatus? status = null, CancellationToken cancellationToken = default);
 
+    /// <summary>At most <paramref name="take"/> postings (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobPosting>> ListAsync(JobPostingStatus? status, int take, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Public career-site lookup by the permanent apply slug (R3): bypasses the tenant query filter, since the
     /// caller is anonymous and doesn't know the tenant yet - the caller must resolve tenant scope from the result
@@ -32,11 +35,17 @@ public interface IJobPostingRepository
     /// <summary>Other Open, not-yet-expired postings of the same tenant (R3 "diğer açık pozisyonlar"), excluding one posting id.</summary>
     Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, DateOnly asOf, CancellationToken cancellationToken = default);
 
+    /// <summary>At most <paramref name="take"/> postings (public career site); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobPosting>> ListPublicOpenAsync(Guid tenantId, Guid excludePostingId, DateOnly asOf, int take, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Public career site's posting list for one tenant (S-10, Faz 9 gün açılışı TALIMAT'ı): Open status AND not
     /// past its <see cref="JobPosting.ClosingDate"/> (null = no closing date, never expires on its own).
     /// </summary>
     Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> postings (public career site); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobPosting>> ListPublicByTenantAsync(Guid tenantId, DateOnly asOf, int take, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Candidate aggregate repository.</summary>
@@ -47,6 +56,9 @@ public interface ICandidateRepository
     Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Candidate>> ListAsync(string? search = null, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> candidates (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<Candidate>> ListAsync(string? search, int take, CancellationToken cancellationToken = default);
 
     /// <summary>Exact e-mail match within the current tenant scope (career-site apply: reuse an existing candidate instead of duplicating).</summary>
     Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default);
@@ -70,7 +82,13 @@ public interface IJobApplicationRepository
 
     Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default);
 
+    /// <summary>At most <paramref name="take"/> applications (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, int take, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> applications (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, int take, CancellationToken cancellationToken = default);
 
     /// <summary>True if this candidate already has an application for this posting (unique index backs this, but the career-site apply flow wants a friendly error, not a DB exception).</summary>
     Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default);
@@ -87,6 +105,9 @@ public interface IJobRequisitionRepository
     Task<JobRequisition?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status = null, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> requisitions (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<JobRequisition>> ListAsync(RequisitionStatus? status, int take, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Tag aggregate repository.</summary>
@@ -99,6 +120,9 @@ public interface ITagRepository
     Task<bool> NameTakenAsync(Guid tenantId, string name, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Tag>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> tags (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<Tag>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default);
 }
 
 /// <summary>RecruitmentFormTemplate aggregate repository.</summary>
@@ -109,6 +133,9 @@ public interface IRecruitmentFormTemplateRepository
     Task<Result<RecruitmentFormTemplate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<RecruitmentFormTemplate>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> templates (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<RecruitmentFormTemplate>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default);
 }
 
 /// <summary>RecruitmentFormResponse aggregate repository.</summary>
@@ -117,6 +144,9 @@ public interface IRecruitmentFormResponseRepository
     void Add(RecruitmentFormResponse response);
 
     Task<IReadOnlyList<RecruitmentFormResponse>> ListByJobApplicationAsync(Guid jobApplicationId, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> responses (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<RecruitmentFormResponse>> ListByJobApplicationAsync(Guid jobApplicationId, int take, CancellationToken cancellationToken = default);
 
     /// <summary>True if the application has at least one submitted response against this template (consumed by AutomationRule gating).</summary>
     Task<bool> ExistsForTemplateAsync(Guid jobApplicationId, Guid templateId, CancellationToken cancellationToken = default);
@@ -130,6 +160,9 @@ public interface IAutomationRuleRepository
     Task<Result<AutomationRule>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AutomationRule>> ListAsync(bool activeOnly = false, CancellationToken cancellationToken = default);
+
+    /// <summary>At most <paramref name="take"/> rules (API-facing reads); the count is clamped to the shared page-size ceiling.</summary>
+    Task<IReadOnlyList<AutomationRule>> ListAsync(bool activeOnly, int take, CancellationToken cancellationToken = default);
 
     /// <summary>Active rules matching this exact stage transition (consumed when moving a JobApplication's stage).</summary>
     Task<IReadOnlyList<AutomationRule>> FindActiveForTransitionAsync(ApplicationStage fromStage, ApplicationStage toStage, CancellationToken cancellationToken = default);

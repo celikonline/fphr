@@ -1,6 +1,6 @@
 namespace Sense.Modules.Reporting.Application;
 
-/// <summary>Application layer error codes (localized in Web layer).</summary>
+/// <summary>Application layer error codes (localized in SharedResource{,.en}.resx).</summary>
 public static class ReportingErrors
 {
     public const string ReportExecutionNotFound = "report_execution.not_found";
@@ -8,4 +8,10 @@ public static class ReportingErrors
     public const string ReportPermissionDenied = "report_execution.report_permission_denied";
     public const string NotOwner = "report_execution.not_owner";
     public const string ReportNotReady = "report_execution.not_ready";
+
+    /// <summary>A parameter the provider marks <c>IsRequired</c> is missing/blank.</summary>
+    public const string ParameterRequired = "report_execution.parameter_required";
+
+    /// <summary>A parameter is present but malformed for its kind (non-GUID unit id, month outside 1–12, bad date, from &gt; to…).</summary>
+    public const string ParameterInvalid = "report_execution.parameter_invalid";
 }

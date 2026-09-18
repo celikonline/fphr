@@ -27,7 +27,7 @@ public sealed class CreateJobPostingValidator : AbstractValidator<CreateJobPosti
     {
         RuleFor(x => x.Title).NotEmpty().MaximumLength(RecruitmentLimits.TitleMaxLength);
         RuleFor(x => x.OrgUnitId).NotEmpty();
-        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType));
+        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType), caseSensitive: false);
         RuleFor(x => x.OwnerUserId).NotEmpty();
     }
 }
@@ -48,7 +48,7 @@ public sealed class CreateJobPostingHandler(
 
         var created = JobPosting.Create(
             tenant.TenantId, command.Title, command.OrgUnitId, command.LocationId,
-            Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType), command.Description, command.OwnerUserId,
+            Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType, ignoreCase: true), command.Description, command.OwnerUserId,
             command.HiringManagerUserId, command.RequisitionId);
         if (created.IsFailure)
         {
@@ -103,7 +103,7 @@ public sealed class UpdateJobPostingValidator : AbstractValidator<UpdateJobPosti
         RuleFor(x => x.PostingId).NotEmpty();
         RuleFor(x => x.Title).NotEmpty().MaximumLength(RecruitmentLimits.TitleMaxLength);
         RuleFor(x => x.OrgUnitId).NotEmpty();
-        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType));
+        RuleFor(x => x.EmploymentType).IsEnumName(typeof(RecruitmentEmploymentType), caseSensitive: false);
     }
 }
 
@@ -128,7 +128,7 @@ public sealed class UpdateJobPostingHandler(
         }
 
         var updated = existing.Value.Update(
-            command.Title, command.OrgUnitId, command.LocationId, Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType),
+            command.Title, command.OrgUnitId, command.LocationId, Enum.Parse<RecruitmentEmploymentType>(command.EmploymentType, ignoreCase: true),
             command.Description, command.CompanyNotes, command.HiringManagerUserId, command.ClosingDate);
         return updated.IsFailure ? updated.Error : Result.Success();
     }
@@ -202,7 +202,7 @@ public sealed class ArchiveJobPostingValidator : AbstractValidator<ArchiveJobPos
     public ArchiveJobPostingValidator()
     {
         RuleFor(x => x.PostingId).NotEmpty();
-        RuleFor(x => x.Reason).IsEnumName(typeof(JobPostingArchiveReason));
+        RuleFor(x => x.Reason).IsEnumName(typeof(JobPostingArchiveReason), caseSensitive: false);
     }
 }
 
@@ -216,7 +216,7 @@ public sealed class ArchiveJobPostingHandler(IJobPostingRepository postings) : I
             return existing.Error;
         }
 
-        var archived = existing.Value.Archive(Enum.Parse<JobPostingArchiveReason>(command.Reason));
+        var archived = existing.Value.Archive(Enum.Parse<JobPostingArchiveReason>(command.Reason, ignoreCase: true));
         return archived.IsFailure ? archived.Error : Result.Success();
     }
 }

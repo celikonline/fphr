@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Recruitment.Application.FormTemplates;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Recruitment.Api.Controllers;
@@ -21,8 +22,8 @@ public sealed class FormTemplatesController : ApiControllerBase
     /// <summary>Lists form templates, optionally active only.</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<FormTemplateDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List([FromQuery] bool activeOnly, CancellationToken ct) =>
-        FromResult(await Dispatcher.Query(new ListFormTemplatesQuery(activeOnly), ct));
+    public async Task<IActionResult> List([FromQuery] bool activeOnly, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListFormTemplatesQuery(activeOnly, take), ct));
 
     /// <summary>A single form template by id.</summary>
     [HttpGet(ApiRoutes.IdParam)]

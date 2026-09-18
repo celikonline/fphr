@@ -1,58 +1,58 @@
 {
-  "greeting": "[DE] Hello {{name}}!",
-  "subtitle": "[DE] Upcoming important days at your company.",
-  "unavailable": "[DE] This information can't be shown right now.",
-  "today": "[DE] Today",
-  "inDays_one": "[DE] In {{count}} day",
-  "inDays_other": "[DE] In {{count}} days",
-  "noWidgets": "[DE] There is nothing to show on your home page.",
-  "daysSuffix": "[DE] d",
-  "viewAll": "[DE] View all",
-  "refresh": "[DE] Refresh",
+  "greeting": "Hallo {{name}}!",
+  "subtitle": "Anstehende wichtige Termine in Ihrem Unternehmen.",
+  "unavailable": "Diese Information kann derzeit nicht angezeigt werden.",
+  "today": "Heute",
+  "inDays_one": "In {{count}} Tag",
+  "inDays_other": "In {{count}} Tagen",
+  "noWidgets": "Auf Ihrer Startseite gibt es nichts anzuzeigen.",
+  "daysSuffix": "T",
+  "viewAll": "Alle anzeigen",
+  "refresh": "Aktualisieren",
   "holidays": {
-    "title": "[DE] Public holidays",
-    "empty": "[DE] No public holidays in the next {{days}} days."
+    "title": "Feiertage",
+    "empty": "In den nächsten {{days}} Tagen gibt es keine Feiertage."
   },
   "birthdays": {
-    "title": "[DE] Upcoming birthdays",
-    "empty": "[DE] No birthdays in the next {{days}} days."
+    "title": "Anstehende Geburtstage",
+    "empty": "In den nächsten {{days}} Tagen gibt es keine Geburtstage."
   },
   "leaves": {
-    "title": "[DE] Upcoming leave",
-    "empty": "[DE] No one is on leave in the next {{days}} days."
+    "title": "Anstehender Urlaub",
+    "empty": "In den nächsten {{days}} Tagen ist niemand im Urlaub."
   },
   "pendingApprovals": {
-    "title": "[DE] Pending approvals",
-    "viewAll": "[DE] View all",
-    "empty": "[DE] No requests awaiting your approval."
+    "title": "Offene Genehmigungen",
+    "viewAll": "Alle anzeigen",
+    "empty": "Es warten keine Anträge auf Ihre Genehmigung."
   },
   "teamRequests": {
-    "title": "[DE] Leave requests",
-    "empty": "[DE] No leave requests awaiting approval.",
-    "viewCalendar": "[DE] View calendar"
+    "title": "Urlaubsanträge",
+    "empty": "Es warten keine Urlaubsanträge auf Genehmigung.",
+    "viewCalendar": "Kalender anzeigen"
   },
   "events": {
-    "title": "[DE] Event calendar",
-    "planned": "[DE] The event calendar arrives in Phase 4; meetings and events will be listed here."
+    "title": "Veranstaltungskalender",
+    "planned": "Der Veranstaltungskalender kommt in Phase 4; Besprechungen und Termine werden hier aufgeführt."
   },
   "orgInfo": {
-    "title": "[DE] My employee card",
-    "manager": "[DE] Manager",
-    "unknownManager": "[DE] Unknown",
-    "hireDate": "[DE] Hire date",
-    "account": "[DE] My account"
+    "title": "Meine Mitarbeiterkarte",
+    "manager": "Führungskraft",
+    "unknownManager": "Unbekannt",
+    "hireDate": "Eintrittsdatum",
+    "account": "Mein Konto"
   },
   "leaveInfo": {
-    "title": "[DE] My leave",
-    "empty": "[DE] There is no leave balance to show.",
-    "availableUntil": "[DE] Available until {{date}}",
-    "future": "[DE] Future",
-    "used": "[DE] Used",
-    "recentTitle": "[DE] Recent requests"
+    "title": "Mein Urlaub",
+    "empty": "Es gibt keinen Urlaubssaldo zum Anzeigen.",
+    "availableUntil": "Verfügbar bis {{date}}",
+    "future": "Zukünftig",
+    "used": "Genutzt",
+    "recentTitle": "Letzte Anträge"
   },
   "departmentDistribution": {
-    "title": "[DE] Employee distribution",
-    "empty": "[DE] There are no employees to show.",
-    "unassigned": "[DE] Unassigned"
+    "title": "Mitarbeiterverteilung",
+    "empty": "Es gibt keine Mitarbeitenden zum Anzeigen.",
+    "unassigned": "Nicht zugeordnet"
   }
 }

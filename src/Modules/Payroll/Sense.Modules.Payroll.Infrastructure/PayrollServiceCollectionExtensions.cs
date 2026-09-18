@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Leave.Contracts.Events;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;

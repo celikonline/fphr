@@ -26,7 +26,10 @@ public class BackgroundJobServiceTests : IAsyncLifetime
     {
         var services = new ServiceCollection();
 
-        // Register in-memory Hangfire for testing
+        // Register in-memory Hangfire for testing. AddHangfire alone doesn't assign JobStorage.Current
+        // (no server started), and the IBackgroundJobClient/IRecurringJobManager factories below read it
+        // eagerly at resolve time - so initialize the storage before building the provider.
+        JobStorage.Current = new InMemoryStorage();
         services.AddHangfire(config => config.UseInMemoryStorage());
         services.AddScoped<IBackgroundJobClient>(sp => new BackgroundJobClient(
             JobStorage.Current ?? throw new InvalidOperationException("Hangfire storage not initialized")));
@@ -47,9 +50,6 @@ public class BackgroundJobServiceTests : IAsyncLifetime
         _backgroundJobService = _serviceProvider.GetRequiredService<IBackgroundJobService>();
         _jobClient = _serviceProvider.GetRequiredService<IBackgroundJobClient>();
         _recurringJobManager = _serviceProvider.GetRequiredService<IRecurringJobManager>();
-
-        // Initialize in-memory storage
-        JobStorage.Current = new InMemoryStorage();
 
         await Task.CompletedTask;
     }

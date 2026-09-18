@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Recruitment.Application;
@@ -8,6 +11,7 @@ using Sense.Modules.Recruitment.Application.Applications;
 using Sense.Modules.Recruitment.Application.Candidates;
 using Sense.Modules.Recruitment.Application.Public;
 using Sense.Modules.Recruitment.Contracts;
+using Sense.Modules.Recruitment.Contracts.Events;
 using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Domain.Applications;
 using Sense.Modules.Recruitment.Domain.Candidates;
@@ -19,7 +23,10 @@ using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Persistence;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Kernel.Results;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
 using Xunit;
@@ -80,10 +87,22 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         services.AddSingleton<FakeLocationLookup>();
         services.AddSingleton<ILocationLookup>(sp => sp.GetRequiredService<FakeLocationLookup>());
 
+        // AuthorizationBehaviour (pipeline) ctor'unda IPermissionService + IDataScopeService ister; Recruitment
+        // istekleri anonim de olabilir (public career) - bu fixture'da izin/kapsam her zaman açık: Employee/
+        // Organization fixture'larındaki GrantAllPermissions/FakeDataScope precedent'i.
+        services.AddSingleton<IPermissionService, GrantAllPermissions>();
+        services.AddSingleton<IDataScopeService, OpenDataScope>();
+        services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
+
         // Faz 9 gün açılışı TALIMAT'ı madde 1 (job testi): CandidateRetentionSweepJobHandler normalde yalnız
         // RecruitmentModule.AddModule'de (Sense.Api/Hangfire) kayıtlıdır - burada da kaydederek gerçek DB'ye karşı
         // BackgroundJobExecutor'ı devreye sokmadan doğrudan çözümleyip çağırabiliyoruz.
         services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
+
+        // Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler S-23 IEmployeeProvisioning'i çağırır;
+        // bu fixture'da fake implementasyon kaydedilir (gerçek implementasyon Faz 2'de).
+        services.AddSingleton<FakeEmployeeProvisioning>();
+        services.AddSingleton<IEmployeeProvisioning>(sp => sp.GetRequiredService<FakeEmployeeProvisioning>());
     }
 
     /// <summary>
@@ -518,8 +537,18 @@ public sealed class RecruitmentIntegrationTests : TestFixture
             await handler.ExecuteAsync(new ScheduledJobContext(tenantId, null, DateTimeOffset.UtcNow), CancellationToken.None);
         }
 
-        (await ExecuteQueryAsync(new GetCandidateQuery(hiredCandidateId))).Value.IsAnonymized.ShouldBeFalse();
-        (await ExecuteQueryAsync(new GetCandidateQuery(pendingCandidateId))).Value.IsAnonymized.ShouldBeTrue();
+        // NB: fresh scopes below, not ExecuteQueryAsync: the root dispatcher scope still tracks the pre-job
+        // entity state, and EF re-query does not refresh already-tracked instances - a production read always
+        // runs in its own request scope, so assert through one here too.
+        (await IsAnonymizedAsync(hiredCandidateId)).ShouldBeFalse();
+        (await IsAnonymizedAsync(pendingCandidateId)).ShouldBeTrue();
+    }
+
+    private async Task<bool> IsAnonymizedAsync(Guid candidateId)
+    {
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        var candidates = scope.ServiceProvider.GetRequiredService<ICandidateRepository>();
+        return (await candidates.GetByIdAsync(candidateId)).Value.IsAnonymized;
     }
 
     /// <summary>G-9-12 (Faz 9 gün açılışı TALIMAT'ı madde 4): aday anonimleştirilince form cevaplarındaki serbest
@@ -634,6 +663,75 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         detail.Value.ApplySlug.ShouldBe(applySlug);
     }
 
+    /// <summary>Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler unit test - Hired stage
+    /// triggers IEmployeeProvisioning.CreateFromCandidateAsync with correct fields.</summary>
+    [Fact]
+    public async Task JobApplicationStageChangedHandler_HiredStage_TriggersProvisioning()
+    {
+        var tenantId = Guid.NewGuid();
+        var candidateId = Guid.NewGuid();
+        var postingId = Guid.NewGuid();
+
+        var fake = new FakeJobApplicationRepository();
+        var application = JobApplication.Create(tenantId, postingId, candidateId);
+        fake.ApplicationsById[application.Id] = application;
+
+        var fakeCandidate = new FakeCandidateRepository();
+        var candidate = Candidate.Create(tenantId, "John", "Doe", "john.doe@example.com", "+905551234567").Value;
+        fakeCandidate.CandidatesById[candidate.Id] = candidate;
+
+        var fakeProvisioning = new FakeEmployeeProvisioning();
+        var fakeUnitOfWork = new FakeRecruitmentUnitOfWork();
+        var logger = new NullLogger<JobApplicationStageChangedHandler>();
+        var handler = new JobApplicationStageChangedHandler(fake, fakeCandidate, fakeProvisioning, fakeUnitOfWork, logger);
+
+        // Tur 11 kapanışı: event artık gerçekte kaydedilen application.Id'yi taşıyor - önceden ilgisiz, ayrı bir
+        // Guid.NewGuid() kullanılıyordu, handler @event.JobApplicationId ile fake repoda hiçbir zaman eşleşen bir
+        // kayıt bulamıyor ve sessizce erken çıkıyordu (bu test hiçbir zaman geçmemişti).
+        var @event = new JobApplicationStageChanged(tenantId, application.Id, postingId, candidateId, nameof(ApplicationStage.Hired));
+
+        await handler.Handle(@event, CancellationToken.None);
+
+        fakeProvisioning.ProvisionedCandidates.Count.ShouldBe(1);
+        var request = fakeProvisioning.ProvisionedCandidates[0];
+        request.FirstName.ShouldBe("John");
+        request.LastName.ShouldBe("Doe");
+        request.Email.ShouldBe("john.doe@example.com");
+        request.Phone.ShouldBe("+905551234567");
+        request.NationalId.ShouldBeNull();
+        request.OrgUnitId.ShouldBeNull();
+        request.PositionTitle.ShouldBeNull();
+        request.SourceApplicationId.ShouldBe(application.Id);
+        fakeUnitOfWork.SaveChangesCalled.ShouldBeTrue();
+    }
+
+    /// <summary>Faz 9 tur 1 TALIMAT madde 1-2: JobApplicationStageChangedHandler unit test - non-Hired
+    /// stage changes do not trigger provisioning.</summary>
+    [Fact]
+    public async Task JobApplicationStageChangedHandler_NonHiredStage_DoesNotTrigger()
+    {
+        var tenantId = Guid.NewGuid();
+        var candidateId = Guid.NewGuid();
+        var applicationId = Guid.NewGuid();
+        var postingId = Guid.NewGuid();
+
+        var fake = new FakeJobApplicationRepository();
+        var fakeCandidate = new FakeCandidateRepository();
+        var fakeProvisioning = new FakeEmployeeProvisioning();
+        var fakeUnitOfWork = new FakeRecruitmentUnitOfWork();
+        var logger = new NullLogger<JobApplicationStageChangedHandler>();
+        var handler = new JobApplicationStageChangedHandler(fake, fakeCandidate, fakeProvisioning, fakeUnitOfWork, logger);
+
+        // Test Screening, Interview, Offer, Rejected - none should trigger provisioning.
+        foreach (var stage in new[] { "Screening", "Interview", "Offer", "Rejected" })
+        {
+            fakeProvisioning.Reset();
+            var @event = new JobApplicationStageChanged(tenantId, applicationId, postingId, candidateId, stage);
+            await handler.Handle(@event, CancellationToken.None);
+            fakeProvisioning.ProvisionedCandidates.Count.ShouldBe(0);
+        }
+    }
+
     /// <summary>Backdates two candidates' <c>created_at</c> past the retention window via raw SQL - the audit
     /// interceptor stamps <c>CreatedAt</c> on insert and refuses to let a normal EF update touch it afterward
     /// (see AuditTenantInterceptor.Apply/Modified), so this is the only way to simulate "created a long time ago".</summary>
@@ -714,6 +812,42 @@ public sealed class RecruitmentIntegrationTests : TestFixture
     private sealed record FormFieldSnapshot(Guid Id);
 
     /// <summary>
+    /// AuthorizationBehaviour/AccessSettingsAuthorizationBehaviour portları: Recruitment isteklerinde ne
+    /// [RequiresPermission] engeli (public career anonim akar) ne [RequiresAccessSetting] var; ama pipeline
+    /// davranışları ctor'dan çözüldüğü için kayıt şart. Her şeyi açan in-memory implementasyonlar (Employee
+    /// fixture'ındaki GrantAllPermissions/FakeDataScope/AllAccessSettingsEnabled precedent'i).
+    /// </summary>
+    private sealed class GrantAllPermissions : IPermissionService
+    {
+        public Task<bool> HasAsync(Guid userId, string permission, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+        public Task<IReadOnlySet<string>> GetPermissionsAsync(Guid userId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<string>>(new HashSet<string>());
+
+        public Task<DataScope> GetScopeAsync(Guid userId, string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult(DataScope.Company);
+    }
+
+    private sealed class OpenDataScope : IDataScopeService
+    {
+        public Task<IReadOnlySet<Guid>?> GetVisibleEmployeeIdsAsync(string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<Guid>?>(null);
+
+        public Task<bool> CanAccessEmployeeAsync(string permission, Guid employeeId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(true);
+
+        public Task<IReadOnlySet<Guid>?> GetAccessibleOrgUnitIdsAsync(string permission, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlySet<Guid>?>(null);
+    }
+
+    private sealed class AllAccessSettingsEnabled : IAccessSettingsService
+    {
+        public Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+        public Task<bool> IsEnabledForCurrentUserAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    }
+
+    /// <summary>
     /// In-memory <see cref="ITenantSlugLookup"/> for this fixture (see class doc comment): tests call
     /// <see cref="Map"/> to declare which slug resolves to which tenant id before dispatching
     /// <c>ListPublicJobPostingsByTenantSlugQuery</c>. An unmapped slug behaves exactly like the real
@@ -762,6 +896,103 @@ public sealed class RecruitmentIntegrationTests : TestFixture
                 .Where(id => _byId.ContainsKey(id))
                 .ToDictionary(id => id, id => _byId[id]);
             return Task.FromResult(result);
+        }
+    }
+
+    /// <summary>
+    /// In-memory <see cref="IEmployeeProvisioning"/> for this fixture (S-23 - Faz 9 tur 1): records each
+    /// provisioning request for assertion in tests, returning a dummy employee Guid. Implementation deferred
+    /// to Faz 2 BE.
+    /// </summary>
+    private sealed class FakeEmployeeProvisioning : IEmployeeProvisioning
+    {
+        public List<CandidateHireRequest> ProvisionedCandidates { get; } = [];
+
+        public void Reset() => ProvisionedCandidates.Clear();
+
+        public Task<Guid> CreateFromCandidateAsync(
+            Guid tenantId,
+            CandidateHireRequest request,
+            CancellationToken cancellationToken = default)
+        {
+            ProvisionedCandidates.Add(request);
+            return Task.FromResult(Guid.CreateVersion7()); // Dummy employee Guid
+        }
+    }
+
+    /// <summary>In-memory <see cref="IJobApplicationRepository"/> for unit testing.</summary>
+    private sealed class FakeJobApplicationRepository : IJobApplicationRepository
+    {
+        public Dictionary<Guid, JobApplication> ApplicationsById { get; } = [];
+
+        public Task<Result<JobApplication>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApplicationsById.TryGetValue(id, out var app) ? Result.Success(app) : Result.Failure<JobApplication>(Error.NotFound(RecruitmentDomainErrors.ApplicationNotFound)));
+
+        public void Add(JobApplication application) => ApplicationsById[application.Id] = application;
+        public void Remove(JobApplication application) => ApplicationsById.Remove(application.Id);
+
+        public Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == jobPostingId).ToList());
+
+        public Task<IReadOnlyList<JobApplication>> ListByJobPostingAsync(Guid jobPostingId, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.JobPostingId == jobPostingId).Take(take).ToList());
+
+        public Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.CandidateId == candidateId).ToList());
+
+        public Task<IReadOnlyList<JobApplication>> ListByCandidateAsync(Guid candidateId, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<JobApplication>>(ApplicationsById.Values.Where(a => a.CandidateId == candidateId).Take(take).ToList());
+
+        public Task<bool> ExistsAsync(Guid jobPostingId, Guid candidateId, CancellationToken cancellationToken = default) =>
+            Task.FromResult(ApplicationsById.Values.Any(a => a.JobPostingId == jobPostingId && a.CandidateId == candidateId));
+    }
+
+    /// <summary>In-memory <see cref="ICandidateRepository"/> for unit testing.</summary>
+    private sealed class FakeCandidateRepository : ICandidateRepository
+    {
+        public Dictionary<Guid, Candidate> CandidatesById { get; } = [];
+
+        public Task<Result<Candidate>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            Task.FromResult(CandidatesById.TryGetValue(id, out var candidate) ? Result.Success(candidate) : Result.Failure<Candidate>(Error.NotFound(RecruitmentDomainErrors.CandidateNotFound)));
+
+        public void Add(Candidate candidate) => CandidatesById[candidate.Id] = candidate;
+        public void Remove(Candidate candidate) => CandidatesById.Remove(candidate.Id);
+
+        public Task<IReadOnlyList<Candidate>> ListAsync(string? search = null, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(FilterCandidates(search).ToList());
+
+        public Task<IReadOnlyList<Candidate>> ListAsync(string? search, int take, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(FilterCandidates(search).Take(take).ToList());
+
+        private IEnumerable<Candidate> FilterCandidates(string? search) =>
+            string.IsNullOrEmpty(search)
+                ? CandidatesById.Values
+                : CandidatesById.Values.Where(c => c.Email.Contains(search, StringComparison.OrdinalIgnoreCase) || $"{c.FirstName} {c.LastName}".Contains(search, StringComparison.OrdinalIgnoreCase));
+
+        public Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default)
+        {
+            var candidate = CandidatesById.Values.FirstOrDefault(c => c.Email == email);
+            return Task.FromResult(candidate);
+        }
+
+        public Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<Candidate>>(CandidatesById.Values.Where(c => !c.IsAnonymized && c.CreatedAt < createdBefore).ToList());
+    }
+
+    /// <summary>In-memory <see cref="IRecruitmentUnitOfWork"/> for unit testing.</summary>
+    private sealed class FakeRecruitmentUnitOfWork : IRecruitmentUnitOfWork
+    {
+        public bool SaveChangesCalled { get; private set; }
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            SaveChangesCalled = true;
+            return Task.FromResult(1);
+        }
+
+        public async Task ExecuteInTransactionAsync(Func<CancellationToken, Task> action, CancellationToken cancellationToken = default)
+        {
+            await action(cancellationToken);
         }
     }
 }

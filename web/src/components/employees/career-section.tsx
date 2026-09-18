@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Anchor, Badge, Box, Button, Card, Group, Input, Modal, Select, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Anchor, Badge, Box, Button, Card, Group, Input, Modal, Select, Skeleton, Stack, Tabs, Text, Textarea, Title } from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { EmploymentPeriodsSection } from "./employment-periods-section";
+import { WorkScheduleSection } from "./work-schedule-section";
 import {
   addCareerRecord,
   deleteCareerRecord,
@@ -126,6 +127,76 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
   if (isLoading) {
     return <Skeleton h={256} />;
   }
+
+  return (
+    <Tabs defaultValue="position" keepMounted={false}>
+      <Tabs.List mb="lg">
+        <Tabs.Tab value="position">{t("employees:career.tabs.position")}</Tabs.Tab>
+        <Tabs.Tab value="workSchedule">{t("employees:career.tabs.workSchedule")}</Tabs.Tab>
+      </Tabs.List>
+      <Tabs.Panel value="position">
+        <CareerPositionTab
+          employee={employee}
+          editable={editable}
+          levels={levels}
+          records={records}
+          current={current}
+          latest={latest}
+          date={date}
+          unitName={unitName}
+          placementSummary={placementSummary}
+          dialog={dialog}
+          setDialog={setDialog}
+          deleting={deleting}
+          setDeleting={setDeleting}
+          deleteMutation={deleteMutation}
+          onTimelineChanged={onTimelineChanged}
+        />
+      </Tabs.Panel>
+      <Tabs.Panel value="workSchedule">
+        <WorkScheduleSection employee={employee} />
+      </Tabs.Panel>
+    </Tabs>
+  );
+}
+
+interface CareerPositionTabProps {
+  employee: EmployeeDetail;
+  editable: boolean;
+  levels: Levels;
+  records: CareerRecord[];
+  current: CareerRecord | null;
+  latest: CareerRecord | null;
+  date: (value: string | null) => string;
+  unitName: (id: string | undefined) => string;
+  placementSummary: (record: CareerRecord) => string;
+  dialog: { mode: "add" } | { mode: "edit"; record: CareerRecord } | null;
+  setDialog: (value: { mode: "add" } | { mode: "edit"; record: CareerRecord } | null) => void;
+  deleting: CareerRecord | null;
+  setDeleting: (value: CareerRecord | null) => void;
+  deleteMutation: ReturnType<typeof useMutation<CareerRecord[], unknown, CareerRecord>>;
+  onTimelineChanged: (updated: CareerRecord[], message: string) => void;
+}
+
+/** "Pozisyon" alt sekmesi: current position card + history timeline + employment periods + the add/edit/delete dialogs. */
+function CareerPositionTab({
+  employee,
+  editable,
+  levels,
+  records,
+  current,
+  latest,
+  date,
+  unitName,
+  placementSummary,
+  dialog,
+  setDialog,
+  deleting,
+  setDeleting,
+  deleteMutation,
+  onTimelineChanged,
+}: CareerPositionTabProps) {
+  const { t } = useTranslation(["employees", "common"]);
 
   return (
     <Stack gap="lg">

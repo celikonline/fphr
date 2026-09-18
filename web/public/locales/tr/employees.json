@@ -393,6 +393,33 @@
       "validFromRequired": "Pozisyon başlama tarihi zorunludur.",
       "validFromAfterPrevious": "Tarih, önceki kaydın başlangıcından ({{date}}) sonra olmalıdır.",
       "validFromBeforeHire": "Tarih, işe başlama tarihinden ({{date}}) önce olamaz."
+    },
+    "tabs": {
+      "position": "Pozisyon",
+      "workSchedule": "Çalışma Takvimi"
+    },
+    "workSchedule": {
+      "title": "Çalışma takvimi geçmişi",
+      "empty": "Henüz çalışma takvimi ataması yok.",
+      "assign": "Çalışma Takvimi Ata",
+      "assignTitle": "Çalışma takvimi ata",
+      "assignDescription": "{{name}} için yeni bir çalışma takvimi ataması ekleyin. Önceki atama, bu tarihten bir gün önce kapanır.",
+      "assigned": "Çalışma takvimi atandı.",
+      "scheduleRequired": "Çalışma takvimi seçilmelidir.",
+      "effectiveFromRequired": "Başlangıç tarihi zorunludur.",
+      "selectPlaceholder": "Seçin",
+      "col": {
+        "start": "Başlangıç",
+        "end": "Bitiş",
+        "duration": "Süre",
+        "schedule": "Çalışma Takvimi",
+        "assignedAt": "Atama Tarihi"
+      },
+      "duration": {
+        "years": "{{count}} yıl",
+        "months": "{{count}} ay",
+        "days": "{{count}} gün"
+      }
     }
   },
   "payments": {
@@ -426,7 +453,9 @@
         "amountInvalid": "Maaş tutarı sıfırdan büyük, en fazla iki ondalıklı bir sayı olmalıdır.",
         "allowanceInvalid": "Yol ve yemek yardımı sıfır veya pozitif, en fazla iki ondalıklı bir sayı olmalıdır.",
         "duplicateDate": "{{date}} tarihli bir maaş kaydı zaten var."
-      }
+      },
+      "createdBy": "Oluşturan",
+      "createdAt": "Oluşturulma Tarihi"
     },
     "bank": {
       "title": "Banka hesapları",

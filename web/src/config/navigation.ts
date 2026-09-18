@@ -162,7 +162,7 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
-  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, phase: 4, iconColor: "orange" },
+  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, iconColor: "orange" },
   { key: "trust", labelKey: "nav.trust", path: "/app/trust", icon: ShieldCheck, iconColor: "teal" },
   { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
 ];
@@ -299,7 +299,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["recruitment.requisitions.read"],
     iconColor: "gold",
   },
-  { key: "analytics", labelKey: "apps.analytics", path: "/app/apps", icon: PieChart, phase: 7 },
+  {
+    key: "analytics",
+    labelKey: "apps.analytics",
+    path: "/app/reports",
+    icon: PieChart,
+    permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
+    iconColor: "blue",
+  },
 ];
 
 export interface SettingsLink {

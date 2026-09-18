@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Integrations.Application.Webhooks;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Integrations.Api.Controllers;
@@ -18,7 +19,8 @@ public sealed class WebhookSubscriptionsController : ApiControllerBase
     /// <summary>Lists the tenant's webhook subscriptions (never includes the secret).</summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<WebhookSubscriptionDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(CancellationToken ct) => FromResult(await Dispatcher.Query(new ListWebhookSubscriptionsQuery(), ct));
+    public async Task<IActionResult> List([FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>
+        FromResult(await Dispatcher.Query(new ListWebhookSubscriptionsQuery(take), ct));
 
     /// <summary>Registers a subscription; the response is the only time the caller sees the signing secret.</summary>
     [HttpPost]

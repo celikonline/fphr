@@ -1,4 +1,5 @@
 using Sense.Modules.Employee.Domain.Employees;
+using Sense.Modules.Identity.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
@@ -9,7 +10,13 @@ using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
 namespace Sense.Modules.Employee.Application.Payments;
 
-/// <summary>A salary record on the card's "Ödemeler" tab (salaryType/payFrequency/source as camelCase enum strings).</summary>
+/// <summary>
+/// A salary record on the card's "Ödemeler" tab (salaryType/payFrequency/source as camelCase enum strings).
+/// "Oluşturan"/"Oluşturulma Tarihi" columns: <see cref="CreatedByUserId"/>/<see cref="CreatedAt"/> come from the
+/// entity's IAuditable columns (AuditTenantInterceptor fills them on insert, no new schema needed);
+/// <see cref="CreatedByName"/> is the resolved display name, null when <see cref="IUserProfileLookup"/> finds no
+/// match (e.g. the user account was later deleted).
+/// </summary>
 public sealed record SalaryRecordDto(
     Guid Id,
     DateOnly EffectiveFrom,
@@ -21,7 +28,10 @@ public sealed record SalaryRecordDto(
     decimal? MealAllowance,
     SalarySource Source,
     string? Note,
-    bool IsCurrent);
+    bool IsCurrent,
+    Guid? CreatedByUserId,
+    string? CreatedByName,
+    DateTime CreatedAt);
 
 /// <summary>
 /// A bank account. <see cref="Iban"/> is grouped ("TR33 0006 …") for callers with employee.sensitive.view (and for the
@@ -51,18 +61,27 @@ public sealed class PaymentsService(
     ICurrentUser currentUser,
     IIbanProtector protector,
     IIntegrationEventOutbox outbox,
+    IUserProfileLookup users,
     TimeProvider clock)
 {
     public DateOnly Today => DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
 
     /// <summary>Newest effective date first; <see cref="SalaryRecordDto.IsCurrent"/> marks the record in effect today (UTC).</summary>
-    public IReadOnlyList<SalaryRecordDto> Salaries(EmployeeEntity employee)
+    public async Task<IReadOnlyList<SalaryRecordDto>> SalariesAsync(EmployeeEntity employee, CancellationToken cancellationToken)
     {
         var current = employee.CurrentSalaryRecord(Today);
+        var creatorIds = employee.SalaryHistory.Where(r => r.CreatedUserId is not null).Select(r => r.CreatedUserId!.Value).Distinct().ToList();
+        var names = creatorIds.Count == 0
+            ? new Dictionary<Guid, UserProfileInfo>()
+            : await users.GetAsync(tenant.TenantId, creatorIds, cancellationToken);
+
         return employee.SalaryHistory
             .Select(r => new SalaryRecordDto(
                 r.Id, r.EffectiveFrom, r.Amount, r.Currency, r.SalaryType, r.PayFrequency, r.TransportAllowance, r.MealAllowance,
-                r.Source, r.Note, r.Id == current?.Id))
+                r.Source, r.Note, r.Id == current?.Id,
+                r.CreatedUserId,
+                r.CreatedUserId is { } creatorId && names.TryGetValue(creatorId, out var info) ? info.DisplayName : null,
+                r.CreatedAt))
             .ToList();
     }
 

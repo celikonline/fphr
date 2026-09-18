@@ -151,12 +151,13 @@ public sealed class GetOvertimeCostKpiHandler(
 
         var summaries = await attendanceSummaries.GetAsync(tenant.TenantId, query.Year, query.Month, employeeIds, cancellationToken);
 
-        var inputs = new List<OvertimeCostInput>(summaries.Count);
-        foreach (var summary in summaries)
-        {
-            var salary = await salaryLookup.GetCurrentSalaryAsync(tenant.TenantId, summary.EmployeeId, cancellationToken);
-            inputs.Add(new OvertimeCostInput(summary.EmployeeId, summary.OvertimeHours, salary));
-        }
+        // G-10-19: one batched salary lookup instead of one round trip per employee with an attendance summary.
+        var salariesByEmployeeId = await salaryLookup.GetCurrentSalariesAsync(
+            tenant.TenantId, summaries.Select(s => s.EmployeeId).ToList(), cancellationToken);
+
+        var inputs = summaries
+            .Select(summary => new OvertimeCostInput(summary.EmployeeId, summary.OvertimeHours, salariesByEmployeeId.GetValueOrDefault(summary.EmployeeId)))
+            .ToList();
 
         var result = OvertimeCostCalculator.Calculate(inputs);
         return Result.Success(new OvertimeCostKpiDto(query.Year, query.Month, result.Totals, result.EmployeeCount, result.ExcludedEmployeeCount));

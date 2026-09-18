@@ -9,7 +9,12 @@
     "ios": {
       "supportsTabletMode": true,
       "bundleIdentifier": "com.algosense.senseik",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +22,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.algosense.senseik",
-      "versionCode": 1
+      "versionCode": 1,
+      "usesCleartextTraffic": false
     },
     "web": {
       "bundler": "metro"

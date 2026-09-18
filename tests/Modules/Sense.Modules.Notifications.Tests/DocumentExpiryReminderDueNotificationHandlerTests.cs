@@ -5,6 +5,7 @@ using NSubstitute;
 using Sense.Modules.Documents.Contracts.Events;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Notifications.Application;
 using Sense.Modules.Notifications.Contracts;
 using Sense.Modules.Notifications.Infrastructure;
 using Sense.Modules.Notifications.Infrastructure.Persistence;
@@ -45,6 +46,10 @@ public sealed class DocumentExpiryReminderDueNotificationHandlerTests : TestFixt
         services.AddSingleton(_contacts);
         services.AddSingleton(_userProfiles);
         services.AddNotificationsCore(configuration);
+        // After AddNotificationsCore: its AddScoped IRealtimeNotifier (SignalR, needs a host HubContext) would
+        // otherwise win single-service resolution; the handler only needs the port, and these tests assert
+        // persisted in-app notifications, not realtime delivery.
+        services.AddSingleton(Substitute.For<IRealtimeNotifier>());
     }
 
     protected override async Task OnDatabaseReadyAsync() =>

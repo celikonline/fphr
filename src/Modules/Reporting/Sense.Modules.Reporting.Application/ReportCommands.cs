@@ -10,9 +10,10 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Reporting.Application;
 
 /// <summary>
-/// Requests a report. Runs synchronously today (R0 - see ReportExecution's remark); the state machine it drives
-/// (Queued -&gt; Running -&gt; Succeeded/Failed) is the same one a future async path would use, so moving generation
-/// onto Hangfire later only changes who calls Start/Complete/Fail, not the aggregate or this DTO shape.
+/// Requests a report (Kolay İK: rapor türü + Birimler/Ay/Yıl filtreleri → oluştur). Runs synchronously today (R0 - see
+/// ReportExecution's remark); the state machine it drives (Queued -&gt; Running -&gt; Succeeded/Failed) is the same
+/// one a future async path would use, so moving generation onto Hangfire later only changes who calls
+/// Start/Complete/Fail, not the aggregate or this DTO shape.
 /// </summary>
 [RequiresPermission("reports.executions.generate")]
 public sealed record RequestReportCommand(string ReportKey, Dictionary<string, string>? Parameters) : ICommand<ReportExecutionDto>;
@@ -45,8 +46,19 @@ public sealed class RequestReportHandler(
             return Error.Forbidden(ReportingErrors.ReportPermissionDenied);
         }
 
+        // Blank values are dropped before validation so an empty form field never counts as "present but malformed".
+        var parameters = (command.Parameters ?? [])
+            .Where(kv => !string.IsNullOrWhiteSpace(kv.Value))
+            .ToDictionary(kv => kv.Key, kv => kv.Value.Trim(), StringComparer.Ordinal);
+
+        var validation = ReportParameterValidation.Validate(provider.Parameters, parameters);
+        if (validation.IsFailure)
+        {
+            return validation.Error;
+        }
+
         var now = clock.GetUtcNow().UtcDateTime;
-        var parametersJson = command.Parameters is { Count: > 0 } ? JsonSerializer.Serialize(command.Parameters) : null;
+        var parametersJson = parameters.Count > 0 ? JsonSerializer.Serialize(parameters) : null;
         var created = ReportExecution.Create(tenant.TenantId, command.ReportKey, parametersJson, userId, now);
         if (created.IsFailure)
         {
@@ -62,7 +74,7 @@ public sealed class RequestReportHandler(
         // that's the whole point of the Queued/Running/Succeeded/Failed state machine existing at all.
         try
         {
-            var file = await provider.GenerateAsync(tenant.TenantId, command.Parameters ?? new Dictionary<string, string>(), cancellationToken);
+            var file = await provider.GenerateAsync(tenant.TenantId, parameters, cancellationToken);
             execution.Complete(file.FileName, file.ContentType, file.Content, clock.GetUtcNow().UtcDateTime);
 
             if (currentUser.Email is { Length: > 0 } email)

@@ -1,0 +1,52 @@
+{
+  "title": "Support",
+  "helpCenter": {
+    "title": "Hilfe-Center",
+    "searchPlaceholder": "Wonach suchen Sie? z. B. \"Datenimport\"",
+    "empty": "Keine Artikel für diese Suche gefunden.",
+    "backToList": "Zurück zur Liste",
+    "categories": {
+      "general": "Allgemein",
+      "data_transfer": "Datenimport",
+      "leave_and_overtime": "Urlaub und Überstunden",
+      "approvals": "Genehmigungsprozesse",
+      "access_and_permissions": "Zugriff und Berechtigungen",
+      "payroll": "Lohnabrechnung",
+      "billing": "Abrechnung",
+      "other": "Sonstiges"
+    }
+  },
+  "contact": {
+    "title": "Support kontaktieren",
+    "description": "Nicht gefunden, wonach Sie gesucht haben? Öffnen Sie ein kurzes Ticket, unser Team meldet sich bei Ihnen.",
+    "subject": "Betreff",
+    "subjectPlaceholder": "Fassen Sie Ihr Anliegen kurz zusammen",
+    "body": "Details",
+    "bodyPlaceholder": "Was haben Sie versucht, was haben Sie erwartet, was ist passiert?",
+    "category": "Kategorie",
+    "categories": {
+      "general": "Allgemein",
+      "dataTransfer": "Datenimport",
+      "leaveAndOvertime": "Urlaub und Überstunden",
+      "approvals": "Genehmigungsprozesse",
+      "accessAndPermissions": "Zugriff und Berechtigungen",
+      "payroll": "Lohnabrechnung",
+      "billing": "Abrechnung",
+      "other": "Sonstiges"
+    },
+    "submit": "Anfrage senden",
+    "submitSuccess": "Ihre Anfrage wurde empfangen. Unser Support-Team meldet sich bei Ihnen.",
+    "submitError": "Anfrage konnte nicht gesendet werden, bitte erneut versuchen."
+  },
+  "myTickets": {
+    "title": "Meine Anfragen",
+    "empty": "Sie haben noch keine Support-Anfragen.",
+    "status": {
+      "open": "Offen",
+      "answered": "Beantwortet",
+      "closed": "Geschlossen"
+    },
+    "resolution": "Antwort",
+    "createdAt": "Erstellt"
+  }
+}

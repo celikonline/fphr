@@ -22,6 +22,7 @@ import {
   recalculateLeaveBalances,
   type LeaveAdjustmentInput,
   type LeaveRequest,
+  type LeaveRequestStatus,
 } from "@/services/leave.service";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
@@ -32,6 +33,10 @@ import { ChangeEmployeeRuleSetDialog } from "./employee-rule-set-dialog";
 import { AbsencesPanel } from "./absences-panel";
 
 export const LEAVE_CARD_TAB_PERMISSIONS = ["leave.balances.read", "leave.requests.read", "leave.my.balances", "leave.my.requests"];
+
+const ALL_LEAVE_TYPES = "__all__";
+const ALL_STATUSES = "__all__";
+const LEAVE_STATUS_OPTIONS: LeaveRequestStatus[] = ["pending", "approved", "rejected", "withdrawn", "cancelled"];
 
 /**
  * Employee card "İzinler": Özet (balances), Detaylar (ledger, leave.balances.read) and the request list.
@@ -60,6 +65,8 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   const [ruleSetOpen, setRuleSetOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState<LeaveRequest | null>(null);
+  const [typeFilter, setTypeFilter] = useState(ALL_LEAVE_TYPES);
+  const [statusFilter, setStatusFilter] = useState(ALL_STATUSES);
   const queryClient = useQueryClient();
 
   const balancesMode = canReadBalances ? "employee" : isOwn && canMyBalances ? "me" : null;
@@ -191,9 +198,36 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
 
       {requestsMode !== null && (
         <Card withBorder padding="lg">
-          <Group gap="xs" mb="md">
-            <ListChecks size={16} color="var(--mantine-color-dimmed)" />
-            <Title order={4}>{t("leave:requests.title")}</Title>
+          <Group justify="space-between" wrap="wrap" mb="md" gap="sm">
+            <Group gap="xs">
+              <ListChecks size={16} color="var(--mantine-color-dimmed)" />
+              <Title order={4}>{t("leave:requests.title")}</Title>
+            </Group>
+            <Group gap="sm" wrap="wrap">
+              <Select
+                id="leave-requests-type-filter"
+                aria-label={t("leave:requests.filterType")}
+                placeholder={t("leave:requests.filterType")}
+                data={[{ value: ALL_LEAVE_TYPES, label: t("leave:requests.allTypes") }, ...ledgerTypes.map((type) => ({ value: type.id, label: type.name }))]}
+                value={typeFilter}
+                onChange={(value) => setTypeFilter(value ?? ALL_LEAVE_TYPES)}
+                allowDeselect={false}
+                w={200}
+              />
+              <Select
+                id="leave-requests-status-filter"
+                aria-label={t("leave:requests.filterStatus")}
+                placeholder={t("leave:requests.filterStatus")}
+                data={[
+                  { value: ALL_STATUSES, label: t("leave:requests.allStatuses") },
+                  ...LEAVE_STATUS_OPTIONS.map((status) => ({ value: status, label: t(`leave:status.${status}`) })),
+                ]}
+                value={statusFilter}
+                onChange={(value) => setStatusFilter(value ?? ALL_STATUSES)}
+                allowDeselect={false}
+                w={180}
+              />
+            </Group>
           </Group>
           {requestsQuery.isLoading ? (
             <Skeleton h={128} />
@@ -203,7 +237,11 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
             </Text>
           ) : (
             <LeaveRequestsTable
-              requests={requestsQuery.data ?? []}
+              requests={(requestsQuery.data ?? []).filter(
+                (request) =>
+                  (typeFilter === ALL_LEAVE_TYPES || request.leaveTypeId === typeFilter) &&
+                  (statusFilter === ALL_STATUSES || request.status === statusFilter)
+              )}
               typeName={typeName}
               onOpen={(request) => setDetailId(request.id)}
               actions={(request) => (

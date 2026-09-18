@@ -11,7 +11,7 @@ public sealed class DocumentRequirementEvaluatorTests
     private static readonly EmployeeDocumentContext NoSignals = new(
         IsUnder18: false, HasDisability: false, NonTurkishNational: false, HasIncentive: false, UsesDisabilityTaxReduction: false,
         IsExConvictOrTerrorVictim: false, RequiresPeriodicHealthCheck: false, RequiresDriving: false, HasOpenAssets: false,
-        IsVeryHazardousJob: false, HasOvertimeConsent: false, IsShiftWorker: false);
+        IsVeryHazardousJob: false, HasOvertimeConsent: false, IsShiftWorker: false, IsUndergroundWorker: false);
 
     private static DocumentTypeDefinition Type(
         string code, DocumentTypeStage stage, bool isRequired, DocumentRequirementCondition? condition = null, bool isActive = true)
@@ -88,5 +88,29 @@ public sealed class DocumentRequirementEvaluatorTests
             [onboarding, matchingConditional, nonMatchingConditional, duringEmployment, offboarding, recommended], context);
 
         resolved.ShouldBe([onboarding, matchingConditional], ignoreOrder: true);
+    }
+
+    [Fact]
+    public void ResolveAtHire_UndergroundWorker_IncludesPeriodicHealthCheckConditional()
+    {
+        // 6331 md.15: underground işçilerin periyodik sağlık muayenesi gerekir
+        var healthCheck = Type("HealthCheck", DocumentTypeStage.Conditional, isRequired: true, DocumentRequirementCondition.RequiresPeriodicHealthCheck);
+        var contextUndergroundWorker = NoSignals with { IsUndergroundWorker = true };
+
+        var resolved = DocumentRequirementEvaluator.ResolveAtHire([healthCheck], contextUndergroundWorker);
+
+        resolved.ShouldBe([healthCheck]);
+    }
+
+    [Fact]
+    public void ResolveAtHire_NonUndergroundWorker_ExcludesPeriodicHealthCheckConditional()
+    {
+        // Non-underground işçi → health check şartı yok
+        var healthCheck = Type("HealthCheck", DocumentTypeStage.Conditional, isRequired: true, DocumentRequirementCondition.RequiresPeriodicHealthCheck);
+        var contextNonUnderground = NoSignals with { IsUndergroundWorker = false };
+
+        var resolved = DocumentRequirementEvaluator.ResolveAtHire([healthCheck], contextNonUnderground);
+
+        resolved.ShouldBeEmpty();
     }
 }

@@ -116,8 +116,9 @@ export async function uploadCompanyLogo(file: File): Promise<UploadLogoResult> {
     const documentId = await uploadDocumentFile(file, "logos");
     await apiClient.put<CompanyProfileResponse>(`${PROFILE_BASE}/logo`, { logoDocumentId: documentId, logoUrl: objectUrl });
     return { documentId, logoUrl: objectUrl };
-  } catch (error) {
-    console.error("Logo upload failed, falling back to local preview only:", error);
+  } catch {
+    // Log a short message only - the raw error can carry request URLs/stack traces.
+    console.error("Logo upload failed, falling back to local preview only.");
     await apiClient.put<CompanyProfileResponse>(`${PROFILE_BASE}/logo`, { logoDocumentId: null, logoUrl: objectUrl });
     return { logoUrl: objectUrl };
   }

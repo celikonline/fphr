@@ -13,7 +13,9 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
       Alert.alert("Hata", "Lütfen e-posta adresinizi girin");
       return;
     }
-    Alert.alert("Başarılı", "Şifre sıfırlama bağlantısı " + email + " adresine gönderildi");
+    // Generic message without echoing the address: the screen performs no request yet,
+    // and confirming a specific address enables account enumeration.
+    Alert.alert("Başarılı", "E-posta kayıtlıysa sıfırlama bağlantısı gönderildi.");
     navigation.goBack();
   };
 

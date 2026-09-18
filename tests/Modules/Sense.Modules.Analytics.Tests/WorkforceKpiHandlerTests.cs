@@ -40,12 +40,16 @@ public sealed class WorkforceKpiHandlerTests
 
     private GetWorkforceKpisHandler CreateHandler() => new(_tenant, _employeeAnalytics, _orgUnits, _dataScope, TimeProvider.System);
 
+    /// <summary>G-10-20: 11.3.12'nin tanımı terfi / (terfi + yatay geçiş) - kademe düşürme ve unvan değişikliği
+    /// paya girmez, yalnızca kırılımda görünür.</summary>
     [Fact]
-    public async Task CareerPathRatio_DividesChangesByActiveHeadcount()
+    public async Task CareerPathRatio_DividesPromotionsByPromotionsPlusLateralMoves()
     {
+        // Counts kept at/above MinCellSize (5) so this test isn't tangled with small-cell suppression (G-10-21,
+        // covered separately below) - it only asserts the ratio formula and that breakdown counts pass through.
         _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(50);
         _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
-            .Returns(new CareerPathChangeCounts(Promotion: 3, LateralMove: 2, Demotion: 0, TitleChange: 0));
+            .Returns(new CareerPathChangeCounts(Promotion: 6, LateralMove: 4, Demotion: 3, TitleChange: 8));
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
 
@@ -55,16 +59,17 @@ public sealed class WorkforceKpiHandlerTests
 
         result.IsSuccess.ShouldBeTrue();
         var ratio = result.Value.Single(k => k.Key == KpiKeys.CareerPathRatio);
-        ratio.Value.ShouldBe(0.1m); // 5 changes / 50 headcount
-        ratio.Breakdown.Single(b => b.Dimension == nameof(CareerPathChangeCounts.Promotion)).Count.ShouldBe(3);
+        ratio.Value.ShouldBe(0.6m); // 6 promotions / (6 promotions + 4 lateral moves) - demotion/title change excluded
+        ratio.Breakdown.Single(b => b.Dimension == nameof(CareerPathChangeCounts.Promotion)).Count.ShouldBe(6);
+        ratio.Breakdown.Single(b => b.Dimension == nameof(CareerPathChangeCounts.TitleChange)).Count.ShouldBe(8);
     }
 
     [Fact]
-    public async Task CareerPathRatio_IsZero_WhenNoActiveEmployees()
+    public async Task CareerPathRatio_IsZero_WhenNoPromotionsOrLateralMoves()
     {
-        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(0);
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(50);
         _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
-            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+            .Returns(new CareerPathChangeCounts(Promotion: 0, LateralMove: 0, Demotion: 2, TitleChange: 1));
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new Dictionary<string, int>());
 
@@ -72,26 +77,67 @@ public sealed class WorkforceKpiHandlerTests
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
+        // Demotion/title change only (no promotion/lateral move) -> 0/0, not a divide-by-zero.
         result.Value.Single(k => k.Key == KpiKeys.CareerPathRatio).Value.ShouldBe(0m);
     }
 
     [Fact]
     public async Task GenderRatio_ReturnsTotalHeadcountAndShares()
     {
-        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(10);
+        // Both counts kept at/above MinCellSize (5) - see Breakdown_SuppressesCellsUnderMinCellSize for the small-N case.
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(100);
         _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
-            .Returns(new Dictionary<string, int> { ["Female"] = 4, ["Male"] = 6 });
+            .Returns(new Dictionary<string, int> { ["Female"] = 40, ["Male"] = 60 });
 
         var handler = CreateHandler();
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
         var gender = result.Value.Single(k => k.Key == KpiKeys.GenderRatio);
-        gender.Value.ShouldBe(10m);
+        gender.Value.ShouldBe(100m);
         gender.Breakdown.Single(b => b.Dimension == "Male").Share.ShouldBe(0.6m);
         gender.Breakdown.Single(b => b.Dimension == "Female").Share.ShouldBe(0.4m);
+    }
+
+    /// <summary>G-10-21 (11.3.12 "Küçük hücre gizleme"): a non-zero breakdown cell under 5 never leaves the API
+    /// with its exact count/share - only that it exists and was suppressed. Applies to every KPI breakdown, checked
+    /// here on GENDER_RATIO (company-wide) and GENDER_RATIO_BY_UNIT (the most identity-risky one, per-unit).</summary>
+    [Fact]
+    public async Task Breakdown_SuppressesCellsUnderMinCellSize_ButNotAtOrAboveIt()
+    {
+        var smallUnit = Guid.NewGuid();
+        var largeUnit = Guid.NewGuid();
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(9);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int> { ["Other"] = 2, ["Female"] = 7 }); // Other < 5, Female >= 5
+        _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount> { new(smallUnit, "Female", 2), new(largeUnit, "Male", 5) });
+        _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<OrgUnitInfo> { new(smallUnit, Guid.NewGuid(), null, "Küçük Birim"), new(largeUnit, Guid.NewGuid(), null, "Büyük Birim") });
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        var genderOther = result.Value.Single(k => k.Key == KpiKeys.GenderRatio).Breakdown.Single(b => b.Dimension == "Other");
+        genderOther.IsSuppressed.ShouldBeTrue();
+        genderOther.Count.ShouldBeNull();
+        genderOther.Share.ShouldBeNull();
+        var genderFemale = result.Value.Single(k => k.Key == KpiKeys.GenderRatio).Breakdown.Single(b => b.Dimension == "Female");
+        genderFemale.IsSuppressed.ShouldBeFalse();
+        genderFemale.Count.ShouldBe(7);
+
+        var byUnit = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit);
+        var small = byUnit.Breakdown.Single(b => b.Dimension == "Küçük Birim / Female");
+        small.IsSuppressed.ShouldBeTrue();
+        small.Count.ShouldBeNull();
+        var large = byUnit.Breakdown.Single(b => b.Dimension == "Büyük Birim / Male");
+        large.IsSuppressed.ShouldBeFalse(); // exactly at the threshold - not suppressed
+        large.Count.ShouldBe(5);
     }
 
     [Fact]
@@ -135,8 +181,10 @@ public sealed class WorkforceKpiHandlerTests
     [Fact]
     public async Task GenderRatioByUnit_LabelsKnownUnits_AndFallsBackToUnassignedForNullOrgUnitId()
     {
+        // Counts kept at/above MinCellSize (5, Male exactly at the boundary) - small-cell suppression is
+        // covered separately in Breakdown_SuppressesCellsUnderMinCellSize_ButNotAtOrAboveIt.
         var unitId = Guid.NewGuid();
-        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(3);
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(15);
         _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
             .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
         _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
@@ -144,8 +192,8 @@ public sealed class WorkforceKpiHandlerTests
         _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<GenderByOrgUnitCount>
             {
-                new(unitId, "Female", 2),
-                new(null, "Male", 1),
+                new(unitId, "Female", 10),
+                new(null, "Male", 5),
             });
         _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<OrgUnitInfo> { new(unitId, Guid.NewGuid(), null, "Ankara Şubesi") });
@@ -155,9 +203,9 @@ public sealed class WorkforceKpiHandlerTests
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
         var byUnit = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit);
-        byUnit.Value.ShouldBe(3m);
+        byUnit.Value.ShouldBe(15m);
         byUnit.Breakdown.Single(b => b.Dimension == "Ankara Şubesi / Female").Share.ShouldBe(0.6667m);
-        byUnit.Breakdown.Single(b => b.Dimension == "Unassigned / Male").Count.ShouldBe(1);
+        byUnit.Breakdown.Single(b => b.Dimension == "Unassigned / Male").Count.ShouldBe(5);
     }
 
     [Fact]

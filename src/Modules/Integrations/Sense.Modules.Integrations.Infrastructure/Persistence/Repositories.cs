@@ -1,9 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Integrations.Domain;
 using Sense.Modules.Integrations.Domain.Webhooks;
+using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Integrations.Infrastructure.Persistence;
+
+/// <summary>Clamps API-facing list caps to the shared page-size ceiling.</summary>
+internal static class ListTake
+{
+    public static IQueryable<T> Apply<T>(IQueryable<T> query, int take) =>
+        query.Take(Math.Clamp(take, 1, PagingDefaults.MaxPageSize));
+}
 
 /// <summary>EF Core-backed WebhookSubscription repository with tenant isolation (via ModuleDbContext's global query filter).</summary>
 public sealed class WebhookSubscriptionRepository(IntegrationsDbContext context) : IWebhookSubscriptionRepository
@@ -18,6 +26,9 @@ public sealed class WebhookSubscriptionRepository(IntegrationsDbContext context)
 
     public async Task<IReadOnlyList<WebhookSubscription>> ListAsync(CancellationToken cancellationToken = default) =>
         await context.WebhookSubscriptions.OrderByDescending(s => s.CreatedAt).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<WebhookSubscription>> ListAsync(int take, CancellationToken cancellationToken = default) =>
+        await ListTake.Apply(context.WebhookSubscriptions.OrderByDescending(s => s.CreatedAt), take).ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<WebhookSubscription>> ListSubscribedToAsync(string eventType, CancellationToken cancellationToken = default)
     {
@@ -40,6 +51,6 @@ public sealed class WebhookDeliveryLogRepository(IntegrationsDbContext context) 
             query = query.Where(d => d.SubscriptionId == id);
         }
 
-        return await query.OrderByDescending(d => d.CreatedAt).Take(take).ToListAsync(cancellationToken);
+        return await ListTake.Apply(query.OrderByDescending(d => d.CreatedAt), take).ToListAsync(cancellationToken);
     }
 }

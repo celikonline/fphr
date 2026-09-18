@@ -1,77 +1,163 @@
 {
   "title": "Raporlar",
-  "subtitle": "Şirket genelinde işgücü KPI'larını görüntüleyin.",
-  "empty": "Seçili dönem için KPI verisi yok.",
-  "filters": {
-    "from": "Başlangıç",
-    "to": "Bitiş",
-    "clear": "Filtreleri temizle"
+  "subtitle": "Hazır raporları birim, dönem ve tarih filtreleriyle oluşturup Excel olarak indirin. Son oluşturduklarınız aşağıda listelenir.",
+  "tabs": {
+    "reports": "Raporlar",
+    "kpis": "İK göstergeleri"
   },
-  "breakdown": {
-    "columns": {
-      "kpi": "KPI",
-      "dimension": "Kırılım",
-      "count": "Sayı",
-      "share": "Oran"
-    },
-    "empty": "Kırılım verisi yok."
-  },
-  "kpiSection": {
-    "title": "İşgücü KPI'ları"
-  },
-  "kpi": {
-    "CAREER_PATH_RATIO": {
-      "label": "Kariyer Yolu Oranı"
-    },
-    "GENDER_RATIO": {
-      "label": "Cinsiyet Dağılımı"
-    },
-    "TURNOVER_RATE": {
-      "label": "Devir Oranı"
-    },
-    "EARLY_TURNOVER_RATE": {
-      "label": "Erken Devir Oranı"
-    },
-    "GENDER_RATIO_BY_UNIT": {
-      "label": "Birim Bazında Cinsiyet Dağılımı"
-    },
-    "leaveUsage": {
-      "label": "İzin Kullanım Oranı",
-      "detail": "{{used}} / {{total}} gün kullanıldı"
-    },
-    "overtimeCost": {
-      "label": "Fazla Mesai Maliyeti",
-      "detail": "{{employeeCount}} çalışan · {{excludedCount}} hariç tutuldu"
-    }
+  "categories": {
+    "administrative": "İdari",
+    "employee": "Çalışan",
+    "leave": "İzinler",
+    "finance": "Finans",
+    "other": "Diğer"
   },
   "catalog": {
-    "title": "Rapor Oluştur",
-    "selectLabel": "Rapor",
-    "selectPlaceholder": "Bir rapor seçin",
-    "generate": "Oluştur",
-    "generateSuccess": "Rapor oluşturuldu.",
-    "generateError": "Rapor oluşturulamadı.",
-    "empty": "Görüntüleyebileceğiniz bir rapor yok.",
+    "title": "Rapor türleri",
+    "empty": "Erişebileceğiniz bir hazır rapor bulunmuyor.",
+    "selectHint": "Bir rapor türü seçin; filtreler yanda açılır.",
     "documents": {
       "missingDocuments": {
-        "label": "Eksik Belgeler Raporu"
+        "label": "Eksik belgeler raporu",
+        "description": "Çalışan başına zorunlu belge durumları (eksik, yüklendi, muaf) ve son tarihler."
+      }
+    },
+    "employee": {
+      "list": {
+        "label": "Çalışan listesi raporu",
+        "description": "Kadro listesi: kariyer bilgileri, işe giriş tarihi, çalışma durumu, iletişim ve çalışma şekli."
+      }
+    },
+    "leave": {
+      "balance": {
+        "summary": {
+          "label": "Çalışan izin bakiye raporu",
+          "description": "Yıllık izin bakiyeleri bugüne göre: kalan, toplam hak edilen, devir kayıpları, kullanılan ve ileri tarihli onaylılar."
+        }
+      },
+      "requests": {
+        "label": "İzin raporu",
+        "description": "Seçilen tarih aralığındaki izin talepleri: tür, süre, durum, talep ve karar tarihi."
+      }
+    },
+    "finance": {
+      "salaries": {
+        "label": "Maaş listesi raporu",
+        "description": "Bugün geçerli maaş kayıtları: tutar, para birimi, net/brüt, ödeme düzeni ve yol/yemek yardımı."
       }
     }
   },
+  "run": {
+    "title": "Rapor oluştur",
+    "generate": "Rapor oluştur",
+    "success": "Rapor oluşturuldu, indirme başladı.",
+    "successNoDownload": "Rapor oluşturuldu. Son oluşturduklarım listesinden indirebilirsiniz.",
+    "error": "Rapor oluşturulamadı.",
+    "requiredHint": "* zorunlu filtre",
+    "emailNote": "Rapor hazır olduğunda kayıtlı e-posta adresinize bağlantı gönderilir.",
+    "format": "Excel (.xlsx)",
+    "noFilters": "Bu rapor filtre almaz; doğrudan oluşturabilirsiniz."
+  },
+  "params": {
+    "orgUnitIds": "Birimler",
+    "orgUnitIdsPlaceholder": "Tüm birimler",
+    "orgUnitIdsHint": "Seçilen birimler ve alt birimleri kapsanır.",
+    "year": "Yıl",
+    "month": "Ay",
+    "monthPlaceholder": "Tüm yıl",
+    "dateRange": "Tarih aralığı",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "includeTerminated": "İşten ayrılanları dahil et",
+    "presets": {
+      "thisMonth": "Bu ay",
+      "lastMonth": "Geçen ay",
+      "thisYear": "Bu yıl"
+    }
+  },
   "history": {
+    "title": "Son oluşturduklarım",
     "columns": {
       "report": "Rapor",
       "status": "Durum",
-      "requestedAt": "Talep Tarihi"
+      "requestedAt": "Talep tarihi",
+      "file": "Dosya"
     },
     "status": {
       "queued": "Sırada",
-      "running": "Çalışıyor",
+      "running": "Hazırlanıyor",
       "succeeded": "Tamamlandı",
       "failed": "Başarısız"
     },
     "download": "İndir",
-    "downloadError": "Dosya indirilemedi.",
-    "empty": "Henüz oluşturulmuş bir rapor yok."
+    "downloadError": "Rapor dosyası indirilemedi.",
+    "empty": "Henüz oluşturulmuş bir rapor yok.",
+    "fromEmail": "E-postadaki rapor hazır; indirme başlatıldı."
+  },
+  "kpis": {
+    "title": "İK göstergeleri",
+    "subtitle": "Mevcut çalışan verisinden anlık hesaplanır. Dönem filtresi işten ayrılma ve kariyer oranlarını etkiler; dağılımlar bugünkü kadroyu gösterir.",
+    "filters": {
+      "from": "Başlangıç",
+      "to": "Bitiş",
+      "clear": "Temizle",
+      "currentYear": "Cari yıl"
+    },
+    "empty": "Seçili dönem için gösterge verisi yok.",
+    "scopedNote": "Yetkiniz birim kapsamında olduğu için yalnızca birim bazlı dağılım gösterilir.",
+    "cards": {
+      "headcount": "Aktif kadro",
+      "turnover": "İşten ayrılma oranı",
+      "turnoverHint": "Dönemde ayrılan / aktif kadro",
+      "earlyTurnover": "İlk 6 ay ayrılma payı",
+      "earlyTurnoverHint": "Dönemde ayrılanlar içinde kıdemi 6 aydan kısa olanlar",
+      "careerPath": "Kariyer hareketliliği",
+      "careerPathHint": "Dönemdeki terfi, yatay geçiş ve unvan değişimi / aktif kadro",
+      "leaveUsage": "Yıllık izin kullanımı",
+      "leaveUsageHint": "{{used}} / {{total}} gün ({{year}})",
+      "overtimeCost": "Fazla mesai maliyeti",
+      "overtimeCostHint": "{{month}} · {{employeeCount}} çalışan"
+    },
+    "charts": {
+      "gender": "Cinsiyet dağılımı",
+      "genderByUnit": "Birim ve cinsiyete göre kadro",
+      "department": "Birim bazında kadro",
+      "leaveByType": "İzin türlerine göre kullanım ({{year}})",
+      "careerMoves": "Kariyer değişim türleri",
+      "noData": "Gösterilecek veri yok",
+      "count": "Kişi",
+      "days": "Gün",
+      "suppressed": "Gizli (< 5)",
+      "suppressedCount": "{{count}} kırılım küçük hücre olduğu için gizlendi (< 5 kişi) - ayrıntı için kırılım tablosuna bakın"
+    },
+    "breakdown": {
+      "title": "Kırılım tablosu",
+      "columns": {
+        "kpi": "Gösterge",
+        "dimension": "Kırılım",
+        "count": "Sayı",
+        "share": "Pay"
+      },
+      "empty": "Gösterilecek kırılım verisi yok."
+    }
+  },
+  "kpi": {
+    "CAREER_PATH_RATIO": { "label": "Kariyer yolu oranı" },
+    "GENDER_RATIO": { "label": "Cinsiyet dağılımı" },
+    "TURNOVER_RATE": { "label": "İşten ayrılma oranı" },
+    "EARLY_TURNOVER_RATE": { "label": "Erken ayrılma payı (ilk 6 ay)" },
+    "GENDER_RATIO_BY_UNIT": { "label": "Birim bazında cinsiyet dağılımı" },
+    "dimensions": {
+      "Promotion": "Terfi",
+      "LateralMove": "Yatay geçiş",
+      "Demotion": "Kademe düşürme",
+      "TitleChange": "Unvan değişikliği",
+      "WithinFirstSixMonths": "İlk 6 ayda ayrılan",
+      "Male": "Erkek",
+      "Female": "Kadın",
+      "Unspecified": "Belirtilmemiş",
+      "Other": "Diğer",
+      "Unassigned": "Birimi yok"
+    }
   }
 }

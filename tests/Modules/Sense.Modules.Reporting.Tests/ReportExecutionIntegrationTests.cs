@@ -35,6 +35,9 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
         new ReportingModule().AddModule(services, configuration);
         services.AddSingleton<IPermissionService, GrantAllPermissions>();
         services.AddSingleton<IDataScopeService, UnrestrictedDataScope>();
+        // AccessSettingsAuthorizationBehaviour ctor'u IAccessSettingsService ister; bu sorgulardaki Forbidden/NotFound
+        // sahiplik/tenant-filtre kararlarıdır, erişim ayarından değil - o yüzden her şeyi açan fake güvenli.
+        services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
     }
 
     protected override async Task OnDatabaseReadyAsync() =>
@@ -135,6 +138,13 @@ public sealed class ReportExecutionIntegrationTests : TestFixture
 
         public Task<DataScope> GetScopeAsync(Guid userId, string permission, CancellationToken cancellationToken = default) =>
             Task.FromResult(DataScope.Company);
+    }
+
+    private sealed class AllAccessSettingsEnabled : IAccessSettingsService
+    {
+        public Task<bool> IsEnabledAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+        public Task<bool> IsEnabledForCurrentUserAsync(string key, CancellationToken cancellationToken = default) => Task.FromResult(true);
     }
 
     /// <summary>

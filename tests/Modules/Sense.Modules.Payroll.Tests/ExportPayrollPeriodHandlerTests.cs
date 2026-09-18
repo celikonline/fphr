@@ -1,6 +1,7 @@
 using System.Text.Json;
 using NSubstitute;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
@@ -30,7 +31,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     private static ExportPayrollPeriodHandler BuildHandler(
         out IPayrollPeriodRepository periods, out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IEmployeeDirectory employeeDirectory, out IExpensePayoutReader expensePayoutReader,
-        out IReportExporter exporter)
+        out IEmployeeCostCenterReader costCenterReader, out IReportExporter exporter)
     {
         periods = Substitute.For<IPayrollPeriodRepository>();
         payslips = Substitute.For<IPayslipRepository>();
@@ -38,12 +39,13 @@ public sealed class ExportPayrollPeriodHandlerTests
         profiles = Substitute.For<IEmployeePayrollProfileRepository>();
         employeeDirectory = Substitute.For<IEmployeeDirectory>();
         expensePayoutReader = Substitute.For<IExpensePayoutReader>();
+        costCenterReader = Substitute.For<IEmployeeCostCenterReader>();
         exporter = Substitute.For<IReportExporter>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        return new ExportPayrollPeriodHandler(periods, payslips, traces, profiles, employeeDirectory, expensePayoutReader, tenant, exporter);
+        return new ExportPayrollPeriodHandler(periods, payslips, traces, profiles, employeeDirectory, expensePayoutReader, costCenterReader, tenant, exporter);
     }
 
     private static string StepsJson(
@@ -65,7 +67,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_UnknownOrOtherTenantPeriod_ReturnsNotFound()
     {
-        var handler = BuildHandler(out var periods, out _, out _, out _, out _, out _, out _);
+        var handler = BuildHandler(out var periods, out _, out _, out _, out _, out _, out _, out _);
         periods.FindByIdAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(null));
 
         var result = await handler.Handle(new ExportPayrollPeriodQuery(Guid.NewGuid()), CancellationToken.None);
@@ -77,7 +79,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_BuildsOneRowPerPayslip_WithAfterExemptionTaxAndExpenseReimbursement()
     {
-        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var exporter);
+        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var costCenterReader, out var exporter);
         var period = OpenPeriod();
         var employeeId = Guid.NewGuid();
         var payslip = Payslip.CreateFirstVersion(TenantId, employeeId, period.Id, "{}", "hash", grossAmount: 100_000m, netAmount: 84_000m, employerCost: 130_000m);
@@ -132,7 +134,7 @@ public sealed class ExportPayrollPeriodHandlerTests
     [Fact]
     public async Task Handle_ReportsMissingSicilCount_InSummarySheet()
     {
-        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var exporter);
+        var handler = BuildHandler(out var periods, out var payslips, out var traces, out var profiles, out var employeeDirectory, out var expensePayoutReader, out var costCenterReader, out var exporter);
         var period = OpenPeriod();
         var employeeId = Guid.NewGuid();
         var payslip = Payslip.CreateFirstVersion(TenantId, employeeId, period.Id, "{}", "hash", grossAmount: 50_000m, netAmount: 42_000m, employerCost: 65_000m);
