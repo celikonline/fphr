@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  ActionIcon,
   Alert,
   Badge,
   Button,
@@ -30,6 +29,7 @@ import { AlertTriangle, CreditCard, Info, Plus, Receipt, Trash2, Wallet } from "
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
+import { RowIconButton } from "@/components/ui/row-icon-button";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
@@ -438,17 +438,12 @@ function ExpenseClaimDialog({
                       <Text size="sm" fw={500}>
                         {item.amount.toLocaleString(i18n.language)} {item.currency}
                       </Text>
-                      <Tooltip label={t("common:delete")}>
-                        <ActionIcon
-                          type="button"
-                          variant="subtle"
-                          color="red"
-                          aria-label={t("common:delete")}
-                          onClick={() => removeItemMutation.mutate(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </ActionIcon>
-                      </Tooltip>
+                      <RowIconButton
+                        label={t("common:delete")}
+                        icon={<Trash2 className="h-4 w-4" />}
+                        color="red"
+                        onClick={() => removeItemMutation.mutate(item.id)}
+                      />
                     </Group>
                   </Group>
                 ))}

@@ -6,8 +6,9 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { ActionIcon, Button, Card, Group, Modal, Select, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { Button, Card, Group, Modal, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
+import { RowIconButton } from "@/components/ui/row-icon-button";
 import ConfirmDialog from "@/components/confirm-dialog";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
@@ -220,28 +221,13 @@ export default function LocationsPage() {
             meta: { headerClassName: "text-right", cellClassName: "text-right" },
             cell: ({ row }) => (
               <Group gap={4} justify="flex-end" wrap="nowrap" onClick={(e) => e.stopPropagation()}>
-                <Tooltip label={t("locations:editLocation")}>
-                  <ActionIcon
-                    type="button"
-                    variant="subtle"
-                    color="gray"
-                    aria-label={t("locations:editLocation")}
-                    onClick={() => openEdit(row.original)}
-                  >
-                    <Pencil size={16} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label={t("locations:deleteLocation")}>
-                  <ActionIcon
-                    type="button"
-                    variant="subtle"
-                    color="red"
-                    aria-label={t("locations:deleteLocation")}
-                    onClick={() => setDeleteTarget(row.original)}
-                  >
-                    <Trash2 size={16} />
-                  </ActionIcon>
-                </Tooltip>
+                <RowIconButton label={t("locations:editLocation")} icon={<Pencil size={16} />} onClick={() => openEdit(row.original)} />
+                <RowIconButton
+                  label={t("locations:deleteLocation")}
+                  icon={<Trash2 size={16} />}
+                  color="red"
+                  onClick={() => setDeleteTarget(row.original)}
+                />
               </Group>
             ),
           } satisfies ColumnDef<Location>,
@@ -325,28 +311,13 @@ export default function LocationsPage() {
                     </div>
                     {canManage && (
                       <Group gap={4} wrap="nowrap">
-                        <Tooltip label={t("locations:editLocation")}>
-                          <ActionIcon
-                            type="button"
-                            variant="subtle"
-                            color="gray"
-                            aria-label={t("locations:editLocation")}
-                            onClick={() => openEdit(location)}
-                          >
-                            <Pencil size={16} />
-                          </ActionIcon>
-                        </Tooltip>
-                        <Tooltip label={t("locations:deleteLocation")}>
-                          <ActionIcon
-                            type="button"
-                            variant="subtle"
-                            color="red"
-                            aria-label={t("locations:deleteLocation")}
-                            onClick={() => setDeleteTarget(location)}
-                          >
-                            <Trash2 size={16} />
-                          </ActionIcon>
-                        </Tooltip>
+                        <RowIconButton label={t("locations:editLocation")} icon={<Pencil size={16} />} onClick={() => openEdit(location)} />
+                        <RowIconButton
+                          label={t("locations:deleteLocation")}
+                          icon={<Trash2 size={16} />}
+                          color="red"
+                          onClick={() => setDeleteTarget(location)}
+                        />
                       </Group>
                     )}
                   </Group>
