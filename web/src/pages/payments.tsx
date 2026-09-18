@@ -26,7 +26,7 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { AlertTriangle, CreditCard, Info, Plus, Receipt, Trash2, Wallet } from "lucide-react";
+import { AlertTriangle, CreditCard, Info, Plus, Receipt, Sparkles, Trash2, Wallet } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -35,6 +35,7 @@ import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { enumLabel } from "@/lib/i18n-enum";
 import { formatMoney } from "@/lib/money";
+import { DEFAULT_EXPENSE_CATEGORY_KEYWORDS, parseExpenseQuickInput } from "@/lib/quick-input";
 import {
   addExpenseItem,
   createAdvanceRequest,
@@ -270,6 +271,8 @@ function ExpenseClaimDialog({
   const [receiptDate, setReceiptDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [taxRate, setTaxRate] = useState<number | "">("");
   const [itemDescription, setItemDescription] = useState("");
+  // Hızlı giriş (senseik-035 pilot): serbest metinden kategori/tutar/tarih/açıklama çıkarımı, tamamen yerel (KVKK).
+  const [quickInputText, setQuickInputText] = useState("");
 
   const categoriesQuery = useQuery({ queryKey: CATEGORIES_KEY, queryFn: () => listExpenseCategories() });
   const claimQuery = useQuery({ queryKey: [...CLAIM_KEY, claimId], queryFn: () => getExpenseClaim(claimId!), enabled: Boolean(claimId) });
@@ -295,6 +298,7 @@ function ExpenseClaimDialog({
       setItemAmount("");
       setTaxRate("");
       setItemDescription("");
+      setQuickInputText("");
       void queryClient.invalidateQueries({ queryKey: [...CLAIM_KEY, claimId] });
     },
     onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("expense:genericError")) }),
@@ -316,6 +320,30 @@ function ExpenseClaimDialog({
     (KNOWN_CATEGORY_CODES as readonly string[]).includes(category.code)
       ? t(`expense:categories.${category.code}`)
       : category.code;
+
+  // Quick Input kategori sözlüğü: bilinen kodlar için sabit anahtar kelimeler + her kategori için kod/etiket kendisi
+  // (tenant'a özel kategoriler de en azından kendi adıyla eşleşebilsin).
+  const categoryKeywords = useMemo(() => {
+    const dictionary: Record<string, string[]> = {};
+    for (const category of categoriesQuery.data ?? []) {
+      dictionary[category.code] = [...(DEFAULT_EXPENSE_CATEGORY_KEYWORDS[category.code] ?? []), category.code, categoryName(category)];
+    }
+    return dictionary;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- categoryName only depends on t/i18n.language, already implied by categoriesQuery.data changing per tenant/locale load.
+  }, [categoriesQuery.data]);
+
+  const handleQuickInputFill = () => {
+    if (!quickInputText.trim()) return;
+    const result = parseExpenseQuickInput(quickInputText, categoryKeywords);
+    if (result.categoryCode) {
+      const matchedCategory = (categoriesQuery.data ?? []).find((category) => category.code === result.categoryCode);
+      if (matchedCategory) setCategoryId(matchedCategory.id);
+    }
+    if (result.amount !== undefined) setItemAmount(result.amount);
+    if (result.receiptDate) setReceiptDate(result.receiptDate);
+    if (result.description) setItemDescription(result.description);
+    setQuickInputText("");
+  };
 
   const claim: ExpenseClaim | undefined = claimQuery.data;
   const canAddItem = categoryId !== "" && itemAmount !== "" && Number(itemAmount) > 0;
@@ -349,6 +377,33 @@ function ExpenseClaimDialog({
           </>
         ) : (
           <>
+            <Card withBorder padding="md" bg="var(--mantine-color-gray-0)">
+              <Stack gap="xs">
+                <Text fw={500} size="sm">
+                  {t("expense:quickInput.label")}
+                </Text>
+                <Textarea
+                  placeholder={t("expense:quickInput.placeholder")}
+                  value={quickInputText}
+                  onChange={(event) => setQuickInputText(event.currentTarget.value)}
+                  autosize
+                  minRows={2}
+                />
+                <Group justify="flex-end">
+                  <Button
+                    type="button"
+                    variant="light"
+                    size="sm"
+                    leftSection={<Sparkles className="h-4 w-4" />}
+                    disabled={!quickInputText.trim()}
+                    onClick={handleQuickInputFill}
+                  >
+                    {t("expense:quickInput.fill")}
+                  </Button>
+                </Group>
+              </Stack>
+            </Card>
+
             <Card withBorder padding="md">
               <Stack gap="xs">
                 <Text fw={500} size="sm">

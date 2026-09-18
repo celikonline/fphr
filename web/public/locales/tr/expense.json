@@ -37,6 +37,11 @@
     "submit": "Gönder",
     "submitted": "Talebiniz gönderildi."
   },
+  "quickInput": {
+    "label": "Hızlı giriş",
+    "placeholder": "Örn. \"Dün akşam yemeği için 450 TL masraf\" — anlaşılan alanlar aşağıdaki formu doldurur, kalanını siz tamamlarsınız.",
+    "fill": "Doldur"
+  },
   "item": {
     "category": "Kategori",
     "categoryPlaceholder": "Kategori seçin",
