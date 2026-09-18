@@ -2,9 +2,10 @@ import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, Group, Modal, Stack, Text } from "@mantine/core";
+import { Button, Group, Stack, Text } from "@mantine/core";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { FormModal } from "@/components/ui/form-modal";
 import { createEmployee } from "@/services/employees.service";
 import {
   EMPTY_GENERAL_VALUES,
@@ -63,7 +64,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   }
 
   return (
-    <Modal
+    <FormModal
       opened={open}
       onClose={() => {
         reset();
@@ -112,6 +113,6 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }

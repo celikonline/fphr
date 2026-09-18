@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Button, Group, Modal, Select, Skeleton, Stack, Text } from "@mantine/core";
+import { Button, Group, Select, Skeleton, Stack, Text } from "@mantine/core";
+import { FormModal } from "@/components/ui/form-modal";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { assignLeaveRuleSet, listLeaveRuleSets, type LeaveRuleSetAssignmentResult } from "@/services/leave.service";
 import { useLeaveName } from "./leave-shared";
@@ -44,7 +45,7 @@ export function ChangeEmployeeRuleSetDialog({ employeeId, employeeName, currentR
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSetChange.title")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:ruleSetChange.title")}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {t("leave:ruleSetChange.description", { name: employeeName })}
@@ -89,6 +90,6 @@ export function ChangeEmployeeRuleSetDialog({ employeeId, employeeName, currentR
           </form>
         )}
       </Stack>
-    </Modal>
+    </FormModal>
   );
 }

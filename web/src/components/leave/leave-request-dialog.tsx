@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Alert, Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Alert, Button, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Users } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FormModal } from "@/components/ui/form-modal";
 import { TimePicker } from "@/components/ui/time-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { LeaveHalfDayPeriod, LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput, LeaveUnit } from "@/services/leave.service";
@@ -165,7 +166,7 @@ export function LeaveRequestDialog({
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile}>
+    <FormModal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {dialogDescription}
@@ -333,6 +334,6 @@ export function LeaveRequestDialog({
           </form>
         )}
       </Stack>
-    </Modal>
+    </FormModal>
   );
 }

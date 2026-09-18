@@ -6,3 +6,4 @@ export * from "./file-dropzone";
 export * from "./filter-bar";
 export * from "./approval-card";
 export * from "./confirm-modal";
+export * from "./form-modal";
