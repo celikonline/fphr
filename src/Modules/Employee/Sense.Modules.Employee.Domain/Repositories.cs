@@ -33,9 +33,10 @@ public interface IEmployeeRepository
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Tracked employees by id with their salary records and custom field values loaded (import row handler only:
-    /// a batch may add salary history or custom field values to any updated employee, and both collections are
-    /// otherwise not auto-included - see <see cref="GetWithPaymentsAsync"/>/<see cref="GetWithCustomFieldsAsync"/>).
+    /// Tracked employees by id with their salary records, bank accounts and custom field values loaded (import row
+    /// handler only: a batch may add salary history, a bank account (G-01 Aşama 1 banka bloğu) or custom field
+    /// values to any updated employee, and all three collections are otherwise not auto-included - see
+    /// <see cref="GetWithPaymentsAsync"/>/<see cref="GetWithCustomFieldsAsync"/>).
     /// </summary>
     Task<IReadOnlyList<EmployeeEntity>> ListByIdsWithPaymentsAndCustomFieldsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 

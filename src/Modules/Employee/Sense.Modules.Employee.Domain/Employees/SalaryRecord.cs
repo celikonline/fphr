@@ -31,6 +31,11 @@ public enum SalarySource
 }
 
 /// <summary>Editable content of a salary record ("Maaş bloğu").</summary>
+/// <param name="OrgUnitId">
+/// Optional lokasyon/pozisyon ataması (11.3.03 G-01 Aşama 1 "Lokasyon/Pozisyon bazında maaş atama"): which org unit this
+/// dated amount applies to, when the tenant assigns salary per location/position rather than per employee only. Same-module
+/// FK-less reference (mirrors <see cref="Employee.OrgUnitId"/>) - Organization is validated by the caller (Application), not here.
+/// </param>
 public sealed record SalaryRecordData(
     DateOnly EffectiveFrom,
     decimal Amount,
@@ -40,7 +45,8 @@ public sealed record SalaryRecordData(
     decimal? TransportAllowance = null,
     decimal? MealAllowance = null,
     string? Note = null,
-    SalarySource Source = SalarySource.Manual);
+    SalarySource Source = SalarySource.Manual,
+    Guid? OrgUnitId = null);
 
 /// <summary>
 /// Result of a salary mutation: the affected record, whether anything changed (no event for a no-op) and the earliest
@@ -89,6 +95,9 @@ public sealed class SalaryRecord : TenantEntity<Guid>
 
     public string? Note { get; private set; }
 
+    /// <summary>Lokasyon/pozisyon ataması (see <see cref="SalaryRecordData.OrgUnitId"/>); null when the record applies to the employee generally.</summary>
+    public Guid? OrgUnitId { get; private set; }
+
     /// <summary>Applies the editable content (Source is kept); returns true when something actually changed.</summary>
     internal bool Apply(SalaryRecordData data)
     {
@@ -101,7 +110,8 @@ public sealed class SalaryRecord : TenantEntity<Guid>
                       PayFrequency != data.PayFrequency ||
                       TransportAllowance != data.TransportAllowance ||
                       MealAllowance != data.MealAllowance ||
-                      !string.Equals(Note, note, StringComparison.Ordinal);
+                      !string.Equals(Note, note, StringComparison.Ordinal) ||
+                      OrgUnitId != data.OrgUnitId;
 
         EffectiveFrom = data.EffectiveFrom;
         Amount = data.Amount;
@@ -111,6 +121,7 @@ public sealed class SalaryRecord : TenantEntity<Guid>
         TransportAllowance = data.TransportAllowance;
         MealAllowance = data.MealAllowance;
         Note = note;
+        OrgUnitId = data.OrgUnitId;
         return changed;
     }
 

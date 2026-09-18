@@ -31,6 +31,8 @@ public static class EmployeeImportOptions
         ],
         [typeof(SalaryType)] = ["Net", "Brüt"],
         [typeof(PayFrequency)] = ["Aylık", "Günlük", "Yıllık", "Haftalık", "Saatlik"],
+        // Enum order (BankAccountType): Cheque, TimeDeposit, DemandDeposit, Other - same Turkish labels as the web card's payments-section.tsx.
+        [typeof(BankAccountType)] = ["Çek", "Vadeli", "Vadesiz", "Diğer"],
     };
 
     /// <summary>The values a column offers, in enum order.</summary>
