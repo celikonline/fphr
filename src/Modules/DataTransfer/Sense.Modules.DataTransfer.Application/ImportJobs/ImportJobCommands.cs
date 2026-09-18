@@ -229,7 +229,8 @@ public sealed class RunImportJobHandler(
     ImportTemplateCatalog catalog,
     ISpreadsheetReader reader,
     TimeProvider clock,
-    ILogger<RunImportJobHandler> logger) : ICommandHandler<RunImportJobCommand, ImportJobDto>
+    ILogger<RunImportJobHandler> logger,
+    IAuditSourceAccessor auditSource) : ICommandHandler<RunImportJobCommand, ImportJobDto>
 {
     public async Task<Result<ImportJobDto>> Handle(RunImportJobCommand command, CancellationToken cancellationToken)
     {
@@ -290,6 +291,11 @@ public sealed class RunImportJobHandler(
 
         job.Start(clock.GetUtcNow().UtcDateTime);
         ImportBatchResult result;
+        // senseik-018 (E-01): audit log Source - a bulk import is triggered by a real signed-in user (not a
+        // background job), so the actor alone can't tell "imported this row" apart from "edited it by hand" the
+        // way ApiKeyId can for Web vs Api. Every module's row handler runs through this one command, so scoping it
+        // here covers all of them (currently Employee, Attendance) without each handler opting in separately.
+        using var importSourceScope = auditSource.BeginScope(AuditSources.Import);
         try
         {
             result = await handler.Value.ProcessAsync(batch, cancellationToken);

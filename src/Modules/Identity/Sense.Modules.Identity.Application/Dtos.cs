@@ -119,7 +119,7 @@ public sealed record UserSummaryDto(Guid UserId, string FullName, string Email, 
 /// biridir (create|update|delete|login|invite|role_change). <c>Details</c>, çağıranın
 /// <c>identity.audit.sensitive_view</c> izni yoksa API katmanında maskelenmiş döner.
 /// </summary>
-public sealed record AuditLogEntryDto(Guid Id, DateTimeOffset OccurredAt, string Actor, string Action, string Resource, string? ResourceId, string Details);
+public sealed record AuditLogEntryDto(Guid Id, DateTimeOffset OccurredAt, string Actor, string Action, string Resource, string? ResourceId, string Details, string? Source);
 
 /// <summary>Çalışana davet sonucu. Outcome: Sent|Resent|AlreadyActive; EmailSource: Work|Personal|Account.</summary>
 public sealed record EmployeeInvitationResultDto(Guid EmployeeId, string Outcome, string? SentToEmail, string? EmailSource);

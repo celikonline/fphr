@@ -199,6 +199,13 @@ export default function AuditLogPage() {
       meta: { label: t("audit:resource") },
     },
     {
+      id: "source",
+      enableSorting: false,
+      header: t("audit:source"),
+      meta: { label: t("audit:source") },
+      cell: ({ row }) => <AuditSourceLabel source={row.original.source} t={t} />,
+    },
+    {
       id: "details",
       enableSorting: false,
       header: t("audit:details"),
@@ -289,6 +296,29 @@ export default function AuditLogPage() {
   );
 }
 
+/**
+ * Source is a free backend string (AuditSources - not a closed enum, extensible per plan §3), so an unknown/future
+ * value falls back to the raw string rather than a blank cell. Never masked (KVKK m.12 - unlike `details`, "how the
+ * action reached the system" must stay visible regardless of `identity.audit.sensitive_view`).
+ */
+function AuditSourceLabel({ source, t }: { source: AuditEvent["source"]; t: (key: string) => string }) {
+  if (!source) {
+    return (
+      <Text size="sm" c="dimmed">
+        —
+      </Text>
+    );
+  }
+
+  const key = `audit:sourceTypes.${source}`;
+  const label = t(key);
+  return (
+    <Text size="sm" c="dimmed">
+      {label === key ? source : label}
+    </Text>
+  );
+}
+
 /** Details cell: masked placeholder + "no permission" tooltip when the caller lacks `identity.audit.sensitive_view`. */
 function AuditDetailsCell({
   event,
@@ -356,9 +386,12 @@ function AuditLogMobileList({
             <Text size="sm" fw={500}>
               {event.actor}
             </Text>
-            <Text size="sm" c="dimmed">
-              {event.resource}
-            </Text>
+            <Group gap={6} wrap="wrap">
+              <Text size="sm" c="dimmed">
+                {event.resource}
+              </Text>
+              <AuditSourceLabel source={event.source} t={t} />
+            </Group>
             <AuditDetailsCell event={event} canViewSensitive={canViewSensitive} t={t} />
           </Stack>
         </Card>

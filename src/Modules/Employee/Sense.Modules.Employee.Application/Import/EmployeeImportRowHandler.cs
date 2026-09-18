@@ -20,6 +20,9 @@ namespace Sense.Modules.Employee.Application.Import;
 /// active managers by full name, active org units by level) before any entity is touched; then valid rows are applied and saved
 /// in one Employee SaveChanges. AllOrNothing saves nothing when any row fails. Respects the caller's data scope for
 /// employee.employees.import (visible employees, accessible target units).
+/// senseik-018 (E-01): audit log Source="Import" is stamped by the caller (RunImportJobHandler wraps every
+/// IImportRowHandler.ProcessAsync call in one IAuditSourceAccessor.BeginScope), not here - this handler runs for
+/// every template, not just Employee, so scoping it at that single choke point covers all of them.
 /// </summary>
 public sealed class EmployeeImportRowHandler(
     ITenantContext tenant,
