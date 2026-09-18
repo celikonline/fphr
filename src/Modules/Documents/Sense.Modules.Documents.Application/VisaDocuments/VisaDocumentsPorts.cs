@@ -3,45 +3,51 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Application.VisaDocuments;
 
-/// <summary>
-/// Repository port for VisaDocumentRequest aggregate.
-/// Abstracts persistence layer for visa requests.
-/// </summary>
+/// <summary>Persistence port for the <see cref="VisaDocumentRequest"/> aggregate.</summary>
 public interface IVisaDocumentRequestRepository
 {
-    /// <summary>Get a visa document request by ID.</summary>
     Task<VisaDocumentRequest?> GetByIdAsync(Guid requestId, CancellationToken cancellationToken);
 
-    /// <summary>Get requests for a specific employee, optionally filtered by status.</summary>
-    Task<IEnumerable<VisaDocumentRequest>> GetByEmployeeIdAsync(
+    Task<IReadOnlyList<VisaDocumentRequest>> GetByEmployeeIdAsync(
         Guid tenantId,
         Guid employeeId,
         VisaDocumentRequestStatus? status = null,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Get requests pending approval for a specific approver.</summary>
-    Task<IEnumerable<VisaDocumentRequest>> GetPendingApprovalAsync(
-        Guid tenantId,
-        Guid approverId,
-        CancellationToken cancellationToken);
-
-    /// <summary>Add a new visa document request to the repository.</summary>
     Task AddAsync(VisaDocumentRequest request, CancellationToken cancellationToken);
 
-    /// <summary>Save all pending changes to the repository.</summary>
+    Task SaveAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>Persistence port for the <see cref="VisaDocumentProcess"/> aggregate.</summary>
+public interface IVisaDocumentProcessRepository
+{
+    Task<VisaDocumentProcess?> GetByIdAsync(Guid processId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<VisaDocumentProcess>> GetActiveAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    Task AddAsync(VisaDocumentProcess process, CancellationToken cancellationToken);
+
     Task SaveAsync(CancellationToken cancellationToken);
 }
 
 /// <summary>
-/// Service port for visa document delivery.
-/// Handles copying template documents to employee folder on approval.
+/// Reads the tenant's visa-specific settings (approver and the template documents copied
+/// into the employee folder once a request is approved).
 /// </summary>
-public interface IDocumentDeliveryService
+public interface IVisaSettingsProvider
 {
-    /// <summary>
-    /// Deliver template visa documents to employee folder.
-    /// Called when visa request is approved.
-    /// </summary>
+    /// <summary>Configured approver, as an <c>EmployeeId</c> (Workflow steps address employees, not users).
+    /// Null or <see cref="Guid.Empty"/> means "not configured".</summary>
+    Task<Guid?> GetApproverEmployeeIdAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    /// <summary>Template documents delivered to the employee on approval. Empty is valid (nothing to deliver).</summary>
+    Task<IReadOnlyList<Guid>> GetTemplateDocumentIdsAsync(Guid tenantId, CancellationToken cancellationToken);
+}
+
+/// <summary>Copies the configured visa template documents into an employee's folder on approval.</summary>
+public interface IVisaDocumentDeliveryService
+{
     /// <returns>Number of documents delivered.</returns>
     Task<Result<int>> DeliverVisaDocumentsAsync(
         Guid tenantId,
@@ -50,67 +56,10 @@ public interface IDocumentDeliveryService
         CancellationToken cancellationToken);
 }
 
-/// <summary>
-/// Port for tenant settings related to visa documents.
-/// Manages approver configuration and template document IDs.
-/// </summary>
-public interface ITenantSettings
-{
-    /// <summary>
-    /// Get the configured approver user ID for visa documents.
-    /// Returns Guid.Empty if not configured.
-    /// </summary>
-    Task<Guid> GetVisaApproverAsync(Guid tenantId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Set the approver for visa documents.
-    /// </summary>
-    Task SetVisaApproverAsync(Guid tenantId, Guid approverId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Get the list of template document IDs to deliver on visa request approval.
-    /// </summary>
-    Task<IEnumerable<Guid>> GetVisaTemplateDocumentsAsync(Guid tenantId, CancellationToken cancellationToken);
-
-    /// <summary>
-    /// Set the template documents for visa approval delivery.
-    /// </summary>
-    Task SetVisaTemplateDocumentsAsync(
-        Guid tenantId,
-        IEnumerable<Guid> templateDocumentIds,
-        CancellationToken cancellationToken);
-}
-
-/// <summary>
-/// Query port for visa documents.
-/// Provides read-only access to visa request data for UI/reporting.
-/// </summary>
-public interface IVisaDocumentRequestQueries
-{
-    /// <summary>Get detail for a single visa request.</summary>
-    Task<VisaDocumentRequestDto?> GetByIdAsync(Guid requestId, CancellationToken cancellationToken);
-
-    /// <summary>Get requests for the current user.</summary>
-    Task<IEnumerable<VisaDocumentRequestDto>> GetMyRequestsAsync(
-        VisaDocumentRequestStatus? status = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Get all requests for an employee (admin view).</summary>
-    Task<IEnumerable<VisaDocumentRequestDto>> GetByEmployeeIdAsync(
-        Guid employeeId,
-        VisaDocumentRequestStatus? status = null,
-        CancellationToken cancellationToken = default);
-
-    /// <summary>Get requests pending approval for the current user (approver view).</summary>
-    Task<IEnumerable<VisaDocumentRequestDto>> GetPendingApprovalsAsync(
-        CancellationToken cancellationToken);
-}
-
-/// <summary>DTO for visa document request (read model).</summary>
+/// <summary>Read model for a visa document request.</summary>
 public sealed record VisaDocumentRequestDto(
     Guid Id,
     Guid EmployeeId,
-    string EmployeeName,
     Guid? VisaDocumentProcessId,
     DateTime TravelStart,
     DateTime TravelEnd,

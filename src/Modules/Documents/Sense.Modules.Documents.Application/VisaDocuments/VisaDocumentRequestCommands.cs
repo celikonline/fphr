@@ -1,19 +1,18 @@
 using FluentValidation;
 using Microsoft.Extensions.Logging;
-using Sense.Modules.Documents.Contracts;
-using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.VisaDocuments;
+using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
-using Sense.Shared.Contracts.Workflow;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Application.VisaDocuments;
 
 /// <summary>
-/// Command to submit a visa document request for approval.
-/// Validates approver configuration and initiates workflow approval.
+/// Submits a visa document request and starts the Workflow approval process for it.
+/// The approver is read from the tenant's visa settings; a missing approver is a hard failure
+/// (the request is not created) so the employee gets an actionable error instead of a silent no-op.
 /// </summary>
 [RequiresPermission("documents.visa.request")]
 public sealed record SubmitVisaDocumentRequestCommand(
@@ -40,36 +39,31 @@ public sealed class SubmitVisaDocumentRequestValidator : AbstractValidator<Submi
 
 public sealed class SubmitVisaDocumentRequestHandler(
     ITenantContext tenant,
-    ICurrentUser currentUser,
     IVisaDocumentRequestRepository visaRequests,
     IWorkflowService workflowService,
-    ITenantSettings tenantSettings,
+    IVisaSettingsProvider visaSettings,
     ILogger<SubmitVisaDocumentRequestHandler> logger)
     : ICommandHandler<SubmitVisaDocumentRequestCommand, SubmitVisaDocumentRequestResponse>
 {
+    /// <summary>Workflow request type discriminator for visa document approvals.</summary>
+    public const string RequestType = "VisaDocument";
+
     public async Task<Result<SubmitVisaDocumentRequestResponse>> Handle(
         SubmitVisaDocumentRequestCommand command,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation(
-            "Submitting visa document request for employee {EmployeeId} to {CountryCode}",
-            command.EmployeeId,
-            command.CountryCode);
-
-        // Validate approver is configured
-        var approverId = await tenantSettings.GetVisaApproverAsync(tenant.Id, cancellationToken);
-        if (approverId == Guid.Empty)
+        var approverEmployeeId = await visaSettings.GetApproverEmployeeIdAsync(tenant.TenantId, cancellationToken);
+        if (approverEmployeeId is null || approverEmployeeId == Guid.Empty)
         {
-            logger.LogWarning("Visa approver not configured for tenant {TenantId}", tenant.Id);
+            logger.LogWarning("Visa approver not configured for tenant {TenantId}", tenant.TenantId);
             return Result.Failure<SubmitVisaDocumentRequestResponse>(
                 new Error(
                     VisaDomainErrors.VisaDocumentRequestApproverNotConfigured,
-                    "Visa document approver is not configured in tenant settings"));
+                    "Vize belgesi onaycisi tenant ayarlarinda tanimli degil."));
         }
 
-        // Create the domain request
         var requestResult = VisaDocumentRequest.Create(
-            tenantId: tenant.Id,
+            tenantId: tenant.TenantId,
             employeeId: command.EmployeeId,
             visaDocumentProcessId: command.VisaDocumentProcessId,
             travelStart: command.TravelStart,
@@ -85,36 +79,32 @@ public sealed class SubmitVisaDocumentRequestHandler(
 
         var request = requestResult.Value;
 
-        // Initiate workflow approval via Workflow module
+        // Single-step approval chain (v1): one configured approver, required.
+        var steps = new[] { new ApprovalStepInput(StepNumber: 1, ApproverEmployeeId: approverEmployeeId.Value, IsRequired: true) };
+
         var approvalResult = await workflowService.StartAsync(
-            requestType: "VisaDocument",
-            referenceId: request.Id,
-            initiatorId: command.EmployeeId,
-            approverIds: new[] { approverId },
-            context: new Dictionary<string, object>
-            {
-                { "CountryCode", command.CountryCode },
-                { "VisaType", command.VisaType },
-                { "TravelStart", command.TravelStart },
-                { "TravelEnd", command.TravelEnd }
-            },
-            cancellationToken: cancellationToken);
+            requestType: RequestType,
+            subjectId: request.Id,
+            requesterEmployeeId: command.EmployeeId,
+            explicitSteps: steps,
+            submittedIpAddress: null,
+            submittedUserAgent: null,
+            ct: cancellationToken);
 
         if (approvalResult.IsFailure)
         {
-            logger.LogError("Failed to initiate workflow approval: {Error}", approvalResult.Error.Message);
+            logger.LogError("Workflow approval could not be started for visa request: {ErrorCode}", approvalResult.Error.Code);
             return Result.Failure<SubmitVisaDocumentRequestResponse>(approvalResult.Error);
         }
 
-        var approvalRequestId = approvalResult.Value.Id;
+        var approvalRequestId = approvalResult.Value;
         request.SubmitForApproval(approvalRequestId);
 
-        // Persist the request
         await visaRequests.AddAsync(request, cancellationToken);
         await visaRequests.SaveAsync(cancellationToken);
 
         logger.LogInformation(
-            "Visa document request {RequestId} submitted for approval (ApprovalRequestId: {ApprovalRequestId})",
+            "Visa document request {RequestId} submitted (approval {ApprovalRequestId})",
             request.Id,
             approvalRequestId);
 
@@ -125,19 +115,17 @@ public sealed class SubmitVisaDocumentRequestHandler(
     }
 }
 
-/// <summary>Response DTO for visa document request submission.</summary>
 public sealed record SubmitVisaDocumentRequestResponse(
     Guid RequestId,
     VisaDocumentRequestStatus Status,
     Guid ApprovalRequestId);
 
 /// <summary>
-/// Command to approve a visa document request.
-/// Called by workflow approval completion handler.
+/// Approves a visa document request and delivers the configured template documents
+/// into the employee's folder. Invoked by the Workflow approval-completed handler.
 /// </summary>
 [RequiresPermission("documents.visa.approve")]
-public sealed record ApproveVisaDocumentRequestCommand(
-    Guid RequestId) : ICommand<ApproveVisaDocumentRequestResponse>;
+public sealed record ApproveVisaDocumentRequestCommand(Guid RequestId) : ICommand<ApproveVisaDocumentRequestResponse>;
 
 public sealed class ApproveVisaDocumentRequestValidator : AbstractValidator<ApproveVisaDocumentRequestCommand>
 {
@@ -150,7 +138,7 @@ public sealed class ApproveVisaDocumentRequestValidator : AbstractValidator<Appr
 public sealed class ApproveVisaDocumentRequestHandler(
     ITenantContext tenant,
     IVisaDocumentRequestRepository visaRequests,
-    IDocumentDeliveryService documentDelivery,
+    IVisaDocumentDeliveryService documentDelivery,
     ILogger<ApproveVisaDocumentRequestHandler> logger)
     : ICommandHandler<ApproveVisaDocumentRequestCommand, ApproveVisaDocumentRequestResponse>
 {
@@ -158,29 +146,22 @@ public sealed class ApproveVisaDocumentRequestHandler(
         ApproveVisaDocumentRequestCommand command,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation("Approving visa document request {RequestId}", command.RequestId);
-
         var request = await visaRequests.GetByIdAsync(command.RequestId, cancellationToken);
-        if (request == null)
+        if (request is null)
         {
             return Result.Failure<ApproveVisaDocumentRequestResponse>(
-                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Visa document request not found"));
+                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Vize belgesi talebi bulunamadi."));
         }
 
-        if (request.TenantId != tenant.Id)
+        if (request.TenantId != tenant.TenantId)
         {
-            logger.LogWarning(
-                "Tenant {TenantId} attempted to access request from tenant {OwnerTenantId}",
-                tenant.Id,
-                request.TenantId);
+            logger.LogWarning("Cross-tenant visa request access blocked for request {RequestId}", command.RequestId);
             return Result.Failure<ApproveVisaDocumentRequestResponse>(
-                new Error("tenant.not_authorized", "Not authorized to access this request"));
+                new Error(DocumentsDomainErrors.TenantNotAuthorized, "Bu talebe erisim yetkiniz yok."));
         }
 
-        // Approve in domain
         request.Approve();
 
-        // Deliver template documents to employee
         var deliveryResult = await documentDelivery.DeliverVisaDocumentsAsync(
             request.TenantId,
             request.EmployeeId,
@@ -189,20 +170,12 @@ public sealed class ApproveVisaDocumentRequestHandler(
 
         if (deliveryResult.IsFailure)
         {
-            logger.LogError("Failed to deliver visa documents: {Error}", deliveryResult.Error.Message);
+            logger.LogError("Visa document delivery failed for request {RequestId}: {ErrorCode}", request.Id, deliveryResult.Error.Code);
             return Result.Failure<ApproveVisaDocumentRequestResponse>(deliveryResult.Error);
         }
 
-        // Mark as completed
         request.Complete();
-
-        // Persist
         await visaRequests.SaveAsync(cancellationToken);
-
-        logger.LogInformation(
-            "Visa document request {RequestId} approved and documents delivered to employee {EmployeeId}",
-            request.Id,
-            request.EmployeeId);
 
         return Result.Success(new ApproveVisaDocumentRequestResponse(
             RequestId: request.Id,
@@ -216,10 +189,7 @@ public sealed record ApproveVisaDocumentRequestResponse(
     VisaDocumentRequestStatus Status,
     int DocumentsDelivered);
 
-/// <summary>
-/// Command to reject a visa document request.
-/// Called by workflow approval rejection or by administrator.
-/// </summary>
+/// <summary>Rejects a visa document request, recording the reason shown to the employee.</summary>
 [RequiresPermission("documents.visa.approve")]
 public sealed record RejectVisaDocumentRequestCommand(
     Guid RequestId,
@@ -231,15 +201,12 @@ public sealed class RejectVisaDocumentRequestValidator : AbstractValidator<Rejec
     public RejectVisaDocumentRequestValidator()
     {
         RuleFor(x => x.RequestId).NotEmpty();
-        RuleFor(x => x.RejectionReason)
-            .NotEmpty()
-            .MaximumLength(VisaLimits.RejectionReasonMaxLength);
+        RuleFor(x => x.RejectionReason).NotEmpty().MaximumLength(VisaLimits.RejectionReasonMaxLength);
     }
 }
 
 public sealed class RejectVisaDocumentRequestHandler(
     ITenantContext tenant,
-    ICurrentUser currentUser,
     IVisaDocumentRequestRepository visaRequests,
     ILogger<RejectVisaDocumentRequestHandler> logger)
     : ICommandHandler<RejectVisaDocumentRequestCommand, RejectVisaDocumentRequestResponse>
@@ -248,30 +215,23 @@ public sealed class RejectVisaDocumentRequestHandler(
         RejectVisaDocumentRequestCommand command,
         CancellationToken cancellationToken)
     {
-        logger.LogInformation("Rejecting visa document request {RequestId}", command.RequestId);
-
         var request = await visaRequests.GetByIdAsync(command.RequestId, cancellationToken);
-        if (request == null)
+        if (request is null)
         {
             return Result.Failure<RejectVisaDocumentRequestResponse>(
-                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Visa document request not found"));
+                new Error(VisaDomainErrors.VisaDocumentRequestNotFound, "Vize belgesi talebi bulunamadi."));
         }
 
-        if (request.TenantId != tenant.Id)
+        if (request.TenantId != tenant.TenantId)
         {
             return Result.Failure<RejectVisaDocumentRequestResponse>(
-                new Error("tenant.not_authorized", "Not authorized to access this request"));
+                new Error(DocumentsDomainErrors.TenantNotAuthorized, "Bu talebe erisim yetkiniz yok."));
         }
 
-        var rejectedBy = command.RejectedBy ?? currentUser.Id;
-        request.Reject(command.RejectionReason, rejectedBy);
-
+        request.Reject(command.RejectionReason, command.RejectedBy);
         await visaRequests.SaveAsync(cancellationToken);
 
-        logger.LogInformation(
-            "Visa document request {RequestId} rejected with reason: {Reason}",
-            request.Id,
-            command.RejectionReason);
+        logger.LogInformation("Visa document request {RequestId} rejected", request.Id);
 
         return Result.Success(new RejectVisaDocumentRequestResponse(
             RequestId: request.Id,

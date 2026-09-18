@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Documents.Domain.Documents;
+using Sense.Modules.Documents.Domain.VisaDocuments;
+using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -21,6 +23,19 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
     public DbSet<DocumentTypeDefinition> DocumentTypeDefinitions => Set<DocumentTypeDefinition>();
 
     public DbSet<EmployeeDocumentRequirement> EmployeeDocumentRequirements => Set<EmployeeDocumentRequirement>();
+
+    public DbSet<VisaDocumentProcess> VisaDocumentProcesses => Set<VisaDocumentProcess>();
+
+    public DbSet<VisaDocumentRequest> VisaDocumentRequests => Set<VisaDocumentRequest>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Visa documents configurations
+        modelBuilder.ApplyConfiguration(new VisaDocumentProcessConfiguration());
+        modelBuilder.ApplyConfiguration(new VisaDocumentRequestConfiguration());
+    }
 }
 
 internal static class DocumentsTables

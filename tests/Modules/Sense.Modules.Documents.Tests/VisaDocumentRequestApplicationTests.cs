@@ -1,10 +1,9 @@
-using Moq;
+using Microsoft.Extensions.Logging.Abstractions;
+using NSubstitute;
 using Sense.Modules.Documents.Application.VisaDocuments;
 using Sense.Modules.Documents.Domain.VisaDocuments;
+using Sense.Modules.Workflow.Contracts;
 using Sense.Shared.Contracts.Context;
-using Sense.Shared.Contracts.Messaging;
-using Sense.Shared.Contracts.Security;
-using Sense.Shared.Contracts.Workflow;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -15,206 +14,177 @@ public sealed class VisaDocumentRequestApplicationTests
 {
     private static readonly Guid TenantId = Guid.NewGuid();
     private static readonly Guid EmployeeId = Guid.NewGuid();
-    private static readonly Guid ApproverId = Guid.NewGuid();
+    private static readonly Guid ApproverEmployeeId = Guid.NewGuid();
 
-    private readonly Mock<ITenantContext> _tenantContext = new();
-    private readonly Mock<ICurrentUser> _currentUser = new();
-    private readonly Mock<IVisaDocumentRequestRepository> _visaRequestsRepo = new();
-    private readonly Mock<IWorkflowService> _workflowService = new();
-    private readonly Mock<ITenantSettings> _tenantSettings = new();
-    private readonly Mock<IDocumentDeliveryService> _documentDelivery = new();
-    private readonly Mock<ILogger<SubmitVisaDocumentRequestHandler>> _logger = new();
+    private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
+    private readonly IVisaDocumentRequestRepository _requests = Substitute.For<IVisaDocumentRequestRepository>();
+    private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();
+    private readonly IVisaSettingsProvider _settings = Substitute.For<IVisaSettingsProvider>();
+    private readonly IVisaDocumentDeliveryService _delivery = Substitute.For<IVisaDocumentDeliveryService>();
 
     public VisaDocumentRequestApplicationTests()
     {
-        _tenantContext.SetupGet(x => x.Id).Returns(TenantId);
-        _currentUser.SetupGet(x => x.Id).Returns(EmployeeId);
+        _tenant.TenantId.Returns(TenantId);
+    }
+
+    private SubmitVisaDocumentRequestHandler SubmitHandler() =>
+        new(_tenant, _requests, _workflow, _settings, NullLogger<SubmitVisaDocumentRequestHandler>.Instance);
+
+    private static SubmitVisaDocumentRequestCommand SubmitCommand() => new(
+        EmployeeId: EmployeeId,
+        VisaDocumentProcessId: null,
+        TravelStart: new DateTime(2026, 11, 1, 0, 0, 0, DateTimeKind.Utc),
+        TravelEnd: new DateTime(2026, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+        CountryCode: "DE",
+        VisaType: "Business",
+        Description: "Berlin musteri ziyareti");
+
+    private static VisaDocumentRequest AwaitingApprovalRequest()
+    {
+        var request = VisaDocumentRequest.Create(
+            tenantId: TenantId,
+            employeeId: EmployeeId,
+            visaDocumentProcessId: null,
+            travelStart: new DateTime(2026, 11, 1, 0, 0, 0, DateTimeKind.Utc),
+            travelEnd: new DateTime(2026, 11, 8, 0, 0, 0, DateTimeKind.Utc),
+            countryCode: "DE",
+            visaType: "Business",
+            description: "Berlin musteri ziyareti").Value;
+
+        request.SubmitForApproval(Guid.NewGuid());
+        return request;
     }
 
     [Fact]
-    public async Task SubmitVisaDocumentRequest_WithValidCommand_CreatesRequestAndInitiatesApproval()
+    public async Task Submit_WithConfiguredApprover_StartsSingleStepApprovalAndPersists()
     {
-        // Arrange
-        var command = new SubmitVisaDocumentRequestCommand(
-            EmployeeId: EmployeeId,
-            VisaDocumentProcessId: Guid.NewGuid(),
-            TravelStart: DateTime.UtcNow.AddDays(30),
-            TravelEnd: DateTime.UtcNow.AddDays(37),
-            CountryCode: "TR",
-            VisaType: "Business",
-            Description: "Business trip to Istanbul");
-
         var approvalRequestId = Guid.NewGuid();
-        var workflowResponse = new WorkflowApprovalResponse(approvalRequestId, VisaDocumentRequestStatus.AwaitingApproval);
+        _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns(ApproverEmployeeId);
+        _workflow.StartAsync(
+                Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(approvalRequestId));
 
-        _tenantSettings
-            .Setup(x => x.GetVisaApproverAsync(TenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(ApproverId);
+        var result = await SubmitHandler().Handle(SubmitCommand(), CancellationToken.None);
 
-        _workflowService
-            .Setup(x => x.StartAsync(
-                It.IsAny<string>(),
-                It.IsAny<Guid>(),
-                It.IsAny<Guid>(),
-                It.IsAny<Guid[]>(),
-                It.IsAny<Dictionary<string, object>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(workflowResponse));
-
-        var handler = new SubmitVisaDocumentRequestHandler(
-            _tenantContext.Object,
-            _currentUser.Object,
-            _visaRequestsRepo.Object,
-            _workflowService.Object,
-            _tenantSettings.Object,
-            _logger.Object);
-
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(VisaDocumentRequestStatus.AwaitingApproval);
         result.Value.ApprovalRequestId.ShouldBe(approvalRequestId);
 
-        _visaRequestsRepo.Verify(x => x.AddAsync(It.IsAny<VisaDocumentRequest>(), It.IsAny<CancellationToken>()), Times.Once);
-        _visaRequestsRepo.Verify(x => x.SaveAsync(It.IsAny<CancellationToken>()), Times.Once);
-        _workflowService.Verify(x => x.StartAsync(
-            It.Is<string>(s => s == "VisaDocument"),
-            It.IsAny<Guid>(),
-            It.Is<Guid>(g => g == EmployeeId),
-            It.Is<Guid[]>(arr => arr.Contains(ApproverId)),
-            It.IsAny<Dictionary<string, object>>(),
-            It.IsAny<CancellationToken>()), Times.Once);
+        await _requests.Received(1).AddAsync(Arg.Any<VisaDocumentRequest>(), Arg.Any<CancellationToken>());
+        await _requests.Received(1).SaveAsync(Arg.Any<CancellationToken>());
+
+        await _workflow.Received(1).StartAsync(
+            SubmitVisaDocumentRequestHandler.RequestType,
+            Arg.Any<Guid>(),
+            EmployeeId,
+            Arg.Is<IReadOnlyList<ApprovalStepInput>?>(steps =>
+                steps != null && steps.Count == 1 && steps[0].ApproverEmployeeId == ApproverEmployeeId && steps[0].IsRequired),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task SubmitVisaDocumentRequest_WithoutConfiguredApprover_FailsWithError()
+    public async Task Submit_WithoutConfiguredApprover_FailsAndDoesNotStartWorkflow()
     {
-        // Arrange
-        var command = new SubmitVisaDocumentRequestCommand(
-            EmployeeId: EmployeeId,
-            VisaDocumentProcessId: null,
-            TravelStart: DateTime.UtcNow.AddDays(30),
-            TravelEnd: DateTime.UtcNow.AddDays(37),
-            CountryCode: "TR",
-            VisaType: "Business",
-            Description: "Test");
+        _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns((Guid?)null);
 
-        _tenantSettings
-            .Setup(x => x.GetVisaApproverAsync(TenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Guid.Empty); // No approver configured
+        var result = await SubmitHandler().Handle(SubmitCommand(), CancellationToken.None);
 
-        var handler = new SubmitVisaDocumentRequestHandler(
-            _tenantContext.Object,
-            _currentUser.Object,
-            _visaRequestsRepo.Object,
-            _workflowService.Object,
-            _tenantSettings.Object,
-            _logger.Object);
-
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        // Assert
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(VisaDomainErrors.VisaDocumentRequestApproverNotConfigured);
+
+        await _workflow.DidNotReceiveWithAnyArgs().StartAsync(default!, default, default, default, default, default, default);
+        await _requests.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
     }
 
     [Fact]
-    public async Task ApproveVisaDocumentRequest_WithValidRequest_ApprovesAndDeliversDocuments()
+    public async Task Submit_WhenWorkflowStartFails_DoesNotPersistRequest()
     {
-        // Arrange
-        var requestId = Guid.NewGuid();
-        var request = VisaDocumentRequest.Create(
-            tenantId: TenantId,
-            employeeId: EmployeeId,
-            visaDocumentProcessId: null,
-            travelStart: DateTime.UtcNow.AddDays(30),
-            travelEnd: DateTime.UtcNow.AddDays(37),
-            countryCode: "TR",
-            visaType: "Business",
-            description: "Test").Value;
+        _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns(ApproverEmployeeId);
+        _workflow.StartAsync(
+                Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<IReadOnlyList<ApprovalStepInput>?>(),
+                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure<Guid>(new Error("workflow.no_approver_resolved", "onayci bulunamadi")));
 
-        // Set the ID for testing
-        var approvalRequestId = Guid.NewGuid();
-        request.SubmitForApproval(approvalRequestId);
+        var result = await SubmitHandler().Handle(SubmitCommand(), CancellationToken.None);
 
-        var command = new ApproveVisaDocumentRequestCommand(requestId);
+        result.IsFailure.ShouldBeTrue();
+        await _requests.DidNotReceiveWithAnyArgs().AddAsync(default!, default);
+        await _requests.DidNotReceiveWithAnyArgs().SaveAsync(default);
+    }
 
-        _visaRequestsRepo
-            .Setup(x => x.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(request);
-
-        _documentDelivery
-            .Setup(x => x.DeliverVisaDocumentsAsync(
-                TenantId,
-                EmployeeId,
-                requestId,
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success(2)); // 2 documents delivered
+    [Fact]
+    public async Task Approve_DeliversDocumentsAndCompletesRequest()
+    {
+        var request = AwaitingApprovalRequest();
+        _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(request);
+        _delivery.DeliverVisaDocumentsAsync(TenantId, EmployeeId, request.Id, Arg.Any<CancellationToken>())
+            .Returns(Result.Success(2));
 
         var handler = new ApproveVisaDocumentRequestHandler(
-            _tenantContext.Object,
-            _visaRequestsRepo.Object,
-            _documentDelivery.Object,
-            new Mock<ILogger<ApproveVisaDocumentRequestHandler>>().Object);
+            _tenant, _requests, _delivery, NullLogger<ApproveVisaDocumentRequestHandler>.Instance);
 
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(new ApproveVisaDocumentRequestCommand(request.Id), CancellationToken.None);
 
-        // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(VisaDocumentRequestStatus.Completed);
         result.Value.DocumentsDelivered.ShouldBe(2);
-
-        _documentDelivery.Verify(
-            x => x.DeliverVisaDocumentsAsync(TenantId, EmployeeId, requestId, It.IsAny<CancellationToken>()),
-            Times.Once);
+        request.ApprovedAt.ShouldNotBeNull();
+        request.CompletedAt.ShouldNotBeNull();
     }
 
     [Fact]
-    public async Task RejectVisaDocumentRequest_WithValidCommand_RejectsAndSetsReason()
+    public async Task Approve_WhenDeliveryFails_LeavesRequestUncompleted()
     {
-        // Arrange
-        var requestId = Guid.NewGuid();
-        var request = VisaDocumentRequest.Create(
-            tenantId: TenantId,
-            employeeId: EmployeeId,
-            visaDocumentProcessId: null,
-            travelStart: DateTime.UtcNow.AddDays(30),
-            travelEnd: DateTime.UtcNow.AddDays(37),
-            countryCode: "TR",
-            visaType: "Business",
-            description: "Test").Value;
+        var request = AwaitingApprovalRequest();
+        _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(request);
+        _delivery.DeliverVisaDocumentsAsync(TenantId, EmployeeId, request.Id, Arg.Any<CancellationToken>())
+            .Returns(Result.Failure<int>(new Error("storage.unavailable", "depolama erisilemez")));
 
-        var approvalRequestId = Guid.NewGuid();
-        request.SubmitForApproval(approvalRequestId);
+        var handler = new ApproveVisaDocumentRequestHandler(
+            _tenant, _requests, _delivery, NullLogger<ApproveVisaDocumentRequestHandler>.Instance);
 
-        var command = new RejectVisaDocumentRequestCommand(
-            RequestId: requestId,
-            RejectionReason: "Missing required documents",
-            RejectedBy: ApproverId);
+        var result = await handler.Handle(new ApproveVisaDocumentRequestCommand(request.Id), CancellationToken.None);
 
-        _visaRequestsRepo
-            .Setup(x => x.GetByIdAsync(requestId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(request);
+        result.IsFailure.ShouldBeTrue();
+        request.Status.ShouldBe(VisaDocumentRequestStatus.Approved);
+        request.CompletedAt.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Approve_ForRequestOfAnotherTenant_IsRejected()
+    {
+        var request = AwaitingApprovalRequest();
+        _tenant.TenantId.Returns(Guid.NewGuid()); // different tenant than the request
+        _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(request);
+
+        var handler = new ApproveVisaDocumentRequestHandler(
+            _tenant, _requests, _delivery, NullLogger<ApproveVisaDocumentRequestHandler>.Instance);
+
+        var result = await handler.Handle(new ApproveVisaDocumentRequestCommand(request.Id), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        await _delivery.DidNotReceiveWithAnyArgs().DeliverVisaDocumentsAsync(default, default, default, default);
+    }
+
+    [Fact]
+    public async Task Reject_RecordsReasonAndStatus()
+    {
+        var request = AwaitingApprovalRequest();
+        _requests.GetByIdAsync(request.Id, Arg.Any<CancellationToken>()).Returns(request);
 
         var handler = new RejectVisaDocumentRequestHandler(
-            _tenantContext.Object,
-            _currentUser.Object,
-            _visaRequestsRepo.Object,
-            new Mock<ILogger<RejectVisaDocumentRequestHandler>>().Object);
+            _tenant, _requests, NullLogger<RejectVisaDocumentRequestHandler>.Instance);
 
-        // Act
-        var result = await handler.Handle(command, CancellationToken.None);
+        var result = await handler.Handle(
+            new RejectVisaDocumentRequestCommand(request.Id, "Pasaport suresi yetersiz", ApproverEmployeeId),
+            CancellationToken.None);
 
-        // Assert
         result.IsSuccess.ShouldBeTrue();
         result.Value.Status.ShouldBe(VisaDocumentRequestStatus.Rejected);
-        result.Value.RejectionReason.ShouldBe("Missing required documents");
+        result.Value.RejectionReason.ShouldBe("Pasaport suresi yetersiz");
+        request.RejectedBy.ShouldBe(ApproverEmployeeId);
     }
 }
-
-/// <summary>Mock workflow approval response for testing.</summary>
-public sealed record WorkflowApprovalResponse(Guid Id, VisaDocumentRequestStatus Status);
