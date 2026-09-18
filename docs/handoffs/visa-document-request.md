@@ -159,3 +159,42 @@ Employees can request visa document processing through a dedicated workflow, wit
 ---
 
 **Next Action**: Run tests on PC-A. Once green, proceed to application handlers.
+
+---
+
+## Progress Log
+
+### Session 2 — Domain Layer TDD (2026-09-18)
+
+**Status**: ✅ Red tests written and committed to dev branch
+
+**Work Completed**:
+- ✅ Created domain aggregates:
+  - `VisaDocumentRequest` with status lifecycle management
+  - `VisaDocumentProcess` for predefined visa workflows
+  - `VisaDomainErrors` with validation error codes
+- ✅ Wrote 5 test cases covering:
+  - Valid request creation
+  - Travel date validation
+  - Status transitions (Pending → AwaitingApproval → Approved/Rejected → Completed)
+  - Approval flow with rejection reason tracking
+- ✅ Committed to `dev` branch:
+  1. `feat(documents): add visa document request domain layer with TDD tests`
+  2. `chore(ecc): set up team orchestration framework for visa document feature`
+
+**Next Step**: Push `dev` branch to GitHub, then run tests locally with Visual Studio to turn red → green.
+
+**Git Status**:
+```
+Branch: dev (ahead of origin/dev by 2 commits)
+- 9a36ab8 feat(documents): add visa document request domain layer with TDD tests
+- c3199ad chore(ecc): set up team orchestration framework for visa document feature
+```
+
+**Local Path**: `C:\Users\ALG0013\Documents\GitHub\senseik`
+
+**Action Required**: From Visual Studio or PowerShell on PC-A:
+1. `git push origin dev` — Push commits to GitHub
+2. `dotnet test tests/Modules/Sense.Modules.Documents.Tests/ --filter VisaDocumentRequestTests` — Run tests
+3. Confirm all 5 tests pass (green status)
+
