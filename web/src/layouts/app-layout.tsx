@@ -1,8 +1,9 @@
 import { Link, NavLink as RouterNavLink, Outlet } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalStorage } from "@mantine/hooks";
 import { ActionIcon, Alert, Badge, Box, Button, Group, Indicator, Menu, NavLink, Stack, Text, Tooltip } from "@mantine/core";
-import { Bell, Grip, ShieldAlert } from "lucide-react";
+import { Bell, Grip, PanelLeftClose, PanelLeftOpen, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
@@ -13,6 +14,9 @@ import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
+
+/** Per-viewer convenience, not shared state - remembered locally, never sent to the server. */
+const SIDEBAR_COLLAPSED_KEY = "senseik.sidebar.collapsed";
 
 function NavList({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation(["navigation"]);
@@ -112,6 +116,23 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
     <Tooltip label={label} position="right" openDelay={300}>
       {link}
     </Tooltip>
+  );
+}
+
+/** Desktop-only collapse/expand control for the sidebar; mobile always stays icon-only. */
+function SidebarToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation(["navigation"]);
+  const label = t(collapsed ? "navigation:nav.expandSidebar" : "navigation:nav.collapseSidebar");
+  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
+
+  return (
+    <div className={`hidden md:flex ${collapsed ? "justify-center" : "justify-end"} px-2 py-2 ${classes.footerNav}`}>
+      <Tooltip label={label} position="right" openDelay={300}>
+        <ActionIcon variant="subtle" color="gray" size="md" aria-label={label} onClick={onToggle}>
+          <Icon size={18} />
+        </ActionIcon>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -238,6 +259,9 @@ function Greeting() {
  * column, greeting, apps launcher) + single left sidebar (Kolay İK order) + content.
  */
 export default function AppLayout() {
+  // Desktop-only preference - the mobile rail below is always icon-only regardless of this value.
+  const [collapsed, setCollapsed] = useLocalStorage<boolean>({ key: SIDEBAR_COLLAPSED_KEY, defaultValue: false });
+
   return (
     <Box className="flex h-screen flex-col" bg="var(--mantine-color-body)" c="var(--mantine-color-text)">
       <ImpersonationBanner />
@@ -252,13 +276,17 @@ export default function AppLayout() {
           </header>
 
           <div className="flex min-h-0 flex-1">
-            {/* Sidebar - full labels from md up */}
-            <aside className={`hidden w-52 shrink-0 flex-col md:flex ${classes.sidebar}`}>
-              <NavList collapsed={false} />
+            {/* Sidebar - full labels from md up, user can collapse to icon-only via SidebarToggle */}
+            <aside
+              data-testid="sidebar-desktop"
+              className={`hidden ${collapsed ? "w-14" : "w-52"} shrink-0 flex-col md:flex ${classes.sidebar}`}
+            >
+              <NavList collapsed={collapsed} />
+              <SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((current) => !current)} />
             </aside>
 
-            {/* Mobile icon rail - always icon-only */}
-            <aside className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
+            {/* Mobile icon rail - always icon-only, unaffected by the desktop collapse preference */}
+            <aside data-testid="sidebar-mobile" className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
               <NavList collapsed />
             </aside>
 

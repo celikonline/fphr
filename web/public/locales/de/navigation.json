@@ -18,7 +18,9 @@
     "settings": "Einstellungen",
     "account": "Mein Profil",
     "support": "Support",
-    "trust": "Vertrauen & Sicherheit"
+    "trust": "Vertrauen & Sicherheit",
+    "collapseSidebar": "Menü einklappen",
+    "expandSidebar": "Menü ausklappen"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

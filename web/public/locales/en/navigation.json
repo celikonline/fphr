@@ -18,7 +18,9 @@
     "settings": "Settings",
     "account": "My profile",
     "support": "Support",
-    "trust": "Trust & security"
+    "trust": "Trust & security",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
