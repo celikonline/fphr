@@ -36,6 +36,7 @@ public sealed class LoginHandler(
     ITenantContextSetter tenantSetter,
     IMfaChallengeTokenProtector mfaChallenge,
     IOptions<IdentityOptions> options,
+    IIdentityUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<LoginCommand, LoginResultDto>
 {
     public async Task<Result<LoginResultDto>> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -51,6 +52,8 @@ public sealed class LoginHandler(
 
         if (matches.Count == 0)
         {
+            // Kullanıcı yok: zamanlama farkı hesabın varlığını sızdırmasın diye sahte hash işlemi yapılır.
+            _ = hasher.Hash(command.Password);
             return Error.Unauthorized(IdentityErrors.InvalidCredentials);
         }
 
@@ -77,23 +80,39 @@ public sealed class LoginHandler(
 
         var (user, tid) = matches[0];
         var tenantEntity = await tenants.GetByIdAsync(tid, cancellationToken).ConfigureAwait(false);
+
+        using var scope = tenantSetter.BeginScope(tid, tenantEntity?.Slug);
+
+        // Kullanıcı numaralandırmayı önlemek için durum hataları (davetli/kilitli/pasif/kiracı pasif) yalnızca parola
+        // doğruysa döner; parola yanlışsa (veya hesabın parolası yoksa) her zaman aynı genel hata verilir.
+        var passwordOk = user.PasswordHash is not null && hasher.Verify(user.PasswordHash, command.Password);
+        if (user.PasswordHash is null)
+        {
+            _ = hasher.Hash(command.Password);
+        }
+
+        if (!passwordOk)
+        {
+            // Sayaç yalnız giriş yapabilecek (aktif, kilitli olmayan) hesaplar için artar. Handler başarısız (Error) döndüğü
+            // için UnitOfWorkBehaviour SaveChanges yapmaz; sayaç/kilit açıkça kalıcılaştırılır.
+            if (tenantEntity is { IsWritable: true } && user.CanSignIn(now).IsSuccess)
+            {
+                user.RecordFailedAccess(now, new LockoutPolicy(options.Value.MaxFailedAccessAttempts, TimeSpan.FromMinutes(options.Value.LockoutMinutes)));
+                await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            return Error.Unauthorized(IdentityErrors.InvalidCredentials);
+        }
+
         if (tenantEntity is null || !tenantEntity.IsWritable)
         {
             return Error.Unauthorized(IdentityErrors.TenantInactive);
         }
 
-        using var scope = tenantSetter.BeginScope(tenantEntity.Id, tenantEntity.Slug);
-
         var canSignIn = user.CanSignIn(now);
         if (canSignIn.IsFailure)
         {
             return canSignIn.Error;
-        }
-
-        if (!hasher.Verify(user.PasswordHash!, command.Password))
-        {
-            user.RecordFailedAccess(now, new LockoutPolicy(options.Value.MaxFailedAccessAttempts, TimeSpan.FromMinutes(options.Value.LockoutMinutes)));
-            return Error.Unauthorized(IdentityErrors.InvalidCredentials);
         }
 
         if (user.MfaEnabled)
@@ -141,6 +160,7 @@ public sealed class CompleteMfaLoginHandler(
     ITotpService totp,
     IEncryptionProvider encryption,
     IOptions<IdentityOptions> options,
+    IIdentityUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<CompleteMfaLoginCommand, LoginResultDto>
 {
     // Login.cs'in başarılı-giriş kuyruğuyla (token üretimi) kasıtlı olarak neredeyse aynı: LoginHandler'ı bu akışa
@@ -177,6 +197,8 @@ public sealed class CompleteMfaLoginHandler(
         if (!totp.ValidateCode(encryption.Decrypt(user.TotpSecretEncrypted), command.Code))
         {
             user.RecordFailedAccess(now, new LockoutPolicy(options.Value.MaxFailedAccessAttempts, TimeSpan.FromMinutes(options.Value.LockoutMinutes)));
+            // Handler hata döndüğü için UnitOfWorkBehaviour kaydetmez: sayaç/kilit açıkça kalıcılaştırılır.
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Error.Unauthorized(IdentityErrors.MfaInvalidCode);
         }
 
