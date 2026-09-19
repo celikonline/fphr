@@ -21,7 +21,8 @@
     "trust": "Vertrauen & Sicherheit",
     "collapseSidebar": "Menü einklappen",
     "expandSidebar": "Menü ausklappen",
-    "workflowInbox": "Genehmigungs-Posteingang"
+    "workflowInbox": "Genehmigungs-Posteingang",
+    "sharedFiles": "Gemeinsame Dateien"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

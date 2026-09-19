@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
+using Sense.Modules.Documents.Domain.SharedFiles;
 using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.BackgroundJobs;
 using Sense.Modules.Documents.Infrastructure.Persistence;
@@ -37,6 +38,7 @@ public sealed class DocumentsModule : IModule
 
         // Register repositories
         services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<ISharedCompanyFileRepository, SharedCompanyFileRepository>();
 
         // Document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();

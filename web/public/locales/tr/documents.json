@@ -132,5 +132,38 @@
       "uploaded": "Yüklendi",
       "waived": "Muaf"
     }
+  },
+  "sharedFiles": {
+    "title": "Ortak dosyalar",
+    "subtitle": "Tüm şirkete açık ya da belirli rollere kısıtlı ortak dosyaları yönetin.",
+    "upload": "Dosya yükle",
+    "uploadDialogTitle": "Dosya yükle",
+    "uploaded": "Dosya yüklendi.",
+    "deleted": "Dosya silindi.",
+    "empty": "Henüz ortak dosya yok.",
+    "everyone": "Herkese açık",
+    "restricted": "Role kısıtlı",
+    "everyoneHint": "Herkese açık — tüm çalışanlar görebilir",
+    "restrictedHint": "Belirli rollere kısıtlı",
+    "visibilityLabel": "Görünürlük",
+    "allowedRoles": "İzin verilen roller",
+    "quotaLabel": "Kullanılan Alan %{{percent}} ({{used}} / {{quota}})",
+    "deleteTitle": "Dosyayı sil",
+    "deleteConfirm": "\"{{name}}\" dosyasını silmek istediğinize emin misiniz?",
+    "columns": {
+      "name": "Ad",
+      "type": "Tür",
+      "size": "Boyut",
+      "uploadedAt": "Yükleme tarihi",
+      "visibility": "Görünürlük"
+    },
+    "errors": {
+      "loadFailed": "Dosyalar yüklenemedi.",
+      "uploadFailed": "Dosya yüklenemedi.",
+      "deleteFailed": "Dosya silinemedi.",
+      "downloadFailed": "İndirme bağlantısı alınamadı.",
+      "quotaExceeded": "Bu dosya yüklendiğinde depolama kotası aşılır.",
+      "rolesRequired": "Role kısıtlı görünürlük için en az bir rol seçilmelidir."
+    }
   }
 }

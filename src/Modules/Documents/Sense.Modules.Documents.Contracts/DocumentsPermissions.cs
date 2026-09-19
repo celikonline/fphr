@@ -79,6 +79,25 @@ public static class DocumentsPermissions
         "Belgeler",
         "Kendi kullanımınız için bir dosya belgesi yükleme");
 
+    /// <summary>View/download tenant-wide shared company files (senseik-028). Key was already reserved in
+    /// <c>SystemRoleDefinitions</c>'s Employee/Intern role includes before this feature existed; reused rather than
+    /// introducing a parallel "documents.sharedfile.view" key.</summary>
+    public static readonly Permission CompanyFilesView = new(
+        "documents.company.view",
+        Module,
+        "View Shared Company Files",
+        "Documents",
+        "View and download tenant-wide shared company files");
+
+    /// <summary>Upload/delete shared company files (senseik-028). Granted to HR/Admin/Owner via those roles'
+    /// existing "documents.*" wildcard include - no SystemRoleDefinitions change needed.</summary>
+    public static readonly Permission CompanyFilesManage = new(
+        "documents.company.manage",
+        Module,
+        "Manage Shared Company Files",
+        "Documents",
+        "Upload and delete tenant-wide shared company files");
+
     /// <summary>All Documents module permissions.</summary>
     public static IEnumerable<Permission> All =>
     [
@@ -91,5 +110,7 @@ public static class DocumentsPermissions
         RequirementsManage,
         MyRequirements,
         MyFilesCreate,
+        CompanyFilesView,
+        CompanyFilesManage,
     ];
 }

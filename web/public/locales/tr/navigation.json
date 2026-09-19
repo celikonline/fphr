@@ -21,7 +21,8 @@
     "trust": "Güven ve güvenlik",
     "collapseSidebar": "Menüyü daralt",
     "expandSidebar": "Menüyü genişlet",
-    "workflowInbox": "Onay kutusu"
+    "workflowInbox": "Onay kutusu",
+    "sharedFiles": "Ortak dosyalar"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {

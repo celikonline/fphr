@@ -21,7 +21,8 @@
     "trust": "Trust & security",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
-    "workflowInbox": "Approval inbox"
+    "workflowInbox": "Approval inbox",
+    "sharedFiles": "Shared files"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

@@ -132,5 +132,38 @@
       "uploaded": "Uploaded",
       "waived": "Waived"
     }
+  },
+  "sharedFiles": {
+    "title": "Shared files",
+    "subtitle": "Manage company-wide files, either open to everyone or restricted to specific roles.",
+    "upload": "Upload file",
+    "uploadDialogTitle": "Upload file",
+    "uploaded": "File uploaded.",
+    "deleted": "File deleted.",
+    "empty": "No shared files yet.",
+    "everyone": "Everyone",
+    "restricted": "Role-restricted",
+    "everyoneHint": "Everyone - visible to all employees",
+    "restrictedHint": "Restricted to specific roles",
+    "visibilityLabel": "Visibility",
+    "allowedRoles": "Allowed roles",
+    "quotaLabel": "Used space {{percent}}% ({{used}} / {{quota}})",
+    "deleteTitle": "Delete file",
+    "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "size": "Size",
+      "uploadedAt": "Uploaded at",
+      "visibility": "Visibility"
+    },
+    "errors": {
+      "loadFailed": "Failed to load files.",
+      "uploadFailed": "Failed to upload the file.",
+      "deleteFailed": "Failed to delete the file.",
+      "downloadFailed": "Failed to get the download link.",
+      "quotaExceeded": "Uploading this file would exceed the storage quota.",
+      "rolesRequired": "Role-restricted visibility requires at least one selected role."
+    }
   }
 }

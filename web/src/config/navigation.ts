@@ -40,6 +40,7 @@ import {
   FileStack,
   FileWarning,
   Upload,
+  FolderOpen,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -169,6 +170,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Inbox,
     permissions: ["workflow.inbox.view"],
     iconColor: "teal",
+  },
+  // senseik-028: appended at the end (hot file, append-only) rather than placed near "documents"-flavored items above.
+  {
+    key: "sharedFiles",
+    labelKey: "nav.sharedFiles",
+    path: "/app/shared-files",
+    icon: FolderOpen,
+    permissions: ["documents.company.view"],
+    iconColor: "gold",
   },
 ];
 

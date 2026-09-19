@@ -870,6 +870,21 @@ The report you requested has been generated. Click the link to view and download
   <data name="documents.my.requirements" xml:space="preserve"><value>View and satisfy own personnel document requirements</value></data>
   <data name="documents.my.files" xml:space="preserve"><value>Upload own document</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>This document requirement does not belong to you.</value></data>
+  <data name="documents.company.view" xml:space="preserve"><value>View shared company files</value></data>
+  <data name="documents.company.manage" xml:space="preserve"><value>Manage shared company files</value></data>
+  <data name="shared_company_file.not_found" xml:space="preserve"><value>File not found.</value></data>
+  <data name="shared_company_file.name_required" xml:space="preserve"><value>File name is required.</value></data>
+  <data name="shared_company_file.name_too_long" xml:space="preserve"><value>File name is too long.</value></data>
+  <data name="shared_company_file.filekey_required" xml:space="preserve"><value>File key is required.</value></data>
+  <data name="shared_company_file.invalid_size" xml:space="preserve"><value>Invalid file size.</value></data>
+  <data name="shared_company_file.uploader_required" xml:space="preserve"><value>Uploader is required.</value></data>
+  <data name="shared_company_file.roles_required_for_restricted_visibility" xml:space="preserve"><value>Role-restricted visibility requires at least one selected role.</value></data>
+  <data name="shared_company_file.invalid_status" xml:space="preserve"><value>The file does not support this operation in its current status.</value></data>
+  <data name="shared_company_file.already_deleted" xml:space="preserve"><value>File is already deleted.</value></data>
+  <data name="shared_company_file.quota_exceeded" xml:space="preserve"><value>Uploading this file would exceed the tenant's storage quota.</value></data>
+  <data name="shared_company_file.upload_initiation_failed" xml:space="preserve"><value>Failed to initiate the file upload.</value></data>
+  <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Failed to confirm the file upload.</value></data>
+  <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Failed to delete the file.</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Manage webhook subscriptions</value></data>

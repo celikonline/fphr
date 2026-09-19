@@ -1,5 +1,6 @@
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Documents.Domain.Documents;
+using Sense.Modules.Documents.Domain.SharedFiles;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Domain;
@@ -75,3 +76,27 @@ public sealed record ExpiringDocumentRow(
     Guid EmployeeId,
     Guid DocumentTypeId,
     DateOnly ExpiryDate);
+
+/// <summary>Shared company file repository (senseik-028): tenant-wide/role-restricted files, distinct from
+/// <see cref="IDocumentRepository"/>'s employee-scoped personnel documents.</summary>
+public interface ISharedCompanyFileRepository
+{
+    void Add(SharedCompanyFile file);
+
+    /// <summary>Gets a file by ID, ensuring it belongs to the current tenant (regardless of visibility - callers
+    /// check <see cref="SharedCompanyFile.IsVisibleTo"/> themselves once they have the aggregate).</summary>
+    Task<Result<SharedCompanyFile>> GetByIdAsync(Guid fileId, CancellationToken cancellationToken = default);
+
+    /// <summary>Lists all non-deleted files for the current tenant (paginated), newest first. Visibility filtering
+    /// against the caller's roles happens in the application layer (mirrors ListDocumentsHandler's tenant-only filter).</summary>
+    Task<IReadOnlyList<SharedCompanyFile>> ListByTenantAsync(
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default);
+
+    Task<int> CountByTenantAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Sum of <see cref="SharedCompanyFile.Size"/> for the tenant's Active (non-deleted, confirmed) files -
+    /// the quota usage figure for <c>GET /shared-files/quota</c>.</summary>
+    Task<long> SumActiveSizeByTenantAsync(CancellationToken cancellationToken = default);
+}
