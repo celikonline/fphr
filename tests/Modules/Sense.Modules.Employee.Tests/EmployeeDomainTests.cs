@@ -237,6 +237,40 @@ public sealed class EmployeeDomainTests
     }
 
     [Fact]
+    public void AssignMentor_Self_Fails()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+
+        e.AssignMentor(e.Id).Error.Code.ShouldBe(EmployeeDomainErrors.MentorSelf);
+        e.MentorEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void AssignMentor_ToAnotherEmployee_Succeeds_AndClearingWorks()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+        var mentor = Guid.NewGuid();
+
+        e.AssignMentor(mentor).IsSuccess.ShouldBeTrue();
+        e.MentorEmployeeId.ShouldBe(mentor);
+
+        e.AssignMentor(null).IsSuccess.ShouldBeTrue();
+        e.MentorEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void AssignMentor_IsIndependentOfManagerHierarchy_NoCycleCheck()
+    {
+        // Mentor is not the reporting line: a manager<->mentee "cycle" (which AssignManager would reject) is fine here.
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B")).Value;
+        var manager = Guid.NewGuid();
+        e.AssignManager(manager, new Dictionary<Guid, Guid?> { [e.Id] = null, [manager] = null }).IsSuccess.ShouldBeTrue();
+
+        e.AssignMentor(manager).IsSuccess.ShouldBeTrue();
+        e.MentorEmployeeId.ShouldBe(manager);
+    }
+
+    [Fact]
     public void WouldCreateCycle_TerminatesOnPreExistingLoopElsewhere()
     {
         var a = Guid.NewGuid();

@@ -19,6 +19,7 @@ using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Modules.Performance.Infrastructure.Persistence;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Modules.Reporting.Infrastructure.Persistence;
+using Sense.Modules.Training.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.DependencyInjection;
 using Sense.Shared.Infrastructure.Persistence;
@@ -42,6 +43,7 @@ builder.Services.AddModuleDbContext<AssetsDbContext>(builder.Configuration, Asse
 builder.Services.AddModuleDbContext<ReportingDbContext>(builder.Configuration, ReportingDbContext.SchemaName);
 builder.Services.AddModuleDbContext<PerformanceDbContext>(builder.Configuration, PerformanceDbContext.SchemaName);
 builder.Services.AddModuleDbContext<AnnouncementsDbContext>(builder.Configuration, AnnouncementsDbContext.SchemaName);
+builder.Services.AddModuleDbContext<TrainingDbContext>(builder.Configuration, TrainingDbContext.SchemaName);
 
 using var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILoggerFactory>().CreateLogger(MigratorConstants.LoggerName);

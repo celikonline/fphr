@@ -1,23 +1,22 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Domain;
+using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
 namespace Sense.Modules.Training.Infrastructure.Persistence;
 
-public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
+/// <summary>Training module DbContext (ADR 0003: one DbContext per module, own PostgreSQL schema "training").</summary>
+public sealed class TrainingDbContext(DbContextOptions<TrainingDbContext> options, ITenantContext tenantContext)
+    : ModuleDbContext(options, tenantContext), ITrainingUnitOfWork
 {
     public const string SchemaName = "training";
-
-    public TrainingDbContext(DbContextOptions<TrainingDbContext> options)
-        : base(options, SchemaName)
-    {
-    }
 
     public override string Schema => SchemaName;
 
     public DbSet<TrainingProgram> TrainingPrograms => Set<TrainingProgram>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
+    public DbSet<TrainingRequirement> TrainingRequirements => Set<TrainingRequirement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -47,9 +46,6 @@ public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
             b.Property(x => x.StartDate)
                 .IsRequired();
 
-            b.Property(x => x.EndDate)
-                .IsRequired();
-
             b.HasIndex(x => new { x.TenantId, x.Title })
                 .IsUnique();
         });
@@ -77,10 +73,41 @@ public class TrainingDbContext : ModuleDbContext, ITrainingUnitOfWork
                 .HasConversion<string>();
 
             b.HasIndex(x => new { x.TenantId, x.TrainingProgramId })
-                .HasName("IX_Enrollments_TenantId_TrainingProgramId");
+                .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId");
 
             b.HasIndex(x => new { x.TenantId, x.EmployeeId })
-                .HasName("IX_Enrollments_TenantId_EmployeeId");
+                .HasDatabaseName("IX_Enrollments_TenantId_EmployeeId");
+
+            // One enrollment per (employee, program); CancelEnrollmentHandler hard-deletes on cancel, so re-enrollment
+            // after a cancellation is not blocked by this constraint. Backs TrainingErrors.DuplicateEnrollment.
+            b.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.EmployeeId })
+                .IsUnique()
+                .HasDatabaseName("IX_Enrollments_TenantId_TrainingProgramId_EmployeeId");
+        });
+
+        // TrainingRequirement configuration (roadmap #72: prerequisite training gating)
+        builder.Entity<TrainingRequirement>(b =>
+        {
+            b.ToTable("TrainingRequirements");
+
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.TenantId)
+                .IsRequired();
+
+            b.Property(x => x.TrainingProgramId)
+                .IsRequired();
+
+            b.Property(x => x.PrerequisiteTrainingProgramId)
+                .IsRequired();
+
+            b.Property(x => x.BlocksAssignmentUntilCompleted)
+                .IsRequired();
+
+            // One prerequisite rule per (program, prerequisite) pair.
+            b.HasIndex(x => new { x.TenantId, x.TrainingProgramId, x.PrerequisiteTrainingProgramId })
+                .IsUnique()
+                .HasDatabaseName("IX_TrainingRequirements_Program_Prerequisite");
         });
     }
 }

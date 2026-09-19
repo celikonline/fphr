@@ -73,7 +73,8 @@ public sealed record EmployeeDetailDto(
     DateOnly? TerminationDate = null,
     Guid? TerminationReasonId = null,
     TerminationType? TerminationType = null,
-    string? SgkExitCode = null);
+    string? SgkExitCode = null,
+    Guid? MentorEmployeeId = null);
 
 /// <summary>
 /// Result of the termination wizard's submit step: the updated card plus the advisory job-security warning (never

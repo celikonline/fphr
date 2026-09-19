@@ -15,6 +15,7 @@ using Sense.Modules.Payroll.Api;
 using Sense.Modules.Performance.Api;
 using Sense.Modules.Recruitment.Api;
 using Sense.Modules.Reporting.Api;
+using Sense.Modules.Training.Api;
 using Sense.Modules.Workflow.Api;
 using Sense.Shared.Contracts.Modules;
 
@@ -43,5 +44,6 @@ public static class ModuleCatalog
         new ReportingModule(),
         new PerformanceModule(),
         new AnnouncementsModule(),
+        new TrainingModule(),
     ];
 }

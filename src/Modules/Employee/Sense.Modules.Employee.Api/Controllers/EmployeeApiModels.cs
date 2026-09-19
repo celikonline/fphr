@@ -119,3 +119,6 @@ public sealed record EmployeeListFilterRequest
 }
 
 public sealed record BulkAssignManagerRequest(EmployeeSelection Selection, Guid ManagerEmployeeId);
+
+/// <summary>Mentor assignment body ("mentör atama", Faz 4 #72); null clears the mentor.</summary>
+public sealed record AssignMentorRequest(Guid? MentorEmployeeId);

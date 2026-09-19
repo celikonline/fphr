@@ -6,6 +6,7 @@ public static class EmployeeErrors
     public const string EmployeeNotFound = "employee.not_found";
     public const string OrgUnitNotFound = "employee.org_unit_not_found";
     public const string ManagerNotFound = "employee.manager_not_found";
+    public const string MentorNotFound = "employee.mentor_not_found";
     public const string NationalIdTaken = "employee.national_id_taken";
     public const string StatusInvalid = "employee.status_invalid";
     public const string DaysOutOfRange = "employee.days_out_of_range";

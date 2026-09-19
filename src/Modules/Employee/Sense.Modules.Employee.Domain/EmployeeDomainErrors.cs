@@ -13,6 +13,9 @@ public static class EmployeeDomainErrors
     public const string WorkPhoneTooLong = "employee.work_phone_too_long";
     public const string ManagerSelf = "employee.manager_self";
     public const string ManagerCycle = "employee.manager_cycle";
+
+    /// <summary>A mentor relationship is not hierarchical (no cycle check needed), only self-assignment is rejected.</summary>
+    public const string MentorSelf = "employee.mentor_self";
     public const string ChildCountInvalid = "employee.child_count_invalid";
     public const string MobilePhoneTooLong = "employee.mobile_phone_too_long";
     public const string HomePhoneTooLong = "employee.home_phone_too_long";

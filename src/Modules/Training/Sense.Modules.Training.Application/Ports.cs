@@ -35,3 +35,16 @@ public interface IEnrollmentRepository
 
     Task DeleteAsync(Enrollment enrollment, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Repository port for TrainingRequirement (roadmap #72: prerequisite training gating).</summary>
+public interface ITrainingRequirementRepository
+{
+    Task AddAsync(TrainingRequirement requirement, CancellationToken cancellationToken = default);
+
+    Task<TrainingRequirement?> GetByIdAsync(Guid tenantId, Guid requirementId, CancellationToken cancellationToken = default);
+
+    /// <summary>All prerequisite rules that gate enrollment into <paramref name="programId"/>.</summary>
+    Task<IReadOnlyList<TrainingRequirement>> GetByTrainingProgramIdAsync(Guid tenantId, Guid programId, CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(TrainingRequirement requirement, CancellationToken cancellationToken = default);
+}
