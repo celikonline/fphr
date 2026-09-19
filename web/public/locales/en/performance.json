@@ -1,0 +1,169 @@
+{
+  "genericError": "Something went wrong. Please try again.",
+  "relation": {
+    "self": "Self",
+    "manager": "Manager",
+    "subordinate": "Subordinate",
+    "peer": "Other"
+  },
+  "kind": {
+    "competency": "Competency",
+    "competencyAndGoal": "Competency + Goal"
+  },
+  "ratingScale": {
+    "zeroToHundred": "0–100 points",
+    "fivePointAgreement": "5-point agreement scale"
+  },
+  "commentMode": {
+    "optional": "Optional",
+    "required": "Required",
+    "disabled": "Disabled",
+    "optionalHint": "A comment is optional",
+    "requiredHint": "A comment is required",
+    "disabledHint": "Comments are disabled"
+  },
+  "evaluatorLabelMode": {
+    "name": "Evaluator's name",
+    "categoryOnly": "Category only"
+  },
+  "goalEntryBy": {
+    "employee": "Employee",
+    "firstManager": "First manager"
+  },
+  "cycleStatus": {
+    "draft": "Draft",
+    "published": "Published",
+    "completed": "Completed"
+  },
+  "participantStatus": {
+    "pending": "Pending",
+    "inProgress": "In progress",
+    "completed": "Completed"
+  },
+  "assignmentStatus": {
+    "pending": "Pending",
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "skipped": "Skipped"
+  },
+  "goalStatus": {
+    "draft": "Draft",
+    "approved": "Approved",
+    "resultEntered": "Result entered",
+    "resultApproved": "Results approved"
+  },
+  "cycles": {
+    "title": "Review cycles",
+    "subtitle": "Manage performance review cycles.",
+    "new": "New review cycle",
+    "empty": "No review cycles yet.",
+    "col": {
+      "name": "Name",
+      "period": "Period",
+      "status": "Status",
+      "participants": "Participants"
+    }
+  },
+  "wizard": {
+    "title": "New review cycle",
+    "subtitle": "Create a review cycle step by step.",
+    "created": "Review cycle created.",
+    "steps": {
+      "general": "General",
+      "competencies": "Competencies",
+      "goalSettings": "Goal settings",
+      "access": "Access"
+    },
+    "name": "Cycle name",
+    "periodStart": "Start date",
+    "periodEnd": "End date",
+    "kind": "Kind",
+    "ratingScale": "Rating scale",
+    "defaultCommentMode": "Default comment mode",
+    "evaluatorLabelMode": "Evaluator visibility in report",
+    "evaluatorLabelModeHint": "Whether the individual report shows the evaluator's name or just the category.",
+    "relationCategories": "Evaluator categories",
+    "selfManagerAlwaysOn": "\"Self\" and \"Manager\" categories are always on.",
+    "weightPlaceholder": "Weight",
+    "weight": "Weight",
+    "competenciesTitle": "Competencies",
+    "addCompetency": "Add competency",
+    "competencyName": "Competency name",
+    "questionText": "Question text",
+    "commentModeDefault": "Use default",
+    "addQuestion": "Add question",
+    "goalEntryBy": "Who enters goals",
+    "goalEntryByHint": "Employee: employee enters, manager approves. First manager: the manager both enters and approves.",
+    "competencyWeight": "Competency weight",
+    "competencyWeightHint": "The competency side's share of the final score; blank means 50/50.",
+    "employeeCanViewResults": "Reviewed employees can view their results",
+    "employeeCanDownloadPdf": "Reviewed employees can download the PDF report",
+    "minEvaluators": "Minimum evaluators required for a report",
+    "minEvaluatorsHint": "The minimum completed forms per category; the \"Self\" category is just on/off.",
+    "next": "Next",
+    "finish": "Save and finish"
+  },
+  "detail": {
+    "col": {
+      "employee": "Employee",
+      "competencyProgress": "Competency progress",
+      "goalProgress": "Goal status",
+      "status": "Status",
+      "finalScore": "Score"
+    },
+    "participants": "Participants",
+    "noParticipants": "No participants added yet.",
+    "addParticipants": "Add participants",
+    "publish": "Publish review cycle",
+    "published": "Review cycle published.",
+    "forceComplete": "Complete review cycle",
+    "forceCompleted": "{{count}} participant(s) completed.",
+    "detailedReport": "Detailed report",
+    "summaryReport": "Summary report"
+  },
+  "addParticipants": {
+    "title": "Add participants",
+    "pick": "Pick a participant",
+    "search": "Search by name...",
+    "noResults": "No results.",
+    "remove": "Remove",
+    "includeGoals": "Include in the goal flow",
+    "addEvaluator": "Add evaluator...",
+    "success": "Participants added."
+  },
+  "goals": {
+    "title": "Goals",
+    "empty": "No goals added yet.",
+    "target": "Target value",
+    "actual": "Actual value",
+    "points": "Points",
+    "resultComment": "Result comment",
+    "approve": "Approve goals",
+    "approveResults": "Approve results",
+    "approved": "Goals approved.",
+    "resultsApproved": "Goal results approved.",
+    "enterResult": "Enter result",
+    "resultEntered": "Goal result saved."
+  },
+  "fillForm": {
+    "title": "Evaluation form",
+    "score": "Score",
+    "complete": "Complete",
+    "submitted": "Form submitted.",
+    "alreadyCompleted": "This form is already completed."
+  },
+  "my": {
+    "title": "Performance",
+    "subtitle": "Forms assigned to me, my goals, and my results.",
+    "manage": "Manage review cycles",
+    "assignmentsTab": "Assigned forms",
+    "goalsTab": "My goals",
+    "resultsTab": "My results",
+    "assignmentsEmpty": "You have no forms assigned right now.",
+    "goalsEmpty": "You are not a participant in any goal-tracking cycle yet.",
+    "resultsEmpty": "You haven't taken part in a review cycle yet.",
+    "fillForm": "Fill form",
+    "competencyProgress": "Competency progress {{value}}%",
+    "downloadReport": "Download report"
+  }
+}

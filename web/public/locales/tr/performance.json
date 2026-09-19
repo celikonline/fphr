@@ -1,0 +1,169 @@
+{
+  "genericError": "Bir şeyler ters gitti. Lütfen tekrar deneyin.",
+  "relation": {
+    "self": "Kendisi",
+    "manager": "Üstü",
+    "subordinate": "Astı",
+    "peer": "Diğer"
+  },
+  "kind": {
+    "competency": "Yetkinlik",
+    "competencyAndGoal": "Yetkinlik + Hedef"
+  },
+  "ratingScale": {
+    "zeroToHundred": "0–100 puan",
+    "fivePointAgreement": "5'li katılım ölçeği"
+  },
+  "commentMode": {
+    "optional": "Seçime bağlı",
+    "required": "Zorunlu",
+    "disabled": "Kapalı",
+    "optionalHint": "Yorum eklemek seçime bağlıdır",
+    "requiredHint": "Yorum eklemek zorunludur",
+    "disabledHint": "Yorum eklemek kapatılmıştır"
+  },
+  "evaluatorLabelMode": {
+    "name": "Değerlendiricinin adı",
+    "categoryOnly": "Yalnız kategori adı"
+  },
+  "goalEntryBy": {
+    "employee": "Çalışan",
+    "firstManager": "Birinci yönetici"
+  },
+  "cycleStatus": {
+    "draft": "Taslak",
+    "published": "Yayınlandı",
+    "completed": "Tamamlandı"
+  },
+  "participantStatus": {
+    "pending": "Bekliyor",
+    "inProgress": "Devam ediyor",
+    "completed": "Tamamlandı"
+  },
+  "assignmentStatus": {
+    "pending": "Bekliyor",
+    "inProgress": "Devam ediyor",
+    "completed": "Tamamlandı",
+    "skipped": "Atlandı"
+  },
+  "goalStatus": {
+    "draft": "Taslak",
+    "approved": "Onaylandı",
+    "resultEntered": "Sonuç girildi",
+    "resultApproved": "Sonuçlar onaylandı"
+  },
+  "cycles": {
+    "title": "Değerlendirme dönemleri",
+    "subtitle": "Performans değerlendirme dönemlerini yönetin.",
+    "new": "Yeni değerlendirme",
+    "empty": "Henüz değerlendirme dönemi yok.",
+    "col": {
+      "name": "Ad",
+      "period": "Dönem",
+      "status": "Durum",
+      "participants": "Katılımcı"
+    }
+  },
+  "wizard": {
+    "title": "Yeni değerlendirme",
+    "subtitle": "Değerlendirme dönemini adım adım oluşturun.",
+    "created": "Değerlendirme dönemi oluşturuldu.",
+    "steps": {
+      "general": "Genel bilgiler",
+      "competencies": "Yetkinlik",
+      "goalSettings": "Hedef ayarları",
+      "access": "Erişim"
+    },
+    "name": "Değerlendirme adı",
+    "periodStart": "Başlangıç tarihi",
+    "periodEnd": "Bitiş tarihi",
+    "kind": "Tür",
+    "ratingScale": "Puanlama şekli",
+    "defaultCommentMode": "Varsayılan yorum modu",
+    "evaluatorLabelMode": "Değerlendiricilerin raporda görünümü",
+    "evaluatorLabelModeHint": "Bireysel raporda değerlendiricinin adı mı yoksa yalnız kategori adı mı gösterilsin.",
+    "relationCategories": "Değerlendirici kategorileri",
+    "selfManagerAlwaysOn": "\"Kendisi\" ve \"Üstü\" kategorileri her zaman açıktır.",
+    "weightPlaceholder": "Ağırlık",
+    "weight": "Ağırlık",
+    "competenciesTitle": "Yetkinlikler",
+    "addCompetency": "Yetkinlik ekle",
+    "competencyName": "Yetkinlik adı",
+    "questionText": "Soru metni",
+    "commentModeDefault": "Varsayılanı kullan",
+    "addQuestion": "Soru ekle",
+    "goalEntryBy": "Hedef girişini kim yapacak",
+    "goalEntryByHint": "Çalışan: çalışan girer, yönetici onaylar. Birinci yönetici: yönetici hem girer hem onaylar.",
+    "competencyWeight": "Yetkinlik ağırlığı",
+    "competencyWeightHint": "Nihai puanda yetkinlik tarafının payı; boş bırakılırsa %50-%50.",
+    "employeeCanViewResults": "Değerlendirilenler sonuçlarını görebilsin",
+    "employeeCanDownloadPdf": "Değerlendirilenler PDF raporunu indirebilsin",
+    "minEvaluators": "Rapor için gerekli minimum değerlendirici sayısı",
+    "minEvaluatorsHint": "Her kategori için minimum tamamlanmış form sayısı; \"Kendisi\" kategorisinde yalnız açık/kapalı seçilir.",
+    "next": "İleri",
+    "finish": "Kaydet ve bitir"
+  },
+  "detail": {
+    "col": {
+      "employee": "Çalışan",
+      "competencyProgress": "Yetkinlik ilerlemesi",
+      "goalProgress": "Hedef durumu",
+      "status": "Durum",
+      "finalScore": "Puan"
+    },
+    "participants": "Katılımcılar",
+    "noParticipants": "Henüz katılımcı eklenmedi.",
+    "addParticipants": "Katılımcı ekle",
+    "publish": "Değerlendirmeyi yayınla",
+    "published": "Değerlendirme yayınlandı.",
+    "forceComplete": "Değerlendirmeyi tamamla",
+    "forceCompleted": "{{count}} katılımcı tamamlandı.",
+    "detailedReport": "Detaylı rapor",
+    "summaryReport": "Özet rapor"
+  },
+  "addParticipants": {
+    "title": "Katılımcı ekle",
+    "pick": "Katılımcı seç",
+    "search": "İsimle ara...",
+    "noResults": "Sonuç bulunamadı.",
+    "remove": "Kaldır",
+    "includeGoals": "Hedef akışına dahil et",
+    "addEvaluator": "Değerlendirici ekle...",
+    "success": "Katılımcılar eklendi."
+  },
+  "goals": {
+    "title": "Hedefler",
+    "empty": "Henüz hedef eklenmedi.",
+    "target": "Hedef değeri",
+    "actual": "Gerçekleşen",
+    "points": "Puan",
+    "resultComment": "Sonuç yorumu",
+    "approve": "Hedefleri onayla",
+    "approveResults": "Sonuçları onayla",
+    "approved": "Hedefler onaylandı.",
+    "resultsApproved": "Hedef sonuçları onaylandı.",
+    "enterResult": "Sonuç gir",
+    "resultEntered": "Hedef sonucu kaydedildi."
+  },
+  "fillForm": {
+    "title": "Değerlendirme formu",
+    "score": "Puan",
+    "complete": "Tamamla",
+    "submitted": "Form gönderildi.",
+    "alreadyCompleted": "Bu form zaten tamamlandı."
+  },
+  "my": {
+    "title": "Performans",
+    "subtitle": "Bana atanan formlar, hedeflerim ve sonuçlarım.",
+    "manage": "Değerlendirmeleri yönet",
+    "assignmentsTab": "Bana atanan formlar",
+    "goalsTab": "Hedeflerim",
+    "resultsTab": "Sonuçlarım",
+    "assignmentsEmpty": "Şu anda size atanan bir form yok.",
+    "goalsEmpty": "Henüz bir hedef döneminde katılımcı değilsiniz.",
+    "resultsEmpty": "Henüz bir değerlendirme döneminde yer almadınız.",
+    "fillForm": "Formu doldur",
+    "competencyProgress": "Yetkinlik ilerlemesi %{{value}}",
+    "downloadReport": "Raporu indir"
+  }
+}

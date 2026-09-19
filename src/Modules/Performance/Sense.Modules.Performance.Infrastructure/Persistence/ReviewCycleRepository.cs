@@ -28,6 +28,11 @@ public sealed class ReviewCycleRepository(PerformanceDbContext context) : IRevie
         await context.ReviewCycles
             .Where(c => c.Kind == ReviewKind.CompetencyAndGoal && c.Participants.Any(p => p.EmployeeId == participantEmployeeId && p.IncludeGoals))
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ReviewCycle>> ListWhereParticipantAsync(Guid participantEmployeeId, CancellationToken cancellationToken = default) =>
+        await context.ReviewCycles
+            .Where(c => c.Participants.Any(p => p.EmployeeId == participantEmployeeId))
+            .ToListAsync(cancellationToken);
 }
 
 /// <summary>EF Core-backed GoalCategory repository with tenant isolation (via ModuleDbContext's global query filter).</summary>

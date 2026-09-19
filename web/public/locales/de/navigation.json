@@ -74,5 +74,12 @@
     "dataTransferDesc": "[DE] Bulk data import with Excel templates",
     "importJobs": "[DE] Import jobs",
     "importJob": "[DE] Import job"
+  },
+  "performance": {
+    "breadcrumb": {
+      "cycles": "[DE] Review cycles",
+      "newCycle": "[DE] New review cycle",
+      "cycle": "[DE] Review cycle"
+    }
   }
 }

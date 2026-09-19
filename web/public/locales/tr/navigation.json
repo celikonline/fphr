@@ -74,5 +74,12 @@
     "dataTransferDesc": "Excel şablonlarıyla toplu veri aktarımı",
     "importJobs": "Aktarım işleri",
     "importJob": "Aktarım işi"
+  },
+  "performance": {
+    "breadcrumb": {
+      "cycles": "Değerlendirme dönemleri",
+      "newCycle": "Yeni değerlendirme",
+      "cycle": "Değerlendirme"
+    }
   }
 }

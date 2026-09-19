@@ -32,6 +32,10 @@ import MyLeavePage from "@/pages/leave/my-leave";
 import LeaveRuleSetsPage from "@/pages/settings/leave-rule-sets";
 import LeaveCalendarPage from "@/pages/leave/leave-calendar";
 import MyOvertimesPage from "@/pages/leave/my-overtimes";
+import MyPerformancePage from "@/pages/performance/my-performance";
+import CyclesListPage from "@/pages/performance/cycles-list";
+import CycleWizardPage from "@/pages/performance/cycle-wizard";
+import CycleDetailPage from "@/pages/performance/cycle-detail";
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -81,6 +85,11 @@ export default function App() {
           <Route path="leave" element={<MyLeavePage />} />
           <Route path="leave/calendar" element={<LeaveCalendarPage />} />
           <Route path="leave/overtimes" element={<MyOvertimesPage />} />
+
+          <Route path="performance" element={<MyPerformancePage />} />
+          <Route path="performance/cycles" element={<CyclesListPage />} />
+          <Route path="performance/cycles/new" element={<CycleWizardPage />} />
+          <Route path="performance/cycles/:id" element={<CycleDetailPage />} />
 
           <Route path="settings" element={<SettingsHomePage />} />
           <Route path="settings/company/structure" element={<CompanyStructurePage />} />

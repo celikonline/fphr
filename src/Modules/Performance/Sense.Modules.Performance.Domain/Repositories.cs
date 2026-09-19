@@ -18,6 +18,9 @@ public interface IReviewCycleRepository
 
     /// <summary>Loads only the cycles (with participants/goals) where the employee is a participant with goals - "Hedeflerim".</summary>
     Task<IReadOnlyList<ReviewCycle>> ListWithGoalsForParticipantAsync(Guid participantEmployeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Loads only the cycles where the employee is a participant (any Kind/status) - "Sonuçlarım".</summary>
+    Task<IReadOnlyList<ReviewCycle>> ListWhereParticipantAsync(Guid participantEmployeeId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Kiracı tanımlı hedef kategorileri (basit liste, kendi aggregate'i).</summary>

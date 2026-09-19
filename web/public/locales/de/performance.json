@@ -1,0 +1,169 @@
+{
+  "genericError": "[DE] Something went wrong. Please try again.",
+  "relation": {
+    "self": "[DE] Self",
+    "manager": "[DE] Manager",
+    "subordinate": "[DE] Subordinate",
+    "peer": "[DE] Other"
+  },
+  "kind": {
+    "competency": "[DE] Competency",
+    "competencyAndGoal": "[DE] Competency + Goal"
+  },
+  "ratingScale": {
+    "zeroToHundred": "[DE] 0–100 points",
+    "fivePointAgreement": "[DE] 5-point agreement scale"
+  },
+  "commentMode": {
+    "optional": "[DE] Optional",
+    "required": "[DE] Required",
+    "disabled": "[DE] Disabled",
+    "optionalHint": "[DE] A comment is optional",
+    "requiredHint": "[DE] A comment is required",
+    "disabledHint": "[DE] Comments are disabled"
+  },
+  "evaluatorLabelMode": {
+    "name": "[DE] Evaluator's name",
+    "categoryOnly": "[DE] Category only"
+  },
+  "goalEntryBy": {
+    "employee": "[DE] Employee",
+    "firstManager": "[DE] First manager"
+  },
+  "cycleStatus": {
+    "draft": "[DE] Draft",
+    "published": "[DE] Published",
+    "completed": "[DE] Completed"
+  },
+  "participantStatus": {
+    "pending": "[DE] Pending",
+    "inProgress": "[DE] In progress",
+    "completed": "[DE] Completed"
+  },
+  "assignmentStatus": {
+    "pending": "[DE] Pending",
+    "inProgress": "[DE] In progress",
+    "completed": "[DE] Completed",
+    "skipped": "[DE] Skipped"
+  },
+  "goalStatus": {
+    "draft": "[DE] Draft",
+    "approved": "[DE] Approved",
+    "resultEntered": "[DE] Result entered",
+    "resultApproved": "[DE] Results approved"
+  },
+  "cycles": {
+    "title": "[DE] Review cycles",
+    "subtitle": "[DE] Manage performance review cycles.",
+    "new": "[DE] New review cycle",
+    "empty": "[DE] No review cycles yet.",
+    "col": {
+      "name": "[DE] Name",
+      "period": "[DE] Period",
+      "status": "[DE] Status",
+      "participants": "[DE] Participants"
+    }
+  },
+  "wizard": {
+    "title": "[DE] New review cycle",
+    "subtitle": "[DE] Create a review cycle step by step.",
+    "created": "[DE] Review cycle created.",
+    "steps": {
+      "general": "[DE] General",
+      "competencies": "[DE] Competencies",
+      "goalSettings": "[DE] Goal settings",
+      "access": "[DE] Access"
+    },
+    "name": "[DE] Cycle name",
+    "periodStart": "[DE] Start date",
+    "periodEnd": "[DE] End date",
+    "kind": "[DE] Kind",
+    "ratingScale": "[DE] Rating scale",
+    "defaultCommentMode": "[DE] Default comment mode",
+    "evaluatorLabelMode": "[DE] Evaluator visibility in report",
+    "evaluatorLabelModeHint": "[DE] Whether the individual report shows the evaluator's name or just the category.",
+    "relationCategories": "[DE] Evaluator categories",
+    "selfManagerAlwaysOn": "[DE] \"Self\" and \"Manager\" categories are always on.",
+    "weightPlaceholder": "[DE] Weight",
+    "weight": "[DE] Weight",
+    "competenciesTitle": "[DE] Competencies",
+    "addCompetency": "[DE] Add competency",
+    "competencyName": "[DE] Competency name",
+    "questionText": "[DE] Question text",
+    "commentModeDefault": "[DE] Use default",
+    "addQuestion": "[DE] Add question",
+    "goalEntryBy": "[DE] Who enters goals",
+    "goalEntryByHint": "[DE] Employee: employee enters, manager approves. First manager: the manager both enters and approves.",
+    "competencyWeight": "[DE] Competency weight",
+    "competencyWeightHint": "[DE] The competency side's share of the final score; blank means 50/50.",
+    "employeeCanViewResults": "[DE] Reviewed employees can view their results",
+    "employeeCanDownloadPdf": "[DE] Reviewed employees can download the PDF report",
+    "minEvaluators": "[DE] Minimum evaluators required for a report",
+    "minEvaluatorsHint": "[DE] The minimum completed forms per category; the \"Self\" category is just on/off.",
+    "next": "[DE] Next",
+    "finish": "[DE] Save and finish"
+  },
+  "detail": {
+    "col": {
+      "employee": "[DE] Employee",
+      "competencyProgress": "[DE] Competency progress",
+      "goalProgress": "[DE] Goal status",
+      "status": "[DE] Status",
+      "finalScore": "[DE] Score"
+    },
+    "participants": "[DE] Participants",
+    "noParticipants": "[DE] No participants added yet.",
+    "addParticipants": "[DE] Add participants",
+    "publish": "[DE] Publish review cycle",
+    "published": "[DE] Review cycle published.",
+    "forceComplete": "[DE] Complete review cycle",
+    "forceCompleted": "[DE] {{count}} participant(s) completed.",
+    "detailedReport": "[DE] Detailed report",
+    "summaryReport": "[DE] Summary report"
+  },
+  "addParticipants": {
+    "title": "[DE] Add participants",
+    "pick": "[DE] Pick a participant",
+    "search": "[DE] Search by name...",
+    "noResults": "[DE] No results.",
+    "remove": "[DE] Remove",
+    "includeGoals": "[DE] Include in the goal flow",
+    "addEvaluator": "[DE] Add evaluator...",
+    "success": "[DE] Participants added."
+  },
+  "goals": {
+    "title": "[DE] Goals",
+    "empty": "[DE] No goals added yet.",
+    "target": "[DE] Target value",
+    "actual": "[DE] Actual value",
+    "points": "[DE] Points",
+    "resultComment": "[DE] Result comment",
+    "approve": "[DE] Approve goals",
+    "approveResults": "[DE] Approve results",
+    "approved": "[DE] Goals approved.",
+    "resultsApproved": "[DE] Goal results approved.",
+    "enterResult": "[DE] Enter result",
+    "resultEntered": "[DE] Goal result saved."
+  },
+  "fillForm": {
+    "title": "[DE] Evaluation form",
+    "score": "[DE] Score",
+    "complete": "[DE] Complete",
+    "submitted": "[DE] Form submitted.",
+    "alreadyCompleted": "[DE] This form is already completed."
+  },
+  "my": {
+    "title": "[DE] Performance",
+    "subtitle": "[DE] Forms assigned to me, my goals, and my results.",
+    "manage": "[DE] Manage review cycles",
+    "assignmentsTab": "[DE] Assigned forms",
+    "goalsTab": "[DE] My goals",
+    "resultsTab": "[DE] My results",
+    "assignmentsEmpty": "[DE] You have no forms assigned right now.",
+    "goalsEmpty": "[DE] You are not a participant in any goal-tracking cycle yet.",
+    "resultsEmpty": "[DE] You haven't taken part in a review cycle yet.",
+    "fillForm": "[DE] Fill form",
+    "competencyProgress": "[DE] Competency progress {{value}}%",
+    "downloadReport": "[DE] Download report"
+  }
+}

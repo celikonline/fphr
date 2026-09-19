@@ -30,6 +30,7 @@ i18n
       "workflow",
       "notifications",
       "leave",
+      "performance",
     ],
     interpolation: {
       escapeValue: false,

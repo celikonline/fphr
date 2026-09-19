@@ -17,6 +17,12 @@ public sealed class AssignmentsController : ApiControllerBase
 {
     private ICurrentUser CurrentUser => HttpContext.RequestServices.GetRequiredService<ICurrentUser>();
 
+    /// <summary>Formu doldurmak için gereken yetkinlik/soru verisi (performance.cycle.view gerektirmez).</summary>
+    [HttpGet("{assignmentId:guid}/form")]
+    [ProducesResponseType<AssignmentFormDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetForm(Guid cycleId, Guid assignmentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetAssignmentFormQuery(cycleId, assignmentId, CurrentUser.EmployeeId ?? Guid.Empty), ct));
+
     /// <summary>Bir atamanın tüm sorularını tek seferde cevaplar (yetkinlik formu → tamamla).</summary>
     [HttpPost("{assignmentId:guid}/submit")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

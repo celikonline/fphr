@@ -20,4 +20,9 @@ public sealed class MyAssignmentsController : ApiControllerBase
     [HttpGet("/api/v{version:apiVersion}/performance/my-goals")]
     [ProducesResponseType<IReadOnlyList<MyGoalCycleDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListGoals(CancellationToken ct) => FromResult(await Dispatcher.Query(new ListMyGoalsQuery(), ct));
+
+    /// <summary>"Sonuçlarım": kendi katılımcı kayıtlarım (ilerleme + görünürse puan).</summary>
+    [HttpGet("/api/v{version:apiVersion}/performance/my-results")]
+    [ProducesResponseType<IReadOnlyList<MyReviewResultDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListResults(CancellationToken ct) => FromResult(await Dispatcher.Query(new ListMyReviewResultsQuery(), ct));
 }
