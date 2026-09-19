@@ -65,6 +65,7 @@ internal static class IdentityTables
     public const int PhoneLength = 30;
     public const int TaxNumberLength = 20;
     public const string AccessSettingsColumn = "access_settings";
+    public const string SecurityPolicyColumn = "security_policy";
 }
 
 public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
@@ -86,6 +87,9 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         // Erişim ayarları: tek jsonb kolon (owned/JSON column). Yeni anahtar eklemek migration istemez
         // (eksik alanlar C# varsayımına düşer); yeni bir ayar "bölümü" eklemek ayrı bir OwnsOne(...).ToJson() ister.
         b.OwnsOne(x => x.AccessSettings, a => a.ToJson(IdentityTables.AccessSettingsColumn));
+
+        // Güvenlik politikası: AccessSettings ile aynı tek-jsonb-kolon kalıbı (senseik-051).
+        b.OwnsOne(x => x.SecurityPolicy, a => a.ToJson(IdentityTables.SecurityPolicyColumn));
 
         b.Ignore(x => x.DomainEvents);
     }

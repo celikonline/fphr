@@ -1,4 +1,4 @@
-import { Link, NavLink as RouterNavLink, Outlet } from "react-router";
+import { Link, NavLink as RouterNavLink } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorage } from "@mantine/hooks";
@@ -11,6 +11,7 @@ import { useWorkflowInboxCount } from "@/hooks/use-workflow-inbox-count";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
+import MfaSetupGuard from "@/components/mfa-setup-guard";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -341,7 +342,7 @@ export default function AppLayout() {
             <main className="min-w-0 flex-1 overflow-auto">
               {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
               <RouteBoundary>
-                <Outlet />
+                <MfaSetupGuard />
               </RouteBoundary>
             </main>
           </div>

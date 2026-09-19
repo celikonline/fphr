@@ -128,6 +128,7 @@ function toFeatures(me: MeResponse): MeFeatures {
   return {
     access: { ...EMPTY_ACCESS, ...(me.features?.access ?? {}) },
     accessSettingsBypass: me.features?.accessSettingsBypass ?? false,
+    mfaSetupRequired: me.features?.mfaSetupRequired ?? false,
   };
 }
 

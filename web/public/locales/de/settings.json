@@ -63,6 +63,16 @@
       }
     }
   },
+  "securityPolicy": {
+    "title": "Sicherheitsrichtlinie",
+    "subtitle": "Zwei-Faktor-Authentifizierung (2FA) für bestimmte Rollen verpflichtend machen.",
+    "notice": "Benutzer mit einer verpflichtenden Rolle, deren 2FA ausgeschaltet ist, werden bis zum Abschluss der Einrichtung auf die Kontoseite geleitet und erreichen keine andere Seite.",
+    "readOnly": "Sie können die Sicherheitsrichtlinie einsehen, aber nicht ändern.",
+    "loadError": "Sicherheitsrichtlinie konnte nicht geladen werden.",
+    "saveSuccess": "Sicherheitsrichtlinie gespeichert.",
+    "saveError": "Sicherheitsrichtlinie konnte nicht gespeichert werden.",
+    "rolesTitle": "Rollen mit verpflichtender 2FA"
+  },
   "supportAccess": {
     "title": "Support-Zugriff",
     "subtitle": "Genehmigen oder widerrufen Sie Anfragen des Sense-Support-Teams auf Zugriff auf Ihr Unternehmenskonto.",

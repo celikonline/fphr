@@ -113,4 +113,12 @@ export type AccessSettingKey = keyof AccessSettings;
 export interface MeFeatures {
   access: AccessSettings;
   accessSettingsBypass: boolean;
+  /** senseik-051: caller's role requires 2FA (tenant security policy) but MFA is currently off — the app
+   * must route them to the MFA setup screen before anything else. */
+  mfaSetupRequired: boolean;
+}
+
+/** Mirrors `SecurityPolicyDto` (Identity): tenant-wide roles for which 2FA is mandatory. */
+export interface SecurityPolicy {
+  requireMfaForRoles: string[];
 }

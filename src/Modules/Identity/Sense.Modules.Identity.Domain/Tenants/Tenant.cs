@@ -55,6 +55,13 @@ public sealed class Tenant : AggregateRoot<Guid>
     /// </summary>
     public TenantAccessSettings AccessSettings { get; private set; } = new();
 
+    /// <summary>
+    /// Güvenlik politikası sayfası (jsonb, ayrı kolon): zorunlu 2FA rol listesi (senseik-051).
+    /// KASITLI: <see cref="TenantSecurityPolicy.Default"/> paylaşılan tekil örneğini burada ATAMA — <see cref="AccessSettings"/>
+    /// ile aynı gerekçe (EF Core change tracker'ın paylaşılan "owned" referansla karışması).
+    /// </summary>
+    public TenantSecurityPolicy SecurityPolicy { get; private set; } = new();
+
     public DateTime? SuspendedAt { get; private set; }
 
     public string? SuspendReason { get; private set; }
@@ -104,6 +111,9 @@ public sealed class Tenant : AggregateRoot<Guid>
 
     /// <summary>Erişim ayarları sayfası "Kaydet" eylemi: 11 anahtar birlikte, anında etkili biçimde değiştirilir.</summary>
     public void UpdateAccessSettings(TenantAccessSettings settings) => AccessSettings = settings;
+
+    /// <summary>Güvenlik politikası sayfası "Kaydet" eylemi: zorunlu 2FA rol listesi anında etkili biçimde değiştirilir.</summary>
+    public void UpdateSecurityPolicy(TenantSecurityPolicy policy) => SecurityPolicy = policy;
 
     public Result Activate()
     {

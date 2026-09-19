@@ -990,7 +990,30 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                                 .HasConstraintName("fk_tenants_tenants_id");
                         });
 
+                    b.OwnsOne("Sense.Modules.Identity.Domain.Tenants.TenantSecurityPolicy", "SecurityPolicy", b1 =>
+                        {
+                            b1.Property<Guid>("TenantId");
+
+                            b1.PrimitiveCollection<string>("RequireMfaForRoles")
+                                .IsRequired();
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("tenants", "identity");
+
+                            b1
+                                .ToJson("security_policy")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId")
+                                .HasConstraintName("fk_tenants_tenants_id");
+                        });
+
                     b.Navigation("AccessSettings")
+                        .IsRequired();
+
+                    b.Navigation("SecurityPolicy")
                         .IsRequired();
                 });
 

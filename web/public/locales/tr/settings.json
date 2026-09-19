@@ -63,6 +63,16 @@
       }
     }
   },
+  "securityPolicy": {
+    "title": "Güvenlik politikası",
+    "subtitle": "Belirli roller için iki adımlı doğrulamayı (2FA) zorunlu kılın.",
+    "notice": "Zorunlu kılınan bir rolde 2FA kapalıyken oturum açan kullanıcılar, kurulumu tamamlayana kadar hesap ekranı dışındaki sayfalara erişemez.",
+    "readOnly": "Güvenlik politikasını görüntüleyebilirsiniz ancak değiştirme yetkiniz yok.",
+    "loadError": "Güvenlik politikası yüklenemedi.",
+    "saveSuccess": "Güvenlik politikası kaydedildi.",
+    "saveError": "Güvenlik politikası kaydedilemedi.",
+    "rolesTitle": "2FA zorunlu roller"
+  },
   "supportAccess": {
     "title": "Destek erişimi",
     "subtitle": "Sense destek ekibinin şirketinizin hesabına erişim taleplerini onaylayın veya iptal edin.",
