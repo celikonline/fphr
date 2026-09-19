@@ -1,0 +1,17 @@
+{
+  "id": "senseik-059",
+  "title": "ATS raporları (R5, roadmap #94): Recruitment modülü Raporlar menüsüne Genel bakış (ilan x aşama), Günlük sayılar ve Aday listesi dışa aktarımı IReportProvider'larını ekler",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/recruitment-reports",
+  "worktree": ".claude/worktrees/wf_9fd15ce6-2c5-5",
+  "acceptance": [
+    "recruitment.overview, recruitment.daily_counts, recruitment.candidates_export sağlayıcıları Reporting kataloğunda listeleniyor; her biri sunucu tarafında RequiredPermission ile korunuyor (overview/daily_counts recruitment.applications.read, aday dışa aktarımı recruitment.candidates.read) ve her sorgu TenantId ile sınırlı",
+    "Genel bakış ilan başına güncel aşamalara göre başvuru sayısı + toplam veriyor (isteğe bağlı başvuru tarihi aralığı); günlük sayılar seçilen aralıktaki her gün için (sıfır günler dahil) yeni başvuru/aday sayısı veriyor (zorunlu aralık); aday dışa aktarımı iletişim/kaynak/etiket/başvuru+aşama satırları veriyor (isteğe bağlı oluşturulma aralığı)",
+    "Başlık, sayfa ve enum metinleri SharedResource{,.en}.resx'te; rapor başlık/açıklamaları web public/locales/{tr,en,de}/reports.json catalog.recruitment.* altında",
+    "Docker'sız birim testleri katalog sözleşmesini (anahtarlar, izinler, kategori, tarih aralığı zorunluluğu) doğruluyor; PostgreSQL gerektiren üretim testleri (RecruitmentReportProviderTests, kiracı izolasyonu dahil) yazıldı"
+  ],
+  "merge_gate": "dotnet build (Sense.Api + Recruitment.Tests) + Recruitment.Tests (Category!=Integration) + Tests.Architecture + pnpm exec tsc --noEmit + eslint src yeşil; Docker'lı RecruitmentReportProviderTests merge sonrası Docker açıkken çalıştırılmalı (bu oturumda çalıştırılamadı)",
+  "handoff": "docs/handoffs/recruitment-reports.md",
+  "source": "docs/analysis/kolayik-video/11.7-yol-haritasi.md #94; 11.3.11-ats-ishe-alim.md; faz6-durum-takibi.md R5"
+}
