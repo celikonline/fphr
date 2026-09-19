@@ -165,7 +165,11 @@ export function LeaveRequestDialog({
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile}>
+    // senseik-041 Bug 3: this dialog has two date pickers (start/end) whose calendar popovers are portalled outside
+    // the modal's own DOM subtree; a stray click meant only to dismiss an open calendar could otherwise land on
+    // Mantine's outside-click overlay and silently close the whole form, discarding everything typed so far.
+    // closeOnClickOutside={false} keeps the explicit Cancel button / Escape as the only ways to discard the draft.
+    <Modal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile} closeOnClickOutside={false}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {dialogDescription}
