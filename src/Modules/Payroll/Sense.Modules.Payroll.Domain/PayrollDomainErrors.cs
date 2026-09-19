@@ -7,6 +7,12 @@ public static class PayrollDomainErrors
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
     public const string PeriodAlreadyOpen = "payroll.errors.period_already_open";
+    public const string PeriodYearOutOfRange = "payroll.errors.period_year_out_of_range";
+
+    /// <summary>A statutory LegislationParameter has no value for the requested period/date (422, not a 500).</summary>
+    public const string LegislationParameterMissing = "payroll.errors.legislation_parameter_missing";
+
+    public const string SeveranceTerminationDateInvalid = "payroll.errors.severance_termination_date_invalid";
     public const string PeriodNotApproved = "payroll.errors.period_not_approved";
     public const string PeriodNotPaid = "payroll.errors.period_not_paid";
     public const string PayslipNotFound = "payroll.payslip.not_found";
@@ -48,6 +54,12 @@ public static class PayrollLimits
 {
     /// <summary>Calendar days assumed per month until Attendance provides the real calendar (roadmap: Payroll depends on Attendance, Faz 2).</summary>
     public const int DefaultCalendarDaysInMonth = 30;
+
+    /// <summary>Earliest payroll period year that can be opened (first year the product is used).</summary>
+    public const int MinPeriodYear = 2024;
+
+    /// <summary>A hypothetical severance exit date may be at most this many days ahead of today.</summary>
+    public const int MaxSeveranceTerminationDaysAhead = 366;
 
     public const int ExternalPayrollCodeMaxLength = 50;
     public const int NotesMaxLength = 2000;

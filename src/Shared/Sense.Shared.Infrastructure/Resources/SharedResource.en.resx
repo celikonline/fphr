@@ -739,6 +739,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.period.not_open" xml:space="preserve"><value>The payroll period is not open.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Payslip not found.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Period month must be between 1 and 12.</value></data>
+  <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Period year must be between {minYear} and {maxYear}.</value></data>
+  <data name="payroll.errors.legislation_parameter_missing" xml:space="preserve"><value>No statutory parameter is defined for {date}: {parameter}. Payroll/severance cannot be calculated; update the legislation parameters.</value></data>
+  <data name="payroll.errors.severance_termination_date_invalid" xml:space="preserve"><value>The termination date cannot be before the hire date and can be at most one year ahead.</value></data>
   <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Gross amount must be greater than zero.</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Worked days must be greater than zero.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>This meal benefit variant is not supported yet.</value></data>

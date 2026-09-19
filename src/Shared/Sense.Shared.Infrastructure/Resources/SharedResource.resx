@@ -748,6 +748,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.period.not_open" xml:space="preserve"><value>Bordro dönemi açık değil.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Bordro satırı bulunamadı.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Dönem ayı 1-12 aralığında olmalıdır.</value></data>
+  <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Dönem yılı {minYear} ile {maxYear} arasında olmalıdır.</value></data>
+  <data name="payroll.errors.legislation_parameter_missing" xml:space="preserve"><value>{date} tarihi için yasal parametre tanımlı değil: {parameter}. Bordro/tazminat hesabı yapılamaz; yasal parametreleri güncelleyin.</value></data>
+  <data name="payroll.errors.severance_termination_date_invalid" xml:space="preserve"><value>Çıkış tarihi işe giriş tarihinden önce olamaz ve en fazla bir yıl ilerisi için hesaplanabilir.</value></data>
   <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Brüt tutar sıfırdan büyük olmalıdır.</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Çalışılan gün sayısı sıfırdan büyük olmalıdır.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>Bu yemek ödemesi varyantı henüz desteklenmiyor.</value></data>

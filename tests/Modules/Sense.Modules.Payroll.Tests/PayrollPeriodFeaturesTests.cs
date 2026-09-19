@@ -2,6 +2,7 @@ using NSubstitute;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Shouldly;
 using Xunit;
@@ -70,10 +71,61 @@ public sealed class PayrollPeriodFeaturesTests
         var tenant = Substitute.For<Sense.Shared.Contracts.Context.ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        var handler = new OpenPayrollPeriodHandler(tenant, periods);
+        var handler = new OpenPayrollPeriodHandler(tenant, periods, TimeProvider.System);
         var result = await handler.Handle(new OpenPayrollPeriodCommand(2026, 3), CancellationToken.None);
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodAlreadyOpen);
+    }
+
+    [Theory]
+    [InlineData(2001)]
+    [InlineData(2023)]
+    [InlineData(2999)]
+    public async Task OpenPayrollPeriodHandler_WhenTheYearIsOutsideTheSupportedWindow_IsRejectedAsValidation(int year)
+    {
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        var tenant = Substitute.For<Sense.Shared.Contracts.Context.ITenantContext>();
+        tenant.TenantId.Returns(TenantId);
+
+        var handler = new OpenPayrollPeriodHandler(tenant, periods, TimeProvider.System);
+        var result = await handler.Handle(new OpenPayrollPeriodCommand(year, 6), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodYearOutOfRange);
+        result.Error.Type.ShouldBe(Sense.Shared.Kernel.Results.ErrorType.Validation);
+        periods.DidNotReceive().Add(Arg.Any<PayrollPeriod>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllPayslipsHandler_WhenNoLegislationParameterExistsForThePeriod_ReturnsABusinessRuleError()
+    {
+        var period = PayrollPeriod.Create(TenantId, 2025, 12).Value;
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        periods.FindByIdAsync(period.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(period));
+        var employeeDirectory = Substitute.For<IEmployeeDirectory>();
+        employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(TenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Guid>>([Guid.NewGuid()]));
+        var tenant = Substitute.For<Sense.Shared.Contracts.Context.ITenantContext>();
+        tenant.TenantId.Returns(TenantId);
+
+        // No brackets for 2025 in the legislation store: the reader returns null for every key.
+        var reader = Substitute.For<Sense.Shared.Contracts.Legislation.ILegislationParameterReader>();
+        var calculation = new PayrollPeriodCalculationService(
+            Substitute.For<IPayslipRepository>(), Substitute.For<IPayslipCalculationTraceRepository>(),
+            Substitute.For<IEmployeePayrollProfileRepository>(), Substitute.For<IPayslipDirtyFlagRepository>(),
+            Substitute.For<IEmployeeSalaryLookup>(), reader, tenant, TimeProvider.System,
+            Substitute.For<Sense.Modules.Payroll.Application.Ports.IWorkedTimeReader>(), Substitute.For<Sense.Modules.Payroll.Application.Ports.IAbsenceDaysReader>(),
+            Substitute.For<Sense.Modules.Payroll.Application.Ports.IExpensePayoutReader>(), periods,
+            Substitute.For<IGarnishmentOrderRepository>(), Substitute.For<IEmployeeDisabilityLookup>(),
+            Substitute.For<Sense.Modules.Payroll.Domain.IEmployeeUnionMembershipRepository>(),
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
+
+        var handler = new RecalculateAllPayslipsHandler(tenant, periods, employeeDirectory, calculation);
+        var result = await handler.Handle(new RecalculateAllPayslipsCommand(period.Id), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(PayrollDomainErrors.LegislationParameterMissing);
+        result.Error.Type.ShouldBe(Sense.Shared.Kernel.Results.ErrorType.Rule);
     }
 }
