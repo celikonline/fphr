@@ -1,0 +1,17 @@
+{
+  "id": "senseik-022",
+  "title": "Menüden açılan formlarda tarayıcı geri tuşu desteği",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/form-browser-back-support",
+  "worktree": ".claude/worktrees/form-back-button",
+  "acceptance": [
+    "Bir liste sayfasından form/dialog açıldığında tarayıcı geri tuşu (veya uygulama içi bir 'geri' butonu) formu kapatıp bir önceki görünüme dönüyor",
+    "Şu anki davranış (modal state ile açılıyor, URL değişmiyor, geri tuşu modalı kapatmıyor) düzeltiliyor — ya URL/query param senkronizasyonu (örn. ?dialog=create) ya da history.pushState tabanlı bir çözüm",
+    "Gerçek route değişimlerindeki (employees/:id/:tab?) mevcut geri tuşu davranışı bozulmuyor",
+    "En az 2-3 yüksek trafikli form (izin talebi, çalışan oluşturma) bu davranışa kavuşuyor — kapsam net değilse önce bunlarla başla"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: form açıp geri tuşuna basınca form kapanıyor, sayfa dışına çıkmıyor",
+  "handoff": "docs/handoffs/form-browser-back-support.md",
+  "source": "Kullanıcı isteği (2026-09-18) — React Router v7, form açma paterni ayrı route değil modal/dialog (örn. web/src/pages/leave/my-leave.tsx → LeaveRequestDialog state ile açılıyor, URL değişmiyor), web/src/App.tsx route tablosu"
+}

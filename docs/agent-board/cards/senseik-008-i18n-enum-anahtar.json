@@ -2,7 +2,7 @@
   "id": "senseik-008",
   "title": "i18n enum anahtarı sızıntılarının tamamı (B-02, H-03)",
   "owner": "pc-b",
-  "state": "ready",
+  "state": "review",
   "branch": "b/i18n-enum-leaks",
   "worktree": ".claude/worktrees/i18n-fix",
   "acceptance": [

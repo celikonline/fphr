@@ -1,0 +1,16 @@
+{
+  "id": "senseik-037",
+  "title": "Dini bayramlar (Ramazan/Kurban) çok yıllı takvime yüklensin",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/holiday-calendar-multiyear",
+  "worktree": ".claude/worktrees/holiday-calendar",
+  "acceptance": [
+    "Ramazan ve Kurban Bayramı kayıtları artık sadece 2026 için değil, en az 5 yıl ileriye (2027-2031) yüklü",
+    "Sabit tarihli resmi tatiller (1 Ocak, 23 Nisan vb.) gibi 'Her yıl' tekrar tipine geçirilemiyorsa (hicri takvime bağlı, sabit gün değil), her yıl için ayrı satır + 'takvim güncellenmeli' uyarı mekanizması eklendi",
+    "İleri tarihli izin talebi verildiğinde, tarihin resmi tatil takviminde tanımsız bir yıla denk gelmesi durumunda kullanıcıya/İK'ya bir uyarı gösteriliyor"
+  ],
+  "merge_gate": "dotnet test (Organization/Leave) + 2027-2031 arası dini bayram tarihleri demo seed'de doğru görünüyor",
+  "handoff": "docs/handoffs/holiday-calendar-multiyear.md",
+  "source": "1. Tur Test Bulgu Dokümanı § A-07 (YÜKSEK, operasyonel — sistem bugünden itibaren canlı risk taşıyor çünkü ileri tarihli izin talebine izin veriyor)."
+}

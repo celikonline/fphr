@@ -1,0 +1,15 @@
+{
+  "id": "senseik-055",
+  "title": "IEmployeeBirthDateLookup DI kaydı 3 Leave entegrasyon test dosyasında eksik — 18 test kırık",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/birthdate-lookup-test-di-fix",
+  "worktree": ".claude/worktrees/birthdate-lookup-di-fix",
+  "acceptance": [
+    "LeaveIntegrationTests.cs, LeaveManagementIntegrationTests.cs, LeaveRequestIntegrationTests.cs test fixture'larına IEmployeeBirthDateLookup DI kaydı eklendi (OvertimeTests.cs'teki düzeltmeyle aynı desen)",
+    "Bu üç dosyadaki 18 test artık DI hatası vermeden çalışıyor"
+  ],
+  "merge_gate": "dotnet test (Leave modülü tam koşu) — bu üç dosyada DI kaynaklı hata kalmıyor",
+  "handoff": "docs/handoffs/birthdate-lookup-test-di-fix.md",
+  "source": "senseik-012/014 implementasyon raporunda tespit edildi (2026-09-19) — senseik-007 (yaş istisnası) yeni IEmployeeBirthDateLookup portunu ekledi ama bu üç test dosyasının fixture'ına DI kaydını eklemedi. senseik-012/014 ajanı sadece kendi ihtiyacı olan OvertimeTests.cs'i düzeltti, kapsam dışı bıraktı."
+}

@@ -1,0 +1,16 @@
+{
+  "id": "senseik-051",
+  "title": "Yönetici/İK rolleri için 2FA zorunluluk politikası",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/mfa-enforcement-policy",
+  "worktree": ".claude/worktrees/mfa-policy",
+  "acceptance": [
+    "Ayarlar → Güvenlik politikası altında, belirli roller (Owner, Admin, HR Manager, Payroll Specialist) için 2FA'yı zorunlu kılan bir ayar eklendi",
+    "Zorunlu kılınan bir rolde 2FA kapalıyken kullanıcı giriş yaptığında, kritik işlemlere erişmeden önce 2FA kurulumuna yönlendiriliyor",
+    "Mevcut 2FA altyapısı (profil sayfasındaki 'Etkinleştir') değiştirilmiyor, sadece zorunluluk katmanı ekleniyor"
+  ],
+  "merge_gate": "dotnet test (Identity) + demo'da zorunlu rol için 2FA kurulum akışı test ediliyor",
+  "handoff": "docs/handoffs/mfa-enforcement-policy.md",
+  "source": "1. Tur Test Bulgu Dokümanı § E-03 (YÜKSEK — 56 kullanıcının tamamında 2FA kapalı, özel nitelikli veri tutan bir sistemde risk)."
+}

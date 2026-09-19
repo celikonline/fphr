@@ -2,7 +2,7 @@
   "id": "senseik-014",
   "title": "Puantaj motoru: ara dinlenme, gece çalışması, denkleştirme, anomali (G-02)",
   "owner": "pc-b",
-  "state": "ready",
+  "state": "review",
   "branch": "b/attendance-timesheet-engine",
   "worktree": ".claude/worktrees/timesheet-engine",
   "acceptance": [

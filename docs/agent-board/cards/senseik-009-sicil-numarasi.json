@@ -2,7 +2,7 @@
   "id": "senseik-009",
   "title": "Sicil numarası alanı + uyruk/yabancı kimlik (F-02)",
   "owner": "pc-a",
-  "state": "ready",
+  "state": "review",
   "branch": "a/employee-sicil-uyruk",
   "worktree": ".claude/worktrees/employee-fields",
   "acceptance": [

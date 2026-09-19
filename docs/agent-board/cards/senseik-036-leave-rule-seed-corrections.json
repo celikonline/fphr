@@ -1,0 +1,22 @@
+{
+  "id": "senseik-036",
+  "title": "Mevzuat izin türü seed düzeltme paketi (babalık, doğum, süt, engelli çocuk, iş arama, ardışık gün, hastalık)",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/leave-rule-seed-corrections",
+  "worktree": ".claude/worktrees/leave-rule-corrections",
+  "acceptance": [
+    "Babalık izni 10 gün → 5 gün (İş K. Ek Madde 2)",
+    "Doğum izni 168 gün → 112 gün (16 hafta), çoğul gebelikte 126 gün (18 hafta) — tekil/çoğul ayrımı destekleniyor (İş K. m.74)",
+    "Süt izni yeni tür olarak eklendi: günde 1.5 saat, 1 yaşından küçük çocuk için (İş K. m.74/son) — saatlik birim desteği zaten var",
+    "Engelli/süreğen hastalıklı çocuk izni yeni tür: yılda 10 gün (İş K. Ek Madde 2 son fıkra)",
+    "Yeni iş arama izni: 'Limitsiz' yerine günde en az 2 saat + yalnızca ihbar süresi içinde kısıtı (İş K. m.27)",
+    "Yıllık izinde 'En az ardışık gün' alanı 10 olarak dolduruldu ve motor bu kuralı denetliyor (İş K. m.56/3)",
+    "Hastalık izni: 'Hassas tür (sağlık verisi)' kutusu işaretlendi (KVKK m.6); 6 hafta devamsızlık eşiği için bir sayaç/uyarı eklendi (İş K. m.25/I-b)",
+    "Rol açıklamalarında 'GDPR' geçen yerler 'KVKK' olarak düzeltildi",
+    "28 Ekim arifesi (13:00'ten itibaren yarım gün, 2429 sayılı Kanun m.2/A) resmi tatil takvimine eklendi — Ramazan/Kurban arifeleriyle aynı mantık"
+  ],
+  "merge_gate": "dotnet test (Leave modülü) + demo seed'de yeni/düzeltilmiş türler doğru değerlerle görünüyor",
+  "handoff": "docs/handoffs/leave-rule-seed-corrections.md",
+  "source": "1. Tur Test Bulgu Dokümanı § A-02, A-03, A-04, A-05, A-06, A-08, A-09, A-11, E-05, E-07 (2026-09-18). Açık sorular (araştırma gerektirir, bu kartta netleştirilsin): A-12 bedelli askerlik 21 gün güncel mevzuata göre doğru mu, A-13 'Koruyucu aile izni 10 gün' İş Kanunu'nda karşılığı var mı yoksa evlat edinme izniyle (m.74, 8 hafta) mi karıştırılmış. NOT: senseik-007 (age exception, review'da) ve wave-2 senseik-012/014 (Attendance/Leave, aktif) ile aynı modüle dokunuyor — bunlar merge olmadan başlatılırsa dikkatli rebase gerekir."
+}

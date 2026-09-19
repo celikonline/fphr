@@ -1,0 +1,17 @@
+{
+  "id": "senseik-024",
+  "title": "Takvim: Outlook tarzı gün/hafta/ay hücreli görünüm",
+  "owner": "pc-b",
+  "state": "review",
+  "branch": "b/leave-calendar-outlook-view",
+  "worktree": ".claude/worktrees/leave-calendar-view",
+  "acceptance": [
+    "İzin takvimi (leave-calendar.tsx) gün, hafta ve ay görünümleri arasında geçiş yapabiliyor (Outlook takvimi gibi)",
+    "Her görünüm hücre tabanlı bir ızgara (grid) ile gösteriliyor",
+    "Mevcut 'lane' algoritması (çakışan izinlerin yan yana dizilmesi) ay görünümünde korunuyor; hafta/gün görünümlerinde uygun şekilde uyarlanıyor",
+    "Performans: büyük çalışan sayısında (58+ demo) gün/hafta görünümü de makul sürede render oluyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: 3 görünüm arası geçiş çalışıyor, veri doğru görüntüleniyor",
+  "handoff": "docs/handoffs/leave-calendar-outlook-view.md",
+  "source": "Kullanıcı isteği (2026-09-18) — web/src/pages/leave/leave-calendar.tsx (route: /app/leave/calendar) şu an sadece custom ay bazlı CSS Grid görünümü sunuyor, hazır bir takvim kütüphanesi (Mantine dates/FullCalendar) kullanmıyor, gün/hafta görünümü yok"
+}

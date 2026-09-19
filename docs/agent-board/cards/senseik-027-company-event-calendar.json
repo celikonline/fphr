@@ -1,0 +1,18 @@
+{
+  "id": "senseik-027",
+  "title": "Şirket etkinlik takvimi (yeni özellik — sıfırdan)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/company-event-calendar",
+  "worktree": ".claude/worktrees/company-event-calendar",
+  "acceptance": [
+    "Yeni bir 'Şirket Etkinlik Takvimi' ekranı: ay görünümlü, hücreli grid, renk kodlu etkinlik türleri (Doğum Günü, Şirket Etkinliği, Toplantı, İzin Başlangıcı vb.)",
+    "Doğum günleri ve izin başlangıç/bitiş tarihleri ilgili modüllerden (Employee, Leave) otomatik olarak takvime yansıyor",
+    "Manuel etkinlik oluşturma (başlık, tarih, tür, görünürlük) — 'Etkinlik Oluştur' akışı",
+    "Etkinlikler herkese görünür kılınabiliyor (tenant geneli) veya belirli bir gruba/departmana kısıtlanabiliyor",
+    "Outlook takvimi tarzı gün/hafta/ay geçişi (senseik-024 ile ortak bir takvim bileşeni paylaşılabilir mi değerlendirilmeli — YAGNI: gerçek ihtiyaç varsa ortaklaştır, yoksa ayrı kalsın)"
+  ],
+  "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck + eslint + demo seed'de birkaç etkinlik türü görünüyor",
+  "handoff": "docs/handoffs/company-event-calendar.md",
+  "source": "Kullanıcı isteği (2026-09-18, ekran görüntüsü ekli — Kolay İK pazarlama görseli referans). DOĞRULANDI: SenseİK'te bu özellik HİÇ YOK — web/src ve src/Modules/Announcements taramasında 'Etkinlik'/CompanyEvent/EventCalendar kavramı bulunamadı (sadece 'yetkinlik' kelimesiyle yanlış eşleşme). 11.7-yol-haritasi.md'de 'Faz 4 etkinlik takvimi' olarak zaten planlanmış ama başlanmamış."
+}

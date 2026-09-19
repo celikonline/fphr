@@ -1,0 +1,17 @@
+{
+  "id": "senseik-044",
+  "title": "Çalışan veri doğrulama: gelecek tarihli doğum tarihi, tarih senkronu, alan temizleme, e-posta Türkçe karakter",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/employee-data-validation",
+  "worktree": ".claude/worktrees/employee-validation",
+  "acceptance": [
+    "Doğum tarihi gelecek bir tarih olamaz (validasyon eklendi) VE doğum tarihi > işe başlama tarihi tutarlılık kontrolü eklendi",
+    "KRİTİK: İşe başlama tarihi değiştirildiğinde, 'İzne esas hak ediş tarihi' de otomatik güncelleniyor VEYA kullanıcıya 'İzne esas hak ediş tarihi de güncellensin mi?' onayı soruluyor — sessizce eski/yanlış kalmıyor (mevcut senseik-007'nin BirthDate wiring düzeltmesiyle aynı ruhta, farklı alan)",
+    "'İzne esas hak ediş tarihi' alanındaki X (temizle) düğmesi çalışıyor — boş değer kaydedilebiliyor, eski değer geri gelmiyor",
+    "E-posta adreslerinde Türkçe karakter (ş,ü,ç,ğ,ö,ı) girildiğinde ya reddediliyor ya da ASCII/punycode'a normalize ediliyor (RFC 5321/5322 uyumluluğu için) — posta teslim edilemez sorunu önleniyor"
+  ],
+  "merge_gate": "dotnet test (Employee modülü) + demo verisindeki mevcut Türkçe karakterli e-postalar için geriye dönük bir düzeltme/migrasyon planı not edildi",
+  "handoff": "docs/handoffs/employee-data-validation.md",
+  "source": "1. Tur Test Bulgu Dokümanı § C-01, C-02, C-03, C-04 (C-02 YÜKSEK — 274 gün fazla izin hakkı örneği doğrulanmış, gerçek veri bütünlüğü riski)."
+}

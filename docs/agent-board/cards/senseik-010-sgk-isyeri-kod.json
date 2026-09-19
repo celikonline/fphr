@@ -2,7 +2,7 @@
   "id": "senseik-010",
   "title": "SGK işyeri sicil no, meslek kodu, teşvik kodu (F-03)",
   "owner": "pc-a",
-  "state": "ready",
+  "state": "running",
   "branch": "a/sgk-workplace-codes",
   "worktree": ".claude/worktrees/sgk-workplace",
   "acceptance": [

@@ -2,7 +2,7 @@
   "id": "senseik-015",
   "title": "İSG modülü: risk değerlendirmesi, kaza/ramak kala kaydı, KKD zimmeti (G-03)",
   "owner": "pc-a",
-  "state": "ready",
+  "state": "review",
   "branch": "a/occupational-safety",
   "worktree": ".claude/worktrees/ohs-module",
   "acceptance": [

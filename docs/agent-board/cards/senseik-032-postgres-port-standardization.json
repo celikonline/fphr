@@ -1,0 +1,18 @@
+{
+  "id": "senseik-032",
+  "title": "Docker port standardizasyonu (+10000 offset) — eski dalı güncel dev'e karşı yeniden uygula",
+  "owner": "pc-a",
+  "state": "archived",
+  "branch": "a/postgres-default-port-15432-reapply",
+  "worktree": ".claude/worktrees/port-standardization",
+  "acceptance": [
+    "chore/postgres-default-port-15432 dalındaki port kalıbı (standart port + 10000: Postgres 15432, Redis 16379, MinIO 19000/19001, Mailpit 11025/18025, RabbitMQ 15672/25672, Seq 15341, API 18080, Web 13000, Jaeger/Prometheus/Loki/Grafana/OTLP karşılıkları) güncel dev dalına karşı yeniden uygulanıyor",
+    "docker-compose.yml, .env.example, docs/ci-cd.md, docs/observability.md güncelleniyor",
+    "dev'e sonradan gelen docker-compose değişiklikleriyle (örn. 5a96eb1 'repair docker-compose full-stack run') çakışmıyor — o commit'ler gözden geçirilip port kalıbı onlarla uyumlu hale getiriliyor",
+    "MinIO presigned URL'lerin public endpoint'i (19000) doğru referans aldığı doğrulanıyor",
+    "Temiz bir ortamda docker compose up + migrate + seed baştan sona çalışıyor"
+  ],
+  "merge_gate": "Temiz makinede/volume'de docker compose up sorunsuz, tüm servisler yeni portlarda erişilebilir",
+  "handoff": "docs/handoffs/postgres-port-standardization.md",
+  "source": "Eski dal: chore/postgres-default-port-15432 (commit c978f649, yazar: ozgurcelik-spec, 2026-09-17). 133 commit geride kaldığı için doğrudan merge edilmedi (2026-09-18) — dev'deki daha yeni docker-compose düzeltmeleriyle çakışma riski. Kullanıcı isteğiyle (2026-09-18) yeniden uygulanacak iş olarak karta dönüştürüldü."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "senseik-020",
+  "title": "Sol menü için küçültme/büyütme (collapse/expand) özelliği",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/sidebar-collapse-toggle",
+  "worktree": ".claude/worktrees/sidebar-collapse",
+  "acceptance": [
+    "Masaüstünde sidebar'ı kullanıcı tetikli bir buton ile daraltıp (ikon-only) genişletebiliyor (şu an collapsed durumu sadece responsive breakpoint'e göre sabit, kullanıcı kontrolü yok)",
+    "Tercih (daraltılmış/genişletilmiş) oturum boyunca veya kalıcı olarak hatırlanıyor",
+    "Mobil rail (w-14, ikon-only) davranışı bozulmuyor",
+    "Menü öğeleri daraltılmış halde tooltip ile erişilebilir kalıyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: masaüstünde toggle çalışıyor, mobilde regresyon yok",
+  "handoff": "docs/handoffs/sidebar-collapse-toggle.md",
+  "source": "Kullanıcı isteği (2026-09-18) — web/src/layouts/app-layout.tsx (NavList satır 17-37, iki <aside> satır 254-263), web/src/config/navigation.ts"
+}

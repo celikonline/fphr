@@ -1,0 +1,16 @@
+{
+  "id": "senseik-053",
+  "title": "Oturum ~30 dakikada uyarısız düşüyor, doldurulmuş form verisi kayboluyor",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/session-refresh-data-loss",
+  "worktree": ".claude/worktrees/session-refresh",
+  "acceptance": [
+    "Token/oturum yenileme döngüsü (kök neden: ~25-30 dakikalık aralıklarla token yenileme, denetim kaydındaki 'Güncelleme/User' kayıtlarının zamanlamasıyla ilişkilendirilmiş) araştırıldı ve neden bazen sessizce başarısız olup kullanıcıyı login ekranına attığı bulundu",
+    "Token yenileme başarısız olduğunda kullanıcıya bir uyarı gösteriliyor (geri sayım veya en azından bir bildirim) — sessiz atma YOK",
+    "Doldurulmuş form verisi (özellikle izin talebi gibi uzun formlar) oturum düşmesi/sayfa yenilenmesi durumunda taslak olarak korunuyor (localStorage tabanlı taslak kurtarma) veya en azından kullanıcı veri kaybı konusunda uyarılıyor"
+  ],
+  "merge_gate": "manuel/entegrasyon test: token yenileme senaryosu simüle edilip kullanıcı deneyiminin (uyarı + taslak koruma) doğru çalıştığı doğrulanıyor",
+  "handoff": "docs/handoffs/session-refresh-data-loss.md",
+  "source": "1. Tur Test Bulgu Dokümanı § E-06 (ORTA — ~35 dakikalık aktif kullanım sonrası doldurulmuş izin talebi formu kayboldu, uyarı/taslak yok)."
+}

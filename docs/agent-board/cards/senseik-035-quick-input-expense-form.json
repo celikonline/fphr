@@ -1,0 +1,19 @@
+{
+  "id": "senseik-035",
+  "title": "Formlara 'Quick Input' (serbest metin → form alanı) özelliği — pilot: Masraf/Avans Talebi",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/quick-input-expense-form",
+  "worktree": ".claude/worktrees/quick-input-expense",
+  "acceptance": [
+    "Kural tabanlı (regex/anahtar-kelime), KVKK-güvenli (veri dışarı çıkmıyor) bir parser çekirdeği: web/src/lib/quick-input/ altında tarih, tutar, süre gibi ortak alan çıkarıcılar (form-bağımsız, tekrar kullanılabilir)",
+    "Masraf/Avans Talebi formuna özel alan şeması: kategori (anahtar kelime→enum eşleme), tutar (sayı+para birimi), tarih, açıklama",
+    "Kullanıcı formun üstünde bir 'Hızlı giriş' textarea'sına serbest metin yazıp (örn. 'Dün akşam yemeği için 450 TL masraf') formu otomatik dolduruyor; doldurulamayan/belirsiz alanlar boş kalıp kullanıcı elle tamamlıyor",
+    "300 sentetik test senaryosu üreten bir script/fixture (farklı tarih formatları, eksik alan, belirsiz ifade, yazım hatası varyasyonları dahil) — golden-set olarak test dosyasına eklendi, mevcut PayrollCalculatorGoldenSetTests.cs deseniyle tutarlı",
+    "300 senaryonun en az %90'ında doğru alan çıkarımı (parser her zaman kesin olamaz — belirsiz durumda alan boş kalır, YANLIŞ değer doldurmaz; bu eşik implementasyon sırasında gerçek sonuçlara göre gözden geçirilebilir)",
+    "Parser çekirdeği, ileride başka formlara (izin talebi vb., bu kartın kapsamı dışı) genişletilebilir şekilde tasarlanıyor — ama bu kartta SADECE Masraf/Avans Talebi formuna uygulanıyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + 300 senaryolu golden-set testi >=%90 doğruluk ile geçiyor",
+  "handoff": "docs/handoffs/quick-input-expense-form.md",
+  "source": "Kullanıcı isteği (2026-09-18) — serbest metin → form alanı otomatik doldurma özelliği, 300 test senaryosu şartıyla. Form seçimi: Masraf/Avans Talebi (Expense) — izin/çalışan formları şu an başka ajanlarca (senseik-021/022, senseik-012/014) değiştiriliyor, çakışmayı önlemek için farklı bir form seçildi. LLM tabanlı parsing yerine kural tabanlı yaklaşım tercih edildi: KVKK (çalışan verisi üçüncü taraf API'ye gitmesin) ve deterministik test edilebilirlik gerekçesiyle."
+}

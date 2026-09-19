@@ -1,0 +1,18 @@
+{
+  "id": "senseik-049",
+  "title": "Denetim kaydı kapsamı genişletilsin: Employee/Leave/Overtime/Approval işlemleri hiç loglanmıyor",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/audit-log-coverage-expansion",
+  "worktree": ".claude/worktrees/audit-coverage",
+  "acceptance": [
+    "Çalışan oluşturma/düzenleme (özlük bilgisi değişiklikleri — işe giriş tarihi, doğum tarihi vb.) denetim kaydına düşüyor",
+    "İzin talebi oluşturma/onaylama/reddetme denetim kaydına düşüyor",
+    "Fazla mesai talebi oluşturma/onaylama denetim kaydına düşüyor",
+    "Denetim kaydı 'Kaynak' sütununda artık User/Role dışında Employee, Leave, Overtime, Approval değerleri de görünüyor",
+    "Detaylar sütunu genel 'X update' yerine hangi alanın değiştiği, öncesi/sonrası değeri gösteriyor (en azından kritik alanlar için: doğum tarihi, işe başlama tarihi, SGK exit code vb.)"
+  ],
+  "merge_gate": "dotnet test (Employee/Leave/Workflow) + demo'da 3+ farklı işlem türü (çalışan düzenleme, izin onayı, FM onayı) denetim kaydında doğru görünüyor",
+  "handoff": "docs/handoffs/audit-log-coverage-expansion.md",
+  "source": "1. Tur Test Bulgu Dokümanı § E-01 (KRİTİK — KVKK m.12, özel nitelikli veri sağlık/sendika bilgisi içeriyor). NOT: senseik-018 (audit-log-fix, tamamlandı) sadece Identity modülündeki (User/Role) interceptor'ı düzeltti — actor/source doğru artık ama Employee/Leave/Overtime modülleri hiç IAuditLogged değil, interceptor bu modüllerin DbContext'lerine hiç bağlı değil. Bu kart farklı/geniş bir mimari genişleme, senseik-018'in TEKRARI DEĞİL."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "senseik-021",
+  "title": "Form/modal açılışları sola dayalı olsun (ortalı değil)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/form-modal-alignment",
+  "worktree": ".claude/worktrees/form-alignment",
+  "acceptance": [
+    "Create/edit form modalları (leave-request-dialog, create-employee-dialog, employee-rule-set-dialog, leave-type-dialog vb.) tutarlı şekilde sola dayalı açılıyor",
+    "Onay/basit modallar (confirm-dialog, confirm-modal) mevcut centered davranışını koruyor — bu kart sadece FORM modallarını kapsıyor, onay dialoglarını değil",
+    "Mobil fullScreen davranışı (isMobile ? fullScreen) bozulmuyor",
+    "Tüm form modallarında tek bir ortak pattern/prop kullanılıyor (kopyala-yapıştır yerine merkezi bir varsayılan)"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: 3+ form modalı sola dayalı açılıyor, onay modalları hâlâ ortalı",
+  "handoff": "docs/handoffs/form-modal-alignment.md",
+  "source": "Kullanıcı isteği (2026-09-18) — Mantine Modal projede tutarsız 'centered' kullanımı: web/src/components/leave/leave-request-dialog.tsx, create-employee-dialog.tsx, employee-rule-set-dialog.tsx, leave-type-dialog.tsx (centered YOK, Mantine varsayılanı) vs confirm-dialog.tsx/confirm-modal.tsx (centered VAR)"
+}

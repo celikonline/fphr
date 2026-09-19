@@ -1,0 +1,18 @@
+{
+  "id": "senseik-050",
+  "title": "RBAC: HR Manager rolünden kimlik yönetimi + mali yetkilerin ayrılması (görevler ayrılığı ihlali)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/hr-manager-rbac-separation",
+  "worktree": ".claude/worktrees/hr-manager-rbac",
+  "acceptance": [
+    "HR Manager rolünden 'Create/edit users and assign roles' (herhangi bir role, System Administrator dahil, atama yapabilme) kaldırıldı veya kısıtlandı",
+    "HR Manager rolünden \"Reset a user's 2FA\" ve \"Suspend/enable users\" kimlik yönetimi yetkileri ayrı bir role (örn. sadece System Administrator) taşındı",
+    "'Edit Salary' ve 'Edit Bank Accounts' yetkileri aynı kişide birleşmiyor VEYA ikinci bir onay adımı (maker-checker) ekleniyor — mali kontrol boşluğu kapatılıyor",
+    "Payroll Specialist, Auditor, Employee rollerindeki mevcut iyi tasarım (dar kapsam) bozulmuyor — sadece HR Manager düzeltiliyor",
+    "Mevcut demo tenant'larda bu değişikliğin geriye dönük etkisi (rol yetkileri daralınca kimin ne kaybettiği) SystemRolePermissionSynchronizer üzerinden doğru senkronize ediliyor"
+  ],
+  "merge_gate": "dotnet test (Identity) + security-reviewer incelemesi + demo'da HR Manager artık System Administrator rolü atayamıyor",
+  "handoff": "docs/handoffs/hr-manager-rbac-separation.md",
+  "source": "1. Tur Test Bulgu Dokümanı § E-02 (YÜKSEK — yetki yükseltme yolu + mali kontrol boşluğu, klasik iç kontrol zafiyeti)."
+}

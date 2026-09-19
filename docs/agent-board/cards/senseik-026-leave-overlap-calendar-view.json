@@ -1,0 +1,17 @@
+{
+  "id": "senseik-026",
+  "title": "İzin talebi onay ekranında çakışan izinler için görsel takvim/hücre görünümü",
+  "owner": "pc-b",
+  "state": "review",
+  "branch": "b/leave-overlap-calendar-view",
+  "worktree": ".claude/worktrees/leave-overlap-view",
+  "acceptance": [
+    "İzin talebi detay/onay ekranında (leave-request-detail.tsx) çakışan izinler artık sadece metin listesi değil, ekran görüntüsündeki gibi gün-gün hücreli bir takvim/grid ile gösteriliyor (tarih sütunları, her çalışan için renkli izin çubuğu)",
+    "'Çakışan İzinler' ve 'Onay süreci' arasında tab geçişi (mevcut tasarımda varsa korunuyor, yoksa eklenmeli)",
+    "Çok sayıda çakışan çalışan varsa 'Tümünü Gör (N)' ile genişletilebiliyor",
+    "Mevcut teamOverlap verisi (detail.teamOverlap.employees, count) backend'den zaten geliyor — API değişikliği muhtemelen gerekmez, sadece görselleştirme; gerekirse teamOverlap'e tarih aralığı/departman verisi eklenir"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: çakışan izni olan bir talep açılıp grid görünümünün doğru render olduğu doğrulanıyor",
+  "handoff": "docs/handoffs/leave-overlap-calendar-view.md",
+  "source": "Kullanıcı isteği (2026-09-18, ekran görüntüsü ekli — Kolay İK referans tasarımı) — web/src/components/leave/leave-request-detail.tsx satır 106-129 (mevcut teamOverlap metin listesi, i18n key leave:detail.overlappingLeaves.*). Not: ayrı/bağımsız bir 'çakışma kontrol ekranı' yok, sadece bu talep-detay panelindeki liste ve genel web/src/pages/leave/leave-calendar.tsx (ay görünümü, talep-özel değil) var."
+}

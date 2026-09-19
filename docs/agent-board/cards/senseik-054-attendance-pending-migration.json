@@ -1,0 +1,16 @@
+{
+  "id": "senseik-054",
+  "title": "Attendance modülünün eksik EF migration'ı — Leave.Tests'teki testcontainer kurulumunu her seferinde kırıyor",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/attendance-pending-migration-fix",
+  "worktree": ".claude/worktrees/attendance-pending-migration",
+  "acceptance": [
+    "AttendanceDbContext modeli ile mevcut migration geçmişi arasındaki fark (MonthlyTimesheetApproval, commit c72791f'ten kalma) için gerçek bir EF migration üretildi (dotnet ef migrations add, elle yazılmadı)",
+    "TestFixture'ın paylaşılan Postgres container kurulumu artık PendingModelChangesWarning hatası vermiyor",
+    "Sense.Modules.Leave.Tests tam koşusu bu hatadan kaynaklanan ~38 başarısızlığı artık vermiyor (hatalar gerçek regresyon değilse)"
+  ],
+  "merge_gate": "dotnet test (Attendance + Leave modülleri) — PendingModelChangesWarning hiçbir testte çıkmıyor",
+  "handoff": "docs/handoffs/attendance-pending-migration-fix.md",
+  "source": "5+ bağımsız ajan tarafından doğrulanan pre-existing hata (senseik-006, 007, 008, 011/013, 026 raporlarında tekrar tekrar tespit edildi) — commit c72791f 'chore(attendance): add pending EF migration for MonthlyTimesheetApproval' zaten dev'in atası ama gerçek migration hiç üretilmemiş. NOT: senseik-012/014 (Attendance/Leave, aktif çalışıyor) muhtemelen kendi migration'larını üretecek — bu kart o dalga merge olduktan sonra başlatılmalı, aynı anda migration üretmek çakışma riski taşır."
+}
