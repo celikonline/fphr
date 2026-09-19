@@ -11,7 +11,7 @@
     "Excel/CSV dışa aktarım, mevcut IReportProvider/ClosedXML deseniyle (yapıldı: leave.company_ledger sağlayıcısı, Raporlar kataloğunda da görünür)",
     "Mevcut izin takvimi (leave-calendar.tsx) ile tamamlayıcı ama farklı - liste/tablo görünümü (yapıldı, ayrı sayfa)"
   ],
-  "merge_gate": "dotnet test (Leave/Reporting) yeşil + pnpm exec tsc --noEmit temiz + demo'da filtre/dışa aktarım çalışıyor - BU OTURUMDA ÇALIŞTIRILAMADI (Docker daemon paralel oturumlardan aşırı yüklüydü, sandbox'ta pnpm/node PATH'te yoktu); merge öncesi mutlaka çalıştırılmalı",
+  "merge_gate": "dotnet test (Leave) yeşil + pnpm exec tsc --noEmit temiz - 2026-09-19: build + web tsc/eslint temiz; Testcontainers testleri Docker yanıt vermediği için bakiye düzeltmesi sonrası yeniden koşulamadı, merge sonrası koşulmalı",
   "handoff": "docs/handoffs/hr-company-wide-leave-ledger.md",
   "source": "Kullanıcı isteği (senseik-048), doğrudan agent görevi olarak verildi"
 }

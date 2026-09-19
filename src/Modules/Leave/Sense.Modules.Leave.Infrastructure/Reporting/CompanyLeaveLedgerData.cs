@@ -86,7 +86,8 @@ internal static class CompanyLeaveLedgerData
                 LeaveStartDate: onLeave?.StartDate,
                 LeaveEndDate: onLeave?.EndDate,
                 LeaveTypeName: onLeave?.TypeName,
-                AnnualLeaveBalance: balanceByEmployee.GetValueOrDefault(row.EmployeeId),
+                // TryGetValue, not GetValueOrDefault: the latter yields 0m for decimal, hiding "no annual type/profile" (web shows "—" for null).
+                AnnualLeaveBalance: balanceByEmployee.TryGetValue(row.EmployeeId, out var balance) ? balance : null,
                 OvertimeHoursYtd: overtimeHours,
                 OvertimeLimitExceeded: overtimeHours > limitHours));
         }

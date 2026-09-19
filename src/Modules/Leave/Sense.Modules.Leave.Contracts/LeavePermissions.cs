@@ -91,11 +91,13 @@ public static class LeavePermissions
     /// <summary>
     /// senseik-048: şirket geneli izin/fazla mesai defteri ("bu ay kimler izinde", bakiye sıralaması, 270 saat sınır
     /// aşımı). HR/HRSpecialist zaten "leave.*" joker deseniyle, Owner/Admin "*" ile bunu otomatik alır -
-    /// SystemRoleDefinitions'a ayrıca eklenmedi (append-only include listeleri bu yeni anahtarı da eşler, doğrulandı).
+    /// SystemRoleDefinitions'a ayrıca eklenmedi. Not: mevcut "leave.*.read" / "*.read" joker desenleri (PayrollSpecialist,
+    /// Timekeeper, Auditor, ApiIntegration) de bu anahtarı eşler - veri yine ReportEmployeeSet üzerinden rolün veri kapsamıyla
+    /// (ör. Timekeeper = Departman) sınırlanır. Manager açık listeyle tanımlı, almaz.
     /// </summary>
     public static readonly Permission CompanyLedgerRead = new(
-        "leave.company_ledger.read", Module, "Read Company Leave Ledger", Group,
-        "View the company-wide leave/overtime ledger (who is on leave, balance ranking, annual overtime limit)");
+        "leave.company_ledger.read", Module, "Şirket İzin/Fazla Mesai Defterini Görüntüleme", Group,
+        "Şirket genelinde kimin izinde olduğunu, yıllık izin bakiyelerini ve yıllık fazla mesai sınırı aşımlarını görüntüleme");
 
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,

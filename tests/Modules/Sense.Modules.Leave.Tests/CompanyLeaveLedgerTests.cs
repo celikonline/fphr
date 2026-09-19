@@ -169,6 +169,50 @@ public sealed class CompanyLeaveLedgerTests : TestFixture
         overLimitRow.AnnualLeaveBalance.ShouldBeNull(); // no leave profile seeded for this employee
     }
 
+    /// <summary>
+    /// HR-only data: both entry points (JSON query via the Dispatcher's RequiresPermission pipeline, Excel via
+    /// ReportCommands' RequiredPermission check) must be gated by the same dedicated key, and the employee set must be
+    /// narrowed by the caller's data scope for that key (not a broader leave.* read key).
+    /// </summary>
+    [Fact]
+    public void CompanyLedger_EntryPoints_AreGatedByDedicatedPermission()
+    {
+        var attribute = typeof(GetCompanyLeaveLedgerQuery)
+            .GetCustomAttributes(typeof(RequiresPermissionAttribute), inherit: false)
+            .Cast<RequiresPermissionAttribute>()
+            .Single();
+        attribute.Permission.ShouldBe(LeavePermissions.CompanyLedgerRead.Key);
+
+        using var scope = ServiceProvider!.CreateScope();
+        var provider = scope.ServiceProvider.GetServices<IReportProvider>().Single(p => p.Key == CompanyLeaveLedgerReportProvider.ReportKey);
+        provider.RequiredPermission.ShouldBe(LeavePermissions.CompanyLedgerRead.Key);
+        LeavePermissions.All.ShouldContain(LeavePermissions.CompanyLedgerRead);
+    }
+
+    [Fact]
+    public async Task GetCompanyLeaveLedgerHandler_ExcludesEmployeesOutsideDataScope()
+    {
+        var tenantId = Guid.NewGuid();
+        var visibleEmployee = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        _dataScope.GetVisibleEmployeeIdsAsync(LeavePermissions.CompanyLedgerRead.Key, Arg.Any<CancellationToken>())
+            .Returns(new HashSet<Guid> { visibleEmployee });
+        _employees.ListAsync(tenantId, Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<IReadOnlyCollection<Guid>?>(), false, Arg.Any<CancellationToken>())
+            .Returns([Row(visibleEmployee, "Zeynep", "Demir")]);
+
+        using var readScope = ServiceProvider!.CreateScope();
+        var handler = readScope.ServiceProvider.GetRequiredService<IQueryHandler<GetCompanyLeaveLedgerQuery, CompanyLeaveLedgerDto>>();
+        var result = await handler.Handle(new GetCompanyLeaveLedgerQuery(2026, 6, null, false), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Rows.Select(r => r.EmployeeId).ShouldBe([visibleEmployee]);
+        await _employees.Received().ListAsync(
+            tenantId,
+            Arg.Is<IReadOnlyCollection<Guid>?>(ids => ids != null && ids.Count == 1 && ids.Contains(visibleEmployee)),
+            Arg.Any<IReadOnlyCollection<Guid>?>(), false, Arg.Any<CancellationToken>());
+    }
+
     [Fact]
     public async Task CompanyLeaveLedgerReportProvider_ExportsSameData_WithDynamicOrgColumns()
     {

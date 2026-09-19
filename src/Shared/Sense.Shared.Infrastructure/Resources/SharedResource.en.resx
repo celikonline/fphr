@@ -690,6 +690,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>View absence records</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Manage absence records</value></data>
+  <data name="leave.company_ledger.read" xml:space="preserve"><value>View company leave/overtime ledger</value></data>
   <data name="leave.absence.not_found" xml:space="preserve"><value>Absence record not found.</value></data>
   <data name="leave.absence.note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Hours must be between 0 and 24.</value></data>

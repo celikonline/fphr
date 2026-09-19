@@ -115,3 +115,26 @@ doğrulanmalı (bu sandbox'ta `pnpm`/`node` PATH'te yoktu).
 
 ---
 *Kaynak: senseik-048 kart isteği. Agent board: `docs/agent-board/cards/senseik-048-hr-company-wide-leave-ledger.json`.*
+
+## Merge öncesi doğrulama (2026-09-19)
+
+- Branch `dev` üzerine rebase edildi; `web/src/App.tsx` çakışması (dev'in `company-calendar` rotası + bu branch'in
+  `leave/company-ledger` rotası) ikisi birden tutularak çözüldü; kart JSON'u branch versiyonuyla çözüldü.
+- **Hata düzeltmesi:** `CompanyLeaveLedgerData` yıllık bakiyeyi `IReadOnlyDictionary<Guid, decimal>.GetValueOrDefault`
+  ile okuyordu → profili/yıllık türü olmayan çalışan `null` ("—") yerine `0` bakiye gösteriyordu (mevcut test
+  `overLimitRow.AnnualLeaveBalance.ShouldBeNull()` bunu yakaladı). `TryGetValue` ile düzeltildi.
+- İzin adı dev'deki Türkçeleştirmeye (90de9e2) uyarlandı; `leave.company_ledger.read` için `SharedResource{,.en}.resx`
+  izin adı yerelleştirmesi eklendi; Excel kolonu "270 saat" sabitini değil yasal parametreyi yansıtacak şekilde
+  "Yıllık fazla mesai sınırı aşıldı mı" oldu.
+- Yetki (sunucu tarafı): JSON sorgusu `[RequiresPermission("leave.company_ledger.read")]` (Dispatcher ardışığı),
+  Excel `IReportProvider.RequiredPermission` (ReportCommands kontrolü); çalışan kümesi `IDataScopeService` ile aynı
+  anahtarın veri kapsamına daraltılıyor. Not: mevcut `leave.*.read` / `*.read` joker desenleri PayrollSpecialist,
+  Timekeeper (Departman kapsamı), Auditor, ApiIntegration rollerine de bu izni verir; Manager almaz.
+- Yeni testler: `CompanyLedger_EntryPoints_AreGatedByDedicatedPermission`,
+  `GetCompanyLeaveLedgerHandler_ExcludesEmployeesOutsideDataScope`.
+- Gate sonuçları: Leave test projesi derleniyor; filtreli koşuda (CompanyLeaveLedgerTests + LeaveReportProviderTests)
+  düzeltme öncesi 5/6 geçti (tek hata = yukarıdaki bakiye hatası). Düzeltme sonrası koşu Docker Desktop yanıt
+  vermediği için (npipe bağlantı hatası, 20+ dk) **tamamlanamadı** — Testcontainers testleri merge sonrası tekrar
+  koşulmalı. Web: `tsc --noEmit` bu branch'e ait hata yok (yalnız dev'de önceden var olan 4 hata:
+  `protected-route.test.tsx`, `home.test.tsx`), `eslint src` 0 hata / 1 önceden var olan uyarı.
+- Migration yok.
