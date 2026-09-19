@@ -157,6 +157,10 @@ bağımlılık YARATILMADI:
   koşuda `AbsenceIntegrationTests` (7) aynı Docker sorunundan `TaskCanceledException` ile düştü (ilk koşuda
   geçmişlerdi). **Sonraki oturum**: `dotnet test tests/Modules/Sense.Modules.Leave.Tests` ve
   `tests/Modules/Sense.Modules.Reporting.Tests` yeniden koşturulmalı.
+- `dev` (`90920c3`) üzerine rebase edildi; tek çakışma `SharedResource{,.en}.resx`'te senseik-029 puantaj anahtarlarıyla
+  yan yana ekleme idi (ikisi de korundu, yinelenen anahtar yok). Rebase sonrası: `Sense.Api` + Leave test projesi
+  build 0 hata, Leave pending model change yok, DB'siz Leave testleri (`Category!=Integration`) 105/105 yeşil.
+  Entegrasyon testleri Docker yanıtsız olduğu için rebase sonrası tekrar koşulamadı.
 - Web tarafına dokunulmadı (tsc/eslint gerekmedi).
 
 ## Kritik dosyalar
