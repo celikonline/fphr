@@ -18,6 +18,7 @@
   "countryCode": "Country Code",
   "countryCodeInvalid": "Enter a 2-letter country code (e.g. TR).",
   "address": "Address",
+  "sgkIsyeriSicilNo": "SGK workplace registration number",
   "searchPlaceholder": "Search locations...",
   "createSuccess": "Location created.",
   "updateSuccess": "Location updated.",

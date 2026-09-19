@@ -36,13 +36,14 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
     {
     }
 
-    private Location(Guid id, Guid tenantId, string name, LocationType type, string countryCode, string? address)
+    private Location(Guid id, Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo)
         : base(id, tenantId)
     {
         Name = name;
         Type = type;
         CountryCode = countryCode;
         Address = address;
+        SgkIsyeriSicilNo = sgkIsyeriSicilNo;
         IsActive = true;
     }
 
@@ -56,9 +57,15 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Free-text address; optional (e.g. a Remote-type location may not have one).</summary>
     public string? Address { get; private set; }
 
+    /// <summary>
+    /// SGK "işyeri sicil numarası" (APHB, senseik-010/F-03): lets a multi-workplace tenant define this per location
+    /// instead of only at company level; free text (no fixed structure enforced here), optional.
+    /// </summary>
+    public string? SgkIsyeriSicilNo { get; private set; }
+
     public bool IsActive { get; private set; }
 
-    public static Result<Location> Create(Guid tenantId, string name, LocationType type, string countryCode, string? address, Guid? id = null)
+    public static Result<Location> Create(Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null, Guid? id = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -82,13 +89,14 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
             Guard.MaxLength(name.Trim(), OrganizationLimits.NameMaxLength),
             type,
             normalizedCountryCode,
-            NormalizeAddress(address));
+            NormalizeAddress(address),
+            NormalizeSgkIsyeriSicilNo(sgkIsyeriSicilNo));
 
         location.Raise(new LocationCreated(location.Id, tenantId, location.Name, location.Type, location.CountryCode));
         return location;
     }
 
-    public Result Update(string name, LocationType type, string countryCode, string? address)
+    public Result Update(string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -110,6 +118,7 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
         Type = type;
         CountryCode = normalizedCountryCode;
         Address = NormalizeAddress(address);
+        SgkIsyeriSicilNo = NormalizeSgkIsyeriSicilNo(sgkIsyeriSicilNo);
 
         Raise(new LocationUpdated(Id, TenantId, Name, Type, CountryCode));
         return Result.Success();
@@ -131,6 +140,9 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
 
     private static string? NormalizeAddress(string? address) =>
         string.IsNullOrWhiteSpace(address) ? null : Guard.MaxLength(address.Trim(), OrganizationLimits.AddressMaxLength);
+
+    private static string? NormalizeSgkIsyeriSicilNo(string? sgkIsyeriSicilNo) =>
+        string.IsNullOrWhiteSpace(sgkIsyeriSicilNo) ? null : Guard.MaxLength(sgkIsyeriSicilNo.Trim(), OrganizationLimits.SgkIsyeriSicilNoMaxLength);
 
     private static string? NormalizeCountryCode(string countryCode)
     {

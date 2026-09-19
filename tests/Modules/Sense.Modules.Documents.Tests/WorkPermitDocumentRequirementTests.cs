@@ -4,6 +4,7 @@ using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Shared.Contracts.Legislation;
 using Shouldly;
 using Xunit;
@@ -38,6 +39,13 @@ public sealed class WorkPermitDocumentRequirementTests
         return lookup;
     }
 
+    private static IEmployeeIncentiveLookup IncentiveLookup()
+    {
+        var lookup = Substitute.For<IEmployeeIncentiveLookup>();
+        lookup.HasActiveIncentiveAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(false);
+        return lookup;
+    }
+
     private static DocumentTypeDefinition WorkPermit() =>
         DocumentTypeDefinition.Create(
             TenantId, "WorkPermit", "Çalışma izni belgesi", DocumentTypeStage.Conditional, true,
@@ -59,7 +67,7 @@ public sealed class WorkPermitDocumentRequirementTests
                 new EmployeeDocumentEligibilitySignals(IsUnder18: false, HasDisability: false, IsUndergroundWorker: false, IsForeignNational: isForeignNational)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation());
         return (types, requirements, materialization);
     }
 

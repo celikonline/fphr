@@ -47,6 +47,22 @@ export interface DownloadedPayrollFile {
   fileName: string;
 }
 
+/**
+ * One SGK teşvik kanunu kodu (5510, 6111, 7103, 27103 vb.) active for at least one employee, with how many employees
+ * carry it (senseik-010/F-03: `IncentivesController.GetSummary`). Read-only - used by the Organizasyon/Şirket profil
+ * ekranı's "Aktif teşvik türleri" summary; the writable value stays on the employee's Bordro parametreleri.
+ */
+export interface IncentiveSummaryItem {
+  code: string;
+  employeeCount: number;
+}
+
+/** Tenant-wide "aktif teşvik türleri" summary as of today (`payroll.profile.manage`). */
+export async function getActiveIncentiveSummary(): Promise<IncentiveSummaryItem[]> {
+  const { data } = await apiClient.get<IncentiveSummaryItem[]>(`${PAYROLL_BASE}/incentives/summary`);
+  return data;
+}
+
 /** Tenant-wide payroll period list (`payroll.period.recalculate`, the module's only gate today - no separate view key yet). */
 export async function listPayrollPeriods(): Promise<PayrollPeriod[]> {
   const { data } = await apiClient.get<PayrollPeriod[]>(`${PAYROLL_BASE}/periods`);

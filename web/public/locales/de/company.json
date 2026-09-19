@@ -24,6 +24,10 @@
   "logoSuccess": "Logo aktualisiert.",
   "logoError": "Das Logo konnte nicht hochgeladen werden.",
   "readOnlyNotice": "Sie haben nur Lesezugriff auf das Unternehmensprofil.",
+  "sectionIncentives": "Aktive Förderarten",
+  "incentivesHint": "Der SGK-Förderkennwert (5510, 6111, 7103, 27103 usw.) und das zugehörige Dokument werden in den Lohnparametern des Mitarbeiters festgelegt; dieser Bereich zeigt nur, welche Förderarten derzeit unternehmensweit aktiv sind.",
+  "incentiveBadge": "{{code}} · {{count}} Mitarbeiter",
+  "noActiveIncentives": "Derzeit keine aktiven Förderungen.",
   "days": {
     "mon": "Mo",
     "tue": "Di",

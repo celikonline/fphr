@@ -24,6 +24,10 @@
   "logoSuccess": "Logo updated.",
   "logoError": "Could not upload logo.",
   "readOnlyNotice": "You have read-only access to the company profile.",
+  "sectionIncentives": "Active Incentive Types",
+  "incentivesHint": "The SGK incentive code (5510, 6111, 7103, 27103, etc.) and its supporting document are set on the employee's Payroll parameters; this section only summarizes which incentive types are currently active tenant-wide.",
+  "incentiveBadge": "{{code}} · {{count}} employees",
+  "noActiveIncentives": "No active incentives right now.",
   "days": {
     "mon": "Mon",
     "tue": "Tue",

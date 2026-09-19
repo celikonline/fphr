@@ -18,4 +18,11 @@ public interface ILocationLookup
     /// not assume every requested id comes back.
     /// </summary>
     Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolves each location's SGK "işyeri sicil numarası" (senseik-010/F-03), for Payroll's APHB/e-Bildirge export
+    /// preparation (the export itself is out of scope; this only surfaces the stored value). A location with no
+    /// value set, or not found for this tenant, is simply absent from the result.
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, string>> GetSgkIsyeriSicilNoAsync(Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default);
 }

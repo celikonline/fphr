@@ -2,16 +2,16 @@
   "id": "senseik-010",
   "title": "SGK işyeri sicil no, meslek kodu, teşvik kodu (F-03)",
   "owner": "pc-a",
-  "state": "running",
+  "state": "review",
   "branch": "a/sgk-workplace-codes",
-  "worktree": ".claude/worktrees/sgk-workplace",
+  "worktree": ".claude/worktrees/agent-a2130fa3464ba6ab1",
   "acceptance": [
-    "Lokasyonlar ekranında 'SGK işyeri sicil numarası' alanı var ve çok işyerli şirketler per-location tanımlanabiliyor",
-    "Çalışan kartında 'SGK meslek kodu' alanı tanımlı; veri aktarım şablonunda var",
-    "Organizasyon/Şirket profil ekranında teşvik türü (5510, 6111, 7103, 27103 vb.) ve teşvik belgesi yer tutuşu bağlantılı",
-    "Bordro test: APHB/e-Bildirge çıktısında bu alanlar önceden doldurulabiliyor"
+    "Lokasyonlar ekranında 'SGK işyeri sicil numarası' alanı var ve çok işyerli şirketler per-location tanımlanabiliyor — TAMAM (backend + web)",
+    "Çalışan kartında 'SGK meslek kodu' alanı tanımlı; veri aktarım şablonunda var — TAMAM (senseik-009 ile dev'e zaten girmişti; bu kart cross-module lookup'ı ekledi)",
+    "Organizasyon/Şirket profil ekranında teşvik türü (5510, 6111, 7103, 27103 vb.) ve teşvik belgesi yer tutuşu bağlantılı — TAMAM (yazılabilir alan yok - handoff §3 kararı; salt okunur özet + Documents'ın HasIncentive sinyali artık gerçek veriye bağlı)",
+    "Bordro test: APHB/e-Bildirge çıktısında bu alanlar önceden doldurulabiliyor — TAMAM (GetAphbPrefillDataQuery + test; gerçek export K-7 kararıyla kapsam dışı)"
   ],
   "merge_gate": "dotnet build + aktarım şablonunda alanlar + demo seed lokasyon doğru kaydediliyor",
-  "handoff": "docs/handoffs/employee-sicil-uyruk.md",
+  "handoff": "docs/handoffs/sgk-workplace-codes.md",
   "source": "2. Tur § F-03 (YÜKSEK — e-Bildirge çıktısının ön koşulu)"
 }

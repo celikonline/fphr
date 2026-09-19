@@ -45,6 +45,7 @@ const schema = z.object({
     .length(2)
     .transform((v) => v.toUpperCase()),
   address: z.string().optional(),
+  sgkIsyeriSicilNo: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -96,11 +97,11 @@ export default function LocationsPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", type: "office", countryCode: "TR", address: "" },
+    defaultValues: { name: "", type: "office", countryCode: "TR", address: "", sgkIsyeriSicilNo: "" },
   });
 
   function openCreate() {
-    reset({ name: "", type: "office", countryCode: "TR", address: "" });
+    reset({ name: "", type: "office", countryCode: "TR", address: "", sgkIsyeriSicilNo: "" });
     setDialog({ open: true });
   }
 
@@ -110,6 +111,7 @@ export default function LocationsPage() {
       type: location.type,
       countryCode: location.countryCode,
       address: location.address ?? "",
+      sgkIsyeriSicilNo: location.sgkIsyeriSicilNo ?? "",
     });
     setDialog({ open: true, location });
   }
@@ -211,6 +213,13 @@ export default function LocationsPage() {
       meta: { label: t("locations:address") },
       cell: ({ row }) => row.original.address ?? "—",
     },
+    {
+      id: "sgkIsyeriSicilNo",
+      enableSorting: false,
+      header: t("locations:sgkIsyeriSicilNo"),
+      meta: { label: t("locations:sgkIsyeriSicilNo") },
+      cell: ({ row }) => row.original.sgkIsyeriSicilNo ?? "—",
+    },
     ...(canManage
       ? [
           {
@@ -308,6 +317,11 @@ export default function LocationsPage() {
                           {location.address}
                         </Text>
                       )}
+                      {location.sgkIsyeriSicilNo && (
+                        <Text size="xs" c="dimmed">
+                          {t("locations:sgkIsyeriSicilNo")}: {location.sgkIsyeriSicilNo}
+                        </Text>
+                      )}
                     </div>
                     {canManage && (
                       <Group gap={4} wrap="nowrap">
@@ -368,6 +382,11 @@ export default function LocationsPage() {
               {...register("countryCode")}
             />
             <TextInput id="loc-address" label={t("locations:address")} {...register("address")} />
+            <TextInput
+              id="loc-sgk-isyeri-sicil-no"
+              label={t("locations:sgkIsyeriSicilNo")}
+              {...register("sgkIsyeriSicilNo")}
+            />
             <Group justify="flex-end" gap="sm">
               <Button type="button" variant="default" onClick={closeDialog} disabled={isSaving}>
                 {t("common:cancel")}

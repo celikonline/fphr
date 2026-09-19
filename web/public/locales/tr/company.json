@@ -24,6 +24,10 @@
   "logoSuccess": "Logo güncellendi.",
   "logoError": "Logo yüklenemedi.",
   "readOnlyNotice": "Şirket profili için salt okunur erişiminiz var.",
+  "sectionIncentives": "Aktif Teşvik Türleri",
+  "incentivesHint": "SGK teşvik kodu (5510, 6111, 7103, 27103 vb.) ve teşvik belgesi, çalışanın Bordro parametrelerinden tanımlanır; burada yalnızca tenant genelinde şu anda aktif olan teşvik türleri özet olarak gösterilir.",
+  "incentiveBadge": "{{code}} · {{count}} çalışan",
+  "noActiveIncentives": "Şu anda aktif teşvik kaydı yok.",
   "days": {
     "mon": "Pzt",
     "tue": "Sal",

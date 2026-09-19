@@ -79,17 +79,32 @@ public sealed class LocationTests
         result.Error.Code.ShouldBe(OrganizationDomainErrors.LocationTypeInvalid);
     }
 
+    /// <summary>senseik-010/F-03: per-location SGK işyeri sicil numarası, same optional/trim pattern as Address.</summary>
+    [Fact]
+    public void Create_WithSgkIsyeriSicilNo_TrimsAndStores()
+    {
+        var result = Location.Create(TenantId, "İstanbul HQ", LocationType.Office, "TR", null, "  1071234.567-8.9-0  ");
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.SgkIsyeriSicilNo.ShouldBe("1071234.567-8.9-0");
+    }
+
+    [Fact]
+    public void Create_WithoutSgkIsyeriSicilNo_StoresNull() =>
+        Location.Create(TenantId, "Remote", LocationType.Remote, "TR", null).Value.SgkIsyeriSicilNo.ShouldBeNull();
+
     [Fact]
     public void Update_WithValidData_ChangesFields()
     {
         var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", "Çankaya").Value;
 
-        var result = location.Update("Ankara Warehouse", LocationType.Warehouse, "TR", "Sincan");
+        var result = location.Update("Ankara Warehouse", LocationType.Warehouse, "TR", "Sincan", "34-987.654");
 
         result.IsSuccess.ShouldBeTrue();
         location.Name.ShouldBe("Ankara Warehouse");
         location.Type.ShouldBe(LocationType.Warehouse);
         location.Address.ShouldBe("Sincan");
+        location.SgkIsyeriSicilNo.ShouldBe("34-987.654");
     }
 
     [Fact]

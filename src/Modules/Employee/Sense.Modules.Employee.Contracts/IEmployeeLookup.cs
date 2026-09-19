@@ -31,4 +31,12 @@ public interface IEmployeeLookup
     /// a match are available); null when no active employee has this sicil numarası.
     /// </summary>
     Task<Guid?> FindActiveBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The employee's SGK "meslek kodu" (senseik-010/F-03), for Payroll's APHB/e-Bildirge export preparation (the
+    /// export itself is out of scope; this only surfaces the stored value, mirroring
+    /// Payroll.Contracts.IEmployeeIncentiveLookup's doc comment). Null when the employee does not exist or has no
+    /// occupation code set.
+    /// </summary>
+    Task<string?> GetSgkOccupationCodeAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }

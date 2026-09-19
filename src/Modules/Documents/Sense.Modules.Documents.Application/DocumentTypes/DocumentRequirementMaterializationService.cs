@@ -2,6 +2,7 @@ using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Shared.Contracts.Legislation;
 
 namespace Sense.Modules.Documents.Application.DocumentTypes;
@@ -18,6 +19,7 @@ public sealed class DocumentRequirementMaterializationService(
     IEmployeeDocumentRequirementRepository requirements,
     IEmployeeDocumentEligibilityLookup eligibility,
     IAssetLookup assetLookup,
+    IEmployeeIncentiveLookup incentiveLookup,
     DocumentTypeProvisioningService provisioning,
     ILegislationParameterReader legislation)
 {
@@ -51,12 +53,15 @@ public sealed class DocumentRequirementMaterializationService(
 
         var signals = await eligibility.GetSignalsAsync(tenantId, employeeId, cancellationToken);
         var hasOpenAssets = await assetLookup.HasOpenAssetsAsync(tenantId, employeeId, cancellationToken);
+        var hasIncentive = await incentiveLookup.HasActiveIncentiveAsync(tenantId, employeeId, dueDateBasis, cancellationToken);
 
-        // Four signals are available cross-module today: BirthDate/DisabilityDegree/Nationality live on Employee
+        // Five signals are available cross-module today: BirthDate/DisabilityDegree/Nationality live on Employee
         // (Nationality/NonTurkishNational since senseik-009/F-02; BirthDate/DisabilityDegree are sensitive, only
         // derived booleans are exposed, per architecture rule); HasOpenAssets comes from the Assets module's
-        // IAssetLookup (roadmap #65). The rest are hardcoded false until their owning data exists:
-        //  - HasIncentive / UsesDisabilityTaxReduction: Payroll incentive tracking doesn't exist yet (senseik-010/F-03)
+        // IAssetLookup (roadmap #65); HasIncentive comes from Payroll's IEmployeeIncentiveLookup (senseik-010/F-03:
+        // EmployeePayrollProfile.IncentiveLawCode already existed but was never read by anything). The rest are
+        // hardcoded false until their owning data exists:
+        //  - UsesDisabilityTaxReduction: a distinct signal from HasIncentive - no owning data yet
         //  - ExConvictOrTerrorVictim: no such field anywhere yet (manual/HR-only data point)
         //  - RequiresPeriodicHealthCheck / VeryHazardousJob: no job-hazard classification yet
         //  - RequiresDriving: no job/position attribute for this yet
@@ -66,7 +71,7 @@ public sealed class DocumentRequirementMaterializationService(
             IsUnder18: signals?.IsUnder18 ?? false,
             HasDisability: signals?.HasDisability ?? false,
             NonTurkishNational: signals?.IsForeignNational ?? false,
-            HasIncentive: false,
+            HasIncentive: hasIncentive,
             UsesDisabilityTaxReduction: false,
             IsExConvictOrTerrorVictim: false,
             RequiresPeriodicHealthCheck: false,

@@ -71,4 +71,10 @@ public interface IEmployeePayrollProfileRepository
 
     /// <summary>The version in effect on <paramref name="asOf"/>, if any.</summary>
     Task<EmployeePayrollProfile?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Every profile version active tenant-wide on <paramref name="asOf"/> (senseik-010/F-03: the Organizasyon/Şirket
+    /// profil ekranı's read-only "aktif teşvik türleri" summary aggregates across all employees, not just one).
+    /// </summary>
+    Task<IReadOnlyList<EmployeePayrollProfile>> ListActiveAsOfAsync(DateOnly asOf, CancellationToken cancellationToken = default);
 }
