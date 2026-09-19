@@ -182,6 +182,16 @@ export interface EmployeeInput {
    * gerçek bir temizleme isteğini bundan ayırmak için bu ayrı bayrak gerekiyor.
    */
   clearLeaveAccrualStartDate?: boolean;
+  /**
+   * senseik-058: sicil numarası / uyruk / yabancı kimlik no / pasaport no / SGK meslek kodu are "keep when absent" -
+   * omitted (or null) preserves the stored value on update; an empty string clears a text field. `toEmployeeInput`
+   * deliberately does not send them (the card does not display them yet), so a section save cannot wipe them.
+   */
+  sicilNumarasi?: string | null;
+  nationality?: "turkish" | "foreign";
+  foreignIdNumber?: string | null;
+  passportNumber?: string | null;
+  sgkOccupationCode?: string | null;
 }
 
 export interface DirectoryEntry {

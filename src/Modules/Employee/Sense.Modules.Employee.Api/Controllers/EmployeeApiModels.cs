@@ -22,6 +22,11 @@ namespace Sense.Modules.Employee.Api.Controllers;
 /// mantığı atlayarak açıkça boşa (null) ayarlanır - <paramref name="LeaveAccrualStartDate"/>'in null gönderilmesi
 /// zaten "dokunulmadı, otomatik takip devam etsin" anlamına geldiği için ayrı bir sinyale ihtiyaç var.
 /// </param>
+/// <param name="SicilNumarasi">
+/// senseik-058: SicilNumarasi/Nationality/ForeignIdNumber/PassportNumber/SgkOccupationCode are "keep when absent" on update:
+/// an omitted/null value preserves the stored one (never wipes it); an empty string clears a text field. On create,
+/// an omitted Nationality defaults to "turkish".
+/// </param>
 public sealed record EmployeeRequest(
     string FirstName,
     string LastName,
@@ -49,7 +54,12 @@ public sealed record EmployeeRequest(
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
     DateOnly? LeaveAccrualStartDate = null,
-    bool ClearLeaveAccrualStartDate = false);
+    bool ClearLeaveAccrualStartDate = false,
+    string? SicilNumarasi = null,
+    Nationality? Nationality = null,
+    string? ForeignIdNumber = null,
+    string? PassportNumber = null,
+    string? SgkOccupationCode = null);
 
 /// <summary>"Pozisyon ekle" / edit body for a career record (changeType/employmentType as camelCase enum strings).</summary>
 public sealed record CareerRecordRequest(
