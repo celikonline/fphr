@@ -39,14 +39,24 @@ describe("toEmployeeInput (senseik-058)", () => {
   it("never sends the keep-when-absent profile fields, so a section save cannot wipe them server-side", () => {
     const body = toEmployeeInput(detail);
 
-    for (const key of ["sicilNumarasi", "nationality", "foreignIdNumber", "passportNumber", "sgkOccupationCode"]) {
+    for (const key of [
+      "sicilNumarasi",
+      "nationality",
+      "foreignIdNumber",
+      "passportNumber",
+      "sgkOccupationCode",
+    ]) {
       expect(body).not.toHaveProperty(key);
       expect(JSON.parse(JSON.stringify(body))).not.toHaveProperty(key);
     }
   });
 
   it("lets a section that owns one of them pass it (or an empty string to clear) as an override", () => {
-    const body = toEmployeeInput(detail, { sicilNumarasi: "SCL-002", nationality: "foreign", passportNumber: "" });
+    const body = toEmployeeInput(detail, {
+      sicilNumarasi: "SCL-002",
+      nationality: "foreign",
+      passportNumber: "",
+    });
 
     expect(body.sicilNumarasi).toBe("SCL-002");
     expect(body.nationality).toBe("foreign");
