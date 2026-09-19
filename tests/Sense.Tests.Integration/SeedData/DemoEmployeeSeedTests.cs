@@ -93,9 +93,11 @@ public sealed class DemoEmployeeSeedTests
     public void DemoTitleFor_GivesOverflowHrUsers_DistinctDepartmentTitles_NotTheDirectorTitle()
     {
         var headquarters = NewUnit("Headquarters", CompanyTypeId);
-        var hrDepartment = NewUnit("HR", DepartmentTypeId, headquarters.Id);
+        // DemoTitleFor looks up SeedDataConstants.DemoDepartments by unit.Name, so this unit's name must match
+        // the (now Turkish) demo department name for the lookup below to resolve (senseik-043).
+        var hrDepartment = NewUnit("İnsan Kaynakları", DepartmentTypeId, headquarters.Id);
         var cursors = new Dictionary<Guid, int>();
-        var hrSpec = SeedDataConstants.DemoDepartments.Single(d => d.Name == "HR");
+        var hrSpec = SeedDataConstants.DemoDepartments.Single(d => d.Name == "İnsan Kaynakları");
 
         var firstOverflowTitle = DataSeeder.DemoTitleFor(hrDepartment, headquarters, RolesOf(SystemRoleCodes.HR), cursors);
         var secondOverflowTitle = DataSeeder.DemoTitleFor(hrDepartment, headquarters, RolesOf(SystemRoleCodes.HR), cursors);

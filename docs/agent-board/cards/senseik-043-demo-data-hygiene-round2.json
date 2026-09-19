@@ -2,14 +2,14 @@
   "id": "senseik-043",
   "title": "Demo veri hijyeni round 2: İngilizce departman/şirket adları, cinsiyet verisi hep 'Unspecified'",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "review",
   "branch": "a/demo-data-hygiene-round2",
   "worktree": ".claude/worktrees/demo-hygiene-2",
   "acceptance": [
     "Demo departman adları (Finance/Sales) Türkçeleştirildi (Finans/Satış), şirket adı (Headquarters→Genel Merkez), çalışma takvimi adı (General work schedule→Genel Çalışma Takvimi)",
     "58 demo çalışanının cinsiyet verisi gerçekçi bir dağılımla dolduruldu (hepsi 'Unspecified' kalmasın) — Raporlar → Cinsiyet Dağılımı demo sunumunda anlamlı görünüyor"
   ],
-  "merge_gate": "Manuel tarama: demo ortamında İngilizce/boş görünen alan kalmıyor",
+  "merge_gate": "Manuel tarama: demo ortamında İngilizce/boş görünen alan kalmıyor. DİKKAT: dotnet build bu oturumda DOĞRULANAMADI — host C: diski %100 dolu (563G/563G, ~3.4M boş), Docker Desktop bu yüzden çöktü (\"no space left on device\"); ortam genelinde bir altyapı sorunu, bu değişikliklerle ilgisi yok. Disk alanı açıldıktan sonra `dotnet build Sense.slnx` (en azından Sense.Api + Sense.Tests.Integration) mutlaka çalıştırılmalı.",
   "handoff": "docs/handoffs/demo-data-hygiene-round2.md",
   "source": "1. Tur Test Bulgu Dokümanı § B-07, C-06 (DÜŞÜK ama müşteri demosunda izlenim riski — senseik-017'nin kapsamı farklıydı, org şeması odaklıydı)."
 }

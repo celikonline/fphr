@@ -17,10 +17,10 @@ This directory contains deterministic seed data generation for development and t
   `bordro@demo.local`, `yonetici@demo.local`, `calisan@demo.local`, `denetci@demo.local` —
   see root `README.md`) + 50 randomly generated employees with realistic Turkish names
 - **Roles**: All 17 system roles (Admin, HR, Finance, Manager, Employee, etc.)
-- **Organization**: Headquarters > 4 departments (Sales, Engineering, HR, Finance) > ~21 Turkish
-  job titles (Ünvan level); every employee sits on a title, so `Employee.OrgUnitId` is the deepest
-  assignment like a real placement (department headcounts are unchanged — the department is the
-  title's parent)
+- **Organization**: Genel Merkez > 4 departments (Satış, Yazılım Geliştirme, İnsan Kaynakları,
+  Finans) > ~21 Turkish job titles (Ünvan level); every employee sits on a title, so
+  `Employee.OrgUnitId` is the deepest assignment like a real placement (department headcounts are
+  unchanged — the department is the title's parent)
 - **Access settings**: every home widget on, including `ShowAllLeavesInCalendar`, so a plain
   employee sees colleagues on the leave calendar / "Yaklaşan izinler" widget
 - **Leave**: the default "Türk İş Kanunu" rule set, a leave profile with generated
