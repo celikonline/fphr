@@ -51,6 +51,9 @@ public sealed record ApprovalTaskSeed(int StepNumber, Guid? ApproverEmployeeId, 
 /// </summary>
 public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    /// <summary>senseik-049: onay sürecinin genel durumu ("Pending → Approved/Rejected/Cancelled") denetim izinde görünür.</summary>
+    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status)];
+
     private readonly List<ApprovalTask> _tasks = [];
     private readonly List<ApprovalHistoryEntry> _history = [];
 

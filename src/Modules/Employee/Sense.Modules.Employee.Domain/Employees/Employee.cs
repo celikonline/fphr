@@ -66,6 +66,14 @@ public enum TerminationType
 /// </summary>
 public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    /// <summary>
+    /// senseik-049 (KVKK m.12): özlük bilgisi denetim izinde alan bazlı diff üretilecek kritik alanlar - işe giriş/doğum
+    /// tarihi, SGK çıkış kodu, işten çıkış tarihi ve durum. Diğer alanlar (adres, telefon, vb.) bu turda kapsam dışı;
+    /// gerekirse tek satırlık ekleme (bkz. IAuditLogged.AuditedFields'ın doc comment'i).
+    /// </summary>
+    public static IReadOnlyList<string> AuditedFields { get; } =
+        [nameof(BirthDate), nameof(HireDate), nameof(SgkExitCode), nameof(TerminationDate), nameof(Status)];
+
     private readonly List<CareerRecord> _careerRecords = [];
 
     private Employee()

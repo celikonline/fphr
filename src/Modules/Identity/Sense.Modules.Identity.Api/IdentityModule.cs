@@ -13,6 +13,7 @@ using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Infrastructure.Messaging;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Modules;
@@ -65,7 +66,9 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IImpersonationGrantRepository, ImpersonationGrantRepository>();
         services.AddScoped<IUnitAuthorizationRepository, UnitAuthorizationRepository>();
         services.AddScoped<IIdentityReadStore, IdentityReadStore>();
-        services.AddScoped<IAuditLogReadStore, AuditLogReadStore>();
+
+        // senseik-049: audit-log okuma tarafı artık çoklu kaynak - bkz. IAuditLogSource'un doc comment'i.
+        services.AddScoped<IAuditLogSource, IdentityAuditLogSource>();
 
         services.AddScoped<PermissionService>();
         services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());

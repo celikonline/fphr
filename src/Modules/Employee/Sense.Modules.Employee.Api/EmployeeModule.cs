@@ -16,10 +16,12 @@ using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Employee.Api;
 
@@ -39,7 +41,13 @@ public sealed class EmployeeModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        // senseik-049: Identity dışına genişletilen denetim izi - IdentityModule'deki IdentityAuditLogInterceptor
+        // deseninin aynısı, paylaşımlı AuditLogInterceptor ile (bkz. Sense.Shared.Infrastructure.Persistence.Audit).
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<EmployeeDbContext>(
+            configuration, EmployeeDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<EmployeeDbContext>>();
 
         // Handlers/validators live in the Application assembly (EmployeePermissions is in Contracts, so it must not be the scan anchor).
         // Contracts assembly is also required: EmployeeHired/EmployeeSuspended/EmployeeReactivated live there, and

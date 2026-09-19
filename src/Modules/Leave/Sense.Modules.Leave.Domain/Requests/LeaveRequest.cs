@@ -28,6 +28,9 @@ public enum LeaveRequestSource
 /// </summary>
 public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    /// <summary>senseik-049: onay/red/iptal denetim izinde "Pending → Approved" gibi durum geçişini gösterir.</summary>
+    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status), nameof(CancellationReason)];
+
     private LeaveRequest()
     {
     }
