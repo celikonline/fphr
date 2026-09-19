@@ -116,7 +116,7 @@ Ortam: Windows host, .NET SDK 10.0.401 + node/pnpm (corepack) yerelde; Docker bu
 Çalıştırıldı, yeşil:
 
 - `dotnet build`: Attendance.Api, Organization.Api, Identity, src/Sense.Api, src/Sense.Migrator, src/Sense.Worker (0 hata).
-- `Sense.Modules.Attendance.Tests` 267/267 (integration dahil; yeni: QR/GPS geofence, tenant yerel saat, gece vardiyası, pano gece vardiyası, `TenantLocalClockTests`), `Sense.Modules.Organization.Tests` 129/129 (CSPRNG kod + yenileme testleri dahil), `Sense.Modules.Identity.Tests` (integration hariç) 131/131.
+- `Sense.Modules.Attendance.Tests` 285/285 (dev en son (ac5c606) üzerine yeniden rebase sonrası, integration dahil; yeni: QR/GPS geofence, tenant yerel saat, gece vardiyası, pano gece vardiyası, `TenantLocalClockTests`), `Sense.Modules.Organization.Tests` 129/129 (CSPRNG kod + yenileme testleri dahil), `Sense.Modules.Identity.Tests` (integration hariç) 131/131.
 - `Sense.Tests.Architecture` 56/56, `ErrorResourceParityTests` 2/2.
 - `dotnet ef migrations has-pending-model-changes`: Organization, Attendance, Identity "No changes".
 - web: `tsc --noEmit` temiz, `eslint src` 0 hata (1 önceden var olan `employee-list.tsx` uyarısı).
