@@ -73,6 +73,7 @@ const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
 const ReviewCyclesPage = lazy(() => import("@/pages/performance/review-cycles"));
+const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -119,6 +120,7 @@ export default function App() {
             <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
             <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
             <Route path="requests" element={<RequestsPage />} />
+            <Route path="shared-files" element={<SharedFilesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />

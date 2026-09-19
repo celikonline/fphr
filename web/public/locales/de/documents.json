@@ -132,5 +132,38 @@
       "uploaded": "Hochgeladen",
       "waived": "Erlassen"
     }
+  },
+  "sharedFiles": {
+    "title": "Gemeinsame Dateien",
+    "subtitle": "Verwalten Sie unternehmensweite Dateien - offen für alle oder auf bestimmte Rollen beschränkt.",
+    "upload": "Datei hochladen",
+    "uploadDialogTitle": "Datei hochladen",
+    "uploaded": "Datei hochgeladen.",
+    "deleted": "Datei gelöscht.",
+    "empty": "Noch keine gemeinsamen Dateien vorhanden.",
+    "everyone": "Für alle sichtbar",
+    "restricted": "Rollenbeschränkt",
+    "everyoneHint": "Für alle sichtbar - für alle Mitarbeitenden",
+    "restrictedHint": "Auf bestimmte Rollen beschränkt",
+    "visibilityLabel": "Sichtbarkeit",
+    "allowedRoles": "Zulässige Rollen",
+    "quotaLabel": "Belegter Speicher {{percent}}% ({{used}} / {{quota}})",
+    "deleteTitle": "Datei löschen",
+    "deleteConfirm": "Möchten Sie \"{{name}}\" wirklich löschen?",
+    "columns": {
+      "name": "Name",
+      "type": "Typ",
+      "size": "Größe",
+      "uploadedAt": "Hochgeladen am",
+      "visibility": "Sichtbarkeit"
+    },
+    "errors": {
+      "loadFailed": "Dateien konnten nicht geladen werden.",
+      "uploadFailed": "Datei konnte nicht hochgeladen werden.",
+      "deleteFailed": "Datei konnte nicht gelöscht werden.",
+      "downloadFailed": "Download-Link konnte nicht abgerufen werden.",
+      "quotaExceeded": "Beim Hochladen dieser Datei würde das Speicherkontingent überschritten.",
+      "rolesRequired": "Für rollenbeschränkte Sichtbarkeit muss mindestens eine Rolle ausgewählt werden."
+    }
   }
 }

@@ -18,7 +18,8 @@
     "settings": "Einstellungen",
     "account": "Mein Profil",
     "support": "Support",
-    "trust": "Vertrauen & Sicherheit"
+    "trust": "Vertrauen & Sicherheit",
+    "sharedFiles": "Gemeinsame Dateien"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

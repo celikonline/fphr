@@ -879,6 +879,21 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>Kendi özlük belge gereksinimlerini görüntüleme ve karşılama</value></data>
   <data name="documents.my.files" xml:space="preserve"><value>Kendi belgesini yükleme</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>Bu belge gereksinimi size ait değil.</value></data>
+  <data name="documents.company.view" xml:space="preserve"><value>Ortak şirket dosyalarını görüntüleme</value></data>
+  <data name="documents.company.manage" xml:space="preserve"><value>Ortak şirket dosyalarını yönetme</value></data>
+  <data name="shared_company_file.not_found" xml:space="preserve"><value>Dosya bulunamadı.</value></data>
+  <data name="shared_company_file.name_required" xml:space="preserve"><value>Dosya adı zorunludur.</value></data>
+  <data name="shared_company_file.name_too_long" xml:space="preserve"><value>Dosya adı çok uzun.</value></data>
+  <data name="shared_company_file.filekey_required" xml:space="preserve"><value>Dosya anahtarı zorunludur.</value></data>
+  <data name="shared_company_file.invalid_size" xml:space="preserve"><value>Geçersiz dosya boyutu.</value></data>
+  <data name="shared_company_file.uploader_required" xml:space="preserve"><value>Yükleyen kullanıcı zorunludur.</value></data>
+  <data name="shared_company_file.roles_required_for_restricted_visibility" xml:space="preserve"><value>Role kısıtlı görünürlük için en az bir rol seçilmelidir.</value></data>
+  <data name="shared_company_file.invalid_status" xml:space="preserve"><value>Dosya bu durumda bu işlemi desteklemiyor.</value></data>
+  <data name="shared_company_file.already_deleted" xml:space="preserve"><value>Dosya zaten silinmiş.</value></data>
+  <data name="shared_company_file.quota_exceeded" xml:space="preserve"><value>Bu dosya yüklendiğinde kiracının depolama kotası aşılır.</value></data>
+  <data name="shared_company_file.upload_initiation_failed" xml:space="preserve"><value>Dosya yükleme başlatılamadı.</value></data>
+  <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Dosya yükleme onaylanamadı.</value></data>
+  <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Dosya silinemedi.</value></data>
 
   <!-- Integrations (Faz 8 #61): dış bordro webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Webhook abonelikleri yönetme</value></data>

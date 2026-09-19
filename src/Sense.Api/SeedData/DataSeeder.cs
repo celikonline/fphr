@@ -319,6 +319,9 @@ public partial class DataSeeder(
         // Create sample documents
         await SeedSampleDocumentsAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
 
+        // senseik-028: sample shared company files (separate table from the employee-scoped Documents above)
+        await SeedSharedCompanyFilesAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
+
         logger.LogInformation(
             "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units ({TitleCount} titles), {LocationCount} locations, {EmployeeCount} employees",
             demoUsers.Count, roles.Count, 3, 1 + departments.Count + titles.Count, titles.Count, 3, employees.Count);

@@ -1,0 +1,17 @@
+{
+  "id": "senseik-028",
+  "title": "Ortak şirket dosya paylaşımı (yeni özellik — sıfırdan)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/shared-company-files",
+  "worktree": ".claude/worktrees/shared-company-files",
+  "acceptance": [
+    "Tüm çalışanlara (veya seçili gruba) açık, ortak bir dosya deposu ekranı: dosya adı, türü, boyutu listesi + yükleme",
+    "Tenant başına depolama kotası ve kullanım göstergesi (örn. 'Kullanılan Alan %22 (22.88 MB / 104.86 MB)')",
+    "Yükleme/silme yetkisi rol bazlı kısıtlanabiliyor (herkes görebilir, sadece HR/Admin yükleyebilir gibi)",
+    "Çalışanların bu dosyalara erişimi menüden kolayca ulaşılabilir bir sayfada"
+  ],
+  "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck + eslint + demo seed'de birkaç örnek dosya görünüyor",
+  "handoff": "docs/handoffs/shared-company-files.md",
+  "source": "Kullanıcı isteği (2026-09-18, ekran görüntüsü ekli — Kolay İK pazarlama görseli referans). DOĞRULANDI: SenseİK'te bu özellik HİÇ YOK — mevcut Documents modülü tamamen çalışana özel belge yaşam döngüsü için (43 sistem tanımlı belge tipi), tenant-geneli ortak/paylaşımlı bir dosya deposu kavramı yok (SharedFile/CompanyDocument taraması src/ ve web/src'de boş döndü). Depolama altyapısı olarak muhtemelen mevcut MinIO/blob storage entegrasyonu (Documents modülünde kullanılan) tekrar kullanılabilir."
+}

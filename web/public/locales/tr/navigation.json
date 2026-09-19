@@ -18,7 +18,8 @@
     "settings": "Ayarlar",
     "account": "Profilim",
     "support": "Destek",
-    "trust": "Güven ve güvenlik"
+    "trust": "Güven ve güvenlik",
+    "sharedFiles": "Ortak dosyalar"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
