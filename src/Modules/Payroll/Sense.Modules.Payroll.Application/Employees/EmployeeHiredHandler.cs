@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Organization.Contracts;
@@ -11,7 +12,8 @@ namespace Sense.Modules.Payroll.Application.Employees;
 /// EmployeeHired -> initial EmployeePayrollProfile (11.3.07 "Profil tanımı" akışı, P2). Defaults: ValidFrom=HireDate,
 /// WageBasis derived from the employee's current salary record via the Contracts port
 /// <see cref="IEmployeeSalaryLookup"/> (Monthly if the employee has no salary record yet), SgkStatus=Normal,
-/// MealBenefitVariant=Cash (hardcoded - there is no <c>Payroll.Meal.DefaultVariant</c> tenant setting yet, TODO
+/// MealBenefitVariant=None (a Cash variant with the default 0 daily amount fails EmployeePayrollProfile validation, which
+/// silently left every new hire without a profile; there is no <c>Payroll.Meal.DefaultVariant</c> tenant setting yet, TODO
 /// P2+), MealDailyAmount=0, TransportVariant=None, PaymentMethod=Bank, SickDaysReducePay = WageBasis != Monthly
 /// (maktu ücrette hastalık günleri ücretten/SGK gününden düşülmez, 11.3.07 "Ücret esası" - this default only
 /// applies here; a manual edit via payroll.profile.manage can override it).
@@ -30,7 +32,8 @@ public sealed class EmployeeHiredHandler(
     IEmployeePayrollProfileRepository profiles,
     IEmployeeSalaryLookup salaryLookup,
     IOrgUnitLookup orgUnits,
-    IPayrollUnitOfWork unitOfWork) : IIntegrationEventHandler<EmployeeHired>
+    IPayrollUnitOfWork unitOfWork,
+    ILogger<EmployeeHiredHandler> logger) : IIntegrationEventHandler<EmployeeHired>
 {
     public async Task Handle(EmployeeHired integrationEvent, CancellationToken cancellationToken)
     {
@@ -43,6 +46,7 @@ public sealed class EmployeeHiredHandler(
         var companyOrgUnitId = await ResolveDefaultSgkWorkplaceCompanyIdAsync(integrationEvent.TenantId, cancellationToken);
         if (companyOrgUnitId is null)
         {
+            logger.LogError("Payroll profile NOT created for hired employee {EmployeeId} (tenant {TenantId}): no active Company-level org unit to use as the SGK workplace. Create the profile manually.", integrationEvent.EmployeeId, integrationEvent.TenantId);
             return;
         }
 
@@ -57,7 +61,7 @@ public sealed class EmployeeHiredHandler(
             WageBasis: wageBasis,
             SgkStatus: SgkStatus.Normal,
             IncentiveLawCode: null,
-            MealBenefitVariant: MealBenefitVariant.Cash,
+            MealBenefitVariant: MealBenefitVariant.None,
             MealDailyAmount: 0m,
             TransportVariant: TransportVariant.None,
             PaymentMethod: PayrollPaymentMethod.Bank,
@@ -69,8 +73,8 @@ public sealed class EmployeeHiredHandler(
         var created = EmployeePayrollProfile.Create(integrationEvent.TenantId, integrationEvent.EmployeeId, data);
         if (created.IsFailure)
         {
-            // Defensive only: every field above is either fixed or event-derived, none of the operator-entered
-            // validations (SGK workplace/meal amount/code length) can actually fail from this call site.
+            // Never swallow silently: a missing profile means the employee is skipped by every payroll run.
+            logger.LogError("Payroll profile NOT created for hired employee {EmployeeId} (tenant {TenantId}): {ErrorCode}.", integrationEvent.EmployeeId, integrationEvent.TenantId, created.Error.Code);
             return;
         }
 
