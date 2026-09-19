@@ -121,6 +121,11 @@ public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(LeaveDomainErrors.OvertimeInvalidDuration, ("max", OvertimeLimits.MaxDurationMinutes));
         }
 
+        if (!Enum.IsDefined(payRateKind))
+        {
+            return Error.Validation(LeaveDomainErrors.OvertimeInvalidPayRateKind);
+        }
+
         if (overlapWithScheduleMinutes < 0 || overlapWithScheduleMinutes > durationMinutes)
         {
             return Error.Validation(LeaveDomainErrors.OvertimeInvalidOverlap);
@@ -146,6 +151,11 @@ public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
         if (Status != OvertimeRequestStatus.Pending)
         {
             return Error.Conflict(LeaveDomainErrors.OvertimeNotPending);
+        }
+
+        if (!Enum.IsDefined(payRateKind))
+        {
+            return Error.Validation(LeaveDomainErrors.OvertimeInvalidPayRateKind);
         }
 
         PayRateKind = payRateKind;

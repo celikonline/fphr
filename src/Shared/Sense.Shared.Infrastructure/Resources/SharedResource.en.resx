@@ -679,6 +679,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.overtime_nothing_to_convert" xml:space="preserve"><value>There is no payable time to convert.</value></data>
   <data name="leave.errors.overtime_overlap" xml:space="preserve"><value>You already have pending or approved overtime in these hours.</value></data>
   <data name="leave.errors.overtime_consent_revoked" xml:space="preserve"><value>The employee's overtime consent revocation is in effect on this date.</value></data>
+  <data name="leave.errors.overtime_future_date" xml:space="preserve"><value>Overtime cannot be requested for a day that has not been worked yet.</value></data>
+  <data name="leave.errors.overtime_invalid_pay_rate_kind" xml:space="preserve"><value>Invalid overtime pay rate.</value></data>
   <data name="leave.errors.overtime_override_payable_not_allowed" xml:space="preserve"><value>You are not allowed to convert the full duration.</value></data>
   <data name="leave.overtime_consent.not_found" xml:space="preserve"><value>Overtime consent not found.</value></data>
   <data name="leave.overtime_consent.already_revoked" xml:space="preserve"><value>This overtime consent has already been revoked.</value></data>

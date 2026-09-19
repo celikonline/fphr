@@ -688,6 +688,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.overtime_nothing_to_convert" xml:space="preserve"><value>Dönüştürülecek ödenecek süre yok.</value></data>
   <data name="leave.errors.overtime_overlap" xml:space="preserve"><value>Bu saatlerde bekleyen veya onaylı başka bir fazla mesai kaydınız var.</value></data>
   <data name="leave.errors.overtime_consent_revoked" xml:space="preserve"><value>Çalışanın fazla çalışma onayını geri alması bu tarihte yürürlüğe girmiş.</value></data>
+  <data name="leave.errors.overtime_future_date" xml:space="preserve"><value>Henüz çalışılmamış bir gün için fazla mesai talebi oluşturulamaz.</value></data>
+  <data name="leave.errors.overtime_invalid_pay_rate_kind" xml:space="preserve"><value>Geçersiz fazla mesai ücret oranı.</value></data>
   <data name="leave.errors.overtime_override_payable_not_allowed" xml:space="preserve"><value>Tam süreyle dönüştürme yetkiniz yok.</value></data>
   <data name="leave.overtime_consent.not_found" xml:space="preserve"><value>Fazla çalışma onayı bulunamadı.</value></data>
   <data name="leave.overtime_consent.already_revoked" xml:space="preserve"><value>Bu fazla çalışma onayı zaten geri alınmış.</value></data>

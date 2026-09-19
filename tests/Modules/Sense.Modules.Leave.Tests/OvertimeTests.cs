@@ -167,6 +167,14 @@ public sealed class OvertimeIntegrationTests : TestFixture
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
 
+    /// <summary>The submit handlers reject work dates after tenant-local today; the scenarios below use fixed 2026-09/10 dates, so "now" is pinned after all of them.</summary>
+    private static readonly TimeProvider AfterAllTestDates = new PinnedTimeProvider(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
+
+    private sealed class PinnedTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
     protected override void ConfigureServices(IServiceCollection services)
     {
         var configuration = (IConfiguration)services.First(s => s.ServiceType == typeof(IConfiguration)).ImplementationInstance!;
@@ -232,14 +240,14 @@ public sealed class OvertimeIntegrationTests : TestFixture
         // Monday 2026-09-14 17:00 for 3 h: 1 h inside the placeholder 09–18 schedule; no consent yet → warnings, still submitted.
         var monday = new DateOnly(2026, 9, 14);
         var submitted = await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(17, 0), 180, "sayım"), CancellationToken.None), _currentUser, _workflow);
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(17, 0), 180, "sayım"), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates);
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
         submitted.Value.PayableMinutes.ShouldBe(120);
         submitted.Value.Warnings.ShouldContain(OvertimeWarnings.ConsentMissing);
         submitted.Value.Warnings.ShouldContain(OvertimeWarnings.OverlapsSchedule);
 
         (await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(19, 0), 60, null), CancellationToken.None), _currentUser, _workflow))
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(19, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates))
             .Error.Code.ShouldBe(OvertimeErrors.Overlap);
 
         await bus.Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Overtime, submitted.Value.Id, employeeId));
@@ -285,11 +293,11 @@ public sealed class OvertimeIntegrationTests : TestFixture
         revoked.Value.RevocationEffectiveAt.ShouldBe(new DateOnly(2026, 10, 1));
 
         var inNotice = await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 9, 26), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow);
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 9, 26), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates);
         inNotice.IsSuccess.ShouldBeTrue(inNotice.IsFailure ? inNotice.Error.Code : null);
         inNotice.Value.Warnings.ShouldBeEmpty(); // Saturday, consent still in effect during notice
         (await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 10, 3), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow))
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 10, 3), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates))
             .Error.Code.ShouldBe(OvertimeErrors.ConsentRevoked);
     }
 
