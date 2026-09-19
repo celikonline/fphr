@@ -159,6 +159,15 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ANY_SETTINGS_PERMISSION,
     iconColor: "steel",
   },
+  // Appended (senseik-047): previously only reachable via the Uygulamalar launcher / home widget - D-03 keşfedilebilirlik.
+  {
+    key: "workflowInbox",
+    labelKey: "nav.workflowInbox",
+    path: "/app/inbox",
+    icon: Inbox,
+    permissions: ["workflow.inbox.view"],
+    iconColor: "teal",
+  },
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [

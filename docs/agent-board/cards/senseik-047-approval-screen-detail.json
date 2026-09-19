@@ -1,0 +1,16 @@
+{
+  "id": "senseik-047",
+  "title": "Onay ekranında karar verecek bilgi yok (ham UUID gösteriliyor) + onay kutusu menüde bulunamıyor",
+  "owner": "pc-b",
+  "state": "review",
+  "branch": "b/approval-screen-detail",
+  "worktree": ".claude/worktrees/agent-aca96bb58d3cb2040",
+  "acceptance": [
+    "Onay ekranında (Karar ver) talep türüne göre ilgili detaylar gösteriliyor: fazla mesai için tarih+saat sayısı+gerekçe, izin için tarih aralığı+tür+gün sayısı — ham UUID YERİNE anlamlı bir başlık/özet",
+    "Onay kutusu görünümünde gönderim tarihi yanında talebin KENDİ tarihi (örn. mesai tarihi) de gösteriliyor",
+    "Onay kutusu (/app/inbox) sol menüde bulunabilir bir yerde (mevcut Uygulamalar sayfası + ana sayfa bileşeni dışında), bekleyen iş sayısını gösteren bir rozet ile"
+  ],
+  "merge_gate": "dotnet test (Workflow) + pnpm --filter web typecheck + manuel test: fazla mesai ve izin onay kararları detaylı bilgiyle veriliyor",
+  "handoff": "docs/handoffs/approval-screen-detail.md",
+  "source": "1. Tur Test Bulgu Dokümanı § D-01 (YÜKSEK — yönetici kör onay veriyor), D-03 (ORTA — keşfedilebilirlik)."
+}

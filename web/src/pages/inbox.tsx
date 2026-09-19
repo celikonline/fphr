@@ -4,15 +4,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@mantine/hooks";
 import { Badge, Button, Card, Group, Modal, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { Inbox as InboxIcon } from "lucide-react";
-import { ApprovalCard } from "@/components/ui/approval-card";
+import { ApprovalCard, type ApprovalCardField } from "@/components/ui/approval-card";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateOnly } from "@/lib/dates";
+import { useLeaveName, useDays } from "@/components/leave/leave-shared";
+import { formatTimeOnly, useMinutes } from "@/components/leave/overtime-shared";
 import {
   decideTask,
   listInbox,
   overrideDecideTask,
+  type ApprovalRequestSummaryDto,
   type DecideTaskPayload,
   type InboxTaskDto,
 } from "@/services/workflow.service";
@@ -28,12 +32,15 @@ export default function WorkflowInboxPage() {
 }
 
 function WorkflowInbox() {
-  const { t, i18n } = useTranslation(["workflow", "common"]);
+  const { t, i18n } = useTranslation(["workflow", "common", "leave"]);
   const canOverride = usePermission("workflow.request.override");
   const queryClient = useQueryClient();
   // ≤390px: decide/override buttons need a ≥40px touch target (Faz 1 tur 1 FE md.4).
   const isMobile = useMediaQuery("(max-width: 390px)");
   const touchButtonStyle = isMobile ? { minHeight: 40 } : undefined;
+  const leaveName = useLeaveName();
+  const days = useDays();
+  const minutes = useMinutes();
 
   const inboxQuery = useQuery({ queryKey: INBOX_QUERY_KEY, queryFn: listInbox });
   const items = inboxQuery.data ?? [];
@@ -42,6 +49,45 @@ function WorkflowInbox() {
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY });
+  }
+
+  /**
+   * senseik-047 D-01: request-type-specific fields from the summary projection - date+duration+reason for overtime,
+   * date range+type+day count for leave - instead of the raw subjectId a manager can't act on.
+   */
+  function summaryFields(summary: ApprovalRequestSummaryDto | null | undefined): ApprovalCardField[] {
+    if (!summary) return [];
+
+    const requestDateField: ApprovalCardField = {
+      label: t("workflow:inbox.requestDate"),
+      value: formatDateOnly(summary.requestDate, i18n.language),
+    };
+
+    if (summary.overtime) {
+      const { overtime } = summary;
+      return [
+        requestDateField,
+        { label: t("workflow:inbox.startTime"), value: formatTimeOnly(overtime.startTime) },
+        { label: t("workflow:inbox.duration"), value: minutes(overtime.durationMinutes) },
+        { label: t("workflow:inbox.reason"), value: overtime.reason ?? "—" },
+      ];
+    }
+
+    if (summary.leave) {
+      const { leave } = summary;
+      const typeLabel = leave.leaveTypeName ? leaveName(leave.leaveTypeName) : t(`leave:code.${leave.leaveTypeCode}`);
+      return [
+        requestDateField,
+        {
+          label: t("workflow:inbox.dateRange"),
+          value: `${formatDateOnly(leave.startDate, i18n.language)} – ${formatDateOnly(leave.endDate, i18n.language)}`,
+        },
+        { label: t("workflow:inbox.leaveType"), value: typeLabel },
+        { label: t("workflow:inbox.days"), value: `${days(leave.days)} ${t("leave:days")}` },
+      ];
+    }
+
+    return [requestDateField];
   }
 
   return (
@@ -96,6 +142,7 @@ function WorkflowInbox() {
                       },
                     ]
                   : []),
+                ...summaryFields(task.summary),
               ]}
               actions={
                 <>
@@ -129,6 +176,7 @@ function WorkflowInbox() {
         <DecideDialog
           task={decideTarget.task}
           override={decideTarget.override}
+          fields={summaryFields(decideTarget.task.summary)}
           onClose={() => setDecideTarget(null)}
           onDecided={refresh}
         />
@@ -140,11 +188,13 @@ function WorkflowInbox() {
 interface DecideDialogProps {
   task: InboxTaskDto;
   override: boolean;
+  /** senseik-047 D-01: the same request-type-specific fields shown on the inbox card, so the decide screen never falls back to a raw subjectId. */
+  fields: ApprovalCardField[];
   onClose: () => void;
   onDecided: () => void;
 }
 
-function DecideDialog({ task, override, onClose, onDecided }: DecideDialogProps) {
+function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDialogProps) {
   const { t } = useTranslation(["workflow", "common"]);
   const [comment, setComment] = useState("");
   const isMobile = useMediaQuery("(max-width: 390px)");
@@ -176,12 +226,26 @@ function DecideDialog({ task, override, onClose, onDecided }: DecideDialogProps)
         <Stack gap={2}>
           <Text fw={600}>{override ? t("workflow:inbox.overrideDecide") : t("workflow:inbox.decide")}</Text>
           <Text size="sm" c="dimmed">
-            {t(`workflow:requestType.${task.requestType}`)} · {task.subjectId}
+            {t(`workflow:requestType.${task.requestType}`)}
           </Text>
         </Stack>
       }
     >
       <Stack gap="md">
+        {fields.length > 0 && (
+          <Card withBorder padding="sm">
+            <Group gap="lg" wrap="wrap">
+              {fields.map((field, index) => (
+                <Stack gap={0} key={index}>
+                  <Text size="xs" c="dimmed">
+                    {field.label}
+                  </Text>
+                  <Text size="sm">{field.value}</Text>
+                </Stack>
+              ))}
+            </Group>
+          </Card>
+        )}
         {override && (
           <Text size="sm" c="dimmed">
             {t("workflow:inbox.overrideHint")}

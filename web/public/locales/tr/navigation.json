@@ -20,7 +20,8 @@
     "support": "Destek",
     "trust": "Güven ve güvenlik",
     "collapseSidebar": "Menüyü daralt",
-    "expandSidebar": "Menüyü genişlet"
+    "expandSidebar": "Menüyü genişlet",
+    "workflowInbox": "Onay kutusu"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {

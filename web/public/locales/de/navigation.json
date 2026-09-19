@@ -20,7 +20,8 @@
     "support": "Support",
     "trust": "Vertrauen & Sicherheit",
     "collapseSidebar": "Menü einklappen",
-    "expandSidebar": "Menü ausklappen"
+    "expandSidebar": "Menü ausklappen",
+    "workflowInbox": "Genehmigungs-Posteingang"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

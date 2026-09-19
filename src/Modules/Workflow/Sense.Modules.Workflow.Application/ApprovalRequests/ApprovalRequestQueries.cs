@@ -1,5 +1,6 @@
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Identity.Contracts;
+using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
 using Sense.Shared.Contracts.Context;
@@ -61,7 +62,8 @@ public sealed class ListInboxHandler(
     ITenantContext tenant,
     IApprovalRequestRepository requests,
     IRoleAssignmentLookup roleAssignments,
-    IEmployeeDirectory employeeDirectory) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
+    IEmployeeDirectory employeeDirectory,
+    IEnumerable<IApprovalRequestSummaryProvider> summaryProviders) : IQueryHandler<ListInboxQuery, IReadOnlyList<InboxTaskDto>>
 {
     /// <summary>
     /// The only fallback role queue IApproverResolver falls back to today is "HR" (TenantSettings.Workflow.FallbackApproverRoleCode
@@ -105,6 +107,15 @@ public sealed class ListInboxHandler(
             : await employeeDirectory.GetContactsAsync(tenant.TenantId, requesterIds, cancellationToken);
         var requesterNames = contacts.ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 
+        var providersByRequestType = summaryProviders.ToDictionary(p => p.RequestType, StringComparer.Ordinal);
+        var summariesByRequestId = new Dictionary<Guid, ApprovalRequestSummary?>();
+        foreach (var parent in requestsById.Values)
+        {
+            summariesByRequestId[parent.Id] = providersByRequestType.TryGetValue(parent.RequestType, out var provider)
+                ? await provider.GetSummaryAsync(tenant.TenantId, parent.SubjectId, cancellationToken)
+                : null;
+        }
+
         IReadOnlyList<InboxTaskDto> dtos = tasks
             .Where(t => requestsById.ContainsKey(t.ApprovalRequestId))
             .Select(t =>
@@ -113,7 +124,7 @@ public sealed class ListInboxHandler(
                 return new InboxTaskDto(
                     t.Id, parent.Id, parent.RequestType, parent.SubjectId,
                     requesterNames.GetValueOrDefault(parent.RequesterEmployeeId), t.StepNumber, t.ApproverEmployeeId is null,
-                    parent.SubmittedAt);
+                    parent.SubmittedAt, summariesByRequestId.GetValueOrDefault(parent.Id));
             })
             .ToList();
 

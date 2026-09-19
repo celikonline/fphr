@@ -20,7 +20,8 @@
     "support": "Support",
     "trust": "Trust & security",
     "collapseSidebar": "Collapse sidebar",
-    "expandSidebar": "Expand sidebar"
+    "expandSidebar": "Expand sidebar",
+    "workflowInbox": "Approval inbox"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
