@@ -140,7 +140,7 @@ public sealed class MinioAdapter : IFileStorage
     }
 
     /// <inheritdoc />
-    public async Task ConfirmUploadAsync(
+    public async Task<long> ConfirmUploadAsync(
         Guid tenantId,
         string bucketName,
         string key,
@@ -172,7 +172,7 @@ public sealed class MinioAdapter : IFileStorage
                 _logger.LogWarning(
                     "ETag mismatch for {TenantId}/{BucketName}/{Key}: expected {ExpectedETag}, got {ActualETag}",
                     tenantId, bucketName, key, normalizedExpectedETag, normalizedActualETag);
-                throw new InvalidOperationException("Upload confirmation failed: ETag mismatch");
+                throw new StorageETagMismatchException("Upload confirmation failed: ETag mismatch");
             }
 
             _logger.LogInformation(
@@ -180,11 +180,13 @@ public sealed class MinioAdapter : IFileStorage
                 tenantId, bucketName, key, stat.ETag, stat.Size);
 
             // TODO: Write audit event to outbox (Item 17 will integrate with audit system)
+
+            return stat.Size;
         }
         catch (Exception ex) when (IsObjectNotFound(ex))
         {
             _logger.LogError("Object not found for confirmation: {TenantId}/{BucketName}/{Key}", tenantId, bucketName, key);
-            throw new InvalidOperationException("File not found for confirmation", ex);
+            throw new StorageObjectNotFoundException("File not found for confirmation", ex);
         }
         catch (Exception ex) when (!(ex is InvalidOperationException))
         {

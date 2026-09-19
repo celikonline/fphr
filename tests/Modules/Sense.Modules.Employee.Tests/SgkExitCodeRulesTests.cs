@@ -36,7 +36,7 @@ public sealed class SgkExitCodeRulesTests
     [InlineData(TerminationType.ValidCause_Art18, "04", true)]
     [InlineData(TerminationType.ValidCause_Art18, "05", false)]
     [InlineData(TerminationType.Resignation, null, true, "no code given - nothing to check yet")]
-    [InlineData(TerminationType.Other, "anything-goes", true, "Other imposes no restriction")]
+    [InlineData(TerminationType.Other, "13", true, "Other imposes no family restriction")]
     public void IsCatalogConsistent_ChecksMembershipOnlyWhenACodeIsGiven(TerminationType type, string? code, bool expected, string because = "")
     {
         SgkExitCodeRules.IsCatalogConsistent(type, code).ShouldBe(expected, because);
@@ -51,8 +51,15 @@ public sealed class SgkExitCodeRulesTests
             "the system seed intentionally leaves md.24/md.25 without a default sub-code");
 
     [Fact]
-    public void IsCatalogConsistent_NullType_IsAlwaysConsistent() =>
-        SgkExitCodeRules.IsCatalogConsistent(null, "99").ShouldBeTrue();
+    public void IsCatalogConsistent_NullType_ImposesNoFamily_ButCodeMustBeAKnownSgkCode()
+    {
+        SgkExitCodeRules.IsCatalogConsistent(null, "10").ShouldBeTrue();
+        SgkExitCodeRules.IsCatalogConsistent(null, "99").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsCatalogConsistent_NullType_EmptyCodeIsFine() =>
+        SgkExitCodeRules.IsCatalogConsistent(null, null).ShouldBeTrue();
 
     [Theory]
     [InlineData("23", true)]
@@ -77,10 +84,45 @@ public sealed class SgkExitCodeRulesTests
     {
         SgkExitCodeRules.IsTerminationConsistent(TerminationType.Other, null).ShouldBeTrue();
         SgkExitCodeRules.IsTerminationConsistent(TerminationType.Other, "22").ShouldBeTrue();
-        SgkExitCodeRules.IsTerminationConsistent(TerminationType.Other, "whatever").ShouldBeTrue();
+        SgkExitCodeRules.IsTerminationConsistent(TerminationType.Other, "13").ShouldBeTrue();
     }
 
     [Fact]
-    public void IsTerminationConsistent_NullType_IsAlwaysConsistent() =>
-        SgkExitCodeRules.IsTerminationConsistent(null, "99").ShouldBeTrue();
+    public void IsTerminationConsistent_NullType_StillRequiresAPlausibleCode()
+    {
+        SgkExitCodeRules.IsTerminationConsistent(null, "10").ShouldBeTrue();
+        SgkExitCodeRules.IsTerminationConsistent(null, null).ShouldBeTrue();
+        SgkExitCodeRules.IsTerminationConsistent(null, "99").ShouldBeFalse();
+    }
+
+    /// <summary>
+    /// Regression: reasons without a fixed type (Ölüm, Askerlik, Emeklilik, Evlilik, Deneme, Nakil) resolve to
+    /// TerminationType.Other, which imposes no family - so an invented code like "99" used to be saved.
+    /// </summary>
+    [Theory]
+    [InlineData("99", false)]
+    [InlineData("00", false)]
+    [InlineData("42", false)]
+    [InlineData("1", false)]
+    [InlineData("003", false)]
+    [InlineData("ab", false)]
+    [InlineData("1a", false)]
+    [InlineData("01", true)]
+    [InlineData("10", true)]
+    [InlineData("41", true)]
+    [InlineData(" 12 ", true)]
+    [InlineData(null, true)]
+    [InlineData("", true)]
+    public void IsPlausibleCode_AcceptsOnlyTwoDigitSgkRangeCodes(string? code, bool expected) =>
+        SgkExitCodeRules.IsPlausibleCode(code).ShouldBe(expected);
+
+    [Theory]
+    [InlineData(TerminationType.Other, "99")]
+    [InlineData(TerminationType.Other, "whatever")]
+    [InlineData(TerminationType.Resignation, "3")]
+    public void BothChecks_RejectMalformedOrUnknownCodes_EvenWhenTheFamilyIsUnrestricted(TerminationType type, string code)
+    {
+        SgkExitCodeRules.IsCatalogConsistent(type, code).ShouldBeFalse();
+        SgkExitCodeRules.IsTerminationConsistent(type, code).ShouldBeFalse();
+    }
 }

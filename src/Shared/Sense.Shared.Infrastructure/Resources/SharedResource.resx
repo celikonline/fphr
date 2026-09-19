@@ -186,6 +186,10 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Doğum tarihi gelecekte bir tarih olamaz.</value></data>
   <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Doğum tarihi işe başlama tarihinden sonra olamaz.</value></data>
+  <data name="employee.birth_date_too_early" xml:space="preserve"><value>Doğum tarihi 1900-01-01 öncesi olamaz.</value></data>
+  <data name="employee.hire_date_too_early" xml:space="preserve"><value>İşe giriş tarihi 1900-01-01 öncesi olamaz.</value></data>
+  <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</value></data>
+  <data name="employee.minimum_age" xml:space="preserve"><value>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 sayılı İş Kanunu md. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
   <data name="employee.mentor_self" xml:space="preserve"><value>Çalışan kendi mentörü olamaz.</value></data>
@@ -195,6 +199,8 @@
   <data name="employee.address_line_too_long" xml:space="preserve"><value>Adres en fazla 250 karakter olabilir.</value></data>
   <data name="employee.city_too_long" xml:space="preserve"><value>Şehir en fazla 100 karakter olabilir.</value></data>
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Posta kodu en fazla 20 karakter olabilir.</value></data>
+  <data name="employee.phone_invalid" xml:space="preserve"><value>Geçersiz telefon numarası. Yalnızca rakam, boşluk ve + - . / ( ) kullanın.</value></data>
+  <data name="employee.postal_code_invalid" xml:space="preserve"><value>Posta kodu en fazla 10 karakter olabilir.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Yalnızca aktif çalışanlar askıya alınabilir.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Yalnızca askıda olan çalışanlar yeniden aktifleştirilebilir.</value></data>
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Yalnızca aktif veya askıda olan çalışanlar işten çıkarılabilir.</value></data>
@@ -207,6 +213,7 @@
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
   <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>Sicil numarası en fazla 30 karakter olabilir.</value></data>
   <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>Bu sicil numarası başka bir çalışana kayıtlı.</value></data>
+  <data name="employee.work_email_taken" xml:space="preserve"><value>Bu iş e-postası başka bir çalışanda zaten kayıtlı.</value></data>
   <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>Türk uyruklu bir çalışana 99 ile başlayan (yabancı formatlı) kimlik numarası girilemez.</value></data>
   <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için kimlik numarası girilecekse 99 ile başlayan yabancı kimlik formatında olmalı.</value></data>
   <data name="employee.foreign_identification_required" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için Yabancı Kimlik No veya Pasaport No alanlarından en az biri zorunludur.</value></data>
@@ -449,6 +456,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Geçersiz telefon numarası: '{value}'.</value></data>
   <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>Değer en fazla {max} karakter olabilir.</value></data>
   <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>Bu kimlik numarası dosyada {row}. satırda da var.</value></data>
+  <data name="IMPORT_DUPLICATE_WORK_EMAIL" xml:space="preserve"><value>Bu iş e-postası başka bir çalışanda veya dosyadaki başka bir satırda zaten kullanılıyor.</value></data>
   <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>Kimlik numarası eşleşen çalışanın adı soyadı dosyadakiyle ({value}) aynı değil.</value></data>
   <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>Bu kimlik numarasıyla kayıtlı çalışan yok (Sadece güncelleme modunda yeni kayıt açılmaz).</value></data>
   <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' sistemde bulunamadı; önce tanımlanmalıdır.</value></data>
@@ -820,6 +828,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Aday bulunamadı.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>Adayın adı ve soyadı zorunludur.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
+  <data name="recruitment.candidate.phone_invalid" xml:space="preserve"><value>Geçersiz telefon numarası. Yalnızca rakam, boşluk ve + - . / ( ) kullanın.</value></data>
   <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Aday verisi zaten anonimleştirilmiş.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>
@@ -947,6 +956,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
+  <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
+  <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>
+  <data name="documents.uploaded_file_invalid" xml:space="preserve"><value>Depolamada bu belge için yüklenmiş geçerli bir dosya bulunamadı; dosyayı yükleyip tekrar deneyin.</value></data>
   <data name="document_type.not_found" xml:space="preserve"><value>Belge tipi bulunamadı.</value></data>
   <data name="document_type.code_required" xml:space="preserve"><value>Belge tipi kodu zorunludur.</value></data>
   <data name="document_type.code_too_long" xml:space="preserve"><value>Belge tipi kodu çok uzun.</value></data>

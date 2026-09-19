@@ -19,6 +19,7 @@ namespace Sense.Modules.Employee.Application.Import;
 public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSnapshot snapshot)
 {
     private readonly Dictionary<string, int> _seenNationalIds = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _seenWorkEmails = new(StringComparer.OrdinalIgnoreCase);
 
     public EmployeeImportValidation Validate(ImportRow row)
     {
@@ -85,6 +86,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         CheckLength(errors, EmployeeImportColumns.LastName, lastName, EmployeeLimits.NameMaxLength);
 
         var workEmail = Email(row, EmployeeImportColumns.WorkEmail, errors);
+        CheckWorkEmailUnique(row, workEmail, existing, errors);
         var personalEmail = Email(row, EmployeeImportColumns.PersonalEmail, errors);
         var workPhone = Text(row, EmployeeImportColumns.WorkPhone);
         if (workPhone is { Length: > EmployeeLimits.PhoneMaxLength })
@@ -315,6 +317,21 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
 
         var text = ImportValueParser.Normalize(cell.Text ?? cell.DateValue?.ToString("dd.MM.yyyy", System.Globalization.CultureInfo.InvariantCulture));
         return text.Length == 0 ? null : text;
+    }
+
+    /// <summary>A work e-mail (already lower-cased by <see cref="Email"/>) must not belong to another non-terminated employee nor repeat within the file.</summary>
+    private void CheckWorkEmailUnique(ImportRow row, string? workEmail, EmployeeRow? existing, List<ImportRowError> errors)
+    {
+        if (workEmail is null)
+        {
+            return;
+        }
+
+        var takenByOther = snapshot.ActiveIdByWorkEmail.TryGetValue(workEmail, out var ownerId) && ownerId != existing?.Id;
+        if (takenByOther || !_seenWorkEmails.TryAdd(workEmail, row.RowNumber))
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.WorkEmail, ImportErrorCodes.DuplicateWorkEmail, ValueArgs(workEmail)));
+        }
     }
 
     private static string? Email(ImportRow row, string key, List<ImportRowError> errors)

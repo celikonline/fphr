@@ -177,6 +177,10 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Birth date cannot be a future date.</value></data>
   <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Birth date cannot be after the hire date.</value></data>
+  <data name="employee.birth_date_too_early" xml:space="preserve"><value>Birth date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_early" xml:space="preserve"><value>Hire date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>Hire date can be at most 12 months in the future.</value></data>
+  <data name="employee.minimum_age" xml:space="preserve"><value>A person under 15 at the hire date cannot be employed (Labour Act 4857, art. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
   <data name="employee.mentor_self" xml:space="preserve"><value>An employee cannot be their own mentor.</value></data>
@@ -186,6 +190,8 @@
   <data name="employee.address_line_too_long" xml:space="preserve"><value>Address can be at most 250 characters.</value></data>
   <data name="employee.city_too_long" xml:space="preserve"><value>City can be at most 100 characters.</value></data>
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
+  <data name="employee.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
+  <data name="employee.postal_code_invalid" xml:space="preserve"><value>Postal code can be at most 10 characters.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Only active or suspended employees can be terminated.</value></data>
@@ -199,6 +205,7 @@
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
   <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>The registry number can be at most 30 characters.</value></data>
   <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>This registry number is already registered to another employee.</value></data>
+  <data name="employee.work_email_taken" xml:space="preserve"><value>This work e-mail is already used by another employee.</value></data>
   <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>A Turkish employee cannot have a national ID starting with 99 (foreign ID format).</value></data>
   <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>A foreign employee's national ID, if provided, must be in the foreign ID format (starting with 99).</value></data>
   <data name="employee.foreign_identification_required" xml:space="preserve"><value>A foreign employee requires at least one of Foreign ID Number or Passport Number.</value></data>
@@ -440,6 +447,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Invalid phone number: '{value}'.</value></data>
   <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>The value can be at most {max} characters.</value></data>
   <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>This national ID also appears on row {row} of the file.</value></data>
+  <data name="IMPORT_DUPLICATE_WORK_EMAIL" xml:space="preserve"><value>This work e-mail is already used by another employee or by another row of the file.</value></data>
   <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>The name of the employee matching this national ID differs from the file ({value}).</value></data>
   <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>No employee is registered with this national ID (Update only mode does not create records).</value></data>
   <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' was not found; it must be defined first.</value></data>
@@ -811,6 +819,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Candidate not found.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>The candidate's first and last name are required.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
+  <data name="recruitment.candidate.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
   <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Candidate data has already been anonymized.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
@@ -938,6 +947,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
+  <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
+  <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>
+  <data name="documents.uploaded_file_invalid" xml:space="preserve"><value>No valid uploaded file was found in storage for this document; upload the file and try again.</value></data>
   <data name="document_type.not_found" xml:space="preserve"><value>Document type not found.</value></data>
   <data name="document_type.code_required" xml:space="preserve"><value>Document type code is required.</value></data>
   <data name="document_type.code_too_long" xml:space="preserve"><value>Document type code is too long.</value></data>

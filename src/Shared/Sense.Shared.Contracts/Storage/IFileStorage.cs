@@ -49,7 +49,8 @@ public interface IFileStorage
     /// <param name="key">Object key that was uploaded.</param>
     /// <param name="eTag">ETag (content hash) returned by storage after upload completion.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task ConfirmUploadAsync(
+    /// <returns>The object size in bytes as stored (authoritative; never trust a client-reported size).</returns>
+    Task<long> ConfirmUploadAsync(
         Guid tenantId,
         string bucketName,
         string key,

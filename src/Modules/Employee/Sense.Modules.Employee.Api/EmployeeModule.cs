@@ -72,8 +72,12 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
         services.AddScoped<TerminationReasonProvisioningService>();
 
-        // senseik-006/F-01: one-time SGK exit code backfill (not auto-run - see TerminationReasonCorrectionService's doc comment).
+        // senseik-006/F-01: SGK exit code backfill service (run at API startup by TerminationReasonCorrectionHostedService below).
         services.AddScoped<TerminationReasonCorrectionService>();
+
+        // Runs the correction at API startup for every writable tenant (idempotent; Worker does not load this module).
+        services.AddScoped<TerminationReasonCorrectionSynchronizer>();
+        services.AddHostedService<TerminationReasonCorrectionHostedService>();
         services.AddScoped<JobSecurityEvaluator>();
         services.AddScoped<CollectiveDismissalEvaluator>();
 

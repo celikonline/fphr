@@ -214,6 +214,30 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         candidate.Source.ShouldBe(CandidateSource.CareerSite);
     }
 
+    /// <summary>Regression: e-mail lookup was case-sensitive, so "X@Example.com" created a second candidate and a second application.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_SubmitApplication_EmailDifferingOnlyByCase_ReusesCandidate_AndRejectsDuplicateApply()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        (await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Ada", "Demir", "Ada.Demir@Example.com", null, "2026-09", true))).IsSuccess.ShouldBeTrue();
+
+        var duplicate = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Ada", "Demir", "ADA.DEMIR@example.COM", null, "2026-09", true));
+        duplicate.IsFailure.ShouldBeTrue();
+        duplicate.Error.Code.ShouldBe(RecruitmentDomainErrors.ApplicationAlreadyExists);
+
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        using var readTenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var candidates = await db.Candidates.Where(c => c.Email.ToLower() == "ada.demir@example.com").ToListAsync();
+        candidates.Count.ShouldBe(1);
+        candidates[0].Email.ShouldBe("ada.demir@example.com");
+    }
+
     [Fact]
     public async Task PublicCareerFlow_SubmitApplication_OutdatedPrivacyNoticeVersion_IsRejected()
     {
@@ -906,6 +930,14 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         public Task<IReadOnlyDictionary<Guid, string>> GetSgkIsyeriSicilNoAsync(
             Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+
+        /// <summary>Not exercised by this fixture's tests (S-31 is Attendance-facing, not S-19); always null.</summary>
+        public Task<LocationGeofence?> GetGeofenceAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<LocationGeofence?>(null);
+
+        /// <summary>Not exercised by this fixture's tests (S-31 is Attendance-facing, not S-19); always null.</summary>
+        public Task<LocationGeofence?> FindBySelfCheckInCodeAsync(Guid tenantId, string code, CancellationToken cancellationToken = default) =>
+            Task.FromResult<LocationGeofence?>(null);
     }
 
     /// <summary>

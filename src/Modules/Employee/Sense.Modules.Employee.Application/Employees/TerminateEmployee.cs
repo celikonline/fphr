@@ -54,7 +54,7 @@ public sealed class TerminateEmployeeValidator : AbstractValidator<TerminateEmpl
         // when either override is omitted the effective value comes from the chosen reason's defaults, which this
         // validator cannot see; TerminateEmployeeHandler re-checks the fully resolved pair before writing.
         RuleFor(x => x.SgkExitCode)
-            .Must((command, sgkExitCode) => command.TerminationType is null || SgkExitCodeRules.IsCatalogConsistent(command.TerminationType, sgkExitCode))
+            .Must((command, sgkExitCode) => SgkExitCodeRules.IsCatalogConsistent(command.TerminationType, sgkExitCode))
             .WithMessage(EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
     }
 }

@@ -290,6 +290,19 @@ public sealed class TerminationIntegrationTests : TestFixture
             validSubCodeTarget.Value.Id, exitDate, familyReason.Value.Id, TerminationType.EmployeeJustCause_Art24, "24"));
         terminated.IsSuccess.ShouldBeTrue();
         terminated.Value.Employee.SgkExitCode.ShouldBe("24");
+
+        // Regression: a reason without a fixed type (Ölüm, Askerlik, ...) imposes no family, so an invented code such
+        // as "99" used to be accepted and stored. It is now rejected both in the catalog and at termination time.
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new CreateTerminationReasonCommand("TypelessBad", "Türsüz kötü", "99", null, 320)));
+        var typelessReason = await ExecuteCommandAsync(new CreateTerminationReasonCommand("TypelessOk", "Türsüz iyi", "10", null, 330));
+        typelessReason.IsSuccess.ShouldBeTrue();
+        var typelessTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Tür", "Süz", null, null, null, null, hireDate, null, null, null));
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new TerminateEmployeeCommand(typelessTarget.Value.Id, exitDate, typelessReason.Value.Id, SgkExitCode: "99")));
+        var typelessDone = await ExecuteCommandAsync(new TerminateEmployeeCommand(typelessTarget.Value.Id, exitDate, typelessReason.Value.Id));
+        typelessDone.IsSuccess.ShouldBeTrue();
+        typelessDone.Value.Employee.SgkExitCode.ShouldBe("10");
     }
 
     /// <summary>
@@ -333,6 +346,51 @@ public sealed class TerminationIntegrationTests : TestFixture
             var correctionService = scope.ServiceProvider.GetRequiredService<TerminationReasonCorrectionService>();
             (await correctionService.CorrectKnownWrongSystemCodesAsync()).ShouldBe(0, "a second run must be a no-op");
         }
+    }
+
+    /// <summary>
+    /// Regression: the correction service was registered but never ran, so existing tenants kept Resignation = "29"
+    /// (only "03" is allowed) and an İstifa termination could not be completed. The startup synchronizer runs it for
+    /// every active tenant, is idempotent and leaves tenant-customized rows alone.
+    /// </summary>
+    [Fact]
+    public async Task CorrectionSynchronizer_FixesEveryActiveTenantAtStartup_AndIsIdempotent()
+    {
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        foreach (var tenantId in new[] { tenantA, tenantB })
+        {
+            SetUser(tenantId);
+            await ExecuteQueryAsync(new ListTerminationReasonsQuery());
+            using var scope = ServiceProvider!.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<EmployeeDbContext>();
+            var resignation = await db.TerminationReasons.FirstAsync(r => r.Code == "Resignation");
+            resignation.Update(resignation.Name, tenantId == tenantA ? "29" : "05", resignation.DefaultTerminationType, resignation.SortOrder);
+            await db.SaveChangesAsync();
+        }
+
+        var directory = Substitute.For<Sense.Shared.Contracts.BackgroundJobs.IActiveTenantDirectory>();
+        directory.GetActiveTenantIdsAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IReadOnlyList<Guid>>([tenantA, tenantB]));
+
+        async Task<int> RunAsync()
+        {
+            using var scope = ServiceProvider!.CreateScope();
+            var synchronizer = new TerminationReasonCorrectionSynchronizer(
+                directory,
+                scope.ServiceProvider.GetRequiredService<Sense.Shared.Contracts.Context.ITenantContextSetter>(),
+                scope.ServiceProvider.GetRequiredService<TerminationReasonCorrectionService>(),
+                scope.ServiceProvider.GetRequiredService<IEmployeeUnitOfWork>(),
+                Microsoft.Extensions.Logging.Abstractions.NullLogger<TerminationReasonCorrectionSynchronizer>.Instance);
+            return await synchronizer.SyncAllTenantsAsync(CancellationToken.None);
+        }
+
+        (await RunAsync()).ShouldBe(1, "only tenant A's Resignation still carries the old wrong \"29\"");
+        (await RunAsync()).ShouldBe(0, "second run is a no-op");
+
+        SetUser(tenantA);
+        (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.Single(r => r.Code == "Resignation").DefaultSgkExitCode.ShouldBe("03");
+        SetUser(tenantB);
+        (await ExecuteQueryAsync(new ListTerminationReasonsQuery())).Value.Single(r => r.Code == "Resignation").DefaultSgkExitCode.ShouldBe("05", "a tenant's own customization survives");
     }
 
     /// <summary>
