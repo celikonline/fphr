@@ -744,6 +744,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.period_not_approved" xml:space="preserve"><value>The payroll period has not been approved.</value></data>
   <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>The payroll period has not been paid.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Salary changed</value></data>
+
+  <!-- Payroll (senseik-011, F-06): severance/notice/unused-leave estimate (exit wizard) -->
+  <data name="payroll.severance.estimate" xml:space="preserve"><value>View the severance/notice estimate</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>

@@ -81,6 +81,14 @@ public static class LegislationParameterSeed
 
         // Payroll (Faz 3 P2, 11.3.07-bordro.md "Yemek varyant kuralları") - see PayrollDraft2026 doc comment above.
         P(39, "Payroll.Meal.MarketCard.ExemptionApplies", 0m, Payroll2026, null, PayrollDraft2026 + " - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"),
+
+        // Severance/notice estimate (senseik-011, F-06 "İşten ayrılış sihirbazı"): kıdem tazminatı tavanı 6 ayda bir
+        // güncellenir (taslak değer - mali müşavirle doğrulanmalı, PayrollDraft2026 ile aynı çekince). İhbar tablosu
+        // İş K. m.17'nin kıdem/hafta eşiklerini gün cinsinden kodlar (183/548/1095 gün ~ 6 ay/1,5 yıl/3 yıl).
+        P(40, "Severance.CeilingGross", 55000.00m, Payroll2026, null, PayrollDraft2026 + " - kıdem tazminatı tavanı (bir hizmet yılı için azami brüt tutar, İş K. m.14)"),
+        PJson(41, "Notice.WeeksBySeniorityTiers", Payroll2026, null,
+            """[{"upperBoundDays":183,"weeks":2},{"upperBoundDays":548,"weeks":4},{"upperBoundDays":1095,"weeks":6},{"upperBoundDays":null,"weeks":8}]""",
+            "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)"),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

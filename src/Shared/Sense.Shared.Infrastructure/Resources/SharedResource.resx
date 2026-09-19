@@ -754,6 +754,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>Bordro dönemi ödenmemiş.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Maaş değişti</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Bordro parametresi değişti</value></data>
+
+  <!-- Payroll (senseik-011, F-06): kıdem/ihbar/kullanılmamış izin ücreti tahmini (İşten ayrılış sihirbazı) -->
+  <data name="payroll.severance.estimate" xml:space="preserve"><value>Kıdem/ihbar tazminatı tahminini görüntüleme</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>

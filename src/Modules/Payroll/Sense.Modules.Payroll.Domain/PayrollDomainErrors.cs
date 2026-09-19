@@ -20,6 +20,9 @@ public static class PayrollDomainErrors
     public const string ProfileOverlap = "payroll.errors.profile_overlap";
     public const string ProfileExternalCodeTooLong = "payroll.errors.profile_external_code_too_long";
     public const string ProfileNotesTooLong = "payroll.errors.profile_notes_too_long";
+
+    /// <summary>senseik-011 (F-06): the severance/notice estimate needs a current salary record (Employee.Contracts.IEmployeeSalaryLookup) to derive a daily wage from.</summary>
+    public const string SeveranceEstimateSalaryMissing = "payroll.errors.severance_estimate_salary_missing";
 }
 
 /// <summary>Domain limits.</summary>
