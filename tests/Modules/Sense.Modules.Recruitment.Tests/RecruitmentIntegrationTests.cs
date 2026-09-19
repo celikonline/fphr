@@ -677,7 +677,11 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         fake.ApplicationsById[application.Id] = application;
 
         var fakeCandidate = new FakeCandidateRepository();
-        var candidate = Candidate.Create(tenantId, "John", "Doe", "john.doe@example.com", "+905551234567").Value;
+        // id: candidateId - same fix as application.Id below (tur 11 kapanışı): Candidate.Create generates its own
+        // id when none is passed, which never matched the unrelated candidateId used in the event/fake dictionary
+        // key below - GetByIdAsync(@event.CandidateId) always missed and the handler silently returned early
+        // ("candidate not found"), so this test never actually exercised provisioning despite the tur 11 fix note.
+        var candidate = Candidate.Create(tenantId, "John", "Doe", "john.doe@example.com", "+905551234567", id: candidateId).Value;
         fakeCandidate.CandidatesById[candidate.Id] = candidate;
 
         var fakeProvisioning = new FakeEmployeeProvisioning();
