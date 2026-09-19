@@ -580,6 +580,8 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var employeeId = Guid.NewGuid();
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
         await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
 
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
