@@ -54,6 +54,8 @@ public sealed record RevokeOvertimeConsentRequest(DateOnly NoticeAt);
 
 public sealed record ConvertOvertimeToTimeOffRequest(decimal? Rate, OvertimeMinutesBasis MinutesBasis, Guid? LeaveTypeId, string? Note);
 
+public sealed record ConvertOvertimeToPayRequest(OvertimeMinutesBasis MinutesBasis, string? Note);
+
 public sealed record AbsenceIdResponse(Guid Id);
 
 public sealed record RecordAbsenceRequest(DateOnly Date, AbsenceKind Kind, decimal? Hours, string? Note);

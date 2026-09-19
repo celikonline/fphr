@@ -1067,9 +1067,25 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.col.effectiveFrom" xml:space="preserve"><value>Effective from</value></data>
   <data name="report.col.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
   <data name="report.col.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
+  <data name="report.col.workDate" xml:space="preserve"><value>Date</value></data>
+  <data name="report.col.startTime" xml:space="preserve"><value>Start time</value></data>
+  <data name="report.col.durationMinutes" xml:space="preserve"><value>Duration (minutes)</value></data>
+  <data name="report.col.payableMinutes" xml:space="preserve"><value>Payable minutes</value></data>
+  <data name="report.col.payRateKind" xml:space="preserve"><value>Pay rate</value></data>
+  <data name="report.col.conversionKind" xml:space="preserve"><value>Conversion type</value></data>
+  <data name="report.col.conversionStatus" xml:space="preserve"><value>Conversion status</value></data>
+  <data name="report.col.reconciliationPeriod" xml:space="preserve"><value>Period</value></data>
+  <data name="report.col.reconciliationUsageDetail" xml:space="preserve"><value>Leave used</value></data>
+  <data name="report.col.reconciliationEmployeeSignature" xml:space="preserve"><value>Employee signature</value></data>
+  <data name="report.col.reconciliationEmployeeSignatureDate" xml:space="preserve"><value>Signed on</value></data>
+  <data name="report.col.reconciliationHrApproval" xml:space="preserve"><value>HR approval</value></data>
+  <data name="report.col.reconciliationHrApprovalDate" xml:space="preserve"><value>Approved on</value></data>
+  <data name="report.col.reconciliationNoUsage" xml:space="preserve"><value>No leave used</value></data>
   <data name="report.sheet.employeeList" xml:space="preserve"><value>Employee list</value></data>
   <data name="report.sheet.leaveBalanceSummary" xml:space="preserve"><value>Leave balance</value></data>
   <data name="report.sheet.leaveRequests" xml:space="preserve"><value>Leave report</value></data>
+  <data name="report.sheet.leaveReconciliation" xml:space="preserve"><value>Leave reconciliation form</value></data>
+  <data name="report.sheet.overtimeMonthly" xml:space="preserve"><value>Overtime report</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>
@@ -1138,6 +1154,13 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.col.closedAt" xml:space="preserve"><value>Closed at</value></data>
   <data name="report.sheet.attendanceMonthlySummary" xml:space="preserve"><value>Monthly timesheet summary</value></data>
   <data name="report.sheet.attendanceMonthlyClosing" xml:space="preserve"><value>Month-end closing - Accountant report</value></data>
+  <data name="report.enum.OvertimePayRateKind.Rate25" xml:space="preserve"><value>25%</value></data>
+  <data name="report.enum.OvertimePayRateKind.Rate50" xml:space="preserve"><value>50%</value></data>
+  <data name="report.enum.OvertimeConversionKind.Pay" xml:space="preserve"><value>Pay</value></data>
+  <data name="report.enum.OvertimeConversionKind.TimeOff" xml:space="preserve"><value>Time off</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Posted" xml:space="preserve"><value>Posted</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Reversed" xml:space="preserve"><value>Reversed</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Expired</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>

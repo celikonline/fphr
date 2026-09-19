@@ -26,8 +26,12 @@ public enum OvertimeConversionStatus
 }
 
 /// <summary>
-/// Conversion of an approved overtime request (11.3.5 "OvertimeConversion"). This slice implements TimeOff: the result is an
-/// ExtraGrant ledger row (<see cref="LedgerEntryId"/>). Pay (Expense PayrollAdjustment) and reversal come later.
+/// Conversion of an approved overtime request (11.3.5 "OvertimeConversion"). TimeOff (<see cref="ToTimeOff"/>) posts an
+/// ExtraGrant ledger row (<see cref="LedgerEntryId"/>). Pay (<see cref="ToPay"/>, kart senseik-030) records the explicit
+/// "nakde çevir" decision without touching the ledger - <c>Leave.Contracts.IOvertimePayrollReader</c> already treats a
+/// request as cash-payable unless its conversion is a Posted TimeOff (never-converted and Kind=Pay land in the same
+/// Rate25/Rate50 bucket there), so this factory exists for the audit trail and to block a later TimeOff conversion of
+/// the same request via <see cref="OvertimeRequest.MarkConverted"/>. Reversal still comes later.
 /// </summary>
 public sealed class OvertimeConversion : TenantAggregateRoot<Guid>, IAuditLogged
 {
@@ -116,6 +120,48 @@ public sealed class OvertimeConversion : TenantAggregateRoot<Guid>, IAuditLogged
             ConvertedAt = at,
             Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
             UsedByDate = usedByDate,
+        };
+    }
+
+    /// <summary>
+    /// "Fazla mesaiyi ödemeye çevir" (kart senseik-030): approved, not-yet-converted request only. No rate/ledger math -
+    /// <see cref="RateSnapshot"/> is the request's own <see cref="OvertimeRequest.PayRateMultiplier"/> snapshot (%25/%50,
+    /// kart senseik-012 §1) for the audit trail; the cash amount is computed by Payroll from its own wage data when it
+    /// reads <c>IOvertimePayrollReader</c> (Leave has no salary access - Modules_TalkOnlyThroughContracts).
+    /// </summary>
+    public static Result<OvertimeConversion> ToPay(OvertimeRequest request, OvertimeMinutesBasis basis, Guid? convertedByUserId, DateTime at, string? note)
+    {
+        if (request.Status != OvertimeRequestStatus.Approved)
+        {
+            return Error.Conflict(LeaveDomainErrors.OvertimeNotApproved);
+        }
+
+        if (request.ConversionId is not null)
+        {
+            return Error.Conflict(LeaveDomainErrors.OvertimeAlreadyConverted);
+        }
+
+        var basisMinutes = basis == OvertimeMinutesBasis.Full ? request.DurationMinutes : request.PayableMinutes;
+        if (basisMinutes <= 0)
+        {
+            return Error.Validation(LeaveDomainErrors.OvertimeNothingToConvert);
+        }
+
+        return new OvertimeConversion(request.TenantId, request.Id, request.EmployeeId)
+        {
+            Kind = OvertimeConversionKind.Pay,
+            MinutesBasis = basis,
+            RateSnapshot = request.PayRateMultiplier,
+            BasisMinutes = basisMinutes,
+            ResultMinutes = basisMinutes,
+            ResultDays = 0m,
+            DailyWorkMinutesSnapshot = 0,
+            LeaveTypeId = null,
+            Status = OvertimeConversionStatus.Posted,
+            ConvertedByUserId = convertedByUserId,
+            ConvertedAt = at,
+            Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
+            UsedByDate = null,
         };
     }
 

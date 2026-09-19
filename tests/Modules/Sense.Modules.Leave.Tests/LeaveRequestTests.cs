@@ -7,6 +7,8 @@ using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Employee.Infrastructure.Lookups;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Calendar;
 using Sense.Modules.Leave.Application.Requests;
@@ -207,12 +209,18 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // returns null (NSubstitute default for Task<Guid?>) so TeamOverlap stays null - existing tests don't assert it.
         services.AddSingleton(Substitute.For<IEmployeeLookup>());
         services.AddSingleton(Substitute.For<IEmployeeDirectory>());
+
+        // senseik-007 (age-50-exception): EmployeeHiredHandler needs IEmployeeBirthDateLookup - same registration as
+        // OvertimeTests/LeaveBalanceRecalculationJobTests; without it every EmployeeHired publish fails DI resolution.
+        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
     }
 
     protected override async Task OnDatabaseReadyAsync()
     {
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
         await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
+        await ServiceProvider.GetRequiredService<EmployeeDbContext>().Database.MigrateAsync();
     }
 
     private async Task<Result<LeaveRequestDto>> SubmitAsync(

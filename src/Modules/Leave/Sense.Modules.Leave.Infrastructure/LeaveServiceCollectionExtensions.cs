@@ -35,6 +35,8 @@ public static class LeaveServiceCollectionExtensions
         // Raporlar menüsü katkıları (roadmap #44/#70) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveBalanceSummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveRequestsReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveReconciliationReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.OvertimeMonthlyReportProvider>();
         return services;
     }
 
