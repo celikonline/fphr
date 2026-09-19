@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Shared.Contracts.Audit;
-using Sense.Shared.Infrastructure.Querying;
 
 namespace Sense.Modules.Identity.Infrastructure.Persistence;
 

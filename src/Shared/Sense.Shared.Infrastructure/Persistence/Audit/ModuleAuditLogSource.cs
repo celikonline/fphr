@@ -1,6 +1,5 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Shared.Contracts.Audit;
-using Sense.Shared.Infrastructure.Querying;
 
 namespace Sense.Shared.Infrastructure.Persistence.Audit;
 
@@ -30,7 +29,9 @@ public sealed class ModuleAuditLogSource<TContext>(TContext db) : IAuditLogSourc
 
         if (!string.IsNullOrWhiteSpace(filter.Actor))
         {
-            var pattern = LikePattern.Contains(filter.Actor);
+            // Identity.Infrastructure'daki LikePattern'ı burada kullanamayız (Shared, Identity'ye bağımlı olamaz -
+            // ters yön); tek satırlık aynı desen, paylaşımlı bir yardımcıya değecek kadar tekrar etmiyor.
+            var pattern = $"%{filter.Actor.Trim()}%";
             query = query.Where(e => EF.Functions.ILike(e.Actor, pattern));
         }
 

@@ -4,6 +4,7 @@ using Sense.Modules.Identity.Application.AuditLog;
 using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Infrastructure.Context;
 using Shouldly;
 using Xunit;
 
