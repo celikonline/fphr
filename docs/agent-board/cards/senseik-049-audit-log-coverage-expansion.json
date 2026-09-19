@@ -2,7 +2,7 @@
   "id": "senseik-049",
   "title": "Denetim kaydı kapsamı genişletilsin: Employee/Leave/Overtime/Approval işlemleri hiç loglanmıyor",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "review",
   "branch": "a/audit-log-coverage-expansion",
   "worktree": ".claude/worktrees/audit-coverage",
   "acceptance": [
@@ -14,5 +14,6 @@
   ],
   "merge_gate": "dotnet test (Employee/Leave/Workflow) + demo'da 3+ farklı işlem türü (çalışan düzenleme, izin onayı, FM onayı) denetim kaydında doğru görünüyor",
   "handoff": "docs/handoffs/audit-log-coverage-expansion.md",
-  "source": "1. Tur Test Bulgu Dokümanı § E-01 (KRİTİK — KVKK m.12, özel nitelikli veri sağlık/sendika bilgisi içeriyor). NOT: senseik-018 (audit-log-fix, tamamlandı) sadece Identity modülündeki (User/Role) interceptor'ı düzeltti — actor/source doğru artık ama Employee/Leave/Overtime modülleri hiç IAuditLogged değil, interceptor bu modüllerin DbContext'lerine hiç bağlı değil. Bu kart farklı/geniş bir mimari genişleme, senseik-018'in TEKRARI DEĞİL."
+  "source": "1. Tur Test Bulgu Dokümanı § E-01 (KRİTİK — KVKK m.12, özel nitelikli veri sağlık/sendika bilgisi içeriyor). NOT: senseik-018 (audit-log-fix, tamamlandı) sadece Identity modülündeki (User/Role) interceptor'ı düzeltti — actor/source doğru artık ama Employee/Leave/Overtime modülleri hiç IAuditLogged değil, interceptor bu modüllerin DbContext'lerine hiç bağlı değil. Bu kart farklı/geniş bir mimari genişleme, senseik-018'in TEKRARI DEĞİL.",
+  "result": "Kod tamam, dev (0b41991) üzerine rebase edildi. Migration'lar dev snapshot'ı üzerine modül başına TEK olarak üretildi: Employee 20260919103003_AddEmployeeAuditLogEntries, Leave 20260919103044_AddLeaveAuditLogEntries, Workflow 20260919103116_AddWorkflowAuditLogEntries (yalnız audit_log_entries tablosu + 2 index). Build: Sense.Api/Sense.Migrator 0 hata. Testler (native dotnet + Docker Desktop, paralel agent yükü altında): Identity.Tests 113/113 geçti; Employee.Tests 217/221 (4 hata PaymentsIntegrationTests - audit testleri geçti; hata nedeni incelenemedi, dev'de de var mı doğrulanmadı); Leave.Tests 104/113 (8 hata Docker.DotNet bağlantı hatası = altyapı, 1 LeaveBalanceRecalculationJobTests incelenemedi; audit testleri geçti); Workflow.Tests Docker yanıt vermediği için ÇALIŞTIRILAMADI. Bu oturumda eklenen: izin reddi testi, details 2000 karakter kesme koruması. Merge öncesi: Workflow.Tests + Payments/LeaveBalance hatalarının dev'de de olup olmadığı ve demo doğrulaması (bkz. handoff)."
 }

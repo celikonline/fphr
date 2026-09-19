@@ -6,9 +6,11 @@ using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Leave.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Leave.Api;
 
@@ -28,7 +30,13 @@ public sealed class LeaveModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<LeaveDbContext>(configuration, LeaveDbContext.SchemaName);
+        // senseik-049: Identity dışına genişletilen denetim izi - IdentityModule'deki IdentityAuditLogInterceptor
+        // deseninin aynısı, paylaşımlı AuditLogInterceptor ile (bkz. Sense.Shared.Infrastructure.Persistence.Audit).
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<LeaveDbContext>(
+            configuration, LeaveDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<LeaveDbContext>>();
         services.AddModuleHandlers(
             LeaveDbContext.SchemaName,
             typeof(LeaveErrors).Assembly,

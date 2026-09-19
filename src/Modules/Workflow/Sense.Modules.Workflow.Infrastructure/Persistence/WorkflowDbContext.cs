@@ -5,6 +5,7 @@ using Sense.Modules.Workflow.Domain.ApprovalPolicies;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Workflow.Infrastructure.Persistence;
 
@@ -25,6 +26,19 @@ public sealed class WorkflowDbContext(DbContextOptions<WorkflowDbContext> option
     public DbSet<ApprovalHistoryEntry> ApprovalHistoryEntries => Set<ApprovalHistoryEntry>();
 
     public DbSet<EmailDecisionToken> EmailDecisionTokens => Set<EmailDecisionToken>();
+
+    /// <summary>senseik-049: workflow.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>
+    /// AuditLogEntryConfiguration ÖNCE uygulanmalı - bkz. EmployeeDbContext'teki aynı override'ın doc comment'i
+    /// (ModuleDbContext.OnModelCreating'in Tenant query filter/index döngüsü base çağrısı sırasında çalışır).
+    /// </summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class WorkflowTables

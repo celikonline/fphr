@@ -48,6 +48,9 @@ public enum OvertimePayRateKind
 /// </summary>
 public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    /// <summary>senseik-049: onay/red denetim izinde "Pending → Approved" gibi durum geçişini gösterir.</summary>
+    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status)];
+
     private OvertimeRequest()
     {
     }
