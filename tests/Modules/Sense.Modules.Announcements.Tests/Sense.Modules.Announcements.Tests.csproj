@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Api/Sense.Modules.Announcements.Api.csproj" />
+    <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Application/Sense.Modules.Announcements.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Contracts/Sense.Modules.Announcements.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Domain/Sense.Modules.Announcements.Domain.csproj" />
+    <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Sense.Modules.Announcements.Infrastructure.csproj" />
+    <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+    <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+    <PackageReference Include="coverlet.collector" />
+  </ItemGroup>
+
+</Project>

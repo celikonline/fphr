@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Sense.Modules.Announcements.Infrastructure;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Assets.Infrastructure;
 using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Attendance.Infrastructure;
@@ -196,6 +198,19 @@ builder.Services.AddModuleHandlers(
     typeof(AssetsDbContext).Assembly,
     typeof(Sense.Modules.Assets.Contracts.AssetsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AssetsDbContext>>();
+
+// Announcements (Faz 4 #69/#71, incl. the Support sub-area): writes SupportTicketCreated to its own outbox - no
+// consumer yet (future platform support queue / Notifications template), but drained so EventTypeRegistry knows the
+// type. Consumes no other module's events, so AddAnnouncementsCoreServices is the only registration call.
+builder.Services.AddModuleDbContext<AnnouncementsDbContext>(builder.Configuration, AnnouncementsDbContext.SchemaName);
+builder.Services.AddAnnouncementsCoreServices(builder.Configuration);
+builder.Services.AddModuleHandlers(
+    AnnouncementsDbContext.SchemaName,
+    typeof(Sense.Modules.Announcements.Application.AnnouncementsErrors).Assembly,
+    typeof(AnnouncementsDbContext).Assembly,
+    typeof(Sense.Modules.Announcements.Domain.IAnnouncementRepository).Assembly,
+    typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
 
 // Integrations (Faz 8 #61): consumes Employee's employee.* lifecycle events and turns them into outbound webhook
 // deliveries for tenants with an active subscription (see faz8-durum-takibi.md). Writes nothing to its own outbox
