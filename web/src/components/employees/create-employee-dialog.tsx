@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button, Group, Modal, Stack, Text } from "@mantine/core";
 import { toast } from "@/hooks/use-toast";
+import { useFormDraft } from "@/hooks/use-form-draft";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { createEmployee } from "@/services/employees.service";
 import {
@@ -23,6 +24,19 @@ interface CreateEmployeeDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/** localStorage-persisted subset of the dialog's state (S-53 draft recovery, see use-form-draft.ts). */
+interface CreateEmployeeDraft {
+  values: EmployeeGeneralValues;
+  orgUnitId: string | null;
+  manager: PickedEmployee | null;
+}
+
+const DRAFT_STORAGE_KEY = "senseik.draft.employee-create";
+
+function isDraftEmpty(draft: CreateEmployeeDraft): boolean {
+  return !draft.orgUnitId && !draft.manager && Object.values(draft.values).every((value) => value.trim() === "");
+}
+
 /** "Yeni çalışan ekle": only first/last name are required; the card opens after saving. */
 export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmployeeDialogProps) {
   const { t } = useTranslation(["employees", "common"]);
@@ -32,6 +46,18 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
   const [orgUnitId, setOrgUnitId] = useState<string | null>(null);
   const [manager, setManager] = useState<PickedEmployee | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
+
+  const { clearDraft } = useFormDraft<CreateEmployeeDraft>({
+    storageKey: DRAFT_STORAGE_KEY,
+    value: { values, orgUnitId, manager },
+    enabled: open,
+    isEmpty: isDraftEmpty,
+    onRestore: (draft) => {
+      setValues(draft.values);
+      setOrgUnitId(draft.orgUnitId);
+      setManager(draft.manager);
+    },
+  });
 
   function reset() {
     setValues(EMPTY_GENERAL_VALUES);
@@ -45,6 +71,7 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
     onSuccess: (employee) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       toast({ variant: "success", title: t("common:success"), description: t("employees:create.success") });
+      clearDraft();
       onOpenChange(false);
       reset();
       navigate(`/app/employees/${employee.id}`);
