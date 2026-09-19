@@ -111,7 +111,10 @@ public static class SystemRoleDefinitions
              "attendance.timesheet.resolve",
              // Package A4: role mapping "Manager → view/resolve/plan/publish @Team" - Manager plans and publishes
              // shifts for their team but does not get shift.settings/.lock/.unlock (Owner/Admin/HR only, via attendance.*).
-             "attendance.shift.plan", "attendance.shift.publish"],
+             "attendance.shift.plan", "attendance.shift.publish",
+             // Package A5: "Aylık Puantaj" onayı (S-11) - Manager approves their own team's monthly puantaj, same
+             // shape as attendance.timesheet.resolve above.
+             "attendance.timesheet.approve"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
@@ -121,7 +124,10 @@ public static class SystemRoleDefinitions
              // (approve/lock yok)" - the excludes above never matched this module's actual key shape (attendance.shift.*,
              // not attendance.timesheets.*/attendance.settings.*), so Timekeeper's "attendance.*" wildcard would otherwise
              // have granted shift lock/unlock/settings too; excluded explicitly instead.
-             "attendance.shift.lock", "attendance.shift.unlock", "attendance.shift.settings", .. PermissionPatterns.Sensitive]),
+             "attendance.shift.lock", "attendance.shift.unlock", "attendance.shift.settings",
+             // senseik-056: same role mapping says "(approve ... yok)" - the monthly puantaj approval (Onayla / Tümünü Onayla)
+             // is HR/Manager territory, so the attendance.* wildcard must not hand it to Timekeeper.
+             "attendance.timesheet.approve", .. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Recruiter, DataScope.Company,
             ["recruitment.*", "employee.create", "employee.*.view", "organization.*.view", "reports.recruitment.*", "documents.*.view", .. PermissionPatterns.SelfService],

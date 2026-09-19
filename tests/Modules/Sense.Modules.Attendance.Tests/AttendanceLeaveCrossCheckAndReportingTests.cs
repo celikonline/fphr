@@ -184,6 +184,13 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
         loaded.Anomalies.ShouldBe(AttendanceAnomaly.None);
     }
 
+    private static IDataScopeService AllowAllScope()
+    {
+        var scope = Substitute.For<IDataScopeService>();
+        scope.CanAccessEmployeeAsync(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
+        return scope;
+    }
+
     [Fact]
     public async Task ApproveMonthlyTimesheet_FirstTime_CreatesApprovalAndRunsLeaveCrossCheck()
     {
@@ -203,7 +210,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
             var currentUser = Substitute.For<ICurrentUser>();
             var approverId = Guid.NewGuid();
             currentUser.UserId.Returns(approverId);
-            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, tenant, currentUser, TimeProvider.System);
+            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System);
 
             var result = await handler.Handle(new ApproveMonthlyTimesheetCommand(employeeId, date), TestContext.Current.CancellationToken);
 
@@ -243,7 +250,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
             var writeDb = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
             var currentUser = Substitute.For<ICurrentUser>();
             currentUser.UserId.Returns(Guid.NewGuid());
-            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, tenant, currentUser, TimeProvider.System);
+            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System);
 
             var first = await handler.Handle(new ApproveMonthlyTimesheetCommand(employeeId, periodMonth), TestContext.Current.CancellationToken);
             first.IsSuccess.ShouldBeTrue();

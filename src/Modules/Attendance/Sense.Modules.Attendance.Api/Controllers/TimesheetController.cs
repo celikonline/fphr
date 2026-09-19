@@ -111,4 +111,16 @@ public sealed class TimesheetController : ApiControllerBase
     [ProducesResponseType<MonthlyTimesheetApprovalDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ApproveMonthly(Guid employeeId, [FromQuery] DateOnly periodMonth, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ApproveMonthlyTimesheetCommand(employeeId, periodMonth), ct));
+
+    /// <summary>"Aylık Puantaj" ızgarası (S-11, package A5): worked/missing/overtime + leave day buckets + onay durumu.</summary>
+    [HttpGet("monthly")]
+    [ProducesResponseType<IReadOnlyList<MonthlyTimesheetRowDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Monthly([FromQuery] DateOnly periodMonth, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMonthlyTimesheetQuery(periodMonth, orgUnitId), ct));
+
+    /// <summary>"Tümünü Onayla"; zaten onaylanmış satırları atlar, o turda onaylanan satır sayısını döner.</summary>
+    [HttpPost("monthly/approve-all")]
+    [ProducesResponseType<int>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ApproveAllMonthly([FromQuery] DateOnly periodMonth, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ApproveAllMonthlyTimesheetsCommand(periodMonth, orgUnitId), ct));
 }

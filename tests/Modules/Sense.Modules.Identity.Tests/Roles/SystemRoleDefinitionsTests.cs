@@ -18,6 +18,7 @@ public sealed class SystemRoleDefinitionsTests
             "organization.approval_assignments.manage", "billing.invoices.view", "analytics.kpi.view",
             "identity.users.view", "identity.users.manage", "identity.users.invite", "identity.users.suspend",
             "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view",
+            "attendance.timesheet.view", "attendance.timesheet.resolve", "attendance.timesheet.approve",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -57,6 +58,20 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldContain("employee.directory.view");
         keys.ShouldContain("employee.orgchart.view");
         keys.ShouldNotContain("employee.salary.view");
+    }
+
+    /// <summary>senseik-056: "Aylık Puantaj" Onayla / Tümünü Onayla - Manager approves their own team (Team scope), HR/Admin/Owner
+    /// via wildcards, Timekeeper explicitly not ("approve yok" in the 11.3.06 role mapping), self-service roles never.</summary>
+    [Fact]
+    public void MonthlyTimesheetApprove_GoesToManagerAndHr_ButNotTimekeeperOrSelfService()
+    {
+        Resolve(SystemRoleCodes.Manager).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.HR).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Admin).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Timekeeper).ShouldNotContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Timekeeper).ShouldContain("attendance.timesheet.resolve");
+        Resolve(SystemRoleCodes.Employee).ShouldNotContain("attendance.timesheet.approve");
+        SystemRoleDefinitions.Get(SystemRoleCodes.Manager).Scope.ShouldBe(DataScope.Team);
     }
 
     [Fact]
