@@ -85,18 +85,18 @@ public static class DocumentsPermissions
     public static readonly Permission CompanyFilesView = new(
         "documents.company.view",
         Module,
-        "View Shared Company Files",
-        "Documents",
-        "View and download tenant-wide shared company files");
+        "Ortak Dosyaları Görüntüleme",
+        "Belgeler",
+        "Kiracı geneli ortak şirket dosyalarını görüntüleme ve indirme");
 
     /// <summary>Upload/delete shared company files (senseik-028). Granted to HR/Admin/Owner via those roles'
     /// existing "documents.*" wildcard include - no SystemRoleDefinitions change needed.</summary>
     public static readonly Permission CompanyFilesManage = new(
         "documents.company.manage",
         Module,
-        "Manage Shared Company Files",
-        "Documents",
-        "Upload and delete tenant-wide shared company files");
+        "Ortak Dosyaları Yönetme",
+        "Belgeler",
+        "Kiracı geneli ortak şirket dosyalarını yükleme ve silme");
 
     /// <summary>All Documents module permissions.</summary>
     public static IEnumerable<Permission> All =>

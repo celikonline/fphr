@@ -11,23 +11,23 @@ namespace Sense.Modules.OccupationalSafety.Contracts;
 public static class OhsPermissions
 {
     private const string Module = "ohs";
-    private const string Group = "OccupationalSafety";
+    private const string Group = "İSG";
 
     public static readonly Permission HazardClassificationsView = new(
-        "ohs.hazard_classifications.view", Module, "View Hazard Classifications", Group,
-        "View the workplace hazard class assigned to each location");
+        "ohs.hazard_classifications.view", Module, "Tehlike Sınıflarını Görüntüleme", Group,
+        "Her lokasyona atanan işyeri tehlike sınıfını görüntüleme");
 
     public static readonly Permission HazardClassificationsManage = new(
-        "ohs.hazard_classifications.manage", Module, "Manage Hazard Classifications", Group,
-        "Assign or update the workplace hazard class for a location");
+        "ohs.hazard_classifications.manage", Module, "Tehlike Sınıflarını Yönetme", Group,
+        "Bir lokasyonun işyeri tehlike sınıfını atama veya güncelleme");
 
     public static readonly Permission RiskAssessmentsView = new(
-        "ohs.risk_assessments.view", Module, "View Risk Assessments", Group,
-        "View recorded risk assessments and their renewal due dates");
+        "ohs.risk_assessments.view", Module, "Risk Değerlendirmelerini Görüntüleme", Group,
+        "Kayıtlı risk değerlendirmelerini ve yenileme son tarihlerini görüntüleme");
 
     public static readonly Permission RiskAssessmentsManage = new(
-        "ohs.risk_assessments.manage", Module, "Manage Risk Assessments", Group,
-        "Record new risk assessments");
+        "ohs.risk_assessments.manage", Module, "Risk Değerlendirmelerini Yönetme", Group,
+        "Yeni risk değerlendirmesi kaydetme");
 
     public static IEnumerable<Permission> All =>
     [
