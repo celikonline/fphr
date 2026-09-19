@@ -32,6 +32,7 @@ using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Modules.Performance.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Modules.Training.Infrastructure;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
@@ -263,6 +264,20 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
     typeof(OhsDbContext).Assembly,
     typeof(Sense.Modules.OccupationalSafety.Contracts.OhsPermissions).Assembly);
+
+// Training (Faz 4 #72: ön koşul eğitim + mentör atama): no cross-module events yet - DbContext + handler scanning
+// only, kept consistent with the other modules so future integration events (e.g. a completion notification) have
+// somewhere to land.
+builder.Services.AddModuleDbContext<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>(
+    builder.Configuration, Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext.SchemaName);
+builder.Services.AddTrainingCoreServices();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext.SchemaName,
+    typeof(Sense.Modules.Training.Domain.TrainingProgram).Assembly,
+    typeof(Sense.Modules.Training.Application.TrainingErrors).Assembly,
+    typeof(Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext).Assembly,
+    typeof(Sense.Modules.Training.Contracts.TrainingPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>>();
 
 await builder.Build().RunAsync();
 

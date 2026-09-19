@@ -1,7 +1,8 @@
 using FluentValidation;
-using Sense.Shared.Contracts.Queries;
+using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
-using Sense.Shared.Contracts.Tenants;
+using Sense.Shared.Contracts.Context;
+using Sense.Modules.Training.Contracts;
 using Sense.Modules.Training.Domain;
 using Sense.Shared.Kernel.Results;
 
@@ -9,19 +10,7 @@ namespace Sense.Modules.Training.Application.Enrollments;
 
 /// <summary>Eğitim programı katılımcılarını listele.</summary>
 [RequiresPermission("training.enrollments.view")]
-public sealed record ListEnrollmentsQuery(
-    Guid TenantId,
-    Guid? TrainingProgramId = null
-) : IQuery<List<EnrollmentDto>>;
-
-public sealed class ListEnrollmentsValidator : AbstractValidator<ListEnrollmentsQuery>
-{
-    public ListEnrollmentsValidator()
-    {
-        RuleFor(x => x.TenantId)
-            .NotEqual(Guid.Empty).WithMessage("Kiracı gereklidir.");
-    }
-}
+public sealed record ListEnrollmentsQuery(Guid? TrainingProgramId = null) : IQuery<List<EnrollmentDto>>;
 
 /// <summary>Katılımcı kayıtlarını listele — repository'den veri al.</summary>
 public sealed class ListEnrollmentsHandler(IEnrollmentRepository enrollments, ITenantContext tenant)
@@ -51,20 +40,13 @@ public sealed class ListEnrollmentsHandler(IEnrollmentRepository enrollments, IT
 
 /// <summary>Katılımcı kaydını ID'ye göre getir.</summary>
 [RequiresPermission("training.enrollments.view")]
-public sealed record GetEnrollmentQuery(
-    Guid EnrollmentId,
-    Guid TenantId
-) : IQuery<EnrollmentDto>;
+public sealed record GetEnrollmentQuery(Guid EnrollmentId) : IQuery<EnrollmentDto>;
 
 public sealed class GetEnrollmentValidator : AbstractValidator<GetEnrollmentQuery>
 {
     public GetEnrollmentValidator()
     {
-        RuleFor(x => x.EnrollmentId)
-            .NotEqual(Guid.Empty).WithMessage("Katılımcı kaydı gereklidir.");
-
-        RuleFor(x => x.TenantId)
-            .NotEqual(Guid.Empty).WithMessage("Kiracı gereklidir.");
+        RuleFor(x => x.EnrollmentId).NotEqual(Guid.Empty).WithMessage("Katılımcı kaydı gereklidir.");
     }
 }
 

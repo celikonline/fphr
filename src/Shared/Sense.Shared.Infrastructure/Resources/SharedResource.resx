@@ -173,6 +173,7 @@
   <data name="employee.not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="employee.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
   <data name="employee.manager_not_found" xml:space="preserve"><value>Seçilen yönetici bulunamadı veya pasif.</value></data>
+  <data name="employee.mentor_not_found" xml:space="preserve"><value>Seçilen mentör bulunamadı veya pasif.</value></data>
   <data name="employee.national_id_taken" xml:space="preserve"><value>Bu kimlik numarası başka bir çalışana kayıtlı.</value></data>
   <data name="employee.status_invalid" xml:space="preserve"><value>Geçersiz çalışan durumu.</value></data>
   <data name="employee.days_out_of_range" xml:space="preserve"><value>Gün sayısı 0 ile 366 arasında olmalı.</value></data>
@@ -187,6 +188,7 @@
   <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Doğum tarihi işe başlama tarihinden sonra olamaz.</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
+  <data name="employee.mentor_self" xml:space="preserve"><value>Çalışan kendi mentörü olamaz.</value></data>
   <data name="employee.child_count_invalid" xml:space="preserve"><value>Çocuk sayısı negatif olamaz.</value></data>
   <data name="employee.mobile_phone_too_long" xml:space="preserve"><value>Cep telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.home_phone_too_long" xml:space="preserve"><value>Ev telefonu en fazla 30 karakter olabilir.</value></data>
@@ -1287,4 +1289,18 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="support_ticket.already_closed" xml:space="preserve"><value>Talep zaten kapatılmış.</value></data>
   <data name="support_ticket.resolution_required" xml:space="preserve"><value>Yanıt metni gereklidir.</value></data>
   <data name="help_article.not_found" xml:space="preserve"><value>Yardım Merkezi makalesi bulunamadı.</value></data>
+
+  <!-- Training (Faz 4 #72: ön koşul eğitim + mentör atama) -->
+  <data name="training.program.title_required" xml:space="preserve"><value>Program başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
+  <data name="training.program.invalid_date_range" xml:space="preserve"><value>Başlangıç tarihi bitiş tarihinden önce olmalıdır.</value></data>
+  <data name="training.program.cannot_activate" xml:space="preserve"><value>Yalnızca taslak programlar aktifleştirilebilir.</value></data>
+  <data name="training.program.cannot_modify_archived" xml:space="preserve"><value>Arşivlenmiş programlar değiştirilemez.</value></data>
+  <data name="training.program.cannot_modify_closed" xml:space="preserve"><value>Kapalı programlar değiştirilemez.</value></data>
+  <data name="training.program.not_found" xml:space="preserve"><value>Eğitim programı bulunamadı.</value></data>
+  <data name="training.enrollment.not_found" xml:space="preserve"><value>Katılımcı kaydı bulunamadı.</value></data>
+  <data name="training.enrollment.already_completed" xml:space="preserve"><value>Katılımcı zaten tamamlandı olarak işaretlenmiş.</value></data>
+  <data name="training.enrollment.duplicate" xml:space="preserve"><value>Katılımcı zaten bu programa kaydedilmiş.</value></data>
+  <data name="training.enrollment.prerequisite_not_completed" xml:space="preserve"><value>Bu programa kaydolmadan önce ön koşul eğitimin tamamlanmış olması gerekir.</value></data>
+  <data name="training.requirement.self_reference" xml:space="preserve"><value>Bir eğitim programı kendi ön koşulu olamaz.</value></data>
+  <data name="training.requirement.not_found" xml:space="preserve"><value>Ön koşul kuralı bulunamadı.</value></data>
 </root>

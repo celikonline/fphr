@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Contracts;
 using Sense.Modules.Training.Domain;
+using Sense.Modules.Training.Infrastructure;
 using Sense.Modules.Training.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -19,8 +20,9 @@ public sealed class TrainingModule : IModule
     public IReadOnlyList<Assembly> Assemblies { get; } =
     [
         typeof(TrainingModule).Assembly,
-        typeof(TrainingPermissions).Assembly,
+        typeof(TrainingErrors).Assembly,
         typeof(TrainingDbContext).Assembly,
+        typeof(TrainingPermissions).Assembly,
     ];
 
     public IEnumerable<Permission> Permissions => TrainingPermissions.All;
@@ -29,16 +31,15 @@ public sealed class TrainingModule : IModule
     {
         services.AddModuleDbContext<TrainingDbContext>(configuration, TrainingDbContext.SchemaName);
 
-        // Domain + Contracts + Application assemblies: handlers/commands/queries + domain/integration event types must resolve in OutboxProcessor
+        // Domain + Application + Infrastructure + Contracts assemblies: handlers/commands/queries + domain/integration
+        // event types must resolve in OutboxProcessor (CLAUDE.md: Contracts-only registration silently registers nothing).
         services.AddModuleHandlers(
             TrainingDbContext.SchemaName,
+            typeof(TrainingProgram).Assembly, // Domain
             typeof(ITrainingProgramRepository).Assembly, // Application
-            typeof(TrainingErrors).Assembly, // Domain
             typeof(TrainingDbContext).Assembly, // Infrastructure
             typeof(TrainingPermissions).Assembly); // Contracts
 
-        services.AddScoped<ITrainingUnitOfWork>(sp => sp.GetRequiredService<TrainingDbContext>());
-        services.AddScoped<ITrainingProgramRepository, TrainingProgramRepository>();
-        services.AddScoped<IEnrollmentRepository, EnrollmentRepository>();
+        services.AddTrainingCoreServices();
     }
 }

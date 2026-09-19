@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Application.Programs;
 using Sense.Modules.Training.Domain;
 using Sense.Shared.Contracts.Context;

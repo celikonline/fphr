@@ -7,7 +7,7 @@ namespace Sense.Modules.Training.Domain;
 /// Training program agregat kökü.
 /// Eğitim programı, sınıf, tarihler ve kapasite yönetimi.
 /// </summary>
-public sealed class TrainingProgram : TenantAggregateRoot, IAuditLogged
+public sealed class TrainingProgram : TenantAggregateRoot<Guid>, IAuditLogged
 {
     // ReSharper disable UnusedMember.Local
     private TrainingProgram() { }
@@ -19,7 +19,6 @@ public sealed class TrainingProgram : TenantAggregateRoot, IAuditLogged
     public DateTime? EndDate { get; private set; }
     public int? MaxCapacity { get; private set; }
     public TrainingStatus Status { get; private set; }
-    public DateTime CreatedAt { get; private set; }
 
     /// <summary>
     /// Eğitim programı oluştur.

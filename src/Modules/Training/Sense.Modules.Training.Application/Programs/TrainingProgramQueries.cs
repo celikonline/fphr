@@ -1,35 +1,18 @@
-using Sense.Shared.Contracts.Queries;
-using Sense.Shared.Contracts.Security;
-using Sense.Shared.Contracts.Tenants;
-using Sense.Shared.Kernel.Results;
-using Sense.Modules.Training.Domain;
 using FluentValidation;
+using Sense.Modules.Training.Contracts;
+using Sense.Modules.Training.Domain;
+using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Security;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Training.Application.Programs;
 
-public record TrainingProgramDto(
-    Guid Id,
-    string Title,
-    string? Description,
-    DateTime StartDate,
-    DateTime EndDate,
-    int? MaxParticipants,
-    int EnrolledCount
-);
+/// <summary>Eğitim programlarını listele.</summary>
+[RequiresPermission("training.programs.view")]
+public sealed record ListTrainingProgramsQuery(bool? ActiveOnly = null) : IQuery<List<TrainingProgramDto>>;
 
-public record ListTrainingProgramsQuery(
-    Guid TenantId,
-    bool? ActiveOnly = null
-) : IQuery<List<TrainingProgramDto>>;
-
-public class ListTrainingProgramsValidator : AbstractValidator<ListTrainingProgramsQuery>
-{
-    public ListTrainingProgramsValidator()
-    {
-        // Basic validation; extend as needed
-    }
-}
-
+/// <summary>Eğitim programlarını listele — repository'den veri al.</summary>
 public sealed class ListTrainingProgramsHandler(ITrainingProgramRepository programs, ITenantContext tenant)
     : IQueryHandler<ListTrainingProgramsQuery, List<TrainingProgramDto>>
 {
@@ -37,38 +20,23 @@ public sealed class ListTrainingProgramsHandler(ITrainingProgramRepository progr
     {
         var trainingPrograms = await programs.GetAllAsync(tenant.TenantId, cancellationToken);
 
-        var dtos = trainingPrograms
-            .Select(p => new TrainingProgramDto(
-                p.Id,
-                p.Title,
-                p.Description,
-                p.StartDate,
-                p.EndDate,
-                p.MaxParticipants,
-                p.EnrolledCount
-            ))
-            .ToList();
+        var filtered = request.ActiveOnly is true
+            ? trainingPrograms.Where(p => p.Status == TrainingStatus.Active)
+            : trainingPrograms;
 
-        return dtos;
+        return filtered.Select(TrainingProgramMapping.ToDto).ToList();
     }
 }
 
 /// <summary>Eğitim programını ID'ye göre getir.</summary>
 [RequiresPermission("training.programs.view")]
-public sealed record GetTrainingProgramQuery(
-    Guid ProgramId,
-    Guid TenantId
-) : IQuery<TrainingProgramDto>;
+public sealed record GetTrainingProgramQuery(Guid ProgramId) : IQuery<TrainingProgramDto>;
 
 public sealed class GetTrainingProgramValidator : AbstractValidator<GetTrainingProgramQuery>
 {
     public GetTrainingProgramValidator()
     {
-        RuleFor(x => x.ProgramId)
-            .NotEqual(Guid.Empty).WithMessage("Eğitim programı gereklidir.");
-
-        RuleFor(x => x.TenantId)
-            .NotEqual(Guid.Empty).WithMessage("Kiracı gereklidir.");
+        RuleFor(x => x.ProgramId).NotEqual(Guid.Empty).WithMessage("Eğitim programı gereklidir.");
     }
 }
 
@@ -80,16 +48,23 @@ public sealed class GetTrainingProgramHandler(ITrainingProgramRepository program
     {
         var program = await programs.GetByIdAsync(tenant.TenantId, request.ProgramId, cancellationToken);
         if (program is null)
+        {
             return TrainingErrors.ProgramNotFound;
+        }
 
-        return new TrainingProgramDto(
-            program.Id,
-            program.Title,
-            program.Description,
-            program.StartDate,
-            program.EndDate,
-            program.MaxParticipants,
-            program.EnrolledCount
-        );
+        return TrainingProgramMapping.ToDto(program);
     }
+}
+
+internal static class TrainingProgramMapping
+{
+    public static TrainingProgramDto ToDto(TrainingProgram p) => new(
+        p.Id,
+        p.Title,
+        p.Description,
+        p.Category.ToString(),
+        p.StartDate,
+        p.EndDate,
+        p.MaxCapacity,
+        p.Status.ToString());
 }

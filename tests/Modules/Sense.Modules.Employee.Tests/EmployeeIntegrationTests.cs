@@ -198,6 +198,26 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task AssignMentor_ValidatesMentorExists_AndClears()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var units = await SeedOrgUnitsAsync(tenantId);
+
+        var newHire = await CreateAsync("Yeni", "Çalışan", orgUnitId: units.Root);
+        var mentor = await CreateAsync("Deneyimli", "Mentör", orgUnitId: units.Root);
+
+        ShouldFail(await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, Guid.NewGuid())), EmployeeErrors.MentorNotFound);
+        ShouldFail(await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, newHire.Id)), EmployeeDomainErrors.MentorSelf);
+
+        (await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, mentor.Id))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetEmployeeQuery(newHire.Id))).Value.MentorEmployeeId.ShouldBe(mentor.Id);
+
+        (await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, null))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetEmployeeQuery(newHire.Id))).Value.MentorEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task OrgChartDirectoryAndBirthdays_AreCompanyWideAndActiveOnly()
     {
         var tenantId = Guid.NewGuid();

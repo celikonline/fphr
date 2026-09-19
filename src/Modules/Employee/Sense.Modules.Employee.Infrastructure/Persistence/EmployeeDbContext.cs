@@ -132,6 +132,7 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => x.OrgUnitId);
         b.HasIndex(x => x.ManagerEmployeeId);
+        b.HasIndex(x => x.MentorEmployeeId);
         b.HasIndex(x => x.TerminationReasonId);
 
         // One employee record per Identity user, when linked; NULL (not-yet-linked) rows are excluded

@@ -1,5 +1,5 @@
 using NSubstitute;
-using Sense.Shared.Contracts.Tenants;
+using Sense.Shared.Contracts.Context;
 using Sense.Modules.Training.Application.Programs;
 using Sense.Modules.Training.Domain;
 using Xunit;

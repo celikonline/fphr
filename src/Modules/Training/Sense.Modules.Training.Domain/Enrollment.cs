@@ -6,13 +6,12 @@ namespace Sense.Modules.Training.Domain;
 /// <summary>
 /// Eğitim katılımcısı kaydı.
 /// </summary>
-public sealed class Enrollment : DomainEntity
+public sealed class Enrollment : TenantAggregateRoot<Guid>, IAuditLogged
 {
     // ReSharper disable UnusedMember.Local
     private Enrollment() { }
 
     public Guid TrainingProgramId { get; private set; }
-    public Guid TenantId { get; private set; }
     public Guid EmployeeId { get; private set; }
     public EnrollmentStatus Status { get; private set; }
     public DateTime EnrolledAt { get; private set; }
@@ -27,8 +26,8 @@ public sealed class Enrollment : DomainEntity
         var enrollment = new Enrollment
         {
             Id = Guid.NewGuid(),
-            TrainingProgramId = trainingProgramId,
             TenantId = tenantId,
+            TrainingProgramId = trainingProgramId,
             EmployeeId = employeeId,
             Status = EnrollmentStatus.Enrolled,
             EnrolledAt = DateTime.UtcNow

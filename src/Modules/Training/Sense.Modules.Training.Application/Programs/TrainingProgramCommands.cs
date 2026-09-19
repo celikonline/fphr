@@ -1,6 +1,6 @@
 using FluentValidation;
 using Sense.Modules.Training.Domain;
-using Sense.Shared.Contracts.Commands;
+using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;

@@ -207,7 +207,8 @@ public sealed class EmployeeDetailBuilder(
             e.TerminationDate,
             e.TerminationReasonId,
             e.TerminationType,
-            e.SgkExitCode);
+            e.SgkExitCode,
+            e.MentorEmployeeId);
     }
 }
 

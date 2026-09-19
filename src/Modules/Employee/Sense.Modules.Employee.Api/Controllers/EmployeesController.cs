@@ -277,6 +277,11 @@ public sealed class EmployeesController : ApiControllerBase
     public async Task<IActionResult> BulkAssignManager([FromBody] BulkAssignManagerRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new BulkAssignManagerCommand(request.Selection, request.ManagerEmployeeId), ct));
 
+    /// <summary>Assigns (or clears, with a null body value) the onboarding mentor ("mentör atama", Faz 4 #72) - independent of the manager hierarchy.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/mentor")]
+    public async Task<IActionResult> AssignMentor(Guid id, [FromBody] AssignMentorRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AssignMentorCommand(id, request.MentorEmployeeId), ct));
+
     /// <summary>Company directory of active employees.</summary>
     [HttpGet("directory")]
     [ProducesResponseType<PagedResult<DirectoryEntryDto>>(StatusCodes.Status200OK)]
