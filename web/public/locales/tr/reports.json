@@ -38,6 +38,10 @@
       "requests": {
         "label": "İzin raporu",
         "description": "Seçilen tarih aralığındaki izin talepleri: tür, süre, durum, talep ve karar tarihi."
+      },
+      "company_ledger": {
+        "label": "Şirket geneli izin/fazla mesai defteri",
+        "description": "\"İzinlerim\"/\"Fazla mesailerim\" ekranındaki şirket geneli görünümün Excel çıktısı: seçilen ayda kimler izinde, yıllık izin bakiyesi ve yıllık fazla mesai (270 saat sınırı)."
       }
     },
     "finance": {

@@ -558,5 +558,32 @@
       "hoursInvalid": "Late hours must be between 0 and 24.",
       "reasonRequired": "Reason is required."
     }
+  },
+  "companyLedger": {
+    "title": "Company leave/overtime ledger",
+    "subtitle": "Who is on leave this month, the highest annual leave balances, and overtime exceeding 270 hours - one filterable list.",
+    "allUnits": "All units",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "includeTerminated": "Also show terminated employees",
+    "onlyOnLeave": "Only those on leave this month",
+    "onlyOverLimit": "Only overtime exceeding {{hours}} hours",
+    "onlyOverLimitGeneric": "Only overtime exceeding the annual limit",
+    "onLeave": "On leave",
+    "notOnLeave": "—",
+    "overtimeLimitExceeded": "Limit exceeded",
+    "overtimeLimitOk": "—",
+    "export": "Export to Excel",
+    "exportSuccess": "Report generated; the download has started.",
+    "exportError": "The report could not be generated.",
+    "empty": "No employees match the selected filters.",
+    "columns": {
+      "employee": "Employee",
+      "unit": "Unit",
+      "onLeave": "On leave this month",
+      "annualBalance": "Annual leave balance",
+      "overtimeHours": "Annual overtime (hours)",
+      "overtimeLimit": "270-hour limit"
+    }
   }
 }

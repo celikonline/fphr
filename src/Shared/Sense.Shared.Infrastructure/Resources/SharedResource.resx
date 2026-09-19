@@ -704,6 +704,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>Çalışanın "{leaveType}" kullanımları yeni izin kuralında karşılığı olmayan bir türe ait; bu kullanımlar bakiyelere yansımaz.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>Devamsızlık kayıtlarını görüntüleme</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Devamsızlık kayıtlarını yönetme</value></data>
+  <data name="leave.company_ledger.read" xml:space="preserve"><value>Şirket izin/fazla mesai defterini görüntüleme</value></data>
   <data name="leave.absence.not_found" xml:space="preserve"><value>Devamsızlık kaydı bulunamadı.</value></data>
   <data name="leave.absence.note_too_long" xml:space="preserve"><value>Not en fazla 500 karakter olabilir.</value></data>
   <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Saat 0 ile 24 arasında olmalıdır.</value></data>
@@ -1100,6 +1101,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.sheet.leaveRequests" xml:space="preserve"><value>İzin raporu</value></data>
   <data name="report.sheet.leaveReconciliation" xml:space="preserve"><value>İzin mutabakat formu</value></data>
   <data name="report.sheet.overtimeMonthly" xml:space="preserve"><value>Fazla mesai raporu</value></data>
+  <data name="report.col.onLeave" xml:space="preserve"><value>İzinde mi</value></data>
+  <data name="report.col.leaveStart" xml:space="preserve"><value>İzin başlangıcı</value></data>
+  <data name="report.col.leaveEnd" xml:space="preserve"><value>İzin bitişi</value></data>
+  <data name="report.col.overtimeHoursYtd" xml:space="preserve"><value>Yıllık fazla mesai (saat)</value></data>
+  <data name="report.col.overtimeLimitExceeded" xml:space="preserve"><value>Yıllık fazla mesai sınırı aşıldı mı</value></data>
+  <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Şirket izin-mesai defteri</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Eksik belgeler</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Maaş listesi</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Taslak</value></data>

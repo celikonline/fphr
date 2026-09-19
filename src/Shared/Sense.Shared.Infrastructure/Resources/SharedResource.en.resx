@@ -695,6 +695,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>View absence records</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Manage absence records</value></data>
+  <data name="leave.company_ledger.read" xml:space="preserve"><value>View company leave/overtime ledger</value></data>
   <data name="leave.absence.not_found" xml:space="preserve"><value>Absence record not found.</value></data>
   <data name="leave.absence.note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Hours must be between 0 and 24.</value></data>
@@ -1091,6 +1092,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.sheet.leaveRequests" xml:space="preserve"><value>Leave report</value></data>
   <data name="report.sheet.leaveReconciliation" xml:space="preserve"><value>Leave reconciliation form</value></data>
   <data name="report.sheet.overtimeMonthly" xml:space="preserve"><value>Overtime report</value></data>
+  <data name="report.col.onLeave" xml:space="preserve"><value>On leave</value></data>
+  <data name="report.col.leaveStart" xml:space="preserve"><value>Leave start</value></data>
+  <data name="report.col.leaveEnd" xml:space="preserve"><value>Leave end</value></data>
+  <data name="report.col.overtimeHoursYtd" xml:space="preserve"><value>Annual overtime (hours)</value></data>
+  <data name="report.col.overtimeLimitExceeded" xml:space="preserve"><value>Exceeds annual limit</value></data>
+  <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Company leave/overtime ledger</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>

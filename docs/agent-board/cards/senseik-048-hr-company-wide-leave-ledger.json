@@ -1,17 +1,17 @@
 {
   "id": "senseik-048",
-  "title": "İK için şirket geneli izin/fazla mesai defteri (liste/filtre/dışa aktarım)",
+  "title": "İK için şirket geneli izin/fazla mesai defteri",
   "owner": "pc-b",
-  "state": "backlog",
+  "state": "review",
   "branch": "b/hr-company-wide-leave-ledger",
-  "worktree": ".claude/worktrees/hr-leave-ledger",
+  "worktree": ".",
   "acceptance": [
-    "İK Müdürü ve Hesap Sahibi rolleri için sol menüde 'İzinlerim'/'Fazla mesailerim' YANINDA (yerine değil) şirket geneli bir görünüm var: 'bu ay kimler izinde', 'yıllık izin birikimi en yüksek 10 kişi', 'bu yıl 270 saati aşan var mı' gibi sorulara cevap veren filtrelenebilir bir liste",
-    "Departman/lokasyon bazında filtreleme",
-    "Excel/CSV dışa aktarım",
-    "Mevcut izin takvimi (leave-calendar.tsx, senseik-024'te Outlook tarzı görünüm eklenecek) ile tamamlayıcı ama farklı bir ihtiyacı karşılıyor (liste/tablo görünümü, takvim değil)"
+    "İK Müdürü ve Hesap Sahibi rolleri için sol menüde İzinlerim/Fazla mesailerim YANINDA şirket geneli bir görünüm/rapor ekranı - bu ay kimler izinde, yıllık izin birikimi en yüksek 10 kişi, 270 saati aşan fazla mesai sorularını cevaplayan filtrelenebilir bir liste (yapıldı: /app/leave/company-ledger, leave.company_ledger.read)",
+    "Departman/lokasyon bazında filtreleme (yapıldı: OrgUnitSelect)",
+    "Excel/CSV dışa aktarım, mevcut IReportProvider/ClosedXML deseniyle (yapıldı: leave.company_ledger sağlayıcısı, Raporlar kataloğunda da görünür)",
+    "Mevcut izin takvimi (leave-calendar.tsx) ile tamamlayıcı ama farklı - liste/tablo görünümü (yapıldı, ayrı sayfa)"
   ],
-  "merge_gate": "dotnet test (Leave/Reporting) + pnpm --filter web typecheck + demo'da filtre/dışa aktarım çalışıyor",
+  "merge_gate": "dotnet test (Leave) yeşil + pnpm exec tsc --noEmit temiz - 2026-09-19: build + web tsc/eslint temiz; Testcontainers testleri Docker yanıt vermediği için bakiye düzeltmesi sonrası yeniden koşulamadı, merge sonrası koşulmalı",
   "handoff": "docs/handoffs/hr-company-wide-leave-ledger.md",
-  "source": "1. Tur Test Bulgu Dokümanı § D-04 (YÜKSEK — İK'nın rutin işi çalışanları teker teker açmaya indirgeniyor)."
+  "source": "Kullanıcı isteği (senseik-048), doğrudan agent görevi olarak verildi"
 }

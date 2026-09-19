@@ -38,6 +38,10 @@
       "requests": {
         "label": "Leave report",
         "description": "Leave requests in the selected date range: type, duration, status, request and decision dates."
+      },
+      "company_ledger": {
+        "label": "Company-wide leave/overtime ledger",
+        "description": "Excel export of the company-wide view next to \"My Leave\"/\"My Overtime\": who is on leave in the selected month, annual leave balance and annual overtime (270-hour limit)."
       }
     },
     "finance": {

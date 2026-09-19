@@ -38,6 +38,10 @@
       "requests": {
         "label": "Urlaubsbericht",
         "description": "Urlaubsanträge im gewählten Zeitraum: Art, Dauer, Status, Antrags- und Entscheidungsdatum."
+      },
+      "company_ledger": {
+        "label": "Unternehmensweites Urlaubs-/Überstundenregister",
+        "description": "Excel-Export der unternehmensweiten Ansicht neben \"Mein Urlaub\"/\"Meine Überstunden\": wer im gewählten Monat im Urlaub ist, Jahresurlaubssaldo und Jahresüberstunden (270-Stunden-Grenze)."
       }
     },
     "finance": {
