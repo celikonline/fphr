@@ -222,23 +222,44 @@
   box-shadow: 0 16px 32px -12px color-mix(in srgb, var(--mantine-color-brand-6) 90%, transparent);
 }
 
-.tenantOption {
+/* Tenant picker row (senseik-025): Card rendered as a native <button>, so it needs the usual browser button
+ * resets on top of Card's own layout, plus the hover/press affordances a clickable card should have. */
+.tenantCard {
+  appearance: none;
+  width: 100%;
+  margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--mantine-color-default-border);
   border-radius: var(--mantine-radius-md);
+  background-color: var(--mantine-color-body);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
   transition:
     background-color 150ms ease,
-    border-color 150ms ease;
+    border-color 150ms ease,
+    translate 150ms ease,
+    box-shadow 150ms ease;
 }
 
-.tenantOption:hover:not(:disabled) {
+.tenantCard:hover:not(:disabled) {
   border-color: var(--mantine-color-brand-6);
   background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  translate: 0 -1px;
+  box-shadow: 0 10px 22px -14px color-mix(in srgb, var(--mantine-color-brand-6) 55%, transparent);
 }
 
-.tenantOption:disabled {
+.tenantCard:focus-visible {
+  outline: 2px solid var(--mantine-color-brand-6);
+  outline-offset: 2px;
+}
+
+.tenantCard:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  translate: none;
+  box-shadow: none;
 }
 
 .demo {
