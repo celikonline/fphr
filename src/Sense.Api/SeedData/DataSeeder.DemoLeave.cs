@@ -18,11 +18,13 @@ using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.Balances;
+using Sense.Modules.Leave.Domain.Calendar;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
@@ -142,6 +144,14 @@ public partial class DataSeeder
         var count = await leaveDayCalculator.CalculateAsync(context.TenantId, context.EmployeeId, start, end, type.CountsNonWorkingDays, cancellationToken);
         if (count.Days <= 0m)
         {
+            // Demo employees have no work schedule yet at seed time: Attendance assigns the default one when the Worker
+            // processes EmployeeHired, which is after this seeder runs, so the calculator reads every day as weekly rest.
+            // Fall back to the Monday–Friday assumption (the default schedule) with the tenant's holiday calendar.
+            count = await CountWithMondayToFridayFallbackAsync(context.TenantId, start, end, type.CountsNonWorkingDays, cancellationToken);
+        }
+
+        if (count.Days <= 0m)
+        {
             logger.LogDebug("Skipping demo leave {Start}-{End} for employee {EmployeeId}: no leave days", start, end, context.EmployeeId);
             return 0;
         }
@@ -178,6 +188,19 @@ public partial class DataSeeder
 
         leaveCtx.Requests.Add(request);
         return 1;
+    }
+
+    private async Task<LeaveDayCount> CountWithMondayToFridayFallbackAsync(
+        Guid tenantId, DateOnly start, DateOnly end, bool countsNonWorkingDays, CancellationToken cancellationToken)
+    {
+        var calendar = await holidayCalendars.ResolveCalendarAsync(tenantId, null, null, cancellationToken);
+        var holidayMap = calendar is null
+            ? new Dictionary<DateOnly, string>()
+            : (await holidayCalendars.GetHolidaysAsync(tenantId, calendar.Id, start, end, cancellationToken))
+                .GroupBy(h => h.Date)
+                .ToDictionary(g => g.Key, g => g.First().Name);
+
+        return LeaveDayCounter.Count(start, end, LeaveDayCounter.MondayToFriday, holidayMap, countsNonWorkingDays);
     }
 
     private static void ThrowIfFailed(Result result)

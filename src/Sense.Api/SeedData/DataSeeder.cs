@@ -26,6 +26,7 @@ using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
@@ -53,6 +54,7 @@ public partial class DataSeeder(
     LeaveDbContext leaveCtx,
     LeaveBalanceService leaveBalances,
     ILeaveDayCalculator leaveDayCalculator,
+    IHolidayCalendarLookup holidayCalendars,
     ITenantContextSetter tenantContextSetter,
     AnnouncementsDbContext announcementsCtx,
     OhsDbContext ohsCtx)
