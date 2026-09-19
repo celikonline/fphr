@@ -49,7 +49,8 @@ import {
 import type { AccessSettingKey } from "@/types";
 
 /** Corporate palette keys from mantine-theme.ts usable for per-item icon accents. */
-export type CorporateColorKey = "brand" | "navy" | "blue" | "cyan" | "teal" | "orange" | "gold" | "steel";
+export type CorporateColorKey =
+  "brand" | "navy" | "blue" | "cyan" | "teal" | "orange" | "gold" | "steel";
 
 export interface NavItem {
   key: string;
@@ -71,7 +72,9 @@ export interface NavItem {
 
 /** CSS var for a NavItem's icon accent, for use as the lucide icon's `color` prop or a styles override. */
 export function navIconColor(item: NavItem): string {
-  return item.iconColor ? `var(--mantine-color-${item.iconColor}-6)` : "var(--mantine-primary-color-filled)";
+  return item.iconColor
+    ? `var(--mantine-color-${item.iconColor}-6)`
+    : "var(--mantine-primary-color-filled)";
 }
 
 /** Settings hub card permissions, reused so the "Ayarlar" menu entry shows whenever any card would. */
@@ -163,7 +166,13 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["leave.rule_sets.read"],
     iconColor: "steel",
   },
-  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, iconColor: "gold" },
+  {
+    key: "requests",
+    labelKey: "nav.requests",
+    path: "/app/requests",
+    icon: ClipboardList,
+    iconColor: "gold",
+  },
   { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow, iconColor: "navy" },
   {
     key: "reports",
@@ -202,9 +211,21 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
-  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, iconColor: "orange" },
+  {
+    key: "support",
+    labelKey: "nav.support",
+    path: "/app/support",
+    icon: LifeBuoy,
+    iconColor: "orange",
+  },
   { key: "trust", labelKey: "nav.trust", path: "/app/trust", icon: ShieldCheck, iconColor: "teal" },
-  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
+  {
+    key: "account",
+    labelKey: "nav.account",
+    path: "/app/account",
+    icon: UserCircle,
+    iconColor: "navy",
+  },
 ];
 
 /** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
@@ -314,7 +335,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["expense.claims.view", "expense.advances.view"],
     iconColor: "blue",
   },
-  { key: "performance", labelKey: "apps.performance", path: "/app/performance/goals", icon: Target, permissions: ["performance.my.goals"], iconColor: "gold" },
+  {
+    key: "performance",
+    labelKey: "apps.performance",
+    path: "/app/performance/goals",
+    icon: Target,
+    permissions: ["performance.my.goals"],
+    iconColor: "gold",
+  },
   {
     key: "performanceReviewCycles",
     labelKey: "apps.performanceReviewCycles",

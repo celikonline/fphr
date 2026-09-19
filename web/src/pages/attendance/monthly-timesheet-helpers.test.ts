@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { MonthlyTimesheetRow, TeamWeekDay } from "@/services/attendance.service";
-import { dayChipTone, monthStartOf, pendingApprovalCount, shiftMonth, summarizeAnomalies, totalsOf } from "./monthly-timesheet-helpers";
+import {
+  dayChipTone,
+  monthStartOf,
+  pendingApprovalCount,
+  shiftMonth,
+  summarizeAnomalies,
+  totalsOf,
+} from "./monthly-timesheet-helpers";
 
 function row(overrides: Partial<MonthlyTimesheetRow> = {}): MonthlyTimesheetRow {
   return {
@@ -45,7 +52,10 @@ describe("month navigation", () => {
 
 describe("totalsOf", () => {
   it("sums every column and rounds float noise away", () => {
-    const totals = totalsOf([row({ workedHours: 0.1, workedDays: 10, sickLeaveDays: 1 }), row({ workedHours: 0.2, workedDays: 12.5, overtimeHours: 3.25 })]);
+    const totals = totalsOf([
+      row({ workedHours: 0.1, workedDays: 10, sickLeaveDays: 1 }),
+      row({ workedHours: 0.2, workedDays: 12.5, overtimeHours: 3.25 }),
+    ]);
     expect(totals.workedHours).toBe(0.3);
     expect(totals.workedDays).toBe(22.5);
     expect(totals.overtimeHours).toBe(3.25);

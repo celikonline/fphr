@@ -22,7 +22,8 @@ export interface MonthlyTotals {
 
 /** Column sums for the footer row. Rounded to 2 decimals so float noise (0.1 + 0.2) never shows up. */
 export function totalsOf(rows: readonly MonthlyTimesheetRow[]): MonthlyTotals {
-  const sum = (pick: (row: MonthlyTimesheetRow) => number) => Math.round(rows.reduce((acc, row) => acc + pick(row), 0) * 100) / 100;
+  const sum = (pick: (row: MonthlyTimesheetRow) => number) =>
+    Math.round(rows.reduce((acc, row) => acc + pick(row), 0) * 100) / 100;
   return {
     workedDays: sum((r) => r.workedDays),
     workedHours: sum((r) => r.workedHours),
@@ -48,10 +49,13 @@ export interface DayAnomalySummary {
 
 /** Anomaly counters for one employee's month; resolved/ignored days no longer count as open problems. */
 export function summarizeAnomalies(days: readonly TeamWeekDay[] | undefined): DayAnomalySummary {
-  const open = (days ?? []).filter((day) => day.status === "unresolved" && day.anomalies.length > 0);
+  const open = (days ?? []).filter(
+    (day) => day.status === "unresolved" && day.anomalies.length > 0
+  );
   return {
     unresolvedDays: open.length,
-    workedWhileOnLeaveDays: open.filter((day) => day.anomalies.includes("workedWhileOnLeave")).length,
+    workedWhileOnLeaveDays: open.filter((day) => day.anomalies.includes("workedWhileOnLeave"))
+      .length,
   };
 }
 
