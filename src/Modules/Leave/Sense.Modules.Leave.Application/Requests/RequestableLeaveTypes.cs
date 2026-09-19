@@ -24,7 +24,11 @@ public sealed record RequestableLeaveTypeDto(
     Guid Id, LeaveTypeCode Code, string Name, string? Description, LeaveUnit Unit, bool IsPaid, bool HasBalance, decimal? PerRequestMaxDays,
     bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays);
 
-/// <summary>"+ Talep": active, self-service types of the caller's rule set (name as stored; the API localizes resource keys).</summary>
+/// <summary>
+/// "+ Talep": caller'ın kural setinin aktif, self-service türleri. `Name` ham haliyle döner (ör. "leave.type.annual");
+/// API artık bunu ÇEVİRMİYOR (senseik-039) — çözümleme, kullanıcının uygulama içi dil tercihini baz alan frontend
+/// i18n'e (`useLeaveName()`) bırakılıyor, tıpkı LeaveRuleSet.types[].name ve balance'lardaki leaveTypeName gibi.
+/// </summary>
 [RequiresPermission("leave.my.requests")]
 public sealed record ListMyRequestableLeaveTypesQuery : IQuery<IReadOnlyList<RequestableLeaveTypeDto>>;
 
