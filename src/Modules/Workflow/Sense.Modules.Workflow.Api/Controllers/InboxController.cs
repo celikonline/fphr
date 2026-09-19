@@ -10,7 +10,7 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Workflow.Api.Controllers;
 
 /// <summary>Request to decide (approve/reject) a pending approval task.</summary>
-public sealed record DecideTaskRequest(ApprovalOutcome Outcome, string? Comment);
+public sealed record DecideTaskRequest(ApprovalOutcome? Outcome, string? Comment);
 
 /// <summary>The caller's approval inbox: pending tasks assigned directly, or via a fallback role queue, and decisions on them.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]

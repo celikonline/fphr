@@ -8,7 +8,7 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Workflow.Api.Controllers;
 
 /// <summary>Request to decide a task via the single-use link in the "you have a pending approval" email.</summary>
-public sealed record DecideByTokenRequest(string Token, ApprovalOutcome Outcome, string? Comment);
+public sealed record DecideByTokenRequest(string Token, ApprovalOutcome? Outcome, string? Comment);
 
 /// <summary>Email-driven decisions. Kept [Authorize] at class level for consistency; the one action below is public.</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
