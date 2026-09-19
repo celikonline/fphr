@@ -1111,6 +1111,26 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Şirket izin-mesai defteri</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Eksik belgeler</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Maaş listesi</value></data>
+  <data name="report.col.email" xml:space="preserve"><value>E-posta</value></data>
+  <data name="report.col.phone" xml:space="preserve"><value>Telefon</value></data>
+  <data name="report.col.tags" xml:space="preserve"><value>Etiketler</value></data>
+  <data name="report.col.applications" xml:space="preserve"><value>Başvurular</value></data>
+  <data name="report.col.createdAt" xml:space="preserve"><value>Oluşturulma tarihi</value></data>
+  <data name="report.col.date" xml:space="preserve"><value>Tarih</value></data>
+  <data name="report.col.newApplications" xml:space="preserve"><value>Yeni başvuru</value></data>
+  <data name="report.col.newCandidates" xml:space="preserve"><value>Yeni eklenen aday</value></data>
+  <data name="report.sheet.recruitmentDailyCounts" xml:space="preserve"><value>Günlük sayılar</value></data>
+  <data name="report.sheet.recruitmentCandidatesExport" xml:space="preserve"><value>Aday listesi</value></data>
+  <data name="report.enum.CandidateSource.Manual" xml:space="preserve"><value>Elle eklendi</value></data>
+  <data name="report.enum.CandidateSource.CareerSite" xml:space="preserve"><value>Kariyer sitesi</value></data>
+  <data name="report.enum.CandidateSource.Referral" xml:space="preserve"><value>Referans</value></data>
+  <data name="report.enum.CandidateSource.Other" xml:space="preserve"><value>Diğer</value></data>
+  <data name="report.enum.ApplicationStage.Applied" xml:space="preserve"><value>Yeni başvuru</value></data>
+  <data name="report.enum.ApplicationStage.Screening" xml:space="preserve"><value>Ön eleme</value></data>
+  <data name="report.enum.ApplicationStage.Interview" xml:space="preserve"><value>Mülakat</value></data>
+  <data name="report.enum.ApplicationStage.Offer" xml:space="preserve"><value>Teklif</value></data>
+  <data name="report.enum.ApplicationStage.Hired" xml:space="preserve"><value>İşe alındı</value></data>
+  <data name="report.enum.ApplicationStage.Rejected" xml:space="preserve"><value>Reddedildi</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Taslak</value></data>
   <data name="report.enum.EmployeeStatus.Active" xml:space="preserve"><value>Aktif</value></data>
   <data name="report.enum.EmployeeStatus.Suspended" xml:space="preserve"><value>Askıda</value></data>

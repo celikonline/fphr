@@ -56,5 +56,9 @@ public sealed class RecruitmentModule : IModule
         // ADR-0004: Hangfire (BackgroundJobExecutor) runs in Sense.Api, so scheduled-job handlers are registered
         // here (mirrors DocumentsModule.AddModule), not in an integration-event-handlers extension.
         services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
+
+        // Raporlar menüsü katkıları (R5, roadmap #94/#96): günlük sayılar + aday dışa aktarımı.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.RecruitmentDailyCountsReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.RecruitmentCandidatesExportReportProvider>();
     }
 }

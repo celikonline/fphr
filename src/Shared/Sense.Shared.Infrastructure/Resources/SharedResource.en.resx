@@ -1102,6 +1102,26 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Company leave/overtime ledger</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
+  <data name="report.col.email" xml:space="preserve"><value>Email</value></data>
+  <data name="report.col.phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="report.col.tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="report.col.applications" xml:space="preserve"><value>Applications</value></data>
+  <data name="report.col.createdAt" xml:space="preserve"><value>Created at</value></data>
+  <data name="report.col.date" xml:space="preserve"><value>Date</value></data>
+  <data name="report.col.newApplications" xml:space="preserve"><value>New applications</value></data>
+  <data name="report.col.newCandidates" xml:space="preserve"><value>New candidates</value></data>
+  <data name="report.sheet.recruitmentDailyCounts" xml:space="preserve"><value>Daily counts</value></data>
+  <data name="report.sheet.recruitmentCandidatesExport" xml:space="preserve"><value>Candidate list</value></data>
+  <data name="report.enum.CandidateSource.Manual" xml:space="preserve"><value>Added manually</value></data>
+  <data name="report.enum.CandidateSource.CareerSite" xml:space="preserve"><value>Career site</value></data>
+  <data name="report.enum.CandidateSource.Referral" xml:space="preserve"><value>Referral</value></data>
+  <data name="report.enum.CandidateSource.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.ApplicationStage.Applied" xml:space="preserve"><value>New application</value></data>
+  <data name="report.enum.ApplicationStage.Screening" xml:space="preserve"><value>Screening</value></data>
+  <data name="report.enum.ApplicationStage.Interview" xml:space="preserve"><value>Interview</value></data>
+  <data name="report.enum.ApplicationStage.Offer" xml:space="preserve"><value>Offer</value></data>
+  <data name="report.enum.ApplicationStage.Hired" xml:space="preserve"><value>Hired</value></data>
+  <data name="report.enum.ApplicationStage.Rejected" xml:space="preserve"><value>Rejected</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>
   <data name="report.enum.EmployeeStatus.Active" xml:space="preserve"><value>Active</value></data>
   <data name="report.enum.EmployeeStatus.Suspended" xml:space="preserve"><value>Suspended</value></data>
