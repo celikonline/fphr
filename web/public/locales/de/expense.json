@@ -37,6 +37,11 @@
     "submit": "Einreichen",
     "submitted": "Ihre Abrechnung wurde eingereicht."
   },
+  "quickInput": {
+    "label": "Schnelleingabe (Türkisch)",
+    "placeholder": "z. B. \"Dün akşam yemeği için 450 TL masraf\" (Türkisch) — erkannte Felder füllen das Formular unten aus, den Rest ergänzen Sie.",
+    "fill": "Ausfüllen"
+  },
   "item": {
     "category": "Kategorie",
     "categoryPlaceholder": "Kategorie auswählen",

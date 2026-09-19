@@ -37,6 +37,11 @@
     "submit": "Submit",
     "submitted": "Your claim has been submitted."
   },
+  "quickInput": {
+    "label": "Quick input (Turkish)",
+    "placeholder": "E.g. \"Dün akşam yemeği için 450 TL masraf\" (Turkish) — recognized fields fill the form below, you complete the rest.",
+    "fill": "Fill"
+  },
   "item": {
     "category": "Category",
     "categoryPlaceholder": "Select a category",
