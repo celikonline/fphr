@@ -741,6 +741,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.period.not_open" xml:space="preserve"><value>The payroll period is not open.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Payslip not found.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Period month must be between 1 and 12.</value></data>
+  <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Period year must be between {minYear} and {maxYear}.</value></data>
+  <data name="payroll.errors.legislation_parameter_missing" xml:space="preserve"><value>No statutory parameter is defined for {date}: {parameter}. Payroll/severance cannot be calculated; update the legislation parameters.</value></data>
+  <data name="payroll.errors.severance_termination_date_invalid" xml:space="preserve"><value>The termination date cannot be before the hire date and can be at most one year ahead.</value></data>
   <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Gross amount must be greater than zero.</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Worked days must be greater than zero.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>This meal benefit variant is not supported yet.</value></data>
@@ -1027,9 +1030,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.item.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="expense.item.tax_rate_invalid" xml:space="preserve"><value>Tax rate must be between 0 and 100.</value></data>
   <data name="expense.item.currency_required" xml:space="preserve"><value>Enter a valid currency code (e.g. TRY).</value></data>
+  <data name="expense.item.amount_too_large" xml:space="preserve"><value>The amount cannot exceed 10,000,000.</value></data>
+  <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Unsupported currency. Enter a valid ISO 4217 code (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
+  <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>The receipt date cannot be in the future.</value></data>
+  <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>All items of an expense claim must use the same currency.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Advance request not found.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
+  <data name="expense.advance.amount_too_large" xml:space="preserve"><value>The advance amount cannot exceed 10,000,000.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Installment count is invalid.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>An advance cannot be marked paid before it is approved.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
@@ -1049,6 +1057,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="asset.already_assigned" xml:space="preserve"><value>This asset is already assigned to an employee or retired.</value></data>
   <data name="asset.not_assigned" xml:space="preserve"><value>This asset is not currently assigned.</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
+  <data name="asset.serial_number_in_use" xml:space="preserve"><value>A device with this serial number is currently assigned to another employee.</value></data>
+  <data name="asset.return_before_issue" xml:space="preserve"><value>The return date cannot be before the issue date.</value></data>
+  <data name="assets.employee_not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="assets.issued_before_hire" xml:space="preserve"><value>The issue date cannot be before the employee's hire date.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <!-- Reporting (Reports menu - roadmap #70) -->
   <data name="report_execution.report_key_required" xml:space="preserve"><value>Report key is required.</value></data>

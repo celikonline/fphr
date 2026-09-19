@@ -54,7 +54,7 @@ public sealed class AddExpenseItemValidator : AbstractValidator<AddExpenseItemCo
     }
 }
 
-public sealed class AddExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories)
+public sealed class AddExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, IExpenseCategoryRepository categories, TimeProvider clock)
     : ICommandHandler<AddExpenseItemCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(AddExpenseItemCommand command, CancellationToken cancellationToken)
@@ -68,6 +68,11 @@ public sealed class AddExpenseItemHandler(ICurrentUser currentUser, IExpenseClai
         if (existing.Value.EmployeeId != currentUser.EmployeeId)
         {
             return Error.Forbidden(ExpenseErrors.NotOwner);
+        }
+
+        if (ReceiptDates.IsInFuture(command.ReceiptDate, clock))
+        {
+            return Error.Validation(ExpenseDomainErrors.ItemReceiptDateInFuture);
         }
 
         var category = await categories.GetByIdAsync(command.CategoryId, cancellationToken);
@@ -104,7 +109,7 @@ public sealed class UpdateExpenseItemValidator : AbstractValidator<UpdateExpense
     }
 }
 
-public sealed class UpdateExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims) : ICommandHandler<UpdateExpenseItemCommand>
+public sealed class UpdateExpenseItemHandler(ICurrentUser currentUser, IExpenseClaimRepository claims, TimeProvider clock) : ICommandHandler<UpdateExpenseItemCommand>
 {
     public async Task<Result> Handle(UpdateExpenseItemCommand command, CancellationToken cancellationToken)
     {
@@ -117,6 +122,11 @@ public sealed class UpdateExpenseItemHandler(ICurrentUser currentUser, IExpenseC
         if (existing.Value.EmployeeId != currentUser.EmployeeId)
         {
             return Error.Forbidden(ExpenseErrors.NotOwner);
+        }
+
+        if (ReceiptDates.IsInFuture(command.ReceiptDate, clock))
+        {
+            return Error.Validation(ExpenseDomainErrors.ItemReceiptDateInFuture);
         }
 
         return existing.Value.UpdateItem(
@@ -226,4 +236,11 @@ public sealed class PayExpenseClaimHandler(ICurrentUser currentUser, TimeProvide
         outbox.Enqueue(new ExpenseClaimPaid(claim.TenantId, claim.Id, claim.EmployeeId, claim.TotalAmount));
         return Result.Success();
     }
+}
+
+internal static class ReceiptDates
+{
+    /// <summary>A receipt dated after tomorrow (today + <see cref="ExpenseLimits.MaxReceiptDateDaysAhead"/>) is a typo/fraud signal.</summary>
+    public static bool IsInFuture(DateOnly receiptDate, TimeProvider clock) =>
+        receiptDate > DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime).AddDays(ExpenseLimits.MaxReceiptDateDaysAhead);
 }

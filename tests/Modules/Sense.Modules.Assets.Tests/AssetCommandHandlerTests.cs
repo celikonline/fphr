@@ -5,6 +5,7 @@ using Sense.Modules.Assets.Application.Categories;
 using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Kernel.Results;
@@ -24,6 +25,14 @@ public sealed class AssetCommandHandlerTests
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
         return tenant;
+    }
+
+    private static IEmployeeSalaryLookup EmployeeDates(DateOnly? hireDate)
+    {
+        var lookup = Substitute.For<IEmployeeSalaryLookup>();
+        lookup.GetEmploymentDatesAsync(TenantId, Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeEmploymentDates?>(new EmployeeEmploymentDates(hireDate, null)));
+        return lookup;
     }
 
     [Fact]
@@ -64,7 +73,7 @@ public sealed class AssetCommandHandlerTests
         var assets = Substitute.For<IAssetRepository>();
         assets.GetByIdAsync(asset.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(asset));
         var outbox = Substitute.For<IIntegrationEventOutbox>();
-        var handler = new AssignAssetHandler(assets, outbox);
+        var handler = new AssignAssetHandler(TenantContext(), assets, outbox, EmployeeDates(null));
         var issuedAt = DateOnly.FromDateTime(DateTime.UtcNow);
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, EmployeeId, issuedAt), CancellationToken.None);
@@ -82,7 +91,7 @@ public sealed class AssetCommandHandlerTests
         var assets = Substitute.For<IAssetRepository>();
         assets.GetByIdAsync(asset.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(asset));
         var outbox = Substitute.For<IIntegrationEventOutbox>();
-        var handler = new AssignAssetHandler(assets, outbox);
+        var handler = new AssignAssetHandler(TenantContext(), assets, outbox, EmployeeDates(null));
 
         var result = await handler.Handle(new AssignAssetCommand(asset.Id, Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow)), CancellationToken.None);
 

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Application.Ports;
@@ -14,11 +15,26 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Payroll.Application.Periods;
 
+/// <summary>Why an employee got no payslip in a run (see <see cref="PayrollSkipReasons"/>).</summary>
+public sealed record PayrollSkippedEmployee(Guid EmployeeId, string Reason);
+
+/// <summary>Machine-readable reasons an employee is skipped by <see cref="PayrollPeriodCalculationService"/>.</summary>
+public static class PayrollSkipReasons
+{
+    public const string NoPayrollProfile = "no_payroll_profile";
+    public const string WageBasisNotMonthly = "wage_basis_not_monthly";
+    public const string NoSalaryRecord = "no_salary_record";
+    public const string NetSalaryNotSupported = "net_salary_not_supported";
+    public const string NotEmployedInPeriod = "not_employed_in_period";
+    public const string NoWorkedDays = "no_worked_days";
+    public const string CalculationFailed = "calculation_failed";
+}
+
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
-/// <see cref="CalculatedCount"/>) when they have no current payroll profile/salary record, a non-Monthly WageBasis, or
-/// a Net SalaryType - each a documented P1/P3 placeholder (see inline comments in <c>CalculateOneAsync</c>); this
-/// slice only surfaces the aggregate count, not a per-employee reason.</summary>
-public sealed record PayrollPeriodRunSummary(Guid RunId, int CalculatedCount, int SkippedCount);
+/// <see cref="CalculatedCount"/>) when they have no payroll profile/salary record, a non-Monthly WageBasis, a Net
+/// SalaryType, were not employed in the period, have no worked day, or their calculation failed; each skipped
+/// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.</summary>
+public sealed record PayrollPeriodRunSummary(Guid RunId, int CalculatedCount, int SkippedCount, IReadOnlyList<PayrollSkippedEmployee> Skipped);
 
 /// <summary>
 /// 11.3.07-bordro.md "Dönem hesabı" akışı (P3): for every candidate employee, resolves current salary + payroll
@@ -42,7 +58,8 @@ public sealed class PayrollPeriodCalculationService(
     IPayrollPeriodRepository periods,
     IGarnishmentOrderRepository garnishmentOrderRepository,
     IEmployeeDisabilityLookup disabilityLookup,
-    IEmployeeUnionMembershipRepository unionMemberships)
+    IEmployeeUnionMembershipRepository unionMemberships,
+    ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -55,21 +72,32 @@ public sealed class PayrollPeriodCalculationService(
         var snapshot = await PayrollLegislationSnapshotResolver.ResolveAsync(legislationReader, periodStart, cancellationToken);
 
         var calculated = 0;
-        var skipped = 0;
+        var skipped = new List<PayrollSkippedEmployee>();
         foreach (var employeeId in employeeIds)
         {
-            var outcome = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, cancellationToken);
-            if (outcome)
+            string? skipReason;
+            try
+            {
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, cancellationToken);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                // One employee's bad data must not break the whole period run: report it as skipped and carry on.
+                logger.LogError(ex, "Payroll calculation failed for employee {EmployeeId} in period {Year}-{Month}; employee skipped.", employeeId, period.Year, period.Month);
+                skipReason = PayrollSkipReasons.CalculationFailed;
+            }
+
+            if (skipReason is null)
             {
                 calculated++;
             }
             else
             {
-                skipped++;
+                skipped.Add(new PayrollSkippedEmployee(employeeId, skipReason));
             }
         }
 
-        return new PayrollPeriodRunSummary(runId, calculated, skipped);
+        return new PayrollPeriodRunSummary(runId, calculated, skipped.Count, skipped);
     }
 
     /// <summary>Recalculates only the employees with an active dirty flag in this period ("Değişenleri yeniden hesapla", §4);
@@ -80,29 +108,44 @@ public sealed class PayrollPeriodCalculationService(
         return await RecalculateAllAsync(period, activeFlags.Select(f => f.EmployeeId).Distinct().ToList(), cancellationToken);
     }
 
-    private async Task<bool> CalculateOneAsync(
+    /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code.</summary>
+    private async Task<string?> CalculateOneAsync(
         PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, CancellationToken cancellationToken)
     {
-        var profile = await profiles.FindCurrentAsync(employeeId, periodStart, cancellationToken);
+        var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
+
+        // Kıst (işe giriş/çıkış ayı): dates unknown (null) = assume employed the whole period, the pre-existing behaviour.
+        var employment = await salaryLookup.GetEmploymentDatesAsync(tenant.TenantId, employeeId, cancellationToken);
+        var paidDays30 = EmploymentProration.PaidDays(periodStart, periodEnd, employment?.HireDate, employment?.TerminationDate);
+        if (paidDays30 == 0)
+        {
+            return PayrollSkipReasons.NotEmployedInPeriod;
+        }
+
+        var isPartialMonth = paidDays30 < EmploymentProration.PayrollMonthDays;
+
+        // A profile created on hire is valid from the hire date, which for a mid-month hire is after the period start.
+        var profile = await profiles.FindCurrentAsync(employeeId, EmploymentProration.EffectiveStart(periodStart, employment?.HireDate), cancellationToken);
         if (profile is null)
         {
-            return false; // no payroll profile covering this period yet
+            return PayrollSkipReasons.NoPayrollProfile; // no payroll profile covering this period yet
         }
 
         if (profile.WageBasis != WageBasis.Monthly)
         {
-            return false; // PayrollCalculator only supports Monthly this slice (P1 placeholder)
+            return PayrollSkipReasons.WageBasisNotMonthly; // PayrollCalculator only supports Monthly this slice (P1 placeholder)
         }
 
-        var salary = await salaryLookup.GetCurrentSalaryAsync(tenant.TenantId, employeeId, cancellationToken);
+        // The salary in force at the period's end, not today's (a later raise must not rewrite a closed month).
+        var salary = await salaryLookup.GetSalaryAsOfAsync(tenant.TenantId, employeeId, periodEnd, cancellationToken);
         if (salary is null)
         {
-            return false; // no salary record yet
+            return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
         }
 
         if (salary.SalaryType != EmployeeSalaryType.Gross)
         {
-            return false; // NET_TO_GROSS_ITER is out of scope this slice (PayrollCalculator doc)
+            return PayrollSkipReasons.NetSalaryNotSupported; // NET_TO_GROSS_ITER is out of scope this slice (PayrollCalculator doc)
         }
 
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
@@ -129,6 +172,18 @@ public sealed class PayrollPeriodCalculationService(
             // pro-rasyonu - için, hafta tatili/resmi tatil ücret hakkına dokunmaz).
             var unexcusedDays = await absenceDaysReader.GetUnexcusedDaysAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
             workedDays = unexcusedDays is > 0 ? Math.Max(0, calendarDays - unexcusedDays.Value) : calendarDays;
+        }
+
+        if (isPartialMonth)
+        {
+            workedDays = Math.Min(workedDays, paidDays30);
+        }
+
+        if (workedDays <= 0)
+        {
+            // e.g. Attendance has a check-in but no worked-minutes day: PayrollCalculator requires >= 1 worked day.
+            logger.LogWarning("Payroll skipped employee {EmployeeId} in period {Year}-{Month}: no worked days.", employeeId, period.Year, period.Month);
+            return PayrollSkipReasons.NoWorkedDays;
         }
 
         // TB-7 Expense köprüsü (roadmap #23, faz-07 tur 1 madde 3): port boş/null dönerse 0 - bugünkü davranış sürer.
@@ -171,7 +226,8 @@ public sealed class PayrollPeriodCalculationService(
             DisabilityDegree: (int)disabilityDegree,
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
-            UnionDuesAmount: unionDuesAmount);
+            UnionDuesAmount: unionDuesAmount,
+            ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
 
@@ -207,26 +263,29 @@ public sealed class PayrollPeriodCalculationService(
         var activeFlag = await dirtyFlags.FindActiveAsync(period.Id, employeeId, cancellationToken);
         activeFlag?.Clear(runId, clock.GetUtcNow().UtcDateTime);
 
-        return true;
+        return null;
     }
 
-    /// <summary>senseik-019 2a: Ocak'ta (yeni takvim yılı) her zaman 0'dan başlanır; önceki ay hiç açılmamışsa veya o
-    /// dönemde bu çalışan için henüz bir Payslip yoksa (örn. çalışan bu ay işe girdi) da 0 kabul edilir - yalnızca
-    /// mevcut bir önceki-ay Payslip'i varsa onun CUMULATIVE_BASE çıktısı devralınır.</summary>
+    /// <summary>senseik-019 2a: Ocak'ta (yeni takvim yılı) her zaman 0'dan başlanır. Aksi halde bu çalışanın AYNI YILDAKİ
+    /// en yakın önceki dönem Payslip'inin CUMULATIVE_BASE çıktısı devralınır (ara bir ay açılmamış/çalışanın o ayda
+    /// payslip'i yoksa daha geriye bakılır); hiç önceki payslip yoksa (örn. yıl içinde işe giren çalışan) 0 kabul edilir.</summary>
     private async Task<decimal> ResolvePriorCumulativeGvBaseAsync(PayrollPeriod period, Guid employeeId, CancellationToken cancellationToken)
     {
-        if (period.Month == 1)
+        for (var month = period.Month - 1; month >= 1; month--)
         {
-            return 0m;
+            var priorPeriod = await periods.FindByYearMonthAsync(period.Year, month, cancellationToken);
+            if (priorPeriod is null)
+            {
+                continue;
+            }
+
+            var priorPayslip = await payslips.FindByEmployeeAndPeriodAsync(employeeId, priorPeriod.Id, cancellationToken);
+            if (priorPayslip is not null)
+            {
+                return priorPayslip.CumulativeGvBase;
+            }
         }
 
-        var priorPeriod = await periods.FindByYearMonthAsync(period.Year, period.Month - 1, cancellationToken);
-        if (priorPeriod is null)
-        {
-            return 0m;
-        }
-
-        var priorPayslip = await payslips.FindByEmployeeAndPeriodAsync(employeeId, priorPeriod.Id, cancellationToken);
-        return priorPayslip?.CumulativeGvBase ?? 0m;
+        return 0m;
     }
 }

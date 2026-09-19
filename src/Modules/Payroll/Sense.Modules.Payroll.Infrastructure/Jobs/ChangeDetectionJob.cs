@@ -75,12 +75,13 @@ public sealed partial class ChangeDetectionJob(IServiceScopeFactory scopes, ILog
             runs.Add(run);
 
             var periodStart = new DateOnly(period.Year, period.Month, 1);
+            var periodEnd = new DateOnly(period.Year, period.Month, DateTime.DaysInMonth(period.Year, period.Month));
             var payslipsInPeriod = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
             var dirtyCount = 0;
             foreach (var payslip in payslipsInPeriod)
             {
                 var profile = await profiles.FindCurrentAsync(payslip.EmployeeId, periodStart, cancellationToken);
-                var salary = await salaryLookup.GetCurrentSalaryAsync(tenantId, payslip.EmployeeId, cancellationToken);
+                var salary = await salaryLookup.GetSalaryAsOfAsync(tenantId, payslip.EmployeeId, periodEnd, cancellationToken);
                 if (profile is null || salary is null)
                 {
                     continue; // nothing live to compare against - a removed profile/salary is not a "hash mismatch"

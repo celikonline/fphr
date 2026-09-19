@@ -33,6 +33,12 @@ public interface IAssetRepository
 
     Task<IReadOnlyList<Asset>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
+    /// <summary>True when another asset (not <paramref name="excludeAssetId"/>) with the same serial number is currently Assigned - a physical item cannot be issued twice.</summary>
+    Task<bool> IsSerialNumberAssignedElsewhereAsync(string serialNumber, Guid excludeAssetId, CancellationToken cancellationToken = default);
+
+    /// <summary>True when an AssetUnreturnedAtTermination audit event for this asset+employee already exists in the module outbox (idempotency guard).</summary>
+    Task<bool> HasUnreturnedTerminationAuditAsync(Guid tenantId, Guid assetId, Guid employeeId, CancellationToken cancellationToken = default);
+
     Task<bool> HasOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>Count of the employee's currently Assigned (unreturned) assets - used to warn HR at offboarding time.</summary>

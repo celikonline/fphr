@@ -55,6 +55,11 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// tests are unaffected. Collective-agreement (TİS) terms and retroactive difference payroll are out of scope this
 /// slice (deferred: faz3-durum-takibi.md #58).
 /// </param>
+/// <param name="ProratedPaidDays">
+/// Kıst (partial-month) ücret: the number of paid days on a 30-day basis (1..29) when the employee was hired or left
+/// mid-month; the maktu brüt ücret, the SGK taban/tavan and the asgari ücret istisnaları are all scaled by
+/// <c>ProratedPaidDays / 30</c>. Null (or >= 30) = full month, the pre-existing behaviour.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -69,4 +74,5 @@ public sealed record PayrollCalculationInput(
     int DisabilityDegree = 0,
     decimal AdvanceDeductionTotal = 0m,
     IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
-    decimal UnionDuesAmount = 0m);
+    decimal UnionDuesAmount = 0m,
+    int? ProratedPaidDays = null);

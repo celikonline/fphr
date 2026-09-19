@@ -28,6 +28,6 @@ public static class SeveranceLegislationSnapshotResolver
             asOf);
     }
 
-    private static InvalidOperationException MissingParameter(string key, DateOnly asOf) =>
-        new($"LegislationParameter '{key}' has no value effective on {asOf:yyyy-MM-dd} (ADR 0008 seed missing or not yet migrated).");
+    private static Calculation.LegislationParameterMissingException MissingParameter(string key, DateOnly asOf) =>
+        new(key, asOf);
 }

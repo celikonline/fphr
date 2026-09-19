@@ -47,7 +47,9 @@ public static class PayrollCalculator
             days, []));
 
         // EARNINGS (maktu ücret + varsa fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar, senseik-019 2d)
-        var baseSalary = input.GrossMonthlySalary;
+        // Kıst ücret (işe giriş/çıkış ayı): 30 gün esasıyla orantı; tam ayda 1 (önceki davranış birebir korunur).
+        var proration = input.ProratedPaidDays is { } paidDays and > 0 and < 30 ? paidDays / 30m : 1m;
+        var baseSalary = proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
         var gross = Round(baseSalary + input.AdditionalTaxableEarnings);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Earnings, "payroll.trace.step.earnings",
@@ -90,10 +92,12 @@ public static class PayrollCalculator
         var mealNetAddition = input.MealVariant == MealBenefitVariant.InKind ? 0m : mealTotal;
 
         // SGK_BASE
-        var sgkBase = Math.Clamp(gross + mealSgkExcess, p.SgkFloor, p.SgkCeiling);
+        var sgkFloor = Round(p.SgkFloor * proration);
+        var sgkCeiling = Round(p.SgkCeiling * proration);
+        var sgkBase = Math.Clamp(gross + mealSgkExcess, sgkFloor, sgkCeiling);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.SgkBase, "payroll.trace.step.sgk_base",
-            Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", p.SgkFloor), ("sgkCeiling", p.SgkCeiling)),
+            Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", sgkFloor), ("sgkCeiling", sgkCeiling)),
             "clamp(gross + yemek SGK istisna aşımı, taban, tavan)",
             Round(sgkBase),
             [Ref("Payroll.Sgk.Floor", p.SgkFloor, p), Ref("Payroll.Sgk.Ceiling", p.SgkCeiling, p)]));
@@ -176,13 +180,14 @@ public static class PayrollCalculator
             segments.Select((s, i) => Ref($"Payroll.IncomeTax.Brackets[{i}]", s.Rate, p)).ToList()));
 
         // MINWAGE_EXEMPTION_GV (derived: minimum wage's own GV base at the first bracket rate - see type doc)
-        var minWageGvBase = Round(p.MinimumWageGross * (1m - p.SgkEmployeeRate - p.UnemploymentEmployeeRate));
+        var minWageGross = Round(p.MinimumWageGross * proration);
+        var minWageGvBase = Round(minWageGross * (1m - p.SgkEmployeeRate - p.UnemploymentEmployeeRate));
         var firstBracketRate = p.IncomeTaxBrackets[0].Rate;
         var minWageExemptionGv = Round(minWageGvBase * firstBracketRate);
         var incomeTaxAfterExemption = Math.Max(0m, incomeTax - minWageExemptionGv);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.MinWageExemptionGv, "payroll.trace.step.minwage_exemption_gv",
-            Map(("minimumWageGross", p.MinimumWageGross), ("minWageGvBase", minWageGvBase), ("firstBracketRate", firstBracketRate), ("incomeTaxBeforeExemption", incomeTax)),
+            Map(("minimumWageGross", minWageGross), ("minWageGvBase", minWageGvBase), ("firstBracketRate", firstBracketRate), ("incomeTaxBeforeExemption", incomeTax)),
             "min(incomeTax, asgari ücret GV matrahı * ilk dilim oranı)",
             Round(incomeTax - incomeTaxAfterExemption),
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]));
@@ -196,11 +201,11 @@ public static class PayrollCalculator
             stampTax, [Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
 
         // MINWAGE_EXEMPTION_DV
-        var minWageStampExemption = Round(p.MinimumWageGross * p.StampTaxRate);
+        var minWageStampExemption = Round(minWageGross * p.StampTaxRate);
         var stampTaxAfterExemption = Math.Max(0m, stampTax - minWageStampExemption);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.MinWageExemptionDv, "payroll.trace.step.minwage_exemption_dv",
-            Map(("minimumWageGross", p.MinimumWageGross), ("rate", p.StampTaxRate), ("stampTaxBeforeExemption", stampTax)),
+            Map(("minimumWageGross", minWageGross), ("rate", p.StampTaxRate), ("stampTaxBeforeExemption", stampTax)),
             "min(stampTax, asgari ücret * damga vergisi oranı)",
             Round(stampTax - stampTaxAfterExemption),
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p), Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
