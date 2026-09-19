@@ -865,7 +865,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>Bu günde çözülecek bir uyuşmazlık yok.</value></data>
   <data name="attendance.day.already_resolved" xml:space="preserve"><value>Bu gün zaten çözüldü veya görmezden gelindi.</value></data>
-  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Çalışılan süre negatif olamaz.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Çalışılan süre 0 ile 24 saat (1440 dakika) arasında olmalıdır.</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>Bu aksiyon, günün uyuşmazlık türü için uygun değil.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Puantaj uyuşmazlıklarını çözme</value></data>
@@ -888,6 +888,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>Haftalık çalışma saati üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>Haftalık çalışma günü üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>Çalışan bu tarih/saat için "müsait değilim" girişi yapmış.</value></data>
+  <data name="attendance.shift.rest_period_too_short" xml:space="preserve"><value>İki vardiya arasında en az 11 saat kesintisiz dinlenme süresi olmalıdır.</value></data>
+  <data name="attendance.shift.break_too_short" xml:space="preserve"><value>Vardiya molası, ayarlarda tanımlı asgari mola süresinden kısa olamaz.</value></data>
   <data name="attendance.shift.self" xml:space="preserve"><value>Kendi vardiyalarımı görüntüleme</value></data>
   <data name="attendance.availability.self" xml:space="preserve"><value>Müsaitlik durumumu bildirme</value></data>
   <data name="attendance.availability.view" xml:space="preserve"><value>Çalışan müsaitliğini görüntüleme</value></data>
@@ -897,6 +899,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>Bu müsaitlik girişi size ait değil.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Geçmiş bir tarih için müsaitlik bildirilemez.</value></data>
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Tarih aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
+  <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>Gelecek tarihli puantaj kaydı girilemez.</value></data>
+  <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>Henüz başlamamış bir dönemin puantajı onaylanamaz.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>

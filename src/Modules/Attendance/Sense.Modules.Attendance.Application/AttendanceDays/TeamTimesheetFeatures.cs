@@ -25,13 +25,14 @@ public sealed record TeamWeekRowDto(Guid EmployeeId, string EmployeeName, IReadO
 public sealed record GetTeamWeekQuery(DateOnly WeekStart, Guid? OrgUnitId) : IQuery<IReadOnlyList<TeamWeekRowDto>>;
 
 public sealed class GetTeamWeekHandler(
-    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, IWorkScheduleReadService schedules)
+    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, IWorkScheduleReadService schedules,
+    NonWorkingDayResolver nonWorkingDays)
     : IQueryHandler<GetTeamWeekQuery, IReadOnlyList<TeamWeekRowDto>>
 {
     public async Task<Result<IReadOnlyList<TeamWeekRowDto>>> Handle(GetTeamWeekQuery query, CancellationToken cancellationToken)
     {
         var weekStart = TimesheetWeekEvaluator.MondayOf(query.WeekStart);
-        return await TeamRangeBuilder.BuildAsync(weekStart, weekStart.AddDays(6), query.OrgUnitId, tenant, dataScope, employees, days, schedules, cancellationToken);
+        return await TeamRangeBuilder.BuildAsync(weekStart, weekStart.AddDays(6), query.OrgUnitId, tenant, dataScope, employees, days, schedules, nonWorkingDays, cancellationToken);
     }
 }
 
@@ -45,14 +46,15 @@ public sealed class GetTeamWeekHandler(
 public sealed record GetTeamMonthQuery(DateOnly MonthStart, Guid? OrgUnitId) : IQuery<IReadOnlyList<TeamWeekRowDto>>;
 
 public sealed class GetTeamMonthHandler(
-    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, IWorkScheduleReadService schedules)
+    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, IWorkScheduleReadService schedules,
+    NonWorkingDayResolver nonWorkingDays)
     : IQueryHandler<GetTeamMonthQuery, IReadOnlyList<TeamWeekRowDto>>
 {
     public async Task<Result<IReadOnlyList<TeamWeekRowDto>>> Handle(GetTeamMonthQuery query, CancellationToken cancellationToken)
     {
         var monthStart = new DateOnly(query.MonthStart.Year, query.MonthStart.Month, 1);
         var monthEnd = monthStart.AddMonths(1).AddDays(-1);
-        return await TeamRangeBuilder.BuildAsync(monthStart, monthEnd, query.OrgUnitId, tenant, dataScope, employees, days, schedules, cancellationToken);
+        return await TeamRangeBuilder.BuildAsync(monthStart, monthEnd, query.OrgUnitId, tenant, dataScope, employees, days, schedules, nonWorkingDays, cancellationToken);
     }
 }
 
@@ -61,7 +63,7 @@ internal static class TeamRangeBuilder
 {
     public static async Task<Result<IReadOnlyList<TeamWeekRowDto>>> BuildAsync(
         DateOnly start, DateOnly end, Guid? orgUnitId, ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees,
-        IAttendanceDayRepository days, IWorkScheduleReadService schedules, CancellationToken cancellationToken)
+        IAttendanceDayRepository days, IWorkScheduleReadService schedules, NonWorkingDayResolver nonWorkingDays, CancellationToken cancellationToken)
     {
         var employeeIds = await VisibleEmployeeResolver.ResolveAsync(
             AttendancePermissions.TimesheetView.Key, orgUnitId, tenant.TenantId, dataScope, employees, cancellationToken);
@@ -71,6 +73,7 @@ internal static class TeamRangeBuilder
         }
 
         var records = await days.ListForEmployeesAsync(employeeIds, start, end, cancellationToken);
+        var nonWorking = await nonWorkingDays.ResolveAsync(tenant.TenantId, employeeIds.ToList(), start, end, cancellationToken);
         var recordsByEmployee = records.ToLookup(d => d.EmployeeId);
         var names = (await employees.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
@@ -90,7 +93,8 @@ internal static class TeamRangeBuilder
                     continue;
                 }
 
-                var isWorkingDay = await schedules.IsWorkingDayAsync(employeeId, date, cancellationToken);
+                // Resmi tatil / onaylı izin günü: kayıt yoksa eksik gün değil, çalışılması gerekmeyen gündür (kayıt varsa yukarıdaki dal aynen çalışır).
+                var isWorkingDay = await schedules.IsWorkingDayAsync(employeeId, date, cancellationToken) && !nonWorking.Contains(employeeId, date);
                 dayDtos.Add(isWorkingDay
                     ? new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Unresolved, [AttendanceAnomaly.NoData], 0, 0, false, false)
                     : new TeamWeekDayDto(date, null, 0, AttendanceResolutionState.Resolved, [], 0, 0, false, false));

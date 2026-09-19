@@ -104,7 +104,7 @@ public static class DailyWorkCalculator
     /// night window, on any of the days the span touches. An anchor date is used only to get real <see cref="DateTime"/>
     /// arithmetic; the result depends solely on the time-of-day inputs.
     /// </summary>
-    private static int NightOverlapMinutes(TimeOnly checkIn, int grossMinutes, TimeOnly nightStart, TimeOnly nightEnd)
+    public static int NightOverlapMinutes(TimeOnly checkIn, int grossMinutes, TimeOnly nightStart, TimeOnly nightEnd)
     {
         var anchor = new DateOnly(2000, 1, 1);
         var start = anchor.ToDateTime(checkIn);

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -59,11 +60,23 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 }
 
 public sealed class RecordAttendanceHandler(
-    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant)
+    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordAttendanceCommand command, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetEdit.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
+        // A day that has not started yet (in the tenant's own time zone) cannot already have worked hours.
+        var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken)).Local);
+        if (command.Date > localToday)
+        {
+            return Error.Validation(AttendanceErrors.DateInFuture);
+        }
+
         var result = await AttendanceDayUpsert.UpsertAsync(
             days, schedules, tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut,
             AttendanceDaySource.Manual, overnight: false, cancellationToken);
@@ -75,10 +88,19 @@ public sealed class RecordAttendanceHandler(
 [RequiresPermission("attendance.timesheet.view")]
 public sealed record ListAttendanceDaysQuery(Guid EmployeeId, DateOnly From, DateOnly To) : IQuery<IReadOnlyList<AttendanceDayDto>>;
 
-public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days) : IQueryHandler<ListAttendanceDaysQuery, IReadOnlyList<AttendanceDayDto>>
+public sealed class ListAttendanceDaysHandler(IAttendanceDayRepository days, IDataScopeService dataScope)
+    : IQueryHandler<ListAttendanceDaysQuery, IReadOnlyList<AttendanceDayDto>>
 {
-    public async Task<Result<IReadOnlyList<AttendanceDayDto>>> Handle(ListAttendanceDaysQuery query, CancellationToken cancellationToken) =>
-        (await days.ListForEmployeeAsync(query.EmployeeId, query.From, query.To, cancellationToken)).Select(AttendanceDayMapper.ToDto).ToList();
+    public async Task<Result<IReadOnlyList<AttendanceDayDto>>> Handle(ListAttendanceDaysQuery query, CancellationToken cancellationToken)
+    {
+        // [RequiresPermission] only proves the caller holds the permission, not that this employee is inside their data scope.
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetView.Key, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
+        return (await days.ListForEmployeeAsync(query.EmployeeId, query.From, query.To, cancellationToken)).Select(AttendanceDayMapper.ToDto).ToList();
+    }
 }
 
 /// <summary>"Puantajım" (11.3.6 self-servis): the caller's own recorded days.</summary>

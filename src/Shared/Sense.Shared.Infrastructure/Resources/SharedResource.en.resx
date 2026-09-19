@@ -855,7 +855,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.day.not_found" xml:space="preserve"><value>Attendance day not found.</value></data>
   <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>This day has no anomaly to resolve.</value></data>
   <data name="attendance.day.already_resolved" xml:space="preserve"><value>This day has already been resolved or ignored.</value></data>
-  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes must be between 0 and 24 hours (1440 minutes).</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>This action is not valid for the day's anomaly type.</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Resolve timesheet anomalies</value></data>
   <data name="attendance.timesheet.approve" xml:space="preserve"><value>Approve monthly timesheet (month-end close)</value></data>
@@ -877,6 +877,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>The weekly working hours limit was exceeded.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>The weekly working days limit was exceeded.</value></data>
   <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>The employee reported being unavailable for this date/time.</value></data>
+  <data name="attendance.shift.rest_period_too_short" xml:space="preserve"><value>There must be at least 11 hours of uninterrupted rest between two shifts.</value></data>
+  <data name="attendance.shift.break_too_short" xml:space="preserve"><value>The shift break cannot be shorter than the minimum break configured in the settings.</value></data>
   <data name="attendance.shift.self" xml:space="preserve"><value>View my own shifts</value></data>
   <data name="attendance.availability.self" xml:space="preserve"><value>Report my own availability</value></data>
   <data name="attendance.availability.view" xml:space="preserve"><value>View employee availability</value></data>
@@ -886,6 +888,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>This availability entry does not belong to you.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Availability cannot be submitted for a past date.</value></data>
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Invalid date range: the start date cannot be after the end date.</value></data>
+  <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>A timesheet record cannot be entered for a future date.</value></data>
+  <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>A period that has not started yet cannot be approved.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
@@ -896,7 +900,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.equalization.anchor_month_invalid" xml:space="preserve"><value>The anchor month must be between 1 and 12.</value></data>
   <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>This equalization period is not open.</value></data>
   <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>The equalization period has not ended yet.</value></data>
-  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes must be between 0 and 24 hours (1440 minutes).</value></data>
   <data name="attendance.my.checkin" xml:space="preserve"><value>Record my own check-in/out via QR/GPS</value></data>
   <data name="attendance.board.view" xml:space="preserve"><value>View the live in/out board</value></data>
   <data name="attendance.self_checkin.invalid_code" xml:space="preserve"><value>Invalid QR code. Please scan the location's code again.</value></data>

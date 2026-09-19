@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Shared.Contracts.Security;
 using Shouldly;
 using Xunit;
 
@@ -31,7 +32,13 @@ public sealed class TimesheetWeekFeaturesTests
     private AttendanceDay Unresolved(DateOnly date) =>
         AttendanceDay.Record(Guid.NewGuid(), _employeeId, date, PlannedStart, new TimeOnly(19, 0), PlannedStart, PlannedEnd, PlannedMinutes, 0, AttendanceDaySource.Manual);
 
-    private GetTimesheetWeekSummaryHandler CreateHandler() => new(_days, _schedules);
+    private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
+
+    private GetTimesheetWeekSummaryHandler CreateHandler()
+    {
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), _employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        return new GetTimesheetWeekSummaryHandler(_days, _schedules, _dataScope);
+    }
 
     [Fact]
     public async Task Handle_NoRecordsYet_ReturnsOpen()
