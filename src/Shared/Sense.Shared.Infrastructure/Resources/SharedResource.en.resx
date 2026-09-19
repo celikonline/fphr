@@ -628,6 +628,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Days cannot be zero.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>A reason is required.</value></data>
   <data name="leave.profile.not_found" xml:space="preserve"><value>The employee's leave profile was not found.</value></data>
+  <data name="performance.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's performance data.</value></data>
   <data name="leave.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's leave data.</value></data>
   <data name="leave.employee.not_linked" xml:space="preserve"><value>Your user is not linked to an employee record.</value></data>
   <data name="leave.errors.invalid_range" xml:space="preserve"><value>End date cannot be before start date.</value></data>
