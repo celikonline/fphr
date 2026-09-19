@@ -86,9 +86,16 @@ Yeni birim testleri (NSubstitute, mevcut kalıpları izliyor):
 
 ## Doğrulama Durumu (bu oturumun sonunda)
 
-Bu oturumda Docker SDK konteyneri üzerinden `dotnet build`/`dotnet test` çalıştırılmaya çalışıldı; ortamdaki Docker daemon uzun süre yanıt vermedi (arka plan komutu tamamlanmadı). Kod derleme zamanı gözle taranarak (tip imzaları, using'ler, mevcut çağıranların yeni imzalara uyumu) gözden geçirildi ama **gerçek `dotnet build`/`dotnet test` çalıştırılıp yeşil olduğu bu oturumda doğrulanamadı**. Bir sonraki oturum/gözden geçirme öncelikle:
-1. `dotnet build Sense.slnx` (Docker SDK konteyneri, CLAUDE.md komutu).
+**Bu commit lokal — `4526f9b` (branch `b/attendance-self-checkin` = worktree branch `worktree-agent-ad7d0f07ccee8191f`).**
+
+Bu oturumda hem Docker daemon hem de host'ta `node`/`pnpm` bu sandbox'ta kullanılamadı:
+- Docker: `docker version` / `docker ps` / `docker info` gibi en basit komutlar bile dakikalarca yanıt vermedi (SDK konteyneriyle `dotnet build` denemesi dahil, tümü zaman aşımına uğrayıp arka plana düştü, hiçbiri sonuçlanmadı). Bu, konteyner/derleme ile ilgili bir sorun değil — Docker daemon'ının kendisi bu oturumda genel olarak yanıt vermez durumdaydı (muhtemelen bu dizinde paralel çalışan başka bir oturumun/işlemin Docker'ı yoğun kullanması; bkz. proje hafızasındaki "Parallel sessions in one directory" notu).
+- `pnpm`/`node`: bu ajan sandbox'ında PATH'te hiç yok (`Get-Command node/pnpm` boş döndü) — CLAUDE.md'nin "host pnpm çalışır" notu bu izole ajan ortamı için geçerli değildi.
+- Sonuç: kod **derleme zamanı satır satır elle gözden geçirildi** (tip/namespace/using tutarlılığı, mevcut çağıranların yeni imzalara uyumu, `Result<T>`/ternary target-typing kalıpları, cref'lerin proje sınırlarını aşmaması, EF `IEntityTypeConfiguration` kaydının assembly-scan ile toplanması) ama **gerçek `dotnet build`/`dotnet test`/`pnpm exec tsc --noEmit` bu oturumda hiç çalıştırılamadı**. `git commit` kendisi docker'a bağımlı değildi ve sorunsuz tamamlandı (husky/lint-staged hook'ları bu worktree'de tetiklenmedi - muhtemelen `node_modules`/`.husky` bu izole worktree'de kurulu değil).
+
+Bir sonraki oturum/gözden geçirme ÖNCELİKLE (Docker ve pnpm çalışan bir ortamda):
+1. `dotnet build Sense.slnx` (Docker SDK konteyneri, CLAUDE.md komutu) — bu commit'in gerçekten derlendiğini doğrulamak birinci öncelik.
 2. `dotnet test` — en az `Sense.Modules.Attendance.Tests`, `Sense.Modules.Organization.Tests`.
-3. Organization + Attendance için `dotnet ef migrations add` ile gerçek migration dosyaları üretilmeli (bu commit'te taslak/elle yazılmış olabilir — dotnet-ef çıktısıyla doğrulanmalı, `AttendanceDbContextModelSnapshot.cs`/`OrganizationDbContextModelSnapshot.cs` güncel mi kontrol edilmeli).
+3. Organization + Attendance için `dotnet ef migrations add` ile gerçek migration dosyaları üretilmeli — **bu commit'te migration dosyaları YOK**, yalnız DbContext/EF configuration kodu var (`Location.Latitude/Longitude/GeofenceRadiusMeters/SelfCheckInCode`, `attendance.self_check_ins` tablosu). Mevcut entegrasyon testleri bu yeni alan/tabloya dokunmadığı için migrasyon eksikliği `dotnet test`'i muhtemelen kırmaz, ama özellik gerçek bir Postgres'e karşı ÇALIŞMAZ ta ki migration üretilene kadar — bu, "demo'da QR/GPS check-in akışı uçtan uca çalışıyor" merge gate'inin şu an KARŞILANMADIĞI anlamına gelir.
 4. `pnpm exec tsc --noEmit` ve `pnpm exec eslint src` (`web/` dizininde, host'ta).
 çalıştırılıp bu bölüm gerçek sonuçlarla güncellenmelidir.

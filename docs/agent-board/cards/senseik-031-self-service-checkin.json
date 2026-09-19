@@ -14,5 +14,5 @@
   "merge_gate": "dotnet test (Attendance + Organization) yeşil + pnpm exec tsc --noEmit temiz + demo'da QR/GPS check-in akışı uçtan uca çalışıyor",
   "handoff": "docs/handoffs/attendance-self-checkin.md",
   "source": "Rakip analizi (kolayik.com/pdks) — self-servis check-in + canlı pano SenseİK'te yoktu",
-  "notes": "Backend + minimal web UI tamamlandı (bkz. handoff). Bu oturumda Docker daemon yanıt vermediği için dotnet build/test ve pnpm tsc bu oturumda ÇALIŞTIRILAMADI - merge_gate'in dotnet/pnpm kısmı bir sonraki oturumda doğrulanmalı. Expo mobile entegrasyonuna dokunulmadı, plan handoff'ta."
+  "notes": "Backend + minimal web UI tamamlandı, lokal commit 4526f9b (bkz. handoff). Bu oturumda Docker daemon TAMAMEN yanıt vermedi (en basit 'docker version' bile dakikalarca donuyor) ve bu ajan sandbox'ında node/pnpm hiç yoktu - dotnet build/test, dotnet ef migrations ve pnpm tsc/eslint bu oturumda ÇALIŞTIRILAMADI, kod yalnız elle gözden geçirildi. EF migration dosyaları da bu yüzden ÜRETİLEMEDİ (DbContext/config kodu hazır ama migration yok) - merge_gate tamamen bir sonraki oturumda (çalışan Docker ile) doğrulanmalı. Expo mobile entegrasyonuna dokunulmadı, plan handoff'ta."
 }
