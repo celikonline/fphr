@@ -11,6 +11,12 @@ public static class EmployeeDomainErrors
     public const string WorkEmailInvalid = "employee.work_email_invalid";
     public const string PersonalEmailInvalid = "employee.personal_email_invalid";
     public const string WorkPhoneTooLong = "employee.work_phone_too_long";
+
+    /// <summary>Doğum tarihi bugünden ileri bir tarih olamaz (senseik-044).</summary>
+    public const string BirthDateInFuture = "employee.birth_date_in_future";
+
+    /// <summary>Doğum tarihi işe başlama tarihinden sonra olamaz (senseik-044).</summary>
+    public const string BirthDateAfterHireDate = "employee.birth_date_after_hire_date";
     public const string ManagerSelf = "employee.manager_self";
     public const string ManagerCycle = "employee.manager_cycle";
     public const string ChildCountInvalid = "employee.child_count_invalid";

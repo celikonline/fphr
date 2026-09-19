@@ -41,13 +41,23 @@ public static class EmployeeInfoRules
             .WithMessage(EmployeeDomainErrors.NationalIdInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
         v.RuleFor(x => info(x).WorkEmail)
-            .Must(e => string.IsNullOrWhiteSpace(e) || EmailAddress.IsValid(e.Trim()))
+            .Must(e => string.IsNullOrWhiteSpace(e) || EmployeeEmailRules.IsValid(e.Trim()))
             .WithMessage(EmployeeDomainErrors.WorkEmailInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.WorkEmail));
         v.RuleFor(x => info(x).PersonalEmail)
-            .Must(e => string.IsNullOrWhiteSpace(e) || EmailAddress.IsValid(e.Trim()))
+            .Must(e => string.IsNullOrWhiteSpace(e) || EmployeeEmailRules.IsValid(e.Trim()))
             .WithMessage(EmployeeDomainErrors.PersonalEmailInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.PersonalEmail));
+        // Doğum tarihi gelecekte olamaz; doğum tarihinden sonra işe girilemez (senseik-044) - domain kuralının
+        // FluentValidation aynası (alan bazlı 400 için).
+        v.RuleFor(x => info(x).BirthDate)
+            .Must(bd => bd is null || bd <= DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage(EmployeeDomainErrors.BirthDateInFuture)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        v.RuleFor(x => info(x))
+            .Must(i => i.BirthDate is null || i.HireDate is null || i.BirthDate <= i.HireDate)
+            .WithMessage(EmployeeDomainErrors.BirthDateAfterHireDate)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
         v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
             .When(x => info(x).ChildCount is not null)

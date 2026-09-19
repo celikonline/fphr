@@ -173,6 +173,12 @@ export interface EmployeeInput {
   employmentType?: EmploymentType | null;
   /** Omitted/null keeps the stored value (or defaults it to hireDate the first time one is set). */
   leaveAccrualStartDate?: string | null;
+  /**
+   * "Temizle" (X) sinyali (senseik-044): true gönderildiğinde alan HireDate takibini atlayıp açıkça boşa (null)
+   * ayarlanır - `leaveAccrualStartDate: null` göndermek zaten "dokunulmadı" anlamına geldiği için (yukarıdaki not),
+   * gerçek bir temizleme isteğini bundan ayırmak için bu ayrı bayrak gerekiyor.
+   */
+  clearLeaveAccrualStartDate?: boolean;
 }
 
 export interface DirectoryEntry {
@@ -309,7 +315,11 @@ export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<Emplo
     postalCode: detail.postalCode,
     contractType: detail.contractType,
     employmentType: detail.employmentType,
-    leaveAccrualStartDate: detail.leaveAccrualStartDate ?? null,
+    // Deliberately omitted (not defaulted to detail.leaveAccrualStartDate): the backend treats a missing/null value
+    // as "untouched, keep following HireDate automatically" (senseik-044) - resending the currently-displayed value
+    // on every unrelated section save would pin it and silently defeat that auto-follow behavior. Only the section
+    // that actually edits this field (GeneralSection) should pass leaveAccrualStartDate/clearLeaveAccrualStartDate
+    // as an explicit override.
     ...overrides,
   };
 }

@@ -51,14 +51,16 @@ public sealed record UpdateEmployeeCommand(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null) : ICommand<EmployeeDetailDto>, IScopedRequest
+    DateOnly? LeaveAccrualStartDate = null,
+    bool ClearLeaveAccrualStartDate = false) : ICommand<EmployeeDetailDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => Id;
 
     public EmployeeInfo ToInfo() => new(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
-        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate);
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate,
+        ClearLeaveAccrualStartDate);
 }
 
 public sealed class UpdateEmployeeValidator : AbstractValidator<UpdateEmployeeCommand>

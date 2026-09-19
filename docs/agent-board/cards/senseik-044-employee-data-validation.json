@@ -1,17 +1,17 @@
 {
   "id": "senseik-044",
-  "title": "Çalışan veri doğrulama: gelecek tarihli doğum tarihi, tarih senkronu, alan temizleme, e-posta Türkçe karakter",
+  "title": "Çalışan veri doğrulama (doğum tarihi, izin hak ediş senkronizasyonu, Türkçe e-posta)",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "review",
   "branch": "a/employee-data-validation",
-  "worktree": ".claude/worktrees/employee-validation",
+  "worktree": ".claude/worktrees/agent-afb5194a2f87a52f4",
   "acceptance": [
-    "Doğum tarihi gelecek bir tarih olamaz (validasyon eklendi) VE doğum tarihi > işe başlama tarihi tutarlılık kontrolü eklendi",
-    "KRİTİK: İşe başlama tarihi değiştirildiğinde, 'İzne esas hak ediş tarihi' de otomatik güncelleniyor VEYA kullanıcıya 'İzne esas hak ediş tarihi de güncellensin mi?' onayı soruluyor — sessizce eski/yanlış kalmıyor (mevcut senseik-007'nin BirthDate wiring düzeltmesiyle aynı ruhta, farklı alan)",
-    "'İzne esas hak ediş tarihi' alanındaki X (temizle) düğmesi çalışıyor — boş değer kaydedilebiliyor, eski değer geri gelmiyor",
-    "E-posta adreslerinde Türkçe karakter (ş,ü,ç,ğ,ö,ı) girildiğinde ya reddediliyor ya da ASCII/punycode'a normalize ediliyor (RFC 5321/5322 uyumluluğu için) — posta teslim edilemez sorunu önleniyor"
+    "Doğum tarihi gelecek bir tarih olamaz VE doğum tarihi > işe başlama tarihi olamaz — domain + application validator'da uygulandı (TAMAMLANDI)",
+    "KRİTİK: İşe başlama tarihi değiştiğinde 'İzne esas hak ediş tarihi' otomatik güncellenmeli — motor zaten doğruydu, web formu düzeltildi; birincil senaryo (temizle+kaydet+yenile) çalışıyor, ama temizlendikten SONRA alakasız bir alan kaydedilirse HireDate'e geri dönme riski kalıyor (kalıcı bayrak + migration gerektiriyor, bu turda uygulanmadı — bkz. handoff §2.3) (KISMEN TAMAMLANDI)",
+    "'İzne esas hak ediş tarihi' temizle (X) düğmesi çalışmalı, boş değer kaydedilip eski değer geri gelmemeli — birincil senaryo (kaydet+yenile) düzeltildi (TAMAMLANDI, bkz. §2.3 sınırı)",
+    "E-posta adreslerinde Türkçe karakter (ş,ü,ç,ğ,ö,ı) reddedilmeli — Employee modülüne özel EmployeeEmailRules ile reddediliyor (TAMAMLANDI)"
   ],
-  "merge_gate": "dotnet test (Employee modülü) + demo verisindeki mevcut Türkçe karakterli e-postalar için geriye dönük bir düzeltme/migrasyon planı not edildi",
+  "merge_gate": "dotnet test (Employee modülü) yeşil OLMALI — bu oturumda Docker daemon yanıt vermediği için ÇALIŞTIRILAMADI, merge öncesi mutlaka doğrulanmalı; Türkçe karakterli e-posta geriye dönük düzeltme planı handoff'a yazıldı (uygulanmadı, gerekli değildi)",
   "handoff": "docs/handoffs/employee-data-validation.md",
-  "source": "1. Tur Test Bulgu Dokümanı § C-01, C-02, C-03, C-04 (C-02 YÜKSEK — 274 gün fazla izin hakkı örneği doğrulanmış, gerçek veri bütünlüğü riski)."
+  "source": "Kullanıcı görev talebi (senseik-044 kart tanımı); AC2 deseni senseik-007 (age-50-exception) BirthDate wiring düzeltmesiyle aynı ruhta"
 }

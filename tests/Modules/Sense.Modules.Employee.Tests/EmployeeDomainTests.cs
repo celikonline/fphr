@@ -115,10 +115,64 @@ public sealed class EmployeeDomainTests
         EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", WorkEmail: work, PersonalEmail: personal))
             .Error.Code.ShouldBe(code);
 
+    /// <summary>
+    /// senseik-044: RFC 5321's SMTP envelope is ASCII-only; a Turkish-charactered local-part or domain is only
+    /// deliverable when every relay supports SMTPUTF8/IDN, which is not guaranteed - reject rather than accept mail
+    /// that later bounces.
+    /// </summary>
+    [Theory]
+    [InlineData("ayşe@acme.com", null, EmployeeDomainErrors.WorkEmailInvalid)]
+    [InlineData("ayse@açme.com", null, EmployeeDomainErrors.WorkEmailInvalid)]
+    [InlineData(null, "üzeyir@example.com", EmployeeDomainErrors.PersonalEmailInvalid)]
+    public void Create_WithTurkishCharacterEmail_Fails(string? work, string? personal, string code) =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", WorkEmail: work, PersonalEmail: personal))
+            .Error.Code.ShouldBe(code);
+
     [Fact]
     public void Create_WithTooLongPhone_Fails() =>
         EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", WorkPhone: new string('1', EmployeeLimits.PhoneMaxLength + 1)))
             .Error.Code.ShouldBe(EmployeeDomainErrors.WorkPhoneTooLong);
+
+    [Fact]
+    public void Create_WithFutureBirthDate_Fails()
+    {
+        var future = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", BirthDate: future))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.BirthDateInFuture);
+    }
+
+    [Fact]
+    public void Create_WithTodayAsBirthDate_Succeeds() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", BirthDate: DateOnly.FromDateTime(DateTime.UtcNow)))
+            .IsSuccess.ShouldBeTrue();
+
+    [Fact]
+    public void Create_WithBirthDateAfterHireDate_Fails()
+    {
+        var hireDate = new DateOnly(2024, 1, 1);
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", HireDate: hireDate, BirthDate: hireDate.AddDays(1)))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.BirthDateAfterHireDate);
+    }
+
+    [Fact]
+    public void Create_WithBirthDateEqualToHireDate_Succeeds()
+    {
+        var hireDate = new DateOnly(2024, 1, 1);
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", HireDate: hireDate, BirthDate: hireDate))
+            .IsSuccess.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateInfo_WithBirthDateAfterHireDate_FailsWithoutChangingStoredValues()
+    {
+        var e = EmployeeEntity.Create(TenantId, new EmployeeInfo("Ali", "Kaya", HireDate: new DateOnly(2024, 1, 1), BirthDate: new DateOnly(1990, 1, 1))).Value;
+
+        var result = e.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: new DateOnly(2024, 1, 1), BirthDate: new DateOnly(2024, 6, 1)));
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(EmployeeDomainErrors.BirthDateAfterHireDate);
+        e.BirthDate.ShouldBe(new DateOnly(1990, 1, 1));
+    }
 
     [Fact]
     public void UpdateInfo_RecomputesDisplayName_AndRejectsInvalidWithoutChanges()

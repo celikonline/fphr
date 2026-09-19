@@ -165,6 +165,9 @@ public sealed class CustomFieldDomainTests
         second.Value.ShouldBeFalse();
 
         ShouldFail(employee.UpdateContactInfo(new EmployeeContactInfo("not-an-email", null, null, null, null, null)), EmployeeDomainErrors.PersonalEmailInvalid);
+        // senseik-044: self-service is a separate validation path (EmployeeContactInfo, not EmployeeInfo) - the
+        // Turkish-character rejection must hold here too, not just on the HR-facing create/update commands.
+        ShouldFail(employee.UpdateContactInfo(new EmployeeContactInfo("üzeyir@example.com", null, null, null, null, null)), EmployeeDomainErrors.PersonalEmailInvalid);
         ShouldFail(employee.UpdateContactInfo(new EmployeeContactInfo(null, null, null, new string('a', EmployeeLimits.AddressLineMaxLength + 1), null, null)), EmployeeDomainErrors.AddressLineTooLong);
 
         // WorkEmail/NationalId/HireDate are untouched by this narrower self-service path.

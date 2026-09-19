@@ -50,12 +50,14 @@ public sealed record CreateEmployeeCommand(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null) : ICommand<EmployeeDetailDto>
+    DateOnly? LeaveAccrualStartDate = null,
+    bool ClearLeaveAccrualStartDate = false) : ICommand<EmployeeDetailDto>
 {
     public EmployeeInfo ToInfo() => new(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
-        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate);
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate,
+        ClearLeaveAccrualStartDate);
 }
 
 public sealed class CreateEmployeeValidator : AbstractValidator<CreateEmployeeCommand>

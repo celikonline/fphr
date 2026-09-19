@@ -17,6 +17,11 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Employee.Api.Controllers;
 
 /// <summary>Create/update body for an employee record.</summary>
+/// <param name="ClearLeaveAccrualStartDate">
+/// "İzne esas hak ediş tarihi" temizle (X) sinyali (senseik-044): true iken alan, HireDate'i takip eden varsayılan
+/// mantığı atlayarak açıkça boşa (null) ayarlanır - <paramref name="LeaveAccrualStartDate"/>'in null gönderilmesi
+/// zaten "dokunulmadı, otomatik takip devam etsin" anlamına geldiği için ayrı bir sinyale ihtiyaç var.
+/// </param>
 public sealed record EmployeeRequest(
     string FirstName,
     string LastName,
@@ -43,7 +48,8 @@ public sealed record EmployeeRequest(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null);
+    DateOnly? LeaveAccrualStartDate = null,
+    bool ClearLeaveAccrualStartDate = false);
 
 /// <summary>"Pozisyon ekle" / edit body for a career record (changeType/employmentType as camelCase enum strings).</summary>
 public sealed record CareerRecordRequest(
