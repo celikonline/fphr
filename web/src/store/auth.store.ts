@@ -160,6 +160,18 @@ interface AuthStore {
   features: MeFeatures | null;
   isLoading: boolean;
   error: string | null;
+  /**
+   * False until zustand's `persist` middleware has restored `user`/`features` from storage.
+   * `token` is read synchronously (see below), but `user`/`features` only exist after this
+   * rehydration completes - it runs a tick after the store is created, not before the first
+   * render. Reading `hasPermission`/`isAccessSettingEnabled` before this flips true always
+   * sees an empty profile, which is why permission-gated buttons ("+ Talep", "Yeni çalışan
+   * ekle", "Düzenle", ...) could silently be absent from the DOM on the very first paint after
+   * a page load - a click aimed at where the button will be lands on nothing, and only a retry
+   * after hydration finishes appears to "work" (senseik-042, çift-tıklama kök nedeni).
+   * `ProtectedRoute` waits on this before rendering the authenticated shell.
+   */
+  hasHydrated: boolean;
   login: (email: string, password: string, tenantSlug?: string) => Promise<LoginOutcome>;
   /** Second step of a login that returned `mfa_required`: TOTP code + the `mfaToken` from that response. */
   completeMfaLogin: (mfaToken: string, code: string) => Promise<LoginOutcome>;
@@ -174,111 +186,144 @@ interface AuthStore {
   isAccessSettingEnabled: (key: AccessSettingKey) => boolean;
 }
 
+// `persist`'s `onRehydrateStorage` callback below can run *synchronously*, inside `create()` itself,
+// when storage (localStorage) resolves synchronously - i.e. before `useAuthStore` below finishes
+// being assigned. Closing over `useAuthStore` there throws "Cannot access before initialization"
+// (silently swallowed by persist's internal thenable, so `hasHydrated` would never flip). Capture
+// the store's own `set` from the creator instead - it is available the moment the creator runs,
+// which always happens before hydration.
+let setAuthState: ((partial: Partial<AuthStore>) => void) | null = null;
+
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set, get) => ({
-      user: null,
-      token: typeof window === "undefined" ? null : readStoredToken(),
-      refreshToken: null,
-      features: null,
-      isLoading: false,
-      error: null,
+    (set, get) => {
+      setAuthState = set;
+      return {
+        user: null,
+        token: typeof window === "undefined" ? null : readStoredToken(),
+        refreshToken: null,
+        features: null,
+        isLoading: false,
+        error: null,
+        hasHydrated: false,
 
-      login: async (email: string, password: string, tenantSlug?: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/login`, { email, password, tenantSlug });
+        login: async (email: string, password: string, tenantSlug?: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/login`, {
+              email,
+              password,
+              tenantSlug,
+            });
 
-          if (data.status === "select_tenant") {
-            set({ isLoading: false });
-            return { status: "select_tenant", tenants: data.tenants ?? [] };
+            if (data.status === "select_tenant") {
+              set({ isLoading: false });
+              return { status: "select_tenant", tenants: data.tenants ?? [] };
+            }
+
+            if (data.status === "mfa_required") {
+              set({ isLoading: false });
+              return { status: "mfa_required", mfaToken: data.mfaToken ?? "" };
+            }
+
+            if (data.status !== "ok" || !data.tokens) {
+              throw new Error(`Login requires an unsupported step: ${data.status}`);
+            }
+
+            await establishSession(set, data.tokens);
+            return { status: "ok" };
+          } catch (error) {
+            safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+            const message = toErrorMessage(error);
+            set({
+              token: null,
+              refreshToken: null,
+              user: null,
+              features: null,
+              error: message,
+              isLoading: false,
+            });
+            throw new Error(message, { cause: error });
           }
+        },
 
-          if (data.status === "mfa_required") {
-            set({ isLoading: false });
-            return { status: "mfa_required", mfaToken: data.mfaToken ?? "" };
+        completeMfaLogin: async (mfaToken: string, code: string) => {
+          set({ isLoading: true, error: null });
+          try {
+            const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/mfa/complete`, {
+              mfaToken,
+              code,
+            });
+            if (data.status !== "ok" || !data.tokens) {
+              throw new Error(`MFA completion requires an unsupported step: ${data.status}`);
+            }
+            await establishSession(set, data.tokens);
+            return { status: "ok" };
+          } catch (error) {
+            safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+            const message = toErrorMessage(error);
+            set({
+              token: null,
+              refreshToken: null,
+              user: null,
+              features: null,
+              error: message,
+              isLoading: false,
+            });
+            throw new Error(message, { cause: error });
           }
+        },
 
-          if (data.status !== "ok" || !data.tokens) {
-            throw new Error(`Login requires an unsupported step: ${data.status}`);
-          }
-
-          await establishSession(set, data.tokens);
-          return { status: "ok" };
-        } catch (error) {
+        logout: () => {
           safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
-          const message = toErrorMessage(error);
-          set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
-          throw new Error(message, { cause: error });
-        }
-      },
+          set({ user: null, token: null, refreshToken: null, features: null, error: null });
+        },
 
-      completeMfaLogin: async (mfaToken: string, code: string) => {
-        set({ isLoading: true, error: null });
-        try {
-          const { data } = await apiClient.post<LoginResult>(`${AUTH_BASE}/mfa/complete`, { mfaToken, code });
-          if (data.status !== "ok" || !data.tokens) {
-            throw new Error(`MFA completion requires an unsupported step: ${data.status}`);
+        refreshMe: async () => {
+          if (!get().token) return;
+          try {
+            const me = await getMe();
+            set({ user: toUser(me), features: toFeatures(me) });
+          } catch {
+            // A 401 is handled by the api-client interceptor; other failures keep the cached profile.
           }
-          await establishSession(set, data.tokens);
-          return { status: "ok" };
-        } catch (error) {
-          safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
-          const message = toErrorMessage(error);
-          set({ token: null, refreshToken: null, user: null, features: null, error: message, isLoading: false });
-          throw new Error(message, { cause: error });
-        }
-      },
+        },
 
-      logout: () => {
-        safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
-        set({ user: null, token: null, refreshToken: null, features: null, error: null });
-      },
+        setUser: (user) => set({ user }),
 
-      refreshMe: async () => {
-        if (!get().token) return;
-        try {
-          const me = await getMe();
-          set({ user: toUser(me), features: toFeatures(me) });
-        } catch {
-          // A 401 is handled by the api-client interceptor; other failures keep the cached profile.
-        }
-      },
+        setToken: (token, refreshToken) => {
+          safeStorageSet(AUTH_TOKEN_STORAGE_KEY, token);
+          set({ token, refreshToken });
+        },
 
-      setUser: (user) => set({ user }),
+        isAuthenticated: () => {
+          const { token, user } = get();
+          // An expired JWT must not count as authenticated, otherwise the guard renders
+          // protected pages until the first API 401 fires.
+          return !!token && !!user && !isJwtExpired(token);
+        },
 
-      setToken: (token, refreshToken) => {
-        safeStorageSet(AUTH_TOKEN_STORAGE_KEY, token);
-        set({ token, refreshToken });
-      },
+        hasPermission: (permission) => {
+          const { user, token } = get();
+          // Mirrors AuthorizationBehaviour's own rule: a platform user's active impersonation session skips
+          // every [RequiresPermission] check server-side, so the UI must not hide things it can already do
+          // (faz0-durum-takibi.md #11 - `/identity/me` returns an empty permission list during impersonation).
+          if (getImpersonatorId(token)) return true;
+          return user?.permissions.includes(permission) ?? false;
+        },
 
-      isAuthenticated: () => {
-        const { token, user } = get();
-        // An expired JWT must not count as authenticated, otherwise the guard renders
-        // protected pages until the first API 401 fires.
-        return !!token && !!user && !isJwtExpired(token);
-      },
+        hasRole: (role) => {
+          const user = get().user;
+          return user?.roles.includes(role) ?? false;
+        },
 
-      hasPermission: (permission) => {
-        const { user, token } = get();
-        // Mirrors AuthorizationBehaviour's own rule: a platform user's active impersonation session skips
-        // every [RequiresPermission] check server-side, so the UI must not hide things it can already do
-        // (faz0-durum-takibi.md #11 - `/identity/me` returns an empty permission list during impersonation).
-        if (getImpersonatorId(token)) return true;
-        return user?.permissions.includes(permission) ?? false;
-      },
-
-      hasRole: (role) => {
-        const user = get().user;
-        return user?.roles.includes(role) ?? false;
-      },
-
-      isAccessSettingEnabled: (key) => {
-        const features = get().features;
-        if (!features) return false;
-        return features.accessSettingsBypass || features.access[key] === true;
-      },
-    }),
+        isAccessSettingEnabled: (key) => {
+          const features = get().features;
+          if (!features) return false;
+          return features.accessSettingsBypass || features.access[key] === true;
+        },
+      };
+    },
     {
       name: "auth-store",
       version: 2,
@@ -298,6 +343,12 @@ export const useAuthStore = create<AuthStore>()(
           delete state.refreshToken;
         }
         return persistedState;
+      },
+      // Runs once storage has been read, whether or not there was anything to restore (including
+      // storage being unavailable) - `hasHydrated` must flip in every case or the app would hang
+      // on the loading screen in private-browsing mode.
+      onRehydrateStorage: () => () => {
+        setAuthState?.({ hasHydrated: true });
       },
     }
   )

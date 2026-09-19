@@ -720,7 +720,7 @@ function BirthdaysWidget() {
   );
 }
 
-/** Active headcount per department; the center shows the largest department, the footer the total. */
+/** Active headcount per department; the donut's center and the footer both show the grand total. */
 function DepartmentDistributionWidget() {
   const { t } = useTranslation(["home", "navigation"]);
   const { data, isLoading, error } = useQuery({
@@ -739,7 +739,6 @@ function DepartmentDistributionWidget() {
     [data, t],
   );
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
-  const largest = chartData[0];
 
   return (
     <WidgetCard
@@ -762,10 +761,10 @@ function DepartmentDistributionWidget() {
               </Suspense>
               <Stack gap={0} align="center" justify="center" pos="absolute" top={0} left={0} right={0} bottom={0}>
                 <Text size="sm" c="dimmed" truncate maw={120} ta="center">
-                  {largest?.name}
+                  {t("home:departmentDistribution.total")}
                 </Text>
-                <Text fz={30} fw={400} lh={1.2}>
-                  {largest?.value}
+                <Text data-testid="department-distribution-center-total" fz={30} fw={400} lh={1.2}>
+                  {total}
                 </Text>
               </Stack>
             </Box>

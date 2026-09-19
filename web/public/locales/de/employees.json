@@ -323,6 +323,8 @@
     "notFoundTitle": "Mitarbeitende:r nicht gefunden",
     "notFoundDescription": "Der Datensatz wurde möglicherweise entfernt oder liegt außerhalb Ihres Zugriffsbereichs.",
     "saved": "Mitarbeiterdaten gespeichert.",
+    "statusLabel": "Mitarbeitende:r",
+    "accountStatusLabel": "Konto",
     "sections": {
       "general": "Allgemein",
       "personal": "Persönliche Daten",

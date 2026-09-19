@@ -53,6 +53,7 @@
   "departmentDistribution": {
     "title": "Employee Distribution",
     "empty": "There are no employees to show.",
-    "unassigned": "Unassigned"
+    "unassigned": "Unassigned",
+    "total": "Total"
   }
 }

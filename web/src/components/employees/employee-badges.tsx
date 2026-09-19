@@ -24,14 +24,21 @@ const STATUS_LOOK: Record<EmployeeStatus, BadgeLook> = {
   Terminated: DESTRUCTIVE,
 };
 
-export function AccountStatusBadge({ status }: { status: UserAccountStatus }) {
+/**
+ * `label` disambiguates this badge from a sibling status badge with the same text (e.g. both read
+ * "Aktif" for an active employee with an active account) - pass it whenever two status badges of
+ * different kinds render next to each other with no column header for context.
+ */
+export function AccountStatusBadge({ status, label }: { status: UserAccountStatus; label?: string }) {
   const { t } = useTranslation(["employees"]);
-  return <Badge {...(ACCOUNT_LOOK[status] ?? OUTLINE)}>{t(`employees:accountStatus.${status}`)}</Badge>;
+  const text = t(`employees:accountStatus.${status}`);
+  return <Badge {...(ACCOUNT_LOOK[status] ?? OUTLINE)}>{label ? `${label}: ${text}` : text}</Badge>;
 }
 
-export function EmployeeStatusBadge({ status }: { status: EmployeeStatus }) {
+export function EmployeeStatusBadge({ status, label }: { status: EmployeeStatus; label?: string }) {
   const { t } = useTranslation(["employees"]);
-  return <Badge {...(STATUS_LOOK[status] ?? OUTLINE)}>{t(`employees:status.${status}`)}</Badge>;
+  const text = t(`employees:status.${status}`);
+  return <Badge {...(STATUS_LOOK[status] ?? OUTLINE)}>{label ? `${label}: ${text}` : text}</Badge>;
 }
 
 export function initials(firstName: string, lastName: string): string {
