@@ -23,6 +23,14 @@ public static class PayrollDomainErrors
 
     /// <summary>senseik-011 (F-06): the severance/notice estimate needs a current salary record (Employee.Contracts.IEmployeeSalaryLookup) to derive a daily wage from.</summary>
     public const string SeveranceEstimateSalaryMissing = "payroll.errors.severance_estimate_salary_missing";
+
+    // İcra/nafaka kesinti emirleri (senseik-019 2c)
+    public const string GarnishmentCaseReferenceRequired = "payroll.errors.garnishment_case_reference_required";
+    public const string GarnishmentInstallmentInvalid = "payroll.errors.garnishment_installment_invalid";
+    public const string GarnishmentBalanceInvalid = "payroll.errors.garnishment_balance_invalid";
+    public const string GarnishmentAlreadyClosed = "payroll.errors.garnishment_already_closed";
+    public const string GarnishmentDateRangeInvalid = "payroll.errors.garnishment_date_range_invalid";
+    public const string GarnishmentNotFound = "payroll.garnishment.not_found";
 }
 
 /// <summary>Domain limits.</summary>

@@ -39,6 +39,9 @@ public static class PayrollServiceCollectionExtensions
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.
         services.AddScoped<IEmployeeIncentiveLookup, EmployeeIncentiveLookup>();
 
+        // senseik-019 2c: icra/nafaka kesinti emirleri.
+        services.AddScoped<IGarnishmentOrderRepository, GarnishmentOrderRepository>();
+
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
         services.AddScoped<IWorkedTimeReader, AttendanceWorkedTimeReaderAdapter>();

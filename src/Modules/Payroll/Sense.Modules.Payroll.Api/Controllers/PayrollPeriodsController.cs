@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sense.Modules.Payroll.Application.Declarations;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Shared.Web.Controllers;
 
@@ -62,6 +63,15 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     public async Task<IActionResult> Export(Guid id, Guid? costCenterId, CancellationToken ct)
     {
         var result = await Dispatcher.Query(new ExportPayrollPeriodQuery(id, costCenterId), ct);
+        return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
+    }
+
+    /// <summary>Downloads the period's APHB (SGK e-Bildirge) DRAFT file (senseik-019 3b - K-7 backlog karşılığı; bkz.
+    /// AphbFileBuilder doc for the "not the official SGK schema" caveat).</summary>
+    [HttpGet("{id:guid}/aphb")]
+    public async Task<IActionResult> Aphb(Guid id, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new ExportAphbFileQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
 }

@@ -128,6 +128,9 @@ public sealed class EmployeeModule : IModule
         // Worker consumer), so unlike IEmployeeSalaryLookup/IEmployeeBirthDateLookup it needs no Sense.Worker registration.
         services.AddScoped<IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
 
+        // Cross-module contract consumed by Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi)
+        services.AddScoped<IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
+
         // Cross-module contract consumed by Leave (EmployeeHired -> EmployeeLeaveProfile.BirthDate, 4857 md.53/IV
         // yaş istisnası; also read in bulk by LeaveBalanceRecalculationJob's nightly backfill/resync pass)
         services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();

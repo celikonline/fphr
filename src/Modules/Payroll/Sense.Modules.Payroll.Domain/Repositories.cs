@@ -1,3 +1,4 @@
+using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -77,4 +78,19 @@ public interface IEmployeePayrollProfileRepository
     /// profil ekranı's read-only "aktif teşvik türleri" summary aggregates across all employees, not just one).
     /// </summary>
     Task<IReadOnlyList<EmployeePayrollProfile>> ListActiveAsOfAsync(DateOnly asOf, CancellationToken cancellationToken = default);
+}
+
+/// <summary>senseik-019 2c: icra/nafaka kesinti emirleri.</summary>
+public interface IGarnishmentOrderRepository
+{
+    void Add(GarnishmentOrder order);
+
+    Task<GarnishmentOrder?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Açık (kapanmamış) emirler - PayrollPeriodCalculationService'in her dönem uyguladığı liste, oluşturulma
+    /// sırasına göre (FIFO, GarnishmentCalculator'ın icra havuzu paylaşımı için).</summary>
+    Task<IReadOnlyList<GarnishmentOrder>> ListActiveByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Çalışanın kapalılar dahil tüm emirleri, en yeni önce ("Kesintiler" ekranı).</summary>
+    Task<IReadOnlyList<GarnishmentOrder>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 }

@@ -92,6 +92,12 @@ public static class LegislationParameterSeed
 
         // senseik-036 (izin türü seed düzeltme paketi): süt izni saati (4857 md.74/son; 7578 s.K. bu hükmü değiştirmedi).
         P(42, "Leave.Breastfeeding.HoursPerDay", 1.5m, Law4857, null, Md74 + "/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"),
+
+        // Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi) - taslak aylık tutarlar,
+        // her yıl GİB tarafından güncellenir; PayrollDraft2026 doc comment'teki gibi mali müşavirle doğrulanmalı.
+        P(43, "Payroll.Disability.MonthlyTaxReduction.Degree1", 6900.00m, Payroll2026, null, "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, " + PayrollDraft2026),
+        P(44, "Payroll.Disability.MonthlyTaxReduction.Degree2", 4000.00m, Payroll2026, null, "193 s. GVK md.31 - II. derece engellilik indirimi, " + PayrollDraft2026),
+        P(45, "Payroll.Disability.MonthlyTaxReduction.Degree3", 1700.00m, Payroll2026, null, "193 s. GVK md.31 - III. derece engellilik indirimi, " + PayrollDraft2026),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>
