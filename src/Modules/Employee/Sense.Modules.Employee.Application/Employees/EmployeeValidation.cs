@@ -165,6 +165,15 @@ public sealed class EmployeeReferenceValidator(ITenantContext tenant, IEmployeeR
             return Error.Conflict(EmployeeErrors.SicilNumarasiTaken);
         }
 
+        // Work e-mail is the login/notification address: unique per tenant, case-insensitively. On update only a
+        // changed address is checked, so legacy duplicates never block unrelated edits.
+        if (info.WorkEmail?.Trim() is { Length: > 0 } workEmail &&
+            !string.Equals(existing?.WorkEmail?.Trim(), workEmail, StringComparison.OrdinalIgnoreCase) &&
+            await employees.WorkEmailTakenAsync(workEmail, existing?.Id, ct).ConfigureAwait(false))
+        {
+            return Error.Conflict(EmployeeErrors.WorkEmailTaken);
+        }
+
         return Result.Success();
     }
 }

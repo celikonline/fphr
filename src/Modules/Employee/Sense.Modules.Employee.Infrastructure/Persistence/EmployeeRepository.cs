@@ -96,6 +96,17 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
     public async Task<bool> SicilNumarasiTakenAsync(string sicilNumarasi, Guid? exceptEmployeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(e => e.SicilNumarasi == sicilNumarasi && (exceptEmployeeId == null || e.Id != exceptEmployeeId), cancellationToken);
 
+    public async Task<bool> WorkEmailTakenAsync(string workEmail, Guid? exceptEmployeeId, CancellationToken cancellationToken = default)
+    {
+        // Invariant: under tr-TR "I".ToLower() is a dotless i and would never match the SQL lower() of the column.
+        var normalized = workEmail.Trim().ToLowerInvariant();
+        return await context.Employees.AnyAsync(
+            e => e.WorkEmail != null && e.WorkEmail.ToLower() == normalized &&
+                 e.Status != EmployeeStatus.Terminated &&
+                 (exceptEmployeeId == null || e.Id != exceptEmployeeId),
+            cancellationToken);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default) =>
         await context.Employees.AsNoTracking()
             .Select(e => new { e.Id, e.ManagerEmployeeId })

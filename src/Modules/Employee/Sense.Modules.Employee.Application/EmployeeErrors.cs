@@ -9,6 +9,9 @@ public static class EmployeeErrors
     public const string MentorNotFound = "employee.mentor_not_found";
     public const string NationalIdTaken = "employee.national_id_taken";
     public const string SicilNumarasiTaken = "employee.sicil_numarasi_taken";
+
+    /// <summary>Another non-terminated employee of the tenant already uses this work e-mail (case-insensitive).</summary>
+    public const string WorkEmailTaken = "employee.work_email_taken";
     public const string StatusInvalid = "employee.status_invalid";
     public const string DaysOutOfRange = "employee.days_out_of_range";
 

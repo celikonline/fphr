@@ -211,6 +211,7 @@
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
   <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>Sicil numarası en fazla 30 karakter olabilir.</value></data>
   <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>Bu sicil numarası başka bir çalışana kayıtlı.</value></data>
+  <data name="employee.work_email_taken" xml:space="preserve"><value>Bu iş e-postası başka bir çalışanda zaten kayıtlı.</value></data>
   <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>Türk uyruklu bir çalışana 99 ile başlayan (yabancı formatlı) kimlik numarası girilemez.</value></data>
   <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için kimlik numarası girilecekse 99 ile başlayan yabancı kimlik formatında olmalı.</value></data>
   <data name="employee.foreign_identification_required" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için Yabancı Kimlik No veya Pasaport No alanlarından en az biri zorunludur.</value></data>
@@ -453,6 +454,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Geçersiz telefon numarası: '{value}'.</value></data>
   <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>Değer en fazla {max} karakter olabilir.</value></data>
   <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>Bu kimlik numarası dosyada {row}. satırda da var.</value></data>
+  <data name="IMPORT_DUPLICATE_WORK_EMAIL" xml:space="preserve"><value>Bu iş e-postası başka bir çalışanda veya dosyadaki başka bir satırda zaten kullanılıyor.</value></data>
   <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>Kimlik numarası eşleşen çalışanın adı soyadı dosyadakiyle ({value}) aynı değil.</value></data>
   <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>Bu kimlik numarasıyla kayıtlı çalışan yok (Sadece güncelleme modunda yeni kayıt açılmaz).</value></data>
   <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' sistemde bulunamadı; önce tanımlanmalıdır.</value></data>

@@ -203,6 +203,7 @@
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
   <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>The registry number can be at most 30 characters.</value></data>
   <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>This registry number is already registered to another employee.</value></data>
+  <data name="employee.work_email_taken" xml:space="preserve"><value>This work e-mail is already used by another employee.</value></data>
   <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>A Turkish employee cannot have a national ID starting with 99 (foreign ID format).</value></data>
   <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>A foreign employee's national ID, if provided, must be in the foreign ID format (starting with 99).</value></data>
   <data name="employee.foreign_identification_required" xml:space="preserve"><value>A foreign employee requires at least one of Foreign ID Number or Passport Number.</value></data>
@@ -444,6 +445,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Invalid phone number: '{value}'.</value></data>
   <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>The value can be at most {max} characters.</value></data>
   <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>This national ID also appears on row {row} of the file.</value></data>
+  <data name="IMPORT_DUPLICATE_WORK_EMAIL" xml:space="preserve"><value>This work e-mail is already used by another employee or by another row of the file.</value></data>
   <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>The name of the employee matching this national ID differs from the file ({value}).</value></data>
   <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>No employee is registered with this national ID (Update only mode does not create records).</value></data>
   <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' was not found; it must be defined first.</value></data>
