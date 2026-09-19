@@ -2,7 +2,9 @@ import { useMemo } from "react";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 
-interface Gated {
+/** senseik-052: dışa açık - route-guard.tsx aynı Gated şeklini rota bazlı yetki kontrolü için kullanıyor
+ * (menü filtrelemesiyle aynı mekanizma, ayrı bir yetki kontrolü icat edilmiyor). */
+export interface Gated {
   permissions?: readonly string[];
   accessSetting?: AccessSettingKey;
 }

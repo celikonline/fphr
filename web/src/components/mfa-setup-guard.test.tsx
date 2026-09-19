@@ -12,9 +12,15 @@ vi.mock("@/store/auth.store", () => ({
 
 const mockUseAuthStore = useAuthStore as unknown as ReturnType<typeof vi.fn>;
 
+// senseik-052: MfaSetupGuard artık MFA yönlendirmesi gerekmediğinde RouteGuard'a (useVisibleItems)
+// devrediyor - bu dosyanın odağı MFA yönlendirme mantığı olduğundan, mock her zaman izin veren bir
+// user/features taşıyor ki RouteGuard hiçbir testte 403'e düşmesin (permission testleri route-guard.test.tsx'te).
 function mockMfaSetupRequired(mfaSetupRequired: boolean) {
   mockUseAuthStore.mockImplementation((selector: (state: unknown) => unknown) =>
-    selector({ features: { mfaSetupRequired } })
+    selector({
+      user: { permissions: ["employee.employees.read"] },
+      features: { mfaSetupRequired, accessSettingsBypass: true, access: {} },
+    })
   );
 }
 
@@ -62,7 +68,9 @@ describe("MfaSetupGuard", () => {
   });
 
   it("treats a missing features block (not yet loaded) as not required", () => {
-    mockUseAuthStore.mockImplementation((selector: (state: unknown) => unknown) => selector({ features: null }));
+    mockUseAuthStore.mockImplementation((selector: (state: unknown) => unknown) =>
+      selector({ user: { permissions: ["employee.employees.read"] }, features: null })
+    );
 
     renderAt("/app/employees");
 
