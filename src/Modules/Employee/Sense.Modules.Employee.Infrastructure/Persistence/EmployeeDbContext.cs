@@ -81,6 +81,11 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.Property(x => x.LastName).HasMaxLength(EmployeeLimits.NameMaxLength).IsRequired();
         b.Property(x => x.DisplayName).HasMaxLength(EmployeeLimits.DisplayNameMaxLength).IsRequired();
         b.Property(x => x.NationalId).HasMaxLength(EmployeeLimits.NationalIdLength);
+        b.Property(x => x.SicilNumarasi).HasMaxLength(EmployeeLimits.SicilNumarasiMaxLength);
+        b.Property(x => x.Nationality).HasConversion<string>().HasMaxLength(EmployeeTables.StatusLength).IsRequired().HasDefaultValue(Nationality.Turkish);
+        b.Property(x => x.ForeignIdNumber).HasMaxLength(EmployeeLimits.ForeignIdNumberLength);
+        b.Property(x => x.PassportNumber).HasMaxLength(EmployeeLimits.PassportNumberMaxLength);
+        b.Property(x => x.SgkOccupationCode).HasMaxLength(EmployeeLimits.SgkOccupationCodeMaxLength);
         b.Property(x => x.WorkEmail).HasMaxLength(EmployeeLimits.EmailMaxLength);
         b.Property(x => x.PersonalEmail).HasMaxLength(EmployeeLimits.EmailMaxLength);
         b.Property(x => x.WorkPhone).HasMaxLength(EmployeeLimits.PhoneMaxLength);
@@ -117,6 +122,10 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasIndex(x => x.UserId).IsUnique().HasFilter("user_id IS NOT NULL");
 
         b.HasIndex(x => new { x.TenantId, x.NationalId }).IsUnique().HasFilter("national_id IS NOT NULL");
+
+        // Same pattern as NationalId's uniqueness above: SicilNumarasi is the dual-key transition's other half
+        // (senseik-009/F-02) - tenant-unique while set, but most rows won't have one yet.
+        b.HasIndex(x => new { x.TenantId, x.SicilNumarasi }).IsUnique().HasFilter("sicil_numarasi IS NOT NULL");
 
         // Career history is part of the aggregate: always loaded with it (read-side list queries opt out with IgnoreAutoIncludes).
         b.HasMany(x => x.CareerRecords).WithOne().HasForeignKey(r => r.EmployeeId).OnDelete(DeleteBehavior.Cascade);

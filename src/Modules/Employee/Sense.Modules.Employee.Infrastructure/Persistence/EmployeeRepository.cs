@@ -92,6 +92,9 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
     public async Task<bool> NationalIdTakenAsync(string nationalId, Guid? exceptEmployeeId, CancellationToken cancellationToken = default) =>
         await context.Employees.AnyAsync(e => e.NationalId == nationalId && (exceptEmployeeId == null || e.Id != exceptEmployeeId), cancellationToken);
 
+    public async Task<bool> SicilNumarasiTakenAsync(string sicilNumarasi, Guid? exceptEmployeeId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AnyAsync(e => e.SicilNumarasi == sicilNumarasi && (exceptEmployeeId == null || e.Id != exceptEmployeeId), cancellationToken);
+
     public async Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default) =>
         await context.Employees.AsNoTracking()
             .Select(e => new { e.Id, e.ManagerEmployeeId })

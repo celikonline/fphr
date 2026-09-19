@@ -77,6 +77,18 @@ public enum ContractType
     FixedTerm = 1,
 }
 
+/// <summary>
+/// Türk vatandaşı mı yabancı uyruklu mu (senseik-009/F-02): Turkish is the default so existing rows (all TCKN'li,
+/// hence really Turkish) keep their meaning unchanged when this column lands. Foreign employees need
+/// <see cref="Employee.ForeignIdNumber"/> or <see cref="Employee.PassportNumber"/> instead of (or alongside) a
+/// TCKN-shaped <see cref="Employee.NationalId"/> - see <see cref="Employee.Validate"/>.
+/// </summary>
+public enum Nationality
+{
+    Turkish = 0,
+    Foreign = 1,
+}
+
 /// <summary>Working-time/engagement type; null = not recorded.</summary>
 public enum EmploymentType
 {

@@ -202,13 +202,25 @@ public partial class DataSeeder
     private readonly HashSet<string> _usedNationalIds = new(StringComparer.Ordinal);
 
     /// <summary>Random but checksum-valid, tenant-unique 11-digit TCKN (TcKimlik algorithm: 10th/11th digits derived from the first nine).</summary>
-    private string NextNationalId()
+    private string NextNationalId() => NextChecksumId(_random.Next(1, 10), secondDigit: null);
+
+    /// <summary>Random but checksum-valid, tenant-unique "99"-prefixed Yabancı Kimlik Numarası (senseik-009/F-02) - same algorithm as <see cref="NextNationalId"/>, just the fixed foreign prefix.</summary>
+    private string NextForeignIdNumber() => NextChecksumId(9, secondDigit: 9);
+
+    private string NextChecksumId(int firstDigit, int? secondDigit)
     {
         while (true)
         {
             var d = new int[11];
-            d[0] = _random.Next(1, 10);
-            for (var i = 1; i < 9; i++)
+            d[0] = firstDigit;
+            var start = 1;
+            if (secondDigit is { } second)
+            {
+                d[1] = second;
+                start = 2;
+            }
+
+            for (var i = start; i < 9; i++)
             {
                 d[i] = _random.Next(0, 10);
             }
@@ -226,6 +238,13 @@ public partial class DataSeeder
         }
     }
 
+    /// <summary>
+    /// Fixed demo accounts that get a Foreign profile instead of the random Turkish one (senseik-009/F-02): no
+    /// NationalId, a valid Yabancı Kimlik Numarası instead - otherwise the foreign-employee path is invisible in
+    /// manual QA/demo data (2. Tur § F-02 finding).
+    /// </summary>
+    private static readonly HashSet<string> FixedDemoForeignAccounts = new(StringComparer.OrdinalIgnoreCase) { "yabanci@demo.local" };
+
     private EmployeeInfo NextDemoEmployeeInfo(User user)
     {
         var birthDate = new DateOnly(1970, 1, 1).AddDays(_random.Next(0, 365 * 33));
@@ -234,6 +253,13 @@ public partial class DataSeeder
         var personalEmail = _random.Next(0, 3) == 0
             ? null
             : $"{AsciiFold(user.FirstName)}.{AsciiFold(user.LastName)}{_random.Next(1, 100)}@example.com";
+
+        if (FixedDemoForeignAccounts.Contains(user.Email))
+        {
+            return new EmployeeInfo(
+                user.FirstName, user.LastName, NationalId: null, user.Email, personalEmail, phone, hireDate, birthDate,
+                Nationality: Nationality.Foreign, ForeignIdNumber: NextForeignIdNumber());
+        }
 
         return new EmployeeInfo(user.FirstName, user.LastName, NextNationalId(), user.Email, personalEmail, phone, hireDate, birthDate);
     }
@@ -280,6 +306,9 @@ public partial class DataSeeder
         // senseik-007 (A-01 regresyon): 4857 md.53/IV 50+ yaş istisnasının demo'da görünür kanıtı - 56 yaş, 2 yıl
         // kıdem, varsayılan kural setiyle (AnnualDays=14, AgeExceptionMinDays=20) 2 tam dönem x 20 gün = 40 gün.
         ("testyas@demo.local", "Test", "Yaş", SystemRoleCodes.Employee),
+        // senseik-009 (F-02 regresyon): yabancı uyruklu çalışan senaryosunun demo'da görünür kanıtı - bkz.
+        // FixedDemoForeignAccounts (NationalId yok, Yabancı Kimlik No dolu).
+        ("yabanci@demo.local", "Olena", "Kovalenko", SystemRoleCodes.Employee),
     ];
 
     /// <summary>

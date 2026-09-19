@@ -1,7 +1,11 @@
 namespace Sense.Modules.Employee.Contracts;
 
-/// <summary>Derived booleans only - never exposes raw BirthDate/DisabilityDegree across the module boundary (both are "hassas"/sensitive fields).</summary>
-public sealed record EmployeeDocumentEligibilitySignals(bool IsUnder18, bool HasDisability, bool IsUndergroundWorker);
+/// <summary>
+/// Derived booleans only - never exposes raw BirthDate/DisabilityDegree across the module boundary (both are
+/// "hassas"/sensitive fields). <see cref="IsForeignNational"/> (senseik-009/F-02) closes the WorkPermit document
+/// type's NonTurkishNational condition, which never fired before this field existed on Employee.
+/// </summary>
+public sealed record EmployeeDocumentEligibilitySignals(bool IsUnder18, bool HasDisability, bool IsUndergroundWorker, bool IsForeignNational = false);
 
 /// <summary>
 /// Read-only cross-module lookup consumed by Documents (document requirement evaluation at hire time and on manual

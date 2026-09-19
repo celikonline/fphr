@@ -56,6 +56,47 @@ public sealed class EmployeeDomainTests
         EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", NationalId: nationalId))
             .Error.Code.ShouldBe(EmployeeDomainErrors.NationalIdInvalid);
 
+    /// <summary>senseik-009/F-02: a Turkish employee cannot carry a "99"-prefixed (foreign-shaped) national id - a data-quality hole this rule closes.</summary>
+    [Fact]
+    public void Create_TurkishWithForeignPrefixedNationalId_Fails() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", NationalId: "99123456740", Nationality: Nationality.Turkish))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.NationalIdForeignPrefixForTurkish);
+
+    /// <summary>senseik-009/F-02: a Foreign employee's NationalId, if given, must itself be foreign-shaped - a normal valid TCKN is rejected.</summary>
+    [Fact]
+    public void Create_ForeignWithValidTurkishNationalId_Fails() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo(
+                "A", "B", NationalId: "10000000146", Nationality: Nationality.Foreign, ForeignIdNumber: "99123456740"))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.NationalIdNotForeignForForeignNational);
+
+    /// <summary>senseik-009/F-02: without this rule a Foreign employee could be saved with no identification at all - the "yabancı işçi kaydı açılamıyor" gap the finding described.</summary>
+    [Fact]
+    public void Create_ForeignWithoutForeignIdOrPassport_Fails() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", Nationality: Nationality.Foreign))
+            .Error.Code.ShouldBe(EmployeeDomainErrors.ForeignIdentificationRequired);
+
+    [Fact]
+    public void Create_ForeignWithForeignIdNumberOnly_Succeeds()
+    {
+        var result = EmployeeEntity.Create(TenantId, new EmployeeInfo(
+            "Olena", "Kovalenko", Nationality: Nationality.Foreign, ForeignIdNumber: "99123456740"));
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Nationality.ShouldBe(Nationality.Foreign);
+        result.Value.ForeignIdNumber.ShouldBe("99123456740");
+        result.Value.NationalId.ShouldBeNull();
+    }
+
+    [Fact]
+    public void Create_ForeignWithPassportNumberOnly_Succeeds() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("Olena", "Kovalenko", Nationality: Nationality.Foreign, PassportNumber: "P1234567"))
+            .IsSuccess.ShouldBeTrue();
+
+    [Fact]
+    public void Create_TurkishDefault_DoesNotRequireForeignIdentification() =>
+        EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", NationalId: "10000000146"))
+            .IsSuccess.ShouldBeTrue();
+
     [Fact]
     public void Create_WithBlankOptionalFields_StoresNulls()
     {
