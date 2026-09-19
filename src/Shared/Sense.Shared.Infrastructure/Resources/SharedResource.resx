@@ -184,6 +184,7 @@
   <data name="employee.name_too_long" xml:space="preserve"><value>Ad ve soyad en fazla 100 karakter olabilir.</value></data>
   <data name="employee.national_id_invalid" xml:space="preserve"><value>Geçersiz T.C. kimlik numarası.</value></data>
   <data name="employee.work_email_invalid" xml:space="preserve"><value>Geçersiz iş e-postası.</value></data>
+  <data name="employee.profile.update_empty" xml:space="preserve"><value>Güncellenecek en az bir alan gönderilmelidir.</value></data>
   <data name="employee.personal_email_invalid" xml:space="preserve"><value>Geçersiz kişisel e-posta.</value></data>
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Doğum tarihi gelecekte bir tarih olamaz.</value></data>

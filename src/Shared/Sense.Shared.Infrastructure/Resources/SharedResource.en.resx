@@ -175,6 +175,7 @@
   <data name="employee.name_too_long" xml:space="preserve"><value>First and last name can be at most 100 characters.</value></data>
   <data name="employee.national_id_invalid" xml:space="preserve"><value>Invalid Turkish national ID number.</value></data>
   <data name="employee.work_email_invalid" xml:space="preserve"><value>Invalid work e-mail.</value></data>
+  <data name="employee.profile.update_empty" xml:space="preserve"><value>At least one field to update must be provided.</value></data>
   <data name="employee.personal_email_invalid" xml:space="preserve"><value>Invalid personal e-mail.</value></data>
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Birth date cannot be a future date.</value></data>
