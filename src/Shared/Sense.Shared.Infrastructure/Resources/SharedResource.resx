@@ -104,6 +104,8 @@
   <data name="role.locked" xml:space="preserve"><value>Hesap Sahibi rolünün izinleri değiştirilemez.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>Rol {count} kullanıcıya atanmış; önce atamaları kaldırın.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Bilinmeyen izin: {permission}</value></data>
+  <data name="role.permission_not_held" xml:space="preserve"><value>Sahip olmadığınız bir izni (veya daha geniş bir veri kapsamını) bir role veremezsiniz: {permission}</value></data>
+  <data name="role.own_role_readonly" xml:space="preserve"><value>Size atanmış bir rolün izinlerini kendiniz değiştiremezsiniz.</value></data>
 
   <!-- Davet -->
   <data name="invitation.not_found" xml:space="preserve"><value>Davet bulunamadı.</value></data>

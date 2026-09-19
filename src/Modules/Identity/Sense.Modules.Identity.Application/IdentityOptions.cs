@@ -121,6 +121,12 @@ public static class IdentityErrors
     public const string RoleInUse = "role.in_use";
     public const string RoleUnknownPermission = "role.unknown_permission";
 
+    /// <summary>Çağıran, verdiği izne (veya bu izni verdiği veri kapsamına) kendisi sahip olmadan rol izni veremez (yetki yükseltme koruması).</summary>
+    public const string RolePermissionNotHeld = "role.permission_not_held";
+
+    /// <summary>Çağıran, kendisine atanmış bir rolün izinlerini düzenleyemez.</summary>
+    public const string RoleOwnRoleReadOnly = "role.own_role_readonly";
+
     public const string InvitationNotFound = "invitation.not_found";
     public const string InvitationAlreadyAccepted = "invitation.already_accepted";
     public const string InvitationExpired = "invitation.expired";
