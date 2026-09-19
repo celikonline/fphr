@@ -108,7 +108,8 @@ public static class LeaveDayCounter
         days.Sort((a, b) => a.Date.CompareTo(b.Date));
     }
 
-    private static DateOnly MondayOf(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+    /// <summary>Monday of the calendar week containing <paramref name="date"/> (the week the Saturday rule inspects).</summary>
+    public static DateOnly MondayOf(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
 
     public static bool MondayToFriday(DateOnly date) => date.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday);
 }
