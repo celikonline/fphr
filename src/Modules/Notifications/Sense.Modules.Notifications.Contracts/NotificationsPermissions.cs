@@ -10,15 +10,15 @@ namespace Sense.Modules.Notifications.Contracts;
 public static class NotificationsPermissions
 {
     private const string Module = "notifications";
-    private const string Group = "Notifications";
+    private const string Group = "Bildirimler";
 
     /// <summary>List one's own in-app notifications and unread count.</summary>
     public static readonly Permission MyView = new(
-        "notifications.my.view", Module, "View My Notifications", Group, "View the caller's own in-app notifications and notification settings");
+        "notifications.my.view", Module, "Kendi Bildirimlerimi Görüntüleme", Group, "Kendi uygulama içi bildirimlerinizi ve bildirim ayarlarınızı görüntüleme");
 
     /// <summary>Mark one's own notifications read and change one's own notification settings.</summary>
     public static readonly Permission MyManage = new(
-        "notifications.my.manage", Module, "Manage My Notifications", Group, "Mark the caller's own notifications as read and change which notifications they receive");
+        "notifications.my.manage", Module, "Kendi Bildirimlerimi Yönetme", Group, "Kendi bildirimlerinizi okundu olarak işaretleme ve hangi bildirimleri alacağınızı değiştirme");
 
     public static IEnumerable<Permission> All => [MyView, MyManage];
 }

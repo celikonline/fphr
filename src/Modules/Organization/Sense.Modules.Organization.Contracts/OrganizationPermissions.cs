@@ -15,79 +15,79 @@ namespace Sense.Modules.Organization.Contracts;
 public static class OrganizationPermissions
 {
     private const string Module = "organization";
-    private const string Group = "Organization";
+    private const string Group = "Şirket Yapısı";
 
     /// <summary>Create an org unit (any hierarchy level).</summary>
     public static readonly Permission UnitsCreate = new(
-        "organization.units.create", Module, "Create Org Unit", Group, "Create an organization unit at any hierarchy level");
+        "organization.units.create", Module, "Birim Oluşturma", Group, "Herhangi bir hiyerarşi seviyesinde organizasyon birimi oluşturma");
 
     /// <summary>Read org units, levels (types), and the org tree.</summary>
     public static readonly Permission UnitsRead = new(
-        "organization.units.read", Module, "Read Org Units", Group, "View organization units, hierarchy levels, and the org tree");
+        "organization.units.read", Module, "Birimleri Görüntüleme", Group, "Organizasyon birimlerini, hiyerarşi seviyelerini ve organizasyon ağacını görüntüleme");
 
     /// <summary>Rename/reparent/assign manager or location to an org unit.</summary>
     public static readonly Permission UnitsUpdate = new(
-        "organization.units.update", Module, "Update Org Unit", Group, "Rename, reparent, or assign a manager/location to an organization unit");
+        "organization.units.update", Module, "Birim Güncelleme", Group, "Bir organizasyon birimini yeniden adlandırma, üst birimini değiştirme veya yönetici/lokasyon atama");
 
     /// <summary>Deactivate (soft delete) an org unit.</summary>
     public static readonly Permission UnitsDelete = new(
-        "organization.units.delete", Module, "Deactivate Org Unit", Group, "Deactivate an organization unit");
+        "organization.units.delete", Module, "Birim Pasifleştirme", Group, "Bir organizasyon birimini pasifleştirme");
 
     /// <summary>Create a tenant-custom holiday calendar.</summary>
     public static readonly Permission HolidayCalendarsCreate = new(
-        "organization.holiday_calendars.create", Module, "Create Holiday Calendar", Group, "Create a tenant-custom holiday calendar");
+        "organization.holiday_calendars.create", Module, "Tatil Takvimi Oluşturma", Group, "Kiracıya özel bir tatil takvimi oluşturma");
 
     /// <summary>Read holiday calendars and their entries.</summary>
     public static readonly Permission HolidayCalendarsRead = new(
-        "organization.holiday_calendars.read", Module, "Read Holiday Calendars", Group, "View holiday calendars and their entries");
+        "organization.holiday_calendars.read", Module, "Tatil Takvimlerini Görüntüleme", Group, "Tatil takvimlerini ve içerdikleri günleri görüntüleme");
 
     /// <summary>Add entries to a calendar, or assign a calendar to a Company.</summary>
     public static readonly Permission HolidayCalendarsUpdate = new(
-        "organization.holiday_calendars.update", Module, "Update Holiday Calendar", Group, "Add entries to a holiday calendar, or assign a calendar to a company");
+        "organization.holiday_calendars.update", Module, "Tatil Takvimi Güncelleme", Group, "Bir tatil takvimine gün ekleme veya bir şirkete takvim atama");
 
     /// <summary>Create a location (roadmap Faz 0 item #6: office/store/warehouse/factory/remote + country).</summary>
     public static readonly Permission LocationsCreate = new(
-        "organization.locations.create", Module, "Create Location", Group, "Create a physical location");
+        "organization.locations.create", Module, "Lokasyon Oluşturma", Group, "Fiziksel bir lokasyon oluşturma");
 
     /// <summary>Read locations.</summary>
     public static readonly Permission LocationsRead = new(
-        "organization.locations.read", Module, "Read Locations", Group, "View locations");
+        "organization.locations.read", Module, "Lokasyonları Görüntüleme", Group, "Lokasyonları görüntüleme");
 
     /// <summary>Rename/retype/re-address a location.</summary>
     public static readonly Permission LocationsUpdate = new(
-        "organization.locations.update", Module, "Update Location", Group, "Rename, retype, or re-address a location");
+        "organization.locations.update", Module, "Lokasyon Güncelleme", Group, "Bir lokasyonu yeniden adlandırma, türünü veya adresini değiştirme");
 
     /// <summary>Deactivate (soft delete) a location.</summary>
     public static readonly Permission LocationsDelete = new(
-        "organization.locations.delete", Module, "Deactivate Location", Group, "Deactivate a location");
+        "organization.locations.delete", Module, "Lokasyon Pasifleştirme", Group, "Bir lokasyonu pasifleştirme");
 
     /// <summary>Add, activate, rename, reorder, and remove hierarchy levels.</summary>
     public static readonly Permission UnitTypesManage = new(
-        UnitTypesManageKey, Module, "Manage Hierarchy Levels", Group, "Add, rename, reorder, activate, or remove organization hierarchy levels");
+        UnitTypesManageKey, Module, "Hiyerarşi Seviyesi Yönetimi", Group, "Organizasyon hiyerarşi seviyeleri ekleme, yeniden adlandırma, sıralama, etkinleştirme veya kaldırma");
 
     /// <summary>Create a company (Company-level org unit with its holiday calendar).</summary>
     public static readonly Permission CompaniesCreate = new(
-        CompaniesCreateKey, Module, "Create Company", Group, "Create a company together with its holiday calendar");
+        CompaniesCreateKey, Module, "Şirket Oluşturma", Group, "Tatil takvimiyle birlikte bir şirket oluşturma");
 
     /// <summary>Edit the tenant's company profile (legal/registry fields, operating hours, logo). Faz 2, TB-10.</summary>
     public static readonly Permission CompanyProfileManage = new(
-        CompanyProfileManageKey, Module, "Manage Company Profile", Group, "Edit the company profile: legal/registry fields, operating hours, and logo");
+        CompanyProfileManageKey, Module, "Şirket Profili Yönetimi", Group, "Şirket profilini düzenleme: yasal/sicil alanları, çalışma saatleri ve logo");
 
     /// <summary>View the effective upcoming holidays (home page list).</summary>
     public static readonly Permission HolidaysView = new(
-        HolidaysViewKey, Module, "View Holidays", Group, "View upcoming official holidays");
+        HolidaysViewKey, Module, "Tatilleri Görüntüleme", Group, "Yaklaşan resmi tatilleri görüntüleme");
 
     /// <summary>Assign/clear the approval policy per request type on an org unit ("Opsiyonel alanlar").</summary>
     public static readonly Permission ApprovalAssignmentsManage = new(
-        ApprovalAssignmentsManageKey, Module, "Manage Unit Approval Policies", Group, "Assign or clear the approval policy of each request type on an organization unit");
+        ApprovalAssignmentsManageKey, Module, "Birim Onay Politikası Yönetimi", Group, "Bir organizasyon biriminde talep türü başına onay politikası atama veya kaldırma");
 
     /// <summary>View the cost center catalog (S-4, roadmap Faz 2 item #2).</summary>
     public static readonly Permission CostCentersView = new(
-        CostCentersViewKey, Module, "View Cost Centers", Group, "View the cost center catalog");
+        CostCentersViewKey, Module, "Masraf Merkezlerini Görüntüleme", Group, "Masraf merkezi kataloğunu görüntüleme");
 
     /// <summary>Create, rename, and activate/deactivate cost centers (S-4).</summary>
     public static readonly Permission CostCentersManage = new(
-        CostCentersManageKey, Module, "Manage Cost Centers", Group, "Create, rename, and activate or deactivate cost centers");
+        CostCentersManageKey, Module, "Masraf Merkezi Yönetimi", Group, "Masraf merkezi oluşturma, yeniden adlandırma ve etkinleştirme/pasifleştirme");
 
     public const string UnitTypesManageKey = "organization.unit_types.manage";
     public const string CompaniesCreateKey = "organization.companies.create";

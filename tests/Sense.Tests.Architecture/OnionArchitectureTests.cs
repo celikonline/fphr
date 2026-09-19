@@ -286,6 +286,40 @@ public sealed class OnionArchitectureTests
     }
 
     /// <summary>
+    /// Faz1a senseik-040: permission catalog display names/groups must be end-user Turkish text (or a dotted
+    /// resource key resolved via SharedResource.resx, the way Identity's catalog does it), never literal
+    /// untranslated English - regression guard for the 2026-09 permission/role i18n pass across every module.
+    /// </summary>
+    [Fact]
+    public void PermissionCatalogs_DoNotExposeUntranslatedEnglishDisplayNames()
+    {
+        // Technical loanwords kept as-is in Turkish product copy (Webhook, API, PDKS, ...) are intentionally not
+        // in this list - only tokens that signal a literal, never-translated English UI label.
+        var englishWord = new System.Text.RegularExpressions.Regex(
+            @"\b(View|Manage|Create|Read|Edit|Delete|Update|Import|Export|Assign|Approve|Own|Generate|Pay|Submit|Publish|Lock|Unlock|Plan|Convert|Override|Decide|Register|Reopen|Report|Deactivate|Recalculate|Adjust)\b");
+
+        var permissions = Named(ContractsSuffix)
+            .Concat(Named(ApplicationSuffix))
+            .SelectMany(a => a.GetTypes())
+            .Where(t => t.IsAbstract && t.IsSealed)
+            .Select(t => t.GetProperty("All", BindingFlags.Public | BindingFlags.Static))
+            .Where(p => p is not null && typeof(IEnumerable<Sense.Shared.Contracts.Security.Permission>).IsAssignableFrom(p.PropertyType))
+            .SelectMany(p => (IEnumerable<Sense.Shared.Contracts.Security.Permission>)p!.GetValue(null)!)
+            .ToList();
+
+        permissions.ShouldNotBeEmpty("permission catalogs should have been discovered via reflection across every module");
+
+        var violations = permissions
+            .Where(p => englishWord.IsMatch(p.DisplayName) || englishWord.IsMatch(p.Group))
+            .Select(p => $"{p.Key} -> DisplayName='{p.DisplayName}' Group='{p.Group}'")
+            .ToList();
+
+        violations.ShouldBeEmpty(
+            "Permission display names/groups must be Turkish, or a dotted resource key resolved via SharedResource.resx (Identity's pattern). " +
+            string.Join(", ", violations));
+    }
+
+    /// <summary>
     /// Architecture rule: Modules can only have one DbContext per module.
     /// All entities in a module share the same PostgreSQL schema.
     /// </summary>
@@ -305,6 +339,57 @@ public sealed class OnionArchitectureTests
         duplicatesByAssembly.ShouldBeEmpty(
             "Each module should have exactly one DbContext inheriting from ModuleDbContext. " +
             string.Join(", ", duplicatesByAssembly.SelectMany(g => g.Select(t => t.FullName))));
+    }
+
+    /// <summary>
+    /// Faz1a senseik-040: RolesController (Kullanıcılar → Roller) and MeController (Profilim) must resolve every
+    /// system role's display name from the exact same "roles.{code}.name"/"roles.{code}.description" resource keys
+    /// (SystemRoleCodes.NameKey/DescriptionKey) - this is what keeps the two screens' role labels consistent.
+    /// Regression guard: every code in SystemRoleCodes.All must have a non-empty entry in both the neutral (tr)
+    /// and ".en" SharedResource satellite, so neither screen silently falls back to the raw code.
+    /// </summary>
+    [Fact]
+    public void SystemRoleNames_HaveResourceEntriesInBothLocales()
+    {
+        var root = FindRepoRoot();
+        root.ShouldNotBeNull("Could not locate repository root from test output path.");
+
+        var resourcesDir = Path.Combine(root!, "src", "Shared", "Sense.Shared.Infrastructure", "Resources");
+        var neutral = ReadResxKeys(Path.Combine(resourcesDir, "SharedResource.resx"));
+        var english = ReadResxKeys(Path.Combine(resourcesDir, "SharedResource.en.resx"));
+
+        var missing = new List<string>();
+        foreach (var code in Sense.Modules.Identity.Domain.Roles.SystemRoleCodes.All)
+        {
+            var nameKey = Sense.Modules.Identity.Domain.Roles.SystemRoleCodes.NameKey(code);
+            var descriptionKey = Sense.Modules.Identity.Domain.Roles.SystemRoleCodes.DescriptionKey(code);
+            foreach (var key in new[] { nameKey, descriptionKey })
+            {
+                if (!neutral.TryGetValue(key, out var trValue) || string.IsNullOrWhiteSpace(trValue))
+                {
+                    missing.Add($"SharedResource.resx missing/empty '{key}'");
+                }
+
+                if (!english.TryGetValue(key, out var enValue) || string.IsNullOrWhiteSpace(enValue))
+                {
+                    missing.Add($"SharedResource.en.resx missing/empty '{key}'");
+                }
+            }
+        }
+
+        missing.ShouldBeEmpty(
+            "Every system role must resolve on both RolesController and MeController via the same resource key. " +
+            string.Join(", ", missing));
+    }
+
+    private static Dictionary<string, string> ReadResxKeys(string path)
+    {
+        var doc = System.Xml.Linq.XDocument.Load(path);
+        return doc.Root!.Elements("data")
+            .ToDictionary(
+                e => e.Attribute("name")!.Value,
+                e => e.Element("value")?.Value ?? string.Empty,
+                StringComparer.Ordinal);
     }
 
     private static Assembly[] LoadSolutionAssemblies()

@@ -12,25 +12,25 @@ public static class OnboardingPermissions
     public static readonly Permission TemplatesManage = new(
         "onboarding.templates.manage",
         Module,
-        "Manage Onboarding Templates",
-        "Onboarding",
-        "Create, edit and (de)activate onboarding/offboarding task templates");
+        "Oryantasyon Şablonu Yönetimi",
+        "Oryantasyon",
+        "İşe alım/işten ayrılış görev şablonları oluşturma, düzenleme ve etkinleştirme/pasifleştirme");
 
     /// <summary>View employees' materialized onboarding/offboarding task checklists.</summary>
     public static readonly Permission TasksView = new(
         "onboarding.tasks.view",
         Module,
-        "View Onboarding Tasks",
-        "Onboarding",
-        "View employees' onboarding/offboarding task checklists");
+        "Oryantasyon Görevlerini Görüntüleme",
+        "Oryantasyon",
+        "Çalışanların işe alım/işten ayrılış görev listelerini görüntüleme");
 
     /// <summary>Materialize, complete and waive employees' onboarding/offboarding tasks.</summary>
     public static readonly Permission TasksManage = new(
         "onboarding.tasks.manage",
         Module,
-        "Manage Onboarding Tasks",
-        "Onboarding",
-        "Materialize, complete and waive employees' onboarding/offboarding tasks");
+        "Oryantasyon Görevi Yönetimi",
+        "Oryantasyon",
+        "Çalışanların işe alım/işten ayrılış görevlerini oluşturma, tamamlama ve muaf tutma");
 
     /// <summary>All Onboarding module permissions.</summary>
     public static IEnumerable<Permission> All =>

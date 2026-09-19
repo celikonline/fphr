@@ -326,9 +326,9 @@ export default function AccountPage() {
           <ProfileRow label={t("account:roles")}>
             {user && user.roles.length > 0 ? (
               <Group gap={4}>
-                {user.roles.map((role) => (
+                {user.roles.map((role, index) => (
                   <Badge key={role} variant="light" color="gray" tt="none">
-                    {t(`account:roleNames.${role}`, role)}
+                    {user.roleLabels[index] ?? role}
                   </Badge>
                 ))}
               </Group>

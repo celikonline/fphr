@@ -17,25 +17,25 @@ public static class ReportingPermissions
     public static readonly Permission CatalogView = new(
         "reports.catalog.view",
         Module,
-        "View Report Catalog",
-        "Reports",
-        "See the list of available reports");
+        "Rapor Kataloğunu Görüntüleme",
+        "Raporlar",
+        "Kullanılabilir raporların listesini görüntüleme");
 
     /// <summary>Request/run a report (subject to each report's own additional permission, if any).</summary>
     public static readonly Permission ExecutionsGenerate = new(
         "reports.executions.generate",
         Module,
-        "Generate Reports",
-        "Reports",
-        "Request a report to be generated");
+        "Rapor Oluşturma",
+        "Raporlar",
+        "Bir raporun oluşturulmasını talep etme");
 
     /// <summary>Self-service: view/download the caller's own report execution history.</summary>
     public static readonly Permission MyExecutions = new(
         "reports.my.executions",
         Module,
-        "My Report Executions",
-        "Reports",
-        "View and download the caller's own generated reports");
+        "Kendi Rapor Çalıştırmalarım",
+        "Raporlar",
+        "Kendi oluşturduğunuz raporları görüntüleme ve indirme");
 
     public static IEnumerable<Permission> All =>
     [
