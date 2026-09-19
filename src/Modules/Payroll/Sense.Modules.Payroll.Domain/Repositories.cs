@@ -2,6 +2,7 @@ using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 
 namespace Sense.Modules.Payroll.Domain;
 
@@ -93,4 +94,29 @@ public interface IGarnishmentOrderRepository
 
     /// <summary>Çalışanın kapalılar dahil tüm emirleri, en yeni önce ("Kesintiler" ekranı).</summary>
     Task<IReadOnlyList<GarnishmentOrder>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+public interface IUnionRepository
+{
+    void Add(Union union);
+
+    Task<Union?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Union>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IEmployeeUnionMembershipRepository
+{
+    void Add(EmployeeUnionMembership membership);
+
+    void Remove(EmployeeUnionMembership membership);
+
+    Task<EmployeeUnionMembership?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every membership record of the employee, newest MembershipDate first.</summary>
+    Task<IReadOnlyList<EmployeeUnionMembership>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The membership in effect on <paramref name="asOf"/> (MembershipDate ≤ asOf ≤ EndDate/open), if any -
+    /// used by <c>PayrollPeriodCalculationService</c> to resolve the period's dues via <c>UnionDuesCalculator</c>.</summary>
+    Task<EmployeeUnionMembership?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
 }

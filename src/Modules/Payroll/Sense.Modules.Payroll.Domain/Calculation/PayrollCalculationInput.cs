@@ -47,6 +47,14 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// senseik-019 2c: çalışanın aktif icra/nafaka emirleri (<see cref="GarnishmentCalculator"/> İİK m.83 kuralını
 /// uygular). Null/boş = kesinti yok (önceki davranış).
 /// </param>
+/// <param name="UnionDuesAmount">
+/// Sendika aidatı / dayanışma aidatı (11.3.07-bordro.md "Sendika / TİS", #58): this period's dues, already computed
+/// by <c>Unions.UnionDuesCalculator</c> from the employee's current <c>EmployeeUnionMembership</c> (Application
+/// layer resolves the membership; the calculator stays pure). Deducted straight from NET (DEDUCTIONS step) - it does
+/// not touch SGK/GV/DV bases (dues are a post-tax deduction, not exempt pay). Defaults to 0 so existing golden-set
+/// tests are unaffected. Collective-agreement (TİS) terms and retroactive difference payroll are out of scope this
+/// slice (deferred: faz3-durum-takibi.md #58).
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -60,4 +68,5 @@ public sealed record PayrollCalculationInput(
     bool IncentiveEligible = false,
     int DisabilityDegree = 0,
     decimal AdvanceDeductionTotal = 0m,
-    IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null);
+    IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
+    decimal UnionDuesAmount = 0m);

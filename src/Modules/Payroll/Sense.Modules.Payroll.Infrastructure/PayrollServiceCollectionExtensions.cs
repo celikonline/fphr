@@ -34,6 +34,8 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         services.AddScoped<IPayslipDirtyFlagRepository, PayslipDirtyFlagRepository>();
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();
+        services.AddScoped<IUnionRepository, UnionRepository>();
+        services.AddScoped<IEmployeeUnionMembershipRepository, EmployeeUnionMembershipRepository>();
 
         // senseik-010/F-03: Documents' DocumentRequirementMaterializationService reads this to materialize
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.

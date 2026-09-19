@@ -772,6 +772,17 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.garnishment_date_range_invalid" xml:space="preserve"><value>The closing date cannot be before the start date.</value></data>
   <data name="payroll.garnishment.not_found" xml:space="preserve"><value>Garnishment order not found.</value></data>
 
+  <!-- Payroll (Faz 3 P5): union / solidarity dues (EmployeeUnionMembership) -->
+  <data name="payroll.union.manage" xml:space="preserve"><value>Manage unions and memberships</value></data>
+  <data name="payroll.union.not_found" xml:space="preserve"><value>Union not found.</value></data>
+  <data name="payroll.errors.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
+  <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>The union name is too long.</value></data>
+  <data name="payroll.union_membership.not_found" xml:space="preserve"><value>Union membership not found.</value></data>
+  <data name="payroll.errors.union_membership_union_required" xml:space="preserve"><value>A union must be selected.</value></data>
+  <data name="payroll.errors.union_membership_date_range_invalid" xml:space="preserve"><value>Invalid dates (the notification/end date cannot be before the membership date).</value></data>
+  <data name="payroll.errors.union_membership_dues_value_invalid" xml:space="preserve"><value>The dues value is invalid for this rule.</value></data>
+  <data name="payroll.errors.union_membership_already_open" xml:space="preserve"><value>The employee already has an open union membership.</value></data>
+
   <!-- Recruitment (Faz 6 R0): job posting/candidate/application core -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>View Job Postings</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>Create Job Posting</value></data>

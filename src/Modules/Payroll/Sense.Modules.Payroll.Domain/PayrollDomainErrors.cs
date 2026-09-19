@@ -31,6 +31,16 @@ public static class PayrollDomainErrors
     public const string GarnishmentAlreadyClosed = "payroll.errors.garnishment_already_closed";
     public const string GarnishmentDateRangeInvalid = "payroll.errors.garnishment_date_range_invalid";
     public const string GarnishmentNotFound = "payroll.garnishment.not_found";
+
+    // Sendika (union) üyeliği ve aidat kesintisi
+    public const string UnionNotFound = "payroll.union.not_found";
+    public const string UnionNameRequired = "payroll.errors.union_name_required";
+    public const string UnionNameTooLong = "payroll.errors.union_name_too_long";
+    public const string UnionMembershipNotFound = "payroll.union_membership.not_found";
+    public const string UnionMembershipUnionRequired = "payroll.errors.union_membership_union_required";
+    public const string UnionMembershipDateRangeInvalid = "payroll.errors.union_membership_date_range_invalid";
+    public const string UnionMembershipDuesValueInvalid = "payroll.errors.union_membership_dues_value_invalid";
+    public const string UnionMembershipAlreadyOpen = "payroll.errors.union_membership_already_open";
 }
 
 /// <summary>Domain limits.</summary>
@@ -42,4 +52,6 @@ public static class PayrollLimits
     public const int ExternalPayrollCodeMaxLength = 50;
     public const int NotesMaxLength = 2000;
     public const int IncentiveLawCodeMaxLength = 30;
+    public const int UnionNameMaxLength = 200;
+    public const int UnionIndustryBranchCodeMaxLength = 30;
 }

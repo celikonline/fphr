@@ -8,6 +8,7 @@ using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 
@@ -34,6 +35,10 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
     public DbSet<ChangeDetectionRun> ChangeDetectionRuns => Set<ChangeDetectionRun>();
 
     public DbSet<GarnishmentOrder> GarnishmentOrders => Set<GarnishmentOrder>();
+
+    public DbSet<Union> Unions => Set<Union>();
+
+    public DbSet<EmployeeUnionMembership> EmployeeUnionMemberships => Set<EmployeeUnionMembership>();
 }
 
 internal static class PayrollTables
@@ -45,6 +50,8 @@ internal static class PayrollTables
     public const string DirtyFlags = "payslip_dirty_flags";
     public const string ChangeDetectionRuns = "change_detection_runs";
     public const string GarnishmentOrders = "garnishment_orders";
+    public const string Unions = "unions";
+    public const string EmployeeUnionMemberships = "employee_union_memberships";
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
     public const int ReasonCodeLength = 40;
@@ -163,6 +170,34 @@ public sealed class GarnishmentOrderConfiguration : IEntityTypeConfiguration<Gar
         b.Property(x => x.Type).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.Property(x => x.CaseReference).HasMaxLength(PayrollTables.CaseReferenceMaxLength).IsRequired();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.ClosedDate });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class UnionConfiguration : IEntityTypeConfiguration<Union>
+{
+    public void Configure(EntityTypeBuilder<Union> b)
+    {
+        b.ToTable(PayrollTables.Unions);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Name).HasMaxLength(PayrollLimits.UnionNameMaxLength).IsRequired();
+        b.Property(x => x.IndustryBranchCode).HasMaxLength(PayrollLimits.UnionIndustryBranchCodeMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.Name });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class EmployeeUnionMembershipConfiguration : IEntityTypeConfiguration<EmployeeUnionMembership>
+{
+    public void Configure(EntityTypeBuilder<EmployeeUnionMembership> b)
+    {
+        b.ToTable(PayrollTables.EmployeeUnionMemberships);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.CoverageType).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.DuesRule).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.MembershipDate });
         b.Ignore(x => x.DomainEvents);
     }
 }

@@ -210,15 +210,18 @@ public static class PayrollCalculator
         var expenseReimbursement = input.ExpenseReimbursement;
         var netBeforeDeductions = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement);
 
-        // DEDUCTIONS (senseik-019 2c: icra/nafaka + avans mahsubu; sendika/BES kesintileri kapsam dışı kalmaya devam ediyor)
+        // DEDUCTIONS (senseik-019 2c: icra/nafaka + avans mahsubu; #58: sendika/dayanışma aidatı -
+        // UnionDuesCalculator ile Application katmanında hesaplanıp buraya girdi olarak geliyor, motor DB'ye
+        // bakmıyor, İİK m.83 tavanına tabi değil; BES kesintisi hâlâ kapsam dışı)
         var garnishmentOrders = input.GarnishmentOrders ?? [];
         var garnishmentResult = GarnishmentCalculator.Calculate(netBeforeDeductions, garnishmentOrders);
         var advanceDeduction = Math.Min(Math.Max(0m, netBeforeDeductions - garnishmentResult.TotalDeduction), input.AdvanceDeductionTotal);
-        var deductionsTotal = Round(garnishmentResult.TotalDeduction + advanceDeduction);
+        var unionDues = input.UnionDuesAmount;
+        var deductionsTotal = Round(garnishmentResult.TotalDeduction + advanceDeduction + unionDues);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Deductions, "payroll.trace.step.deductions",
-            Map(("netBeforeDeductions", netBeforeDeductions), ("garnishmentDeductionTotal", garnishmentResult.TotalDeduction), ("advanceDeductionTotal", advanceDeduction)),
-            "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) - sendika/BES kapsam dışı (P5+)",
+            Map(("netBeforeDeductions", netBeforeDeductions), ("garnishmentDeductionTotal", garnishmentResult.TotalDeduction), ("advanceDeductionTotal", advanceDeduction), ("unionDues", unionDues)),
+            "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) + sendika/dayanışma aidatı - BES kapsam dışı (P6+)",
             deductionsTotal, []));
 
         // NET
@@ -229,7 +232,7 @@ public static class PayrollCalculator
                 ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption),
                 ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement),
                 ("deductionsTotal", deductionsTotal)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans)",
+            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/sendika aidatı)",
             net, []));
 
         // EMPLOYER_SGK

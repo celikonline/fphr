@@ -7,6 +7,7 @@ using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Legislation;
 using Sense.Shared.Kernel.Results;
@@ -40,7 +41,8 @@ public sealed class PayrollPeriodCalculationService(
     IExpensePayoutReader expensePayoutReader,
     IPayrollPeriodRepository periods,
     IGarnishmentOrderRepository garnishmentOrderRepository,
-    IEmployeeDisabilityLookup disabilityLookup)
+    IEmployeeDisabilityLookup disabilityLookup,
+    IEmployeeUnionMembershipRepository unionMemberships)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -151,6 +153,11 @@ public sealed class PayrollPeriodCalculationService(
             .Select(o => new GarnishmentDeductionInput(o.Id, o.Type, o.MonthlyInstallmentAmount, o.RemainingBalance))
             .ToList();
 
+        // Sendika / dayanışma aidatı (11.3.07-bordro.md #58): pure UnionDuesCalculator decides eligibility for this
+        // period from the current membership (or 0 if the employee has none) - the calculator never touches the DB.
+        var membership = await unionMemberships.FindCurrentAsync(employeeId, periodStart, cancellationToken);
+        var unionDuesAmount = UnionDuesCalculator.Calculate(membership, salary.Amount, calendarDays, periodStart);
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: salary.Amount,
             WorkedDays: workedDays,
@@ -163,7 +170,8 @@ public sealed class PayrollPeriodCalculationService(
             IncentiveEligible: incentiveEligible,
             DisabilityDegree: (int)disabilityDegree,
             AdvanceDeductionTotal: advanceBalance,
-            GarnishmentOrders: garnishmentInputs);
+            GarnishmentOrders: garnishmentInputs,
+            UnionDuesAmount: unionDuesAmount);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
 

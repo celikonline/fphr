@@ -35,5 +35,9 @@ public static class PayrollPermissions
     public static readonly Permission DeclarationsExport = new(
         "payroll.declarations.export", Module, "Export Payroll Declarations", Group, "Download APHB/e-Bildirge, bank payment and accounting voucher files");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, CourtOrderManage, DeclarationsExport];
+    /// <summary>11.3.07-bordro.md "Sendika & TİS" (#58, P5): manage unions and employees' union/TİS membership + dues.</summary>
+    public static readonly Permission UnionManage = new(
+        "payroll.union.manage", Module, "Manage Unions", Group, "Manage unions and employees' union/collective-agreement membership and dues");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, CourtOrderManage, DeclarationsExport, UnionManage];
 }
