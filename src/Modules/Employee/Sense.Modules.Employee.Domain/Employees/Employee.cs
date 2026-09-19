@@ -122,7 +122,8 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 
     /// <summary>
     /// "İzne esas hak ediş tarihi" (11.3.03): the date leave entitlement accrues from. Defaults to
-    /// <see cref="HireDate"/> the first time a hire date is set, but may be earlier (group transfer, rehire).
+    /// <see cref="HireDate"/> the first time a hire date is set, but may be earlier (group transfer, rehire), or
+    /// explicitly cleared (senseik-044's "temizle" (X) button) - see <see cref="ResolveLeaveAccrualStart"/>.
     /// </summary>
     public DateOnly? LeaveAccrualStartDate { get; private set; }
 
@@ -714,7 +715,9 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         WorkPhone = Normalize(info.WorkPhone);
         var previousHireDate = HireDate;
         HireDate = info.HireDate;
-        LeaveAccrualStartDate = ResolveLeaveAccrualStart(info.LeaveAccrualStartDate, LeaveAccrualStartDate, previousHireDate, HireDate);
+        LeaveAccrualStartDate = info.ClearLeaveAccrualStartDate
+            ? null
+            : ResolveLeaveAccrualStart(info.LeaveAccrualStartDate, LeaveAccrualStartDate, previousHireDate, HireDate);
         BirthDate = info.BirthDate;
         Gender = info.Gender;
         MaritalStatus = info.MaritalStatus;
@@ -812,14 +815,26 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(EmployeeDomainErrors.SgkOccupationCodeTooLong);
         }
 
-        if (Normalize(info.WorkEmail) is { } workEmail && !EmailAddress.IsValid(workEmail))
+        if (Normalize(info.WorkEmail) is { } workEmail && !EmployeeEmailRules.IsValid(workEmail))
         {
             return Error.Validation(EmployeeDomainErrors.WorkEmailInvalid);
         }
 
-        if (Normalize(info.PersonalEmail) is { } personalEmail && !EmailAddress.IsValid(personalEmail))
+        if (Normalize(info.PersonalEmail) is { } personalEmail && !EmployeeEmailRules.IsValid(personalEmail))
         {
             return Error.Validation(EmployeeDomainErrors.PersonalEmailInvalid);
+        }
+
+        // Doğum tarihi gelecekte olamaz; doğum tarihinden sonra işe girilemez (senseik-044).
+        if (info.BirthDate is { } birthDate && birthDate > DateOnly.FromDateTime(DateTime.UtcNow))
+        {
+            return Error.Validation(EmployeeDomainErrors.BirthDateInFuture);
+        }
+
+        if (info.BirthDate is { } birthDateForHireCheck && info.HireDate is { } hireDateForBirthCheck &&
+            birthDateForHireCheck > hireDateForBirthCheck)
+        {
+            return Error.Validation(EmployeeDomainErrors.BirthDateAfterHireDate);
         }
 
         if (Normalize(info.WorkPhone) is { Length: > EmployeeLimits.PhoneMaxLength })
@@ -868,6 +883,15 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// deliberately moved earlier - group transfer, rehire - is kept). A termination-date upper bound comes with the
     /// termination package (E4), which owns that field.
     /// </summary>
+    /// <remarks>
+    /// Not called at all when <see cref="EmployeeInfo.ClearLeaveAccrualStartDate"/> is set (see <see cref="Apply"/>):
+    /// that flag forces the field to <see langword="null"/> unconditionally, since a plain <see langword="null"/>
+    /// <see cref="EmployeeInfo.LeaveAccrualStartDate"/> already means "untouched, keep following HireDate" here.
+    /// <para>
+    /// An empty value with an unchanged hire date stays empty (a deliberate clear survives later, unrelated saves); an
+    /// empty value is re-derived only when the hire date is first set or changes. Readers treat empty as HireDate.
+    /// </para>
+    /// </remarks>
     private static DateOnly? ResolveLeaveAccrualStart(DateOnly? requested, DateOnly? current, DateOnly? oldHireDate, DateOnly? newHireDate)
     {
         if (requested is not null)
@@ -877,7 +901,10 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 
         if (current is null)
         {
-            return newHireDate;
+            // Only (re)derive when the hire date is first set or changes: an unchanged hire date with an empty field
+            // means it was cleared on purpose (senseik-044) and must stay empty across unrelated saves - readers
+            // already fall back to HireDate for an empty value.
+            return newHireDate != oldHireDate ? newHireDate : null;
         }
 
         return oldHireDate is not null && current == oldHireDate && newHireDate is not null ? newHireDate : current;

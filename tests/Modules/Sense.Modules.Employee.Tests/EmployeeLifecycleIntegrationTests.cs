@@ -111,6 +111,34 @@ public sealed class EmployeeLifecycleIntegrationTests : TestFixture
         received.LeaveAccrualStartDate.ShouldBe(hireDate);
     }
 
+    /// <summary>
+    /// senseik-044 (C-02): EmployeeHired fires once, so a later hire-date correction must reach Leave through
+    /// EmployeeEmploymentDatesChanged (with the re-derived accrual start); a save that keeps the dates raises nothing.
+    /// </summary>
+    [Fact]
+    public async Task HireDateCorrection_OnHiredEmployee_RaisesEmploymentDatesChanged_WithFollowingAccrualStart()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId);
+        var db = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+        var datesEventType = EventTypeRegistry.NameOf(typeof(ContractEvents.EmployeeEmploymentDatesChanged));
+
+        var hireDate = new DateOnly(2025, 3, 1);
+        var created = await ExecuteCommandAsync(new CreateEmployeeCommand("Deniz", "Er", null, null, null, null, hireDate, null, null, null));
+        created.IsSuccess.ShouldBeTrue();
+
+        await ExecuteCommandAsync(new UpdateEmployeeCommand(created.Value.Id, "Deniz", "E.", null, null, null, null, hireDate, null, null, null));
+        (await db.OutboxMessages.CountAsync(m => m.Type == datesEventType && m.TenantId == tenantId)).ShouldBe(0);
+
+        var corrected = new DateOnly(2025, 12, 1);
+        var updated = await ExecuteCommandAsync(new UpdateEmployeeCommand(created.Value.Id, "Deniz", "E.", null, null, null, null, corrected, null, null, null));
+        updated.IsSuccess.ShouldBeTrue();
+        updated.Value.LeaveAccrualStartDate.ShouldBe(corrected);
+        (await db.OutboxMessages.CountAsync(m => m.Type == datesEventType && m.TenantId == tenantId)).ShouldBe(1);
+        var payload = (await db.OutboxMessages.SingleAsync(m => m.Type == datesEventType && m.TenantId == tenantId)).Payload;
+        payload.ShouldContain("2025-12-01");
+    }
+
     [Fact]
     public async Task Suspend_ThenReactivate_RaisesEventsAndRejectsInvalidTransitions()
     {

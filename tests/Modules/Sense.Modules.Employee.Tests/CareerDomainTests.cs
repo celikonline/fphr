@@ -225,6 +225,35 @@ public sealed class CareerDomainTests
         employee.LeaveAccrualStartDate.ShouldBe(groupTransfer);
     }
 
+    /// <summary>
+    /// senseik-044: the "temizle" (X) button in the web form must actually persist an empty value. Before
+    /// <see cref="EmployeeInfo.ClearLeaveAccrualStartDate"/> existed, a plain <c>null</c> LeaveAccrualStartDate could
+    /// never mean "clear it" - that shape was already claimed by "untouched, keep following HireDate" (the test
+    /// above). The explicit flag wins outright, even over a customized (non-hire-date-following) value.
+    /// </summary>
+    [Fact]
+    public void LeaveAccrualStart_ExplicitClearFlag_ForcesNull_EvenOverACustomizedValue_AndSurvivesUnrelatedSaves()
+    {
+        var employee = EmployeeEntity.Create(TenantId, new EmployeeInfo("Ali", "Kaya", HireDate: HireDate)).Value;
+        employee.LeaveAccrualStartDate.ShouldBe(HireDate);
+
+        var groupTransfer = new DateOnly(2019, 5, 1);
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate, LeaveAccrualStartDate: groupTransfer)).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBe(groupTransfer);
+
+        // The card's actual complaint: temizle (X) + kaydet + kartı yenile must show empty, not the old value.
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate, ClearLeaveAccrualStartDate: true)).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBeNull();
+
+        // A later, unrelated save (hire date unchanged, field untouched) must not bring the value back...
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate, WorkPhone: "02120000000")).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBeNull();
+
+        // ...but a hire-date correction re-derives it (AC2: accrual follows the corrected hire date).
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate.AddDays(5))).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBe(HireDate.AddDays(5));
+    }
+
     [Fact]
     public void OrgPlacement_ChainForUnit_AddsShallowerAncestorsOnly_AndValidatesLevel()
     {
