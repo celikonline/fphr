@@ -16,6 +16,14 @@ public static class KpiKeys
     public const string TurnoverRate = "TURNOVER_RATE";
     public const string EarlyTurnoverRate = "EARLY_TURNOVER_RATE";
     public const string GenderRatioByUnit = "GENDER_RATIO_BY_UNIT";
+
+    /// <summary>
+    /// senseik-046: <see cref="GenderRatioByUnit"/> groups by each employee's raw OrgUnitId, which for most tenants
+    /// is the deepest assignment (Title level) - its breakdown dimension therefore reads "İK Uzmanı / Kadın" rather
+    /// than a department. This KPI groups by the Department-level ancestor instead, so the same distribution can be
+    /// read at the department granularity too.
+    /// </summary>
+    public const string GenderRatioByDepartment = "GENDER_RATIO_BY_DEPARTMENT";
 }
 
 /// <summary>
@@ -46,19 +54,26 @@ public sealed class GetWorkforceKpisHandler(
         var from = query.From ?? new DateOnly(to.Year, 1, 1);
 
         // "Company" scope (Owner/HRAdmin/... - the roles this permission ships with by default) sees every KPI.
-        // Anything narrower (a unit manager's Department/Team/Location scope) sees only the unit breakdown, filtered
-        // to their accessible units - the other four KPIs are tenant-wide aggregates that Employee.Contracts doesn't
-        // expose pre-filtered by employee/unit yet, so excluding them (rather than showing a wrong/unscoped number)
-        // is the safe choice; widening them needs an Employee.Contracts query shape change (cross-module, not ours).
+        // Anything narrower (a unit manager's Department/Team/Location scope) sees only the unit and department
+        // breakdowns, filtered to their accessible units - the other four KPIs are tenant-wide aggregates that
+        // Employee.Contracts doesn't expose pre-filtered by employee/unit yet, so excluding them (rather than
+        // showing a wrong/unscoped number) is the safe choice; widening them needs an Employee.Contracts query
+        // shape change (cross-module, not ours).
         var accessibleUnitIds = await dataScope.GetAccessibleOrgUnitIdsAsync(AnalyticsPermissions.KpiView.Key, cancellationToken);
         var unitNames = (await orgUnits.ListActiveUnitsAsync(tenant.TenantId, cancellationToken)).ToDictionary(u => u.Id, u => u.Name);
         var genderByUnit = await employeeAnalytics.GetGenderByOrgUnitAsync(tenant.TenantId, cancellationToken);
+        var genderByDepartment = await employeeAnalytics.GetGenderByDepartmentAsync(tenant.TenantId, cancellationToken);
         if (accessibleUnitIds is not null)
         {
             genderByUnit = genderByUnit.Where(g => g.OrgUnitId is { } id && accessibleUnitIds.Contains(id)).ToList();
+            genderByDepartment = genderByDepartment.Where(g => g.OrgUnitId is { } id && accessibleUnitIds.Contains(id)).ToList();
         }
 
-        var results = new List<KpiResultDto> { BuildGenderRatioByUnit(from, to, genderByUnit, unitNames) };
+        var results = new List<KpiResultDto>
+        {
+            BuildGenderRatioByUnit(KpiKeys.GenderRatioByUnit, "Gender Ratio by Unit", from, to, genderByUnit, unitNames),
+            BuildGenderRatioByUnit(KpiKeys.GenderRatioByDepartment, "Gender Ratio by Department", from, to, genderByDepartment, unitNames),
+        };
 
         if (accessibleUnitIds is null)
         {
@@ -126,8 +141,10 @@ public sealed class GetWorkforceKpisHandler(
         return new KpiResultDto(KpiKeys.EarlyTurnoverRate, "Early Turnover Rate", value, "ratio", from, to, breakdown);
     }
 
+    /// <summary>Shared by GENDER_RATIO_BY_UNIT (raw OrgUnitId) and GENDER_RATIO_BY_DEPARTMENT (Department-level ancestor,
+    /// senseik-046) - both are a list of (org unit id, gender, count) rows sharing the same unit-name dictionary.</summary>
     private static KpiResultDto BuildGenderRatioByUnit(
-        DateOnly from, DateOnly to, IReadOnlyList<GenderByOrgUnitCount> genderByUnit, IReadOnlyDictionary<Guid, string> unitNames)
+        string key, string label, DateOnly from, DateOnly to, IReadOnlyList<GenderByOrgUnitCount> genderByUnit, IReadOnlyDictionary<Guid, string> unitNames)
     {
         var total = genderByUnit.Sum(g => g.Count);
         var breakdown = genderByUnit
@@ -135,7 +152,7 @@ public sealed class GetWorkforceKpisHandler(
             .OrderByDescending(b => b.Count)
             .ToList();
 
-        return new KpiResultDto(KpiKeys.GenderRatioByUnit, "Gender Ratio by Unit", total, "headcount", from, to, breakdown);
+        return new KpiResultDto(key, label, total, "headcount", from, to, breakdown);
     }
 
     private static string UnitLabel(Guid? orgUnitId, IReadOnlyDictionary<Guid, string> unitNames) =>

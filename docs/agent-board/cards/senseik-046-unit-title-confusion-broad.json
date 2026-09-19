@@ -2,16 +2,16 @@
   "id": "senseik-046",
   "title": "'Birim' sütunu departman yerine ünvan gösteriyor — çalışan listesi ve raporlar genelinde",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "review",
   "branch": "a/unit-title-confusion-broad",
-  "worktree": ".claude/worktrees/unit-title-broad",
+  "worktree": ".claude/worktrees/agent-a42591004449874e3",
   "acceptance": [
-    "Çalışanlar listesindeki 'Birim' sütunu departmanı gösteriyor (ünvanı değil) — ya sütun adı 'Ünvan' olarak düzeltiliyor ya da ayrı bir 'Departman' sütunu ekleniyor",
-    "Raporlar → 'Birim Bazında Cinsiyet Dağılımı' ve benzeri kırılımlar artık departman bazında da filtrelenebiliyor (şu an sadece ünvan bazında çıkıyor)",
-    "Bordro/Puantör rolünün gördüğü 'Çalışan rehberi'nde bu sütun boş ('—') kalmıyor",
-    "senseik-017'de org şeması için eklenen departmentName alanı/deseni burada da tekrar kullanılıyor (kod tekrarı yok)"
+    "Çalışanlar listesindeki 'Birim' sütunu departmanı gösteriyor (ünvanı değil) — ayrı 'Departman' ve 'Ünvan' sütunlarına bölündü",
+    "Raporlar → 'Birim Bazında Cinsiyet Dağılımı' ve benzeri kırılımlar artık departman bazında da çıkıyor (yeni GENDER_RATIO_BY_DEPARTMENT KPI'sı, mevcut GENDER_RATIO_BY_UNIT'in yanında)",
+    "Bordro/Puantör rolünün gördüğü 'Çalışan rehberi' ekranında bu sütun artık boş ('—') kalmıyor (kök neden yetkiydi: organization.units.read gerektiren client-side lookup yerine backend'de org yerleşim zinciriyle çözülüyor)",
+    "senseik-017'de eklenen OrgPlacement/LevelUnitFor deseni çalışan listesi, çalışan rehberi ve raporlama KPI'sında tekrar kullanıldı (kod tekrarı yok)"
   ],
-  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: çalışan listesi ve raporlarda departman/ünvan ayrımı net",
+  "merge_gate": "pnpm exec tsc --noEmit + eslint src + dotnet build/test (Employee.Tests, Analytics.Tests) yeşil + manuel test: çalışan listesi ve raporlarda departman/ünvan ayrımı net — HEPSİ DOĞRULANDI (ayrıntı: handoff)",
   "handoff": "docs/handoffs/unit-title-confusion-broad.md",
   "source": "1. Tur Test Bulgu Dokümanı § C-07 (ORTA — senseik-017 sadece org şemasını kapsıyordu, bu kart çalışan listesi + raporlama katmanını kapsıyor)."
 }

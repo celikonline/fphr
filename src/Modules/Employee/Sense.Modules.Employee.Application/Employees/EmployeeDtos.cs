@@ -28,7 +28,10 @@ public sealed record EmployeeListItemDto(
     // of a flat count-less badge on every incomplete record (senseik-045).
     int MissingInfoFieldCount = 0,
     // Title level of the org placement chain (shown on the grid's card view), like EmployeeDetailDto.TitleName.
-    string? TitleName = null);
+    string? TitleName = null,
+    // Department level of the org placement chain (senseik-046: the list's "Birim" column showed the raw, usually
+    // Title-level, OrgUnitId - this is the actual Department ancestor, like EmployeeDetailDto.DepartmentName).
+    string? DepartmentName = null);
 
 /// <summary>Employee card. PositionStartDate is derived (ValidFrom of the career record in effect today). DepartmentName/TitleName are resolved from the org placement chain (Department/Title levels) so callers without organization.units.read still see them. Health/disability fields and an unmasked NationalId are only populated for callers with employee.sensitive.view; others get a masked NationalId and nulls (Employee.EmployeeSensitiveAccess).</summary>
 public sealed record EmployeeDetailDto(
@@ -92,7 +95,13 @@ public sealed record TerminateEmployeeResultDto(
     CollectiveDismissalEvaluation? CollectiveDismissal = null,
     int OpenAssetCount = 0);
 
-public sealed record DirectoryEntryDto(Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone);
+/// <summary>
+/// Company directory row. TitleName/DepartmentName are resolved from the org placement chain (senseik-046) so a
+/// caller with employee.directory.view but not organization.units.read - e.g. Bordro/Puantör - still sees them,
+/// instead of the "—" that a client-side org-unit lookup silently produces when it lacks that permission.
+/// </summary>
+public sealed record DirectoryEntryDto(
+    Guid Id, string DisplayName, Guid? OrgUnitId, string? WorkEmail, string? WorkPhone, string? TitleName, string? DepartmentName);
 
 public sealed record OrgChartNodeDto(
     Guid Id,

@@ -40,7 +40,8 @@
   },
   "columns": {
     "name": "Name",
-    "orgUnit": "Einheit",
+    "department": "Abteilung",
+    "title": "Titel",
     "manager": "Führungskraft",
     "workEmail": "Dienstliche E-Mail",
     "workPhone": "Diensttelefon",

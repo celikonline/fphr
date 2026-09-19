@@ -40,7 +40,8 @@
   },
   "columns": {
     "name": "Ad soyad",
-    "orgUnit": "Birim",
+    "department": "Departman",
+    "title": "Ünvan",
     "manager": "Yönetici",
     "workEmail": "İş e-postası",
     "workPhone": "İş telefonu",

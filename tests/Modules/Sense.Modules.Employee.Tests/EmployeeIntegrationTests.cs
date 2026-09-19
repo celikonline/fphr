@@ -225,7 +225,8 @@ public sealed class EmployeeIntegrationTests : TestFixture
         directory.TotalCount.ShouldBe(3);
         directory.Items.Select(d => d.DisplayName).ShouldBe(["Ceyda Başkan", "Deniz Geliştirici"]);
         var byUnit = (await ExecuteQueryAsync(new GetEmployeeDirectoryQuery(new PagedQuery { Q = "tolga" }, units.Sales))).Value;
-        byUnit.Items.ShouldHaveSingleItem().ShouldBe(new DirectoryEntryDto(cto.Id, "Tolga Teknik", units.Sales, null, "+90 212 000 00 01"));
+        // Placed directly on the Department (no Title level below it): TitleName is null, DepartmentName is resolved.
+        byUnit.Items.ShouldHaveSingleItem().ShouldBe(new DirectoryEntryDto(cto.Id, "Tolga Teknik", units.Sales, null, "+90 212 000 00 01", null, "Sales"));
 
         var within30 = (await ExecuteQueryAsync(new GetUpcomingBirthdaysQuery())).Value;
         within30.ShouldHaveSingleItem().ShouldBe(new UpcomingBirthdayDto(ceo.Id, "Ceyda Başkan", units.Root, BirthdayCalculator.NextBirthday(ceo.BirthDate!.Value, today)));

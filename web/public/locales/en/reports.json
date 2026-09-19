@@ -120,7 +120,7 @@
       "currentYear": "Current year"
     },
     "empty": "No indicator data for the selected period.",
-    "scopedNote": "Your permission is unit-scoped, so only the per-unit distribution is shown.",
+    "scopedNote": "Your permission is unit-scoped, so only the per-unit and per-department distribution is shown.",
     "cards": {
       "headcount": "Active headcount",
       "turnover": "Turnover rate",
@@ -137,7 +137,7 @@
     "charts": {
       "gender": "Gender distribution",
       "genderByUnit": "Headcount by unit and gender",
-      "department": "Headcount by unit",
+      "department": "Headcount by department",
       "leaveByType": "Leave usage by type ({{year}})",
       "careerMoves": "Career change types",
       "noData": "No data to show",
@@ -163,6 +163,7 @@
     "TURNOVER_RATE": { "label": "Turnover rate" },
     "EARLY_TURNOVER_RATE": { "label": "Early attrition share (first 6 months)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Gender distribution by unit" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Gender distribution by department" },
     "dimensions": {
       "Promotion": "Promotion",
       "LateralMove": "Lateral move",

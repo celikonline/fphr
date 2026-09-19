@@ -74,7 +74,8 @@ public sealed class ListEmployeesHandler(
             e.EmploymentType,
             EmployeeCompleteness.IsMissingInfo(e),
             EmployeeCompleteness.MissingFieldCount(e),
-            placement?.LevelUnitFor(e.OrgUnitId, "Title")?.Name));
+            placement?.LevelUnitFor(e.OrgUnitId, "Title")?.Name,
+            placement?.LevelUnitFor(e.OrgUnitId, "Department")?.Name));
     }
 }
 
@@ -243,7 +244,7 @@ public sealed class GetMyEmployeeHandler(ICurrentUser currentUser, IEmployeeRead
 [RequiresPermission(EmployeePermissions.DirectoryViewKey)]
 public sealed record GetEmployeeDirectoryQuery(PagedQuery Paging, Guid? OrgUnitId) : IQuery<PagedResult<DirectoryEntryDto>>;
 
-public sealed class GetEmployeeDirectoryHandler(IEmployeeReadStore store, IAccessSettingsService accessSettings)
+public sealed class GetEmployeeDirectoryHandler(IEmployeeReadStore store, IAccessSettingsService accessSettings, OrgPlacementLoader placementLoader)
     : IQueryHandler<GetEmployeeDirectoryQuery, PagedResult<DirectoryEntryDto>>
 {
     public async Task<Result<PagedResult<DirectoryEntryDto>>> Handle(GetEmployeeDirectoryQuery query, CancellationToken cancellationToken)
@@ -257,7 +258,23 @@ public sealed class GetEmployeeDirectoryHandler(IEmployeeReadStore store, IAcces
         var paging = query.Paging with { Sort = EmployeeSortFields.DisplayName, Filters = [] };
         var page = await store.ListAsync(criteria, paging, cancellationToken);
         var showPhones = await accessSettings.IsEnabledForCurrentUserAsync(AccessSettingKeys.AccountShowWorkPhoneNumbers, cancellationToken);
-        return page.Map(e => new DirectoryEntryDto(e.Id, e.DisplayName, e.OrgUnitId, e.WorkEmail, showPhones ? e.WorkPhone : null));
+
+        // senseik-046: the directory used to send only OrgUnitId and let the FE resolve its name via a client-side
+        // org-unit lookup that needs organization.units.read - a caller with directory.view but not that permission
+        // (e.g. Bordro/Puantör) always saw "—". Resolving Title/Department here (like the employee card/list) makes
+        // it work for every caller regardless of their organization.units.read grant.
+        var placement = page.Items.Any(e => e.OrgUnitId is not null)
+            ? await placementLoader.LoadAsync(cancellationToken)
+            : null;
+
+        return page.Map(e => new DirectoryEntryDto(
+            e.Id,
+            e.DisplayName,
+            e.OrgUnitId,
+            e.WorkEmail,
+            showPhones ? e.WorkPhone : null,
+            placement?.LevelUnitFor(e.OrgUnitId, "Title")?.Name,
+            placement?.LevelUnitFor(e.OrgUnitId, "Department")?.Name));
     }
 }
 

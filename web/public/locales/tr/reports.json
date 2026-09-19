@@ -120,7 +120,7 @@
       "currentYear": "Cari yıl"
     },
     "empty": "Seçili dönem için gösterge verisi yok.",
-    "scopedNote": "Yetkiniz birim kapsamında olduğu için yalnızca birim bazlı dağılım gösterilir.",
+    "scopedNote": "Yetkiniz birim kapsamında olduğu için yalnızca birim ve departman bazlı dağılım gösterilir.",
     "cards": {
       "headcount": "Aktif kadro",
       "turnover": "İşten ayrılma oranı",
@@ -137,7 +137,7 @@
     "charts": {
       "gender": "Cinsiyet dağılımı",
       "genderByUnit": "Birim ve cinsiyete göre kadro",
-      "department": "Birim bazında kadro",
+      "department": "Departman bazında kadro",
       "leaveByType": "İzin türlerine göre kullanım ({{year}})",
       "careerMoves": "Kariyer değişim türleri",
       "noData": "Gösterilecek veri yok",
@@ -163,6 +163,7 @@
     "TURNOVER_RATE": { "label": "İşten ayrılma oranı" },
     "EARLY_TURNOVER_RATE": { "label": "Erken ayrılma payı (ilk 6 ay)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Birim bazında cinsiyet dağılımı" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Departman bazında cinsiyet dağılımı" },
     "dimensions": {
       "Promotion": "Terfi",
       "LateralMove": "Yatay geçiş",
