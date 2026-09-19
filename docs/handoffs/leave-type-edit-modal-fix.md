@@ -67,5 +67,13 @@ dokunulmadı.
 - `web/src/components/leave/leave-type-dialog.test.tsx` (regresyon testi)
 - `web/src/components/ui/form-modal.tsx` (referans — bu kartta değiştirilmedi, sadece incelendi)
 
+## Doğrulama Turu (2026-09-19)
+
+- `dev` üzerine rebase edildi (çakışma yok); diff yeniden incelendi — modal içindeki 6 grid'in tamamında
+  `w-full` var, regresyon testi (`leave-type-dialog.test.tsx`) hepsini kontrol ediyor.
+- web `tsc --noEmit`: bu branch'in dosyalarında hata yok (dev'de zaten var olan 4 ilgisiz test hatası).
+  `eslint src`: 0 hata. `vitest run src/components/leave src/pages/leave`: 21/21 (izole koşum).
+- Hâlâ açık: gerçek tarayıcıda 3+ izin türü için Düzenle penceresinin manuel kontrolü (PO/QA).
+
 ---
 *Kaynak: 1. Tur Test Bulgu Dokümanı § B-01. Agent board: `docs/agent-board/cards/senseik-038-leave-type-edit-modal-css-bug.json`.*

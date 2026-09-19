@@ -96,5 +96,34 @@ frontend `leaveName()`'e devret) düzeltilmesi.
 - Referans (bu kartta değiştirilmedi): `web/src/components/leave/leave-section.tsx` (`addLeaveTypes` — doğru
   çalışan kardeş desen)
 
+## Doğrulama Turu (2026-09-19)
+
+- `dev` üzerine rebase edildi (çakışma yok).
+- **Bulunan açık — mobil regresyon (düzeltildi):** `GET /leave/me/leave-types` sözleşmesi değişince (artık ham
+  anahtar) mobil uygulama da etkileniyordu: `apps/senseik-mobile/src/screens/app/LeaveScreen.tsx` talep türü
+  çiplerinde `type.name`'i doğrudan gösteriyor ve mobilde i18n yok → "leave.type.annual" görünecekti. Aynı ekranın
+  bakiye kartları (ve `DashboardScreen`) `/me/balances`'tan gelen `leaveTypeName`'i de zaten ham gösteriyordu
+  (mevcut sızıntı). Düzeltme: `apps/senseik-mobile/src/services/LeaveService.ts`'e `leaveTypeDisplayName()`
+  (SharedResource.resx `leave.type.*` Türkçe değerlerinin aynası; bilinmeyen/serbest adlar olduğu gibi geçer)
+  eklendi; `getMyRequestableLeaveTypes` ve `getMyBalances` adları ekrana ulaşmadan çözüyor (immutable map).
+  `LeaveService.test.ts`'e 2 test eklendi.
+- Gate sonuçları:
+  - web `tsc --noEmit`: yalnız dev'de zaten var olan 4 hata (`protected-route.test.tsx`, `home.test.tsx` —
+    `roleLabels`/`mfaSetupRequired`), bu branch'in dokunduğu dosyalarda hata yok.
+  - web `eslint src`: 0 hata (1 ilgisiz, önceden var olan uyarı: `employee-list.tsx`).
+  - web `vitest run src/components/leave src/pages/leave`: 21/21 (tam koşumda bir kez
+    `leave-type-dialog.test.tsx` › "raw override" testi makine yükünde 5 sn timeout'a düştü; dosya tek başına 5/5
+    yeşil — senseik-008'den gelen, userEvent ile 22 karakter yazan test, bu branch'le ilgisiz).
+  - mobil `eslint` (değişen 2 dosya): temiz. Mobil `jest` ve `tsc` bu makinede çalıştırılamadı — dev'de de
+    aynı şekilde kırık (jest-expo `@react-native/assets-registry/registry` bulunamıyor; tsconfig `paths`
+    TS5090) — hem host'ta hem `node:24-alpine` Docker'da denendi. Değişiklik küçük ve saf; testler eklendi ama
+    koşturulamadı.
+  - `dotnet build` Sense.Modules.Leave.Api: 0 hata. `dotnet test tests/Modules/Sense.Modules.Leave.Tests`:
+    127/146 geçti, 19 başarısız — hepsi branch dışı: (a) `EmployeeHiredHandler` için
+    `IEmployeeBirthDateLookup` Leave test fixture'ında kayıtlı değil (senseik-007'den gelen, dev'de mevcut),
+    (b) Testcontainers/Docker `CreateContainerAsync` timeout'ları (paralel oturum yükü). Bu branch yalnız
+    controller katmanındaki `.Localize()` çağrısını kaldırıyor; testler handler'ları doğrudan çağırıyor.
+- Hâlâ açık: gerçek tarayıcıda "+ Talep" listesi ve mobil talep çiplerinin manuel kontrolü (PO/QA).
+
 ---
 *Kaynak: 1. Tur Test Bulgu Dokümanı § B-03. Agent board: `docs/agent-board/cards/senseik-039-leave-request-form-english-types.json`.*
