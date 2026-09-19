@@ -67,6 +67,7 @@ public static class WebServiceCollectionExtensions
                 // senseik-057: kiracının kapattığı modüllerin uçları 403 module.disabled (bkz. ModuleAccessFilter).
                 options.Filters.Add<ModuleAccessFilter>();
             })
+            .ConfigureApiBehaviorOptions(o => o.InvalidModelStateResponseFactory = ErrorHandling.ModelStateProblemFactory.Create)
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;

@@ -46,6 +46,7 @@
 
   <!-- Genel -->
   <data name="general.null_value" xml:space="preserve"><value>Değer boş olamaz.</value></data>
+  <data name="general.invalid_field" xml:space="preserve"><value>Alan geçersiz veya eksik.</value></data>
   <data name="general.validation_error" xml:space="preserve"><value>Gönderilen veriler doğrulamadan geçmedi.</value></data>
   <data name="general.concurrency_conflict" xml:space="preserve"><value>Kayıt başka bir kullanıcı tarafından değiştirildi; yenileyip tekrar deneyin.</value></data>
   <data name="general.request_cancelled" xml:space="preserve"><value>İstemci isteği iptal etti.</value></data>
