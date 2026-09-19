@@ -17,6 +17,18 @@ public static class EmployeeDomainErrors
 
     /// <summary>Doğum tarihi işe başlama tarihinden sonra olamaz (senseik-044).</summary>
     public const string BirthDateAfterHireDate = "employee.birth_date_after_hire_date";
+
+    /// <summary>Doğum tarihi 1900-01-01'den önce olamaz (veri girişi hatası koruması).</summary>
+    public const string BirthDateTooEarly = "employee.birth_date_too_early";
+
+    /// <summary>İşe giriş tarihi 1900-01-01'den önce olamaz.</summary>
+    public const string HireDateTooEarly = "employee.hire_date_too_early";
+
+    /// <summary>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</summary>
+    public const string HireDateTooFarInFuture = "employee.hire_date_too_far_in_future";
+
+    /// <summary>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 md.71).</summary>
+    public const string MinimumAge = "employee.minimum_age";
     public const string ManagerSelf = "employee.manager_self";
     public const string ManagerCycle = "employee.manager_cycle";
 

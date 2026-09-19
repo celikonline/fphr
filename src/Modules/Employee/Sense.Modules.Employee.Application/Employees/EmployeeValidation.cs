@@ -65,6 +65,24 @@ public static class EmployeeInfoRules
             .Must(i => i.BirthDate is null || i.HireDate is null || i.BirthDate <= i.HireDate)
             .WithMessage(EmployeeDomainErrors.BirthDateAfterHireDate)
             .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        // Makul tarih sınırları + işe girişte asgari yaş 15 (4857 md.71): Employee.Validate ile aynı EmployeeDateRules
+        // kaynağı; alan bazlı 400 için.
+        v.RuleFor(x => info(x).BirthDate)
+            .Must(bd => EmployeeDateRules.CheckBirthDate(bd) is null)
+            .WithMessage(EmployeeDomainErrors.BirthDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd >= EmployeeDateRules.EarliestDate)
+            .WithMessage(EmployeeDomainErrors.HireDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd <= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(EmployeeDateRules.MaxHireDateMonthsAhead))
+            .WithMessage(EmployeeDomainErrors.HireDateTooFarInFuture)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x))
+            .Must(i => EmployeeDateRules.CheckMinimumAge(i.BirthDate, i.HireDate) is null)
+            .WithMessage(EmployeeDomainErrors.MinimumAge)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
         v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
             .When(x => info(x).ChildCount is not null)

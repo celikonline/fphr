@@ -845,6 +845,15 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(EmployeeDomainErrors.BirthDateAfterHireDate);
         }
 
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var dateRuleError = EmployeeDateRules.CheckBirthDate(info.BirthDate)
+            ?? EmployeeDateRules.CheckHireDate(info.HireDate, today)
+            ?? EmployeeDateRules.CheckMinimumAge(info.BirthDate, info.HireDate);
+        if (dateRuleError is not null)
+        {
+            return Error.Validation(dateRuleError);
+        }
+
         if (Normalize(info.WorkPhone) is { Length: > EmployeeLimits.PhoneMaxLength })
         {
             return Error.Validation(EmployeeDomainErrors.WorkPhoneTooLong);

@@ -186,6 +186,10 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Doğum tarihi gelecekte bir tarih olamaz.</value></data>
   <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Doğum tarihi işe başlama tarihinden sonra olamaz.</value></data>
+  <data name="employee.birth_date_too_early" xml:space="preserve"><value>Doğum tarihi 1900-01-01 öncesi olamaz.</value></data>
+  <data name="employee.hire_date_too_early" xml:space="preserve"><value>İşe giriş tarihi 1900-01-01 öncesi olamaz.</value></data>
+  <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</value></data>
+  <data name="employee.minimum_age" xml:space="preserve"><value>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 sayılı İş Kanunu md. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
   <data name="employee.mentor_self" xml:space="preserve"><value>Çalışan kendi mentörü olamaz.</value></data>

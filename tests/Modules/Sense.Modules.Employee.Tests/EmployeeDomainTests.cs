@@ -155,11 +155,13 @@ public sealed class EmployeeDomainTests
     }
 
     [Fact]
-    public void Create_WithBirthDateEqualToHireDate_Succeeds()
+    public void Create_WithBirthDateEqualToHireDate_IsNotReportedAsBirthAfterHire_ButFailsMinimumAge()
     {
+        // Birth == hire passes the senseik-044 "birth after hire" rule (boundary), but a newborn can never be
+        // employed: the minimum-age rule (15) now rejects it.
         var hireDate = new DateOnly(2024, 1, 1);
         EmployeeEntity.Create(TenantId, new EmployeeInfo("A", "B", HireDate: hireDate, BirthDate: hireDate))
-            .IsSuccess.ShouldBeTrue();
+            .Error.Code.ShouldBe(EmployeeDomainErrors.MinimumAge);
     }
 
     [Fact]

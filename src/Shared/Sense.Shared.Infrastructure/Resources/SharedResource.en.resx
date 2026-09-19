@@ -177,6 +177,10 @@
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Birth date cannot be a future date.</value></data>
   <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Birth date cannot be after the hire date.</value></data>
+  <data name="employee.birth_date_too_early" xml:space="preserve"><value>Birth date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_early" xml:space="preserve"><value>Hire date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>Hire date can be at most 12 months in the future.</value></data>
+  <data name="employee.minimum_age" xml:space="preserve"><value>A person under 15 at the hire date cannot be employed (Labour Act 4857, art. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
   <data name="employee.mentor_self" xml:space="preserve"><value>An employee cannot be their own mentor.</value></data>
