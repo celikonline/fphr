@@ -20,4 +20,12 @@ public static class LeavePartialDay
         var minutes = (decimal)(end - start).TotalMinutes;
         return decimal.Round(minutes / dailyWorkMinutes, 4, MidpointRounding.AwayFromZero);
     }
+
+    /// <summary>
+    /// A flat statutory hour count (e.g. "günde en az 2 saat iş arama izni", 4857 md.27; "günde 1,5 saat süt izni",
+    /// md.74/son) expressed as the same day-fraction <see cref="HourlyFraction"/> produces, so it can be compared
+    /// directly against <see cref="RuleSets.LeaveTypeSettings.MinConsecutiveDays"/>/<see cref="RuleSets.LeaveTypeSettings.MaxConsecutiveDays"/>.
+    /// </summary>
+    public static decimal HoursFraction(decimal hours, int dailyWorkMinutes = DefaultDailyWorkMinutes) =>
+        decimal.Round(hours * 60m / dailyWorkMinutes, 4, MidpointRounding.AwayFromZero);
 }

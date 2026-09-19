@@ -99,7 +99,8 @@ public sealed class LeaveRequestRules(
             return Error.Validation(LeaveRequestErrors.AbovePerRequestLimit, ("max", type.PerRequestMaxDays));
         }
 
-        if (type.MinConsecutiveDays is { } min && days < min)
+        // Annual's MinConsecutiveDays is the m.56/3 "smallest block" (AnnualLeaveSplitRule), not a per-request minimum.
+        if (type.MinConsecutiveDays is { } min && days < min && !AnnualLeaveSplitRule.Applies(type))
         {
             return Error.Validation(LeaveRequestErrors.BelowMinDays, ("min", min));
         }
@@ -109,7 +110,9 @@ public sealed class LeaveRequestRules(
             return Error.Validation(LeaveRequestErrors.AboveMaxDays, ("max", max));
         }
 
-        if (type.HasBalance && type.NegativeBalance != NegativeBalanceMode.Unlimited)
+        // HR entering leave on behalf (requireSelfService: false) is the employer's own decision to split the leave.
+        var checkSplit = requireSelfService && AnnualLeaveSplitRule.Applies(type) && days < type.MinConsecutiveDays;
+        if (type.HasBalance && (type.NegativeBalance != NegativeBalanceMode.Unlimited || checkSplit))
         {
             var entries = await ledger.ListAsync(employeeId, type.Id, ct);
             var projected = LeaveBalanceEngine.Project(type, profile.LeaveAccrualStartDate, balances.Today, entries);
@@ -119,14 +122,35 @@ public sealed class LeaveRequestRules(
                 pending -= edited.CalculatedDays;
             }
 
-            var floor = type.NegativeBalance == NegativeBalanceMode.Limited ? -(type.NegativeBalanceLimitDays ?? 0m) : 0m;
-            if (projected.AvailableBalance - pending - days < floor)
+            var available = projected.AvailableBalance - pending;
+            if (type.NegativeBalance != NegativeBalanceMode.Unlimited)
             {
-                return Error.Validation(LeaveRequestErrors.InsufficientBalance, ("available", projected.AvailableBalance - pending));
+                var floor = type.NegativeBalance == NegativeBalanceMode.Limited ? -(type.NegativeBalanceLimitDays ?? 0m) : 0m;
+                if (available - days < floor)
+                {
+                    return Error.Validation(LeaveRequestErrors.InsufficientBalance, ("available", available));
+                }
+            }
+
+            if (checkSplit && AnnualLeaveSplitRule.WouldForfeitMinimumBlock(type.MinConsecutiveDays!.Value, days, available)
+                && !await HasBookedBlockInPeriodAsync(employeeId, type, projected, editedRequestId, ct))
+            {
+                return Error.Validation(LeaveRequestErrors.AnnualMinimumBlock, ("min", type.MinConsecutiveDays!.Value));
             }
         }
 
         return (type, days);
+    }
+
+    private async Task<bool> HasBookedBlockInPeriodAsync(Guid employeeId, LeaveType type, LeaveBalance projected, Guid? editedRequestId, CancellationToken ct)
+    {
+        var booked = await requests.ListByEmployeeAsync(employeeId, ct);
+        return AnnualLeaveSplitRule.HasBookedBlock(
+            type.MinConsecutiveDays!.Value,
+            booked
+                .Where(r => r.LeaveTypeId == type.Id && r.Id != editedRequestId && (r.Status is LeaveRequestStatus.Pending or LeaveRequestStatus.Approved)
+                    && r.StartDate >= projected.CurrentPeriodFrom && r.StartDate <= projected.CurrentPeriodTo)
+                .Select(r => r.CalculatedDays));
     }
 
     /// <summary>Hourly needs a time range, HalfDay a period, both single-day; FullDay accepts neither.</summary>

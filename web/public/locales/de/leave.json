@@ -21,7 +21,9 @@
     "type_unpaid": "Unbezahlter Urlaub",
     "type_foster_care": "Pflegeelternurlaub",
     "type_template_remote_work": "Remote-Arbeit",
-    "type_template_birthday": "Geburtstagsurlaub"
+    "type_template_birthday": "Geburtstagsurlaub",
+    "type_breastfeeding": "Stillzeit",
+    "type_disabled_child": "Urlaub für Eltern eines behinderten/chronisch kranken Kindes"
   },
   "code": {
     "custom": "Benutzerdefinierter Urlaub",
@@ -38,7 +40,9 @@
     "unpaid": "Unbezahlter Urlaub",
     "fosterCare": "Pflegeelternurlaub",
     "remoteWork": "Remote-Arbeit",
-    "birthday": "Geburtstagsurlaub"
+    "birthday": "Geburtstagsurlaub",
+    "breastfeeding": "Stillzeit",
+    "disabledChild": "Urlaub für Eltern eines behinderten/chronisch kranken Kindes"
   },
   "status": {
     "pending": "Ausstehend",

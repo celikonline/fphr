@@ -272,10 +272,10 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
             annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
         }
 
-        // 14 days accrued; Mon..Fri of a future week = 5 working days + the Saturday rule (full Mon–Fri
-        // taken with the default schedule's IncludeSaturdayWhenFullWeek flag) = 6 leave days.
+        // 14 days accrued; Mon..Thu of a future week = 4 leave days, which leaves exactly the 10-day block
+        // (İş K. m.56/3, senseik-036) - a 6-day request would leave 8 and is rejected, see Submit_AnnualLeave_...
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
-        var submitted = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(4));
+        var submitted = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(3));
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
 
         (await SubmitAsync(tenantId, annualId, monday.AddDays(2), monday.AddDays(3))).Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
@@ -287,12 +287,48 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
         var request = await db.Requests.SingleAsync(r => r.Id == submitted.Value.Id);
         request.Status.ShouldBe(LeaveRequestStatus.Approved);
-        request.CalculatedDays.ShouldBe(6m);
+        request.CalculatedDays.ShouldBe(4m);
         request.ApprovalRequestId.ShouldBe(approvalId);
         var usage = await db.LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
-        usage.Amount.ShouldBe(-6m);
+        usage.Amount.ShouldBe(-4m);
         usage.EffectiveDate.ShouldBe(monday);
         usage.SourceRefId.ShouldBe(submitted.Value.Id);
+    }
+
+    /// <summary>
+    /// senseik-036 (İş K. m.56/3): the Annual type's "en az ardışık gün" = 10 is enforced as "a short request may not strand the
+    /// last 10-day block" - not as a per-request minimum, so ordinary short annual leave keeps working.
+    /// </summary>
+    [Fact]
+    public async Task Submit_AnnualLeave_RejectsShortRequestThatStrandsTheMinimumBlock_ButAllowsOthers()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            var annual = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual);
+            annual.MinConsecutiveDays.ShouldBe(10m);
+            annualId = annual.Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        // 14 accrued days: a full Mon–Fri week (6 leave days with the Saturday rule) would leave 8 - no 10-day part possible.
+        (await SubmitAsync(tenantId, annualId, monday, monday.AddDays(4))).Error.Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
+
+        // 4 days leave exactly 10: allowed. One more day afterwards would leave 9 with no block booked: rejected.
+        var first = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(3));
+        first.IsSuccess.ShouldBeTrue(first.IsFailure ? first.Error.Code : null);
+        (await SubmitAsync(tenantId, annualId, monday.AddDays(7), monday.AddDays(7))).Error.Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
     }
 
     [Fact]
@@ -321,7 +357,8 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // Mon..Sun: 5 working days + Saturday appended by the Saturday rule (full week, flag on) = 6; only Sunday rests.
         preview.Value.Days.ShouldBe(6m);
         preview.Value.WeeklyRestDays.ShouldBe(1);
-        preview.Value.Warnings.ShouldBeEmpty();
+        // senseik-036 (İş K. m.56/3): 6 of the 14 accrued days would leave 8 - no 10-day part could be formed any more.
+        preview.Value.Warnings.Single().Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
         var tooLong = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
             .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(27), null), CancellationToken.None);
         tooLong.Value.Warnings.Single().Code.ShouldBe(LeaveRequestErrors.InsufficientBalance);
@@ -535,6 +572,32 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         usage.Amount.ShouldBe(-0.2667m);
     }
 
+    /// <summary>senseik-036 md.5: 4857 md.27 - iş arama izninde tek bir talep günde en az 2 saatin altında olamaz.</summary>
+    [Fact]
+    public async Task Submit_JobSearchBelowTwoHours_IsRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid jobSearchId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            jobSearchId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.JobSearch).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        var belowMinimum = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(10, 0));
+        belowMinimum.Error.Code.ShouldBe(LeaveRequestErrors.BelowMinDays);
+
+        var atMinimum = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0));
+        atMinimum.IsSuccess.ShouldBeTrue(atMinimum.IsFailure ? atMinimum.Error.Code : null);
+    }
+
     /// <summary>
     /// Before LeaveRequest.ConflictsWith, the "leave.errors.overlap" gate only looked at the date range, so a
     /// second same-day Hourly request was always rejected regardless of the actual time window. Now only a real
@@ -561,15 +624,17 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
 
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
 
-        var first = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(10, 0));
+        // senseik-036 md.5: "leave.type.job_search" now enforces a 2-hour-per-request floor (4857 md.27), so every
+        // window below is >= 2h even where the original (pre-036) test used a bare 1-hour span.
+        var first = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0));
         first.IsSuccess.ShouldBeTrue(first.IsFailure ? first.Error.Code : null);
 
         // Non-overlapping window, same day: both requests stay active, but the time ranges do not intersect.
-        var nonOverlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 0), new TimeOnly(12, 0));
+        var nonOverlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(12, 0), new TimeOnly(14, 0));
         nonOverlapping.IsSuccess.ShouldBeTrue(nonOverlapping.IsFailure ? nonOverlapping.Error.Code : null);
 
         // Overlapping window: still rejected.
-        var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 30), new TimeOnly(12, 30));
+        var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(13, 0), new TimeOnly(15, 0));
         overlapping.Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
     }
 

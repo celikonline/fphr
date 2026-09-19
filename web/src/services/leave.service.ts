@@ -24,7 +24,9 @@ export type LeaveTypeCode =
   | "unpaid"
   | "fosterCare"
   | "remoteWork"
-  | "birthday";
+  | "birthday"
+  | "breastfeeding"
+  | "disabledChild";
 export type LeaveLimitType = "unlimited" | "perRequest" | "perYear";
 export type NegativeBalanceMode = "none" | "unlimited" | "limited";
 export type AccrualFrequency = "yearly" | "monthly" | "daily";
@@ -72,6 +74,12 @@ export interface EmployeeLeaveBalances {
   hireDate: string;
   leaveAccrualStartDate: string;
   balances: LeaveBalanceItem[];
+}
+
+/** `SickLeaveAbsenceStatusDto` (senseik-036 md.7, 4857 md.25/I-b) - informational only, see the handler's doc comment. */
+export interface SickLeaveAbsenceStatus {
+  usedDaysLast12Months: number;
+  thresholdReached: boolean;
 }
 
 export interface LeaveLedgerEntry {
@@ -320,6 +328,16 @@ export async function getEmployeeLeaveLedger(employeeId: string, leaveTypeId?: s
   const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/employees/${employeeId}/ledger`, {
     params: leaveTypeId ? { leaveTypeId } : undefined,
   });
+  return data;
+}
+
+export async function getEmployeeSickLeaveAbsenceStatus(employeeId: string): Promise<SickLeaveAbsenceStatus> {
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/employees/${employeeId}/sick-leave-absence-status`);
+  return data;
+}
+
+export async function getMySickLeaveAbsenceStatus(): Promise<SickLeaveAbsenceStatus> {
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/me/sick-leave-absence-status`);
   return data;
 }
 

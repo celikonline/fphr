@@ -30,12 +30,13 @@ public sealed class TrHolidaySeedFileTests
         file.Name.ShouldNotBeNullOrWhiteSpace();
         file.Entries.ShouldNotBeEmpty();
 
-        // The 7 fixed-date national holidays from the roadmap item's spec must be present and recurring.
+        // The 7 fixed-date national holidays from the roadmap item's spec, plus the 28 Ekim Cumhuriyet Bayramı
+        // arifesi half-day added by senseik-036 (2429 s.K. m.2/A) - all fixed Gregorian dates, so recurring.
         string[] expectedRecurringNames =
         [
             "Yılbaşı", "Ulusal Egemenlik ve Çocuk Bayramı", "Emek ve Dayanışma Günü",
             "Atatürk'ü Anma, Gençlik ve Spor Bayramı", "Demokrasi ve Millî Birlik Günü",
-            "Zafer Bayramı", "Cumhuriyet Bayramı",
+            "Zafer Bayramı", "Cumhuriyet Bayramı", "Cumhuriyet Bayramı Arifesi (13.00'ten itibaren yarım gün)",
         ];
         var recurring = file.Entries.Where(e => e.RecurringAnnually).ToList();
         recurring.Select(e => e.Name).ShouldBe(expectedRecurringNames, ignoreOrder: true);

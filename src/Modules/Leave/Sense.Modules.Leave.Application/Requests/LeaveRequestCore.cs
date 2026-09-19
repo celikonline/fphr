@@ -26,6 +26,7 @@ public static class LeaveRequestErrors
     public const string Overlap = "leave.errors.overlap";
     public const string AbovePerRequestLimit = "leave.errors.above_per_request_limit";
     public const string BelowMinDays = "leave.errors.below_min_days";
+    public const string AnnualMinimumBlock = "leave.errors.annual_minimum_block";
     public const string AboveMaxDays = "leave.errors.above_max_days";
     public const string InsufficientBalance = "leave.errors.insufficient_balance";
     public const string DescriptionRequired = "leave.errors.description_required";

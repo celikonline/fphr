@@ -21,7 +21,9 @@
     "type_unpaid": "Ücretsiz izin",
     "type_foster_care": "Koruyucu aile izni",
     "type_template_remote_work": "Uzaktan Çalışma",
-    "type_template_birthday": "Doğum günü izni"
+    "type_template_birthday": "Doğum günü izni",
+    "type_breastfeeding": "Süt izni",
+    "type_disabled_child": "Engelli/süreğen hastalıklı çocuk izni"
   },
   "code": {
     "custom": "Özel izin",
@@ -38,7 +40,9 @@
     "unpaid": "Ücretsiz izin",
     "fosterCare": "Koruyucu aile izni",
     "remoteWork": "Uzaktan Çalışma",
-    "birthday": "Doğum günü izni"
+    "birthday": "Doğum günü izni",
+    "breastfeeding": "Süt izni",
+    "disabledChild": "Engelli/süreğen hastalıklı çocuk izni"
   },
   "status": {
     "pending": "Bekliyor",

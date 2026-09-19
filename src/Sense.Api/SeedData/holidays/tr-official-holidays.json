@@ -12,6 +12,12 @@
     { "name": "Zafer Bayramı", "month": 8, "day": 30, "recurringAnnually": true },
     { "name": "Cumhuriyet Bayramı", "month": 10, "day": 29, "recurringAnnually": true },
     {
+      "name": "Cumhuriyet Bayramı Arifesi (13.00'ten itibaren yarım gün)",
+      "month": 10,
+      "day": 28,
+      "recurringAnnually": true
+    },
+    {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
       "date": "2026-03-19",
       "recurringAnnually": false,

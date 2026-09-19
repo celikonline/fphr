@@ -9,6 +9,7 @@ using Sense.Modules.Leave.Domain;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Legislation;
 using Sense.Shared.Infrastructure.Persistence;
 
 namespace Sense.Modules.Leave.Infrastructure.Jobs;
@@ -21,6 +22,8 @@ namespace Sense.Modules.Leave.Infrastructure.Jobs;
 /// Also backfills/resyncs EmployeeLeaveProfile.BirthDate from Employee.Contracts.IEmployeeBirthDateLookup in bulk
 /// (one batched call per tenant, never one lookup per employee) before regenerating: this is what makes the ≤18/≥50
 /// statutory age exception (4857 md.53/IV) apply retroactively to profiles created before the exception was wired up.
+/// Before regenerating it also syncs each tenant's system-seed rule set with the current seed (LeaveRuleSetSeedSync, senseik-036), so
+/// leave types added to the seed after a tenant was provisioned (süt izni, engelli çocuk izni) reach existing tenants.
 /// NOTE (senseik-007): the very first nightly run after this ships will therefore raise the balances of every
 /// existing ≤18/≥50-year-old employee across every tenant, retroactively - see docs/handoffs/age-50-exception.md §5.
 /// </summary>
@@ -62,6 +65,7 @@ public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory sc
         var balances = scope.ServiceProvider.GetRequiredService<LeaveBalanceService>();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<ILeaveUnitOfWork>();
         var birthDateLookup = scope.ServiceProvider.GetRequiredService<IEmployeeBirthDateLookup>();
+        var legislation = scope.ServiceProvider.GetRequiredService<ILegislationParameterReader>();
 
         var profiles = await db.Profiles.ToListAsync(cancellationToken);
 
@@ -75,6 +79,7 @@ public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory sc
         }
 
         var sets = new Dictionary<Guid, LeaveRuleSet?>();
+        StatutoryLeaveDurations? durations = null;
         var count = 0;
         foreach (var profile in profiles)
         {
@@ -83,6 +88,17 @@ public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory sc
                 var loaded = await ruleSets.GetByIdAsync(profile.RuleSetId, cancellationToken);
                 set = loaded.IsSuccess ? loaded.Value : null;
                 sets[profile.RuleSetId] = set;
+                if (set is { IsSystemSeed: true })
+                {
+                    // senseik-036: existing tenants receive seed types added after they were provisioned (before recalculating, so
+                    // a new PerYear type such as DisabledChild gets its accrual rows in this same run).
+                    durations ??= await StatutoryLeaveResolver.ResolveAsync(legislation, balances.Today, cancellationToken);
+                    var changed = LeaveRuleSetSeedSync.Apply(set, LeaveRuleSetSeed.Types(durations).ToList());
+                    if (changed > 0)
+                    {
+                        LogSeedSynced(logger, changed, set.Id, tenantId);
+                    }
+                }
             }
 
             if (set is null)
@@ -100,6 +116,9 @@ public sealed partial class LeaveBalanceRecalculationJob(IServiceScopeFactory sc
 
     [LoggerMessage(EventId = 7301, Level = LogLevel.Error, Message = "Leave balance recalculation failed for tenant {TenantId}")]
     private static partial void LogTenantFailed(ILogger logger, Exception exception, Guid tenantId);
+
+    [LoggerMessage(EventId = 7304, Level = LogLevel.Information, Message = "Leave system-seed rule set synced with the current seed: {Changes} change(s) to rule set {RuleSetId} of tenant {TenantId}")]
+    private static partial void LogSeedSynced(ILogger logger, int changes, Guid ruleSetId, Guid tenantId);
 
     [LoggerMessage(EventId = 7302, Level = LogLevel.Information, Message = "Leave balances recalculated for {Profiles} profiles in {Tenants} tenants")]
     private static partial void LogCompleted(ILogger logger, int profiles, int tenants);
