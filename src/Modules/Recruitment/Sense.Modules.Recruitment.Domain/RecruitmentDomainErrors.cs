@@ -14,6 +14,7 @@ public static class RecruitmentDomainErrors
     public const string CandidateNotFound = "recruitment.candidate.not_found";
     public const string CandidateNameRequired = "recruitment.candidate.name_required";
     public const string CandidateEmailRequired = "recruitment.candidate.email_required";
+    public const string CandidatePhoneInvalid = "recruitment.candidate.phone_invalid";
     public const string CandidateAlreadyAnonymized = "recruitment.candidate.already_anonymized";
 
     public const string ApplicationNotFound = "recruitment.application.not_found";

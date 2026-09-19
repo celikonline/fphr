@@ -190,6 +190,8 @@
   <data name="employee.address_line_too_long" xml:space="preserve"><value>Address can be at most 250 characters.</value></data>
   <data name="employee.city_too_long" xml:space="preserve"><value>City can be at most 100 characters.</value></data>
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
+  <data name="employee.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
+  <data name="employee.postal_code_invalid" xml:space="preserve"><value>Postal code can be at most 10 characters.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Only active or suspended employees can be terminated.</value></data>
@@ -812,6 +814,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Candidate not found.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>The candidate's first and last name are required.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
+  <data name="recruitment.candidate.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
   <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Candidate data has already been anonymized.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>

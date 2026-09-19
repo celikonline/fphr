@@ -40,6 +40,12 @@ public static class EmployeeDomainErrors
     public const string AddressLineTooLong = "employee.address_line_too_long";
     public const string CityTooLong = "employee.city_too_long";
     public const string PostalCodeTooLong = "employee.postal_code_too_long";
+
+    /// <summary>Free-typed phone contains characters other than digits, spaces, "+ - . / ( )" or has an implausible digit count.</summary>
+    public const string PhoneInvalid = "employee.phone_invalid";
+
+    /// <summary>Postal code longer than <see cref="EmployeeLimits.PostalCodeInputMaxLength"/> (input rule; the column itself stays 20 wide).</summary>
+    public const string PostalCodeInvalid = "employee.postal_code_invalid";
     public const string SuspendInvalidStatus = "employee.suspend_invalid_status";
     public const string ReactivateNotSuspended = "employee.reactivate_not_suspended";
 
@@ -178,6 +184,9 @@ public static class EmployeeLimits
     public const int AddressLineMaxLength = 250;
     public const int CityMaxLength = 100;
     public const int PostalCodeMaxLength = 20;
+
+    /// <summary>Longest postal code accepted from users (Turkish codes are 5 digits, foreign ones rarely exceed 10); the DB column stays PostalCodeMaxLength wide so no migration is needed.</summary>
+    public const int PostalCodeInputMaxLength = 10;
     public const int CareerNoteMaxLength = 500;
     public const int SalaryNoteMaxLength = 500;
     public const int BankNameMaxLength = 100;

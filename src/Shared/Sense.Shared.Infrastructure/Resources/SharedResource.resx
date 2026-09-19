@@ -199,6 +199,8 @@
   <data name="employee.address_line_too_long" xml:space="preserve"><value>Adres en fazla 250 karakter olabilir.</value></data>
   <data name="employee.city_too_long" xml:space="preserve"><value>Şehir en fazla 100 karakter olabilir.</value></data>
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Posta kodu en fazla 20 karakter olabilir.</value></data>
+  <data name="employee.phone_invalid" xml:space="preserve"><value>Geçersiz telefon numarası. Yalnızca rakam, boşluk ve + - . / ( ) kullanın.</value></data>
+  <data name="employee.postal_code_invalid" xml:space="preserve"><value>Posta kodu en fazla 10 karakter olabilir.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Yalnızca aktif çalışanlar askıya alınabilir.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Yalnızca askıda olan çalışanlar yeniden aktifleştirilebilir.</value></data>
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Yalnızca aktif veya askıda olan çalışanlar işten çıkarılabilir.</value></data>
@@ -821,6 +823,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Aday bulunamadı.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>Adayın adı ve soyadı zorunludur.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Geçerli bir e-posta adresi girin.</value></data>
+  <data name="recruitment.candidate.phone_invalid" xml:space="preserve"><value>Geçersiz telefon numarası. Yalnızca rakam, boşluk ve + - . / ( ) kullanın.</value></data>
   <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Aday verisi zaten anonimleştirilmiş.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Başvuru bulunamadı.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>Bu başvuru işe alındı/reddedildi durumunda; aşaması değiştirilemez.</value></data>

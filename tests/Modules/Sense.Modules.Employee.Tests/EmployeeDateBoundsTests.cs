@@ -112,3 +112,40 @@ public sealed class EmployeeDateBoundsTests
         }
     }
 }
+
+/// <summary>Regression: "abc" was accepted as a phone number and a 13-digit postal code passed.</summary>
+public sealed class EmployeeContactFormatTests
+{
+    private static CreateEmployeeCommand Command(string? workPhone = null, string? mobile = null, string? home = null, string? postal = null) =>
+        new("A", "B", null, null, null, workPhone, null, null, null, null, MobilePhone: mobile, HomePhone: home, PostalCode: postal);
+
+    private static CreateEmployeeValidator Validator()
+    {
+        var user = Substitute.For<ICurrentUser>();
+        user.UserId.Returns(Guid.NewGuid());
+        var permissions = Substitute.For<IPermissionService>();
+        permissions.HasAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        return new CreateEmployeeValidator(new EmployeeSensitiveAccess(user, permissions));
+    }
+
+    [Theory]
+    [InlineData("abc", null, null, null, EmployeeDomainErrors.PhoneInvalid)]
+    [InlineData(null, "abc", null, null, EmployeeDomainErrors.PhoneInvalid)]
+    [InlineData(null, null, "12 ab 34", null, EmployeeDomainErrors.PhoneInvalid)]
+    [InlineData(null, null, null, "1234567890123", EmployeeDomainErrors.PostalCodeInvalid)]
+    [InlineData("+90 212 555 00 00", "0532 123 45 67", "5551234567", "34000", null)]
+    [InlineData(null, null, null, "1234567890", null)]
+    public async Task Validator_ChecksPhoneFormatAndPostalCodeLength(string? work, string? mobile, string? home, string? postal, string? expectedCode)
+    {
+        var result = await Validator().ValidateAsync(Command(work, mobile, home, postal), TestContext.Current.CancellationToken);
+
+        if (expectedCode is null)
+        {
+            result.IsValid.ShouldBeTrue(string.Join(";", result.Errors.Select(e => e.ErrorMessage)));
+        }
+        else
+        {
+            result.Errors.Select(e => e.ErrorMessage).ShouldContain(expectedCode);
+        }
+    }
+}

@@ -39,9 +39,12 @@ public sealed class UpdateMyProfileValidator : AbstractValidator<UpdateMyProfile
             .WithMessage(EmployeeDomainErrors.PersonalEmailInvalid);
         RuleFor(x => PhoneNormalizer.Normalize(x.MobilePhone)).MaximumLength(EmployeeLimits.PhoneMaxLength).WithMessage(EmployeeDomainErrors.MobilePhoneTooLong);
         RuleFor(x => PhoneNormalizer.Normalize(x.HomePhone)).MaximumLength(EmployeeLimits.PhoneMaxLength).WithMessage(EmployeeDomainErrors.HomePhoneTooLong);
+        RuleFor(x => x.MobilePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid);
+        RuleFor(x => x.HomePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid);
         RuleFor(x => x.AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).WithMessage(EmployeeDomainErrors.AddressLineTooLong);
         RuleFor(x => x.City).MaximumLength(EmployeeLimits.CityMaxLength).WithMessage(EmployeeDomainErrors.CityTooLong);
         RuleFor(x => x.PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).WithMessage(EmployeeDomainErrors.PostalCodeTooLong);
+        RuleFor(x => x.PostalCode).MaximumLength(EmployeeLimits.PostalCodeInputMaxLength).WithMessage(EmployeeDomainErrors.PostalCodeInvalid);
     }
 }
 

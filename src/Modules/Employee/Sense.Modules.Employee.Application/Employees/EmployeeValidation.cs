@@ -84,6 +84,9 @@ public static class EmployeeInfoRules
             .WithMessage(EmployeeDomainErrors.MinimumAge)
             .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).WorkPhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).MobilePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.MobilePhone));
+        v.RuleFor(x => info(x).HomePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.HomePhone));
         v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
             .When(x => info(x).ChildCount is not null)
             .WithMessage(EmployeeDomainErrors.ChildCountInvalid)
@@ -95,6 +98,7 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x).AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).OverridePropertyName(nameof(EmployeeInfo.AddressLine));
         v.RuleFor(x => info(x).City).MaximumLength(EmployeeLimits.CityMaxLength).OverridePropertyName(nameof(EmployeeInfo.City));
         v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
+        v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeInputMaxLength).WithMessage(EmployeeDomainErrors.PostalCodeInvalid).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
 
         v.RuleFor(x => info(x).SicilNumarasi).MaximumLength(EmployeeLimits.SicilNumarasiMaxLength).OverridePropertyName(nameof(EmployeeInfo.SicilNumarasi));
         v.RuleFor(x => info(x).ForeignIdNumber).MaximumLength(EmployeeLimits.ForeignIdNumberLength).OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));

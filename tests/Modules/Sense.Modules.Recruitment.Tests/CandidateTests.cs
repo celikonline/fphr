@@ -81,3 +81,23 @@ public sealed class CandidateTests
         result.Error.Code.ShouldBe(RecruitmentDomainErrors.CandidateAlreadyAnonymized);
     }
 }
+
+/// <summary>Regression: candidate phone accepted any text.</summary>
+public sealed class CandidatePhoneValidationTests
+{
+    [Theory]
+    [InlineData("abc", false)]
+    [InlineData("0532 123 45 67", true)]
+    [InlineData(null, true)]
+    public async Task Validators_CheckPhoneFormat(string? phone, bool valid)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        (await new Sense.Modules.Recruitment.Application.Candidates.CreateCandidateValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Candidates.CreateCandidateCommand("Ada", "Y", "ada@example.com", phone), ct)).IsValid.ShouldBe(valid);
+        (await new Sense.Modules.Recruitment.Application.Candidates.UpdateCandidateValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Candidates.UpdateCandidateCommand(Guid.NewGuid(), "Ada", "Y", "ada@example.com", phone), ct)).IsValid.ShouldBe(valid);
+        (await new Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationCommand("slug", "Ada", "Y", "ada@example.com", phone, "2026-09", true), ct)).IsValid.ShouldBe(valid);
+    }
+}
