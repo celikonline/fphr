@@ -74,6 +74,9 @@
   <data name="tenant.invalid_slug" xml:space="preserve"><value>Şirket adresi yalnızca küçük harf, rakam ve tire içerebilir (3–40 karakter).</value></data>
   <data name="tenant.slug_taken" xml:space="preserve"><value>Bu şirket adresi zaten kullanımda.</value></data>
   <data name="tenant.not_found" xml:space="preserve"><value>Şirket hesabı bulunamadı.</value></data>
+  <data name="module.disabled" xml:space="preserve"><value>Bu modül şirketiniz için kapalı. Yöneticiniz Ayarlar   <data name="tenant.not_found" xml:space="preserve"><value>Şirket hesabı bulunamadı.</value></data>gt; Modüller sayfasından açabilir.</value></data>
+  <data name="module.unknown" xml:space="preserve"><value>Bilinmeyen modül: {module}</value></data>
+  <data name="module.not_toggleable" xml:space="preserve"><value>Temel modül kapatılamaz: {module}</value></data>
   <data name="tenant.closed" xml:space="preserve"><value>Kapatılmış şirket hesabı üzerinde işlem yapılamaz.</value></data>
 
   <!-- Kullanıcı -->
@@ -156,6 +159,7 @@
   <data name="identity.tenant.view" xml:space="preserve"><value>Şirket hesabı bilgilerini görüntüleme</value></data>
   <data name="identity.tenant.manage" xml:space="preserve"><value>Şirket hesabı ayarlarını değiştirme</value></data>
   <data name="identity.security.manage" xml:space="preserve"><value>Güvenlik politikasını yönetme</value></data>
+  <data name="identity.modules.manage" xml:space="preserve"><value>Modülleri açma/kapatma</value></data>
   <data name="identity.api_keys.manage" xml:space="preserve"><value>API anahtarlarını yönetme</value></data>
   <data name="identity.audit.view" xml:space="preserve"><value>Denetim kaydını görüntüleme</value></data>
   <data name="identity.audit.sensitive_view" xml:space="preserve"><value>Denetim kaydında hassas alanları açık görme</value></data>

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Alert } from "@mantine/core";
 import { AlertTriangle } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
+import { useModuleEnabled } from "@/hooks/use-module-enabled";
 import { getEmployeeAssets } from "@/services/assets.service";
 
 /**
@@ -12,7 +13,10 @@ import { getEmployeeAssets } from "@/services/assets.service";
  */
 export function OpenAssetsWarning({ employeeId }: { employeeId: string }) {
   const { t } = useTranslation(["employees"]);
-  const canViewAssets = usePermission("assets.assets.view");
+  const hasAssetsPermission = usePermission("assets.assets.view");
+  // senseik-057: no lookup when the tenant turned the Assets module off (Ayarlar → Modüller).
+  const assetsEnabled = useModuleEnabled("assets");
+  const canViewAssets = hasAssetsPermission && assetsEnabled;
   const { data: assets = [] } = useQuery({
     queryKey: ["assets", "employee-assets", employeeId],
     queryFn: () => getEmployeeAssets(employeeId),

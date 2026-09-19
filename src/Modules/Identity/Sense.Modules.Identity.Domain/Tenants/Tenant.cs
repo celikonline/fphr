@@ -62,6 +62,13 @@ public sealed class Tenant : AggregateRoot<Guid>
     /// </summary>
     public TenantSecurityPolicy SecurityPolicy { get; private set; } = new();
 
+    /// <summary>
+    /// Modül aç/kapa ayarı (jsonb, ayrı kolon): kiracının kapattığı ürün modülleri (senseik-057).
+    /// KASITLI: <see cref="TenantModuleSettings.Default"/> paylaşılan tekil örneğini burada ATAMA — <see cref="AccessSettings"/>
+    /// ile aynı gerekçe (EF Core change tracker'ın paylaşılan "owned" referansla karışması).
+    /// </summary>
+    public TenantModuleSettings ModuleSettings { get; private set; } = new();
+
     public DateTime? SuspendedAt { get; private set; }
 
     public string? SuspendReason { get; private set; }
@@ -114,6 +121,9 @@ public sealed class Tenant : AggregateRoot<Guid>
 
     /// <summary>Güvenlik politikası sayfası "Kaydet" eylemi: zorunlu 2FA rol listesi anında etkili biçimde değiştirilir.</summary>
     public void UpdateSecurityPolicy(TenantSecurityPolicy policy) => SecurityPolicy = policy;
+
+    /// <summary>Modüller sayfası "Kaydet" eylemi: kapalı modül listesi anında etkili biçimde değiştirilir.</summary>
+    public void UpdateModuleSettings(TenantModuleSettings settings) => ModuleSettings = settings;
 
     public Result Activate()
     {

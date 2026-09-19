@@ -20,6 +20,9 @@ public static class IdentityPermissions
     public const string TenantView = "identity.tenant.view";
     public const string TenantManage = "identity.tenant.manage";
     public const string SecurityPolicyManage = "identity.security.manage";
+
+    /// <summary>Ayarlar &gt; Modüller: kiracı için ürün modüllerini aç/kapa (senseik-057). Owner/Admin joker "*" ile alır.</summary>
+    public const string ModulesManage = "identity.modules.manage";
     public const string ApiKeysManage = "identity.api_keys.manage";
     public const string AuditLogView = "identity.audit.view";
     public const string AuditSensitiveView = "identity.audit.sensitive_view";
@@ -68,5 +71,6 @@ public static class IdentityPermissions
         new(UnitAuthorizationsManage, Module, UnitAuthorizationsManage, Groups.UnitAuthorizations),
         new(UnitAuthorizationsRead, Module, UnitAuthorizationsRead, Groups.UnitAuthorizations),
         new(AccessSettingsBypass, Module, AccessSettingsBypass, Groups.AccessSettings),
+        new(ModulesManage, Module, ModulesManage, Groups.Account),
     ];
 }

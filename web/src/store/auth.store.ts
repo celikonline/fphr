@@ -140,6 +140,7 @@ function toFeatures(me: MeResponse): MeFeatures {
     access: { ...EMPTY_ACCESS, ...(me.features?.access ?? {}) },
     accessSettingsBypass: me.features?.accessSettingsBypass ?? false,
     mfaSetupRequired: me.features?.mfaSetupRequired ?? false,
+    disabledModules: me.features?.disabledModules ?? [],
   };
 }
 
@@ -203,6 +204,8 @@ interface AuthStore {
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
   isAccessSettingEnabled: (key: AccessSettingKey) => boolean;
+  /** senseik-057: false when the tenant turned this module off (Ayarlar → Modüller). Core/unknown keys are always on. */
+  isModuleEnabled: (key: string) => boolean;
 }
 
 // `persist`'s `onRehydrateStorage` callback below can run *synchronously*, inside `create()` itself,
@@ -359,6 +362,11 @@ export const useAuthStore = create<AuthStore>()(
           const features = get().features;
           if (!features) return false;
           return features.accessSettingsBypass || features.access[key] === true;
+        },
+
+        isModuleEnabled: (key) => {
+          // Missing features (not loaded yet / older persisted state) = nothing disabled; the server still enforces.
+          return !(get().features?.disabledModules ?? []).includes(key);
         },
       };
     },

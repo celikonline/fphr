@@ -93,6 +93,8 @@
     "accessDesc": "Was Mitarbeitende auf Start, Konto und Kalender sehen",
     "securityPolicy": "Sicherheitsrichtlinie",
     "securityPolicyDesc": "Verpflichtende Zwei-Faktor-Authentifizierung (2FA) für bestimmte Rollen",
+    "modules": "Module",
+    "modulesDesc": "Produktmodule unternehmensweit ein- oder ausschalten",
     "usersRoles": "Benutzer & Rollen",
     "usersRolesDesc": "Benutzer, Zugriffsarten, Rollen und Berechtigungen",
     "auditLog": "Audit-Protokoll",

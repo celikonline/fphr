@@ -72,6 +72,9 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IDataScopeService, DataScopeService>();
         services.AddScoped<IAccessSettingsService, AccessSettingsService>();
+        services.AddScoped<ModuleAccessService>();
+        services.AddScoped<IModuleAccessService>(sp => sp.GetRequiredService<ModuleAccessService>());
+        services.AddScoped<IModuleSettingsCacheInvalidator>(sp => sp.GetRequiredService<ModuleAccessService>());
         services.AddScoped<IImpersonationSessionValidator, ImpersonationSessionValidator>();
 
         services.AddScoped<AccessTypeGuard>();
