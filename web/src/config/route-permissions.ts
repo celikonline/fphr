@@ -25,11 +25,11 @@ function isGated(item: Gated): boolean {
 }
 
 function collect(items: readonly NavItem[]): Array<[string, Gated]> {
-  return items.filter(isGated).map((item) => [item.path, toGate(item)]);
+  return items.filter(isGated).map((item) => [normalizePath(item.path), toGate(item)]);
 }
 
 function collectSettingsLinks(links: readonly SettingsLink[]): Array<[string, Gated]> {
-  return links.filter(isGated).map((link) => [link.path, toGate(link)]);
+  return links.filter(isGated).map((link) => [normalizePath(link.path), toGate(link)]);
 }
 
 const SETTINGS_LINKS = SETTINGS_SECTIONS.flatMap((section) => section.links);
@@ -42,7 +42,17 @@ export const ROUTE_ACCESS: ReadonlyMap<string, Gated> = new Map([
   ...collectSettingsLinks(SETTINGS_LINKS),
 ]);
 
+/**
+ * React Router eşleşmesi büyük/küçük harfe duyarsız ve sondaki "/"'ı yok sayıyor ("/app/Settings/System/Users-Roles/"
+ * de users-roles sayfasını açar) - harita aramasını aynı şekilde normalize etmezsek böyle bir URL korumasız kalır.
+ */
+function normalizePath(pathname: string): string {
+  const lower = pathname.toLowerCase();
+  const trimmed = lower.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+}
+
 /** Rota için gerekli yetki/erişim ayarı - harita boşsa (kayıt yoksa) rota herkese açık kabul edilir. */
 export function getRouteAccess(pathname: string): Gated | undefined {
-  return ROUTE_ACCESS.get(pathname);
+  return ROUTE_ACCESS.get(normalizePath(pathname));
 }

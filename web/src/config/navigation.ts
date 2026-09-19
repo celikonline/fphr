@@ -93,7 +93,7 @@ export const SETTINGS_PERMISSIONS = {
   documentTypes: ["documents.document_types.view", "documents.document_types.manage"],
   missingDocuments: ["documents.requirements.view"],
   assetCategories: ["assets.categories.view", "assets.categories.manage"],
-  expenseCategories: ["expense.categories.manage"],
+  expenseCategories: ["expense.categories.view", "expense.categories.manage"],
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
   workSchedules: ["attendance.workschedule.view"],
