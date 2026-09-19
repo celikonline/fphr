@@ -107,5 +107,32 @@ public sealed class HolidayCalendarIntegrationTests : TestFixture
             var visibleToOtherTenant = await db.HolidayCalendars.AnyAsync(c => c.Id == calendar.Id);
             visibleToOtherTenant.ShouldBeFalse();
         }
+
+        // GetLastDefinedReligiousHolidayYearAsync (senseik-037): only the non-recurring entry's year counts -
+        // the recurring Cumhuriyet Bayramı entry (anchor year 2000) must not leak in as "the calendar covers 2000".
+        (await lookup.GetLastDefinedReligiousHolidayYearAsync(tenantId)).ShouldBe(farFutureDate.Year);
+        (await lookup.GetLastDefinedReligiousHolidayYearAsync(otherTenantId)).ShouldBeNull();
+    }
+
+    /// <summary>
+    /// senseik-037: a calendar with only recurring (fixed-date) entries has no religious-holiday coverage to compare
+    /// against - GetLastDefinedReligiousHolidayYearAsync must return null ("nothing to warn about"), not throw on an empty MAX.
+    /// </summary>
+    [Fact]
+    public async Task GetLastDefinedReligiousHolidayYearAsync_ReturnsNull_WhenCalendarHasOnlyRecurringEntries()
+    {
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var calendar = HolidayCalendar.Create(tenantId, "Türkiye Resmi Tatilleri", "TR", isSystemDefined: true).Value;
+        db.HolidayCalendars.Add(calendar);
+        db.HolidayCalendarEntries.Add(
+            HolidayCalendarEntry.Create(tenantId, calendar.Id, new DateOnly(2000, 1, 1), "Yılbaşı", isRecurringAnnually: true).Value);
+        await db.SaveChangesAsync();
+
+        (await new HolidayCalendarLookup(db).GetLastDefinedReligiousHolidayYearAsync(tenantId)).ShouldBeNull();
     }
 }

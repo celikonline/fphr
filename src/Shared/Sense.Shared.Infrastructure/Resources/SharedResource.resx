@@ -664,6 +664,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.above_max_days" xml:space="preserve"><value>Bu izin türünde en fazla {max} gün talep edilebilir.</value></data>
   <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>İzin bakiyesi yetersiz (kullanılabilir: {available} gün).</value></data>
   <data name="leave.errors.description_required" xml:space="preserve"><value>Bu izin türünde açıklama zorunludur.</value></data>
+  <data name="leave.errors.holiday_calendar_year_undefined" xml:space="preserve"><value>Bu talep {year} yılına denk geliyor; resmi tatil takviminde bu yıl için dini bayram (Ramazan/Kurban Bayramı) tarihleri henüz tanımlı değil. Lütfen takvimi güncelleyin.</value></data>
   <data name="leave.overtimes.read" xml:space="preserve"><value>Fazla mesaileri görüntüleme</value></data>
   <data name="leave.my.overtimes" xml:space="preserve"><value>Kendi fazla mesai taleplerimi yönetme</value></data>
   <data name="leave.overtimes.create_on_behalf" xml:space="preserve"><value>Çalışan adına fazla mesai ekleme</value></data>

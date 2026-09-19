@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
@@ -40,7 +41,7 @@ internal static class LeaveRequestPreview
 {
     public static async Task<Result<LeaveRequestPreviewDto>> BuildAsync(
         LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, ILeaveDayCalculator dayCalculator,
-        Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct,
+        IHolidayCalendarLookup holidays, Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct,
         TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
     {
         if (end < start)
@@ -70,7 +71,16 @@ internal static class LeaveRequestPreview
         // Description is not part of the preview; pass a placeholder so "description required" does not show up as a warning.
         var valid = await rules.ValidateAsync(
             tenantId, employeeId, leaveTypeId, start, end, "-", editedRequestId, ct, requireSelfService, startTime, endTime, halfDayPeriod);
-        IReadOnlyList<Error> warnings = valid.IsFailure ? [valid.Error] : [];
+        var warnings = new List<Error>();
+        if (valid.IsFailure)
+        {
+            warnings.Add(valid.Error);
+        }
+
+        if (await BuildHolidayCalendarCoverageWarningAsync(holidays, tenantId, end, ct) is { } coverageWarning)
+        {
+            warnings.Add(coverageWarning);
+        }
 
         // On failure (e.g. missing time range while typing) show the best-effort fraction instead of the whole-day count.
         var days = valid.IsSuccess ? valid.Value.Days : type.Unit switch
@@ -81,6 +91,24 @@ internal static class LeaveRequestPreview
         };
         return new LeaveRequestPreviewDto(days, count.WeeklyRestDays, count.PublicHolidayDays, warnings);
     }
+
+    /// <summary>
+    /// senseik-037: warns (non-blocking) when the request's end date falls in a year the effective holiday calendar
+    /// has no seeded religious-holiday (Ramazan/Kurban Bayramı) entries for - see IHolidayCalendarLookup
+    /// .GetLastDefinedReligiousHolidayYearAsync's doc comment. Null (no calendar, or a calendar with no religious
+    /// entries at all - nothing to compare against) means "nothing to warn about", not "always warn".
+    /// </summary>
+    private static async Task<Error?> BuildHolidayCalendarCoverageWarningAsync(
+        IHolidayCalendarLookup holidays, Guid tenantId, DateOnly end, CancellationToken ct)
+    {
+        var lastDefinedYear = await holidays.GetLastDefinedReligiousHolidayYearAsync(tenantId, ct);
+        if (lastDefinedYear is not { } definedYear || end.Year <= definedYear)
+        {
+            return null;
+        }
+
+        return Error.Validation(LeaveRequestErrors.HolidayCalendarYearUndefined, ("year", end.Year.ToString(CultureInfo.InvariantCulture)));
+    }
 }
 
 [RequiresPermission("leave.my.requests")]
@@ -90,7 +118,7 @@ public sealed record PreviewMyLeaveRequestQuery(
 
 public sealed class PreviewMyLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
-    ILeaveDayCalculator dayCalculator, IEmployeeLookup employeeLookup, IEmployeeDirectory employees, ILeaveRequestRepository requests)
+    ILeaveDayCalculator dayCalculator, IHolidayCalendarLookup holidays, IEmployeeLookup employeeLookup, IEmployeeDirectory employees, ILeaveRequestRepository requests)
     : IQueryHandler<PreviewMyLeaveRequestQuery, LeaveRequestPreviewDto>
 {
     /// <summary>Display cap only - <c>Count</c> still reports the true total overlap.</summary>
@@ -104,7 +132,7 @@ public sealed class PreviewMyLeaveRequestHandler(
         }
 
         var preview = await LeaveRequestPreview.BuildAsync(
-            rules, profiles, ruleSets, dayCalculator, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
+            rules, profiles, ruleSets, dayCalculator, holidays, tenant.TenantId, employeeId, query.LeaveTypeId, query.StartDate, query.EndDate, query.EditedRequestId, true,
             cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
         if (preview.IsFailure)
         {
@@ -177,13 +205,13 @@ public sealed record PreviewEmployeeLeaveRequestQuery(
 
 public sealed class PreviewEmployeeLeaveRequestHandler(
     ITenantContext tenant, IDataScopeService dataScope, LeaveRequestRules rules, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets,
-    ILeaveDayCalculator dayCalculator)
+    ILeaveDayCalculator dayCalculator, IHolidayCalendarLookup holidays)
     : IQueryHandler<PreviewEmployeeLeaveRequestQuery, LeaveRequestPreviewDto>
 {
     public async Task<Result<LeaveRequestPreviewDto>> Handle(PreviewEmployeeLeaveRequestQuery query, CancellationToken cancellationToken) =>
         !await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsCreateOnBehalf.Key, query.EmployeeId, cancellationToken)
             ? Error.Forbidden(LeaveErrors.EmployeeNotInScope)
             : await LeaveRequestPreview.BuildAsync(
-                rules, profiles, ruleSets, dayCalculator, tenant.TenantId, query.EmployeeId, query.LeaveTypeId, query.StartDate, query.EndDate, null, false,
+                rules, profiles, ruleSets, dayCalculator, holidays, tenant.TenantId, query.EmployeeId, query.LeaveTypeId, query.StartDate, query.EndDate, null, false,
                 cancellationToken, query.StartTime, query.EndTime, query.HalfDayPeriod);
 }

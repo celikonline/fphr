@@ -36,6 +36,17 @@ public interface IHolidayCalendarLookup
 
     /// <summary>Holiday occurrences of one calendar within [from, to], recurring entries projected into every year of the window; ordered by date.</summary>
     Task<IReadOnlyList<UpcomingHoliday>> GetHolidaysAsync(Guid tenantId, Guid holidayCalendarId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Last calendar year for which the tenant's effective calendar has at least one non-recurring holiday entry
+    /// (i.e. a Ramazan/Kurban Bayramı date has actually been seeded for it) - senseik-037. Recurring (fixed-date)
+    /// entries cover every year automatically via <see cref="Domain.HolidayCalendars.HolidayCalendarEntry.MatchesDate"/>
+    /// and are not considered here, since only the lunar religious holidays ever run out of seeded years (see
+    /// HolidayCalendarEntry's class doc: they need a periodic manual/Platform-admin refresh). Null if the tenant has
+    /// no calendar at all, or its calendar has no non-recurring entries at all - callers should treat null as
+    /// "nothing to warn about" rather than "everything is undefined".
+    /// </summary>
+    Task<int?> GetLastDefinedReligiousHolidayYearAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>One resolved upcoming holiday occurrence.</summary>

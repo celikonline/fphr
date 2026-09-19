@@ -655,6 +655,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.above_max_days" xml:space="preserve"><value>At most {max} days can be requested for this leave type.</value></data>
   <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>Insufficient leave balance (available: {available} days).</value></data>
   <data name="leave.errors.description_required" xml:space="preserve"><value>A description is required for this leave type.</value></data>
+  <data name="leave.errors.holiday_calendar_year_undefined" xml:space="preserve"><value>This request falls in {year}; the official holiday calendar has no religious holiday (Ramazan/Kurban Bayramı) dates defined for that year yet. Please update the calendar.</value></data>
   <data name="leave.overtimes.read" xml:space="preserve"><value>View overtime</value></data>
   <data name="leave.my.overtimes" xml:space="preserve"><value>Manage my overtime requests</value></data>
   <data name="leave.overtimes.create_on_behalf" xml:space="preserve"><value>Add overtime for employees</value></data>
