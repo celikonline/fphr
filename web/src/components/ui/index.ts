@@ -7,3 +7,4 @@ export * from "./filter-bar";
 export * from "./approval-card";
 export * from "./confirm-modal";
 export * from "./row-icon-button";
+export * from "./form-modal";

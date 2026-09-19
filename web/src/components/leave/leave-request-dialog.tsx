@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Alert, Button, Group, Input, Modal, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Alert, Button, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Users } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FormModal } from "@/components/ui/form-modal";
 import { TimePicker } from "@/components/ui/time-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
 import type { LeaveHalfDayPeriod, LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput, LeaveUnit } from "@/services/leave.service";
@@ -169,7 +170,8 @@ export function LeaveRequestDialog({
     // the modal's own DOM subtree; a stray click meant only to dismiss an open calendar could otherwise land on
     // Mantine's outside-click overlay and silently close the whole form, discarding everything typed so far.
     // closeOnClickOutside={false} keeps the explicit Cancel button / Escape as the only ways to discard the draft.
-    <Modal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile} closeOnClickOutside={false}>
+    <FormModal opened onClose={onClose} size="32rem" title={title} fullScreen={isMobile} closeOnClickOutside={false}>
+
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {dialogDescription}
@@ -337,6 +339,6 @@ export function LeaveRequestDialog({
           </form>
         )}
       </Stack>
-    </Modal>
+    </FormModal>
   );
 }
