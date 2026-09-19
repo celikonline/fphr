@@ -323,6 +323,8 @@
     "notFoundTitle": "Çalışan bulunamadı",
     "notFoundDescription": "Kayıt silinmiş veya erişim kapsamınız dışında olabilir.",
     "saved": "Çalışan bilgileri kaydedildi.",
+    "statusLabel": "Çalışan",
+    "accountStatusLabel": "Hesap",
     "sections": {
       "general": "Genel",
       "personal": "Kişisel bilgiler",

@@ -323,6 +323,8 @@
     "notFoundTitle": "Employee not found",
     "notFoundDescription": "The record may have been removed or is outside your access scope.",
     "saved": "Employee details saved.",
+    "statusLabel": "Employee",
+    "accountStatusLabel": "Account",
     "sections": {
       "general": "General",
       "personal": "Personal details",
