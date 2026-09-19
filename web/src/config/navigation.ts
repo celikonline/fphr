@@ -267,6 +267,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
+    key: "monthlyTimesheet",
+    labelKey: "apps.monthlyTimesheet",
+    path: "/app/attendance/monthly-timesheet",
+    icon: ClipboardCheck,
+    permissions: ["attendance.timesheet.view"],
+    iconColor: "navy",
+  },
+  {
     key: "shiftPlan",
     labelKey: "apps.shiftPlan",
     path: "/app/attendance/shift-plan",
