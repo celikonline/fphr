@@ -27,9 +27,50 @@ public sealed record EmployeeCriteria(
 /// </summary>
 public static class EmployeeCompleteness
 {
-    public static bool IsMissingInfo(EmployeeRow e) =>
-        e.Status != EmployeeStatus.Draft &&
-        (e.NationalId is null || e.HireDate is null || e.BirthDate is null || e.OrgUnitId is null || e.ContractType is null || e.EmploymentType is null);
+    public static bool IsMissingInfo(EmployeeRow e) => MissingFieldCount(e) > 0;
+
+    /// <summary>How many of the expected personnel fields are unfilled (badge text, e.g. "Eksik bilgi (2)") - 0 for a
+    /// Draft row, which is knowingly incomplete until someone hires them.</summary>
+    public static int MissingFieldCount(EmployeeRow e)
+    {
+        if (e.Status == EmployeeStatus.Draft)
+        {
+            return 0;
+        }
+
+        var count = 0;
+        if (e.NationalId is null)
+        {
+            count++;
+        }
+
+        if (e.HireDate is null)
+        {
+            count++;
+        }
+
+        if (e.BirthDate is null)
+        {
+            count++;
+        }
+
+        if (e.OrgUnitId is null)
+        {
+            count++;
+        }
+
+        if (e.ContractType is null)
+        {
+            count++;
+        }
+
+        if (e.EmploymentType is null)
+        {
+            count++;
+        }
+
+        return count;
+    }
 }
 
 /// <summary>Flat read model of an employee row.</summary>

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Documents.Domain.Documents;
+using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Employee.Domain.Employees;
@@ -335,6 +336,11 @@ public partial class DataSeeder(
         // senseik-028: sample shared company files (separate table from the employee-scoped Documents above)
         await SeedSharedCompanyFilesAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
 
+        // senseik-045 (acceptance #3): personnel document metadata for a handful of employees, so the Documents
+        // module's own screens/reports show a realistic mix of uploaded/missing instead of nobody ever having
+        // uploaded anything.
+        await SeedEmployeeDocumentMetadataAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), employees, cancellationToken);
+
         logger.LogInformation(
             "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units ({TitleCount} titles), {LocationCount} locations, {EmployeeCount} employees",
             demoUsers.Count, roles.Count, 3, 1 + departments.Count + titles.Count, titles.Count, 3, employees.Count);
@@ -370,6 +376,84 @@ public partial class DataSeeder(
                 var doc = docResult.Value;
                 doc.ConfirmUpload($"etag_{Guid.NewGuid():N}", size);
                 documentsCtx.Documents.Add(doc);
+            }
+        }
+
+        await documentsCtx.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Per-employee document metadata (senseik-045 acceptance #3): type + status records only, no real files.
+    /// Seeds the tenant's onboarding-required document type catalog directly (mirrors
+    /// DocumentTypeProvisioningService.EnsureSeededAsync's lazy per-tenant copy of <see cref="DocumentTypeSeed"/>,
+    /// but the seeder runs outside a query/command handler so it can't reuse that lazy path), then for a handful of
+    /// demo employees marks roughly two-thirds of the onboarding-required types Uploaded (with a matching Document
+    /// row) and leaves the rest Missing - a believable mid-onboarding spread instead of the whole roster sitting at
+    /// either 0% or 100% document coverage.
+    /// </summary>
+    private async Task SeedEmployeeDocumentMetadataAsync(Guid tenantId, Guid uploadedBy, IReadOnlyList<DemoEmployee> demoEmployees, CancellationToken cancellationToken)
+    {
+        if (uploadedBy == Guid.Empty || demoEmployees.Count == 0)
+        {
+            return;
+        }
+
+        // Seed the whole system catalog, not only the types sampled below: DocumentTypeProvisioningService.EnsureSeededAsync
+        // skips seeding once the tenant has any type, so a partial copy here would leave the tenant without every
+        // non-onboarding/optional/conditional type for good.
+        var typeDefinitions = new List<DocumentTypeDefinition>();
+        foreach (var row in DocumentTypeSeed.SystemDefinitions())
+        {
+            var result = DocumentTypeDefinition.Create(
+                tenantId, row.Code, row.Name, row.Stage, row.IsRequired, row.Condition, row.RenewalPeriodDays,
+                row.Quantity, row.IsSensitive, row.DefaultRetentionDays, isSystem: true, row.SortOrder);
+            if (result.IsSuccess)
+            {
+                typeDefinitions.Add(result.Value);
+            }
+        }
+
+        documentsCtx.DocumentTypeDefinitions.AddRange(typeDefinitions);
+        var onboardingRequiredTypes = typeDefinitions
+            .Where(type => type.Stage == DocumentTypeStage.Onboarding && type.IsRequired)
+            .ToList();
+
+        // A handful of employees is enough to show the spread without materializing all ~57 employees x 11 types.
+        const int SampleEmployeeCount = 8;
+        foreach (var demoEmployee in demoEmployees.Take(SampleEmployeeCount))
+        {
+            foreach (var type in onboardingRequiredTypes)
+            {
+                var requirementResult = EmployeeDocumentRequirement.Materialize(tenantId, demoEmployee.Employee.Id, type.Id, dueDate: null);
+                if (requirementResult.IsFailure)
+                {
+                    continue;
+                }
+
+                var requirement = requirementResult.Value;
+
+                // ~2/3 of the required types uploaded, the rest left Missing.
+                if (_random.Next(0, 3) != 0)
+                {
+                    var docResult = Document.Create(
+                        tenantId: tenantId,
+                        title: type.Name,
+                        fileKey: $"documents/employees/{demoEmployee.Employee.Id}/{type.Code}.pdf",
+                        contentType: "application/pdf",
+                        size: 1024 * 64,
+                        uploadedBy: uploadedBy,
+                        bucketName: "documents");
+
+                    if (docResult.IsSuccess)
+                    {
+                        var doc = docResult.Value;
+                        doc.ConfirmUpload($"etag_{Guid.NewGuid():N}", 1024 * 64);
+                        documentsCtx.Documents.Add(doc);
+                        requirement.MarkUploaded(doc.Id);
+                    }
+                }
+
+                documentsCtx.EmployeeDocumentRequirements.Add(requirement);
             }
         }
 

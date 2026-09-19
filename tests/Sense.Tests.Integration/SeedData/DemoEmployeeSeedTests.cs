@@ -131,4 +131,56 @@ public sealed class DemoEmployeeSeedTests
     {
         DataSeeder.DemoGenderFor(firstName).ShouldBe(expected);
     }
+
+    /// <summary>
+    /// senseik-045: every seeded demo employee used to have a null ContractType/EmploymentType, so
+    /// EmployeeCompleteness.IsMissingInfo flagged all 56 of them - a badge that flags everyone is useless. The fixed,
+    /// documented login accounts (README.md "Demo kullanıcılar") must never show it, so they must always resolve a
+    /// contract/employment type.
+    /// </summary>
+    [Theory]
+    [InlineData("owner@demo.local")]
+    [InlineData("ik@demo.local")]
+    [InlineData("bordro@demo.local")]
+    [InlineData("yonetici@demo.local")]
+    [InlineData("calisan@demo.local")]
+    [InlineData("denetci@demo.local")]
+    [InlineData("testyas@demo.local")]
+    public void IsFixedDemoAccount_RecognizesEveryDocumentedLoginAccount(string email)
+    {
+        DataSeeder.IsFixedDemoAccount(email).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFixedDemoAccount_IsFalse_ForARandomlyGeneratedEmployeeEmail()
+    {
+        DataSeeder.IsFixedDemoAccount("ahmet.yilmaz@democompany.com").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesInterns_FixedTermInternship()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Intern));
+
+        contractType.ShouldBe(ContractType.FixedTerm);
+        employmentType.ShouldBe(EmploymentType.Intern);
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesContractors_FixedTermContractWork()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Contractor));
+
+        contractType.ShouldBe(ContractType.FixedTerm);
+        employmentType.ShouldBe(EmploymentType.Contract);
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesEveryoneElse_IndefiniteFullTime()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Employee));
+
+        contractType.ShouldBe(ContractType.Indefinite);
+        employmentType.ShouldBe(EmploymentType.FullTime);
+    }
 }

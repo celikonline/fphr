@@ -73,6 +73,7 @@ public sealed class ListEmployeesHandler(
             e.ContractType,
             e.EmploymentType,
             EmployeeCompleteness.IsMissingInfo(e),
+            EmployeeCompleteness.MissingFieldCount(e),
             placement?.LevelUnitFor(e.OrgUnitId, "Title")?.Name));
     }
 }

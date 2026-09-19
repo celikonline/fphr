@@ -35,6 +35,7 @@
     "withAccount": "With account",
     "withoutAccount": "Without account",
     "missingInfo": "Missing info",
+    "missingInfoBadge": "Missing info ({{count}})",
     "missingInfoHint": "Hired, but the national ID, hire/birth date, unit, contract type or employment type is empty."
   },
   "columns": {

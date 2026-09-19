@@ -35,6 +35,7 @@
     "withAccount": "Hesabı olanlar",
     "withoutAccount": "Hesabı olmayanlar",
     "missingInfo": "Eksik bilgi",
+    "missingInfoBadge": "Eksik bilgi ({{count}})",
     "missingInfoHint": "İşe alınmış ama kimlik no, işe başlama/doğum tarihi, birim, sözleşme türü veya çalışma şekli alanlarından biri boş."
   },
   "columns": {

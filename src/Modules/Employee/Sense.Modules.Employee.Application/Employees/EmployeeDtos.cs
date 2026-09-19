@@ -24,6 +24,9 @@ public sealed record EmployeeListItemDto(
     EmploymentType? EmploymentType = null,
     // "Eksik bilgi" badge (EmployeeCompleteness.IsMissingInfo): a non-draft record with an unfilled personnel field.
     bool HasMissingInfo = false,
+    // Count behind the badge (EmployeeCompleteness.MissingFieldCount), so the UI can show "Eksik bilgi (2)" instead
+    // of a flat count-less badge on every incomplete record (senseik-045).
+    int MissingInfoFieldCount = 0,
     // Title level of the org placement chain (shown on the grid's card view), like EmployeeDetailDto.TitleName.
     string? TitleName = null);
 
