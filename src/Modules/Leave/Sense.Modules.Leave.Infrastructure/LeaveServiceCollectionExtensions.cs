@@ -62,6 +62,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
         services.AddScoped<ILeaveStartDateReader, Lookups.LeaveStartDateReader>();
+        services.AddScoped<IOvertimePayrollReader, Lookups.OvertimePayrollReader>();
         return services;
     }
 

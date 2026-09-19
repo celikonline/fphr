@@ -138,7 +138,11 @@
       "leaveTypeRequired": "Select a leave type."
     },
     "week": "Week",
-    "month": "Month"
+    "month": "Month",
+    "breakApplied": "Break: {{m}} min",
+    "nightMinutes": "Night: {{m}} min",
+    "dailyLimitExceeded": "Exceeded the 11-hour daily limit (art. 63)",
+    "nightLimitExceeded": "Exceeded the 7.5-hour night-work limit (art. 69)"
   },
   "shiftLock": {
     "scheduledLockDate": "Scheduled lock date"

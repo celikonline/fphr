@@ -423,6 +423,17 @@
       "weeklyRest": "Weekly rest day",
       "publicHoliday": "Public holiday"
     },
+    "payRate": {
+      "label": "Pay rate",
+      "hint": "Labor Law art. 41: overtime beyond the 45-hour weekly cap pays 50% extra; overtime within a contractually shortened week pays 25% extra.",
+      "rate25": "25% extra",
+      "rate50": "50% extra"
+    },
+    "annualUsage": {
+      "title": "{{year}} annual overtime",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Exceeded the statutory 270-hour annual limit."
+    },
     "sources": {
       "manual": "Request",
       "attendance": "Timesheet",

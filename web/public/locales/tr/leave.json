@@ -423,6 +423,17 @@
       "weeklyRest": "Hafta tatili",
       "publicHoliday": "Resmi tatil"
     },
+    "payRate": {
+      "label": "Ücret oranı",
+      "hint": "İş K. m.41: haftalık 45 saati aşan fazla mesai %50, aşmayan (sözleşmeyle kısaltılmış haftalık süre üstü) %25 fazlasıyla ödenir.",
+      "rate25": "%25 fazla",
+      "rate50": "%50 fazla"
+    },
+    "annualUsage": {
+      "title": "{{year}} yıllık fazla mesai",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Yıllık 270 saat yasal sınırı aşıldı."
+    },
     "sources": {
       "manual": "Talep",
       "attendance": "Puantaj",

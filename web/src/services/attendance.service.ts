@@ -92,6 +92,26 @@ export interface TeamWeekDay {
   workedMinutes: number;
   status: AttendanceResolutionState;
   anomalies: AttendanceAnomalyFlag[];
+  /** m.68 uygulanan mola (kart senseik-014 G-02). */
+  breakMinutesApplied: number;
+  /** Gece çalışma penceresiyle kesişen dakikalar (m.69). */
+  nightMinutes: number;
+  /** m.63: günlük 11 saat üst sınırı aşıldı mı. */
+  dailyLimitExceeded: boolean;
+  /** m.69: gece çalışması 7,5 saat üst sınırı aşıldı mı. */
+  nightLimitExceeded: boolean;
+}
+
+/** `EqualizationStatusDto` (m.63 denkleştirme, kart senseik-014 §4): `enabled` false ise diğer alanlar anlamsızdır. */
+export interface EqualizationStatus {
+  enabled: boolean;
+  periodStart?: string | null;
+  periodEnd?: string | null;
+  budgetMinutes: number;
+  totalWorkedMinutes: number;
+  provisionalOvertimeMinutes: number;
+  isClosed: boolean;
+  trueUpOvertimeMinutes?: number | null;
 }
 
 /** `TeamWeekRowDto` (S-8): one employee's Monday–Sunday row for the manager's weekly grid. */
@@ -172,6 +192,14 @@ export async function getTeamTimesheet(weekStart: string, orgUnitId?: string | n
 export async function getTeamMonth(monthStart: string, orgUnitId?: string | null): Promise<TeamWeekRow[]> {
   const { data } = await apiClient.get<TeamWeekRow[]>(`${ATTENDANCE_BASE}/timesheet/team/month`, {
     params: { monthStart, orgUnitId: orgUnitId || undefined },
+  });
+  return data;
+}
+
+/** Denkleştirme dönemi durumu (m.63, kart senseik-014 §4; attendance.timesheet.view). */
+export async function getEqualizationStatus(employeeId: string, date: string): Promise<EqualizationStatus> {
+  const { data } = await apiClient.get<EqualizationStatus>(`${ATTENDANCE_BASE}/timesheet/employees/${employeeId}/equalization`, {
+    params: { date },
   });
   return data;
 }
