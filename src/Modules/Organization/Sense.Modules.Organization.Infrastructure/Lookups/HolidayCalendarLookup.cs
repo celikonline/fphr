@@ -136,6 +136,21 @@ public sealed class HolidayCalendarLookup(OrganizationDbContext context) : IHoli
         return null;
     }
 
+    public async Task<int?> GetLastDefinedReligiousHolidayYearAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        var calendarId = await ResolveCalendarIdAsync(tenantId, cancellationToken);
+        if (calendarId is null)
+        {
+            return null;
+        }
+
+        // Nullable projection so an empty set yields null instead of throwing (single MAX in SQL, no row load).
+        return await context.HolidayCalendarEntries.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.HolidayCalendarId == calendarId && !e.IsRecurringAnnually)
+            .Select(e => (int?)e.Date.Year)
+            .MaxAsync(cancellationToken);
+    }
+
     /// <summary>Tenant default: the earliest company with an assigned calendar, else the tenant's system TR calendar.</summary>
     private async Task<Guid?> ResolveCalendarIdAsync(Guid tenantId, CancellationToken cancellationToken)
     {

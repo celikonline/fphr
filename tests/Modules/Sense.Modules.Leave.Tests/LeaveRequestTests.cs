@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -332,6 +333,44 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var ledger = await ActivatorUtilities.CreateInstance<Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerHandler>(verify.ServiceProvider, _currentUser)
             .Handle(new Sense.Modules.Leave.Application.Balances.ListMyLeaveLedgerQuery(annualId), CancellationToken.None);
         ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value.Id);
+    }
+
+    /// <summary>
+    /// senseik-037: IHolidayCalendarLookup.GetLastDefinedReligiousHolidayYearAsync flags a request landing in a year
+    /// the tenant's calendar has no religious-holiday (Ramazan/Kurban Bayramı) entries for - a non-blocking warning
+    /// (same channel as InsufficientBalance above), not a rejection: the request must still preview/submit fine.
+    /// </summary>
+    [Fact]
+    public async Task Preview_WarnsWhenRequestFallsInAYearTheReligiousHolidayCalendarHasNoDataFor()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        // Calendar's religious-holiday data stops last year - any request touching this year (or later) is undefined.
+        var holidays = ServiceProvider.GetRequiredService<IHolidayCalendarLookup>();
+        holidays.GetLastDefinedReligiousHolidayYearAsync(tenantId, Arg.Any<CancellationToken>()).Returns(today.Year - 1);
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        using var scope = ServiceProvider.CreateScope();
+        var preview = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(1), null), CancellationToken.None);
+
+        preview.IsSuccess.ShouldBeTrue(preview.IsFailure ? preview.Error.Code : null);
+        var warning = preview.Value.Warnings.ShouldHaveSingleItem();
+        warning.Code.ShouldBe(LeaveRequestErrors.HolidayCalendarYearUndefined);
+        warning.Args.ShouldNotBeNull();
+        warning.Args!["year"].ShouldBe(monday.Year.ToString(CultureInfo.InvariantCulture));
     }
 
     /// <summary>S-7 teamOverlap: same org unit + active (Pending/Approved) only; rejected/cancelled/different-unit peers are excluded.</summary>
