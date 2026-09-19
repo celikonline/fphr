@@ -336,7 +336,7 @@ public sealed class MinioAdapter : IFileStorage
             _logger.LogError("Object not found for copy: {TenantId}/{SourceBucket}/{SourceKey}", tenantId, sourceBucketName, sourceKey);
             throw new InvalidOperationException("File not found for copy", ex);
         }
-        catch (Exception ex) when (ex is not InvalidOperationException)
+        catch (Exception ex) when (ex is not InvalidOperationException and not OperationCanceledException)
         {
             _logger.LogError(ex,
                 "Failed to copy {TenantId}/{SourceBucket}/{SourceKey} to {DestinationBucket}/{DestinationKey}",

@@ -1,4 +1,6 @@
 using FluentValidation;
+using Sense.Modules.Documents.Domain;
+using Sense.Modules.Documents.Domain.Documents;
 using Sense.Modules.Documents.Domain.VisaDocuments;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -59,11 +61,26 @@ public sealed class GetVisaSettingsHandler(IVisaSettingsRepository settings, ITe
 [RequiresPermission("documents.visa.manage")]
 public sealed record UpdateVisaSettingsCommand(Guid? ApproverEmployeeId, IReadOnlyList<Guid> TemplateDocumentIds) : ICommand<VisaSettingsDto>;
 
-public sealed class UpdateVisaSettingsHandler(IVisaSettingsRepository settings, ITenantContext tenant, IDocumentsUnitOfWork unitOfWork)
+public sealed class UpdateVisaSettingsHandler(
+    IVisaSettingsRepository settings, ITenantContext tenant, IDocumentsUnitOfWork unitOfWork, IDocumentRepository documents)
     : ICommandHandler<UpdateVisaSettingsCommand, VisaSettingsDto>
 {
     public async Task<Result<VisaSettingsDto>> Handle(UpdateVisaSettingsCommand command, CancellationToken cancellationToken)
     {
+        // Every template is copied into each requester's folder, so it must be a plain, active company document - never
+        // another employee's file or an earlier delivered copy.
+        foreach (var templateId in command.TemplateDocumentIds.Where(id => id != Guid.Empty).Distinct())
+        {
+            var template = await documents.GetByIdAsync(templateId, cancellationToken);
+            if (template.IsFailure
+                || template.Value.Status != DocumentStatus.Active
+                || template.Value.EmployeeId is not null
+                || template.Value.VisaDocumentRequestId is not null)
+            {
+                return Error.Validation(VisaDomainErrors.VisaSettingsTemplateInvalid);
+            }
+        }
+
         var current = await VisaSettingsProvisioning.EnsureAsync(settings, tenant.TenantId, unitOfWork, cancellationToken);
         current.SetApprover(command.ApproverEmployeeId);
         current.SetTemplateDocumentIds(command.TemplateDocumentIds);

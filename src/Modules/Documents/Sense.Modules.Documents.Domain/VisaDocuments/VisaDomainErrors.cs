@@ -20,6 +20,9 @@ public static class VisaDomainErrors
     public const string VisaDocumentRequestProcessUnavailable = "visa_document_request.process_unavailable";
     public const string VisaDocumentRequestNoEmployeeForUser = "visa_document_request.no_employee_for_user";
 
+    /// <summary>A configured template document does not exist, is not active, or is an employee-folder copy.</summary>
+    public const string VisaSettingsTemplateInvalid = "visa_settings.template_invalid";
+
     /// <summary>Copying a configured template document's bytes into the employee's folder failed
     /// (<c>IVisaDocumentDeliveryService</c>/<c>IFileStorage.CopyObjectAsync</c>).</summary>
     public const string VisaDocumentDeliveryFailed = "visa_document_request.delivery_failed";

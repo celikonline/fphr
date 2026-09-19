@@ -52,7 +52,9 @@ public sealed class VisaDocumentDeliveryService(
                 continue;
             }
 
-            var destinationKey = $"{DeliveredKeyPrefix}/{visaRequestId:N}/{Guid.CreateVersion7():N}-{template.Title}";
+            // Deterministic per (request, template): a retry after a partial failure overwrites instead of orphaning objects, and the
+            // key never embeds user-supplied text (only a sanitized extension), so the storage adapter cannot reject it.
+            var destinationKey = $"{DeliveredKeyPrefix}/{visaRequestId:N}/{template.Id:N}{SafeExtension(template.Title)}";
 
             try
             {
@@ -91,6 +93,21 @@ public sealed class VisaDocumentDeliveryService(
         return Result.Success(copies.Count);
     }
 
+    private const int MaxExtensionLength = 10;
+
+    /// <summary>File extension of the (user-supplied) title, restricted to letters/digits so it is always a valid storage key
+    /// suffix; empty when there is none. The document row keeps the original title.</summary>
+    public static string SafeExtension(string title)
+    {
+        var extension = Path.GetExtension(title);
+        if (extension.Length is 0 or > MaxExtensionLength + 1 || !extension.Skip(1).All(char.IsAsciiLetterOrDigit))
+        {
+            return string.Empty;
+        }
+
+        return extension.ToLowerInvariant();
+    }
+
     private async Task<Document?> ResolveActiveTemplateAsync(Guid templateId, Guid visaRequestId, CancellationToken cancellationToken)
     {
         var result = await documents.GetByIdAsync(templateId, cancellationToken);
@@ -98,6 +115,16 @@ public sealed class VisaDocumentDeliveryService(
         {
             logger.LogWarning(
                 "Visa request {RequestId}: configured template document {DocumentId} no longer resolves to a document",
+                visaRequestId, templateId);
+            return null;
+        }
+
+        // A template is a plain tenant document. System-delivered copies (someone's personal folder) and anything tied to
+        // another employee must never be re-delivered even if an id slipped into the settings.
+        if (result.Value.EmployeeId is not null || result.Value.VisaDocumentRequestId is not null)
+        {
+            logger.LogWarning(
+                "Visa request {RequestId}: configured template document {DocumentId} belongs to an employee folder and is skipped",
                 visaRequestId, templateId);
             return null;
         }

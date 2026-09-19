@@ -111,8 +111,19 @@ public sealed class SubmitVisaDocumentRequestHandler(
 
         request.SubmitForApproval(approvalResult.Value);
 
-        await visaRequests.AddAsync(request, cancellationToken);
-        await visaRequests.SaveAsync(cancellationToken);
+        try
+        {
+            await visaRequests.AddAsync(request, cancellationToken);
+            await visaRequests.SaveAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The approval was already committed in Workflow's own unit of work; without the request row it would sit in the
+            // approver's inbox for a subject that does not exist. Best-effort compensation, then surface the original failure.
+            logger.LogError(ex, "Saving visa request {RequestId} failed after approval {ApprovalRequestId} started; cancelling it", request.Id, approvalResult.Value);
+            await workflowService.CancelAsync(approvalResult.Value, employeeId, CancellationToken.None);
+            throw;
+        }
 
         logger.LogInformation(
             "Visa document request {RequestId} submitted (approval {ApprovalRequestId})",

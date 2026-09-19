@@ -484,6 +484,10 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                     b.HasIndex("TenantId", "IsActive")
                         .HasDatabaseName("ix_visa_document_processes_tenant_id_is_active");
 
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_visa_document_processes_tenant_id_name");
+
                     b.ToTable("visa_document_processes", "documents");
                 });
 

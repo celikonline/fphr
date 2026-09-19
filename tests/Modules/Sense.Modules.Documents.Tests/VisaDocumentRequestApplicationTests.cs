@@ -168,6 +168,19 @@ public sealed class VisaDocumentRequestApplicationTests
     }
 
     [Fact]
+    public async Task Submit_WhenSavingFailsAfterWorkflowStarted_CancelsTheApprovalAndRethrows()
+    {
+        var approvalRequestId = Guid.NewGuid();
+        _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns(ApproverEmployeeId);
+        WorkflowStartsWith(Result.Success(approvalRequestId));
+        _requests.SaveAsync(Arg.Any<CancellationToken>()).Returns(Task.FromException(new InvalidOperationException("db down")));
+
+        await Should.ThrowAsync<InvalidOperationException>(() => SubmitHandler().Handle(SubmitCommand(), CancellationToken.None));
+
+        await _workflow.Received(1).CancelAsync(approvalRequestId, EmployeeId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Submit_WhenWorkflowStartFails_DoesNotPersistRequest()
     {
         _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns(ApproverEmployeeId);

@@ -38,7 +38,7 @@ internal static class VisaJsonColumn
         var comparer = new ValueComparer<IReadOnlyList<Guid>>(
             (a, b) => JsonSerializer.Serialize(a, Options) == JsonSerializer.Serialize(b, Options),
             v => JsonSerializer.Serialize(v, Options).GetHashCode(StringComparison.Ordinal),
-            v => v);
+            v => (IReadOnlyList<Guid>)new List<Guid>(v));
         property.HasConversion(converter, comparer).HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
         return property;
     }
@@ -54,6 +54,8 @@ public sealed class VisaDocumentProcessConfiguration : IEntityTypeConfiguration<
 
         // Tenant isolation index
         b.HasIndex(x => new { x.TenantId, x.IsActive });
+        // Backstop for the lazy default seed racing on first access (the case-insensitive check lives in the handlers).
+        b.HasIndex(x => new { x.TenantId, x.Name }).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.CountryCode }).IsUnique(false);
 
         // Properties

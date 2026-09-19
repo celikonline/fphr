@@ -12,7 +12,7 @@ using Sense.Modules.Documents.Infrastructure.Persistence;
 namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(DocumentsDbContext))]
-    [Migration("20260919124043_AddVisaSettingsAndDocumentDeliveryFields")]
+    [Migration("20260919130808_AddVisaSettingsAndDocumentDeliveryFields")]
     partial class AddVisaSettingsAndDocumentDeliveryFields
     {
         /// <inheritdoc />
@@ -486,6 +486,10 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "IsActive")
                         .HasDatabaseName("ix_visa_document_processes_tenant_id_is_active");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_visa_document_processes_tenant_id_name");
 
                     b.ToTable("visa_document_processes", "documents");
                 });

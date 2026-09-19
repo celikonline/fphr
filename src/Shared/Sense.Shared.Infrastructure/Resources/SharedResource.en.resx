@@ -950,6 +950,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>The country code must be 2-3 letters (e.g. DE).</value></data>
   <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>The selected visa process does not exist or is inactive.</value></data>
   <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your account.</value></data>
+  <data name="visa_settings.template_invalid" xml:space="preserve"><value>A template document was not found, is not active or belongs to an employee folder; only company documents can be used as templates.</value></data>
   <data name="documents.my.visa_requests" xml:space="preserve"><value>Request visa documents</value></data>
   <data name="documents.visa.manage" xml:space="preserve"><value>Manage visa settings</value></data>
 

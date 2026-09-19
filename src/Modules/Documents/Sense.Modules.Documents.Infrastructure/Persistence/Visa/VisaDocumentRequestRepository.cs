@@ -67,9 +67,14 @@ public sealed class VisaDocumentProcessRepository(DocumentsDbContext dbContext, 
 
     public async Task<bool> NameExistsAsync(Guid tenantId, string name, Guid? exceptProcessId, CancellationToken cancellationToken)
     {
-        var normalized = name.ToUpperInvariant();
-        return await dbContext.VisaDocumentProcesses.AnyAsync(
-            x => x.TenantId == tenantId && x.Id != exceptProcessId && x.Name.ToUpper() == normalized, cancellationToken);
+        // A tenant has a handful of processes: compare in memory (ordinal, ignoring case) rather than relying on the
+        // database's collation/locale for upper()/ILIKE, which differs for Turkish i/I.
+        var names = await dbContext.VisaDocumentProcesses
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id != exceptProcessId)
+            .Select(x => x.Name)
+            .ToListAsync(cancellationToken);
+        return names.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase));
     }
 
     public async Task AddAsync(VisaDocumentProcess process, CancellationToken cancellationToken) =>

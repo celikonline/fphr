@@ -45,6 +45,13 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "ix_visa_document_processes_tenant_id_name",
+                schema: "documents",
+                table: "visa_document_processes",
+                columns: new[] { "tenant_id", "name" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_documents_tenant_id_employee_id",
                 schema: "documents",
                 table: "documents",
@@ -70,6 +77,11 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
             migrationBuilder.DropTable(
                 name: "visa_settings",
                 schema: "documents");
+
+            migrationBuilder.DropIndex(
+                name: "ix_visa_document_processes_tenant_id_name",
+                schema: "documents",
+                table: "visa_document_processes");
 
             migrationBuilder.DropIndex(
                 name: "ix_documents_tenant_id_employee_id",

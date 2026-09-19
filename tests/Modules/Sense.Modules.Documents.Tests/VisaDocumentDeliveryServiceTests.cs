@@ -117,12 +117,53 @@ public sealed class VisaDocumentDeliveryServiceTests
             .Returns((IReadOnlyList<Guid>)[first.Id, second.Id]);
         _documents.GetByIdAsync(first.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(first));
         _documents.GetByIdAsync(second.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(second));
-        _storage.CopyObjectAsync(TenantId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Is<string>(k => k.EndsWith("second.pdf")), Arg.Any<CancellationToken>())
+        _storage.CopyObjectAsync(TenantId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Is<string>(k => k.Contains(second.Id.ToString("N"))), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("storage down"));
 
         var result = await Service().DeliverVisaDocumentsAsync(TenantId, EmployeeId, VisaRequestId, CancellationToken.None);
 
         result.IsFailure.ShouldBeTrue();
         _documents.DidNotReceiveWithAnyArgs().Add(default!);
+    }
+
+    [Theory]
+    [InlineData("a..b.pdf", ".pdf")]
+    [InlineData("../etc/passwd", "")]
+    [InlineData("vize başvuru formu.PDF", ".pdf")]
+    [InlineData("noextension", "")]
+    [InlineData("weird.ex/t", "")]
+    [InlineData("long.abcdefghijklmnop", "")]
+    public void SafeExtension_OnlyEverYieldsAShortAlphanumericSuffix(string title, string expected)
+    {
+        VisaDocumentDeliveryService.SafeExtension(title).ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task DeliverVisaDocumentsAsync_UsesADeterministicKeyThatIgnoresTheUserSuppliedTitle()
+    {
+        var template = Document.Create(TenantId, "Form..evil.pdf", "templates/f.pdf", "application/pdf", 10, Guid.NewGuid()).Value;
+        template.ConfirmUpload("etag", 10);
+        _settings.GetTemplateDocumentIdsAsync(TenantId, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<Guid>)[template.Id]);
+        _documents.GetByIdAsync(template.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(template));
+
+        await Service().DeliverVisaDocumentsAsync(TenantId, EmployeeId, VisaRequestId, CancellationToken.None);
+        await Service().DeliverVisaDocumentsAsync(TenantId, EmployeeId, VisaRequestId, CancellationToken.None);
+
+        var expectedKey = $"visa-deliveries/{VisaRequestId:N}/{template.Id:N}.pdf";
+        await _storage.Received(2).CopyObjectAsync(
+            TenantId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), expectedKey, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task DeliverVisaDocumentsAsync_SkipsATemplateThatIsAnEmployeeFolderCopy()
+    {
+        var copy = Document.CreateDeliveredCopy(TenantId, Guid.NewGuid(), Guid.NewGuid(), "c.pdf", "visa-deliveries/a/b.pdf", "application/pdf", 10, "documents").Value;
+        _settings.GetTemplateDocumentIdsAsync(TenantId, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<Guid>)[copy.Id]);
+        _documents.GetByIdAsync(copy.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(copy));
+
+        var result = await Service().DeliverVisaDocumentsAsync(TenantId, EmployeeId, VisaRequestId, CancellationToken.None);
+
+        result.Value.ShouldBe(0);
+        await _storage.DidNotReceiveWithAnyArgs().CopyObjectAsync(default, default!, default!, default!, default!, default);
     }
 }

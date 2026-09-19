@@ -27,6 +27,14 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<DocumentTypeProvisioningService>();
         services.AddScoped<DocumentRequirementMaterializationService>();
+        // Visa document requests (senseik-001): the approval handlers registered by AddDocumentsIntegrationEventHandlers run
+        // in Sense.Worker, so everything they (and the API handlers) depend on is registered here for both hosts. The
+        // delivery service needs IFileStorage, which Sense.Worker gets from AddFileStorage.
+        services.AddScoped<IVisaDocumentRequestRepository, VisaDocumentRequestRepository>();
+        services.AddScoped<IVisaDocumentProcessRepository, VisaDocumentProcessRepository>();
+        services.AddScoped<IVisaSettingsRepository, VisaSettingsRepository>();
+        services.AddScoped<IVisaSettingsProvider, VisaSettingsProvider>();
+        services.AddScoped<IVisaDocumentDeliveryService, VisaDocumentDeliveryService>();
         // IReportProvider (MissingDocumentReportProvider) is registered in DocumentsModule.AddModule, not here: it
         // needs IStringLocalizer<SharedResource>, which only the API host (AddSenseWeb -> AddLocalization) provides.
         return services;

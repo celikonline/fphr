@@ -959,6 +959,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>Ülke kodu 2-3 harften oluşmalıdır (örn. DE).</value></data>
   <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>Seçilen vize süreci mevcut değil veya pasif.</value></data>
   <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>Hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="visa_settings.template_invalid" xml:space="preserve"><value>Şablon belge bulunamadı, aktif değil veya bir çalışan klasörüne ait; yalnızca şirket belgeleri şablon olarak seçilebilir.</value></data>
   <data name="documents.my.visa_requests" xml:space="preserve"><value>Vize belgesi talep etme</value></data>
   <data name="documents.visa.manage" xml:space="preserve"><value>Vize ayarlarını yönetme</value></data>
 

@@ -44,6 +44,8 @@ using Sense.Shared.Infrastructure.Persistence.Outbox;
 
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.Services.AddSenseCore(builder.Configuration);
+// Documents' visa approval handler (senseik-001) copies template documents server-side through IFileStorage (MinIO:*).
+builder.Services.AddFileStorage(builder.Configuration);
 // Every module's outbox receives both Aggregate.Raise(...) domain events (AuditTenantInterceptor collects them on
 // SaveChanges) and explicit IIntegrationEventOutbox writes. EventTypeRegistry must know each polled module's
 // Domain+Contracts assemblies or OutboxProcessor retries forever with "Event type could not be resolved".
