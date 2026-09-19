@@ -1,0 +1,19 @@
+/* senseik-041 Bug 4: public holidays get a distinct fill + a small dot so they read as holidays at a glance,
+   without hiding the day number or breaking the selected/today states Mantine already applies via its own classes. */
+.holiday {
+  position: relative;
+  background-color: var(--mantine-color-red-light);
+  color: var(--mantine-color-red-light-color);
+}
+
+.holiday::after {
+  content: "";
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--mantine-color-red-filled);
+}
