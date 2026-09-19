@@ -1051,6 +1051,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="asset.already_assigned" xml:space="preserve"><value>This asset is already assigned to an employee or retired.</value></data>
   <data name="asset.not_assigned" xml:space="preserve"><value>This asset is not currently assigned.</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
+  <data name="asset.serial_number_in_use" xml:space="preserve"><value>A device with this serial number is currently assigned to another employee.</value></data>
+  <data name="asset.return_before_issue" xml:space="preserve"><value>The return date cannot be before the issue date.</value></data>
+  <data name="assets.employee_not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="assets.issued_before_hire" xml:space="preserve"><value>The issue date cannot be before the employee's hire date.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <!-- Reporting (Reports menu - roadmap #70) -->
   <data name="report_execution.report_key_required" xml:space="preserve"><value>Report key is required.</value></data>

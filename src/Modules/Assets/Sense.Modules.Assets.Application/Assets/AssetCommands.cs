@@ -2,6 +2,7 @@ using FluentValidation;
 using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
+using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
@@ -87,7 +88,9 @@ public sealed class AssignAssetValidator : AbstractValidator<AssignAssetCommand>
     }
 }
 
-public sealed class AssignAssetHandler(IAssetRepository assets, IIntegrationEventOutbox outbox) : ICommandHandler<AssignAssetCommand>
+public sealed class AssignAssetHandler(
+    ITenantContext tenant, IAssetRepository assets, IIntegrationEventOutbox outbox, IEmployeeSalaryLookup employeeDates)
+    : ICommandHandler<AssignAssetCommand>
 {
     public async Task<Result> Handle(AssignAssetCommand command, CancellationToken cancellationToken)
     {
@@ -97,7 +100,25 @@ public sealed class AssignAssetHandler(IAssetRepository assets, IIntegrationEven
             return existing.Error;
         }
 
+        // The employee must exist in this tenant (dates == null) and the issue date cannot precede the hire date.
+        var employment = await employeeDates.GetEmploymentDatesAsync(tenant.TenantId, command.EmployeeId, cancellationToken);
+        if (employment is null)
+        {
+            return Error.NotFound(AssetsErrors.EmployeeNotFound);
+        }
+
+        if (employment.HireDate is { } hireDate && command.IssuedAt < hireDate)
+        {
+            return Error.Validation(AssetsErrors.IssuedBeforeHire);
+        }
+
         var asset = existing.Value;
+        if (!string.IsNullOrWhiteSpace(asset.SerialNumber)
+            && await assets.IsSerialNumberAssignedElsewhereAsync(asset.SerialNumber, asset.Id, cancellationToken))
+        {
+            return Error.Conflict(AssetsDomainErrors.SerialNumberInUse);
+        }
+
         var assigned = asset.Assign(command.EmployeeId, command.IssuedAt);
         if (assigned.IsFailure)
         {

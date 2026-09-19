@@ -152,4 +152,63 @@ public sealed class AssetLookupIntegrationTests : TestFixture
         var lookup = checkScope.ServiceProvider.GetRequiredService<IAssetLookup>();
         (await lookup.HasOpenAssetsAsync(tenantId, employeeId)).ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task IsSerialNumberAssignedElsewhereAsync_OnlyMatchesOtherAssignedAssets_CaseInsensitively()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var categoryId = Guid.NewGuid();
+        Guid assignedId;
+        Guid spareId;
+
+        using (var writeScope = ServiceProvider!.CreateScope())
+        {
+            var db = writeScope.ServiceProvider.GetRequiredService<AssetsDbContext>();
+            var repo = writeScope.ServiceProvider.GetRequiredService<IAssetRepository>();
+            var assigned = Asset.Create(tenantId, categoryId, "Laptop A", "SN-DUP", null).Value;
+            assigned.Assign(Guid.NewGuid(), new DateOnly(2026, 9, 1));
+            var spare = Asset.Create(tenantId, categoryId, "Laptop B", "sn-dup", null).Value;
+            repo.Add(assigned);
+            repo.Add(spare);
+            await db.SaveChangesAsync();
+            assignedId = assigned.Id;
+            spareId = spare.Id;
+        }
+
+        using var checkScope = ServiceProvider!.CreateScope();
+        var checkRepo = checkScope.ServiceProvider.GetRequiredService<IAssetRepository>();
+        (await checkRepo.IsSerialNumberAssignedElsewhereAsync("SN-DUP", spareId)).ShouldBeTrue();
+        (await checkRepo.IsSerialNumberAssignedElsewhereAsync("SN-DUP", assignedId)).ShouldBeFalse();
+        (await checkRepo.IsSerialNumberAssignedElsewhereAsync("SN-OTHER", spareId)).ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task HasUnreturnedTerminationAuditAsync_FindsAnAlreadyWrittenAuditEvent()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var assetId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+
+        using (var writeScope = ServiceProvider!.CreateScope())
+        {
+            var db = writeScope.ServiceProvider.GetRequiredService<AssetsDbContext>();
+            var integrationEvent = new Sense.Modules.Assets.Contracts.Events.AssetUnreturnedAtTermination(tenantId, assetId, employeeId);
+            db.OutboxMessages.Add(new Sense.Shared.Infrastructure.Persistence.Outbox.OutboxMessage
+            {
+                Id = integrationEvent.EventId,
+                TenantId = tenantId,
+                Type = Sense.Shared.Infrastructure.Persistence.Outbox.EventTypeRegistry.NameOf(integrationEvent.GetType()),
+                Payload = System.Text.Json.JsonSerializer.Serialize(integrationEvent, integrationEvent.GetType(), new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)),
+                OccurredAt = DateTime.UtcNow,
+            });
+            await db.SaveChangesAsync();
+        }
+
+        using var checkScope = ServiceProvider!.CreateScope();
+        var repo = checkScope.ServiceProvider.GetRequiredService<IAssetRepository>();
+        (await repo.HasUnreturnedTerminationAuditAsync(tenantId, assetId, employeeId)).ShouldBeTrue();
+        (await repo.HasUnreturnedTerminationAuditAsync(tenantId, assetId, Guid.NewGuid())).ShouldBeFalse();
+    }
 }
