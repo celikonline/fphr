@@ -33,7 +33,8 @@ public sealed class EmployeeImportRowHandler(
     IDataScopeService dataScope,
     CareerService career,
     ICustomFieldDefinitionRepository customFields,
-    EmployeeSensitiveAccess sensitiveAccess) : IImportRowHandler
+    EmployeeSensitiveAccess sensitiveAccess,
+    IIbanProtector ibanProtector) : IImportRowHandler
 {
     public string TemplateCode => EmployeeImportColumns.TemplateCode;
 
@@ -113,6 +114,16 @@ public sealed class EmployeeImportRowHandler(
                     }
                 }
 
+                if (plan.Bank is { } newBank)
+                {
+                    var addedBank = created.Value.AddBankAccount(newBank, makePrimary: false, ibanProtector);
+                    if (addedBank.IsFailure)
+                    {
+                        results[plan.RowNumber] = Failed(plan, addedBank.Error.Code);
+                        continue;
+                    }
+                }
+
                 if (plan.CustomFieldValues is { Count: > 0 } newCustomFields)
                 {
                     created.Value.SetCustomFieldValues(newCustomFields);
@@ -177,6 +188,16 @@ public sealed class EmployeeImportRowHandler(
                 }
             }
 
+            if (plan.Bank is { } bank)
+            {
+                var addedBank = employee.AddBankAccount(bank, makePrimary: false, ibanProtector);
+                if (addedBank.IsFailure)
+                {
+                    results[plan.RowNumber] = Failed(plan, addedBank.Error.Code);
+                    continue;
+                }
+            }
+
             if (plan.CustomFieldValues is { Count: > 0 } customFieldValues)
             {
                 employee.SetCustomFieldValues(customFieldValues);
@@ -232,7 +253,8 @@ public sealed record EmployeeImportPlan(
     Guid? ManagerId,
     bool HasChanges,
     SalaryRecordData? Salary = null,
-    IReadOnlyDictionary<Guid, string?>? CustomFieldValues = null);
+    IReadOnlyDictionary<Guid, string?>? CustomFieldValues = null,
+    BankAccountData? Bank = null);
 
 public sealed record EmployeeImportValidation(EmployeeImportPlan? Plan, string? MatchKey, Guid? ExistingId, IReadOnlyList<ImportRowError> Errors);
 

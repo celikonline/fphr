@@ -486,6 +486,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Pay frequency</value></data>
   <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
   <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
+  <data name="import.column.employee.bankIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="import.column.employee.bankAccountType" xml:space="preserve"><value>Bank account type</value></data>
+  <data name="import.column.employee.bankName" xml:space="preserve"><value>Bank name</value></data>
+  <data name="import.column.employee.bankCurrency" xml:space="preserve"><value>Account currency</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>The real date leave entitlement accrues from; left empty, the hire date is used.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
@@ -524,6 +528,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Pick from the list (Monthly, Daily, Yearly, Weekly, Hourly). Required when the salary block is filled.</value></data>
   <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
   <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
+  <data name="import.column.employee.bankIban.description" xml:space="preserve"><value>Left empty, the row's whole bank account block is ignored; once filled, the IBAN is validated (length/check digits/country) and Bank account type becomes required.</value></data>
+  <data name="import.column.employee.bankAccountType.description" xml:space="preserve"><value>Pick from the list (Cheque, Time deposit, Demand deposit, Other). Required when the bank block (IBAN) is filled.</value></data>
+  <data name="import.column.employee.bankName.description" xml:space="preserve"><value>Optional, at most 100 characters.</value></data>
+  <data name="import.column.employee.bankCurrency.description" xml:space="preserve"><value>Optional; ISO 4217 code (e.g. TRY, EUR, USD), the abbreviations "TL" and "Euro" are also accepted.</value></data>
   <data name="import.column.employee.customField.description" xml:space="preserve"><value>Tenant-defined custom field; an empty cell keeps the stored value. Pick from the list for option-based fields; for multi-select, enter the values as a JSON list such as ["Value1","Value2"].</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Do not rename the header row; do not delete the hidden key row (row 2). Renamed columns can be mapped manually after upload.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>You may delete unused columns, reorder columns or insert your own columns (extra columns are left as 'Ignore').</value></data>

@@ -81,6 +81,7 @@ public sealed class EmployeeRepository(EmployeeDbContext context) : IEmployeeRep
         return await context.Employees
             .Where(e => list.Contains(e.Id))
             .Include(e => e.SalaryRecords)
+            .Include(e => e.BankAccounts)
             .Include(e => e.CustomFieldValues)
             .AsSplitQuery()
             .ToListAsync(cancellationToken);

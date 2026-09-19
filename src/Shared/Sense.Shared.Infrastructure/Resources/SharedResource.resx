@@ -495,6 +495,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Ödeme düzeni</value></data>
   <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Yol yardımı</value></data>
   <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Yemek yardımı</value></data>
+  <data name="import.column.employee.bankIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="import.column.employee.bankAccountType" xml:space="preserve"><value>Banka hesap türü</value></data>
+  <data name="import.column.employee.bankName" xml:space="preserve"><value>Banka adı</value></data>
+  <data name="import.column.employee.bankCurrency" xml:space="preserve"><value>Hesap para birimi</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>İzin hak edişinin başladığı gerçek tarih; boş bırakılırsa işe başlama tarihi kullanılır.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
@@ -533,6 +537,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Listeden seçin (Aylık, Günlük, Yıllık, Haftalık, Saatlik). Maaş bloğu doluysa zorunludur.</value></data>
   <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
   <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
+  <data name="import.column.employee.bankIban.description" xml:space="preserve"><value>Boş bırakılırsa satırdaki banka hesabı bloğu tümüyle yok sayılır; doluysa IBAN doğrulanır (uzunluk/kontrol haneleri/ülke) ve Banka hesap türü zorunlu hale gelir.</value></data>
+  <data name="import.column.employee.bankAccountType.description" xml:space="preserve"><value>Listeden seçin (Çek, Vadeli, Vadesiz, Diğer). Banka bloğu (IBAN) doluysa zorunludur.</value></data>
+  <data name="import.column.employee.bankName.description" xml:space="preserve"><value>Opsiyonel, en fazla 100 karakter.</value></data>
+  <data name="import.column.employee.bankCurrency.description" xml:space="preserve"><value>Opsiyonel; ISO 4217 kodu (ör. TRY, EUR, USD), "TL" ve "Euro" kısaltmaları da kabul edilir.</value></data>
   <data name="import.column.employee.customField.description" xml:space="preserve"><value>Kiracı tanımlı özel alan; boş bırakılırsa mevcut değer korunur. Seçenekli alanlarda listeden seçin; çoklu seçimde değerler ["Değer1","Değer2"] biçiminde girilir.</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Başlık satırındaki kolon adlarını değiştirmeyin; gizli 2. satırdaki kolon anahtarlarını silmeyin. Başlığı değişen kolonlar yükleme sonrası elle eşleştirilebilir.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>Kullanmadığınız kolonları silebilir, kolonların sırasını değiştirebilir veya araya kendi kolonlarınızı ekleyebilirsiniz (eklenen kolonlar 'Yok say' olarak bırakılır).</value></data>

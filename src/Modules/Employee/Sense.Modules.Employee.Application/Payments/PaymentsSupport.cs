@@ -31,7 +31,8 @@ public sealed record SalaryRecordDto(
     bool IsCurrent,
     Guid? CreatedByUserId,
     string? CreatedByName,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    Guid? OrgUnitId);
 
 /// <summary>
 /// A bank account. <see cref="Iban"/> is grouped ("TR33 0006 …") for callers with employee.sensitive.view (and for the
@@ -81,7 +82,8 @@ public sealed class PaymentsService(
                 r.Source, r.Note, r.Id == current?.Id,
                 r.CreatedUserId,
                 r.CreatedUserId is { } creatorId && names.TryGetValue(creatorId, out var info) ? info.DisplayName : null,
-                r.CreatedAt))
+                r.CreatedAt,
+                r.OrgUnitId))
             .ToList();
     }
 

@@ -57,6 +57,13 @@ public static class EmployeeImportColumns
     public const string TransportAllowance = "transportAllowance";
     public const string MealAllowance = "mealAllowance";
 
+    // Bank block ("Banka Hesabı bloğu", G-01 Aşama 1): one bank account per row, symmetric with the salary block -
+    // the whole block is ignored (not an error) unless BankIban is filled (11.3.03 "Banka bloğu bütünlüğü").
+    public const string BankIban = "bankIban";
+    public const string BankAccountType = "bankAccountType";
+    public const string BankName = "bankName";
+    public const string BankCurrency = "bankCurrency";
+
     /// <summary>Dynamic column per active hierarchy level: "orgUnit:{OrgUnitType.Code}".</summary>
     public const string OrgUnitPrefix = "orgUnit:";
 
@@ -137,6 +144,10 @@ public sealed class EmployeeMasterImportTemplate(
             Options<PayFrequency>(EmployeeImportColumns.PayFrequency),
             Static(EmployeeImportColumns.TransportAllowance, ImportColumnDataType.Text),
             Static(EmployeeImportColumns.MealAllowance, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.BankIban, ImportColumnDataType.Text),
+            Options<BankAccountType>(EmployeeImportColumns.BankAccountType),
+            Static(EmployeeImportColumns.BankName, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.BankCurrency, ImportColumnDataType.Text),
         };
 
         var types = await orgUnits.ListActiveTypesAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false);
