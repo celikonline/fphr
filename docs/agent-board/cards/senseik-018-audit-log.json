@@ -2,7 +2,7 @@
   "id": "senseik-018",
   "title": "Denetim kaydı: gerçek kullanıcı ve kaynak kaydedilmesi (E-01)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/audit-log-fix",
   "worktree": ".claude/worktrees/audit-real-users",
   "acceptance": [

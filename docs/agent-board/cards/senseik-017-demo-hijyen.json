@@ -2,7 +2,7 @@
   "id": "senseik-017",
   "title": "Demo verisi hijyeni ve org şeması görüntüleme (H-02, H-04, H-05)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/demo-data-hygiene",
   "worktree": ".claude/worktrees/demo-cleanup",
   "acceptance": [

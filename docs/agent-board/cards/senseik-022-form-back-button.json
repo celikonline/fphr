@@ -2,7 +2,7 @@
   "id": "senseik-022",
   "title": "Menüden açılan formlarda tarayıcı geri tuşu desteği",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/form-browser-back-support",
   "worktree": ".claude/worktrees/form-back-button",
   "acceptance": [

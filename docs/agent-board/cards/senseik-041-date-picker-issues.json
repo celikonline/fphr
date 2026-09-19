@@ -2,7 +2,7 @@
   "id": "senseik-041",
   "title": "Tarih seçici sorunları: ABD formatı, üst üste binme + veri kaybı, tatil işaretlenmiyor",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/date-picker-fixes",
   "worktree": ".claude/worktrees/date-picker-fixes",
   "acceptance": [

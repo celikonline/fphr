@@ -2,7 +2,7 @@
   "id": "senseik-028",
   "title": "Ortak şirket dosya paylaşımı (yeni özellik — sıfırdan)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/shared-company-files",
   "worktree": ".claude/worktrees/shared-company-files",
   "acceptance": [

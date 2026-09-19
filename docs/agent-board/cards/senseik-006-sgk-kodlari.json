@@ -2,7 +2,7 @@
   "id": "senseik-006",
   "title": "SGK işten çıkış kodları tablosu doğrulaması ve düzeltme (F-01)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/sgk-exit-codes-fix",
   "worktree": ".claude/worktrees/sgk-codes",
   "acceptance": [

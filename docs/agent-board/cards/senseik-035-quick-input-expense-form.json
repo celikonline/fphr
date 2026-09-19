@@ -2,7 +2,7 @@
   "id": "senseik-035",
   "title": "Formlara 'Quick Input' (serbest metin → form alanı) özelliği — pilot: Masraf/Avans Talebi",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/quick-input-expense-form",
   "worktree": ".claude/worktrees/quick-input-expense",
   "acceptance": [

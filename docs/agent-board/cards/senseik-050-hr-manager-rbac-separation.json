@@ -2,7 +2,7 @@
   "id": "senseik-050",
   "title": "RBAC: HR Manager rolünden kimlik yönetimi + mali yetkilerin ayrılması (görevler ayrılığı ihlali)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/hr-manager-rbac-separation",
   "worktree": ".claude/worktrees/hr-manager-rbac",
   "acceptance": [

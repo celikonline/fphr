@@ -2,7 +2,7 @@
   "id": "senseik-033",
   "title": "UI tooltip bileşeni — hâlâ eksik mi doğrula, gerekiyorsa tamamla",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/ui-tooltip-verify",
   "worktree": ".claude/worktrees/ui-tooltip",
   "acceptance": [

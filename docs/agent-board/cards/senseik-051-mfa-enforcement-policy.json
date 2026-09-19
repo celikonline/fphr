@@ -2,7 +2,7 @@
   "id": "senseik-051",
   "title": "Yönetici/İK rolleri için 2FA zorunluluk politikası",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/mfa-enforcement-policy",
   "worktree": ".claude/worktrees/mfa-policy",
   "acceptance": [

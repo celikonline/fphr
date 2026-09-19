@@ -2,7 +2,7 @@
   "id": "senseik-053",
   "title": "Oturum ~30 dakikada uyarısız düşüyor, doldurulmuş form verisi kayboluyor",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/session-refresh-data-loss",
   "worktree": ".claude/worktrees/session-refresh",
   "acceptance": [

@@ -2,7 +2,7 @@
   "id": "senseik-024",
   "title": "Takvim: Outlook tarzı gün/hafta/ay hücreli görünüm",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/leave-calendar-outlook-view",
   "worktree": ".claude/worktrees/leave-calendar-view",
   "acceptance": [

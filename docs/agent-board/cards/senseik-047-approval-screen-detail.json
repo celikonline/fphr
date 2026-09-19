@@ -2,7 +2,7 @@
   "id": "senseik-047",
   "title": "Onay ekranında karar verecek bilgi yok (ham UUID gösteriliyor) + onay kutusu menüde bulunamıyor",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/approval-screen-detail",
   "worktree": ".claude/worktrees/agent-aca96bb58d3cb2040",
   "acceptance": [

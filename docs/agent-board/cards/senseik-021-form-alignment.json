@@ -2,7 +2,7 @@
   "id": "senseik-021",
   "title": "Form/modal açılışları sola dayalı olsun (ortalı değil)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/form-modal-alignment",
   "worktree": ".claude/worktrees/form-alignment",
   "acceptance": [
