@@ -42,6 +42,12 @@ public sealed class MyLeaveController : ApiControllerBase
     // alınarak) doğru şekilde çözülüyordu. Kalıcı düzeltme: isimleri ham anahtar olarak bırak — tıpkı
     // LeaveRuleSet.types[].name ve EmployeeLeaveBalances.balances[].leaveTypeName gibi — ve çözümlemeyi tek
     // otorite olan frontend i18n'e devret (bkz. web/src/pages/leave/my-leave.tsx buildRequestableTypes).
+
+    /// <summary>senseik-036 md.7: hastalık izni 6 hafta devamsızlık eşiği sayacı (4857 md.25/I-b, bilgi amaçlı).</summary>
+    [HttpGet("sick-leave-absence-status")]
+    [ProducesResponseType<SickLeaveAbsenceStatusDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SickLeaveAbsenceStatus(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMySickLeaveAbsenceStatusQuery(), ct));
     [HttpGet("leave-types")]
     [ProducesResponseType<IReadOnlyList<RequestableLeaveTypeDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> LeaveTypes(CancellationToken ct) =>

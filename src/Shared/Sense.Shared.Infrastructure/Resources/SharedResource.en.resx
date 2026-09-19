@@ -109,7 +109,7 @@
   <data name="roles.admin.name" xml:space="preserve"><value>System Administrator</value></data>
   <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions except billing.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>HR Manager</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, GDPR.</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, KVKK (Turkish data protection law).</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>HR Specialist</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>Subset of HR Manager: no salary visibility, payroll, termination or compensation approvals.</value></data>
   <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Payroll Specialist</value></data>

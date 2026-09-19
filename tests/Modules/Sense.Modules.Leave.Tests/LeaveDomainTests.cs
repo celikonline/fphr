@@ -165,6 +165,30 @@ public sealed class LeavePartialDayTests
     [Fact]
     public void HourlyFraction_HonorsACustomDailyWorkMinutes() =>
         LeavePartialDay.HourlyFraction(new TimeOnly(9, 0), new TimeOnly(13, 0), dailyWorkMinutes: 480).ShouldBe(0.5m);
+
+    [Fact]
+    public void HoursFraction_MatchesHourlyFractionForTheSameSpan() =>
+        // senseik-036 md.5: 4857 md.27 iş arama izni günde en az 2 saat = 120/450 gün kesri.
+        LeavePartialDay.HoursFraction(2m).ShouldBe(LeavePartialDay.HourlyFraction(new TimeOnly(9, 0), new TimeOnly(11, 0)));
+
+    [Fact]
+    public void HoursFraction_HalfDayAndAHalf_IsExactlyOneFifth() =>
+        // senseik-036 md.3: 4857 md.74/son süt izni günde toplam 1,5 saat = 90/450 = 0,2 gün kesri (tam sayı, yuvarlama yok).
+        LeavePartialDay.HoursFraction(1.5m).ShouldBe(0.2m);
+}
+
+public sealed class SickLeaveAbsenceThresholdTests
+{
+    [Theory]
+    [InlineData(41.9999, false)]
+    [InlineData(42, true)]
+    [InlineData(60, true)]
+    [InlineData(0, false)]
+    public void IsReached_ComparesAgainstSixWeeks(decimal usedDays, bool expected) =>
+        SickLeaveAbsenceThreshold.IsReached(usedDays).ShouldBe(expected);
+
+    [Fact]
+    public void MinimumDays_IsSixWeeks() => SickLeaveAbsenceThreshold.MinimumDays.ShouldBe(42m);
 }
 
 public sealed class LeaveTypeTests
@@ -228,16 +252,42 @@ public sealed class LeaveTypeTests
         var seed = LeaveRuleSetSeed.CreateTurkishLabourLawRuleSet(TenantId, StatutoryLeaveDurations.Turkey2026);
 
         seed.IsDefault.ShouldBeTrue();
+        // 7578 s.K. (RG 01.05.2026/33240) is in force as of this seed's date: babalık 10 gün, doğum sonrası 16
+        // hafta (toplam 24 hafta/168 gün) - senseik-036 handoff explains why these are NOT reverted to 5/112.
         seed.Types.Single(t => t.Code == LeaveTypeCode.Paternity).PerRequestMaxDays.ShouldBe(10m);
         seed.Types.Single(t => t.Code == LeaveTypeCode.Paternity).CountsNonWorkingDays.ShouldBeTrue();
         seed.Types.Single(t => t.Code == LeaveTypeCode.Maternity).PerRequestMaxDays.ShouldBe(168m);
         seed.Types.Single(t => t.Code == LeaveTypeCode.PaidMilitaryService).PerRequestMaxDays.ShouldBe(21m);
         seed.Types.Single(t => t.Code == LeaveTypeCode.FosterCare).IsPaid.ShouldBeFalse();
         seed.Types.Single(t => t.Code == LeaveTypeCode.Sick).ShowTypeNameOnCalendar.ShouldBeFalse();
+        seed.Types.Single(t => t.Code == LeaveTypeCode.Sick).IsSensitive.ShouldBeTrue();
         var remote = seed.Types.Single(t => t.Code == LeaveTypeCode.RemoteWork);
         remote.IsDisabled.ShouldBeTrue();
         remote.ShowTypeNameOnCalendar.ShouldBeTrue();
         remote.HasBalance.ShouldBeTrue();
+
+        // senseik-036 md.6 (4857 md.56/3): deliberately NOT enforced as a per-request MinConsecutiveDays - see the
+        // seed's own comment on the Annual type and the senseik-036 handoff for why.
+        seed.Types.Single(t => t.Code == LeaveTypeCode.Annual).MinConsecutiveDays.ShouldBeNull();
+
+        // senseik-036 md.5: 4857 md.27 - iş arama izninde günde en az 2 saat (120/450 gün kesri).
+        seed.Types.Single(t => t.Code == LeaveTypeCode.JobSearch).MinConsecutiveDays.ShouldBe(0.2667m);
+
+        // senseik-036 md.2: çoğul gebelikte doğum izni = (8+2) hafta öncesi + 16 hafta sonrası = 26 hafta = 182 gün.
+        var multipleBirth = seed.Types.Single(t => t.Code == LeaveTypeCode.MaternityMultipleBirth);
+        multipleBirth.PerRequestMaxDays.ShouldBe(182m);
+        multipleBirth.IsSensitive.ShouldBeTrue();
+
+        // senseik-036 md.3: süt izni - günde toplam en fazla 1,5 saat (90/450 = 0,2 gün kesri).
+        var breastfeeding = seed.Types.Single(t => t.Code == LeaveTypeCode.Breastfeeding);
+        breastfeeding.Unit.ShouldBe(LeaveUnit.Hourly);
+        breastfeeding.MaxConsecutiveDays.ShouldBe(0.2m);
+
+        // senseik-036 md.4: engelli/süreğen hastalıklı çocuk izni - yılda 10 gün, PerYear (bakiyeli).
+        var disabledChild = seed.Types.Single(t => t.Code == LeaveTypeCode.DisabledChild);
+        disabledChild.LimitType.ShouldBe(LeaveLimitType.PerYear);
+        disabledChild.AnnualDays.ShouldBe(10m);
+        disabledChild.IsSensitive.ShouldBeTrue();
     }
 }
 
@@ -494,6 +544,21 @@ public sealed class LegislationParameterTests
         after.PaternityDays.ShouldBe(10m);
         after.MaternityPostBirthWeeks.ShouldBe(16m);
         after.Annual.ShouldBe(StatutoryAnnualLeave.Turkey2026);
+
+        // senseik-036: yeni anahtarlar da seed'den okunur (md.74 çoğul gebelik ve süt izni 7578'den etkilenmez).
+        after.MaternityMultipleBirthPreBirthExtraWeeks.ShouldBe(2m);
+        after.BreastfeedingHoursPerDay.ShouldBe(1.5m);
+        after.DisabledChildDaysPerYear.ShouldBe(10m);
+        after.JobSearchMinHoursPerDay.ShouldBe(2m);
+    }
+
+    [Fact]
+    public void MultipleBirthAndBreastfeeding_AreSeededAndUnaffectedBy7578()
+    {
+        var values = SeedValues();
+
+        values.Resolve(LegislationParameterKeys.MaternityMultipleBirthPreBirthExtraWeeks, new DateOnly(2003, 6, 10))!.DecimalValue.ShouldBe(2m);
+        values.Resolve(LegislationParameterKeys.BreastfeedingHoursPerDay, new DateOnly(2003, 6, 10))!.DecimalValue.ShouldBe(1.5m);
     }
 }
 

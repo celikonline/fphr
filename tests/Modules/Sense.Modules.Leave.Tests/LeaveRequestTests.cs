@@ -535,6 +535,32 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         usage.Amount.ShouldBe(-0.2667m);
     }
 
+    /// <summary>senseik-036 md.5: 4857 md.27 - iş arama izninde tek bir talep günde en az 2 saatin altında olamaz.</summary>
+    [Fact]
+    public async Task Submit_JobSearchBelowTwoHours_IsRejected()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        _currentUser.EmployeeId.Returns(employeeId);
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, today.AddYears(-1), today.AddYears(-1)));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid jobSearchId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            jobSearchId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.JobSearch).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        var belowMinimum = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(10, 0));
+        belowMinimum.Error.Code.ShouldBe(LeaveRequestErrors.BelowMinDays);
+
+        var atMinimum = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0));
+        atMinimum.IsSuccess.ShouldBeTrue(atMinimum.IsFailure ? atMinimum.Error.Code : null);
+    }
+
     /// <summary>
     /// Before LeaveRequest.ConflictsWith, the "leave.errors.overlap" gate only looked at the date range, so a
     /// second same-day Hourly request was always rejected regardless of the actual time window. Now only a real
@@ -561,15 +587,17 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
 
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
 
-        var first = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(10, 0));
+        // senseik-036 md.5: "leave.type.job_search" now enforces a 2-hour-per-request floor (4857 md.27), so every
+        // window below is >= 2h even where the original (pre-036) test used a bare 1-hour span.
+        var first = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(9, 0), new TimeOnly(11, 0));
         first.IsSuccess.ShouldBeTrue(first.IsFailure ? first.Error.Code : null);
 
         // Non-overlapping window, same day: both requests stay active, but the time ranges do not intersect.
-        var nonOverlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 0), new TimeOnly(12, 0));
+        var nonOverlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(12, 0), new TimeOnly(14, 0));
         nonOverlapping.IsSuccess.ShouldBeTrue(nonOverlapping.IsFailure ? nonOverlapping.Error.Code : null);
 
         // Overlapping window: still rejected.
-        var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(11, 30), new TimeOnly(12, 30));
+        var overlapping = await SubmitAsync(tenantId, jobSearchId, monday, monday, new TimeOnly(13, 0), new TimeOnly(15, 0));
         overlapping.Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
     }
 

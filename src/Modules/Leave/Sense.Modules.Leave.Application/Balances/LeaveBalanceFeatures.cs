@@ -1,6 +1,7 @@
 using FluentValidation;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Balances;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Profiles;
@@ -211,5 +212,82 @@ public sealed class RecalculateLeaveBalancesHandler(
 
         await balances.RecalculateAsync(loaded.Value.Profile, loaded.Value.RuleSet, cancellationToken);
         return Result.Success();
+    }
+}
+
+/// <summary>
+/// senseik-036 md.7 (4857 md.25/I-b): trailing 12-month Sick-type usage total + whether it has reached the
+/// six-week informational floor. See <see cref="SickLeaveAbsenceThreshold"/> for why this is a caveated signal,
+/// not a legal determination (no employee-specific notice period is available to Leave yet).
+/// </summary>
+public sealed record SickLeaveAbsenceStatusDto(decimal UsedDaysLast12Months, bool ThresholdReached);
+
+internal static class SickLeaveAbsenceStatusCalculator
+{
+    private const int WindowDays = 365;
+
+    public static async Task<SickLeaveAbsenceStatusDto> ComputeAsync(
+        LeaveRuleSet set, Guid employeeId, DateOnly today, ILeaveLedgerRepository ledger, CancellationToken cancellationToken)
+    {
+        var sickType = set.Types.FirstOrDefault(t => t.Code == LeaveTypeCode.Sick);
+        if (sickType is null)
+        {
+            return new SickLeaveAbsenceStatusDto(0m, false);
+        }
+
+        var windowStart = today.AddDays(-WindowDays);
+        var entries = await ledger.ListAsync(employeeId, sickType.Id, cancellationToken);
+        // Usage rows are negative and Reversal rows (cancelled leave) positive at the same EffectiveDate, so
+        // summing and negating nets cancellations out automatically.
+        var used = -entries.Where(e => e.EffectiveDate >= windowStart && e.EffectiveDate <= today).Sum(e => e.Amount);
+        return new SickLeaveAbsenceStatusDto(used, SickLeaveAbsenceThreshold.IsReached(used));
+    }
+}
+
+/// <summary>İK: bir çalışanın hastalık izni devamsızlık eşiği durumu.</summary>
+[RequiresPermission("leave.balances.read")]
+public sealed record GetEmployeeSickLeaveAbsenceStatusQuery(Guid EmployeeId) : IQuery<SickLeaveAbsenceStatusDto>;
+
+public sealed class GetEmployeeSickLeaveAbsenceStatusHandler(
+    IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, ILeaveLedgerRepository ledger, LeaveBalanceService balances)
+    : IQueryHandler<GetEmployeeSickLeaveAbsenceStatusQuery, SickLeaveAbsenceStatusDto>
+{
+    public async Task<Result<SickLeaveAbsenceStatusDto>> Handle(GetEmployeeSickLeaveAbsenceStatusQuery query, CancellationToken cancellationToken)
+    {
+        var loaded = await new EmployeeLeaveContext(profiles, ruleSets, dataScope).LoadAsync(query.EmployeeId, LeavePermissions.BalancesRead.Key, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var (profile, set) = loaded.Value;
+        return await SickLeaveAbsenceStatusCalculator.ComputeAsync(set, profile.EmployeeId, balances.Today, ledger, cancellationToken);
+    }
+}
+
+/// <summary>Self-service: the caller's own hastalık izni devamsızlık eşiği durumu.</summary>
+[RequiresPermission("leave.my.balances")]
+public sealed record GetMySickLeaveAbsenceStatusQuery : IQuery<SickLeaveAbsenceStatusDto>;
+
+public sealed class GetMySickLeaveAbsenceStatusHandler(
+    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope,
+    ILeaveLedgerRepository ledger, LeaveBalanceService balances)
+    : IQueryHandler<GetMySickLeaveAbsenceStatusQuery, SickLeaveAbsenceStatusDto>
+{
+    public async Task<Result<SickLeaveAbsenceStatusDto>> Handle(GetMySickLeaveAbsenceStatusQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(LeaveErrors.NoEmployeeForUser);
+        }
+
+        var loaded = await new EmployeeLeaveContext(profiles, ruleSets, dataScope).LoadAsync(employeeId, null, cancellationToken);
+        if (loaded.IsFailure)
+        {
+            return loaded.Error;
+        }
+
+        var (profile, set) = loaded.Value;
+        return await SickLeaveAbsenceStatusCalculator.ComputeAsync(set, profile.EmployeeId, balances.Today, ledger, cancellationToken);
     }
 }
