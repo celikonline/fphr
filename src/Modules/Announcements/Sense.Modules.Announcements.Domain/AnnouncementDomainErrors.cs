@@ -25,6 +25,7 @@ public static class SupportDomainErrors
 public static class AnnouncementsLimits
 {
     public const int TitleMaxLength = 200;
+    public const int TargetAudienceMaxLength = 200;
     public const int ContentMaxLength = 10_000;
     public const int SubjectMaxLength = 200;
     public const int BodyMaxLength = 10_000;
