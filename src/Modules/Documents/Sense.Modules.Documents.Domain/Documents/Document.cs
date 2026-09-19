@@ -83,6 +83,16 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
     /// uploaded by", not "until when is the uploaded document valid"). Nullable: most documents have no expiry.</summary>
     public DateOnly? ExpiryDate { get; private set; }
 
+    /// <summary>Employee this document was personally delivered to (e.g. a visa template copy) - null for the
+    /// generic tenant-wide bucket most Document rows live in. Distinct from <c>EmployeeDocumentRequirement.DocumentId</c>
+    /// (a catalog-tracked requirement); this is a lighter "whose folder is this in" tag for system-delivered copies.</summary>
+    public Guid? EmployeeId { get; private set; }
+
+    /// <summary>When this document is a system-delivered copy (e.g. <c>IVisaDocumentDeliveryService</c>), the
+    /// <c>VisaDocumentRequest</c> it was delivered for - the audit trail the handoff doc asks for. Null for
+    /// ordinarily-uploaded documents.</summary>
+    public Guid? VisaDocumentRequestId { get; private set; }
+
     /// <summary>Creates a new document aggregate with Pending status.</summary>
     public static Result<Document> Create(
         Guid tenantId,
@@ -119,6 +129,50 @@ public sealed class Document : TenantAggregateRoot<Guid>, IAuditLogged
         };
 
         doc.Raise(new DocumentCreated(doc.Id, tenantId, doc.Title, doc.FileKey, size, uploadedBy));
+        return doc;
+    }
+
+    /// <summary>
+    /// Creates a document row for a file the system copied into an employee's folder (e.g.
+    /// <c>IVisaDocumentDeliveryService</c> copying a visa template) rather than one a user uploaded through
+    /// <see cref="Create"/>. The object already exists in storage under <paramref name="fileKey"/> by the time this
+    /// is called, so the row is created directly <see cref="DocumentStatus.Active"/> - there is no pending
+    /// presigned-upload step to confirm.
+    /// </summary>
+    public static Result<Document> CreateDeliveredCopy(
+        Guid tenantId,
+        Guid employeeId,
+        Guid visaDocumentRequestId,
+        string title,
+        string fileKey,
+        string contentType,
+        long size,
+        string bucketName)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return Error.Validation("document.title_required");
+        }
+
+        if (string.IsNullOrWhiteSpace(fileKey))
+        {
+            return Error.Validation("document.filekey_required");
+        }
+
+        if (employeeId == Guid.Empty)
+        {
+            return Error.Validation("document.uploader_required");
+        }
+
+        var doc = new Document(
+            id: Guid.CreateVersion7(), tenantId, title, fileKey, contentType, size, uploadedBy: Guid.Empty)
+        {
+            BucketName = Guard.NotEmpty(bucketName),
+            EmployeeId = employeeId,
+            VisaDocumentRequestId = visaDocumentRequestId,
+            Status = DocumentStatus.Active,
+        };
+
         return doc;
     }
 

@@ -952,6 +952,27 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Dosya yükleme onaylanamadı.</value></data>
   <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Dosya silinemedi.</value></data>
 
+  <!-- senseik-001-vize-belgesi: vize belgesi talebi -->
+  <data name="visa_document_process.not_found" xml:space="preserve"><value>Vize süreci bulunamadı.</value></data>
+  <data name="visa_document_process.name_required" xml:space="preserve"><value>Vize süreci adı zorunludur.</value></data>
+  <data name="visa_document_process.name_too_long" xml:space="preserve"><value>Vize süreci adı çok uzun.</value></data>
+  <data name="visa_document_process.already_exists" xml:space="preserve"><value>Bu vize süreci zaten mevcut.</value></data>
+  <data name="visa_document_request.not_found" xml:space="preserve"><value>Vize belgesi talebi bulunamadı.</value></data>
+  <data name="visa_document_request.invalid_travel_dates" xml:space="preserve"><value>Seyahat bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="visa_document_request.country_code_required" xml:space="preserve"><value>Ülke kodu zorunludur.</value></data>
+  <data name="visa_document_request.visa_type_required" xml:space="preserve"><value>Vize tipi zorunludur.</value></data>
+  <data name="visa_document_request.already_submitted" xml:space="preserve"><value>Bu talep zaten onaya gönderilmiş.</value></data>
+  <data name="visa_document_request.approver_not_configured" xml:space="preserve"><value>Vize onaylayıcısı tanımlanmamış. Lütfen sistem yöneticinizle iletişime geçin.</value></data>
+  <data name="visa_document_request.invalid_status_transition" xml:space="preserve"><value>Talep bu durumdan bu işleme geçemez.</value></data>
+  <data name="visa_document_request.delivery_failed" xml:space="preserve"><value>Vize belgeleri çalışan klasörüne kopyalanamadı.</value></data>
+  <data name="visa_document_request.invalid_visa_type" xml:space="preserve"><value>Geçersiz vize tipi.</value></data>
+  <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>Ülke kodu 2-3 harften oluşmalıdır (örn. DE).</value></data>
+  <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>Seçilen vize süreci mevcut değil veya pasif.</value></data>
+  <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>Hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="visa_settings.template_invalid" xml:space="preserve"><value>Şablon belge bulunamadı, aktif değil veya bir çalışan klasörüne ait; yalnızca şirket belgeleri şablon olarak seçilebilir.</value></data>
+  <data name="documents.my.visa_requests" xml:space="preserve"><value>Vize belgesi talep etme</value></data>
+  <data name="documents.visa.manage" xml:space="preserve"><value>Vize ayarlarını yönetme</value></data>
+
   <!-- Integrations (Faz 8 #61): dış bordro webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Webhook abonelikleri yönetme</value></data>
   <data name="integrations.webhooks.view" xml:space="preserve"><value>Webhook aboneliklerini görüntüleme</value></data>

@@ -86,4 +86,23 @@ public interface IFileStorage
         string bucketName,
         string key,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Server-side copies an existing object to a new key, within the same tenant (e.g. delivering a shared visa
+    /// document template into an individual employee's folder without round-tripping the bytes through the API).
+    /// Both keys are namespaced under the same tenant-isolated bucket prefix as every other operation here.
+    /// </summary>
+    /// <param name="tenantId">Tenant identifier; used for bucket naming isolation for both source and destination.</param>
+    /// <param name="sourceBucketName">Logical bucket name the source object lives in.</param>
+    /// <param name="sourceKey">Object key to copy from.</param>
+    /// <param name="destinationBucketName">Logical bucket name to copy into.</param>
+    /// <param name="destinationKey">Object key to copy to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task CopyObjectAsync(
+        Guid tenantId,
+        string sourceBucketName,
+        string sourceKey,
+        string destinationBucketName,
+        string destinationKey,
+        CancellationToken cancellationToken = default);
 }

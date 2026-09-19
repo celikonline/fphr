@@ -54,6 +54,29 @@ public sealed class VisaDocumentProcessRepository(DocumentsDbContext dbContext, 
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<VisaDocumentProcess>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        await dbContext.VisaDocumentProcesses
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+
+    public async Task<bool> AnyAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        await dbContext.VisaDocumentProcesses.AnyAsync(x => x.TenantId == tenantId, cancellationToken);
+
+    public async Task<bool> NameExistsAsync(Guid tenantId, string name, Guid? exceptProcessId, CancellationToken cancellationToken)
+    {
+        // A tenant has a handful of processes: compare in memory (ordinal, ignoring case) rather than relying on the
+        // database's collation/locale for upper()/ILIKE, which differs for Turkish i/I.
+        var names = await dbContext.VisaDocumentProcesses
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.Id != exceptProcessId)
+            .Select(x => x.Name)
+            .ToListAsync(cancellationToken);
+        return names.Any(existing => string.Equals(existing, name, StringComparison.OrdinalIgnoreCase));
+    }
+
     public async Task AddAsync(VisaDocumentProcess process, CancellationToken cancellationToken) =>
         await dbContext.VisaDocumentProcesses.AddAsync(process, cancellationToken);
 

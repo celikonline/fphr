@@ -1,243 +1,59 @@
-# Visa Document Request Feature — Handoff Document
+# Vize belgesi talebi ve süreci — handoff
 
-**Card**: senseik-001-vize-belgesi  
-**Status**: Domain layer implemented; tests written (red ✓)  
-**Last Updated**: 2026-09-18  
-**Owner**: PC-A
+**Kart**: senseik-001-vize-belgesi (roadmap Faz 1b #31)
+**Dal**: `a/visa-document-request`
+**Durum**: `review` — dikey dilim uçtan uca kodlandı; Docker'sız doğrulandı (aşağıya bak), entegrasyon çalıştırılmadı.
+**Sahip**: PC-A (Documents) — Workflow'a yalnızca `Workflow.Contracts` üzerinden dokunuldu.
 
-## Feature Summary
+## Ne çalışıyor (kodda var)
 
-Employees can request visa document processing through a dedicated workflow, with approval required from a designated tenant admin. Once approved, a template set of visa-related documents is delivered to the employee's folder for upload and processing.
+Akış: çalışan talep eder → tenant'ın tanımlı onaycısına Workflow görevi düşer → onaycı gelen kutusundan karar verir →
+`ApprovalCompleted` olayıyla ayarlardaki şablon belgeler çalışanın klasörüne kopyalanır, talep `Completed` olur
+(`ApprovalRejected` → `Rejected`).
 
-## Domain Layer — COMPLETED ✓
-
-### Entities Implemented
-
-#### VisaDocumentRequest (aggregate root)
-- **Status lifecycle**: Pending → AwaitingApproval → Approved/Rejected → Completed
-- **Key properties**:
-  - `EmployeeId`: Employee initiating the request
-  - `VisaDocumentProcessId`: Optional reference to a predefined process
-  - `TravelStart`, `TravelEnd`: Travel date range
-  - `CountryCode`, `VisaType`: Destination and visa type
-  - `Description`: Free-form request details
-  - `ApprovalRequestId`: Workflow approval reference (null until submitted)
-  - `RejectionReason`, `RejectedBy`, `RejectedAt`: Rejection tracking
-  - `ApprovedAt`, `CompletedAt`: Lifecycle timestamps
-- **Behaviors**:
-  - `Create()`: Factory with travel date validation
-  - `SubmitForApproval(approvalRequestId)`: Transitions to AwaitingApproval
-  - `Approve()`: Transitions to Approved, sets `ApprovedAt`
-  - `Reject(reason, rejectedBy)`: Transitions to Rejected with reason
-  - `Complete()`: Transitions to Completed after approval
-
-#### VisaDocumentProcess (aggregate root)
-- **Purpose**: Predefined visa processes (e.g., "Schengen Business", "Turkish Work Permit")
-- **Key properties**:
-  - `Name`: Process name
-  - `CountryCode`: Optional country association
-  - `IsActive`: Whether available for new requests
-  - `CreatedAt`, `ModifiedAt`: Audit timestamps
-- **Behaviors**:
-  - `Create()`: Factory method
-  - `Deactivate()`, `Reactivate()`: Toggle active status
-  - `Update(name, countryCode)`: Update process details
-
-### Tests Written (Red — Ready for Green Phase)
-
-**File**: `tests/Modules/Sense.Modules.Documents.Tests/VisaDocumentRequestTests.cs`  
-**Coverage**:
-- ✓ `Create_WithValidData_InitializesRequestInPendingStatus` — Factory validates and creates request
-- ✓ `Create_WithInvalidTravelDates_Fails` — End date before start date rejected
-- ✓ `SubmitForApproval_TransitionsToAwaitingApprovalAndSetsApprovalRequestId` — Status and approval ID
-- ✓ `Approve_TransitionsToApproved` — Approval transition
-- ✓ `Reject_WithReason_TransitionsToRejected` — Rejection with reason tracking
-
-**Test Framework**: xUnit + Shouldly  
-**Status**: 5 tests written; ready for `dotnet test` to turn green
-
-### Domain Errors
-
-**File**: `src/Modules/Documents/Sense.Modules.Documents.Domain/VisaDocuments/VisaDomainErrors.cs`
-
-- `visa_document_process.not_found`
-- `visa_document_process.name_required`
-- `visa_document_process.name_too_long`
-- `visa_document_request.invalid_travel_dates`
-- `visa_document_request.country_code_required`
-- `visa_document_request.visa_type_required`
-- `visa_document_request.approver_not_configured`
-
-## Next Steps — Application Layer
-
-### GATE 1 Assumptions (Pending User Confirmation)
-1. **VisaType** is seed-defined lookup (Turistik, İş/Schengen, Çalışma, Öğrenci, Transit)
-2. **Employee manually selects process**; no auto country→process mapping in v1
-3. **Delivered visa documents stay visible** even if `Access.Employee.FilesVisible=false`
-4. **Missing approver**: block request creation with clear error (not silent fail)
-
-### Application Layer Tasks (After GATE 1 Approval)
-
-**Goal**: Build `IVisaDocumentRequestService` with approval integration
-
-1. **Handler**: `SubmitVisaDocumentRequestHandler`
-   - Input: `SubmitVisaDocumentRequestCommand {EmployeeId, ProcessId, TravelStart, ...}`
-   - Validation: Tenant settings for `TenantSettings.Documents.Visa.ApproverUserId`
-   - Action: Create request → Call `IWorkflowService.StartAsync("VisaDocument", requestId, approverUserId, ...)`
-   - Emit: Event for approval inbox update
-
-2. **Handler**: `ApprovalCompletedEventHandler` (workflow approval completion)
-   - Trigger: Workflow approval completes for `RequestType == "VisaDocument"`
-   - On **Approved**: `IVisaDocumentRequestService.ApproveAsync(requestId)` + Deliver template documents
-   - On **Rejected**: `IVisaDocumentRequestService.RejectAsync(requestId, reason)`
-
-3. **Document Delivery** (on approval)
-   - Query: `TenantSettings.Documents.Visa.TemplateDocumentIds[]` (list of template document IDs)
-   - Action: For each template, copy to employee folder as new `Document { SourceRef = VisaDocumentRequest }`
-   - Metadata: Tag with source reference for audit trail
-
-### API Layer Tasks
-
-**Endpoints** (PC-A responsibility):
-- `POST /api/v1/visa-requests` — Create new request (JSON body with travel dates, visa type, description)
-- `GET /api/v1/visa-requests/{id}` — Fetch request status
-- `GET /api/v1/visa-requests?employeeId={id}&status={status}` — List filtered requests
-- `GET /api/v1/visa-processes?isActive=true` — Fetch available processes for employee selection
-
-### Web Layer Tasks
-
-**Pages** (PC-A responsibility):
-1. **Visa Request Creation Dialog** (new)
-   - Form fields: Travel dates, country, visa type, process selection, description
-   - Validation: Travel end ≥ start, country not empty
-   - Error handling: Show "Approver not configured" if no ApproverUserId set
-   - Success: Redirect to request detail or inbox
-
-2. **Settings Page**: `/app/settings/rules/visa-processes` (new)
-   - CRUD for VisaDocumentProcess
-   - List with toggle active/inactive
-   - Form: Name, country code, template document selection
-   - Approver picker: Single Guid picker for `TenantSettings.Documents.Visa.ApproverUserId`
-   - Template assignment: Multi-select documents to deliver on approval
-
-3. **Integration**: Employee card → Dosyalar tab
-   - Already reads from `Documents` table
-   - No code change needed; delivered documents appear automatically
-
-### Database Layer
-
-**Migrations** (one per module layer):
-1. **Domain Tables**: `VisaDocumentProcess`, `VisaDocumentRequest` in Documents schema
-2. **Settings**: Extend `TenantSettings.Documents` with `{ Visa: { ApproverUserId, TemplateDocumentIds } }`
-3. **Audit**: Both aggregates inherit `CreatedAt`, `ModifiedAt`, `DeletedAt` tracking
-
-## Phase Gate Summary
-
-| Gate | Status | Details |
-|------|--------|---------|
-| **GATE 1: Plan Approval** | ✅ PASSED | Plan + 4 assumptions documented; user approved starting work |
-| **GATE 2: TDD Red → Green** | 🟡 IN PROGRESS | Domain + 5 tests written; awaiting `dotnet test` run on PC-A |
-| **GATE 3: Application Handlers** | ⏳ BLOCKED | Awaiting domain tests to turn green |
-| **GATE 4: API + Web** | ⏳ BLOCKED | Awaiting application layer approval |
-| **GATE 5: Review & Merge** | ⏳ BLOCKED | Awaiting all above + test coverage review |
-
-## Build & Test Checklist
-
-- [ ] Run: `dotnet test tests/Modules/Sense.Modules.Documents.Tests/ --filter VisaDocumentRequestTests`
-- [ ] Verify: All 5 tests pass (green)
-- [ ] Review: Domain error codes in error response contracts
-- [ ] Update this doc with: **GATE 2 Status** = ✅ GREEN
-
-## Deployment Notes
-
-- **Feature Flag**: None required; domain entities are opt-in via settings
-- **Rollout**: 
-  1. Deploy domain + application layer
-  2. Configure approver + template documents in tenant settings
-  3. Enable in UI (Dosyalar tab shows visa request button once configured)
-
----
-
-**Next Action**: Run tests on PC-A. Once green, proceed to application handlers.
-
----
-
-## Progress Log
-
-### Session 2 — Domain Layer TDD (2026-09-18)
-
-**Status**: ✅ Red tests written and committed to dev branch
-
-**Work Completed**:
-- ✅ Created domain aggregates:
-  - `VisaDocumentRequest` with status lifecycle management
-  - `VisaDocumentProcess` for predefined visa workflows
-  - `VisaDomainErrors` with validation error codes
-- ✅ Wrote 5 test cases covering:
-  - Valid request creation
-  - Travel date validation
-  - Status transitions (Pending → AwaitingApproval → Approved/Rejected → Completed)
-  - Approval flow with rejection reason tracking
-- ✅ Committed to `dev` branch:
-  1. `feat(documents): add visa document request domain layer with TDD tests`
-  2. `chore(ecc): set up team orchestration framework for visa document feature`
-
-**Next Step**: Push `dev` branch to GitHub, then run tests locally with Visual Studio to turn red → green.
-
-**Git Status**:
-```
-Branch: dev (ahead of origin/dev by 2 commits)
-- 9a36ab8 feat(documents): add visa document request domain layer with TDD tests
-- c3199ad chore(ecc): set up team orchestration framework for visa document feature
-```
-
-**Local Path**: `C:\Users\ALG0013\Documents\GitHub\senseik`
-
-**Action Required**: From Visual Studio or PowerShell on PC-A:
-1. `git push origin dev` — Push commits to GitHub
-2. `dotnet test tests/Modules/Sense.Modules.Documents.Tests/ --filter VisaDocumentRequestTests` — Run tests
-3. Confirm all 5 tests pass (green status)
-
-
----
-
-## ⚠️ DÜZELTME — Doğrulama durumu (2026-09-18, oturum sonu)
-
-Yukarıdaki "✅" işaretleri **fazla iddialıydı**. Doğrusu: bu oturumda yazılan
-hiçbir C# kodu **derlenmedi ve çalıştırılmadı**.
-
-**Neden:** Bu oturumun kabuğunda `dotnet` de `docker` da yok
-(`command not found`). Board README'nin kendisi de söylüyor: "Host'ta dotnet
-yok; .NET komutları SDK konteynerinde çalışır" — o konteynere de bu oturumdan
-erişilemiyor. Yani backend tarafında **yeşil/kırmızı sinyali üretecek bir kapı
-mevcut değil**.
-
-**Bunun somut bedeli:** İlk yazılan application katmanı, var olmayan bir
-namespace'e (`Sense.Shared.Contracts.Workflow`) ve uydurulmuş bir
-`IWorkflowService.StartAsync` imzasına dayanıyordu; testler projede bulunmayan
-Moq'u kullanıyordu; `ITenantContext.Id` diye bir üye yok (`TenantId` var).
-Beş ayrı derleme hatası, hiçbiri fark edilmeden `dev`'e commit'lendi.
-`72f7ea3` bunları gerçek kaynağa bakarak düzeltiyor — ama **düzeltilmiş hâli de
-derlenmedi.**
-
-### Hâlâ doğrulanmamış varsayımlar
-
-| Varsayım | Risk |
+| Katman | İçerik |
 |---|---|
-| `Error(code, message)` ctor imzası | Orta |
-| `TenantAggregateRoot<Guid>` base ctor + `DomainEvents` üyesi | Orta |
-| `ModuleDbContext.OnModelCreating` zaten assembly'den config topluyor olabilir → benim `ApplyConfiguration` çağrılarım gereksiz/çakışan olabilir | **Yüksek** |
-| `IVisaSettingsProvider` / `IVisaDocumentDeliveryService` implementasyonu | **Yok — DI'a kayıtlı değil, uçlar çalışmaz** |
-| Migration üretilmedi | **Yüksek** — tablolar DB'de yok |
+| Domain | `VisaDocumentRequest` (Pending → AwaitingApproval → Approved → Completed / Rejected), `VisaDocumentProcess`, `VisaSettings` (tenant başına tek satır: `ApproverEmployeeId`, `TemplateDocumentIds`), `VisaTypes` (tourist/business/work/student/transit), `Document.CreateDeliveredCopy` (`EmployeeId`, `VisaDocumentRequestId`) |
+| Application | `SubmitVisaDocumentRequestHandler` — istekte bulunan **her zaman oturumdaki çalışan** (gövdede `employeeId` yok), onaycı yoksa `visa_document_request.approver_not_configured` ile talep oluşmaz, pasif/olmayan süreç reddedilir, seyahat tarihleri UTC gün olarak saklanır; tek adımlı zorunlu `ApprovalStepInput` ile `IWorkflowService.StartAsync("VisaDocument", …)`. `VisaApprovalCompletedHandler`/`VisaApprovalRejectedHandler` (`IIntegrationEventHandler<ApprovalCompleted/Rejected>`, RequestType filtreli, durum korumalı = idempotent; teslim başarısızsa istisna fırlatıp outbox'a yeniden denetir ve talebe dokunmaz). Sorgular: kendi taleplerim, tek talep (sahiplik; başkasınınki NotFound), teslim edilen belgeler (presigned indirme). Süreç CRUD + aktif/pasif + ilk erişimde 4 varsayılan süreç seed'i. Ayarlar get/update (en çok 20 şablon). |
+| Infrastructure | EF konfigürasyonları, repository'ler, `VisaSettingsProvider`, `VisaDocumentDeliveryService` (önce hepsini kopyalar, sonra satırları ekler — yarım kalan teslimde tracker kirlenmez; hedef anahtar `visa-deliveries/{requestId}/{templateId}{uzantı}` — deterministik, kullanıcı metni içermez, yeniden denemede üzerine yazar), `IFileStorage.CopyObjectAsync` + `MinioAdapter` implementasyonu. DI: beş visa portu + `IDocumentRepository` `AddDocumentsCoreServices`'te (API ve Worker ortak), olay işleyicileri `AddDocumentsIntegrationEventHandlers`'ta (Worker). **Worker artık `AddFileStorage` çağırıyor** (`Sense.Worker/Program.cs`, `appsettings.json` `MinIO:*`; docker-compose worker servisinde `MinIO__*` zaten vardı) — başka ortamlarda Worker'a `MinIO__Endpoint/AccessKey/SecretKey` verilmeli, yoksa Worker açılışta hata verir. |
+| API | `POST/GET visa-requests`, `GET visa-requests/{id}`, `GET visa-requests/{id}/documents`, `GET visa-processes` (aktifler), `GET/POST/PUT visa-processes/manage…`, `GET/PUT visa-settings` |
+| İzinler | `documents.my.visa_requests` (`*.my.*` deseniyle Employee dahil tüm self-service rollere otomatik), `documents.visa.manage` (Owner/Admin `*`, HR `documents.*`). Türkçe görünen ad + `SharedResource{,.en}.resx`. `SystemRoleDefinitions` **değişmedi** (desen yetiyor). |
+| Web | `/app/requests/visa` (`web/src/pages/visa-requests.tsx`: liste, form, teslim edilen belgeler), Talep hub'ında Vize kartı aktif, `/app/settings/rules/visa-processes` (`settings/visa-processes.tsx`: onaycı, şablon belge seçimi + yükleme, süreç CRUD), nav girdisi `documents.visa.manage` ile korunuyor, `web/src/services/visa.service.ts`, tr/en/de `documents:visa.*` ve `workflow:requestType.VisaDocument` |
+| Migration | `AddVisaSettingsAndDocumentDeliveryFields` (Documents): `visa_settings` tablosu, `documents.employee_id`, `documents.visa_document_request_id`, `visa_document_processes (tenant_id, name)` unique indeksi. `has-pending-model-changes` temiz. `visa_document_requests/processes` tabloları dev'deki `AddSharedCompanyFiles` migration'ında zaten oluşuyor. |
 
-### Sıradaki tek anlamlı adım
+## Doğrulama (dürüst durum)
 
-PC-A'da SDK konteynerinde:
+Docker kapalıydı; **Testcontainers/entegrasyon testleri ve gerçek MinIO/Postgres/Workflow uçtan uca çalıştırılmadı.**
 
-```
-dotnet build Sense.slnx
-dotnet test tests/Modules/Sense.Modules.Documents.Tests
-```
+Çalıştırılıp geçenler:
+- `dotnet build`: `Sense.Modules.Documents.Api`, `Sense.Api`, `Sense.Migrator`, `Sense.Worker` — 0 hata.
+- `dotnet test tests/Modules/Sense.Modules.Documents.Tests` — 180/180 (mock tabanlı: handler, validator, teslim servisi, domain; ayrıca DI kayıt testi — visa servis/işleyicilerinin tüm ctor bağımlılıkları kayıtlı mı — ve `TemplateDocumentIds` jsonb değişiklik izleme (comparer) testi).
+- Bağımsız kod incelemesinde (csharp-reviewer) bulunan ve düzeltilenler: visa portlarının DI'a hiç kaydedilmemiş olması + Worker'da `IFileStorage` yokluğu (her `ApprovalCompleted` teslimatını bozardı), şablon listesinin güncellemede kalıcılaşmaması (comparer snapshot referansı paylaşıyordu), kullanıcı metnini taşıyan depolama anahtarı, şablon olarak çalışan klasörü kopyası seçilebilmesi, kayıt hatasında yetim onay (Workflow `CancelAsync` ile telafi), süreç adı kontrolünün DB locale'ine bağlı olması.
+- `dotnet test tests/Sense.Tests.Architecture` — 56/56 (izin görünen adları Türkçe olmalı kuralı dahil). `Sense.Shared.Infrastructure.Tests` 34/34 (hata kodu resx eşitliği dahil).
+- `dotnet ef migrations has-pending-model-changes` (Documents) — model değişikliği yok.
+- Web: `tsc --noEmit` temiz, `eslint src` 0 hata (employee-list'te önceden var olan 1 uyarı), `vitest run` 554/555 — tek başarısız `i18n.locales.test.ts > attendance.json de placeholder` — bu dalın dokunmadığı dosya (attendance.json), dev'den gelen bir açık.
+- `Sense.Tests.Contract` 2 test başarısız (`SharedContractStructureTests`: `IRequest<T>` üyesiz, `IntegrationEvents` tipi yok) — Shared.Contracts yapısıyla ilgili, bu dalın değiştirdiği dosyalara dokunmuyor; dev üzerinde ayrıca doğrulanmadı.
 
-Çıkan hataları bu dosyaya yapıştır. Yeşil olmadan API/web katmanına geçmek,
-doğrulanmamış kodun üstüne doğrulanmamış kod koymak olur.
+Çalıştırılmayanlar / bilinmeyenler (merge öncesi CI'da bakılmalı):
+- Worker'da `ApprovalCompleted` → `VisaApprovalCompletedHandler` gerçek zincirinin (Workflow outbox → EventBus → handler) çalışması; handler DI'ı derleniyor ama Worker hiç başlatılmadı.
+- `MinioAdapter.CopyObjectAsync` gerçek MinIO'ya karşı.
+- `visa_settings` jsonb Guid listesi dönüşümünün gerçek Postgres'te gidiş-dönüşü.
+- Web sayfalarının tarayıcıda elle denenmesi (yalnız jsdom testi + tip/lint).
+
+## Bilinçli kapsam dışı / kalanlar
+
+1. Ret gerekçesi: `ApprovalRejected` olayı gerekçe taşımıyor; `RejectionReason` boş kalır, web "Onaylayıcı talebi reddetti" gösterir. İyileştirme: olaya yorum eklemek (Workflow sahibiyle contract-first) veya Worker'a `IApprovalRequestLookup` kaydı.
+2. Onaycının gelen kutusunda vizeye özel özet yok (`IApprovalRequestSummaryProvider` yalnız Leave/Overtime); yalnız "Vize belgesi" tür etiketi görünür.
+3. İK/yönetici için tüm vize taleplerini listeleme yok; yalnız çalışanın kendi talepleri (yetki modeli: handler'larda permission sorgusu yok, sahiplik kontrolü var).
+4. Şablon seti tenant geneli tek liste; süreç başına ayrı belge seti yok. Ülke → süreç otomatik eşleme yok (çalışan süreci elle seçer, isteğe bağlı).
+5. Bildirim: Workflow'un genel talep e-postaları çalışır; vizeye özel metin/bildirim yok.
+6. Documents için denetim kaydı (senseik-049) bağlanmadı; `IAuditLogged` işaretli ama kaynak eşlemesi yok.
+7. Onaycı = talep eden çalışan durumu ayrıca ele alınmadı (Workflow'un kendi kuralına kalır).
+8. Süreç adı tekilliği: büyük/küçük harfsiz kontrol uygulama katmanında, veritabanında yalnızca birebir aynı ad için unique index (ilk erişimdeki seed yarışına karşı yedek; yarışta ilk ziyaretçi 500 alıp tekrar deneyebilir).
+9. Kalıcı teslim hatası (ör. Active bir şablonun depodaki nesnesi silinmişse): outbox `MaxAttempts` sonunda mesajı ölü işaretler ve talep `AwaitingApproval`'da kalır (Workflow tarafı Approved). Geçici hatalar için doğru davranış; kalıcı hata için ayrıştırma (nesne-yok → şablonu atla) `MinioAdapter`'ın hata tipi ayrımı gerektiriyor, yapılmadı.
+10. Onaycı `ApproverEmployeeId` ayarda Employee sözleşmesiyle doğrulanmıyor; silinmiş/pasif bir çalışan seçilirse talepler onaylanamaz.
+11. `Sense.Worker` başlatılıp uçtan uca denenmedi; yeni `AddFileStorage` çağrısı Worker'ın açılışında MinIO yapılandırması arıyor.
+
+## Sonraki adım
+
+Merge öncesi: CI'da `dotnet test` (Testcontainers dahil) + bir tenant'ta elle akış: ayarlardan onaycı + şablon belge seç → çalışan olarak talep aç → onaycı olarak Gelen Kutusu'ndan onayla → talebin `Completed` olduğunu ve belgelerin indirilebildiğini doğrula.

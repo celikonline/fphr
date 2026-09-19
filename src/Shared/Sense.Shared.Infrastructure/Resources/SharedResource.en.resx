@@ -943,6 +943,27 @@ The report you requested has been generated. Click the link to view and download
   <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Failed to confirm the file upload.</value></data>
   <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Failed to delete the file.</value></data>
 
+  <!-- senseik-001-vize-belgesi: visa document request -->
+  <data name="visa_document_process.not_found" xml:space="preserve"><value>Visa process not found.</value></data>
+  <data name="visa_document_process.name_required" xml:space="preserve"><value>Visa process name is required.</value></data>
+  <data name="visa_document_process.name_too_long" xml:space="preserve"><value>Visa process name is too long.</value></data>
+  <data name="visa_document_process.already_exists" xml:space="preserve"><value>This visa process already exists.</value></data>
+  <data name="visa_document_request.not_found" xml:space="preserve"><value>Visa document request not found.</value></data>
+  <data name="visa_document_request.invalid_travel_dates" xml:space="preserve"><value>Travel end date cannot be before the start date.</value></data>
+  <data name="visa_document_request.country_code_required" xml:space="preserve"><value>Country code is required.</value></data>
+  <data name="visa_document_request.visa_type_required" xml:space="preserve"><value>Visa type is required.</value></data>
+  <data name="visa_document_request.already_submitted" xml:space="preserve"><value>This request has already been submitted for approval.</value></data>
+  <data name="visa_document_request.approver_not_configured" xml:space="preserve"><value>No visa approver is configured. Please contact your system administrator.</value></data>
+  <data name="visa_document_request.invalid_status_transition" xml:space="preserve"><value>The request cannot move from its current status to this one.</value></data>
+  <data name="visa_document_request.delivery_failed" xml:space="preserve"><value>Visa documents could not be copied into the employee's folder.</value></data>
+  <data name="visa_document_request.invalid_visa_type" xml:space="preserve"><value>Invalid visa type.</value></data>
+  <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>The country code must be 2-3 letters (e.g. DE).</value></data>
+  <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>The selected visa process does not exist or is inactive.</value></data>
+  <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your account.</value></data>
+  <data name="visa_settings.template_invalid" xml:space="preserve"><value>A template document was not found, is not active or belongs to an employee folder; only company documents can be used as templates.</value></data>
+  <data name="documents.my.visa_requests" xml:space="preserve"><value>Request visa documents</value></data>
+  <data name="documents.visa.manage" xml:space="preserve"><value>Manage visa settings</value></data>
+
   <!-- Integrations (Faz 8 #61): external payroll webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Manage webhook subscriptions</value></data>
   <data name="integrations.webhooks.view" xml:space="preserve"><value>View webhook subscriptions</value></data>

@@ -3,7 +3,8 @@
     "Leave": "Leave",
     "Advance": "Advance",
     "Expense": "Expense",
-    "Overtime": "Overtime"
+    "Overtime": "Overtime",
+    "VisaDocument": "Visa document"
   },
   "policies": {
     "listTitle": "Approval processes",

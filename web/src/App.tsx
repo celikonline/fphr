@@ -83,6 +83,8 @@ const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
 const ReviewCyclesPage = lazy(() => import("@/pages/performance/review-cycles"));
 const CompanyCalendarPage = lazy(() => import("@/pages/company-calendar"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
+const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
+const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -129,6 +131,7 @@ export default function App() {
             <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
             <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
             <Route path="requests" element={<RequestsPage />} />
+            <Route path="requests/visa" element={<VisaRequestsPage />} />
             <Route path="shared-files" element={<SharedFilesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="support" element={<SupportPage />} />
@@ -183,16 +186,8 @@ export default function App() {
             <Route path="settings/company/ohs-hazard-classification" element={<OhsHazardClassificationPage />} />
             <Route path="settings/company/ohs-risk-assessments" element={<OhsRiskAssessmentsPage />} />
             <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
-            <Route
-              path="settings/rules/*"
-              element={
-                <ComingSoonPage
-                  titleKey="settings.rules"
-                  phase={1}
-                  itemKeys={["settings.visaProcesses"]}
-                />
-              }
-            />
+            <Route path="settings/rules/visa-processes" element={<VisaProcessesPage />} />
+            <Route path="settings/rules" element={<Navigate to="/app/settings/rules/work-calendars" replace />} />
             <Route path="settings/system/access" element={<AccessSettingsPage />} />
             <Route path="settings/system/security-policy" element={<SecurityPolicyPage />} />
             <Route path="settings/system/modules" element={<ModuleSettingsPage />} />
