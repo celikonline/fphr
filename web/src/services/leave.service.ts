@@ -170,7 +170,12 @@ export interface LeaveRuleSetAssignmentResult {
   warnings: { employeeId: string; code: string; message: string }[];
 }
 
-/** `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types, `name` localized by the API. */
+/**
+ * `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types. `name` HAM haliyle gelir
+ * (ör. "leave.type.annual") — senseik-039 öncesi API bunu Accept-Language başlığına göre (uygulama içi dil
+ * tercihinden bağımsız) çeviriyordu, bu da "+ Talep" açılır listesinin diğer izin ekranlarıyla tutarsız
+ * görünmesine yol açıyordu. Çağıran taraf `useLeaveName()` ile çözmeli (bkz. my-leave.tsx buildRequestableTypes).
+ */
 export interface RequestableLeaveType {
   id: string;
   code: LeaveTypeCode;

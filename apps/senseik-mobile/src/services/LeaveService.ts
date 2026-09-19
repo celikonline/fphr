@@ -43,7 +43,7 @@ export interface LeaveBalance {
   negativeBalanceLimit?: number | null;
 }
 
-/** `LeaveBalanceDto`: `leaveTypeName` may be a resource key for seeded types, already resolved by the API. */
+/** `LeaveBalanceDto`: `leaveTypeName` may be a raw resource key for seeded types; `getMyBalances` resolves it (`leaveTypeDisplayName`). */
 export interface LeaveBalanceItem {
   leaveTypeName: string;
   leaveTypeCode: LeaveTypeCode;
@@ -76,7 +76,10 @@ export interface LeaveRequest {
   cancellationReason?: string | null;
 }
 
-/** `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types, `name` localized by the API. */
+/**
+ * `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types. Since senseik-039 the API returns
+ * `name` raw (e.g. "leave.type.annual"); `getMyRequestableLeaveTypes` resolves it (`leaveTypeDisplayName`).
+ */
 export interface RequestableLeaveType {
   id: string;
   code: LeaveTypeCode;
@@ -100,10 +103,40 @@ export interface MyLeaveRequestInput {
   previousRequestId?: string | null;
 }
 
+/**
+ * Turkish names of the seeded leave-type resource keys (mirror of `leave.type.*` in SharedResource.resx; the mobile
+ * app has no i18n and is Turkish-only). The leave API returns these keys raw on `/me/balances` and `/me/leave-types`
+ * (the web resolves them with its own i18n), so the service resolves them before the screens render them.
+ */
+const LEAVE_TYPE_NAMES: Readonly<Record<string, string>> = {
+  "leave.type.annual": "Yıllık izin",
+  "leave.type.excuse": "Mazeret izni",
+  "leave.type.sick": "Hastalık izni",
+  "leave.type.job_search": "Yeni iş arama izni",
+  "leave.type.marriage": "Evlilik izni",
+  "leave.type.bereavement": "Ölüm izni",
+  "leave.type.paternity": "Babalık izni",
+  "leave.type.maternity": "Doğum izni",
+  "leave.type.postnatal_unpaid": "Doğum sonrası ücretsiz izin",
+  "leave.type.paid_military_service": "Bedelli askerlik izni",
+  "leave.type.unpaid": "Ücretsiz izin",
+  "leave.type.foster_care": "Koruyucu aile izni",
+  "leave.type.template.remote_work": "Uzaktan Çalışma",
+  "leave.type.template.birthday": "Doğum günü izni",
+};
+
+/** Resolves a seeded leave-type resource key to its Turkish name; free-form (user-entered) names pass through. */
+export function leaveTypeDisplayName(name: string): string {
+  return LEAVE_TYPE_NAMES[name] ?? name;
+}
+
 export class LeaveService {
   async getMyBalances(): Promise<EmployeeLeaveBalances> {
     const response = await apiClient.get<EmployeeLeaveBalances>(`${LEAVE_BASE}/me/balances`);
-    return response.data;
+    return {
+      ...response.data,
+      balances: response.data.balances.map((item) => ({ ...item, leaveTypeName: leaveTypeDisplayName(item.leaveTypeName) })),
+    };
   }
 
   async getMyRequests(): Promise<LeaveRequest[]> {
@@ -113,7 +146,7 @@ export class LeaveService {
 
   async getMyRequestableLeaveTypes(): Promise<RequestableLeaveType[]> {
     const response = await apiClient.get<RequestableLeaveType[]>(`${LEAVE_BASE}/me/leave-types`);
-    return response.data;
+    return response.data.map((type) => ({ ...type, name: leaveTypeDisplayName(type.name) }));
   }
 
   async submitLeaveRequest(input: MyLeaveRequestInput): Promise<LeaveRequest> {

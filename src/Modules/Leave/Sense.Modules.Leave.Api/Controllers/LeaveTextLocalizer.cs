@@ -25,10 +25,10 @@ internal static class LeaveTextLocalizer
             ? result
             : result.Value with { LeaveTypeName = localizer.MessageOrText(result.Value.LeaveTypeName) };
 
-    public static Result<IReadOnlyList<RequestableLeaveTypeDto>> Localize(this Result<IReadOnlyList<RequestableLeaveTypeDto>> result, IErrorLocalizer localizer) =>
-        result.IsFailure
-            ? result
-            : Result.Success<IReadOnlyList<RequestableLeaveTypeDto>>(result.Value.Select(t => t with { Name = localizer.MessageOrText(t.Name) }).ToList());
+    // senseik-039: RequestableLeaveTypeDto için burada bir Localize() overload'u VARDI ve kaldırıldı — Accept-Language
+    // başlığına göre (kullanıcının uygulama içi dil tercihinden bağımsız) sunucu tarafında çeviriyordu, bu da
+    // "+ Talep" açılır listesinin diğer izin ekranlarıyla (frontend i18n'e dayanan) tutarsız görünmesine yol
+    // açıyordu. Bkz. MyLeaveController.LeaveTypes ve web/src/pages/leave/my-leave.tsx buildRequestableTypes.
 
     public static Result<LeaveRequestDetailDto> Localize(this Result<LeaveRequestDetailDto> result, IErrorLocalizer localizer) =>
         result.IsFailure || result.Value.LeaveTypeName is null

@@ -101,10 +101,15 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const requestsQuery = useQuery({ queryKey: [...MY_LEAVE_KEY, "requests"], queryFn: getMyLeaveRequests, enabled: canRequests });
 
   const typeName = useLeaveTypeNames(balancesQuery.data, undefined);
-  const requestableTypes = useMemo(() => buildRequestableTypes(balancesQuery.data, typesQuery.data), [balancesQuery.data, typesQuery.data]);
+  const requestableTypes = useMemo(
+    () => buildRequestableTypes(balancesQuery.data, typesQuery.data, leaveName),
+    [balancesQuery.data, typesQuery.data, leaveName],
+  );
+  // senseik-039: `typesQuery.data[].name` artık API'den ham anahtar olarak geliyor (bkz. buildRequestableTypes),
+  // ledger filtresi de her yerdeki gibi `leaveName()`'den geçmeli.
   const ledgerTypes = useMemo(
     () =>
-      typesQuery.data?.map((type) => ({ id: type.id, name: type.name })) ??
+      typesQuery.data?.map((type) => ({ id: type.id, name: leaveName(type.name) })) ??
       (balancesQuery.data?.balances ?? []).map((item) => ({ id: item.balance.leaveTypeId, name: leaveName(item.leaveTypeName) })),
     [typesQuery.data, balancesQuery.data, leaveName],
   );
@@ -275,13 +280,25 @@ function RowAction({ icon: Icon, label, onClick }: { icon: LucideIcon; label: st
   );
 }
 
-/** "+ Talep" types from `/leave/me/leave-types` (with the PerYear balance); falls back to the balance types when that call fails. */
-function buildRequestableTypes(balances: EmployeeLeaveBalances | undefined, types: RequestableLeaveType[] | undefined): LeaveRequestTypeOption[] {
+/**
+ * "+ Talep" types from `/leave/me/leave-types` (with the PerYear balance); falls back to the balance types when
+ * that call fails. senseik-039: `type.name`/`item.leaveTypeName` ham anahtar olarak gelir (ör. "leave.type.annual")
+ * — API artık bunları çevirmiyor, bu yüzden burada da `leave-section.tsx`'teki `addLeaveTypes`
+ * (İzin Ekle — HR'ın çalışan adına oluşturduğu form) ile AYNI şekilde `leaveName()`'den geçiriyoruz. Öncesinde bu
+ * fonksiyon `leaveName()` çağırmıyordu ve API'nin (kullanıcının uygulama içi dil tercihinden bağımsız,
+ * Accept-Language başlığına göre) çevirdiği ham metne güveniyordu — "+ Talep" açılır listesinin tek başına
+ * İngilizce görünmesinin kök nedeni buydu.
+ */
+export function buildRequestableTypes(
+  balances: EmployeeLeaveBalances | undefined,
+  types: RequestableLeaveType[] | undefined,
+  leaveName: (name: string) => string,
+): LeaveRequestTypeOption[] {
   const available = new Map((balances?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
   if (types) {
     return types.map((type) => ({
       id: type.id,
-      name: type.name,
+      name: leaveName(type.name),
       description: type.description ?? null,
       requiresDescription: type.requiresDescription,
       perRequestMaxDays: type.perRequestMaxDays ?? null,
@@ -292,7 +309,7 @@ function buildRequestableTypes(balances: EmployeeLeaveBalances | undefined, type
   // Balance-only fallback (leave-types call failed): unit unknown, so the form stays FullDay-only.
   return (balances?.balances ?? []).map((item) => ({
     id: item.balance.leaveTypeId,
-    name: item.leaveTypeName,
+    name: leaveName(item.leaveTypeName),
     description: null,
     requiresDescription: false,
     perRequestMaxDays: null,
