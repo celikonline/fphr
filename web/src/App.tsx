@@ -74,6 +74,7 @@ const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
 const ReviewCyclesPage = lazy(() => import("@/pages/performance/review-cycles"));
+const CompanyCalendarPage = lazy(() => import("@/pages/company-calendar"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -130,6 +131,7 @@ export default function App() {
             <Route path="leave" element={<MyLeavePage />} />
             <Route path="leave/calendar" element={<LeaveCalendarPage />} />
             <Route path="leave/overtimes" element={<MyOvertimesPage />} />
+            <Route path="company-calendar" element={<CompanyCalendarPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
             <Route path="payroll/periods" element={<PayrollPeriodsPage />} />

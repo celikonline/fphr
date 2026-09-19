@@ -1084,4 +1084,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="support_ticket.already_closed" xml:space="preserve"><value>This ticket is already closed.</value></data>
   <data name="support_ticket.resolution_required" xml:space="preserve"><value>A response is required.</value></data>
   <data name="help_article.not_found" xml:space="preserve"><value>Help Center article not found.</value></data>
+  <!-- Company event calendar (senseik-027, roadmap #71/P-19) -->
+  <data name="announcements.my.events" xml:space="preserve"><value>View the event calendar</value></data>
+  <data name="announcements.events.manage" xml:space="preserve"><value>Manage events</value></data>
+  <data name="company_event.title_required" xml:space="preserve"><value>An event title is required and cannot exceed 200 characters.</value></data>
+  <data name="company_event.description_too_long" xml:space="preserve"><value>Event description cannot exceed 2000 characters.</value></data>
+  <data name="company_event.type_not_manual" xml:space="preserve"><value>Birthday and leave-start types cannot be created manually; they are derived automatically.</value></data>
+  <data name="company_event.not_found" xml:space="preserve"><value>Event not found.</value></data>
+  <data name="company_event.visibility_org_unit_not_found" xml:space="preserve"><value>The selected org unit was not found.</value></data>
+  <data name="company_calendar.invalid_range" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="company_calendar.range_too_large" xml:space="preserve"><value>The calendar range cannot exceed {max} days.</value></data>
 </root>

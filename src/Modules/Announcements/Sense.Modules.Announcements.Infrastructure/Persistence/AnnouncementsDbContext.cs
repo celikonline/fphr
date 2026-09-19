@@ -19,4 +19,5 @@ public sealed class AnnouncementsDbContext(DbContextOptions<AnnouncementsDbConte
     public DbSet<AnnouncementReadRecord> AnnouncementReadRecords => Set<AnnouncementReadRecord>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<HelpSearchLog> HelpSearchLogs => Set<HelpSearchLog>();
+    public DbSet<CompanyEvent> CompanyEvents => Set<CompanyEvent>();
 }

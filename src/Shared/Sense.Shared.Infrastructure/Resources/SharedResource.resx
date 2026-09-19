@@ -1087,6 +1087,16 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
+  <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
+  <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
+  <data name="announcements.events.manage" xml:space="preserve"><value>Etkinlik yönetimi</value></data>
+  <data name="company_event.title_required" xml:space="preserve"><value>Etkinlik başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
+  <data name="company_event.description_too_long" xml:space="preserve"><value>Etkinlik açıklaması 2000 karakteri aşamaz.</value></data>
+  <data name="company_event.type_not_manual" xml:space="preserve"><value>Doğum günü ve izin başlangıcı türleri manuel oluşturulamaz; bunlar otomatik türetilir.</value></data>
+  <data name="company_event.not_found" xml:space="preserve"><value>Etkinlik bulunamadı.</value></data>
+  <data name="company_event.visibility_org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı.</value></data>
+  <data name="company_calendar.invalid_range" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="company_calendar.range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>Talep konusu gereklidir ve 200 karakteri aşamaz.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Talep içeriği gereklidir.</value></data>
   <data name="support_ticket.not_found" xml:space="preserve"><value>Destek talebi bulunamadı.</value></data>

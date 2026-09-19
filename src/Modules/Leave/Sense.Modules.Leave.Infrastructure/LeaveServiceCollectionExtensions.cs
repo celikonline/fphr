@@ -61,6 +61,7 @@ public static class LeaveServiceCollectionExtensions
         // Workflow.Contracts.IApprovalRequestSummaryProvider: inbox/decision detail for "Leave"/"Overtime" ApprovalRequests.
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
+        services.AddScoped<ILeaveStartDateReader, Lookups.LeaveStartDateReader>();
         return services;
     }
 

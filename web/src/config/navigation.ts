@@ -318,6 +318,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
     iconColor: "blue",
   },
+  {
+    key: "companyCalendar",
+    labelKey: "apps.companyCalendar",
+    path: "/app/company-calendar",
+    icon: CalendarDays,
+    permissions: ["announcements.my.events"],
+    iconColor: "cyan",
+  },
 ];
 
 export interface SettingsLink {

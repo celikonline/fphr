@@ -41,6 +41,7 @@ i18n
       "performance",
       "payroll",
       "support",
+      "companyCalendar",
     ],
     interpolation: {
       escapeValue: false,

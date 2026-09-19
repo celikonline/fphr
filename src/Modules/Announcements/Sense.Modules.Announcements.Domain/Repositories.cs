@@ -43,3 +43,17 @@ public interface IHelpSearchLogRepository
 {
     void Add(HelpSearchLog log);
 }
+
+/// <summary>Manually created company calendar entries (senseik-027, roadmap #71/P-19). Birthdays and leave starts
+/// are derived at query time and never go through this repository.</summary>
+public interface ICompanyEventRepository
+{
+    void Add(CompanyEvent companyEvent);
+
+    void Remove(CompanyEvent companyEvent);
+
+    Task<CompanyEvent?> GetByIdAsync(Guid tenantId, Guid eventId, CancellationToken cancellationToken = default);
+
+    /// <summary>Every manual event whose EventDate falls in [from, to], regardless of visibility (callers filter).</summary>
+    Task<IReadOnlyList<CompanyEvent>> GetInRangeAsync(Guid tenantId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}

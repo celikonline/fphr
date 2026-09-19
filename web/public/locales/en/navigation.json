@@ -47,7 +47,8 @@
     "recruitmentCandidates": "Candidates",
     "recruitmentRequisitions": "Requisitions",
     "analytics": "Analytics",
-    "workflowInbox": "Approval inbox"
+    "workflowInbox": "Approval inbox",
+    "companyCalendar": "Event calendar"
   },
   "settings": {
     "company": "Company information",

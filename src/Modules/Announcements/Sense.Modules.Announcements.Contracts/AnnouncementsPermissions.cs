@@ -14,6 +14,7 @@ public static class AnnouncementsPermissions
     private const string Module = "announcements";
     private const string Group = "Duyurular";
     private const string SupportGroup = "Destek";
+    private const string CalendarGroup = "Etkinlik Takvimi";
 
     public static readonly Permission View = new(
         "announcements.announcements.view", Module, "Duyuruları görüntüleme", Group, "Kurumsal duyuruları görüntüleme");
@@ -29,6 +30,19 @@ public static class AnnouncementsPermissions
     public static readonly Permission ManageSupportTickets = new(
         "announcements.support_tickets.manage", Module, "Destek taleplerini yönetme", SupportGroup, "Kiracının tüm destek taleplerini görüntüleme, yanıtlama ve kapatma");
 
+    /// <summary>
+    /// Şirket etkinlik takvimini görüntüleme (senseik-027, roadmap #71/P-19 kararındaki anahtar adı:
+    /// "announcements.my.events"). "*.my.*" deseni ile PermissionPatterns.SelfService zaten her temel role
+    /// ulaşır (SystemRoleDefinitions.cs'te her rol ".. PermissionPatterns.SelfService" içerir), bu yüzden ayrı bir
+    /// rol eşleme değişikliği gerekmez.
+    /// </summary>
+    public static readonly Permission ViewCalendar = new(
+        "announcements.my.events", Module, "Etkinlik takvimini görüntüleme", CalendarGroup, "Şirket etkinlik takvimini (doğum günleri, izin başlangıçları, manuel etkinlikler) görüntüleme");
+
+    /// <summary>Manuel etkinlik oluşturma/silme (İK/Admin) - roadmap #71/P-19 kararındaki anahtar adı: "announcements.events.manage".</summary>
+    public static readonly Permission ManageCalendar = new(
+        "announcements.events.manage", Module, "Etkinlik yönetimi", CalendarGroup, "Şirket etkinliği oluşturma ve silme");
+
     public static IEnumerable<Permission> All =>
-        [View, Manage, MySupportTickets, ManageSupportTickets];
+        [View, Manage, MySupportTickets, ManageSupportTickets, ViewCalendar, ManageCalendar];
 }
