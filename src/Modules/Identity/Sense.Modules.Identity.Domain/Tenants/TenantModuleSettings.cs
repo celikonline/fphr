@@ -10,7 +10,15 @@ namespace Sense.Modules.Identity.Domain.Tenants;
 public sealed record TenantModuleSettings
 {
     /// <summary>Kapalı modül anahtarları; tekrarsız ve sıralı (<see cref="WithDisabled"/> normalize eder). Boş = hepsi açık.</summary>
-    public IReadOnlyList<string> DisabledModules { get; init; } = [];
+    public IReadOnlyList<string> DisabledModules
+    {
+        // A jsonb value without the property ('{}', the migration default for existing tenants) materializes as a null
+        // list through EF Core; the getter keeps IsDisabled and the /me feature flags null-safe.
+        get => disabledKeys ?? [];
+        init => disabledKeys = value;
+    }
+
+    private readonly IReadOnlyList<string>? disabledKeys;
 
     public static readonly TenantModuleSettings Default = new();
 
