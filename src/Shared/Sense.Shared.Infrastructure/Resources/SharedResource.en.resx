@@ -96,6 +96,7 @@
   <data name="role.not_found" xml:space="preserve"><value>Role not found.</value></data>
   <data name="role.system_readonly" xml:space="preserve"><value>System roles cannot be modified or deleted.</value></data>
   <data name="role.locked" xml:space="preserve"><value>The permissions of the Owner role cannot be changed.</value></data>
+  <data name="user.password_too_weak" xml:space="preserve"><value>The password is too weak: use at least three of upper case, lower case, digits and symbols, and avoid common passwords or your e-mail address.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>The role is assigned to {count} users; remove the assignments first.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Unknown permission: {permission}</value></data>
   <data name="role.permission_not_held" xml:space="preserve"><value>You cannot grant a role a permission (or a wider data scope) that you do not hold yourself: {permission}</value></data>

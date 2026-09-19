@@ -107,6 +107,7 @@ public static class IdentityErrors
     public const string UserLastOwner = "user.last_owner";
     public const string UserCannotModifySelf = "user.cannot_modify_self";
     public const string PasswordTooShort = "user.password_too_short";
+    public const string PasswordTooWeak = "user.password_too_weak";
     public const string PasswordMismatch = "user.password_mismatch";
 
     public const string PasswordResetTokenNotFound = "password_reset.not_found";

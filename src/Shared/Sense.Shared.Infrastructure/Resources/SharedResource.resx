@@ -102,6 +102,7 @@
   <data name="role.not_found" xml:space="preserve"><value>Rol bulunamadı.</value></data>
   <data name="role.system_readonly" xml:space="preserve"><value>Sistem rolü değiştirilemez veya silinemez.</value></data>
   <data name="role.locked" xml:space="preserve"><value>Hesap Sahibi rolünün izinleri değiştirilemez.</value></data>
+  <data name="user.password_too_weak" xml:space="preserve"><value>Parola çok zayıf: büyük harf, küçük harf, rakam ve sembolden en az üçünü içermeli; yaygın parolalar ve e-posta adresinizi içeremez.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>Rol {count} kullanıcıya atanmış; önce atamaları kaldırın.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Bilinmeyen izin: {permission}</value></data>
   <data name="role.permission_not_held" xml:space="preserve"><value>Sahip olmadığınız bir izni (veya daha geniş bir veri kapsamını) bir role veremezsiniz: {permission}</value></data>
