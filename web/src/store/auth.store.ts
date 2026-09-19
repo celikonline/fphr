@@ -11,6 +11,9 @@ export interface User {
   email: string;
   name: string;
   roles: string[];
+  /** Display labels for `roles` (same order/length) - backend-localized (RolesController's "roles.{code}.name"
+   * resource keys, faz1a senseik-040), so this always matches what Kullanıcılar → Roller shows for the same role. */
+  roleLabels: string[];
   permissions: string[];
   firstName?: string;
   lastName?: string;
@@ -108,12 +111,14 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Login failed";
 }
 
-function toUser(me: MeResponse): User {
+/** Exported for unit testing (senseik-040): maps the backend-localized `/me` roles onto the store's `User` shape. */
+export function toUser(me: MeResponse): User {
   return {
     id: me.userId,
     email: me.email,
     name: `${me.firstName} ${me.lastName}`.trim(),
     roles: me.roles.map((role) => role.code),
+    roleLabels: me.roles.map((role) => role.name ?? role.code),
     permissions: me.permissions,
     firstName: me.firstName,
     lastName: me.lastName,

@@ -13,22 +13,22 @@ namespace Sense.Modules.Assets.Contracts;
 public static class AssetsPermissions
 {
     private const string Module = "assets";
-    private const string Group = "Assets";
+    private const string Group = "Zimmet";
 
     public static readonly Permission AssetsView = new(
-        "assets.assets.view", Module, "View Assets", Group, "View the company's assigned/unassigned equipment");
+        "assets.assets.view", Module, "Zimmetleri Görüntüleme", Group, "Şirketin zimmetli/zimmetsiz ekipmanlarını görüntüleme");
 
     public static readonly Permission AssetsManage = new(
-        "assets.assets.manage", Module, "Manage Assets", Group, "Create, edit, assign, return and retire equipment");
+        "assets.assets.manage", Module, "Zimmet Yönetimi", Group, "Ekipman oluşturma, düzenleme, zimmetleme, iade alma ve hizmet dışı bırakma");
 
     public static readonly Permission CategoriesView = new(
-        "assets.categories.view", Module, "View Asset Categories", Group, "View equipment categories");
+        "assets.categories.view", Module, "Zimmet Kategorilerini Görüntüleme", Group, "Ekipman kategorilerini görüntüleme");
 
     public static readonly Permission CategoriesManage = new(
-        "assets.categories.manage", Module, "Manage Asset Categories", Group, "Create or rename equipment categories");
+        "assets.categories.manage", Module, "Zimmet Kategorisi Yönetimi", Group, "Ekipman kategorisi oluşturma veya yeniden adlandırma");
 
     public static readonly Permission MyAssets = new(
-        "assets.my.assets", Module, "Own Assets", Group, "View the equipment currently assigned to you");
+        "assets.my.assets", Module, "Kendi Zimmetlerim", Group, "Üzerinize zimmetli ekipmanları görüntüleme");
 
     public static IEnumerable<Permission> All =>
     [
