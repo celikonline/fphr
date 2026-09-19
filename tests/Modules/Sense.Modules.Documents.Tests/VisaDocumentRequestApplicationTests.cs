@@ -106,6 +106,27 @@ public sealed class VisaDocumentRequestApplicationTests
     }
 
     [Fact]
+    public async Task Submit_StoresTravelDatesAsUtcCalendarDays()
+    {
+        _settings.GetApproverEmployeeIdAsync(TenantId, Arg.Any<CancellationToken>()).Returns(ApproverEmployeeId);
+        WorkflowStartsWith(Result.Success(Guid.NewGuid()));
+        var command = SubmitCommand() with
+        {
+            TravelStart = new DateTime(2026, 11, 1, 14, 30, 0, DateTimeKind.Unspecified),
+            TravelEnd = new DateTime(2026, 11, 8, 0, 0, 0, DateTimeKind.Unspecified),
+        };
+
+        await SubmitHandler().Handle(command, CancellationToken.None);
+
+        await _requests.Received(1).AddAsync(
+            Arg.Is<VisaDocumentRequest>(r =>
+                r.TravelStart == new DateTime(2026, 11, 1, 0, 0, 0, DateTimeKind.Utc)
+                && r.TravelStart.Kind == DateTimeKind.Utc
+                && r.TravelEnd.Kind == DateTimeKind.Utc),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Submit_WithoutLinkedEmployee_Fails()
     {
         _currentUser.EmployeeId.Returns((Guid?)null);

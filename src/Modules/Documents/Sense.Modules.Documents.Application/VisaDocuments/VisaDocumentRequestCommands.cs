@@ -78,8 +78,8 @@ public sealed class SubmitVisaDocumentRequestHandler(
             tenantId: tenant.TenantId,
             employeeId: employeeId,
             visaDocumentProcessId: command.VisaDocumentProcessId,
-            travelStart: command.TravelStart,
-            travelEnd: command.TravelEnd,
+            travelStart: AsUtcDate(command.TravelStart),
+            travelEnd: AsUtcDate(command.TravelEnd),
             countryCode: command.CountryCode.ToUpperInvariant(),
             visaType: command.VisaType,
             description: command.Description?.Trim() ?? string.Empty);
@@ -121,6 +121,10 @@ public sealed class SubmitVisaDocumentRequestHandler(
 
         return new SubmitVisaDocumentRequestResponse(request.Id, request.Status, approvalResult.Value);
     }
+
+    /// <summary>Travel dates are calendar days: the clock part is dropped and the value marked UTC (Npgsql refuses
+    /// Unspecified-kind DateTime for timestamptz columns, which is what a plain "2026-11-01" body value binds to).</summary>
+    private static DateTime AsUtcDate(DateTime value) => DateTime.SpecifyKind(value.Date, DateTimeKind.Utc);
 }
 
 public sealed record SubmitVisaDocumentRequestResponse(
