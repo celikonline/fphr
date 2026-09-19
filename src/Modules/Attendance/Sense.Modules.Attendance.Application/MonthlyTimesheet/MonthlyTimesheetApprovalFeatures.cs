@@ -1,4 +1,5 @@
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
@@ -25,7 +26,7 @@ public sealed record ApproveMonthlyTimesheetCommand(Guid EmployeeId, DateOnly Pe
 
 public sealed class ApproveMonthlyTimesheetHandler(
     IMonthlyTimesheetApprovalRepository approvals, IAttendanceDayRepository days, LeaveOverlapChecker leaveOverlap, IDataScopeService dataScope, ITenantContext tenant,
-    ICurrentUser currentUser, TimeProvider clock) : ICommandHandler<ApproveMonthlyTimesheetCommand, MonthlyTimesheetApprovalDto>
+    ICurrentUser currentUser, TimeProvider clock, ITenantLocalClock localClock) : ICommandHandler<ApproveMonthlyTimesheetCommand, MonthlyTimesheetApprovalDto>
 {
     public async Task<Result<MonthlyTimesheetApprovalDto>> Handle(ApproveMonthlyTimesheetCommand command, CancellationToken cancellationToken)
     {
@@ -37,6 +38,11 @@ public sealed class ApproveMonthlyTimesheetHandler(
         }
 
         var monthStart = MonthlyTimesheetApproval.NormalizeToMonthStart(command.PeriodMonth);
+        if (await MonthlyPeriodGuard.IsNotStartedAsync(localClock, tenant.TenantId, monthStart, cancellationToken))
+        {
+            return Error.Validation(AttendanceErrors.PeriodNotStarted);
+        }
+
         var monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
         var records = await days.ListForEmployeeAsync(command.EmployeeId, monthStart, monthEnd, cancellationToken);
@@ -154,7 +160,7 @@ public sealed record ApproveAllMonthlyTimesheetsCommand(DateOnly PeriodMonth, Gu
 
 public sealed class ApproveAllMonthlyTimesheetsHandler(
     ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, IEmployeeDirectory employees, IMonthlyTimesheetApprovalRepository approvals,
-    IAttendanceDayRepository days, LeaveOverlapChecker leaveOverlap, TimeProvider clock)
+    IAttendanceDayRepository days, LeaveOverlapChecker leaveOverlap, TimeProvider clock, ITenantLocalClock localClock)
     : ICommandHandler<ApproveAllMonthlyTimesheetsCommand, int>
 {
     public async Task<Result<int>> Handle(ApproveAllMonthlyTimesheetsCommand command, CancellationToken cancellationToken)
@@ -167,6 +173,11 @@ public sealed class ApproveAllMonthlyTimesheetsHandler(
         }
 
         var periodMonth = MonthlyTimesheetApproval.NormalizeToMonthStart(command.PeriodMonth);
+        if (await MonthlyPeriodGuard.IsNotStartedAsync(localClock, tenant.TenantId, periodMonth, cancellationToken))
+        {
+            return Error.Validation(AttendanceErrors.PeriodNotStarted);
+        }
+
         var alreadyApproved = (await approvals.ListForPeriodAsync(employeeIds, periodMonth, cancellationToken))
             .Select(a => a.EmployeeId).ToHashSet();
         var toApprove = employeeIds.Where(id => !alreadyApproved.Contains(id)).ToList();
@@ -212,5 +223,15 @@ internal static class VisibleTimesheetEmployees
         return visible is null
             ? await employees.ListActiveEmployeeIdsAsync(tenantId, cancellationToken)
             : visible.ToList();
+    }
+}
+
+/// <summary>A monthly timesheet can only be closed once its month has begun (tenant-local date); the still-running current month may be closed early, but a future month may not.</summary>
+internal static class MonthlyPeriodGuard
+{
+    public static async Task<bool> IsNotStartedAsync(ITenantLocalClock localClock, Guid tenantId, DateOnly periodMonthStart, CancellationToken cancellationToken)
+    {
+        var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenantId, cancellationToken)).Local);
+        return periodMonthStart > localToday;
     }
 }

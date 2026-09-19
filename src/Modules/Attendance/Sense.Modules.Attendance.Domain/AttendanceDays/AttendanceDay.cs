@@ -121,7 +121,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
             return guard;
         }
 
-        if (overrideWorkedMinutes < 0)
+        if (overrideWorkedMinutes is < 0 or > AttendanceLimits.MaxMinutesPerDay)
         {
             return Error.Validation(AttendanceDomainErrors.OverrideMinutesInvalid);
         }

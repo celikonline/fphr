@@ -52,4 +52,7 @@ public static class AttendanceLimits
 {
     public const int NameMaxLength = 200;
     public const int DaysPerWeek = 7;
+
+    /// <summary>A calendar day has 24 hours: no single day can carry more worked minutes than this.</summary>
+    public const int MaxMinutesPerDay = 24 * 60;
 }

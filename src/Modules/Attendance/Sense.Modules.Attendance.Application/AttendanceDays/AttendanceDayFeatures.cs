@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
@@ -59,7 +60,7 @@ public sealed class RecordAttendanceValidator : AbstractValidator<RecordAttendan
 }
 
 public sealed class RecordAttendanceHandler(
-    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope)
+    IAttendanceDayRepository days, IWorkScheduleReadService schedules, ITenantContext tenant, IDataScopeService dataScope, ITenantLocalClock localClock)
     : ICommandHandler<RecordAttendanceCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordAttendanceCommand command, CancellationToken cancellationToken)
@@ -67,6 +68,13 @@ public sealed class RecordAttendanceHandler(
         if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetEdit.Key, command.EmployeeId, cancellationToken))
         {
             return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
+        // A day that has not started yet (in the tenant's own time zone) cannot already have worked hours.
+        var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken)).Local);
+        if (command.Date > localToday)
+        {
+            return Error.Validation(AttendanceErrors.DateInFuture);
         }
 
         var result = await AttendanceDayUpsert.UpsertAsync(

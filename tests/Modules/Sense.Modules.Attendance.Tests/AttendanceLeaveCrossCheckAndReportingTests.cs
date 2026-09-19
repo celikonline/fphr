@@ -210,7 +210,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
             var currentUser = Substitute.For<ICurrentUser>();
             var approverId = Guid.NewGuid();
             currentUser.UserId.Returns(approverId);
-            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System);
+            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System, new FixedLocalClock(new DateTime(2026, 9, 30, 12, 0, 0)));
 
             var result = await handler.Handle(new ApproveMonthlyTimesheetCommand(employeeId, date), TestContext.Current.CancellationToken);
 
@@ -250,7 +250,7 @@ public sealed class AttendanceLeaveCrossCheckAndReportingTests : TestFixture
             var writeDb = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
             var currentUser = Substitute.For<ICurrentUser>();
             currentUser.UserId.Returns(Guid.NewGuid());
-            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System);
+            var handler = new ApproveMonthlyTimesheetHandler(approvals, days, checker, AllowAllScope(), tenant, currentUser, TimeProvider.System, new FixedLocalClock(new DateTime(2026, 9, 30, 12, 0, 0)));
 
             var first = await handler.Handle(new ApproveMonthlyTimesheetCommand(employeeId, periodMonth), TestContext.Current.CancellationToken);
             first.IsSuccess.ShouldBeTrue();

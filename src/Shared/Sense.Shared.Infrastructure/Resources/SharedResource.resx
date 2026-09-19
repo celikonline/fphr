@@ -863,7 +863,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>Bu günde çözülecek bir uyuşmazlık yok.</value></data>
   <data name="attendance.day.already_resolved" xml:space="preserve"><value>Bu gün zaten çözüldü veya görmezden gelindi.</value></data>
-  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Çalışılan süre negatif olamaz.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Çalışılan süre 0 ile 24 saat (1440 dakika) arasında olmalıdır.</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>Bu aksiyon, günün uyuşmazlık türü için uygun değil.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Puantaj uyuşmazlıklarını çözme</value></data>
@@ -897,6 +897,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>Bu müsaitlik girişi size ait değil.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Geçmiş bir tarih için müsaitlik bildirilemez.</value></data>
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Tarih aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
+  <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>Gelecek tarihli puantaj kaydı girilemez.</value></data>
+  <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>Henüz başlamamış bir dönemin puantajı onaylanamaz.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>

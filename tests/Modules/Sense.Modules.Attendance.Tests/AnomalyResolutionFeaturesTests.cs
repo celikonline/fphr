@@ -66,6 +66,35 @@ public sealed class AnomalyResolutionFeaturesTests
         _resolutions.Received(1).Add(Arg.Is<AnomalyResolution>(r => r.Action == AnomalyResolutionAction.SetWorkedHours && r.AttendanceDayId == day.Id));
     }
 
+    [Theory]
+    [InlineData(1441)]
+    [InlineData(1800)]
+    public async Task SetWorkedHours_MoreThan24HoursInADay_IsRejected(int workedMinutes)
+    {
+        var day = UnderworkDay();
+        ExistingDay(day);
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
+
+        var result = await handler.Handle(new SetWorkedHoursCommand(day.Id, workedMinutes, null), TestContext.Current.CancellationToken);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AttendanceDomainErrors.OverrideMinutesInvalid);
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Unresolved);
+        day.OverrideWorkedMinutes.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SetWorkedHours_Exactly24Hours_IsAccepted()
+    {
+        var day = UnderworkDay();
+        ExistingDay(day);
+        var handler = new SetWorkedHoursHandler(_days, _resolutions, _dataScope, _tenant, _currentUser, _schedules, _outbox, TimeProvider.System);
+
+        var result = await handler.Handle(new SetWorkedHoursCommand(day.Id, 1440, null), TestContext.Current.CancellationToken);
+
+        result.IsSuccess.ShouldBeTrue();
+    }
+
     [Fact]
     public async Task SetWorkedHours_OverworkDay_NotAllowed()
     {

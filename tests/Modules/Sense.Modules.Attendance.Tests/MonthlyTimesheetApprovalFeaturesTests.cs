@@ -1,6 +1,7 @@
 using NSubstitute;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Application.MonthlyTimesheet;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
@@ -34,6 +35,7 @@ public sealed class MonthlyTimesheetApprovalFeaturesTests
     private readonly IApprovedLeaveDateLookup _leaveDates = Substitute.For<IApprovedLeaveDateLookup>();
     private readonly LeaveOverlapChecker _leaveOverlap;
     private readonly TimeProvider _clock = TimeProvider.System;
+    private readonly ITenantLocalClock _localClock = new FixedLocalClock(new DateTime(2026, 9, 30, 12, 0, 0));
 
     public MonthlyTimesheetApprovalFeaturesTests()
     {
@@ -46,9 +48,9 @@ public sealed class MonthlyTimesheetApprovalFeaturesTests
 
     private GetMonthlyTimesheetHandler CreateQueryHandler() => new(_tenant, _dataScope, _employees, _attendanceSummaries, _leaveDays, _approvals);
 
-    private ApproveMonthlyTimesheetHandler CreateApproveHandler() => new(_approvals, _days, _leaveOverlap, _dataScope, _tenant, _currentUser, _clock);
+    private ApproveMonthlyTimesheetHandler CreateApproveHandler() => new(_approvals, _days, _leaveOverlap, _dataScope, _tenant, _currentUser, _clock, _localClock);
 
-    private ApproveAllMonthlyTimesheetsHandler CreateApproveAllHandler() => new(_tenant, _currentUser, _dataScope, _employees, _approvals, _days, _leaveOverlap, _clock);
+    private ApproveAllMonthlyTimesheetsHandler CreateApproveAllHandler() => new(_tenant, _currentUser, _dataScope, _employees, _approvals, _days, _leaveOverlap, _clock, _localClock);
 
     [Fact]
     public async Task Query_NoVisibleEmployees_ReturnsEmpty()
