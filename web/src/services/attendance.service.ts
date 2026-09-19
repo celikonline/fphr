@@ -197,6 +197,56 @@ export async function getTeamMonth(monthStart: string, orgUnitId?: string | null
   return data;
 }
 
+/** `MonthlyTimesheetRowDto` ("Aylık Puantaj" ızgarası, S-11): one employee's month totals + approval state. Decimals are days/hours. */
+export interface MonthlyTimesheetRow {
+  employeeId: string;
+  employeeName: string;
+  workedDays: number;
+  workedHours: number;
+  missingDays: number;
+  overtimeHours: number;
+  paidLeaveDays: number;
+  unpaidLeaveDays: number;
+  sickLeaveDays: number;
+  /** Payroll period is locked for the month (Attendance's own lock, informational here). */
+  isPeriodLocked: boolean;
+  isApproved: boolean;
+  approvedAt?: string | null;
+  approvedByUserId?: string | null;
+}
+
+/** `MonthlyTimesheetApprovalDto`. */
+export interface MonthlyTimesheetApproval {
+  employeeId: string;
+  periodMonth: string;
+  approvedAt: string;
+  approvedByUserId?: string | null;
+}
+
+/** "Aylık Puantaj" ızgarası (attendance.timesheet.view + veri kapsamı; `periodMonth` ayın herhangi bir günü olabilir, `orgUnitId` opsiyonel daraltma). */
+export async function getMonthlyTimesheet(periodMonth: string, orgUnitId?: string | null): Promise<MonthlyTimesheetRow[]> {
+  const { data } = await apiClient.get<MonthlyTimesheetRow[]>(`${ATTENDANCE_BASE}/timesheet/monthly`, {
+    params: { periodMonth, orgUnitId: orgUnitId || undefined },
+  });
+  return data;
+}
+
+/** Tek çalışanın ayını onaylar (attendance.timesheet.approve; önce izinli-günde-çalışma çapraz kontrolü yeniden çalışır, tekrar onay = Reapprove). */
+export async function approveMonthlyTimesheet(employeeId: string, periodMonth: string): Promise<MonthlyTimesheetApproval> {
+  const { data } = await apiClient.post<MonthlyTimesheetApproval>(`${ATTENDANCE_BASE}/timesheet/monthly/employees/${employeeId}/approve`, null, {
+    params: { periodMonth },
+  });
+  return data;
+}
+
+/** "Tümünü Onayla": görünür çalışanlardan henüz onaylanmamışları onaylar; o turda onaylanan satır sayısını döner. */
+export async function approveAllMonthlyTimesheets(periodMonth: string, orgUnitId?: string | null): Promise<number> {
+  const { data } = await apiClient.post<number>(`${ATTENDANCE_BASE}/timesheet/monthly/approve-all`, null, {
+    params: { periodMonth, orgUnitId: orgUnitId || undefined },
+  });
+  return data;
+}
+
 /** Denkleştirme dönemi durumu (m.63, kart senseik-014 §4; attendance.timesheet.view). */
 export async function getEqualizationStatus(employeeId: string, date: string): Promise<EqualizationStatus> {
   const { data } = await apiClient.get<EqualizationStatus>(`${ATTENDANCE_BASE}/timesheet/employees/${employeeId}/equalization`, {

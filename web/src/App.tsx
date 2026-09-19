@@ -72,6 +72,7 @@ const ExpensePaymentsAdminPage = lazy(() => import("@/pages/expense-payments-adm
 const MyTimesheetPage = lazy(() => import("@/pages/attendance/my-timesheet"));
 const MyShiftsPage = lazy(() => import("@/pages/attendance/my-shifts"));
 const TeamTimesheetPage = lazy(() => import("@/pages/attendance/team-timesheet"));
+const MonthlyTimesheetPage = lazy(() => import("@/pages/attendance/monthly-timesheet"));
 const DeviceLogImportPage = lazy(() => import("@/pages/attendance/device-log-import"));
 const ShiftPlanPage = lazy(() => import("@/pages/attendance/shift-plan"));
 const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
@@ -146,6 +147,7 @@ export default function App() {
             <Route path="attendance/timesheet" element={<MyTimesheetPage />} />
             <Route path="attendance/shifts" element={<MyShiftsPage />} />
             <Route path="attendance/team-timesheet" element={<TeamTimesheetPage />} />
+            <Route path="attendance/monthly-timesheet" element={<MonthlyTimesheetPage />} />
             <Route path="attendance/device-logs/import" element={<DeviceLogImportPage />} />
             <Route path="attendance/shift-plan" element={<ShiftPlanPage />} />
 

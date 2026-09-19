@@ -108,6 +108,47 @@
     },
     "workingDayCount": "{{count}} days"
   },
+  "monthlyTimesheet": {
+    "title": "Monthly timesheet",
+    "subtitle": "Month totals, leave days and month-end approval status for the employees you can view.",
+    "empty": "No employees to show for this month.",
+    "totals": "Total",
+    "pendingCount": "{{pending}} of {{total}} employees awaiting approval",
+    "col": {
+      "workedDays": "Days worked",
+      "workedHours": "Hours worked",
+      "missingDays": "Missing days",
+      "overtimeHours": "Overtime (hours)",
+      "paidLeaveDays": "Paid leave (days)",
+      "unpaidLeaveDays": "Unpaid leave (days)",
+      "sickLeaveDays": "Sick leave (days)",
+      "anomalies": "Discrepancies",
+      "status": "Status",
+      "action": "Action"
+    },
+    "noAnomalies": "No issues",
+    "anomalyDays": "{{count}} days with discrepancies",
+    "toggleDays": "Toggle daily detail for {{name}}",
+    "daysUnavailable": "Daily detail could not be loaded.",
+    "hourUnit": "h",
+    "approvedState": "Approved",
+    "approvedAt": "Approved on {{date}}",
+    "pendingState": "Awaiting approval",
+    "locked": "Payroll period is locked",
+    "approve": "Approve",
+    "reapprove": "Re-approve",
+    "approveRow": "Approve {{name}}'s timesheet",
+    "approved": "Timesheet approved.",
+    "readOnly": "You can view this screen only; you do not have permission to approve timesheets.",
+    "forbidden": "You do not have permission for this action, or the employee is outside your data scope.",
+    "approveAll": {
+      "button": "Approve all",
+      "confirmTitle": "Approve all timesheets",
+      "confirmMessage": "The timesheets of {{count}} employees awaiting approval for {{month}} will be approved. The worked-while-on-leave check is re-run before approval. Continue?",
+      "done": "{{count}} timesheets approved.",
+      "nothing": "There were no timesheets to approve."
+    }
+  },
   "teamTimesheet": {
     "title": "Team timesheet",
     "subtitle": "Weekly timesheet grid for the employees you're authorized to view.",

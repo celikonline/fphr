@@ -7,6 +7,7 @@ describe("moduleForPath (senseik-057)", () => {
     ["/app/leave/calendar", "leave"],
     ["/app/settings/leave/rule-sets", "leave"],
     ["/app/attendance/timesheet", "attendance"],
+    ["/app/attendance/monthly-timesheet", "attendance"],
     ["/app/settings/rules/work-calendars", "attendance"],
     ["/app/payroll/periods/42", "payroll"],
     ["/app/recruitment/postings", "recruitment"],

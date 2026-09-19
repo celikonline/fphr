@@ -108,6 +108,47 @@
     },
     "workingDayCount": "{{count}} gün"
   },
+  "monthlyTimesheet": {
+    "title": "Aylık Puantaj",
+    "subtitle": "Görüntüleme yetkiniz olan çalışanların ay toplamları, izin günleri ve ay sonu onay durumu.",
+    "empty": "Bu ay için gösterilecek çalışan yok.",
+    "totals": "Toplam",
+    "pendingCount": "{{pending}} / {{total}} çalışan onay bekliyor",
+    "col": {
+      "workedDays": "Çalışılan gün",
+      "workedHours": "Çalışılan saat",
+      "missingDays": "Eksik gün",
+      "overtimeHours": "Fazla mesai (saat)",
+      "paidLeaveDays": "Ücretli izin (gün)",
+      "unpaidLeaveDays": "Ücretsiz izin (gün)",
+      "sickLeaveDays": "Raporlu (gün)",
+      "anomalies": "Uyuşmazlıklar",
+      "status": "Durum",
+      "action": "İşlem"
+    },
+    "noAnomalies": "Sorun yok",
+    "anomalyDays": "{{count}} gün uyuşmazlık",
+    "toggleDays": "{{name}} gün detayını aç/kapat",
+    "daysUnavailable": "Gün detayı yüklenemedi.",
+    "hourUnit": "sa",
+    "approvedState": "Onaylandı",
+    "approvedAt": "Onay tarihi: {{date}}",
+    "pendingState": "Onay bekliyor",
+    "locked": "Bordro dönemi kilitli",
+    "approve": "Onayla",
+    "reapprove": "Yeniden onayla",
+    "approveRow": "{{name}} puantajını onayla",
+    "approved": "Puantaj onaylandı.",
+    "readOnly": "Bu ekranı yalnızca görüntüleyebilirsiniz; puantaj onaylamak için yetkiniz yok.",
+    "forbidden": "Bu işlem için yetkiniz yok ya da çalışan yetki alanınızın dışında.",
+    "approveAll": {
+      "button": "Tümünü Onayla",
+      "confirmTitle": "Tüm puantajları onayla",
+      "confirmMessage": "{{month}} ayında onay bekleyen {{count}} çalışanın puantajı onaylanacak. Onaydan önce izinli günde çalışma kontrolü yeniden yapılır. Devam edilsin mi?",
+      "done": "{{count}} çalışanın puantajı onaylandı.",
+      "nothing": "Onaylanacak puantaj bulunamadı."
+    }
+  },
   "teamTimesheet": {
     "title": "Ekip puantajı",
     "subtitle": "Yetkili olduğunuz çalışanların haftalık puantaj ızgarası.",

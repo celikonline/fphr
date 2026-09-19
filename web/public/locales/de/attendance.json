@@ -108,6 +108,47 @@
     },
     "workingDayCount": "{{count}} Tage"
   },
+  "monthlyTimesheet": {
+    "title": "Monatliche Zeiterfassung",
+    "subtitle": "Monatssummen, Abwesenheitstage und Freigabestatus zum Monatsende für die Mitarbeitenden, die Sie einsehen dürfen.",
+    "empty": "Für diesen Monat gibt es keine Mitarbeitenden.",
+    "totals": "Summe",
+    "pendingCount": "{{pending}} von {{total}} Mitarbeitenden warten auf Freigabe",
+    "col": {
+      "workedDays": "Gearbeitete Tage",
+      "workedHours": "Gearbeitete Stunden",
+      "missingDays": "Fehltage",
+      "overtimeHours": "Überstunden (Std.)",
+      "paidLeaveDays": "Bezahlter Urlaub (Tage)",
+      "unpaidLeaveDays": "Unbezahlter Urlaub (Tage)",
+      "sickLeaveDays": "Krankheit (Tage)",
+      "anomalies": "Abweichungen",
+      "status": "Status",
+      "action": "Aktion"
+    },
+    "noAnomalies": "Keine Probleme",
+    "anomalyDays": "{{count}} Tage mit Abweichungen",
+    "toggleDays": "Tagesdetails für {{name}} ein-/ausblenden",
+    "daysUnavailable": "Die Tagesdetails konnten nicht geladen werden.",
+    "hourUnit": "Std.",
+    "approvedState": "Freigegeben",
+    "approvedAt": "Freigegeben am {{date}}",
+    "pendingState": "Freigabe ausstehend",
+    "locked": "Abrechnungszeitraum ist gesperrt",
+    "approve": "Freigeben",
+    "reapprove": "Erneut freigeben",
+    "approveRow": "Zeiterfassung von {{name}} freigeben",
+    "approved": "Zeiterfassung freigegeben.",
+    "readOnly": "Sie können diese Ansicht nur einsehen; Ihnen fehlt die Berechtigung zur Freigabe.",
+    "forbidden": "Ihnen fehlt die Berechtigung für diese Aktion, oder der Mitarbeitende liegt außerhalb Ihres Datenbereichs.",
+    "approveAll": {
+      "button": "Alle freigeben",
+      "confirmTitle": "Alle Zeiterfassungen freigeben",
+      "confirmMessage": "Die Zeiterfassungen von {{count}} Mitarbeitenden, die für {{month}} auf Freigabe warten, werden freigegeben. Vor der Freigabe wird die Prüfung „Arbeit trotz Urlaub“ erneut ausgeführt. Fortfahren?",
+      "done": "{{count}} Zeiterfassungen freigegeben.",
+      "nothing": "Es gab keine Zeiterfassungen zur Freigabe."
+    }
+  },
   "teamTimesheet": {
     "title": "Team-Zeiterfassung",
     "subtitle": "Wöchentliche Zeiterfassungsübersicht für die Mitarbeitenden, die Sie einsehen dürfen.",
