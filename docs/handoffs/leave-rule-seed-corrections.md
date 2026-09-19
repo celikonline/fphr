@@ -2,11 +2,14 @@
 
 ## Durum
 
-**Uygulandı, `b/leave-rule-seed-corrections` branch'inde, yerel commit alınacak (push YAPILMAYACAK).**
+**Uygulandı, `b/leave-rule-seed-corrections` branch'inde, yerel commit alındı (push YAPILMADI) — 2 commit:
+`97b137b` (kod+test+doküman) ve `8689ede` (EF migration).**
 Kartın 9 kabul kriterinden **7'si aynen, 2'si (madde 1-2) bilinçli olarak DEĞİŞTİRİLMİŞ halde** uygulandı —
 gerekçe aşağıda "KRİTİK BULGU" bölümünde. Ayrıca madde 6 da (yıllık izin) literal okumayla uygulanamadı —
-kendi bölümünde ayrıca açıklanıyor. Kart state'i `review` yerine **`blocked`** olarak işaretlenmeli: maddeler
-1, 2 ve 6 üzerinde ürün/hukuk onayı gerekiyor.
+kendi bölümünde ayrıca açıklanıyor. Kart state'i `review` yerine **`blocked`** olarak işaretlendi: maddeler
+1, 2 ve 6 üzerinde ürün/hukuk onayı gerekiyor. `dotnet test` ve EF migration bu oturumda TAMAMLANDI (aşağıda
+"Testler" ve "EF Migration" bölümleri gerçek sonuçlarla güncellendi) — domain seviyesi tam yeşil, entegrasyon
+seviyesi senseik-036 ile ilgisiz, önceden var olan bir Attendance migration borcuyla kırmızı (detay altta).
 
 ---
 
@@ -189,18 +192,46 @@ sadece işaretlenen 9 maddeyi düzeltmekti; md.74 evlat edinme izni maddeler ara
 - `TrHolidaySeedFileTests.cs` (Organization modülü, Leave'in merge gate'i dışında ama ilişkili): yeni arife
   kaydı için güncellendi.
 
-**Çalıştırma sonucu:** Docker SDK konteyneri bu handoff yazılırken hâlâ build/migration adımını tamamlıyordu
-(host'ta paralel başka session'lar docker'ı yoğun kullanıyor gibi görünüyor — bkz. proje hafızası "Parallel
-sessions"). [DOLDURULACAK: gerçek `dotnet test` çıktısı, tamamlandığında.]
+**Çalıştırma sonucu (docker SDK konteyneri, `dotnet test tests/Modules/Sense.Modules.Leave.Tests/...`):**
+`Total tests: 137, Passed: 98, Failed: 39, Duration: 3.1 dk`. **39 hatanın TAMAMI** — tek istisnasız —
+`LeaveRequestIntegrationTests`/`LeaveManagementIntegrationTests`/`AbsenceIntegrationTests`/`OvertimeIntegrationTests`/
+`LeaveUsageReaderTests`/`LeaveReportProviderTests`/`LeaveIntegrationTests` sınıflarının `OnDatabaseReadyAsync()`
+adımında (yani testin kendi mantığı hiç çalışmadan) şu hatayla düşüyor:
+`System.InvalidOperationException: ... 'PendingModelChangesWarning': The model for context 'AttendanceDbContext'
+has pending changes.` — bu, senseik-007'nin kendi handoff'unda zaten belgelediği, **Leave'den TAMAMEN bağımsız,
+`dev`'den miras kalan bir Attendance modülü eksik-migration sorunu** (senseik-007: "38 önceden var olan hata...
+c72791f'den miras, senseik-007 ile ilgisiz, dokunulmadı" — şimdi 39, çünkü bu turda 1 yeni entegrasyon testi
+(`Submit_JobSearchBelowTwoHours_IsRejected`) eklendi ve o da aynı nedenle düşüyor). Doğrulama: TÜM entegrasyon
+testleri (senseik-036 ile hiç ilgisi olmayanlar dahil, ör. `WorkerRegistration_ResolvesEveryLeaveIntegrationEventHandler`,
+`LegislationReader_ResolvesSeededDateRanges`) aynı hatayla aynı noktada düşüyor — hata Attendance şemasında,
+Leave'in kendi domain/seed kodunda değil.
+
+**98 geçen testin TAMAMI domain-seviyeli (Postgres/Testcontainers gerektirmeyen) testler ve senseik-036'nın
+yeni/değiştirdiği HER TEST bunların içinde, hepsi yeşil:** `SickLeaveAbsenceThresholdTests` (4 vaka),
+`LeavePartialDayTests.HoursFraction_*` (2 yeni), `LegislationParameterTests.MultipleBirthAndBreastfeeding_...`,
+`LegislationParameterTests.StatutoryResolver_SeedsRuleSetWithDurationsOfTheDate` (4 yeni alanla), `LeaveTypeTests.
+Seed_ContainsStatutoryTypesAndPassiveTemplates` (3 yeni tür + Annual.MinConsecutiveDays==null teyidiyle).
+
+`TrHolidaySeedFileTests` (Organization modülü): **1/1 geçti** (yeni arife kaydıyla).
+
+**Sonuç:** Merge gate'in "dotnet test (Leave modülü) yeşil" kısmı **domain seviyesinde tam yeşil**; entegrasyon
+seviyesinde önceden var olan, bu kartla ilgisiz bir Attendance migration borcu nedeniyle kırmızı (senseik-007'de
+de aynı durum, aynı gerekçeyle "dokunulmadı" denip bırakılmış). Bu kart bu borcu ÇÖZMEDİ (kapsam dışı — ayrı bir
+Attendance migration kartı gerekiyor); ama senseik-036'nın KENDİ mantığının doğruluğunu domain testleriyle kanıtladı.
 
 ## EF Migration
 
-`Sense.Modules.Leave.Infrastructure`'da yeni bir migration gerekiyor: 2 yeni `LegislationParameter` satırı
-(`Leave.Maternity.MultipleBirthPreBirthExtraWeeks`, `Leave.Breastfeeding.HoursPerDay`) `LegislationParameterSeed.All`
-listesine eklendi (`HasData` ile migration'a gömülü, ADR 0008). [DOLDURULACAK: migration adı/dosyaları,
-docker adımı tamamlandığında.] Yeni `LeaveType` satırları (Breastfeeding/DisabledChild/MaternityMultipleBirth)
-migration GEREKTİRMİYOR — `LeaveType` satırları EF `HasData` ile değil, her kiracı için
+`Sense.Modules.Leave.Infrastructure`'da yeni migration üretildi: `20260919080101_SenseIk036LegislationParameters`
+(docker SDK konteyneri, `dotnet tool restore && dotnet ef migrations add ... -o Persistence/Migrations`). 2 yeni
+`LegislationParameter` satırı ekliyor: `Leave.Maternity.MultipleBirthPreBirthExtraWeeks` (id `...040`) ve
+`Leave.Breastfeeding.HoursPerDay` (id `...041`), `LeaveDbContextModelSnapshot.cs` güncellendi. Ayrı bir commit'te
+alındı (`8689ede`). Yeni `LeaveType` satırları (Breastfeeding/DisabledChild/MaternityMultipleBirth) migration
+GEREKTİRMEDİ — `LeaveType` satırları EF `HasData` ile değil, her kiracı için
 `LeaveBalanceService.EnsureDefaultRuleSetAsync` çalıştığında runtime'da üretiliyor.
+
+**Not (altyapı):** Bu oturumda Docker Desktop birkaç kez `npipe:////./pipe/dockerDesktopLinuxEngine` bağlantısını
+kaybedip (host'ta çok sayıda paralel session/konteyner varken) kendi kendine toparlandı; migration/test komutları
+2-3 kez yeniden denendikten sonra başarılı oldu. Kod tarafında bir sorun değildi.
 
 ## Bilinen sınırlama: mevcut kiracılar yeni türleri otomatik almaz
 
