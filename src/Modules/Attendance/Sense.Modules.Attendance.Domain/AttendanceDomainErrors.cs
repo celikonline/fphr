@@ -30,6 +30,8 @@ public static class AttendanceDomainErrors
     public const string ShiftWeeklyHoursExceeded = "attendance.shift.weekly_hours_exceeded";
     public const string ShiftWeeklyDaysExceeded = "attendance.shift.weekly_days_exceeded";
     public const string ShiftAvailabilityConflict = "attendance.shift.availability_conflict";
+    public const string ShiftRestPeriodTooShort = "attendance.shift.rest_period_too_short";
+    public const string ShiftBreakTooShort = "attendance.shift.break_too_short";
     public const string AvailabilityTimeRangeInvalid = "attendance.availability.time_range_invalid";
     public const string AvailabilityAlreadyCancelled = "attendance.availability.already_cancelled";
     public const string AvailabilityNotFound = "attendance.availability.not_found";

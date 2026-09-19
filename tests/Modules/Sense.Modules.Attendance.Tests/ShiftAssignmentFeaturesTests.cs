@@ -134,7 +134,7 @@ public sealed class AssignShiftHandlerTests
         _shifts.ListForRangeAsync(Monday, Monday.AddDays(6), Arg.Any<IReadOnlyCollection<Guid>?>(), Arg.Any<CancellationToken>()).Returns([existing]);
 
         var result = await CreateHandler().Handle(
-            new AssignShiftCommand(_employeeId, Monday, new TimeOnly(10, 0), new TimeOnly(18, 0), 0, false, "Güncellendi"), TestContext.Current.CancellationToken);
+            new AssignShiftCommand(_employeeId, Monday, new TimeOnly(10, 0), new TimeOnly(18, 0), 30, false, "Güncellendi"), TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
         existing.Start.ShouldBe(new TimeOnly(10, 0));

@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
 using Sense.Modules.Attendance.Domain;
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -26,11 +27,15 @@ internal static class ShiftAssignmentMapper
 /// <summary>
 /// Vardiya limitleri (11.3.6 "genel merkezin tanımladığı üst sınırların üzerine çıkamaz"): daily limit (night limit
 /// when the shift is marked IsNight and a night limit is configured) + weekly hours/days across the ISO week
-/// containing the candidate's date. MVP simplification: one limit set for every employee (see ShiftSettings doc).
+/// containing the candidate's date, then the minimum break (<see cref="ShiftSettings.BreakMinMinutes"/>, for shifts long
+/// enough to require one) and the 11-hour uninterrupted rest against the neighbouring days' shifts.
+/// <paramref name="knownAssignments"/> is the candidate's ISO week plus (when the candidate sits on the week's first/last
+/// day) the adjacent day outside it - see <see cref="ShiftAdjacency"/>. MVP simplification: one limit set for every employee
+/// (see ShiftSettings doc).
 /// </summary>
 internal static class ShiftLimitValidator
 {
-    public static Result Validate(ShiftSettings settings, IReadOnlyList<ShiftAssignment> weekAssignments, Guid excludeAssignmentId, ShiftAssignment candidate)
+    public static Result Validate(ShiftSettings settings, IReadOnlyList<ShiftAssignment> knownAssignments, Guid excludeAssignmentId, ShiftAssignment candidate)
     {
         var dailyLimit = candidate.IsNight && settings.NightWorkEnabled && settings.NightWorkMaxMinutes is { } nightLimit ? nightLimit : settings.MaxDailyMinutes;
         if (candidate.ShiftMinutes > dailyLimit)
@@ -38,7 +43,9 @@ internal static class ShiftLimitValidator
             return Error.Validation(AttendanceDomainErrors.ShiftDailyLimitExceeded);
         }
 
-        var others = weekAssignments.Where(a => a.Id != excludeAssignmentId && a.Date != candidate.Date).ToList();
+        var weekStart = TimesheetWeekEvaluator.MondayOf(candidate.Date);
+        var weekEnd = weekStart.AddDays(6);
+        var others = knownAssignments.Where(a => a.Id != excludeAssignmentId && a.Date != candidate.Date && a.Date >= weekStart && a.Date <= weekEnd).ToList();
         if (others.Sum(a => a.ShiftMinutes) + candidate.ShiftMinutes > settings.MaxWeeklyMinutes)
         {
             return Error.Validation(AttendanceDomainErrors.ShiftWeeklyHoursExceeded);
@@ -49,8 +56,86 @@ internal static class ShiftLimitValidator
             return Error.Validation(AttendanceDomainErrors.ShiftWeeklyDaysExceeded);
         }
 
-        return Result.Success();
+        if (RequiresBreak(candidate) && candidate.BreakMinutes < settings.BreakMinMinutes)
+        {
+            return Error.Validation(AttendanceDomainErrors.ShiftBreakTooShort);
+        }
+
+        return HasEnoughRest(knownAssignments, excludeAssignmentId, candidate) ? Result.Success() : Error.Validation(AttendanceDomainErrors.ShiftRestPeriodTooShort);
     }
+
+    /// <summary>The configured minimum break only binds shifts long enough for the m.68 ara dinlenme to apply at all (4 saatten kısa vardiyada mola şartı yok).</summary>
+    private static bool RequiresBreak(ShiftAssignment candidate) =>
+        DailyWorkCalculator.LegalMinimumBreakMinutes((int)ShiftSpan(candidate).TotalMinutes) > 0;
+
+    private static bool HasEnoughRest(IReadOnlyList<ShiftAssignment> knownAssignments, Guid excludeAssignmentId, ShiftAssignment candidate)
+    {
+        var candidateStart = StartOf(candidate);
+        var candidateEnd = EndOf(candidate);
+        var minimumRest = TimeSpan.FromMinutes(ShiftSettings.MinDailyRestMinutes);
+        foreach (var other in knownAssignments.Where(a => a.Id != excludeAssignmentId))
+        {
+            var isPrevious = other.Date == candidate.Date.AddDays(-1);
+            var isNext = other.Date == candidate.Date.AddDays(1);
+            if ((isPrevious && candidateStart - EndOf(other) < minimumRest) || (isNext && StartOf(other) - candidateEnd < minimumRest))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static TimeSpan ShiftSpan(ShiftAssignment a)
+    {
+        var span = a.End.ToTimeSpan() - a.Start.ToTimeSpan();
+        return span <= TimeSpan.Zero ? span + TimeSpan.FromDays(1) : span;
+    }
+
+    private static DateTime StartOf(ShiftAssignment a) => a.Date.ToDateTime(a.Start);
+
+    private static DateTime EndOf(ShiftAssignment a) => StartOf(a) + ShiftSpan(a);
+}
+
+/// <summary>Loads the neighbouring-day shifts the rest-period check needs when the candidate sits on the first/last day of its ISO week (inside the week they are already loaded).</summary>
+internal static class ShiftAdjacency
+{
+    public static async Task<IReadOnlyList<ShiftAssignment>> WithAdjacentDaysAsync(
+        IShiftAssignmentRepository shifts, Guid employeeId, DateOnly date, IReadOnlyList<ShiftAssignment> week, IReadOnlyList<ShiftAssignment> pending,
+        CancellationToken cancellationToken)
+    {
+        var weekStart = TimesheetWeekEvaluator.MondayOf(date);
+        var outside = new List<DateOnly>();
+        if (date == weekStart)
+        {
+            outside.Add(date.AddDays(-1));
+        }
+
+        if (date == weekStart.AddDays(6))
+        {
+            outside.Add(date.AddDays(1));
+        }
+
+        if (outside.Count == 0)
+        {
+            return week;
+        }
+
+        var all = week.ToList();
+        foreach (var adjacent in outside)
+        {
+            all.AddRange(await shifts.ListForRangeAsync(adjacent, adjacent, [employeeId], cancellationToken));
+            all.AddRange(pending.Where(p => p.EmployeeId == employeeId && p.Date == adjacent));
+        }
+
+        return all.DistinctBy(a => a.Id).ToList();
+    }
+}
+
+/// <summary>m.69: night-shift status is derived server-side from the shift hours; the client's flag can only add to it, never remove it.</summary>
+internal static class ShiftNightClassifier
+{
+    public static bool Resolve(ShiftSettings settings, TimeOnly start, TimeOnly end, bool clientFlag) => clientFlag || settings.IsNightShift(start, end);
 }
 
 internal static class ShiftPlanLockGuard
@@ -145,17 +230,19 @@ public sealed class AssignShiftHandler(
         var settings = await ShiftSettingsProvisioning.EnsureAsync(settingsRepository, tenant, unitOfWork, cancellationToken);
         var weekStart = TimesheetWeekEvaluator.MondayOf(command.Date);
         var weekAssignments = await shifts.ListForRangeAsync(weekStart, weekStart.AddDays(6), [command.EmployeeId], cancellationToken);
+        var knownAssignments = await ShiftAdjacency.WithAdjacentDaysAsync(shifts, command.EmployeeId, command.Date, weekAssignments, [], cancellationToken);
+        var isNight = ShiftNightClassifier.Resolve(settings, command.Start, command.End, command.IsNight);
 
         var existing = await shifts.FindByEmployeeAndDateAsync(command.EmployeeId, command.Date, cancellationToken);
         if (existing is not null)
         {
-            var candidateCheck = ShiftAssignment.Create(tenant.TenantId, command.EmployeeId, command.Date, command.Start, command.End, command.BreakMinutes, command.IsNight, command.Note);
+            var candidateCheck = ShiftAssignment.Create(tenant.TenantId, command.EmployeeId, command.Date, command.Start, command.End, command.BreakMinutes, isNight, command.Note);
             if (candidateCheck.IsFailure)
             {
                 return candidateCheck.Error;
             }
 
-            var limitCheck = ShiftLimitValidator.Validate(settings, weekAssignments, existing.Id, candidateCheck.Value);
+            var limitCheck = ShiftLimitValidator.Validate(settings, knownAssignments, existing.Id, candidateCheck.Value);
             if (limitCheck.IsFailure)
             {
                 return limitCheck.Error;
@@ -167,17 +254,17 @@ public sealed class AssignShiftHandler(
                 return availabilityCheck.Error;
             }
 
-            var updated = existing.Update(command.Start, command.End, command.BreakMinutes, command.IsNight, command.Note);
+            var updated = existing.Update(command.Start, command.End, command.BreakMinutes, isNight, command.Note);
             return updated.IsFailure ? updated.Error : existing.Id;
         }
 
-        var created = ShiftAssignment.Create(tenant.TenantId, command.EmployeeId, command.Date, command.Start, command.End, command.BreakMinutes, command.IsNight, command.Note);
+        var created = ShiftAssignment.Create(tenant.TenantId, command.EmployeeId, command.Date, command.Start, command.End, command.BreakMinutes, isNight, command.Note);
         if (created.IsFailure)
         {
             return created.Error;
         }
 
-        var newLimitCheck = ShiftLimitValidator.Validate(settings, weekAssignments, Guid.Empty, created.Value);
+        var newLimitCheck = ShiftLimitValidator.Validate(settings, knownAssignments, Guid.Empty, created.Value);
         if (newLimitCheck.IsFailure)
         {
             return newLimitCheck.Error;
@@ -224,6 +311,7 @@ public sealed class RepeatShiftAssignmentsHandler(
                 return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
             }
 
+            var pending = new List<ShiftAssignment>();
             var sourceWeek = await shifts.ListForRangeAsync(sourceWeekStart, sourceWeekStart.AddDays(6), [employeeId], cancellationToken);
             foreach (var targetWeekStartRaw in command.TargetWeekStarts.Distinct())
             {
@@ -242,13 +330,15 @@ public sealed class RepeatShiftAssignmentsHandler(
                     }
 
                     var existing = targetWeekAssignments.FirstOrDefault(a => a.Date == targetDate);
-                    var candidateCheck = ShiftAssignment.Create(tenant.TenantId, employeeId, targetDate, source.Start, source.End, source.BreakMinutes, source.IsNight, source.Note);
+                    var isNight = ShiftNightClassifier.Resolve(settings, source.Start, source.End, source.IsNight);
+                    var candidateCheck = ShiftAssignment.Create(tenant.TenantId, employeeId, targetDate, source.Start, source.End, source.BreakMinutes, isNight, source.Note);
                     if (candidateCheck.IsFailure)
                     {
                         return candidateCheck.Error;
                     }
 
-                    var limitCheck = ShiftLimitValidator.Validate(settings, targetWeekAssignments, existing?.Id ?? Guid.Empty, candidateCheck.Value);
+                    var knownAssignments = await ShiftAdjacency.WithAdjacentDaysAsync(shifts, employeeId, targetDate, targetWeekAssignments, pending, cancellationToken);
+                    var limitCheck = ShiftLimitValidator.Validate(settings, knownAssignments, existing?.Id ?? Guid.Empty, candidateCheck.Value);
                     if (limitCheck.IsFailure)
                     {
                         return limitCheck.Error;
@@ -262,7 +352,7 @@ public sealed class RepeatShiftAssignmentsHandler(
 
                     if (existing is not null)
                     {
-                        var updated = existing.Update(source.Start, source.End, source.BreakMinutes, source.IsNight, source.Note);
+                        var updated = existing.Update(source.Start, source.End, source.BreakMinutes, isNight, source.Note);
                         if (updated.IsFailure)
                         {
                             return updated;
@@ -272,6 +362,7 @@ public sealed class RepeatShiftAssignmentsHandler(
                     {
                         shifts.Add(candidateCheck.Value);
                         targetWeekAssignments = [.. targetWeekAssignments, candidateCheck.Value];
+                        pending.Add(candidateCheck.Value);
                     }
                 }
             }

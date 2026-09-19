@@ -875,6 +875,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>The weekly working hours limit was exceeded.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>The weekly working days limit was exceeded.</value></data>
   <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>The employee reported being unavailable for this date/time.</value></data>
+  <data name="attendance.shift.rest_period_too_short" xml:space="preserve"><value>There must be at least 11 hours of uninterrupted rest between two shifts.</value></data>
+  <data name="attendance.shift.break_too_short" xml:space="preserve"><value>The shift break cannot be shorter than the minimum break configured in the settings.</value></data>
   <data name="attendance.shift.self" xml:space="preserve"><value>View my own shifts</value></data>
   <data name="attendance.availability.self" xml:space="preserve"><value>Report my own availability</value></data>
   <data name="attendance.availability.view" xml:space="preserve"><value>View employee availability</value></data>

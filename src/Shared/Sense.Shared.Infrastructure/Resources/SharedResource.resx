@@ -886,6 +886,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>Haftalık çalışma saati üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>Haftalık çalışma günü üst sınırı aşıldı.</value></data>
   <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>Çalışan bu tarih/saat için "müsait değilim" girişi yapmış.</value></data>
+  <data name="attendance.shift.rest_period_too_short" xml:space="preserve"><value>İki vardiya arasında en az 11 saat kesintisiz dinlenme süresi olmalıdır.</value></data>
+  <data name="attendance.shift.break_too_short" xml:space="preserve"><value>Vardiya molası, ayarlarda tanımlı asgari mola süresinden kısa olamaz.</value></data>
   <data name="attendance.shift.self" xml:space="preserve"><value>Kendi vardiyalarımı görüntüleme</value></data>
   <data name="attendance.availability.self" xml:space="preserve"><value>Müsaitlik durumumu bildirme</value></data>
   <data name="attendance.availability.view" xml:space="preserve"><value>Çalışan müsaitliğini görüntüleme</value></data>
