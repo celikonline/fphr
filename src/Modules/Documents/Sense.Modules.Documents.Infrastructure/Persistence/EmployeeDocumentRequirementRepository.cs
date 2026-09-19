@@ -28,12 +28,18 @@ public sealed class EmployeeDocumentRequirementRepository(DocumentsDbContext con
     }
 
     public async Task<(IReadOnlyList<EmployeeDocumentRequirement> Items, int Total)> ListReportAsync(
-        DocumentRequirementStatus? status, int skip, int take, CancellationToken cancellationToken = default)
+        DocumentRequirementStatus? status, int skip, int take, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default)
     {
         var query = context.EmployeeDocumentRequirements.AsQueryable();
         if (status is { } s)
         {
             query = query.Where(r => r.Status == s);
+        }
+
+        if (employeeIds is not null)
+        {
+            var ids = employeeIds.ToList();
+            query = query.Where(r => ids.Contains(r.EmployeeId));
         }
 
         var total = await query.CountAsync(cancellationToken);
