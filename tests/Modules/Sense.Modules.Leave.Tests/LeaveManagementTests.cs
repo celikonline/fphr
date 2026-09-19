@@ -395,6 +395,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         // group heading - the heading needs the requester's org unit name, best-effort resolved via IOrgUnitLookup.
         var (tenantId, employeeId, annualId) = await HireAsync();
         _currentUser.EmployeeId.Returns(employeeId);
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), employeeId, Arg.Any<CancellationToken>()).Returns(true);
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var monday = NextWeekMonday();
 

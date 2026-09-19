@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
@@ -76,6 +77,9 @@ public sealed class LeaveIntegrationTests : TestFixture
         services.AddModuleDbContext<LeaveDbContext>(configuration, LeaveDbContext.SchemaName);
         services.AddLeaveCoreServices(configuration);
         services.AddLeaveIntegrationEventHandlers();
+        // senseik-055: isolated ServiceCollection, built independently of ConfigureServices above - needs its own
+        // IEmployeeBirthDateLookup stub for EmployeeHiredHandler to resolve.
+        services.AddSingleton(Substitute.For<IEmployeeBirthDateLookup>());
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();

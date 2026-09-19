@@ -1,15 +1,16 @@
 {
   "id": "senseik-055",
-  "title": "IEmployeeBirthDateLookup DI kaydı 3 Leave entegrasyon test dosyasında eksik — 18 test kırık",
+  "title": "IEmployeeBirthDateLookup DI kaydı 3 Leave entegrasyon test dosyasında eksik — 19 test kırık",
   "owner": "pc-b",
-  "state": "backlog",
+  "state": "review",
   "branch": "b/birthdate-lookup-test-di-fix",
-  "worktree": ".claude/worktrees/birthdate-lookup-di-fix",
+  "worktree": ".",
   "acceptance": [
     "LeaveIntegrationTests.cs, LeaveManagementIntegrationTests.cs, LeaveRequestIntegrationTests.cs test fixture'larına IEmployeeBirthDateLookup DI kaydı eklendi (OvertimeTests.cs'teki düzeltmeyle aynı desen)",
-    "Bu üç dosyadaki 18 test artık DI hatası vermeden çalışıyor"
+    "Bu üç dosyadaki 19 test artık DI hatası vermeden çalışıyor",
+    "tests/Modules/Sense.Modules.Leave.Tests projesindeki tüm 146 test PASS olur, başka test kırılmaz"
   ],
-  "merge_gate": "dotnet test (Leave modülü tam koşu) — bu üç dosyada DI kaynaklı hata kalmıyor",
+  "merge_gate": "dotnet test tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj yeşil (146/146)",
   "handoff": "docs/handoffs/birthdate-lookup-test-di-fix.md",
-  "source": "senseik-012/014 implementasyon raporunda tespit edildi (2026-09-19) — senseik-007 (yaş istisnası) yeni IEmployeeBirthDateLookup portunu ekledi ama bu üç test dosyasının fixture'ına DI kaydını eklemedi. senseik-012/014 ajanı sadece kendi ihtiyacı olan OvertimeTests.cs'i düzeltti, kapsam dışı bıraktı."
+  "source": "senseik-012/014 implementasyon raporunda tespit edildi (2026-09-19) — senseik-007 (yaş istisnası) yeni IEmployeeBirthDateLookup portunu ekledi ama bu üç test dosyasının fixture'ına DI kaydını eklemedi. senseik-012/014 ajanı sadece kendi ihtiyacı olan OvertimeTests.cs'i düzeltti, kapsam dışı bıraktı. Bugün doğrulanan hata: System.InvalidOperationException - Unable to resolve service for type 'Sense.Modules.Employee.Contracts.IEmployeeBirthDateLookup' while attempting to activate 'EmployeeHiredHandler' (InProcessEventBus.Publish üzerinden). Düzeltme sırasında, birthdate lookup'ı çözünce daha önce aynı erken çökme tarafından maskelenen 3 ayrı ön-var-olan test açığı daha ortaya çıktı (bkz. handoff)."
 }
