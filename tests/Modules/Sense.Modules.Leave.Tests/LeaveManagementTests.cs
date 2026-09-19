@@ -380,6 +380,33 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task Detail_TeamOverlap_ResolvesOrgUnitName()
+    {
+        // senseik-026: the leave request detail's team-overlap panel becomes a day-by-day calendar grid with a
+        // group heading - the heading needs the requester's org unit name, best-effort resolved via IOrgUnitLookup.
+        var (tenantId, employeeId, annualId) = await HireAsync();
+        _currentUser.EmployeeId.Returns(employeeId);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+
+        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(1), null, true), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        created.IsSuccess.ShouldBeTrue(created.IsFailure ? created.Error.Code : null);
+
+        var orgUnitId = Guid.NewGuid();
+        using var verify = ServiceProvider!.CreateScope();
+        var detail = await ActivatorUtilities.CreateInstance<GetMyLeaveRequestHandler>(
+                verify.ServiceProvider, _currentUser, SubstituteDetails(verify.ServiceProvider, (orgUnitId, "Human Resources")))
+            .Handle(new GetMyLeaveRequestQuery(created.Value.Id), CancellationToken.None);
+
+        detail.IsSuccess.ShouldBeTrue(detail.IsFailure ? detail.Error.Code : null);
+        detail.Value.TeamOverlap.ShouldNotBeNull();
+        detail.Value.TeamOverlap!.OrgUnitName.ShouldBe("Human Resources");
+        detail.Value.TeamOverlap.Count.ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Resubmission_RequiresOwnRejectedRequest()
     {
         var (tenantId, employeeId, annualId) = await HireAsync();
@@ -507,13 +534,30 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         (await finalDb.LedgerEntries.CountAsync(e => e.Type == LeaveLedgerEntryType.Usage)).ShouldBe(1);
     }
 
-    private static LeaveRequestDetailBuilder SubstituteDetails(IServiceProvider services)
+    /// <summary>
+    /// Unconfigured <paramref name="orgUnit"/>: GetOrgUnitIdAsync returns null (NSubstitute default), so
+    /// ResolveTeamOverlapAsync short-circuits to a null overlap. Pass <paramref name="orgUnit"/> to exercise the
+    /// org-unit-name resolution path (senseik-026 calendar grid header).
+    /// </summary>
+    private static LeaveRequestDetailBuilder SubstituteDetails(IServiceProvider services, (Guid Id, string Name)? orgUnit = null)
     {
         var directory = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeDirectory>();
         directory.GetContactsAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(ci => ci.ArgAt<IReadOnlyCollection<Guid>>(1).Select(id => new Sense.Modules.Employee.Contracts.EmployeeContact(id, "Ada", "Lovelace", null, null, null, "Active")).ToList());
-        // GetOrgUnitIdAsync defaults to null (unconfigured), so ResolveTeamOverlapAsync short-circuits to an empty overlap.
         var employeeLookup = Substitute.For<Sense.Modules.Employee.Contracts.IEmployeeLookup>();
-        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(services, directory, employeeLookup, Substitute.For<IApprovalRequestLookup>());
+        var orgUnits = Substitute.For<IOrgUnitLookup>();
+        if (orgUnit is { } unit)
+        {
+            employeeLookup.GetOrgUnitIdAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(unit.Id);
+            orgUnits.ListActiveUnitsAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+                .Returns([new OrgUnitInfo(unit.Id, Guid.NewGuid(), null, unit.Name)]);
+            // No peers configured (senseik-026 test only asserts OrgUnitName resolution) - ResolveTeamOverlapAsync
+            // still returns a non-null TeamOverlapDto with Count 0 once GetOrgUnitIdAsync is non-null.
+            directory.ListActiveEmployeeIdsInOrgUnitsAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+                .Returns((IReadOnlyList<Guid>)[]);
+        }
+
+        return ActivatorUtilities.CreateInstance<LeaveRequestDetailBuilder>(
+            services, directory, employeeLookup, Substitute.For<IApprovalRequestLookup>(), orgUnits);
     }
 }

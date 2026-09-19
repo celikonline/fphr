@@ -327,7 +327,8 @@
     "remainingBalance": "Remaining leave balance",
     "overlappingLeaves": {
       "title": "Overlapping leaves ({{count}})",
-      "more": "+{{count}} more"
+      "more": "+{{count}} more (not listed)",
+      "viewAll": "View all ({{count}})"
     }
   },
   "request": {

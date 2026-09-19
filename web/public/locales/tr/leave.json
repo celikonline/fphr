@@ -327,7 +327,8 @@
     "remainingBalance": "Kalan izin bakiyesi",
     "overlappingLeaves": {
       "title": "Çakışan izinler ({{count}})",
-      "more": "+{{count}} kişi daha"
+      "more": "+{{count}} kişi daha (listelenmedi)",
+      "viewAll": "Tümünü gör ({{count}})"
     }
   },
   "request": {
