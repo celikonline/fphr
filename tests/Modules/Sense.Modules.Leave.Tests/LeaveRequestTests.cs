@@ -214,6 +214,18 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // OvertimeTests/LeaveBalanceRecalculationJobTests; without it every EmployeeHired publish fails DI resolution.
         services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
         services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
+
+        // GetLeaveCalendarHandler (Identity module contracts, never registered here) needs all three resolvable.
+        // IPermissionService/IDataScopeService stay unconfigured (calendar-read permission scope isn't under test
+        // in this file); IAccessSettingsService mirrors its real "unset key = no restriction" safe default
+        // (Permissions.cs doc comment) so the calendar's org-unit-visibility fallback path is exercised, matching
+        // what tenants see out of the box - NSubstitute's own unconfigured-bool default (false) is the opposite.
+        services.AddSingleton(Substitute.For<IPermissionService>());
+        services.AddSingleton(Substitute.For<IDataScopeService>());
+        var accessSettings = Substitute.For<IAccessSettingsService>();
+        accessSettings.IsEnabledForCurrentUserAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        accessSettings.IsEnabledAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(true);
+        services.AddSingleton(accessSettings);
     }
 
     protected override async Task OnDatabaseReadyAsync()
