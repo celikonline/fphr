@@ -100,7 +100,7 @@ export default function EmployeeDirectory() {
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>{t("employees:columns.name")}</Table.Th>
-                      <Table.Th>{t("employees:columns.orgUnit")}</Table.Th>
+                      <Table.Th>{t("employees:columns.department")}</Table.Th>
                       <Table.Th>{t("employees:columns.workEmail")}</Table.Th>
                       <Table.Th>{t("employees:columns.workPhone")}</Table.Th>
                     </Table.Tr>
@@ -109,7 +109,10 @@ export default function EmployeeDirectory() {
                     {data.items.map((entry) => (
                       <Table.Tr key={entry.id}>
                         <Table.Td fw={500}>{entry.displayName}</Table.Td>
-                        <Table.Td>{(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}</Table.Td>
+                        {/* senseik-046: departmentName/titleName come from the server's org placement chain, unlike
+                            the old client-side nameById lookup below (still used for the filter), which needs
+                            organization.units.read and silently rendered "—" for roles without it (e.g. Bordro/Puantör). */}
+                        <Table.Td>{entry.departmentName ?? entry.titleName ?? "—"}</Table.Td>
                         <Table.Td>
                           {entry.workEmail ? (
                             <Anchor href={`mailto:${entry.workEmail}`} size="sm" c="inherit">
@@ -137,7 +140,7 @@ export default function EmployeeDirectory() {
                         {entry.displayName}
                       </Text>
                       <Text size="xs" c="dimmed" truncate>
-                        {(entry.orgUnitId && nameById.get(entry.orgUnitId)) || "—"}
+                        {entry.departmentName ?? entry.titleName ?? "—"}
                       </Text>
                     </Stack>
                     <Stack gap={4} mt="xs">

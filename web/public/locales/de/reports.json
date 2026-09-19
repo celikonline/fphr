@@ -120,7 +120,7 @@
       "currentYear": "Laufendes Jahr"
     },
     "empty": "Keine Kennzahlen für den gewählten Zeitraum.",
-    "scopedNote": "Ihre Berechtigung ist auf Einheiten beschränkt, daher wird nur die Verteilung je Einheit angezeigt.",
+    "scopedNote": "Ihre Berechtigung ist auf Einheiten beschränkt, daher wird nur die Verteilung je Einheit und Abteilung angezeigt.",
     "cards": {
       "headcount": "Aktiver Personalstand",
       "turnover": "Fluktuationsrate",
@@ -137,7 +137,7 @@
     "charts": {
       "gender": "Geschlechterverteilung",
       "genderByUnit": "Personalstand nach Einheit und Geschlecht",
-      "department": "Personalstand nach Einheit",
+      "department": "Personalstand nach Abteilung",
       "leaveByType": "Urlaubsnutzung nach Art ({{year}})",
       "careerMoves": "Arten von Karriereänderungen",
       "noData": "Keine Daten vorhanden",
@@ -163,6 +163,7 @@
     "TURNOVER_RATE": { "label": "Fluktuationsrate" },
     "EARLY_TURNOVER_RATE": { "label": "Frühfluktuation (erste 6 Monate)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Geschlechterverteilung nach Einheit" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Geschlechterverteilung nach Abteilung" },
     "dimensions": {
       "Promotion": "Beförderung",
       "LateralMove": "Lateraler Wechsel",

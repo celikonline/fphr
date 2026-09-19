@@ -40,7 +40,8 @@
   },
   "columns": {
     "name": "Name",
-    "orgUnit": "Unit",
+    "department": "Department",
+    "title": "Title",
     "manager": "Manager",
     "workEmail": "Work email",
     "workPhone": "Work phone",

@@ -100,6 +100,13 @@ function EmployeeGridCard({
           <Text size="sm" lineClamp={1} title={subtitle ?? undefined}>
             {subtitle ?? "—"}
           </Text>
+          {/* senseik-046: departmentName is the org placement chain's Department-level ancestor (like the org chart's
+              node subtitle), shown separately from the title/unit line above so the two are never conflated. */}
+          {employee.departmentName && (
+            <Text size="xs" c="dimmed" lineClamp={1} title={employee.departmentName}>
+              {employee.departmentName}
+            </Text>
+          )}
           <Text size="xs" c="dimmed" truncate="end" maw="100%" title={employee.workEmail ?? undefined}>
             {employee.workEmail ?? "—"}
           </Text>

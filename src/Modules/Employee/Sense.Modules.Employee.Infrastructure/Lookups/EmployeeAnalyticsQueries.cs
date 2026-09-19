@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 
 namespace Sense.Modules.Employee.Infrastructure.Lookups;
 
 /// <summary>Implements Employee.Contracts.IEmployeeAnalyticsQueries so the Analytics module can compute workforce KPIs.</summary>
-public sealed class EmployeeAnalyticsQueries(EmployeeDbContext context) : IEmployeeAnalyticsQueries
+public sealed class EmployeeAnalyticsQueries(EmployeeDbContext context, IOrgUnitLookup orgUnits) : IEmployeeAnalyticsQueries
 {
     private static readonly CareerChangeType[] CareerPathChangeTypes =
     [
@@ -68,6 +70,30 @@ public sealed class EmployeeAnalyticsQueries(EmployeeDbContext context) : IEmplo
             .ToListAsync(cancellationToken);
 
         return counts.Select(c => new GenderByOrgUnitCount(c.OrgUnitId, c.Gender.ToString(), c.Count)).ToList();
+    }
+
+    /// <summary>
+    /// senseik-046: re-groups the raw per-OrgUnitId counts onto their Department-level ancestor (same org placement
+    /// chain resolution as <see cref="OrgPlacement.LevelUnitFor"/>, used by EmployeeQueries for the employee card's
+    /// DepartmentName and GetDepartmentDistributionHandler) so employees under different titles in one department
+    /// land in one bucket instead of being split - or hidden - behind their (usually Title-level) raw unit.
+    /// </summary>
+    public async Task<IReadOnlyList<GenderByOrgUnitCount>> GetGenderByDepartmentAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    {
+        var byRawUnit = await GetGenderByOrgUnitAsync(tenantId, cancellationToken);
+        if (byRawUnit.Count == 0)
+        {
+            return byRawUnit;
+        }
+
+        var types = await orgUnits.ListActiveTypesAsync(tenantId, cancellationToken);
+        var units = await orgUnits.ListActiveUnitsAsync(tenantId, cancellationToken);
+        var placement = new OrgPlacement(types, units);
+
+        return byRawUnit
+            .GroupBy(c => (DepartmentId: placement.LevelUnitFor(c.OrgUnitId, "Department")?.Id, c.Gender))
+            .Select(g => new GenderByOrgUnitCount(g.Key.DepartmentId, g.Key.Gender, g.Sum(c => c.Count)))
+            .ToList();
     }
 
     private const int EarlyAttritionDays = 182;

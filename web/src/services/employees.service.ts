@@ -65,6 +65,9 @@ export interface EmployeeListItem {
   missingInfoFieldCount: number;
   /** "Title" level unit of the placement chain (card view); missing when unplaced. */
   titleName?: string | null;
+  /** "Department" level unit of the placement chain (senseik-046: the grid's "Birim" column showed the raw, usually
+   * Title-level, org unit before this existed) - missing when the employee has no Department-level ancestor. */
+  departmentName?: string | null;
 }
 
 /**
@@ -182,6 +185,10 @@ export interface DirectoryEntry {
   workEmail: string | null;
   /** Null when the "work phone numbers" access setting is off for the caller. */
   workPhone: string | null;
+  /** Title/Department level of the org placement chain (senseik-046), resolved server-side so a caller with
+   * directory.view but not organization.units.read (e.g. Bordro/Puantör) still sees it instead of "—". */
+  titleName?: string | null;
+  departmentName?: string | null;
 }
 
 export interface OrgChartNode {
