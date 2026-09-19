@@ -2,7 +2,7 @@
   "id": "senseik-052",
   "title": "Yetkisiz sayfa engellenmiyor (boş/bozuk gösteriliyor) + sol menü rol bazında filtrelenmiyor",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/route-authorization-guard",
   "worktree": ".claude/worktrees/agent-a7f444d3e057a9d25",
   "acceptance": [

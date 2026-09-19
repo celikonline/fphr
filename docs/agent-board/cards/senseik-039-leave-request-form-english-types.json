@@ -2,7 +2,7 @@
   "id": "senseik-039",
   "title": "İzin talebi formunda 12 izin türünün tamamı İngilizce görünüyor",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/leave-type-edit-modal-fix",
   "worktree": ".claude/worktrees/leave-type-modal-fix",
   "acceptance": [

@@ -2,7 +2,7 @@
   "id": "senseik-049",
   "title": "Denetim kaydı kapsamı genişletilsin: Employee/Leave/Overtime/Approval işlemleri hiç loglanmıyor",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/audit-log-coverage-expansion",
   "worktree": ".claude/worktrees/audit-coverage",
   "acceptance": [

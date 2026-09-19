@@ -2,7 +2,7 @@
   "id": "senseik-030",
   "title": "İzin/fazla mesai raporlama: mutabakat formu, aylık mesai raporu, fazla mesai ödemeye çevirme",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/leave-overtime-reporting",
   "worktree": ".claude/worktrees/leave-overtime-reporting",
   "acceptance": [

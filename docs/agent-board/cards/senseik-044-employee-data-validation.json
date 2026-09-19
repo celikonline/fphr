@@ -2,7 +2,7 @@
   "id": "senseik-044",
   "title": "Çalışan veri doğrulama (doğum tarihi, izin hak ediş senkronizasyonu, Türkçe e-posta)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/employee-data-validation",
   "worktree": ".claude/worktrees/agent-afb5194a2f87a52f4",
   "acceptance": [

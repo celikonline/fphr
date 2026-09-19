@@ -2,7 +2,7 @@
   "id": "senseik-048",
   "title": "İK için şirket geneli izin/fazla mesai defteri",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/hr-company-wide-leave-ledger",
   "worktree": ".",
   "acceptance": [

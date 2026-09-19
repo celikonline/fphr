@@ -2,7 +2,7 @@
   "id": "senseik-057",
   "title": "Ayarlar → Modüller: kiracı bazında ürün modüllerini aç/kapa (API 403 filtresi + web gizleme)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/module-toggle-settings",
   "worktree": ".claude/worktrees/module-toggle",
   "acceptance": [

@@ -2,7 +2,7 @@
   "id": "senseik-029",
   "title": "Puantaj raporlama: Excel/mali müşavir çıktısı, ay sonu kapatma raporu, izinli günde çalışma detektörü",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/attendance-reporting-export",
   "worktree": ".claude/worktrees/attendance-reporting",
   "acceptance": [

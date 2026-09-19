@@ -2,7 +2,7 @@
   "id": "senseik-043",
   "title": "Demo veri hijyeni round 2: İngilizce departman/şirket adları, cinsiyet verisi hep 'Unspecified'",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/demo-data-hygiene-round2",
   "worktree": ".claude/worktrees/demo-hygiene-2",
   "acceptance": [

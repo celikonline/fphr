@@ -2,7 +2,7 @@
   "id": "senseik-045",
   "title": "'Eksik bilgi' rozeti 56/56 çalışanda çıkıyor — anlamsız hale geliyor",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/missing-info-badge-fix",
   "worktree": ".claude/worktrees/agent-a0035fa6f828fd10e",
   "acceptance": [

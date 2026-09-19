@@ -2,7 +2,7 @@
   "id": "senseik-038",
   "title": "İzin türü düzenleme penceresi bozuk açılıyor — fieldset>div.grid genişlik 0px (BLOKAJ)",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/leave-type-edit-modal-fix",
   "worktree": ".claude/worktrees/leave-type-modal-fix",
   "acceptance": [

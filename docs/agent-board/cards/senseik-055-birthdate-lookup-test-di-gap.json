@@ -2,7 +2,7 @@
   "id": "senseik-055",
   "title": "IEmployeeBirthDateLookup DI kaydı 3 Leave entegrasyon test dosyasında eksik — 19 test kırık",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/birthdate-lookup-test-di-fix",
   "worktree": ".",
   "acceptance": [

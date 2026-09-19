@@ -2,7 +2,7 @@
   "id": "senseik-046",
   "title": "'Birim' sütunu departman yerine ünvan gösteriyor — çalışan listesi ve raporlar genelinde",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/unit-title-confusion-broad",
   "worktree": ".claude/worktrees/agent-a42591004449874e3",
   "acceptance": [
