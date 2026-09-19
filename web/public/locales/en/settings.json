@@ -63,6 +63,16 @@
       }
     }
   },
+  "securityPolicy": {
+    "title": "Security policy",
+    "subtitle": "Require two-factor authentication (2FA) for specific roles.",
+    "notice": "Users with an enforced role whose 2FA is off are routed to the account page until they finish setup - they cannot reach any other screen.",
+    "readOnly": "You can view the security policy but do not have permission to change it.",
+    "loadError": "Failed to load the security policy.",
+    "saveSuccess": "Security policy saved.",
+    "saveError": "Failed to save the security policy.",
+    "rolesTitle": "Roles requiring 2FA"
+  },
   "supportAccess": {
     "title": "Support access",
     "subtitle": "Approve or revoke requests from the Sense support team to access your company account.",

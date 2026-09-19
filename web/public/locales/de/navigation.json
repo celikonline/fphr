@@ -82,6 +82,8 @@
     "system": "Systemeinstellungen",
     "access": "Zugriffseinstellungen",
     "accessDesc": "Was Mitarbeitende auf Start, Konto und Kalender sehen",
+    "securityPolicy": "Sicherheitsrichtlinie",
+    "securityPolicyDesc": "Verpflichtende Zwei-Faktor-Authentifizierung (2FA) für bestimmte Rollen",
     "usersRoles": "Benutzer & Rollen",
     "usersRolesDesc": "Benutzer, Zugriffsarten, Rollen und Berechtigungen",
     "auditLog": "Audit-Protokoll",

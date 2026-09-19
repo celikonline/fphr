@@ -82,6 +82,8 @@
     "system": "Sistem ayarları",
     "access": "Erişim ayarları",
     "accessDesc": "Çalışanların ana sayfa, hesap ve takvimde neleri göreceği",
+    "securityPolicy": "Güvenlik politikası",
+    "securityPolicyDesc": "Belirli roller için zorunlu iki adımlı doğrulama (2FA)",
     "usersRoles": "Kullanıcılar ve roller",
     "usersRolesDesc": "Kullanıcılar, erişim türleri, roller ve izinler",
     "auditLog": "Denetim kaydı",

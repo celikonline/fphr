@@ -87,7 +87,9 @@ public sealed record MeDto(
 /// Kiracıya bağlı, izin dışı özellik ayarları; ön yüz menü/widget filtrelemesi için tek yanıtta taşınır.
 /// Access = çağırana göre ETKİN değerler (bypass varsa hepsi true).
 /// </summary>
-public sealed record FeaturesDto(Tenants.AccessSettingsDto Access, bool AccessSettingsBypass);
+/// <param name="MfaSetupRequired">senseik-051: çağıranın rolü güvenlik politikasında 2FA zorunlu listesinde VE MFA'sı
+/// kapalı — ön yüz kritik ekranlara erişmeden önce kurulum akışına yönlendirmeli (bkz. Tenants.TenantSecurityPolicy).</param>
+public sealed record FeaturesDto(Tenants.AccessSettingsDto Access, bool AccessSettingsBypass, bool MfaSetupRequired);
 
 /// <summary>Birim ağacı satır menüsü "Birim yetkilendirme" listesindeki tek bir grant (bkz. UnitAuthorizations.UnitAuthorizationCommands).</summary>
 public sealed record UnitAuthorizationDto(

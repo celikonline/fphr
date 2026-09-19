@@ -82,6 +82,8 @@
     "system": "System settings",
     "access": "Access settings",
     "accessDesc": "What employees can see on home, account and calendar",
+    "securityPolicy": "Security policy",
+    "securityPolicyDesc": "Mandatory two-factor authentication (2FA) for specific roles",
     "usersRoles": "Users & roles",
     "usersRolesDesc": "Users, access types, roles and permissions",
     "auditLog": "Audit log",

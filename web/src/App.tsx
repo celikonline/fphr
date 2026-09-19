@@ -31,6 +31,7 @@ const SettingsHomePage = lazy(() => import("@/pages/settings/settings-home"));
 const CompanyStructurePage = lazy(() => import("@/pages/settings/company-structure"));
 const HolidayCalendarsPage = lazy(() => import("@/pages/settings/holiday-calendars"));
 const AccessSettingsPage = lazy(() => import("@/pages/settings/access-settings"));
+const SecurityPolicyPage = lazy(() => import("@/pages/settings/security-policy"));
 const SupportAccessPage = lazy(() => import("@/pages/settings/support-access"));
 const DataTransferPage = lazy(() => import("@/pages/settings/data-transfer"));
 const DataTransferJobPage = lazy(() => import("@/pages/settings/data-transfer-job"));
@@ -176,6 +177,7 @@ export default function App() {
               }
             />
             <Route path="settings/system/access" element={<AccessSettingsPage />} />
+            <Route path="settings/system/security-policy" element={<SecurityPolicyPage />} />
             <Route path="settings/system/users-roles" element={<UsersRolesPage />} />
             <Route path="settings/system/audit-log" element={<AuditLogPage />} />
             <Route path="settings/system/support-access" element={<SupportAccessPage />} />

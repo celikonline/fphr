@@ -55,7 +55,9 @@ public sealed class GetMeHandler(
                 Roles: [],
                 Permissions: [],
                 Scopes: new Dictionary<string, DataScope>(StringComparer.Ordinal),
-                new FeaturesDto(AccessSettingsDto.AllEnabled, AccessSettingsBypass: true));
+                // Impersonation oturumu kiracının güvenlik politikasına tabi değil (destek ekibi platform kullanıcısı,
+                // bu kiracıda gerçek bir rolü yok) — AuthorizationBehaviour'ın uyguladığı tam-erişim bypass'ıyla tutarlı.
+                new FeaturesDto(AccessSettingsDto.AllEnabled, AccessSettingsBypass: true, MfaSetupRequired: false));
         }
 
         var user = await users.GetByIdAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
@@ -75,12 +77,15 @@ public sealed class GetMeHandler(
             scopes[p] = await permissions.GetScopeAsync(user.Id, p, cancellationToken).ConfigureAwait(false);
         }
 
+        // senseik-051: zorunlu rol + MFA kapalı ise ön yüz kurulum akışına yönlendirir (bkz. FeaturesDto.MfaSetupRequired).
+        var mfaSetupRequired = tenant.SecurityPolicy.RequiresMfaSetup(userRoles.Select(r => r.Code), user.MfaEnabled);
+
         return new MeDto(
             user.Id, user.Email, user.FirstName, user.LastName, user.EmployeeId, user.PreferredLanguage, user.MfaEnabled,
             new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone),
             userRoles.Select(r => new RoleRefDto(r.Id, r.Code, r.Name)).ToList(),
             effective.Order(StringComparer.Ordinal).ToList(),
             scopes,
-            new FeaturesDto(bypass ? AccessSettingsDto.AllEnabled : AccessSettingsDto.From(tenant.AccessSettings), bypass));
+            new FeaturesDto(bypass ? AccessSettingsDto.AllEnabled : AccessSettingsDto.From(tenant.AccessSettings), bypass, mfaSetupRequired));
     }
 }
