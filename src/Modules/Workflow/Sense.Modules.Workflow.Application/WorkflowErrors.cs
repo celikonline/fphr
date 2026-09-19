@@ -13,6 +13,7 @@ public static class WorkflowErrors
     public const string TaskNotFound = "workflow.task.not_found";
     public const string TaskNotCurrent = "workflow.task.not_current";
     public const string AssigneeMismatch = "workflow.task.assignee_mismatch";
+    public const string SelfApprovalNotAllowed = "workflow.task.self_approval_not_allowed";
 
     public const string TokenInvalid = "workflow.token.invalid";
     public const string TokenExpired = "workflow.token.expired";

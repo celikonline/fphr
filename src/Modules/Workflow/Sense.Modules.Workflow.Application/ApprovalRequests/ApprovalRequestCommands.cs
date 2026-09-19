@@ -216,6 +216,12 @@ public sealed class OverrideDecideApprovalTaskHandler(
         var request = loaded.Value;
         var task = request.Tasks.Single(t => t.Id == command.TaskId);
 
+        // Override, atanan kontrolünü atlar ama kimse kendi talebini onaylayamaz (self-approval).
+        if (request.RequesterEmployeeId == command.DecidingEmployeeId)
+        {
+            return Error.Rule(WorkflowErrors.SelfApprovalNotAllowed);
+        }
+
         var decided = request.Decide(
             task.StepNumber, command.DecidingEmployeeId, command.Outcome, command.Comment, wasOverride: true,
             command.Channel, command.IpAddress, command.UserAgent, clock.GetUtcNow().UtcDateTime);
