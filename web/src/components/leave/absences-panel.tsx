@@ -2,11 +2,12 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ActionIcon, Alert, Button, Card, Group, Input, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title, Tooltip } from "@mantine/core";
+import { Alert, Button, Card, Group, Input, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle, RotateCcw, UserX } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { RowIconButton } from "@/components/ui/row-icon-button";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
@@ -151,17 +152,11 @@ export function AbsencesPanel({ employeeId }: AbsencesPanelProps) {
             meta: { headerClassName: "w-0" },
             cell: ({ row }) =>
               !row.original.isReversed && !row.original.reversesId ? (
-                <Tooltip label={t("leave:absences.reverse")}>
-                  <ActionIcon
-                    type="button"
-                    variant="subtle"
-                    color="gray"
-                    aria-label={t("leave:absences.reverse")}
-                    onClick={() => setReversing(row.original)}
-                  >
-                    <RotateCcw size={16} />
-                  </ActionIcon>
-                </Tooltip>
+                <RowIconButton
+                  label={t("leave:absences.reverse")}
+                  icon={<RotateCcw size={16} />}
+                  onClick={() => setReversing(row.original)}
+                />
               ) : null,
           } satisfies ColumnDef<Absence>,
         ]
@@ -269,11 +264,7 @@ function AbsencesMobileList({
                 </Text>
               </Strike>
               {canManage && !item.isReversed && !item.reversesId && (
-                <Tooltip label={t("leave:absences.reverse")}>
-                  <ActionIcon type="button" variant="subtle" color="gray" aria-label={t("leave:absences.reverse")} onClick={() => onReverse(item)}>
-                    <RotateCcw size={16} />
-                  </ActionIcon>
-                </Tooltip>
+                <RowIconButton label={t("leave:absences.reverse")} icon={<RotateCcw size={16} />} onClick={() => onReverse(item)} />
               )}
             </Group>
             <Strike reversed={item.isReversed}>
