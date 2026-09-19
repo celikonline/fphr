@@ -243,6 +243,10 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("e_tag");
 
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
                     b.Property<DateOnly?>("ExpiryDate")
                         .HasColumnType("date")
                         .HasColumnName("expiry_date");
@@ -289,11 +293,21 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("uploaded_by");
 
+                    b.Property<Guid?>("VisaDocumentRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("visa_document_request_id");
+
                     b.HasKey("Id")
                         .HasName("pk_documents");
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_documents_tenant_id");
+
+                    b.HasIndex("VisaDocumentRequestId")
+                        .HasDatabaseName("ix_documents_visa_document_request_id");
+
+                    b.HasIndex("TenantId", "EmployeeId")
+                        .HasDatabaseName("ix_documents_tenant_id_employee_id");
 
                     b.HasIndex("TenantId", "ExpiryDate")
                         .HasDatabaseName("ix_documents_tenant_id_expiry_date");
@@ -581,6 +595,52 @@ namespace Sense.Modules.Documents.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_visa_document_requests_tenant_id_status");
 
                     b.ToTable("visa_document_requests", "documents");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Documents.Domain.VisaDocuments.VisaSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ApproverEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approver_employee_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("TemplateDocumentIds")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("template_document_ids");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_visa_settings");
+
+                    b.HasIndex("TenantId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_visa_settings_tenant_id");
+
+                    b.ToTable("visa_settings", "documents");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>
