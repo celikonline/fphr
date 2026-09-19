@@ -376,11 +376,20 @@
     "subtitle": "Genehmigte und offene Urlaube.",
     "previous": "Vorheriger Monat",
     "next": "Nächster Monat",
+    "previousWeek": "Vorherige Woche",
+    "nextWeek": "Nächste Woche",
+    "previousDay": "Vorheriger Tag",
+    "nextDay": "Nächster Tag",
     "today": "Heute",
     "employee": "Mitarbeitende",
     "empty": "In diesem Zeitraum gibt es keine Urlaube.",
     "masked": "Im Urlaub",
-    "overlappingCount": "An diesem Tag überschneiden sich {{count}} genehmigte Urlaubsanträge"
+    "overlappingCount": "An diesem Tag überschneiden sich {{count}} genehmigte Urlaubsanträge",
+    "view": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat"
+    }
   },
   "overtime": {
     "myTitle": "Meine Überstunden",

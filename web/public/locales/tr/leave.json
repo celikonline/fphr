@@ -376,11 +376,20 @@
     "subtitle": "Onaylanmış ve onay bekleyen izinler.",
     "previous": "Önceki ay",
     "next": "Sonraki ay",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "previousDay": "Önceki gün",
+    "nextDay": "Sonraki gün",
     "today": "Bugün",
     "employee": "Çalışan",
     "empty": "Bu dönemde izin kaydı yok.",
     "masked": "İzinli",
-    "overlappingCount": "Bu günde {{count}} onaylı izin çakışıyor"
+    "overlappingCount": "Bu günde {{count}} onaylı izin çakışıyor",
+    "view": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay"
+    }
   },
   "overtime": {
     "myTitle": "Fazla mesailerim",
