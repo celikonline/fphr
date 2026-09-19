@@ -87,6 +87,34 @@ public sealed class LeaveAuditLogInterceptorIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task RejectingALeaveRequest_WritesTheStatusTransitionInDetails()
+    {
+        var db = ServiceProvider!.GetRequiredService<LeaveDbContext>();
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+        SetCurrentUser(tenantId, Guid.NewGuid(), "manager@test.local", new HashSet<string>(StringComparer.Ordinal));
+
+        var request = LeaveRequest.Submit(
+            tenantId, Guid.NewGuid(), LeaveTypeId, LeaveTypeCode.Annual,
+            new DateOnly(2026, 8, 3), new DateOnly(2026, 8, 4), 2m, null,
+            LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+        db.Requests.Add(request);
+        await db.SaveChangesAsync();
+
+        var approvalId = Guid.NewGuid();
+        request.AttachApproval(approvalId);
+        request.Reject(approvalId, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+        await db.SaveChangesAsync();
+
+        var entry = await db.Set<AuditLogEntry>().AsNoTracking()
+            .Where(e => e.ResourceId == request.Id.ToString() && e.Action == AuditActions.Update)
+            .OrderByDescending(e => e.OccurredAt)
+            .FirstAsync();
+
+        entry.Details.ShouldContain($"Status: {LeaveRequestStatus.Pending} → {LeaveRequestStatus.Rejected}");
+    }
+
+    [Fact]
     public async Task SubmittingAnOvertimeRequest_WritesACreateAuditLogEntry()
     {
         var db = ServiceProvider!.GetRequiredService<LeaveDbContext>();

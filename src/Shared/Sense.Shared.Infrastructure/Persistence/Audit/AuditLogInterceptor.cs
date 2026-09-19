@@ -168,8 +168,19 @@ public sealed class AuditLogInterceptor(
             changes.Add($"{field}: {FormatValue(propertyEntry.OriginalValue)} → {FormatValue(propertyEntry.CurrentValue)}");
         }
 
-        return changes is { Count: > 0 } ? $"{resource} {action}: {string.Join("; ", changes)}" : $"{resource} {action}";
+        return changes is { Count: > 0 }
+            ? Truncate($"{resource} {action}: {string.Join("; ", changes)}")
+            : $"{resource} {action}";
     }
+
+    /// <summary>
+    /// Serbest metin alanları (ör. LeaveRequest.CancellationReason) diff'i details kolonunun sınırını aşırabilir -
+    /// aşarsa SaveChanges'ın tamamı (asıl iş işlemi dahil) DB hatasıyla düşerdi; bunun yerine kesip "…" ekliyoruz.
+    /// </summary>
+    private static string Truncate(string details) =>
+        details.Length <= AuditLogTables.DetailsMaxLength
+            ? details
+            : string.Concat(details.AsSpan(0, AuditLogTables.DetailsMaxLength - 1), "…");
 
     private static string FormatValue(object? value) => value switch
     {
