@@ -61,6 +61,20 @@
           "description": "The monthly timesheet summary plus paid, unpaid and sick leave days, whether the month is approved and the approval date."
         }
       }
+    },
+    "recruitment": {
+      "overview": {
+        "label": "Overview report",
+        "description": "Applications per job posting broken down by pipeline stage: new application, screening, interview, offer, hired, rejected and total. Optional application date range."
+      },
+      "daily_counts": {
+        "label": "Daily counts report",
+        "description": "New applications and newly added candidates for every day in the selected date range (days with none appear as zero)."
+      },
+      "candidates_export": {
+        "label": "Candidate list export",
+        "description": "Candidates: contact details, source, tags and the postings applied to with their current stage. Optional created-date range."
+      }
     }
   },
   "run": {
