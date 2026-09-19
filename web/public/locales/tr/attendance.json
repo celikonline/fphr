@@ -33,7 +33,8 @@
     "lateLeave": "Geç çıkış",
     "overwork": "Fazla çalışma",
     "underwork": "Az çalışma",
-    "unplannedWork": "Plansız çalışma"
+    "unplannedWork": "Plansız çalışma",
+    "workedWhileOnLeave": "İzinli günde çalışma"
   },
   "resolutionState": {
     "unresolved": "Çözülmedi",

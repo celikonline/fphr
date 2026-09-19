@@ -199,6 +199,18 @@ public sealed class CompensatoryWorkLedgerConfiguration : IEntityTypeConfigurati
     }
 }
 
+public sealed class MonthlyTimesheetApprovalConfiguration : IEntityTypeConfiguration<MonthlyTimesheetApproval>
+{
+    public void Configure(EntityTypeBuilder<MonthlyTimesheetApproval> b)
+    {
+        b.ToTable(AttendanceTables.MonthlyTimesheetApprovals);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PeriodMonth }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
 public sealed class EqualizationPeriodConfiguration : IEntityTypeConfiguration<EqualizationPeriod>
 {
     public void Configure(EntityTypeBuilder<EqualizationPeriod> b)

@@ -33,7 +33,8 @@
     "lateLeave": "Late leave",
     "overwork": "Overwork",
     "underwork": "Underwork",
-    "unplannedWork": "Unplanned work"
+    "unplannedWork": "Unplanned work",
+    "workedWhileOnLeave": "Worked while on leave"
   },
   "resolutionState": {
     "unresolved": "Unresolved",

@@ -45,6 +45,18 @@
         "label": "Maaş listesi raporu",
         "description": "Bugün geçerli maaş kayıtları: tutar, para birimi, net/brüt, ödeme düzeni ve yol/yemek yardımı."
       }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Aylık puantaj özeti raporu",
+          "description": "Seçilen ay için çalışan başına kayıtlı/çalışılan gün, çalışılan, fazla mesai ve gece saatleri; geç kalma, erken çıkış, eksik gün, izinli günde çalışma ve çözülmemiş uyuşmazlık sayıları."
+        },
+        "closing": {
+          "label": "Ay sonu kapatma (mali müşavir) raporu",
+          "description": "Aylık puantaj özetine ek olarak ücretli, ücretsiz ve raporlu izin günleri ile ayın onaylanıp onaylanmadığı ve onay tarihi."
+        }
+      }
     }
   },
   "run": {

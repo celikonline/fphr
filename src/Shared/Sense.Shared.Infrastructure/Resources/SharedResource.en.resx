@@ -824,6 +824,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>This action is not valid for the day's anomaly type.</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Resolve timesheet anomalies</value></data>
+  <data name="attendance.timesheet.approve" xml:space="preserve"><value>Approve monthly timesheet (month-end close)</value></data>
   <data name="attendance.shift.view" xml:space="preserve"><value>View shift plan</value></data>
   <data name="attendance.shift.plan" xml:space="preserve"><value>Plan shifts</value></data>
   <data name="attendance.shift.publish" xml:space="preserve"><value>Publish shifts</value></data>
@@ -850,6 +851,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.availability.not_found" xml:space="preserve"><value>Availability entry not found.</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>This availability entry does not belong to you.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Availability cannot be submitted for a past date.</value></data>
+  <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Invalid date range: the start date cannot be after the end date.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
@@ -1116,6 +1118,26 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.DocumentRequirementStatus.Missing" xml:space="preserve"><value>Missing</value></data>
   <data name="report.enum.DocumentRequirementStatus.Uploaded" xml:space="preserve"><value>Uploaded</value></data>
   <data name="report.enum.DocumentRequirementStatus.Waived" xml:space="preserve"><value>Waived</value></data>
+  <data name="report.enum.Boolean.True" xml:space="preserve"><value>Yes</value></data>
+  <data name="report.enum.Boolean.False" xml:space="preserve"><value>No</value></data>
+  <!-- Attendance timesheet reports (senseik-029) -->
+  <data name="report.col.recordedDays" xml:space="preserve"><value>Recorded days</value></data>
+  <data name="report.col.workedDays" xml:space="preserve"><value>Worked days</value></data>
+  <data name="report.col.workedHours" xml:space="preserve"><value>Worked hours</value></data>
+  <data name="report.col.overtimeHours" xml:space="preserve"><value>Overtime (hours)</value></data>
+  <data name="report.col.nightHours" xml:space="preserve"><value>Night work (hours)</value></data>
+  <data name="report.col.lateArrivalCount" xml:space="preserve"><value>Late arrivals</value></data>
+  <data name="report.col.earlyLeaveCount" xml:space="preserve"><value>Early leaves</value></data>
+  <data name="report.col.missingDayCount" xml:space="preserve"><value>Missing days</value></data>
+  <data name="report.col.workedWhileOnLeaveCount" xml:space="preserve"><value>Worked while on leave</value></data>
+  <data name="report.col.unresolvedAnomalyCount" xml:space="preserve"><value>Unresolved anomalies</value></data>
+  <data name="report.col.paidLeaveDays" xml:space="preserve"><value>Paid leave days</value></data>
+  <data name="report.col.unpaidLeaveDays" xml:space="preserve"><value>Unpaid leave days</value></data>
+  <data name="report.col.sickLeaveDays" xml:space="preserve"><value>Sick leave days</value></data>
+  <data name="report.col.monthClosed" xml:space="preserve"><value>Month closed</value></data>
+  <data name="report.col.closedAt" xml:space="preserve"><value>Closed at</value></data>
+  <data name="report.sheet.attendanceMonthlySummary" xml:space="preserve"><value>Monthly timesheet summary</value></data>
+  <data name="report.sheet.attendanceMonthlyClosing" xml:space="preserve"><value>Month-end closing - Accountant report</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>

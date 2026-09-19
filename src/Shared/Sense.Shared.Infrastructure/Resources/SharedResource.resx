@@ -835,6 +835,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>Bu aksiyon, günün uyuşmazlık türü için uygun değil.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Puantaj içe aktarma (PDKS)</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Puantaj uyuşmazlıklarını çözme</value></data>
+  <data name="attendance.timesheet.approve" xml:space="preserve"><value>Aylık puantajı onaylama (ay sonu kapatma)</value></data>
   <data name="attendance.shift.view" xml:space="preserve"><value>Vardiya planını görüntüleme</value></data>
   <data name="attendance.shift.plan" xml:space="preserve"><value>Vardiya planlama</value></data>
   <data name="attendance.shift.publish" xml:space="preserve"><value>Vardiya yayınlama</value></data>
@@ -861,6 +862,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.availability.not_found" xml:space="preserve"><value>Müsaitlik girişi bulunamadı.</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>Bu müsaitlik girişi size ait değil.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Geçmiş bir tarih için müsaitlik bildirilemez.</value></data>
+  <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Tarih aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>
@@ -1125,6 +1127,26 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.enum.DocumentRequirementStatus.Missing" xml:space="preserve"><value>Eksik</value></data>
   <data name="report.enum.DocumentRequirementStatus.Uploaded" xml:space="preserve"><value>Yüklendi</value></data>
   <data name="report.enum.DocumentRequirementStatus.Waived" xml:space="preserve"><value>Muaf</value></data>
+  <data name="report.enum.Boolean.True" xml:space="preserve"><value>Evet</value></data>
+  <data name="report.enum.Boolean.False" xml:space="preserve"><value>Hayır</value></data>
+  <!-- Attendance puantaj raporları (senseik-029) -->
+  <data name="report.col.recordedDays" xml:space="preserve"><value>Kayıtlı gün</value></data>
+  <data name="report.col.workedDays" xml:space="preserve"><value>Çalışılan gün</value></data>
+  <data name="report.col.workedHours" xml:space="preserve"><value>Çalışılan saat</value></data>
+  <data name="report.col.overtimeHours" xml:space="preserve"><value>Fazla mesai (saat)</value></data>
+  <data name="report.col.nightHours" xml:space="preserve"><value>Gece çalışması (saat)</value></data>
+  <data name="report.col.lateArrivalCount" xml:space="preserve"><value>Geç kalma sayısı</value></data>
+  <data name="report.col.earlyLeaveCount" xml:space="preserve"><value>Erken çıkış sayısı</value></data>
+  <data name="report.col.missingDayCount" xml:space="preserve"><value>Eksik gün sayısı</value></data>
+  <data name="report.col.workedWhileOnLeaveCount" xml:space="preserve"><value>İzinli günde çalışma sayısı</value></data>
+  <data name="report.col.unresolvedAnomalyCount" xml:space="preserve"><value>Çözülmemiş uyuşmazlık sayısı</value></data>
+  <data name="report.col.paidLeaveDays" xml:space="preserve"><value>Ücretli izin günü</value></data>
+  <data name="report.col.unpaidLeaveDays" xml:space="preserve"><value>Ücretsiz izin günü</value></data>
+  <data name="report.col.sickLeaveDays" xml:space="preserve"><value>Raporlu gün</value></data>
+  <data name="report.col.monthClosed" xml:space="preserve"><value>Ay kapatıldı mı</value></data>
+  <data name="report.col.closedAt" xml:space="preserve"><value>Kapatma tarihi</value></data>
+  <data name="report.sheet.attendanceMonthlySummary" xml:space="preserve"><value>Aylık puantaj özeti</value></data>
+  <data name="report.sheet.attendanceMonthlyClosing" xml:space="preserve"><value>Ay sonu kapatma - Mali müşavir raporu</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>Zorunlu bir rapor filtresi eksik.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>Rapor filtresi geçersiz.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>Bu filtrelerle kapsamınızda çalışan bulunmuyor.</value></data>
