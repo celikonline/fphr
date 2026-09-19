@@ -7,6 +7,8 @@ using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.Equalization;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Shared.Contracts.Context;
@@ -113,5 +115,51 @@ public sealed class TimesheetBoundaryTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(AttendanceErrors.PeriodNotStarted);
+    }
+}
+
+/// <summary>QA regression: GetEqualizationStatus decides "period ended" on the tenant-local date, not the UTC date.</summary>
+public sealed class EqualizationStatusLocalDateTests
+{
+    private readonly Guid _tenantId = Guid.NewGuid();
+    private readonly Guid _employeeId = Guid.NewGuid();
+
+    private async Task<Application.Equalization.EqualizationStatusDto> QueryAsync(ITenantLocalClock clock)
+    {
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(_tenantId);
+        var settings = ShiftSettings.CreateDefault(_tenantId);
+        settings.UpdateEqualization(enabled: true, periodMonths: 2, anchorMonth: 1, hasWrittenAgreement: false).IsSuccess.ShouldBeTrue();
+        var settingsRepository = Substitute.For<IShiftSettingsRepository>();
+        settingsRepository.FindAsync(Arg.Any<CancellationToken>()).Returns(settings);
+        var days = Substitute.For<IAttendanceDayRepository>();
+        days.ListForEmployeeAsync(_employeeId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(new List<AttendanceDay>());
+        var dataScope = Substitute.For<IDataScopeService>();
+        dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), _employeeId, Arg.Any<CancellationToken>()).Returns(true);
+
+        var handler = new Application.Equalization.GetEqualizationStatusHandler(
+            tenant, settingsRepository, Substitute.For<IEqualizationPeriodRepository>(), days, Substitute.For<IAttendanceUnitOfWork>(), clock, dataScope);
+
+        // Jul-Aug is the 2-month period containing 2026-08-15; it ends 2026-08-31.
+        var result = await handler.Handle(new Application.Equalization.GetEqualizationStatusQuery(_employeeId, new DateOnly(2026, 8, 15)), TestContext.Current.CancellationToken);
+        return result.Value;
+    }
+
+    [Fact]
+    public async Task PeriodEndedInTenantLocalTimeButNotYetInUtc_IsClosed()
+    {
+        // 22:30 UTC on 31 Aug is 01:30 on 1 Sep in a UTC+3 tenant: the period has ended for that tenant.
+        var status = await QueryAsync(new FixedLocalClock(new DateTime(2026, 8, 31, 22, 30, 0, DateTimeKind.Utc), new DateTime(2026, 9, 1, 1, 30, 0)));
+
+        status.PeriodEnd.ShouldBe(new DateOnly(2026, 8, 31));
+        status.IsClosed.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task LastDayOfPeriodInTenantLocalTime_StaysOpen()
+    {
+        var status = await QueryAsync(new FixedLocalClock(new DateTime(2026, 8, 31, 12, 0, 0, DateTimeKind.Utc), new DateTime(2026, 8, 31, 15, 0, 0)));
+
+        status.IsClosed.ShouldBeFalse();
     }
 }

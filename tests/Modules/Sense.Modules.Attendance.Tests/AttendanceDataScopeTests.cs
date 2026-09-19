@@ -76,7 +76,7 @@ public sealed class AttendanceDataScopeTests
         var unitOfWork = Substitute.For<IAttendanceUnitOfWork>();
         var handler = new GetEqualizationStatusHandler(
             Substitute.For<ITenantContext>(), Substitute.For<IShiftSettingsRepository>(), Substitute.For<IEqualizationPeriodRepository>(), _days, unitOfWork,
-            TimeProvider.System, _dataScope);
+            new FixedLocalClock(DateTime.UtcNow), _dataScope);
 
         var result = await handler.Handle(new GetEqualizationStatusQuery(_outOfScope, Monday), TestContext.Current.CancellationToken);
 

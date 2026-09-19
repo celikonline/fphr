@@ -1,3 +1,4 @@
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Equalization;
@@ -28,7 +29,7 @@ public sealed record GetEqualizationStatusQuery(Guid EmployeeId, DateOnly Date) 
 
 public sealed class GetEqualizationStatusHandler(
     ITenantContext tenant, IShiftSettingsRepository shiftSettings, IEqualizationPeriodRepository periods, IAttendanceDayRepository days,
-    IAttendanceUnitOfWork unitOfWork, TimeProvider clock, IDataScopeService dataScope)
+    IAttendanceUnitOfWork unitOfWork, ITenantLocalClock localClock, IDataScopeService dataScope)
     : IQueryHandler<GetEqualizationStatusQuery, EqualizationStatusDto>
 {
     public async Task<Result<EqualizationStatusDto>> Handle(GetEqualizationStatusQuery query, CancellationToken cancellationToken)
@@ -53,7 +54,8 @@ public sealed class GetEqualizationStatusHandler(
             periods.Add(period);
         }
 
-        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        // "Bugün" kiracının yerel takvim günüdür (UTC değil): UTC+3 kiracıda gece yarısından sonraki dönem sonu bir gün geç görünmesin.
+        var today = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false)).Local);
         if (period.Status == EqualizationPeriodStatus.Open)
         {
             var sumTo = today < period.PeriodEnd ? today : period.PeriodEnd;
