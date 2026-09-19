@@ -19,14 +19,14 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     private AttendanceDay(
         Guid id, Guid tenantId, Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut,
         TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source,
-        bool overnight)
+        bool overnight, int actualBreakMinutes, ShiftLimits? shiftLimits)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
         Date = date;
         Source = source;
         ResolutionState = AttendanceResolutionState.Unresolved;
-        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight);
+        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight, actualBreakMinutes, shiftLimits);
     }
 
     public Guid EmployeeId { get; private set; }
@@ -48,6 +48,27 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
     public int WorkedMinutes { get; private set; }
 
+    /// <summary>PDKS'de ilk "in" ile son "out" arasında görülen ara Out→In çiftlerinin toplamı (G-02, gerçek mola) - <see cref="BreakMinutes"/> (planlanan sabit mola) ile karıştırılmamalı. Manuel/Excel kayıtlarda ölçülmediği için 0.</summary>
+    public int ActualBreakMinutes { get; private set; }
+
+    /// <summary>m.68 uygulanan mola: max(<see cref="ActualBreakMinutes"/>, o günün brüt süresine göre yasal asgari) - bkz. <see cref="AttendanceDays.DailyWorkCalculator"/>.</summary>
+    public int BreakMinutesApplied { get; private set; }
+
+    /// <summary>Check-in→check-out brüt süresinden <see cref="BreakMinutesApplied"/> düşülmüş net çalışma süresi (G-02 hesaplama motoru çıktısı; legacy <see cref="WorkedMinutes"/>'tan farklı olabilir).</summary>
+    public int NetWorkedMinutes { get; private set; }
+
+    /// <summary>Gece çalışma penceresiyle (varsa <c>Shifts.ShiftSettings</c>) kesişen dakikalar (m.69).</summary>
+    public int NightMinutes { get; private set; }
+
+    /// <summary>m.63: günlük çalışma süresi üst sınırı (varsayılan 11 saat) aşıldı mı.</summary>
+    public bool DailyLimitExceeded { get; private set; }
+
+    /// <summary>m.69: gece çalışması 7,5 saat üst sınırı aşıldı mı (yalnız <c>ShiftSettings.NightWorkEnabled</c> açıkken anlamlı).</summary>
+    public bool NightLimitExceeded { get; private set; }
+
+    /// <summary>Günlük fazla mesai vekili (NetWorkedMinutes − PlannedMinutes, 0'da taban): kesin değer için denkleştirme dönemine bakılmalı.</summary>
+    public int OvertimeMinutes { get; private set; }
+
     public AttendanceAnomaly Anomalies { get; private set; }
 
     public AttendanceResolutionState ResolutionState { get; private set; }
@@ -62,8 +83,9 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     public static AttendanceDay Record(
         Guid tenantId, Guid employeeId, DateOnly date, TimeOnly? checkIn, TimeOnly? checkOut,
         TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source,
-        bool overnight = false) =>
-        new(Guid.CreateVersion7(), tenantId, employeeId, date, checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, source, overnight);
+        bool overnight = false, int actualBreakMinutes = 0, ShiftLimits? shiftLimits = null) =>
+        new(Guid.CreateVersion7(), tenantId, employeeId, date, checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, source, overnight,
+            actualBreakMinutes, shiftLimits);
 
     /// <summary>
     /// Overwrites this day's check-in/out and re-derives worked minutes and anomaly flags (re-import or re-record).
@@ -72,7 +94,9 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
     /// <paramref name="checkOut"/> being earlier in the day than <paramref name="checkIn"/> is expected, and worked
     /// minutes wrap past midnight instead of being rejected as reversed order.
     /// </summary>
-    public Result UpdateRecord(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source, bool overnight = false)
+    public Result UpdateRecord(
+        TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, AttendanceDaySource source,
+        bool overnight = false, int actualBreakMinutes = 0, ShiftLimits? shiftLimits = null)
     {
         if (!overnight && checkIn is not null && checkOut is not null && checkOut <= checkIn)
         {
@@ -80,7 +104,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         }
 
         Source = source;
-        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight);
+        Recompute(checkIn, checkOut, plannedStart, plannedEnd, plannedMinutes, breakMinutes, overnight, actualBreakMinutes, shiftLimits);
         return Result.Success();
     }
 
@@ -149,7 +173,9 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         return Result.Success();
     }
 
-    private void Recompute(TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, bool overnight = false)
+    private void Recompute(
+        TimeOnly? checkIn, TimeOnly? checkOut, TimeOnly? plannedStart, TimeOnly? plannedEnd, int plannedMinutes, int breakMinutes, bool overnight = false,
+        int actualBreakMinutes = 0, ShiftLimits? shiftLimits = null)
     {
         CheckIn = checkIn;
         CheckOut = checkOut;
@@ -157,6 +183,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         PlannedEnd = plannedEnd;
         PlannedMinutes = plannedMinutes;
         BreakMinutes = breakMinutes;
+        ActualBreakMinutes = actualBreakMinutes;
 
         // A re-record/re-import overwrites the day's own facts (class doc: "aynı çalışan+gün tekrar yüklenirse üzerine
         // yazar"), so any prior manual resolution is superseded along with it - new data means a fresh evaluation.
@@ -166,6 +193,16 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
         WorkedMinutes = checkIn is not null && checkOut is not null
             ? Math.Max((int)WorkedSpan(checkIn.Value, checkOut.Value, overnight).TotalMinutes - breakMinutes, 0)
             : 0;
+
+        // G-02 puantaj hesaplama motoru (kart senseik-014): mola/gece/limit/fazla mesai vekili DailyWorkCalculator'a
+        // delege edilir - legacy WorkedMinutes (üstte) hâlâ Overwork/Underwork anomali kıyaslaması için korunur.
+        var dailyWork = DailyWorkCalculator.Calculate(new DailyWorkInput(checkIn, checkOut, overnight, actualBreakMinutes, plannedMinutes, shiftLimits ?? ShiftLimits.None));
+        NetWorkedMinutes = dailyWork.NetWorkedMinutes;
+        BreakMinutesApplied = dailyWork.BreakMinutesApplied;
+        NightMinutes = dailyWork.NightMinutes;
+        DailyLimitExceeded = dailyWork.DailyLimitExceeded;
+        NightLimitExceeded = dailyWork.NightLimitExceeded;
+        OvertimeMinutes = dailyWork.OvertimeMinutes;
 
         var isWorkingDay = plannedStart is not null && plannedEnd is not null;
         var anomalies = AttendanceAnomaly.None;

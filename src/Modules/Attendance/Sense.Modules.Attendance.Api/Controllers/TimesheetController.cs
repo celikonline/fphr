@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Attendance.Application.AttendanceDays;
+using Sense.Modules.Attendance.Application.Equalization;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Attendance.Api.Controllers;
@@ -59,6 +60,12 @@ public sealed class TimesheetController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<TeamWeekRowDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> TeamMonth([FromQuery] DateOnly monthStart, [FromQuery] Guid? orgUnitId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetTeamMonthQuery(monthStart, orgUnitId), ct));
+
+    /// <summary>Denkleştirme dönemi durumu (m.63, kart senseik-014): verilen tarihi kapsayan dönemin bütçe/kullanım özeti.</summary>
+    [HttpGet("employees/{employeeId:guid}/equalization")]
+    [ProducesResponseType<EqualizationStatusDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Equalization(Guid employeeId, [FromQuery] DateOnly date, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEqualizationStatusQuery(employeeId, date), ct));
 
     /// <summary>Hücre çekmecesindeki hareketler (11.3.6): bir günün uyuşmazlık çözüm geçmişi.</summary>
     [HttpGet("days/{attendanceDayId:guid}/resolutions")]

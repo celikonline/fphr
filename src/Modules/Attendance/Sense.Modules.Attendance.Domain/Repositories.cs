@@ -1,6 +1,7 @@
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
@@ -115,4 +116,16 @@ public interface ICompensatoryWorkLedgerRepository
     Task<CompensatoryWorkLedger?> FindByEmployeeAndWeekAsync(Guid employeeId, DateOnly weekStart, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<CompensatoryWorkLedger>> ListForEmployeeAsync(Guid employeeId, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
+}
+
+public interface IEqualizationPeriodRepository
+{
+    void Add(EqualizationPeriod period);
+
+    /// <summary>The period row whose [PeriodStart, PeriodEnd] contains <paramref name="date"/>, if one has already been opened.</summary>
+    Task<EqualizationPeriod?> FindCoveringAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
+
+    /// <summary>Closed periods whose PeriodEnd falls inside [from, to] (Payroll bridge: attributes the true-up to the month a period closes in).</summary>
+    Task<IReadOnlyList<EqualizationPeriod>> ListClosedEndingInRangeAsync(
+        IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default);
 }
