@@ -56,6 +56,7 @@
 
   <!-- Kimlik doğrulama / yetki -->
   <data name="auth.unauthenticated" xml:space="preserve"><value>Kimlik doğrulaması gerekli.</value></data>
+  <data name="auth.forbidden_generic" xml:space="preserve"><value>Bu işlem için yetkiniz yok.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>Bu işlem için '{permission}' izni gerekli.</value></data>
   <data name="auth.feature_disabled" xml:space="preserve"><value>Bu özellik şirketinizin erişim ayarlarında kapatılmış.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>

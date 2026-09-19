@@ -18,9 +18,17 @@ public interface IErrorLocalizer
 
 public sealed class ErrorLocalizer(IStringLocalizer<SharedResource> localizer) : IErrorLocalizer
 {
+    private const string PermissionArgument = "permission";
+    private const string ForbiddenWithoutPermissionKey = "auth.forbidden_generic";
+
     public string Message(Error error)
     {
-        var template = localizer[error.Code];
+        // "auth.forbidden" şablonu '{permission}' yer tutucusu içerir; izin adı taşımayan Forbidden hataları (ör. sahiplik/kapsam
+        // reddi) çözülmemiş yer tutucu göstermesin diye genel şablona düşer.
+        var templateKey = error.Code == ErrorCodes.Forbidden && error.Args?.ContainsKey(PermissionArgument) != true
+            ? ForbiddenWithoutPermissionKey
+            : error.Code;
+        var template = localizer[templateKey];
         var text = template.ResourceNotFound ? error.Code : template.Value;
         if (error.Args is null)
         {

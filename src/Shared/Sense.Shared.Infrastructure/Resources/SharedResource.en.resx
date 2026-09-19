@@ -53,6 +53,7 @@
   <data name="general.rate_limit_exceeded" xml:space="preserve"><value>Too many requests were sent; please try again later.</value></data>
 
   <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
+  <data name="auth.forbidden_generic" xml:space="preserve"><value>You are not allowed to perform this action.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
   <data name="auth.feature_disabled" xml:space="preserve"><value>This feature has been turned off in your company's access settings.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Record not found.</value></data>
