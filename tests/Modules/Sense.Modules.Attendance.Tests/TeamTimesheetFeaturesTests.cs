@@ -4,6 +4,8 @@ using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Leave.Contracts;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
 using Shouldly;
@@ -33,7 +35,10 @@ public sealed class TeamTimesheetFeaturesTests
             .Returns(call => ((DateOnly)call[1]).DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday));
     }
 
-    private GetTeamWeekHandler CreateHandler() => new(_tenant, _dataScope, _employees, _days, _schedules);
+    private readonly IApprovedLeaveDateLookup _leaveDates = Substitute.For<IApprovedLeaveDateLookup>();
+    private readonly IHolidayCalendarLookup _holidays = Substitute.For<IHolidayCalendarLookup>();
+
+    private GetTeamWeekHandler CreateHandler() => new(_tenant, _dataScope, _employees, _days, _schedules, new NonWorkingDayResolver(_leaveDates, _holidays));
 
     [Fact]
     public async Task Handle_NoVisibleEmployees_ReturnsEmpty()
@@ -122,5 +127,82 @@ public sealed class TeamTimesheetFeaturesTests
 
         result.IsSuccess.ShouldBeTrue();
         result.Value.ShouldHaveSingleItem().EmployeeId.ShouldBe(_employeeA);
+    }
+
+    private void SeedSingleEmployeeWithNoRecords()
+    {
+        _dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.TimesheetView.Key, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeA });
+        _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Monday, Monday.AddDays(6), Arg.Any<CancellationToken>())
+            .Returns(new List<AttendanceDay>());
+    }
+
+    [Fact]
+    public async Task Handle_HolidayWithoutRecord_IsNotFlaggedAsNoData()
+    {
+        SeedSingleEmployeeWithNoRecords();
+        var calendarId = Guid.NewGuid();
+        _holidays.ResolveCalendarAsync(_tenantId, null, null, Arg.Any<CancellationToken>()).Returns(new HolidayCalendarRef(calendarId, "TR"));
+        _holidays.GetHolidaysAsync(_tenantId, calendarId, Monday, Monday.AddDays(6), Arg.Any<CancellationToken>())
+            .Returns(new List<UpcomingHoliday> { new(Monday.AddDays(1), "Resmi tatil") });
+
+        var result = await CreateHandler().Handle(new GetTeamWeekQuery(Monday, null), TestContext.Current.CancellationToken);
+
+        var days = result.Value.Single().Days;
+        var holiday = days.Single(d => d.Date == Monday.AddDays(1));
+        holiday.Status.ShouldBe(AttendanceResolutionState.Resolved);
+        holiday.Anomalies.ShouldBeEmpty();
+        days.Single(d => d.Date == Monday).Anomalies.ShouldContain(AttendanceAnomaly.NoData); // ordinary working day stays flagged
+    }
+
+    [Fact]
+    public async Task Handle_ApprovedLeaveWithoutRecord_IsNotFlaggedAsNoData_OnlyForTheEmployeeOnLeave()
+    {
+        _dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.TimesheetView.Key, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeA, _employeeB });
+        _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active"), new(_employeeB, "Can", "Demir", null, null, null, "Active") });
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Monday, Monday.AddDays(6), Arg.Any<CancellationToken>()).Returns(new List<AttendanceDay>());
+        _leaveDates.GetApprovedLeaveDatesAsync(_tenantId, Monday, Monday.AddDays(6), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<ApprovedLeaveDay> { new(_employeeA, Monday.AddDays(2)) });
+
+        var result = await CreateHandler().Handle(new GetTeamWeekQuery(Monday, null), TestContext.Current.CancellationToken);
+
+        var onLeave = result.Value.Single(r => r.EmployeeId == _employeeA).Days.Single(d => d.Date == Monday.AddDays(2));
+        onLeave.Status.ShouldBe(AttendanceResolutionState.Resolved);
+        onLeave.Anomalies.ShouldBeEmpty();
+        var other = result.Value.Single(r => r.EmployeeId == _employeeB).Days.Single(d => d.Date == Monday.AddDays(2));
+        other.Anomalies.ShouldContain(AttendanceAnomaly.NoData);
+    }
+
+    [Fact]
+    public async Task Handle_HolidayWithARecord_KeepsTheRecordedDay()
+    {
+        SeedSingleEmployeeWithNoRecords();
+        var worked = AttendanceDay.Record(
+            _tenantId, _employeeA, Monday, new TimeOnly(9, 0), new TimeOnly(17, 0), null, null, plannedMinutes: 0, breakMinutes: 0, AttendanceDaySource.Manual);
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Monday, Monday.AddDays(6), Arg.Any<CancellationToken>()).Returns(new List<AttendanceDay> { worked });
+        var calendarId = Guid.NewGuid();
+        _holidays.ResolveCalendarAsync(_tenantId, null, null, Arg.Any<CancellationToken>()).Returns(new HolidayCalendarRef(calendarId, "TR"));
+        _holidays.GetHolidaysAsync(_tenantId, calendarId, Monday, Monday.AddDays(6), Arg.Any<CancellationToken>()).Returns(new List<UpcomingHoliday> { new(Monday, "Resmi tatil") });
+
+        var result = await CreateHandler().Handle(new GetTeamWeekQuery(Monday, null), TestContext.Current.CancellationToken);
+
+        var entry = result.Value.Single().Days.Single(d => d.Date == Monday);
+        entry.AttendanceDayId.ShouldBe(worked.Id);
+        entry.WorkedMinutes.ShouldBe(worked.WorkedMinutes);
+    }
+
+    [Fact]
+    public async Task Handle_NoHolidayOrLeaveLookupRegistered_BehavesAsBefore()
+    {
+        SeedSingleEmployeeWithNoRecords();
+        var handler = new GetTeamWeekHandler(_tenant, _dataScope, _employees, _days, _schedules, new NonWorkingDayResolver());
+
+        var result = await handler.Handle(new GetTeamWeekQuery(Monday, null), TestContext.Current.CancellationToken);
+
+        result.Value.Single().Days.Single(d => d.Date == Monday).Anomalies.ShouldContain(AttendanceAnomaly.NoData);
     }
 }

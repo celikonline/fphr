@@ -124,4 +124,26 @@ public sealed class SystemRoleDefinitionsTests
 
     private static List<string> Resolve(string roleCode) =>
         SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), Catalog).Select(p => p.Permission).ToList();
+
+    /// <summary>QA teslim testi bulgu 12: the employee-facing expense page lists categories when adding a line, so every
+    /// role that owns expense.my.claims must also read (only read) the category catalog.</summary>
+    [Theory]
+    [InlineData(SystemRoleCodes.Employee)]
+    [InlineData(SystemRoleCodes.Intern)]
+    [InlineData(SystemRoleCodes.Manager)]
+    [InlineData(SystemRoleCodes.PayrollSpecialist)]
+    public void ExpenseClaimOwners_CanReadTheCategoryCatalog_ButNotManageIt(string roleCode)
+    {
+        IReadOnlyList<Permission> catalog =
+        [
+            .. new[] { "expense.my.claims", "expense.categories.view", "expense.categories.manage" }
+                .Select(k => new Permission(k, "expense", k, "Test")),
+        ];
+
+        var keys = SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), catalog).Select(p => p.Permission).ToList();
+
+        keys.ShouldContain("expense.my.claims");
+        keys.ShouldContain("expense.categories.view");
+        keys.ShouldNotContain("expense.categories.manage");
+    }
 }

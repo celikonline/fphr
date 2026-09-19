@@ -6,6 +6,7 @@ using Sense.Modules.Performance.Domain;
 using Sense.Modules.Performance.Domain.Goals;
 using Sense.Modules.Performance.Domain.ReviewCycles;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -19,6 +20,13 @@ namespace Sense.Modules.Performance.Tests;
 /// </summary>
 public sealed class GoalCommandsTests
 {
+    private static IDataScopeService AllowAllScope()
+    {
+        var scope = Substitute.For<IDataScopeService>();
+        scope.CanAccessEmployeeAsync(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);
+        return scope;
+    }
+
     private static ReviewCycle OpenCycle(DateOnly start, DateOnly end)
     {
         var cycle = ReviewCycle.Create(Guid.NewGuid(), "2026 Q1", start, end).Value;
@@ -43,7 +51,7 @@ public sealed class GoalCommandsTests
         goals.GetByIdAsync(goal.Id, Arg.Any<CancellationToken>()).Returns(goal);
         var cycles = Substitute.For<IReviewCycleRepository>();
         cycles.GetByIdAsync(cycle.Id, Arg.Any<CancellationToken>()).Returns(cycle);
-        var handler = new UpdateGoalProgressHandler(goals, cycles);
+        var handler = new UpdateGoalProgressHandler(goals, cycles, AllowAllScope());
 
         var result = await handler.Handle(new UpdateGoalProgressCommand(goal.Id, 50), CancellationToken.None);
 
@@ -62,7 +70,7 @@ public sealed class GoalCommandsTests
         goals.GetByIdAsync(goal.Id, Arg.Any<CancellationToken>()).Returns(goal);
         var cycles = Substitute.For<IReviewCycleRepository>();
         cycles.GetByIdAsync(cycle.Id, Arg.Any<CancellationToken>()).Returns(cycle);
-        var handler = new CancelGoalHandler(goals, cycles);
+        var handler = new CancelGoalHandler(goals, cycles, AllowAllScope());
 
         var result = await handler.Handle(new CancelGoalCommand(goal.Id), CancellationToken.None);
 
@@ -105,7 +113,7 @@ public sealed class GoalCommandsTests
         cycles.GetByIdAsync(cycle.Id, Arg.Any<CancellationToken>()).Returns(cycle);
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(tenantId);
-        var handler = new CreateGoalHandler(tenant, employees, goals, cycles);
+        var handler = new CreateGoalHandler(tenant, employees, goals, cycles, AllowAllScope());
 
         var result = await handler.Handle(
             new CreateGoalCommand(employeeId, "Satışları artır", null, new DateOnly(2026, 4, 1), cycle.Id), CancellationToken.None);

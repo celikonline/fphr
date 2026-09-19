@@ -103,6 +103,11 @@ public sealed class Asset : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(AssetsDomainErrors.NotAssigned);
         }
 
+        if (IssuedAt is { } issuedAt && returnedAt < issuedAt)
+        {
+            return Error.Validation(AssetsDomainErrors.ReturnBeforeIssue);
+        }
+
         Status = AssetStatus.Unassigned;
         AssignedEmployeeId = null;
         IssuedAt = null;

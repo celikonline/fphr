@@ -146,6 +146,7 @@ public static class ImportErrorCodes
     public const string InvalidPhone = "IMPORT_INVALID_PHONE";
     public const string ValueTooLong = "IMPORT_VALUE_TOO_LONG";
     public const string DuplicateRow = "IMPORT_DUPLICATE_ROW";
+    public const string DuplicateWorkEmail = "IMPORT_DUPLICATE_WORK_EMAIL";
     public const string NameMismatch = "IMPORT_NAME_MISMATCH";
     public const string NoMatch = "IMPORT_NO_MATCH";
     public const string LookupNotFound = "IMPORT_LOOKUP_NOT_FOUND";

@@ -23,6 +23,7 @@ public sealed class RefreshTokenHandler(
     ISecretGenerator secrets,
     ITokenService tokens,
     ITenantContextSetter tenantSetter,
+    IIdentityUnitOfWork unitOfWork,
     TimeProvider clock) : ICommandHandler<RefreshTokenCommand, AuthTokensDto>
 {
     public async Task<Result<AuthTokensDto>> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
@@ -44,6 +45,8 @@ public sealed class RefreshTokenHandler(
                 t.Revoke(now);
             }
 
+            // Handler hata döndüğü için UnitOfWorkBehaviour kaydetmez: aile iptali açıkça kalıcılaştırılır.
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return Error.Unauthorized(IdentityErrors.RefreshTokenReused);
         }
 

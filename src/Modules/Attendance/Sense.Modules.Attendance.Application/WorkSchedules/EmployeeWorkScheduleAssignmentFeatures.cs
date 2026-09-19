@@ -59,12 +59,18 @@ internal static class EmployeeWorkScheduleAssignmentMapper
 [RequiresPermission("attendance.workschedule.view")]
 public sealed record ListEmployeeWorkScheduleAssignmentsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>;
 
-public sealed class ListEmployeeWorkScheduleAssignmentsHandler(IEmployeeWorkScheduleAssignmentRepository assignments, IWorkScheduleRepository schedules)
+public sealed class ListEmployeeWorkScheduleAssignmentsHandler(
+    IEmployeeWorkScheduleAssignmentRepository assignments, IWorkScheduleRepository schedules, IDataScopeService dataScope)
     : IQueryHandler<ListEmployeeWorkScheduleAssignmentsQuery, IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>
 {
     public async Task<Result<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>> Handle(
         ListEmployeeWorkScheduleAssignmentsQuery query, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.WorkScheduleView.Key, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
         var list = await assignments.ListForEmployeeAsync(query.EmployeeId, cancellationToken);
         return Result.Success(await EmployeeWorkScheduleAssignmentMapper.ToDtosAsync(list, schedules, cancellationToken));
     }

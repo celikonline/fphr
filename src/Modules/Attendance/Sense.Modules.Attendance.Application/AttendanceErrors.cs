@@ -8,6 +8,12 @@ public static class AttendanceErrors
     public const string AvailabilityDateInPast = "attendance.availability.date_in_past";
     public const string DateRangeInvalid = "attendance.timesheet.date_range_invalid";
 
+    /// <summary>A manual timesheet record cannot be entered for a day that has not started yet (tenant-local date).</summary>
+    public const string DateInFuture = "attendance.timesheet.date_in_future";
+
+    /// <summary>A monthly timesheet cannot be approved before its month has started (tenant-local date).</summary>
+    public const string PeriodNotStarted = "attendance.timesheet.period_not_started";
+
     /// <summary>S-31: no active Location has this QR self-servis check-in code for the tenant.</summary>
     public const string SelfCheckInInvalidCode = "attendance.self_checkin.invalid_code";
 

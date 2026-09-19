@@ -103,6 +103,22 @@ public sealed class ApprovedExpensePayoutReaderIntegrationTests : TestFixture
             approvedNotYetPaidAdvance.Approve(advanceApprovalId2, DateTime.UtcNow);
             db.AdvanceRequests.Add(approvedNotYetPaidAdvance);
 
+            // Foreign-currency claim + advance are never added to a TRY payslip (no FX conversion): excluded.
+            var usdClaim = ExpenseClaim.Create(tenantId, employeeId, "USD masraf");
+            usdClaim.AddItem(categoryId, 77m, receiptDate, null, "USD", "receipt-key-usd", null);
+            usdClaim.Submit();
+            var usdApprovalId = Guid.NewGuid();
+            usdClaim.AttachApproval(usdApprovalId, DateTime.UtcNow);
+            usdClaim.Approve(usdApprovalId, new DateTime(2026, 9, 16, 0, 0, 0, DateTimeKind.Utc));
+            db.ExpenseClaims.Add(usdClaim);
+
+            var usdAdvance = AdvanceRequest.Submit(tenantId, employeeId, 5000m, "USD", receiptDate, false, null, null).Value;
+            var usdAdvanceApprovalId = Guid.NewGuid();
+            usdAdvance.AttachApproval(usdAdvanceApprovalId);
+            usdAdvance.Approve(usdAdvanceApprovalId, DateTime.UtcNow);
+            usdAdvance.MarkPaid(DateTime.UtcNow, otherEmployeeId, null);
+            db.AdvanceRequests.Add(usdAdvance);
+
             await db.SaveChangesAsync();
         }
 

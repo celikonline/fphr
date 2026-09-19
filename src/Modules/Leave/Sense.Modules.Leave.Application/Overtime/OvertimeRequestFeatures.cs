@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Identity.Contracts;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Contracts.Events;
 using Sense.Modules.Leave.Domain;
@@ -20,6 +21,7 @@ public static class OvertimeErrors
 {
     public const string Overlap = "leave.errors.overtime_overlap";
     public const string ConsentRevoked = "leave.errors.overtime_consent_revoked";
+    public const string FutureDate = "leave.errors.overtime_future_date";
     public const string NotOwner = "leave.request.not_owner";
 }
 
@@ -58,7 +60,8 @@ public sealed class OvertimeRequestRules(
     IWorkScheduleReader schedules,
     IHolidayCalendarLookup holidays,
     ILegislationParameterReader legislation,
-    IIntegrationEventOutbox outbox)
+    IIntegrationEventOutbox outbox,
+    ITenantTimeZoneLookup? timeZones = null)
 {
     public const decimal FallbackAnnualLimitHours = 270m;
 
@@ -130,11 +133,25 @@ public sealed class OvertimeRequestRules(
         return (yearTotal, limitHours * 60m);
     }
 
+    /// <summary>Today's date in the tenant's time zone (falls back to UTC when the zone is unknown, like Attendance's TenantLocalClock).</summary>
+    private async Task<DateOnly> TenantLocalDateAsync(Guid tenantId, DateTime utcNow, CancellationToken ct)
+    {
+        var zoneId = timeZones is null ? null : await timeZones.FindTimeZoneIdAsync(tenantId, ct);
+        var zone = zoneId is not null && TimeZoneInfo.TryFindSystemTimeZoneById(zoneId, out var found) ? found : TimeZoneInfo.Utc;
+        return DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utcNow, DateTimeKind.Utc), zone));
+    }
+
     /// <summary>Evaluate → create Pending → start the Workflow "Overtime" approval with the employee as requester.</summary>
     public async Task<Result<(OvertimeRequest Request, OvertimeSubmissionDto Submission)>> SubmitAsync(
         IWorkflowService workflow, Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, string? description,
         OvertimeRequestSource source, DateTime now, Guid? userId, string? ip, CancellationToken ct, OvertimePayRateKind payRateKind = OvertimePayRateKind.Rate50)
     {
+        // Overtime is claimed for work already done: a day that has not started yet (tenant-local date) cannot be requested.
+        if (workDate > await TenantLocalDateAsync(tenantId, now, ct))
+        {
+            return Error.Validation(OvertimeErrors.FutureDate);
+        }
+
         var evaluated = await EvaluateAsync(tenantId, employeeId, workDate, startTime, durationMinutes, ct);
         if (evaluated.IsFailure)
         {
@@ -175,6 +192,7 @@ public sealed class SubmitMyOvertimeRequestValidator : AbstractValidator<SubmitM
     public SubmitMyOvertimeRequestValidator()
     {
         RuleFor(x => x.DurationMinutes).InclusiveBetween(1, OvertimeLimits.MaxDurationMinutes);
+        RuleFor(x => x.PayRateKind).IsInEnum();
         RuleFor(x => x.Description).MaximumLength(LeaveLimits.DescriptionMaxLength);
     }
 }
@@ -208,6 +226,7 @@ public sealed class CreateOvertimeRequestOnBehalfValidator : AbstractValidator<C
     public CreateOvertimeRequestOnBehalfValidator()
     {
         RuleFor(x => x.DurationMinutes).InclusiveBetween(1, OvertimeLimits.MaxDurationMinutes);
+        RuleFor(x => x.PayRateKind).IsInEnum();
         RuleFor(x => x.Description).MaximumLength(LeaveLimits.DescriptionMaxLength);
     }
 }
@@ -233,6 +252,11 @@ public sealed class CreateOvertimeRequestOnBehalfHandler(
 /// <summary>HR/yönetici düzeltmesi (m.41, kart senseik-012 §1): oran seçimi ancak talep hâlâ Pending iken değiştirilebilir.</summary>
 [RequiresPermission("leave.overtimes.create_on_behalf")]
 public sealed record ChangeOvertimePayRateKindCommand(Guid RequestId, OvertimePayRateKind PayRateKind) : ICommand;
+
+public sealed class ChangeOvertimePayRateKindValidator : AbstractValidator<ChangeOvertimePayRateKindCommand>
+{
+    public ChangeOvertimePayRateKindValidator() => RuleFor(x => x.PayRateKind).IsInEnum();
+}
 
 public sealed class ChangeOvertimePayRateKindHandler(IDataScopeService dataScope, IOvertimeRequestRepository requests)
     : ICommandHandler<ChangeOvertimePayRateKindCommand>

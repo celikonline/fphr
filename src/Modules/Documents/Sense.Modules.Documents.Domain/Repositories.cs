@@ -61,8 +61,9 @@ public interface IEmployeeDocumentRequirementRepository
 
     Task<IReadOnlyList<EmployeeDocumentRequirement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
+    /// <param name="employeeIds">Null = tüm çalışanlar; dolu ise (veri kapsamı) yalnız bu çalışanların gereksinimleri.</param>
     Task<(IReadOnlyList<EmployeeDocumentRequirement> Items, int Total)> ListReportAsync(
-        DocumentRequirementStatus? status, int skip, int take, CancellationToken cancellationToken = default);
+        DocumentRequirementStatus? status, int skip, int take, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
 
     /// <summary>Paged report of Uploaded requirements whose linked <see cref="Document"/> has a non-null ExpiryDate,
     /// filtered by expiry window (<c>GET /api/v1/documents/expiring</c>). <paramref name="today"/>/<paramref name="withinDays"/>

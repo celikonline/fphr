@@ -1,3 +1,5 @@
+using Sense.Modules.Attendance.Application.SelfCheckIns;
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Shared.Contracts.Context;
@@ -27,11 +29,16 @@ public sealed record GetEqualizationStatusQuery(Guid EmployeeId, DateOnly Date) 
 
 public sealed class GetEqualizationStatusHandler(
     ITenantContext tenant, IShiftSettingsRepository shiftSettings, IEqualizationPeriodRepository periods, IAttendanceDayRepository days,
-    IAttendanceUnitOfWork unitOfWork, TimeProvider clock)
+    IAttendanceUnitOfWork unitOfWork, ITenantLocalClock localClock, IDataScopeService dataScope)
     : IQueryHandler<GetEqualizationStatusQuery, EqualizationStatusDto>
 {
     public async Task<Result<EqualizationStatusDto>> Handle(GetEqualizationStatusQuery query, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetView.Key, query.EmployeeId, cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
         var settings = await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false);
         if (settings is null || !settings.EqualizationEnabled)
         {
@@ -47,7 +54,8 @@ public sealed class GetEqualizationStatusHandler(
             periods.Add(period);
         }
 
-        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        // "Bugün" kiracının yerel takvim günüdür (UTC değil): UTC+3 kiracıda gece yarısından sonraki dönem sonu bir gün geç görünmesin.
+        var today = DateOnly.FromDateTime((await localClock.NowAsync(tenant.TenantId, cancellationToken).ConfigureAwait(false)).Local);
         if (period.Status == EqualizationPeriodStatus.Open)
         {
             var sumTo = today < period.PeriodEnd ? today : period.PeriodEnd;

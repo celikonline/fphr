@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
@@ -250,6 +251,53 @@ public sealed class AttendanceIntegrationTests : TestFixture
 
         summary.MissingDays.ShouldBe((decimal)(workingDaysInMonth - 2));
         summary.IsPeriodLocked.ShouldBeFalse();
+    }
+
+    /// <summary>QA: resmi tatil ve onaylı izin günleri, kayıt yoksa "eksik gün" sayılmaz; o günlerde çalışılmışsa çalışılan gün olarak kalır.</summary>
+    [Fact]
+    public async Task MonthlySummaryReader_HolidaysAndApprovedLeave_AreNotMissingDays()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        var workingDaysInMonth = Enumerable.Range(1, DateTime.DaysInMonth(2026, 9))
+            .Select(d => new DateOnly(2026, 9, d))
+            .Count(d => d.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday));
+
+        using var scope = ServiceProvider!.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+        await scope.ServiceProvider.GetRequiredService<Application.WorkSchedules.WorkScheduleAssignmentService>()
+            .EnsureDefaultScheduleAsync(tenantId, TestContext.Current.CancellationToken);
+        foreach (var date in new[] { new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 2) })
+        {
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, employeeId, date, new TimeOnly(9, 0), new TimeOnly(18, 0), new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 480, breakMinutes: 60, AttendanceDaySource.Manual));
+        }
+
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        var holidays = Substitute.For<Sense.Modules.Organization.Contracts.IHolidayCalendarLookup>();
+        var calendarId = Guid.NewGuid();
+        holidays.ResolveCalendarAsync(tenantId, null, null, Arg.Any<CancellationToken>()).Returns(new Sense.Modules.Organization.Contracts.HolidayCalendarRef(calendarId, "TR"));
+        holidays.GetHolidaysAsync(tenantId, calendarId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Sense.Modules.Organization.Contracts.UpcomingHoliday> { new(new DateOnly(2026, 9, 3), "Tatil") });
+        var leave = Substitute.For<Sense.Modules.Leave.Contracts.IApprovedLeaveDateLookup>();
+        leave.GetApprovedLeaveDatesAsync(tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<Sense.Modules.Leave.Contracts.ApprovedLeaveDay>
+            {
+                new(employeeId, new DateOnly(2026, 9, 2)), // izinli ama çalışılmış: çalışılan gün olarak kalır, ayrıca düşülmez
+                new(employeeId, new DateOnly(2026, 9, 4)),
+                new(employeeId, new DateOnly(2026, 9, 7)),
+            });
+
+        var reader = new Infrastructure.Lookups.AttendanceMonthlySummaryReader(
+            db, scope.ServiceProvider.GetRequiredService<IWorkScheduleReadService>(), new Application.AttendanceDays.NonWorkingDayResolver(leave, holidays));
+
+        var summary = (await reader.GetAsync(tenantId, 2026, 9, [employeeId], TestContext.Current.CancellationToken)).Single();
+
+        summary.WorkedDays.ShouldBe(2m);
+        summary.MissingDays.ShouldBe((decimal)(workingDaysInMonth - 2 - 3)); // 3 Eylül tatil + 4 ve 7 Eylül izin
     }
 
     // Kart senseik-014 §6 (Puantaj → Bordro Kontratı): equalization is off for this tenant, so the reader only ever

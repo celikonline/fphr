@@ -34,6 +34,28 @@ public sealed class EmployeeSalaryLookup(EmployeeDbContext context) : IEmployeeS
             : new EmployeeCurrentSalary(current.Amount, current.Currency, MapSalaryType(current.SalaryType), Map(current.PayFrequency), current.EffectiveFrom);
     }
 
+    public async Task<EmployeeCurrentSalary?> GetSalaryAsOfAsync(Guid tenantId, Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default)
+    {
+        var record = await context.Set<SalaryRecord>().AsNoTracking()
+            .Where(r => r.TenantId == tenantId && r.EmployeeId == employeeId && r.EffectiveFrom <= asOf)
+            .OrderByDescending(r => r.EffectiveFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return record is null
+            ? null
+            : new EmployeeCurrentSalary(record.Amount, record.Currency, MapSalaryType(record.SalaryType), Map(record.PayFrequency), record.EffectiveFrom);
+    }
+
+    public async Task<EmployeeEmploymentDates?> GetEmploymentDatesAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default)
+    {
+        var dates = await context.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Where(e => e.TenantId == tenantId && e.Id == employeeId)
+            .Select(e => new { e.HireDate, e.TerminationDate })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return dates is null ? null : new EmployeeEmploymentDates(dates.HireDate, dates.TerminationDate);
+    }
+
     public async Task<IReadOnlyDictionary<Guid, EmployeeCurrentSalary>> GetCurrentSalariesAsync(
         Guid tenantId, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken = default)
     {

@@ -65,7 +65,28 @@ public static class EmployeeInfoRules
             .Must(i => i.BirthDate is null || i.HireDate is null || i.BirthDate <= i.HireDate)
             .WithMessage(EmployeeDomainErrors.BirthDateAfterHireDate)
             .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        // Makul tarih sınırları + işe girişte asgari yaş 15 (4857 md.71): Employee.Validate ile aynı EmployeeDateRules
+        // kaynağı; alan bazlı 400 için.
+        v.RuleFor(x => info(x).BirthDate)
+            .Must(bd => EmployeeDateRules.CheckBirthDate(bd) is null)
+            .WithMessage(EmployeeDomainErrors.BirthDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd >= EmployeeDateRules.EarliestDate)
+            .WithMessage(EmployeeDomainErrors.HireDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd <= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(EmployeeDateRules.MaxHireDateMonthsAhead))
+            .WithMessage(EmployeeDomainErrors.HireDateTooFarInFuture)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x))
+            .Must(i => EmployeeDateRules.CheckMinimumAge(i.BirthDate, i.HireDate) is null)
+            .WithMessage(EmployeeDomainErrors.MinimumAge)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).WorkPhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).MobilePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.MobilePhone));
+        v.RuleFor(x => info(x).HomePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.HomePhone));
         v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
             .When(x => info(x).ChildCount is not null)
             .WithMessage(EmployeeDomainErrors.ChildCountInvalid)
@@ -77,6 +98,7 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x).AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).OverridePropertyName(nameof(EmployeeInfo.AddressLine));
         v.RuleFor(x => info(x).City).MaximumLength(EmployeeLimits.CityMaxLength).OverridePropertyName(nameof(EmployeeInfo.City));
         v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
+        v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeInputMaxLength).WithMessage(EmployeeDomainErrors.PostalCodeInvalid).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
 
         v.RuleFor(x => info(x).SicilNumarasi).MaximumLength(EmployeeLimits.SicilNumarasiMaxLength).OverridePropertyName(nameof(EmployeeInfo.SicilNumarasi));
         v.RuleFor(x => info(x).ForeignIdNumber).MaximumLength(EmployeeLimits.ForeignIdNumberLength).OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
@@ -145,6 +167,15 @@ public sealed class EmployeeReferenceValidator(ITenantContext tenant, IEmployeeR
             await employees.SicilNumarasiTakenAsync(info.SicilNumarasi.Trim(), existing?.Id, ct).ConfigureAwait(false))
         {
             return Error.Conflict(EmployeeErrors.SicilNumarasiTaken);
+        }
+
+        // Work e-mail is the login/notification address: unique per tenant, case-insensitively. On update only a
+        // changed address is checked, so legacy duplicates never block unrelated edits.
+        if (info.WorkEmail?.Trim() is { Length: > 0 } workEmail &&
+            !string.Equals(existing?.WorkEmail?.Trim(), workEmail, StringComparison.OrdinalIgnoreCase) &&
+            await employees.WorkEmailTakenAsync(workEmail, existing?.Id, ct).ConfigureAwait(false))
+        {
+            return Error.Conflict(EmployeeErrors.WorkEmailTaken);
         }
 
         return Result.Success();

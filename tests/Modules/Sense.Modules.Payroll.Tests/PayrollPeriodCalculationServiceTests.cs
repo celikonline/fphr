@@ -120,7 +120,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
         out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
         out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader,
-        out IEmployeeUnionMembershipRepository unionMemberships)
+        out IEmployeeUnionMembershipRepository unionMemberships, IPayrollPeriodRepository? periodsOverride = null)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -143,13 +143,14 @@ public sealed class PayrollPeriodCalculationServiceTests
         // .Returns()) reproduces "no prior period, no disability, no garnishment orders" - the pre-existing tests in
         // this file don't exercise these scenarios (covered instead by PayrollCalculatorGoldenSetTests at the pure
         // Domain level), so none of them need to be exposed as an `out` parameter here.
-        var periods = Substitute.For<IPayrollPeriodRepository>();
+        var periods = periodsOverride ?? Substitute.For<IPayrollPeriodRepository>();
         var garnishmentOrders = Substitute.For<IGarnishmentOrderRepository>();
         var disabilityLookup = Substitute.For<IEmployeeDisabilityLookup>();
 
         return new PayrollPeriodCalculationService(
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
-            workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup, unionMemberships);
+            workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup, unionMemberships,
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
     }
 
     [Fact]
@@ -160,8 +161,8 @@ public sealed class PayrollPeriodCalculationServiceTests
         var employeeB = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeA, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeA)));
         profiles.FindCurrentAsync(employeeB, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeB)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeA, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeB, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(80_000m)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeA, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeB, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(80_000m)));
 
         var summary = await service.RecalculateAllAsync(OpenPeriod(), [employeeA, employeeB], CancellationToken.None);
 
@@ -183,7 +184,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         summary.CalculatedCount.ShouldBe(0);
         summary.SkippedCount.ShouldBe(1);
         payslips.DidNotReceive().Add(Arg.Any<Payslip>());
-        await salaryLookup.DidNotReceive().GetCurrentSalaryAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+        await salaryLookup.DidNotReceive().GetSalaryAsOfAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -199,7 +200,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         dirtyFlags.FindActiveAsync(period.Id, dirtyEmployee, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayslipDirtyFlag?>(activeFlag));
 
         profiles.FindCurrentAsync(dirtyEmployee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(dirtyEmployee)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, dirtyEmployee, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, dirtyEmployee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
 
         var summary = await service.RecalculateDirtyAsync(period, CancellationToken.None);
 
@@ -208,7 +209,7 @@ public sealed class PayrollPeriodCalculationServiceTests
 
         // The untouched employee is never looked up at all - RecalculateDirtyAsync only iterates flagged ids.
         await profiles.DidNotReceive().FindCurrentAsync(untouchedEmployee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
-        await salaryLookup.DidNotReceive().GetCurrentSalaryAsync(TenantId, untouchedEmployee, Arg.Any<CancellationToken>());
+        await salaryLookup.DidNotReceive().GetSalaryAsOfAsync(TenantId, untouchedEmployee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
 
         activeFlag.IsActive.ShouldBeFalse();
         activeFlag.ClearedByRunId.ShouldBe(summary.RunId);
@@ -225,7 +226,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
 
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
 
@@ -240,7 +241,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out var workedTimeReader, out var absenceDaysReader, out _);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
         absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
@@ -260,7 +261,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var absenceDaysReader, out _);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         absenceDaysReader.GetUnexcusedDaysAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<int?>(5));
 
@@ -277,7 +278,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         workedTimeReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 18, MissingDays: 13, OvertimeHours: 4m)));
 
@@ -294,7 +295,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out _);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
 
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
 
@@ -309,7 +310,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var expensePayoutReader);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         expensePayoutReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpensePayoutFigures?>(new ExpensePayoutFigures(ApprovedExpenseTotal: 2_500m, OpenAdvanceBalance: 1_000m)));
 
@@ -327,13 +328,202 @@ public sealed class PayrollPeriodCalculationServiceTests
         var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup, out _, out var expensePayoutReader);
         var employeeId = Guid.NewGuid();
         profiles.FindCurrentAsync(employeeId, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
-        salaryLookup.GetCurrentSalaryAsync(TenantId, employeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary()));
         expensePayoutReader.GetAsync(TenantId, employeeId, 2026, 3, Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<ExpensePayoutFigures?>(new ExpensePayoutFigures(ApprovedExpenseTotal: 2_500m, OpenAdvanceBalance: 0m, UndocumentedExpenseTotal: 900m)));
 
         await service.RecalculateAllAsync(OpenPeriod(), [employeeId], CancellationToken.None);
 
         CapturedNetStepExpenseReimbursementInput(traces).ShouldBe("2500");
+    }
+
+    // ---- QA teslim testi düzeltmeleri: kümülatif GV, kıst maaş, dönem-tarihli maaş, atlanan çalışan nedenleri ----
+
+    private static PayrollPeriod SeptemberPeriod() => PayrollPeriod.Create(TenantId, 2026, 9).Value;
+
+    private static void GivenEmployee(
+        IEmployeePayrollProfileRepository profiles, IEmployeeSalaryLookup salaryLookup, Guid employeeId,
+        EmployeeCurrentSalary? salary = null, DateOnly? hireDate = null, DateOnly? terminationDate = null, DateOnly? profileAsOf = null)
+    {
+        profiles.FindCurrentAsync(employeeId, profileAsOf ?? Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeCurrentSalary?>(salary ?? Salary()));
+        salaryLookup.GetEmploymentDatesAsync(TenantId, employeeId, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeEmploymentDates?>(new EmployeeEmploymentDates(hireDate, terminationDate)));
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_CarriesPriorMonthCumulativeGvBase_IntoTheIncomeTaxStep()
+    {
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        var august = PayrollPeriod.Create(TenantId, 2026, 8).Value;
+        periods.FindByYearMonthAsync(2026, 8, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(august));
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, periods);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(75_000m));
+        payslips.FindByEmployeeAndPeriodAsync(employeeId, august.Id, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Payslip?>(Payslip.CreateFirstVersion(TenantId, employeeId, august.Id, "{}", "hash", 75_000m, 57_670.95m, 90_000m, cumulativeGvBase: 500_000m)));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        var steps = CapturedSteps(traces);
+        steps.Single(s => s.Code == PayrollTraceStepCodes.IncomeTax).Inputs["priorCumulativeGvBase"].ShouldBe("500000");
+        steps.Single(s => s.Code == PayrollTraceStepCodes.CumulativeBase).Output.ShouldBeGreaterThan(500_000m);
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_FallsBackToTheLatestEarlierPayslipOfTheYear_WhenThePreviousMonthHasNone()
+    {
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        var july = PayrollPeriod.Create(TenantId, 2026, 7).Value;
+        periods.FindByYearMonthAsync(2026, 7, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(july));
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, periods);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId);
+        payslips.FindByEmployeeAndPeriodAsync(employeeId, july.Id, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Payslip?>(Payslip.CreateFirstVersion(TenantId, employeeId, july.Id, "{}", "hash", 50_000m, 40_000m, 60_000m, cumulativeGvBase: 300_000m)));
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.IncomeTax).Inputs["priorCumulativeGvBase"].ShouldBe("300000");
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_StartsCumulativeBaseAtZero_WhenTheEmployeeHasNoEarlierPayslipThisYear()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId);
+
+        await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        CapturedSteps(traces).Single(s => s.Code == PayrollTraceStepCodes.IncomeTax).Inputs["priorCumulativeGvBase"].ShouldBe("0");
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_ProratesSalaryAndDays_ForAMidMonthHire()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        var hireDate = new DateOnly(2026, 9, 16);
+        // The hire-date profile is only valid from the hire date, so it must be looked up as of that date, not Sep 1.
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(50_000m), hireDate: hireDate, profileAsOf: hireDate);
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        var steps = CapturedSteps(traces);
+        steps.Single(s => s.Code == PayrollTraceStepCodes.Days).Output.ShouldBe(15m); // 16..30 => 15 days
+        steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Output.ShouldBe(25_000m); // 50,000 * 15 / 30
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_ProratesSalaryAndDays_ForAMidMonthTermination()
+    {
+        var service = BuildService(out _, out var traces, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId, Salary(60_000m), terminationDate: new DateOnly(2026, 9, 10));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        var steps = CapturedSteps(traces);
+        steps.Single(s => s.Code == PayrollTraceStepCodes.Days).Output.ShouldBe(10m);
+        steps.Single(s => s.Code == PayrollTraceStepCodes.Earnings).Output.ShouldBe(20_000m); // 60,000 * 10 / 30
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_SkipsAnEmployeeHiredAfterThePeriod_WithAReason()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId, hireDate: new DateOnly(2026, 10, 1));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(0);
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NotEmployedInPeriod)]);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_SkipsAnEmployeeTerminatedBeforeThePeriod_WithAReason()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId, terminationDate: new DateOnly(2026, 8, 31));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.Skipped.Single().Reason.ShouldBe(PayrollSkipReasons.NotEmployedInPeriod);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_ReadsTheSalaryInForceAtPeriodEnd_NotTheCurrentOne()
+    {
+        var service = BuildService(out _, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        profiles.FindCurrentAsync(employeeId, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employeeId)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employeeId, new DateOnly(2026, 8, 31), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(75_000m)));
+
+        var augustPeriod = PayrollPeriod.Create(TenantId, 2026, 8).Value;
+        var summary = await service.RecalculateAllAsync(augustPeriod, [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        await salaryLookup.Received(1).GetSalaryAsOfAsync(TenantId, employeeId, new DateOnly(2026, 8, 31), Arg.Any<CancellationToken>());
+        await salaryLookup.DidNotReceive().GetCurrentSalaryAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_ReportsANetSalaryEmployeeAsSkippedWithAReason()
+    {
+        var service = BuildService(out _, out _, out var profiles, out _, out var salaryLookup);
+        var employeeId = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, employeeId,
+            new EmployeeCurrentSalary(40_000m, "TRY", EmployeeSalaryType.Net, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(0);
+        summary.SkippedCount.ShouldBe(1);
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NetSalaryNotSupported)]);
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_SkipsAnEmployeeWithZeroWorkedDays_AndStillCalculatesTheOthers()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out var workedTimeReader);
+        var noDays = Guid.NewGuid();
+        var normal = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, noDays);
+        GivenEmployee(profiles, salaryLookup, normal);
+        workedTimeReader.GetAsync(TenantId, noDays, 2026, 9, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<WorkedTimeSummary?>(new WorkedTimeSummary(WorkedDays: 0, MissingDays: 30, OvertimeHours: 0m)));
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [noDays, normal], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(noDays, PayrollSkipReasons.NoWorkedDays)]);
+        payslips.Received(1).Add(Arg.Any<Payslip>());
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_OneEmployeeFailingTheCalculation_DoesNotBreakTheWholeRun()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var broken = Guid.NewGuid();
+        var normal = Guid.NewGuid();
+        GivenEmployee(profiles, salaryLookup, broken, Salary(0m)); // PayrollCalculator rejects a non-positive gross
+        GivenEmployee(profiles, salaryLookup, normal);
+
+        var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [broken, normal], CancellationToken.None);
+
+        summary.CalculatedCount.ShouldBe(1);
+        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(broken, PayrollSkipReasons.CalculationFailed)]);
+        payslips.Received(1).Add(Arg.Any<Payslip>());
     }
 
     private static decimal CapturedDaysStepOutput(IPayslipCalculationTraceRepository traces)

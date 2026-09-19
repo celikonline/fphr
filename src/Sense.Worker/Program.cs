@@ -115,6 +115,12 @@ builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
 // through this Identity read contract; without it the host fails DI validation at startup.
 builder.Services.AddScoped<Sense.Modules.Identity.Domain.ITenantRepository, TenantRepository>();
 builder.Services.AddScoped<ITenantTimeZoneLookup, TenantTimeZoneLookup>();
+// Identity's EmployeeTerminated handler (G-3-01) disables the terminated employee's login; it lives in the Application
+// assembly the Worker does not scan, so it is registered explicitly with the repositories it needs.
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.IUserRepository, UserRepository>();
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<Sense.Modules.Identity.Application.IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
+builder.Services.AddScoped<Sense.Shared.Contracts.Events.IIntegrationEventHandler<Sense.Modules.Employee.Contracts.Events.EmployeeTerminated>, Sense.Modules.Identity.Application.Users.EmployeeTerminatedHandler>();
 // Documents' EmployeeHired handler materializes requirements through this Employee read contract.
 builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
@@ -168,6 +174,8 @@ builder.Services.AddPayrollServices(builder.Configuration);
 builder.Services.AddPayrollIntegrationEventHandlers();
 builder.Services.AddPayrollChangeDetectionJob();
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+// PayrollPeriodCalculationService reads the disability degree (engelli vergi indirimi) through this Employee contract.
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();
 builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
@@ -214,6 +222,7 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Module
 // but drained anyway so EventTypeRegistry knows the types (see the note at the top of this file).
 builder.Services.AddModuleDbContext<ExpenseDbContext>(builder.Configuration, ExpenseDbContext.SchemaName);
 builder.Services.AddExpenseCoreServices();
+builder.Services.AddExpenseIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     ExpenseDbContext.SchemaName,
     typeof(Sense.Modules.Expense.Contracts.ExpensePermissions).Assembly,

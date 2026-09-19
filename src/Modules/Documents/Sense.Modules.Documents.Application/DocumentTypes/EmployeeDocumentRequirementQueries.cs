@@ -9,6 +9,11 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Application.DocumentTypes;
 
+internal static class DocumentsPermissionKeys
+{
+    public const string RequirementsView = "documents.requirements.view";
+}
+
 internal static class EmployeeDocumentRequirementMapping
 {
     /// <summary>Maps requirements to DTOs, resolving <c>ExpiryDate</c> for all linked documents in a single
@@ -47,11 +52,17 @@ internal static class EmployeeDocumentRequirementMapping
 public sealed record GetEmployeeDocumentRequirementsQuery(Guid EmployeeId) : IQuery<IReadOnlyList<EmployeeDocumentRequirementDto>>;
 
 public sealed class GetEmployeeDocumentRequirementsHandler(
-    IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents)
+    IEmployeeDocumentRequirementRepository requirements, IDocumentTypeDefinitionRepository types, IDocumentRepository documents,
+    IDataScopeService dataScope)
     : IQueryHandler<GetEmployeeDocumentRequirementsQuery, IReadOnlyList<EmployeeDocumentRequirementDto>>
 {
     public async Task<Result<IReadOnlyList<EmployeeDocumentRequirementDto>>> Handle(GetEmployeeDocumentRequirementsQuery query, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(DocumentsPermissionKeys.RequirementsView, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(DocumentsErrors.EmployeeNotInScope);
+        }
+
         var list = await requirements.ListByEmployeeAsync(query.EmployeeId, cancellationToken);
         return Result.Success(await EmployeeDocumentRequirementMapping.ToDtosAsync(list, types, documents, cancellationToken));
     }
@@ -85,11 +96,14 @@ public sealed class GetMissingDocumentReportHandler(
     IEmployeeDocumentRequirementRepository requirements,
     IDocumentTypeDefinitionRepository types,
     IEmployeeContactLookup employeeContacts,
-    ITenantContext tenant) : IQueryHandler<GetMissingDocumentReportQuery, PagedResult<MissingDocumentReportItemDto>>
+    ITenantContext tenant,
+    IDataScopeService dataScope) : IQueryHandler<GetMissingDocumentReportQuery, PagedResult<MissingDocumentReportItemDto>>
 {
     public async Task<Result<PagedResult<MissingDocumentReportItemDto>>> Handle(GetMissingDocumentReportQuery query, CancellationToken cancellationToken)
     {
-        var (items, total) = await requirements.ListReportAsync(query.Status, query.Paging.Skip, query.Paging.PageSize, cancellationToken);
+        // null = kapsam kısıtı yok (Company); aksi halde yalnız görünür çalışanların gereksinimleri raporlanır.
+        var visible = await dataScope.GetVisibleEmployeeIdsAsync(DocumentsPermissionKeys.RequirementsView, cancellationToken);
+        var (items, total) = await requirements.ListReportAsync(query.Status, query.Paging.Skip, query.Paging.PageSize, visible, cancellationToken);
 
         var typeMap = new Dictionary<Guid, DocumentTypeDefinition>();
         foreach (var typeId in items.Select(i => i.DocumentTypeId).Distinct())

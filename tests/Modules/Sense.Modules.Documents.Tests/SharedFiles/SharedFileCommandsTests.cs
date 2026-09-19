@@ -40,6 +40,9 @@ public sealed class SharedFileCommandsTests
         var storage = Substitute.For<IFileStorage>();
         storage.InitiateUploadAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new PresignedUrlRequest("https://storage/upload", "req-1", DateTime.UtcNow.AddMinutes(60), new Dictionary<string, string>())));
+        // Storage is the authoritative source of the confirmed size (client-reported size is ignored).
+        storage.ConfirmUploadAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(4096L));
         return storage;
     }
 

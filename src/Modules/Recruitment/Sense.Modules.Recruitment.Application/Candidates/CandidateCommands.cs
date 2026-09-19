@@ -5,6 +5,7 @@ using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
+using Sense.Shared.Kernel.ValueObjects;
 
 namespace Sense.Modules.Recruitment.Application.Candidates;
 
@@ -19,6 +20,7 @@ public sealed class CreateCandidateValidator : AbstractValidator<CreateCandidate
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(RecruitmentLimits.EmailMaxLength);
+        RuleFor(x => x.Phone).Must(PhoneFormat.IsValid).WithMessage(RecruitmentDomainErrors.CandidatePhoneInvalid);
     }
 }
 
@@ -49,6 +51,7 @@ public sealed class UpdateCandidateValidator : AbstractValidator<UpdateCandidate
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(RecruitmentLimits.EmailMaxLength);
+        RuleFor(x => x.Phone).Must(PhoneFormat.IsValid).WithMessage(RecruitmentDomainErrors.CandidatePhoneInvalid);
     }
 }
 

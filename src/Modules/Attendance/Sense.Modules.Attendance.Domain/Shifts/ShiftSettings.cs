@@ -1,3 +1,4 @@
+using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Shared.Kernel.Domain;
 using Sense.Shared.Kernel.Results;
 
@@ -18,6 +19,9 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
     public const int DefaultMaxWeeklyDays = 6;
     public const int DefaultMaxWeeklyMinutes = 45 * 60;
     public const int DefaultBreakMinMinutes = 30;
+
+    /// <summary>İş K. günlük kesintisiz dinlenme: iki vardiya arasında en az 11 saat.</summary>
+    public const int MinDailyRestMinutes = 11 * 60;
 
     /// <summary>m.69 gece çalışması üst sınırı: 7,5 saat.</summary>
     public const int DefaultNightWorkMaxMinutes = 450;
@@ -108,6 +112,27 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
         new(Guid.CreateVersion7(), tenantId, DefaultMaxDailyMinutes, DefaultMaxWeeklyDays, DefaultMaxWeeklyMinutes, nightWorkEnabled: true,
             DefaultNightWorkStart, DefaultNightWorkEnd, DefaultNightWorkMaxMinutes, DefaultBreakMinMinutes, breakIsPaid: false, autoLockEnabled: false,
             autoLockDayOfMonth: 26, autoLockNotifyDaysBefore: 3);
+
+    /// <summary>
+    /// Sunucu tarafı gece vardiyası tespiti (m.69): gece çalışması açıksa ve vardiya süresinin yarısından fazlası gece penceresine
+    /// (varsayılan 20:00-06:00) düşüyorsa gece vardiyasıdır. İstemcinin gönderdiği <c>IsNight</c> bayrağı tek başına güvenilmez.
+    /// </summary>
+    public bool IsNightShift(TimeOnly start, TimeOnly end)
+    {
+        if (!NightWorkEnabled || NightWorkStart is not { } nightStart || NightWorkEnd is not { } nightEnd)
+        {
+            return false;
+        }
+
+        var span = end.ToTimeSpan() - start.ToTimeSpan();
+        if (span <= TimeSpan.Zero)
+        {
+            span += TimeSpan.FromDays(1);
+        }
+
+        var grossMinutes = (int)span.TotalMinutes;
+        return DailyWorkCalculator.NightOverlapMinutes(start, grossMinutes, nightStart, nightEnd) * 2 > grossMinutes;
+    }
 
     public Result Update(
         int maxDailyMinutes, int maxWeeklyDays, int maxWeeklyMinutes, bool nightWorkEnabled, TimeOnly? nightWorkStart, TimeOnly? nightWorkEnd,

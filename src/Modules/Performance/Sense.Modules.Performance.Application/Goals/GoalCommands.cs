@@ -1,5 +1,6 @@
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Performance.Contracts;
 using Sense.Modules.Performance.Domain;
 using Sense.Modules.Performance.Domain.Goals;
 using Sense.Modules.Performance.Domain.ReviewCycles;
@@ -62,11 +63,18 @@ public sealed class CreateGoalValidator : AbstractValidator<CreateGoalCommand>
     }
 }
 
-public sealed class CreateGoalHandler(ITenantContext tenant, IEmployeeLookup employees, IGoalRepository goals, IReviewCycleRepository cycles)
+public sealed class CreateGoalHandler(
+    ITenantContext tenant, IEmployeeLookup employees, IGoalRepository goals, IReviewCycleRepository cycles, IDataScopeService dataScope)
     : ICommandHandler<CreateGoalCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateGoalCommand command, CancellationToken cancellationToken)
     {
+        // Kapsam kontrolü varlık kontrolünden önce: kapsam dışı çağırana çalışanın var olup olmadığı sızdırılmaz.
+        if (!await dataScope.CanAccessEmployeeAsync(PerformancePermissions.GoalsManage.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(PerformanceErrors.EmployeeNotInScope);
+        }
+
         if (!await employees.ExistsActiveAsync(tenant.TenantId, command.EmployeeId, cancellationToken))
         {
             return Error.Validation(PerformanceErrors.EmployeeInvalid);
@@ -135,7 +143,8 @@ public sealed class CreateMyGoalHandler(ITenantContext tenant, ICurrentUser curr
 [RequiresPermission("performance.goals.manage")]
 public sealed record UpdateGoalProgressCommand(Guid GoalId, int Progress) : ICommand;
 
-public sealed class UpdateGoalProgressHandler(IGoalRepository goals, IReviewCycleRepository cycles) : ICommandHandler<UpdateGoalProgressCommand>
+public sealed class UpdateGoalProgressHandler(IGoalRepository goals, IReviewCycleRepository cycles, IDataScopeService dataScope)
+    : ICommandHandler<UpdateGoalProgressCommand>
 {
     public async Task<Result> Handle(UpdateGoalProgressCommand command, CancellationToken cancellationToken)
     {
@@ -143,6 +152,11 @@ public sealed class UpdateGoalProgressHandler(IGoalRepository goals, IReviewCycl
         if (existing.IsFailure)
         {
             return existing.Error;
+        }
+
+        if (!await dataScope.CanAccessEmployeeAsync(PerformancePermissions.GoalsManage.Key, existing.Value.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(PerformanceErrors.EmployeeNotInScope);
         }
 
         if (existing.Value.ReviewCycleId is { } reviewCycleId)
@@ -199,7 +213,8 @@ public sealed class UpdateMyGoalProgressHandler(ICurrentUser currentUser, IGoalR
 [RequiresPermission("performance.goals.manage")]
 public sealed record CancelGoalCommand(Guid GoalId) : ICommand;
 
-public sealed class CancelGoalHandler(IGoalRepository goals, IReviewCycleRepository cycles) : ICommandHandler<CancelGoalCommand>
+public sealed class CancelGoalHandler(IGoalRepository goals, IReviewCycleRepository cycles, IDataScopeService dataScope)
+    : ICommandHandler<CancelGoalCommand>
 {
     public async Task<Result> Handle(CancelGoalCommand command, CancellationToken cancellationToken)
     {
@@ -207,6 +222,11 @@ public sealed class CancelGoalHandler(IGoalRepository goals, IReviewCycleReposit
         if (existing.IsFailure)
         {
             return existing.Error;
+        }
+
+        if (!await dataScope.CanAccessEmployeeAsync(PerformancePermissions.GoalsManage.Key, existing.Value.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(PerformanceErrors.EmployeeNotInScope);
         }
 
         if (existing.Value.ReviewCycleId is { } reviewCycleId)

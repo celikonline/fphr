@@ -12,6 +12,8 @@ public static class AssetsDomainErrors
     public const string AlreadyAssigned = "asset.already_assigned";
     public const string NotAssigned = "asset.not_assigned";
     public const string CannotRetireWhileAssigned = "asset.cannot_retire_while_assigned";
+    public const string SerialNumberInUse = "asset.serial_number_in_use";
+    public const string ReturnBeforeIssue = "asset.return_before_issue";
 }
 
 /// <summary>Domain constants and length limits.</summary>

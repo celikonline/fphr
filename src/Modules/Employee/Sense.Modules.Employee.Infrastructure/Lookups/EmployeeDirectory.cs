@@ -34,6 +34,15 @@ public sealed class EmployeeDirectory(EmployeeDbContext context, EmployeeSelecti
             .Where(e => e.TenantId == tenantId && e.Status == EmployeeStatus.Active)
             .Select(e => e.Id)
             .ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Guid>> ListPayrollCandidateEmployeeIdsAsync(Guid tenantId, DateOnly periodStart, DateOnly periodEnd, CancellationToken ct = default) =>
+        await context.Employees.AsNoTracking().IgnoreAutoIncludes()
+            .Where(e => e.TenantId == tenantId
+                && (e.HireDate == null || e.HireDate <= periodEnd)
+                && ((e.Status == EmployeeStatus.Active)
+                    || (e.Status == EmployeeStatus.Terminated && e.TerminationDate != null && e.TerminationDate >= periodStart)))
+            .Select(e => e.Id)
+            .ToListAsync(ct);
 }
 
 /// <summary>Implements Employee.Contracts.IEmployeeContactLookup (EmployeeDbContext only).</summary>

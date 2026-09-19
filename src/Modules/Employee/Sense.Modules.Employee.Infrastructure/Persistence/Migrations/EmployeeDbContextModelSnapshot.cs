@@ -465,6 +465,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("Unspecified")
                         .HasColumnName("marital_status");
 
+                    b.Property<Guid?>("MentorEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("mentor_employee_id");
+
                     b.Property<string>("MilitaryStatus")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
@@ -585,6 +589,9 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ManagerEmployeeId")
                         .HasDatabaseName("ix_employees_manager_employee_id");
+
+                    b.HasIndex("MentorEmployeeId")
+                        .HasDatabaseName("ix_employees_mentor_employee_id");
 
                     b.HasIndex("OrgUnitId")
                         .HasDatabaseName("ix_employees_org_unit_id");

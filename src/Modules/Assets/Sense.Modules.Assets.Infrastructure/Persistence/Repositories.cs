@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Domain.Assets;
+using Sense.Shared.Infrastructure.Persistence.Outbox;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Assets.Infrastructure.Persistence;
@@ -64,6 +66,19 @@ public sealed class AssetRepository(AssetsDbContext context) : IAssetRepository
         await context.Assets.AnyAsync(
             a => a.TenantId == tenantId && a.AssignedEmployeeId == employeeId && a.Status == AssetStatus.Assigned,
             cancellationToken);
+
+    public async Task<bool> IsSerialNumberAssignedElsewhereAsync(string serialNumber, Guid excludeAssetId, CancellationToken cancellationToken = default) =>
+        await context.Assets.AnyAsync(
+            a => a.Id != excludeAssetId && a.Status == AssetStatus.Assigned && a.SerialNumber != null && a.SerialNumber.ToLower() == serialNumber.ToLower(),
+            cancellationToken);
+
+    public async Task<bool> HasUnreturnedTerminationAuditAsync(Guid tenantId, Guid assetId, Guid employeeId, CancellationToken cancellationToken = default)
+    {
+        var typeName = EventTypeRegistry.NameOf(typeof(AssetUnreturnedAtTermination));
+        var containing = "{\"assetId\":\"" + assetId + "\",\"employeeId\":\"" + employeeId + "\"}";
+        return await context.OutboxMessages.AsNoTracking()
+            .AnyAsync(m => m.TenantId == tenantId && m.Type == typeName && EF.Functions.JsonContains(m.Payload, containing), cancellationToken);
+    }
 
     public async Task<int> CountOpenAssetsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Assets.CountAsync(

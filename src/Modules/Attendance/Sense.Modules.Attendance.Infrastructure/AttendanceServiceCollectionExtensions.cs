@@ -57,6 +57,8 @@ public static class AttendanceServiceCollectionExtensions
         // tarama (DetectWorkedWhileOnLeaveHandler) ve ay sonu kapatma (ApproveMonthlyTimesheetHandler) kullanır. Bilinçli
         // olarak RecordAttendanceHandler/AttendanceImportRowHandler'a bağlanmaz (bkz. LeaveOverlapChecker doc comment).
         services.AddScoped<LeaveOverlapChecker>();
+        // Resmi tatil (Organization) + onaylı izin (Leave) günleri: ekip ızgarası ve aylık özet "eksik gün" hesabı. İki port da opsiyonel (bkz. NonWorkingDayResolver).
+        services.AddScoped<NonWorkingDayResolver>();
         return services;
     }
 

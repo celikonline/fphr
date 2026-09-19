@@ -26,6 +26,7 @@ public sealed class InitiateSharedFileUploadValidator : AbstractValidator<Initia
     {
         RuleFor(x => x.FileName).NotEmpty().MaximumLength(SharedFilesLimits.FileNameMaxLength);
         RuleFor(x => x.ContentType).NotEmpty();
+        UploadFilePolicy.ApplyRules(this, x => x.FileName, x => x.ContentType);
         RuleFor(x => x.FileSizeBytes).GreaterThan(0).LessThanOrEqualTo(SharedFilesLimits.MaxFileSize);
         RuleFor(x => x.AllowedRoles)
             .Must(roles => roles is { Count: > 0 })
@@ -52,7 +53,18 @@ public sealed class InitiateSharedFileUploadHandler(
 
         try
         {
-            var fileKey = $"{Guid.CreateVersion7():N}/{command.FileName}";
+            var safeName = UploadFilePolicy.SanitizeFileName(command.FileName);
+            if (safeName.Length == 0)
+            {
+                return Error.Validation(DocumentsErrors.FileNameInvalid);
+            }
+
+            if (!UploadFilePolicy.IsAllowed(safeName, command.ContentType))
+            {
+                return Error.Validation(DocumentsErrors.FileTypeNotAllowed);
+            }
+
+            var fileKey = $"{Guid.CreateVersion7():N}/{safeName}";
 
             var presignedRequest = await fileStorage.InitiateUploadAsync(
                 tenant.TenantId,
@@ -63,7 +75,7 @@ public sealed class InitiateSharedFileUploadHandler(
 
             var file = SharedCompanyFile.Create(
                 tenant.TenantId,
-                command.FileName,
+                safeName,
                 fileKey,
                 command.ContentType,
                 command.FileSizeBytes,
@@ -123,22 +135,39 @@ public sealed class ConfirmSharedFileUploadHandler(
             return file.Error;
         }
 
+        if (file.Value.Status != SharedFileStatus.Pending)
+        {
+            return Error.Conflict(DocumentsErrors.UploadNotPending);
+        }
+
         try
         {
-            await fileStorage.ConfirmUploadAsync(
+            // Authoritative size from storage; the client-reported ActualFileSizeBytes is ignored (it would let a
+            // caller under-report and bypass the tenant quota).
+            var storedSize = await fileStorage.ConfirmUploadAsync(
                 tenant.TenantId,
                 SharedCompanyFile.BucketName,
                 file.Value.FileKey,
                 command.ETag,
                 cancellationToken);
 
-            file.Value.ConfirmUpload(command.ETag, command.ActualFileSizeBytes);
+            if (storedSize <= 0 || storedSize > SharedFilesLimits.MaxFileSize)
+            {
+                return Error.Rule(DocumentsErrors.UploadedFileInvalid);
+            }
+
+            file.Value.ConfirmUpload(command.ETag, storedSize);
 
             return new ConfirmSharedFileUploadResponse(
                 file.Value.Id,
                 file.Value.FileName,
                 file.Value.Size,
                 file.Value.UploadedAt);
+        }
+        catch (Exception ex) when (ex is StorageObjectNotFoundException or StorageETagMismatchException)
+        {
+            logger.LogWarning(ex, "Shared file upload confirmation rejected for {FileId}.", command.FileId);
+            return Error.Rule(DocumentsErrors.UploadedFileInvalid);
         }
         catch (InvalidOperationException ex)
         {

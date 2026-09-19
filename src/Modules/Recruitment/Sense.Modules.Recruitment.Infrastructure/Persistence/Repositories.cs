@@ -131,7 +131,11 @@ public sealed class CandidateRepository(RecruitmentDbContext context) : ICandida
     }
 
     public async Task<Candidate?> FindByEmailAsync(string email, CancellationToken cancellationToken = default) =>
-        await context.Candidates.FirstOrDefaultAsync(c => c.Email == email, cancellationToken);
+        await FindByNormalizedEmailAsync(Candidate.NormalizeEmail(email), cancellationToken);
+
+    // lower(column) so rows saved before e-mails were normalized (mixed case) still match; the argument is already invariant-lowered (tr-TR safe).
+    private async Task<Candidate?> FindByNormalizedEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
+        await context.Candidates.FirstOrDefaultAsync(c => c.Email.ToLower() == normalizedEmail, cancellationToken);
 
     public async Task<IReadOnlyList<Candidate>> ListRetentionExpiredAsync(DateTime createdBefore, CancellationToken cancellationToken = default) =>
         await context.Candidates

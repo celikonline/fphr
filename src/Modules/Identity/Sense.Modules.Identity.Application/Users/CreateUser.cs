@@ -41,10 +41,19 @@ public sealed class CreateUserHandler(
     ITenantContext tenant,
     IDispatcher dispatcher,
     AccessTypeGuard accessTypeGuard,
+    IIdentityUnitOfWork unitOfWork,
+    ICurrentUser currentUser,
+    IPermissionService permissions,
     IOptions<IdentityOptions> options) : ICommandHandler<CreateUserCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateUserCommand command, CancellationToken cancellationToken)
     {
+        // Davet ayrı bir komutla (identity.users.invite) gönderilir; yetki yoksa kullanıcı yarım kalmadan baştan reddedilir.
+        if (command.SendInvitation && !await CanInviteAsync(cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Forbidden(ErrorCodes.Forbidden);
+        }
+
         if (await users.EmailExistsAsync(command.Email, null, cancellationToken).ConfigureAwait(false))
         {
             return Error.Conflict(IdentityErrors.UserEmailTaken);
@@ -80,6 +89,9 @@ public sealed class CreateUserHandler(
 
         if (command.SendInvitation)
         {
+            // SendInvitationCommand kullanıcıyı veritabanından okur; aynı işlem (transaction) içinde önce kaydedilmelidir,
+            // aksi halde kullanıcı henüz görünmez (404 user.not_found) ve tüm işlem geri alınırdı.
+            await unitOfWork.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             var invite = await dispatcher.Send(new SendInvitationCommand(user.Id), cancellationToken).ConfigureAwait(false);
             if (invite.IsFailure)
             {
@@ -89,4 +101,8 @@ public sealed class CreateUserHandler(
 
         return user.Id;
     }
+
+    private async Task<bool> CanInviteAsync(CancellationToken cancellationToken) =>
+        currentUser.UserId is { } userId
+        && await permissions.HasAsync(userId, IdentityPermissions.UsersInvite, cancellationToken).ConfigureAwait(false);
 }

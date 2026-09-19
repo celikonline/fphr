@@ -3,6 +3,9 @@
     "Leave": "İzin",
     "Advance": "Avans",
     "Expense": "Harcama",
-    "Overtime": "Fazla mesai"
+    "ExpenseClaim": "Harcama",
+    "Overtime": "Fazla mesai",
+    "Requisition": "Kadro",
+    "VisaDocument": "Vize belgesi"
   }
 }

@@ -26,6 +26,7 @@ using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
 using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
@@ -53,6 +54,7 @@ public partial class DataSeeder(
     LeaveDbContext leaveCtx,
     LeaveBalanceService leaveBalances,
     ILeaveDayCalculator leaveDayCalculator,
+    IHolidayCalendarLookup holidayCalendars,
     ITenantContextSetter tenantContextSetter,
     AnnouncementsDbContext announcementsCtx,
     OhsDbContext ohsCtx)
@@ -328,6 +330,7 @@ public partial class DataSeeder(
         var titles = new DemoTitleCatalog(tenant.Id, orgUnitTypes.Title, organizationCtx);
         var employees = SeedDemoEmployees(tenant.Id, demoUsers, roleAssignments, headquarters, departments, titles);
         _demoLeaveSeed = new DemoLeaveSeed(tenant.Id, tenant.Slug, employees);
+        SeedDemoSalaries(employees);
 
         // senseik-018 (E-01): hand-authored audit trail (see SeedDemoAuditLog) - the seeder's own SaveChanges
         // cannot produce per-person attribution through the interceptor (single SystemUser actor for the batch).

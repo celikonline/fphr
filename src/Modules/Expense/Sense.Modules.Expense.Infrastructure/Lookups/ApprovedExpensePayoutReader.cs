@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Expense.Contracts;
+using Sense.Modules.Expense.Domain;
 using Sense.Modules.Expense.Domain.Advances;
 using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Modules.Expense.Infrastructure.Persistence;
@@ -26,7 +27,9 @@ public sealed class ApprovedExpensePayoutReader(ExpenseDbContext context) : IApp
             .Where(c => c.TenantId == tenantId && ids.Contains(c.EmployeeId)
                 && c.Status == ExpenseClaimStatus.Approved
                 && c.DecidedAt != null && c.DecidedAt.Value.Year == year && c.DecidedAt.Value.Month == month)
-            .SelectMany(c => c.Items, (c, i) => new { c.EmployeeId, i.Amount, i.ReceiptFileId })
+            .SelectMany(c => c.Items, (c, i) => new { c.EmployeeId, i.Amount, i.ReceiptFileId, i.Currency })
+            // Payroll is in TRY: foreign-currency items are never summed into a TRY payslip (no FX conversion yet).
+            .Where(i => i.Currency == ExpenseLimits.PayrollCurrency)
             .ToListAsync(cancellationToken);
 
         var approvedTotals = approvedClaimItems
@@ -42,7 +45,7 @@ public sealed class ApprovedExpensePayoutReader(ExpenseDbContext context) : IApp
             .ToList();
 
         var openAdvances = await context.AdvanceRequests.AsNoTracking()
-            .Where(a => a.TenantId == tenantId && ids.Contains(a.EmployeeId) && a.Status == AdvanceRequestStatus.Paid)
+            .Where(a => a.TenantId == tenantId && ids.Contains(a.EmployeeId) && a.Status == AdvanceRequestStatus.Paid && a.Currency == ExpenseLimits.PayrollCurrency)
             .GroupBy(a => a.EmployeeId)
             .Select(g => new { EmployeeId = g.Key, Total = g.Sum(a => a.Amount) })
             .ToListAsync(cancellationToken);
