@@ -148,11 +148,7 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.Employee, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
-             "announcements.feed.*", "documents.company.view", "ai.assistant.use",
-             // senseik-001-vize-belgesi: "documents.visa.request" doesn't match "*.my.*"/"*.self.*" (PermissionPatterns.SelfService
-             // above) despite being a self-service permission - appended explicitly, same as the Manager/Timekeeper
-             // exceptions elsewhere in this file, rather than renaming the already-shipped [RequiresPermission] key.
-             "documents.visa.request"],
+             "announcements.feed.*", "documents.company.view", "ai.assistant.use"],
             []),
 
         new(SystemRoleCodes.Intern, DataScope.Self,

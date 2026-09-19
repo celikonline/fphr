@@ -107,4 +107,22 @@ public sealed class VisaDocumentDeliveryServiceTests
         result.Error.Code.ShouldBe(VisaDomainErrors.VisaDocumentDeliveryFailed);
         _documents.DidNotReceiveWithAnyArgs().Add(default!);
     }
+
+    [Fact]
+    public async Task DeliverVisaDocumentsAsync_WhenALaterCopyFails_AddsNoneOfTheEarlierOnes()
+    {
+        var first = ActiveTemplate("first.pdf");
+        var second = ActiveTemplate("second.pdf");
+        _settings.GetTemplateDocumentIdsAsync(TenantId, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlyList<Guid>)[first.Id, second.Id]);
+        _documents.GetByIdAsync(first.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(first));
+        _documents.GetByIdAsync(second.Id, Arg.Any<CancellationToken>()).Returns(Result.Success(second));
+        _storage.CopyObjectAsync(TenantId, Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Is<string>(k => k.EndsWith("second.pdf")), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new InvalidOperationException("storage down"));
+
+        var result = await Service().DeliverVisaDocumentsAsync(TenantId, EmployeeId, VisaRequestId, CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        _documents.DidNotReceiveWithAnyArgs().Add(default!);
+    }
 }

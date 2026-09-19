@@ -54,6 +54,24 @@ public sealed class VisaDocumentProcessRepository(DocumentsDbContext dbContext, 
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<VisaDocumentProcess>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        await dbContext.VisaDocumentProcesses
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId)
+            .OrderByDescending(x => x.IsActive)
+            .ThenBy(x => x.Name)
+            .ToListAsync(cancellationToken);
+
+    public async Task<bool> AnyAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        await dbContext.VisaDocumentProcesses.AnyAsync(x => x.TenantId == tenantId, cancellationToken);
+
+    public async Task<bool> NameExistsAsync(Guid tenantId, string name, Guid? exceptProcessId, CancellationToken cancellationToken)
+    {
+        var normalized = name.ToUpperInvariant();
+        return await dbContext.VisaDocumentProcesses.AnyAsync(
+            x => x.TenantId == tenantId && x.Id != exceptProcessId && x.Name.ToUpper() == normalized, cancellationToken);
+    }
+
     public async Task AddAsync(VisaDocumentProcess process, CancellationToken cancellationToken) =>
         await dbContext.VisaDocumentProcesses.AddAsync(process, cancellationToken);
 

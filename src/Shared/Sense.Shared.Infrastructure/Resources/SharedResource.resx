@@ -955,8 +955,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="visa_document_request.approver_not_configured" xml:space="preserve"><value>Vize onaylayıcısı tanımlanmamış. Lütfen sistem yöneticinizle iletişime geçin.</value></data>
   <data name="visa_document_request.invalid_status_transition" xml:space="preserve"><value>Talep bu durumdan bu işleme geçemez.</value></data>
   <data name="visa_document_request.delivery_failed" xml:space="preserve"><value>Vize belgeleri çalışan klasörüne kopyalanamadı.</value></data>
-  <data name="documents.visa.request" xml:space="preserve"><value>Vize belgesi talep etme</value></data>
-  <data name="documents.visa.approve" xml:space="preserve"><value>Vize belgesi taleplerini onaylama</value></data>
+  <data name="visa_document_request.invalid_visa_type" xml:space="preserve"><value>Geçersiz vize tipi.</value></data>
+  <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>Ülke kodu 2-3 harften oluşmalıdır (örn. DE).</value></data>
+  <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>Seçilen vize süreci mevcut değil veya pasif.</value></data>
+  <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>Hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
+  <data name="documents.my.visa_requests" xml:space="preserve"><value>Vize belgesi talep etme</value></data>
   <data name="documents.visa.manage" xml:space="preserve"><value>Vize ayarlarını yönetme</value></data>
 
   <!-- Integrations (Faz 8 #61): dış bordro webhook -->

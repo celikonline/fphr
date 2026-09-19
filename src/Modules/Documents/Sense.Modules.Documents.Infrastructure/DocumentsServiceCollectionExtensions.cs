@@ -2,9 +2,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
+using Sense.Modules.Documents.Application.VisaDocuments;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Documents.Infrastructure;
@@ -21,6 +24,7 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IDocumentsUnitOfWork>(sp => sp.GetRequiredService<DocumentsDbContext>());
         services.AddScoped<IDocumentTypeDefinitionRepository, DocumentTypeDefinitionRepository>();
         services.AddScoped<IEmployeeDocumentRequirementRepository, EmployeeDocumentRequirementRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<DocumentTypeProvisioningService>();
         services.AddScoped<DocumentRequirementMaterializationService>();
         // IReportProvider (MissingDocumentReportProvider) is registered in DocumentsModule.AddModule, not here: it
@@ -39,6 +43,9 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<EmployeeProfileChanged>, EmployeeProfileChangedDocumentRequirementHandler>();
         services.AddScoped<IIntegrationEventHandler<AssetAssigned>, AssetAssignedDocumentRequirementHandler>();
         services.AddScoped<IIntegrationEventHandler<AssetReturned>, AssetReturnedDocumentRequirementHandler>();
+        // Workflow decisions on "VisaDocument" requests (visa document request approval, senseik-001).
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, VisaApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, VisaApprovalRejectedHandler>();
         return services;
     }
 }

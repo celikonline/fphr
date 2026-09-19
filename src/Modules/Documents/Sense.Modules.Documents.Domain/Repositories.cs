@@ -20,6 +20,9 @@ public interface IDocumentRepository
         int take = 20,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Documents the system copied into an employee's folder for a visa request (audit trail: <c>Document.VisaDocumentRequestId</c>).</summary>
+    Task<IReadOnlyList<Document>> ListByVisaRequestAsync(Guid visaDocumentRequestId, CancellationToken cancellationToken = default);
+
     /// <summary>Counts documents for the current tenant.</summary>
     Task<int> CountByTenantAsync(CancellationToken cancellationToken = default);
 

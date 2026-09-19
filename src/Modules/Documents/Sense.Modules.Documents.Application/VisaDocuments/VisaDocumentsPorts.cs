@@ -26,6 +26,15 @@ public interface IVisaDocumentProcessRepository
 
     Task<IReadOnlyList<VisaDocumentProcess>> GetActiveAsync(Guid tenantId, CancellationToken cancellationToken);
 
+    /// <summary>All of the tenant's processes, inactive ones included (admin list).</summary>
+    Task<IReadOnlyList<VisaDocumentProcess>> GetAllAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    /// <summary>True once the tenant has any process row at all (seeded or custom) - guards the lazy default seed.</summary>
+    Task<bool> AnyAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    /// <summary>Case-insensitive name lookup within the tenant; <paramref name="exceptProcessId"/> excludes the row being renamed.</summary>
+    Task<bool> NameExistsAsync(Guid tenantId, string name, Guid? exceptProcessId, CancellationToken cancellationToken);
+
     Task AddAsync(VisaDocumentProcess process, CancellationToken cancellationToken);
 
     Task SaveAsync(CancellationToken cancellationToken);
@@ -65,6 +74,10 @@ public interface IVisaDocumentDeliveryService
         Guid visaRequestId,
         CancellationToken cancellationToken);
 }
+
+/// <summary>Read model for a visa document delivered into the employee's folder once a request was approved.</summary>
+public sealed record VisaDeliveredDocumentDto(
+    Guid Id, string Title, string ContentType, long Size, DateTime UploadedAt, string DownloadUrl, DateTime DownloadUrlExpiresAt);
 
 /// <summary>Read model for a visa document request.</summary>
 public sealed record VisaDocumentRequestDto(

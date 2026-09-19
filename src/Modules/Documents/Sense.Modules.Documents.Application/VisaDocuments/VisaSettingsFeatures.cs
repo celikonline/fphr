@@ -1,3 +1,4 @@
+using FluentValidation;
 using Sense.Modules.Documents.Domain.VisaDocuments;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -67,5 +68,17 @@ public sealed class UpdateVisaSettingsHandler(IVisaSettingsRepository settings, 
         current.SetApprover(command.ApproverEmployeeId);
         current.SetTemplateDocumentIds(command.TemplateDocumentIds);
         return VisaSettingsMapper.ToDto(current);
+    }
+}
+
+/// <summary>Bounds the template list: it is a handful of documents (passport copy checklist, invitation letter
+/// template, ...), and every one is copied per approved request.</summary>
+public sealed class UpdateVisaSettingsValidator : AbstractValidator<UpdateVisaSettingsCommand>
+{
+    public const int MaxTemplateDocuments = 20;
+
+    public UpdateVisaSettingsValidator()
+    {
+        RuleFor(x => x.TemplateDocumentIds).NotNull().Must(ids => ids.Count <= MaxTemplateDocuments);
     }
 }

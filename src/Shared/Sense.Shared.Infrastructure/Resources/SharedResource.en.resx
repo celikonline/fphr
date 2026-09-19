@@ -946,8 +946,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="visa_document_request.approver_not_configured" xml:space="preserve"><value>No visa approver is configured. Please contact your system administrator.</value></data>
   <data name="visa_document_request.invalid_status_transition" xml:space="preserve"><value>The request cannot move from its current status to this one.</value></data>
   <data name="visa_document_request.delivery_failed" xml:space="preserve"><value>Visa documents could not be copied into the employee's folder.</value></data>
-  <data name="documents.visa.request" xml:space="preserve"><value>Request visa documents</value></data>
-  <data name="documents.visa.approve" xml:space="preserve"><value>Approve visa document requests</value></data>
+  <data name="visa_document_request.invalid_visa_type" xml:space="preserve"><value>Invalid visa type.</value></data>
+  <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>The country code must be 2-3 letters (e.g. DE).</value></data>
+  <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>The selected visa process does not exist or is inactive.</value></data>
+  <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your account.</value></data>
+  <data name="documents.my.visa_requests" xml:space="preserve"><value>Request visa documents</value></data>
   <data name="documents.visa.manage" xml:space="preserve"><value>Manage visa settings</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->

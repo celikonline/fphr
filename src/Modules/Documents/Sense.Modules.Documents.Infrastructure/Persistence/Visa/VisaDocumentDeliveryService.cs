@@ -41,7 +41,9 @@ public sealed class VisaDocumentDeliveryService(
             return Result.Success(0);
         }
 
-        var delivered = 0;
+        // Rows are only added once every copy succeeded: a failure part-way must not leave some of them tracked
+        // (a later SaveChanges in the same scope would persist them and a retry would then duplicate them).
+        var copies = new List<Document>(templateIds.Count);
         foreach (var templateId in templateIds)
         {
             var template = await ResolveActiveTemplateAsync(templateId, visaRequestId, cancellationToken);
@@ -78,11 +80,15 @@ public sealed class VisaDocumentDeliveryService(
                 continue;
             }
 
-            documents.Add(copy.Value);
-            delivered++;
+            copies.Add(copy.Value);
         }
 
-        return Result.Success(delivered);
+        foreach (var copy in copies)
+        {
+            documents.Add(copy);
+        }
+
+        return Result.Success(copies.Count);
     }
 
     private async Task<Document?> ResolveActiveTemplateAsync(Guid templateId, Guid visaRequestId, CancellationToken cancellationToken)

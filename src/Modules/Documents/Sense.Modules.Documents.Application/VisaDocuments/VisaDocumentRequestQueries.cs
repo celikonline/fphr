@@ -1,7 +1,9 @@
+using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.VisaDocuments;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
+using Sense.Shared.Contracts.Storage;
 using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Documents.Application.VisaDocuments;
@@ -23,57 +25,87 @@ internal static class VisaDocumentRequestMapper
         r.CreatedAt,
         r.ApprovedAt,
         r.CompletedAt);
+
+    /// <summary>The caller's own request, or null. Someone else's request is indistinguishable from a missing one
+    /// (NotFound, not Forbidden) so ids can't be probed.</summary>
+    public static async Task<VisaDocumentRequest?> FindOwnAsync(
+        IVisaDocumentRequestRepository requests, ICurrentUser currentUser, Guid requestId, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return null;
+        }
+
+        var request = await requests.GetByIdAsync(requestId, cancellationToken);
+        return request is not null && request.EmployeeId == employeeId ? request : null;
+    }
 }
 
-/// <summary>Fetches a single visa document request by id, tenant-scoped by the repository.</summary>
-[RequiresPermission("documents.visa.request")]
+/// <summary>Fetches one of the caller's own visa document requests.</summary>
+[RequiresPermission("documents.my.visa_requests")]
 public sealed record GetVisaDocumentRequestQuery(Guid RequestId) : IQuery<VisaDocumentRequestDto>;
 
-public sealed class GetVisaDocumentRequestHandler(IVisaDocumentRequestRepository requests)
+public sealed class GetVisaDocumentRequestHandler(IVisaDocumentRequestRepository requests, ICurrentUser currentUser)
     : IQueryHandler<GetVisaDocumentRequestQuery, VisaDocumentRequestDto>
 {
-    public async Task<Result<VisaDocumentRequestDto>> Handle(GetVisaDocumentRequestQuery query, CancellationToken cancellationToken)
-    {
-        var request = await requests.GetByIdAsync(query.RequestId, cancellationToken);
-        return request is null
-            ? Error.NotFound(VisaDomainErrors.VisaDocumentRequestNotFound)
-            : VisaDocumentRequestMapper.ToDto(request);
-    }
+    public async Task<Result<VisaDocumentRequestDto>> Handle(GetVisaDocumentRequestQuery query, CancellationToken cancellationToken) =>
+        await VisaDocumentRequestMapper.FindOwnAsync(requests, currentUser, query.RequestId, cancellationToken) is { } request
+            ? VisaDocumentRequestMapper.ToDto(request)
+            : Error.NotFound(VisaDomainErrors.VisaDocumentRequestNotFound);
 }
 
-/// <summary>Lists an employee's visa document requests, optionally filtered by status.</summary>
-[RequiresPermission("documents.visa.request")]
-public sealed record ListVisaDocumentRequestsQuery(Guid EmployeeId, VisaDocumentRequestStatus? Status) : IQuery<IReadOnlyList<VisaDocumentRequestDto>>;
+/// <summary>Lists the caller's own visa document requests, newest first, optionally filtered by status.</summary>
+[RequiresPermission("documents.my.visa_requests")]
+public sealed record ListMyVisaDocumentRequestsQuery(VisaDocumentRequestStatus? Status) : IQuery<IReadOnlyList<VisaDocumentRequestDto>>;
 
-public sealed class ListVisaDocumentRequestsHandler(IVisaDocumentRequestRepository requests, ITenantContext tenant)
-    : IQueryHandler<ListVisaDocumentRequestsQuery, IReadOnlyList<VisaDocumentRequestDto>>
+public sealed class ListMyVisaDocumentRequestsHandler(IVisaDocumentRequestRepository requests, ITenantContext tenant, ICurrentUser currentUser)
+    : IQueryHandler<ListMyVisaDocumentRequestsQuery, IReadOnlyList<VisaDocumentRequestDto>>
 {
     public async Task<Result<IReadOnlyList<VisaDocumentRequestDto>>> Handle(
-        ListVisaDocumentRequestsQuery query, CancellationToken cancellationToken)
+        ListMyVisaDocumentRequestsQuery query, CancellationToken cancellationToken)
     {
-        var items = await requests.GetByEmployeeIdAsync(tenant.TenantId, query.EmployeeId, query.Status, cancellationToken);
-        return Result.Success<IReadOnlyList<VisaDocumentRequestDto>>(
-            items.Select(VisaDocumentRequestMapper.ToDto).ToList());
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(VisaDomainErrors.VisaDocumentRequestNoEmployeeForUser);
+        }
+
+        var items = await requests.GetByEmployeeIdAsync(tenant.TenantId, employeeId, query.Status, cancellationToken);
+        return Result.Success<IReadOnlyList<VisaDocumentRequestDto>>(items.Select(VisaDocumentRequestMapper.ToDto).ToList());
     }
 }
 
-/// <summary>Read model for a visa document process (the employee-facing selection list).</summary>
-public sealed record VisaDocumentProcessDto(Guid Id, string Name, string? CountryCode, bool IsActive);
+/// <summary>Documents delivered into the caller's folder for one of their approved requests, each with a short-lived
+/// presigned download URL. Deliberately gated by ownership + <c>documents.my.visa_requests</c> rather than
+/// <c>documents.files.read</c>: an employee must see what was delivered to them even where tenant file visibility for
+/// employees is off (handoff GATE 1 assumption 3).</summary>
+[RequiresPermission("documents.my.visa_requests")]
+public sealed record ListVisaRequestDocumentsQuery(Guid RequestId) : IQuery<IReadOnlyList<VisaDeliveredDocumentDto>>;
 
-/// <summary>Lists the tenant's active visa document processes (the employee-facing selection list per the
-/// handoff's API layer task; <c>GET /api/v1/visa-processes?isActive=true</c> - there is no repository support yet
-/// for listing inactive ones too, that's an admin/settings-page concern deferred with process CRUD).</summary>
-[RequiresPermission("documents.visa.request")]
-public sealed record ListVisaDocumentProcessesQuery : IQuery<IReadOnlyList<VisaDocumentProcessDto>>;
-
-public sealed class ListVisaDocumentProcessesHandler(IVisaDocumentProcessRepository processes, ITenantContext tenant)
-    : IQueryHandler<ListVisaDocumentProcessesQuery, IReadOnlyList<VisaDocumentProcessDto>>
+public sealed class ListVisaRequestDocumentsHandler(
+    IVisaDocumentRequestRepository requests,
+    IDocumentRepository documents,
+    IFileStorage fileStorage,
+    ITenantContext tenant,
+    ICurrentUser currentUser) : IQueryHandler<ListVisaRequestDocumentsQuery, IReadOnlyList<VisaDeliveredDocumentDto>>
 {
-    public async Task<Result<IReadOnlyList<VisaDocumentProcessDto>>> Handle(
-        ListVisaDocumentProcessesQuery query, CancellationToken cancellationToken)
+    private const int DownloadUrlMinutes = 15;
+
+    public async Task<Result<IReadOnlyList<VisaDeliveredDocumentDto>>> Handle(
+        ListVisaRequestDocumentsQuery query, CancellationToken cancellationToken)
     {
-        var items = await processes.GetActiveAsync(tenant.TenantId, cancellationToken);
-        return Result.Success<IReadOnlyList<VisaDocumentProcessDto>>(
-            items.Select(p => new VisaDocumentProcessDto(p.Id, p.Name, p.CountryCode, p.IsActive)).ToList());
+        if (await VisaDocumentRequestMapper.FindOwnAsync(requests, currentUser, query.RequestId, cancellationToken) is null)
+        {
+            return Error.NotFound(VisaDomainErrors.VisaDocumentRequestNotFound);
+        }
+
+        var delivered = await documents.ListByVisaRequestAsync(query.RequestId, cancellationToken);
+        var items = new List<VisaDeliveredDocumentDto>(delivered.Count);
+        foreach (var doc in delivered)
+        {
+            var url = await fileStorage.GetDownloadUrlAsync(tenant.TenantId, doc.BucketName, doc.FileKey, DownloadUrlMinutes, cancellationToken);
+            items.Add(new VisaDeliveredDocumentDto(doc.Id, doc.Title, doc.ContentType, doc.Size, doc.UploadedAt, url.DownloadUrl, url.ExpiresAt));
+        }
+
+        return items;
     }
 }
