@@ -63,21 +63,8 @@ internal static class TeamRangeBuilder
         DateOnly start, DateOnly end, Guid? orgUnitId, ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees,
         IAttendanceDayRepository days, IWorkScheduleReadService schedules, CancellationToken cancellationToken)
     {
-        var visible = await dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.TimesheetView.Key, cancellationToken);
-        if (orgUnitId is { } unitId)
-        {
-            var inUnit = await employees.ListActiveEmployeeIdsInOrgUnitsAsync(tenant.TenantId, [unitId], cancellationToken);
-            visible = visible is null ? inUnit.ToHashSet() : inUnit.Where(visible.Contains).ToHashSet();
-        }
-
-        if (visible is { Count: 0 })
-        {
-            return Result.Success<IReadOnlyList<TeamWeekRowDto>>([]);
-        }
-
-        var employeeIds = visible is null
-            ? await employees.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken)
-            : visible.ToList();
+        var employeeIds = await VisibleEmployeeResolver.ResolveAsync(
+            AttendancePermissions.TimesheetView.Key, orgUnitId, tenant.TenantId, dataScope, employees, cancellationToken);
         if (employeeIds.Count == 0)
         {
             return Result.Success<IReadOnlyList<TeamWeekRowDto>>([]);

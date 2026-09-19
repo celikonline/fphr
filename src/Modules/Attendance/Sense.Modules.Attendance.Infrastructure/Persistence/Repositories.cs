@@ -5,6 +5,7 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -195,6 +196,11 @@ public sealed class EmployeeAvailabilityRepository(AttendanceDbContext context) 
             .Where(a => a.EmployeeId == employeeId && a.Date >= from && a.Date <= to)
             .OrderBy(a => a.Date)
             .ToListAsync(cancellationToken);
+}
+
+public sealed class SelfCheckInRepository(AttendanceDbContext context) : ISelfCheckInRepository
+{
+    public void Add(SelfCheckIn checkIn) => context.SelfCheckIns.Add(checkIn);
 }
 
 public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository

@@ -26,5 +26,16 @@
   "genericError": "Etwas ist schiefgelaufen.",
   "empty": "Noch keine Standorte vorhanden.",
   "deleteConfirmDescription": "Möchten Sie \"{{name}}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.",
-  "inUseError": "Dieser Standort ist mit einer aktiven Einheit verknüpft und kann nicht gelöscht werden. Ändern Sie zuerst den Standort der Einheit in der Unternehmensstruktur."
+  "inUseError": "Dieser Standort ist mit einer aktiven Einheit verknüpft und kann nicht gelöscht werden. Ändern Sie zuerst den Standort der Einheit in der Unternehmensstruktur.",
+  "geofenceTitle": "Geofence (GPS-Selbst-Check-in)",
+  "geofenceHint": "Sind Breiten-/Längengrad gesetzt, kann der GPS-Check-in diesen Standort nutzen; Radius leer lassen, um den Standort ohne Entfernungsprüfung zu speichern.",
+  "geofenceInvalid": "Ungültiger Wert.",
+  "latitude": "Breitengrad",
+  "longitude": "Längengrad",
+  "geofenceRadius": "Radius (Meter)",
+  "geofenceRadiusHint": "Leer lassen, um die Entfernungsprüfung zu überspringen.",
+  "selfCheckInCode": "QR-Selbst-Check-in-Code",
+  "selfCheckInCodeHint": "Diesen Code als QR am Eingang aushängen; Mitarbeitende können ihn scannen (oder eintippen), um ein-/auszuchecken.",
+  "copy": "Kopieren",
+  "copied": "Kopiert"
 }

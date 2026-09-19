@@ -152,4 +152,107 @@ public sealed class LocationTests
 
         location.IsActive.ShouldBeTrue();
     }
+
+    [Fact]
+    public void Create_GeneratesAnEightCharacterSelfCheckInCode()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        location.SelfCheckInCode.Length.ShouldBe(8);
+    }
+
+    [Fact]
+    public void Create_TwoLocations_GetDifferentSelfCheckInCodes()
+    {
+        var first = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+        var second = Location.Create(TenantId, "İzmir Office", LocationType.Office, "TR", null).Value;
+
+        first.SelfCheckInCode.ShouldNotBe(second.SelfCheckInCode);
+    }
+
+    [Fact]
+    public void SetGeofence_WithValidCenterAndRadius_Succeeds()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(39.925533, 32.866287, 150);
+
+        result.IsSuccess.ShouldBeTrue();
+        location.Latitude.ShouldBe(39.925533);
+        location.Longitude.ShouldBe(32.866287);
+        location.GeofenceRadiusMeters.ShouldBe(150);
+    }
+
+    [Fact]
+    public void SetGeofence_WithCenterButNoRadius_SucceedsWithoutDistanceCheck()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(39.925533, 32.866287, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        location.GeofenceRadiusMeters.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetGeofence_AllNull_ClearsExistingGeofence()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+        location.SetGeofence(39.925533, 32.866287, 150);
+
+        var result = location.SetGeofence(null, null, null);
+
+        result.IsSuccess.ShouldBeTrue();
+        location.Latitude.ShouldBeNull();
+        location.Longitude.ShouldBeNull();
+        location.GeofenceRadiusMeters.ShouldBeNull();
+    }
+
+    [Fact]
+    public void SetGeofence_LatitudeWithoutLongitude_Fails()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(39.925533, null, null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(OrganizationDomainErrors.LocationGeofenceInvalid);
+    }
+
+    [Fact]
+    public void SetGeofence_RadiusWithoutCenter_Fails()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(null, null, 150);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(OrganizationDomainErrors.LocationGeofenceInvalid);
+    }
+
+    [Theory]
+    [InlineData(91.0, 0.0)]
+    [InlineData(-91.0, 0.0)]
+    [InlineData(0.0, 181.0)]
+    [InlineData(0.0, -181.0)]
+    public void SetGeofence_OutOfRangeCoordinates_Fails(double latitude, double longitude)
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(latitude, longitude, null);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(OrganizationDomainErrors.LocationGeofenceInvalid);
+    }
+
+    [Fact]
+    public void SetGeofence_NonPositiveRadius_Fails()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+
+        var result = location.SetGeofence(39.925533, 32.866287, 0);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(OrganizationDomainErrors.LocationGeofenceInvalid);
+    }
 }

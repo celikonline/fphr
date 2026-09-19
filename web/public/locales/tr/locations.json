@@ -26,5 +26,16 @@
   "genericError": "Bir şeyler ters gitti.",
   "empty": "Henüz lokasyon yok.",
   "deleteConfirmDescription": "\"{{name}}\" lokasyonunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.",
-  "inUseError": "Bu lokasyon aktif bir birime bağlı olduğu için silinemez. Önce Şirket yapısı ekranında birimin lokasyonunu değiştirin."
+  "inUseError": "Bu lokasyon aktif bir birime bağlı olduğu için silinemez. Önce Şirket yapısı ekranında birimin lokasyonunu değiştirin.",
+  "geofenceTitle": "Geofence (GPS self-servis check-in)",
+  "geofenceHint": "Enlem/boylam girilirse GPS check-in bu lokasyonu kullanabilir; yarıçap boş bırakılırsa konum sadece kaydedilir, mesafe doğrulanmaz.",
+  "geofenceInvalid": "Geçersiz değer.",
+  "latitude": "Enlem",
+  "longitude": "Boylam",
+  "geofenceRadius": "Yarıçap (metre)",
+  "geofenceRadiusHint": "Boş bırakılırsa mesafe doğrulaması yapılmaz.",
+  "selfCheckInCode": "QR self-servis check-in kodu",
+  "selfCheckInCodeHint": "Bu kodu girişe QR olarak yazdırın; çalışanlar taratarak (ya da elle girerek) giriş-çıkış kaydı oluşturabilir.",
+  "copy": "Kopyala",
+  "copied": "Kopyalandı"
 }

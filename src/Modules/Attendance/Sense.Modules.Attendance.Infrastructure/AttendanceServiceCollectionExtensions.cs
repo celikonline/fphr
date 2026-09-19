@@ -45,6 +45,7 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IEmployeeAvailabilityRepository, EmployeeAvailabilityRepository>();
         services.AddScoped<ICompensatoryWorkLedgerRepository, CompensatoryWorkLedgerRepository>();
         services.AddScoped<IEqualizationPeriodRepository, EqualizationPeriodRepository>();
+        services.AddScoped<ISelfCheckInRepository, SelfCheckInRepository>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         services.AddScoped<IAttendanceMonthlySummaryReader, AttendanceMonthlySummaryReader>();

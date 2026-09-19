@@ -25,4 +25,13 @@ public interface ILocationLookup
     /// value set, or not found for this tenant, is simply absent from the result.
     /// </summary>
     Task<IReadOnlyDictionary<Guid, string>> GetSgkIsyeriSicilNoAsync(Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default);
+
+    /// <summary>Geofence + name for GPS self-servis check-in validation (S-31, Attendance module). Null if inactive or not found.</summary>
+    Task<LocationGeofence?> GetGeofenceAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default);
+
+    /// <summary>Resolves the location a QR self-servis check-in code (Location.SelfCheckInCode) points at (S-31). Null if no active location has this code.</summary>
+    Task<LocationGeofence?> FindBySelfCheckInCodeAsync(Guid tenantId, string code, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Cross-module read of a Location's geofence (S-31); <paramref name="Latitude"/>/<paramref name="Longitude"/>/<paramref name="RadiusMeters"/> null when no geofence is configured for it.</summary>
+public sealed record LocationGeofence(Guid LocationId, string Name, double? Latitude, double? Longitude, int? RadiusMeters);

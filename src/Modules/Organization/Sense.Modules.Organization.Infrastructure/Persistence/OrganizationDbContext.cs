@@ -63,6 +63,9 @@ internal static class OrganizationTables
 
     /// <summary>ISO 3166-1 alpha-2 country code length (e.g. "TR"), used by Location.</summary>
     public const int CountryCodeLength = 2;
+
+    /// <summary>Location.SelfCheckInCode (S-31 QR self-servis check-in): fixed 8-char code.</summary>
+    public const int SelfCheckInCodeLength = 8;
 }
 
 public sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUnitType>
@@ -124,9 +127,11 @@ public sealed class LocationConfiguration : IEntityTypeConfiguration<Location>
         b.Property(x => x.Address).HasMaxLength(OrganizationTables.AddressLength);
         b.Property(x => x.SgkIsyeriSicilNo).HasMaxLength(OrganizationLimits.SgkIsyeriSicilNoMaxLength);
         b.Property(x => x.Type).HasConversion<int>();
+        b.Property(x => x.SelfCheckInCode).HasMaxLength(OrganizationTables.SelfCheckInCodeLength).IsRequired();
 
         b.HasIndex(x => x.TenantId);
         b.HasIndex(x => new { x.TenantId, x.Name });
+        b.HasIndex(x => new { x.TenantId, x.SelfCheckInCode }).IsUnique();
 
         b.Ignore(x => x.DomainEvents);
     }

@@ -41,6 +41,8 @@
     "monthlyTimesheet": "Monthly timesheet",
     "shiftPlan": "Shift plan",
     "deviceLogImport": "Import PDKS device log",
+    "selfCheckIn": "Self check-in",
+    "liveBoard": "Live in/out board",
     "payroll": "Payroll & compensation",
     "expenses": "Expenses & advances",
     "expensePaymentsAdmin": "Expense/advance payments",

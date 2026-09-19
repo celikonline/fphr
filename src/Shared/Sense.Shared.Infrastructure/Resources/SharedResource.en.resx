@@ -874,6 +874,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>This equalization period is not open.</value></data>
   <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>The equalization period has not ended yet.</value></data>
   <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.my.checkin" xml:space="preserve"><value>Record my own check-in/out via QR/GPS</value></data>
+  <data name="attendance.board.view" xml:space="preserve"><value>View the live in/out board</value></data>
+  <data name="attendance.self_checkin.invalid_code" xml:space="preserve"><value>Invalid QR code. Please scan the location's code again.</value></data>
+  <data name="attendance.self_checkin.location_not_found" xml:space="preserve"><value>The given location was not found or is inactive.</value></data>
+  <data name="attendance.self_checkin.outside_geofence" xml:space="preserve"><value>Your location is outside this location's allowed area; check-in was rejected.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>

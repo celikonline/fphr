@@ -40,7 +40,8 @@ public sealed class CreateLocationHandler(ITenantContext tenant, ILocationReposi
         return Task.FromResult<Result<LocationDto>>(ToDto(location));
     }
 
-    internal static LocationDto ToDto(Location l) => new(l.Id, l.Name, l.Type, l.CountryCode, l.Address, l.IsActive, l.SgkIsyeriSicilNo);
+    internal static LocationDto ToDto(Location l) =>
+        new(l.Id, l.Name, l.Type, l.CountryCode, l.Address, l.IsActive, l.SgkIsyeriSicilNo, l.Latitude, l.Longitude, l.GeofenceRadiusMeters, l.SelfCheckInCode);
 }
 
 /// <summary>Updates a location's name/type/country/address/SGK işyeri sicil no.</summary>
@@ -78,6 +79,40 @@ public sealed class UpdateLocationHandler(ILocationRepository locations) : IComm
         }
 
         return CreateLocationHandler.ToDto(location);
+    }
+}
+
+/// <summary>
+/// Sets or clears a location's GPS geofence (S-31 kabul kriteri 2): center point + optional radius the Attendance
+/// module validates a self-servis GPS check-in against. Same permission as the location's other fields.
+/// </summary>
+[RequiresPermission("organization.locations.update")]
+public sealed record SetLocationGeofenceCommand(Guid Id, double? Latitude, double? Longitude, int? RadiusMeters) : ICommand<LocationDto>;
+
+public sealed class SetLocationGeofenceValidator : AbstractValidator<SetLocationGeofenceCommand>
+{
+    public SetLocationGeofenceValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty();
+        RuleFor(x => x.Latitude).InclusiveBetween(-90, 90).When(x => x.Latitude is not null);
+        RuleFor(x => x.Longitude).InclusiveBetween(-180, 180).When(x => x.Longitude is not null);
+        RuleFor(x => x.RadiusMeters).GreaterThan(0).When(x => x.RadiusMeters is not null);
+    }
+}
+
+public sealed class SetLocationGeofenceHandler(ILocationRepository locations) : ICommandHandler<SetLocationGeofenceCommand, LocationDto>
+{
+    public async Task<Result<LocationDto>> Handle(SetLocationGeofenceCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await locations.GetByIdAsync(command.Id, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        var location = existing.Value;
+        var result = location.SetGeofence(command.Latitude, command.Longitude, command.RadiusMeters);
+        return result.IsFailure ? result.Error : CreateLocationHandler.ToDto(location);
     }
 }
 
