@@ -119,3 +119,10 @@ pipe hatası) — kodla ilgisi yok, sadece host kaynak baskısı; yeniden deneme
 Bu branch main'e merge edilirken, main henüz dev'deki 50 commit'i içermiyorsa, merge sırasında
 `LeaveIntegrationTests.cs` / `LeaveManagementTests.cs` / `LeaveRequestTests.cs` dosyalarının main'deki
 hallerinin bu dört değişikliği (veya denklerini) hâlâ içerip içermediği kontrol edilmeli.
+
+## Doğrulama (2026-09-19, merge öncesi)
+
+- Branch `dev` (96f9b48) üzerine çakışmasız rebase edildi.
+- Windows host'ta native `dotnet test tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj`
+  (Testcontainers / Docker Desktop): **146/146 başarılı**, 0 başarısız, 0 atlanan (9m53s).
+- Migration yok (yalnız test fixture değişiklikleri). Kart `review` durumunda; dev'e merge'e hazır.
