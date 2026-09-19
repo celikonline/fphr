@@ -104,10 +104,13 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
             id ?? Guid.CreateVersion7(), tenantId,
             Guard.MaxLength(firstName.Trim(), RecruitmentLimits.NameMaxLength),
             Guard.MaxLength(lastName.Trim(), RecruitmentLimits.NameMaxLength),
-            Guard.MaxLength(email.Trim(), RecruitmentLimits.EmailMaxLength),
+            Guard.MaxLength(NormalizeEmail(email), RecruitmentLimits.EmailMaxLength),
             string.IsNullOrWhiteSpace(phone) ? null : Guard.MaxLength(phone.Trim(), RecruitmentLimits.PhoneMaxLength),
             source);
     }
+
+    /// <summary>E-mail is stored trimmed and lower-cased so lookups (career-site re-applications) are case-insensitive.</summary>
+    public static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     public Result UpdateContactInfo(string firstName, string lastName, string email, string? phone)
     {
@@ -123,7 +126,7 @@ public sealed class Candidate : TenantAggregateRoot<Guid>, IAuditLogged
 
         FirstName = Guard.MaxLength(firstName.Trim(), RecruitmentLimits.NameMaxLength);
         LastName = Guard.MaxLength(lastName.Trim(), RecruitmentLimits.NameMaxLength);
-        Email = Guard.MaxLength(email.Trim(), RecruitmentLimits.EmailMaxLength);
+        Email = Guard.MaxLength(NormalizeEmail(email), RecruitmentLimits.EmailMaxLength);
         Phone = string.IsNullOrWhiteSpace(phone) ? null : Guard.MaxLength(phone.Trim(), RecruitmentLimits.PhoneMaxLength);
         return Result.Success();
     }

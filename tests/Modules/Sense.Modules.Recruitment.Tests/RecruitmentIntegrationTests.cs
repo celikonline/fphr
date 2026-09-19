@@ -214,6 +214,30 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         candidate.Source.ShouldBe(CandidateSource.CareerSite);
     }
 
+    /// <summary>Regression: e-mail lookup was case-sensitive, so "X@Example.com" created a second candidate and a second application.</summary>
+    [Fact]
+    public async Task PublicCareerFlow_SubmitApplication_EmailDifferingOnlyByCase_ReusesCandidate_AndRejectsDuplicateApply()
+    {
+        var tenantId = Guid.NewGuid();
+        var postingId = await CreatePublishedPostingAsync(tenantId);
+        var applySlug = await GetApplySlugAsync(postingId);
+
+        (await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Ada", "Demir", "Ada.Demir@Example.com", null, "2026-09", true))).IsSuccess.ShouldBeTrue();
+
+        var duplicate = await ExecuteCommandAsync(
+            new SubmitCareerApplicationCommand(applySlug, "Ada", "Demir", "ADA.DEMIR@example.COM", null, "2026-09", true));
+        duplicate.IsFailure.ShouldBeTrue();
+        duplicate.Error.Code.ShouldBe(RecruitmentDomainErrors.ApplicationAlreadyExists);
+
+        await using var scope = ServiceProvider!.CreateAsyncScope();
+        using var readTenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var db = scope.ServiceProvider.GetRequiredService<RecruitmentDbContext>();
+        var candidates = await db.Candidates.Where(c => c.Email.ToLower() == "ada.demir@example.com").ToListAsync();
+        candidates.Count.ShouldBe(1);
+        candidates[0].Email.ShouldBe("ada.demir@example.com");
+    }
+
     [Fact]
     public async Task PublicCareerFlow_SubmitApplication_OutdatedPrivacyNoticeVersion_IsRejected()
     {

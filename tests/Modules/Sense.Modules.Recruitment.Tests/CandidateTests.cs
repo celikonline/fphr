@@ -27,6 +27,23 @@ public sealed class CandidateTests
     }
 
     [Fact]
+    public void Create_And_UpdateContactInfo_StoreEmailLowerCased()
+    {
+        var candidate = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "Ada.Yilmaz@EXAMPLE.com", null).Value;
+        candidate.Email.ShouldBe("ada.yilmaz@example.com");
+
+        candidate.UpdateContactInfo("Ada", "Yılmaz", "X@Example.COM", null).IsSuccess.ShouldBeTrue();
+        candidate.Email.ShouldBe("x@example.com");
+    }
+
+    [Fact]
+    public void NormalizeEmail_UsesInvariantCasing_NotCurrentCulture()
+    {
+        // "I" must become "i" (not the Turkish dotless "ı") regardless of the machine culture.
+        Candidate.NormalizeEmail("INFO@EXAMPLE.COM").ShouldBe("info@example.com");
+    }
+
+    [Fact]
     public void Create_InvalidEmail_IsRejected()
     {
         var result = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "not-an-email", null);
