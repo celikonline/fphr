@@ -622,6 +622,24 @@ public sealed class LegislationParameterTests
         values.Resolve(LegislationParameterKeys.FosterCareDays, new DateOnly(2026, 4, 30)).ShouldBeNull();
     }
 
+    /// <summary>QA teslim testi bulgu 7: 2026 payroll parameters verified against the official announcements
+    /// (asgari ücret ÇSGB, GVK Genel Tebliği Sıra No 332, Hazine ve Maliye Bakanlığı kıdem tavanı genelgeleri).</summary>
+    [Fact]
+    public void PayrollSeed_Holds_The_Verified2026StatutoryValues()
+    {
+        var values = SeedValues();
+        var mid2026 = new DateOnly(2026, 3, 15);
+
+        values.Resolve("Payroll.MinimumWage.Gross", mid2026)!.DecimalValue.ShouldBe(33_030.00m);
+        values.Resolve("Payroll.Sgk.Floor", mid2026)!.DecimalValue.ShouldBe(33_030.00m);
+        values.Resolve("Payroll.Sgk.Ceiling", mid2026)!.DecimalValue.ShouldBe(247_725.00m);
+        values.Resolve("Payroll.StampTax.Rate", mid2026)!.DecimalValue.ShouldBe(0.00759m);
+        values.Resolve("Payroll.IncomeTax.Brackets", mid2026)!.ValueJson.ShouldBe(
+            """[{"upperBound":190000,"rate":0.15},{"upperBound":400000,"rate":0.20},{"upperBound":1500000,"rate":0.27},{"upperBound":5300000,"rate":0.35},{"upperBound":null,"rate":0.40}]""");
+        values.Resolve("Severance.CeilingGross", new DateOnly(2026, 6, 30))!.DecimalValue.ShouldBe(64_948.77m);
+        values.Resolve("Severance.CeilingGross", new DateOnly(2026, 7, 1))!.DecimalValue.ShouldBe(73_729.87m);
+    }
+
     [Fact]
     public void SeedRanges_DoNotOverlap_AndEveryRowCitesASource()
     {

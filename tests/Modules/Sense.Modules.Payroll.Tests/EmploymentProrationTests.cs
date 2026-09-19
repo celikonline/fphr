@@ -101,3 +101,31 @@ public sealed class EmploymentProrationTests
         MealMarketCardExemptionApplies: false, DisabilityMonthlyTaxReductionDegree1: 6_900m,
         DisabilityMonthlyTaxReductionDegree2: 4_000m, DisabilityMonthlyTaxReductionDegree3: 1_700m, AsOf: SepStart);
 }
+
+/// <summary>QA teslim testi bulgu 7: hand-checked 2026 minimum-wage sanity check with the verified statutory values.</summary>
+public sealed class MinimumWage2026Tests
+{
+    [Fact]
+    public void GrossMinimumWage33030_YieldsTheOfficialNet28075_50()
+    {
+        var snapshot = new PayrollLegislationSnapshot(
+            [
+                new TaxBracket(190_000m, 0.15m), new TaxBracket(400_000m, 0.20m), new TaxBracket(1_500_000m, 0.27m),
+                new TaxBracket(5_300_000m, 0.35m), new TaxBracket(null, 0.40m),
+            ],
+            SgkFloor: 33_030m, SgkCeiling: 247_725m, SgkEmployeeRate: 0.14m, UnemploymentEmployeeRate: 0.01m,
+            SgkEmployerRate: 0.205m, UnemploymentEmployerRate: 0.02m, SgkEmployerDiscountRate: 0.05m, StampTaxRate: 0.00759m,
+            MinimumWageGross: 33_030m, MealIncomeTaxDailyExemption: 240m, MealSgkDailyExemptionRate: 0.2365m,
+            MealMarketCardExemptionApplies: false, DisabilityMonthlyTaxReductionDegree1: 6_900m,
+            DisabilityMonthlyTaxReductionDegree2: 4_000m, DisabilityMonthlyTaxReductionDegree3: 1_700m, AsOf: new DateOnly(2026, 1, 1));
+
+        var result = PayrollCalculator.Calculate(
+            new PayrollCalculationInput(33_030m, 30, 30, MealBenefitVariant.None, 0m, 0m, new DateOnly(2026, 1, 1)), snapshot);
+
+        result.Step(PayrollTraceStepCodes.SgkEmployee).Output.ShouldBe(4_624.20m); // 33,030 * 14%
+        result.Step(PayrollTraceStepCodes.UnempEmployee).Output.ShouldBe(330.30m); // 33,030 * 1%
+        result.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBe(250.70m); // 33,030 * 0.759%
+        result.Step(PayrollTraceStepCodes.MinWageExemptionGv).Output.ShouldBe(4_211.33m); // 28,075.50 * 15%
+        result.NetAmount.ShouldBe(28_075.50m);
+    }
+}
