@@ -59,6 +59,9 @@ public sealed class PayrollPeriodCalculationServiceTests
             [LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption] = Decimal(LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, 240m),
             [LegislationParameterKeys.PayrollMealSgkDailyExemptionRate] = Decimal(LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, 0.2365m),
             [LegislationParameterKeys.PayrollMealMarketCardExemptionApplies] = Decimal(LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, 0m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, 6900m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, 4000m),
+            [LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3] = Decimal(LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3, 1700m),
         };
 
         var reader = Substitute.For<ILegislationParameterReader>();
@@ -122,9 +125,17 @@ public sealed class PayrollPeriodCalculationServiceTests
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
+        // senseik-019 2a/2b/2c ports: default NSubstitute behaviour (null/empty for any Arg without an explicit
+        // .Returns()) reproduces "no prior period, no disability, no garnishment orders" - the pre-existing tests in
+        // this file don't exercise these scenarios (covered instead by PayrollCalculatorGoldenSetTests at the pure
+        // Domain level), so none of them need to be exposed as an `out` parameter here.
+        var periods = Substitute.For<IPayrollPeriodRepository>();
+        var garnishmentOrders = Substitute.For<IGarnishmentOrderRepository>();
+        var disabilityLookup = Substitute.For<IEmployeeDisabilityLookup>();
+
         return new PayrollPeriodCalculationService(
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
-            workedTimeReader, absenceDaysReader, expensePayoutReader);
+            workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup);
     }
 
     [Fact]

@@ -81,6 +81,12 @@ public static class LegislationParameterSeed
 
         // Payroll (Faz 3 P2, 11.3.07-bordro.md "Yemek varyant kuralları") - see PayrollDraft2026 doc comment above.
         P(39, "Payroll.Meal.MarketCard.ExemptionApplies", 0m, Payroll2026, null, PayrollDraft2026 + " - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"),
+
+        // Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi) - taslak aylık tutarlar,
+        // her yıl GİB tarafından güncellenir; PayrollDraft2026 doc comment'teki gibi mali müşavirle doğrulanmalı.
+        P(40, "Payroll.Disability.MonthlyTaxReduction.Degree1", 6900.00m, Payroll2026, null, "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, " + PayrollDraft2026),
+        P(41, "Payroll.Disability.MonthlyTaxReduction.Degree2", 4000.00m, Payroll2026, null, "193 s. GVK md.31 - II. derece engellilik indirimi, " + PayrollDraft2026),
+        P(42, "Payroll.Disability.MonthlyTaxReduction.Degree3", 1700.00m, Payroll2026, null, "193 s. GVK md.31 - III. derece engellilik indirimi, " + PayrollDraft2026),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

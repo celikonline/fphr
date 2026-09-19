@@ -16,7 +16,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
 
     private Payslip(
         Guid id, Guid tenantId, Guid employeeId, Guid payrollPeriodId, string inputSnapshot, string inputHash,
-        int version, decimal grossAmount, decimal netAmount, decimal employerCost)
+        int version, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
@@ -27,6 +27,7 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
         GrossAmount = grossAmount;
         NetAmount = netAmount;
         EmployerCost = employerCost;
+        CumulativeGvBase = cumulativeGvBase;
     }
 
     public Guid EmployeeId { get; private set; }
@@ -47,26 +48,32 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
 
     public decimal EmployerCost { get; private set; }
 
+    /// <summary>senseik-019 2a: bu ayın CUMULATIVE_BASE trace çıktısı (yıl başından bu aya kadarki kümülatif GV
+    /// matrahı) - bir sonraki ayın PriorCumulativeGvBase'i olarak PayrollPeriodCalculationService tarafından okunur
+    /// (aynı takvim yılı içindeyse; Ocak'ta veya önceki ay hiç hesaplanmadıysa 0'dan başlanır).</summary>
+    public decimal CumulativeGvBase { get; private set; }
+
     public static Payslip CreateFirstVersion(
         Guid tenantId, Guid employeeId, Guid payrollPeriodId, string inputSnapshot, string inputHash,
-        decimal grossAmount, decimal netAmount, decimal employerCost)
+        decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m)
     {
         Guard.NotDefault(tenantId);
         Guard.NotDefault(employeeId);
         Guard.NotDefault(payrollPeriodId);
         return new Payslip(
             Guid.NewGuid(), tenantId, employeeId, payrollPeriodId, Guard.NotEmpty(inputSnapshot), Guard.NotEmpty(inputHash),
-            version: 1, grossAmount, netAmount, employerCost);
+            version: 1, grossAmount, netAmount, employerCost, cumulativeGvBase);
     }
 
     /// <summary>Recompute with new figures (P3 "Değişenleri yeniden hesapla"): bumps <see cref="Version"/>.</summary>
-    public void Recalculate(string inputSnapshot, string inputHash, decimal grossAmount, decimal netAmount, decimal employerCost)
+    public void Recalculate(string inputSnapshot, string inputHash, decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m)
     {
         InputSnapshot = Guard.NotEmpty(inputSnapshot);
         InputHash = Guard.NotEmpty(inputHash);
         GrossAmount = grossAmount;
         NetAmount = netAmount;
         EmployerCost = employerCost;
+        CumulativeGvBase = cumulativeGvBase;
         Version++;
     }
 }

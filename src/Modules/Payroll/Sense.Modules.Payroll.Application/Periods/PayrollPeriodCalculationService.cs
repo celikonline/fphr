@@ -3,6 +3,7 @@ using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
+using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -36,7 +37,10 @@ public sealed class PayrollPeriodCalculationService(
     TimeProvider clock,
     IWorkedTimeReader workedTimeReader,
     IAbsenceDaysReader absenceDaysReader,
-    IExpensePayoutReader expensePayoutReader)
+    IExpensePayoutReader expensePayoutReader,
+    IPayrollPeriodRepository periods,
+    IGarnishmentOrderRepository garnishmentOrderRepository,
+    IEmployeeDisabilityLookup disabilityLookup)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
@@ -99,9 +103,8 @@ public sealed class PayrollPeriodCalculationService(
             return false; // NET_TO_GROSS_ITER is out of scope this slice (PayrollCalculator doc)
         }
 
-        // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) is deferred to P4+/P8: every
-        // period is calculated as if it were the employee's first month of the year. TODO documented in
-        // faz3-durum-takibi.md P3 entry.
+        // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
+        // girdi - bkz. ResolvePriorCumulativeGvBaseAsync (bu metodun altında).
         // TB-7 Attendance köprüsü (roadmap #23): null (no adapter wired yet, or Attendance has no data for this
         // employee/period) keeps today's full-month assumption; once IWorkedTimeReader has a real Attendance-backed
         // implementation, WorkedDays reflects actual attendance instead.
@@ -130,18 +133,48 @@ public sealed class PayrollPeriodCalculationService(
         var expensePayout = await expensePayoutReader.GetAsync(tenant.TenantId, employeeId, period.Year, period.Month, cancellationToken);
         var expenseReimbursement = expensePayout?.ApprovedExpenseTotal ?? 0m;
 
+        // senseik-019 2a: kümülatif GV matrahı devri - önceki dönemin Payslip'inden okunur (yıl başında veya önceki
+        // dönem/payslip yoksa 0'dan başlanır, örn. yıl içinde işe giren çalışan).
+        var priorCumulativeGvBase = await ResolvePriorCumulativeGvBaseAsync(period, employeeId, cancellationToken);
+
+        // senseik-019 2a: BASİTLEŞTİRME - gerçek teşvik uygunluk kontrolü (SGK'nın güncel kanun kodu listesiyle
+        // eşleşme, işyeri bazlı başvuru durumu) bu sürümde yapılmıyor, bkz. PayrollCalculationInput.IncentiveEligible.
+        var incentiveEligible = !string.IsNullOrWhiteSpace(profile.IncentiveLawCode);
+
+        // senseik-019 2b: GVK md.31 engelli çalışan gelir vergisi matrah indirimi derecesi.
+        var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenant.TenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
+
+        // senseik-019 2c: açık avans bakiyesi + aktif icra/nafaka emirleri.
+        var advanceBalance = expensePayout?.OpenAdvanceBalance ?? 0m;
+        var activeGarnishments = await garnishmentOrderRepository.ListActiveByEmployeeAsync(employeeId, cancellationToken) ?? [];
+        var garnishmentInputs = activeGarnishments
+            .Select(o => new GarnishmentDeductionInput(o.Id, o.Type, o.MonthlyInstallmentAmount, o.RemainingBalance))
+            .ToList();
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: salary.Amount,
             WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
             MealVariant: profile.MealBenefitVariant,
             MealDailyAmount: profile.MealDailyAmount,
-            PriorCumulativeGvBase: 0m,
+            PriorCumulativeGvBase: priorCumulativeGvBase,
             AsOfDate: periodStart,
-            ExpenseReimbursement: expenseReimbursement);
+            ExpenseReimbursement: expenseReimbursement,
+            IncentiveEligible: incentiveEligible,
+            DisabilityDegree: (int)disabilityDegree,
+            AdvanceDeductionTotal: advanceBalance,
+            GarnishmentOrders: garnishmentInputs);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
 
+        // senseik-019 2c: uygulanan icra/nafaka kesintilerini emir bakiyelerine işle (aynı DbContext'te izlenen
+        // entity'ler - IPayrollUnitOfWork.SaveChangesAsync çağıran command handler'ın işlemiyle birlikte kaydedilir).
+        foreach (var applied in result.GarnishmentApplied)
+        {
+            activeGarnishments.First(o => o.Id == applied.OrderId).ApplyMonthlyDeduction(applied.Amount, periodStart);
+        }
+
+        var cumulativeGvBase = result.Step(PayrollTraceStepCodes.CumulativeBase).Output;
         var snapshotDto = PayrollInputHashing.BuildSnapshot(profile, salary);
         var inputSnapshotJson = PayrollInputHashing.Serialize(snapshotDto);
         var inputHash = PayrollInputHashing.Hash(snapshotDto);
@@ -150,12 +183,13 @@ public sealed class PayrollPeriodCalculationService(
         Payslip payslip;
         if (existing is null)
         {
-            payslip = Payslip.CreateFirstVersion(tenant.TenantId, employeeId, period.Id, inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost);
+            payslip = Payslip.CreateFirstVersion(
+                tenant.TenantId, employeeId, period.Id, inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost, cumulativeGvBase);
             payslips.Add(payslip);
         }
         else
         {
-            existing.Recalculate(inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost);
+            existing.Recalculate(inputSnapshotJson, inputHash, result.GrossAmount, result.NetAmount, result.EmployerCost, cumulativeGvBase);
             payslip = existing;
         }
 
@@ -166,5 +200,25 @@ public sealed class PayrollPeriodCalculationService(
         activeFlag?.Clear(runId, clock.GetUtcNow().UtcDateTime);
 
         return true;
+    }
+
+    /// <summary>senseik-019 2a: Ocak'ta (yeni takvim yılı) her zaman 0'dan başlanır; önceki ay hiç açılmamışsa veya o
+    /// dönemde bu çalışan için henüz bir Payslip yoksa (örn. çalışan bu ay işe girdi) da 0 kabul edilir - yalnızca
+    /// mevcut bir önceki-ay Payslip'i varsa onun CUMULATIVE_BASE çıktısı devralınır.</summary>
+    private async Task<decimal> ResolvePriorCumulativeGvBaseAsync(PayrollPeriod period, Guid employeeId, CancellationToken cancellationToken)
+    {
+        if (period.Month == 1)
+        {
+            return 0m;
+        }
+
+        var priorPeriod = await periods.FindByYearMonthAsync(period.Year, period.Month - 1, cancellationToken);
+        if (priorPeriod is null)
+        {
+            return 0m;
+        }
+
+        var priorPayslip = await payslips.FindByEmployeeAndPeriodAsync(employeeId, priorPeriod.Id, cancellationToken);
+        return priorPayslip?.CumulativeGvBase ?? 0m;
     }
 }

@@ -20,6 +20,14 @@ public static class PayrollDomainErrors
     public const string ProfileOverlap = "payroll.errors.profile_overlap";
     public const string ProfileExternalCodeTooLong = "payroll.errors.profile_external_code_too_long";
     public const string ProfileNotesTooLong = "payroll.errors.profile_notes_too_long";
+
+    // İcra/nafaka kesinti emirleri (senseik-019 2c)
+    public const string GarnishmentCaseReferenceRequired = "payroll.errors.garnishment_case_reference_required";
+    public const string GarnishmentInstallmentInvalid = "payroll.errors.garnishment_installment_invalid";
+    public const string GarnishmentBalanceInvalid = "payroll.errors.garnishment_balance_invalid";
+    public const string GarnishmentAlreadyClosed = "payroll.errors.garnishment_already_closed";
+    public const string GarnishmentDateRangeInvalid = "payroll.errors.garnishment_date_range_invalid";
+    public const string GarnishmentNotFound = "payroll.garnishment.not_found";
 }
 
 /// <summary>Domain limits.</summary>

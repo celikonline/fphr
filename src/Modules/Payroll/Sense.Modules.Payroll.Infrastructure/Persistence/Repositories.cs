@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
@@ -91,4 +92,24 @@ public sealed class EmployeePayrollProfileRepository(PayrollDbContext context) :
             .Where(p => p.EmployeeId == employeeId && p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
             .OrderByDescending(p => p.ValidFrom)
             .FirstOrDefaultAsync(cancellationToken);
+}
+
+public sealed class GarnishmentOrderRepository(PayrollDbContext context) : IGarnishmentOrderRepository
+{
+    public void Add(GarnishmentOrder order) => context.GarnishmentOrders.Add(order);
+
+    public async Task<GarnishmentOrder?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<GarnishmentOrder>> ListActiveByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders
+            .Where(o => o.EmployeeId == employeeId && o.ClosedDate == null)
+            .OrderBy(o => o.StartDate)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<GarnishmentOrder>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders
+            .Where(o => o.EmployeeId == employeeId)
+            .OrderByDescending(o => o.StartDate)
+            .ToListAsync(cancellationToken);
 }

@@ -2,7 +2,17 @@
   "id": "senseik-019",
   "title": "Bordro motoru: Aşama 2–3 (brüt→net, vergi, e-Bildirge, banka ödeme) (G-01 Aşama 2–3)",
   "owner": "pc-a",
-  "state": "ready",
+  "state": "running",
+  "next_steps": [
+    "GÜNCEL ENGEL (2026-09-19): Docker Desktop bu makinede kararsız - önce engine pipe hatasıyla erişilemiyordu, tekrar ayağa kalkınca `dotnet build Sense.slnx` 'No space left on device' hatasıyla düştü (muhtemelen paralel oturumların doldurduğu Docker VM diski), sonrasında docker daemon TEKRAR erişilemez hale geldi (aynı pipe hatası). Kod tam yazıldı ve elle gözden geçirildi ama HENÜZ hiçbir build/test çalıştırılamadı - devam eden ajan önce `docker system df` / `docker builder prune -f` ile disk temizliği denemeli (diğer paralel oturumları bozmamak için `docker system prune -a`/volume silme YAPMA, yalnız build cache/dangling image temizliği dene), docker stabil olunca aşağıdaki adımlara geç",
+    "1) dotnet build Sense.slnx (veya en az Payroll+Employee+Leave projeleri) çalıştır, derleme hatalarını düzelt",
+    "2) Leave modülü için migration üret: LegislationParameterSeed.cs'e eklenen 3 satır (Payroll.Disability.MonthlyTaxReduction.Degree1/2/3, id 40-42) için dotnet ef migrations add (LeaveDbContext)",
+    "3) Payroll modülü için migration üret: Payslip.CumulativeGvBase kolonu + garnishment_orders tablosu için dotnet ef migrations add (PayrollDbContext)",
+    "4) dotnet test tests/Modules/Sense.Modules.Payroll.Tests (+ Sense.Modules.Employee.Tests, Sense.Modules.Leave.Tests, Sense.Tests.Architecture) çalıştır, kırmızıları düzelt",
+    "5) dotnet format ile commit öncesi biçimlendir, sonra commit at (push YOK)",
+    "6) docs/handoffs/payroll-full-engine.md'deki 'Merge Gate Durumu' bölümünü gerçek test sonuçlarıyla güncelle",
+    "7) Testler yeşilse kart state'ini review yap"
+  ],
   "branch": "a/payroll-full-engine",
   "worktree": ".claude/worktrees/payroll-full-calc",
   "acceptance": [

@@ -22,5 +22,14 @@ public static class PayrollPermissions
     public static readonly Permission PeriodRecalculate = new(
         "payroll.period.recalculate", Module, "Recalculate Payroll Period", Group, "Recalculate payslips for an open payroll period");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate];
+    /// <summary>senseik-019 2c: icra/nafaka kesinti emirlerini açma/kapatma.</summary>
+    public static readonly Permission CourtOrderManage = new(
+        "payroll.courtorder.manage", Module, "Manage Garnishment Orders", Group, "Create and close employees' garnishment (icra/nafaka) orders");
+
+    /// <summary>senseik-019 3b/3c/3d: e-Bildirge/APHB, banka ödeme talimatı ve muhasebe fişi dosyalarını indirme.
+    /// "payroll.declarations.*" içeren mevcut muhasebe/bordro sistem rolüne (SystemRoleDefinitions) otomatik dahildir.</summary>
+    public static readonly Permission DeclarationsExport = new(
+        "payroll.declarations.export", Module, "Export Payroll Declarations", Group, "Download APHB/e-Bildirge, bank payment and accounting voucher files");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, CourtOrderManage, DeclarationsExport];
 }

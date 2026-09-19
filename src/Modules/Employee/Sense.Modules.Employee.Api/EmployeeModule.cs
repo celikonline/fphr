@@ -116,6 +116,9 @@ public sealed class EmployeeModule : IModule
         // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
         services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();
 
+        // Cross-module contract consumed by Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi)
+        services.AddScoped<IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
+
         // Cross-module contract consumed by Leave (EmployeeHired -> EmployeeLeaveProfile.BirthDate, 4857 md.53/IV
         // yaş istisnası; also read in bulk by LeaveBalanceRecalculationJob's nightly backfill/resync pass)
         services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();

@@ -35,6 +35,13 @@ public sealed class PayrollCalculatorGoldenSetTests
     /// <summary>Current draft (LegislationParameterSeed id 39): the meal+market card variant is NOT exempt.</summary>
     private const bool MealMarketCardExemptionApplies = false;
 
+    /// <summary>GVK md.31 taslak aylık indirim tutarları (senseik-019 2b) - mali müşavirle doğrulanmalı.</summary>
+    private const decimal DisabilityMonthlyTaxReductionDegree1 = 6900.00m;
+
+    private const decimal DisabilityMonthlyTaxReductionDegree2 = 4000.00m;
+
+    private const decimal DisabilityMonthlyTaxReductionDegree3 = 1700.00m;
+
     /// <summary>2026 draft brackets (15/20/27/35/40), same shape as the seeded Payroll.IncomeTax.Brackets JSON.</summary>
     private static readonly PayrollLegislationSnapshot Snapshot = new(
         [
@@ -56,6 +63,9 @@ public sealed class PayrollCalculatorGoldenSetTests
         MealIncomeTaxDailyExemption,
         MealSgkDailyExemptionRate,
         MealMarketCardExemptionApplies,
+        DisabilityMonthlyTaxReductionDegree1,
+        DisabilityMonthlyTaxReductionDegree2,
+        DisabilityMonthlyTaxReductionDegree3,
         AsOf);
 
     [Fact]
@@ -70,10 +80,10 @@ public sealed class PayrollCalculatorGoldenSetTests
         result.Steps.Select(s => s.Code).ShouldBe(
         [
             PayrollTraceStepCodes.Days, PayrollTraceStepCodes.Earnings, PayrollTraceStepCodes.SgkBase, PayrollTraceStepCodes.SgkEmployee,
-            PayrollTraceStepCodes.UnempEmployee, PayrollTraceStepCodes.GvBase, PayrollTraceStepCodes.CumulativeBase, PayrollTraceStepCodes.IncomeTax,
-            PayrollTraceStepCodes.MinWageExemptionGv, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.MinWageExemptionDv, PayrollTraceStepCodes.Deductions,
-            PayrollTraceStepCodes.Net, PayrollTraceStepCodes.EmployerSgk, PayrollTraceStepCodes.EmployerDiscount, PayrollTraceStepCodes.EmployerUnemp,
-            PayrollTraceStepCodes.EmployerCost,
+            PayrollTraceStepCodes.UnempEmployee, PayrollTraceStepCodes.GvBase, PayrollTraceStepCodes.DisabilityReduction, PayrollTraceStepCodes.CumulativeBase,
+            PayrollTraceStepCodes.IncomeTax, PayrollTraceStepCodes.MinWageExemptionGv, PayrollTraceStepCodes.StampTax, PayrollTraceStepCodes.MinWageExemptionDv,
+            PayrollTraceStepCodes.Deductions, PayrollTraceStepCodes.Net, PayrollTraceStepCodes.EmployerSgk, PayrollTraceStepCodes.EmployerDiscount,
+            PayrollTraceStepCodes.EmployerUnemp, PayrollTraceStepCodes.EmployerCost,
         ]);
 
         result.Step(PayrollTraceStepCodes.Days).Output.ShouldBe(30m);
@@ -214,5 +224,126 @@ public sealed class PayrollCalculatorGoldenSetTests
         var input = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, (MealBenefitVariant)99, 100m, 0m, AsOf);
 
         Should.Throw<NotSupportedException>(() => PayrollCalculator.Calculate(input, Snapshot));
+    }
+
+    [Fact]
+    public void UnknownDisabilityDegree_Throws()
+    {
+        var input = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf, DisabilityDegree: 4);
+
+        Should.Throw<NotSupportedException>(() => PayrollCalculator.Calculate(input, Snapshot));
+    }
+
+    /// <summary>senseik-019 2b golden-set senaryosu: engelli (2. derece) çalışan - GVK md.31 matrah indirimi
+    /// MINWAGE_EXEMPTION_GV'den önce uygulanır, dolayısıyla marjinal dilim oranında (burada %20) vergi tasarrufu sağlar.</summary>
+    [Fact]
+    public void DisabledEmployee_SecondDegree_ReducesGvBaseAndIncomeTaxBeforeMinWageExemption()
+    {
+        var noDisabilityInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var disabledInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf, DisabilityDegree: 2);
+
+        var noDisability = PayrollCalculator.Calculate(noDisabilityInput, Snapshot);
+        var disabled = PayrollCalculator.Calculate(disabledInput, Snapshot);
+
+        disabled.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(noDisability.Step(PayrollTraceStepCodes.GvBase).Output); // GV_BASE'in kendisi değişmez
+        disabled.Step(PayrollTraceStepCodes.DisabilityReduction).Output.ShouldBe(DisabilityMonthlyTaxReductionDegree2);
+
+        // CUMULATIVE_BASE = 170,000 - 4,000 = 166,000; INCOME_TAX = 158,000*15% + 8,000*20% = 23,700 + 1,600 = 25,300.
+        disabled.Step(PayrollTraceStepCodes.CumulativeBase).Output.ShouldBe(166_000m);
+        disabled.Step(PayrollTraceStepCodes.IncomeTax).Output.ShouldBe(25_300m);
+
+        // %20 marjinal dilimde 4,000 TL matrah indirimi = 800 TL vergi tasarrufu, doğrudan NET'e yansır.
+        disabled.NetAmount.ShouldBe(noDisability.NetAmount + 800m);
+    }
+
+    /// <summary>senseik-019 2a golden-set senaryosu: teşvikli işveren (5510 md.81) - yalnızca işveren maliyetini
+    /// etkiler, çalışanın net ücretine dokunmaz (SGK işçi payı teşvikten etkilenmiyor).</summary>
+    [Fact]
+    public void IncentiveEligibleEmployer_AppliesFivePointSgkDiscount_ReducesEmployerCostOnlyNotEmployeeNet()
+    {
+        var noIncentiveInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var incentiveInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf, IncentiveEligible: true);
+
+        var noIncentive = PayrollCalculator.Calculate(noIncentiveInput, Snapshot);
+        var incentive = PayrollCalculator.Calculate(incentiveInput, Snapshot);
+
+        // EMPLOYER_DISCOUNT = 200,000 * 5% = 10,000; efektif işveren SGK oranı %20,5 -> %15,5.
+        incentive.Step(PayrollTraceStepCodes.EmployerDiscount).Output.ShouldBe(10_000m);
+        incentive.EmployerCost.ShouldBe(noIncentive.EmployerCost - 10_000m);
+        incentive.EmployerCost.ShouldBe(235_000m);
+        incentive.NetAmount.ShouldBe(noIncentive.NetAmount); // çalışan tarafı etkilenmez
+    }
+
+    /// <summary>senseik-019 2d golden-set senaryosu: fazla mesaili ay. OvertimePayCalculator'ın ürettiği tutar
+    /// maktu ücrete eklenir ve SGK/GV/damga matrahlarının tamamına (maktu ücret gibi) dahil olur. 270 saatlik
+    /// yıllık sayaç ve saatlerin gerçek Attendance verisinden 25/50 kategorisine ayrıştırılması senseik-012'nin
+    /// sorumluluğu (bkz. handoff) - burada yalnızca TL akışı doğrulanıyor.</summary>
+    [Fact]
+    public void OvertimeMonth_AdditionalTaxableEarningsFlowsThroughGrossSgkAndNet()
+    {
+        var overtimePay = OvertimePayCalculator.Calculate(200_000m, overtimeHours25: 10m, overtimeHours50: 5m);
+        overtimePay.ShouldBeGreaterThan(0m);
+
+        var noOvertimeInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var overtimeInput = new PayrollCalculationInput(
+            200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf, AdditionalTaxableEarnings: overtimePay);
+
+        var noOvertime = PayrollCalculator.Calculate(noOvertimeInput, Snapshot);
+        var overtime = PayrollCalculator.Calculate(overtimeInput, Snapshot);
+
+        overtime.GrossAmount.ShouldBe(noOvertime.GrossAmount + overtimePay);
+        overtime.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(noOvertime.Step(PayrollTraceStepCodes.SgkBase).Output + overtimePay);
+        overtime.Step(PayrollTraceStepCodes.StampTax).Output.ShouldBeGreaterThan(noOvertime.Step(PayrollTraceStepCodes.StampTax).Output);
+        overtime.NetAmount.ShouldBeGreaterThan(noOvertime.NetAmount);
+    }
+
+    /// <summary>senseik-019 2a golden-set senaryosu: "yıl içinde işe giren çalışan" için doğru dilim/matrah devri.
+    /// 2. ayın PriorCumulativeGvBase'i 1. ayın CUMULATIVE_BASE çıktısını devralır (Application katmanında
+    /// PayrollPeriodCalculationService'in önceki dönemin Payslip'inden okuduğu değer - bkz. handoff); aynı brüt
+    /// tekrarlansa bile kümülatif matrah 158.000 dilim sınırını aşarak 2. ayda daha yüksek oranlı vergiye geçer.</summary>
+    [Fact]
+    public void MidYearProgression_CumulativeGvBaseCarriesAcrossMonths_CrossesBracketBoundary()
+    {
+        var month1Input = new PayrollCalculationInput(100_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var month1 = PayrollCalculator.Calculate(month1Input, Snapshot);
+
+        month1.Step(PayrollTraceStepCodes.CumulativeBase).Output.ShouldBe(85_000m); // 100,000 * 0.85
+        month1.Step(PayrollTraceStepCodes.IncomeTax).Output.ShouldBe(12_750m); // 85,000 * %15
+
+        var priorCumulative = month1.Step(PayrollTraceStepCodes.CumulativeBase).Output;
+        var month2Input = new PayrollCalculationInput(100_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, priorCumulative, AsOf.AddMonths(1));
+        var month2 = PayrollCalculator.Calculate(month2Input, Snapshot);
+
+        month2.Step(PayrollTraceStepCodes.CumulativeBase).Output.ShouldBe(170_000m); // 85,000 + 85,000, 158,000 sınırını aşıyor
+        // 73,000 kalan %15 diliminde + 12,000 %20 diliminde = 10,950 + 2,400 = 13,350 (1. aydan yüksek, aynı brüte rağmen).
+        month2.Step(PayrollTraceStepCodes.IncomeTax).Output.ShouldBe(13_350m);
+        month2.NetAmount.ShouldBeLessThan(month1.NetAmount);
+    }
+
+    /// <summary>senseik-019 2c golden-set senaryosu: icra + nafaka kesintili ve açık avanslı çalışan. Nafaka önce ve
+    /// sınırsız (kalan nete kadar) kesilir, icra net ücretin (kesinti öncesi) %25'i havuzuyla sınırlıdır, avans kalan
+    /// nete kadar mahsup edilir. BASİTLEŞTİRME - SMMM/hukuk onayı gerekli (bkz. GarnishmentCalculator doc, handoff).</summary>
+    [Fact]
+    public void GarnishmentAndAdvance_AppliesNafakaFirstThenIcraCapThenAdvance()
+    {
+        var nafakaOrderId = Guid.NewGuid();
+        var icraOrderId = Guid.NewGuid();
+        var orders = new List<GarnishmentDeductionInput>
+        {
+            new(nafakaOrderId, GarnishmentType.Nafaka, MonthlyInstallmentAmount: 2_000m, RemainingBalance: 10_000m),
+            new(icraOrderId, GarnishmentType.Icra, MonthlyInstallmentAmount: 50_000m, RemainingBalance: 200_000m),
+        };
+        var input = new PayrollCalculationInput(
+            200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf,
+            AdvanceDeductionTotal: 5_000m, GarnishmentOrders: orders);
+
+        var result = PayrollCalculator.Calculate(input, Snapshot);
+
+        // netBeforeDeductions = 146,434.70 (bkz. MidRangeSalary_NoMeal testi, kesinti yokken aynı Net). Nafaka tam
+        // (2,000) kesilir; icra %25 tavanına (36,608.68) kadar kesilir; avans kalan nete kadar (5,000) düşer.
+        result.Step(PayrollTraceStepCodes.Deductions).Output.ShouldBe(43_608.68m);
+        result.NetAmount.ShouldBe(102_826.02m);
+        result.GarnishmentApplied.ShouldContain(a => a.OrderId == nafakaOrderId && a.Amount == 2_000m);
+        result.GarnishmentApplied.ShouldContain(a => a.OrderId == icraOrderId && a.Amount == 36_608.68m);
     }
 }

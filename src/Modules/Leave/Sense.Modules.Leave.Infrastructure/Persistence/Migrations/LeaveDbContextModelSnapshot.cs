@@ -638,6 +638,36 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Meal.MarketCard.ExemptionApplies",
                             Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - yemek+market kartı varyantına Cash/MealCardOnly istisnası uygulanmıyor (0 = hayır), tamamı matraha girer"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000040"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 6900.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree1",
+                            Source = "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000041"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 4000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree2",
+                            Source = "193 s. GVK md.31 - II. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000042"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 1700.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree3",
+                            Source = "193 s. GVK md.31 - III. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
                         });
                 });
 

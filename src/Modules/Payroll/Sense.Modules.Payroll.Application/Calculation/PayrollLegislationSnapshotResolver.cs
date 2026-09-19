@@ -33,6 +33,9 @@ public static class PayrollLegislationSnapshotResolver
             MealIncomeTaxDailyExemption: await Decimal(reader, LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, asOf, cancellationToken),
             MealSgkDailyExemptionRate: await Decimal(reader, LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, asOf, cancellationToken),
             MealMarketCardExemptionApplies: await Decimal(reader, LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, asOf, cancellationToken) != 0m,
+            DisabilityMonthlyTaxReductionDegree1: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, asOf, cancellationToken),
+            DisabilityMonthlyTaxReductionDegree2: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, asOf, cancellationToken),
+            DisabilityMonthlyTaxReductionDegree3: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3, asOf, cancellationToken),
             AsOf: asOf);
     }
 
