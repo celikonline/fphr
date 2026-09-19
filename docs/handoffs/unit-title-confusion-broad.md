@@ -82,3 +82,17 @@ Ayrıca aynı dosyada fark edilen bir ek karışıklık düzeltildi: "Birim baz�
 ## Oturum Notu — Ortam Sorunu
 
 Bu kartın uygulanması sırasında Docker Desktop backend'i (`dockerDesktopLinuxEngine` named pipe) birkaç kez düşüp kendi kendine toparlandı — muhtemelen bu makinede eşzamanlı çalışan başka oturumların (bkz. `feedback-parallel-sessions.md` hafıza notu) yarattığı yük yüzünden. `docker version`/`docker ps` gibi en temel komutlar bile zaman zaman 10+ saniye askıda kaldı veya "failed to connect to the docker API" hatası verdi. Build/test adımları her komuttan önce `docker version` ile sağlık kontrolü yapılarak, gerektiğinde tekrar denenerek tamamlandı. Bir sonraki oturumda benzer bir şey yaşanırsa: sabırla tekrar dene, tüm solüsyonu değil sadece dokunulan proje(ler)i build et (bellek baskısı altında tam solüsyon build'i başarısız olabiliyor).
+
+## Doğrulama Turu (2026-09-19)
+
+- `dev`'e rebase edildi (yalnızca kart dosyasında add/add çakışması; branch sürümü korundu, worktree yolu düzeltildi).
+  Kod çakışması yok, migration yok.
+- Native `dotnet build`: `Sense.Modules.Employee.Tests` + `Sense.Modules.Analytics.Tests` temiz.
+- `Sense.Modules.Analytics.Tests`: **24/24** yeşil.
+- `Sense.Modules.Employee.Tests` unit (container'sız) koşu **165/165** yeşil. Tam Testcontainers
+  koşusu bu oturumda Docker Desktop yanıt vermez hale geldiği için güvenilir sonuç vermedi (fixture başlatma
+  hataları, `<1 ms` süreli toplu başarısızlıklar — kodla ilgisiz); ilk turdaki 205/209 (4 = dev'deki Payments DI)
+  sonucu geçerli referans. Merge sonrası Docker sağlıklıyken tam koşu önerilir.
+- Web: `pnpm exec tsc --noEmit` temiz, `pnpm exec eslint src` 0 hata.
+- İnceleme notu: `GENDER_RATIO_BY_DEPARTMENT` kapsamlı (scoped) kullanıcıda departman id'si erişilebilir birimler
+  kümesinde değilse (ör. Team kapsamı) boş döner — veri sızdırmaz, bilinçli olarak güvenli taraf.
