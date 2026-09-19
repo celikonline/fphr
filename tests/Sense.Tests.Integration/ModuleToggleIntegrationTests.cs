@@ -147,7 +147,7 @@ public sealed class ModuleToggleIntegrationTests : IdentityStackTestBase
         var tenantId = await SeedTenantAsync("legacy");
         var db = Get<IdentityDbContext>();
         await db.Database.ExecuteSqlRawAsync(
-            "UPDATE identity.tenants SET module_settings = '{}'::jsonb WHERE id = {0}", [tenantId], Ct);
+            "UPDATE identity.tenants SET module_settings = '{{}}'::jsonb WHERE id = {0}", [tenantId], Ct);
         ActAs(tenantId, await SeedUserAsync(tenantId, "owner@legacy.test", SystemRoleCodes.Owner));
 
         var fresh = await Get<IdentityDbContext>().Tenants.AsNoTracking().SingleAsync(t => t.Id == tenantId, Ct);
