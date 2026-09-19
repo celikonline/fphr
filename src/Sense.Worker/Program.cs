@@ -110,6 +110,10 @@ if (!string.IsNullOrWhiteSpace(redisConnection))
 builder.Services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
 builder.Services.AddScoped<IUserProfileLookup, UserProfileLookup>();
 builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
+// Attendance's ITenantLocalClock (registered by AddAttendanceCoreServices for both hosts) resolves the tenant time zone
+// through this Identity read contract; without it the host fails DI validation at startup.
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ITenantTimeZoneLookup, TenantTimeZoneLookup>();
 // Documents' EmployeeHired handler materializes requirements through this Employee read contract.
 builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
@@ -131,6 +135,13 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 builder.Services.AddLeaveBalanceRecalculationJob();
+// AddModuleHandlers above scans the Leave Infrastructure assembly, which also holds the API-only company ledger query
+// handler (senseik-048). It needs IDataScopeService/report readers that only the API host registers and the Worker never
+// serves queries, so drop it here or the host fails DI validation at startup.
+Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll<
+    Sense.Shared.Contracts.Messaging.IQueryHandler<
+        Sense.Modules.Leave.Application.Ledger.GetCompanyLeaveLedgerQuery,
+        Sense.Modules.Leave.Application.Ledger.CompanyLeaveLedgerDto>>(builder.Services);
 
 // Attendance consumes EmployeeHired (default work schedule assignment, Source=Hire) and publishes WorkScheduleAssigned
 // for Leave to eventually replace its Monday–Friday placeholder (roadmap #23).
