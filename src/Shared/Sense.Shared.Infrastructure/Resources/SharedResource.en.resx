@@ -1112,6 +1112,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.col.newCandidates" xml:space="preserve"><value>New candidates</value></data>
   <data name="report.sheet.recruitmentDailyCounts" xml:space="preserve"><value>Daily counts</value></data>
   <data name="report.sheet.recruitmentCandidatesExport" xml:space="preserve"><value>Candidate list</value></data>
+  <data name="report.col.jobPosting" xml:space="preserve"><value>Job posting</value></data>
+  <data name="report.col.totalApplications" xml:space="preserve"><value>Total applications</value></data>
+  <data name="report.sheet.recruitmentOverview" xml:space="preserve"><value>Overview</value></data>
   <data name="report.enum.CandidateSource.Manual" xml:space="preserve"><value>Added manually</value></data>
   <data name="report.enum.CandidateSource.CareerSite" xml:space="preserve"><value>Career site</value></data>
   <data name="report.enum.CandidateSource.Referral" xml:space="preserve"><value>Referral</value></data>

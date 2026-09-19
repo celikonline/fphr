@@ -10,7 +10,7 @@ using Sense.Shared.Infrastructure.Export;
 namespace Sense.Modules.Recruitment.Infrastructure.Reporting;
 
 /// <summary>
-/// Kolay İK "ATS raporları" → Günlük sayılar (R5, roadmap #94/#96, faz6-durum-takibi.md): for every calendar day in
+/// Kolay İK "ATS raporları" → Günlük sayılar (R5, roadmap #94, faz6-durum-takibi.md): for every calendar day in
 /// the requested range, how many new applications came in and how many new candidates were added (any source -
 /// manual entry or the public career site). One row per day, including zero-count days, so a trend chart on the
 /// web side never has to fill gaps itself. Contacted/stage-distribution columns from the Kolay İK "Overview" tab

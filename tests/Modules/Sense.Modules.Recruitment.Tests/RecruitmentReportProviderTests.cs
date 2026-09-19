@@ -24,10 +24,10 @@ using Xunit;
 namespace Sense.Modules.Recruitment.Tests;
 
 /// <summary>
-/// Raporlar menüsü katkıları (R5, roadmap #94/#96, faz6-durum-takibi.md) on real PostgreSQL:
-/// <c>recruitment.daily_counts</c> and <c>recruitment.candidates_export</c> read through RecruitmentDbContext, and
+/// Raporlar menüsü katkıları (R5, roadmap #94, faz6-durum-takibi.md) on real PostgreSQL:
+/// <c>recruitment.overview</c>, <c>recruitment.daily_counts</c> and <c>recruitment.candidates_export</c> read through RecruitmentDbContext, and
 /// the produced Excel content is read back with ClosedXML (mirrors LeaveReportProviderTests). A minimal
-/// registration - just the DbContext + module handlers + the two providers - no Organization/Identity ports are
+/// registration - just the DbContext + module handlers + the three providers - no Organization/Identity ports are
 /// needed since neither provider resolves org unit or location names (unlike the public career-site queries in
 /// RecruitmentIntegrationTests).
 /// </summary>
@@ -49,6 +49,7 @@ public sealed class RecruitmentReportProviderTests : TestFixture
         services.AddLocalization(o => o.ResourcesPath = "Resources");
         services.TryAddSingleton<IReportExporter, ExcelReportExporter>();
         services.AddScoped<IReportProvider, RecruitmentDailyCountsReportProvider>();
+        services.AddScoped<IReportProvider, RecruitmentOverviewReportProvider>();
         services.AddScoped<IReportProvider, RecruitmentCandidatesExportReportProvider>();
     }
 
@@ -282,5 +283,46 @@ public sealed class RecruitmentReportProviderTests : TestFixture
         var emails = sheet.RowsUsed().Skip(1).Select(r => Cell(sheet, r.RowNumber(), "E-posta")).ToList();
         emails.ShouldContain("a-export@example.com");
         emails.ShouldNotContain("b-export@example.com");
+    }
+
+    [Fact]
+    public async Task Overview_CountsApplicationsPerPostingAndStage_ExcludingOtherTenants()
+    {
+        CultureInfo.CurrentUICulture = new CultureInfo("tr-TR"); // headers/enum texts asserted in Turkish
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+
+        using (TenantContextSetter!.BeginScope(tenantA))
+        {
+            var postingId = await CreatePostingAsync(tenantA, "Backend Geliştirici");
+            var c1 = await CreateCandidateAsync(tenantA, "Ada", "Yılmaz", "ada-ov@example.com");
+            var c2 = await CreateCandidateAsync(tenantA, "Ela", "Kaya", "ela-ov@example.com");
+            var c3 = await CreateCandidateAsync(tenantA, "Can", "Demir", "can-ov@example.com");
+            await CreateApplicationAsync(tenantA, postingId, c1);
+            await CreateApplicationAsync(tenantA, postingId, c2, ApplicationStage.Interview);
+            await CreateApplicationAsync(tenantA, postingId, c3, ApplicationStage.Interview);
+        }
+
+        using (TenantContextSetter!.BeginScope(tenantB))
+        {
+            var postingB = await CreatePostingAsync(tenantB, "Başka Kiracı İlanı");
+            var cb = await CreateCandidateAsync(tenantB, "B", "Aday", "b-ov@example.com");
+            await CreateApplicationAsync(tenantB, postingB, cb);
+        }
+
+        ReportFileResult file;
+        using (TenantContextSetter!.BeginScope(tenantA))
+        {
+            file = await Provider(RecruitmentOverviewReportProvider.ReportKey).GenerateAsync(
+                tenantA, new Dictionary<string, string>(), CancellationToken.None);
+        }
+
+        var sheet = FirstSheet(file);
+        sheet.RowsUsed().Count().ShouldBe(2); // header + the single tenant-A posting
+        Cell(sheet, 2, "İlan").ShouldBe("Backend Geliştirici");
+        Cell(sheet, 2, "Yeni başvuru").ShouldBe("1");
+        Cell(sheet, 2, "Mülakat").ShouldBe("2");
+        Cell(sheet, 2, "Teklif").ShouldBe("0");
+        Cell(sheet, 2, "Toplam başvuru").ShouldBe("3");
     }
 }

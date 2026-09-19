@@ -57,8 +57,9 @@ public sealed class RecruitmentModule : IModule
         // here (mirrors DocumentsModule.AddModule), not in an integration-event-handlers extension.
         services.AddScoped<IScheduledJobHandler, CandidateRetentionSweepJobHandler>();
 
-        // Raporlar menüsü katkıları (R5, roadmap #94/#96): günlük sayılar + aday dışa aktarımı.
+        // Raporlar menüsü katkıları (R5, roadmap #94): genel bakış + günlük sayılar + aday dışa aktarımı.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.RecruitmentDailyCountsReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.RecruitmentOverviewReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Infrastructure.Reporting.RecruitmentCandidatesExportReportProvider>();
     }
 }

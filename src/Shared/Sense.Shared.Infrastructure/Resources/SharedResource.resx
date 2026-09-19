@@ -1121,6 +1121,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="report.col.newCandidates" xml:space="preserve"><value>Yeni eklenen aday</value></data>
   <data name="report.sheet.recruitmentDailyCounts" xml:space="preserve"><value>Günlük sayılar</value></data>
   <data name="report.sheet.recruitmentCandidatesExport" xml:space="preserve"><value>Aday listesi</value></data>
+  <data name="report.col.jobPosting" xml:space="preserve"><value>İlan</value></data>
+  <data name="report.col.totalApplications" xml:space="preserve"><value>Toplam başvuru</value></data>
+  <data name="report.sheet.recruitmentOverview" xml:space="preserve"><value>Genel bakış</value></data>
   <data name="report.enum.CandidateSource.Manual" xml:space="preserve"><value>Elle eklendi</value></data>
   <data name="report.enum.CandidateSource.CareerSite" xml:space="preserve"><value>Kariyer sitesi</value></data>
   <data name="report.enum.CandidateSource.Referral" xml:space="preserve"><value>Referans</value></data>

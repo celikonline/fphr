@@ -12,7 +12,7 @@ using Sense.Shared.Infrastructure.Export;
 namespace Sense.Modules.Recruitment.Infrastructure.Reporting;
 
 /// <summary>
-/// Kolay İK "ATS raporları" → Adaylar dışa aktarımı (R5, roadmap #94/#96, faz6-durum-takibi.md): every candidate -
+/// Kolay İK "ATS raporları" → Adaylar dışa aktarımı (R5, roadmap #94, faz6-durum-takibi.md): every candidate -
 /// contact info, source, tags (roadmap #89), and, for each posting applied to, its current pipeline stage. The
 /// Kolay İK doc's "aşama geçmişi" (full stage-change history) variant is NOT modeled - <see cref="JobApplication"/>
 /// only stores the current <see cref="ApplicationStage"/>, no per-transition timestamps exist yet - so each

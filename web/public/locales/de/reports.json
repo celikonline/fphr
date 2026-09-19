@@ -61,6 +61,20 @@
           "description": "Die monatliche Zeiterfassungsübersicht plus bezahlte, unbezahlte und Krankheitstage sowie ob und wann der Monat genehmigt wurde."
         }
       }
+    },
+    "recruitment": {
+      "overview": {
+        "label": "Übersichtsbericht",
+        "description": "Bewerbungen je Stellenanzeige nach Pipeline-Phase: neue Bewerbung, Vorauswahl, Interview, Angebot, eingestellt, abgelehnt und gesamt. Optionaler Bewerbungszeitraum."
+      },
+      "daily_counts": {
+        "label": "Bericht Tageszahlen",
+        "description": "Neue Bewerbungen und neu angelegte Kandidaten für jeden Tag im gewählten Zeitraum (Tage ohne Einträge erscheinen mit null)."
+      },
+      "candidates_export": {
+        "label": "Kandidatenlisten-Export",
+        "description": "Kandidaten: Kontaktdaten, Quelle, Tags sowie die Stellen, auf die sie sich beworben haben, mit aktueller Phase. Optionaler Zeitraum der Anlage."
+      }
     }
   },
   "run": {
