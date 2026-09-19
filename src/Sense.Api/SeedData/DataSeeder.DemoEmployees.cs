@@ -255,7 +255,7 @@ public partial class DataSeeder
     private static readonly HashSet<string> DemoFemaleFirstNames =
         new(SeedDataConstants.TurkishFemaleFirstNames, StringComparer.OrdinalIgnoreCase) { "Olena" };
 
-    private static Gender DemoGenderFor(string firstName) =>
+    internal static Gender DemoGenderFor(string firstName) =>
         DemoFemaleFirstNames.Contains(firstName) ? Gender.Female : Gender.Male;
 
     private EmployeeInfo NextDemoEmployeeInfo(User user)

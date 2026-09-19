@@ -1,6 +1,6 @@
 # senseik-043 — Demo Veri Hijyeni Round 2 — UYGULAMA PLANI
 
-**Durum: Uygulandı (GATE 1/GATE 2 onaylı). `a/demo-data-hygiene-round2` dalında commit edildi; push yapılmadı.**
+**Durum: Uygulandı ve doğrulandı (build + seed testleri yeşil) — review. `a/demo-data-hygiene-round2` dalında; push/merge yapılmadı.**
 
 ## Özet
 
@@ -34,22 +34,18 @@ Kök neden: `EmployeeInfo.Gender` varsayılan değeri `Unspecified`; `DataSeeder
 - `src/Sense.Api/SeedData/README.md` — organizasyon şeması açıklaması Türkçe departman adlarıyla güncellendi (dev dokümantasyonu, müşteri karşısına çıkmıyor).
 - `tests/Sense.Tests.Integration/SeedData/DemoEmployeeSeedTests.cs` — `SeedDataConstants.DemoDepartments` üzerinden `"HR"` araması yapan satır ve o testteki elle kurulmuş `hrDepartment` OrgUnit'inin adı yeni Türkçe departman adına (`"İnsan Kaynakları"`) güncellendi (`DemoTitleFor` unit adını `DemoDepartments.Name` ile eşleştirdiği için gerekliydi — aksi halde test kırılırdı). Diğer testlerdeki bağımsız/elle kurulmuş `"Headquarters"`/`"Sales"`/`"Engineering"` literal'leri `SeedDataConstants`'a bağlı olmadığından (yalnızca `ResolveDemoOrgUnit`'in nesne kimliği mantığını test ediyorlar) değiştirilmedi.
 
-## Build/Test — DOĞRULANAMADI (altyapı sorunu)
+## Build/Test — Doğrulama turu (2026-09-19)
 
-`dotnet build` bu oturumda **çalıştırılamadı**. Kök neden kod ile ilgili değil, makine genelinde bir kaynak tükenmesi:
+İlk oturumda disk dolu olduğu için yapılamayan derleme/test doğrulaması tamamlandı:
 
-- Host `C:` diski **%100 dolu** (563G/563G, ~3.4M boş) — `df -h /` ile doğrulandı.
-- İlk `dotnet build Sense.slnx` denemesi gerçekten başladı (restore + derleme aşamasına geçti) ama test projelerinin native runtime asset kopyalama adımında (`QuestPDF`, `System.Drawing.Common` vb. .dll/.dylib dosyaları) art arda `Input/output error` ve nihayetinde `No space left on device` hatalarıyla karşılaştı; Docker konteyneri "unexpected EOF" ile çöktü, ardından Docker Desktop'ın kendisi bir süre `npipe` bağlantı hatası verip tamamen yanıtsız kaldı.
-- Docker geri geldiğinde, daha dar kapsamlı bir deneme (`dotnet build src/Sense.Api/Sense.Api.csproj`) de aynı "No space left on device" hatasıyla (bu kez host tarafında, `tail` çıktı dosyasına bile yazılamadı) başarısız oldu.
-- Bu, birden fazla paralel agent oturumunun aynı makinede eşzamanlı Docker/dotnet kullanmasından kaynaklanan **paylaşılan bir altyapı sorunu** (bkz. proje hafızası "Parallel sessions in one directory") — bu karttaki kod değişiklikleriyle hiçbir ilgisi yok.
+- `dev` üzerine rebase edildi (çakışma yok).
+- `dotnet build src/Sense.Migrator`: 0 hata. `Sense.Api`, `Sense.Tests.Integration` ile birlikte derlendi: 0 hata.
+- `dotnet test tests/Sense.Tests.Integration --filter FullyQualifiedName~Sense.Tests.Integration.SeedData`: **16/16 yeşil**.
+- Yeni testler (`DemoEmployeeSeedTests`): erkek/kadın isim havuzları kesişmiyor; her havuz adı kendi cinsiyetine eşleniyor; sabit hesaplar (`Olena` → Kadın, `Test` → Erkek). Bunun için `DataSeeder.DemoGenderFor` `private` → `internal` yapıldı (`InternalsVisibleTo("Sense.Tests.Integration")` zaten var).
+- Repo genelinde (web/e2e dahil) eski İngilizce departman/şirket literal'lerinin (`"Sales"`, `"Engineering"`, `"HR"`, `"Headquarters"`) `SeedDataConstants`'a bağlı başka kullanımı yok; Module testlerindeki aynı literal'ler bağımsız kurulumlar.
+- Migration yok (yalnız seed verisi + resx değeri).
 
-**Yapılan doğrulama (build yerine):** Tüm değişiklikler elle, dikkatli bir statik inceleme ile doğrulandı:
-- Yeniden adlandırılan tüm literal eşleşmeler (`"Sales"`, `"Engineering"`, `"HR"`, `"Headquarters"`) için repo genelinde `grep` ile tüm kullanım yerleri bulundu ve tutarlı şekilde güncellendi (`DataSeeder.cs`, `DataSeeder.CompanyEvents.cs`, `DataSeeder.DemoEmployees.cs`, `DemoEmployeeSeedTests.cs`).
-- `EmployeeInfo` record'unun `Gender` parametresinin sırası/tipi (`Gender Gender = Gender.Unspecified`, 9. pozisyonel parametre) doğrulandı; yeni `Gender: gender` named argument kullanımı derleme açısından geçerli (positional + sonrasında named parametreler).
-- `SeedDataConstants.TurkishFirstNames`/`TurkishLastNames`'in tek kullanıcısının `DataSeeder.DemoEmployees.cs` olduğu doğrulandı (başka hiçbir dosya referans vermiyor), bölme işleminin güvenli olduğu teyit edildi.
-- `SeedDataConstants` kullanan tek test dosyasının (`DemoEmployeeSeedTests.cs`) etkilenen tek satırı güncellendi; diğer test dosyalarındaki (`OrgChartBuilderTests`, `EmployeeIntegrationTests` vb.) benzer literal'lerin `SeedDataConstants`'tan bağımsız olduğu doğrulandı.
-
-**Yapılamayan:** Gerçek derleyici/derleme doğrulaması, xUnit test çalıştırması. **Bu oturumun ardından disk alanı açıldığında `dotnet build Sense.slnx` (en azından `src/Sense.Api/Sense.Api.csproj` ve `tests/Sense.Tests.Integration/Sense.Tests.Integration.csproj`) mutlaka çalıştırılmalı** — merge gate'in "dotnet build yeşil olmalı" şartı hâlâ açık.
+**Not:** Seed daha önce çalıştırılmış bir demo veritabanı eski İngilizce departman/şirket adlarını ve `Unspecified` cinsiyetleri korur; demo ortamında görmek için DB yeniden seed edilmeli. `attendance.work_schedule.default.name` ise DB'de anahtar olarak tutulduğundan tüm tenantlarda anında yeni değeri gösterir.
 
 ## Kapsam Dışı / Not
 

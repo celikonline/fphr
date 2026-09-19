@@ -1,4 +1,5 @@
 using Sense.Api.SeedData;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Shouldly;
@@ -106,5 +107,28 @@ public sealed class DemoEmployeeSeedTests
         secondOverflowTitle.ShouldBe(hrSpec.Titles[1 % hrSpec.Titles.Count]);
         firstOverflowTitle.ShouldNotBe(SeedDataConstants.DemoHrTitle);
         secondOverflowTitle.ShouldNotBe(SeedDataConstants.DemoHrTitle);
+    }
+
+    // senseik-043: demo Gender is derived from the first name so Reports -> Cinsiyet Dağılımı is meaningful.
+    [Fact]
+    public void DemoGenderPools_AreDisjoint_SoAPickedNameMapsToExactlyOneGender()
+    {
+        SeedDataConstants.TurkishMaleFirstNames.Intersect(SeedDataConstants.TurkishFemaleFirstNames, StringComparer.OrdinalIgnoreCase)
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DemoGenderFor_MapsEveryPoolNameToItsPoolsGender()
+    {
+        SeedDataConstants.TurkishFemaleFirstNames.ShouldAllBe(name => DataSeeder.DemoGenderFor(name) == Gender.Female);
+        SeedDataConstants.TurkishMaleFirstNames.ShouldAllBe(name => DataSeeder.DemoGenderFor(name) == Gender.Male);
+    }
+
+    [Theory]
+    [InlineData("Olena", Gender.Female)] // fixed foreign account, not in the Turkish pools
+    [InlineData("Test", Gender.Male)] // fixed "Test Yaş" account falls back to Male
+    public void DemoGenderFor_HandlesTheFixedAccountsOutsideThePools(string firstName, Gender expected)
+    {
+        DataSeeder.DemoGenderFor(firstName).ShouldBe(expected);
     }
 }
