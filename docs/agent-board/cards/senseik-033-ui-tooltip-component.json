@@ -1,0 +1,16 @@
+{
+  "id": "senseik-033",
+  "title": "UI tooltip bileşeni — hâlâ eksik mi doğrula, gerekiyorsa tamamla",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/ui-tooltip-verify",
+  "worktree": ".claude/worktrees/ui-tooltip",
+  "acceptance": [
+    "web/src/components/ui/ altında ayrı bir tooltip sarmalayıcı bileşeni var mı yok mu netleştirildi (eski a/ui-data-table dalında 'tooltip component + icon button kullanımı' vardı, date-picker.tsx zaten mevcut dev'de var, tooltip'in durumu belirsiz)",
+    "Eksikse: ikon butonlar için tutarlı bir Tooltip sarmalayıcı eklendi (Mantine Tooltip üzerine, mevcut projede zaten kullanılıyorsa doğrudan Mantine Tooltip kullanımı yeterli olabilir — YAGNI, gereksiz sarmalayıcı açma)",
+    "Mevcutsa: bu kart 'gerek yokmuş' notuyla kapatılıyor, kod değişikliği yapılmıyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint",
+  "handoff": "docs/handoffs/ui-tooltip-verify.md",
+  "source": "Eski dal: a/ui-data-table (4 commit, 2026-09-15, 304 commit geride kaldığı için merge edilmedi) — 'feat(web): add tooltip component and use it for icon buttons'. Kullanıcı isteğiyle (2026-09-18) doğrulama/tamamlama kartına dönüştürüldü."
+}

@@ -33,7 +33,21 @@ public sealed class LeaveEmployeeOvertimeController : ApiControllerBase
     [ProducesResponseType<OvertimeSubmissionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateOnBehalf(Guid employeeId, [FromBody] OvertimeRequestBody request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
-            new CreateOvertimeRequestOnBehalfCommand(employeeId, request.WorkDate, request.StartTime, request.DurationMinutes, request.Description), ct));
+            new CreateOvertimeRequestOnBehalfCommand(
+                employeeId, request.WorkDate, request.StartTime, request.DurationMinutes, request.Description, request.PayRateKind),
+            ct));
+
+    /// <summary>HR/yönetici oran düzeltmesi (m.41, kart senseik-012 §1): yalnız Pending talepler için.</summary>
+    [HttpPost("overtimes/" + ApiRoutes.IdParam + "/pay-rate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> ChangePayRate(Guid employeeId, Guid id, [FromBody] ChangeOvertimePayRateKindRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ChangeOvertimePayRateKindCommand(id, request.PayRateKind), ct));
+
+    /// <summary>270 saat yıllık sınır göstergesi (kart senseik-012), çalışan kartı görünümü.</summary>
+    [HttpGet("overtimes/annual-usage")]
+    [ProducesResponseType<AnnualOvertimeUsageDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AnnualUsage(Guid employeeId, [FromQuery] int? year, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeAnnualOvertimeUsageQuery(employeeId, year), ct));
 
     [HttpPost("overtimes/" + ApiRoutes.IdParam + "/convert-to-time-off")]
     [ProducesResponseType<OvertimeConversionDto>(StatusCodes.Status200OK)]

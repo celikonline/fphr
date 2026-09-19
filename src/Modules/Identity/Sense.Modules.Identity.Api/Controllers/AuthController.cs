@@ -7,6 +7,7 @@ using Sense.Modules.Identity.Application.Auth;
 using Sense.Modules.Identity.Application.Invitations;
 using Sense.Modules.Identity.Application.Tenants;
 using Sense.Modules.Identity.Application.Users;
+using Sense.Modules.Identity.Domain.Roles;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Identity.Api.Controllers;
@@ -102,7 +103,22 @@ public sealed class MeController : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType<MeDto>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Get(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetMeQuery(), ct));
+    public async Task<IActionResult> Get(CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new GetMeQuery(), ct);
+        return result.IsSuccess ? Ok(Localize(result.Value)) : Problem(result.Error);
+    }
+
+    /// <summary>Sistem rolü adlarını RolesController.Localize ile aynı kaynak anahtarına (roles.{code}.name) bağlar,
+    /// böylece "Profilim" ekranı Kullanıcılar → Roller listesiyle aynı Türkçe rol adını gösterir.</summary>
+    private MeDto Localize(MeDto me) => me with
+    {
+        Roles = me.Roles
+            .Select(r => SystemRoleCodes.All.Contains(r.Code)
+                ? r with { Name = Localizer.MessageOrText(SystemRoleCodes.NameKey(r.Code)) }
+                : r)
+            .ToList(),
+    };
 
     /// <summary>Güvenlik ekranı: MFA açık mı, yarım kalmış kayıt var mı.</summary>
     [HttpGet("mfa")]

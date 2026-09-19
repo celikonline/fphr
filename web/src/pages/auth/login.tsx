@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
   Alert,
+  Avatar,
   Button,
+  Card,
   Checkbox,
   Group,
   Menu,
@@ -17,12 +19,10 @@ import {
   ThemeIcon,
   Title,
   Tooltip,
-  UnstyledButton,
 } from "@mantine/core";
 import {
   ArrowLeft,
   ArrowRight,
-  Building2,
   Palmtree,
   Eye,
   EyeOff,
@@ -139,7 +139,7 @@ function writeStoredMfaToken(token: string | null) {
 }
 
 export default function LoginPage() {
-  const { t } = useTranslation(["auth"]);
+  const { t } = useTranslation(["auth", "common"]);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
   const completeMfaLogin = useAuthStore((state) => state.completeMfaLogin);
@@ -469,40 +469,45 @@ export default function LoginPage() {
         )}
       </main>
 
+      {/* senseik-025: closing (X / ESC / backdrop, all Mantine defaults here) only clears tenantChoices — it never
+       * touches isLoading, email or password, so the login form underneath is already interactive again and the
+       * user can retry with the same or a different account without a reload. */}
       <Modal
         opened={tenantChoices !== null}
         onClose={() => setTenantChoices(null)}
         title={t("auth:selectCompany.title")}
         centered
+        size="sm"
+        closeButtonProps={{ "aria-label": t("common:close") }}
       >
-        <Text size="sm" c="dimmed" mb="md">
+        <Text size="sm" c="dimmed" mb="lg">
           {t("auth:selectCompany.subtitle")}
         </Text>
         <Stack gap="xs">
           {tenantChoices?.map((tenant) => (
-            <UnstyledButton
+            <Card
               key={tenant.tenantId}
+              component="button"
+              type="button"
               onClick={() => handleSelectTenant(tenant)}
               disabled={isLoading}
-              className={classes.tenantOption}
+              className={classes.tenantCard}
             >
               <Group justify="space-between" wrap="nowrap">
-                <Group gap="sm" wrap="nowrap">
-                  <ThemeIcon variant="light" color="brand" size={36} radius="md">
-                    <Building2 size={18} />
-                  </ThemeIcon>
-                  <div>
-                    <Text fw={600} size="sm">
+                <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
+                  <Avatar name={tenant.name} color="initials" radius="md" size={42} />
+                  <div style={{ minWidth: 0 }}>
+                    <Text fw={600} size="sm" truncate>
                       {tenant.name}
                     </Text>
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="dimmed" truncate>
                       {tenant.slug}
                     </Text>
                   </div>
                 </Group>
-                <ArrowRight size={16} />
+                <ArrowRight size={16} style={{ flexShrink: 0 }} />
               </Group>
-            </UnstyledButton>
+            </Card>
           ))}
         </Stack>
       </Modal>

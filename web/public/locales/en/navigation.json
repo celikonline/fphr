@@ -18,7 +18,11 @@
     "settings": "Settings",
     "account": "My profile",
     "support": "Support",
-    "trust": "Trust & security"
+    "trust": "Trust & security",
+    "collapseSidebar": "Collapse sidebar",
+    "expandSidebar": "Expand sidebar",
+    "workflowInbox": "Approval inbox",
+    "sharedFiles": "Shared files"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
@@ -44,7 +48,8 @@
     "recruitmentCandidates": "Candidates",
     "recruitmentRequisitions": "Requisitions",
     "analytics": "Analytics",
-    "workflowInbox": "Approval inbox"
+    "workflowInbox": "Approval inbox",
+    "companyCalendar": "Event calendar"
   },
   "settings": {
     "company": "Company information",
@@ -73,6 +78,10 @@
     "assetCategoriesDesc": "Equipment category catalog (computer, phone, vehicle, etc.)",
     "expenseCategories": "Expense categories",
     "expenseCategoriesDesc": "The expense category catalog and limits used when adding receipts",
+    "ohsHazardClassification": "OHS hazard class",
+    "ohsHazardClassificationDesc": "Hazard class history for each workplace location",
+    "ohsRiskAssessments": "Risk assessments",
+    "ohsRiskAssessmentsDesc": "Recorded risk assessments and their renewal due dates",
     "approvalFlowsDesc": "Approval steps per request type",
     "rules": "Rules",
     "workCalendars": "Work calendars",
@@ -82,6 +91,8 @@
     "system": "System settings",
     "access": "Access settings",
     "accessDesc": "What employees can see on home, account and calendar",
+    "securityPolicy": "Security policy",
+    "securityPolicyDesc": "Mandatory two-factor authentication (2FA) for specific roles",
     "usersRoles": "Users & roles",
     "usersRolesDesc": "Users, access types, roles and permissions",
     "auditLog": "Audit log",

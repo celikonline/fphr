@@ -26,3 +26,19 @@ export function daysUntil(value: string): number {
   const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return Math.round((parseDateOnly(value).getTime() - start.getTime()) / 86_400_000);
 }
+
+/** Adds (or, with a negative count, subtracts) whole days to a backend `DateOnly`, returned as a `DateOnly`. */
+export function addDaysToDateOnly(value: string, days: number): string {
+  const date = parseDateOnly(value);
+  date.setDate(date.getDate() + days);
+  return toDateOnly(date);
+}
+
+/** Every `DateOnly` from `start` to `end` inclusive (empty when `end` is before `start`). */
+export function enumerateDateOnlyRange(start: string, end: string): string[] {
+  const dates: string[] = [];
+  for (let cursor = parseDateOnly(start); cursor <= parseDateOnly(end); cursor.setDate(cursor.getDate() + 1)) {
+    dates.push(toDateOnly(cursor));
+  }
+  return dates;
+}

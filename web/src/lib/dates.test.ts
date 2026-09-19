@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDateOnly, daysUntil, parseDateOnly, toDateOnly } from "./dates";
+import { addDaysToDateOnly, enumerateDateOnlyRange, formatDateOnly, daysUntil, parseDateOnly, toDateOnly } from "./dates";
 
 describe("dates", () => {
   describe("formatDateOnly", () => {
@@ -98,6 +98,42 @@ describe("dates", () => {
       const parsed = parseDateOnly(original);
       const serialized = toDateOnly(parsed);
       expect(serialized).toBe(original);
+    });
+  });
+
+  describe("addDaysToDateOnly", () => {
+    it("adds positive days within the same month", () => {
+      expect(addDaysToDateOnly("2026-09-17", 3)).toBe("2026-09-20");
+    });
+
+    it("subtracts days with a negative count", () => {
+      expect(addDaysToDateOnly("2026-09-17", -3)).toBe("2026-09-14");
+    });
+
+    it("rolls over a month boundary", () => {
+      expect(addDaysToDateOnly("2026-09-29", 3)).toBe("2026-10-02");
+    });
+
+    it("rolls over a year boundary", () => {
+      expect(addDaysToDateOnly("2026-12-30", 3)).toBe("2027-01-02");
+    });
+  });
+
+  describe("enumerateDateOnlyRange", () => {
+    it("returns every date from start to end inclusive", () => {
+      expect(enumerateDateOnlyRange("2026-09-17", "2026-09-20")).toEqual(["2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20"]);
+    });
+
+    it("returns a single-element array when start equals end", () => {
+      expect(enumerateDateOnlyRange("2026-09-17", "2026-09-17")).toEqual(["2026-09-17"]);
+    });
+
+    it("returns an empty array when end is before start", () => {
+      expect(enumerateDateOnlyRange("2026-09-20", "2026-09-17")).toEqual([]);
+    });
+
+    it("spans a month boundary", () => {
+      expect(enumerateDateOnlyRange("2026-09-29", "2026-10-02")).toEqual(["2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02"]);
     });
   });
 });

@@ -168,8 +168,8 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
                 {unitName}
               </Text>
             )}
-            <EmployeeStatusBadge status={employee.status} />
-            <AccountStatusBadge status={employee.accountStatus} />
+            <EmployeeStatusBadge status={employee.status} label={t("employees:card.statusLabel")} />
+            <AccountStatusBadge status={employee.accountStatus} label={t("employees:card.accountStatusLabel")} />
           </Group>
         </div>
         {(showInvite || lifecycleActions.length > 0) && (

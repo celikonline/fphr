@@ -53,6 +53,7 @@
   "departmentDistribution": {
     "title": "Mitarbeiterverteilung",
     "empty": "Es gibt keine Mitarbeitenden zum Anzeigen.",
-    "unassigned": "Nicht zugeordnet"
+    "unassigned": "Nicht zugeordnet",
+    "total": "Gesamt"
   }
 }

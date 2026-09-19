@@ -126,6 +126,21 @@ public static class EmployeeDomainErrors
     public const string BankAccountTypeRequired = "employee.bank_account_type_required";
     public const string BankNameTooLong = "employee.bank_name_too_long";
     public const string BankAccountNoteTooLong = "employee.bank_account_note_too_long";
+
+    public const string SicilNumarasiTooLong = "employee.sicil_numarasi_too_long";
+
+    /// <summary>Türk uyruklu bir çalışana 99 ile başlayan (yabancı formatlı) kimlik numarası girilemez.</summary>
+    public const string NationalIdForeignPrefixForTurkish = "employee.national_id_foreign_prefix_for_turkish";
+
+    /// <summary>Yabancı uyruklu bir çalışana NationalId verilirse, 99 ile başlayan yabancı kimlik formatında olmalı.</summary>
+    public const string NationalIdNotForeignForForeignNational = "employee.national_id_not_foreign_for_foreign_national";
+
+    /// <summary>Yabancı uyruklu bir çalışan için Yabancı Kimlik No veya Pasaport No alanlarından en az biri zorunludur.</summary>
+    public const string ForeignIdentificationRequired = "employee.foreign_identification_required";
+
+    public const string ForeignIdNumberTooLong = "employee.foreign_id_number_too_long";
+    public const string PassportNumberTooLong = "employee.passport_number_too_long";
+    public const string SgkOccupationCodeTooLong = "employee.sgk_occupation_code_too_long";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -158,4 +173,15 @@ public static class EmployeeLimits
 
     /// <summary>"TR** **** **** **** **** **12 34": at most 34 characters plus group separators.</summary>
     public const int MaskedIbanMaxLength = 42;
+
+    /// <summary>Tenant-unique employee identifier (senseik-009/F-02), replacing NationalId as the external match key over time (see IEmployeeLookup remarks).</summary>
+    public const int SicilNumarasiMaxLength = 30;
+
+    /// <summary>Same shape as NationalId (11-digit, "99" prefix for foreign) - see TcKimlik.</summary>
+    public const int ForeignIdNumberLength = 11;
+
+    public const int PassportNumberMaxLength = 20;
+
+    /// <summary>SGK "meslek kodu" (ISCO-08 based, senseik-010/F-03).</summary>
+    public const int SgkOccupationCodeMaxLength = 20;
 }

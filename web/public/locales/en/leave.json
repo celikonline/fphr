@@ -327,7 +327,8 @@
     "remainingBalance": "Remaining leave balance",
     "overlappingLeaves": {
       "title": "Overlapping leaves ({{count}})",
-      "more": "+{{count}} more"
+      "more": "+{{count}} more (not listed)",
+      "viewAll": "View all ({{count}})"
     }
   },
   "request": {
@@ -376,11 +377,20 @@
     "subtitle": "Approved and pending leave.",
     "previous": "Previous month",
     "next": "Next month",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "previousDay": "Previous day",
+    "nextDay": "Next day",
     "today": "Today",
     "employee": "Employee",
     "empty": "No leave in this period.",
     "masked": "On leave",
-    "overlappingCount": "{{count}} approved leave requests overlap on this day"
+    "overlappingCount": "{{count}} approved leave requests overlap on this day",
+    "view": {
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    }
   },
   "overtime": {
     "myTitle": "My overtime",
@@ -412,6 +422,17 @@
       "workday": "Workday",
       "weeklyRest": "Weekly rest day",
       "publicHoliday": "Public holiday"
+    },
+    "payRate": {
+      "label": "Pay rate",
+      "hint": "Labor Law art. 41: overtime beyond the 45-hour weekly cap pays 50% extra; overtime within a contractually shortened week pays 25% extra.",
+      "rate25": "25% extra",
+      "rate50": "50% extra"
+    },
+    "annualUsage": {
+      "title": "{{year}} annual overtime",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Exceeded the statutory 270-hour annual limit."
     },
     "sources": {
       "manual": "Request",

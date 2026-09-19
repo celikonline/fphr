@@ -135,4 +135,90 @@ public sealed class GetMeHandlerTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.UserId.ShouldBe(platformUser.Id);
     }
+
+    /// <summary>
+    /// Ortak fikstür: normal (impersonation olmayan) giriş için tenant + rol + kullanıcı grafiğini kurar.
+    /// senseik-051 - tenant.SecurityPolicy çağıran tarafından ayarlanır, sonra Handle() ile Features.MfaSetupRequired doğrulanır.
+    /// </summary>
+    private static GetMeHandler NormalHandlerFor(Tenant tenant, User user, Role role, out ITenantContext tenantContext)
+    {
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.IsAuthenticated.Returns(true);
+        currentUser.UserId.Returns(user.Id);
+        currentUser.ImpersonatorUserId.Returns((Guid?)null);
+
+        tenantContext = Substitute.For<ITenantContext>();
+        tenantContext.IsResolved.Returns(true);
+        tenantContext.TenantId.Returns(tenant.Id);
+
+        var users = Substitute.For<IUserRepository>();
+        users.GetByIdAsync(user.Id, Arg.Any<CancellationToken>()).Returns(user);
+
+        var tenants = Substitute.For<ITenantRepository>();
+        tenants.GetByIdAsync(tenant.Id, Arg.Any<CancellationToken>()).Returns(tenant);
+
+        var roles = Substitute.For<IRoleRepository>();
+        roles.GetByIdsAsync(Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>()).Returns([role]);
+
+        var permissions = Substitute.For<IPermissionService>();
+        permissions.GetPermissionsAsync(user.Id, Arg.Any<CancellationToken>()).Returns(new HashSet<string>());
+        permissions.GetScopeAsync(user.Id, Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(DataScope.Self);
+
+        return HandlerWith(currentUser, tenantContext, users, tenants, roles, permissions, sessions: null);
+    }
+
+    [Fact]
+    public async Task Handle_UserRoleEnforcedByPolicy_MfaDisabled_SetsMfaSetupRequiredTrue()
+    {
+        var tenant = Tenant.Create("acme", "Acme", DateTime.UtcNow, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+        tenant.UpdateSecurityPolicy(new TenantSecurityPolicy { RequireMfaForRoles = [SystemRoleCodes.PayrollSpecialist] });
+
+        var role = Role.CreateSystem(tenant.Id, SystemRoleCodes.PayrollSpecialist);
+        var user = User.Create(tenant.Id, "bordro@example.com", "Bordro", "Uzmanı", "tr").Value;
+        user.SetRoles([role.Id]);
+        // MfaEnabled false (varsayılan) - zorunlu rol + kapalı MFA -> kurulum akışına yönlendirilmeli.
+
+        var handler = NormalHandlerFor(tenant, user, role, out _);
+        var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Features.MfaSetupRequired.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Handle_UserRoleEnforcedByPolicy_MfaAlreadyEnabled_SetsMfaSetupRequiredFalse()
+    {
+        var tenant = Tenant.Create("acme", "Acme", DateTime.UtcNow, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+        tenant.UpdateSecurityPolicy(new TenantSecurityPolicy { RequireMfaForRoles = [SystemRoleCodes.Owner] });
+
+        var role = Role.CreateSystem(tenant.Id, SystemRoleCodes.Owner);
+        var user = User.Create(tenant.Id, "sahip@example.com", "Hesap", "Sahibi", "tr").Value;
+        user.SetRoles([role.Id]);
+        user.BeginMfaEnrollment("encrypted-secret");
+        user.EnableMfa("encrypted-secret");
+
+        var handler = NormalHandlerFor(tenant, user, role, out _);
+        var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.MfaEnabled.ShouldBeTrue();
+        result.Value.Features.MfaSetupRequired.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_PolicyDoesNotEnforceCallersRole_SetsMfaSetupRequiredFalse()
+    {
+        var tenant = Tenant.Create("acme", "Acme", DateTime.UtcNow, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+        tenant.UpdateSecurityPolicy(new TenantSecurityPolicy { RequireMfaForRoles = [SystemRoleCodes.Owner] });
+
+        var role = Role.CreateSystem(tenant.Id, SystemRoleCodes.Employee);
+        var user = User.Create(tenant.Id, "calisan@example.com", "Çalışan", "Kullanıcı", "tr").Value;
+        user.SetRoles([role.Id]);
+
+        var handler = NormalHandlerFor(tenant, user, role, out _);
+        var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Features.MfaSetupRequired.ShouldBeFalse();
+    }
 }

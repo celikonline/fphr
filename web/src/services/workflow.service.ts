@@ -62,6 +62,40 @@ export async function deactivatePolicy(id: string): Promise<void> {
 
 // ---------------------------------------------------------------- Inbox
 
+/** "Overtime" summary field - one of `OvertimeApprovalSummary`/`LeaveApprovalSummary` on `ApprovalRequestSummaryDto`. */
+export interface OvertimeApprovalSummaryDto {
+  /** DateOnly "yyyy-MM-dd" - see `formatDateOnly`. */
+  workDate: string;
+  /** TimeOnly "HH:mm:ss" - see `formatTimeOnly`. */
+  startTime: string;
+  durationMinutes: number;
+  reason?: string | null;
+}
+
+/** "Leave" summary field - one of `OvertimeApprovalSummary`/`LeaveApprovalSummary` on `ApprovalRequestSummaryDto`. */
+export interface LeaveApprovalSummaryDto {
+  /** DateOnly "yyyy-MM-dd" - see `formatDateOnly`. */
+  startDate: string;
+  /** DateOnly "yyyy-MM-dd" - see `formatDateOnly`. */
+  endDate: string;
+  /** camelCased `LeaveTypeCode` enum name (e.g. "annual", "sick") - translate via `leave:code.${leaveTypeCode}` when leaveTypeName is unset. */
+  leaveTypeCode: string;
+  leaveTypeName?: string | null;
+  days: number;
+}
+
+/**
+ * Request-type-specific projection of an inbox task's subject entity (OvertimeRequest/LeaveRequest), so the card can
+ * show more than a raw subjectId. requestDate is the request's own date (overtime work date / leave start date) -
+ * shown next to submittedAt. Exactly one of overtime/leave is set today; both unset means no provider is registered
+ * yet for this requestType (Advance/Expense/Requisition).
+ */
+export interface ApprovalRequestSummaryDto {
+  requestDate: string;
+  overtime?: OvertimeApprovalSummaryDto | null;
+  leave?: LeaveApprovalSummaryDto | null;
+}
+
 export interface InboxTaskDto {
   taskId: string;
   approvalRequestId: string;
@@ -72,6 +106,7 @@ export interface InboxTaskDto {
   isFallbackRoleTask: boolean;
   /** BE ekliyor (tur 2 sözleşmesi); henüz gelmiyorsa undefined/null olarak ele alınır. */
   submittedAt?: string | null;
+  summary?: ApprovalRequestSummaryDto | null;
 }
 
 export async function listInbox(): Promise<InboxTaskDto[]> {

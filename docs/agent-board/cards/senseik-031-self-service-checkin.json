@@ -1,0 +1,17 @@
+{
+  "id": "senseik-031",
+  "title": "PDKS: QR kod + GPS ile self-servis check-in, canlı içeride/dışarıda panosu",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/attendance-self-checkin",
+  "worktree": ".claude/worktrees/attendance-self-checkin",
+  "acceptance": [
+    "Çalışan mobil/web'den QR kod okutarak giriş-çıkış kaydı oluşturabiliyor (yeni bir self-servis check-in endpoint'i, mevcut PDKS CSV import'una alternatif/ek kanal)",
+    "Saha/uzaktan çalışanlar için GPS konum doğrulamalı check-in (konum kaydı, opsiyonel geofence kontrolü)",
+    "Canlı 'içeride/dışarıda' panosu: o an kim işte kim değil, gerçek zamanlı liste (ofis ekranına yansıtılabilir görünüm)",
+    "Bu yeni kanaldan gelen kayıtlar mevcut AttendanceDay modeline PDKS import ile aynı şekilde akıyor (kod tekrarı yok, ortak bir 'giriş kaydı oluştur' iç servisi kullanılıyor)"
+  ],
+  "merge_gate": "dotnet test (Attendance) + pnpm --filter web typecheck + demo'da QR/GPS check-in akışı uçtan uca çalışıyor",
+  "handoff": "docs/handoffs/attendance-self-checkin.md",
+  "source": "Kullanıcı isteği (2026-09-18) — kolayik.com/pdks rakip analizi. DOĞRULANDI: SenseİK'te QR/GPS/self-servis check-in ve canlı içeride-dışarıda panosu YOK (sadece toplu PDKS CSV import var). NOT: senseik-012/014 (Attendance motor genişletmesi) ile AYNI dosyalara (AttendanceDay) dokunabilir — o dalga merge olmadan BAŞLATILMAMALI."
+}

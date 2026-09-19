@@ -37,6 +37,12 @@ public static class AttendanceDomainErrors
     public const string CompensatoryLedgerNotFound = "attendance.compensatory.not_found";
     public const string CompensatoryLedgerNotOpen = "attendance.compensatory.not_open";
     public const string CompensatoryMinutesInvalid = "attendance.compensatory.minutes_invalid";
+    public const string EqualizationPeriodMonthsInvalid = "attendance.equalization.period_months_invalid";
+    public const string EqualizationWrittenAgreementRequired = "attendance.equalization.written_agreement_required";
+    public const string EqualizationAnchorMonthInvalid = "attendance.equalization.anchor_month_invalid";
+    public const string EqualizationPeriodNotOpen = "attendance.equalization.period_not_open";
+    public const string EqualizationPeriodNotYetEnded = "attendance.equalization.period_not_yet_ended";
+    public const string EqualizationMinutesInvalid = "attendance.equalization.minutes_invalid";
 }
 
 /// <summary>Domain limits.</summary>

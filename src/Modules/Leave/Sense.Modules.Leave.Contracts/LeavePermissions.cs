@@ -9,84 +9,84 @@ namespace Sense.Modules.Leave.Contracts;
 public static class LeavePermissions
 {
     private const string Module = "leave";
-    private const string Group = "Leave";
+    private const string Group = "İzin";
 
     public static readonly Permission RuleSetsRead = new(
-        "leave.rule_sets.read", Module, "Read Leave Rule Sets", Group, "View leave rule sets and their leave types");
+        "leave.rule_sets.read", Module, "İzin Kural Setlerini Görüntüleme", Group, "İzin kural setlerini ve içerdikleri izin türlerini görüntüleme");
 
     public static readonly Permission RuleSetsManage = new(
-        "leave.rule_sets.manage", Module, "Manage Leave Rule Sets", Group, "Create, clone, rename and set the default leave rule set");
+        "leave.rule_sets.manage", Module, "İzin Kural Seti Yönetimi", Group, "İzin kural seti oluşturma, çoğaltma, yeniden adlandırma ve varsayılan olarak ayarlama");
 
     public static readonly Permission RuleSetsAssign = new(
-        "leave.rule_sets.assign", Module, "Assign Leave Rule Sets", Group, "Assign a leave rule set to employees");
+        "leave.rule_sets.assign", Module, "İzin Kural Seti Atama", Group, "Çalışanlara izin kural seti atama");
 
     public static readonly Permission TypesManage = new(
-        "leave.types.manage", Module, "Manage Leave Types", Group, "Add, edit and disable leave types inside a rule set");
+        "leave.types.manage", Module, "İzin Türü Yönetimi", Group, "Bir kural seti içinde izin türü ekleme, düzenleme ve pasifleştirme");
 
     public static readonly Permission BalancesRead = new(
-        "leave.balances.read", Module, "Read Leave Balances", Group, "View employees' leave balances and ledger");
+        "leave.balances.read", Module, "İzin Bakiyelerini Görüntüleme", Group, "Çalışanların izin bakiyelerini ve hareket dökümünü görüntüleme");
 
     public static readonly Permission BalancesAdjust = new(
-        "leave.balances.adjust", Module, "Adjust Leave Balances", Group, "Post manual balance adjustments");
+        "leave.balances.adjust", Module, "İzin Bakiyesi Düzeltme", Group, "Manuel bakiye düzeltmesi işleme");
 
     public static readonly Permission BalancesRecalculate = new(
-        "leave.balances.recalculate", Module, "Recalculate Leave Balances", Group, "Regenerate accruals and carry-overs for employees");
+        "leave.balances.recalculate", Module, "İzin Bakiyelerini Yeniden Hesaplama", Group, "Çalışanlar için tahakkuk ve devir bakiyelerini yeniden üretme");
 
     public static readonly Permission ExtraGrantsManage = new(
-        "leave.extra_grants.manage", Module, "Manage Extra Leave", Group, "Grant extra leave days");
+        "leave.extra_grants.manage", Module, "Ek İzin Yönetimi", Group, "Ek izin günü tanımlama");
 
     public static readonly Permission MyBalances = new(
-        "leave.my.balances", Module, "View My Leave Balances", Group, "View the caller's own leave balances");
+        "leave.my.balances", Module, "Kendi İzin Bakiyemi Görüntüleme", Group, "Kendi izin bakiyelerinizi görüntüleme");
 
     public static readonly Permission RequestsRead = new(
-        "leave.requests.read", Module, "Read Leave Requests", Group, "View employees' leave requests");
+        "leave.requests.read", Module, "İzin Taleplerini Görüntüleme", Group, "Çalışanların izin taleplerini görüntüleme");
 
     /// <summary>Self-service create/edit/withdraw of own requests; "*.my.*" so every base role gets it (11.3.5 names it leave.requests.create).</summary>
     public static readonly Permission MyRequests = new(
-        "leave.my.requests", Module, "Manage My Leave Requests", Group, "Submit, edit, withdraw and view the caller's own leave requests");
+        "leave.my.requests", Module, "Kendi İzin Taleplerimi Yönetme", Group, "Kendi izin talebinizi oluşturma, düzenleme, geri çekme ve görüntüleme");
 
     public static readonly Permission OvertimesRead = new(
-        "leave.overtimes.read", Module, "Read Overtime", Group, "View employees' overtime requests and conversions");
+        "leave.overtimes.read", Module, "Fazla Mesaiyi Görüntüleme", Group, "Çalışanların fazla mesai taleplerini ve dönüşümlerini görüntüleme");
 
     /// <summary>Self-service submit/withdraw/list of own overtime (11.3.5 names it leave.overtimes.create); "*.my.*" reaches every base role.</summary>
     public static readonly Permission MyOvertimes = new(
-        "leave.my.overtimes", Module, "Manage My Overtime", Group, "Submit, withdraw and view the caller's own overtime requests");
+        "leave.my.overtimes", Module, "Kendi Fazla Mesaimi Yönetme", Group, "Kendi fazla mesai talebinizi oluşturma, geri çekme ve görüntüleme");
 
     public static readonly Permission OvertimesCreateOnBehalf = new(
-        "leave.overtimes.create_on_behalf", Module, "Add Overtime For Employees", Group, "Create overtime requests on behalf of employees");
+        "leave.overtimes.create_on_behalf", Module, "Çalışan Adına Fazla Mesai Ekleme", Group, "Çalışanlar adına fazla mesai talebi oluşturma");
 
     public static readonly Permission OvertimesConvert = new(
-        "leave.overtimes.convert", Module, "Convert Overtime", Group, "Convert approved overtime to extra leave");
+        "leave.overtimes.convert", Module, "Fazla Mesai Dönüştürme", Group, "Onaylanmış fazla mesaiyi ek izne dönüştürme");
 
     public static readonly Permission OvertimesOverridePayable = new(
-        "leave.overtimes.override_payable", Module, "Override Payable Overtime", Group, "Convert the full overtime duration instead of the payable minutes");
+        "leave.overtimes.override_payable", Module, "Ödenecek Fazla Mesaiyi Geçersiz Kılma", Group, "Ödenecek dakikalar yerine fazla mesainin tamamını dönüştürme");
 
     public static readonly Permission OvertimeConsentsManage = new(
-        "leave.overtime_consents.manage", Module, "Manage Overtime Consents", Group, "Record, view and revoke employees' written overtime consents");
+        "leave.overtime_consents.manage", Module, "Fazla Mesai Muvafakati Yönetimi", Group, "Çalışanların yazılı fazla mesai muvafakatini kaydetme, görüntüleme ve iptal etme");
 
     public static readonly Permission RequestsCreateOnBehalf = new(
-        "leave.requests.create_on_behalf", Module, "Add Leave For Employees", Group, "Create leave requests on behalf of employees (İşlemler → İzin Ekle)");
+        "leave.requests.create_on_behalf", Module, "Çalışan Adına İzin Ekleme", Group, "Çalışanlar adına izin talebi oluşturma (İşlemler → İzin Ekle)");
 
     public static readonly Permission RequestsBypassApproval = new(
-        "leave.requests.bypass_approval", Module, "Approve Leave Without Workflow", Group, "Record leave added for employees as approved without the approval process");
+        "leave.requests.bypass_approval", Module, "Onay Süreci Olmadan İzin Onaylama", Group, "Çalışanlar için eklenen izni onay sürecine gerek kalmadan onaylanmış olarak kaydetme");
 
     /// <summary>Decision #16: approved leave is cancelled (never edited) by an authorized user; also cancels pending requests.</summary>
     public static readonly Permission RequestsCancelApproved = new(
-        "leave.requests.cancel_approved", Module, "Cancel Leave Requests", Group, "Cancel employees' approved or pending leave requests");
+        "leave.requests.cancel_approved", Module, "İzin Talebi İptali", Group, "Çalışanların onaylanmış veya bekleyen izin taleplerini iptal etme");
 
     /// <summary>İzin takvimi menu; "*.my.*" reaches every base role (visibility further limited by Calendar access settings).</summary>
     public static readonly Permission MyCalendar = new(
-        "leave.my.calendar", Module, "View Leave Calendar", Group, "Open the leave calendar (own leave, or everyone's when the tenant allows it)");
+        "leave.my.calendar", Module, "İzin Takvimini Görüntüleme", Group, "İzin takvimini açma (kendi izniniz veya kiracının izin verdiği durumda herkesinki)");
 
     public static readonly Permission CalendarRead = new(
-        "leave.calendar.read", Module, "Read Team Leave Calendar", Group, "See the leave of employees in the caller's data scope on the calendar");
+        "leave.calendar.read", Module, "Ekip İzin Takvimini Görüntüleme", Group, "Takvimde, veri kapsamınızdaki çalışanların izinlerini görme");
 
     /// <summary>Employee card → Devamsızlık: unexcused/excused/late records İK enters by hand.</summary>
     public static readonly Permission AbsencesView = new(
-        "leave.absences.view", Module, "Read Absence Records", Group, "View employees' unexcused/excused/late absence records");
+        "leave.absences.view", Module, "Devamsızlık Kayıtlarını Görüntüleme", Group, "Çalışanların mazeretsiz/mazeretli/geç kalma devamsızlık kayıtlarını görüntüleme");
 
     public static readonly Permission AbsencesManage = new(
-        "leave.absences.manage", Module, "Manage Absence Records", Group, "Record and reverse employees' absence records");
+        "leave.absences.manage", Module, "Devamsızlık Kaydı Yönetimi", Group, "Çalışanların devamsızlık kayıtlarını işleme ve geri alma");
 
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,

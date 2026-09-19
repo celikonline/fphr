@@ -71,7 +71,9 @@
   "noAccessTitle": "You don't have access to this page",
   "noAccessDescription": "Contact your company administrator for the required permission.",
   "errors": {
-    "rateLimited": "Too many requests. Please try again in {{seconds}} seconds."
+    "rateLimited": "Too many requests. Please try again in {{seconds}} seconds.",
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpired": "Your session has expired. Please sign in again."
   },
   "reload": "Reload page"
 }

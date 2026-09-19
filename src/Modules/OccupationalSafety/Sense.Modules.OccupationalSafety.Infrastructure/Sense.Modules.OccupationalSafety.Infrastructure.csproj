@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.OccupationalSafety.Domain/Sense.Modules.OccupationalSafety.Domain.csproj" />
+    <ProjectReference Include="../Sense.Modules.OccupationalSafety.Application/Sense.Modules.OccupationalSafety.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.OccupationalSafety.Contracts/Sense.Modules.OccupationalSafety.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="EFCore.NamingConventions" />
+    <!-- Design-time only, for `dotnet ef migrations add` (Sense.Migrator references this module via AddModuleDbContext, not this project directly). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

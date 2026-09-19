@@ -18,7 +18,11 @@
     "settings": "Ayarlar",
     "account": "Profilim",
     "support": "Destek",
-    "trust": "Güven ve güvenlik"
+    "trust": "Güven ve güvenlik",
+    "collapseSidebar": "Menüyü daralt",
+    "expandSidebar": "Menüyü genişlet",
+    "workflowInbox": "Onay kutusu",
+    "sharedFiles": "Ortak dosyalar"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
@@ -44,7 +48,8 @@
     "recruitmentCandidates": "Adaylar",
     "recruitmentRequisitions": "Talep formları",
     "analytics": "Analitik",
-    "workflowInbox": "Onay kutusu"
+    "workflowInbox": "Onay kutusu",
+    "companyCalendar": "Etkinlik takvimi"
   },
   "settings": {
     "company": "Şirket bilgileri",
@@ -74,6 +79,10 @@
     "assetCategoriesDesc": "Ekipman kategori kataloğu (bilgisayar, telefon, araç vb.)",
     "expenseCategories": "Harcama kategorileri",
     "expenseCategoriesDesc": "Fiş eklerken seçilen harcama kategori kataloğu ve üst limitleri",
+    "ohsHazardClassification": "İSG tehlike sınıfı",
+    "ohsHazardClassificationDesc": "İşyeri konumlarının tehlike sınıfı geçmişi",
+    "ohsRiskAssessments": "Risk değerlendirmeleri",
+    "ohsRiskAssessmentsDesc": "Kayıtlı risk değerlendirmeleri ve yenileme tarihleri",
     "rules": "Kurallar",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",
@@ -82,6 +91,8 @@
     "system": "Sistem ayarları",
     "access": "Erişim ayarları",
     "accessDesc": "Çalışanların ana sayfa, hesap ve takvimde neleri göreceği",
+    "securityPolicy": "Güvenlik politikası",
+    "securityPolicyDesc": "Belirli roller için zorunlu iki adımlı doğrulama (2FA)",
     "usersRoles": "Kullanıcılar ve roller",
     "usersRolesDesc": "Kullanıcılar, erişim türleri, roller ve izinler",
     "auditLog": "Denetim kaydı",

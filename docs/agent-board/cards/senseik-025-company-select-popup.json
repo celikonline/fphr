@@ -1,0 +1,17 @@
+{
+  "id": "senseik-025",
+  "title": "Login şirket seçim popup'ı — daha profesyonel tasarım + kapat/yeniden dene akışı",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/login-tenant-select-redesign",
+  "worktree": ".claude/worktrees/tenant-select-redesign",
+  "acceptance": [
+    "Birden fazla şirkete (tenant) üye bir kullanıcı giriş yaptığında açılan şirket seçim popup'ı görsel olarak yenilenmiş/daha profesyonel (mevcut liste görünümü yerine kart/marka tutarlılığı olan bir tasarım)",
+    "Popup kapatılabiliyor (X veya ESC) ve kullanıcı login ekranına geri dönüp farklı bir kullanıcıyla tekrar giriş deneyebiliyor",
+    "Aynı kullanıcıyla tekrar login denemesi de popup kapatıldıktan sonra mümkün (form state sıfırlanıyor, kilitlenme yok)",
+    "Mobilde de kullanılabilir kalıyor (mevcut Modal zaten responsive olabilir, doğrulanmalı)"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: çoklu tenant'lı demo kullanıcıyla giriş, popup kapat, farklı/aynı kullanıcıyla tekrar giriş dene",
+  "handoff": "docs/handoffs/login-tenant-select-redesign.md",
+  "source": "Kullanıcı isteği (2026-09-18) — web/src/pages/auth/login.tsx satır 152 (tenantChoices state), 472-499 (Modal, title=auth:selectCompany.title), web/src/store/auth.store.ts (TenantChoice tipi)"
+}

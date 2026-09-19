@@ -17,6 +17,7 @@ import {
   Landmark,
   LifeBuoy,
   ListChecks,
+  Lock,
   LogOut,
   MapPin,
   Network,
@@ -39,6 +40,9 @@ import {
   FileStack,
   FileWarning,
   Upload,
+  FolderOpen,
+  HardHat,
+  ClipboardCheck,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -76,6 +80,7 @@ export const SETTINGS_PERMISSIONS = {
   companyProfile: ["identity.tenant.view", "identity.tenant.manage"],
   tenantManage: ["identity.tenant.manage"],
   access: ["identity.tenant.view", "identity.tenant.manage"],
+  securityPolicy: ["identity.tenant.view", "identity.security.manage"],
   usersRoles: ["identity.users.view", "identity.roles.view"],
   auditLog: ["identity.audit.view"],
   supportAccess: ["identity.impersonation.approve"],
@@ -92,6 +97,8 @@ export const SETTINGS_PERMISSIONS = {
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
   workSchedules: ["attendance.workschedule.view"],
+  ohsHazardClassification: ["ohs.hazard_classifications.view", "ohs.hazard_classifications.manage"],
+  ohsRiskAssessments: ["ohs.risk_assessments.view", "ohs.risk_assessments.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -158,6 +165,24 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     permissions: ANY_SETTINGS_PERMISSION,
     iconColor: "steel",
+  },
+  // Appended (senseik-047): previously only reachable via the Uygulamalar launcher / home widget - D-03 keşfedilebilirlik.
+  {
+    key: "workflowInbox",
+    labelKey: "nav.workflowInbox",
+    path: "/app/inbox",
+    icon: Inbox,
+    permissions: ["workflow.inbox.view"],
+    iconColor: "teal",
+  },
+  // senseik-028: appended at the end (hot file, append-only) rather than placed near "documents"-flavored items above.
+  {
+    key: "sharedFiles",
+    labelKey: "nav.sharedFiles",
+    path: "/app/shared-files",
+    icon: FolderOpen,
+    permissions: ["documents.company.view"],
+    iconColor: "gold",
   },
 ];
 
@@ -307,6 +332,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
     iconColor: "blue",
   },
+  {
+    key: "companyCalendar",
+    labelKey: "apps.companyCalendar",
+    path: "/app/company-calendar",
+    icon: CalendarDays,
+    permissions: ["announcements.my.events"],
+    iconColor: "cyan",
+  },
 ];
 
 export interface SettingsLink {
@@ -437,6 +470,22 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: Receipt,
         permissions: SETTINGS_PERMISSIONS.expenseCategories,
       },
+      {
+        key: "ohsHazardClassification",
+        labelKey: "settings.ohsHazardClassification",
+        descriptionKey: "settings.ohsHazardClassificationDesc",
+        path: "/app/settings/company/ohs-hazard-classification",
+        icon: HardHat,
+        permissions: SETTINGS_PERMISSIONS.ohsHazardClassification,
+      },
+      {
+        key: "ohsRiskAssessments",
+        labelKey: "settings.ohsRiskAssessments",
+        descriptionKey: "settings.ohsRiskAssessmentsDesc",
+        path: "/app/settings/company/ohs-risk-assessments",
+        icon: ClipboardCheck,
+        permissions: SETTINGS_PERMISSIONS.ohsRiskAssessments,
+      },
     ],
   },
   {
@@ -474,6 +523,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/system/access",
         icon: KeyRound,
         permissions: SETTINGS_PERMISSIONS.access,
+      },
+      {
+        key: "securityPolicy",
+        labelKey: "settings.securityPolicy",
+        descriptionKey: "settings.securityPolicyDesc",
+        path: "/app/settings/system/security-policy",
+        icon: Lock,
+        permissions: SETTINGS_PERMISSIONS.securityPolicy,
       },
       {
         key: "usersRoles",

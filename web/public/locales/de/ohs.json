@@ -1,0 +1,50 @@
+{
+  "hazardClassification": {
+    "title": "Arbeitsschutz-Gefahrenklasse",
+    "subtitle": "Verwalten Sie den Verlauf der Gefahrenklasse je Standort.",
+    "add": "Klassifizierung hinzufügen",
+    "reclassify": "Neu klassifizieren",
+    "empty": "Noch keine Gefahrenklasse erfasst.",
+    "saved": "Gefahrenklasse gespeichert.",
+    "columns": {
+      "location": "Standort",
+      "hazardClass": "Gefahrenklasse",
+      "effectiveFrom": "Gültig ab",
+      "note": "Notiz"
+    },
+    "errors": {
+      "loadFailed": "Gefahrenklassen konnten nicht geladen werden.",
+      "generic": "Gefahrenklasse konnte nicht gespeichert werden.",
+      "locationRequired": "Standort ist erforderlich.",
+      "hazardClassRequired": "Gefahrenklasse ist erforderlich."
+    }
+  },
+  "riskAssessments": {
+    "title": "Gefährdungsbeurteilungen",
+    "subtitle": "Erfasste Gefährdungsbeurteilungen und ihre Fälligkeitstermine ansehen.",
+    "add": "Gefährdungsbeurteilung erfassen",
+    "empty": "Noch keine Gefährdungsbeurteilung erfasst.",
+    "saved": "Gefährdungsbeurteilung gespeichert.",
+    "columns": {
+      "location": "Standort",
+      "hazardClass": "Gefahrenklasse",
+      "assessmentDate": "Beurteilungsdatum",
+      "nextDueDate": "Nächster Fälligkeitstermin",
+      "preparedBy": "Erstellt von"
+    },
+    "errors": {
+      "loadFailed": "Gefährdungsbeurteilungen konnten nicht geladen werden.",
+      "generic": "Gefährdungsbeurteilung konnte nicht gespeichert werden.",
+      "locationRequired": "Standort ist erforderlich.",
+      "preparedByRequired": "Erstellt von ist erforderlich.",
+      "hazardClassificationMissing": "Für diesen Standort muss zuerst eine Gefahrenklasse zugewiesen werden."
+    }
+  },
+  "enum": {
+    "hazardClass": {
+      "low": "Geringe Gefährdung",
+      "medium": "Gefährlich",
+      "high": "Hochgefährlich"
+    }
+  }
+}

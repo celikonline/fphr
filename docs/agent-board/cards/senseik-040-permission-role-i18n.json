@@ -1,0 +1,17 @@
+{
+  "id": "senseik-040",
+  "title": "Yetki matrisi (~170 izin), rol adları ve rapor kırılım değerleri İngilizce",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/permission-role-i18n",
+  "worktree": ".claude/worktrees/permission-role-i18n",
+  "acceptance": [
+    "Ayarlar → Kullanıcılar ve Roller → Roller ekranındaki ~170 izin adı Türkçeleştirildi (yalnızca Performans modülü şu an Türkçe, örnek/şablon olarak kullanılabilir)",
+    "17 sistem rolünün adları (System Administrator→Sistem Yöneticisi, Account Owner→Hesap Sahibi, HR Manager→İK Müdürü, Payroll Specialist→Bordro Uzmanı, Timekeeper→Puantör, External Accountant→Dış Muhasebeci, Integration→Entegrasyon vb.) ve açıklamaları Türkçeleştirildi",
+    "Aynı rol farklı ekranlarda (Profilim vs Kullanıcılar ve Roller) artık AYNI Türkçe adla gösteriliyor — tutarsızlık giderildi",
+    "Raporlar → İşgücü KPI'ları kırılım değerleri (Promotion→Terfi, LateralMove→Yatay Geçiş, Demotion→Rütbe Düşürme, TitleChange→Unvan Değişikliği, Unspecified→Belirtilmemiş, WithinFirstSixMonths→İlk Altı Ay İçinde) Türkçeleştirildi — kök neden muhtemelen senseik-008'deki gibi backend enum .ToString() deseni, aynı enumLabel yaklaşımı uygulanabilir"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: rol/izin/rapor ekranlarında ham İngilizce metin kalmıyor",
+  "handoff": "docs/handoffs/permission-role-i18n.md",
+  "source": "1. Tur Test Bulgu Dokümanı § B-04, B-05, B-06 (ORTA/DÜŞÜK — çeviri altyapısı çalışıyor, Performans modülünde kanıtlanmış, sadece uygulanmamış)."
+}

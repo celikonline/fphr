@@ -221,6 +221,8 @@ public sealed class OvertimeRequestConfiguration : IEntityTypeConfiguration<Over
         b.Property(x => x.Source).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.Description).HasMaxLength(LeaveLimits.DescriptionMaxLength);
         b.Property(x => x.SubmittedIpAddress).HasMaxLength(LeaveTables.IpAddressLength);
+        b.Property(x => x.PayRateKind).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.PayRateMultiplier).HasPrecision(LeaveTables.RatePrecision, LeaveTables.RateScale);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.WorkDate });
         b.HasIndex(x => new { x.TenantId, x.ApprovalRequestId });
         b.Ignore(x => x.StartAt);

@@ -1,0 +1,17 @@
+{
+  "id": "senseik-046",
+  "title": "'Birim' sütunu departman yerine ünvan gösteriyor — çalışan listesi ve raporlar genelinde",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/unit-title-confusion-broad",
+  "worktree": ".claude/worktrees/unit-title-broad",
+  "acceptance": [
+    "Çalışanlar listesindeki 'Birim' sütunu departmanı gösteriyor (ünvanı değil) — ya sütun adı 'Ünvan' olarak düzeltiliyor ya da ayrı bir 'Departman' sütunu ekleniyor",
+    "Raporlar → 'Birim Bazında Cinsiyet Dağılımı' ve benzeri kırılımlar artık departman bazında da filtrelenebiliyor (şu an sadece ünvan bazında çıkıyor)",
+    "Bordro/Puantör rolünün gördüğü 'Çalışan rehberi'nde bu sütun boş ('—') kalmıyor",
+    "senseik-017'de org şeması için eklenen departmentName alanı/deseni burada da tekrar kullanılıyor (kod tekrarı yok)"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: çalışan listesi ve raporlarda departman/ünvan ayrımı net",
+  "handoff": "docs/handoffs/unit-title-confusion-broad.md",
+  "source": "1. Tur Test Bulgu Dokümanı § C-07 (ORTA — senseik-017 sadece org şemasını kapsıyordu, bu kart çalışan listesi + raporlama katmanını kapsıyor)."
+}

@@ -93,6 +93,25 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>11-digit T.C. Kimlik No (validated with <see cref="TcKimlik"/>); unique per tenant when set.</summary>
     public string? NationalId { get; private set; }
 
+    /// <summary>
+    /// Tenant-unique işyeri sicil numarası (senseik-009/F-02); intended to replace <see cref="NationalId"/> as the
+    /// external match key over time (dual-key transition - see <c>IEmployeeLookup.FindActiveBySicilNumarasiAsync</c>
+    /// and <c>FindActiveByNationalIdAsync</c>, both kept).
+    /// </summary>
+    public string? SicilNumarasi { get; private set; }
+
+    /// <summary>Turkish by default (every pre-existing row is TCKN'li, hence really Turkish); Foreign requires <see cref="ForeignIdNumber"/> or <see cref="PassportNumber"/> (see <see cref="Validate"/>).</summary>
+    public Nationality Nationality { get; private set; }
+
+    /// <summary>"99" ile başlayan Yabancı Kimlik Numarası (aynı checksum algoritması, <see cref="TcKimlik"/>); YKN atanmış yabancı çalışan için.</summary>
+    public string? ForeignIdNumber { get; private set; }
+
+    /// <summary>YKN henüz atanmamış yabancı çalışan için pasaport numarası.</summary>
+    public string? PassportNumber { get; private set; }
+
+    /// <summary>SGK meslek kodu (senseik-010/F-03); e-Bildirge/APHB alanlarının ön doldurulması için.</summary>
+    public string? SgkOccupationCode { get; private set; }
+
     public string? WorkEmail { get; private set; }
 
     public string? PersonalEmail { get; private set; }
@@ -685,6 +704,11 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
         LastName = info.LastName.Trim();
         DisplayName = ComposeDisplayName(FirstName, LastName);
         NationalId = Normalize(info.NationalId);
+        SicilNumarasi = Normalize(info.SicilNumarasi);
+        Nationality = info.Nationality;
+        ForeignIdNumber = Normalize(info.ForeignIdNumber);
+        PassportNumber = Normalize(info.PassportNumber);
+        SgkOccupationCode = Normalize(info.SgkOccupationCode);
         WorkEmail = Normalize(info.WorkEmail)?.ToLowerInvariant();
         PersonalEmail = Normalize(info.PersonalEmail)?.ToLowerInvariant();
         WorkPhone = Normalize(info.WorkPhone);
@@ -741,9 +765,51 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(EmployeeDomainErrors.NameTooLong);
         }
 
-        if (Normalize(info.NationalId) is { } nationalId && !TcKimlik.IsValid(nationalId))
+        if (Normalize(info.NationalId) is { } nationalId)
         {
-            return Error.Validation(EmployeeDomainErrors.NationalIdInvalid);
+            if (!TcKimlik.IsValid(nationalId))
+            {
+                return Error.Validation(EmployeeDomainErrors.NationalIdInvalid);
+            }
+
+            // Same checksum algorithm for Turkish TCKN and "99"-prefixed foreign YKN (TcKimlik.IsForeign) - only the
+            // prefix differs, so a Turkish employee's NationalId must not be foreign-shaped and vice versa (F-02).
+            var isForeignFormat = TcKimlik.Of(nationalId).IsForeign;
+            if (info.Nationality == Nationality.Turkish && isForeignFormat)
+            {
+                return Error.Validation(EmployeeDomainErrors.NationalIdForeignPrefixForTurkish);
+            }
+
+            if (info.Nationality == Nationality.Foreign && !isForeignFormat)
+            {
+                return Error.Validation(EmployeeDomainErrors.NationalIdNotForeignForForeignNational);
+            }
+        }
+
+        if (info.Nationality == Nationality.Foreign &&
+            string.IsNullOrWhiteSpace(info.ForeignIdNumber) && string.IsNullOrWhiteSpace(info.PassportNumber))
+        {
+            return Error.Validation(EmployeeDomainErrors.ForeignIdentificationRequired);
+        }
+
+        if (Normalize(info.SicilNumarasi) is { Length: > EmployeeLimits.SicilNumarasiMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.SicilNumarasiTooLong);
+        }
+
+        if (Normalize(info.ForeignIdNumber) is { Length: > EmployeeLimits.ForeignIdNumberLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.ForeignIdNumberTooLong);
+        }
+
+        if (Normalize(info.PassportNumber) is { Length: > EmployeeLimits.PassportNumberMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.PassportNumberTooLong);
+        }
+
+        if (Normalize(info.SgkOccupationCode) is { Length: > EmployeeLimits.SgkOccupationCodeMaxLength })
+        {
+            return Error.Validation(EmployeeDomainErrors.SgkOccupationCodeTooLong);
         }
 
         if (Normalize(info.WorkEmail) is { } workEmail && !EmailAddress.IsValid(workEmail))

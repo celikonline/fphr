@@ -780,7 +780,7 @@ function EditRolesDialog({
   );
 }
 
-function RolesTab({ t }: { t: TFn }) {
+export function RolesTab({ t }: { t: TFn }) {
   const { data: roles, isLoading } = useQuery({ queryKey: ["roles"], queryFn: listRoles });
   const { data: permissionGroups } = useQuery({ queryKey: ["permission-groups"], queryFn: listPermissionGroups });
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);

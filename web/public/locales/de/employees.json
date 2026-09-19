@@ -323,6 +323,8 @@
     "notFoundTitle": "Mitarbeitende:r nicht gefunden",
     "notFoundDescription": "Der Datensatz wurde möglicherweise entfernt oder liegt außerhalb Ihres Zugriffsbereichs.",
     "saved": "Mitarbeiterdaten gespeichert.",
+    "statusLabel": "Mitarbeitende:r",
+    "accountStatusLabel": "Konto",
     "sections": {
       "general": "Allgemein",
       "personal": "Persönliche Daten",
@@ -564,6 +566,16 @@
       "sgkSubCode": "SGK-Untercode",
       "sgkSubCodeHint": "Dieser Grund hat mehr als einen gültigen SGK-Code - wählen Sie einen aus.",
       "sgkSubCodeRequired": "Wählen Sie für diesen Grund einen SGK-Untercode aus.",
+      "severanceEstimate": {
+        "title": "Abfindungs-/Kündigungsfristvergütung (Schätzung)",
+        "immoralOrBadFaith": "Kündigung wegen Verstoßes gegen Sitte und Treu und Glauben (İş K. m.25/II)",
+        "severance": "Abfindung",
+        "notice": "Kündigungsfristvergütung",
+        "unusedLeave": "Nicht genommener Urlaub (Vergütung)",
+        "total": "Gesamt",
+        "unavailable": "Die Schätzung kann derzeit nicht berechnet werden (aktueller Gehaltsdatensatz erforderlich).",
+        "disclaimer": "Dies ist nur eine Schätzung; Entschädigung wegen böswilliger Kündigung/Gewerkschaft ist nicht enthalten und nichts wird gespeichert."
+      },
       "severancePaid": "Abfindung ausgezahlt",
       "severancePaidHint": "Bei Auszahlung zählt dieser Zeitraum nach einer Wiedereinstellung nicht zur Abfindungsseniorität.",
       "leaveSettled": "Jahresurlaub genommen oder ausgezahlt",

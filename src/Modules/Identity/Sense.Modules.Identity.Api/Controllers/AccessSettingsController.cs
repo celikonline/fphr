@@ -37,3 +37,21 @@ public sealed class AccessSettingsController : ApiControllerBase
             request.ShowWorkPhoneNumbers, request.ShowOrgChart, request.ShowCustomFields,
             request.ShowCalendarMenu, request.ShowAllLeavesInCalendar), ct));
 }
+
+public sealed record SecurityPolicyRequest(IReadOnlyList<string> RequireMfaForRoles);
+
+/// <summary>Ayarlar &gt; Sistem ayarları &gt; Güvenlik politikası sayfası (senseik-051): belirli roller için zorunlu 2FA.</summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route(IdentityRoutes.Settings + "/security")]
+[Authorize]
+public sealed class SecurityPolicyController : ApiControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<SecurityPolicyDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetSecurityPolicyQuery(), ct));
+
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update([FromBody] SecurityPolicyRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateSecurityPolicyCommand(request.RequireMfaForRoles), ct));
+}

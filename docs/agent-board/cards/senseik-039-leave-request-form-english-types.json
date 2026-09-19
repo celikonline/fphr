@@ -1,0 +1,16 @@
+{
+  "id": "senseik-039",
+  "title": "İzin talebi formunda 12 izin türünün tamamı İngilizce görünüyor",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/leave-request-form-i18n",
+  "worktree": ".claude/worktrees/leave-request-i18n",
+  "acceptance": [
+    "İzinler → + Talep → İzin türü açılır listesindeki tüm türler Türkçe gösteriliyor (Annual leave→Yıllık izin, Excuse leave→Mazeret izni, vb.)",
+    "Aynı türler zaten Ayarlar → İzin kuralları listesinde ve takvimde Türkçe görünüyor — kök neden SADECE talep formunun dropdown'ında; o bileşenin neden farklı bir kaynak/fallback kullandığı bulunup düzeltildi",
+    "Bu, senseik-008'in düzelttiği 'ham anahtar sızıntısı' (settings.name state sorunu) ile AYNI KÖK NEDEN değil — farklı bir bileşen/veri yolu, ayrıca araştırılmalı"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: izin talebi formu açılıp tüm 12 tür Türkçe görünüyor",
+  "handoff": "docs/handoffs/leave-request-form-i18n.md",
+  "source": "1. Tur Test Bulgu Dokümanı § B-03 (YÜKSEK — her çalışanın kullandığı ekran). NOT: senseik-021/022 (leave-request-dialog.tsx üzerinde çalışıyor) ile aynı dosya, merge sırası kontrol edilmeli."
+}

@@ -327,7 +327,8 @@
     "remainingBalance": "Kalan izin bakiyesi",
     "overlappingLeaves": {
       "title": "Çakışan izinler ({{count}})",
-      "more": "+{{count}} kişi daha"
+      "more": "+{{count}} kişi daha (listelenmedi)",
+      "viewAll": "Tümünü gör ({{count}})"
     }
   },
   "request": {
@@ -376,11 +377,20 @@
     "subtitle": "Onaylanmış ve onay bekleyen izinler.",
     "previous": "Önceki ay",
     "next": "Sonraki ay",
+    "previousWeek": "Önceki hafta",
+    "nextWeek": "Sonraki hafta",
+    "previousDay": "Önceki gün",
+    "nextDay": "Sonraki gün",
     "today": "Bugün",
     "employee": "Çalışan",
     "empty": "Bu dönemde izin kaydı yok.",
     "masked": "İzinli",
-    "overlappingCount": "Bu günde {{count}} onaylı izin çakışıyor"
+    "overlappingCount": "Bu günde {{count}} onaylı izin çakışıyor",
+    "view": {
+      "day": "Gün",
+      "week": "Hafta",
+      "month": "Ay"
+    }
   },
   "overtime": {
     "myTitle": "Fazla mesailerim",
@@ -412,6 +422,17 @@
       "workday": "İş günü",
       "weeklyRest": "Hafta tatili",
       "publicHoliday": "Resmi tatil"
+    },
+    "payRate": {
+      "label": "Ücret oranı",
+      "hint": "İş K. m.41: haftalık 45 saati aşan fazla mesai %50, aşmayan (sözleşmeyle kısaltılmış haftalık süre üstü) %25 fazlasıyla ödenir.",
+      "rate25": "%25 fazla",
+      "rate50": "%50 fazla"
+    },
+    "annualUsage": {
+      "title": "{{year}} yıllık fazla mesai",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Yıllık 270 saat yasal sınırı aşıldı."
     },
     "sources": {
       "manual": "Talep",

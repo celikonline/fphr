@@ -57,7 +57,14 @@
     "comment": "Yorum",
     "commentPlaceholder": "Opsiyonel yorum ekleyin...",
     "approveSuccess": "Talep onaylandı.",
-    "rejectSuccess": "Talep reddedildi."
+    "rejectSuccess": "Talep reddedildi.",
+    "requestDate": "Talep tarihi",
+    "startTime": "Başlangıç saati",
+    "duration": "Süre",
+    "reason": "Gerekçe",
+    "dateRange": "Tarih aralığı",
+    "leaveType": "İzin türü",
+    "days": "Gün sayısı"
   },
   "status": {
     "title": "Onay durumu",

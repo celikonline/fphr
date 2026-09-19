@@ -1,0 +1,16 @@
+{
+  "id": "senseik-023",
+  "title": "Üst header bar navigasyon sonrası kayboluyor (sadece dashboard'da görünüyor) — BUG",
+  "owner": "pc-a",
+  "state": "blocked",
+  "branch": "a/header-bar-visibility-fix",
+  "worktree": ".claude/worktrees/header-bar-fix",
+  "acceptance": [
+    "Kullanıcının bildirdiği tekrar üretme adımları netleştirildi ve doğrulandı (hangi menü öğesi, hangi sayfa)",
+    "Header bar (Brand/Greeting/AppsLauncher) menüden herhangi bir sayfaya geçildiğinde de görünür kalıyor, sadece dashboard'da değil",
+    "Kök neden bulundu: CSS/z-index sorunu mu, belirli bir sayfanın kendi layout'u AppLayout'u bypass mı ediyor, yoksa başka bir şey mi"
+  ],
+  "merge_gate": "Manuel test: 5+ farklı menü öğesine tıklanıp header bar'ın her sayfada göründüğü doğrulanıyor",
+  "handoff": "docs/handoffs/header-bar-visibility-fix.md",
+  "source": "Kullanıcı bildirimi (2026-09-18) — ÖNEMLİ ÇELİŞKİ: web/src/layouts/app-layout.tsx incelemesi header/sidebar'ın TÜM /app/* korumalı route'larında (AppLayout + Outlet ile) göründüğünü gösteriyor, sadece public route'larda (login, invite, kariyer vb.) yok. Kullanıcının canlı gözlemiyle kod okuması çelişiyor — bu kart önce gerçek tekrar üretme adımlarının doğrulanmasıyla başlamalı, kod okumasıyla değil"
+}

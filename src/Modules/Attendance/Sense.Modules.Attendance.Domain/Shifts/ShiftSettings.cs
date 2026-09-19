@@ -19,6 +19,19 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
     public const int DefaultMaxWeeklyMinutes = 45 * 60;
     public const int DefaultBreakMinMinutes = 30;
 
+    /// <summary>m.69 gece çalışması üst sınırı: 7,5 saat.</summary>
+    public const int DefaultNightWorkMaxMinutes = 450;
+
+    public static readonly TimeOnly DefaultNightWorkStart = new(20, 0);
+
+    public static readonly TimeOnly DefaultNightWorkEnd = new(6, 0);
+
+    /// <summary>m.63 denkleştirme: varsayılan dönem (yazılı anlaşma olmadan) 2 ay.</summary>
+    public const int DefaultEqualizationPeriodMonths = 2;
+
+    /// <summary>m.63 denkleştirme: yazılı anlaşmayla uzatılabilen azami dönem, 4 ay.</summary>
+    public const int ExtendedEqualizationPeriodMonths = 4;
+
     private ShiftSettings()
     {
     }
@@ -41,6 +54,8 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
         AutoLockEnabled = autoLockEnabled;
         AutoLockDayOfMonth = autoLockDayOfMonth;
         AutoLockNotifyDaysBefore = autoLockNotifyDaysBefore;
+        EqualizationPeriodMonths = DefaultEqualizationPeriodMonths;
+        EqualizationAnchorMonth = 1;
     }
 
     /// <summary>"Günlük çalışma süresi üst sınırı" (varsayılan 11 saat).</summary>
@@ -71,9 +86,28 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
 
     public int AutoLockNotifyDaysBefore { get; private set; }
 
+    /// <summary>m.63 denkleştirme uygulanıyor mu (kart senseik-014 §4); kapalıyken günlük <c>OvertimeMinutes</c> doğrudan kesindir.</summary>
+    public bool EqualizationEnabled { get; private set; }
+
+    /// <summary>2 (varsayılan) veya 4 (<see cref="HasWrittenEqualizationAgreement"/> zorunlu) ay.</summary>
+    public int EqualizationPeriodMonths { get; private set; }
+
+    /// <summary>Dönem döngüsünün başladığı takvim ayı (1-12) - <c>Equalization.EqualizationPeriodCalculator</c>'a girdi.</summary>
+    public int EqualizationAnchorMonth { get; private set; }
+
+    /// <summary>m.63: dönem 4 aya çıkarılmışsa yazılı anlaşma şartı karşılandı mı.</summary>
+    public bool HasWrittenEqualizationAgreement { get; private set; }
+
+    /// <summary>
+    /// Yeni tenant varsayılanı (kart senseik-014 §3): gece çalışması AÇIK, 20:00-06:00 penceresi, 7,5 saat üst sınır -
+    /// Leave modülündeki sabit gece penceresiyle (<c>Overtime.OvertimeMath</c>, md.69) bilinçli olarak aynı. Mevcut
+    /// tenantların satırları bu değişiklikten ETKİLENMEZ (yalnız yeni <c>CreateDefault</c> çağrıları); bkz. handoff
+    /// notu "Implementasyon Notu" - eski satırları güncellemek ayrı, bilinçli bir veri geçiş kararı gerektirir.
+    /// </summary>
     public static ShiftSettings CreateDefault(Guid tenantId) =>
-        new(Guid.CreateVersion7(), tenantId, DefaultMaxDailyMinutes, DefaultMaxWeeklyDays, DefaultMaxWeeklyMinutes, nightWorkEnabled: false, null, null,
-            null, DefaultBreakMinMinutes, breakIsPaid: false, autoLockEnabled: false, autoLockDayOfMonth: 26, autoLockNotifyDaysBefore: 3);
+        new(Guid.CreateVersion7(), tenantId, DefaultMaxDailyMinutes, DefaultMaxWeeklyDays, DefaultMaxWeeklyMinutes, nightWorkEnabled: true,
+            DefaultNightWorkStart, DefaultNightWorkEnd, DefaultNightWorkMaxMinutes, DefaultBreakMinMinutes, breakIsPaid: false, autoLockEnabled: false,
+            autoLockDayOfMonth: 26, autoLockNotifyDaysBefore: 3);
 
     public Result Update(
         int maxDailyMinutes, int maxWeeklyDays, int maxWeeklyMinutes, bool nightWorkEnabled, TimeOnly? nightWorkStart, TimeOnly? nightWorkEnd,
@@ -106,6 +140,38 @@ public sealed class ShiftSettings : TenantAggregateRoot<Guid>
         AutoLockEnabled = autoLockEnabled;
         AutoLockDayOfMonth = autoLockDayOfMonth;
         AutoLockNotifyDaysBefore = autoLockNotifyDaysBefore;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Denkleştirme ayarlarını günceller (m.63, kart senseik-014 §4). <paramref name="periodMonths"/> yalnız 2 veya 4
+    /// olabilir; 4 seçildiğinde <paramref name="hasWrittenAgreement"/> true olmalıdır (md.63: "yazılı anlaşma ile dört
+    /// aya kadar artırılabilir"). <paramref name="anchorMonth"/> dönem döngüsünün başladığı takvim ayıdır (1-12).
+    /// </summary>
+    public Result UpdateEqualization(bool enabled, int periodMonths, int anchorMonth, bool hasWrittenAgreement)
+    {
+        if (enabled)
+        {
+            if (periodMonths != DefaultEqualizationPeriodMonths && periodMonths != ExtendedEqualizationPeriodMonths)
+            {
+                return Error.Validation(AttendanceDomainErrors.EqualizationPeriodMonthsInvalid);
+            }
+
+            if (periodMonths == ExtendedEqualizationPeriodMonths && !hasWrittenAgreement)
+            {
+                return Error.Validation(AttendanceDomainErrors.EqualizationWrittenAgreementRequired);
+            }
+
+            if (anchorMonth is < 1 or > 12)
+            {
+                return Error.Validation(AttendanceDomainErrors.EqualizationAnchorMonthInvalid);
+            }
+        }
+
+        EqualizationEnabled = enabled;
+        EqualizationPeriodMonths = periodMonths;
+        EqualizationAnchorMonth = anchorMonth;
+        HasWrittenEqualizationAgreement = hasWrittenAgreement;
         return Result.Success();
     }
 

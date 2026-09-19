@@ -32,6 +32,7 @@ import {
   convertOvertimeToTimeOff,
   createOvertimeOnBehalf,
   getEmployeeLeaveBalances,
+  getEmployeeOvertimeAnnualUsage,
   getEmployeeOvertimes,
   getOvertimeConsents,
   getOvertimeConversions,
@@ -46,7 +47,7 @@ import {
   type OvertimeRequest,
 } from "@/services/leave.service";
 import { useDays, useLeaveName } from "./leave-shared";
-import { OvertimeRequestDialog, OvertimesTable, formatTimeOnly, useMinutes } from "./overtime-shared";
+import { AnnualOvertimeUsageGauge, OvertimeRequestDialog, OvertimesTable, formatTimeOnly, useMinutes } from "./overtime-shared";
 
 export const OVERTIME_CARD_TAB_PERMISSION = "leave.overtimes.read";
 
@@ -117,6 +118,12 @@ export function OvertimeSection({ employee }: { employee: EmployeeDetail }) {
     queryFn: () => getEmployeeOvertimes(employee.id),
     enabled: canRead,
   });
+  const annualUsageQuery = useQuery({
+    queryKey: ["leave", "overtimes", employee.id, "annual-usage"],
+    queryFn: () => getEmployeeOvertimeAnnualUsage(employee.id),
+    enabled: canRead,
+    retry: false,
+  });
   const conversionsQuery = useQuery({
     queryKey: ["leave", "overtimes", employee.id, "conversions"],
     queryFn: () => getOvertimeConversions(employee.id),
@@ -158,6 +165,11 @@ export function OvertimeSection({ employee }: { employee: EmployeeDetail }) {
           )
         }
       >
+        {annualUsageQuery.data && (
+          <Card withBorder padding="sm" mb="md" bg="var(--mantine-color-default-hover)">
+            <AnnualOvertimeUsageGauge usage={annualUsageQuery.data} />
+          </Card>
+        )}
         {overtimesQuery.isLoading ? (
           <Skeleton h={128} />
         ) : overtimesQuery.isError ? (

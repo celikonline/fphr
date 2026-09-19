@@ -20,6 +20,9 @@ public enum OvertimeConversionStatus
 {
     Posted = 0,
     Reversed = 1,
+
+    /// <summary>Serbest zaman m.41: 6 ay (Overtime.CompTimeExpiryMonths) içinde kullandırılmadı (kart senseik-012 §3).</summary>
+    Expired = 2,
 }
 
 /// <summary>
@@ -61,6 +64,9 @@ public sealed class OvertimeConversion : TenantAggregateRoot<Guid>, IAuditLogged
 
     public Guid? LedgerEntryId { get; private set; }
 
+    /// <summary>Yalnız <see cref="OvertimeConversionKind.TimeOff"/> için anlamlı: bu tarihe kadar kullandırılmalı (m.41, 6 ay varsayılan - <c>Overtime.CompTimeExpiryMonths</c>), aksi halde <see cref="ExpireIfPastDue"/> ile <see cref="OvertimeConversionStatus.Expired"/> olur.</summary>
+    public DateOnly? UsedByDate { get; private set; }
+
     public OvertimeConversionStatus Status { get; private set; }
 
     public Guid? ConvertedByUserId { get; private set; }
@@ -70,7 +76,8 @@ public sealed class OvertimeConversion : TenantAggregateRoot<Guid>, IAuditLogged
     public string? Note { get; private set; }
 
     public static Result<OvertimeConversion> ToTimeOff(
-        OvertimeRequest request, OvertimeMinutesBasis basis, decimal rate, int dailyWorkMinutes, Guid leaveTypeId, Guid? convertedByUserId, DateTime at, string? note)
+        OvertimeRequest request, OvertimeMinutesBasis basis, decimal rate, int dailyWorkMinutes, Guid leaveTypeId, Guid? convertedByUserId, DateTime at,
+        string? note, DateOnly? usedByDate = null)
     {
         if (request.Status != OvertimeRequestStatus.Approved)
         {
@@ -108,8 +115,22 @@ public sealed class OvertimeConversion : TenantAggregateRoot<Guid>, IAuditLogged
             ConvertedByUserId = convertedByUserId,
             ConvertedAt = at,
             Note = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
+            UsedByDate = usedByDate,
         };
     }
 
     public void AttachLedgerEntry(Guid ledgerEntryId) => LedgerEntryId = ledgerEntryId;
+
+    /// <summary>
+    /// m.41 6 ay kuralı (kart senseik-012 §3): <see cref="UsedByDate"/> geçtiyse ve hâlâ Posted ise Expired'a döner -
+    /// aynı <c>Compensatory.CompensatoryWorkLedger.ExpireIfPastDue</c> deseni (query-time/lazy expiry, arka plan
+    /// işi yok). Yalnız TimeOff dönüşümleri için anlamlıdır (Pay dönüşümlerinde UsedByDate hep null).
+    /// </summary>
+    public void ExpireIfPastDue(DateOnly today)
+    {
+        if (Status == OvertimeConversionStatus.Posted && UsedByDate is { } dueDate && today > dueDate)
+        {
+            Status = OvertimeConversionStatus.Expired;
+        }
+    }
 }

@@ -1,0 +1,16 @@
+{
+  "id": "senseik-042",
+  "title": "Küçük UI hataları: halka grafik merkezi, etiketsiz çift rozet, düğmelerin ilk tıklamada tepki vermemesi",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/minor-ui-fixes",
+  "worktree": ".claude/worktrees/minor-ui-fixes",
+  "acceptance": [
+    "Ana sayfa 'Çalışan Dağılımı' halka grafiğinin merkezinde toplam çalışan sayısı gösteriliyor (departman adı değil)",
+    "Çalışan kartındaki iki yeşil 'Aktif' rozeti etiketlendi (örn. 'Çalışan: Aktif' / 'Hesap: Aktif')",
+    "ÖNEMLİ: '+ Talep', 'Yeni çalışan ekle', 'Düzenle' gibi düğmelerdeki ilk-tıklama-tepkisizliği/çift-tıklama yarışı (aç-kapa) sorunu kök nedeniyle düzeltildi — muhtemelen bir debounce/state güncelleme sırası sorunu, birden fazla bileşende tekrarlanan bir desen olabilir, ortak kök neden araştırılmalı"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: 5+ farklı düğme ilk tıklamada tutarlı çalışıyor",
+  "handoff": "docs/handoffs/minor-ui-fixes.md",
+  "source": "1. Tur Test Bulgu Dokümanı § B-11, B-12, B-13 (B-13 ORTA ama yaygın etkisi nedeniyle önceliklendirilmeli — birden fazla ekranda İK'nın günlük işini engelliyor)."
+}

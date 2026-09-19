@@ -1,18 +1,24 @@
-import { Link, NavLink as RouterNavLink, Outlet } from "react-router";
+import { Link, NavLink as RouterNavLink } from "react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalStorage } from "@mantine/hooks";
 import { ActionIcon, Alert, Badge, Box, Button, Group, Indicator, Menu, NavLink, Stack, Text, Tooltip } from "@mantine/core";
-import { Bell, Grip, ShieldAlert } from "lucide-react";
+import { Bell, Grip, PanelLeftClose, PanelLeftOpen, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
+import { useWorkflowInboxCount } from "@/hooks/use-workflow-inbox-count";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
+import MfaSetupGuard from "@/components/mfa-setup-guard";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
 const PLANNED_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase !== undefined);
+
+/** Per-viewer convenience, not shared state - remembered locally, never sent to the server. */
+const SIDEBAR_COLLAPSED_KEY = "senseik.sidebar.collapsed";
 
 function NavList({ collapsed }: { collapsed: boolean }) {
   const { t } = useTranslation(["navigation"]);
@@ -22,9 +28,13 @@ function NavList({ collapsed }: { collapsed: boolean }) {
   return (
     <>
       <Stack component="nav" gap={4} className="flex-1 overflow-y-auto px-2 py-4">
-        {items.map((item) => (
-          <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
-        ))}
+        {items.map((item) =>
+          item.key === "workflowInbox" ? (
+            <WorkflowInboxNavItem key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
+          ) : (
+            <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
+          ),
+        )}
       </Stack>
       <Stack component="nav" gap={4} className={`px-2 py-3 ${classes.footerNav}`}>
         <NotificationsNavItem collapsed={collapsed} />
@@ -37,6 +47,49 @@ function NavList({ collapsed }: { collapsed: boolean }) {
 }
 
 const NAV_LINK_CLASS_NAMES = { root: classes.navLink, section: classes.navSection, body: classes.navBody };
+
+/** "Onay kutusu" sidebar entry: pending task count on the icon (senseik-047 D-01/D-03), mirrors NotificationsNavItem's Indicator. */
+function WorkflowInboxNavItem({ item, collapsed, label }: { item: NavItem; collapsed: boolean; label: string }) {
+  const Icon = item.icon;
+  const pendingCount = useWorkflowInboxCount();
+
+  const link = (
+    <NavLink
+      component={RouterNavLink}
+      to={item.path}
+      end={item.end}
+      variant="light"
+      aria-label={collapsed ? label : undefined}
+      mod={{ collapsed }}
+      classNames={NAV_LINK_CLASS_NAMES}
+      styles={{ section: { color: navIconColor(item) } }}
+      leftSection={
+        <Indicator
+          color="red"
+          size={16}
+          offset={2}
+          label={pendingCount}
+          maxValue={99}
+          disabled={pendingCount === 0}
+          styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
+          inline
+        >
+          <Icon size={20} />
+        </Indicator>
+      }
+      label={collapsed ? undefined : label}
+      noWrap
+    />
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip label={label} position="right" openDelay={300}>
+      {link}
+    </Tooltip>
+  );
+}
 
 /** "Bildirimler" at the top of the sidebar footer: unread count on the bell, dropdown opens beside the sidebar. */
 function NotificationsNavItem({ collapsed }: { collapsed: boolean }) {
@@ -112,6 +165,23 @@ function NavItemLink({ item, collapsed, label }: { item: NavItem; collapsed: boo
     <Tooltip label={label} position="right" openDelay={300}>
       {link}
     </Tooltip>
+  );
+}
+
+/** Desktop-only collapse/expand control for the sidebar; mobile always stays icon-only. */
+function SidebarToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+  const { t } = useTranslation(["navigation"]);
+  const label = t(collapsed ? "navigation:nav.expandSidebar" : "navigation:nav.collapseSidebar");
+  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
+
+  return (
+    <div className={`hidden md:flex ${collapsed ? "justify-center" : "justify-end"} px-2 py-2 ${classes.footerNav}`}>
+      <Tooltip label={label} position="right" openDelay={300}>
+        <ActionIcon variant="subtle" color="gray" size="md" aria-label={label} onClick={onToggle}>
+          <Icon size={18} />
+        </ActionIcon>
+      </Tooltip>
+    </div>
   );
 }
 
@@ -238,6 +308,9 @@ function Greeting() {
  * column, greeting, apps launcher) + single left sidebar (Kolay İK order) + content.
  */
 export default function AppLayout() {
+  // Desktop-only preference - the mobile rail below is always icon-only regardless of this value.
+  const [collapsed, setCollapsed] = useLocalStorage<boolean>({ key: SIDEBAR_COLLAPSED_KEY, defaultValue: false });
+
   return (
     <Box className="flex h-screen flex-col" bg="var(--mantine-color-body)" c="var(--mantine-color-text)">
       <ImpersonationBanner />
@@ -252,20 +325,24 @@ export default function AppLayout() {
           </header>
 
           <div className="flex min-h-0 flex-1">
-            {/* Sidebar - full labels from md up */}
-            <aside className={`hidden w-52 shrink-0 flex-col md:flex ${classes.sidebar}`}>
-              <NavList collapsed={false} />
+            {/* Sidebar - full labels from md up, user can collapse to icon-only via SidebarToggle */}
+            <aside
+              data-testid="sidebar-desktop"
+              className={`hidden ${collapsed ? "w-14" : "w-52"} shrink-0 flex-col md:flex ${classes.sidebar}`}
+            >
+              <NavList collapsed={collapsed} />
+              <SidebarToggle collapsed={collapsed} onToggle={() => setCollapsed((current) => !current)} />
             </aside>
 
-            {/* Mobile icon rail - always icon-only */}
-            <aside className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
+            {/* Mobile icon rail - always icon-only, unaffected by the desktop collapse preference */}
+            <aside data-testid="sidebar-mobile" className={`flex w-14 shrink-0 flex-col md:hidden ${classes.sidebar}`}>
               <NavList collapsed />
             </aside>
 
             <main className="min-w-0 flex-1 overflow-auto">
               {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
               <RouteBoundary>
-                <Outlet />
+                <MfaSetupGuard />
               </RouteBoundary>
             </main>
           </div>

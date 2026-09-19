@@ -1,0 +1,95 @@
+/* Company event calendar surfaces. States come from data attributes: data-weekend, data-today, data-outside; chip
+   colour comes from data-type="companyEvent|meeting|birthday|leaveStart" (senseik-027). */
+
+.root {
+  --calendar-weekend-bg: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-6));
+  --calendar-today-bg: var(--mantine-primary-color-light);
+}
+
+.grid {
+  border-top: 1px solid var(--mantine-color-default-border);
+  border-inline-start: 1px solid var(--mantine-color-default-border);
+}
+
+.weekdayHeader {
+  border-inline-end: 1px solid var(--mantine-color-default-border);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  color: var(--mantine-color-dimmed);
+  font-weight: 500;
+  text-align: center;
+}
+
+.dayCell {
+  min-height: 6.5rem;
+  border-inline-end: 1px solid var(--mantine-color-default-border);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+
+  &[data-weekend] {
+    background-color: var(--calendar-weekend-bg);
+  }
+
+  &[data-outside] {
+    color: var(--mantine-color-dimmed);
+    opacity: 0.55;
+  }
+
+  &[data-today] .dayNumber {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background-color: var(--mantine-primary-color-filled);
+    color: var(--mantine-color-white);
+  }
+}
+
+.chip {
+  border-radius: var(--mantine-radius-sm);
+  font-size: rem(11px);
+  font-weight: 500;
+  cursor: default;
+
+  &[data-type="companyEvent"] {
+    background-color: var(--mantine-color-blue-light);
+    color: var(--mantine-color-blue-9);
+  }
+
+  &[data-type="meeting"] {
+    background-color: var(--mantine-color-orange-light);
+    color: var(--mantine-color-orange-9);
+  }
+
+  &[data-type="birthday"] {
+    background-color: var(--mantine-color-pink-light);
+    color: var(--mantine-color-pink-9);
+  }
+
+  &[data-type="leaveStart"] {
+    background-color: var(--mantine-color-teal-light);
+    color: var(--mantine-color-teal-9);
+  }
+}
+
+.legendDot {
+  border-radius: 999px;
+
+  &[data-type="companyEvent"] {
+    background-color: var(--mantine-color-blue-6);
+  }
+
+  &[data-type="meeting"] {
+    background-color: var(--mantine-color-orange-6);
+  }
+
+  &[data-type="birthday"] {
+    background-color: var(--mantine-color-pink-6);
+  }
+
+  &[data-type="leaveStart"] {
+    background-color: var(--mantine-color-teal-6);
+  }
+}

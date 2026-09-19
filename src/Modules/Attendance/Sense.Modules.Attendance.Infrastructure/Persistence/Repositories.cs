@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
+using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -214,4 +215,28 @@ public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context
             .Where(l => l.EmployeeId == employeeId && l.WeekStart >= from && l.WeekStart <= to)
             .OrderBy(l => l.WeekStart)
             .ToListAsync(cancellationToken);
+}
+
+public sealed class EqualizationPeriodRepository(AttendanceDbContext context) : IEqualizationPeriodRepository
+{
+    public void Add(EqualizationPeriod period) => context.EqualizationPeriods.Add(period);
+
+    public async Task<EqualizationPeriod?> FindCoveringAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default) =>
+        await context.EqualizationPeriods
+            .FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PeriodStart <= date && date <= p.PeriodEnd, cancellationToken)
+        ?? context.EqualizationPeriods.Local.FirstOrDefault(p => p.EmployeeId == employeeId && p.PeriodStart <= date && date <= p.PeriodEnd);
+
+    public async Task<IReadOnlyList<EqualizationPeriod>> ListClosedEndingInRangeAsync(
+        IReadOnlyCollection<Guid> employeeIds, DateOnly from, DateOnly to, CancellationToken cancellationToken = default)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return [];
+        }
+
+        return await context.EqualizationPeriods
+            .Where(p => employeeIds.Contains(p.EmployeeId) && p.Status == EqualizationPeriodStatus.Closed && p.PeriodEnd >= from && p.PeriodEnd <= to)
+            .OrderBy(p => p.EmployeeId).ThenBy(p => p.PeriodEnd)
+            .ToListAsync(cancellationToken);
+    }
 }

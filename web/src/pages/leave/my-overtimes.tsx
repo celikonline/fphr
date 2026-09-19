@@ -7,11 +7,11 @@ import { Clock, Undo2 } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
-import { OvertimeRequestDialog, OvertimesTable, formatTimeOnly } from "@/components/leave/overtime-shared";
+import { AnnualOvertimeUsageGauge, OvertimeRequestDialog, OvertimesTable, formatTimeOnly } from "@/components/leave/overtime-shared";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
-import { getMyOvertimes, submitMyOvertime, withdrawMyOvertime, type OvertimeRequest } from "@/services/leave.service";
+import { getMyOvertimeAnnualUsage, getMyOvertimes, submitMyOvertime, withdrawMyOvertime, type OvertimeRequest } from "@/services/leave.service";
 
 const MY_OVERTIMES_KEY = ["leave", "overtimes", "me"] as const;
 
@@ -30,6 +30,7 @@ function MyOvertimes() {
   const [adding, setAdding] = useState(() => searchParams.get("new") === "1");
   const [withdrawing, setWithdrawing] = useState<OvertimeRequest | null>(null);
   const query = useQuery({ queryKey: MY_OVERTIMES_KEY, queryFn: getMyOvertimes });
+  const annualUsageQuery = useQuery({ queryKey: [...MY_OVERTIMES_KEY, "annual-usage"], queryFn: () => getMyOvertimeAnnualUsage(), retry: false });
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
@@ -71,6 +72,12 @@ function MyOvertimes() {
           {t("leave:overtime.newRequest")}
         </Button>
       </Group>
+
+      {annualUsageQuery.data && (
+        <Card withBorder padding="sm">
+          <AnnualOvertimeUsageGauge usage={annualUsageQuery.data} />
+        </Card>
+      )}
 
       <Card withBorder padding="lg">
         <div className="overflow-x-auto">

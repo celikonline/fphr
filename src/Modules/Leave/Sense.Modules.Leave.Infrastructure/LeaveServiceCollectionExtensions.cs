@@ -58,6 +58,15 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+        // Workflow.Contracts.IApprovalRequestSummaryProvider: inbox/decision detail for "Leave"/"Overtime" ApprovalRequests.
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
+        services.AddScoped<ILeaveStartDateReader, Lookups.LeaveStartDateReader>();
+        services.AddScoped<IOvertimePayrollReader, Lookups.OvertimePayrollReader>();
+
+        // Cross-module contract consumed by Payroll (severance/notice estimate, senseik-011 F-06); API-only (no
+        // Worker consumer), same pattern as ILeaveUsageReader/ILeaveDayReader above.
+        services.AddScoped<ILeaveBalanceLookup, Lookups.LeaveBalanceLookup>();
         return services;
     }
 

@@ -31,6 +31,7 @@ const SettingsHomePage = lazy(() => import("@/pages/settings/settings-home"));
 const CompanyStructurePage = lazy(() => import("@/pages/settings/company-structure"));
 const HolidayCalendarsPage = lazy(() => import("@/pages/settings/holiday-calendars"));
 const AccessSettingsPage = lazy(() => import("@/pages/settings/access-settings"));
+const SecurityPolicyPage = lazy(() => import("@/pages/settings/security-policy"));
 const SupportAccessPage = lazy(() => import("@/pages/settings/support-access"));
 const DataTransferPage = lazy(() => import("@/pages/settings/data-transfer"));
 const DataTransferJobPage = lazy(() => import("@/pages/settings/data-transfer-job"));
@@ -43,6 +44,8 @@ const DocumentTypesPage = lazy(() => import("@/pages/settings/document-types"));
 const MissingDocumentsReportPage = lazy(() => import("@/pages/settings/missing-documents-report"));
 const AssetCategoriesPage = lazy(() => import("@/pages/settings/asset-categories"));
 const ExpenseCategoriesPage = lazy(() => import("@/pages/settings/expense-categories"));
+const OhsHazardClassificationPage = lazy(() => import("@/pages/settings/ohs-hazard-classification"));
+const OhsRiskAssessmentsPage = lazy(() => import("@/pages/settings/ohs-risk-assessments"));
 const PayrollPeriodsPage = lazy(() => import("@/pages/payroll/periods"));
 const PayrollPeriodDetailPage = lazy(() => import("@/pages/payroll/period-detail"));
 const WorkflowInboxPage = lazy(() => import("@/pages/inbox"));
@@ -73,6 +76,8 @@ const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
 const ReviewCyclesPage = lazy(() => import("@/pages/performance/review-cycles"));
+const CompanyCalendarPage = lazy(() => import("@/pages/company-calendar"));
+const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -119,6 +124,7 @@ export default function App() {
             <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
             <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
             <Route path="requests" element={<RequestsPage />} />
+            <Route path="shared-files" element={<SharedFilesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="apps" element={<AppsPage />} />
@@ -129,6 +135,7 @@ export default function App() {
             <Route path="leave" element={<MyLeavePage />} />
             <Route path="leave/calendar" element={<LeaveCalendarPage />} />
             <Route path="leave/overtimes" element={<MyOvertimesPage />} />
+            <Route path="company-calendar" element={<CompanyCalendarPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
             <Route path="payroll/periods" element={<PayrollPeriodsPage />} />
@@ -164,6 +171,8 @@ export default function App() {
             <Route path="settings/company/missing-documents" element={<MissingDocumentsReportPage />} />
             <Route path="settings/company/asset-categories" element={<AssetCategoriesPage />} />
             <Route path="settings/company/expense-categories" element={<ExpenseCategoriesPage />} />
+            <Route path="settings/company/ohs-hazard-classification" element={<OhsHazardClassificationPage />} />
+            <Route path="settings/company/ohs-risk-assessments" element={<OhsRiskAssessmentsPage />} />
             <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
             <Route
               path="settings/rules/*"
@@ -176,6 +185,7 @@ export default function App() {
               }
             />
             <Route path="settings/system/access" element={<AccessSettingsPage />} />
+            <Route path="settings/system/security-policy" element={<SecurityPolicyPage />} />
             <Route path="settings/system/users-roles" element={<UsersRolesPage />} />
             <Route path="settings/system/audit-log" element={<AuditLogPage />} />
             <Route path="settings/system/support-access" element={<SupportAccessPage />} />

@@ -2,12 +2,13 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Badge, Button, Divider, Drawer, Group, Modal, Paper, Skeleton, Stack, Text, Textarea } from "@mantine/core";
-import { CheckCircle2, Circle, CircleDot, Users, XCircle } from "lucide-react";
+import { CheckCircle2, Circle, CircleDot, XCircle } from "lucide-react";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import { cancelLeaveRequest, type LeaveApprovalStep, type LeaveRequest, type LeaveRequestDetail } from "@/services/leave.service";
 import { Field, LeaveStatusBadge, useDays } from "./leave-shared";
 import { formatTimeOnly } from "./overtime-shared";
+import { TeamOverlapCalendar } from "./team-overlap-calendar";
 
 const CANCEL_REASON_MAX_LENGTH = 500;
 
@@ -104,29 +105,7 @@ export function LeaveRequestDetailSheet({ requestId, scope, load, typeName, foot
               </Alert>
             )}
             {detail.teamOverlap && detail.teamOverlap.count > 0 && (
-              <Paper withBorder p="sm" radius="md">
-                <Group gap="xs" mb="xs">
-                  <Users size={16} color="var(--mantine-color-dimmed)" />
-                  <Text size="sm" fw={600}>
-                    {t("leave:detail.overlappingLeaves.title", { count: detail.teamOverlap.count })}
-                  </Text>
-                </Group>
-                <Stack gap={4}>
-                  {detail.teamOverlap.employees.map((employee) => (
-                    <Group key={employee.employeeId} justify="space-between" gap="sm" wrap="wrap">
-                      <Text size="sm">{employee.name}</Text>
-                      <Text size="xs" c="dimmed">
-                        {date(employee.startDate)} – {date(employee.endDate)}
-                      </Text>
-                    </Group>
-                  ))}
-                </Stack>
-                {detail.teamOverlap.count > detail.teamOverlap.employees.length && (
-                  <Text size="xs" c="dimmed" mt={4}>
-                    {t("leave:detail.overlappingLeaves.more", { count: detail.teamOverlap.count - detail.teamOverlap.employees.length })}
-                  </Text>
-                )}
-              </Paper>
+              <TeamOverlapCalendar overlap={detail.teamOverlap} requestStart={detail.startDate} requestEnd={detail.endDate} locale={i18n.language} />
             )}
             <Divider />
             <ApprovalChain detail={detail} />

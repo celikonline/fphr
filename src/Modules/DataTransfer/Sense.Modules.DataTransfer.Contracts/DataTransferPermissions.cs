@@ -6,7 +6,7 @@ namespace Sense.Modules.DataTransfer.Contracts;
 public static class DataTransferPermissions
 {
     private const string Module = "datatransfer";
-    private const string Group = "DataTransfer";
+    private const string Group = "Veri Aktarımı";
 
     public const string ImportViewKey = "datatransfer.import.view";
     public const string ImportRunKey = "datatransfer.import.run";
@@ -14,16 +14,16 @@ public static class DataTransferPermissions
     public const string ResultDownloadKey = "datatransfer.result.download";
 
     public static readonly Permission ImportView = new(
-        ImportViewKey, Module, "View Imports", Group, "View import templates, import history and row outcomes");
+        ImportViewKey, Module, "İçe Aktarmaları Görüntüleme", Group, "İçe aktarma şablonlarını, geçmişini ve satır sonuçlarını görüntüleme");
 
     public static readonly Permission ImportRun = new(
-        ImportRunKey, Module, "Run Imports", Group, "Upload files, map columns and run imports");
+        ImportRunKey, Module, "İçe Aktarma Çalıştırma", Group, "Dosya yükleme, sütun eşleme ve içe aktarma çalıştırma");
 
     public static readonly Permission TemplateDownload = new(
-        TemplateDownloadKey, Module, "Download Import Templates", Group, "Download import template files");
+        TemplateDownloadKey, Module, "İçe Aktarma Şablonu İndirme", Group, "İçe aktarma şablon dosyalarını indirme");
 
     public static readonly Permission ResultDownload = new(
-        ResultDownloadKey, Module, "Download Import Results", Group, "Download import result files");
+        ResultDownloadKey, Module, "İçe Aktarma Sonucu İndirme", Group, "İçe aktarma sonuç dosyalarını indirme");
 
     /// <summary>All DataTransfer module permissions.</summary>
     public static IEnumerable<Permission> All => [ImportView, ImportRun, TemplateDownload, ResultDownload];

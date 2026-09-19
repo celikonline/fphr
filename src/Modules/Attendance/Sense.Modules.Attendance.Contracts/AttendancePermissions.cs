@@ -10,37 +10,37 @@ namespace Sense.Modules.Attendance.Contracts;
 public static class AttendancePermissions
 {
     private const string Module = "attendance";
-    private const string Group = "Attendance";
+    private const string Group = "Puantaj";
 
     public static readonly Permission WorkScheduleView = new(
-        "attendance.workschedule.view", Module, "View Work Schedules", Group, "View work schedules and their day tables");
+        "attendance.workschedule.view", Module, "Çalışma Tablolarını Görüntüleme", Group, "Çalışma tablolarını ve gün planlarını görüntüleme");
 
     public static readonly Permission WorkScheduleManage = new(
-        "attendance.workschedule.manage", Module, "Manage Work Schedules", Group, "Create, edit, activate/deactivate and set the default work schedule");
+        "attendance.workschedule.manage", Module, "Çalışma Tablosu Yönetimi", Group, "Çalışma tablosu oluşturma, düzenleme, etkinleştirme/pasifleştirme ve varsayılan olarak ayarlama");
 
     public static readonly Permission WorkScheduleAssign = new(
-        "attendance.workschedule.assign", Module, "Assign Work Schedules", Group, "Assign a work schedule to employees");
+        "attendance.workschedule.assign", Module, "Çalışma Tablosu Atama", Group, "Çalışanlara çalışma tablosu atama");
 
     /// <summary>"Çalışma tablosu" field on the employee card and Puantajım summary; "*.my.*" reaches every base role.</summary>
     public static readonly Permission MyWorkSchedule = new(
-        "attendance.my.workschedule", Module, "View My Work Schedule", Group, "View the caller's own work schedule");
+        "attendance.my.workschedule", Module, "Kendi Çalışma Tablomu Görüntüleme", Group, "Kendi çalışma tablonuzu görüntüleme");
 
     public static readonly Permission TimesheetView = new(
-        "attendance.timesheet.view", Module, "View Timesheets", Group, "View employees' recorded attendance days");
+        "attendance.timesheet.view", Module, "Puantaj Kayıtlarını Görüntüleme", Group, "Çalışanların işlenmiş puantaj günlerini görüntüleme");
 
     /// <summary>"Çalışılan saat" manual record/correction (11.3.6); PDKS import (package A2b) reuses the same write path.</summary>
     public static readonly Permission TimesheetEdit = new(
-        "attendance.timesheet.edit", Module, "Edit Timesheets", Group, "Record and correct employees' check-in/check-out times");
+        "attendance.timesheet.edit", Module, "Puantaj Kaydı Düzenleme", Group, "Çalışanların giriş/çıkış saatlerini kaydetme ve düzeltme");
 
     /// <summary>"Puantajım"; "*.my.*" reaches every base role.</summary>
     public static readonly Permission MyTimesheet = new(
-        "attendance.my.timesheet", Module, "View My Timesheet", Group, "View the caller's own recorded attendance days");
+        "attendance.my.timesheet", Module, "Kendi Puantajımı Görüntüleme", Group, "Kendi işlenmiş puantaj günlerinizi görüntüleme");
 
     public const string TimesheetImportKey = "attendance.timesheet.import";
 
     /// <summary>PDKS Excel import (package A2b); checked on top of datatransfer.import.run by the DataTransfer module's ImportTemplateCatalog.</summary>
     public static readonly Permission TimesheetImport = new(
-        TimesheetImportKey, Module, "Import Timesheets (PDKS)", Group, "Import check-in/check-out times from a PDKS Excel file");
+        TimesheetImportKey, Module, "Puantaj İçe Aktarma (PDKS)", Group, "PDKS Excel dosyasından giriş/çıkış saatlerini içe aktarma");
 
     /// <summary>
     /// "Öneri" resolution (package A3, 11.3.6 "Roller ve yetkiler" - spec text names it attendance.timesheet.resolve):
@@ -54,7 +54,7 @@ public static class AttendancePermissions
     public const string TimesheetResolveKey = "attendance.timesheet.resolve";
 
     public static readonly Permission TimesheetResolve = new(
-        TimesheetResolveKey, Module, "Resolve Timesheet Anomalies", Group, "Apply a suggested resolution (overtime, worked hours, leave request, ignore) to a flagged attendance day");
+        TimesheetResolveKey, Module, "Puantaj Önerisini Çözümleme", Group, "İşaretli bir puantaj gününe önerilen çözümü (fazla mesai, çalışılan saat, izin talebi, yok say) uygulama");
 
     /// <summary>
     /// Vardiya izinleri (package A4, 11.3.6 "Roller ve yetkiler"). Timekeeper's "attendance.*" wildcard already
@@ -64,43 +64,43 @@ public static class AttendancePermissions
     /// Manager's include list is appended with shift.plan/.publish ("Manager → view/resolve/plan/publish @Team").
     /// </summary>
     public static readonly Permission ShiftView = new(
-        "attendance.shift.view", Module, "View Shift Plan", Group, "View the shift plan (weekly/monthly views, reports)");
+        "attendance.shift.view", Module, "Vardiya Planını Görüntüleme", Group, "Vardiya planını görüntüleme (haftalık/aylık görünümler, raporlar)");
 
     public static readonly Permission ShiftPlan = new(
-        "attendance.shift.plan", Module, "Plan Shifts", Group, "Create, edit and repeat draft shift assignments");
+        "attendance.shift.plan", Module, "Vardiya Planlama", Group, "Taslak vardiya atamaları oluşturma, düzenleme ve tekrarlama");
 
     public static readonly Permission ShiftPublish = new(
-        "attendance.shift.publish", Module, "Publish Shifts", Group, "Publish draft shift assignments to employees");
+        "attendance.shift.publish", Module, "Vardiya Yayınlama", Group, "Taslak vardiya atamalarını çalışanlara yayınlama");
 
     public static readonly Permission ShiftSettingsManage = new(
-        "attendance.shift.settings", Module, "Manage Shift Settings", Group, "Configure daily/weekly limits, night work, break and auto-lock settings");
+        "attendance.shift.settings", Module, "Vardiya Ayarları Yönetimi", Group, "Günlük/haftalık limitleri, gece çalışmasını, molayı ve otomatik kilit ayarlarını yapılandırma");
 
     public static readonly Permission ShiftLock = new(
-        "attendance.shift.lock", Module, "Lock Shift Plan", Group, "Lock a month's shift plan against further changes");
+        "attendance.shift.lock", Module, "Vardiya Planını Kilitleme", Group, "Bir ayın vardiya planını değişikliğe karşı kilitleme");
 
     public static readonly Permission ShiftUnlock = new(
-        "attendance.shift.unlock", Module, "Unlock Shift Plan", Group, "Reopen a locked month's shift plan (audited exception)");
+        "attendance.shift.unlock", Module, "Vardiya Planı Kilidini Açma", Group, "Kilitli bir ayın vardiya planını yeniden açma (denetimli istisna)");
 
     /// <summary>"Vardiyam"; "*.self.*" reaches every base role.</summary>
     public static readonly Permission ShiftSelf = new(
-        "attendance.shift.self", Module, "View My Shifts", Group, "View the caller's own shift assignments");
+        "attendance.shift.self", Module, "Kendi Vardiyalarımı Görüntüleme", Group, "Kendi vardiya atamalarınızı görüntüleme");
 
     /// <summary>Package A5. "*.self.*" reaches every base role for self-service submit/cancel.</summary>
     public static readonly Permission AvailabilitySelf = new(
-        "attendance.availability.self", Module, "Report My Availability", Group, "Submit and cancel the caller's own \"müsait değilim\" entries");
+        "attendance.availability.self", Module, "Müsaitlik Durumumu Bildirme", Group, "Kendi \"müsait değilim\" kayıtlarınızı oluşturma ve iptal etme");
 
     public static readonly Permission AvailabilityView = new(
-        "attendance.availability.view", Module, "View Employee Availability", Group, "View employees' availability entries when planning shifts");
+        "attendance.availability.view", Module, "Çalışan Müsaitlik Durumunu Görüntüleme", Group, "Vardiya planlarken çalışanların müsaitlik kayıtlarını görüntüleme");
 
     public const string CompensatoryViewKey = "attendance.compensatory.view";
 
     public static readonly Permission CompensatoryView = new(
-        CompensatoryViewKey, Module, "View Compensatory Work Ledger", Group, "View employees' telafi çalışması debt/compensation ledger");
+        CompensatoryViewKey, Module, "Telafi Çalışması Defterini Görüntüleme", Group, "Çalışanların telafi çalışması borç/telafi defterini görüntüleme");
 
     public const string CompensatoryManageKey = "attendance.compensatory.manage";
 
     public static readonly Permission CompensatoryManage = new(
-        CompensatoryManageKey, Module, "Record Compensatory Work", Group, "Log compensatory hours worked against an open telafi debt");
+        CompensatoryManageKey, Module, "Telafi Çalışması Kaydetme", Group, "Açık bir telafi borcuna karşı çalışılan telafi saatlerini kaydetme");
 
     public static IEnumerable<Permission> All =>
         [

@@ -16,6 +16,8 @@ public sealed class SystemRoleDefinitionsTests
             "employee.directory.view", "employee.orgchart.view", "employee.salary.view", "employee.salary.edit", "employee.bank_accounts.edit",
             "employee.sensitive.view", "organization.holidays.view", "organization.units.read",
             "organization.approval_assignments.manage", "billing.invoices.view", "analytics.kpi.view",
+            "identity.users.view", "identity.users.manage", "identity.users.invite", "identity.users.suspend",
+            "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -69,6 +71,23 @@ public sealed class SystemRoleDefinitionsTests
         Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.salary.edit");
         Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.bank_accounts.edit");
         Resolve(SystemRoleCodes.Auditor).ShouldNotContain("employee.sensitive.view");
+    }
+
+    /// <summary>senseik-050: HR Manager loses identity-management rights (create/edit users + role assignment,
+    /// 2FA reset, suspend/enable) - those stay with System Administrator (Owner/Admin) only - but keeps viewing
+    /// users and inviting them, since onboarding still needs that.</summary>
+    [Fact]
+    public void HR_LosesIdentityManagementPermissions_ButKeepsUserViewAndInvite()
+    {
+        var keys = Resolve(SystemRoleCodes.HR);
+
+        keys.ShouldContain("identity.users.view");
+        keys.ShouldContain("identity.users.invite");
+        keys.ShouldContain("identity.roles.view");
+        keys.ShouldNotContain("identity.users.manage");
+        keys.ShouldNotContain("identity.users.suspend");
+        keys.ShouldNotContain("identity.users.reset_mfa");
+        keys.ShouldNotContain("identity.users.impersonate");
     }
 
     [Fact]

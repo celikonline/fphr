@@ -1,0 +1,17 @@
+{
+  "id": "senseik-048",
+  "title": "İK için şirket geneli izin/fazla mesai defteri (liste/filtre/dışa aktarım)",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/hr-company-wide-leave-ledger",
+  "worktree": ".claude/worktrees/hr-leave-ledger",
+  "acceptance": [
+    "İK Müdürü ve Hesap Sahibi rolleri için sol menüde 'İzinlerim'/'Fazla mesailerim' YANINDA (yerine değil) şirket geneli bir görünüm var: 'bu ay kimler izinde', 'yıllık izin birikimi en yüksek 10 kişi', 'bu yıl 270 saati aşan var mı' gibi sorulara cevap veren filtrelenebilir bir liste",
+    "Departman/lokasyon bazında filtreleme",
+    "Excel/CSV dışa aktarım",
+    "Mevcut izin takvimi (leave-calendar.tsx, senseik-024'te Outlook tarzı görünüm eklenecek) ile tamamlayıcı ama farklı bir ihtiyacı karşılıyor (liste/tablo görünümü, takvim değil)"
+  ],
+  "merge_gate": "dotnet test (Leave/Reporting) + pnpm --filter web typecheck + demo'da filtre/dışa aktarım çalışıyor",
+  "handoff": "docs/handoffs/hr-company-wide-leave-ledger.md",
+  "source": "1. Tur Test Bulgu Dokümanı § D-04 (YÜKSEK — İK'nın rutin işi çalışanları teker teker açmaya indirgeniyor)."
+}

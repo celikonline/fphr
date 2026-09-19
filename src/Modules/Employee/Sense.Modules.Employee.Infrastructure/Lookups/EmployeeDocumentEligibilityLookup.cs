@@ -17,7 +17,7 @@ public sealed class EmployeeDocumentEligibilityLookup(EmployeeDbContext context)
     {
         var row = await context.Employees.AsNoTracking()
             .Where(e => e.TenantId == tenantId && e.Id == employeeId)
-            .Select(e => new { e.BirthDate, e.DisabilityDegree, e.IsUndergroundWorker })
+            .Select(e => new { e.BirthDate, e.DisabilityDegree, e.IsUndergroundWorker, e.Nationality })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (row is null)
@@ -29,7 +29,8 @@ public sealed class EmployeeDocumentEligibilityLookup(EmployeeDbContext context)
         var isUnder18 = row.BirthDate is { } birthDate && Age(birthDate, today) < 18;
         var hasDisability = row.DisabilityDegree is { } degree && degree != DisabilityDegree.None;
         var isUndergroundWorker = row.IsUndergroundWorker;
-        return new EmployeeDocumentEligibilitySignals(isUnder18, hasDisability, isUndergroundWorker);
+        var isForeignNational = row.Nationality == Nationality.Foreign;
+        return new EmployeeDocumentEligibilitySignals(isUnder18, hasDisability, isUndergroundWorker, isForeignNational);
     }
 
     private static int Age(DateOnly birthDate, DateOnly asOf)

@@ -1,0 +1,50 @@
+{
+  "hazardClassification": {
+    "title": "OHS hazard class",
+    "subtitle": "Manage the hazard class history for each workplace location.",
+    "add": "Add classification",
+    "reclassify": "Reclassify",
+    "empty": "No hazard classification recorded yet.",
+    "saved": "Hazard class saved.",
+    "columns": {
+      "location": "Location",
+      "hazardClass": "Hazard class",
+      "effectiveFrom": "Effective from",
+      "note": "Note"
+    },
+    "errors": {
+      "loadFailed": "Could not load hazard classifications.",
+      "generic": "Could not save the hazard class.",
+      "locationRequired": "Location is required.",
+      "hazardClassRequired": "Hazard class is required."
+    }
+  },
+  "riskAssessments": {
+    "title": "Risk assessments",
+    "subtitle": "View recorded risk assessments and their renewal due dates.",
+    "add": "Record risk assessment",
+    "empty": "No risk assessment recorded yet.",
+    "saved": "Risk assessment saved.",
+    "columns": {
+      "location": "Location",
+      "hazardClass": "Hazard class",
+      "assessmentDate": "Assessment date",
+      "nextDueDate": "Next due date",
+      "preparedBy": "Prepared by"
+    },
+    "errors": {
+      "loadFailed": "Could not load risk assessments.",
+      "generic": "Could not save the risk assessment.",
+      "locationRequired": "Location is required.",
+      "preparedByRequired": "Prepared by is required.",
+      "hazardClassificationMissing": "This location needs a hazard class assigned first."
+    }
+  },
+  "enum": {
+    "hazardClass": {
+      "low": "Low hazard",
+      "medium": "Hazardous",
+      "high": "Very hazardous"
+    }
+  }
+}

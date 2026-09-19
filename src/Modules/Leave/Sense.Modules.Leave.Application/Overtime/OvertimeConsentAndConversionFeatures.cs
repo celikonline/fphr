@@ -20,7 +20,7 @@ public sealed record OvertimeConsentDto(
 
 public sealed record OvertimeConversionDto(
     Guid Id, Guid OvertimeRequestId, Guid EmployeeId, OvertimeConversionKind Kind, OvertimeMinutesBasis MinutesBasis, decimal Rate, int BasisMinutes,
-    int ResultMinutes, decimal ResultDays, Guid? LeaveTypeId, Guid? LedgerEntryId, OvertimeConversionStatus Status, DateTime ConvertedAt);
+    int ResultMinutes, decimal ResultDays, Guid? LeaveTypeId, Guid? LedgerEntryId, OvertimeConversionStatus Status, DateTime ConvertedAt, DateOnly? UsedByDate);
 
 internal static class OvertimeConsentMapper
 {
@@ -29,7 +29,7 @@ internal static class OvertimeConsentMapper
 
     public static OvertimeConversionDto ToDto(OvertimeConversion c) =>
         new(c.Id, c.OvertimeRequestId, c.EmployeeId, c.Kind, c.MinutesBasis, c.RateSnapshot, c.BasisMinutes, c.ResultMinutes, c.ResultDays, c.LeaveTypeId,
-            c.LedgerEntryId, c.Status, c.ConvertedAt);
+            c.LedgerEntryId, c.Status, c.ConvertedAt, c.UsedByDate);
 }
 
 [RequiresPermission("leave.overtime_consents.manage")]
@@ -128,10 +128,14 @@ public sealed class ConvertOvertimeToTimeOffHandler(
     IEmployeeLeaveProfileRepository profiles,
     ILeaveRuleSetRepository ruleSets,
     ILeaveLedgerRepository ledger,
+    ILegislationParameterReader legislation,
     IIntegrationEventOutbox outbox,
     TimeProvider clock)
     : ICommandHandler<ConvertOvertimeToTimeOffCommand, OvertimeConversionDto>
 {
+    /// <summary>m.41 varsayılan serbest zaman kullanım süresi (Overtime.CompTimeExpiryMonths seed'i olmadığında).</summary>
+    public const int FallbackExpiryMonths = 6;
+
     public async Task<Result<OvertimeConversionDto>> Handle(ConvertOvertimeToTimeOffCommand command, CancellationToken cancellationToken)
     {
         if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesConvert.Key, command.EmployeeId, cancellationToken))
@@ -177,8 +181,14 @@ public sealed class ConvertOvertimeToTimeOffHandler(
         }
 
         var now = clock.GetUtcNow().UtcDateTime;
+        var today = DateOnly.FromDateTime(now);
+        var expiryMonths = (int)await legislation.GetDecimalOrDefaultAsync(
+            LegislationParameterKeys.OvertimeCompTimeExpiryMonths, today, FallbackExpiryMonths, cancellationToken);
+        var usedByDate = today.AddMonths(expiryMonths);
+
         var conversion = OvertimeConversion.ToTimeOff(
-            request, command.MinutesBasis, command.Rate ?? OvertimeMath.DefaultTimeOffRate, OvertimeMath.DefaultDailyWorkMinutes, type.Id, currentUser.UserId, now, command.Note);
+            request, command.MinutesBasis, command.Rate ?? OvertimeMath.DefaultTimeOffRate, OvertimeMath.DefaultDailyWorkMinutes, type.Id, currentUser.UserId,
+            now, command.Note, usedByDate);
         if (conversion.IsFailure)
         {
             return conversion.Error;

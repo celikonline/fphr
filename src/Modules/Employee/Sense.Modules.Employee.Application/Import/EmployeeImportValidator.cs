@@ -114,7 +114,17 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var postalCode = Text(row, EmployeeImportColumns.PostalCode);
         var contractType = Enum<ContractType>(row, EmployeeImportColumns.ContractType, errors);
         var employmentType = Enum<EmploymentType>(row, EmployeeImportColumns.EmploymentType, errors);
+        var sicilNumarasi = Text(row, EmployeeImportColumns.SicilNumarasi);
+        CheckLength(errors, EmployeeImportColumns.SicilNumarasi, sicilNumarasi, EmployeeLimits.SicilNumarasiMaxLength);
+        var nationality = Enum<Nationality>(row, EmployeeImportColumns.Nationality, errors);
+        var foreignIdNumber = Text(row, EmployeeImportColumns.ForeignIdNumber);
+        CheckLength(errors, EmployeeImportColumns.ForeignIdNumber, foreignIdNumber, EmployeeLimits.ForeignIdNumberLength);
+        var passportNumber = Text(row, EmployeeImportColumns.PassportNumber);
+        CheckLength(errors, EmployeeImportColumns.PassportNumber, passportNumber, EmployeeLimits.PassportNumberMaxLength);
+        var sgkOccupationCode = Text(row, EmployeeImportColumns.SgkOccupationCode);
+        CheckLength(errors, EmployeeImportColumns.SgkOccupationCode, sgkOccupationCode, EmployeeLimits.SgkOccupationCodeMaxLength);
         var salary = Salary(row, errors);
+        var bank = Bank(row, errors);
         var customFieldValues = CustomFields(row, errors);
 
         if (errors.Count > 0 || nationalId is null)
@@ -151,6 +161,11 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
             PostalCode = postalCode ?? baseInfo.PostalCode,
             ContractType = contractType ?? baseInfo.ContractType,
             EmploymentType = employmentType ?? baseInfo.EmploymentType,
+            SicilNumarasi = sicilNumarasi ?? baseInfo.SicilNumarasi,
+            Nationality = nationality ?? baseInfo.Nationality,
+            ForeignIdNumber = foreignIdNumber ?? baseInfo.ForeignIdNumber,
+            PassportNumber = passportNumber ?? baseInfo.PassportNumber,
+            SgkOccupationCode = sgkOccupationCode ?? baseInfo.SgkOccupationCode,
         };
 
         var domainCheck = EmployeeEntity.Validate(info);
@@ -166,6 +181,7 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
             (setOrgUnit && orgUnitId != existing.OrgUnitId) ||
             (setManager && managerId != existing.ManagerEmployeeId) ||
             salary is not null ||
+            bank is not null ||
             customFieldValues.Count > 0;
 
         if (setManager)
@@ -174,7 +190,9 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         }
 
         return new EmployeeImportValidation(
-            new EmployeeImportPlan(row.RowNumber, nationalId, existing, newId, info, setOrgUnit, orgUnitId, setManager, managerId, hasChanges, salary, customFieldValues),
+            new EmployeeImportPlan(
+                row.RowNumber, nationalId, existing, newId, info, setOrgUnit, orgUnitId, setManager, managerId, hasChanges,
+                Salary: salary, CustomFieldValues: customFieldValues, Bank: bank),
             nationalId,
             existing?.Id,
             []);
@@ -187,7 +205,8 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
     private static EmployeeInfo ExistingInfo(EmployeeRow e) => new(
         e.FirstName, e.LastName, e.NationalId, e.WorkEmail, e.PersonalEmail, e.WorkPhone, e.HireDate, e.BirthDate,
         e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
-        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType);
+        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType,
+        null, e.SicilNumarasi, e.Nationality, e.ForeignIdNumber, e.PassportNumber, e.SgkOccupationCode);
 
     private Guid? ResolveManager(ImportRow row, EmployeeRow? existing, List<ImportRowError> errors)
     {
@@ -427,6 +446,58 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
 
         return new SalaryRecordData(
             effectiveFrom.Value, amount.Value, currency, salaryType.Value, payFrequency.Value, transportAllowance, mealAllowance, Source: SalarySource.Import);
+    }
+
+    /// <summary>
+    /// "Banka bloğu bütünlüğü" (G-01 Aşama 1, salary block ile simetrik): without an IBAN the whole block is ignored -
+    /// not an error, even if other bank cells are filled. Once the IBAN is present, it is parsed (length/checksum/country,
+    /// same rule <see cref="BankAccount.ParseIban"/> enforces on manual entry) and the account type becomes required;
+    /// bank name/currency stay optional. Duplicate-IBAN-per-employee is checked at apply time by <c>Employee.AddBankAccount</c>.
+    /// </summary>
+    private static BankAccountData? Bank(ImportRow row, List<ImportRowError> errors)
+    {
+        if (row.Get(EmployeeImportColumns.BankIban) is null)
+        {
+            return null;
+        }
+
+        var iban = Text(row, EmployeeImportColumns.BankIban);
+        var parsedIban = BankAccount.ParseIban(iban);
+        if (parsedIban.IsFailure)
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.BankIban, parsedIban.Error.Code));
+        }
+
+        var bankAccountTypeCell = row.Get(EmployeeImportColumns.BankAccountType);
+        var bankAccountType = Enum<BankAccountType>(row, EmployeeImportColumns.BankAccountType, errors);
+        if (bankAccountTypeCell is null)
+        {
+            errors.Add(new ImportRowError(EmployeeImportColumns.BankAccountType, EmployeeDomainErrors.BankAccountTypeRequired));
+        }
+
+        var bankName = Text(row, EmployeeImportColumns.BankName);
+
+        var currencyCell = row.Get(EmployeeImportColumns.BankCurrency);
+        string? currency = null;
+        if (currencyCell is not null)
+        {
+            var normalized = NormalizeCurrencyAlias(Text(row, EmployeeImportColumns.BankCurrency));
+            if (normalized is not null && Currencies.IsKnown(normalized))
+            {
+                currency = normalized;
+            }
+            else
+            {
+                errors.Add(ValueError(EmployeeImportColumns.BankCurrency, EmployeeDomainErrors.CurrencyInvalid, currencyCell));
+            }
+        }
+
+        if (parsedIban.IsFailure || bankAccountType is null)
+        {
+            return null;
+        }
+
+        return new BankAccountData(iban, bankAccountType.Value, bankName, currency);
     }
 
     /// <summary>Kolay İK kısaltmaları ("TL", "Euro") normalize to their ISO 4217 code before <see cref="Currencies.IsKnown"/>; every other value only gets <see cref="SalaryRecord.NormalizeCurrency"/>'s trim/uppercase.</summary>

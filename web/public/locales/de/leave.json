@@ -327,7 +327,8 @@
     "remainingBalance": "Verbleibendes Urlaubsguthaben",
     "overlappingLeaves": {
       "title": "Überschneidende Urlaube ({{count}})",
-      "more": "+{{count}} weitere"
+      "more": "+{{count}} weitere (nicht aufgeführt)",
+      "viewAll": "Alle anzeigen ({{count}})"
     }
   },
   "request": {
@@ -376,11 +377,20 @@
     "subtitle": "Genehmigte und offene Urlaube.",
     "previous": "Vorheriger Monat",
     "next": "Nächster Monat",
+    "previousWeek": "Vorherige Woche",
+    "nextWeek": "Nächste Woche",
+    "previousDay": "Vorheriger Tag",
+    "nextDay": "Nächster Tag",
     "today": "Heute",
     "employee": "Mitarbeitende",
     "empty": "In diesem Zeitraum gibt es keine Urlaube.",
     "masked": "Im Urlaub",
-    "overlappingCount": "An diesem Tag überschneiden sich {{count}} genehmigte Urlaubsanträge"
+    "overlappingCount": "An diesem Tag überschneiden sich {{count}} genehmigte Urlaubsanträge",
+    "view": {
+      "day": "Tag",
+      "week": "Woche",
+      "month": "Monat"
+    }
   },
   "overtime": {
     "myTitle": "Meine Überstunden",
@@ -412,6 +422,17 @@
       "workday": "Arbeitstag",
       "weeklyRest": "Wochenruhetag",
       "publicHoliday": "Feiertag"
+    },
+    "payRate": {
+      "label": "Zuschlagssatz",
+      "hint": "Arbeitsgesetz Art. 41: Überstunden über die wöchentliche 45-Stunden-Grenze werden mit 50% Zuschlag, Überstunden innerhalb einer vertraglich verkürzten Woche mit 25% Zuschlag vergütet.",
+      "rate25": "25% Zuschlag",
+      "rate50": "50% Zuschlag"
+    },
+    "annualUsage": {
+      "title": "Jährliche Überstunden {{year}}",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Die gesetzliche Jahresgrenze von 270 Stunden wurde überschritten."
     },
     "sources": {
       "manual": "Antrag",

@@ -71,7 +71,7 @@ function renderDialog(editing: LeaveType | null) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   const onClose = vi.fn();
 
-  render(
+  const view = render(
     <I18nextProvider i18n={createTestI18n()}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
@@ -81,7 +81,7 @@ function renderDialog(editing: LeaveType | null) {
     </I18nextProvider>,
   );
 
-  return { onClose };
+  return { onClose, ...view };
 }
 
 function seededAnnualType(): LeaveType {
@@ -124,6 +124,18 @@ function seededAnnualType(): LeaveType {
     },
   };
 }
+
+describe("LeaveTypeDialog (senseik-021 form modal alignment)", () => {
+  it("opens left-aligned via the shared FormModal wrapper (inner justify-content: flex-start)", () => {
+    renderDialog(seededAnnualType());
+
+    // Mantine's ModalBaseContent renders the "inner" flex wrapper as the dialog's direct parent
+    // (FocusTrap clones its child rather than adding a DOM node of its own).
+    const inner = screen.getByRole("dialog").parentElement;
+    expect(inner).not.toBeNull();
+    expect(inner?.style.justifyContent).toBe("flex-start");
+  });
+});
 
 describe("LeaveTypeDialog (senseik-008 Bug 1)", () => {
   it("shows the resolved leave name, not the raw seed key, in the name field", () => {

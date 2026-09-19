@@ -16,7 +16,8 @@ public sealed record SalaryRecordRequest(
     PayFrequency? PayFrequency,
     decimal? TransportAllowance,
     decimal? MealAllowance,
-    string? Note);
+    string? Note,
+    Guid? OrgUnitId = null);
 
 /// <summary>Add body of a bank account (accountType as a camelCase enum string; IBAN with or without spaces).</summary>
 public sealed record AddBankAccountRequest(
@@ -69,7 +70,7 @@ public sealed class EmployeePaymentsController : ApiControllerBase
     public async Task<IActionResult> AddSalary(Guid id, [FromBody] SalaryRecordRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new AddSalaryRecordCommand(id, request.EffectiveFrom, request.Amount, request.Currency, request.SalaryType, request.PayFrequency,
-                request.TransportAllowance, request.MealAllowance, request.Note),
+                request.TransportAllowance, request.MealAllowance, request.Note, request.OrgUnitId),
             ct));
 
     [HttpPut(ApiRoutes.IdParam + Salaries + RecordId)]
@@ -77,7 +78,7 @@ public sealed class EmployeePaymentsController : ApiControllerBase
     public async Task<IActionResult> UpdateSalary(Guid id, Guid recordId, [FromBody] SalaryRecordRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new UpdateSalaryRecordCommand(id, recordId, request.EffectiveFrom, request.Amount, request.Currency, request.SalaryType, request.PayFrequency,
-                request.TransportAllowance, request.MealAllowance, request.Note),
+                request.TransportAllowance, request.MealAllowance, request.Note, request.OrgUnitId),
             ct));
 
     [HttpDelete(ApiRoutes.IdParam + Salaries + RecordId)]

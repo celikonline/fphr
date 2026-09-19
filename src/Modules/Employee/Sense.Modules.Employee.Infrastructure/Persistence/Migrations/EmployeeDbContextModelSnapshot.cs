@@ -404,6 +404,11 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
 
+                    b.Property<string>("ForeignIdNumber")
+                        .HasMaxLength(11)
+                        .HasColumnType("character varying(11)")
+                        .HasColumnName("foreign_id_number");
+
                     b.Property<string>("Gender")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -483,9 +488,22 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(11)")
                         .HasColumnName("national_id");
 
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Turkish")
+                        .HasColumnName("nationality");
+
                     b.Property<Guid?>("OrgUnitId")
                         .HasColumnType("uuid")
                         .HasColumnName("org_unit_id");
+
+                    b.Property<string>("PassportNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("passport_number");
 
                     b.Property<string>("PersonalEmail")
                         .HasMaxLength(254)
@@ -501,6 +519,16 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("sgk_exit_code");
+
+                    b.Property<string>("SgkOccupationCode")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("sgk_occupation_code");
+
+                    b.Property<string>("SicilNumarasi")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("sicil_numarasi");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -576,6 +604,11 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_employees_tenant_id_national_id")
                         .HasFilter("national_id IS NOT NULL");
+
+                    b.HasIndex("TenantId", "SicilNumarasi")
+                        .IsUnique()
+                        .HasDatabaseName("ix_employees_tenant_id_sicil_numarasi")
+                        .HasFilter("sicil_numarasi IS NOT NULL");
 
                     b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("ix_employees_tenant_id_status");
@@ -781,6 +814,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("note");
+
+                    b.Property<Guid?>("OrgUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("org_unit_id");
 
                     b.Property<string>("PayFrequency")
                         .IsRequired()

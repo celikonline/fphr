@@ -116,6 +116,10 @@ public sealed class EmployeeModule : IModule
         // Cross-module contract consumed by Payroll (EmployeeHired -> initial EmployeePayrollProfile.WageBasis, 11.3.07 P2)
         services.AddScoped<IEmployeeSalaryLookup, EmployeeSalaryLookup>();
 
+        // Cross-module contract consumed by Payroll (severance/notice estimate, senseik-011 F-06); API-only (no
+        // Worker consumer), so unlike IEmployeeSalaryLookup/IEmployeeBirthDateLookup it needs no Sense.Worker registration.
+        services.AddScoped<IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
+
         // Cross-module contract consumed by Leave (EmployeeHired -> EmployeeLeaveProfile.BirthDate, 4857 md.53/IV
         // yaş istisnası; also read in bulk by LeaveBalanceRecalculationJob's nightly backfill/resync pass)
         services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();

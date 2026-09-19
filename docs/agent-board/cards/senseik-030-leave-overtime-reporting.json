@@ -1,0 +1,17 @@
+{
+  "id": "senseik-030",
+  "title": "İzin/fazla mesai raporlama: mutabakat formu, aylık mesai raporu, fazla mesai ödemeye çevirme",
+  "owner": "pc-b",
+  "state": "backlog",
+  "branch": "b/leave-overtime-reporting",
+  "worktree": ".claude/worktrees/leave-overtime-reporting",
+  "acceptance": [
+    "İzin mutabakat formu: çalışanın dönem içi izin kullanımını özetleyen, imzalanabilir/indirilebilir bir rapor (Excel/PDF)",
+    "Aylık fazla mesai raporu: onaylanan fazla mesailerin dönem bazlı Excel dökümü (mevcut LeaveReportProviderTests.cs/IReportProvider deseniyle genişletme)",
+    "Fazla mesai → ödemeye çevirme: OvertimeConversion.Kind=Pay şu an implemente değil (kod içi yorum: 'Pay ... come later') — bu kartta tamamlanmalı, Expense/Payroll'a nasıl bağlanacağı (PayrollAdjustment) netleştirilmeli",
+    "'Kendin Oluştur' özel rapor motoru bu kartın KAPSAMI DIŞI — ayrı, büyük bir özellik (backlog'a not düş, bu kartta yapma)"
+  ],
+  "merge_gate": "dotnet test (Leave/Reporting) + demo seed'de örnek mutabakat formu ve mesai raporu üretiliyor",
+  "handoff": "docs/handoffs/leave-overtime-reporting.md",
+  "source": "Kullanıcı isteği (2026-09-18) — kolayik.com/izin-fazla-mesai-yonetimi rakip analizi. NOT: senseik-012 (fazla mesai oranları) implementasyonuyla AYNI ANDA çalışabilir/çakışabilir (OvertimeRequest/OvertimeConversion'a dokunuyor) — bu kart o dalga merge olana kadar BAŞLATILMAMALI."
+}

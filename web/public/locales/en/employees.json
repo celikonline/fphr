@@ -323,6 +323,8 @@
     "notFoundTitle": "Employee not found",
     "notFoundDescription": "The record may have been removed or is outside your access scope.",
     "saved": "Employee details saved.",
+    "statusLabel": "Employee",
+    "accountStatusLabel": "Account",
     "sections": {
       "general": "General",
       "personal": "Personal details",
@@ -564,6 +566,16 @@
       "sgkSubCode": "SGK sub-code",
       "sgkSubCodeHint": "This reason has more than one valid SGK code - pick one.",
       "sgkSubCodeRequired": "Pick an SGK sub-code for this reason.",
+      "severanceEstimate": {
+        "title": "Severance/notice estimate",
+        "immoralOrBadFaith": "Termination for violating rules of morality and good faith (İş K. m.25/II)",
+        "severance": "Severance pay",
+        "notice": "Notice pay",
+        "unusedLeave": "Unused leave pay",
+        "total": "Total",
+        "unavailable": "The estimate cannot be calculated right now (a current salary record is required).",
+        "disclaimer": "This is an estimate only; kötüniyet/union compensation is out of scope and nothing is recorded."
+      },
       "severancePaid": "Severance paid",
       "severancePaidHint": "When paid, this period does not count towards severance seniority after a rehire.",
       "leaveSettled": "Annual leave used up or paid out",

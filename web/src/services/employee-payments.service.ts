@@ -33,6 +33,8 @@ export interface SalaryRecord {
   createdByUserId?: string | null;
   createdByName?: string | null;
   createdAt: string;
+  /** Lokasyon/pozisyon ataması (G-01 Aşama 1); null when the record applies to the employee generally. */
+  orgUnitId?: string | null;
 }
 
 /** `SalaryRecordRequest` body: effectiveFrom + amount are mandatory ("Maaş bloğu bütünlüğü"). */
@@ -45,6 +47,7 @@ export interface SalaryRecordInput {
   transportAllowance: number | null;
   mealAllowance: number | null;
   note: string | null;
+  orgUnitId?: string | null;
 }
 
 /** `BankAccountDto`; primary first. `iban` is grouped ("TR33 0006 …") or masked ("TR** **** … **12 34") when `isIbanMasked`. */

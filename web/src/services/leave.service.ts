@@ -189,6 +189,8 @@ export interface RequestableLeaveType {
 export interface LeaveTeamOverlap {
   count: number;
   employees: { employeeId: string; name: string; startDate: string; endDate: string }[];
+  /** The requester's org unit name (S-8, senseik-026); best-effort, absent when the lookup misses. */
+  orgUnitName?: string | null;
 }
 
 /** `LeaveRequestPreviewResponse`: day count of a draft; rule violations come back as localized warnings. */
@@ -510,8 +512,10 @@ export type OvertimeDayKind = "workday" | "weeklyRest" | "publicHoliday";
 export type OvertimeConversionKind = "pay" | "timeOff";
 /** Conversion basis: payable minutes (default) or the full duration (leave.overtimes.override_payable). */
 export type OvertimeMinutesBasis = "payable" | "full";
-export type OvertimeConversionStatus = "posted" | "reversed";
+export type OvertimeConversionStatus = "posted" | "reversed" | "expired";
 export type OvertimeConsentSource = "employmentContract" | "standaloneForm";
+/** `OvertimePayRateKind` (İş K. m.41): Rate25 = %25 fazlası, Rate50 = %50 fazlası (varsayılan, asıl fazla mesai). */
+export type OvertimePayRateKind = "rate25" | "rate50";
 
 /** `OvertimeRequestDto`: `startTime` is a TimeOnly ("HH:mm:ss"), `startAt`/`endAt` the employee's local wall clock. */
 export interface OvertimeRequest {
@@ -533,6 +537,8 @@ export interface OvertimeRequest {
   decidedAt?: string | null;
   /** Set once the approved request was converted (time off). */
   conversionId?: string | null;
+  payRateKind: OvertimePayRateKind;
+  payRateMultiplier: number;
 }
 
 /** `OvertimeSubmissionDto`: `warnings` are resource keys ("leave.warnings.overtime_consent_missing"), localized by the web. */
@@ -550,6 +556,16 @@ export interface OvertimeRequestInput {
   startTime: string;
   durationMinutes: number;
   description: string | null;
+  /** Omitted defaults to "rate50" (API side). */
+  payRateKind?: OvertimePayRateKind;
+}
+
+/** Kart senseik-012 §2: 270 saat yıllık fazla mesai sınırı göstergesi (hesaplanan, kalıcı sayaç değil). */
+export interface AnnualOvertimeUsage {
+  year: number;
+  usedMinutes: number;
+  limitMinutes: number;
+  exceeded: boolean;
 }
 
 /** `OvertimeConversionDto`. */
@@ -567,6 +583,8 @@ export interface OvertimeConversion {
   ledgerEntryId?: string | null;
   status: OvertimeConversionStatus;
   convertedAt: string;
+  /** Yalnız time-off dönüşümlerinde dolu: m.41 6 ay kullanım süresi son tarihi. */
+  usedByDate?: string | null;
 }
 
 /** `ConvertOvertimeToTimeOffRequest`: rate 1–3 (API default when null), `leaveTypeId` null = the default balance type. */
@@ -612,10 +630,27 @@ export async function withdrawMyOvertime(id: string): Promise<void> {
   await apiClient.post(`${LEAVE_BASE}/me/overtimes/${id}/withdraw`);
 }
 
+/** leave.my.overtimes: 270 saat yıllık sınır göstergesi. */
+export async function getMyOvertimeAnnualUsage(year?: number): Promise<AnnualOvertimeUsage> {
+  const { data } = await apiClient.get<AnnualOvertimeUsage>(`${LEAVE_BASE}/me/overtimes/annual-usage`, { params: { year } });
+  return data;
+}
+
 /** leave.overtimes.read */
 export async function getEmployeeOvertimes(employeeId: string): Promise<OvertimeRequest[]> {
   const { data } = await apiClient.get<OvertimeRequest[]>(`${LEAVE_BASE}/employees/${employeeId}/overtimes`);
   return data;
+}
+
+/** leave.overtimes.read: 270 saat yıllık sınır göstergesi (çalışan kartı). */
+export async function getEmployeeOvertimeAnnualUsage(employeeId: string, year?: number): Promise<AnnualOvertimeUsage> {
+  const { data } = await apiClient.get<AnnualOvertimeUsage>(`${LEAVE_BASE}/employees/${employeeId}/overtimes/annual-usage`, { params: { year } });
+  return data;
+}
+
+/** leave.overtimes.create_on_behalf: HR/yönetici oran düzeltmesi (yalnız Pending). */
+export async function changeOvertimePayRateKind(employeeId: string, id: string, payRateKind: OvertimePayRateKind): Promise<void> {
+  await apiClient.post(`${LEAVE_BASE}/employees/${employeeId}/overtimes/${id}/pay-rate`, { payRateKind });
 }
 
 /** leave.overtimes.create_on_behalf (approval still runs). */

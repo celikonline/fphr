@@ -167,6 +167,77 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                     b.ToTable("announcement_read_records", "announcements");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<DateOnly>("EventDate")
+                        .HasColumnType("date")
+                        .HasColumnName("event_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.Property<Guid?>("VisibilityOrgUnitId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("visibility_org_unit_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_company_events");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_company_events_tenant_id");
+
+                    b.HasIndex("TenantId", "EventDate")
+                        .HasDatabaseName("ix_company_events_tenant_id_event_date");
+
+                    b.HasIndex("TenantId", "VisibilityOrgUnitId", "EventDate")
+                        .HasDatabaseName("ix_company_events_tenant_id_visibility_org_unit_id_event_date");
+
+                    b.ToTable("company_events", "announcements");
+                });
+
             modelBuilder.Entity("Sense.Modules.Announcements.Domain.Support.HelpSearchLog", b =>
                 {
                     b.Property<Guid>("Id")

@@ -138,7 +138,11 @@
       "leaveTypeRequired": "İzin türü seçin."
     },
     "week": "Hafta",
-    "month": "Ay"
+    "month": "Ay",
+    "breakApplied": "Mola: {{m}} dk",
+    "nightMinutes": "Gece: {{m}} dk",
+    "dailyLimitExceeded": "Günlük 11 saat sınırı aşıldı (m.63)",
+    "nightLimitExceeded": "Gece çalışması 7,5 saat sınırını aştı (m.69)"
   },
   "shiftLock": {
     "scheduledLockDate": "Otomatik kilit tarihi"

@@ -25,7 +25,7 @@ import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/d
 import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
-import { useAccessSetting } from "@/hooks";
+import { useAccessSetting, useDialogHistorySync } from "@/hooks";
 import { formatDateOnly } from "@/lib/dates";
 import { EMPLOYEE_STATUSES, listEmployees, type EmployeeListItem, type EmployeeSortField } from "@/services/employees.service";
 import type { EmployeeFilter, EmployeeSelection } from "@/types";
@@ -102,7 +102,9 @@ function EmployeeGrid() {
   const [missingInfo, setMissingInfo] = useState(false);
   const [sort, setSort] = useState<{ field: EmployeeSortField; desc: boolean }>({ field: "displayName", desc: false });
   const [selection, setSelection] = useState<SelectionState>(EMPTY_SELECTION);
-  const [createOpen, setCreateOpen] = useState(false);
+  // senseik-022: create-employee dialog's open state follows the URL (?dialog=create-employee) so
+  // the browser back button closes it instead of leaving the employees list.
+  const { isOpen: createOpen, open: openCreate, close: closeCreate } = useDialogHistorySync("create-employee");
   const [viewMode, setViewMode] = useState<ViewMode>(readViewMode);
 
   function changeViewMode(next: ViewMode) {
@@ -381,7 +383,7 @@ function EmployeeGrid() {
             </Button>
           )}
           {canCreate && (
-            <Button type="button" onClick={() => setCreateOpen(true)} leftSection={<Plus size={16} />}>
+            <Button type="button" onClick={openCreate} leftSection={<Plus size={16} />}>
               {t("employees:create.button")}
             </Button>
           )}
@@ -596,7 +598,7 @@ function EmployeeGrid() {
         {data && <PaginationFooter result={data} onPageChange={setPage} pageSize={pageSize} onPageSizeChange={changePageSize} />}
       </Card>
 
-      <CreateEmployeeDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <CreateEmployeeDialog open={createOpen} onOpenChange={(open) => !open && closeCreate()} />
     </div>
   );
 }

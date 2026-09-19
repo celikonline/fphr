@@ -128,4 +128,13 @@ public static class LegislationParameterKeys
     public const string CollectiveDismissalNoticeDays = "CollectiveDismissal.NoticeDays";
     public const string CollectiveDismissalRehirePriorityMonths = "CollectiveDismissal.RehirePriorityMonths";
     public const string CollectiveDismissalTempWorkerBanMonths = "CollectiveDismissal.TempWorkerBanMonths";
+
+    // Severance/notice estimate (senseik-011, F-06 "İşten ayrılış sihirbazı" - kıdem/ihbar tazminatı). Seeded via a
+    // Leave migration (ADR 0008: single owner table leave.legislation_parameters) - Payroll only reads them through
+    // ILegislationParameterReader, same pattern as the Payroll.* keys above.
+    /// <summary>İş K. m.14 - kıdem tazminatı tavanı: azami brüt tutar bir hizmet yılı için ödenecek (6 ayda bir güncellenir).</summary>
+    public const string SeveranceCeilingGross = "Severance.CeilingGross";
+
+    /// <summary>İş K. m.17 - kıdem süresine göre ihbar önel tablosu (JSON dizi: kıdem gün üst sınırı + hafta sayısı).</summary>
+    public const string NoticeWeeksBySeniorityTiers = "Notice.WeeksBySeniorityTiers";
 }

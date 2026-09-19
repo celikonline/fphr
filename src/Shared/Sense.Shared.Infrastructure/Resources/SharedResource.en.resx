@@ -189,6 +189,14 @@
   <data name="employee.termination_sgk_exit_code_inconsistent" xml:space="preserve"><value>The selected SGK exit code is not valid for this termination type.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Only terminated employees can be rehired.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
+  <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>The registry number can be at most 30 characters.</value></data>
+  <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>This registry number is already registered to another employee.</value></data>
+  <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>A Turkish employee cannot have a national ID starting with 99 (foreign ID format).</value></data>
+  <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>A foreign employee's national ID, if provided, must be in the foreign ID format (starting with 99).</value></data>
+  <data name="employee.foreign_identification_required" xml:space="preserve"><value>A foreign employee requires at least one of Foreign ID Number or Passport Number.</value></data>
+  <data name="employee.foreign_id_number_too_long" xml:space="preserve"><value>The foreign ID number can be at most 11 characters.</value></data>
+  <data name="employee.passport_number_too_long" xml:space="preserve"><value>The passport number can be at most 20 characters.</value></data>
+  <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>The SGK occupation code can be at most 20 characters.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Subcontractor not found.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>The subcontractor name is required.</value></data>
   <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>The company name can be at most 200 characters.</value></data>
@@ -437,12 +445,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.template.employee.master.instruction.org_units" xml:space="preserve"><value>Unit columns are your company's hierarchy levels; pick an existing unit from the list. If several levels are filled the employee is assigned to the deepest one.</value></data>
   <data name="import.template.employee.master.sample.valid_new" xml:space="preserve"><value>Correct: new employee (dates DD.MM.YYYY and DD/MM/YYYY).</value></data>
   <data name="import.template.employee.master.sample.valid_manager" xml:space="preserve"><value>Correct: employee with a manager given by full name (date YYYY-MM-DD).</value></data>
+  <data name="import.template.employee.master.sample.valid_foreign" xml:space="preserve"><value>Correct: foreign employee, Foreign ID Number filled in instead of the national ID.</value></data>
   <data name="import.template.employee.master.sample.invalid_national_id" xml:space="preserve"><value>Incorrect: invalid national ID.</value></data>
   <data name="import.template.employee.master.sample.invalid_date" xml:space="preserve"><value>Incorrect: date written as text (1 Ocak 2020).</value></data>
   <data name="import.template.employee.master.sample.invalid_email" xml:space="preserve"><value>Incorrect: incomplete e-mail address.</value></data>
   <data name="import.column.employee.firstName" xml:space="preserve"><value>First name</value></data>
   <data name="import.column.employee.lastName" xml:space="preserve"><value>Last name</value></data>
   <data name="import.column.employee.nationalId" xml:space="preserve"><value>National ID</value></data>
+  <data name="import.column.employee.sicilNumarasi" xml:space="preserve"><value>Registry number</value></data>
   <data name="import.column.employee.workEmail" xml:space="preserve"><value>Work e-mail</value></data>
   <data name="import.column.employee.personalEmail" xml:space="preserve"><value>Personal e-mail</value></data>
   <data name="import.column.employee.workPhone" xml:space="preserve"><value>Work phone</value></data>
@@ -463,6 +473,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.addressLine" xml:space="preserve"><value>Address</value></data>
   <data name="import.column.employee.city" xml:space="preserve"><value>City</value></data>
   <data name="import.column.employee.postalCode" xml:space="preserve"><value>Postal code</value></data>
+  <data name="import.column.employee.nationality" xml:space="preserve"><value>Nationality</value></data>
+  <data name="import.column.employee.foreignIdNumber" xml:space="preserve"><value>Foreign ID number</value></data>
+  <data name="import.column.employee.passportNumber" xml:space="preserve"><value>Passport number</value></data>
+  <data name="import.column.employee.sgkOccupationCode" xml:space="preserve"><value>SGK occupation code</value></data>
   <data name="import.column.employee.contractType" xml:space="preserve"><value>Contract type</value></data>
   <data name="import.column.employee.employmentType" xml:space="preserve"><value>Employment type</value></data>
   <data name="import.column.employee.salaryEffectiveFrom" xml:space="preserve"><value>Salary effective date</value></data>
@@ -472,6 +486,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Pay frequency</value></data>
   <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
   <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
+  <data name="import.column.employee.bankIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="import.column.employee.bankAccountType" xml:space="preserve"><value>Bank account type</value></data>
+  <data name="import.column.employee.bankName" xml:space="preserve"><value>Bank name</value></data>
+  <data name="import.column.employee.bankCurrency" xml:space="preserve"><value>Account currency</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>The real date leave entitlement accrues from; left empty, the hire date is used.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
@@ -486,6 +504,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.addressLine.description" xml:space="preserve"><value>Street address, at most 250 characters.</value></data>
   <data name="import.column.employee.city.description" xml:space="preserve"><value>City, at most 100 characters.</value></data>
   <data name="import.column.employee.postalCode.description" xml:space="preserve"><value>Postal code, at most 20 characters.</value></data>
+  <data name="import.column.employee.sicilNumarasi.description" xml:space="preserve"><value>Tenant-unique registry number; not yet a match key, only stored.</value></data>
+  <data name="import.column.employee.nationality.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value (default Turkish).</value></data>
+  <data name="import.column.employee.foreignIdNumber.description" xml:space="preserve"><value>Foreign ID Number starting with "99"; for foreign employees.</value></data>
+  <data name="import.column.employee.passportNumber.description" xml:space="preserve"><value>Passport number for a foreign employee without a Foreign ID Number yet.</value></data>
+  <data name="import.column.employee.sgkOccupationCode.description" xml:space="preserve"><value>SGK occupation code, to pre-fill e-Bildirge/APHB fields.</value></data>
   <data name="import.column.employee.contractType.description" xml:space="preserve"><value>Indefinite term or Fixed term.</value></data>
   <data name="import.column.employee.employmentType.description" xml:space="preserve"><value>Pick from the list; an empty cell keeps the stored value.</value></data>
   <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Employee's first name (used for matching).</value></data>
@@ -505,6 +528,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Pick from the list (Monthly, Daily, Yearly, Weekly, Hourly). Required when the salary block is filled.</value></data>
   <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
   <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Optional, numeric, at most two decimals.</value></data>
+  <data name="import.column.employee.bankIban.description" xml:space="preserve"><value>Left empty, the row's whole bank account block is ignored; once filled, the IBAN is validated (length/check digits/country) and Bank account type becomes required.</value></data>
+  <data name="import.column.employee.bankAccountType.description" xml:space="preserve"><value>Pick from the list (Cheque, Time deposit, Demand deposit, Other). Required when the bank block (IBAN) is filled.</value></data>
+  <data name="import.column.employee.bankName.description" xml:space="preserve"><value>Optional, at most 100 characters.</value></data>
+  <data name="import.column.employee.bankCurrency.description" xml:space="preserve"><value>Optional; ISO 4217 code (e.g. TRY, EUR, USD), the abbreviations "TL" and "Euro" are also accepted.</value></data>
   <data name="import.column.employee.customField.description" xml:space="preserve"><value>Tenant-defined custom field; an empty cell keeps the stored value. Pick from the list for option-based fields; for multi-select, enter the values as a JSON list such as ["Value1","Value2"].</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Do not rename the header row; do not delete the hidden key row (row 2). Renamed columns can be mapped manually after upload.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>You may delete unused columns, reorder columns or insert your own columns (extra columns are left as 'Ignore').</value></data>
@@ -717,6 +744,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.period_not_approved" xml:space="preserve"><value>The payroll period has not been approved.</value></data>
   <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>The payroll period has not been paid.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Salary changed</value></data>
+
+  <!-- Payroll (senseik-011, F-06): severance/notice/unused-leave estimate (exit wizard) -->
+  <data name="payroll.severance.estimate" xml:space="preserve"><value>View the severance/notice estimate</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>
@@ -824,6 +855,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
   <data name="attendance.compensatory.not_open" xml:space="preserve"><value>This compensatory work ledger entry is not open.</value></data>
   <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Compensatory minutes must be positive.</value></data>
+  <data name="attendance.equalization.period_months_invalid" xml:space="preserve"><value>The equalization period must be 2 or 4 months.</value></data>
+  <data name="attendance.equalization.written_agreement_required" xml:space="preserve"><value>A written agreement is required for a 4-month equalization period.</value></data>
+  <data name="attendance.equalization.anchor_month_invalid" xml:space="preserve"><value>The anchor month must be between 1 and 12.</value></data>
+  <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>This equalization period is not open.</value></data>
+  <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>The equalization period has not ended yet.</value></data>
+  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>
@@ -870,6 +907,21 @@ The report you requested has been generated. Click the link to view and download
   <data name="documents.my.requirements" xml:space="preserve"><value>View and satisfy own personnel document requirements</value></data>
   <data name="documents.my.files" xml:space="preserve"><value>Upload own document</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>This document requirement does not belong to you.</value></data>
+  <data name="documents.company.view" xml:space="preserve"><value>View shared company files</value></data>
+  <data name="documents.company.manage" xml:space="preserve"><value>Manage shared company files</value></data>
+  <data name="shared_company_file.not_found" xml:space="preserve"><value>File not found.</value></data>
+  <data name="shared_company_file.name_required" xml:space="preserve"><value>File name is required.</value></data>
+  <data name="shared_company_file.name_too_long" xml:space="preserve"><value>File name is too long.</value></data>
+  <data name="shared_company_file.filekey_required" xml:space="preserve"><value>File key is required.</value></data>
+  <data name="shared_company_file.invalid_size" xml:space="preserve"><value>Invalid file size.</value></data>
+  <data name="shared_company_file.uploader_required" xml:space="preserve"><value>Uploader is required.</value></data>
+  <data name="shared_company_file.roles_required_for_restricted_visibility" xml:space="preserve"><value>Role-restricted visibility requires at least one selected role.</value></data>
+  <data name="shared_company_file.invalid_status" xml:space="preserve"><value>The file does not support this operation in its current status.</value></data>
+  <data name="shared_company_file.already_deleted" xml:space="preserve"><value>File is already deleted.</value></data>
+  <data name="shared_company_file.quota_exceeded" xml:space="preserve"><value>Uploading this file would exceed the tenant's storage quota.</value></data>
+  <data name="shared_company_file.upload_initiation_failed" xml:space="preserve"><value>Failed to initiate the file upload.</value></data>
+  <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Failed to confirm the file upload.</value></data>
+  <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Failed to delete the file.</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Manage webhook subscriptions</value></data>
@@ -1084,4 +1136,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="support_ticket.already_closed" xml:space="preserve"><value>This ticket is already closed.</value></data>
   <data name="support_ticket.resolution_required" xml:space="preserve"><value>A response is required.</value></data>
   <data name="help_article.not_found" xml:space="preserve"><value>Help Center article not found.</value></data>
+  <!-- Company event calendar (senseik-027, roadmap #71/P-19) -->
+  <data name="announcements.my.events" xml:space="preserve"><value>View the event calendar</value></data>
+  <data name="announcements.events.manage" xml:space="preserve"><value>Manage events</value></data>
+  <data name="company_event.title_required" xml:space="preserve"><value>An event title is required and cannot exceed 200 characters.</value></data>
+  <data name="company_event.description_too_long" xml:space="preserve"><value>Event description cannot exceed 2000 characters.</value></data>
+  <data name="company_event.type_not_manual" xml:space="preserve"><value>Birthday and leave-start types cannot be created manually; they are derived automatically.</value></data>
+  <data name="company_event.not_found" xml:space="preserve"><value>Event not found.</value></data>
+  <data name="company_event.visibility_org_unit_not_found" xml:space="preserve"><value>The selected org unit was not found.</value></data>
+  <data name="company_calendar.invalid_range" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="company_calendar.range_too_large" xml:space="preserve"><value>The calendar range cannot exceed {max} days.</value></data>
 </root>

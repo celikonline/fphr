@@ -10,6 +10,7 @@ import { usePermission } from "@/components/permission-guard";
 import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { LeaveRequestDialog, type LeaveRequestTypeOption } from "@/components/leave/leave-request-dialog";
 import { LeaveRequestDetailSheet } from "@/components/leave/leave-request-detail";
+import { DIALOG_SEARCH_PARAM, useDialogHistorySync } from "@/hooks";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
@@ -29,6 +30,8 @@ import {
 
 const MY_LEAVE_KEY = ["leave", "me"] as const;
 
+type LeaveDialogState = { mode: "add" } | { mode: "edit"; request: LeaveRequest } | { mode: "resubmit"; request: LeaveRequest };
+
 export default function MyLeavePage() {
   const canBalances = usePermission("leave.my.balances");
   const canRequests = usePermission("leave.my.requests");
@@ -43,23 +46,50 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const [ledgerOpen, setLedgerOpen] = useState(false);
   // Tek "Talep" hub'ından (/app/requests) `?new=1` ile gelince ekleme diyaloğu ilk render'da açık başlar (roadmap #42).
   const [searchParams, setSearchParams] = useSearchParams();
-  const [dialog, setDialog] = useState<
-    { mode: "add" } | { mode: "edit"; request: LeaveRequest } | { mode: "resubmit"; request: LeaveRequest } | null
-  >(() => (canRequests && searchParams.get("new") === "1" ? { mode: "add" } : null));
+  // senseik-022: dialog açık/kapalı durumu URL'e (`?dialog=leave-request`) senkronize — tarayıcı geri
+  // tuşu diyaloğu kapatır, sayfadan çıkarmaz. `dialog` state'i hangi mod (add/edit/resubmit) ve hangi
+  // kayıt olduğunu hâlâ yerelde tutuyor (URL bunu taşımıyor); `dialogUrlOpen` sadece "açık mı" sinyali.
+  const { isOpen: dialogUrlOpen, open: openDialogUrl, close: closeDialogUrl } = useDialogHistorySync("leave-request");
+  const [dialog, setDialog] = useState<LeaveDialogState | null>(() =>
+    canRequests && searchParams.get("new") === "1" ? { mode: "add" } : null,
+  );
   const [withdrawing, setWithdrawing] = useState<LeaveRequest | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
   useEffect(() => {
     if (searchParams.get("new") === "1") {
+      // `new=1` zaten kendi history girdisiyle geldi (hub'daki Link tıklaması) — burada `replace` ile
+      // aynı girdiyi `?dialog=leave-request` işaretine çeviriyoruz, ayrı bir history girdisi eklemiyoruz.
       setSearchParams(
         (params) => {
-          params.delete("new");
-          return params;
+          const next = new URLSearchParams(params);
+          next.delete("new");
+          next.set(DIALOG_SEARCH_PARAM, "leave-request");
+          return next;
         },
         { replace: true },
       );
     }
   }, [searchParams, setSearchParams]);
+
+  // Tarayıcı geri tuşu `?dialog=leave-request` işaretini kaldırınca diyaloğu kapat (senseik-022).
+  // Render sırasında düzeltiliyor (efekt içinde değil — employee-list.tsx'teki `prevFilter` deseniyle
+  // aynı "türetilmiş state'i render'da senkronize et" yaklaşımı; `react-hooks/set-state-in-effect` uyarısını önler).
+  const [dialogWasUrlOpen, setDialogWasUrlOpen] = useState(dialogUrlOpen);
+  if (dialogWasUrlOpen !== dialogUrlOpen) {
+    setDialogWasUrlOpen(dialogUrlOpen);
+    if (!dialogUrlOpen) setDialog(null);
+  }
+
+  function openLeaveDialog(next: LeaveDialogState) {
+    setDialog(next);
+    openDialogUrl();
+  }
+
+  function closeLeaveDialog() {
+    setDialog(null);
+    closeDialogUrl();
+  }
 
   const balancesQuery = useQuery({
     queryKey: [...MY_LEAVE_KEY, "balances"],
@@ -106,7 +136,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           <Text c="dimmed">{t("leave:my.subtitle")}</Text>
         </div>
         {canRequests && (
-          <Button type="button" onClick={() => setDialog({ mode: "add" })}>
+          <Button type="button" onClick={() => openLeaveDialog({ mode: "add" })}>
             {t("leave:my.newRequest")}
           </Button>
         )}
@@ -151,12 +181,12 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
                   <RowAction icon={Eye} label={t("leave:detail.open")} onClick={() => setDetailId(request.id)} />
                   {request.status === "pending" && (
                     <>
-                      <RowAction icon={Pencil} label={t("leave:my.edit")} onClick={() => setDialog({ mode: "edit", request })} />
+                      <RowAction icon={Pencil} label={t("leave:my.edit")} onClick={() => openLeaveDialog({ mode: "edit", request })} />
                       <RowAction icon={Undo2} label={t("leave:my.withdraw")} onClick={() => setWithdrawing(request)} />
                     </>
                   )}
                   {request.status === "rejected" && (
-                    <RowAction icon={RotateCcw} label={t("leave:my.resubmit")} onClick={() => setDialog({ mode: "resubmit", request })} />
+                    <RowAction icon={RotateCcw} label={t("leave:my.resubmit")} onClick={() => openLeaveDialog({ mode: "resubmit", request })} />
                   )}
                 </Group>
               )}
@@ -178,7 +208,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
                 type="button"
                 onClick={() => {
                   setDetailId(null);
-                  setDialog({ mode: "resubmit", request: detail });
+                  openLeaveDialog({ mode: "resubmit", request: detail });
                 }}
               >
                 {t("leave:my.resubmit")}
@@ -188,7 +218,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
         />
       )}
 
-      {dialog && (
+      {dialog && dialogUrlOpen && (
         <LeaveRequestDialog
           key={dialog.mode === "add" ? "add" : `${dialog.mode}-${dialog.request.id}`}
           editing={dialog.mode === "edit" ? dialog.request : null}
@@ -205,10 +235,10 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
               ? updatePendingLeaveRequest(dialog.request.id, input)
               : submitLeaveRequest(dialog.mode === "resubmit" ? { ...input, previousRequestId: dialog.request.id } : input)
           }
-          onClose={() => setDialog(null)}
+          onClose={closeLeaveDialog}
           onSaved={() => {
             const message = dialog.mode === "edit" ? t("leave:my.updated") : t("leave:my.submitted");
-            setDialog(null);
+            closeLeaveDialog();
             toast({ variant: "success", title: t("common:success"), description: message });
             void refresh();
           }}

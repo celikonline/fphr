@@ -1,0 +1,18 @@
+{
+  "id": "senseik-041",
+  "title": "Tarih seçici sorunları: ABD formatı, üst üste binme + veri kaybı, tatil işaretlenmiyor",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/date-picker-fixes",
+  "worktree": ".claude/worktrees/date-picker-fixes",
+  "acceptance": [
+    "'Yeni çalışan ekle' ve çalışan düzenleme formlarındaki tarih alanları mm/dd/yyyy yerine dd.MM.yyyy (Türkçe format) gösteriyor — arayüzün geri kalanıyla tutarlı",
+    "İzin talebi formunda Başlangıç seçildikten sonra Bitiş'e tıklandığında iki takvim üst üste/saydam açılmıyor",
+    "KRİTİK: Takvimlerin dışına yanlışlıkla tıklandığında modal kapanıp girilen form verisi KAYBOLMUYOR — en azından bir onay/uyarı gösteriliyor ('Kaydedilmemiş değişiklikler var, çıkmak istediğinize emin misiniz?')",
+    "Tarih seçicide resmi tatiller (örn. 29 Ekim) görsel olarak işaretleniyor (ana sayfadaki 'Resmi Tatiller' bileşeniyle tutarlı)",
+    "Bu düzeltmeler mevcut web/src/components/ui/date-picker.tsx bileşeninde merkezi olarak yapılıyor (tekrar kullanılan bileşen, tek yerden düzeltilirse her formda düzelir)"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: izin talebi formu, çalışan formu üzerinde tüm senaryolar doğrulanıyor",
+  "handoff": "docs/handoffs/date-picker-fixes.md",
+  "source": "1. Tur Test Bulgu Dokümanı § B-08, B-09, B-10 (B-09 ORTA ama veri kaybı riski nedeniyle öncelikli olmalı — kullanıcı üç denemede izin talebi formunu tamamlayamadı)."
+}

@@ -23,12 +23,14 @@ using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
@@ -50,7 +52,9 @@ public partial class DataSeeder(
     LeaveDbContext leaveCtx,
     LeaveBalanceService leaveBalances,
     ILeaveDayCalculator leaveDayCalculator,
-    ITenantContextSetter tenantContextSetter)
+    ITenantContextSetter tenantContextSetter,
+    AnnouncementsDbContext announcementsCtx,
+    OhsDbContext ohsCtx)
 {
     private const int RandomSeed = 42; // Deterministic seed for reproducibility
     private readonly Random _random = new(RandomSeed);
@@ -96,6 +100,8 @@ public partial class DataSeeder(
 
             await identityCtx.SaveChangesAsync(cancellationToken);
             await organizationCtx.SaveChangesAsync(cancellationToken);
+            await announcementsCtx.SaveChangesAsync(cancellationToken);
+            await ohsCtx.SaveChangesAsync(cancellationToken);
 
             // Leave data needs the saved holiday calendar (leave day counts) and must be committed BEFORE the employee
             // save: that save writes the EmployeeHired outbox rows, and Leave's EmployeeHiredHandler (Sense.Worker) must
@@ -304,6 +310,13 @@ public partial class DataSeeder(
         departments.First(d => d.Name == "Sales").AssignLocation(ankaraOffice.Id);
         departments.First(d => d.Name == "Engineering").AssignLocation(izmirOffice.Id);
 
+        // Şirket etkinlik takvimi (senseik-027): birkaç manuel örnek etkinlik türü; doğum günü ve izin başlangıcı
+        // türetmeleri aşağıdaki employees/leave seed'inden otomatik gelir.
+        SeedDemoCompanyEvents(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), departments);
+
+        // senseik-015 (İSG modülü, Faz 0-1): hazard classification + risk assessment per location.
+        SeedDemoOhs(tenant.Id, istanbulHq.Id, ankaraOffice.Id, izmirOffice.Id);
+
         // Employee: one minimal stub per demo user, assigned round-robin across the 4 departments
         // (executives/HR go to Headquarters), linked back via User.EmployeeId, first Manager per unit
         // becomes that unit's ManagerEmployeeId. Each employee sits on a Title-level unit ("Ünvan") under
@@ -318,6 +331,9 @@ public partial class DataSeeder(
 
         // Create sample documents
         await SeedSampleDocumentsAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
+
+        // senseik-028: sample shared company files (separate table from the employee-scoped Documents above)
+        await SeedSharedCompanyFilesAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
 
         logger.LogInformation(
             "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units ({TitleCount} titles), {LocationCount} locations, {EmployeeCount} employees",

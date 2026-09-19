@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, Landmark, Pencil, Plus, Star, Trash2, Wallet } from "lucide-react";
 import {
-  ActionIcon,
   Badge,
   Button,
   Card,
@@ -21,10 +20,10 @@ import {
   TextInput,
   Textarea,
   Title,
-  Tooltip,
 } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DatePicker } from "@/components/ui/date-picker";
+import { RowIconButton } from "@/components/ui/row-icon-button";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -100,16 +99,6 @@ function SectionHeader({ icon, title, action }: { icon?: ReactNode; title: strin
       </Group>
       {action}
     </Group>
-  );
-}
-
-function RowIconButton({ label, icon, onClick }: { label: string; icon: ReactNode; onClick: () => void }) {
-  return (
-    <Tooltip label={label}>
-      <ActionIcon type="button" variant="subtle" color="gray" aria-label={label} onClick={onClick}>
-        {icon}
-      </ActionIcon>
-    </Tooltip>
   );
 }
 

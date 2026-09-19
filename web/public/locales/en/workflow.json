@@ -57,7 +57,14 @@
     "comment": "Comment",
     "commentPlaceholder": "Add an optional comment...",
     "approveSuccess": "Request approved.",
-    "rejectSuccess": "Request rejected."
+    "rejectSuccess": "Request rejected.",
+    "requestDate": "Request date",
+    "startTime": "Start time",
+    "duration": "Duration",
+    "reason": "Reason",
+    "dateRange": "Date range",
+    "leaveType": "Leave type",
+    "days": "Days"
   },
   "status": {
     "title": "Approval status",

@@ -1,0 +1,16 @@
+{
+  "id": "senseik-052",
+  "title": "Yetkisiz sayfa engellenmiyor (boş/bozuk gösteriliyor) + sol menü rol bazında filtrelenmiyor",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/route-authorization-guard",
+  "worktree": ".claude/worktrees/route-guard",
+  "acceptance": [
+    "Bir kullanıcı erişim yetkisi olmayan bir rotaya (örn. /app/settings/system/users-roles) gittiğinde açık bir 403/'Bu sayfaya erişim yetkiniz yok' ekranı görüyor — boş tablo/bozuk görünüm yerine",
+    "Sol menü, kullanıcının rolüne göre filtrelenmiş öğeleri gösteriyor (yetkisi olmayan menü başlıkları hiç görünmüyor) — mevcut ekran-bazlı görünürlük mantığı zaten var, menüye de uygulanıyor",
+    "API tarafındaki mevcut yetkisiz-veri-döndürmeme davranışı (zaten doğru çalışıyor) korunuyor, bu kart sadece frontend UX katmanını düzeltiyor"
+  ],
+  "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: bordro@demo.local ile users-roles sayfasına gidince 403 görünüyor, sol menüde o başlık hiç yok",
+  "handoff": "docs/handoffs/route-authorization-guard.md",
+  "source": "1. Tur Test Bulgu Dokümanı § E-04 (ORTA — veri korunuyor ama UX yanıltıcı, kullanıcı bozuk bir ekran gördüğünü düşünüyor)."
+}

@@ -56,7 +56,8 @@ public sealed record AddSalaryRecordCommand(
     PayFrequency? PayFrequency,
     decimal? TransportAllowance = null,
     decimal? MealAllowance = null,
-    string? Note = null) : ICommand<IReadOnlyList<SalaryRecordDto>>, IScopedRequest, ISalaryInput
+    string? Note = null,
+    Guid? OrgUnitId = null) : ICommand<IReadOnlyList<SalaryRecordDto>>, IScopedRequest, ISalaryInput
 {
     public Guid? TargetEmployeeId => EmployeeId;
 }
@@ -74,7 +75,8 @@ public sealed record UpdateSalaryRecordCommand(
     PayFrequency? PayFrequency,
     decimal? TransportAllowance = null,
     decimal? MealAllowance = null,
-    string? Note = null) : ICommand<IReadOnlyList<SalaryRecordDto>>, IScopedRequest, ISalaryInput
+    string? Note = null,
+    Guid? OrgUnitId = null) : ICommand<IReadOnlyList<SalaryRecordDto>>, IScopedRequest, ISalaryInput
 {
     public Guid? TargetEmployeeId => EmployeeId;
 }
@@ -105,6 +107,9 @@ public interface ISalaryInput
     decimal? MealAllowance { get; }
 
     string? Note { get; }
+
+    /// <summary>Lokasyon/pozisyon ataması (G-01 Aşama 1); no format validation here - Organization side is the caller's responsibility.</summary>
+    Guid? OrgUnitId { get; }
 }
 
 /// <summary>
@@ -148,7 +153,8 @@ public static class SalaryRules
         input.PayFrequency!.Value,
         input.TransportAllowance,
         input.MealAllowance,
-        input.Note);
+        input.Note,
+        OrgUnitId: input.OrgUnitId);
 }
 
 public sealed class AddSalaryRecordValidator : AbstractValidator<AddSalaryRecordCommand>

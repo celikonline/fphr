@@ -373,7 +373,7 @@ function AddEntryDialog({ calendar, onClose }: { calendar: HolidayCalendar; onCl
             label={t("structure:calendars.date")}
             error={submitted && dateMissing ? t("common:required") : undefined}
           >
-            <DatePicker id="entry-date" value={date} onChange={setDate} />
+            <DatePicker id="entry-date" value={date} onChange={setDate} holidayCalendarId={calendar.id} />
           </Input.Wrapper>
           <TextInput
             id="entry-name"

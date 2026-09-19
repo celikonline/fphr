@@ -5,6 +5,8 @@ using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.AttendanceDays;
+using Sense.Modules.Attendance.Domain.Equalization;
+using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
@@ -248,5 +250,73 @@ public sealed class AttendanceIntegrationTests : TestFixture
 
         summary.MissingDays.ShouldBe((decimal)(workingDaysInMonth - 2));
         summary.IsPeriodLocked.ShouldBeFalse();
+    }
+
+    // Kart senseik-014 §6 (Puantaj → Bordro Kontratı): equalization is off for this tenant, so the reader only ever
+    // has the daily-proxy figure to offer - ProvisionalOvertimeMinutes sums AttendanceDay.OvertimeMinutes, no finalized value.
+    [Fact]
+    public async Task OvertimePayrollReader_EqualizationDisabled_ReturnsOnlyProvisionalMinutes()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            // 09:00-20:00 planlanan 480dk'ya karşı 660dk net (m.68 asgari mola 30dk) -> 180dk fazla mesai.
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, employeeId, new DateOnly(2026, 9, 3), new TimeOnly(9, 0), new TimeOnly(20, 0),
+                new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 480, breakMinutes: 0, AttendanceDaySource.Manual));
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IAttendanceOvertimePayrollReader>();
+        var result = await reader.GetAsync(tenantId, 2026, 9, [employeeId], TestContext.Current.CancellationToken);
+
+        var line = result.ShouldHaveSingleItem();
+        line.EmployeeId.ShouldBe(employeeId);
+        line.ProvisionalOvertimeMinutes.ShouldBeGreaterThan(0);
+        line.FinalizedOvertimeMinutes.ShouldBeNull();
+        line.EqualizationApplies.ShouldBeFalse();
+    }
+
+    // Denkleştirme açıkken ve dönem bu ay içinde kapandığında, Payroll'a kesin (TrueUpOvertimeMinutes) değer sunulur.
+    [Fact]
+    public async Task OvertimePayrollReader_EqualizationEnabledWithClosedPeriodInMonth_ReturnsFinalizedMinutes()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<AttendanceDbContext>();
+            var settings = ShiftSettings.CreateDefault(tenantId);
+            settings.UpdateEqualization(enabled: true, periodMonths: 2, anchorMonth: 1, hasWrittenAgreement: false).IsSuccess.ShouldBeTrue();
+            db.ShiftSettings.Add(settings);
+
+            var period = EqualizationPeriod.Open(tenantId, employeeId, new DateOnly(2026, 9, 1), new DateOnly(2026, 10, 31), weeksInPeriod: 9);
+            period.SetProvisionalTotal(30000).IsSuccess.ShouldBeTrue();
+            period.Close(new DateOnly(2026, 10, 31).AddDays(1)).IsSuccess.ShouldBeTrue();
+            db.EqualizationPeriods.Add(period);
+
+            // The reader only surfaces an employee that has at least one puantaj record that month (same "absence = no
+            // data" contract as IAttendanceMonthlySummaryReader) - a plain day with no overtime still counts.
+            db.AttendanceDays.Add(AttendanceDay.Record(
+                tenantId, employeeId, new DateOnly(2026, 10, 5), new TimeOnly(9, 0), new TimeOnly(18, 0),
+                new TimeOnly(9, 0), new TimeOnly(18, 0), plannedMinutes: 480, breakMinutes: 60, AttendanceDaySource.Manual));
+
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IAttendanceOvertimePayrollReader>();
+        var result = await reader.GetAsync(tenantId, 2026, 10, [employeeId], TestContext.Current.CancellationToken);
+
+        var line = result.ShouldHaveSingleItem();
+        line.EqualizationApplies.ShouldBeTrue();
+        line.FinalizedOvertimeMinutes.ShouldBe(30000 - (9 * EqualizationPeriod.WeeklyBudgetMinutes));
     }
 }

@@ -1,0 +1,21 @@
+{
+  "id": "senseik-034",
+  "title": "Bordro kapanış süreci eksikleri: BES, işgöremezlik ödeneği, MUHSGK, değişiklik logu, sapma analizi, onay akışı, kritik tarihler takvimi",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/payroll-closing-checklist-gaps",
+  "worktree": ".claude/worktrees/payroll-closing-gaps",
+  "acceptance": [
+    "BES (otomatik katılım emeklilik sistemi) kesinti tutarı takibi, yeni katılımcı/cayma süresi yönetimi ve bankaya ödeme talimatı üretimi",
+    "Raporlu gün / işgöremezlik ödeneği: SGK e-Rapor entegrasyonu veya en azından manuel giriş ile ayrı bir devamsızlık alt türü olarak takip edilip bordro hesabına doğru yansıması",
+    "MUHSGK (Muhtasar ve Prim Hizmet Beyannamesi) — senseik-019 alt-aşama 3b'deki APHB/e-Bildirge işiyle ilişkisi netleştirilmeli (aynı/farklı beyanname mi araştırılmalı), gerekiyorsa ayrı çıktı",
+    "Bordro dönemi kapandığında otomatik bir 'değişiklik logu' üretiliyor (personel sayısı, toplam maliyet, teşvik değişiklikleri önceki aya göre)",
+    "Önceki ayla karşılaştırmalı sapma analizi raporu — %5'ten fazla sapan kalemler otomatik işaretleniyor",
+    "Bordro dönemi için çok aşamalı onay akışı (Finans/Muhasebe → Üst Yönetim, mevcut Workflow motoru kullanılarak) — PayrollPeriod'un mevcut durum makinesine entegre ediliyor",
+    "2026 kritik tarihler takvimi (SGK işe giriş: 1 gün önce, işten ayrılış: 10 gün, SGK prim: ayın son günü, MUHSGK: 26'sı, vergi: ayın son günü, BES: maaş sonrası ilk gün) — Notifications modülü üzerinden hatırlatma olarak kuruluyor",
+    "Deneme bordrosu (provizyon) modu: mevcut PayrollPeriod recalculate mekanizmasının bunu zaten karşılayıp karşılamadığı doğrulanıyor, karşılamıyorsa 'kaydetmeden önizleme' modu eklenmeli"
+  ],
+  "merge_gate": "dotnet build + dotnet test (Payroll) + demo seed'de örnek BES/işgöremezlik/değişiklik logu kayıtları görünüyor",
+  "handoff": "docs/handoffs/payroll-closing-checklist-gaps.md",
+  "source": "Kullanıcı isteği (2026-09-18) — 'Bordro Kapanış Kontrol Listesi 2026' e-kitabı (Kolay İK) analizi, PDF ekli. NOT: Payroll modülü senseik-011/013 (wave-2, şu an aktif çalışıyor) ve senseik-019 (bordro tam motor, henüz başlamadı) tarafından da değiştiriliyor/değiştirilecek — bu kart o işler tamamlanmadan BAŞLATILMAMALI, aynı Payroll.Domain/Application dosyalarına dokunuyor. Prim/komisyon ödemeleri, avans/icra kesintileri, banka ödeme dosyası, APHB gibi maddeler zaten senseik-011/013/019'da kapsanıyor, burada TEKRAR edilmedi."
+}

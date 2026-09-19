@@ -197,6 +197,14 @@
   <data name="employee.termination_reason_name_required" xml:space="preserve"><value>İşten ayrılma nedeni adı zorunludur.</value></data>
   <data name="employee.termination_sgk_exit_code_inconsistent" xml:space="preserve"><value>Seçilen SGK çıkış kodu, fesih türü ile uyumlu değil.</value></data>
   <data name="employee.rehire_invalid_status" xml:space="preserve"><value>Yalnızca işten ayrılmış çalışanlar yeniden işe alınabilir.</value></data>
+  <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>Sicil numarası en fazla 30 karakter olabilir.</value></data>
+  <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>Bu sicil numarası başka bir çalışana kayıtlı.</value></data>
+  <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>Türk uyruklu bir çalışana 99 ile başlayan (yabancı formatlı) kimlik numarası girilemez.</value></data>
+  <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için kimlik numarası girilecekse 99 ile başlayan yabancı kimlik formatında olmalı.</value></data>
+  <data name="employee.foreign_identification_required" xml:space="preserve"><value>Yabancı uyruklu bir çalışan için Yabancı Kimlik No veya Pasaport No alanlarından en az biri zorunludur.</value></data>
+  <data name="employee.foreign_id_number_too_long" xml:space="preserve"><value>Yabancı kimlik numarası en fazla 11 karakter olabilir.</value></data>
+  <data name="employee.passport_number_too_long" xml:space="preserve"><value>Pasaport numarası en fazla 20 karakter olabilir.</value></data>
+  <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>SGK meslek kodu en fazla 20 karakter olabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Alt işveren firma bulunamadı.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>Alt işveren firma adı zorunludur.</value></data>
@@ -446,12 +454,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.template.employee.master.instruction.org_units" xml:space="preserve"><value>Birim kolonları şirketinizin hiyerarşi seviyeleridir; listeden var olan bir birim seçin. Birden fazla seviye doluysa çalışan en alt seviyedeki birime atanır.</value></data>
   <data name="import.template.employee.master.sample.valid_new" xml:space="preserve"><value>Doğru: yeni çalışan (tarih GG.AA.YYYY ve GG/AA/YYYY).</value></data>
   <data name="import.template.employee.master.sample.valid_manager" xml:space="preserve"><value>Doğru: yöneticisi ad soyad ile belirtilmiş çalışan (tarih YYYY-AA-GG).</value></data>
+  <data name="import.template.employee.master.sample.valid_foreign" xml:space="preserve"><value>Doğru: yabancı uyruklu çalışan, kimlik numarası yerine Yabancı Kimlik No dolu.</value></data>
   <data name="import.template.employee.master.sample.invalid_national_id" xml:space="preserve"><value>Hatalı: kimlik numarası geçersiz.</value></data>
   <data name="import.template.employee.master.sample.invalid_date" xml:space="preserve"><value>Hatalı: tarih metin olarak yazılmış (1 Ocak 2020).</value></data>
   <data name="import.template.employee.master.sample.invalid_email" xml:space="preserve"><value>Hatalı: e-posta adresi eksik.</value></data>
   <data name="import.column.employee.firstName" xml:space="preserve"><value>Ad</value></data>
   <data name="import.column.employee.lastName" xml:space="preserve"><value>Soyad</value></data>
   <data name="import.column.employee.nationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.employee.sicilNumarasi" xml:space="preserve"><value>Sicil numarası</value></data>
   <data name="import.column.employee.workEmail" xml:space="preserve"><value>İş e-postası</value></data>
   <data name="import.column.employee.personalEmail" xml:space="preserve"><value>Kişisel e-posta</value></data>
   <data name="import.column.employee.workPhone" xml:space="preserve"><value>İş telefonu</value></data>
@@ -472,6 +482,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.addressLine" xml:space="preserve"><value>Adres</value></data>
   <data name="import.column.employee.city" xml:space="preserve"><value>Şehir</value></data>
   <data name="import.column.employee.postalCode" xml:space="preserve"><value>Posta kodu</value></data>
+  <data name="import.column.employee.nationality" xml:space="preserve"><value>Uyruk</value></data>
+  <data name="import.column.employee.foreignIdNumber" xml:space="preserve"><value>Yabancı kimlik numarası</value></data>
+  <data name="import.column.employee.passportNumber" xml:space="preserve"><value>Pasaport numarası</value></data>
+  <data name="import.column.employee.sgkOccupationCode" xml:space="preserve"><value>SGK meslek kodu</value></data>
   <data name="import.column.employee.contractType" xml:space="preserve"><value>Sözleşme türü</value></data>
   <data name="import.column.employee.employmentType" xml:space="preserve"><value>Çalışma şekli</value></data>
   <data name="import.column.employee.salaryEffectiveFrom" xml:space="preserve"><value>Maaş geçerlilik tarihi</value></data>
@@ -481,6 +495,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.payFrequency" xml:space="preserve"><value>Ödeme düzeni</value></data>
   <data name="import.column.employee.transportAllowance" xml:space="preserve"><value>Yol yardımı</value></data>
   <data name="import.column.employee.mealAllowance" xml:space="preserve"><value>Yemek yardımı</value></data>
+  <data name="import.column.employee.bankIban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="import.column.employee.bankAccountType" xml:space="preserve"><value>Banka hesap türü</value></data>
+  <data name="import.column.employee.bankName" xml:space="preserve"><value>Banka adı</value></data>
+  <data name="import.column.employee.bankCurrency" xml:space="preserve"><value>Hesap para birimi</value></data>
   <data name="import.column.employee.leaveAccrualStartDate.description" xml:space="preserve"><value>İzin hak edişinin başladığı gerçek tarih; boş bırakılırsa işe başlama tarihi kullanılır.</value></data>
   <data name="import.column.employee.gender.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
   <data name="import.column.employee.maritalStatus.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
@@ -495,6 +513,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.addressLine.description" xml:space="preserve"><value>Açık adres, en fazla 250 karakter.</value></data>
   <data name="import.column.employee.city.description" xml:space="preserve"><value>Şehir, en fazla 100 karakter.</value></data>
   <data name="import.column.employee.postalCode.description" xml:space="preserve"><value>Posta kodu, en fazla 20 karakter.</value></data>
+  <data name="import.column.employee.sicilNumarasi.description" xml:space="preserve"><value>Kiracı içinde benzersiz sicil numarası; şimdilik eşleştirme anahtarı değil, sadece kaydediliyor.</value></data>
+  <data name="import.column.employee.nationality.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer (varsayılan Türk) korunur.</value></data>
+  <data name="import.column.employee.foreignIdNumber.description" xml:space="preserve"><value>"99" ile başlayan Yabancı Kimlik Numarası; yabancı uyruklu çalışan için.</value></data>
+  <data name="import.column.employee.passportNumber.description" xml:space="preserve"><value>Yabancı Kimlik No henüz atanmamış yabancı çalışan için pasaport numarası.</value></data>
+  <data name="import.column.employee.sgkOccupationCode.description" xml:space="preserve"><value>SGK meslek kodu; e-Bildirge/APHB alanlarının ön doldurulması için.</value></data>
   <data name="import.column.employee.contractType.description" xml:space="preserve"><value>Belirsiz süreli veya Belirli süreli.</value></data>
   <data name="import.column.employee.employmentType.description" xml:space="preserve"><value>Listeden seçin; boş bırakılırsa mevcut değer korunur.</value></data>
   <data name="import.column.employee.firstName.description" xml:space="preserve"><value>Çalışanın adı (eşleştirmede kullanılır).</value></data>
@@ -514,6 +537,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.employee.payFrequency.description" xml:space="preserve"><value>Listeden seçin (Aylık, Günlük, Yıllık, Haftalık, Saatlik). Maaş bloğu doluysa zorunludur.</value></data>
   <data name="import.column.employee.transportAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
   <data name="import.column.employee.mealAllowance.description" xml:space="preserve"><value>Opsiyonel, sayısal, en fazla iki ondalık.</value></data>
+  <data name="import.column.employee.bankIban.description" xml:space="preserve"><value>Boş bırakılırsa satırdaki banka hesabı bloğu tümüyle yok sayılır; doluysa IBAN doğrulanır (uzunluk/kontrol haneleri/ülke) ve Banka hesap türü zorunlu hale gelir.</value></data>
+  <data name="import.column.employee.bankAccountType.description" xml:space="preserve"><value>Listeden seçin (Çek, Vadeli, Vadesiz, Diğer). Banka bloğu (IBAN) doluysa zorunludur.</value></data>
+  <data name="import.column.employee.bankName.description" xml:space="preserve"><value>Opsiyonel, en fazla 100 karakter.</value></data>
+  <data name="import.column.employee.bankCurrency.description" xml:space="preserve"><value>Opsiyonel; ISO 4217 kodu (ör. TRY, EUR, USD), "TL" ve "Euro" kısaltmaları da kabul edilir.</value></data>
   <data name="import.column.employee.customField.description" xml:space="preserve"><value>Kiracı tanımlı özel alan; boş bırakılırsa mevcut değer korunur. Seçenekli alanlarda listeden seçin; çoklu seçimde değerler ["Değer1","Değer2"] biçiminde girilir.</value></data>
   <data name="import.instructions.headers" xml:space="preserve"><value>Başlık satırındaki kolon adlarını değiştirmeyin; gizli 2. satırdaki kolon anahtarlarını silmeyin. Başlığı değişen kolonlar yükleme sonrası elle eşleştirilebilir.</value></data>
   <data name="import.instructions.columns" xml:space="preserve"><value>Kullanmadığınız kolonları silebilir, kolonların sırasını değiştirebilir veya araya kendi kolonlarınızı ekleyebilirsiniz (eklenen kolonlar 'Yok say' olarak bırakılır).</value></data>
@@ -727,6 +754,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.period_not_paid" xml:space="preserve"><value>Bordro dönemi ödenmemiş.</value></data>
   <data name="payroll.dirty.reason.salary_changed" xml:space="preserve"><value>Maaş değişti</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Bordro parametresi değişti</value></data>
+
+  <!-- Payroll (senseik-011, F-06): kıdem/ihbar/kullanılmamış izin ücreti tahmini (İşten ayrılış sihirbazı) -->
+  <data name="payroll.severance.estimate" xml:space="preserve"><value>Kıdem/ihbar tazminatı tahminini görüntüleme</value></data>
+  <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>
@@ -835,6 +866,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>
   <data name="attendance.compensatory.not_open" xml:space="preserve"><value>Bu telafi kaydı açık durumda değil.</value></data>
   <data name="attendance.compensatory.minutes_invalid" xml:space="preserve"><value>Telafi süresi pozitif olmalıdır.</value></data>
+  <data name="attendance.equalization.period_months_invalid" xml:space="preserve"><value>Denkleştirme dönemi yalnızca 2 veya 4 ay olabilir.</value></data>
+  <data name="attendance.equalization.written_agreement_required" xml:space="preserve"><value>4 aylık denkleştirme dönemi için yazılı anlaşma gereklidir.</value></data>
+  <data name="attendance.equalization.anchor_month_invalid" xml:space="preserve"><value>Dönem başlangıç ayı 1-12 arasında olmalıdır.</value></data>
+  <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>Bu denkleştirme dönemi açık durumda değil.</value></data>
+  <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>Denkleştirme dönemi henüz bitmedi.</value></data>
+  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Çalışma süresi negatif olamaz.</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="attendance.device_log.invalid_timestamp" xml:space="preserve"><value>Geçersiz zaman damgası: '{value}'. ISO 8601 biçiminde girin (ör. 2026-09-16T08:03:00).</value></data>
@@ -879,6 +916,21 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="documents.my.requirements" xml:space="preserve"><value>Kendi özlük belge gereksinimlerini görüntüleme ve karşılama</value></data>
   <data name="documents.my.files" xml:space="preserve"><value>Kendi belgesini yükleme</value></data>
   <data name="employee_document_requirement.not_owner" xml:space="preserve"><value>Bu belge gereksinimi size ait değil.</value></data>
+  <data name="documents.company.view" xml:space="preserve"><value>Ortak şirket dosyalarını görüntüleme</value></data>
+  <data name="documents.company.manage" xml:space="preserve"><value>Ortak şirket dosyalarını yönetme</value></data>
+  <data name="shared_company_file.not_found" xml:space="preserve"><value>Dosya bulunamadı.</value></data>
+  <data name="shared_company_file.name_required" xml:space="preserve"><value>Dosya adı zorunludur.</value></data>
+  <data name="shared_company_file.name_too_long" xml:space="preserve"><value>Dosya adı çok uzun.</value></data>
+  <data name="shared_company_file.filekey_required" xml:space="preserve"><value>Dosya anahtarı zorunludur.</value></data>
+  <data name="shared_company_file.invalid_size" xml:space="preserve"><value>Geçersiz dosya boyutu.</value></data>
+  <data name="shared_company_file.uploader_required" xml:space="preserve"><value>Yükleyen kullanıcı zorunludur.</value></data>
+  <data name="shared_company_file.roles_required_for_restricted_visibility" xml:space="preserve"><value>Role kısıtlı görünürlük için en az bir rol seçilmelidir.</value></data>
+  <data name="shared_company_file.invalid_status" xml:space="preserve"><value>Dosya bu durumda bu işlemi desteklemiyor.</value></data>
+  <data name="shared_company_file.already_deleted" xml:space="preserve"><value>Dosya zaten silinmiş.</value></data>
+  <data name="shared_company_file.quota_exceeded" xml:space="preserve"><value>Bu dosya yüklendiğinde kiracının depolama kotası aşılır.</value></data>
+  <data name="shared_company_file.upload_initiation_failed" xml:space="preserve"><value>Dosya yükleme başlatılamadı.</value></data>
+  <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Dosya yükleme onaylanamadı.</value></data>
+  <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Dosya silinemedi.</value></data>
 
   <!-- Integrations (Faz 8 #61): dış bordro webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Webhook abonelikleri yönetme</value></data>
@@ -1087,6 +1139,16 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
+  <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
+  <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
+  <data name="announcements.events.manage" xml:space="preserve"><value>Etkinlik yönetimi</value></data>
+  <data name="company_event.title_required" xml:space="preserve"><value>Etkinlik başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
+  <data name="company_event.description_too_long" xml:space="preserve"><value>Etkinlik açıklaması 2000 karakteri aşamaz.</value></data>
+  <data name="company_event.type_not_manual" xml:space="preserve"><value>Doğum günü ve izin başlangıcı türleri manuel oluşturulamaz; bunlar otomatik türetilir.</value></data>
+  <data name="company_event.not_found" xml:space="preserve"><value>Etkinlik bulunamadı.</value></data>
+  <data name="company_event.visibility_org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı.</value></data>
+  <data name="company_calendar.invalid_range" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="company_calendar.range_too_large" xml:space="preserve"><value>Takvim aralığı en fazla {max} gün olabilir.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>Talep konusu gereklidir ve 200 karakteri aşamaz.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Talep içeriği gereklidir.</value></data>
   <data name="support_ticket.not_found" xml:space="preserve"><value>Destek talebi bulunamadı.</value></data>

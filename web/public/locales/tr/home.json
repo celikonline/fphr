@@ -53,6 +53,7 @@
   "departmentDistribution": {
     "title": "Çalışan Dağılımı",
     "empty": "Görüntülenecek çalışan yok.",
-    "unassigned": "Departmansız"
+    "unassigned": "Departmansız",
+    "total": "Toplam"
   }
 }

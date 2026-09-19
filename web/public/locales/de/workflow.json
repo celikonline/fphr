@@ -57,7 +57,14 @@
     "comment": "Kommentar",
     "commentPlaceholder": "Optionalen Kommentar hinzufügen...",
     "approveSuccess": "Antrag genehmigt.",
-    "rejectSuccess": "Antrag abgelehnt."
+    "rejectSuccess": "Antrag abgelehnt.",
+    "requestDate": "Antragsdatum",
+    "startTime": "Startzeit",
+    "duration": "Dauer",
+    "reason": "Begründung",
+    "dateRange": "Zeitraum",
+    "leaveType": "Urlaubsart",
+    "days": "Anzahl Tage"
   },
   "status": {
     "title": "Genehmigungsstatus",

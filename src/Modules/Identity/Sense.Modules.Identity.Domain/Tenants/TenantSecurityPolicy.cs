@@ -1,0 +1,33 @@
+namespace Sense.Modules.Identity.Domain.Tenants;
+
+/// <summary>
+/// Kiracı "Güvenlik politikası" (Ayarlar &gt; Sistem ayarları &gt; Güvenlik politikası; senseik-051). Belirli sistem
+/// rollerinde 2FA'yı zorunlu kılar: <see cref="RequireMfaForRoles"/> içindeki rol kodlarından birine sahip bir
+/// kullanıcı MFA'sı kapalıyken oturum açtığında, ön yüz onu kritik ekranlara erişmeden önce kurulum akışına
+/// yönlendirir (bkz. <c>GetMeHandler</c> → <c>FeaturesDto.MfaSetupRequired</c>).
+/// Değişmez (record); <see cref="Tenant.UpdateSecurityPolicy"/> ile tamamı birlikte güncellenir. Erişim ayarlarıyla
+/// aynı tek-jsonb-kolon kalıbı (bkz. <see cref="TenantAccessSettings"/>): yeni bir alan eklemek ayrı migration
+/// istemez, mevcut satırlar eksik alanlar için C# varsayımını kullanır.
+/// </summary>
+public sealed record TenantSecurityPolicy
+{
+    /// <summary>Bu rol kodlarından (Owner, Admin, HR, PayrollSpecialist…) birine sahip kullanıcılar için 2FA zorunlu.
+    /// Boşsa hiçbir rol için zorunluluk yoktur (varsayılan).</summary>
+    public IReadOnlyList<string> RequireMfaForRoles { get; init; } = [];
+
+    public static readonly TenantSecurityPolicy Default = new();
+
+    /// <summary>
+    /// Kullanıcının rollerinden biri zorunlu listede VE MFA'sı kapalıysa true — ön yüzün kurulum akışına
+    /// yönlendirmesi gereken durum. MFA zaten açıksa veya zorunlu rol listesi boşsa her zaman false.
+    /// </summary>
+    public bool RequiresMfaSetup(IEnumerable<string> userRoleCodes, bool mfaEnabled)
+    {
+        if (mfaEnabled || RequireMfaForRoles.Count == 0)
+        {
+            return false;
+        }
+
+        return userRoleCodes.Any(code => RequireMfaForRoles.Contains(code, StringComparer.OrdinalIgnoreCase));
+    }
+}

@@ -18,7 +18,11 @@
     "settings": "Einstellungen",
     "account": "Mein Profil",
     "support": "Support",
-    "trust": "Vertrauen & Sicherheit"
+    "trust": "Vertrauen & Sicherheit",
+    "collapseSidebar": "Menü einklappen",
+    "expandSidebar": "Menü ausklappen",
+    "workflowInbox": "Genehmigungs-Posteingang",
+    "sharedFiles": "Gemeinsame Dateien"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
@@ -44,7 +48,8 @@
     "recruitmentCandidates": "Kandidat:innen",
     "recruitmentRequisitions": "Personalanforderungen",
     "analytics": "Analysen",
-    "workflowInbox": "Genehmigungs-Posteingang"
+    "workflowInbox": "Genehmigungs-Posteingang",
+    "companyCalendar": "Veranstaltungskalender"
   },
   "settings": {
     "company": "Unternehmensdaten",
@@ -73,6 +78,10 @@
     "assetCategoriesDesc": "Katalog der Ausstattungskategorien (Computer, Telefon, Fahrzeug usw.)",
     "expenseCategories": "Spesenkategorien",
     "expenseCategoriesDesc": "Katalog der Spesenkategorien und Limits beim Hinzufügen von Belegen",
+    "ohsHazardClassification": "Arbeitsschutz-Gefahrenklasse",
+    "ohsHazardClassificationDesc": "Verlauf der Gefahrenklasse je Standort",
+    "ohsRiskAssessments": "Gefährdungsbeurteilungen",
+    "ohsRiskAssessmentsDesc": "Erfasste Gefährdungsbeurteilungen und ihre Fälligkeitstermine",
     "approvalFlowsDesc": "Genehmigungsschritte je Antragsart",
     "rules": "Regeln",
     "workCalendars": "Arbeitskalender",
@@ -82,6 +91,8 @@
     "system": "Systemeinstellungen",
     "access": "Zugriffseinstellungen",
     "accessDesc": "Was Mitarbeitende auf Start, Konto und Kalender sehen",
+    "securityPolicy": "Sicherheitsrichtlinie",
+    "securityPolicyDesc": "Verpflichtende Zwei-Faktor-Authentifizierung (2FA) für bestimmte Rollen",
     "usersRoles": "Benutzer & Rollen",
     "usersRolesDesc": "Benutzer, Zugriffsarten, Rollen und Berechtigungen",
     "auditLog": "Audit-Protokoll",

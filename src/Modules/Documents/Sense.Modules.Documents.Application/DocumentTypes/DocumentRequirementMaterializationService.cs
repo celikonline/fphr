@@ -52,11 +52,11 @@ public sealed class DocumentRequirementMaterializationService(
         var signals = await eligibility.GetSignalsAsync(tenantId, employeeId, cancellationToken);
         var hasOpenAssets = await assetLookup.HasOpenAssetsAsync(tenantId, employeeId, cancellationToken);
 
-        // Three signals are available cross-module today: BirthDate/DisabilityDegree live on Employee and are
-        // sensitive (only derived booleans are exposed, per architecture rule); HasOpenAssets comes from the Assets
-        // module's IAssetLookup (roadmap #65). The rest are hardcoded false until their owning data exists:
-        //  - NonTurkishNational: no Nationality field on Employee yet
-        //  - HasIncentive / UsesDisabilityTaxReduction: Payroll incentive tracking doesn't exist yet
+        // Four signals are available cross-module today: BirthDate/DisabilityDegree/Nationality live on Employee
+        // (Nationality/NonTurkishNational since senseik-009/F-02; BirthDate/DisabilityDegree are sensitive, only
+        // derived booleans are exposed, per architecture rule); HasOpenAssets comes from the Assets module's
+        // IAssetLookup (roadmap #65). The rest are hardcoded false until their owning data exists:
+        //  - HasIncentive / UsesDisabilityTaxReduction: Payroll incentive tracking doesn't exist yet (senseik-010/F-03)
         //  - ExConvictOrTerrorVictim: no such field anywhere yet (manual/HR-only data point)
         //  - RequiresPeriodicHealthCheck / VeryHazardousJob: no job-hazard classification yet
         //  - RequiresDriving: no job/position attribute for this yet
@@ -65,7 +65,7 @@ public sealed class DocumentRequirementMaterializationService(
         var context = new EmployeeDocumentContext(
             IsUnder18: signals?.IsUnder18 ?? false,
             HasDisability: signals?.HasDisability ?? false,
-            NonTurkishNational: false,
+            NonTurkishNational: signals?.IsForeignNational ?? false,
             HasIncentive: false,
             UsesDisabilityTaxReduction: false,
             IsExConvictOrTerrorVictim: false,

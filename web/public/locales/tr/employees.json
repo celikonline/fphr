@@ -323,6 +323,8 @@
     "notFoundTitle": "Çalışan bulunamadı",
     "notFoundDescription": "Kayıt silinmiş veya erişim kapsamınız dışında olabilir.",
     "saved": "Çalışan bilgileri kaydedildi.",
+    "statusLabel": "Çalışan",
+    "accountStatusLabel": "Hesap",
     "sections": {
       "general": "Genel",
       "personal": "Kişisel bilgiler",
@@ -564,6 +566,16 @@
       "sgkSubCode": "SGK alt kodu",
       "sgkSubCodeHint": "Bu neden birden fazla geçerli SGK koduna sahip; aralarından birini seçin.",
       "sgkSubCodeRequired": "Bu neden için bir SGK alt kodu seçmelisiniz.",
+      "severanceEstimate": {
+        "title": "Kıdem/ihbar tazminatı tahmini",
+        "immoralOrBadFaith": "Ahlak ve iyiniyet kurallarına aykırılık nedeniyle fesih (İş K. m.25/II)",
+        "severance": "Kıdem tazminatı",
+        "notice": "İhbar tazminatı",
+        "unusedLeave": "Kullanılmamış izin ücreti",
+        "total": "Toplam",
+        "unavailable": "Tahmin şu an hesaplanamıyor (güncel maaş kaydı gerekli).",
+        "disclaimer": "Bu tahmini bir hesaplamadır; kötüniyet/sendikal tazminat kapsam dışıdır ve kayıt oluşturmaz."
+      },
       "severancePaid": "Kıdem tazminatı ödendi",
       "severancePaidHint": "Ödendiyse bu dönem yeniden işe alımda kıdem tazminatı kıdemine sayılmaz.",
       "leaveSettled": "Yıllık izinler kullandırıldı veya ücreti ödendi",
