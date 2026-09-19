@@ -58,6 +58,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+        services.AddScoped<ILeaveStartDateReader, Lookups.LeaveStartDateReader>();
         return services;
     }
 

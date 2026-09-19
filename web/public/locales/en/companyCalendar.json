@@ -1,0 +1,37 @@
+{
+  "title": "Company Event Calendar",
+  "subtitle": "Birthdays, leave starts and company events in one calendar.",
+  "previous": "Previous month",
+  "next": "Next month",
+  "today": "Today",
+  "empty": "No events this month.",
+  "genericError": "The calendar could not be loaded.",
+  "moreCount": "+{{count}} more",
+  "create": "Create Event",
+  "delete": "Delete",
+  "deleteConfirmTitle": "Delete event",
+  "deleteConfirmMessage": "Are you sure you want to delete \"{{title}}\"?",
+  "deleted": "Event deleted.",
+  "saved": "Event created.",
+  "type": {
+    "companyEvent": "Company Event",
+    "meeting": "Meeting",
+    "birthday": "Birthday",
+    "leaveStart": "Leave Start"
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "e.g. Year-End Party",
+    "description": "Description",
+    "descriptionPlaceholder": "Optional description",
+    "date": "Date",
+    "type": "Type",
+    "visibility": "Visibility",
+    "visibilityAll": "Whole company",
+    "visibilityOrgUnit": "A specific unit"
+  },
+  "errors": {
+    "titleRequired": "An event title is required.",
+    "generic": "The event could not be saved."
+  }
+}

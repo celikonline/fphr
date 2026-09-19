@@ -17,6 +17,10 @@
     <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Contracts/Sense.Modules.Announcements.Contracts.csproj" />
     <ProjectReference Include="../../../src/Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Sense.Modules.Announcements.Infrastructure.csproj" />
     <ProjectReference Include="../../../src/Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
+    <!-- Company calendar (senseik-027): cross-module read ports exercised via NSubstitute fakes. -->
+    <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
   </ItemGroup>
 

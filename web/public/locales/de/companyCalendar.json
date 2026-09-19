@@ -1,0 +1,37 @@
+{
+  "title": "Veranstaltungskalender",
+  "subtitle": "Geburtstage, Urlaubsbeginn und Firmenveranstaltungen in einem Kalender.",
+  "previous": "Vorheriger Monat",
+  "next": "Nächster Monat",
+  "today": "Heute",
+  "empty": "Diesen Monat keine Veranstaltungen.",
+  "genericError": "Der Kalender konnte nicht geladen werden.",
+  "moreCount": "+{{count}} weitere",
+  "create": "Veranstaltung erstellen",
+  "delete": "Löschen",
+  "deleteConfirmTitle": "Veranstaltung löschen",
+  "deleteConfirmMessage": "Möchten Sie \"{{title}}\" wirklich löschen?",
+  "deleted": "Veranstaltung gelöscht.",
+  "saved": "Veranstaltung erstellt.",
+  "type": {
+    "companyEvent": "Firmenveranstaltung",
+    "meeting": "Meeting",
+    "birthday": "Geburtstag",
+    "leaveStart": "Urlaubsbeginn"
+  },
+  "form": {
+    "title": "Titel",
+    "titlePlaceholder": "z. B. Jahresabschlussfeier",
+    "description": "Beschreibung",
+    "descriptionPlaceholder": "Optionale Beschreibung",
+    "date": "Datum",
+    "type": "Typ",
+    "visibility": "Sichtbarkeit",
+    "visibilityAll": "Ganzes Unternehmen",
+    "visibilityOrgUnit": "Eine bestimmte Einheit"
+  },
+  "errors": {
+    "titleRequired": "Ein Veranstaltungstitel ist erforderlich.",
+    "generic": "Die Veranstaltung konnte nicht gespeichert werden."
+  }
+}

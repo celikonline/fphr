@@ -1,0 +1,37 @@
+{
+  "title": "Şirket Etkinlik Takvimi",
+  "subtitle": "Doğum günleri, izin başlangıçları ve şirket etkinlikleri tek takvimde.",
+  "previous": "Önceki ay",
+  "next": "Sonraki ay",
+  "today": "Bugün",
+  "empty": "Bu ay için etkinlik yok.",
+  "genericError": "Takvim yüklenirken bir sorun oluştu.",
+  "moreCount": "+{{count}} daha",
+  "create": "Etkinlik Oluştur",
+  "delete": "Sil",
+  "deleteConfirmTitle": "Etkinliği sil",
+  "deleteConfirmMessage": "\"{{title}}\" etkinliğini silmek istediğinize emin misiniz?",
+  "deleted": "Etkinlik silindi.",
+  "saved": "Etkinlik oluşturuldu.",
+  "type": {
+    "companyEvent": "Şirket Etkinliği",
+    "meeting": "Toplantı",
+    "birthday": "Doğum Günü",
+    "leaveStart": "İzin Başlangıcı"
+  },
+  "form": {
+    "title": "Başlık",
+    "titlePlaceholder": "ör. Yıl Sonu Kutlaması",
+    "description": "Açıklama",
+    "descriptionPlaceholder": "İsteğe bağlı açıklama",
+    "date": "Tarih",
+    "type": "Tür",
+    "visibility": "Görünürlük",
+    "visibilityAll": "Tüm şirket",
+    "visibilityOrgUnit": "Belirli bir birim"
+  },
+  "errors": {
+    "titleRequired": "Etkinlik başlığı gereklidir.",
+    "generic": "Etkinlik kaydedilemedi."
+  }
+}

@@ -44,7 +44,8 @@
     "recruitmentCandidates": "Kandidat:innen",
     "recruitmentRequisitions": "Personalanforderungen",
     "analytics": "Analysen",
-    "workflowInbox": "Genehmigungs-Posteingang"
+    "workflowInbox": "Genehmigungs-Posteingang",
+    "companyCalendar": "Veranstaltungskalender"
   },
   "settings": {
     "company": "Unternehmensdaten",

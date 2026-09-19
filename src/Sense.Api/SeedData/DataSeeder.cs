@@ -23,6 +23,7 @@ using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
@@ -50,7 +51,8 @@ public partial class DataSeeder(
     LeaveDbContext leaveCtx,
     LeaveBalanceService leaveBalances,
     ILeaveDayCalculator leaveDayCalculator,
-    ITenantContextSetter tenantContextSetter)
+    ITenantContextSetter tenantContextSetter,
+    AnnouncementsDbContext announcementsCtx)
 {
     private const int RandomSeed = 42; // Deterministic seed for reproducibility
     private readonly Random _random = new(RandomSeed);
@@ -96,6 +98,7 @@ public partial class DataSeeder(
 
             await identityCtx.SaveChangesAsync(cancellationToken);
             await organizationCtx.SaveChangesAsync(cancellationToken);
+            await announcementsCtx.SaveChangesAsync(cancellationToken);
 
             // Leave data needs the saved holiday calendar (leave day counts) and must be committed BEFORE the employee
             // save: that save writes the EmployeeHired outbox rows, and Leave's EmployeeHiredHandler (Sense.Worker) must
@@ -303,6 +306,10 @@ public partial class DataSeeder(
         headquarters.AssignLocation(istanbulHq.Id);
         departments.First(d => d.Name == "Sales").AssignLocation(ankaraOffice.Id);
         departments.First(d => d.Name == "Engineering").AssignLocation(izmirOffice.Id);
+
+        // Şirket etkinlik takvimi (senseik-027): birkaç manuel örnek etkinlik türü; doğum günü ve izin başlangıcı
+        // türetmeleri aşağıdaki employees/leave seed'inden otomatik gelir.
+        SeedDemoCompanyEvents(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), departments);
 
         // Employee: one minimal stub per demo user, assigned round-robin across the 4 departments
         // (executives/HR go to Headquarters), linked back via User.EmployeeId, first Manager per unit
