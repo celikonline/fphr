@@ -99,6 +99,8 @@ export const SETTINGS_PERMISSIONS = {
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
   workSchedules: ["attendance.workschedule.view"],
+  // senseik-001: vize belge süreçleri (approver, template documents, process definitions).
+  visaProcesses: ["documents.visa.manage"],
   ohsHazardClassification: ["ohs.hazard_classifications.view", "ohs.hazard_classifications.manage"],
   ohsRiskAssessments: ["ohs.risk_assessments.view", "ohs.risk_assessments.manage"],
   // senseik-057: read = identity.tenant.view (same as Erişim ayarları), change = identity.modules.manage.
@@ -522,8 +524,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         descriptionKey: "settings.visaProcessesDesc",
         path: "/app/settings/rules/visa-processes",
         icon: Stamp,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 1,
+        permissions: SETTINGS_PERMISSIONS.visaProcesses,
       },
     ],
   },

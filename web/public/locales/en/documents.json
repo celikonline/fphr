@@ -165,5 +165,117 @@
       "quotaExceeded": "Uploading this file would exceed the storage quota.",
       "rolesRequired": "Role-restricted visibility requires at least one selected role."
     }
+  },
+  "visa": {
+    "my": {
+      "title": "My visa document requests",
+      "subtitle": "Request visa documents for your trip; once approved they are added to your file.",
+      "newRequest": "New visa request",
+      "empty": "You have no visa document requests yet.",
+      "columns": {
+        "country": "Country",
+        "visaType": "Visa type",
+        "travel": "Travel dates",
+        "process": "Process",
+        "status": "Status",
+        "createdAt": "Requested on",
+        "actions": "Documents"
+      },
+      "documents": {
+        "show": "View documents",
+        "title": "Delivered documents",
+        "empty": "No documents have been delivered for this request.",
+        "download": "Download",
+        "loadFailed": "Could not load the documents."
+      },
+      "rejectedNoReason": "The approver rejected the request.",
+      "rejectedReason": "Reason: {{reason}}",
+      "awaitingHint": "Awaiting approval: the decision is in the approver's inbox.",
+      "submitted": "Your visa document request was sent for approval.",
+      "loadFailed": "Could not load visa requests."
+    },
+    "form": {
+      "title": "New visa document request",
+      "description": "Your request goes to the configured approver; once approved the documents are added to your file.",
+      "process": "Visa process",
+      "processPlaceholder": "Select a process (optional)",
+      "country": "Country code",
+      "countryHint": "2-3 letter country code, e.g. DE, GB, US.",
+      "visaType": "Visa type",
+      "visaTypePlaceholder": "Select the visa type",
+      "travelStart": "Travel start",
+      "travelEnd": "Travel end",
+      "notes": "Notes",
+      "notesPlaceholder": "Purpose of the trip, inviting organisation, etc.",
+      "submit": "Submit request",
+      "validation": {
+        "datesRequired": "Travel start and end dates are required.",
+        "datesOrder": "Travel end cannot be before the start.",
+        "countryFormat": "The country code must be 2-3 letters (e.g. DE).",
+        "visaTypeRequired": "Select a visa type."
+      },
+      "genericError": "The request could not be submitted."
+    },
+    "status": {
+      "pending": "Preparing",
+      "awaitingApproval": "Awaiting approval",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "completed": "Completed"
+    },
+    "type": {
+      "tourist": "Tourist",
+      "business": "Business",
+      "work": "Work",
+      "student": "Student",
+      "transit": "Transit"
+    },
+    "settings": {
+      "title": "Visa document processes",
+      "subtitle": "Manage the approver for visa document requests, the process definitions and the template documents delivered to the employee after approval.",
+      "approver": {
+        "title": "Approver",
+        "description": "Every visa document request lands in this person's inbox. Without one, employees cannot submit requests.",
+        "placeholder": "Select an approver",
+        "notConfigured": "No approver is configured; employees cannot submit visa requests."
+      },
+      "templates": {
+        "title": "Template documents to deliver",
+        "description": "When a request is approved, a copy of each of these documents is added to the employee's file (e.g. a sample letter, a checklist).",
+        "placeholder": "Select template documents",
+        "empty": "No documents to choose from. Upload a template document first.",
+        "upload": "Upload template document",
+        "uploaded": "Document uploaded and added to the selection.",
+        "uploadFailed": "The document could not be uploaded."
+      },
+      "save": "Save settings",
+      "saved": "Visa settings saved.",
+      "processes": {
+        "title": "Visa processes",
+        "subtitle": "Process templates employees can pick on the request form.",
+        "add": "Add process",
+        "addTitle": "New visa process",
+        "editTitle": "Edit visa process",
+        "empty": "No processes defined.",
+        "columns": {
+          "name": "Name",
+          "country": "Country",
+          "status": "Status"
+        },
+        "name": "Process name",
+        "country": "Country code (optional)",
+        "countryHint": "Leave empty when the process is not tied to a single country (e.g. Schengen).",
+        "active": "Active",
+        "inactive": "Inactive",
+        "deactivate": "Deactivate",
+        "reactivate": "Reactivate",
+        "saved": "Process saved.",
+        "statusSaved": "Process status updated.",
+        "duplicate": "A process with this name already exists.",
+        "countryInvalid": "The country code must be 2-3 letters."
+      },
+      "genericError": "The operation could not be completed.",
+      "loadFailed": "Could not load visa settings."
+    }
   }
 }
