@@ -2,7 +2,7 @@
   "id": "senseik-038",
   "title": "İzin türü düzenleme penceresi bozuk açılıyor — fieldset>div.grid genişlik 0px (BLOKAJ)",
   "owner": "pc-b",
-  "state": "backlog",
+  "state": "review",
   "branch": "b/leave-type-edit-modal-fix",
   "worktree": ".claude/worktrees/leave-type-modal-fix",
   "acceptance": [
@@ -12,5 +12,6 @@
   ],
   "merge_gate": "pnpm --filter web typecheck + eslint + manuel test: 3+ izin türü düzenleme penceresi açılıp tüm alanlar görünür/kullanılabilir",
   "handoff": "docs/handoffs/leave-type-edit-modal-fix.md",
-  "source": "1. Tur Test Bulgu Dokümanı § B-01 (KRİTİK/BLOKAJ — hiçbir izin türü düzenlenemiyor). Kök neden DOM üzerinden tespit edilmiş ve doğrulanmış düzeltme (w-full) belgelenmiş, doğrudan uygulanabilir. NOT: senseik-021 (form modal alignment) aynı dosyaya (leave-type-dialog.tsx) dokunuyor olabilir — merge sırasını kontrol et."
+  "source": "1. Tur Test Bulgu Dokümanı § B-01 (KRİTİK/BLOKAJ — hiçbir izin türü düzenlenemiyor). Kök neden DOM üzerinden tespit edilmiş ve doğrulanmış düzeltme (w-full) belgelenmiş, doğrudan uygulanabilir. NOT: senseik-021 (form modal alignment) aynı dosyaya (leave-type-dialog.tsx) dokunuyor olabilir — merge sırasını kontrol et.",
+  "resolution": "6 grid'in tamamına w-full eklendi (leave-type-dialog.tsx). FormModal sarmalayıcısı (senseik-021/041) zaten uygulanmıştı, o sadece sola hizalıyor — fieldset/grid çakışmasına dokunmuyordu, kök neden hâlâ geçerliydi. Regresyon testi eklendi (leave-type-dialog.test.tsx). tsc/eslint temiz, vitest 21/21 yeşil. Manuel test (3+ tür) yapılmadı — bu ortamda tarayıcı çalıştırılamıyor; bir sonraki adım olarak PO/QA'nın gerçek tarayıcıda doğrulaması gerekiyor. Detay: docs/handoffs/leave-type-edit-modal-fix.md."
 }
