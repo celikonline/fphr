@@ -31,6 +31,10 @@ public enum EmployeeSalaryType
 /// </summary>
 public sealed record EmployeeCurrentSalary(decimal Amount, string Currency, EmployeeSalaryType SalaryType, EmployeePayFrequency PayFrequency, DateOnly EffectiveFrom);
 
+/// <summary>Hire/termination dates of one employee, for Payroll's kıst (partial-month) salary proration. Either date
+/// may be null (not hired yet / still employed).</summary>
+public sealed record EmployeeEmploymentDates(DateOnly? HireDate, DateOnly? TerminationDate);
+
 /// <summary>
 /// Read-only cross-module lookup: lets Payroll derive <c>EmployeePayrollProfile.WageBasis</c> (11.3.07 "Ücret esası")
 /// from the employee's current salary record ("Maaş bloğu" > "Ödeme düzeni") without depending on Employee's Domain
@@ -46,6 +50,13 @@ public interface IEmployeeSalaryLookup
     /// (11.3.07 P3) - amounts are sensitive (employee.salary.view) so this is a Contracts-port read, never carried on
     /// an event. Null if the employee has no salary record yet.</summary>
     Task<EmployeeCurrentSalary?> GetCurrentSalaryAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The salary record in effect on <paramref name="asOf"/> (latest <c>EffectiveFrom &lt;= asOf</c>) - lets a
+    /// past/future payroll period be calculated with the salary that applied then, not today's. Null if none applies.</summary>
+    Task<EmployeeCurrentSalary?> GetSalaryAsOfAsync(Guid tenantId, Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
+
+    /// <summary>The employee's hire and termination dates (Payroll kıst hesabı); null if the employee does not exist.</summary>
+    Task<EmployeeEmploymentDates?> GetEmploymentDatesAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Batched form of <see cref="GetCurrentSalaryAsync"/> for callers resolving many employees at once (Analytics'

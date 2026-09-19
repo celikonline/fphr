@@ -157,7 +157,10 @@ public sealed class RecalculateAllPayslipsHandler(
             return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
         }
 
-        var employeeIds = await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
+        // Active employees hired by period end + those terminated on/after the period start (exit-month payslip).
+        var periodStart = new DateOnly(period.Year, period.Month, 1);
+        var periodEnd = new DateOnly(period.Year, period.Month, DateTime.DaysInMonth(period.Year, period.Month));
+        var employeeIds = await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(tenant.TenantId, periodStart, periodEnd, cancellationToken);
         return await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
     }
 }

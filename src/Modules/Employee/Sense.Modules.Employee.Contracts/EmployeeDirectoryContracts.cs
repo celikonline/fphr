@@ -40,6 +40,11 @@ public interface IEmployeeDirectory
     /// (system-level enumeration for the Payroll period run, 11.3.07 P3 - Draft/Suspended/Terminated employees are
     /// excluded, unlike <see cref="ListActiveEmployeeIdsInOrgUnitsAsync"/>'s broader "not Terminated").</summary>
     Task<IReadOnlyList<Guid>> ListActiveEmployeeIdsAsync(Guid tenantId, CancellationToken ct = default);
+
+    /// <summary>Employees eligible for a payroll period covering <paramref name="periodStart"/>..<paramref name="periodEnd"/>:
+    /// <c>Active</c> employees hired on/before the period end, plus <c>Terminated</c> employees whose termination date falls
+    /// on/after the period start (their exit-month payslip). No org-unit/permission-scope filtering.</summary>
+    Task<IReadOnlyList<Guid>> ListPayrollCandidateEmployeeIdsAsync(Guid tenantId, DateOnly periodStart, DateOnly periodEnd, CancellationToken ct = default);
 }
 
 /// <summary>
