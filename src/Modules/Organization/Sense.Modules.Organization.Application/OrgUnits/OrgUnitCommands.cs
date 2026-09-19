@@ -144,6 +144,26 @@ public sealed class UpdateOrgUnitHandler(
             {
                 return Error.NotFound(OrganizationErrors.ParentNotFound);
             }
+
+            // Walk from the new parent up to the root: meeting the unit being moved means the move would
+            // put it under one of its own descendants (multi-level cycle). Visited set guards bad legacy data.
+            var visited = new HashSet<Guid> { parentId };
+            var ancestorId = parent.Value.ParentId;
+            while (ancestorId is { } current)
+            {
+                if (current == command.Id)
+                {
+                    return Error.Rule(OrganizationErrors.ParentCausesCycle);
+                }
+
+                if (!visited.Add(current))
+                {
+                    break;
+                }
+
+                var ancestor = await units.GetByIdAsync(current, cancellationToken);
+                ancestorId = ancestor.IsSuccess ? ancestor.Value.ParentId : null;
+            }
         }
 
         if (command.ManagerEmployeeId is { } managerId && employeeLookup is not null &&
