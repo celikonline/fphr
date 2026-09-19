@@ -26,6 +26,9 @@ public static class DocumentsErrors
 
     public const string NoEmployeeForUser = "documents.employee.not_linked";
 
+    /// <summary>Çağıranın "documents.requirements.view" veri kapsamı bu çalışanı kapsamıyor.</summary>
+    public const string EmployeeNotInScope = "documents.employee.not_in_scope";
+
     /// <summary>Self-service write attempted against a requirement that belongs to a different employee.</summary>
     public const string NotOwner = "employee_document_requirement.not_owner";
 }

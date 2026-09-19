@@ -3,6 +3,9 @@
     "Leave": "Urlaub",
     "Advance": "Vorschuss",
     "Expense": "Spesen",
-    "Overtime": "Überstunden"
+    "ExpenseClaim": "Spesen",
+    "Overtime": "Überstunden",
+    "Requisition": "Stellenanforderung",
+    "VisaDocument": "Visadokument"
   }
 }

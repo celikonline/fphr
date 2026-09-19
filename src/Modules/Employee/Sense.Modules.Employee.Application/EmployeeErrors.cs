@@ -23,4 +23,7 @@ public static class EmployeeErrors
 
     /// <summary>A self-service request tried to touch a definition that is not IsEmployeeEditable.</summary>
     public const string CustomFieldNotEmployeeEditable = "employee.custom_field.not_employee_editable";
+
+    /// <summary>Self-servis profil güncellemesi tam-değiştirme semantiğindedir; hiçbir alan gönderilmemiş (boş gövde) istek mevcut iletişim verisini silmesin diye reddedilir.</summary>
+    public const string ProfileUpdateEmpty = "employee.profile.update_empty";
 }

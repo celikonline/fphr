@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Sense.Modules.Workflow.Application.ApprovalRequests;
 using Sense.Modules.Workflow.Domain.ApprovalRequests;
 using Sense.Shared.Web.Controllers;
@@ -19,6 +20,7 @@ public sealed class DecisionsController : ApiControllerBase
     /// <summary>Decides a task via the single-use link in the decision email. Public, unauthenticated.</summary>
     [HttpPost("by-token")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-attempt")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DecideByToken([FromBody] DecideByTokenRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(

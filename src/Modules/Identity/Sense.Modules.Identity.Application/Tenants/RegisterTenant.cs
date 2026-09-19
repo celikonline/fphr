@@ -34,7 +34,13 @@ public sealed class RegisterTenantValidator : AbstractValidator<RegisterTenantCo
         RuleFor(x => x.OwnerEmail).NotEmpty().EmailAddress();
         RuleFor(x => x.OwnerFirstName).NotEmpty().MaximumLength(IdentityLimits.NameMaxLength);
         RuleFor(x => x.OwnerLastName).NotEmpty().MaximumLength(IdentityLimits.NameMaxLength);
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
+        RuleFor(x => x.Password).Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort)
+            .Must(PasswordPolicy.IsStrongEnough).WithMessage(IdentityErrors.PasswordTooWeak);
+        RuleFor(x => x.Password)
+            .Must((command, password) => !PasswordPolicy.ContainsEmailLocalPart(password, command.OwnerEmail))
+            .WithMessage(IdentityErrors.PasswordTooWeak);
     }
 }
 

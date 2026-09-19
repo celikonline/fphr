@@ -130,7 +130,10 @@ public sealed class AcceptInvitationValidator : AbstractValidator<AcceptInvitati
     public AcceptInvitationValidator(IOptions<IdentityOptions> options)
     {
         RuleFor(x => x.Token).NotEmpty();
-        RuleFor(x => x.Password).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
+        RuleFor(x => x.Password).Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort)
+            .Must(PasswordPolicy.IsStrongEnough).WithMessage(IdentityErrors.PasswordTooWeak);
         RuleFor(x => x.PrivacyNoticeAccepted).Equal(true);
         RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().MaximumLength(20).When(x => x.PrivacyNoticeAccepted);
 
@@ -184,6 +187,11 @@ public sealed class AcceptInvitationHandler(
         if (user is null || tenant is null)
         {
             return Error.NotFound(IdentityErrors.InvitationNotFound);
+        }
+
+        if (PasswordPolicy.ContainsEmailLocalPart(command.Password, user.Email))
+        {
+            return Error.Validation(IdentityErrors.PasswordTooWeak);
         }
 
         user.SetPassword(hasher.Hash(command.Password));

@@ -71,7 +71,8 @@ public sealed class ListPermissionsHandler(IPermissionCatalog catalog) : IQueryH
     }
 }
 
-public sealed class CreateRoleHandler(IRoleRepository roles, IPermissionCatalog catalog, ITenantContext tenant) : ICommandHandler<CreateRoleCommand, Guid>
+public sealed class CreateRoleHandler(
+    IRoleRepository roles, IPermissionCatalog catalog, ITenantContext tenant, RolePermissionGrantGuard grantGuard) : ICommandHandler<CreateRoleCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(CreateRoleCommand command, CancellationToken cancellationToken)
     {
@@ -91,6 +92,12 @@ public sealed class CreateRoleHandler(IRoleRepository roles, IPermissionCatalog 
         if (mapped.IsFailure)
         {
             return mapped.Error;
+        }
+
+        var allowed = await grantGuard.EnsureCallerMayGrantAsync(command.Permissions, cancellationToken).ConfigureAwait(false);
+        if (allowed.IsFailure)
+        {
+            return allowed.Error;
         }
 
         var set = role.SetPermissions(mapped.Value);
@@ -113,7 +120,9 @@ public sealed class UpdateRoleHandler(IRoleRepository roles) : ICommandHandler<U
     }
 }
 
-public sealed class SetRolePermissionsHandler(IRoleRepository roles, IPermissionCatalog catalog, IPermissionCacheInvalidator cache, ITenantContext tenant)
+public sealed class SetRolePermissionsHandler(
+    IRoleRepository roles, IPermissionCatalog catalog, IPermissionCacheInvalidator cache, ITenantContext tenant,
+    ICurrentUser currentUser, RolePermissionGrantGuard grantGuard)
     : ICommandHandler<SetRolePermissionsCommand>
 {
     public async Task<Result> Handle(SetRolePermissionsCommand command, CancellationToken cancellationToken)
@@ -124,10 +133,22 @@ public sealed class SetRolePermissionsHandler(IRoleRepository roles, IPermission
             return Error.NotFound(IdentityErrors.RoleNotFound);
         }
 
+        // Yetki yükseltme koruması: çağıran kendi rolünü düzenleyemez ve sahip olmadığı izni/kapsamı veremez.
+        if (currentUser.Roles.Contains(role.Code))
+        {
+            return Error.Forbidden(IdentityErrors.RoleOwnRoleReadOnly);
+        }
+
         var mapped = RolePermissionMapper.Map(role.Id, command.Permissions, catalog);
         if (mapped.IsFailure)
         {
             return mapped.Error;
+        }
+
+        var allowed = await grantGuard.EnsureCallerMayGrantAsync(command.Permissions, cancellationToken).ConfigureAwait(false);
+        if (allowed.IsFailure)
+        {
+            return allowed.Error;
         }
 
         var set = role.SetPermissions(mapped.Value);
@@ -159,6 +180,43 @@ public sealed class DeleteRoleHandler(IRoleRepository roles, IUserRepository use
         }
 
         roles.Remove(role);
+        return Result.Success();
+    }
+}
+
+/// <summary>
+/// Yetki yükseltme koruması: bir role verilecek her izin, çağıranın kendi efektif izinlerinde bulunmalı ve istenen veri kapsamı
+/// çağıranın o izindeki kapsamından geniş olmamalı. Owner tüm izinlere Company kapsamıyla sahip olduğundan etkilenmez.
+/// </summary>
+public sealed class RolePermissionGrantGuard(ICurrentUser currentUser, IPermissionService permissions)
+{
+    public async Task<Result> EnsureCallerMayGrantAsync(IReadOnlyList<RolePermissionDto> requested, CancellationToken cancellationToken)
+    {
+        if (requested.Count == 0)
+        {
+            return Result.Success();
+        }
+
+        if (currentUser.UserId is not { } userId)
+        {
+            return Error.Forbidden(IdentityErrors.RolePermissionNotHeld, (IdentityErrors.Args.Permission, requested[0].Permission));
+        }
+
+        var held = await permissions.GetPermissionsAsync(userId, cancellationToken).ConfigureAwait(false);
+        foreach (var dto in requested)
+        {
+            if (!held.Contains(dto.Permission))
+            {
+                return Error.Forbidden(IdentityErrors.RolePermissionNotHeld, (IdentityErrors.Args.Permission, dto.Permission));
+            }
+
+            var callerScope = await permissions.GetScopeAsync(userId, dto.Permission, cancellationToken).ConfigureAwait(false);
+            if (DataScopes.Rank(dto.Scope) > DataScopes.Rank(callerScope))
+            {
+                return Error.Forbidden(IdentityErrors.RolePermissionNotHeld, (IdentityErrors.Args.Permission, dto.Permission));
+            }
+        }
+
         return Result.Success();
     }
 }

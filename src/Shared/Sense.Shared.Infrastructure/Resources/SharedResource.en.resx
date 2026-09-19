@@ -44,6 +44,7 @@
   <data name="problem.title.too_many_requests" xml:space="preserve"><value>Too many requests</value></data>
 
   <data name="general.null_value" xml:space="preserve"><value>Value cannot be empty.</value></data>
+  <data name="general.invalid_field" xml:space="preserve"><value>The field is invalid or missing.</value></data>
   <data name="general.validation_error" xml:space="preserve"><value>The submitted data failed validation.</value></data>
   <data name="general.concurrency_conflict" xml:space="preserve"><value>The record was modified by another user; refresh and try again.</value></data>
   <data name="general.request_cancelled" xml:space="preserve"><value>The client cancelled the request.</value></data>
@@ -52,6 +53,7 @@
   <data name="general.rate_limit_exceeded" xml:space="preserve"><value>Too many requests were sent; please try again later.</value></data>
 
   <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
+  <data name="auth.forbidden_generic" xml:space="preserve"><value>You are not allowed to perform this action.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
   <data name="auth.feature_disabled" xml:space="preserve"><value>This feature has been turned off in your company's access settings.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Record not found.</value></data>
@@ -96,8 +98,11 @@
   <data name="role.not_found" xml:space="preserve"><value>Role not found.</value></data>
   <data name="role.system_readonly" xml:space="preserve"><value>System roles cannot be modified or deleted.</value></data>
   <data name="role.locked" xml:space="preserve"><value>The permissions of the Owner role cannot be changed.</value></data>
+  <data name="user.password_too_weak" xml:space="preserve"><value>The password is too weak: use at least three of upper case, lower case, digits and symbols, and avoid common passwords or your e-mail address.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>The role is assigned to {count} users; remove the assignments first.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Unknown permission: {permission}</value></data>
+  <data name="role.permission_not_held" xml:space="preserve"><value>You cannot grant a role a permission (or a wider data scope) that you do not hold yourself: {permission}</value></data>
+  <data name="role.own_role_readonly" xml:space="preserve"><value>You cannot change the permissions of a role assigned to you.</value></data>
 
   <data name="invitation.not_found" xml:space="preserve"><value>Invitation not found.</value></data>
   <data name="invitation.already_accepted" xml:space="preserve"><value>The invitation has already been accepted.</value></data>
@@ -173,6 +178,7 @@
   <data name="employee.name_too_long" xml:space="preserve"><value>First and last name can be at most 100 characters.</value></data>
   <data name="employee.national_id_invalid" xml:space="preserve"><value>Invalid Turkish national ID number.</value></data>
   <data name="employee.work_email_invalid" xml:space="preserve"><value>Invalid work e-mail.</value></data>
+  <data name="employee.profile.update_empty" xml:space="preserve"><value>At least one field to update must be provided.</value></data>
   <data name="employee.personal_email_invalid" xml:space="preserve"><value>Invalid personal e-mail.</value></data>
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Birth date cannot be a future date.</value></data>
@@ -598,6 +604,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.task.not_found" xml:space="preserve"><value>Approval task not found.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>This task is no longer the current step.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
+  <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>You cannot decide on your own request.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
@@ -633,6 +640,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Days cannot be zero.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>A reason is required.</value></data>
   <data name="leave.profile.not_found" xml:space="preserve"><value>The employee's leave profile was not found.</value></data>
+  <data name="performance.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's performance data.</value></data>
+  <data name="documents.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's personnel documents.</value></data>
   <data name="leave.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's leave data.</value></data>
   <data name="leave.employee.not_linked" xml:space="preserve"><value>Your user is not linked to an employee record.</value></data>
   <data name="leave.errors.invalid_range" xml:space="preserve"><value>End date cannot be before start date.</value></data>

@@ -66,6 +66,20 @@ public sealed class TemplateRendererTests
             .ShouldBe("Ihr Antrag (Urlaub) wurde genehmigt");
     }
 
+    [Theory]
+    [InlineData("ExpenseClaim", "Harcama talebiniz oluşturuldu")]
+    [InlineData("Advance", "Avans talebiniz oluşturuldu")]
+    [InlineData("Requisition", "Kadro talebiniz oluşturuldu")]
+    [InlineData("Overtime", "Fazla mesai talebiniz oluşturuldu")]
+    [InlineData("VisaDocument", "Vize belgesi talebiniz oluşturuldu")]
+    public void EverySubmittedRequestType_HasReadableTurkishLabel_NotTheRawEnumName(string requestType, string expectedSubject)
+    {
+        var model = SampleModel();
+        model[WorkflowTemplateModel.RequestType] = requestType;
+
+        Renderer.Render(NotificationTemplateKeys.RequestCreated, NotificationChannels.InApp, "tr", model).Subject.ShouldBe(expectedSubject);
+    }
+
     [Fact]
     public void UnsupportedLanguage_FallsBackToDefaultLanguage()
     {

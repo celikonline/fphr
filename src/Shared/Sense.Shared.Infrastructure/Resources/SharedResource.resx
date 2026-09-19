@@ -46,6 +46,7 @@
 
   <!-- Genel -->
   <data name="general.null_value" xml:space="preserve"><value>Değer boş olamaz.</value></data>
+  <data name="general.invalid_field" xml:space="preserve"><value>Alan geçersiz veya eksik.</value></data>
   <data name="general.validation_error" xml:space="preserve"><value>Gönderilen veriler doğrulamadan geçmedi.</value></data>
   <data name="general.concurrency_conflict" xml:space="preserve"><value>Kayıt başka bir kullanıcı tarafından değiştirildi; yenileyip tekrar deneyin.</value></data>
   <data name="general.request_cancelled" xml:space="preserve"><value>İstemci isteği iptal etti.</value></data>
@@ -55,6 +56,7 @@
 
   <!-- Kimlik doğrulama / yetki -->
   <data name="auth.unauthenticated" xml:space="preserve"><value>Kimlik doğrulaması gerekli.</value></data>
+  <data name="auth.forbidden_generic" xml:space="preserve"><value>Bu işlem için yetkiniz yok.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>Bu işlem için '{permission}' izni gerekli.</value></data>
   <data name="auth.feature_disabled" xml:space="preserve"><value>Bu özellik şirketinizin erişim ayarlarında kapatılmış.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
@@ -102,8 +104,11 @@
   <data name="role.not_found" xml:space="preserve"><value>Rol bulunamadı.</value></data>
   <data name="role.system_readonly" xml:space="preserve"><value>Sistem rolü değiştirilemez veya silinemez.</value></data>
   <data name="role.locked" xml:space="preserve"><value>Hesap Sahibi rolünün izinleri değiştirilemez.</value></data>
+  <data name="user.password_too_weak" xml:space="preserve"><value>Parola çok zayıf: büyük harf, küçük harf, rakam ve sembolden en az üçünü içermeli; yaygın parolalar ve e-posta adresinizi içeremez.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>Rol {count} kullanıcıya atanmış; önce atamaları kaldırın.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Bilinmeyen izin: {permission}</value></data>
+  <data name="role.permission_not_held" xml:space="preserve"><value>Sahip olmadığınız bir izni (veya daha geniş bir veri kapsamını) bir role veremezsiniz: {permission}</value></data>
+  <data name="role.own_role_readonly" xml:space="preserve"><value>Size atanmış bir rolün izinlerini kendiniz değiştiremezsiniz.</value></data>
 
   <!-- Davet -->
   <data name="invitation.not_found" xml:space="preserve"><value>Davet bulunamadı.</value></data>
@@ -182,6 +187,7 @@
   <data name="employee.name_too_long" xml:space="preserve"><value>Ad ve soyad en fazla 100 karakter olabilir.</value></data>
   <data name="employee.national_id_invalid" xml:space="preserve"><value>Geçersiz T.C. kimlik numarası.</value></data>
   <data name="employee.work_email_invalid" xml:space="preserve"><value>Geçersiz iş e-postası.</value></data>
+  <data name="employee.profile.update_empty" xml:space="preserve"><value>Güncellenecek en az bir alan gönderilmelidir.</value></data>
   <data name="employee.personal_email_invalid" xml:space="preserve"><value>Geçersiz kişisel e-posta.</value></data>
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>İş telefonu en fazla 30 karakter olabilir.</value></data>
   <data name="employee.birth_date_in_future" xml:space="preserve"><value>Doğum tarihi gelecekte bir tarih olamaz.</value></data>
@@ -607,6 +613,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="workflow.task.not_found" xml:space="preserve"><value>Onay görevi bulunamadı.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>Bu görev artık sırada değil.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>Bu onay görevine karar verme yetkiniz yok.</value></data>
+  <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>Kendi talebiniz için onay kararı veremezsiniz.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>Onay bağlantısı geçersiz.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>Onay bağlantısının süresi dolmuş.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>Onay bağlantısı daha önce kullanılmış.</value></data>
@@ -642,6 +649,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Gün sayısı sıfır olamaz.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>Gerekçe zorunludur.</value></data>
   <data name="leave.profile.not_found" xml:space="preserve"><value>Çalışanın izin profili bulunamadı.</value></data>
+  <data name="performance.employee.not_in_scope" xml:space="preserve"><value>Bu çalışanın performans bilgilerine erişim yetkiniz yok.</value></data>
+  <data name="documents.employee.not_in_scope" xml:space="preserve"><value>Bu çalışanın özlük belgelerine erişim yetkiniz yok.</value></data>
   <data name="leave.employee.not_in_scope" xml:space="preserve"><value>Bu çalışanın izin bilgilerine erişim yetkiniz yok.</value></data>
   <data name="leave.employee.not_linked" xml:space="preserve"><value>Kullanıcınız bir çalışan kaydına bağlı değil.</value></data>
   <data name="leave.errors.invalid_range" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>

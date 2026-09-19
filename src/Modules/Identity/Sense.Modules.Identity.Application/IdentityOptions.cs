@@ -107,6 +107,7 @@ public static class IdentityErrors
     public const string UserLastOwner = "user.last_owner";
     public const string UserCannotModifySelf = "user.cannot_modify_self";
     public const string PasswordTooShort = "user.password_too_short";
+    public const string PasswordTooWeak = "user.password_too_weak";
     public const string PasswordMismatch = "user.password_mismatch";
 
     public const string PasswordResetTokenNotFound = "password_reset.not_found";
@@ -120,6 +121,12 @@ public static class IdentityErrors
     public const string RoleLocked = "role.locked";
     public const string RoleInUse = "role.in_use";
     public const string RoleUnknownPermission = "role.unknown_permission";
+
+    /// <summary>Çağıran, verdiği izne (veya bu izni verdiği veri kapsamına) kendisi sahip olmadan rol izni veremez (yetki yükseltme koruması).</summary>
+    public const string RolePermissionNotHeld = "role.permission_not_held";
+
+    /// <summary>Çağıran, kendisine atanmış bir rolün izinlerini düzenleyemez.</summary>
+    public const string RoleOwnRoleReadOnly = "role.own_role_readonly";
 
     public const string InvitationNotFound = "invitation.not_found";
     public const string InvitationAlreadyAccepted = "invitation.already_accepted";

@@ -82,6 +82,12 @@ public sealed class Role : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(IdentityDomainErrors.RoleLocked);
         }
 
+        // Sistem rolü izinleri yalnız SystemRolePermissionSynchronizer/seed (…Unchecked) ile değişir; kullanıcı yolu kapalıdır.
+        if (IsSystem)
+        {
+            return Error.Rule(IdentityDomainErrors.RoleSystemReadOnly);
+        }
+
         ReplacePermissions(permissions);
         return Result.Success();
     }

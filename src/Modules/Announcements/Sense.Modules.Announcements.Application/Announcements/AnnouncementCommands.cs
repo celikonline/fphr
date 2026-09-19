@@ -22,6 +22,11 @@ public sealed class CreateAnnouncementValidator : AbstractValidator<CreateAnnoun
     {
         RuleFor(x => x.Title).NotEmpty().MaximumLength(AnnouncementsLimits.TitleMaxLength);
         RuleFor(x => x.Content).NotEmpty().MaximumLength(AnnouncementsLimits.ContentMaxLength);
+
+        // Tanımsız enum değerleri (ör. type:99) JsonStringEnumConverter'dan sayısal olarak geçebilir; kabul edilmez.
+        RuleFor(x => x.Type).IsInEnum();
+        RuleFor(x => x.Priority).IsInEnum();
+        RuleFor(x => x.TargetAudience).MaximumLength(AnnouncementsLimits.TargetAudienceMaxLength);
     }
 }
 

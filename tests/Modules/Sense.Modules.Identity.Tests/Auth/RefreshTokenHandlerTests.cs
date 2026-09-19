@@ -26,8 +26,9 @@ public sealed class RefreshTokenHandlerTests
         IRoleRepository roles,
         ISecretGenerator secrets,
         ITokenService tokens,
-        ITenantContextSetter tenantSetter) =>
-        new(refreshTokens, users, tenants, roles, secrets, tokens, tenantSetter, TimeProvider.System);
+        ITenantContextSetter tenantSetter,
+        IIdentityUnitOfWork? unitOfWork = null) =>
+        new(refreshTokens, users, tenants, roles, secrets, tokens, tenantSetter, unitOfWork ?? Substitute.For<IIdentityUnitOfWork>(), TimeProvider.System);
 
     [Fact]
     public async Task Handle_DisabledUser_RejectsRefresh_NoNewTokenIssued()
@@ -65,5 +66,37 @@ public sealed class RefreshTokenHandlerTests
         tokens.DidNotReceive().IssueAccessToken(
             Arg.Any<User>(), Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<IReadOnlyCollection<string>>(),
             Arg.Any<int>(), Arg.Any<Guid?>(), Arg.Any<DateTime?>());
+    }
+
+    [Fact]
+    public async Task Handle_RevokedTokenReused_RevokesWholeFamily_AndPersistsExplicitly()
+    {
+        // Handler hata döndüğünde UnitOfWorkBehaviour SaveChanges yapmaz; aile iptali handler içinde kaydedilmelidir.
+        var now = DateTime.UtcNow;
+        var tenant = Tenant.Create("acme", "Acme", now, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+        var userId = Guid.NewGuid();
+        var reused = RefreshToken.Issue(tenant.Id, userId, null, "hash", now, TimeSpan.FromDays(30), null, null);
+        reused.Revoke(now);
+        var sibling = RefreshToken.Issue(tenant.Id, userId, reused.FamilyId, "hash2", now, TimeSpan.FromDays(30), null, null);
+
+        var refreshTokens = Substitute.For<IRefreshTokenRepository>();
+        refreshTokens.GetByHashAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(reused);
+        refreshTokens.GetFamilyAsync(reused.FamilyId, Arg.Any<CancellationToken>()).Returns((IReadOnlyList<RefreshToken>)new[] { reused, sibling });
+
+        var secrets = Substitute.For<ISecretGenerator>();
+        secrets.Hash(Arg.Any<string>()).Returns("hash");
+        var tenantSetter = Substitute.For<ITenantContextSetter>();
+        tenantSetter.BeginScope(Arg.Any<Guid>(), Arg.Any<string?>()).Returns(Substitute.For<IDisposable>());
+        var uow = Substitute.For<IIdentityUnitOfWork>();
+
+        var handler = Handler(refreshTokens, Substitute.For<IUserRepository>(), Substitute.For<ITenantRepository>(),
+            Substitute.For<IRoleRepository>(), secrets, Substitute.For<ITokenService>(), tenantSetter, uow);
+
+        var result = await handler.Handle(new RefreshTokenCommand("raw-token", null, null), CancellationToken.None);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(IdentityErrors.RefreshTokenReused);
+        sibling.IsActive(now).ShouldBeFalse();
+        await uow.Received(1).SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 }

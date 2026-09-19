@@ -81,6 +81,7 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IImpersonationSessionValidator, ImpersonationSessionValidator>();
 
         services.AddScoped<AccessTypeGuard>();
+        services.AddScoped<Sense.Modules.Identity.Application.Roles.RolePermissionGrantGuard>();
         services.AddScoped<EmployeeInvitationService>();
 
         // Mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşır (API başlangıcı).
