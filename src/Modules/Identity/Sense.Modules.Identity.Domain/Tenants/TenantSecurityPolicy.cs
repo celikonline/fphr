@@ -13,7 +13,15 @@ public sealed record TenantSecurityPolicy
 {
     /// <summary>Bu rol kodlarından (Owner, Admin, HR, PayrollSpecialist…) birine sahip kullanıcılar için 2FA zorunlu.
     /// Boşsa hiçbir rol için zorunluluk yoktur (varsayılan).</summary>
-    public IReadOnlyList<string> RequireMfaForRoles { get; init; } = [];
+    public IReadOnlyList<string> RequireMfaForRoles
+    {
+        // EF Core materializes a jsonb value that lacks the property (the migration default '{}' on tenants that
+        // existed before senseik-051) with a null list; the getter keeps every reader (GetMe, DTO mapping) null-safe.
+        get => enforcedRoles ?? [];
+        init => enforcedRoles = value;
+    }
+
+    private readonly IReadOnlyList<string>? enforcedRoles;
 
     public static readonly TenantSecurityPolicy Default = new();
 
