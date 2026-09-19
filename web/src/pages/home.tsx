@@ -6,6 +6,7 @@ import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Gro
 import { BarChart3, Cake, CalendarDays, Check, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
+import { useModuleEnabled } from "@/hooks/use-module-enabled";
 import { avatarColor, initials } from "@/components/employees/employee-badges";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
@@ -801,17 +802,20 @@ export default function HomePage() {
   const { t } = useTranslation(["home", "navigation"]);
   const canViewHolidays = usePermission("organization.holidays.view");
   const canViewDirectory = usePermission("employee.directory.view");
-  const canViewLeaveBalances = usePermission("leave.my.balances");
-  const canViewTeamRequests = usePermission("leave.requests.read");
+  // senseik-057: widgets of a module the tenant turned off (Ayarlar → Modüller) are hidden, never 403-ing.
+  const leaveEnabled = useModuleEnabled("leave");
+  const announcementsEnabled = useModuleEnabled("announcements");
+  const canViewLeaveBalances = usePermission("leave.my.balances") && leaveEnabled;
+  const canViewTeamRequests = usePermission("leave.requests.read") && leaveEnabled;
   const canViewInbox = usePermission("workflow.inbox.view");
   // The leave calendar endpoint also requires the Calendar.ShowMenu access setting.
   const hasLeaveCalendarPermission = usePermission("leave.my.calendar");
   const showCalendarMenu = useAccessSetting("showCalendarMenu");
-  const canViewLeaveCalendar = hasLeaveCalendarPermission && showCalendarMenu;
+  const canViewLeaveCalendar = hasLeaveCalendarPermission && showCalendarMenu && leaveEnabled;
   const showOrgInfo = useAccessSetting("showOrgInfo");
   const showBirthdays = useAccessSetting("showUpcomingBirthdays");
   const showLeaves = useAccessSetting("showUpcomingLeaves");
-  const showEvents = useAccessSetting("showEventCalendar");
+  const showEvents = useAccessSetting("showEventCalendar") && announcementsEnabled;
 
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
   const columns: ReactNode[][] = [

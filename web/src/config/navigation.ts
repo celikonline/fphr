@@ -43,6 +43,7 @@ import {
   FolderOpen,
   HardHat,
   ClipboardCheck,
+  Blocks,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -99,6 +100,8 @@ export const SETTINGS_PERMISSIONS = {
   workSchedules: ["attendance.workschedule.view"],
   ohsHazardClassification: ["ohs.hazard_classifications.view", "ohs.hazard_classifications.manage"],
   ohsRiskAssessments: ["ohs.risk_assessments.view", "ohs.risk_assessments.manage"],
+  // senseik-057: read = identity.tenant.view (same as Erişim ayarları), change = identity.modules.manage.
+  modules: ["identity.tenant.view", "identity.modules.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -531,6 +534,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/system/security-policy",
         icon: Lock,
         permissions: SETTINGS_PERMISSIONS.securityPolicy,
+      },
+      {
+        key: "modules",
+        labelKey: "settings.modules",
+        descriptionKey: "settings.modulesDesc",
+        path: "/app/settings/system/modules",
+        icon: Blocks,
+        permissions: SETTINGS_PERMISSIONS.modules,
       },
       {
         key: "usersRoles",

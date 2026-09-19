@@ -63,6 +63,9 @@ public static class WebServiceCollectionExtensions
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status401Unauthorized));
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status403Forbidden));
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status404NotFound));
+
+                // senseik-057: kiracının kapattığı modüllerin uçları 403 module.disabled (bkz. ModuleAccessFilter).
+                options.Filters.Add<ModuleAccessFilter>();
             })
             .AddJsonOptions(o =>
             {

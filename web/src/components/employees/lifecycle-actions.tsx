@@ -6,6 +6,7 @@ import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { OpenAssetsWarning } from "@/components/assets/open-assets-warning";
 import { toast } from "@/hooks/use-toast";
+import { useModuleEnabled } from "@/hooks/use-module-enabled";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { formatMoney } from "@/lib/money";
@@ -429,15 +430,17 @@ function SeveranceEstimatePanel({
   const { t, i18n } = useTranslation(["employees", "common"]);
   const [art25IsImmoral, setArt25IsImmoral] = useState(false);
   const causeCategory = mapCauseCategory(terminationType, art25IsImmoral);
+  // senseik-057: the estimate comes from Payroll; skip it when the tenant turned that module off.
+  const payrollEnabled = useModuleEnabled("payroll");
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["severance-estimate", employeeId, terminationDate, causeCategory],
     queryFn: () => getSeveranceEstimate(employeeId, terminationDate, causeCategory),
-    enabled: Boolean(employeeId && terminationDate),
+    enabled: payrollEnabled && Boolean(employeeId && terminationDate),
     retry: false,
   });
 
-  if (!terminationDate) {
+  if (!terminationDate || !payrollEnabled) {
     return null;
   }
 

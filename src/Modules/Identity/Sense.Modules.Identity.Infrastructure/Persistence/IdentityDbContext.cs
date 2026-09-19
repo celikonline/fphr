@@ -66,6 +66,7 @@ internal static class IdentityTables
     public const int TaxNumberLength = 20;
     public const string AccessSettingsColumn = "access_settings";
     public const string SecurityPolicyColumn = "security_policy";
+    public const string ModuleSettingsColumn = "module_settings";
 }
 
 public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
@@ -90,6 +91,9 @@ public sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
 
         // Güvenlik politikası: AccessSettings ile aynı tek-jsonb-kolon kalıbı (senseik-051).
         b.OwnsOne(x => x.SecurityPolicy, a => a.ToJson(IdentityTables.SecurityPolicyColumn));
+
+        // Modül aç/kapa: aynı tek-jsonb-kolon kalıbı (senseik-057).
+        b.OwnsOne(x => x.ModuleSettings, a => a.ToJson(IdentityTables.ModuleSettingsColumn));
 
         b.Ignore(x => x.DomainEvents);
     }

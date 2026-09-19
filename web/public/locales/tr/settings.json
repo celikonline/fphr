@@ -270,5 +270,68 @@
       "loadFailed": "Özel alan tanımları yüklenemedi.",
       "keyTaken": "Bu anahtar başka bir özel alan tanımında zaten kullanılıyor."
     }
+  },
+  "modules": {
+    "title": "Modüller",
+    "subtitle": "Şirketinizde kullanılacak ürün modüllerini açın veya kapatın.",
+    "notice": "Kapatılan bir modülün verileri silinmez, yalnızca gizlenir: menüler, uygulamalar, ana sayfa kartları ve sayfaları tüm kullanıcılardan kalkar ve API uçları erişime kapanır. Modülü yeniden açtığınızda her şey kaldığı yerden devam eder.",
+    "readOnly": "Modülleri görüntüleyebilirsiniz; değiştirmek için \"Modülleri açma/kapatma\" yetkisi gerekir.",
+    "loadError": "Modül ayarları yüklenemedi.",
+    "saveSuccess": "Modül ayarları kaydedildi.",
+    "saveError": "Modül ayarları kaydedilemedi.",
+    "optionalTitle": "İsteğe bağlı modüller",
+    "coreTitle": "Temel modüller",
+    "coreHint": "Diğer modüllerin dayandığı çekirdek; kapatılamaz.",
+    "coreBadge": "Temel modül",
+    "confirmTitle": "{{module}} modülü kapatılsın mı?",
+    "confirmDescription": "Veriler silinmez, sadece gizlenir. Kaydettiğinizde bu modülün menüleri, sayfaları ve ana sayfa kartları tüm kullanıcılardan kaldırılır; istediğiniz zaman yeniden açabilirsiniz.",
+    "confirmAction": "Kapat",
+    "disabledPage": {
+      "title": "Bu modül kapalı",
+      "description": "{{module}} modülü şirketiniz için kapatılmış. Yöneticiniz Ayarlar > Modüller sayfasından yeniden açabilir.",
+      "home": "Ana sayfaya dön"
+    },
+    "names": {
+      "identity": "Kimlik ve erişim",
+      "organization": "Organizasyon",
+      "employee": "Çalışanlar",
+      "workflow": "Onay akışları",
+      "notifications": "Bildirimler",
+      "documents": "Dokümanlar",
+      "dataTransfer": "Veri aktarımı",
+      "reporting": "Raporlar",
+      "analytics": "Analitik",
+      "integrations": "Entegrasyonlar",
+      "leave": "İzin",
+      "attendance": "Puantaj ve vardiya",
+      "payroll": "Bordro",
+      "recruitment": "İşe alım",
+      "expense": "Harcama",
+      "assets": "Zimmet",
+      "performance": "Performans",
+      "announcements": "Duyurular ve şirket takvimi",
+      "occupationalSafety": "İş sağlığı ve güvenliği"
+    },
+    "descriptions": {
+      "identity": "Kullanıcılar, roller, yetkiler ve oturum",
+      "organization": "Şirket yapısı, lokasyonlar, tatil takvimleri",
+      "employee": "Çalışan kartları ve özlük bilgileri",
+      "workflow": "Talep onay akışları ve onay kutusu",
+      "notifications": "E-posta ve uygulama içi bildirimler",
+      "documents": "Çalışan ve şirket dosyaları",
+      "dataTransfer": "Excel ile içe/dışa aktarım",
+      "reporting": "Hazır ve özel raporlar",
+      "analytics": "İK göstergeleri",
+      "integrations": "API anahtarları ve webhook'lar",
+      "leave": "İzin talepleri, bakiyeler, izin takvimi ve fazla mesai",
+      "attendance": "Puantaj, vardiya planı ve çalışma takvimleri",
+      "payroll": "Bordro dönemleri ve kıdem tazminatı tahmini",
+      "recruitment": "İlanlar, adaylar, kadro talepleri ve kariyer sayfası",
+      "expense": "Harcama talepleri, avanslar ve ödemeler",
+      "assets": "Zimmet takibi ve kategorileri",
+      "performance": "Hedefler ve değerlendirme dönemleri",
+      "announcements": "Duyurular ve şirket etkinlik takvimi",
+      "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri"
+    }
   }
 }

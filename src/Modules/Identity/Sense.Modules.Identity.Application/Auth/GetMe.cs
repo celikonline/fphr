@@ -57,7 +57,7 @@ public sealed class GetMeHandler(
                 Scopes: new Dictionary<string, DataScope>(StringComparer.Ordinal),
                 // Impersonation oturumu kiracının güvenlik politikasına tabi değil (destek ekibi platform kullanıcısı,
                 // bu kiracıda gerçek bir rolü yok) — AuthorizationBehaviour'ın uyguladığı tam-erişim bypass'ıyla tutarlı.
-                new FeaturesDto(AccessSettingsDto.AllEnabled, AccessSettingsBypass: true, MfaSetupRequired: false));
+                new FeaturesDto(AccessSettingsDto.AllEnabled, AccessSettingsBypass: true, MfaSetupRequired: false, tenant.ModuleSettings.DisabledModules));
         }
 
         var user = await users.GetByIdAsync(currentUser.UserId.Value, cancellationToken).ConfigureAwait(false);
@@ -86,6 +86,6 @@ public sealed class GetMeHandler(
             userRoles.Select(r => new RoleRefDto(r.Id, r.Code, r.Name)).ToList(),
             effective.Order(StringComparer.Ordinal).ToList(),
             scopes,
-            new FeaturesDto(bypass ? AccessSettingsDto.AllEnabled : AccessSettingsDto.From(tenant.AccessSettings), bypass, mfaSetupRequired));
+            new FeaturesDto(bypass ? AccessSettingsDto.AllEnabled : AccessSettingsDto.From(tenant.AccessSettings), bypass, mfaSetupRequired, tenant.ModuleSettings.DisabledModules));
     }
 }

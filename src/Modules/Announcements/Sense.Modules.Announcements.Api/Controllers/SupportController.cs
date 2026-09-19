@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Announcements.Application.Support;
 using Sense.Modules.Announcements.Domain.Support;
+using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Announcements.Api.Controllers;
@@ -15,10 +16,12 @@ public sealed record RespondToSupportTicketRequest(string Resolution);
 /// "Yardım Merkezi + Desteğe bağlan" (11.3.13, roadmap #69). Makale arama/okuma izin gerektirmez (herhangi bir
 /// kimliği doğrulanmış kullanıcı); talep açma "announcements.my.support_tickets" ile her role otomatik ulaşır;
 /// tüm talepleri görme/yanıtlama "announcements.support_tickets.manage" (İK/Admin) gerektirir.
+/// senseik-057: Duyurular modülü kapatılsa bile destek her zaman erişilebilir kalır (ModuleAccessExempt).
 /// </summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/support")]
 [Authorize]
+[ModuleAccessExempt]
 public sealed class SupportController : ApiControllerBase
 {
     [HttpGet("articles")]

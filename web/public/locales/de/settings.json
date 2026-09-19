@@ -270,5 +270,68 @@
       "loadFailed": "Die Definitionen der benutzerdefinierten Felder konnten nicht geladen werden.",
       "keyTaken": "Dieser Schlüssel wird bereits von einer anderen Definition eines benutzerdefinierten Feldes verwendet."
     }
+  },
+  "modules": {
+    "title": "Module",
+    "subtitle": "Schalten Sie die Produktmodule Ihres Unternehmens ein oder aus.",
+    "notice": "Beim Ausschalten eines Moduls werden keine Daten gelöscht, sie werden nur ausgeblendet: Menüs, Apps, Startseitenkarten und Seiten verschwinden für alle Benutzer und die API-Endpunkte werden gesperrt. Nach dem Wiedereinschalten geht alles dort weiter, wo es aufgehört hat.",
+    "readOnly": "Sie können die Module ansehen; zum Ändern ist die Berechtigung \"Module ein-/ausschalten\" erforderlich.",
+    "loadError": "Moduleinstellungen konnten nicht geladen werden.",
+    "saveSuccess": "Moduleinstellungen gespeichert.",
+    "saveError": "Moduleinstellungen konnten nicht gespeichert werden.",
+    "optionalTitle": "Optionale Module",
+    "coreTitle": "Kernmodule",
+    "coreHint": "Der Kern, auf dem andere Module aufbauen; kann nicht ausgeschaltet werden.",
+    "coreBadge": "Kernmodul",
+    "confirmTitle": "{{module}} ausschalten?",
+    "confirmDescription": "Es werden keine Daten gelöscht, sie werden nur ausgeblendet. Nach dem Speichern werden Menüs, Seiten und Startseitenkarten dieses Moduls für alle Benutzer entfernt; Sie können es jederzeit wieder einschalten.",
+    "confirmAction": "Ausschalten",
+    "disabledPage": {
+      "title": "Dieses Modul ist ausgeschaltet",
+      "description": "Das Modul {{module}} ist für Ihr Unternehmen ausgeschaltet. Ein Administrator kann es unter Einstellungen > Module wieder einschalten.",
+      "home": "Zur Startseite"
+    },
+    "names": {
+      "identity": "Identität & Zugriff",
+      "organization": "Organisation",
+      "employee": "Mitarbeitende",
+      "workflow": "Genehmigungsabläufe",
+      "notifications": "Benachrichtigungen",
+      "documents": "Dokumente",
+      "dataTransfer": "Datenübertragung",
+      "reporting": "Berichte",
+      "analytics": "Analysen",
+      "integrations": "Integrationen",
+      "leave": "Urlaub",
+      "attendance": "Zeiterfassung & Schichten",
+      "payroll": "Lohnabrechnung",
+      "recruitment": "Recruiting",
+      "expense": "Ausgaben",
+      "assets": "Inventar",
+      "performance": "Leistung",
+      "announcements": "Ankündigungen & Firmenkalender",
+      "occupationalSafety": "Arbeitsschutz"
+    },
+    "descriptions": {
+      "identity": "Benutzer, Rollen, Berechtigungen und Anmeldung",
+      "organization": "Unternehmensstruktur, Standorte, Feiertagskalender",
+      "employee": "Mitarbeiterakten und Personaldaten",
+      "workflow": "Genehmigungsabläufe und Posteingang",
+      "notifications": "E-Mail- und In-App-Benachrichtigungen",
+      "documents": "Mitarbeiter- und Unternehmensdateien",
+      "dataTransfer": "Excel-Import/-Export",
+      "reporting": "Standard- und benutzerdefinierte Berichte",
+      "analytics": "HR-Kennzahlen",
+      "integrations": "API-Schlüssel und Webhooks",
+      "leave": "Urlaubsanträge, Salden, Urlaubskalender und Überstunden",
+      "attendance": "Zeiterfassung, Schichtpläne und Arbeitskalender",
+      "payroll": "Abrechnungsperioden und Abfindungsschätzung",
+      "recruitment": "Stellenanzeigen, Bewerber, Stellenanforderungen und Karriereseite",
+      "expense": "Ausgabenanträge, Vorschüsse und Zahlungen",
+      "assets": "Inventarzuweisungen und Kategorien",
+      "performance": "Ziele und Beurteilungszyklen",
+      "announcements": "Ankündigungen und Firmen-Veranstaltungskalender",
+      "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen"
+    }
   }
 }

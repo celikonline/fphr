@@ -116,9 +116,25 @@ export interface MeFeatures {
   /** senseik-051: caller's role requires 2FA (tenant security policy) but MFA is currently off — the app
    * must route them to the MFA setup screen before anything else. */
   mfaSetupRequired: boolean;
+  /** senseik-057: modules the tenant turned off (Ayarlar → Modüller) — same for every user, no bypass.
+   * Older backends omit it; the auth store normalizes it to []. */
+  disabledModules: string[];
 }
 
 /** Mirrors `SecurityPolicyDto` (Identity): tenant-wide roles for which 2FA is mandatory. */
 export interface SecurityPolicy {
   requireMfaForRoles: string[];
+}
+
+/** One row of `ModuleSettingsDto` (Identity, senseik-057): catalog module, whether it is core (locked), and its state. */
+export interface ModuleSettingItem {
+  key: string;
+  isCore: boolean;
+  enabled: boolean;
+}
+
+/** Mirrors `ModuleSettingsDto` (Identity): whole catalog + the tenant's disabled keys (the PUT body shape). */
+export interface ModuleSettings {
+  modules: ModuleSettingItem[];
+  disabledModules: string[];
 }

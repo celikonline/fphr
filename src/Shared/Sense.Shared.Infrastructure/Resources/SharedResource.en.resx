@@ -70,6 +70,9 @@
   <data name="tenant.invalid_slug" xml:space="preserve"><value>The company address may only contain lowercase letters, digits and hyphens (3–40 characters).</value></data>
   <data name="tenant.slug_taken" xml:space="preserve"><value>This company address is already in use.</value></data>
   <data name="tenant.not_found" xml:space="preserve"><value>Company account not found.</value></data>
+  <data name="module.disabled" xml:space="preserve"><value>This module is turned off for your company. An administrator can turn it on under Settings   <data name="tenant.not_found" xml:space="preserve"><value>Company account not found.</value></data>gt; Modules.</value></data>
+  <data name="module.unknown" xml:space="preserve"><value>Unknown module: {module}</value></data>
+  <data name="module.not_toggleable" xml:space="preserve"><value>Core modules cannot be turned off: {module}</value></data>
   <data name="tenant.closed" xml:space="preserve"><value>A closed company account cannot be modified.</value></data>
 
   <data name="user.invalid_email" xml:space="preserve"><value>Invalid e-mail address.</value></data>
@@ -147,6 +150,7 @@
   <data name="identity.tenant.view" xml:space="preserve"><value>View company account details</value></data>
   <data name="identity.tenant.manage" xml:space="preserve"><value>Change company account settings</value></data>
   <data name="identity.security.manage" xml:space="preserve"><value>Manage security policy</value></data>
+  <data name="identity.modules.manage" xml:space="preserve"><value>Turn modules on/off</value></data>
   <data name="identity.api_keys.manage" xml:space="preserve"><value>Manage API keys</value></data>
   <data name="identity.audit.view" xml:space="preserve"><value>View audit log</value></data>
   <data name="identity.audit.sensitive_view" xml:space="preserve"><value>View sensitive fields in audit log</value></data>

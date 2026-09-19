@@ -5,6 +5,7 @@ import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Table, Text
 import { CalendarClock, Plus } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
 import { usePermission } from "@/components/permission-guard";
+import { useModuleEnabled } from "@/hooks/use-module-enabled";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
@@ -58,7 +59,9 @@ export function WorkScheduleSection({ employee }: { employee: EmployeeDetail }) 
   const isOwnCard = !canView && ownEmployeeId === employee.id;
   const [assignOpen, setAssignOpen] = useState(false);
 
-  const enabled = canView || (isOwnCard && canViewMine);
+  // senseik-057: work schedules belong to Attendance; hide the whole block when the tenant turned it off.
+  const attendanceEnabled = useModuleEnabled("attendance");
+  const enabled = attendanceEnabled && (canView || (isOwnCard && canViewMine));
   const query = useQuery({
     queryKey: ["attendance", "work-schedule-assignments", isOwnCard ? "me" : employee.id],
     queryFn: () => (isOwnCard ? getMyWorkScheduleAssignments() : getEmployeeWorkScheduleAssignments(employee.id)),
@@ -66,6 +69,10 @@ export function WorkScheduleSection({ employee }: { employee: EmployeeDetail }) 
   });
 
   const date = (value: string) => formatDateOnly(value, i18n.language);
+
+  if (!attendanceEnabled) {
+    return null;
+  }
 
   if (!enabled) {
     return (

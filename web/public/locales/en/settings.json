@@ -270,5 +270,68 @@
       "loadFailed": "Custom field definitions could not be loaded.",
       "keyTaken": "This key is already used by another custom field definition."
     }
+  },
+  "modules": {
+    "title": "Modules",
+    "subtitle": "Turn the product modules your company uses on or off.",
+    "notice": "Turning a module off never deletes its data, it only hides it: its menus, apps, home cards and pages disappear for every user and its API endpoints are closed. Turn it back on and everything continues where it left off.",
+    "readOnly": "You can view modules; changing them requires the \"Turn modules on/off\" permission.",
+    "loadError": "Module settings could not be loaded.",
+    "saveSuccess": "Module settings saved.",
+    "saveError": "Module settings could not be saved.",
+    "optionalTitle": "Optional modules",
+    "coreTitle": "Core modules",
+    "coreHint": "The core other modules rely on; cannot be turned off.",
+    "coreBadge": "Core module",
+    "confirmTitle": "Turn off {{module}}?",
+    "confirmDescription": "No data is deleted, it is only hidden. Once you save, this module's menus, pages and home cards are removed for every user; you can turn it back on at any time.",
+    "confirmAction": "Turn off",
+    "disabledPage": {
+      "title": "This module is turned off",
+      "description": "The {{module}} module is turned off for your company. An administrator can turn it back on under Settings > Modules.",
+      "home": "Back to home"
+    },
+    "names": {
+      "identity": "Identity & access",
+      "organization": "Organization",
+      "employee": "Employees",
+      "workflow": "Approval flows",
+      "notifications": "Notifications",
+      "documents": "Documents",
+      "dataTransfer": "Data transfer",
+      "reporting": "Reports",
+      "analytics": "Analytics",
+      "integrations": "Integrations",
+      "leave": "Leave",
+      "attendance": "Timesheets & shifts",
+      "payroll": "Payroll",
+      "recruitment": "Recruitment",
+      "expense": "Expenses",
+      "assets": "Assets",
+      "performance": "Performance",
+      "announcements": "Announcements & company calendar",
+      "occupationalSafety": "Occupational health & safety"
+    },
+    "descriptions": {
+      "identity": "Users, roles, permissions and sign-in",
+      "organization": "Company structure, locations, holiday calendars",
+      "employee": "Employee records and personnel data",
+      "workflow": "Request approval flows and inbox",
+      "notifications": "E-mail and in-app notifications",
+      "documents": "Employee and company files",
+      "dataTransfer": "Excel import/export",
+      "reporting": "Standard and custom reports",
+      "analytics": "HR KPIs",
+      "integrations": "API keys and webhooks",
+      "leave": "Leave requests, balances, leave calendar and overtime",
+      "attendance": "Timesheets, shift plans and work calendars",
+      "payroll": "Payroll periods and severance estimate",
+      "recruitment": "Postings, candidates, requisitions and careers page",
+      "expense": "Expense claims, advances and payments",
+      "assets": "Asset assignments and categories",
+      "performance": "Goals and review cycles",
+      "announcements": "Announcements and company event calendar",
+      "occupationalSafety": "Hazard class and risk assessments"
+    }
   }
 }
