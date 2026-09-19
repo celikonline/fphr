@@ -691,3 +691,49 @@ export async function revokeOvertimeConsent(employeeId: string, id: string, noti
   const { data } = await apiClient.post<OvertimeConsent>(`${LEAVE_BASE}/employees/${employeeId}/overtime-consents/${id}/revoke`, { noticeAt });
   return data;
 }
+
+// ---------------------------------------------------------------- Company-wide leave/overtime ledger (senseik-048; leave.company_ledger.read)
+
+/** `CompanyLeaveLedgerRowDto`: one employee row - `leaveStartDate`/`leaveEndDate`/`leaveTypeName` are set only when `isOnLeaveInPeriod`. */
+export interface CompanyLeaveLedgerRow {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  orgPath?: string | null;
+  isOnLeaveInPeriod: boolean;
+  leaveStartDate?: string | null;
+  leaveEndDate?: string | null;
+  leaveTypeName?: string | null;
+  /** Annual leave balance projected as of today; missing when the employee's rule set has no active Annual-coded type. */
+  annualLeaveBalance?: number | null;
+  overtimeHoursYtd: number;
+  overtimeLimitExceeded: boolean;
+}
+
+/** `CompanyLeaveLedgerDto`: `overtimeLimitHours` is the legal/tenant limit in force (Overtime.AnnualLimitHours, default 270) - drives the "exceeds limit" label. */
+export interface CompanyLeaveLedger {
+  year: number;
+  month: number;
+  overtimeLimitHours: number;
+  rows: CompanyLeaveLedgerRow[];
+}
+
+export interface CompanyLeaveLedgerQuery {
+  year: number;
+  month: number;
+  orgUnitId?: string | null;
+  includeTerminated: boolean;
+}
+
+/** leave.company_ledger.read - company-wide "who is on leave / balance ranking / annual overtime limit" screen, next to "İzinlerim"/"Fazla mesailerim". */
+export async function getCompanyLeaveLedger(query: CompanyLeaveLedgerQuery): Promise<CompanyLeaveLedger> {
+  const { data } = await apiClient.get<CompanyLeaveLedger>(`${LEAVE_BASE}/company/ledger`, {
+    params: {
+      year: query.year,
+      month: query.month,
+      includeTerminated: query.includeTerminated,
+      ...(query.orgUnitId ? { orgUnitId: query.orgUnitId } : {}),
+    },
+  });
+  return data;
+}

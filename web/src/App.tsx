@@ -58,6 +58,7 @@ const MyLeavePage = lazy(() => import("@/pages/leave/my-leave"));
 const LeaveRuleSetsPage = lazy(() => import("@/pages/settings/leave-rule-sets"));
 const LeaveCalendarPage = lazy(() => import("@/pages/leave/leave-calendar"));
 const MyOvertimesPage = lazy(() => import("@/pages/leave/my-overtimes"));
+const CompanyLeaveLedgerPage = lazy(() => import("@/pages/leave/company-leave-ledger"));
 const JobPostingsPage = lazy(() => import("@/pages/recruitment/job-postings"));
 const JobPostingDetailPage = lazy(() => import("@/pages/recruitment/job-posting-detail"));
 const CandidatesPage = lazy(() => import("@/pages/recruitment/candidates"));
@@ -136,6 +137,7 @@ export default function App() {
             <Route path="leave/calendar" element={<LeaveCalendarPage />} />
             <Route path="leave/overtimes" element={<MyOvertimesPage />} />
             <Route path="company-calendar" element={<CompanyCalendarPage />} />
+            <Route path="leave/company-ledger" element={<CompanyLeaveLedgerPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
             <Route path="payroll/periods" element={<PayrollPeriodsPage />} />

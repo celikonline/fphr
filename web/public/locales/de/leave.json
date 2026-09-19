@@ -558,5 +558,32 @@
       "hoursInvalid": "Die Verspätungsstunden müssen zwischen 0 und 24 liegen.",
       "reasonRequired": "Der Grund ist erforderlich."
     }
+  },
+  "companyLedger": {
+    "title": "Urlaubs-/Überstundenregister",
+    "subtitle": "Wer diesen Monat im Urlaub ist, die höchsten Jahresurlaubssalden und Überstunden über 270 Stunden - eine filterbare Liste.",
+    "allUnits": "Alle Einheiten",
+    "previousMonth": "Vorheriger Monat",
+    "nextMonth": "Nächster Monat",
+    "includeTerminated": "Ausgeschiedene Mitarbeitende auch anzeigen",
+    "onlyOnLeave": "Nur diesen Monat im Urlaub",
+    "onlyOverLimit": "Nur Überstunden über {{hours}} Stunden",
+    "onlyOverLimitGeneric": "Nur Überstunden über dem Jahreslimit",
+    "onLeave": "Im Urlaub",
+    "notOnLeave": "—",
+    "overtimeLimitExceeded": "Limit überschritten",
+    "overtimeLimitOk": "—",
+    "export": "Als Excel exportieren",
+    "exportSuccess": "Bericht erstellt, der Download hat begonnen.",
+    "exportError": "Der Bericht konnte nicht erstellt werden.",
+    "empty": "Keine Mitarbeitenden entsprechen den gewählten Filtern.",
+    "columns": {
+      "employee": "Mitarbeitend",
+      "unit": "Einheit",
+      "onLeave": "Diesen Monat im Urlaub",
+      "annualBalance": "Jahresurlaubssaldo",
+      "overtimeHours": "Jahresüberstunden (Stunden)",
+      "overtimeLimit": "270-Stunden-Grenze"
+    }
   }
 }

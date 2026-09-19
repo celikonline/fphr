@@ -21,6 +21,7 @@ import {
   LogOut,
   MapPin,
   Network,
+  NotebookText,
   Package,
   Palmtree,
   PieChart,
@@ -139,6 +140,17 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Clock,
     permissions: ["leave.my.overtimes"],
     iconColor: "orange",
+  },
+  {
+    // senseik-048: "İzinlerim"/"Fazla mesailerim" YANINDA şirket geneli görünüm (İK Müdürü/Hesap Sahibi) - ayrı bir
+    // izinle (leave.company_ledger.read) kapılı, HR/HRSpecialist "leave.*" ve Owner/Admin "*" joker desenleriyle
+    // otomatik alır (SystemRoleDefinitions'a append edilmedi, doğrulandı - bkz. LeavePermissions.CompanyLedgerRead).
+    key: "companyLedger",
+    labelKey: "nav.companyLedger",
+    path: "/app/leave/company-ledger",
+    icon: NotebookText,
+    permissions: ["leave.company_ledger.read"],
+    iconColor: "teal",
   },
   {
     key: "leaveRules",

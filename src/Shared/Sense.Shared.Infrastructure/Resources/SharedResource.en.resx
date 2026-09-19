@@ -1086,6 +1086,12 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.sheet.leaveRequests" xml:space="preserve"><value>Leave report</value></data>
   <data name="report.sheet.leaveReconciliation" xml:space="preserve"><value>Leave reconciliation form</value></data>
   <data name="report.sheet.overtimeMonthly" xml:space="preserve"><value>Overtime report</value></data>
+  <data name="report.col.onLeave" xml:space="preserve"><value>On leave</value></data>
+  <data name="report.col.leaveStart" xml:space="preserve"><value>Leave start</value></data>
+  <data name="report.col.leaveEnd" xml:space="preserve"><value>Leave end</value></data>
+  <data name="report.col.overtimeHoursYtd" xml:space="preserve"><value>Annual overtime (hours)</value></data>
+  <data name="report.col.overtimeLimitExceeded" xml:space="preserve"><value>Exceeds annual limit</value></data>
+  <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Company leave/overtime ledger</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>
