@@ -60,7 +60,7 @@ public sealed record UpdateEmployeeCommand(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
         MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate,
-        ClearLeaveAccrualStartDate);
+        ClearLeaveAccrualStartDate: ClearLeaveAccrualStartDate);
 }
 
 public sealed class UpdateEmployeeValidator : AbstractValidator<UpdateEmployeeCommand>
@@ -108,6 +108,8 @@ public sealed class UpdateEmployeeHandler(
         var placementChanged = orgUnitChanged || managerChanged || command.EmploymentType != employee.EmploymentType;
         var previousBirthDate = employee.BirthDate;
         var previousDisabilityDegree = employee.DisabilityDegree;
+        var previousHireDate = employee.HireDate;
+        var previousAccrualStart = employee.LeaveAccrualStartDate ?? employee.HireDate;
 
         // Unit/manager/employment type now live on the career timeline: materialize the initial record first (so a
         // hire-date correction can realign it), then route the change through the aggregate's career rules.
@@ -149,6 +151,13 @@ public sealed class UpdateEmployeeHandler(
         if (updated.Value && employee.HireDate is { } hireDate)
         {
             outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate) { ActorUserId = currentUser.UserId });
+        }
+        else if (employee.HireDate is { } currentHireDate &&
+                 (currentHireDate != previousHireDate || (employee.LeaveAccrualStartDate ?? currentHireDate) != previousAccrualStart))
+        {
+            // Already hired: EmployeeHired never fires again, so Leave needs the corrected dates explicitly (senseik-044, C-02).
+            outbox.Enqueue(new Contracts.Events.EmployeeEmploymentDatesChanged(
+                tenant.TenantId, employee.Id, currentHireDate, employee.LeaveAccrualStartDate ?? currentHireDate) { ActorUserId = currentUser.UserId });
         }
 
         if (employee.BirthDate != previousBirthDate || employee.DisabilityDegree != previousDisabilityDegree)

@@ -232,7 +232,7 @@ public sealed class CareerDomainTests
     /// above). The explicit flag wins outright, even over a customized (non-hire-date-following) value.
     /// </summary>
     [Fact]
-    public void LeaveAccrualStart_ExplicitClearFlag_ForcesNull_EvenOverACustomizedValue()
+    public void LeaveAccrualStart_ExplicitClearFlag_ForcesNull_EvenOverACustomizedValue_AndSurvivesUnrelatedSaves()
     {
         var employee = EmployeeEntity.Create(TenantId, new EmployeeInfo("Ali", "Kaya", HireDate: HireDate)).Value;
         employee.LeaveAccrualStartDate.ShouldBe(HireDate);
@@ -245,12 +245,13 @@ public sealed class CareerDomainTests
         employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate, ClearLeaveAccrualStartDate: true)).IsSuccess.ShouldBeTrue();
         employee.LeaveAccrualStartDate.ShouldBeNull();
 
-        // KNOWN GAP (see ResolveLeaveAccrualStart's remarks and the handoff): a *subsequent*, unrelated save while
-        // the field is still empty cannot distinguish "cleared on purpose" from "never customized" - both are a bare
-        // null - so it re-derives from HireDate here. A precise fix needs a persisted "is customized" marker (schema
-        // migration), proposed but not applied this round; this assertion documents the current, accepted behavior.
-        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate)).IsSuccess.ShouldBeTrue();
-        employee.LeaveAccrualStartDate.ShouldBe(HireDate);
+        // A later, unrelated save (hire date unchanged, field untouched) must not bring the value back...
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate, WorkPhone: "02120000000")).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBeNull();
+
+        // ...but a hire-date correction re-derives it (AC2: accrual follows the corrected hire date).
+        employee.UpdateInfo(new EmployeeInfo("Ali", "Kaya", HireDate: HireDate.AddDays(5))).IsSuccess.ShouldBeTrue();
+        employee.LeaveAccrualStartDate.ShouldBe(HireDate.AddDays(5));
     }
 
     [Fact]

@@ -888,13 +888,8 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
     /// that flag forces the field to <see langword="null"/> unconditionally, since a plain <see langword="null"/>
     /// <see cref="EmployeeInfo.LeaveAccrualStartDate"/> already means "untouched, keep following HireDate" here.
     /// <para>
-    /// KNOWN GAP (senseik-044, tracked in the handoff): because "explicitly cleared" and "never customized" are both
-    /// represented as a bare <see langword="null"/> <see cref="LeaveAccrualStartDate"/>, a clear does not survive a
-    /// *later*, unrelated save once <paramref name="current"/> is null again - the branch below cannot tell "cleared
-    /// on purpose" from "still following HireDate" and re-derives it from <paramref name="newHireDate"/>. Fixing this
-    /// precisely needs a persisted "is customized" marker (a schema migration) instead of this value-based heuristic;
-    /// see the handoff for the proposed column and backfill. The immediate "temizle (X) + kaydet + yenile" case the
-    /// card asks for is already correct - the gap is only a subsequent, unrelated field edit while it is still empty.
+    /// An empty value with an unchanged hire date stays empty (a deliberate clear survives later, unrelated saves); an
+    /// empty value is re-derived only when the hire date is first set or changes. Readers treat empty as HireDate.
     /// </para>
     /// </remarks>
     private static DateOnly? ResolveLeaveAccrualStart(DateOnly? requested, DateOnly? current, DateOnly? oldHireDate, DateOnly? newHireDate)
@@ -906,7 +901,10 @@ public sealed partial class Employee : TenantAggregateRoot<Guid>, IAuditLogged
 
         if (current is null)
         {
-            return newHireDate;
+            // Only (re)derive when the hire date is first set or changes: an unchanged hire date with an empty field
+            // means it was cleared on purpose (senseik-044) and must stay empty across unrelated saves - readers
+            // already fall back to HireDate for an empty value.
+            return newHireDate != oldHireDate ? newHireDate : null;
         }
 
         return oldHireDate is not null && current == oldHireDate && newHireDate is not null ? newHireDate : current;

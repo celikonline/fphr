@@ -88,6 +88,7 @@ public static class LeaveServiceCollectionExtensions
     public static IServiceCollection AddLeaveIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeEmploymentDatesChanged>, EmployeeEmploymentDatesChangedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, LeaveApprovalCompletedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, LeaveApprovalRejectedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, OvertimeApprovalCompletedHandler>();

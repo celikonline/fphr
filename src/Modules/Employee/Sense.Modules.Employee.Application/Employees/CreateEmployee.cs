@@ -57,7 +57,7 @@ public sealed record CreateEmployeeCommand(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
         MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate,
-        ClearLeaveAccrualStartDate);
+        ClearLeaveAccrualStartDate: ClearLeaveAccrualStartDate);
 }
 
 public sealed class CreateEmployeeValidator : AbstractValidator<CreateEmployeeCommand>
