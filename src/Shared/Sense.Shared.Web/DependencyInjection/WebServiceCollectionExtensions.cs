@@ -201,6 +201,7 @@ public static class WebServiceCollectionExtensions
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymous, httpContext => CreatePartition(httpContext, options.PublicAnonymous));
             limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymousWrite, httpContext => CreatePartition(httpContext, options.PublicAnonymousWrite));
+            limiter.AddPolicy(RateLimitPolicyNames.AuthAttempt, httpContext => CreatePartition(httpContext, options.AuthAttempt));
             limiter.OnRejected = WriteRateLimitProblemAsync;
         });
 

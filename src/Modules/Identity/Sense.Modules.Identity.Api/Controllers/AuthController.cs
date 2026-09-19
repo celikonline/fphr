@@ -48,6 +48,7 @@ public sealed class AuthController : ApiControllerBase
 {
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("auth-attempt")]
     [ProducesResponseType<LoginResultDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new LoginCommand(request.Email, request.Password, request.TenantSlug, Request.Headers.UserAgent, HttpContext.Connection.RemoteIpAddress?.ToString()), ct));
