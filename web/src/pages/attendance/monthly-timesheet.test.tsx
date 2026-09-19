@@ -24,8 +24,16 @@ import {
 } from "@/services/attendance.service";
 
 vi.mock("@/services/attendance.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/attendance.service")>("@/services/attendance.service");
-  return { ...actual, getMonthlyTimesheet: vi.fn(), getTeamMonth: vi.fn(), approveMonthlyTimesheet: vi.fn(), approveAllMonthlyTimesheets: vi.fn() };
+  const actual = await vi.importActual<typeof import("@/services/attendance.service")>(
+    "@/services/attendance.service"
+  );
+  return {
+    ...actual,
+    getMonthlyTimesheet: vi.fn(),
+    getTeamMonth: vi.fn(),
+    approveMonthlyTimesheet: vi.fn(),
+    approveAllMonthlyTimesheets: vi.fn(),
+  };
 });
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
@@ -61,7 +69,10 @@ const MONTH_ISO = toDateOnly(new Date(NOW.getFullYear(), NOW.getMonth(), 1));
 const dayIso = (n: number) => toDateOnly(new Date(NOW.getFullYear(), NOW.getMonth(), n));
 
 function setPermissions(granted: string[]) {
-  useAuthStore.setState({ hasPermission: (permission: string) => granted.includes(permission), isAccessSettingEnabled: () => true });
+  useAuthStore.setState({
+    hasPermission: (permission: string) => granted.includes(permission),
+    isAccessSettingEnabled: () => true,
+  });
 }
 
 function rowsFixture(): MonthlyTimesheetRow[] {
@@ -97,18 +108,39 @@ function rowsFixture(): MonthlyTimesheetRow[] {
 }
 
 function daysFixture(): TeamWeekRow[] {
-  const base = { breakMinutesApplied: 0, nightMinutes: 0, dailyLimitExceeded: false, nightLimitExceeded: false };
+  const base = {
+    breakMinutesApplied: 0,
+    nightMinutes: 0,
+    dailyLimitExceeded: false,
+    nightLimitExceeded: false,
+  };
   return [
     {
       employeeId: "emp-1",
       employeeName: "Ayşe Yılmaz",
       days: [
         { ...base, date: dayIso(1), workedMinutes: 480, status: "unresolved", anomalies: [] },
-        { ...base, date: dayIso(2), workedMinutes: 480, status: "unresolved", anomalies: ["workedWhileOnLeave"] },
-        { ...base, date: dayIso(3), workedMinutes: 0, status: "unresolved", anomalies: ["missingCheckIn"] },
+        {
+          ...base,
+          date: dayIso(2),
+          workedMinutes: 480,
+          status: "unresolved",
+          anomalies: ["workedWhileOnLeave"],
+        },
+        {
+          ...base,
+          date: dayIso(3),
+          workedMinutes: 0,
+          status: "unresolved",
+          anomalies: ["missingCheckIn"],
+        },
       ],
     },
-    { employeeId: "emp-2", employeeName: "Baran Demir", days: [{ ...base, date: dayIso(1), workedMinutes: 480, status: "unresolved", anomalies: [] }] },
+    {
+      employeeId: "emp-2",
+      employeeName: "Baran Demir",
+      days: [{ ...base, date: dayIso(1), workedMinutes: 480, status: "unresolved", anomalies: [] }],
+    },
   ];
 }
 
@@ -137,7 +169,9 @@ function createTestI18n() {
 }
 
 function renderPage() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   return render(
     <I18nextProvider i18n={createTestI18n()}>
       <QueryClientProvider client={queryClient}>
@@ -145,7 +179,7 @@ function renderPage() {
           <MonthlyTimesheetPage />
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
 
@@ -155,7 +189,9 @@ describe("MonthlyTimesheetPage", () => {
 
     expect(await screen.findByText("Ayşe Yılmaz")).toBeInTheDocument();
     const rowTexts = screen.getAllByRole("row").map((r) => r.textContent ?? "");
-    expect(rowTexts.findIndex((t) => t.includes("Ayşe"))).toBeLessThan(rowTexts.findIndex((t) => t.includes("Baran")));
+    expect(rowTexts.findIndex((t) => t.includes("Ayşe"))).toBeLessThan(
+      rowTexts.findIndex((t) => t.includes("Baran"))
+    );
     expect(vi.mocked(getMonthlyTimesheet)).toHaveBeenCalledWith(MONTH_ISO, null);
     expect(screen.getByText("Onaylandı")).toBeInTheDocument();
     expect(screen.getByText("Onay bekliyor")).toBeInTheDocument();
@@ -192,16 +228,29 @@ describe("MonthlyTimesheetPage", () => {
     await user.click(within(dialog).getByRole("button", { name: "Tümünü Onayla" }));
 
     await waitFor(() => expect(approveAllMonthlyTimesheets).toHaveBeenCalledWith(MONTH_ISO, null));
-    await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: "success", description: "1 çalışanın puantajı onaylandı." })));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: "success",
+          description: "1 çalışanın puantajı onaylandı.",
+        })
+      )
+    );
   });
 
   it("approves a single employee via the row button (already approved rows offer re-approve)", async () => {
     const user = userEvent.setup();
-    vi.mocked(approveMonthlyTimesheet).mockResolvedValue({ employeeId: "emp-1", periodMonth: MONTH_ISO, approvedAt: "2026-09-30T10:00:00Z" });
+    vi.mocked(approveMonthlyTimesheet).mockResolvedValue({
+      employeeId: "emp-1",
+      periodMonth: MONTH_ISO,
+      approvedAt: "2026-09-30T10:00:00Z",
+    });
     renderPage();
     await screen.findByText("Ayşe Yılmaz");
 
-    expect(screen.getByRole("button", { name: /Baran Demir puantajını onayla/ })).toHaveTextContent("Yeniden onayla");
+    expect(screen.getByRole("button", { name: /Baran Demir puantajını onayla/ })).toHaveTextContent(
+      "Yeniden onayla"
+    );
     await user.click(screen.getByRole("button", { name: /Ayşe Yılmaz puantajını onayla/ }));
 
     await waitFor(() => expect(approveMonthlyTimesheet).toHaveBeenCalledWith("emp-1", MONTH_ISO));
@@ -209,28 +258,45 @@ describe("MonthlyTimesheetPage", () => {
 
   it("shows the localized forbidden message when the server answers 403", async () => {
     const user = userEvent.setup();
-    vi.mocked(approveMonthlyTimesheet).mockRejectedValue(new AxiosError("forbidden", "ERR_BAD_REQUEST", undefined, undefined, { status: 403, data: {} } as never));
+    vi.mocked(approveMonthlyTimesheet).mockRejectedValue(
+      new AxiosError("forbidden", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 403,
+        data: {},
+      } as never)
+    );
     renderPage();
     await screen.findByText("Ayşe Yılmaz");
 
     await user.click(screen.getByRole("button", { name: /Ayşe Yılmaz puantajını onayla/ }));
 
     await waitFor(() =>
-      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: "destructive", description: expect.stringContaining("yetkiniz yok") })),
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: "destructive",
+          description: expect.stringContaining("yetkiniz yok"),
+        })
+      )
     );
   });
 
   it("surfaces the server's validation detail on a 400", async () => {
     const user = userEvent.setup();
     vi.mocked(approveMonthlyTimesheet).mockRejectedValue(
-      new AxiosError("bad", "ERR_BAD_REQUEST", undefined, undefined, { status: 400, data: { detail: "Dönem geçersiz." } } as never),
+      new AxiosError("bad", "ERR_BAD_REQUEST", undefined, undefined, {
+        status: 400,
+        data: { detail: "Dönem geçersiz." },
+      } as never)
     );
     renderPage();
     await screen.findByText("Ayşe Yılmaz");
 
     await user.click(screen.getByRole("button", { name: /Ayşe Yılmaz puantajını onayla/ }));
 
-    await waitFor(() => expect(toast).toHaveBeenCalledWith(expect.objectContaining({ variant: "destructive", description: "Dönem geçersiz." })));
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: "destructive", description: "Dönem geçersiz." })
+      )
+    );
   });
 
   it("hides every approve action without attendance.timesheet.approve but still shows the grid", async () => {
@@ -254,7 +320,9 @@ describe("MonthlyTimesheetPage", () => {
   });
 
   it("disables Tümünü Onayla when every row is already approved", async () => {
-    vi.mocked(getMonthlyTimesheet).mockResolvedValue(rowsFixture().map((r) => ({ ...r, isApproved: true })));
+    vi.mocked(getMonthlyTimesheet).mockResolvedValue(
+      rowsFixture().map((r) => ({ ...r, isApproved: true }))
+    );
     renderPage();
     await screen.findByText("Ayşe Yılmaz");
 
