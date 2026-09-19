@@ -933,6 +933,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
+  <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
+  <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>
+  <data name="documents.uploaded_file_invalid" xml:space="preserve"><value>No valid uploaded file was found in storage for this document; upload the file and try again.</value></data>
   <data name="document_type.not_found" xml:space="preserve"><value>Document type not found.</value></data>
   <data name="document_type.code_required" xml:space="preserve"><value>Document type code is required.</value></data>
   <data name="document_type.code_too_long" xml:space="preserve"><value>Document type code is too long.</value></data>

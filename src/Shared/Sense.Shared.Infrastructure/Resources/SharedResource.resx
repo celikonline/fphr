@@ -942,6 +942,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
+  <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
+  <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>
+  <data name="documents.uploaded_file_invalid" xml:space="preserve"><value>Depolamada bu belge için yüklenmiş geçerli bir dosya bulunamadı; dosyayı yükleyip tekrar deneyin.</value></data>
   <data name="document_type.not_found" xml:space="preserve"><value>Belge tipi bulunamadı.</value></data>
   <data name="document_type.code_required" xml:space="preserve"><value>Belge tipi kodu zorunludur.</value></data>
   <data name="document_type.code_too_long" xml:space="preserve"><value>Belge tipi kodu çok uzun.</value></data>
