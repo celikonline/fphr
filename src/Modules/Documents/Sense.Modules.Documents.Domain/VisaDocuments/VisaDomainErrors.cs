@@ -15,6 +15,10 @@ public static class VisaDomainErrors
     public const string VisaDocumentRequestAlreadySubmitted = "visa_document_request.already_submitted";
     public const string VisaDocumentRequestApproverNotConfigured = "visa_document_request.approver_not_configured";
     public const string VisaDocumentRequestInvalidStatusTransition = "visa_document_request.invalid_status_transition";
+
+    /// <summary>Copying a configured template document's bytes into the employee's folder failed
+    /// (<c>IVisaDocumentDeliveryService</c>/<c>IFileStorage.CopyObjectAsync</c>).</summary>
+    public const string VisaDocumentDeliveryFailed = "visa_document_request.delivery_failed";
 }
 
 /// <summary>Domain constants and limits for Visa Documents.</summary>

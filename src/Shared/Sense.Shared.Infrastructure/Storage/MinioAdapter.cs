@@ -288,6 +288,63 @@ public sealed class MinioAdapter : IFileStorage
         }
     }
 
+    /// <inheritdoc />
+    public async Task CopyObjectAsync(
+        Guid tenantId,
+        string sourceBucketName,
+        string sourceKey,
+        string destinationBucketName,
+        string destinationKey,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = StartStorageActivity("document.copy", tenantId, destinationBucketName, destinationKey);
+
+        ValidateParameters(tenantId, sourceBucketName, sourceKey);
+        ValidateParameters(tenantId, destinationBucketName, destinationKey);
+
+        // Source and destination are always the same tenant (see the interface doc) - both isolate under the same prefix.
+        var isolatedSourceBucket = CreateBucketName(tenantId, sourceBucketName);
+        var isolatedDestinationBucket = CreateBucketName(tenantId, destinationBucketName);
+
+        try
+        {
+            var destinationBucketExists = await _client.BucketExistsAsync(
+                new BucketExistsArgs().WithBucket(isolatedDestinationBucket), cancellationToken);
+            if (!destinationBucketExists)
+            {
+                await _client.MakeBucketAsync(new MakeBucketArgs().WithBucket(isolatedDestinationBucket), cancellationToken);
+                _logger.LogInformation("Created bucket {Bucket} for tenant {TenantId}", isolatedDestinationBucket, tenantId);
+            }
+
+            var copySource = new CopySourceObjectArgs()
+                .WithBucket(isolatedSourceBucket)
+                .WithObject(sourceKey);
+
+            var copyArgs = new CopyObjectArgs()
+                .WithBucket(isolatedDestinationBucket)
+                .WithObject(destinationKey)
+                .WithCopyObjectSource(copySource);
+
+            await _client.CopyObjectAsync(copyArgs, cancellationToken);
+
+            _logger.LogInformation(
+                "Copied {TenantId}/{SourceBucket}/{SourceKey} to {TenantId}/{DestinationBucket}/{DestinationKey}",
+                tenantId, sourceBucketName, sourceKey, tenantId, destinationBucketName, destinationKey);
+        }
+        catch (Exception ex) when (IsObjectNotFound(ex))
+        {
+            _logger.LogError("Object not found for copy: {TenantId}/{SourceBucket}/{SourceKey}", tenantId, sourceBucketName, sourceKey);
+            throw new InvalidOperationException("File not found for copy", ex);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            _logger.LogError(ex,
+                "Failed to copy {TenantId}/{SourceBucket}/{SourceKey} to {DestinationBucket}/{DestinationKey}",
+                tenantId, sourceBucketName, sourceKey, destinationBucketName, destinationKey);
+            throw new InvalidOperationException($"Failed to copy file: {ex.Message}", ex);
+        }
+    }
+
     /// <summary>
     /// Opens a span for a document operation: only identity/metadata tags are attached (tenant, bucket, key), never content.
     /// Spans never leave this adapter to prevent cross-tenant data leaks.
