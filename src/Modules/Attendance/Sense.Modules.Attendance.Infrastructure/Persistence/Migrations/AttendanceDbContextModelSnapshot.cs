@@ -426,7 +426,6 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.MonthlyTimesheet.MonthlyTimesheetApproval", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -471,6 +470,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_monthly_timesheet_approvals_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "PeriodMonth")
+                        .IsUnique()
+                        .HasDatabaseName("ix_monthly_timesheet_approvals_tenant_id_employee_id_period_mo");
 
                     b.ToTable("monthly_timesheet_approvals", "attendance");
                 });

@@ -102,10 +102,21 @@ public static class AttendancePermissions
     public static readonly Permission CompensatoryManage = new(
         CompensatoryManageKey, Module, "Telafi Çalışması Kaydetme", Group, "Açık bir telafi borcuna karşı çalışılan telafi saatlerini kaydetme");
 
+    /// <summary>
+    /// Ay sonu kapatma (senseik-029, 11.3.6 "Aylık Puantaj" S-11): bir çalışanın bir ayını MonthlyTimesheetApproval
+    /// ile onaylar/yeniden onaylar ve mali müşavir raporunu (attendance.monthly.closing) üretilebilir hale getirir.
+    /// Anahtar senseik-056 (b/attendance-monthly-timesheet-approval) ile ortak tutuldu - aynı eylem için tek izin. Yeni bir "attendance.*" anahtarı olduğundan SystemRoleDefinitions'taki mevcut "attendance.*" joker izinleri
+    /// (Owner/Admin/HR/HRSpecialist/Timekeeper) ayrı bir dosya değişikliği gerekmeden bunu da kapsar.
+    /// </summary>
+    public const string TimesheetApproveKey = "attendance.timesheet.approve";
+
+    public static readonly Permission TimesheetApprove = new(
+        TimesheetApproveKey, Module, "Aylık Puantaj Onaylama", Group, "Bir çalışanın aylık puantajını dönem sonunda onaylama/kapatma (yeniden onaylama dahil)");
+
     public static IEnumerable<Permission> All =>
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
-            ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
+            TimesheetApprove, ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
             AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage,
         ];
 }

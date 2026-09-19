@@ -222,6 +222,67 @@ public sealed class AttendanceDayDomainTests
     [InlineData(AttendanceAnomaly.NoData, AnomalyResolutionAction.AddOvertime, false)]
     [InlineData(AttendanceAnomaly.LateArrival, AnomalyResolutionAction.Ignore, true)]
     [InlineData(AttendanceAnomaly.None, AnomalyResolutionAction.Ignore, false)]
+    [InlineData(AttendanceAnomaly.WorkedWhileOnLeave, AnomalyResolutionAction.SetWorkedHours, true)]
+    [InlineData(AttendanceAnomaly.WorkedWhileOnLeave, AnomalyResolutionAction.AddOvertime, false)]
     public void AnomalyResolutionAdvisor_AllowsExpectedActions(AttendanceAnomaly anomaly, AnomalyResolutionAction action, bool expected) =>
         AnomalyResolutionAdvisor.IsAllowed(anomaly, action).ShouldBe(expected);
+
+    [Fact]
+    public void ApplyLeaveOverlap_PunchedDayOverlappingApprovedLeave_FlagsWorkedWhileOnLeaveAndReopens()
+    {
+        var day = RecordWorkingDay(PlannedStart, PlannedEnd);
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Resolved); // baseline: no anomaly yet
+
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+
+        day.Anomalies.HasFlag(AttendanceAnomaly.WorkedWhileOnLeave).ShouldBeTrue();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Unresolved);
+    }
+
+    [Fact]
+    public void ApplyLeaveOverlap_NoPunch_DoesNotFlagEvenWhenOnApprovedLeave()
+    {
+        // İzin gününde hiç giriş/çıkış kaydı yoksa bu normal bir izin günüdür - anomali değil.
+        var day = RecordWorkingDay(null, null);
+
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+
+        day.Anomalies.HasFlag(AttendanceAnomaly.WorkedWhileOnLeave).ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ApplyLeaveOverlap_LeaveNoLongerApproved_ClearsFlagAndResolvesWhenNoOtherAnomaly()
+    {
+        var day = RecordWorkingDay(PlannedStart, PlannedEnd);
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: false);
+
+        day.Anomalies.ShouldBe(AttendanceAnomaly.None);
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Resolved);
+    }
+
+    [Fact]
+    public void ApplyLeaveOverlap_LeaveClearedButOtherAnomalyRemains_StaysUnresolved()
+    {
+        var day = RecordWorkingDay(PlannedStart, new TimeOnly(19, 0)); // Overwork/LateLeave zaten var
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: false);
+
+        day.Anomalies.HasFlag(AttendanceAnomaly.WorkedWhileOnLeave).ShouldBeFalse();
+        day.Anomalies.HasFlag(AttendanceAnomaly.Overwork).ShouldBeTrue();
+        day.ResolutionState.ShouldBe(AttendanceResolutionState.Unresolved);
+    }
+
+    [Fact]
+    public void ApplyLeaveOverlap_CalledTwiceWithSameValue_IsIdempotent()
+    {
+        var day = RecordWorkingDay(PlannedStart, PlannedEnd);
+
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+        day.ApplyLeaveOverlap(overlapsApprovedLeave: true);
+
+        day.Anomalies.ShouldBe(AttendanceAnomaly.WorkedWhileOnLeave);
+    }
 }

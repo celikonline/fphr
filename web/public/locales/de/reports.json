@@ -45,6 +45,18 @@
         "label": "Gehaltsliste",
         "description": "Heute gültige Gehaltsdatensätze: Betrag, Währung, netto/brutto, Zahlungsrhythmus sowie Fahrt- und Essenszuschuss."
       }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Monatliche Zeiterfassungsübersicht",
+          "description": "Pro Mitarbeiter für den gewählten Monat: erfasste/gearbeitete Tage, Arbeits-, Überstunden- und Nachtstunden; Anzahl Verspätungen, frühe Gehzeiten, Fehltage, Arbeit an Urlaubstagen und offene Abweichungen."
+        },
+        "closing": {
+          "label": "Monatsabschlussbericht (Steuerberater)",
+          "description": "Die monatliche Zeiterfassungsübersicht plus bezahlte, unbezahlte und Krankheitstage sowie ob und wann der Monat genehmigt wurde."
+        }
+      }
     }
   },
   "run": {

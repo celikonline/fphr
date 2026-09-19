@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Attendance.Application;
+using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
 using Sense.Modules.Attendance.Application.WorkSchedules;
@@ -21,6 +22,9 @@ public static class AttendanceServiceCollectionExtensions
     public static IServiceCollection AddAttendanceServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddAttendanceCoreServices(configuration);
+        // Raporlar menüsü katkıları (senseik-029) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlySummaryReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.AttendanceMonthlyClosingReportProvider>();
         return services;
     }
 
@@ -45,6 +49,11 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         services.AddScoped<IAttendanceMonthlySummaryReader, AttendanceMonthlySummaryReader>();
         services.AddScoped<IAttendanceOvertimePayrollReader, AttendanceOvertimePayrollReader>();
+        services.AddScoped<IMonthlyTimesheetApprovalRepository, MonthlyTimesheetApprovalRepository>();
+        // İzinli günde çalışma detektörü (senseik-029): Leave.Contracts.IApprovedLeaveDateLookup üzerinden - toplu yeniden
+        // tarama (DetectWorkedWhileOnLeaveHandler) ve ay sonu kapatma (ApproveMonthlyTimesheetHandler) kullanır. Bilinçli
+        // olarak RecordAttendanceHandler/AttendanceImportRowHandler'a bağlanmaz (bkz. LeaveOverlapChecker doc comment).
+        services.AddScoped<LeaveOverlapChecker>();
         return services;
     }
 

@@ -45,6 +45,18 @@
         "label": "Salary list report",
         "description": "Salary records in effect today: amount, currency, net/gross, pay frequency and transport/meal allowances."
       }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Monthly timesheet summary report",
+          "description": "Per employee for the selected month: recorded/worked days, worked, overtime and night hours; late arrival, early leave, missing day, worked-while-on-leave and unresolved anomaly counts."
+        },
+        "closing": {
+          "label": "Month-end closing (accountant) report",
+          "description": "The monthly timesheet summary plus paid, unpaid and sick leave days, whether the month is approved and the approval date."
+        }
+      }
     }
   },
   "run": {

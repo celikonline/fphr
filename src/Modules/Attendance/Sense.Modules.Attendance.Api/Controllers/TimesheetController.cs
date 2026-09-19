@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Equalization;
+using Sense.Modules.Attendance.Application.MonthlyTimesheet;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Attendance.Api.Controllers;
 
 public sealed record RecordAttendanceRequest(DateOnly Date, TimeOnly? CheckIn, TimeOnly? CheckOut);
+
+public sealed record DetectWorkedWhileOnLeaveRequest(DateOnly From, DateOnly To, IReadOnlyList<Guid>? EmployeeIds);
 
 public sealed record SetWorkedHoursRequest(int WorkedMinutes, string? Reason);
 
@@ -96,4 +99,16 @@ public sealed class TimesheetController : ApiControllerBase
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Ignore(Guid attendanceDayId, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new IgnoreAttendanceAnomalyCommand(attendanceDayId), ct));
+
+    /// <summary>İzinli günde çalışma toplu yeniden tarama (senseik-029): retroaktif izin onayları için elle tetiklenir.</summary>
+    [HttpPost("detect-leave-overlap")]
+    [ProducesResponseType<int>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> DetectLeaveOverlap([FromBody] DetectWorkedWhileOnLeaveRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DetectWorkedWhileOnLeaveCommand(request.From, request.To, request.EmployeeIds), ct));
+
+    /// <summary>Aylık puantajı ay sonunda onaylar/kapatır (senseik-029, S-11 "Tümünü Onayla"): önce izin çapraz kontrolünü yeniden çalıştırır.</summary>
+    [HttpPost("monthly/employees/{employeeId:guid}/approve")]
+    [ProducesResponseType<MonthlyTimesheetApprovalDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ApproveMonthly(Guid employeeId, [FromQuery] DateOnly periodMonth, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ApproveMonthlyTimesheetCommand(employeeId, periodMonth), ct));
 }

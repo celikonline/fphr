@@ -18,7 +18,8 @@ export type AttendanceAnomalyFlag =
   | "lateLeave"
   | "overwork"
   | "underwork"
-  | "unplannedWork";
+  | "unplannedWork"
+  | "workedWhileOnLeave";
 
 /** Splits a possibly-combined `AttendanceAnomaly` string into its individual flags ("none"/empty → []). */
 export function parseAnomalyFlags(value: string): AttendanceAnomalyFlag[] {

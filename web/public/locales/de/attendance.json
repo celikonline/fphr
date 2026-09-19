@@ -33,7 +33,8 @@
     "lateLeave": "Später gegangen",
     "overwork": "Mehrarbeit",
     "underwork": "Minderarbeit",
-    "unplannedWork": "Ungeplante Arbeit"
+    "unplannedWork": "Ungeplante Arbeit",
+    "workedWhileOnLeave": "Arbeit an einem Urlaubstag"
   },
   "resolutionState": {
     "unresolved": "Offen",

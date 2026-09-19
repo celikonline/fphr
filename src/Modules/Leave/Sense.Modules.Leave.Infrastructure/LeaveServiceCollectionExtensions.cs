@@ -58,6 +58,8 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+        // Attendance'ın "izinli günde çalışma" detektörü (senseik-029) - AttendanceDay ile aynı Api/Worker kapsamı.
+        services.AddScoped<IApprovedLeaveDateLookup, Lookups.ApprovedLeaveDateLookup>();
         // Workflow.Contracts.IApprovalRequestSummaryProvider: inbox/decision detail for "Leave"/"Overtime" ApprovalRequests.
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
