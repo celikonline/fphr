@@ -18,7 +18,9 @@
     "settings": "Ayarlar",
     "account": "Profilim",
     "support": "Destek",
-    "trust": "Güven ve güvenlik"
+    "trust": "Güven ve güvenlik",
+    "collapseSidebar": "Menüyü daralt",
+    "expandSidebar": "Menüyü genişlet"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
