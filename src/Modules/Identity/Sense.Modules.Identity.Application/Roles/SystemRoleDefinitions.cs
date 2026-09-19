@@ -64,7 +64,12 @@ public static class SystemRoleDefinitions
              "assets.*", "expense.*", "training.*", "documents.*", "announcements.*", "performance.*", "compensation.*", "recruitment.*",
              "analytics.*", "reports.*", "notifications.*", "payroll.payslips.view", "payroll.periods.view", "ai.*", "datatransfer.*", AccessSettingPermissions.Bypass,
              .. PermissionPatterns.SelfService],
-            ["identity.users.impersonate", "identity.security.manage", "identity.api_keys.manage", "payroll.periods.lock", "billing.*"]),
+            [// senseik-050: kimlik yönetimi yetkileri (kullanıcı oluşturma/düzenleme + rol atama, 2FA sıfırlama,
+             // askıya alma/etkinleştirme) yalnız System Administrator'da (Owner/Admin, joker "*" ile) kalmalı -
+             // "identity.users.*" include joker'inden açıkça hariç tutuldu (bu dosyada zaten kullanılan desen,
+             // bkz. Timekeeper'ın "attendance.*"den hariç tuttuğu anahtarlar).
+             "identity.users.manage", "identity.users.suspend", "identity.users.reset_mfa",
+             "identity.users.impersonate", "identity.security.manage", "identity.api_keys.manage", "payroll.periods.lock", "billing.*"]),
 
         new(SystemRoleCodes.HRSpecialist, DataScope.Company,
             ["organization.*.view", "employee.*", "leave.*", "workflow.*", "attendance.*", "assets.*", "expense.*.view", "training.*", "documents.*",
