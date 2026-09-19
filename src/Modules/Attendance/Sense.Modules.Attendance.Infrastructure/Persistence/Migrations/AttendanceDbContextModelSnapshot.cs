@@ -478,6 +478,78 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                     b.ToTable("monthly_timesheet_approvals", "attendance");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Attendance.Domain.SelfCheckIns.SelfCheckIn", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Direction")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("direction");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("method");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("TimestampUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp_utc");
+
+                    b.Property<bool?>("WithinGeofence")
+                        .HasColumnType("boolean")
+                        .HasColumnName("within_geofence");
+
+                    b.HasKey("Id")
+                        .HasName("pk_self_check_ins");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_self_check_ins_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "TimestampUtc")
+                        .HasDatabaseName("ix_self_check_ins_tenant_id_employee_id_timestamp_utc");
+
+                    b.ToTable("self_check_ins", "attendance");
+                });
+
             modelBuilder.Entity("Sense.Modules.Attendance.Domain.Shifts.ShiftAssignment", b =>
                 {
                     b.Property<Guid>("Id")

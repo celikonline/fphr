@@ -45,6 +45,8 @@ import {
   HardHat,
   ClipboardCheck,
   Blocks,
+  QrCode,
+  MonitorCheck,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -289,6 +291,22 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Upload,
     permissions: ["attendance.timesheet.import"],
     iconColor: "orange",
+  },
+  {
+    key: "selfCheckIn",
+    labelKey: "apps.selfCheckIn",
+    path: "/app/attendance/self-check-in",
+    icon: QrCode,
+    permissions: ["attendance.my.checkin"],
+    iconColor: "teal",
+  },
+  {
+    key: "liveBoard",
+    labelKey: "apps.liveBoard",
+    path: "/app/attendance/live-board",
+    icon: MonitorCheck,
+    permissions: ["attendance.board.view"],
+    iconColor: "navy",
   },
   {
     key: "payroll",

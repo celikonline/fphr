@@ -68,7 +68,7 @@ public sealed class ImportDeviceLogsHandler(
         }
 
         var overnightDates = await ReassignNightShiftPunchesAsync(plans, days, cancellationToken).ConfigureAwait(false);
-        var limits = ToShiftLimits(await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false));
+        var limits = AttendanceDayUpsert.ToShiftLimits(await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false));
 
         var imported = 0;
         var anyChange = false;
@@ -105,17 +105,17 @@ public sealed class ImportDeviceLogsHandler(
             var computedBreak = ComputeActualBreakMinutes(groupList);
             var actualBreakMinutes = computedBreak > 0 ? computedBreak : existing?.ActualBreakMinutes ?? 0;
 
-            var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, group.Key.EmployeeId, group.Key.Date, cancellationToken).ConfigureAwait(false);
-            if (existing is not null)
+            var upserted = await AttendanceDayUpsert.UpsertAsync(
+                days, schedules, tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut,
+                AttendanceDaySource.Device, isOvernight, cancellationToken, actualBreakMinutes, limits).ConfigureAwait(false);
+            if (upserted.IsFailure)
             {
-                existing.UpdateRecord(checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device, isOvernight, actualBreakMinutes, limits);
-            }
-            else
-            {
-                var day = AttendanceDay.Record(
-                    tenant.TenantId, group.Key.EmployeeId, group.Key.Date, checkIn, checkOut, start, end, minutes, breakMinutes, AttendanceDaySource.Device,
-                    isOvernight, actualBreakMinutes, limits);
-                days.Add(day);
+                foreach (var plan in group)
+                {
+                    errors.Add(new DeviceLogImportErrorDto(plan.Line, DeviceLogErrorCodes.CheckOutBeforeCheckIn, null));
+                }
+
+                continue;
             }
 
             imported += group.Count();
@@ -216,8 +216,4 @@ public sealed class ImportDeviceLogsHandler(
         return total;
     }
 
-    private static ShiftLimits ToShiftLimits(ShiftSettings? settings) =>
-        settings is null
-            ? ShiftLimits.None
-            : new ShiftLimits(settings.MaxDailyMinutes, settings.NightWorkEnabled, settings.NightWorkStart, settings.NightWorkEnd, settings.NightWorkMaxMinutes);
 }

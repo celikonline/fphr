@@ -64,18 +64,10 @@ public sealed class RecordAttendanceHandler(
 {
     public async Task<Result<Guid>> Handle(RecordAttendanceCommand command, CancellationToken cancellationToken)
     {
-        var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, command.EmployeeId, command.Date, cancellationToken);
-        var existing = await days.FindByEmployeeAndDateAsync(command.EmployeeId, command.Date, cancellationToken);
-        if (existing is not null)
-        {
-            var updated = existing.UpdateRecord(command.CheckIn, command.CheckOut, start, end, minutes, breakMinutes, AttendanceDaySource.Manual);
-            return updated.IsFailure ? updated.Error : existing.Id;
-        }
-
-        var day = AttendanceDay.Record(
-            tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut, start, end, minutes, breakMinutes, AttendanceDaySource.Manual);
-        days.Add(day);
-        return day.Id;
+        var result = await AttendanceDayUpsert.UpsertAsync(
+            days, schedules, tenant.TenantId, command.EmployeeId, command.Date, command.CheckIn, command.CheckOut,
+            AttendanceDaySource.Manual, overnight: false, cancellationToken);
+        return result.IsFailure ? result.Error : result.Value.Id;
     }
 }
 

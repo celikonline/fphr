@@ -57,6 +57,9 @@ public enum AttendanceDaySource
     Manual = 0,
     Import = 1,
     Device = 2,
+
+    /// <summary>Self-servis QR/GPS check-in (S-31) - the employee's own device, not a manual HR entry or a batch PDKS import/device feed.</summary>
+    SelfService = 3,
 }
 
 /// <summary>

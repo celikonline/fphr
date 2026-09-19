@@ -113,10 +113,22 @@ public static class AttendancePermissions
     public static readonly Permission TimesheetApprove = new(
         TimesheetApproveKey, Module, "Aylık Puantaj Onaylama", Group, "Bir çalışanın aylık puantajını dönem sonunda onaylama/kapatma (yeniden onaylama dahil)");
 
+    /// <summary>Self-servis QR/GPS check-in/out (S-31); "*.my.*" reaches every base role, same as MyTimesheet/ShiftSelf/AvailabilitySelf above.</summary>
+    public const string MyCheckInKey = "attendance.my.checkin";
+
+    public static readonly Permission MyCheckIn = new(
+        MyCheckInKey, Module, "Kendi Giriş-Çıkışımı Kaydetme", Group, "QR kod veya GPS ile kendi giriş-çıkışınızı kaydetme");
+
+    /// <summary>Canlı içeride/dışarıda panosu (S-31): "attendance.*" already reaches Owner/Admin/HR/HRSpecialist/Timekeeper, "attendance.*.view" reaches Manager/PayrollSpecialist.</summary>
+    public const string BoardViewKey = "attendance.board.view";
+
+    public static readonly Permission BoardView = new(
+        BoardViewKey, Module, "Canlı İçeride/Dışarıda Panosunu Görüntüleme", Group, "Şu an kimin içeride kimin dışarıda olduğunu canlı görüntüleme");
+
     public static IEnumerable<Permission> All =>
         [
             WorkScheduleView, WorkScheduleManage, WorkScheduleAssign, MyWorkSchedule, TimesheetView, TimesheetEdit, MyTimesheet, TimesheetImport, TimesheetResolve,
             TimesheetApprove, ShiftView, ShiftPlan, ShiftPublish, ShiftSettingsManage, ShiftLock, ShiftUnlock, ShiftSelf,
-            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage,
+            AvailabilitySelf, AvailabilityView, CompensatoryView, CompensatoryManage, MyCheckIn, BoardView,
         ];
 }

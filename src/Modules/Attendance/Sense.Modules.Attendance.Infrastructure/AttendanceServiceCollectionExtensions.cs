@@ -4,6 +4,7 @@ using Sense.Modules.Attendance.Application;
 using Sense.Modules.Attendance.Application.AttendanceDays;
 using Sense.Modules.Attendance.Application.Compensatory;
 using Sense.Modules.Attendance.Application.Employees;
+using Sense.Modules.Attendance.Application.SelfCheckIns;
 using Sense.Modules.Attendance.Application.WorkSchedules;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Contracts.Events;
@@ -45,6 +46,8 @@ public static class AttendanceServiceCollectionExtensions
         services.AddScoped<IEmployeeAvailabilityRepository, EmployeeAvailabilityRepository>();
         services.AddScoped<ICompensatoryWorkLedgerRepository, CompensatoryWorkLedgerRepository>();
         services.AddScoped<IEqualizationPeriodRepository, EqualizationPeriodRepository>();
+        services.AddScoped<ISelfCheckInRepository, SelfCheckInRepository>();
+        services.AddScoped<ITenantLocalClock, TenantLocalClock>();
         services.AddScoped<WorkScheduleAssignmentService>();
         services.AddScoped<IWorkScheduleReadService, WorkScheduleReadService>();
         services.AddScoped<IAttendanceMonthlySummaryReader, AttendanceMonthlySummaryReader>();

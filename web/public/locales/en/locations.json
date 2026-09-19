@@ -26,5 +26,20 @@
   "genericError": "Something went wrong.",
   "empty": "No locations yet.",
   "deleteConfirmDescription": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
-  "inUseError": "This location is linked to an active unit and can't be deleted. Change the unit's location in Company structure first."
+  "inUseError": "This location is linked to an active unit and can't be deleted. Change the unit's location in Company structure first.",
+  "geofenceTitle": "Geofence (GPS self check-in)",
+  "geofenceHint": "If latitude/longitude are set, GPS check-in can use this location; leave the radius empty to record location without distance validation.",
+  "geofenceInvalid": "Invalid value.",
+  "latitude": "Latitude",
+  "longitude": "Longitude",
+  "geofenceRadius": "Radius (meters)",
+  "geofenceRadiusHint": "Leave empty to skip distance validation.",
+  "selfCheckInCode": "QR self check-in code",
+  "selfCheckInCodeHint": "Print this code as a QR at the entrance; employees can scan it (or type it in) to check in/out.",
+  "copy": "Copy",
+  "copied": "Copied",
+  "regenerateCode": "Regenerate code",
+  "regenerateSuccess": "QR code regenerated; the old printed poster no longer works.",
+  "regenerateConfirmTitle": "Regenerate the QR code?",
+  "regenerateConfirmDescription": "The QR code of \"{{name}}\" will be regenerated. The poster currently on display stops working immediately; you will need to print the new code."
 }

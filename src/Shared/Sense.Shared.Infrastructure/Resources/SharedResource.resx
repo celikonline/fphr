@@ -885,6 +885,13 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>Bu denkleştirme dönemi açık durumda değil.</value></data>
   <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>Denkleştirme dönemi henüz bitmedi.</value></data>
   <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Çalışma süresi negatif olamaz.</value></data>
+  <data name="attendance.my.checkin" xml:space="preserve"><value>Kendi giriş-çıkışımı QR/GPS ile kaydetme</value></data>
+  <data name="attendance.board.view" xml:space="preserve"><value>Canlı içeride/dışarıda panosunu görüntüleme</value></data>
+  <data name="attendance.self_checkin.invalid_code" xml:space="preserve"><value>Geçersiz QR kod. Lütfen lokasyondaki kodu tekrar okutun.</value></data>
+  <data name="attendance.self_checkin.location_not_found" xml:space="preserve"><value>Belirtilen lokasyon bulunamadı veya pasif.</value></data>
+  <data name="organization.location.geofence_invalid" xml:space="preserve"><value>Geofence geçersiz: enlem/boylam birlikte verilmeli (enlem -90..90, boylam -180..180) ve yarıçap pozitif olmalıdır.</value></data>
+  <data name="attendance.self_checkin.coordinates_required" xml:space="preserve"><value>Bu lokasyon konumunuzu doğrulamayı gerektiriyor: lütfen konum erişimine izin verip tekrar deneyin.</value></data>
+  <data name="attendance.self_checkin.outside_geofence" xml:space="preserve"><value>Konumunuz bu lokasyonun izin verilen alanı dışında; check-in reddedildi.</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Geçersiz saat: '{value}'. SS:dd biçiminde girin.</value></data>
   <data name="attendance.import.error.check_out_before_check_in" xml:space="preserve"><value>Çıkış saati giriş saatinden önce olamaz.</value></data>
   <data name="attendance.device_log.invalid_timestamp" xml:space="preserve"><value>Geçersiz zaman damgası: '{value}'. ISO 8601 biçiminde girin (ör. 2026-09-16T08:03:00).</value></data>

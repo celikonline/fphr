@@ -75,6 +75,8 @@ const TeamTimesheetPage = lazy(() => import("@/pages/attendance/team-timesheet")
 const MonthlyTimesheetPage = lazy(() => import("@/pages/attendance/monthly-timesheet"));
 const DeviceLogImportPage = lazy(() => import("@/pages/attendance/device-log-import"));
 const ShiftPlanPage = lazy(() => import("@/pages/attendance/shift-plan"));
+const SelfCheckInPage = lazy(() => import("@/pages/attendance/self-check-in"));
+const LiveBoardPage = lazy(() => import("@/pages/attendance/live-board"));
 const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
@@ -150,6 +152,8 @@ export default function App() {
             <Route path="attendance/monthly-timesheet" element={<MonthlyTimesheetPage />} />
             <Route path="attendance/device-logs/import" element={<DeviceLogImportPage />} />
             <Route path="attendance/shift-plan" element={<ShiftPlanPage />} />
+            <Route path="attendance/self-check-in" element={<SelfCheckInPage />} />
+            <Route path="attendance/live-board" element={<LiveBoardPage />} />
 
             <Route path="performance/goals" element={<MyGoalsPage />} />
             <Route path="performance/team-goals" element={<TeamGoalsPage />} />

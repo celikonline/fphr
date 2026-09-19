@@ -40,6 +40,7 @@ public static class OrganizationDomainErrors
     public const string LocationTypeInvalid = "organization.location.type_invalid";
     public const string LocationCountryCodeInvalid = "organization.location.country_code_invalid";
     public const string LocationAlreadyInactive = "organization.location.already_inactive";
+    public const string LocationGeofenceInvalid = "organization.location.geofence_invalid";
 
     public const string CostCenterNotFound = "organization.cost_center.not_found";
     public const string CostCenterCodeRequired = "organization.cost_center.code_required";

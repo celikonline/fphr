@@ -30,7 +30,7 @@ export function parseAnomalyFlags(value: string): AttendanceAnomalyFlag[] {
 }
 
 export type AttendanceResolutionState = "unresolved" | "resolved" | "ignored";
-export type AttendanceDaySource = "manual" | "import" | "device";
+export type AttendanceDaySource = "manual" | "import" | "device" | "selfService";
 export type AnomalyResolutionAction = "addOvertime" | "setWorkedHours" | "createLeaveRequest" | "ignore";
 
 /** `AttendanceDayDto`. */
@@ -551,5 +551,70 @@ export async function getEmployeeWorkScheduleAssignments(employeeId: string): Pr
 /** Own card, self-service (attendance.my.workschedule). */
 export async function getMyWorkScheduleAssignments(): Promise<EmployeeWorkScheduleAssignment[]> {
   const { data } = await apiClient.get<EmployeeWorkScheduleAssignment[]>(`${ATTENDANCE_BASE}/work-schedules/me/assignments`);
+  return data;
+}
+
+// ---------------------------------------------------------------- Self-servis check-in (QR/GPS) ve canlı pano (S-31)
+
+export type PunchDirection = "in" | "out";
+
+/** `SelfCheckInResultDto`. */
+export interface SelfCheckInResult {
+  attendanceDayId: string;
+  date: string;
+  direction: PunchDirection;
+  time: string;
+  locationId?: string | null;
+  locationName?: string | null;
+  withinGeofence?: boolean | null;
+}
+
+/** `MyCheckInStatusDto`: "şu an içeride miyim" - hangi butonun (Giriş/Çıkış) gösterileceğini belirler. */
+export interface MyCheckInStatus {
+  isCheckedIn: boolean;
+  date: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+}
+
+/** attendance.my.checkin. */
+export async function getMyCheckInStatus(): Promise<MyCheckInStatus> {
+  const { data } = await apiClient.get<MyCheckInStatus>(`${ATTENDANCE_BASE}/self-checkin/status`);
+  return data;
+}
+
+/** Lokasyon girişindeki QR kodu taratarak giriş/çıkış (attendance.my.checkin, kabul kriteri 1). */
+/** Konum geofence'li bir lokasyonda zorunludur (sunucu doğrular); geofence yoksa yalnız kaydedilir. */
+export async function qrCheckIn(input: {
+  code: string;
+  direction: PunchDirection;
+  latitude?: number;
+  longitude?: number;
+}): Promise<SelfCheckInResult> {
+  const { data } = await apiClient.post<SelfCheckInResult>(`${ATTENDANCE_BASE}/self-checkin/qr`, input);
+  return data;
+}
+
+/** Cihaz GPS konumuyla giriş/çıkış, isteğe bağlı lokasyon + geofence doğrulaması (attendance.my.checkin, kabul kriteri 2). */
+export async function gpsCheckIn(input: { latitude: number; longitude: number; locationId?: string | null; direction: PunchDirection }): Promise<SelfCheckInResult> {
+  const { data } = await apiClient.post<SelfCheckInResult>(`${ATTENDANCE_BASE}/self-checkin/gps`, input);
+  return data;
+}
+
+/** `LiveAttendanceStatusDto`: canlı içeride/dışarıda panosu satırı (S-31 kabul kriteri 3). */
+export interface LiveAttendanceStatus {
+  employeeId: string;
+  employeeName: string;
+  checkIn?: string | null;
+  checkOut?: string | null;
+  isInside: boolean;
+  source?: AttendanceDaySource | null;
+}
+
+/** attendance.board.view; `orgUnitId` opsiyonel daraltma. Polling ile yenilenir. */
+export async function getLiveAttendanceBoard(orgUnitId?: string | null): Promise<LiveAttendanceStatus[]> {
+  const { data } = await apiClient.get<LiveAttendanceStatus[]>(`${ATTENDANCE_BASE}/board/live`, {
+    params: { orgUnitId: orgUnitId || undefined },
+  });
   return data;
 }
