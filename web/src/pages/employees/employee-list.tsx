@@ -282,7 +282,7 @@ function EmployeeGrid() {
           {row.original.hasMissingInfo && (
             <Tooltip label={t("employees:filters.missingInfoHint")}>
               <Badge size="xs" variant="light" color="orange">
-                {t("employees:filters.missingInfo")}
+                {t("employees:filters.missingInfoBadge", { count: row.original.missingInfoFieldCount })}
               </Badge>
             </Tooltip>
           )}

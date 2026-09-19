@@ -112,7 +112,7 @@ function EmployeeGridCard({
               {employee.hasMissingInfo && (
                 <Tooltip label={t("employees:filters.missingInfoHint")}>
                   <Badge size="xs" variant="light" color="orange">
-                    {t("employees:filters.missingInfo")}
+                    {t("employees:filters.missingInfoBadge", { count: employee.missingInfoFieldCount })}
                   </Badge>
                 </Tooltip>
               )}

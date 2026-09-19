@@ -2,9 +2,9 @@
   "id": "senseik-045",
   "title": "'Eksik bilgi' rozeti 56/56 çalışanda çıkıyor — anlamsız hale geliyor",
   "owner": "pc-a",
-  "state": "running",
+  "state": "review",
   "branch": "a/missing-info-badge-fix",
-  "worktree": ".claude/worktrees/missing-info-badge",
+  "worktree": ".claude/worktrees/agent-a0035fa6f828fd10e",
   "acceptance": [
     "Rozet metni sayı içerecek şekilde değiştirildi (örn. 'Eksik belge (11)') — daha önce 2. tur test dokümanında önerilen düzeltme",
     "Rozetin gerçekten eksik belge/alan durumuna göre tetiklendiği doğrulandı (demo verisinde belge hiç yüklenmemiş olması gerçek bir 'eksik' durumu, rozet hatalı çalışmıyor — ama ayırt edicilik için sayı gösterimi şart)",

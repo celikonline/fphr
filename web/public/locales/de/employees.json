@@ -35,6 +35,7 @@
     "withAccount": "Mit Konto",
     "withoutAccount": "Ohne Konto",
     "missingInfo": "Fehlende Angaben",
+    "missingInfoBadge": "Fehlende Angaben ({{count}})",
     "missingInfoHint": "Eingestellt, aber Ausweisnummer, Eintritts-/Geburtsdatum, Einheit, Vertrags- oder Beschäftigungsart sind leer."
   },
   "columns": {

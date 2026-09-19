@@ -61,6 +61,8 @@ export interface EmployeeListItem {
   employmentType: EmploymentType | null;
   /** "Eksik bilgi" badge: a hired record with an unfilled personnel field (drafts are never flagged). */
   hasMissingInfo: boolean;
+  /** Count of unfilled personnel fields behind hasMissingInfo, for the badge text ("Eksik bilgi (2)"). */
+  missingInfoFieldCount: number;
   /** "Title" level unit of the placement chain (card view); missing when unplaced. */
   titleName?: string | null;
 }
