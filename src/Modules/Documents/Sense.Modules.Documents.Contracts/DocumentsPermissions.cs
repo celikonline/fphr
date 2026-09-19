@@ -98,6 +98,31 @@ public static class DocumentsPermissions
         "Belgeler",
         "Kiracı geneli ortak şirket dosyalarını yükleme ve silme");
 
+    /// <summary>Self-service: submit a visa document processing request and view the caller's own requests
+    /// (senseik-001-vize-belgesi).</summary>
+    public static readonly Permission VisaRequest = new(
+        "documents.visa.request",
+        Module,
+        "Request Visa Documents",
+        "Documents",
+        "Submit a visa document processing request and view the caller's own requests");
+
+    /// <summary>Approve or reject a submitted visa document request (the tenant's configured approver).</summary>
+    public static readonly Permission VisaApprove = new(
+        "documents.visa.approve",
+        Module,
+        "Approve Visa Requests",
+        "Documents",
+        "Approve or reject submitted visa document requests");
+
+    /// <summary>Configure the tenant's visa approver and delivered template documents (Settings page).</summary>
+    public static readonly Permission VisaManage = new(
+        "documents.visa.manage",
+        Module,
+        "Manage Visa Settings",
+        "Documents",
+        "Configure the tenant's visa document approver and template documents");
+
     /// <summary>All Documents module permissions.</summary>
     public static IEnumerable<Permission> All =>
     [
@@ -112,5 +137,8 @@ public static class DocumentsPermissions
         MyFilesCreate,
         CompanyFilesView,
         CompanyFilesManage,
+        VisaRequest,
+        VisaApprove,
+        VisaManage,
     ];
 }

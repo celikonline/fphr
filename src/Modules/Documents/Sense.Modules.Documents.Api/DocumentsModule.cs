@@ -1,12 +1,14 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Sense.Modules.Documents.Application.VisaDocuments;
 using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.SharedFiles;
 using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.BackgroundJobs;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
@@ -39,6 +41,13 @@ public sealed class DocumentsModule : IModule
         // Register repositories
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<ISharedCompanyFileRepository, SharedCompanyFileRepository>();
+
+        // Visa document request feature (senseik-001): repositories + tenant settings provider + delivery service.
+        services.AddScoped<IVisaDocumentRequestRepository, VisaDocumentRequestRepository>();
+        services.AddScoped<IVisaDocumentProcessRepository, VisaDocumentProcessRepository>();
+        services.AddScoped<IVisaSettingsRepository, VisaSettingsRepository>();
+        services.AddScoped<IVisaSettingsProvider, VisaSettingsProvider>();
+        services.AddScoped<IVisaDocumentDeliveryService, VisaDocumentDeliveryService>();
 
         // Document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();
