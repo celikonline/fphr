@@ -18,10 +18,15 @@ public static class ExpenseDomainErrors
     public const string ItemAmountInvalid = "expense.item.amount_invalid";
     public const string ItemTaxRateInvalid = "expense.item.tax_rate_invalid";
     public const string ItemCurrencyRequired = "expense.item.currency_required";
+    public const string ItemAmountTooLarge = "expense.item.amount_too_large";
+    public const string ItemCurrencyUnsupported = "expense.item.currency_unsupported";
+    public const string ItemReceiptDateInFuture = "expense.item.receipt_date_in_future";
+    public const string ClaimCurrencyMismatch = "expense.claim.currency_mismatch";
 
     public const string AdvanceNotFound = "expense.advance.not_found";
     public const string AdvanceNotSubmitted = "expense.advance.not_submitted";
     public const string AdvanceAmountInvalid = "expense.advance.amount_invalid";
+    public const string AdvanceAmountTooLarge = "expense.advance.amount_too_large";
     public const string AdvanceInstallmentCountInvalid = "expense.advance.installment_count_invalid";
     public const string AdvanceAlreadyPaid = "expense.advance.already_paid";
 }
@@ -31,6 +36,21 @@ public static class ExpenseLimits
 {
     public const int DescriptionMaxLength = 1000;
     public const int CurrencyLength = 3;
+
+    /// <summary>Upper bound for a single expense item/advance amount (sanity limit against typos such as 99999999999).</summary>
+    public const decimal MaxAmount = 10_000_000m;
+
+    /// <summary>A receipt may be dated at most this many days ahead of today (time-zone slack), never further.</summary>
+    public const int MaxReceiptDateDaysAhead = 1;
+
+    /// <summary>The payroll currency: only items in it are added to the payslip reimbursement.</summary>
+    public const string PayrollCurrency = "TRY";
+
+    /// <summary>ISO 4217 codes accepted on expense items and advances.</summary>
+    public static readonly IReadOnlySet<string> AllowedCurrencies = new HashSet<string>(StringComparer.Ordinal)
+    {
+        "TRY", "USD", "EUR", "GBP", "CHF", "JPY", "CNY", "SAR", "AED", "RUB",
+    };
     public const int CategoryCodeMaxLength = 100;
     public const int CategoryNameKeyMaxLength = 200;
     public const int FileKeyMaxLength = 500;
