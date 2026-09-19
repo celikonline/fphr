@@ -290,6 +290,19 @@ public sealed class TerminationIntegrationTests : TestFixture
             validSubCodeTarget.Value.Id, exitDate, familyReason.Value.Id, TerminationType.EmployeeJustCause_Art24, "24"));
         terminated.IsSuccess.ShouldBeTrue();
         terminated.Value.Employee.SgkExitCode.ShouldBe("24");
+
+        // Regression: a reason without a fixed type (Ölüm, Askerlik, ...) imposes no family, so an invented code such
+        // as "99" used to be accepted and stored. It is now rejected both in the catalog and at termination time.
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new CreateTerminationReasonCommand("TypelessBad", "Türsüz kötü", "99", null, 320)));
+        var typelessReason = await ExecuteCommandAsync(new CreateTerminationReasonCommand("TypelessOk", "Türsüz iyi", "10", null, 330));
+        typelessReason.IsSuccess.ShouldBeTrue();
+        var typelessTarget = await ExecuteCommandAsync(new CreateEmployeeCommand("Tür", "Süz", null, null, null, null, hireDate, null, null, null));
+        await Should.ThrowAsync<ValidationException>(() => ExecuteCommandAsync(
+            new TerminateEmployeeCommand(typelessTarget.Value.Id, exitDate, typelessReason.Value.Id, SgkExitCode: "99")));
+        var typelessDone = await ExecuteCommandAsync(new TerminateEmployeeCommand(typelessTarget.Value.Id, exitDate, typelessReason.Value.Id));
+        typelessDone.IsSuccess.ShouldBeTrue();
+        typelessDone.Value.Employee.SgkExitCode.ShouldBe("10");
     }
 
     /// <summary>

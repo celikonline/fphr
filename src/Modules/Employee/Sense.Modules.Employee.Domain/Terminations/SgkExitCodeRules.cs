@@ -10,6 +10,25 @@ namespace Sense.Modules.Employee.Domain.Terminations;
 /// </summary>
 public static class SgkExitCodeRules
 {
+    /// <summary>SGK "işten ayrılış nedeni" tablosunun alt sınırı (docs/handoffs/sgk-exit-codes.md §1).</summary>
+    public const int MinKnownCode = 1;
+
+    /// <summary>Tabloda anılan en yüksek kod (01-41); bunun dışındaki değerler (örn. "99") SGK kodu değildir.</summary>
+    public const int MaxKnownCode = 41;
+
+    /// <summary>
+    /// Biçim kontrolü: tam iki haneli sayısal kod ve SGK tablosunun aralığında (01-41). Fesih türünden bağımsız;
+    /// türü kısıtsız (null / <see cref="TerminationType.Other"/>) nedenlerde "99" gibi uydurma kodu da engeller.
+    /// Boş kod bu kontrolde geçerlidir (zorunluluğu tür ailesi kuralları belirler).
+    /// </summary>
+    public static bool IsPlausibleCode(string? sgkExitCode)
+    {
+        var trimmed = Normalize(sgkExitCode);
+        return trimmed is null ||
+               (trimmed.Length == 2 && trimmed.All(char.IsAsciiDigit) &&
+                int.Parse(trimmed, System.Globalization.CultureInfo.InvariantCulture) is >= MinKnownCode and <= MaxKnownCode);
+    }
+
     /// <summary>
     /// İzin verilen kod kümesi bu fesih türü için; null = tür herhangi bir kısıtlama getirmiyor
     /// (<see cref="TerminationType.Other"/> - "diğer nedenler" havuzu, SGK'da tek bir karşılığı yok).
@@ -33,6 +52,11 @@ public static class SgkExitCodeRules
     /// </summary>
     public static bool IsCatalogConsistent(TerminationType? type, string? sgkExitCode)
     {
+        if (!IsPlausibleCode(sgkExitCode))
+        {
+            return false;
+        }
+
         var trimmed = Normalize(sgkExitCode);
         if (type is null || trimmed is null)
         {
@@ -50,6 +74,11 @@ public static class SgkExitCodeRules
     /// </summary>
     public static bool IsTerminationConsistent(TerminationType? type, string? sgkExitCode)
     {
+        if (!IsPlausibleCode(sgkExitCode))
+        {
+            return false;
+        }
+
         if (type is null)
         {
             return true;

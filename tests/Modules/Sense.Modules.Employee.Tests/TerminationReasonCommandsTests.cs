@@ -45,11 +45,12 @@ public sealed class TerminationReasonCommandsTests
     }
 
     [Fact]
-    public void Create_WithoutATerminationType_AnyCodeIsAccepted()
+    public void Create_WithoutATerminationType_AnyKnownSgkCodeIsAccepted_ButNotAnInventedOne()
     {
-        var command = new CreateTerminationReasonCommand("NoType", "Türsüz", "anything", null, 0);
+        var command = new CreateTerminationReasonCommand("NoType", "Türsüz", "10", null, 0);
 
         _createValidator.Validate(command).IsValid.ShouldBeTrue();
+        _createValidator.Validate(command with { DefaultSgkExitCode = "99" }).IsValid.ShouldBeFalse();
     }
 
     [Fact]

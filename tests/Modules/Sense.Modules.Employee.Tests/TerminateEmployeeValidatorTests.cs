@@ -68,4 +68,26 @@ public sealed class TerminateEmployeeValidatorTests
 
         _validator.Validate(command).IsValid.ShouldBeFalse();
     }
+
+    /// <summary>Regression: with no type override the guard was skipped entirely, so "99" reached the handler for type-less reasons.</summary>
+    [Fact]
+    public void Validate_CodeOnlyOverridden_NotAnSgkCode_Fails()
+    {
+        var command = new TerminateEmployeeCommand(
+            Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow), Guid.NewGuid(), SgkExitCode: "99");
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage == EmployeeDomainErrors.TerminationSgkExitCodeInconsistent);
+    }
+
+    [Fact]
+    public void Validate_CodeOnlyOverridden_KnownSgkCode_Passes()
+    {
+        var command = new TerminateEmployeeCommand(
+            Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow), Guid.NewGuid(), SgkExitCode: "10");
+
+        _validator.Validate(command).IsValid.ShouldBeTrue();
+    }
 }
