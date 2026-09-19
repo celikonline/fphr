@@ -30,9 +30,19 @@ const mockApiClient = vi.hoisted(() => ({
     },
   },
 }));
+const mockSetRefreshHandler = vi.hoisted(() => vi.fn());
+const mockSetSessionExpiredHandler = vi.hoisted(() => vi.fn());
 
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
+  setRefreshHandler: mockSetRefreshHandler,
+  setSessionExpiredHandler: mockSetSessionExpiredHandler,
+}));
+
+// Mock the auth store: registerSessionRefreshHandlers() only needs `useAuthStore.getState().refresh`.
+const mockAuthRefresh = vi.hoisted(() => vi.fn());
+vi.mock("@/store/auth.store", () => ({
+  useAuthStore: { getState: () => ({ refresh: mockAuthRefresh }) },
 }));
 
 // Mock toast hook
@@ -233,6 +243,36 @@ describe("http-interceptors", () => {
       const result = successHandler(response);
 
       expect(result).toEqual(response);
+    });
+  });
+
+  describe("registerSessionRefreshHandlers (S-53: warn instead of silently dropping the user)", () => {
+    it("wires the auth store's refresh() as api-client's refresh handler", async () => {
+      httpInterceptorsModule.registerSessionRefreshHandlers();
+
+      expect(mockSetRefreshHandler).toHaveBeenCalledWith(expect.any(Function));
+      const [registeredRefresh] = mockSetRefreshHandler.mock.calls[0];
+
+      mockAuthRefresh.mockResolvedValue(true);
+      await expect(registeredRefresh()).resolves.toBe(true);
+      expect(mockAuthRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it("shows a session-expired toast when the refresh ultimately fails", () => {
+      httpInterceptorsModule.registerSessionRefreshHandlers();
+
+      expect(mockSetSessionExpiredHandler).toHaveBeenCalledWith(expect.any(Function));
+      const [onSessionExpired] = mockSetSessionExpiredHandler.mock.calls[0];
+
+      onSessionExpired();
+
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          variant: "destructive",
+          title: "common:errors.sessionExpiredTitle",
+          description: "common:errors.sessionExpired",
+        }),
+      );
     });
   });
 });

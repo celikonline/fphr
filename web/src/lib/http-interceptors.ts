@@ -11,9 +11,10 @@
  * wait time. No automatic retry - the caller still gets the rejected promise/error as before.
  */
 import axios from "axios";
-import { apiClient } from "@senseik/api-client";
+import { apiClient, setRefreshHandler, setSessionExpiredHandler } from "@senseik/api-client";
 import i18n from "@/i18n";
 import { toast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/store/auth.store";
 
 /** Falls back to the shortest configured rate-limit window (see appsettings.json RateLimiting) when the response has no usable `Retry-After`. */
 const DEFAULT_RETRY_AFTER_SECONDS = 60;
@@ -49,4 +50,22 @@ export function registerHttpInterceptors(): void {
       return Promise.reject(error);
     }
   );
+}
+
+/**
+ * Wires api-client's generic refresh/session-expiry hooks to the web auth store and a toast
+ * (S-53: users were silently dropped to /login every ~15-30 min when the access token expired,
+ * because no refresh was ever attempted - see api-client's `handleResponseError`). Call once at
+ * startup alongside `registerHttpInterceptors()`.
+ */
+export function registerSessionRefreshHandlers(): void {
+  setRefreshHandler(() => useAuthStore.getState().refresh());
+  setSessionExpiredHandler(() => {
+    toast({
+      variant: "destructive",
+      title: i18n.t("common:errors.sessionExpiredTitle"),
+      description: i18n.t("common:errors.sessionExpired"),
+      duration: false,
+    });
+  });
 }

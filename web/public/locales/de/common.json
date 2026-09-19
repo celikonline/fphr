@@ -71,7 +71,9 @@
   "noAccessTitle": "Sie haben keinen Zugriff auf diese Seite",
   "noAccessDescription": "Wenden Sie sich für die erforderliche Berechtigung an Ihre Unternehmensadministration.",
   "errors": {
-    "rateLimited": "Zu viele Anfragen. Bitte versuchen Sie es in {{seconds}} Sekunden erneut."
+    "rateLimited": "Zu viele Anfragen. Bitte versuchen Sie es in {{seconds}} Sekunden erneut.",
+    "sessionExpiredTitle": "Sitzung abgelaufen",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
   },
   "reload": "Seite neu laden"
 }

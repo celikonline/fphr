@@ -47,6 +47,12 @@ export type LoginOutcome =
 // Base paths mirror `IdentityRoutes` in AuthController.cs.
 const AUTH_BASE = "/v1/identity/auth";
 
+/** Mirrors `AuthTokensDto` in Sense.Modules.Identity.Application/Dtos.cs. */
+interface AuthTokensResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
 const EMPTY_ACCESS: AccessSettings = {
   showOrgInfo: false,
   showUpcomingLeaves: false,
@@ -166,6 +172,13 @@ interface AuthStore {
   logout: () => void;
   /** Re-reads /identity/me (permissions, access settings) - call after changing anything that affects the caller. */
   refreshMe: () => Promise<void>;
+  /**
+   * Rotates the access/refresh token pair via `/identity/auth/refresh`. Wired into api-client's
+   * `setRefreshHandler` (see web/src/lib/http-interceptors.ts) so a 401 refreshes silently instead
+   * of immediately logging the user out. Returns false (never throws) on any failure - the caller
+   * (api-client) falls back to ending the session.
+   */
+  refresh: () => Promise<boolean>;
   setUser: (user: User) => void;
   setToken: (token: string, refreshToken?: string) => void;
   isAuthenticated: () => boolean;
@@ -242,6 +255,25 @@ export const useAuthStore = create<AuthStore>()(
           set({ user: toUser(me), features: toFeatures(me) });
         } catch {
           // A 401 is handled by the api-client interceptor; other failures keep the cached profile.
+        }
+      },
+
+      refresh: async () => {
+        const refreshToken = get().refreshToken;
+        if (!refreshToken) return false;
+        try {
+          // `skipAuthRetry` tells api-client's response interceptor not to treat THIS call's own
+          // 401 (an invalid/expired refresh token) as another session to refresh - it would recurse.
+          const { data } = await apiClient.post<AuthTokensResponse>(
+            `${AUTH_BASE}/refresh`,
+            { refreshToken },
+            { skipAuthRetry: true }
+          );
+          safeStorageSet(AUTH_TOKEN_STORAGE_KEY, data.accessToken);
+          set({ token: data.accessToken, refreshToken: data.refreshToken });
+          return true;
+        } catch {
+          return false;
         }
       },
 

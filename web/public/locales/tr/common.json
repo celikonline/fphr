@@ -71,7 +71,9 @@
   "noAccessTitle": "Bu sayfaya erişiminiz yok",
   "noAccessDescription": "Gerekli yetki için şirket yöneticinizle iletişime geçin.",
   "errors": {
-    "rateLimited": "Çok fazla istek gönderildi. Lütfen {{seconds}} saniye sonra tekrar deneyin."
+    "rateLimited": "Çok fazla istek gönderildi. Lütfen {{seconds}} saniye sonra tekrar deneyin.",
+    "sessionExpiredTitle": "Oturum sona erdi",
+    "sessionExpired": "Oturumunuz sona erdi, lütfen tekrar giriş yapın."
   },
   "reload": "Sayfayı yenile"
 }
