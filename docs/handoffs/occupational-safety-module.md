@@ -1,6 +1,35 @@
 # senseik-015 — İSG Modülü — UYGULAMA PLANI
 
-**Durum: GATE 1 onayı bekliyor. Hiçbir dosya değiştirilmedi/oluşturulmadı.**
+## Implementasyon Notu (bu tur)
+
+**Durum: Faz 0 + Faz 1 tamamlandı (branch `a/occupational-safety`, bu doküman güncellendiğinde henüz push edilmedi). Faz 2-6 bu turun kapsamı dışında bırakıldı, backlog'da.**
+
+### Yapılanlar
+
+- **Faz 0 — İskelet**: `src/Modules/OccupationalSafety` (Domain/Application/Contracts/Infrastructure/Api), Assets modülü şablon alındı. `OhsDbContext` (şema `ohs`), ilk EF migration (`InitialOhs`, gerçek `dotnet ef migrations add` ile üretildi — elle yazılmadı). `ModuleCatalog.cs`, `Sense.Migrator/Program.cs`, `Sense.Worker/Program.cs`, `Sense.slnx`, `Sense.Api/Sense.Api.csproj`, `Sense.Migrator.csproj`, `Sense.Worker.csproj` — hepsine append-only (listenin sonuna) eklendi. `ohs.hazard_classifications.{view,manage}` + `ohs.risk_assessments.{view,manage}` izin seti (`OhsPermissions.cs`); `SystemRoleDefinitions.cs`'te HR ve HRSpecialist rollerinin Include listelerine `"ohs.*"` append edildi (append-only, mevcut satırlar değişmedi). NetArchTest (`Sense.Tests.Architecture`, 54/54 yeşil) yeni modülü otomatik kapsadı.
+- **Faz 1 — Tehlike sınıfı + Risk değerlendirmesi**: `HazardClass` enum (Low/Medium/High), `WorkplaceHazardClassification` aggregate (Location bazlı, tarih-aralıklı — Employee'nin `SalaryRecord` deseni: sadece `EffectiveFrom`, "en son başlamış kayıt" = güncel; `EffectiveTo` yok). `RiskAssessment` aggregate: `RenewalPeriodMonths` oluşturma anında `HazardClassAtAssessment`'tan türetilir (statik tablo `RiskAssessmentRenewalPeriods`: Az tehlikeli→72 ay, Tehlikeli→48 ay, Çok tehlikeli→24 ay — yasal azami süreler; `ILegislationParameterReader`'a dokunulmadı, plan §6'nın önerisi buydu). `RecordRiskAssessmentCommand` hazard class'ı komuttan almıyor — konumun o tarihteki güncel sınıflandırmasından otomatik snapshot alıyor (`RiskAssessmentHazardClassificationMissing` hatası sınıflandırma yoksa).
+  Web: `settings/ohs-hazard-classification.tsx` (güncel sınıflandırma listesi + yeniden sınıflandırma dialogu), `settings/ohs-risk-assessments.tsx` (RD listesi + kayıt dialogu) — `asset-categories.tsx` deseni, `ohs.service.ts`, navigasyon/route/i18n (tr/en/de `ohs.json` + `navigation.json` ek anahtarları) kablolandı.
+  Demo seed: `DataSeeder.DemoOhs.cs` — 3 demo lokasyonun (İstanbul HQ/Ankara/İzmir) her biri için bir tehlike sınıfı + bir risk değerlendirmesi (Low/Medium/High'ın üçü de temsil ediliyor), kartın merge_gate'i ("tehlike sınıfı ve periyodlar yüklü") karşılanıyor.
+
+### Doğrulama
+
+- `dotnet build Sense.slnx`: 0 hata (Docker SDK konteyneri).
+- `Sense.Modules.OccupationalSafety.Tests`: 18/18 yeşil (domain: RD periyot hesaplama, hazard classification validasyonu; handler testleri: reclassify/duplicate-date, RD kaydı hazard-class snapshot'ı).
+- `Sense.Tests.Architecture`: 54/54 yeşil (Contracts-only erişim, permission key konvansiyonu, tek DbContext/modül kuralları yeni modülü otomatik kapsadı).
+- `Sense.Tests.Integration` (filtreli, `DemoOhsSeedTests`): 7/7 yeşil — demo seed smoke testi, DB gerektirmeden `DataSeeder.CreateHazardClassificationOrThrow`/`CreateRiskAssessmentOrThrow` static yardımcılarını doğruluyor.
+- Web: `tsc --noEmit` temiz, `eslint src` temiz (1 önceden var olan, bu turla ilgisiz uyarı hariç), i18n locale testi (`ohs.json` için tr/en/de anahtar/interpolasyon paritesi) yeşil.
+
+### Kalan Fazlar (backlog, bu turda dokunulmadı)
+
+- **Faz 2 — Kurul + görevlendirme**: `OhsCommitteeMember` (6331 md.22), `SafetyAssignmentPeriod` (işyeri hekimi/İSG uzmanı görevlendirme, yasal süreler).
+- **Faz 3 — Kaza/ramak kala + Documents entegrasyonu**: `AccidentRecord` (kaza/ramak kala kaydı), `SgkNotificationDeadline` = EventDate + 3 iş günü (`IHolidayCalendarLookup` ile), `AccidentRecord.Create` → integration event → Documents'te `WorkAccidentReport` requirement materialize.
+- **Faz 4 — KKD zimmeti**: Assets modülüne additive genişleme (`AssetCategorySeed`'e "ppe" satırı, `AssetCategory.RequiresPeriodicReplacement`/`ReplacementIntervalDays`) — yeni aggregate açılmayacak. ⚠️ Backfill riski: `AssetCategoryProvisioningService.EnsureSeededAsync` tenant başına bir kez çalışıyor, zaten seed'i tamamlanmış tenantlarda "ppe" otomatik görünmeyecek.
+- **Faz 5 — Belge motoru entegrasyonu**: `DocumentRequirementMaterializationService.cs`'teki `IsVeryHazardousJob`/`RequiresPeriodicHealthCheck` hardcoded `false`'ların düzeltilmesi + `RequiresPeriodicHealthCheck`'in bugün yanlışlıkla `IsUndergroundWorker`'a eşlenen placeholder hatasının giderilmesi (davranış değişikliği — re-materialization notu gerekli, sessiz geçilmemeli). `IOhsProfileLookup` gibi yeni bir cross-module lookup port'u gerekecek.
+- **Faz 6 — Stretch**: legislation-parameter taşıma (statik tablo yerine `ILegislationParameterReader`'a geçiş ihtiyacı doğarsa), Analytics/Notifications entegrasyonu, mobil.
+
+---
+
+**Durum: GATE 1 onayı bekliyor. Hiçbir dosya değiştirilmedi/oluşturulmadı.** *(orijinal planın başlangıç notu — yukarıdaki "Implementasyon Notu" bu turun gerçek durumunu yansıtır.)*
 
 ## Karar: Yeni Modül + Assets'e Küçük Genişleme
 

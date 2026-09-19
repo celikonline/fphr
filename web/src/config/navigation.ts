@@ -41,6 +41,8 @@ import {
   FileWarning,
   Upload,
   FolderOpen,
+  HardHat,
+  ClipboardCheck,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -95,6 +97,8 @@ export const SETTINGS_PERMISSIONS = {
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
   workSchedules: ["attendance.workschedule.view"],
+  ohsHazardClassification: ["ohs.hazard_classifications.view", "ohs.hazard_classifications.manage"],
+  ohsRiskAssessments: ["ohs.risk_assessments.view", "ohs.risk_assessments.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -465,6 +469,22 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/expense-categories",
         icon: Receipt,
         permissions: SETTINGS_PERMISSIONS.expenseCategories,
+      },
+      {
+        key: "ohsHazardClassification",
+        labelKey: "settings.ohsHazardClassification",
+        descriptionKey: "settings.ohsHazardClassificationDesc",
+        path: "/app/settings/company/ohs-hazard-classification",
+        icon: HardHat,
+        permissions: SETTINGS_PERMISSIONS.ohsHazardClassification,
+      },
+      {
+        key: "ohsRiskAssessments",
+        labelKey: "settings.ohsRiskAssessments",
+        descriptionKey: "settings.ohsRiskAssessmentsDesc",
+        path: "/app/settings/company/ohs-risk-assessments",
+        icon: ClipboardCheck,
+        permissions: SETTINGS_PERMISSIONS.ohsRiskAssessments,
       },
     ],
   },

@@ -42,6 +42,7 @@ i18n
       "payroll",
       "support",
       "companyCalendar",
+      "ohs",
     ],
     interpolation: {
       escapeValue: false,

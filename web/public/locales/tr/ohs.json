@@ -1,0 +1,50 @@
+{
+  "hazardClassification": {
+    "title": "İSG tehlike sınıfı",
+    "subtitle": "İşyeri konumlarının tehlike sınıfı geçmişini yönetin.",
+    "add": "Sınıflandırma ekle",
+    "reclassify": "Yeniden sınıflandır",
+    "empty": "Kayıtlı tehlike sınıfı yok.",
+    "saved": "Tehlike sınıfı kaydedildi.",
+    "columns": {
+      "location": "Konum",
+      "hazardClass": "Tehlike sınıfı",
+      "effectiveFrom": "Geçerlilik başlangıcı",
+      "note": "Not"
+    },
+    "errors": {
+      "loadFailed": "Tehlike sınıfları yüklenemedi.",
+      "generic": "Tehlike sınıfı kaydedilemedi.",
+      "locationRequired": "Konum seçimi zorunludur.",
+      "hazardClassRequired": "Tehlike sınıfı seçimi zorunludur."
+    }
+  },
+  "riskAssessments": {
+    "title": "Risk değerlendirmeleri",
+    "subtitle": "Kayıtlı risk değerlendirmelerini ve yenileme tarihlerini görüntüleyin.",
+    "add": "Risk değerlendirmesi ekle",
+    "empty": "Kayıtlı risk değerlendirmesi yok.",
+    "saved": "Risk değerlendirmesi kaydedildi.",
+    "columns": {
+      "location": "Konum",
+      "hazardClass": "Tehlike sınıfı",
+      "assessmentDate": "Değerlendirme tarihi",
+      "nextDueDate": "Sonraki yenileme tarihi",
+      "preparedBy": "Hazırlayan"
+    },
+    "errors": {
+      "loadFailed": "Risk değerlendirmeleri yüklenemedi.",
+      "generic": "Risk değerlendirmesi kaydedilemedi.",
+      "locationRequired": "Konum seçimi zorunludur.",
+      "preparedByRequired": "Hazırlayan alanı zorunludur.",
+      "hazardClassificationMissing": "Bu konum için önce tehlike sınıfı atanmalı."
+    }
+  },
+  "enum": {
+    "hazardClass": {
+      "low": "Az tehlikeli",
+      "medium": "Tehlikeli",
+      "high": "Çok tehlikeli"
+    }
+  }
+}
