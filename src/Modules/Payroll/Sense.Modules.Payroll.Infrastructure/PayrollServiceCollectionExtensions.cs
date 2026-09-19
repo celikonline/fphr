@@ -32,6 +32,8 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         services.AddScoped<IPayslipDirtyFlagRepository, PayslipDirtyFlagRepository>();
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();
+        services.AddScoped<IUnionRepository, UnionRepository>();
+        services.AddScoped<IEmployeeUnionMembershipRepository, EmployeeUnionMembershipRepository>();
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.

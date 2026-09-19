@@ -215,4 +215,23 @@ public sealed class PayrollCalculatorGoldenSetTests
 
         Should.Throw<NotSupportedException>(() => PayrollCalculator.Calculate(input, Snapshot));
     }
+
+    [Fact]
+    public void UnionDues_DeductedFromNet_ButNeverTouchesSgkGvBases()
+    {
+        // 11.3.07-bordro.md #58 "Sendika / TİS": dues are a post-tax deduction, resolved by the Application layer
+        // (UnionDuesCalculator) and passed in as a plain amount - the calculator itself just wires DEDUCTIONS into NET.
+        var noDuesInput = new PayrollCalculationInput(200_000m, WorkedDays, CalendarDaysInMonth, MealBenefitVariant.None, 0m, 0m, AsOf);
+        var withDuesInput = noDuesInput with { UnionDuesAmount = 2_000m };
+
+        var noDues = PayrollCalculator.Calculate(noDuesInput, Snapshot);
+        var withDues = PayrollCalculator.Calculate(withDuesInput, Snapshot);
+
+        withDues.Step(PayrollTraceStepCodes.SgkBase).Output.ShouldBe(noDues.Step(PayrollTraceStepCodes.SgkBase).Output);
+        withDues.Step(PayrollTraceStepCodes.GvBase).Output.ShouldBe(noDues.Step(PayrollTraceStepCodes.GvBase).Output);
+        withDues.Step(PayrollTraceStepCodes.IncomeTax).Output.ShouldBe(noDues.Step(PayrollTraceStepCodes.IncomeTax).Output);
+        withDues.Step(PayrollTraceStepCodes.Deductions).Output.ShouldBe(2_000m);
+        withDues.NetAmount.ShouldBe(noDues.NetAmount - 2_000m);
+        withDues.GrossAmount.ShouldBe(noDues.GrossAmount); // dues never reduce GROSS/EARNINGS
+    }
 }

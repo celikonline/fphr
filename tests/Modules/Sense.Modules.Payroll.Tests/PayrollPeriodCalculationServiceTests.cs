@@ -8,6 +8,7 @@ using Sense.Modules.Payroll.Domain.Calculation;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Legislation;
 using Shouldly;
@@ -104,7 +105,19 @@ public sealed class PayrollPeriodCalculationServiceTests
         out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
         out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
-        out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader)
+        out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader) =>
+        BuildService(out payslips, out traces, out profiles, out dirtyFlags, out salaryLookup, out workedTimeReader, out absenceDaysReader, out expensePayoutReader, out _);
+
+    /// <summary>Overload additionally exposing the IEmployeeUnionMembershipRepository fake (#58 "Sendika /
+    /// dayanışma aidatı"): default NSubstitute behaviour (FindCurrentAsync returns null) reproduces "no union
+    /// membership" - UnionDuesCalculator.Calculate then returns 0 - without any .Returns() setup, so every other
+    /// test in this file is unaffected.</summary>
+    private static PayrollPeriodCalculationService BuildService(
+        out IPayslipRepository payslips, out IPayslipCalculationTraceRepository traces,
+        out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
+        out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
+        out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader,
+        out IEmployeeUnionMembershipRepository unionMemberships)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -118,13 +131,14 @@ public sealed class PayrollPeriodCalculationServiceTests
         workedTimeReader = Substitute.For<IWorkedTimeReader>();
         absenceDaysReader = Substitute.For<IAbsenceDaysReader>();
         expensePayoutReader = Substitute.For<IExpensePayoutReader>();
+        unionMemberships = Substitute.For<IEmployeeUnionMembershipRepository>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
         return new PayrollPeriodCalculationService(
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
-            workedTimeReader, absenceDaysReader, expensePayoutReader);
+            workedTimeReader, absenceDaysReader, expensePayoutReader, unionMemberships);
     }
 
     [Fact]

@@ -173,22 +173,26 @@ public static class PayrollCalculator
             Round(stampTax - stampTaxAfterExemption),
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p), Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
 
-        // DEDUCTIONS (empty this slice: avans/icra/nafaka/sendika/BES → P3/P5)
+        // DEDUCTIONS (this slice: yalnız sendika/dayanışma aidatı, #58 - avans/icra/nafaka/BES hâlâ P6+ kapsamı,
+        // mahkeme kararı kalemleri #60'a bırakıldı; UnionDuesAmount Application katmanında UnionDuesCalculator ile
+        // hesaplanıp buraya girdi olarak geliyor, motor DB'ye bakmıyor)
+        var unionDues = input.UnionDuesAmount;
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Deductions, "payroll.trace.step.deductions",
-            new Dictionary<string, string>(),
-            "kesinti kalemi yok (avans/icra/nafaka/sendika/BES - P3/P5 kapsamına bırakıldı)",
-            0m, []));
+            Map(("unionDues", unionDues)),
+            "sendika/dayanışma aidatı (avans/icra/nafaka/BES - P6+ kapsamına bırakıldı)",
+            unionDues, []));
 
-        // NET (masraf iadesi vergisiz eklenir - TB-7 Expense köprüsü, S-13; SGK/GV/damga matrahlarına hiç girmez)
+        // NET (masraf iadesi vergisiz eklenir - TB-7 Expense köprüsü, S-13; SGK/GV/damga matrahlarına hiç girmez;
+        // DEDUCTIONS vergi sonrası net'ten düşülür - sendika aidatı SGK/GV/DV matrahına girmez)
         var expenseReimbursement = input.ExpenseReimbursement;
-        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement);
+        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement - unionDues);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Net, "payroll.trace.step.net",
             Map(("gross", gross), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee),
                 ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption),
-                ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz)",
+                ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement), ("unionDues", unionDues)),
+            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (sendika aidatı)",
             net, []));
 
         // EMPLOYER_SGK

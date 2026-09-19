@@ -22,6 +22,14 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// unlike the meal benefit's SGK/GV-excess handling. Defaults to 0 so existing callers/golden-set tests are
 /// unaffected until a caller wires <c>IExpensePayoutReader</c>.
 /// </param>
+/// <param name="UnionDuesAmount">
+/// Sendika aidatı / dayanışma aidatı (11.3.07-bordro.md "Sendika / TİS", #58): this period's dues, already computed
+/// by <c>Unions.UnionDuesCalculator</c> from the employee's current <c>EmployeeUnionMembership</c> (Application
+/// layer resolves the membership; the calculator stays pure). Deducted straight from NET (DEDUCTIONS step) - it does
+/// not touch SGK/GV/DV bases (dues are a post-tax deduction, not exempt pay). Defaults to 0 so existing golden-set
+/// tests are unaffected. Collective-agreement (TİS) terms and retroactive difference payroll are out of scope this
+/// slice (deferred: faz3-durum-takibi.md #58).
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -30,4 +38,5 @@ public sealed record PayrollCalculationInput(
     decimal MealDailyAmount,
     decimal PriorCumulativeGvBase,
     DateOnly AsOfDate,
-    decimal ExpenseReimbursement = 0m);
+    decimal ExpenseReimbursement = 0m,
+    decimal UnionDuesAmount = 0m);

@@ -730,6 +730,17 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>
 
+  <!-- Payroll (Faz 3 P5): sendika / dayanışma aidatı (EmployeeUnionMembership) -->
+  <data name="payroll.union.manage" xml:space="preserve"><value>Sendikaları ve üyelikleri yönetme</value></data>
+  <data name="payroll.union.not_found" xml:space="preserve"><value>Sendika bulunamadı.</value></data>
+  <data name="payroll.errors.union_name_required" xml:space="preserve"><value>Sendika adı zorunludur.</value></data>
+  <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>Sendika adı çok uzun.</value></data>
+  <data name="payroll.union_membership.not_found" xml:space="preserve"><value>Sendika üyeliği bulunamadı.</value></data>
+  <data name="payroll.errors.union_membership_union_required" xml:space="preserve"><value>Sendika seçilmelidir.</value></data>
+  <data name="payroll.errors.union_membership_date_range_invalid" xml:space="preserve"><value>Tarihler geçersiz (bildirim/bitiş tarihi üyelik tarihinden önce olamaz).</value></data>
+  <data name="payroll.errors.union_membership_dues_value_invalid" xml:space="preserve"><value>Aidat tutarı bu kural için geçersiz.</value></data>
+  <data name="payroll.errors.union_membership_already_open" xml:space="preserve"><value>Çalışanın zaten açık bir sendika üyeliği var.</value></data>
+
   <!-- Recruitment (Faz 6 R0): ilan/aday/başvuru çekirdeği -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>İlanları görüntüleme</value></data>
   <data name="recruitment.postings.create" xml:space="preserve"><value>İlan oluşturma</value></data>

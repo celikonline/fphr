@@ -22,5 +22,9 @@ public static class PayrollPermissions
     public static readonly Permission PeriodRecalculate = new(
         "payroll.period.recalculate", Module, "Recalculate Payroll Period", Group, "Recalculate payslips for an open payroll period");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate];
+    /// <summary>11.3.07-bordro.md "Sendika & TİS" (#58, P5): manage unions and employees' union/TİS membership + dues.</summary>
+    public static readonly Permission UnionManage = new(
+        "payroll.union.manage", Module, "Manage Unions", Group, "Manage unions and employees' union/collective-agreement membership and dues");
+
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, UnionManage];
 }
