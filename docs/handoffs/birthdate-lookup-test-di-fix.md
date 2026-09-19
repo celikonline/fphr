@@ -126,3 +126,15 @@ hallerinin bu dört değişikliği (veya denklerini) hâlâ içerip içermediği
 - Windows host'ta native `dotnet test tests/Modules/Sense.Modules.Leave.Tests/Sense.Modules.Leave.Tests.csproj`
   (Testcontainers / Docker Desktop): **146/146 başarılı**, 0 başarısız, 0 atlanan (9m53s).
 - Migration yok (yalnız test fixture değişiklikleri). Kart `review` durumunda; dev'e merge'e hazır.
+
+## İkinci rebase (dev 0b41991, senseik-030 sonrası)
+
+- dev, senseik-030 ile üç dosyaya da **gerçek** `IEmployeeBirthDateLookup` kaydını (EmployeeDbContext +
+  `EmployeeBirthDateLookup`) eklemişti. Çakışma tek kayıt yönünde çözüldü: 055'in `Substitute` stub'ları üç
+  fixture'dan **kaldırıldı**, dev'in kaydı korundu.
+- 055'ten kalan (dev'de karşılığı olmayan) değişiklikler: `WorkerRegistration_ResolvesEveryLeaveIntegrationEventHandler`
+  testindeki izole `ServiceCollection` için stub, `LeaveRequestTests` fixture'ında `IPermissionService` /
+  `IDataScopeService` / `IAccessSettingsService` stub'ları, `LeaveManagementTests`'te senseik-026 team-overlap testine
+  `CanAccessEmployeeAsync` ayarı.
+- Doğrulama: Leave test projesi derleniyor (0 hata). Testcontainers koşusu bu rebase sonrası **yapılamadı** — Docker
+  Desktop yanıt vermiyordu; merge sonrası `dotnet test tests/Modules/Sense.Modules.Leave.Tests` koşulmalı.
