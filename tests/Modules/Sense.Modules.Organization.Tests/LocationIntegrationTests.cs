@@ -79,6 +79,32 @@ public sealed class LocationIntegrationTests : TestFixture
         }
     }
 
+    /// <summary>senseik-010/F-03: SgkIsyeriSicilNo round-trips through the EF migration/mapping, and ILocationLookup.GetSgkIsyeriSicilNoAsync surfaces it for Payroll's APHB/e-Bildirge preparation.</summary>
+    [Fact]
+    public async Task CreateLocation_WithSgkIsyeriSicilNo_RoundTripsAndIsResolvedByLookup()
+    {
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var withSicilNo = Location.Create(tenantId, "İstanbul HQ", LocationType.Office, "TR", "Maslak", "1071234.567-8.9-0").Value;
+        var withoutSicilNo = Location.Create(tenantId, "Remote", LocationType.Remote, "TR", null).Value;
+        db.Locations.AddRange(withSicilNo, withoutSicilNo);
+        await db.SaveChangesAsync();
+
+        var reloaded = await db.Locations.AsNoTracking().SingleAsync(l => l.Id == withSicilNo.Id);
+        reloaded.SgkIsyeriSicilNo.ShouldBe("1071234.567-8.9-0");
+
+        var lookup = new LocationLookup(db);
+        var result = await lookup.GetSgkIsyeriSicilNoAsync(tenantId, [withSicilNo.Id, withoutSicilNo.Id, Guid.NewGuid()]);
+
+        result.Count.ShouldBe(1);
+        result[withSicilNo.Id].ShouldBe("1071234.567-8.9-0");
+        result.ContainsKey(withoutSicilNo.Id).ShouldBeFalse();
+    }
+
     [Fact]
     public async Task DeactivateLocation_TwiceInARow_SecondCallFails()
     {

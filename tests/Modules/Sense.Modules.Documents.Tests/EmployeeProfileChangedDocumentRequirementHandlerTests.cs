@@ -6,6 +6,7 @@ using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Shared.Contracts.Legislation;
 using Shouldly;
 using Xunit;
@@ -60,9 +61,10 @@ public sealed class EmployeeProfileChangedDocumentRequirementHandlerTests
 
         var assetLookup = Substitute.For<IAssetLookup>();
         assetLookup.HasOpenAssetsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(false);
+        var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
         return (types, requirements, materialization);
     }
 
@@ -134,9 +136,10 @@ public sealed class EmployeeProfileChangedDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
         var assetLookup = Substitute.For<IAssetLookup>();
         assetLookup.HasOpenAssetsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(false);
+        var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
         var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
 
         var handler = new EmployeeProfileChangedDocumentRequirementHandler(materialization, unitOfWork, TimeProvider.System);

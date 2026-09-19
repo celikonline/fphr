@@ -28,6 +28,8 @@ export interface Location {
   countryCode: string;
   address: string | null;
   isActive: boolean;
+  /** SGK işyeri sicil numarası (senseik-010/F-03): çok işyerli şirketler için per-location tanımlanır. */
+  sgkIsyeriSicilNo: string | null;
 }
 
 export interface LocationInput {
@@ -35,6 +37,7 @@ export interface LocationInput {
   type: LocationType;
   countryCode: string;
   address?: string | null;
+  sgkIsyeriSicilNo?: string | null;
 }
 
 const LOCATIONS_BASE = "/v1/organization/locations";

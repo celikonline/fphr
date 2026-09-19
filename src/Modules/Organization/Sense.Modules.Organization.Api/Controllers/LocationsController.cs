@@ -9,10 +9,10 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Organization.Api.Controllers;
 
 /// <summary>Request to create a location.</summary>
-public sealed record CreateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address);
+public sealed record CreateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address, string? SgkIsyeriSicilNo = null);
 
 /// <summary>Request to update a location.</summary>
-public sealed record UpdateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address);
+public sealed record UpdateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address, string? SgkIsyeriSicilNo = null);
 
 /// <summary>
 /// Physical location management (office/store/warehouse/factory/remote + country, roadmap Faz 0 item #6).
@@ -33,13 +33,13 @@ public sealed class LocationsController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateLocationRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateLocationCommand(request.Name, request.Type, request.CountryCode, request.Address), ct));
+        FromResult(await Dispatcher.Send(new CreateLocationCommand(request.Name, request.Type, request.CountryCode, request.Address, request.SgkIsyeriSicilNo), ct));
 
-    /// <summary>Updates a location's name/type/country/address.</summary>
+    /// <summary>Updates a location's name/type/country/address/SGK işyeri sicil no.</summary>
     [HttpPut(ApiRoutes.IdParam)]
     [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLocationRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new UpdateLocationCommand(id, request.Name, request.Type, request.CountryCode, request.Address), ct));
+        FromResult(await Dispatcher.Send(new UpdateLocationCommand(id, request.Name, request.Type, request.CountryCode, request.Address, request.SgkIsyeriSicilNo), ct));
 
     /// <summary>Soft delete: sets IsActive=false (409 if an active org unit still references this location).</summary>
     [HttpDelete(ApiRoutes.IdParam)]

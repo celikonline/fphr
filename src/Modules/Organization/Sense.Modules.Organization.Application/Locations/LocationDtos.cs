@@ -9,4 +9,5 @@ public sealed record LocationDto(
     LocationType Type,
     string CountryCode,
     string? Address,
-    bool IsActive);
+    bool IsActive,
+    string? SgkIsyeriSicilNo = null);

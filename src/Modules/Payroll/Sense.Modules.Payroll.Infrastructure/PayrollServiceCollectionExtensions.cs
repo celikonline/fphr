@@ -8,9 +8,11 @@ using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Ports;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Infrastructure.Adapters;
 using Sense.Modules.Payroll.Infrastructure.Jobs;
+using Sense.Modules.Payroll.Infrastructure.Lookups;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Events;
 
@@ -32,6 +34,10 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IEmployeePayrollProfileRepository, EmployeePayrollProfileRepository>();
         services.AddScoped<IPayslipDirtyFlagRepository, PayslipDirtyFlagRepository>();
         services.AddScoped<IChangeDetectionRunRepository, ChangeDetectionRunRepository>();
+
+        // senseik-010/F-03: Documents' DocumentRequirementMaterializationService reads this to materialize
+        // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.
+        services.AddScoped<IEmployeeIncentiveLookup, EmployeeIncentiveLookup>();
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.

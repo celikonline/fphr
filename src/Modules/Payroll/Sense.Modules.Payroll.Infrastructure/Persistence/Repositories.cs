@@ -91,4 +91,9 @@ public sealed class EmployeePayrollProfileRepository(PayrollDbContext context) :
             .Where(p => p.EmployeeId == employeeId && p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
             .OrderByDescending(p => p.ValidFrom)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayrollProfile>> ListActiveAsOfAsync(DateOnly asOf, CancellationToken cancellationToken = default) =>
+        await context.EmployeePayrollProfiles
+            .Where(p => p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
+            .ToListAsync(cancellationToken);
 }

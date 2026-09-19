@@ -18,6 +18,7 @@
   "countryCode": "Ländercode",
   "countryCodeInvalid": "Geben Sie einen zweistelligen Ländercode ein (z. B. DE).",
   "address": "Adresse",
+  "sgkIsyeriSicilNo": "SGK-Betriebsstättennummer",
   "searchPlaceholder": "Standorte durchsuchen...",
   "createSuccess": "Standort angelegt.",
   "updateSuccess": "Standort aktualisiert.",

@@ -304,7 +304,8 @@ public partial class DataSeeder(
 
         // Locations (roadmap Faz 0 item #6): matches the 3 sample rows web/src/services/locations.service.ts
         // used to mock before this item wired the real backend, so a manual QA pass sees the same data.
-        var istanbulHq = CreateLocationOrThrow(tenant.Id, "İstanbul HQ", LocationType.Office, "TR", "Maslak, İstanbul");
+        // İstanbul HQ also carries a demo SGK işyeri sicil numarası (senseik-010/F-03), otherwise invisible in manual QA.
+        var istanbulHq = CreateLocationOrThrow(tenant.Id, "İstanbul HQ", LocationType.Office, "TR", "Maslak, İstanbul", "1071234.567-8.9-0");
         var ankaraOffice = CreateLocationOrThrow(tenant.Id, "Ankara Office", LocationType.Office, "TR", "Çankaya, Ankara");
         var izmirOffice = CreateLocationOrThrow(tenant.Id, "İzmir Office", LocationType.Office, "TR", "Konak, İzmir");
         organizationCtx.Locations.AddRange(istanbulHq, ankaraOffice, izmirOffice);

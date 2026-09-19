@@ -50,6 +50,13 @@ public sealed class EmployeePayrollProfilesController : ApiControllerBase
     public async Task<IActionResult> GetHistory(Guid employeeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListEmployeePayrollProfilesQuery(employeeId), ct));
 
+    /// <summary>APHB/e-Bildirge pre-fill data (senseik-010/F-03): SGK işyeri sicil no, meslek kodu, teşvik kodu -
+    /// the export itself is out of scope, this only surfaces the stored values.</summary>
+    [HttpGet("aphb-prefill")]
+    [ProducesResponseType<AphbPrefillDataDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAphbPrefill(Guid employeeId, [FromQuery] DateOnly? asOf, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetAphbPrefillDataQuery(employeeId, asOf), ct));
+
     /// <summary>Opens a new profile version (no ProfileId) or edits an existing one (ProfileId set); either way the
     /// caller must not create an overlapping date range for this employee (payroll.errors.profile_overlap).</summary>
     [HttpPut]

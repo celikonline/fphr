@@ -6,6 +6,7 @@ using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Shared.Contracts.Legislation;
 using Shouldly;
 using Xunit;
@@ -54,7 +55,8 @@ public sealed class AssetEventDocumentRequirementHandlersTests
         assetLookup.HasOpenAssetsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(hasOpenAssets);
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, provisioning, Legislation());
+        var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
         return (types, requirements, assetLookup, materialization);
     }
 
@@ -106,7 +108,8 @@ public sealed class AssetEventDocumentRequirementHandlersTests
         assetLookup.HasOpenAssetsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(false);
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, provisioning, Legislation());
+        var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
         var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
         var handler = new AssetReturnedDocumentRequirementHandler(materialization, unitOfWork, TimeProvider.System);
 

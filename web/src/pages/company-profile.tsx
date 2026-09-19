@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, Info } from "lucide-react";
-import { Alert, Avatar, Button, Card, Chip, Group, Input, Skeleton, Text, TextInput, Title } from "@mantine/core";
+import { Alert, Avatar, Badge, Button, Card, Chip, Group, Input, Skeleton, Text, TextInput, Title } from "@mantine/core";
 import { FileDropzone, type FileRejectReason } from "@/components/ui/file-dropzone";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import {
   type CompanyProfile,
   type WeekDay,
 } from "@/services/company.service";
+import { getActiveIncentiveSummary } from "@/services/payroll.service";
 
 const LOGO_MAX_BYTES = 2 * 1024 * 1024;
 const WEEK_DAYS: WeekDay[] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
@@ -53,10 +54,19 @@ export default function CompanyProfilePage() {
   const { t } = useTranslation(["company", "common"]);
   const queryClient = useQueryClient();
   const canManage = usePermission("identity.tenant.manage");
+  const canViewIncentives = usePermission("payroll.profile.manage");
 
   const { data: profile, isLoading } = useQuery({
     queryKey: ["company-profile"],
     queryFn: getCompanyProfile,
+  });
+
+  // senseik-010/F-03: read-only "aktif teşvik türleri" summary (handoff §3 - the writable value stays on the
+  // employee's Bordro parametreleri, this screen only shows which teşvik codes are currently in effect).
+  const { data: incentiveSummary } = useQuery({
+    queryKey: ["company-profile", "incentive-summary"],
+    queryFn: getActiveIncentiveSummary,
+    enabled: canViewIncentives,
   });
 
   const {
@@ -267,6 +277,30 @@ export default function CompanyProfilePage() {
           </Group>
         )}
       </form>
+
+      {canViewIncentives && (
+        <Card withBorder padding="lg">
+          <Text fw={600} mb="xs">
+            {t("company:sectionIncentives")}
+          </Text>
+          <Text size="sm" c="dimmed" mb="md">
+            {t("company:incentivesHint")}
+          </Text>
+          {incentiveSummary && incentiveSummary.length > 0 ? (
+            <Group gap="xs">
+              {incentiveSummary.map((item) => (
+                <Badge key={item.code} variant="light" size="lg">
+                  {t("company:incentiveBadge", { code: item.code, count: item.employeeCount })}
+                </Badge>
+              ))}
+            </Group>
+          ) : (
+            <Text size="sm" c="dimmed">
+              {t("company:noActiveIncentives")}
+            </Text>
+          )}
+        </Card>
+      )}
     </div>
   );
 }

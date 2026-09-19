@@ -897,6 +897,11 @@ public sealed class RecruitmentIntegrationTests : TestFixture
                 .ToDictionary(id => id, id => _byId[id]);
             return Task.FromResult(result);
         }
+
+        /// <summary>Not exercised by this fixture's tests (senseik-010/F-03 is Payroll-facing, not S-19); always empty.</summary>
+        public Task<IReadOnlyDictionary<Guid, string>> GetSgkIsyeriSicilNoAsync(
+            Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
     }
 
     /// <summary>

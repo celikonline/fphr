@@ -122,6 +122,7 @@ public sealed class LocationConfiguration : IEntityTypeConfiguration<Location>
         b.Property(x => x.Name).HasMaxLength(OrganizationTables.NameLength).IsRequired();
         b.Property(x => x.CountryCode).HasMaxLength(OrganizationTables.CountryCodeLength).IsRequired();
         b.Property(x => x.Address).HasMaxLength(OrganizationTables.AddressLength);
+        b.Property(x => x.SgkIsyeriSicilNo).HasMaxLength(OrganizationLimits.SgkIsyeriSicilNoMaxLength);
         b.Property(x => x.Type).HasConversion<int>();
 
         b.HasIndex(x => x.TenantId);

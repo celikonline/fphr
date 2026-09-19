@@ -211,9 +211,9 @@ public partial class DataSeeder
         [property: JsonPropertyName("recurringAnnually")] bool RecurringAnnually,
         [property: JsonPropertyName("note")] string? Note);
 
-    private static Location CreateLocationOrThrow(Guid tenantId, string name, LocationType type, string countryCode, string? address)
+    private static Location CreateLocationOrThrow(Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null)
     {
-        var result = Location.Create(tenantId, name, type, countryCode, address);
+        var result = Location.Create(tenantId, name, type, countryCode, address, sgkIsyeriSicilNo);
         if (result.IsFailure)
         {
             throw new InvalidOperationException($"Failed to seed location '{name}': {result.Error}");

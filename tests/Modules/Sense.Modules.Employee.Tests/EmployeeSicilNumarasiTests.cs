@@ -80,14 +80,36 @@ public sealed class EmployeeSicilNumarasiTests : TestFixture
         (await lookup.FindActiveBySicilNumarasiAsync(tenantId, "SCL-NONE")).ShouldBeNull();
     }
 
-    private static EmployeeEntity CreateEmployeeOrThrow(Guid tenantId, string sicilNumarasi)
+    /// <summary>senseik-010/F-03: IEmployeeLookup.GetSgkOccupationCodeAsync surfaces Employee.SgkOccupationCode for Payroll's APHB/e-Bildirge preparation.</summary>
+    [Fact]
+    public async Task GetSgkOccupationCodeAsync_ReturnsStoredCode_NullWhenNotSetOrEmployeeMissing()
+    {
+        var db = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var withCode = CreateEmployeeOrThrow(tenantId, "SCL-200", sgkOccupationCode: "3121.03");
+        var withoutCode = CreateEmployeeOrThrow(tenantId, "SCL-201");
+        db.Employees.AddRange(withCode, withoutCode);
+        await db.SaveChangesAsync();
+
+        var lookup = new EmployeeLookup(db);
+        (await lookup.GetSgkOccupationCodeAsync(tenantId, withCode.Id)).ShouldBe("3121.03");
+        (await lookup.GetSgkOccupationCodeAsync(tenantId, withoutCode.Id)).ShouldBeNull();
+        (await lookup.GetSgkOccupationCodeAsync(tenantId, Guid.NewGuid())).ShouldBeNull();
+    }
+
+    private static EmployeeEntity CreateEmployeeOrThrow(Guid tenantId, string sicilNumarasi, string? sgkOccupationCode = null)
     {
         var info = new EmployeeInfo(
             FirstName: "Test",
             LastName: "Sicil",
             NationalId: Tckn.Next(),
             HireDate: new DateOnly(2020, 1, 1),
-            SicilNumarasi: sicilNumarasi);
+            SicilNumarasi: sicilNumarasi,
+            SgkOccupationCode: sgkOccupationCode);
 
         var result = EmployeeEntity.Create(tenantId, info);
         result.IsSuccess.ShouldBeTrue();
