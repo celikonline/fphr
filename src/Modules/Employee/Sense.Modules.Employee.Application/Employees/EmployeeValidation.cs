@@ -31,8 +31,15 @@ public static class EmployeeInfoRules
     /// (EmployeeSensitiveAccess.PreserveSensitiveFields) - validating that masked string against TcKimlik would
     /// otherwise reject a request that never touches NationalId.
     /// </summary>
-    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info, EmployeeSensitiveAccess sensitiveAccess)
+    /// <param name="nationalityProvided">
+    /// Update requests may leave Nationality unsent (the stored value is kept, senseik-058); the nationality-conditioned
+    /// rules then cannot be judged from the request alone and are skipped here - Employee.Validate re-checks them
+    /// against the merged info in the handler. Null = always provided (create).
+    /// </param>
+    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info, EmployeeSensitiveAccess sensitiveAccess, Func<T, bool>? nationalityProvided = null)
     {
+        bool NationalityKnown(T x) => nationalityProvided?.Invoke(x) ?? true;
+
         v.RuleFor(x => info(x).FirstName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.FirstName));
         v.RuleFor(x => info(x).LastName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.LastName));
         v.RuleFor(x => info(x).NationalId)
@@ -81,19 +88,20 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x))
             .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
                        i.Nationality != Nationality.Turkish || !TcKimlik.Of(i.NationalId.Trim()).IsForeign)
-            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WhenAsync(async (x, ct) => NationalityKnown(x) && await sensitiveAccess.CanViewAsync(ct))
             .WithMessage(EmployeeDomainErrors.NationalIdForeignPrefixForTurkish)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
         v.RuleFor(x => info(x))
             .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
                        i.Nationality != Nationality.Foreign || TcKimlik.Of(i.NationalId.Trim()).IsForeign)
-            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WhenAsync(async (x, ct) => NationalityKnown(x) && await sensitiveAccess.CanViewAsync(ct))
             .WithMessage(EmployeeDomainErrors.NationalIdNotForeignForForeignNational)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
 
         // Not sensitive-view gated: ForeignIdNumber/PassportNumber are not masked like NationalId.
         v.RuleFor(x => info(x))
             .Must(i => i.Nationality != Nationality.Foreign || !string.IsNullOrWhiteSpace(i.ForeignIdNumber) || !string.IsNullOrWhiteSpace(i.PassportNumber))
+            .When(NationalityKnown)
             .WithMessage(EmployeeDomainErrors.ForeignIdentificationRequired)
             .OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
     }

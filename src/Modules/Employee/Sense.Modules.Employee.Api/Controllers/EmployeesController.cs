@@ -69,7 +69,8 @@ public sealed class EmployeesController : ApiControllerBase
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
                 request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate,
-                request.ClearLeaveAccrualStartDate),
+                request.ClearLeaveAccrualStartDate, request.SicilNumarasi, request.Nationality, request.ForeignIdNumber, request.PassportNumber,
+                request.SgkOccupationCode),
             ct));
 
     /// <summary>Updates an employee record.</summary>
@@ -82,7 +83,8 @@ public sealed class EmployeesController : ApiControllerBase
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
                 request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate,
-                request.ClearLeaveAccrualStartDate),
+                request.ClearLeaveAccrualStartDate, request.SicilNumarasi, request.Nationality, request.ForeignIdNumber, request.PassportNumber,
+                request.SgkOccupationCode),
             ct));
 
     /// <summary>Career timeline, newest first (an employee without stored history shows its current values as one implicit Hire record).</summary>
