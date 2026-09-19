@@ -330,6 +330,7 @@ public partial class DataSeeder(
         var titles = new DemoTitleCatalog(tenant.Id, orgUnitTypes.Title, organizationCtx);
         var employees = SeedDemoEmployees(tenant.Id, demoUsers, roleAssignments, headquarters, departments, titles);
         _demoLeaveSeed = new DemoLeaveSeed(tenant.Id, tenant.Slug, employees);
+        SeedDemoSalaries(employees);
 
         // senseik-018 (E-01): hand-authored audit trail (see SeedDemoAuditLog) - the seeder's own SaveChanges
         // cannot produce per-person attribution through the interceptor (single SystemUser actor for the batch).

@@ -101,7 +101,7 @@ public partial class DataSeeder
             user.LinkEmployee(employee.Id);
             EnqueueHiredIfActive(tenantId, employee);
             created.Add((employee, orgUnit));
-            result.Add(new DemoEmployee(employee, user.Email));
+            result.Add(new DemoEmployee(employee, user.Email, titleName));
 
             if (isExecutive && headquarters.ManagerEmployeeId is null)
             {

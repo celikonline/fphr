@@ -40,7 +40,7 @@ namespace Sense.Api.SeedData;
 
 public partial class DataSeeder
 {
-    private sealed record DemoEmployee(Employee Employee, string Email);
+    private sealed record DemoEmployee(Employee Employee, string Email, string? Title = null);
 
     private sealed record DemoLeaveSeed(Guid TenantId, string TenantSlug, IReadOnlyList<DemoEmployee> Employees);
 
@@ -83,7 +83,7 @@ public partial class DataSeeder
             .ToDictionary(x => x.Id, x => x.Plan);
 
         var requestCount = 0;
-        foreach (var (employee, email) in active)
+        foreach (var (employee, email, _) in active)
         {
             var hireDate = employee.HireDate!.Value;
             var accrualStart = employee.LeaveAccrualStartDate ?? hireDate;
