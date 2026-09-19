@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Documents.Domain.Documents;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
@@ -23,14 +24,13 @@ using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
-using Sense.Modules.Announcements.Infrastructure.Persistence;
+using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
-using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
@@ -281,11 +281,11 @@ public partial class DataSeeder(
             user.SetPassword(seedPasswordHash);
         }
 
-        // Organization: system hierarchy levels + demo tree (Headquarters -> Sales/Engineering/HR/Finance),
+        // Organization: system hierarchy levels + demo tree (Genel Merkez -> Satış/Yazılım Geliştirme/İnsan Kaynakları/Finans),
         // matching the shape web/src/services/organization.service.ts already mocks (Item 20 frontend).
         var orgUnitTypes = SeedOrgUnitTypes(tenant.Id);
 
-        var headquarters = CreateOrgUnitOrThrow(tenant.Id, orgUnitTypes.Company, parentId: null, name: "Headquarters");
+        var headquarters = CreateOrgUnitOrThrow(tenant.Id, orgUnitTypes.Company, parentId: null, name: "Genel Merkez");
         organizationCtx.OrgUnits.Add(headquarters);
 
         var demoHolidayCalendar = SeedTrHolidayCalendar(tenant.Id);
@@ -307,8 +307,8 @@ public partial class DataSeeder(
         organizationCtx.Locations.AddRange(istanbulHq, ankaraOffice, izmirOffice);
 
         headquarters.AssignLocation(istanbulHq.Id);
-        departments.First(d => d.Name == "Sales").AssignLocation(ankaraOffice.Id);
-        departments.First(d => d.Name == "Engineering").AssignLocation(izmirOffice.Id);
+        departments.First(d => d.Name == "Satış").AssignLocation(ankaraOffice.Id);
+        departments.First(d => d.Name == "Yazılım Geliştirme").AssignLocation(izmirOffice.Id);
 
         // Şirket etkinlik takvimi (senseik-027): birkaç manuel örnek etkinlik türü; doğum günü ve izin başlangıcı
         // türetmeleri aşağıdaki employees/leave seed'inden otomatik gelir.

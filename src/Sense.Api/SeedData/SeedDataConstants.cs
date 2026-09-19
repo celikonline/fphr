@@ -17,16 +17,21 @@ public static class SeedDataConstants
     /// <summary>Login password for every seeded user (minimal admin + demo accounts). Documented in README.md.</summary>
     public const string SeedUserPassword = "Demo123!";
 
-    // Turkish Names for Demo Data (realistic mix)
-    public static readonly string[] TurkishFirstNames =
+    // Turkish Names for Demo Data (realistic mix), split by gender so GenerateDemoUsersWithRoles can alternate
+    // pools and land on a ~50/50 Gender split (senseik-043: Reports -> Cinsiyet Dağılımı needs non-Unspecified data).
+    public static readonly string[] TurkishMaleFirstNames =
     [
         "Ahmet", "Mehmet", "Ali", "Fatih", "Mustafa", "Ibrahim", "Yusuf", "Hamza",
         "Kerem", "Deniz", "Cem", "Arda", "Serkan", "Emre", "Kaan", "Bahadir",
-        "Ayşe", "Fatma", "Zeynep", "Emine", "Elif", "Sevgi", "Gülşen", "Türkan",
-        "Selin", "Betül", "Pınar", "Didem", "Hande", "Ceren", "Burçin", "Nilüfer",
         "Şirvan", "Kemal", "Ercan", "Bülent", "Hakan", "Nihat", "Salih", "Tunç",
         "İbrahim", "Fikret", "Galip", "Hayri", "Kadir", "Levent", "Murat", "Nezih",
-        "Osman", "Paşa", "Raşid", "Saime", "Talat", "Ufuk", "Vecdi", "Wilmar"
+        "Osman", "Paşa", "Raşid", "Talat", "Ufuk", "Vecdi", "Wilmar"
+    ];
+
+    public static readonly string[] TurkishFemaleFirstNames =
+    [
+        "Ayşe", "Fatma", "Zeynep", "Emine", "Elif", "Sevgi", "Gülşen", "Türkan",
+        "Selin", "Betül", "Pınar", "Didem", "Hande", "Ceren", "Burçin", "Nilüfer", "Saime"
     ];
 
     public static readonly string[] TurkishLastNames =
@@ -48,10 +53,10 @@ public static class SeedDataConstants
     /// </summary>
     public static readonly DemoDepartment[] DemoDepartments =
     [
-        new("Sales", "Satış Müdürü", "Bölge Satış Yöneticisi", ["Satış Temsilcisi", "Kıdemli Satış Temsilcisi", "Satış Destek Uzmanı"]),
-        new("Engineering", "Yazılım Geliştirme Müdürü", "Takım Lideri", ["Yazılım Mühendisi", "Kıdemli Yazılım Mühendisi", "Test Mühendisi"]),
-        new("HR", "İnsan Kaynakları Müdürü", "İK İş Ortağı", ["İK Uzmanı", "İşe Alım Uzmanı"]),
-        new("Finance", "Finans Müdürü", "Finans Yöneticisi", ["Finans Uzmanı", "Muhasebe Uzmanı"]),
+        new("Satış", "Satış Müdürü", "Bölge Satış Yöneticisi", ["Satış Temsilcisi", "Kıdemli Satış Temsilcisi", "Satış Destek Uzmanı"]),
+        new("Yazılım Geliştirme", "Yazılım Geliştirme Müdürü", "Takım Lideri", ["Yazılım Mühendisi", "Kıdemli Yazılım Mühendisi", "Test Mühendisi"]),
+        new("İnsan Kaynakları", "İnsan Kaynakları Müdürü", "İK İş Ortağı", ["İK Uzmanı", "İşe Alım Uzmanı"]),
+        new("Finans", "Finans Müdürü", "Finans Yöneticisi", ["Finans Uzmanı", "Muhasebe Uzmanı"]),
     ];
 
     public const string DemoInternTitle = "Stajyer";
