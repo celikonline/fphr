@@ -89,7 +89,9 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,
             ["payroll.*", "attendance.timesheets.*", "attendance.*.view", "leave.*.view", "employee.*.view", "employee.salary.*", "employee.bank_accounts.*", "expense.adjustments.*",
-             "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService, "leave.*.read"],
+             "expense.bank_payments.*", "reports.*", "organization.*.view", "documents.*.view", .. PermissionPatterns.SelfService, "leave.*.read",
+             // QA teslim testi bulgu 12: expense.my.claims sahipleri kalem eklerken kategori listesini okuyabilmeli.
+             "expense.categories.view"],
             []),
 
         new(SystemRoleCodes.Finance, DataScope.Company,
@@ -114,7 +116,9 @@ public static class SystemRoleDefinitions
              "attendance.shift.plan", "attendance.shift.publish",
              // Package A5: "Aylık Puantaj" onayı (S-11) - Manager approves their own team's monthly puantaj, same
              // shape as attendance.timesheet.resolve above.
-             "attendance.timesheet.approve"],
+             "attendance.timesheet.approve",
+             // QA teslim testi bulgu 12: kendi harcama talebine kalem eklerken kategori listesi (yalnız okuma).
+             "expense.categories.view"],
             [.. PermissionPatterns.Sensitive]),
 
         new(SystemRoleCodes.Timekeeper, DataScope.Department,
@@ -154,12 +158,14 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.Employee, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
-             "announcements.feed.*", "documents.company.view", "ai.assistant.use"],
+             "announcements.feed.*", "documents.company.view", "ai.assistant.use",
+             // QA teslim testi bulgu 12: harcama kalemi eklerken kategori listesi (yalnız okuma).
+             "expense.categories.view"],
             []),
 
         new(SystemRoleCodes.Intern, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
-             "announcements.feed.*", "documents.company.view"],
+             "announcements.feed.*", "documents.company.view", "expense.categories.view"],
             ["payroll.my.*", "expense.my.advances.*", "ai.*"]),
 
         new(SystemRoleCodes.Contractor, DataScope.Self,
