@@ -21,7 +21,7 @@ import {
   Tooltip,
   UnstyledButton,
 } from "@mantine/core";
-import { CalendarPlus, ChevronLeft, ChevronRight, Clock, EyeOff, Pencil, Users } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, Clock, Coffee, EyeOff, Moon, Pencil, Users } from "lucide-react";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import OrgUnitSelect from "@/components/employees/org-unit-select";
@@ -55,6 +55,28 @@ function mondayOf(date: Date): Date {
   const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   monday.setDate(monday.getDate() + diff);
   return monday;
+}
+
+/** Mola/gece/limit rozet açıklamaları (kart senseik-014 G-02): yalnız anlamlı olduğunda gösterilir. */
+function dailyWorkTooltips(day: TeamWeekDay, t: TFunction): string[] {
+  const tooltips: string[] = [];
+  if (day.breakMinutesApplied > 0) {
+    tooltips.push(t("attendance:teamTimesheet.breakApplied", { m: day.breakMinutesApplied }));
+  }
+
+  if (day.nightMinutes > 0) {
+    tooltips.push(t("attendance:teamTimesheet.nightMinutes", { m: day.nightMinutes }));
+  }
+
+  if (day.dailyLimitExceeded) {
+    tooltips.push(t("attendance:teamTimesheet.dailyLimitExceeded"));
+  }
+
+  if (day.nightLimitExceeded) {
+    tooltips.push(t("attendance:teamTimesheet.nightLimitExceeded"));
+  }
+
+  return tooltips;
 }
 
 /** First day of the calendar month that contains `date` (local time). */
@@ -295,6 +317,7 @@ function TeamWeekCell({ day, onClick, label: t }: { day: TeamWeekDay; onClick?: 
   const rest = day.workedMinutes % 60;
   const duration = day.workedMinutes <= 0 ? "—" : rest === 0 ? t("attendance:duration.hoursOnly", { h: hours }) : t("attendance:duration.hoursMinutes", { h: hours, m: rest });
   const badgeColor = day.status === "ignored" ? "gray" : flags.length > 0 ? "red" : "green";
+  const dailyWorkTooltipText = dailyWorkTooltips(day, t).join(" · ");
 
   return (
     <button
@@ -307,13 +330,27 @@ function TeamWeekCell({ day, onClick, label: t }: { day: TeamWeekDay; onClick?: 
       <Text size="sm" c={day.workedMinutes <= 0 ? "dimmed" : undefined}>
         {duration}
       </Text>
-      {flags.length > 0 && (
-        <Tooltip label={flags.map((flag) => t(`attendance:anomaly.${flag}`)).join(", ")} multiline maw={220}>
-          <Badge size="xs" color={badgeColor} variant="light">
-            {flags.length}
-          </Badge>
-        </Tooltip>
-      )}
+      <Group gap={4} wrap="nowrap">
+        {flags.length > 0 && (
+          <Tooltip label={flags.map((flag) => t(`attendance:anomaly.${flag}`)).join(", ")} multiline maw={220}>
+            <Badge size="xs" color={badgeColor} variant="light">
+              {flags.length}
+            </Badge>
+          </Tooltip>
+        )}
+        {dailyWorkTooltipText && (
+          <Tooltip label={dailyWorkTooltipText} multiline maw={220}>
+            <Badge
+              size="xs"
+              color={day.dailyLimitExceeded || day.nightLimitExceeded ? "orange" : "gray"}
+              variant="outline"
+              leftSection={day.nightMinutes > 0 ? <Moon className="h-3 w-3" /> : <Coffee className="h-3 w-3" />}
+            >
+              {" "}
+            </Badge>
+          </Tooltip>
+        )}
+      </Group>
     </button>
   );
 }
@@ -326,6 +363,7 @@ function TeamDayCard({ employeeName, day, onClick }: { employeeName: string; day
   const rest = day.workedMinutes % 60;
   const duration = day.workedMinutes <= 0 ? "—" : rest === 0 ? t("attendance:duration.hoursOnly", { h: hours }) : t("attendance:duration.hoursMinutes", { h: hours, m: rest });
   const badgeColor = day.status === "ignored" ? "gray" : flags.length > 0 ? "red" : "green";
+  const dailyWorkTooltipText = dailyWorkTooltips(day, t).join(" · ");
 
   return (
     <UnstyledButton
@@ -346,13 +384,25 @@ function TeamDayCard({ employeeName, day, onClick }: { employeeName: string; day
           {duration}
         </Text>
       </Group>
-      {flags.length > 0 && (
+      {(flags.length > 0 || dailyWorkTooltipText) && (
         <Group gap={4} wrap="wrap" mt={6}>
           {flags.map((flag) => (
             <Badge key={flag} size="xs" color={badgeColor} variant="light">
               {t(`attendance:anomaly.${flag}`)}
             </Badge>
           ))}
+          {dailyWorkTooltipText && (
+            <Tooltip label={dailyWorkTooltipText} multiline maw={220}>
+              <Badge
+                size="xs"
+                color={day.dailyLimitExceeded || day.nightLimitExceeded ? "orange" : "gray"}
+                variant="outline"
+                leftSection={day.nightMinutes > 0 ? <Moon className="h-3 w-3" /> : <Coffee className="h-3 w-3" />}
+              >
+                {" "}
+              </Badge>
+            </Tooltip>
+          )}
         </Group>
       )}
     </UnstyledButton>

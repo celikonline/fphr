@@ -43,7 +43,10 @@ public sealed record LeaveRequestOnBehalfBody(
 
 public sealed record AdjustLeaveBalanceRequest(Guid LeaveTypeId, decimal Days, DateOnly EffectiveDate, string Reason);
 
-public sealed record OvertimeRequestBody(DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description);
+public sealed record OvertimeRequestBody(
+    DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description, OvertimePayRateKind PayRateKind = OvertimePayRateKind.Rate50);
+
+public sealed record ChangeOvertimePayRateKindRequest(OvertimePayRateKind PayRateKind);
 
 public sealed record RecordOvertimeConsentRequest(DateOnly GivenAt, OvertimeConsentSource Source, bool CoversNightWork, Guid? DocumentId);
 

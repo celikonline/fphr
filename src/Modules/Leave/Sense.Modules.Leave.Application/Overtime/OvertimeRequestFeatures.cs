@@ -35,7 +35,7 @@ public static class OvertimeWarnings
 public sealed record OvertimeRequestDto(
     Guid Id, Guid EmployeeId, DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, DateTime StartAt, DateTime EndAt, OvertimeDayKind DayKind,
     int OverlapWithScheduleMinutes, int PayableMinutes, string? Description, OvertimeRequestSource Source, OvertimeRequestStatus Status,
-    Guid? ApprovalRequestId, DateTime SubmittedAt, DateTime? DecidedAt, Guid? ConversionId);
+    Guid? ApprovalRequestId, DateTime SubmittedAt, DateTime? DecidedAt, Guid? ConversionId, OvertimePayRateKind PayRateKind, decimal PayRateMultiplier);
 
 public sealed record OvertimeSubmissionDto(Guid Id, int OverlapWithScheduleMinutes, int PayableMinutes, IReadOnlyList<string> Warnings);
 
@@ -43,7 +43,7 @@ internal static class OvertimeMapper
 {
     public static OvertimeRequestDto ToDto(OvertimeRequest r) =>
         new(r.Id, r.EmployeeId, r.WorkDate, r.StartTime, r.DurationMinutes, r.StartAt, r.EndAt, r.DayKind, r.OverlapWithScheduleMinutes, r.PayableMinutes,
-            r.Description, r.Source, r.Status, r.ApprovalRequestId, r.SubmittedAt, r.DecidedAt, r.ConversionId);
+            r.Description, r.Source, r.Status, r.ApprovalRequestId, r.SubmittedAt, r.DecidedAt, r.ConversionId, r.PayRateKind, r.PayRateMultiplier);
 }
 
 public sealed record OvertimeEvaluation(OvertimeDayKind DayKind, int OverlapWithScheduleMinutes, IReadOnlyList<string> Warnings);
@@ -112,10 +112,8 @@ public sealed class OvertimeRequestRules(
             : isWorkingDay(workDate) ? OvertimeDayKind.Workday
             : OvertimeDayKind.WeeklyRest;
 
-        var limitHours = await legislation.GetDecimalOrDefaultAsync(LegislationParameterKeys.OvertimeAnnualLimitHours, workDate, FallbackAnnualLimitHours, ct);
-        var yearStart = new DateOnly(workDate.Year, 1, 1);
-        var yearTotal = (await requests.ListActiveAsync(employeeId, yearStart, yearStart.AddYears(1).AddDays(-1), ct)).Sum(r => r.DurationMinutes);
-        if (yearTotal + durationMinutes > limitHours * 60m)
+        var (yearTotal, limitMinutes) = await GetAnnualUsageAsync(employeeId, workDate.Year, workDate, ct);
+        if (yearTotal + durationMinutes > limitMinutes)
         {
             warnings.Add(OvertimeWarnings.AnnualLimitExceeded);
         }
@@ -123,10 +121,19 @@ public sealed class OvertimeRequestRules(
         return new OvertimeEvaluation(dayKind, overlap, warnings);
     }
 
+    /// <summary>270 saat sayacı (kart senseik-012 §2, "GetAnnualOvertimeUsageQuery"): calendar-year total of active (Pending/Approved) overtime minutes and the statutory annual limit, both computed on demand - no persistent counter.</summary>
+    public async Task<(int UsedMinutes, decimal LimitMinutes)> GetAnnualUsageAsync(Guid employeeId, int year, DateOnly asOf, CancellationToken ct)
+    {
+        var limitHours = await legislation.GetDecimalOrDefaultAsync(LegislationParameterKeys.OvertimeAnnualLimitHours, asOf, FallbackAnnualLimitHours, ct);
+        var yearStart = new DateOnly(year, 1, 1);
+        var yearTotal = (await requests.ListActiveAsync(employeeId, yearStart, yearStart.AddYears(1).AddDays(-1), ct)).Sum(r => r.DurationMinutes);
+        return (yearTotal, limitHours * 60m);
+    }
+
     /// <summary>Evaluate → create Pending → start the Workflow "Overtime" approval with the employee as requester.</summary>
     public async Task<Result<(OvertimeRequest Request, OvertimeSubmissionDto Submission)>> SubmitAsync(
         IWorkflowService workflow, Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, string? description,
-        OvertimeRequestSource source, DateTime now, Guid? userId, string? ip, CancellationToken ct)
+        OvertimeRequestSource source, DateTime now, Guid? userId, string? ip, CancellationToken ct, OvertimePayRateKind payRateKind = OvertimePayRateKind.Rate50)
     {
         var evaluated = await EvaluateAsync(tenantId, employeeId, workDate, startTime, durationMinutes, ct);
         if (evaluated.IsFailure)
@@ -136,7 +143,8 @@ public sealed class OvertimeRequestRules(
 
         var e = evaluated.Value;
         var created = OvertimeRequest.Submit(
-            tenantId, employeeId, workDate, startTime, durationMinutes, e.DayKind, e.OverlapWithScheduleMinutes, description, source, now, userId, ip);
+            tenantId, employeeId, workDate, startTime, durationMinutes, e.DayKind, e.OverlapWithScheduleMinutes, description, source, now, userId, ip,
+            payRateKind);
         if (created.IsFailure)
         {
             return created.Error;
@@ -156,9 +164,11 @@ public sealed class OvertimeRequestRules(
     }
 }
 
-/// <summary>Self-service overtime request ("Talep → Fazla mesai").</summary>
+/// <summary>Self-service overtime request ("Talep → Fazla mesai"). PayRateKind defaults to Rate50 (m.41 asıl fazla mesai) when omitted.</summary>
 [RequiresPermission("leave.my.overtimes")]
-public sealed record SubmitMyOvertimeRequestCommand(DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description) : ICommand<OvertimeSubmissionDto>;
+public sealed record SubmitMyOvertimeRequestCommand(
+    DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description, OvertimePayRateKind PayRateKind = OvertimePayRateKind.Rate50)
+    : ICommand<OvertimeSubmissionDto>;
 
 public sealed class SubmitMyOvertimeRequestValidator : AbstractValidator<SubmitMyOvertimeRequestCommand>
 {
@@ -182,14 +192,15 @@ public sealed class SubmitMyOvertimeRequestHandler(
 
         var submitted = await rules.SubmitAsync(
             workflow, tenant.TenantId, employeeId, command.WorkDate, command.StartTime, command.DurationMinutes, command.Description,
-            OvertimeRequestSource.Manual, clock.GetUtcNow().UtcDateTime, currentUser.UserId, currentUser.IpAddress, cancellationToken);
+            OvertimeRequestSource.Manual, clock.GetUtcNow().UtcDateTime, currentUser.UserId, currentUser.IpAddress, cancellationToken, command.PayRateKind);
         return submitted.IsFailure ? submitted.Error : submitted.Value.Submission;
     }
 }
 
 /// <summary>CreateOvertimeRequestOnBehalf: a manager/HR adds overtime for an employee in scope (Source = Admin); approval still runs.</summary>
 [RequiresPermission("leave.overtimes.create_on_behalf")]
-public sealed record CreateOvertimeRequestOnBehalfCommand(Guid EmployeeId, DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description)
+public sealed record CreateOvertimeRequestOnBehalfCommand(
+    Guid EmployeeId, DateOnly WorkDate, TimeOnly StartTime, int DurationMinutes, string? Description, OvertimePayRateKind PayRateKind = OvertimePayRateKind.Rate50)
     : ICommand<OvertimeSubmissionDto>;
 
 public sealed class CreateOvertimeRequestOnBehalfValidator : AbstractValidator<CreateOvertimeRequestOnBehalfCommand>
@@ -214,8 +225,32 @@ public sealed class CreateOvertimeRequestOnBehalfHandler(
 
         var submitted = await rules.SubmitAsync(
             workflow, tenant.TenantId, command.EmployeeId, command.WorkDate, command.StartTime, command.DurationMinutes, command.Description,
-            OvertimeRequestSource.Admin, clock.GetUtcNow().UtcDateTime, currentUser.UserId, currentUser.IpAddress, cancellationToken);
+            OvertimeRequestSource.Admin, clock.GetUtcNow().UtcDateTime, currentUser.UserId, currentUser.IpAddress, cancellationToken, command.PayRateKind);
         return submitted.IsFailure ? submitted.Error : submitted.Value.Submission;
+    }
+}
+
+/// <summary>HR/yönetici düzeltmesi (m.41, kart senseik-012 §1): oran seçimi ancak talep hâlâ Pending iken değiştirilebilir.</summary>
+[RequiresPermission("leave.overtimes.create_on_behalf")]
+public sealed record ChangeOvertimePayRateKindCommand(Guid RequestId, OvertimePayRateKind PayRateKind) : ICommand;
+
+public sealed class ChangeOvertimePayRateKindHandler(IDataScopeService dataScope, IOvertimeRequestRepository requests)
+    : ICommandHandler<ChangeOvertimePayRateKindCommand>
+{
+    public async Task<Result> Handle(ChangeOvertimePayRateKindCommand command, CancellationToken cancellationToken)
+    {
+        var request = await requests.FindByIdAsync(command.RequestId, cancellationToken);
+        if (request is null)
+        {
+            return Error.NotFound(LeaveDomainErrors.OvertimeNotFound);
+        }
+
+        if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesCreateOnBehalf.Key, request.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        return request.ChangePayRateKind(command.PayRateKind);
     }
 }
 
@@ -281,6 +316,49 @@ public sealed class ListEmployeeOvertimeRequestsHandler(IOvertimeRequestReposito
 
         IReadOnlyList<OvertimeRequestDto> list = (await requests.ListByEmployeeAsync(query.EmployeeId, query.Take, cancellationToken)).Select(OvertimeMapper.ToDto).ToList();
         return Result.Success(list);
+    }
+}
+
+/// <summary>270 saat yıllık sınır göstergesi (kart senseik-012 §2, "Fazla Mesailerim" sayfası + onay formu).</summary>
+public sealed record AnnualOvertimeUsageDto(int Year, int UsedMinutes, decimal LimitMinutes, bool Exceeded);
+
+[RequiresPermission("leave.my.overtimes")]
+public sealed record GetMyAnnualOvertimeUsageQuery(int? Year = null) : IQuery<AnnualOvertimeUsageDto>;
+
+public sealed class GetMyAnnualOvertimeUsageHandler(ICurrentUser currentUser, OvertimeRequestRules rules, TimeProvider clock)
+    : IQueryHandler<GetMyAnnualOvertimeUsageQuery, AnnualOvertimeUsageDto>
+{
+    public async Task<Result<AnnualOvertimeUsageDto>> Handle(GetMyAnnualOvertimeUsageQuery query, CancellationToken cancellationToken)
+    {
+        if (currentUser.EmployeeId is not { } employeeId)
+        {
+            return Error.NotFound(LeaveErrors.NoEmployeeForUser);
+        }
+
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var year = query.Year ?? today.Year;
+        var (used, limit) = await rules.GetAnnualUsageAsync(employeeId, year, new DateOnly(year, 1, 1), cancellationToken);
+        return new AnnualOvertimeUsageDto(year, used, limit, used > limit);
+    }
+}
+
+[RequiresPermission("leave.overtimes.read")]
+public sealed record GetEmployeeAnnualOvertimeUsageQuery(Guid EmployeeId, int? Year = null) : IQuery<AnnualOvertimeUsageDto>;
+
+public sealed class GetEmployeeAnnualOvertimeUsageHandler(IDataScopeService dataScope, OvertimeRequestRules rules, TimeProvider clock)
+    : IQueryHandler<GetEmployeeAnnualOvertimeUsageQuery, AnnualOvertimeUsageDto>
+{
+    public async Task<Result<AnnualOvertimeUsageDto>> Handle(GetEmployeeAnnualOvertimeUsageQuery query, CancellationToken cancellationToken)
+    {
+        if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesRead.Key, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
+        var year = query.Year ?? today.Year;
+        var (used, limit) = await rules.GetAnnualUsageAsync(query.EmployeeId, year, new DateOnly(year, 1, 1), cancellationToken);
+        return new AnnualOvertimeUsageDto(year, used, limit, used > limit);
     }
 }
 

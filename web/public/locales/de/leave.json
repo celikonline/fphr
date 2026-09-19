@@ -413,6 +413,17 @@
       "weeklyRest": "Wochenruhetag",
       "publicHoliday": "Feiertag"
     },
+    "payRate": {
+      "label": "Zuschlagssatz",
+      "hint": "Arbeitsgesetz Art. 41: Überstunden über die wöchentliche 45-Stunden-Grenze werden mit 50% Zuschlag, Überstunden innerhalb einer vertraglich verkürzten Woche mit 25% Zuschlag vergütet.",
+      "rate25": "25% Zuschlag",
+      "rate50": "50% Zuschlag"
+    },
+    "annualUsage": {
+      "title": "Jährliche Überstunden {{year}}",
+      "usedOfLimit": "{{used}} / {{limit}}",
+      "exceeded": "Die gesetzliche Jahresgrenze von 270 Stunden wurde überschritten."
+    },
     "sources": {
       "manual": "Antrag",
       "attendance": "Zeiterfassung",

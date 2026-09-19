@@ -808,6 +808,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<DateOnly?>("UsedByDate")
+                        .HasColumnType("date")
+                        .HasColumnName("used_by_date");
+
                     b.HasKey("Id")
                         .HasName("pk_overtime_conversions");
 
@@ -881,6 +885,17 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                     b.Property<int>("OverlapWithScheduleMinutes")
                         .HasColumnType("integer")
                         .HasColumnName("overlap_with_schedule_minutes");
+
+                    b.Property<string>("PayRateKind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("pay_rate_kind");
+
+                    b.Property<decimal>("PayRateMultiplier")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("pay_rate_multiplier");
 
                     b.Property<int>("PayableMinutes")
                         .HasColumnType("integer")

@@ -30,6 +30,17 @@ public enum OvertimeDayKind
 }
 
 /// <summary>
+/// 4857 md.41 ücret oranı seçimi (kart senseik-012 §1): Rate25 = normal saat ücretinin %25 fazlası (haftalık 45 saati
+/// aşmayan, sözleşmede kısaltılmış haftalık süre üstüne yapılan fazla çalışma), Rate50 = %50 fazlası (asıl m.41 fazla
+/// mesai - haftalık 45 saati aşan çalışma). MVP: HR/yönetici seçimi elle yapar (otomatik öneri roadmap'te).
+/// </summary>
+public enum OvertimePayRateKind
+{
+    Rate25 = 0,
+    Rate50 = 1,
+}
+
+/// <summary>
 /// Overtime ("fazla mesai") request. Times are the employee's local wall-clock: <see cref="WorkDate"/> + <see cref="StartTime"/>
 /// for <see cref="DurationMinutes"/> (may cross midnight). <see cref="PayableMinutes"/> = DurationMinutes − the part that
 /// overlaps the planned work schedule (11.3.5 15.09 addendum). Lifecycle mirrors LeaveRequest: Pending → Approved | Rejected
@@ -68,6 +79,13 @@ public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public string? Description { get; private set; }
 
+    /// <summary>m.41 ücret oranı seçimi (kart senseik-012 §1).</summary>
+    public OvertimePayRateKind PayRateKind { get; private set; }
+
+    /// <summary>Seçim anındaki oran anlık görüntüsü (1.25 veya 1.5) - <see cref="PayRateKind"/> için ileride bir
+    /// idari düzeltme (örn. oran tanımı değişirse) geçmiş kayıtları etkilemez.</summary>
+    public decimal PayRateMultiplier { get; private set; }
+
     public OvertimeRequestSource Source { get; private set; }
 
     public OvertimeRequestStatus Status { get; private set; }
@@ -92,7 +110,8 @@ public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public static Result<OvertimeRequest> Submit(
         Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, OvertimeDayKind dayKind, int overlapWithScheduleMinutes,
-        string? description, OvertimeRequestSource source, DateTime submittedAt, Guid? submittedByUserId, string? ip)
+        string? description, OvertimeRequestSource source, DateTime submittedAt, Guid? submittedByUserId, string? ip,
+        OvertimePayRateKind payRateKind = OvertimePayRateKind.Rate50)
     {
         if (durationMinutes <= 0 || durationMinutes > OvertimeLimits.MaxDurationMinutes)
         {
@@ -113,8 +132,26 @@ public sealed class OvertimeRequest : TenantAggregateRoot<Guid>, IAuditLogged
             OverlapWithScheduleMinutes = overlapWithScheduleMinutes,
             PayableMinutes = durationMinutes - overlapWithScheduleMinutes,
             Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+            PayRateKind = payRateKind,
+            PayRateMultiplier = PayRateMultiplierOf(payRateKind),
         };
     }
+
+    /// <summary>HR/yönetici onaylı düzeltme: gönderimden sonra oran değişirse (kart senseik-012 §1 - MVP'de manuel seçim).</summary>
+    public Result ChangePayRateKind(OvertimePayRateKind payRateKind)
+    {
+        if (Status != OvertimeRequestStatus.Pending)
+        {
+            return Error.Conflict(LeaveDomainErrors.OvertimeNotPending);
+        }
+
+        PayRateKind = payRateKind;
+        PayRateMultiplier = PayRateMultiplierOf(payRateKind);
+        return Result.Success();
+    }
+
+    public static decimal PayRateMultiplierOf(OvertimePayRateKind kind) =>
+        kind == OvertimePayRateKind.Rate25 ? 1.25m : 1.5m;
 
     public void AttachApproval(Guid approvalRequestId) => ApprovalRequestId = approvalRequestId;
 

@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Alert, Badge, Button, Card, Group, Input, Modal, NumberInput, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
+import { Alert, Badge, Button, Card, Group, Input, Modal, NumberInput, Progress, Radio, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -10,7 +10,14 @@ import { TimePicker } from "@/components/ui/time-picker";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
-import type { OvertimeRequest, OvertimeRequestInput, OvertimeRequestStatus, OvertimeSubmission } from "@/services/leave.service";
+import type {
+  AnnualOvertimeUsage,
+  OvertimePayRateKind,
+  OvertimeRequest,
+  OvertimeRequestInput,
+  OvertimeRequestStatus,
+  OvertimeSubmission,
+} from "@/services/leave.service";
 
 /** Backend OvertimeLimits.MaxDurationMinutes (one record is at most a day). */
 export const OVERTIME_MAX_MINUTES = 24 * 60;
@@ -61,6 +68,45 @@ const STATUS_BADGE: Record<OvertimeRequestStatus, Pick<BadgeProps, "variant" | "
 export function OvertimeStatusBadge({ status }: { status: OvertimeRequestStatus }) {
   const { t } = useTranslation(["leave"]);
   return <Badge {...STATUS_BADGE[status]}>{t(`leave:status.${status}`)}</Badge>;
+}
+
+/** İş K. m.41 ücret oranı rozeti (kart senseik-012 §1). */
+export function OvertimePayRateBadge({ kind }: { kind: OvertimePayRateKind }) {
+  const { t } = useTranslation(["leave"]);
+  return (
+    <Badge variant="outline" color={kind === "rate50" ? "grape" : "cyan"}>
+      {t(`leave:overtime.payRate.${kind}`)}
+    </Badge>
+  );
+}
+
+/**
+ * 270 saat yıllık fazla mesai sınırı göstergesi (kart senseik-012 §2, "GetAnnualOvertimeUsageQuery"): "Fazla
+ * Mesailerim" sayfası ve onay formunda kullanılır. Provizyon değil, o ana kadarki Pending/Approved talep toplamıdır.
+ */
+export function AnnualOvertimeUsageGauge({ usage }: { usage: AnnualOvertimeUsage }) {
+  const { t } = useTranslation(["leave"]);
+  const minutes = useMinutes();
+  const percent = usage.limitMinutes > 0 ? Math.min((usage.usedMinutes / usage.limitMinutes) * 100, 100) : 0;
+
+  return (
+    <Stack gap={4}>
+      <Group justify="space-between" gap="xs">
+        <Text size="sm" fw={500}>
+          {t("leave:overtime.annualUsage.title", { year: usage.year })}
+        </Text>
+        <Text size="sm" c={usage.exceeded ? "red" : "dimmed"}>
+          {t("leave:overtime.annualUsage.usedOfLimit", { used: minutes(usage.usedMinutes), limit: minutes(usage.limitMinutes) })}
+        </Text>
+      </Group>
+      <Progress value={percent} color={usage.exceeded ? "red" : percent > 80 ? "yellow" : "blue"} size="md" radius="sm" />
+      {usage.exceeded && (
+        <Text size="xs" c="red">
+          {t("leave:overtime.annualUsage.exceeded")}
+        </Text>
+      )}
+    </Stack>
+  );
 }
 
 /** Overtime list (Tarih, Başlangıç, Süre, Ödenecek, Gün türü, Durum, Kaynak, Açıklama); newest work date first. */
@@ -123,6 +169,13 @@ export function OvertimesTable({ rows, actions }: { rows: OvertimeRequest[]; act
       accessorFn: (row) => t(`leave:overtime.dayKinds.${row.dayKind}`),
       header: t("leave:overtime.dayKind"),
       meta: { label: t("leave:overtime.dayKind") },
+    },
+    {
+      id: "payRateKind",
+      accessorKey: "payRateKind",
+      header: t("leave:overtime.payRate.label"),
+      meta: { label: t("leave:overtime.payRate.label") },
+      cell: ({ row }) => <OvertimePayRateBadge kind={row.original.payRateKind} />,
     },
     {
       id: "status",
@@ -224,6 +277,9 @@ function OvertimesMobileList({ rows, actions }: { rows: OvertimeRequest[]; actio
             <Text size="xs" c="dimmed">
               {formatTimeOnly(row.startTime)} · {minutes(row.durationMinutes)} · {t(`leave:overtime.dayKinds.${row.dayKind}`)}
             </Text>
+            <Group gap={4}>
+              <OvertimePayRateBadge kind={row.payRateKind} />
+            </Group>
             <Text size="xs" c="dimmed">
               {t("leave:overtime.payable")}: {minutes(row.payableMinutes)} · {t(`leave:overtime.sources.${row.source}`)}
             </Text>
@@ -264,6 +320,7 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
   const [hours, setHours] = useState("");
   const [mins, setMins] = useState("");
   const [description, setDescription] = useState("");
+  const [payRateKind, setPayRateKind] = useState<OvertimePayRateKind>("rate50");
   const [error, setError] = useState<string | null>(null);
   const [submission, setSubmission] = useState<OvertimeSubmission | null>(null);
 
@@ -288,7 +345,7 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
       return setError(t("leave:overtime.validation.duration", { max: OVERTIME_MAX_MINUTES / 60 }));
     }
     setError(null);
-    mutation.mutate({ workDate, startTime: `${startTime}:00`, durationMinutes: total, description: description.trim() || null });
+    mutation.mutate({ workDate, startTime: `${startTime}:00`, durationMinutes: total, description: description.trim() || null, payRateKind });
   }
 
   const busy = mutation.isPending;
@@ -374,6 +431,17 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
                   </Group>
                 </div>
               </Input.Wrapper>
+              <Radio.Group
+                value={payRateKind}
+                onChange={(value) => setPayRateKind(value as OvertimePayRateKind)}
+                label={t("leave:overtime.payRate.label")}
+                description={t("leave:overtime.payRate.hint")}
+              >
+                <Group gap="lg" mt={4}>
+                  <Radio value="rate50" label={t("leave:overtime.payRate.rate50")} disabled={busy} />
+                  <Radio value="rate25" label={t("leave:overtime.payRate.rate25")} disabled={busy} />
+                </Group>
+              </Radio.Group>
               <Textarea
                 id="overtime-description"
                 label={t("leave:requests.description")}

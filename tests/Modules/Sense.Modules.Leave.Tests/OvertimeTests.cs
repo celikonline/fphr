@@ -5,7 +5,10 @@ using NSubstitute;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Employee.Infrastructure.Lookups;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Overtime;
 using Sense.Modules.Leave.Contracts;
@@ -151,12 +154,19 @@ public sealed class OvertimeIntegrationTests : TestFixture
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
         services.AddSingleton(holidays);
+
+        // senseik-007 (age-50-exception): EmployeeHiredHandler now needs IEmployeeBirthDateLookup - without it, DI
+        // validation fails for every test in this fixture (WorkerRegistration_ResolvesEveryLeaveIntegrationEventHandler
+        // and beyond), same pattern as LeaveBalanceRecalculationJobTests.
+        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
     }
 
     protected override async Task OnDatabaseReadyAsync()
     {
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
         await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
+        await ServiceProvider.GetRequiredService<EmployeeDbContext>().Database.MigrateAsync();
     }
 
     private async Task<Result<T>> RunAsync<THandler, T>(Func<THandler, Task<Result<T>>> run, params object[] args)
@@ -307,5 +317,55 @@ public sealed class OvertimeIntegrationTests : TestFixture
 
         using var verify = ServiceProvider.CreateScope();
         (await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().OvertimeRequests.SingleAsync(r => r.Id == requestId)).Status.ShouldBe(OvertimeRequestStatus.Rejected);
+    }
+
+    // Kart senseik-012 §4 (Puantaj -> Bordro Kontratı): bir Rate25 talep hiç dönüştürülmemiş (nakit ödenecek), bir
+    // Rate50 talep serbest zamana çevrilmiş (nakitten düşülür, TimeOffConvertedMinutes'e yazılır).
+    [Fact]
+    public async Task OvertimePayrollReader_SeparatesRateBucketsFromTimeOffConversions()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid rate50RequestId;
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+
+            var rate25 = OvertimeRequest.Submit(
+                tenantId, employeeId, new DateOnly(2026, 9, 3), new TimeOnly(17, 0), 120, OvertimeDayKind.Workday, 0, null,
+                OvertimeRequestSource.Manual, DateTime.UtcNow, null, null, OvertimePayRateKind.Rate25).Value;
+            var rate25Approval = Guid.NewGuid();
+            rate25.AttachApproval(rate25Approval);
+            rate25.Approve(rate25Approval, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            db.OvertimeRequests.Add(rate25);
+
+            var rate50 = OvertimeRequest.Submit(
+                tenantId, employeeId, new DateOnly(2026, 9, 10), new TimeOnly(17, 0), 120, OvertimeDayKind.Workday, 0, null,
+                OvertimeRequestSource.Manual, DateTime.UtcNow, null, null, OvertimePayRateKind.Rate50).Value;
+            var rate50Approval = Guid.NewGuid();
+            rate50.AttachApproval(rate50Approval);
+            rate50.Approve(rate50Approval, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            db.OvertimeRequests.Add(rate50);
+            rate50RequestId = rate50.Id;
+
+            var conversion = OvertimeConversion.ToTimeOff(
+                rate50, OvertimeMinutesBasis.Payable, 1.5m, 450, Guid.NewGuid(), null, DateTime.UtcNow, null, new DateOnly(2027, 3, 10)).Value;
+            rate50.MarkConverted(conversion.Id).IsSuccess.ShouldBeTrue();
+            db.OvertimeConversions.Add(conversion);
+
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
+        using var read = ServiceProvider.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IOvertimePayrollReader>();
+        var result = await reader.GetAsync(tenantId, 2026, 9, [employeeId], TestContext.Current.CancellationToken);
+
+        var line = result.ShouldHaveSingleItem();
+        line.EmployeeId.ShouldBe(employeeId);
+        line.Rate25Minutes.ShouldBe(120); // rate25 talebi hiç dönüştürülmedi -> nakit.
+        line.Rate50Minutes.ShouldBe(0); // rate50 talebi dönüştürüldü -> nakit kovasından düşer.
+        line.TimeOffConvertedMinutes.ShouldBe(180); // 120dk x 1.5.
     }
 }

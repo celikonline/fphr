@@ -32,10 +32,17 @@ public sealed class MyOvertimeController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<OvertimeSubmissionDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Submit([FromBody] OvertimeRequestBody request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new SubmitMyOvertimeRequestCommand(request.WorkDate, request.StartTime, request.DurationMinutes, request.Description), ct));
+        FromResult(await Dispatcher.Send(
+            new SubmitMyOvertimeRequestCommand(request.WorkDate, request.StartTime, request.DurationMinutes, request.Description, request.PayRateKind), ct));
 
     [HttpPost(ApiRoutes.IdParam + "/withdraw")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Withdraw(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new WithdrawOvertimeRequestCommand(id), ct));
+
+    /// <summary>270 saat yıllık sınır göstergesi (kart senseik-012).</summary>
+    [HttpGet("annual-usage")]
+    [ProducesResponseType<AnnualOvertimeUsageDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AnnualUsage([FromQuery] int? year, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMyAnnualOvertimeUsageQuery(year), ct));
 }
