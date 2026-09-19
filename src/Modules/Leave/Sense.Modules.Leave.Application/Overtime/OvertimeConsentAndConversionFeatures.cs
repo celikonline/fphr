@@ -217,6 +217,72 @@ public sealed class ConvertOvertimeToTimeOffHandler(
     }
 }
 
+/// <summary>
+/// "Ödemeye çevir" (kart senseik-030): approved overtime → explicit Kind=Pay conversion, no ledger row. Money is not
+/// computed here - Leave has no salary access (Modules_TalkOnlyThroughContracts); Payroll reads the payable minutes
+/// through <c>IOvertimePayrollReader</c> during its own gross calculation (a never-converted request and a Kind=Pay one
+/// land in the same cash bucket there - see that contract's doc comment). This command mainly (a) records HR's explicit
+/// decision for audit and (b) blocks a later TimeOff conversion of the same request.
+/// </summary>
+[RequiresPermission("leave.overtimes.convert")]
+public sealed record ConvertOvertimeToPayCommand(Guid EmployeeId, Guid OvertimeRequestId, OvertimeMinutesBasis MinutesBasis, string? Note) : ICommand<OvertimeConversionDto>;
+
+public sealed class ConvertOvertimeToPayValidator : AbstractValidator<ConvertOvertimeToPayCommand>
+{
+    public ConvertOvertimeToPayValidator()
+    {
+        RuleFor(x => x.Note).MaximumLength(LeaveLimits.ReasonMaxLength);
+    }
+}
+
+public sealed class ConvertOvertimeToPayHandler(
+    ICurrentUser currentUser,
+    IDataScopeService dataScope,
+    IOvertimeRequestRepository requests,
+    IOvertimeConversionRepository conversions,
+    IIntegrationEventOutbox outbox,
+    TimeProvider clock)
+    : ICommandHandler<ConvertOvertimeToPayCommand, OvertimeConversionDto>
+{
+    public async Task<Result<OvertimeConversionDto>> Handle(ConvertOvertimeToPayCommand command, CancellationToken cancellationToken)
+    {
+        if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesConvert.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        if (command.MinutesBasis == OvertimeMinutesBasis.Full
+            && !await dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesOverridePayable.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.OverridePayableNotAllowed);
+        }
+
+        var request = await requests.FindByIdAsync(command.OvertimeRequestId, cancellationToken);
+        if (request is null || request.EmployeeId != command.EmployeeId)
+        {
+            return Error.NotFound(LeaveDomainErrors.OvertimeNotFound);
+        }
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        var conversion = OvertimeConversion.ToPay(request, command.MinutesBasis, currentUser.UserId, now, command.Note);
+        if (conversion.IsFailure)
+        {
+            return conversion.Error;
+        }
+
+        var marked = request.MarkConverted(conversion.Value.Id);
+        if (marked.IsFailure)
+        {
+            return marked.Error;
+        }
+
+        conversions.Add(conversion.Value);
+        var c = conversion.Value;
+        outbox.Enqueue(new OvertimeConvertedToPay(c.TenantId, request.Id, c.Id, c.EmployeeId, request.WorkDate, c.MinutesBasis.ToString(), c.BasisMinutes, c.RateSnapshot));
+        return OvertimeConsentMapper.ToDto(conversion.Value);
+    }
+}
+
 [RequiresPermission("leave.overtimes.read")]
 public sealed record ListOvertimeConversionsQuery(Guid EmployeeId, int Take = PagingDefaults.MaxPageSize) : IQuery<IReadOnlyList<OvertimeConversionDto>>;
 

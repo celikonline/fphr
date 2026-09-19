@@ -54,6 +54,11 @@ public sealed class LeaveEmployeeOvertimeController : ApiControllerBase
     public async Task<IActionResult> ConvertToTimeOff(Guid employeeId, Guid id, [FromBody] ConvertOvertimeToTimeOffRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ConvertOvertimeToTimeOffCommand(employeeId, id, request.Rate, request.MinutesBasis, request.LeaveTypeId, request.Note), ct));
 
+    [HttpPost("overtimes/" + ApiRoutes.IdParam + "/convert-to-pay")]
+    [ProducesResponseType<OvertimeConversionDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ConvertToPay(Guid employeeId, Guid id, [FromBody] ConvertOvertimeToPayRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ConvertOvertimeToPayCommand(employeeId, id, request.MinutesBasis, request.Note), ct));
+
     [HttpGet("overtime-conversions")]
     [ProducesResponseType<IReadOnlyList<OvertimeConversionDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Conversions(Guid employeeId, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>

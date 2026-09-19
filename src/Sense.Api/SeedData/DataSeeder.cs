@@ -110,6 +110,8 @@ public partial class DataSeeder(
             if (_demoLeaveSeed is { } demoLeave)
             {
                 await SeedDemoLeaveAsync(demoLeave, cancellationToken);
+                // kart senseik-030: sample overtime data for the new monthly overtime report + pay conversion demo.
+                await SeedDemoOvertimeAsync(demoLeave, cancellationToken);
             }
 
             await employeeCtx.SaveChangesAsync(cancellationToken);
