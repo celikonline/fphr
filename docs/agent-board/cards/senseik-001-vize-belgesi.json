@@ -14,5 +14,5 @@
   "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck + eslint temiz",
   "handoff": "docs/handoffs/visa-document-request.md",
   "source": "11.7-yol-haritasi.md Faz 1 (vize belgesi); form testi raporunda 'Vize Belge Talebi' eksik işaretli",
-  "merge_gate_status": "dotnet build (Documents.Api/Sense.Api/Migrator/Worker) + Documents.Tests 165/165 + Architecture 56/56 + web tsc/eslint/vitest yeşil; Testcontainers/entegrasyon testleri ve gerçek MinIO/Workflow uçtan uca Docker kapalı olduğu için ÇALIŞTIRILMADI - CI'da doğrulanmalı"
+  "merge_gate_status": "dotnet build (Documents.Api/Sense.Api/Migrator/Worker) + Documents.Tests 180/180 + Architecture 56/56 + web tsc/eslint/vitest yeşil; Testcontainers/entegrasyon testleri ve gerçek MinIO/Workflow uçtan uca Docker kapalı olduğu için ÇALIŞTIRILMADI - CI'da doğrulanmalı"
 }
