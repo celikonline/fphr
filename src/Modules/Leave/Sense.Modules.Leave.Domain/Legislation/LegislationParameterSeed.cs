@@ -90,10 +90,8 @@ public static class LegislationParameterSeed
             """[{"upperBoundDays":183,"weeks":2},{"upperBoundDays":548,"weeks":4},{"upperBoundDays":1095,"weeks":6},{"upperBoundDays":null,"weeks":8}]""",
             "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)"),
 
-        // senseik-036 (izin türü seed düzeltme paketi): süt izni ve çoğul gebelikte doğum izni - her ikisi de 7578
-        // s.K. öncesi mevcut, değişiklikten etkilenmeyen md.74 hükümleri (bkz. handoff'taki hukuki doğrulama).
-        P(42, "Leave.Maternity.MultipleBirthPreBirthExtraWeeks", 2m, Law4857, null, Md74 + " - çoğul gebelikte doğum öncesi süreye eklenen ilave hafta"),
-        P(43, "Leave.Breastfeeding.HoursPerDay", 1.5m, Law4857, null, Md74 + "/son - 1 yaşından küçük çocuk için günde toplam süt izni"),
+        // senseik-036 (izin türü seed düzeltme paketi): süt izni saati (4857 md.74/son; 7578 s.K. bu hükmü değiştirmedi).
+        P(42, "Leave.Breastfeeding.HoursPerDay", 1.5m, Law4857, null, Md74 + "/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

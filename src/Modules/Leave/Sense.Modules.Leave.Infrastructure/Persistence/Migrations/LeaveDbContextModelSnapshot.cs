@@ -658,6 +658,16 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Key = "Notice.WeeksBySeniorityTiers",
                             Source = "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)",
                             ValueJson = "[{\"upperBoundDays\":183,\"weeks\":2},{\"upperBoundDays\":548,\"weeks\":4},{\"upperBoundDays\":1095,\"weeks\":6},{\"upperBoundDays\":null,\"weeks\":8}]"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000042"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 1.5m,
+                            EffectiveFrom = new DateOnly(2003, 6, 10),
+                            Key = "Leave.Breastfeeding.HoursPerDay",
+                            Source = "4857 s. İş Kanunu md.74 (RG 10.06.2003/25134)/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"
                         });
                 });
 

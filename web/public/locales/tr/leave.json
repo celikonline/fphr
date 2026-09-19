@@ -22,7 +22,6 @@
     "type_foster_care": "Koruyucu aile izni",
     "type_template_remote_work": "Uzaktan Çalışma",
     "type_template_birthday": "Doğum günü izni",
-    "type_maternity_multiple_birth": "Doğum izni (çoğul gebelik)",
     "type_breastfeeding": "Süt izni",
     "type_disabled_child": "Engelli/süreğen hastalıklı çocuk izni"
   },
@@ -42,7 +41,6 @@
     "fosterCare": "Koruyucu aile izni",
     "remoteWork": "Uzaktan Çalışma",
     "birthday": "Doğum günü izni",
-    "maternityMultipleBirth": "Doğum izni (çoğul gebelik)",
     "breastfeeding": "Süt izni",
     "disabledChild": "Engelli/süreğen hastalıklı çocuk izni"
   },

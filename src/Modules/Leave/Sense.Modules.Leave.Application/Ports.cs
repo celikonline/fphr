@@ -69,7 +69,7 @@ public static class StatutoryLeaveResolver
         LegislationParameterKeys.AnnualOldAgeMin, LegislationParameterKeys.AnnualAgeExceptionMinDays, LegislationParameterKeys.PaternityDays,
         LegislationParameterKeys.MaternityPreBirthWeeks, LegislationParameterKeys.MaternityPostBirthWeeks, LegislationParameterKeys.MarriageDays,
         LegislationParameterKeys.BereavementDays, LegislationParameterKeys.FosterCareDays, LegislationParameterKeys.PaidMilitaryServiceDays,
-        LegislationParameterKeys.MaternityMultipleBirthPreBirthExtraWeeks, LegislationParameterKeys.BreastfeedingHoursPerDay,
+        LegislationParameterKeys.BreastfeedingHoursPerDay,
         LegislationParameterKeys.DisabledChildDaysPerYear, LegislationParameterKeys.JobSearchMinHoursPerDay,
     ];
 
@@ -102,7 +102,6 @@ public static class StatutoryLeaveResolver
             D(LegislationParameterKeys.BereavementDays, fallback.BereavementDays),
             D(LegislationParameterKeys.FosterCareDays, fallback.FosterCareDays),
             D(LegislationParameterKeys.PaidMilitaryServiceDays, fallback.PaidMilitaryServiceDays),
-            D(LegislationParameterKeys.MaternityMultipleBirthPreBirthExtraWeeks, fallback.MaternityMultipleBirthPreBirthExtraWeeks),
             D(LegislationParameterKeys.BreastfeedingHoursPerDay, fallback.BreastfeedingHoursPerDay),
             D(LegislationParameterKeys.DisabledChildDaysPerYear, fallback.DisabledChildDaysPerYear),
             D(LegislationParameterKeys.JobSearchMinHoursPerDay, fallback.JobSearchMinHoursPerDay));

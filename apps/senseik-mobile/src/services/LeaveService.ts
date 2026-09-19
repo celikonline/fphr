@@ -24,6 +24,8 @@ export type LeaveTypeCode =
   | "paidMilitaryService"
   | "unpaid"
   | "fosterCare"
+  | "breastfeeding"
+  | "disabledChild"
   | "remoteWork"
   | "birthday";
 
@@ -121,6 +123,8 @@ const LEAVE_TYPE_NAMES: Readonly<Record<string, string>> = {
   "leave.type.paid_military_service": "Bedelli askerlik izni",
   "leave.type.unpaid": "Ücretsiz izin",
   "leave.type.foster_care": "Koruyucu aile izni",
+  "leave.type.breastfeeding": "Süt izni",
+  "leave.type.disabled_child": "Engelli/süreğen hastalıklı çocuk izni",
   "leave.type.template.remote_work": "Uzaktan Çalışma",
   "leave.type.template.birthday": "Doğum günü izni",
 };

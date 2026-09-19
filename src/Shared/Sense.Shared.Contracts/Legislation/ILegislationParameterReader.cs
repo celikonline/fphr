@@ -88,9 +88,6 @@ public static class LegislationParameterKeys
     public const string PaidMilitaryServiceDays = "Leave.PaidMilitaryService.Days";
     public const string JobSearchMinHoursPerDay = "Leave.JobSearch.MinHoursPerDay";
 
-    /// <summary>senseik-036: 4857 md.74 - çoğul gebelikte doğum öncesi süreye eklenen ilave hafta.</summary>
-    public const string MaternityMultipleBirthPreBirthExtraWeeks = "Leave.Maternity.MultipleBirthPreBirthExtraWeeks";
-
     /// <summary>senseik-036: 4857 md.74/son - 1 yaşından küçük çocuk için günde toplam süt izni saati.</summary>
     public const string BreastfeedingHoursPerDay = "Leave.Breastfeeding.HoursPerDay";
     public const string OvertimeAnnualLimitHours = "Overtime.AnnualLimitHours";

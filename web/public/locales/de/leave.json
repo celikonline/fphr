@@ -22,7 +22,6 @@
     "type_foster_care": "Pflegeelternurlaub",
     "type_template_remote_work": "Remote-Arbeit",
     "type_template_birthday": "Geburtstagsurlaub",
-    "type_maternity_multiple_birth": "Mutterschaftsurlaub (Mehrlingsgeburt)",
     "type_breastfeeding": "Stillzeit",
     "type_disabled_child": "Urlaub für Eltern eines behinderten/chronisch kranken Kindes"
   },
@@ -42,7 +41,6 @@
     "fosterCare": "Pflegeelternurlaub",
     "remoteWork": "Remote-Arbeit",
     "birthday": "Geburtstagsurlaub",
-    "maternityMultipleBirth": "Mutterschaftsurlaub (Mehrlingsgeburt)",
     "breastfeeding": "Stillzeit",
     "disabledChild": "Urlaub für Eltern eines behinderten/chronisch kranken Kindes"
   },

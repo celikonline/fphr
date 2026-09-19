@@ -272,10 +272,10 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
             annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
         }
 
-        // 14 days accrued; Mon..Fri of a future week = 5 working days + the Saturday rule (full Mon–Fri
-        // taken with the default schedule's IncludeSaturdayWhenFullWeek flag) = 6 leave days.
+        // 14 days accrued; Mon..Thu of a future week = 4 leave days, which leaves exactly the 10-day block
+        // (İş K. m.56/3, senseik-036) - a 6-day request would leave 8 and is rejected, see Submit_AnnualLeave_...
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
-        var submitted = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(4));
+        var submitted = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(3));
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
 
         (await SubmitAsync(tenantId, annualId, monday.AddDays(2), monday.AddDays(3))).Error.Code.ShouldBe(LeaveRequestErrors.Overlap);
@@ -287,12 +287,48 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
         var request = await db.Requests.SingleAsync(r => r.Id == submitted.Value.Id);
         request.Status.ShouldBe(LeaveRequestStatus.Approved);
-        request.CalculatedDays.ShouldBe(6m);
+        request.CalculatedDays.ShouldBe(4m);
         request.ApprovalRequestId.ShouldBe(approvalId);
         var usage = await db.LedgerEntries.SingleAsync(e => e.Type == LeaveLedgerEntryType.Usage);
-        usage.Amount.ShouldBe(-6m);
+        usage.Amount.ShouldBe(-4m);
         usage.EffectiveDate.ShouldBe(monday);
         usage.SourceRefId.ShouldBe(submitted.Value.Id);
+    }
+
+    /// <summary>
+    /// senseik-036 (İş K. m.56/3): the Annual type's "en az ardışık gün" = 10 is enforced as "a short request may not strand the
+    /// last 10-day block" - not as a per-request minimum, so ordinary short annual leave keeps working.
+    /// </summary>
+    [Fact]
+    public async Task Submit_AnnualLeave_RejectsShortRequestThatStrandsTheMinimumBlock_ButAllowsOthers()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            var annual = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual);
+            annual.MinConsecutiveDays.ShouldBe(10m);
+            annualId = annual.Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+
+        // 14 accrued days: a full Mon–Fri week (6 leave days with the Saturday rule) would leave 8 - no 10-day part possible.
+        (await SubmitAsync(tenantId, annualId, monday, monday.AddDays(4))).Error.Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
+
+        // 4 days leave exactly 10: allowed. One more day afterwards would leave 9 with no block booked: rejected.
+        var first = await SubmitAsync(tenantId, annualId, monday, monday.AddDays(3));
+        first.IsSuccess.ShouldBeTrue(first.IsFailure ? first.Error.Code : null);
+        (await SubmitAsync(tenantId, annualId, monday.AddDays(7), monday.AddDays(7))).Error.Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
     }
 
     [Fact]
@@ -321,7 +357,8 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         // Mon..Sun: 5 working days + Saturday appended by the Saturday rule (full week, flag on) = 6; only Sunday rests.
         preview.Value.Days.ShouldBe(6m);
         preview.Value.WeeklyRestDays.ShouldBe(1);
-        preview.Value.Warnings.ShouldBeEmpty();
+        // senseik-036 (İş K. m.56/3): 6 of the 14 accrued days would leave 8 - no 10-day part could be formed any more.
+        preview.Value.Warnings.Single().Code.ShouldBe(LeaveRequestErrors.AnnualMinimumBlock);
         var tooLong = await ActivatorUtilities.CreateInstance<PreviewMyLeaveRequestHandler>(scope.ServiceProvider, _currentUser)
             .Handle(new PreviewMyLeaveRequestQuery(annualId, monday, monday.AddDays(27), null), CancellationToken.None);
         tooLong.Value.Warnings.Single().Code.ShouldBe(LeaveRequestErrors.InsufficientBalance);

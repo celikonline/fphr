@@ -22,7 +22,6 @@
     "type_foster_care": "Foster care leave",
     "type_template_remote_work": "Remote Work",
     "type_template_birthday": "Birthday leave",
-    "type_maternity_multiple_birth": "Maternity leave (multiple birth)",
     "type_breastfeeding": "Breastfeeding leave",
     "type_disabled_child": "Disabled/chronically ill child leave"
   },
@@ -42,7 +41,6 @@
     "fosterCare": "Foster care leave",
     "remoteWork": "Remote Work",
     "birthday": "Birthday leave",
-    "maternityMultipleBirth": "Maternity leave (multiple birth)",
     "breastfeeding": "Breastfeeding leave",
     "disabledChild": "Disabled/chronically ill child leave"
   },

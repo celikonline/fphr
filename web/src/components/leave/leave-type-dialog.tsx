@@ -56,6 +56,8 @@ const CODES: LeaveTypeCode[] = [
   "paidMilitaryService",
   "unpaid",
   "fosterCare",
+  "breastfeeding",
+  "disabledChild",
   "remoteWork",
   "birthday",
 ];

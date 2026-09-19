@@ -26,8 +26,7 @@ export type LeaveTypeCode =
   | "remoteWork"
   | "birthday"
   | "breastfeeding"
-  | "disabledChild"
-  | "maternityMultipleBirth";
+  | "disabledChild";
 export type LeaveLimitType = "unlimited" | "perRequest" | "perYear";
 export type NegativeBalanceMode = "none" | "unlimited" | "limited";
 export type AccrualFrequency = "yearly" | "monthly" | "daily";
