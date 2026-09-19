@@ -255,6 +255,19 @@ public partial class DataSeeder
     private static readonly HashSet<string> DemoFemaleFirstNames =
         new(SeedDataConstants.TurkishFemaleFirstNames, StringComparer.OrdinalIgnoreCase) { "Olena" };
 
+    /// <summary>Lower-cases a name for use in a work e-mail address and folds the Turkish letters to ASCII: the Employee
+    /// module rejects non-ASCII addresses (EmployeeEmailRules, senseik-044), so "Bülent" must become "bulent".</summary>
+    internal static string ToAsciiEmailPart(string name) => string.Concat(name.Select(c => c switch
+    {
+        'ç' or 'Ç' => 'c',
+        'ğ' or 'Ğ' => 'g',
+        'ı' or 'İ' or 'I' => 'i',
+        'ö' or 'Ö' => 'o',
+        'ş' or 'Ş' => 's',
+        'ü' or 'Ü' => 'u',
+        _ => char.ToLowerInvariant(c),
+    }));
+
     internal static Gender DemoGenderFor(string firstName) =>
         DemoFemaleFirstNames.Contains(firstName) ? Gender.Female : Gender.Male;
 
@@ -473,7 +486,7 @@ public partial class DataSeeder
                 var firstNames = userCount % 2 == 0 ? maleFirstNames : femaleFirstNames;
                 var firstName = firstNames[_random.Next(firstNames.Length)];
                 var lastName = lastNames[_random.Next(lastNames.Length)];
-                var email = $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@democompany.com".Replace(" ", "");
+                var email = $"{ToAsciiEmailPart(firstName)}.{ToAsciiEmailPart(lastName)}@democompany.com".Replace(" ", "");
 
                 // Ensure unique email (simple deduplication)
                 var emailSuffix = 0;
