@@ -1,0 +1,71 @@
+using Sense.Modules.Documents.Domain.VisaDocuments;
+using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Messaging;
+using Sense.Shared.Contracts.Security;
+using Sense.Shared.Kernel.Results;
+
+namespace Sense.Modules.Documents.Application.VisaDocuments;
+
+/// <summary>Read model for the tenant's visa settings.</summary>
+public sealed record VisaSettingsDto(Guid? ApproverEmployeeId, IReadOnlyList<Guid> TemplateDocumentIds);
+
+internal static class VisaSettingsMapper
+{
+    public static VisaSettingsDto ToDto(VisaSettings settings) =>
+        new(settings.ApproverEmployeeId, settings.TemplateDocumentIds);
+}
+
+/// <summary>Ensures the tenant's single VisaSettings row exists (lazy default seed, mirrors Attendance's
+/// ShiftSettingsProvisioning.EnsureAsync).</summary>
+internal static class VisaSettingsProvisioning
+{
+    public static async Task<VisaSettings> EnsureAsync(
+        IVisaSettingsRepository settings,
+        Guid tenantId,
+        IDocumentsUnitOfWork unitOfWork,
+        CancellationToken cancellationToken)
+    {
+        var existing = await settings.FindAsync(cancellationToken);
+        if (existing is not null)
+        {
+            return existing;
+        }
+
+        var seeded = VisaSettings.CreateDefault(tenantId);
+        settings.Add(seeded);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return seeded;
+    }
+}
+
+/// <summary>Reads the tenant's visa settings (approver + template documents), seeding a default row on first
+/// access. Same permission as managing them - there is no separate "view visa settings" concern (only the settings
+/// page reads this).</summary>
+[RequiresPermission("documents.visa.manage")]
+public sealed record GetVisaSettingsQuery : IQuery<VisaSettingsDto>;
+
+public sealed class GetVisaSettingsHandler(IVisaSettingsRepository settings, ITenantContext tenant, IDocumentsUnitOfWork unitOfWork)
+    : IQueryHandler<GetVisaSettingsQuery, VisaSettingsDto>
+{
+    public async Task<Result<VisaSettingsDto>> Handle(GetVisaSettingsQuery query, CancellationToken cancellationToken) =>
+        VisaSettingsMapper.ToDto(await VisaSettingsProvisioning.EnsureAsync(settings, tenant.TenantId, unitOfWork, cancellationToken));
+}
+
+/// <summary>Configures the tenant's visa approver and delivered template documents (Settings page - "Vize
+/// süreçleri" per the handoff doc's Web Layer Tasks). Both fields are optional to allow clearing them; there is no
+/// validation on TemplateDocumentIds existing as real Document rows here - a stale id is simply skipped at delivery
+/// time (<c>IVisaDocumentDeliveryService</c>), the same tolerant approach as a deactivated DocumentType.</summary>
+[RequiresPermission("documents.visa.manage")]
+public sealed record UpdateVisaSettingsCommand(Guid? ApproverEmployeeId, IReadOnlyList<Guid> TemplateDocumentIds) : ICommand<VisaSettingsDto>;
+
+public sealed class UpdateVisaSettingsHandler(IVisaSettingsRepository settings, ITenantContext tenant, IDocumentsUnitOfWork unitOfWork)
+    : ICommandHandler<UpdateVisaSettingsCommand, VisaSettingsDto>
+{
+    public async Task<Result<VisaSettingsDto>> Handle(UpdateVisaSettingsCommand command, CancellationToken cancellationToken)
+    {
+        var current = await VisaSettingsProvisioning.EnsureAsync(settings, tenant.TenantId, unitOfWork, cancellationToken);
+        current.SetApprover(command.ApproverEmployeeId);
+        current.SetTemplateDocumentIds(command.TemplateDocumentIds);
+        return VisaSettingsMapper.ToDto(current);
+    }
+}

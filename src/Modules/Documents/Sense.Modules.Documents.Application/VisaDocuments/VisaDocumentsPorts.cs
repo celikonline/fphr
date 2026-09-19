@@ -31,6 +31,16 @@ public interface IVisaDocumentProcessRepository
     Task SaveAsync(CancellationToken cancellationToken);
 }
 
+/// <summary>Persistence port for the <see cref="VisaSettings"/> aggregate (one row per tenant). Mirrors
+/// Attendance's <c>IShiftSettingsRepository</c>: <see cref="FindAsync"/> is tenant-scoped implicitly (via the
+/// DbContext's global filter), no explicit tenantId parameter needed.</summary>
+public interface IVisaSettingsRepository
+{
+    void Add(VisaSettings settings);
+
+    Task<VisaSettings?> FindAsync(CancellationToken cancellationToken = default);
+}
+
 /// <summary>
 /// Reads the tenant's visa-specific settings (approver and the template documents copied
 /// into the employee folder once a request is approved).

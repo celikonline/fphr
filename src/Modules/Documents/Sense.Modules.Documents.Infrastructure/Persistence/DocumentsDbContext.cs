@@ -33,6 +33,8 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
     /// employee-scoped <see cref="Documents"/> table.</summary>
     public DbSet<SharedCompanyFile> SharedCompanyFiles => Set<SharedCompanyFile>();
 
+    public DbSet<VisaSettings> VisaSettings => Set<VisaSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -84,6 +86,12 @@ public sealed class DocumentConfiguration : IEntityTypeConfiguration<Document>
         b.Property(x => x.DeletedBy);
         b.Property(x => x.BucketName).HasMaxLength(DocumentsTables.BucketNameLength).IsRequired();
         b.Property(x => x.ExpiryDate);
+        b.Property(x => x.EmployeeId);
+        b.Property(x => x.VisaDocumentRequestId);
+
+        // "Employee's folder" lookups (e.g. delivered visa documents) and the visa audit trail.
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId });
+        b.HasIndex(x => x.VisaDocumentRequestId);
 
         // Ignore domain events (handled by outbox processor)
         b.Ignore(x => x.DomainEvents);
