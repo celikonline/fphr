@@ -906,6 +906,14 @@ public sealed class RecruitmentIntegrationTests : TestFixture
         public Task<IReadOnlyDictionary<Guid, string>> GetSgkIsyeriSicilNoAsync(
             Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyDictionary<Guid, string>>(new Dictionary<Guid, string>());
+
+        /// <summary>Not exercised by this fixture's tests (S-31 is Attendance-facing, not S-19); always null.</summary>
+        public Task<LocationGeofence?> GetGeofenceAsync(Guid tenantId, Guid locationId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<LocationGeofence?>(null);
+
+        /// <summary>Not exercised by this fixture's tests (S-31 is Attendance-facing, not S-19); always null.</summary>
+        public Task<LocationGeofence?> FindBySelfCheckInCodeAsync(Guid tenantId, string code, CancellationToken cancellationToken = default) =>
+            Task.FromResult<LocationGeofence?>(null);
     }
 
     /// <summary>

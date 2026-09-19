@@ -524,6 +524,12 @@ public sealed class EmployeeIntegrationTests : TestFixture
         result.Error.Code.ShouldBe(code);
     }
 
+    private static void ShouldFail(Result result, string code)
+    {
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(code);
+    }
+
     /// <summary>
     /// Permissions are granted by the test double; "platformAdmin" only resets the data scope to Company. The platform flag itself is
     /// never set: without an active impersonation session it no longer bypasses authorization.
