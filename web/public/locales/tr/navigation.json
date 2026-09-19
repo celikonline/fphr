@@ -18,7 +18,8 @@
     "settings": "Ayarlar",
     "account": "Profilim",
     "support": "Destek",
-    "trust": "Güven ve güvenlik"
+    "trust": "Güven ve güvenlik",
+    "workflowInbox": "Onay kutusu"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {

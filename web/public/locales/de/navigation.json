@@ -18,7 +18,8 @@
     "settings": "Einstellungen",
     "account": "Mein Profil",
     "support": "Support",
-    "trust": "Vertrauen & Sicherheit"
+    "trust": "Vertrauen & Sicherheit",
+    "workflowInbox": "Genehmigungs-Posteingang"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

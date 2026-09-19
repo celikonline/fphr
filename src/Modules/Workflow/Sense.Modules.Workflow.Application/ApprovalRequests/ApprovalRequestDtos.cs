@@ -1,3 +1,5 @@
+using Sense.Modules.Workflow.Contracts;
+
 namespace Sense.Modules.Workflow.Application.ApprovalRequests;
 
 /// <summary>
@@ -14,7 +16,11 @@ public sealed record ApprovalRequestStatusDto(
     int? CurrentStepNumber,
     Guid? CurrentApproverEmployeeId);
 
-/// <summary>One pending task in the caller's approval inbox (assigned directly, or via a fallback role queue).</summary>
+/// <summary>
+/// One pending task in the caller's approval inbox (assigned directly, or via a fallback role queue). Summary is the
+/// request-type-specific projection from IApprovalRequestSummaryProvider (null when RequestType has no registered
+/// provider, or the subject entity no longer resolves) - the caller shows RequestType's label alone in that case.
+/// </summary>
 public sealed record InboxTaskDto(
     Guid TaskId,
     Guid ApprovalRequestId,
@@ -23,7 +29,8 @@ public sealed record InboxTaskDto(
     string? RequesterName,
     int StepNumber,
     bool IsFallbackRoleTask,
-    DateTime SubmittedAt);
+    DateTime SubmittedAt,
+    ApprovalRequestSummary? Summary);
 
 /// <summary>Summary row for the caller's own submitted approval requests.</summary>
 public sealed record MyApprovalRequestDto(

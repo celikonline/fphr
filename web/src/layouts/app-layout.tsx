@@ -6,6 +6,7 @@ import { Bell, Grip, ShieldAlert } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import { useImpersonatorId } from "@/hooks/use-access-setting";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
+import { useWorkflowInboxCount } from "@/hooks/use-workflow-inbox-count";
 import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type NavItem } from "@/config/navigation";
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
@@ -22,9 +23,13 @@ function NavList({ collapsed }: { collapsed: boolean }) {
   return (
     <>
       <Stack component="nav" gap={4} className="flex-1 overflow-y-auto px-2 py-4">
-        {items.map((item) => (
-          <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
-        ))}
+        {items.map((item) =>
+          item.key === "workflowInbox" ? (
+            <WorkflowInboxNavItem key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
+          ) : (
+            <NavItemLink key={item.key} item={item} collapsed={collapsed} label={t(item.labelKey)} />
+          ),
+        )}
       </Stack>
       <Stack component="nav" gap={4} className={`px-2 py-3 ${classes.footerNav}`}>
         <NotificationsNavItem collapsed={collapsed} />
@@ -37,6 +42,49 @@ function NavList({ collapsed }: { collapsed: boolean }) {
 }
 
 const NAV_LINK_CLASS_NAMES = { root: classes.navLink, section: classes.navSection, body: classes.navBody };
+
+/** "Onay kutusu" sidebar entry: pending task count on the icon (senseik-047 D-01/D-03), mirrors NotificationsNavItem's Indicator. */
+function WorkflowInboxNavItem({ item, collapsed, label }: { item: NavItem; collapsed: boolean; label: string }) {
+  const Icon = item.icon;
+  const pendingCount = useWorkflowInboxCount();
+
+  const link = (
+    <NavLink
+      component={RouterNavLink}
+      to={item.path}
+      end={item.end}
+      variant="light"
+      aria-label={collapsed ? label : undefined}
+      mod={{ collapsed }}
+      classNames={NAV_LINK_CLASS_NAMES}
+      styles={{ section: { color: navIconColor(item) } }}
+      leftSection={
+        <Indicator
+          color="red"
+          size={16}
+          offset={2}
+          label={pendingCount}
+          maxValue={99}
+          disabled={pendingCount === 0}
+          styles={{ indicator: { fontSize: 10, fontWeight: 600, paddingInline: 4 } }}
+          inline
+        >
+          <Icon size={20} />
+        </Indicator>
+      }
+      label={collapsed ? undefined : label}
+      noWrap
+    />
+  );
+
+  if (!collapsed) return link;
+
+  return (
+    <Tooltip label={label} position="right" openDelay={300}>
+      {link}
+    </Tooltip>
+  );
+}
 
 /** "Bildirimler" at the top of the sidebar footer: unread count on the bell, dropdown opens beside the sidebar. */
 function NotificationsNavItem({ collapsed }: { collapsed: boolean }) {

@@ -58,6 +58,9 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+        // Workflow.Contracts.IApprovalRequestSummaryProvider: inbox/decision detail for "Leave"/"Overtime" ApprovalRequests.
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
+        services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
         return services;
     }
 

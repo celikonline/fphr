@@ -18,7 +18,8 @@
     "settings": "Settings",
     "account": "My profile",
     "support": "Support",
-    "trust": "Trust & security"
+    "trust": "Trust & security",
+    "workflowInbox": "Approval inbox"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
