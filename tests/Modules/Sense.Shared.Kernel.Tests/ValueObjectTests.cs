@@ -56,6 +56,15 @@ public sealed class TcKimlikTests
 
     [Fact]
     public void Masked_HidesMiddleDigits() => TcKimlik.Of("10000000146").Masked.ShouldBe("100******46");
+
+    /// <summary>Same checksum algorithm for a "99"-prefixed Yabancı Kimlik Numarası as a regular TCKN (senseik-009/F-02); only IsForeign differs.</summary>
+    [Theory]
+    [InlineData("99123456740", true)]
+    [InlineData("10000000146", false)]
+    public void IsForeign_DetectsNinetyNinePrefix(string value, bool expected) => TcKimlik.Of(value).IsForeign.ShouldBe(expected);
+
+    [Fact]
+    public void IsValid_AcceptsForeignPrefixedNumber_SameChecksumAlgorithm() => TcKimlik.IsValid("99123456740").ShouldBeTrue();
 }
 
 public sealed class IbanTests

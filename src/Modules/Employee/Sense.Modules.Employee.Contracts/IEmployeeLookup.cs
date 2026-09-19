@@ -24,4 +24,11 @@ public interface IEmployeeLookup
     /// template); null when no active employee has this national id. National id is stored unmasked for this reason.
     /// </summary>
     Task<Guid?> FindActiveByNationalIdAsync(Guid tenantId, string nationalId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The single active employee whose sicil numarası matches exactly (senseik-009/F-02 dual-key transition: import
+    /// row matching prefers this over <see cref="FindActiveByNationalIdAsync"/> when both a sicil numarası column and
+    /// a match are available); null when no active employee has this sicil numarası.
+    /// </summary>
+    Task<Guid?> FindActiveBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default);
 }

@@ -70,7 +70,12 @@ public sealed record EmployeeRow(
     Guid? TerminationReasonId = null,
     TerminationType? TerminationType = null,
     string? SgkExitCode = null,
-    Guid? SubcontractorId = null)
+    Guid? SubcontractorId = null,
+    string? SicilNumarasi = null,
+    Nationality Nationality = Nationality.Turkish,
+    string? ForeignIdNumber = null,
+    string? PassportNumber = null,
+    string? SgkOccupationCode = null)
 {
     /// <summary>
     /// <paramref name="today"/> resolves the derived PositionStartDate (ValidFrom of the career record in effect
@@ -82,7 +87,8 @@ public sealed record EmployeeRow(
         e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
         e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType, e.SuspensionReason,
         e.LeaveAccrualStartDate, today is { } date ? e.PositionStartDate(date) : null,
-        e.TerminationDate, e.TerminationReasonId, e.TerminationType, e.SgkExitCode, e.SubcontractorId);
+        e.TerminationDate, e.TerminationReasonId, e.TerminationType, e.SgkExitCode, e.SubcontractorId,
+        e.SicilNumarasi, e.Nationality, e.ForeignIdNumber, e.PassportNumber, e.SgkOccupationCode);
 }
 
 /// <summary>Grid sort field names accepted by the employee list (?sort=).</summary>

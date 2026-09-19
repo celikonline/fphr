@@ -44,6 +44,9 @@ public interface IEmployeeRepository
     /// <summary>True if another employee of the tenant already uses this national id.</summary>
     Task<bool> NationalIdTakenAsync(string nationalId, Guid? exceptEmployeeId, CancellationToken cancellationToken = default);
 
+    /// <summary>True if another employee of the tenant already uses this sicil numarası (senseik-009/F-02).</summary>
+    Task<bool> SicilNumarasiTakenAsync(string sicilNumarasi, Guid? exceptEmployeeId, CancellationToken cancellationToken = default);
+
     /// <summary>Every employee id of the tenant mapped to its current manager (hierarchy checks).</summary>
     Task<IReadOnlyDictionary<Guid, Guid?>> GetManagerMapAsync(CancellationToken cancellationToken = default);
 

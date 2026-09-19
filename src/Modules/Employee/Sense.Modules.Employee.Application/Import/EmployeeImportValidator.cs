@@ -114,6 +114,15 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
         var postalCode = Text(row, EmployeeImportColumns.PostalCode);
         var contractType = Enum<ContractType>(row, EmployeeImportColumns.ContractType, errors);
         var employmentType = Enum<EmploymentType>(row, EmployeeImportColumns.EmploymentType, errors);
+        var sicilNumarasi = Text(row, EmployeeImportColumns.SicilNumarasi);
+        CheckLength(errors, EmployeeImportColumns.SicilNumarasi, sicilNumarasi, EmployeeLimits.SicilNumarasiMaxLength);
+        var nationality = Enum<Nationality>(row, EmployeeImportColumns.Nationality, errors);
+        var foreignIdNumber = Text(row, EmployeeImportColumns.ForeignIdNumber);
+        CheckLength(errors, EmployeeImportColumns.ForeignIdNumber, foreignIdNumber, EmployeeLimits.ForeignIdNumberLength);
+        var passportNumber = Text(row, EmployeeImportColumns.PassportNumber);
+        CheckLength(errors, EmployeeImportColumns.PassportNumber, passportNumber, EmployeeLimits.PassportNumberMaxLength);
+        var sgkOccupationCode = Text(row, EmployeeImportColumns.SgkOccupationCode);
+        CheckLength(errors, EmployeeImportColumns.SgkOccupationCode, sgkOccupationCode, EmployeeLimits.SgkOccupationCodeMaxLength);
         var salary = Salary(row, errors);
         var customFieldValues = CustomFields(row, errors);
 
@@ -151,6 +160,11 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
             PostalCode = postalCode ?? baseInfo.PostalCode,
             ContractType = contractType ?? baseInfo.ContractType,
             EmploymentType = employmentType ?? baseInfo.EmploymentType,
+            SicilNumarasi = sicilNumarasi ?? baseInfo.SicilNumarasi,
+            Nationality = nationality ?? baseInfo.Nationality,
+            ForeignIdNumber = foreignIdNumber ?? baseInfo.ForeignIdNumber,
+            PassportNumber = passportNumber ?? baseInfo.PassportNumber,
+            SgkOccupationCode = sgkOccupationCode ?? baseInfo.SgkOccupationCode,
         };
 
         var domainCheck = EmployeeEntity.Validate(info);
@@ -187,7 +201,8 @@ public sealed class EmployeeImportRowValidator(ImportMode mode, EmployeeImportSn
     private static EmployeeInfo ExistingInfo(EmployeeRow e) => new(
         e.FirstName, e.LastName, e.NationalId, e.WorkEmail, e.PersonalEmail, e.WorkPhone, e.HireDate, e.BirthDate,
         e.Gender, e.MaritalStatus, e.ChildCount, e.EducationStatus, e.HighestEducationLevel, e.MilitaryStatus, e.DisabilityDegree, e.BloodType,
-        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType);
+        e.MobilePhone, e.HomePhone, e.AddressLine, e.City, e.PostalCode, e.ContractType, e.EmploymentType,
+        null, e.SicilNumarasi, e.Nationality, e.ForeignIdNumber, e.PassportNumber, e.SgkOccupationCode);
 
     private Guid? ResolveManager(ImportRow row, EmployeeRow? existing, List<ImportRowError> errors)
     {

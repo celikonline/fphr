@@ -294,8 +294,10 @@ public sealed class DataTransferIntegrationTests : TestFixture
         job.TotalRows.ShouldBe(1);
         var firstName = job.SourceColumns.Single(c => c.Header == "Given name");
         (firstName.SuggestedTargetKey, firstName.AutoMatched).ShouldBe(("firstName", true));
-        // Every template column except the renamed "firstName" header maps itself by the hidden key row.
-        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(36);
+        // Every template column except the renamed "firstName" header maps itself by the hidden key row
+        // (41 = 36 + the 5 senseik-009/F-02 and senseik-010/F-03 columns: sicilNumarasi, nationality,
+        // foreignIdNumber, passportNumber, sgkOccupationCode).
+        job.SourceColumns.Count(c => c.SuggestedTargetKey is not null).ShouldBe(41);
 
         await MapAsync(job, "Upsert", "SkipInvalidRows");
         var run = await RunAsync(job.Id);

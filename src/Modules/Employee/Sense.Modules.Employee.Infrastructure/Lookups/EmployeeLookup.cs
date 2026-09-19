@@ -48,4 +48,15 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
 
         return matches.Count == 1 ? matches[0] : null;
     }
+
+    public async Task<Guid?> FindActiveBySicilNumarasiAsync(Guid tenantId, string sicilNumarasi, CancellationToken cancellationToken = default)
+    {
+        var matches = await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.SicilNumarasi == sicilNumarasi && e.Status != EmployeeStatus.Terminated)
+            .Select(e => e.Id)
+            .Take(2)
+            .ToListAsync(cancellationToken);
+
+        return matches.Count == 1 ? matches[0] : null;
+    }
 }

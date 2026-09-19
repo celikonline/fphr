@@ -31,6 +31,7 @@ public static class EmployeeImportOptions
         ],
         [typeof(SalaryType)] = ["Net", "Brüt"],
         [typeof(PayFrequency)] = ["Aylık", "Günlük", "Yıllık", "Haftalık", "Saatlik"],
+        [typeof(Nationality)] = ["Türk", "Yabancı"],
     };
 
     /// <summary>The values a column offers, in enum order.</summary>

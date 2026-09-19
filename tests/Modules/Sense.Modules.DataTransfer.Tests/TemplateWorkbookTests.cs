@@ -33,17 +33,19 @@ public sealed class TemplateWorkbookTests
 
         var headers = data.Row(1).CellsUsed().Select(c => c.GetString()).ToList();
         headers.ShouldBe([
-            "Ad", "Soyad", "Kimlik numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
+            "Ad", "Soyad", "Kimlik numarası", "Sicil numarası", "İş e-postası", "Kişisel e-posta", "İş telefonu", "İşe başlama tarihi", "Doğum tarihi", "Yönetici",
             "İzne esas hak ediş tarihi", "Cinsiyet", "Medeni durum", "Çocuk sayısı", "Eğitim durumu", "Son mezuniyet derecesi", "Askerlik durumu",
-            "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu", "Sözleşme türü", "Çalışma şekli",
+            "Engellilik derecesi", "Kan grubu", "Cep telefonu", "Ev telefonu", "Adres", "Şehir", "Posta kodu",
+            "Uyruk", "Yabancı kimlik numarası", "Pasaport numarası", "SGK meslek kodu", "Sözleşme türü", "Çalışma şekli",
             "Maaş geçerlilik tarihi", "Maaş", "Para birimi", "Maaş türü", "Ödeme düzeni", "Yol yardımı", "Yemek yardımı",
             "Şirket", "Departman"]);
 
         var keys = data.Row(2).CellsUsed().Select(c => c.GetString()).ToList();
         keys.ShouldBe([
-            "firstName", "lastName", "nationalId", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
+            "firstName", "lastName", "nationalId", "sicilNumarasi", "workEmail", "personalEmail", "workPhone", "hireDate", "birthDate", "manager",
             "leaveAccrualStartDate", "gender", "maritalStatus", "childCount", "educationStatus", "highestEducationLevel", "militaryStatus",
-            "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode", "contractType", "employmentType",
+            "disabilityDegree", "bloodType", "mobilePhone", "homePhone", "addressLine", "city", "postalCode",
+            "nationality", "foreignIdNumber", "passportNumber", "sgkOccupationCode", "contractType", "employmentType",
             "salaryEffectiveFrom", "salaryAmount", "salaryCurrency", "salaryType", "payFrequency", "transportAllowance", "mealAllowance",
             "orgUnit:Company", "orgUnit:Department"]);
         data.Row(2).IsHidden.ShouldBeTrue();
@@ -60,8 +62,9 @@ public sealed class TemplateWorkbookTests
         departmentValidation.Value.ShouldContain("Listeler");
         departmentValidation.Ranges.Single().RangeAddress.FirstAddress.RowNumber.ShouldBe(3);
 
-        // One dropdown per option-bearing column: the two org levels plus the eleven enum columns (E6 personnel fields + salary type/pay frequency).
-        data.DataValidations.Count().ShouldBe(13);
+        // One dropdown per option-bearing column: the two org levels plus the twelve enum columns (E6 personnel
+        // fields + salary type/pay frequency + Nationality, senseik-009/F-02).
+        data.DataValidations.Count().ShouldBe(14);
 
         var instructions = workbook.Worksheet("Açıklamalar");
         instructions.Cell(1, 1).GetString().ShouldBe("Veri aktarım kuralları");
@@ -74,7 +77,7 @@ public sealed class TemplateWorkbookTests
         var examples = workbook.Worksheet("Örnekler");
         examples.Row(1).Cell(1).GetString().ShouldBe("Ad");
         var exampleRows = examples.RowsUsed().Skip(1).ToList();
-        exampleRows.Count.ShouldBe(5);
+        exampleRows.Count.ShouldBe(6);
         exampleRows[0].Cell(1).Style.Fill.BackgroundColor.ShouldBe(XLColor.FromHtml("#C6EFCE"));
         exampleRows[2].Cell(1).Style.Fill.BackgroundColor.ShouldBe(XLColor.FromHtml("#FFC7CE"));
         exampleRows[2].Cell(3).GetString().ShouldBe("12345678901");

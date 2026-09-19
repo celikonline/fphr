@@ -40,6 +40,13 @@ public static class EmployeeImportColumns
     public const string ContractType = "contractType";
     public const string EmploymentType = "employmentType";
 
+    // senseik-009/F-02 (Sicil numarası + uyruk) and senseik-010/F-03 (SGK meslek kodu) fields.
+    public const string SicilNumarasi = "sicilNumarasi";
+    public const string Nationality = "nationality";
+    public const string ForeignIdNumber = "foreignIdNumber";
+    public const string PassportNumber = "passportNumber";
+    public const string SgkOccupationCode = "sgkOccupationCode";
+
     // Salary block ("Maaş bloğu", E6 part 2): one salary record per row; the whole block is ignored (not an error)
     // unless both SalaryEffectiveFrom and SalaryAmount are filled (11.3.03 "Maaş bloğu bütünlüğü").
     public const string SalaryEffectiveFrom = "salaryEffectiveFrom";
@@ -94,6 +101,9 @@ public sealed class EmployeeMasterImportTemplate(
             Static(EmployeeImportColumns.FirstName, ImportColumnDataType.Text, ImportColumnRequirement.Always),
             Static(EmployeeImportColumns.LastName, ImportColumnDataType.Text, ImportColumnRequirement.Always),
             Static(EmployeeImportColumns.NationalId, ImportColumnDataType.NationalId, ImportColumnRequirement.Always, isMatchKey: true),
+            // senseik-009/F-02: dual-key transition - offered, not yet a match key (NationalId stays the match key
+            // until a tenant has assigned sicil numarası to its whole workforce; see IEmployeeLookup remarks).
+            Static(EmployeeImportColumns.SicilNumarasi, ImportColumnDataType.Text),
             Static(EmployeeImportColumns.WorkEmail, ImportColumnDataType.Email),
             Static(EmployeeImportColumns.PersonalEmail, ImportColumnDataType.Email),
             Static(EmployeeImportColumns.WorkPhone, ImportColumnDataType.Phone),
@@ -114,6 +124,10 @@ public sealed class EmployeeMasterImportTemplate(
             Static(EmployeeImportColumns.AddressLine, ImportColumnDataType.Text),
             Static(EmployeeImportColumns.City, ImportColumnDataType.Text),
             Static(EmployeeImportColumns.PostalCode, ImportColumnDataType.Text),
+            Options<Nationality>(EmployeeImportColumns.Nationality),
+            Static(EmployeeImportColumns.ForeignIdNumber, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.PassportNumber, ImportColumnDataType.Text),
+            Static(EmployeeImportColumns.SgkOccupationCode, ImportColumnDataType.Text),
             Options<ContractType>(EmployeeImportColumns.ContractType),
             Options<EmploymentType>(EmployeeImportColumns.EmploymentType),
             Static(EmployeeImportColumns.SalaryEffectiveFrom, ImportColumnDataType.Date),
@@ -207,6 +221,13 @@ public sealed class EmployeeMasterImportTemplate(
                 (EmployeeImportColumns.FirstName, "Elif"), (EmployeeImportColumns.LastName, "Şahin"), (EmployeeImportColumns.NationalId, "10000000146"),
                 (EmployeeImportColumns.WorkEmail, "elif@")),
                 KeyPrefix + "sample.invalid_email"),
+            // senseik-009/F-02: yabancı uyruklu çalışan - kimlik numarası boş, Yabancı Kimlik No dolu
+            // (Employee.Validate ikisinden en az birini şart koşar); "99" önekli TCKN yerine bu kullanılıyor.
+            new(true, Row(
+                (EmployeeImportColumns.FirstName, "Olena"), (EmployeeImportColumns.LastName, "Kovalenko"),
+                (EmployeeImportColumns.WorkEmail, "olena.kovalenko@ornek.com"), (EmployeeImportColumns.HireDate, "01.04.2024"),
+                (EmployeeImportColumns.Nationality, "Yabancı"), (EmployeeImportColumns.ForeignIdNumber, "99123456740")),
+                KeyPrefix + "sample.valid_foreign"),
         ];
     }
 

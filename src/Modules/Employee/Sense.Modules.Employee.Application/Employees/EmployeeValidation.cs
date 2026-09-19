@@ -60,6 +60,32 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x).AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).OverridePropertyName(nameof(EmployeeInfo.AddressLine));
         v.RuleFor(x => info(x).City).MaximumLength(EmployeeLimits.CityMaxLength).OverridePropertyName(nameof(EmployeeInfo.City));
         v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
+
+        v.RuleFor(x => info(x).SicilNumarasi).MaximumLength(EmployeeLimits.SicilNumarasiMaxLength).OverridePropertyName(nameof(EmployeeInfo.SicilNumarasi));
+        v.RuleFor(x => info(x).ForeignIdNumber).MaximumLength(EmployeeLimits.ForeignIdNumberLength).OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
+        v.RuleFor(x => info(x).PassportNumber).MaximumLength(EmployeeLimits.PassportNumberMaxLength).OverridePropertyName(nameof(EmployeeInfo.PassportNumber));
+        v.RuleFor(x => info(x).SgkOccupationCode).MaximumLength(EmployeeLimits.SgkOccupationCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.SgkOccupationCode));
+
+        // Mirrors Employee.Validate's nationality-conditioned NationalId format check (F-02); gated the same way as
+        // the NationalId format rule above (masked NationalId never reaches here without the permission).
+        v.RuleFor(x => info(x))
+            .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
+                       i.Nationality != Nationality.Turkish || !TcKimlik.Of(i.NationalId.Trim()).IsForeign)
+            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WithMessage(EmployeeDomainErrors.NationalIdForeignPrefixForTurkish)
+            .OverridePropertyName(nameof(EmployeeInfo.NationalId));
+        v.RuleFor(x => info(x))
+            .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
+                       i.Nationality != Nationality.Foreign || TcKimlik.Of(i.NationalId.Trim()).IsForeign)
+            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WithMessage(EmployeeDomainErrors.NationalIdNotForeignForForeignNational)
+            .OverridePropertyName(nameof(EmployeeInfo.NationalId));
+
+        // Not sensitive-view gated: ForeignIdNumber/PassportNumber are not masked like NationalId.
+        v.RuleFor(x => info(x))
+            .Must(i => i.Nationality != Nationality.Foreign || !string.IsNullOrWhiteSpace(i.ForeignIdNumber) || !string.IsNullOrWhiteSpace(i.PassportNumber))
+            .WithMessage(EmployeeDomainErrors.ForeignIdentificationRequired)
+            .OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
     }
 }
 
@@ -95,6 +121,12 @@ public sealed class EmployeeReferenceValidator(ITenantContext tenant, IEmployeeR
             await employees.NationalIdTakenAsync(info.NationalId.Trim(), existing?.Id, ct).ConfigureAwait(false))
         {
             return Error.Conflict(EmployeeErrors.NationalIdTaken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(info.SicilNumarasi) &&
+            await employees.SicilNumarasiTakenAsync(info.SicilNumarasi.Trim(), existing?.Id, ct).ConfigureAwait(false))
+        {
+            return Error.Conflict(EmployeeErrors.SicilNumarasiTaken);
         }
 
         return Result.Success();

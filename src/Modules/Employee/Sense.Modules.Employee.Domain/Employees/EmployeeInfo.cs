@@ -29,4 +29,9 @@ public sealed record EmployeeInfo(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null);
+    DateOnly? LeaveAccrualStartDate = null,
+    string? SicilNumarasi = null,
+    Nationality Nationality = Nationality.Turkish,
+    string? ForeignIdNumber = null,
+    string? PassportNumber = null,
+    string? SgkOccupationCode = null);
