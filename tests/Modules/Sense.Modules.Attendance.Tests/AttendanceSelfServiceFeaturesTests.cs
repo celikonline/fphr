@@ -55,6 +55,7 @@ public sealed class AttendanceSelfServiceFeaturesTests
     {
         var shifts = Substitute.For<IShiftAssignmentRepository>();
         var assignment = ShiftAssignment.Create(_tenantId, _employeeId, new DateOnly(2026, 9, 21), new TimeOnly(9, 0), new TimeOnly(17, 0), 0, isNight: false, note: null).Value;
+        assignment.Publish(DateTime.UtcNow);
         shifts.ListForRangeAsync(Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Is<IReadOnlyCollection<Guid>>(ids => ids.Contains(_employeeId)), Arg.Any<CancellationToken>())
             .Returns(new List<ShiftAssignment> { assignment });
         var handler = new GetMyShiftAssignmentsHandler(shifts, _currentUser);

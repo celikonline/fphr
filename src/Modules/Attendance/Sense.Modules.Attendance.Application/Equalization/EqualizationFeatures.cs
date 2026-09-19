@@ -1,3 +1,4 @@
+using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Shared.Contracts.Context;
@@ -27,11 +28,16 @@ public sealed record GetEqualizationStatusQuery(Guid EmployeeId, DateOnly Date) 
 
 public sealed class GetEqualizationStatusHandler(
     ITenantContext tenant, IShiftSettingsRepository shiftSettings, IEqualizationPeriodRepository periods, IAttendanceDayRepository days,
-    IAttendanceUnitOfWork unitOfWork, TimeProvider clock)
+    IAttendanceUnitOfWork unitOfWork, TimeProvider clock, IDataScopeService dataScope)
     : IQueryHandler<GetEqualizationStatusQuery, EqualizationStatusDto>
 {
     public async Task<Result<EqualizationStatusDto>> Handle(GetEqualizationStatusQuery query, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetView.Key, query.EmployeeId, cancellationToken).ConfigureAwait(false))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
         var settings = await shiftSettings.FindAsync(cancellationToken).ConfigureAwait(false);
         if (settings is null || !settings.EqualizationEnabled)
         {

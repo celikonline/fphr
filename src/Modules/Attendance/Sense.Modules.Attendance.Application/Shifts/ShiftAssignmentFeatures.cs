@@ -78,10 +78,26 @@ internal static class ShiftAvailabilityGuard
 [RequiresPermission("attendance.shift.view")]
 public sealed record ListShiftAssignmentsQuery(DateOnly From, DateOnly To, IReadOnlyList<Guid>? EmployeeIds) : IQuery<IReadOnlyList<ShiftAssignmentDto>>;
 
-public sealed class ListShiftAssignmentsHandler(IShiftAssignmentRepository shifts) : IQueryHandler<ListShiftAssignmentsQuery, IReadOnlyList<ShiftAssignmentDto>>
+public sealed class ListShiftAssignmentsHandler(IShiftAssignmentRepository shifts, IDataScopeService dataScope)
+    : IQueryHandler<ListShiftAssignmentsQuery, IReadOnlyList<ShiftAssignmentDto>>
 {
-    public async Task<Result<IReadOnlyList<ShiftAssignmentDto>>> Handle(ListShiftAssignmentsQuery query, CancellationToken cancellationToken) =>
-        (await shifts.ListForRangeAsync(query.From, query.To, query.EmployeeIds, cancellationToken)).Select(ShiftAssignmentMapper.ToDto).ToList();
+    public async Task<Result<IReadOnlyList<ShiftAssignmentDto>>> Handle(ListShiftAssignmentsQuery query, CancellationToken cancellationToken)
+    {
+        // Grid rows are narrowed to the caller's data scope (null = unrestricted). An empty/omitted employeeIds filter means "everyone the caller
+        // may see", never "everyone"; ids outside the scope are silently dropped so a stale client filter cannot widen the result.
+        var visible = await dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.ShiftView.Key, cancellationToken);
+        IReadOnlyCollection<Guid>? employeeIds = query.EmployeeIds is { Count: > 0 } ? query.EmployeeIds : null;
+        if (visible is not null)
+        {
+            employeeIds = (employeeIds ?? visible).Where(visible.Contains).Distinct().ToList();
+            if (employeeIds.Count == 0)
+            {
+                return Result.Success<IReadOnlyList<ShiftAssignmentDto>>([]);
+            }
+        }
+
+        return (await shifts.ListForRangeAsync(query.From, query.To, employeeIds, cancellationToken)).Select(ShiftAssignmentMapper.ToDto).ToList();
+    }
 }
 
 /// <summary>Aylık görünüm "paylaşılmamış/bekleyen vardiyalar" sayacı.</summary>
@@ -367,7 +383,8 @@ public sealed class GetMyShiftAssignmentsHandler(IShiftAssignmentRepository shif
             return Error.NotFound(AttendanceErrors.EmployeeNotFound);
         }
 
+        // Drafts are planner work-in-progress; the employee only sees a shift once it has been published (Yayınla notifies them).
         var list = await shifts.ListForRangeAsync(query.From, query.To, [employeeId], cancellationToken);
-        return list.Select(ShiftAssignmentMapper.ToDto).ToList();
+        return list.Where(a => a.Status == ShiftAssignmentStatus.Published).Select(ShiftAssignmentMapper.ToDto).ToList();
     }
 }

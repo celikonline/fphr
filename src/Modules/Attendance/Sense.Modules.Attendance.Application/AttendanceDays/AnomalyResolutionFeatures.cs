@@ -233,9 +233,22 @@ public sealed class CreateLeaveRequestFromAnomalyHandler(
 [RequiresPermission("attendance.timesheet.view")]
 public sealed record ListAnomalyResolutionsQuery(Guid AttendanceDayId) : IQuery<IReadOnlyList<AnomalyResolutionDto>>;
 
-public sealed class ListAnomalyResolutionsHandler(IAnomalyResolutionRepository resolutions)
+public sealed class ListAnomalyResolutionsHandler(IAnomalyResolutionRepository resolutions, IAttendanceDayRepository days, IDataScopeService dataScope)
     : IQueryHandler<ListAnomalyResolutionsQuery, IReadOnlyList<AnomalyResolutionDto>>
 {
-    public async Task<Result<IReadOnlyList<AnomalyResolutionDto>>> Handle(ListAnomalyResolutionsQuery query, CancellationToken cancellationToken) =>
-        (await resolutions.ListForDayAsync(query.AttendanceDayId, cancellationToken)).Select(AnomalyResolutionMapper.ToDto).ToList();
+    public async Task<Result<IReadOnlyList<AnomalyResolutionDto>>> Handle(ListAnomalyResolutionsQuery query, CancellationToken cancellationToken)
+    {
+        var found = await days.GetByIdAsync(query.AttendanceDayId, cancellationToken);
+        if (found.IsFailure)
+        {
+            return found.Error;
+        }
+
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetView.Key, found.Value.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
+        return (await resolutions.ListForDayAsync(query.AttendanceDayId, cancellationToken)).Select(AnomalyResolutionMapper.ToDto).ToList();
+    }
 }
