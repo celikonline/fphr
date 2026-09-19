@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Sense.Shared.Kernel;
 using Sense.Shared.Kernel.Domain;
 using Sense.Shared.Kernel.Results;
@@ -85,6 +86,12 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
     /// unique index).
     /// </summary>
     public string SelfCheckInCode { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Issues a fresh QR self-check-in code, invalidating the old one (a leaked/photographed poster can be revoked without
+    /// touching the rest of the location). The old code stops resolving immediately.
+    /// </summary>
+    public void RegenerateSelfCheckInCode() => SelfCheckInCode = GenerateSelfCheckInCode();
 
     public static Result<Location> Create(Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null, Guid? id = null)
     {
@@ -194,19 +201,17 @@ public sealed class Location : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Alphabet excludes visually ambiguous characters (0/O, 1/I/L) - printed on a QR poster, may be read by eye as a fallback.</summary>
     private const string SelfCheckInCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 
-    private const int SelfCheckInCodeLength = 8;
+    /// <summary>12 chars over a 31-symbol alphabet is ~59 bits of CSPRNG entropy - not guessable/enumerable through the (authenticated, tenant-scoped) QR endpoint.</summary>
+    public const int SelfCheckInCodeLength = 12;
 
-    private static string GenerateSelfCheckInCode()
-    {
-        var bytes = Guid.CreateVersion7().ToByteArray();
-        var chars = new char[SelfCheckInCodeLength];
-        for (var i = 0; i < chars.Length; i++)
+    private static string GenerateSelfCheckInCode() =>
+        string.Create(SelfCheckInCodeLength, 0, static (chars, _) =>
         {
-            chars[i] = SelfCheckInCodeAlphabet[bytes[i] % SelfCheckInCodeAlphabet.Length];
-        }
-
-        return new string(chars);
-    }
+            for (var i = 0; i < chars.Length; i++)
+            {
+                chars[i] = SelfCheckInCodeAlphabet[RandomNumberGenerator.GetInt32(SelfCheckInCodeAlphabet.Length)];
+            }
+        });
 
     private static string? NormalizeAddress(string? address) =>
         string.IsNullOrWhiteSpace(address) ? null : Guard.MaxLength(address.Trim(), OrganizationLimits.AddressMaxLength);

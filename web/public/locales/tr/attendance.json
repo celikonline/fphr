@@ -21,7 +21,8 @@
     "checkedOutAt": "{{time}} itibarıyla çıkış kaydedildi.",
     "lastCheckIn": "Son giriş: {{time}} · {{location}}",
     "lastCheckOut": "Son çıkış: {{time}} · {{location}}",
-    "unknownLocation": "lokasyon bilgisi yok"
+    "unknownLocation": "lokasyon bilgisi yok",
+    "qrGeofenceHint": "Lokasyona geofence tanımlıysa konumunuz da doğrulanır (tarayıcı konum izni istenir)."
   },
   "liveBoard": {
     "title": "Canlı içeride/dışarıda",

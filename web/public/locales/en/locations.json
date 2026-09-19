@@ -37,5 +37,9 @@
   "selfCheckInCode": "QR self check-in code",
   "selfCheckInCodeHint": "Print this code as a QR at the entrance; employees can scan it (or type it in) to check in/out.",
   "copy": "Copy",
-  "copied": "Copied"
+  "copied": "Copied",
+  "regenerateCode": "Regenerate code",
+  "regenerateSuccess": "QR code regenerated; the old printed poster no longer works.",
+  "regenerateConfirmTitle": "Regenerate the QR code?",
+  "regenerateConfirmDescription": "The QR code of \"{{name}}\" will be regenerated. The poster currently on display stops working immediately; you will need to print the new code."
 }

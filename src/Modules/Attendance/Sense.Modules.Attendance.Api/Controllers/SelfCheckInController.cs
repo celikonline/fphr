@@ -7,7 +7,7 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Attendance.Api.Controllers;
 
-public sealed record QrCheckInRequest(string Code, PunchDirection Direction);
+public sealed record QrCheckInRequest(string Code, PunchDirection Direction, double? Latitude = null, double? Longitude = null);
 
 public sealed record GpsCheckInRequest(double Latitude, double Longitude, Guid? LocationId, PunchDirection Direction);
 
@@ -24,7 +24,7 @@ public sealed class SelfCheckInController : ApiControllerBase
     [HttpPost("qr")]
     [ProducesResponseType<SelfCheckInResultDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Qr([FromBody] QrCheckInRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new QrCheckInCommand(request.Code, request.Direction), ct));
+        FromResult(await Dispatcher.Send(new QrCheckInCommand(request.Code, request.Direction, request.Latitude, request.Longitude), ct));
 
     /// <summary>Cihaz GPS konumuyla giriş/çıkış, isteğe bağlı lokasyon + geofence doğrulaması (kabul kriteri 2).</summary>
     [HttpPost("gps")]

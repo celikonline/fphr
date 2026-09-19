@@ -21,7 +21,8 @@
     "checkedOutAt": "Um {{time}} ausgecheckt.",
     "lastCheckIn": "Letztes Einchecken: {{time}} · {{location}}",
     "lastCheckOut": "Letztes Auschecken: {{time}} · {{location}}",
-    "unknownLocation": "keine Standortangabe"
+    "unknownLocation": "keine Standortangabe",
+    "qrGeofenceHint": "Ist für den Standort ein Geofence hinterlegt, wird auch Ihr Standort geprüft (der Browser fragt nach der Standortfreigabe)."
   },
   "liveBoard": {
     "title": "Live-Anwesenheitstafel",

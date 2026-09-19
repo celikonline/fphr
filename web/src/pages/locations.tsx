@@ -6,7 +6,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
 import { MapPin, Pencil, Plus, QrCode, Search, Trash2 } from "lucide-react";
-import { ActionIcon, Button, Card, CopyButton, Group, Modal, NumberInput, Select, Stack, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { Button, Card, CopyButton, Group, Modal, NumberInput, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { RowIconButton } from "@/components/ui/row-icon-button";
 import ConfirmDialog from "@/components/confirm-dialog";
@@ -18,6 +18,7 @@ import {
   createLocation,
   deleteLocation,
   listLocations,
+  regenerateLocationSelfCheckInCode,
   setLocationGeofence,
   updateLocation,
   LOCATION_TYPES,
@@ -95,6 +96,7 @@ export default function LocationsPage() {
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
+  const [regenerateTarget, setRegenerateTarget] = useState<Location | null>(null);
 
   const {
     register,
@@ -149,6 +151,17 @@ export default function LocationsPage() {
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("locations:updateSuccess") });
       setDialog({ open: false });
+    },
+    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("locations:genericError") }),
+  });
+
+  const regenerateMutation = useMutation({
+    mutationFn: regenerateLocationSelfCheckInCode,
+    onSuccess: (updated) => {
+      invalidate();
+      toast({ variant: "success", title: t("common:success"), description: t("locations:regenerateSuccess") });
+      setRegenerateTarget(null);
+      setDialog((current) => (current.open && current.location?.id === updated.id ? { open: true, location: updated } : current));
     },
     onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("locations:genericError") }),
   });
@@ -473,6 +486,9 @@ export default function LocationsPage() {
                       </Button>
                     )}
                   </CopyButton>
+                  <Button size="compact-xs" variant="subtle" color="red" onClick={() => setRegenerateTarget(dialog.location ?? null)}>
+                    {t("locations:regenerateCode")}
+                  </Button>
                 </Group>
                 <Text size="xs" c="dimmed" mt={4}>
                   {t("locations:selfCheckInCodeHint")}
@@ -498,6 +514,16 @@ export default function LocationsPage() {
         description={t("locations:deleteConfirmDescription", { name: deleteTarget?.name ?? "" })}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={regenerateTarget !== null}
+        onOpenChange={(open) => !open && setRegenerateTarget(null)}
+        title={t("locations:regenerateConfirmTitle")}
+        description={t("locations:regenerateConfirmDescription", { name: regenerateTarget?.name ?? "" })}
+        confirmLabel={t("locations:regenerateCode")}
+        onConfirm={() => regenerateTarget && regenerateMutation.mutate(regenerateTarget.id)}
+        isLoading={regenerateMutation.isPending}
       />
     </div>
   );

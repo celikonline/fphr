@@ -50,9 +50,22 @@ function SelfCheckIn() {
   const qrMutation = useMutation({ mutationFn: qrCheckIn, onSuccess, onError });
   const gpsMutation = useMutation({ mutationFn: gpsCheckIn, onSuccess, onError });
 
-  function handleQrSubmit() {
+  /** Best-effort konum: geofence'li lokasyonlarda sunucu zorunlu tutar ve reddeder; izin yoksa konumsuz gönderilir. */
+  function readPosition(): Promise<{ latitude: number; longitude: number } | null> {
+    if (!navigator.geolocation) return Promise.resolve(null);
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        () => resolve(null),
+        { enableHighAccuracy: true, timeout: 10_000 },
+      );
+    });
+  }
+
+  async function handleQrSubmit() {
     if (!code.trim()) return;
-    qrMutation.mutate({ code: code.trim().toUpperCase(), direction });
+    const position = await readPosition();
+    qrMutation.mutate({ code: code.trim().toUpperCase(), direction, ...(position ?? {}) });
   }
 
   function handleGpsCheckIn() {
@@ -108,6 +121,9 @@ function SelfCheckIn() {
           </Title>
           <Text size="sm" c="dimmed">
             {t("attendance:selfCheckIn.qrHint")}
+          </Text>
+          <Text size="xs" c="dimmed">
+            {t("attendance:selfCheckIn.qrGeofenceHint")}
           </Text>
           <TextInput
             id="checkin-code"

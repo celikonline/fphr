@@ -84,3 +84,9 @@ export async function setLocationGeofence(id: string, input: LocationGeofenceInp
   const { data } = await apiClient.put<Location>(`${LOCATIONS_BASE}/${id}/geofence`, input);
   return normalize(data);
 }
+
+/** QR self-servis check-in kodunu yeniler; önceki basılı QR anında geçersiz olur (sızan/fotoğrafı paylaşılan poster için). */
+export async function regenerateLocationSelfCheckInCode(id: string): Promise<Location> {
+  const { data } = await apiClient.post<Location>(`${LOCATIONS_BASE}/${id}/self-checkin-code/regenerate`, null);
+  return normalize(data);
+}

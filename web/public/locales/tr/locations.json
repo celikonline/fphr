@@ -37,5 +37,9 @@
   "selfCheckInCode": "QR self-servis check-in kodu",
   "selfCheckInCodeHint": "Bu kodu girişe QR olarak yazdırın; çalışanlar taratarak (ya da elle girerek) giriş-çıkış kaydı oluşturabilir.",
   "copy": "Kopyala",
-  "copied": "Kopyalandı"
+  "copied": "Kopyalandı",
+  "regenerateCode": "Kodu yenile",
+  "regenerateSuccess": "QR kodu yenilendi; eski basılı poster artık geçersiz.",
+  "regenerateConfirmTitle": "QR kodu yenilensin mi?",
+  "regenerateConfirmDescription": "\"{{name}}\" lokasyonunun QR kodu yenilenecek. Girişe asılı mevcut QR poster hemen geçersiz olur; yeni kodu yeniden yazdırmanız gerekir."
 }

@@ -116,6 +116,34 @@ public sealed class SetLocationGeofenceHandler(ILocationRepository locations) : 
     }
 }
 
+/// <summary>
+/// Rotates a location's QR self-servis check-in code (S-31): the previously printed QR poster stops working at once,
+/// e.g. after it was photographed/shared. Same permission as the location's other fields.
+/// </summary>
+[RequiresPermission("organization.locations.update")]
+public sealed record RegenerateLocationSelfCheckInCodeCommand(Guid Id) : ICommand<LocationDto>;
+
+public sealed class RegenerateLocationSelfCheckInCodeValidator : AbstractValidator<RegenerateLocationSelfCheckInCodeCommand>
+{
+    public RegenerateLocationSelfCheckInCodeValidator() => RuleFor(x => x.Id).NotEmpty();
+}
+
+public sealed class RegenerateLocationSelfCheckInCodeHandler(ILocationRepository locations)
+    : ICommandHandler<RegenerateLocationSelfCheckInCodeCommand, LocationDto>
+{
+    public async Task<Result<LocationDto>> Handle(RegenerateLocationSelfCheckInCodeCommand command, CancellationToken cancellationToken)
+    {
+        var existing = await locations.GetByIdAsync(command.Id, cancellationToken);
+        if (existing.IsFailure)
+        {
+            return existing.Error;
+        }
+
+        existing.Value.RegenerateSelfCheckInCode();
+        return CreateLocationHandler.ToDto(existing.Value);
+    }
+}
+
 /// <summary>Soft-deletes a location (IsActive=false); fails with 409 if an active org unit still references it.</summary>
 [RequiresPermission("organization.locations.delete")]
 public sealed record DeactivateLocationCommand(Guid Id) : ICommand;

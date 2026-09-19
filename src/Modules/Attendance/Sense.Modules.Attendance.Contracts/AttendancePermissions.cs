@@ -117,13 +117,13 @@ public static class AttendancePermissions
     public const string MyCheckInKey = "attendance.my.checkin";
 
     public static readonly Permission MyCheckIn = new(
-        MyCheckInKey, Module, "Self Check-In/Out", Group, "Record the caller's own check-in/check-out via QR code or GPS");
+        MyCheckInKey, Module, "Kendi Giriş-Çıkışımı Kaydetme", Group, "QR kod veya GPS ile kendi giriş-çıkışınızı kaydetme");
 
     /// <summary>Canlı içeride/dışarıda panosu (S-31): "attendance.*" already reaches Owner/Admin/HR/HRSpecialist/Timekeeper, "attendance.*.view" reaches Manager/PayrollSpecialist.</summary>
     public const string BoardViewKey = "attendance.board.view";
 
     public static readonly Permission BoardView = new(
-        BoardViewKey, Module, "View Live Attendance Board", Group, "See who is currently checked in/out in real time");
+        BoardViewKey, Module, "Canlı İçeride/Dışarıda Panosunu Görüntüleme", Group, "Şu an kimin içeride kimin dışarıda olduğunu canlı görüntüleme");
 
     public static IEnumerable<Permission> All =>
         [

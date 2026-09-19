@@ -14,6 +14,9 @@ public static class AttendanceErrors
     /// <summary>S-31: the GPS check-in named a LocationId that doesn't resolve to an active tenant Location.</summary>
     public const string SelfCheckInLocationNotFound = "attendance.self_checkin.location_not_found";
 
+    /// <summary>S-31: the location has a geofence radius but the request carried no (complete) coordinates.</summary>
+    public const string SelfCheckInCoordinatesRequired = "attendance.self_checkin.coordinates_required";
+
     /// <summary>S-31: the caller's GPS coordinates are farther from the location's geofence center than its configured radius.</summary>
     public const string SelfCheckInOutsideGeofence = "attendance.self_checkin.outside_geofence";
 }

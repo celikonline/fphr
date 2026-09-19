@@ -14,7 +14,7 @@ public enum PunchDirection
 /// <summary>How the self-servis check-in was verified (S-31 kabul kriteri 1/2).</summary>
 public enum SelfCheckInMethod
 {
-    /// <summary>Location's printed QR code was scanned - physical proof of presence, no GPS check.</summary>
+    /// <summary>Location's printed QR code was scanned; coordinates (and a geofence verdict) are recorded too when the location has a radius.</summary>
     Qr = 0,
 
     /// <summary>The caller's device GPS coordinates were submitted, optionally validated against a Location's geofence.</summary>
@@ -68,8 +68,10 @@ public sealed class SelfCheckIn : TenantAggregateRoot<Guid>
     /// <summary>Null when the location had no geofence configured (not checked); true/false is the actual distance verdict.</summary>
     public bool? WithinGeofence { get; private set; }
 
-    public static SelfCheckIn RecordQr(Guid tenantId, Guid employeeId, DateTime timestampUtc, PunchDirection direction, Guid locationId) =>
-        new(Guid.CreateVersion7(), tenantId, employeeId, timestampUtc, direction, SelfCheckInMethod.Qr, locationId, null, null, null);
+    public static SelfCheckIn RecordQr(
+        Guid tenantId, Guid employeeId, DateTime timestampUtc, PunchDirection direction, Guid locationId,
+        double? latitude = null, double? longitude = null, bool? withinGeofence = null) =>
+        new(Guid.CreateVersion7(), tenantId, employeeId, timestampUtc, direction, SelfCheckInMethod.Qr, locationId, latitude, longitude, withinGeofence);
 
     public static SelfCheckIn RecordGps(
         Guid tenantId, Guid employeeId, DateTime timestampUtc, PunchDirection direction, Guid? locationId,

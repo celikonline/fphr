@@ -104,6 +104,9 @@ public sealed class IdentityModule : IModule
 
         // Cross-module read contract consumed by Career (Faz 9): slug → tenantId, pasif kiracı için null (ADR-0007)
         services.AddScoped<ITenantSlugLookup, TenantSlugLookup>();
+
+        // Cross-module read contract consumed by Attendance (S-31 self-servis check-in): tenant IANA saat dilimi
+        services.AddScoped<ITenantTimeZoneLookup, TenantTimeZoneLookup>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();

@@ -21,7 +21,8 @@
     "checkedOutAt": "Checked out at {{time}}.",
     "lastCheckIn": "Last check-in: {{time}} · {{location}}",
     "lastCheckOut": "Last check-out: {{time}} · {{location}}",
-    "unknownLocation": "no location info"
+    "unknownLocation": "no location info",
+    "qrGeofenceHint": "If the location has a geofence, your position is validated too (the browser asks for location access)."
   },
   "liveBoard": {
     "title": "Live in/out board",

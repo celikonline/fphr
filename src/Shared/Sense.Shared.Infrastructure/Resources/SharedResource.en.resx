@@ -878,6 +878,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.board.view" xml:space="preserve"><value>View the live in/out board</value></data>
   <data name="attendance.self_checkin.invalid_code" xml:space="preserve"><value>Invalid QR code. Please scan the location's code again.</value></data>
   <data name="attendance.self_checkin.location_not_found" xml:space="preserve"><value>The given location was not found or is inactive.</value></data>
+  <data name="organization.location.geofence_invalid" xml:space="preserve"><value>The geofence is invalid: latitude/longitude must be provided together (latitude -90..90, longitude -180..180) and the radius must be positive.</value></data>
+  <data name="attendance.self_checkin.coordinates_required" xml:space="preserve"><value>This location requires your position: please allow location access and try again.</value></data>
   <data name="attendance.self_checkin.outside_geofence" xml:space="preserve"><value>Your location is outside this location's allowed area; check-in was rejected.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>

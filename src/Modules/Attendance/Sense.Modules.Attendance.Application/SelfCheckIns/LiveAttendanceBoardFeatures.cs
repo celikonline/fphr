@@ -23,7 +23,7 @@ public sealed record LiveAttendanceStatusDto(
 public sealed record GetLiveAttendanceBoardQuery(Guid? OrgUnitId) : IQuery<IReadOnlyList<LiveAttendanceStatusDto>>;
 
 public sealed class GetLiveAttendanceBoardHandler(
-    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, TimeProvider clock)
+    ITenantContext tenant, IDataScopeService dataScope, IEmployeeDirectory employees, IAttendanceDayRepository days, ITenantLocalClock clock)
     : IQueryHandler<GetLiveAttendanceBoardQuery, IReadOnlyList<LiveAttendanceStatusDto>>
 {
     public async Task<Result<IReadOnlyList<LiveAttendanceStatusDto>>> Handle(GetLiveAttendanceBoardQuery query, CancellationToken cancellationToken)
@@ -35,8 +35,17 @@ public sealed class GetLiveAttendanceBoardHandler(
             return Result.Success<IReadOnlyList<LiveAttendanceStatusDto>>([]);
         }
 
-        var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var records = (await days.ListForEmployeesAsync(employeeIds, today, today, cancellationToken)).ToDictionary(d => d.EmployeeId);
+        // Tenant-local "today" (not UTC). Yesterday is read too: a night-shift employee whose evening "in" is still open
+        // (no "out" yet) is inside this morning, and only has a record dated yesterday.
+        var today = DateOnly.FromDateTime((await clock.NowAsync(tenant.TenantId, cancellationToken)).Local);
+        var yesterday = today.AddDays(-1);
+        var recent = await days.ListForEmployeesAsync(employeeIds, yesterday, today, cancellationToken);
+        var records = recent.Where(d => d.Date == today).ToDictionary(d => d.EmployeeId);
+        foreach (var open in recent.Where(d => d.Date == yesterday && d.CheckOut is null && d.CheckIn >= new TimeOnly(12, 0)))
+        {
+            records.TryAdd(open.EmployeeId, open);
+        }
+
         var names = (await employees.GetContactsAsync(tenant.TenantId, employeeIds, cancellationToken))
             .ToDictionary(c => c.EmployeeId, c => $"{c.FirstName} {c.LastName}".Trim());
 

@@ -154,11 +154,35 @@ public sealed class LocationTests
     }
 
     [Fact]
-    public void Create_GeneratesAnEightCharacterSelfCheckInCode()
+    public void Create_GeneratesATwelveCharacterSelfCheckInCode()
     {
         var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
 
-        location.SelfCheckInCode.Length.ShouldBe(8);
+        location.SelfCheckInCode.Length.ShouldBe(Location.SelfCheckInCodeLength);
+        location.SelfCheckInCode.ShouldMatch("^[A-HJKMNP-Z2-9]+$");
+    }
+
+    [Fact]
+    public void Create_SelfCheckInCode_IsNotDerivedFromCreationTime()
+    {
+        // Regression: the first version derived the code from Guid.CreateVersion7() bytes (a millisecond timestamp), so codes created
+        // moments apart shared a prefix and were enumerable. A CSPRNG code must not share a long prefix across back-to-back creations.
+        var codes = Enumerable.Range(0, 20).Select(_ => Location.Create(TenantId, "L", LocationType.Office, "TR", null).Value.SelfCheckInCode).ToList();
+
+        codes.Distinct().Count().ShouldBe(codes.Count);
+        codes.Select(c => c[..3]).Distinct().Count().ShouldBeGreaterThan(1);
+    }
+
+    [Fact]
+    public void RegenerateSelfCheckInCode_ReplacesTheCode()
+    {
+        var location = Location.Create(TenantId, "Ankara Office", LocationType.Office, "TR", null).Value;
+        var before = location.SelfCheckInCode;
+
+        location.RegenerateSelfCheckInCode();
+
+        location.SelfCheckInCode.ShouldNotBe(before);
+        location.SelfCheckInCode.Length.ShouldBe(Location.SelfCheckInCodeLength);
     }
 
     [Fact]

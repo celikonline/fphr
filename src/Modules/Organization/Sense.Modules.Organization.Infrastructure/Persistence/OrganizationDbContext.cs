@@ -64,8 +64,8 @@ internal static class OrganizationTables
     /// <summary>ISO 3166-1 alpha-2 country code length (e.g. "TR"), used by Location.</summary>
     public const int CountryCodeLength = 2;
 
-    /// <summary>Location.SelfCheckInCode (S-31 QR self-servis check-in): fixed 8-char code.</summary>
-    public const int SelfCheckInCodeLength = 8;
+    /// <summary>Location.SelfCheckInCode (S-31 QR self-servis check-in): fixed 12-char CSPRNG code.</summary>
+    public const int SelfCheckInCodeLength = 12;
 }
 
 public sealed class OrgUnitTypeConfiguration : IEntityTypeConfiguration<OrgUnitType>

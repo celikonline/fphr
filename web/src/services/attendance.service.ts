@@ -584,7 +584,13 @@ export async function getMyCheckInStatus(): Promise<MyCheckInStatus> {
 }
 
 /** Lokasyon girişindeki QR kodu taratarak giriş/çıkış (attendance.my.checkin, kabul kriteri 1). */
-export async function qrCheckIn(input: { code: string; direction: PunchDirection }): Promise<SelfCheckInResult> {
+/** Konum geofence'li bir lokasyonda zorunludur (sunucu doğrular); geofence yoksa yalnız kaydedilir. */
+export async function qrCheckIn(input: {
+  code: string;
+  direction: PunchDirection;
+  latitude?: number;
+  longitude?: number;
+}): Promise<SelfCheckInResult> {
   const { data } = await apiClient.post<SelfCheckInResult>(`${ATTENDANCE_BASE}/self-checkin/qr`, input);
   return data;
 }

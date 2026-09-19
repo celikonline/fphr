@@ -50,6 +50,12 @@ public sealed class LocationsController : ApiControllerBase
     public async Task<IActionResult> SetGeofence(Guid id, [FromBody] SetLocationGeofenceRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new SetLocationGeofenceCommand(id, request.Latitude, request.Longitude, request.RadiusMeters), ct));
 
+    /// <summary>Rotates the QR self-servis check-in code (S-31); the old printed QR stops working immediately.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/self-checkin-code/regenerate")]
+    [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RegenerateSelfCheckInCode(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RegenerateLocationSelfCheckInCodeCommand(id), ct));
+
     /// <summary>Soft delete: sets IsActive=false (409 if an active org unit still references this location).</summary>
     [HttpDelete(ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

@@ -15,7 +15,7 @@ namespace Sense.Modules.Attendance.Tests;
 public sealed class LiveAttendanceBoardFeaturesTests
 {
     private static readonly DateOnly Today = new(2026, 9, 21);
-    private static readonly FixedTimeProvider Clock = new(new DateTimeOffset(2026, 9, 21, 10, 0, 0, TimeSpan.Zero));
+    private static readonly FixedLocalClock Clock = new(new DateTime(2026, 9, 21, 10, 0, 0, DateTimeKind.Utc));
 
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly Guid _employeeA = Guid.NewGuid();
@@ -49,7 +49,7 @@ public sealed class LiveAttendanceBoardFeaturesTests
         _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
         var day = AttendanceDay.Record(_tenantId, _employeeA, Today, new TimeOnly(9, 0), null, new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.SelfService);
-        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today, Today, Arg.Any<CancellationToken>())
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today.AddDays(-1), Today, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceDay> { day });
 
         var result = await CreateHandler().Handle(new GetLiveAttendanceBoardQuery(null), TestContext.Current.CancellationToken);
@@ -63,6 +63,23 @@ public sealed class LiveAttendanceBoardFeaturesTests
     }
 
     [Fact]
+    public async Task Handle_OpenEveningCheckInFromYesterday_ReportsInsideThisMorning()
+    {
+        // Night shift: "in" at 22:00 yesterday, no "out" yet, nothing recorded today.
+        _dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.BoardViewKey, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeA });
+        _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
+        var night = AttendanceDay.Record(_tenantId, _employeeA, Today.AddDays(-1), new TimeOnly(22, 0), null, new TimeOnly(22, 0), new TimeOnly(6, 0), 480, 0, AttendanceDaySource.SelfService);
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today.AddDays(-1), Today, Arg.Any<CancellationToken>())
+            .Returns(new List<AttendanceDay> { night });
+
+        var result = await CreateHandler().Handle(new GetLiveAttendanceBoardQuery(null), TestContext.Current.CancellationToken);
+
+        result.Value.ShouldHaveSingleItem().IsInside.ShouldBeTrue();
+    }
+
+    [Fact]
     public async Task Handle_CheckedInAndOut_ReportsOutside()
     {
         _dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.BoardViewKey, Arg.Any<CancellationToken>())
@@ -70,7 +87,7 @@ public sealed class LiveAttendanceBoardFeaturesTests
         _employees.GetContactsAsync(_tenantId, Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(new List<EmployeeContact> { new(_employeeA, "Ayşe", "Yılmaz", null, null, null, "Active") });
         var day = AttendanceDay.Record(_tenantId, _employeeA, Today, new TimeOnly(9, 0), new TimeOnly(17, 0), new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.SelfService);
-        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today, Today, Arg.Any<CancellationToken>())
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today.AddDays(-1), Today, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceDay> { day });
 
         var result = await CreateHandler().Handle(new GetLiveAttendanceBoardQuery(null), TestContext.Current.CancellationToken);
@@ -90,7 +107,7 @@ public sealed class LiveAttendanceBoardFeaturesTests
                 new(_employeeB, "Kemal", "Demir", null, null, null, "Active"),
             });
         var day = AttendanceDay.Record(_tenantId, _employeeA, Today, new TimeOnly(9, 0), null, new TimeOnly(9, 0), new TimeOnly(18, 0), 540, 0, AttendanceDaySource.SelfService);
-        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today, Today, Arg.Any<CancellationToken>())
+        _days.ListForEmployeesAsync(Arg.Any<IReadOnlyCollection<Guid>>(), Today.AddDays(-1), Today, Arg.Any<CancellationToken>())
             .Returns(new List<AttendanceDay> { day });
 
         var result = await CreateHandler().Handle(new GetLiveAttendanceBoardQuery(null), TestContext.Current.CancellationToken);
@@ -101,8 +118,4 @@ public sealed class LiveAttendanceBoardFeaturesTests
         absent.CheckIn.ShouldBeNull();
     }
 
-    private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => now;
-    }
 }
