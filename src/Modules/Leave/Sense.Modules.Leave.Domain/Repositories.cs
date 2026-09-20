@@ -66,6 +66,16 @@ public interface ILeaveRequestRepository
         DateOnly from, DateOnly to, IReadOnlyCollection<Guid>? employeeIds, CancellationToken cancellationToken = default);
 }
 
+/// <summary>Denetim A5-belge: talebe eklenen belgeler (dosya Documents modülünde, bağ burada).</summary>
+public interface ILeaveRequestAttachmentRepository
+{
+    void Add(LeaveRequestAttachment attachment);
+
+    void Remove(LeaveRequestAttachment attachment);
+
+    Task<IReadOnlyList<LeaveRequestAttachment>> ListByRequestAsync(Guid leaveRequestId, CancellationToken cancellationToken = default);
+}
+
 public interface IOvertimeRequestRepository
 {
     void Add(OvertimeRequest request);

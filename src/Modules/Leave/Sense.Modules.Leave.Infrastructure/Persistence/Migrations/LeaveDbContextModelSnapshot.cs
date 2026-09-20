@@ -1234,6 +1234,70 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                     b.ToTable("leave_requests", "leave");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Leave.Domain.Requests.LeaveRequestAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AttachedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("attached_at");
+
+                    b.Property<Guid?>("AttachedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("attached_by_user_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)")
+                        .HasColumnName("file_name");
+
+                    b.Property<Guid>("LeaveRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("leave_request_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_leave_request_attachments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_leave_request_attachments_tenant_id");
+
+                    b.HasIndex("TenantId", "LeaveRequestId")
+                        .HasDatabaseName("ix_leave_request_attachments_tenant_id_leave_request_id");
+
+                    b.HasIndex("TenantId", "LeaveRequestId", "DocumentId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_leave_request_attachments_tenant_id_leave_request_id_docume");
+
+                    b.ToTable("leave_request_attachments", "leave");
+                });
+
             modelBuilder.Entity("Sense.Modules.Leave.Domain.RuleSets.LeaveRuleSet", b =>
                 {
                     b.Property<Guid>("Id")

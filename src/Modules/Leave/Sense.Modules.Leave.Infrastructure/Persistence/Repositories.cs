@@ -135,6 +135,16 @@ public sealed class LeaveRequestRepository(LeaveDbContext context) : ILeaveReque
     }
 }
 
+public sealed class LeaveRequestAttachmentRepository(LeaveDbContext context) : ILeaveRequestAttachmentRepository
+{
+    public void Add(LeaveRequestAttachment attachment) => context.RequestAttachments.Add(attachment);
+
+    public void Remove(LeaveRequestAttachment attachment) => context.RequestAttachments.Remove(attachment);
+
+    public async Task<IReadOnlyList<LeaveRequestAttachment>> ListByRequestAsync(Guid leaveRequestId, CancellationToken cancellationToken = default) =>
+        await context.RequestAttachments.Where(a => a.LeaveRequestId == leaveRequestId).OrderBy(a => a.AttachedAt).ToListAsync(cancellationToken);
+}
+
 public sealed class OvertimeRequestRepository(LeaveDbContext context) : IOvertimeRequestRepository
 {
     public void Add(OvertimeRequest request) => context.OvertimeRequests.Add(request);

@@ -38,6 +38,11 @@ public static class LeaveRequestErrors
     public const string SubstituteNotFound = "leave.errors.substitute_not_found";
     public const string SubstituteOnLeave = "leave.errors.substitute_on_leave";
 
+    /// <summary>Denetim A5-belge: RequiresDocument türünde belgesiz talep; silinmiş/yabancı belge; talepte olmayan eki çıkarma.</summary>
+    public const string DocumentRequired = "leave.errors.document_required";
+    public const string DocumentNotFound = "leave.errors.document_not_found";
+    public const string AttachmentNotFound = "leave.errors.attachment_not_found";
+
     /// <summary>Denetim A10: self-servis talebin başlangıcı kiracı yerel bugününden en fazla LeaveBackdatePolicy.SelfServiceMaxBackdateDays gün geriye gidebilir.</summary>
     public const string StartDateTooFarInPast = "leave.errors.start_date_too_far_past";
 

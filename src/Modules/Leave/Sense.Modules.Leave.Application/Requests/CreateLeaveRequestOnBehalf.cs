@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
@@ -28,7 +29,8 @@ namespace Sense.Modules.Leave.Application.Requests;
 [RequiresPermission("leave.requests.create_on_behalf")]
 public sealed record CreateLeaveRequestOnBehalfCommand(
     Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null)
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null,
+    IReadOnlyList<Guid>? DocumentIds = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
@@ -38,7 +40,8 @@ public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<Crea
 
 public sealed class CreateLeaveRequestOnBehalfHandler(
     ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, LeaveRequestRules rules, ILeaveRequestRepository requests,
-    ILeaveLedgerRepository ledger, IWorkflowService workflow, TimeProvider clock)
+    ILeaveRequestAttachmentRepository attachments, IDocumentAttachmentLookup documents, ILeaveLedgerRepository ledger, IWorkflowService workflow,
+    TimeProvider clock)
     : ICommandHandler<CreateLeaveRequestOnBehalfCommand, LeaveRequestDto>
 {
     public async Task<Result<LeaveRequestDto>> Handle(CreateLeaveRequestOnBehalfCommand command, CancellationToken cancellationToken)
@@ -67,6 +70,14 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         if (substitute.IsFailure)
         {
             return substitute.Error;
+        }
+
+        var documentIds = command.DocumentIds ?? [];
+        var documentCheck = await rules.ValidateDocumentAsync(
+            tenant.TenantId, valid.Value.Type, documentIds, cancellationToken, bypass: command.BypassApproval);
+        if (documentCheck.IsFailure)
+        {
+            return documentCheck.Error;
         }
 
         var now = clock.GetUtcNow().UtcDateTime;
@@ -102,6 +113,16 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
         }
 
         requests.Add(request);
+        if (documentIds.Count > 0)
+        {
+            var attached = await LeaveRequestAttachmentLinker.LinkAsync(
+                documents, attachments, tenant.TenantId, request.Id, documentIds, currentUser.UserId, now, cancellationToken);
+            if (attached.IsFailure)
+            {
+                return attached.Error;
+            }
+        }
+
         return LeaveRequestMapper.ToDto(request, valid.Value.Type.Name);
     }
 }

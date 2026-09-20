@@ -33,13 +33,18 @@ public sealed record SetLeaveTypeDisabledRequest(bool Disabled);
 /// <summary>Self-service submit/edit body; <c>PreviousRequestId</c> (submit only) re-submits the caller's rejected request.</summary>
 public sealed record LeaveRequestBody(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null,
+    IReadOnlyList<Guid>? DocumentIds = null);
 
 public sealed record CancelLeaveRequestBody(string Reason);
 
+/// <summary>Bekleyen talebe belge eki (Documents modülünde Active durumda bir belge).</summary>
+public sealed record AttachLeaveDocumentBody(Guid DocumentId);
+
 public sealed record LeaveRequestOnBehalfBody(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null,
+    IReadOnlyList<Guid>? DocumentIds = null);
 
 public sealed record AdjustLeaveBalanceRequest(Guid LeaveTypeId, decimal Days, DateOnly EffectiveDate, string Reason);
 

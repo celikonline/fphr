@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Documents.Domain/Sense.Modules.Documents.Domain.csproj" />
     <ProjectReference Include="../Sense.Modules.Documents.Application/Sense.Modules.Documents.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.Documents.Contracts/Sense.Modules.Documents.Contracts.csproj" />
     <!-- Implements IReportProvider (Reporting.Contracts) so the missing-document report is generatable via the Reports menu (roadmap #70). -->
     <ProjectReference Include="../../Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />

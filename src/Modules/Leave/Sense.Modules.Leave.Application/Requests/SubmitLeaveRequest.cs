@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
@@ -28,7 +29,8 @@ namespace Sense.Modules.Leave.Application.Requests;
 [RequiresPermission("leave.my.requests")]
 public sealed record SubmitLeaveRequestCommand(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null)
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null,
+    IReadOnlyList<Guid>? DocumentIds = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveRequestCommand>
@@ -37,7 +39,8 @@ public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveR
 }
 
 public sealed class SubmitLeaveRequestHandler(
-    ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, IWorkflowService workflow, TimeProvider clock)
+    ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, ILeaveRequestAttachmentRepository attachments,
+    IDocumentAttachmentLookup documents, IWorkflowService workflow, TimeProvider clock)
     : ICommandHandler<SubmitLeaveRequestCommand, LeaveRequestDto>
 {
     public async Task<Result<LeaveRequestDto>> Handle(SubmitLeaveRequestCommand command, CancellationToken cancellationToken)
@@ -72,6 +75,13 @@ public sealed class SubmitLeaveRequestHandler(
             return substitute.Error;
         }
 
+        var documentIds = command.DocumentIds ?? [];
+        var documentCheck = await rules.ValidateDocumentAsync(tenant.TenantId, valid.Value.Type, documentIds, cancellationToken);
+        if (documentCheck.IsFailure)
+        {
+            return documentCheck.Error;
+        }
+
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, employeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
             command.Description, command.PreviousRequestId is null ? LeaveRequestSource.SelfService : LeaveRequestSource.Resubmission,
@@ -90,6 +100,16 @@ public sealed class SubmitLeaveRequestHandler(
 
         submitted.Value.AttachApproval(approval.Value);
         requests.Add(submitted.Value);
+        if (documentIds.Count > 0)
+        {
+            var attached = await LeaveRequestAttachmentLinker.LinkAsync(
+                documents, attachments, tenant.TenantId, submitted.Value.Id, documentIds, currentUser.UserId, clock.GetUtcNow().UtcDateTime, cancellationToken);
+            if (attached.IsFailure)
+            {
+                return attached.Error;
+            }
+        }
+
         return LeaveRequestMapper.ToDto(submitted.Value, valid.Value.Type.Name);
     }
 }

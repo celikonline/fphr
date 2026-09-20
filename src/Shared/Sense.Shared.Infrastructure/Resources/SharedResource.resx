@@ -730,6 +730,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>Vekil, izin talep eden çalışanın kendisi olamaz.</value></data>
   <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>Seçilen vekil bulunamadı veya aktif değil.</value></data>
   <data name="leave.errors.substitute_on_leave" xml:space="preserve"><value>Seçilen vekil bu tarihlerde kendisi de izinli.</value></data>
+  <data name="leave.errors.document_required" xml:space="preserve"><value>Bu izin türü için belge eklemelisiniz.</value></data>
+  <data name="leave.errors.document_not_found" xml:space="preserve"><value>Eklenen belge bulunamadı veya silinmiş.</value></data>
+  <data name="leave.errors.attachment_not_found" xml:space="preserve"><value>Talepte böyle bir belge eki yok.</value></data>
+  <data name="leave.errors.invalid_attachment" xml:space="preserve"><value>Belge eki geçersiz.</value></data>
   <data name="leave.requests.cancel_approved" xml:space="preserve"><value>İzin taleplerini iptal etme</value></data>
   <data name="leave.my.calendar" xml:space="preserve"><value>İzin takvimini görüntüleme</value></data>
   <data name="leave.calendar.read" xml:space="preserve"><value>Ekip izin takvimini görüntüleme</value></data>

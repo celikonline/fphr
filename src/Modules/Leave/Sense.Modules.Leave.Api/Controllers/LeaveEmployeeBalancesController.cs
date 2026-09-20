@@ -59,7 +59,7 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
         FromResult((await Dispatcher.Send(
             new CreateLeaveRequestOnBehalfCommand(
                 employeeId, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.BypassApproval,
-                request.StartTime, request.EndTime, request.HalfDayPeriod, request.SubstituteEmployeeId), ct))
+                request.StartTime, request.EndTime, request.HalfDayPeriod, request.SubstituteEmployeeId, request.DocumentIds), ct))
             .Localize(localizer));
 
     [HttpGet("requests/preview")]

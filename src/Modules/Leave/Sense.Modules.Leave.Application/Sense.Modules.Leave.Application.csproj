@@ -7,6 +7,7 @@
     <ProjectReference Include="../Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
     <ProjectReference Include="../Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <!-- Cross-module read contracts only, per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Documents/Sense.Modules.Documents.Contracts/Sense.Modules.Documents.Contracts.csproj" />
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />

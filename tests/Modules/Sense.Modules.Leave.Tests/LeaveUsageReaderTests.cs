@@ -37,6 +37,8 @@ public sealed class LeaveUsageReaderTests : TestFixture
         services.AddAttendanceCoreServices(configuration);
         services.AddAttendanceIntegrationEventHandlers();
         services.AddLeaveServices(configuration);
+        // Denetim A5-belge: LeaveRequestRules'un Documents bağı (bu dosyadaki senaryolar belge kuralı dışı).
+        services.AddSingleton(DocumentLookupDoubles.Permissive());
         services.AddModuleHandlers(
             LeaveDbContext.SchemaName,
             typeof(LeaveErrors).Assembly,
