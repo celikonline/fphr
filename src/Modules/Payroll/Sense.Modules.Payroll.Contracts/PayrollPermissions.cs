@@ -28,16 +28,16 @@ public static class PayrollPermissions
 
     /// <summary>senseik-019 2c: icra/nafaka kesinti emirlerini açma/kapatma.</summary>
     public static readonly Permission CourtOrderManage = new(
-        "payroll.courtorder.manage", Module, "Manage Garnishment Orders", Group, "Create and close employees' garnishment (icra/nafaka) orders");
+        "payroll.courtorder.manage", Module, "payroll.courtorder.manage", Group, "Create and close employees' garnishment (icra/nafaka) orders");
 
     /// <summary>senseik-019 3b/3c/3d: e-Bildirge/APHB, banka ödeme talimatı ve muhasebe fişi dosyalarını indirme.
     /// "payroll.declarations.*" içeren mevcut muhasebe/bordro sistem rolüne (SystemRoleDefinitions) otomatik dahildir.</summary>
     public static readonly Permission DeclarationsExport = new(
-        "payroll.declarations.export", Module, "Export Payroll Declarations", Group, "Download APHB/e-Bildirge, bank payment and accounting voucher files");
+        "payroll.declarations.export", Module, "payroll.declarations.export", Group, "Download APHB/e-Bildirge, bank payment and accounting voucher files");
 
     /// <summary>11.3.07-bordro.md "Sendika & TİS" (#58, P5): manage unions and employees' union/TİS membership + dues.</summary>
     public static readonly Permission UnionManage = new(
-        "payroll.union.manage", Module, "Manage Unions", Group, "Manage unions and employees' union/collective-agreement membership and dues");
+        "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
     public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, CourtOrderManage, DeclarationsExport, UnionManage];
 }
