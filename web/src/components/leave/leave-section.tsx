@@ -26,7 +26,7 @@ import {
 } from "@/services/leave.service";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
-import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, useLeaveName, useLeaveTypeNames } from "./leave-shared";
+import { LeaveBalanceSummary, LeaveLedgerDialog, LeaveRequestsTable, isEligibleForGender, useLeaveName, useLeaveTypeNames } from "./leave-shared";
 import { LeaveRequestDialog, type LeaveRequestTypeOption } from "./leave-request-dialog";
 import { CancelLeaveRequestDialog, LeaveRequestDetailSheet } from "./leave-request-detail";
 import { ChangeEmployeeRuleSetDialog } from "./employee-rule-set-dialog";
@@ -100,7 +100,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
     const available = new Map((balancesQuery.data?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
     if (ruleSetQuery.data) {
       return [...ruleSetQuery.data.types]
-        .filter((type) => !type.settings.isDisabled)
+        .filter((type) => !type.settings.isDisabled && isEligibleForGender(type.settings.eligibleGender, employee.gender))
         .sort((a, b) => a.sortOrder - b.sortOrder)
         .map((type) => ({
           id: type.id,
@@ -110,6 +110,8 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           perRequestMaxDays: type.settings.perRequestMaxDays ?? null,
           availableBalance: available.get(type.id) ?? null,
           unit: type.settings.unit,
+          requiresSubstitute: type.settings.requiresSubstitute,
+          requiresDocument: type.settings.requiresDocument,
         }));
     }
     // Rule set not readable (leave.rule_sets.read missing): balance types only, unit unknown → FullDay-only form.
@@ -121,7 +123,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
       perRequestMaxDays: null,
       availableBalance: item.balance.availableBalance,
     }));
-  }, [ruleSetQuery.data, balancesQuery.data, leaveName]);
+  }, [ruleSetQuery.data, balancesQuery.data, leaveName, employee.gender]);
 
   const recalculateMutation = useMutation({
     mutationFn: () => recalculateLeaveBalances(employee.id),
@@ -358,6 +360,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           preview={(input) => previewEmployeeLeaveRequest(employee.id, input)}
           save={(input, bypassApproval) => createLeaveRequestOnBehalf(employee.id, { ...input, bypassApproval })}
           allowBypass={canBypassApproval}
+          requesterEmployeeId={employee.id}
           onClose={() => setAddOpen(false)}
           onSaved={() => {
             setAddOpen(false);

@@ -121,6 +121,7 @@ public sealed class LeaveTypeConfiguration : IEntityTypeConfiguration<LeaveType>
         b.Property(x => x.AccrualBasis).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.CarryOverMode).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         b.Property(x => x.Unit).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
+        b.Property(x => x.EligibleGender).HasConversion<string>().HasMaxLength(LeaveTables.EnumCodeLength);
         foreach (var days in new[] { nameof(LeaveType.PerRequestMaxDays), nameof(LeaveType.AnnualDays), nameof(LeaveType.AgeExceptionMinDays),
                      nameof(LeaveType.NegativeBalanceLimitDays), nameof(LeaveType.CarryOverMaxDays), nameof(LeaveType.MinConsecutiveDays), nameof(LeaveType.MaxConsecutiveDays) })
         {

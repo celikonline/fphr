@@ -94,6 +94,11 @@
     "halfDay": "Half day",
     "hourly": "Hourly"
   },
+  "eligibleGender": {
+    "any": "Everyone",
+    "female": "Women only",
+    "male": "Men only"
+  },
   "negativeBalance": {
     "none": "Off",
     "unlimited": "Unlimited negative balance",
@@ -142,6 +147,8 @@
     "maxConsecutiveDays": "Max consecutive days",
     "waitingPeriodMonths": "Waiting period (months)",
     "waitingPeriodMonthsHint": "How long after hire this type cannot be requested.",
+    "eligibleGender": "Eligible gender",
+    "eligibleGenderHint": "Only employees of the selected gender can request this type; employees with no recorded gender are not restricted.",
     "requiresDescription": "Description required",
     "requiresSubstitute": "Substitute assignment required",
     "requiresDocument": "Document required",
@@ -229,11 +236,16 @@
     "perRequestMax": "At most {{days}} days per request.",
     "calculatedDays": "Calculated days: {{days}}",
     "typesLimited": "Only leave types with a balance are listed.",
+    "substitute": "Substitute",
+    "substituteHint": "The colleague who will cover your work during the leave.",
+    "substitutePlaceholder": "Choose a substitute",
+    "documentHint": "This leave type needs a supporting document (e.g. a report); hand it to human resources.",
     "validation": {
       "typeRequired": "Select a leave type.",
       "datesRequired": "Start and end dates are required.",
       "range": "End date cannot be before the start date.",
       "descriptionRequired": "A description is required for this leave type.",
+      "substituteRequired": "A substitute is required for this leave type.",
       "timeRequired": "Enter a start and end time; the end time must be after the start time.",
       "halfDayRequired": "Select morning or afternoon."
     },
@@ -329,6 +341,7 @@
     "halfDayPeriod": "Half-day period",
     "timeRange": "Time range",
     "remainingBalance": "Remaining leave balance",
+    "substitute": "Substitute",
     "overlappingLeaves": {
       "title": "Overlapping leaves ({{count}})",
       "more": "+{{count}} more (not listed)",

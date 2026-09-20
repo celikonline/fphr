@@ -120,7 +120,7 @@ public sealed record LeaveRequestDetailDto(
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
     string? LeaveTypeName, Guid? PreviousRequestId, DateTime? CancelledAt, string? CancellationReason, string EmployeeName, LeaveApprovalDto? Approval,
     TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null,
-    decimal? RemainingBalance = null, TeamOverlapDto? TeamOverlap = null);
+    decimal? RemainingBalance = null, TeamOverlapDto? TeamOverlap = null, Guid? SubstituteEmployeeId = null, string? SubstituteName = null);
 
 public sealed class LeaveRequestDetailBuilder(
     ITenantContext tenant,
@@ -144,6 +144,11 @@ public sealed class LeaveRequestDetailBuilder(
         var status = request.ApprovalRequestId is { } approvalId ? await approvals.GetStatusAsync(tenant.TenantId, approvalId, cancellationToken) : null;
 
         var contactIds = new HashSet<Guid> { request.EmployeeId };
+        if (request.SubstituteEmployeeId is { } substituteId)
+        {
+            contactIds.Add(substituteId);
+        }
+
         foreach (var step in status?.Steps ?? [])
         {
             if (step.ApproverEmployeeId is { } approverId)
@@ -179,7 +184,8 @@ public sealed class LeaveRequestDetailBuilder(
             dto.Id, dto.EmployeeId, dto.LeaveTypeId, dto.LeaveTypeCode, dto.StartDate, dto.EndDate, dto.CalculatedDays, dto.Description, dto.Status, dto.Source,
             dto.ApprovalRequestId, dto.RevisionNo, dto.SubmittedAt, dto.DecidedAt, dto.LeaveTypeName, dto.PreviousRequestId, dto.CancelledAt, dto.CancellationReason,
             names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval, dto.StartTime, dto.EndTime, dto.HalfDayPeriod,
-            remainingBalance, teamOverlap);
+            remainingBalance, teamOverlap, request.SubstituteEmployeeId,
+            request.SubstituteEmployeeId is { } substitute ? names.GetValueOrDefault(substitute) : null);
     }
 
     /// <summary>"Kalan İzin Bakiyesi": the employee's current available balance for this request's leave type (PerYear types only, else null).</summary>

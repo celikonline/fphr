@@ -24,7 +24,7 @@ namespace Sense.Modules.Leave.Application.Requests;
 [RequiresPermission("leave.my.requests")]
 public sealed record UpdatePendingLeaveRequestCommand(
     Guid RequestId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null) : ICommand;
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null) : ICommand;
 
 public sealed class UpdatePendingLeaveRequestHandler(
     ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, IWorkflowService workflow)
@@ -56,6 +56,14 @@ public sealed class UpdatePendingLeaveRequestHandler(
             return valid.Error;
         }
 
+        var substitute = await rules.ValidateSubstituteAsync(
+            tenant.TenantId, request.EmployeeId, valid.Value.Type, command.SubstituteEmployeeId, command.StartDate, command.EndDate,
+            command.StartTime, command.EndTime, command.HalfDayPeriod, cancellationToken);
+        if (substitute.IsFailure)
+        {
+            return substitute.Error;
+        }
+
         if (request.ApprovalRequestId is { } previousApproval)
         {
             var cancelled = await workflow.CancelAsync(previousApproval, request.EmployeeId, cancellationToken);
@@ -67,7 +75,7 @@ public sealed class UpdatePendingLeaveRequestHandler(
 
         var updated = request.UpdatePending(
             valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days, command.Description,
-            command.StartTime, command.EndTime, command.HalfDayPeriod);
+            command.StartTime, command.EndTime, command.HalfDayPeriod, command.SubstituteEmployeeId);
         if (updated.IsFailure)
         {
             return updated;

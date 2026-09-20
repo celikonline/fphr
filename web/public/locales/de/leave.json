@@ -94,6 +94,11 @@
     "halfDay": "Halber Tag",
     "hourly": "Stundenweise"
   },
+  "eligibleGender": {
+    "any": "Alle",
+    "female": "Nur Frauen",
+    "male": "Nur Männer"
+  },
   "negativeBalance": {
     "none": "Aus",
     "unlimited": "Unbegrenzter Negativsaldo",
@@ -142,6 +147,8 @@
     "maxConsecutiveDays": "Max. aufeinanderfolgende Tage",
     "waitingPeriodMonths": "Wartezeit (Monate)",
     "waitingPeriodMonthsHint": "Wie lange nach dem Eintritt diese Art nicht beantragt werden kann.",
+    "eligibleGender": "Berechtigtes Geschlecht",
+    "eligibleGenderHint": "Nur Mitarbeitende des gewählten Geschlechts können diesen Typ beantragen; ohne erfasstes Geschlecht gilt keine Einschränkung.",
     "requiresDescription": "Beschreibung erforderlich",
     "requiresSubstitute": "Vertretung erforderlich",
     "requiresDocument": "Nachweis erforderlich",
@@ -229,11 +236,16 @@
     "perRequestMax": "Höchstens {{days}} Tage pro Antrag.",
     "calculatedDays": "Berechnete Tage: {{days}}",
     "typesLimited": "Es werden nur Urlaubsarten mit Saldo aufgeführt.",
+    "substitute": "Vertretung",
+    "substituteHint": "Die Kollegin oder der Kollege, die bzw. der Ihre Aufgaben während des Urlaubs übernimmt.",
+    "substitutePlaceholder": "Vertretung wählen",
+    "documentHint": "Für diesen Abwesenheitstyp wird ein Nachweis (z. B. ein Attest) benötigt; bitte an die Personalabteilung übergeben.",
     "validation": {
       "typeRequired": "Wählen Sie eine Urlaubsart aus.",
       "datesRequired": "Start- und Enddatum sind erforderlich.",
       "range": "Das Enddatum darf nicht vor dem Startdatum liegen.",
       "descriptionRequired": "Für diese Urlaubsart ist eine Beschreibung erforderlich.",
+      "substituteRequired": "Für diesen Abwesenheitstyp ist eine Vertretung erforderlich.",
       "timeRequired": "Geben Sie eine Start- und Endzeit ein; die Endzeit muss nach der Startzeit liegen.",
       "halfDayRequired": "Wählen Sie Vormittag oder Nachmittag."
     },
@@ -329,6 +341,7 @@
     "halfDayPeriod": "Tageshälfte",
     "timeRange": "Zeitraum",
     "remainingBalance": "Verbleibendes Urlaubsguthaben",
+    "substitute": "Vertretung",
     "overlappingLeaves": {
       "title": "Überschneidende Urlaube ({{count}})",
       "more": "+{{count}} weitere (nicht aufgeführt)",

@@ -1208,6 +1208,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("submitted_user_agent");
 
+                    b.Property<Guid?>("SubstituteEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("substitute_employee_id");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
@@ -1362,6 +1366,12 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("description");
+
+                    b.Property<string>("EligibleGender")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("eligible_gender");
 
                     b.Property<bool>("IsDisabled")
                         .HasColumnType("boolean")

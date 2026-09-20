@@ -13,10 +13,12 @@ import {
   type EmployeeLeaveBalances,
   type LeaveBalanceItem,
   type LeaveLedgerEntry,
+  type LeaveEligibleGender,
   type LeaveRequest,
   type LeaveRequestStatus,
   type LeaveRuleSet,
 } from "@/services/leave.service";
+import type { Gender } from "@/services/employees.service";
 
 const ALL_TYPES = "__all__";
 const PAGE_SIZE = 20;
@@ -28,6 +30,16 @@ const LEDGER_COLUMNS_KEY = "senseik.leave.ledger.columns";
 const NO_LEDGER_ENTRIES: LeaveLedgerEntry[] = [];
 /** Column chooser trigger sized like the surrounding `size="sm"` buttons. */
 const COLUMN_CHOOSER_CLASS = "h-9 px-3";
+
+/**
+ * Mirrors the API's gender gate (`LeaveGenderEligibility`): a type restricted to one gender is offered only to that gender;
+ * an unspecified/other/unknown gender is never restricted (the server re-checks on submit).
+ */
+export function isEligibleForGender(required: LeaveEligibleGender | undefined, gender: Gender | null | undefined): boolean {
+  if (required === "female") return gender !== "male";
+  if (required === "male") return gender !== "female";
+  return true;
+}
 
 /**
  * Seeded rule sets and types store a resource key as their name ("leave.type.annual"); the API returns it as is, so
