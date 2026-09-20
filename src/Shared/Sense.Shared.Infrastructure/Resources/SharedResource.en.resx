@@ -709,6 +709,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.requests.create_on_behalf" xml:space="preserve"><value>Add leave for employees</value></data>
   <data name="leave.requests.bypass_approval" xml:space="preserve"><value>Approve leave without the approval process</value></data>
   <data name="leave.errors.bypass_approval_not_allowed" xml:space="preserve"><value>You are not allowed to record leave without the approval process.</value></data>
+  <data name="leave.errors.gender_not_eligible" xml:space="preserve"><value>This leave type is not available for the employee's gender.</value></data>
+  <data name="leave.errors.substitute_required" xml:space="preserve"><value>You must choose a substitute for this leave type.</value></data>
+  <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>The substitute cannot be the employee requesting the leave.</value></data>
+  <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>The selected substitute was not found or is not active.</value></data>
+  <data name="leave.errors.substitute_on_leave" xml:space="preserve"><value>The selected substitute is also on leave on these dates.</value></data>
   <data name="leave.requests.cancel_approved" xml:space="preserve"><value>Cancel leave requests</value></data>
   <data name="leave.my.calendar" xml:space="preserve"><value>View the leave calendar</value></data>
   <data name="leave.calendar.read" xml:space="preserve"><value>View the team leave calendar</value></data>

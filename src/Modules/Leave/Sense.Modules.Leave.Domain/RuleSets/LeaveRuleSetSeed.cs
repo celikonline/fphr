@@ -88,10 +88,10 @@ public static class LeaveRuleSetSeed
         yield return new LeaveTypeSettings(LeaveTypeCode.Bereavement, "leave.type.bereavement", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: d.BereavementDays, IsStatutory: true);
         yield return new LeaveTypeSettings(LeaveTypeCode.Paternity, "leave.type.paternity", null, true, LeaveLimitType.PerRequest,
-            PerRequestMaxDays: d.PaternityDays, CountsNonWorkingDays: true, IsStatutory: true);
+            PerRequestMaxDays: d.PaternityDays, CountsNonWorkingDays: true, IsStatutory: true, EligibleGender: LeaveEligibleGender.Male);
         yield return new LeaveTypeSettings(LeaveTypeCode.Maternity, "leave.type.maternity", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: (d.MaternityPreBirthWeeks + d.MaternityPostBirthWeeks) * DaysPerWeek, CountsNonWorkingDays: true,
-            RequiresDocument: true, IsSensitive: true, ShowTypeNameOnCalendar: false, IsStatutory: true);
+            RequiresDocument: true, IsSensitive: true, ShowTypeNameOnCalendar: false, IsStatutory: true, EligibleGender: LeaveEligibleGender.Female);
         yield return new LeaveTypeSettings(LeaveTypeCode.PostnatalUnpaid, "leave.type.postnatal_unpaid", null, false, LeaveLimitType.Unlimited,
             CountsNonWorkingDays: true, CountsTowardAccrualService: false, IsStatutory: true);
         yield return new LeaveTypeSettings(LeaveTypeCode.PaidMilitaryService, "leave.type.paid_military_service", null, false, LeaveLimitType.PerRequest,
@@ -105,7 +105,7 @@ public static class LeaveRuleSetSeed
         // olarak uygular (senseik-036 md.3). Yaş (<1) koşulu Employee'deki çocuk verisinden okunmadığı için İK onayında.
         yield return new LeaveTypeSettings(LeaveTypeCode.Breastfeeding, "leave.type.breastfeeding", null, true, LeaveLimitType.PerRequest,
             PerRequestMaxDays: SingleDayMax, MaxConsecutiveDays: LeavePartialDay.HoursFraction(d.BreastfeedingHoursPerDay),
-            Unit: LeaveUnit.Hourly, IsStatutory: true);
+            Unit: LeaveUnit.Hourly, IsStatutory: true, EligibleGender: LeaveEligibleGender.Female);
         // 4857 Ek md.2 son fıkra - %70 engelli veya süreğen hastalığı olan çocuğu bulunan işçiye yılda azami
         // DisabledChildDaysPerYear gün ücretli izin (senseik-036 md.4).
         yield return new LeaveTypeSettings(LeaveTypeCode.DisabledChild, "leave.type.disabled_child", null, true, LeaveLimitType.PerYear,

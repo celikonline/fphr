@@ -1,5 +1,14 @@
 namespace Sense.Modules.Employee.Contracts;
 
+/// <summary>Employee gender mirroring Employee.Domain.Employees.Gender as a Contracts-only shape (Leave's gender-restricted types).</summary>
+public enum EmployeeGender
+{
+    Unspecified = 0,
+    Male = 1,
+    Female = 2,
+    Other = 3,
+}
+
 /// <summary>
 /// Read-only cross-module lookup: lets other modules (e.g. Organization, when assigning
 /// OrgUnit.ManagerEmployeeId) validate an employee reference without depending on Employee's Domain
@@ -39,4 +48,10 @@ public interface IEmployeeLookup
     /// occupation code set.
     /// </summary>
     Task<string?> GetSgkOccupationCodeAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// The employee's recorded gender (Leave's cinsiyete bağlı izin türleri: Babalık/Doğum/Süt); null when the employee does
+    /// not exist for the tenant, <see cref="EmployeeGender.Unspecified"/> when none is recorded.
+    /// </summary>
+    Task<EmployeeGender?> GetGenderAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }

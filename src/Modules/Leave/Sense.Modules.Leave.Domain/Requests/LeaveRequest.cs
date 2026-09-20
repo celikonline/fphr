@@ -68,6 +68,9 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     public string? Description { get; private set; }
 
+    /// <summary>"Vekil": the colleague covering the requester (required by types with RequiresSubstitute); validated by LeaveRequestRules.</summary>
+    public Guid? SubstituteEmployeeId { get; private set; }
+
     public LeaveRequestStatus Status { get; private set; }
 
     public LeaveRequestSource Source { get; private set; }
@@ -98,10 +101,10 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
     public static Result<LeaveRequest> Submit(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, LeaveTypeCode code, DateOnly start, DateOnly end, decimal days, string? description,
         LeaveRequestSource source, DateTime submittedAt, string? ip, string? userAgent, Guid? previousRequestId = null,
-        TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
+        TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null, Guid? substituteEmployeeId = null)
     {
         var request = new LeaveRequest(tenantId, employeeId, source, submittedAt, ip, userAgent) { PreviousRequestId = previousRequestId };
-        var applied = request.ApplyDetails(leaveTypeId, code, start, end, days, description, startTime, endTime, halfDayPeriod);
+        var applied = request.ApplyDetails(leaveTypeId, code, start, end, days, description, startTime, endTime, halfDayPeriod, substituteEmployeeId);
         return applied.IsFailure ? applied.Error : request;
     }
 
@@ -136,14 +139,14 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>UpdatePendingLeaveRequest: new values, RevisionNo++, the caller starts a fresh approval request.</summary>
     public Result UpdatePending(
         Guid leaveTypeId, LeaveTypeCode code, DateOnly start, DateOnly end, decimal days, string? description,
-        TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
+        TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null, Guid? substituteEmployeeId = null)
     {
         if (Status != LeaveRequestStatus.Pending)
         {
             return Error.Conflict(LeaveDomainErrors.RequestNotPending);
         }
 
-        var applied = ApplyDetails(leaveTypeId, code, start, end, days, description, startTime, endTime, halfDayPeriod);
+        var applied = ApplyDetails(leaveTypeId, code, start, end, days, description, startTime, endTime, halfDayPeriod, substituteEmployeeId);
         if (applied.IsFailure)
         {
             return applied;
@@ -239,7 +242,7 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
 
     private Result ApplyDetails(
         Guid leaveTypeId, LeaveTypeCode code, DateOnly start, DateOnly end, decimal days, string? description,
-        TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod)
+        TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod, Guid? substituteEmployeeId)
     {
         if (end < start)
         {
@@ -276,6 +279,7 @@ public sealed class LeaveRequest : TenantAggregateRoot<Guid>, IAuditLogged
         HalfDayPeriod = halfDayPeriod;
         CalculatedDays = decimal.Round(days, 4);
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        SubstituteEmployeeId = substituteEmployeeId;
         return Result.Success();
     }
 }

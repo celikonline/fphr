@@ -14,6 +14,7 @@ import { DIALOG_SEARCH_PARAM, useDialogHistorySync } from "@/hooks";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
+import { useAuthStore } from "@/store/auth.store";
 import {
   getMyLeaveBalances,
   getMyLeaveRequest,
@@ -43,6 +44,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
   const { t, i18n } = useTranslation(["leave", "common"]);
   const queryClient = useQueryClient();
   const leaveName = useLeaveName();
+  const employeeId = useAuthStore((state) => state.user?.employeeId);
   const [ledgerOpen, setLedgerOpen] = useState(false);
   // Tek "Talep" hub'ından (/app/requests) `?new=1` ile gelince ekleme diyaloğu ilk render'da açık başlar (roadmap #42).
   const [searchParams, setSearchParams] = useSearchParams();
@@ -234,6 +236,8 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           submitLabel={dialog.mode === "edit" ? t("common:save") : t("leave:form.submit")}
           typesHint={typesQuery.isError ? t("leave:form.typesLimited") : undefined}
           previewScope="me"
+          loadDetail={getMyLeaveRequest}
+          requesterEmployeeId={employeeId ?? undefined}
           preview={previewMyLeaveRequest}
           save={(input) =>
             dialog.mode === "edit"
@@ -304,6 +308,8 @@ export function buildRequestableTypes(
       perRequestMaxDays: type.perRequestMaxDays ?? null,
       availableBalance: available.get(type.id) ?? null,
       unit: type.unit,
+      requiresSubstitute: type.requiresSubstitute ?? false,
+      requiresDocument: type.requiresDocument,
     }));
   }
   // Balance-only fallback (leave-types call failed): unit unknown, so the form stays FullDay-only.

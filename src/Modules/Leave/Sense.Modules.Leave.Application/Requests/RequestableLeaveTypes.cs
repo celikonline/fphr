@@ -22,7 +22,7 @@ namespace Sense.Modules.Leave.Application.Requests;
 
 public sealed record RequestableLeaveTypeDto(
     Guid Id, LeaveTypeCode Code, string Name, string? Description, LeaveUnit Unit, bool IsPaid, bool HasBalance, decimal? PerRequestMaxDays,
-    bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays);
+    bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays, bool RequiresSubstitute = false);
 
 /// <summary>
 /// "+ Talep": caller'ın kural setinin aktif, self-service türleri. `Name` ham haliyle döner (ör. "leave.type.annual");
@@ -33,7 +33,8 @@ public sealed record RequestableLeaveTypeDto(
 public sealed record ListMyRequestableLeaveTypesQuery : IQuery<IReadOnlyList<RequestableLeaveTypeDto>>;
 
 public sealed class ListMyRequestableLeaveTypesHandler(
-    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope)
+    ITenantContext tenant, ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope,
+    IEmployeeLookup employees)
     : IQueryHandler<ListMyRequestableLeaveTypesQuery, IReadOnlyList<RequestableLeaveTypeDto>>
 {
     public async Task<Result<IReadOnlyList<RequestableLeaveTypeDto>>> Handle(ListMyRequestableLeaveTypesQuery query, CancellationToken cancellationToken)
@@ -49,12 +50,14 @@ public sealed class ListMyRequestableLeaveTypesHandler(
             return loaded.Error;
         }
 
+        // Denetim raporu A6: gender-restricted types (Babalık/Doğum/Süt) are not offered to the other gender; the submit rules re-check.
+        var gender = await employees.GetGenderAsync(tenant.TenantId, employeeId, cancellationToken);
         IReadOnlyList<RequestableLeaveTypeDto> types = loaded.Value.RuleSet.Types
-            .Where(t => !t.IsDisabled && t.AllowSelfServiceRequest)
+            .Where(t => !t.IsDisabled && t.AllowSelfServiceRequest && LeaveGenderEligibility.IsEligible(t.EligibleGender, gender))
             .OrderBy(t => t.SortOrder)
             .Select(t => new RequestableLeaveTypeDto(
                 t.Id, t.Code, t.Name, t.Description, t.Unit, t.IsPaid, t.HasBalance, t.LimitType == LeaveLimitType.PerRequest ? t.PerRequestMaxDays : null,
-                t.RequiresDescription, t.RequiresDocument, t.CountsNonWorkingDays))
+                t.RequiresDescription, t.RequiresDocument, t.CountsNonWorkingDays, t.RequiresSubstitute))
             .ToList();
         return Result.Success(types);
     }

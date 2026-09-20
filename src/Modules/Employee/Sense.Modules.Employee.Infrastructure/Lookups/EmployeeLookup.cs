@@ -65,4 +65,14 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
             .Where(e => e.TenantId == tenantId && e.Id == employeeId)
             .Select(e => e.SgkOccupationCode)
             .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<EmployeeGender?> GetGenderAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default)
+    {
+        var row = await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.Id == employeeId)
+            .Select(e => new { e.Gender })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return row is null ? null : Enum.Parse<EmployeeGender>(row.Gender.ToString());
+    }
 }
