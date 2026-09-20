@@ -1,0 +1,18 @@
+{
+  "id": "senseik-063",
+  "title": "Açılan form pencereleri uygulama genelinde sola dayalı (FormModal) — senseik-021'in devamı",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/dialogs-left-aligned",
+  "worktree": ".claude/worktrees/dialogs-left-aligned",
+  "acceptance": [
+    "Envanter: web/src altındaki tüm düz <Modal> kullanımları (2026-09-20 sayımı: 78 düz Modal, 12 FormModal, 4 Drawer) sınıflandırılır — çok alanlı create/edit/atama/seçim formları vs. evet-hayır onay diyalogları; sonuç handoff notuna tablo olarak yazılır",
+    "Tüm form diyalogları (örn. recruitment/candidates, employees/lifecycle-actions, settings/* tür-kategori-maliyet merkezi-belge türü diyalogları, performance/*, expense-payments-admin, users-roles, visa-requests, company-calendar 'Etkinlik Oluştur', leave/overtime-section) components/ui/form-modal.tsx üzerinden sola dayalı açılır; ConfirmDialog/confirm-modal ve basit bilgi diyalogları ortalı kalır (senseik-021 kararı)",
+    "Mobilde (isMobile → fullScreen) davranış bozulmaz; diyalog içi tarih/saat/combobox açılır listeleri (portal) sola dayalı pencerede doğru konumlanır",
+    "Geri dönüşü önlemek için koruma: form diyaloğunda düz Modal kullanımını yakalayan ESLint kuralı (no-restricted-imports/no-restricted-syntax ile @mantine/core Modal, yalnızca confirm-dialog/confirm-modal/form-modal içinde izinli) veya eşdeğer vitest yapı testi",
+    "Kapsam notu: yalnızca açılır pencereler (modal/dialog). Sayfa içeriğinin kendisi (65 sayfada `mx-auto max-w-*` ortalanmış kapsayıcı) bu kartın DIŞINDA; sayfa düzeninin de sola dayanması isteniyorsa ayrı karar/kart gerekir"
+  ],
+  "merge_gate": "pnpm exec tsc --noEmit + eslint + vitest (form-modal.test.tsx dahil) yeşil; kritik ekranlarda (izin talebi, çalışan ekle, aday, ayarlar) tarayıcıda sola dayalı açıldığı gözle doğrulanır",
+  "handoff": "docs/handoffs/dialogs-left-aligned.md",
+  "source": "Kullanıcı isteği (2026-09-20): 'açılan sayfalar sola dayalı olsun'. senseik-021 (form-alignment, FormModal) yalnızca birkaç diyaloğu kapsadı; izin denetimi B2 (2026-09-20) leave diyaloglarını taşıdı, geri kalan 60+ kullanım açık. docs/analysis/izin-modulu-denetim-raporu-2026-09-20.md B2."
+}
