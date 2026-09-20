@@ -55,6 +55,12 @@ public sealed class PaymentsIntegrationTests : TestFixture
         services.AddSingleton<IDataScopeService>(_scope);
         services.AddSingleton<IAccessSettingsService, AllAccessSettingsEnabled>();
         services.AddSingleton<IUserAccountLookup>(new FakeUserAccountLookup());
+        // PaymentsService resolves salary-record creator names via Identity's IUserProfileLookup; the test host
+        // loads only Organization + Employee, so an empty lookup stands in (same pattern as Leave AbsenceTests).
+        var userProfiles = Substitute.For<IUserProfileLookup>();
+        userProfiles.GetAsync(Arg.Any<Guid>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<Guid, UserProfileInfo>());
+        services.AddSingleton(userProfiles);
         services.AddSingleton<IIntegrationEventHandler<ContractEvents.SalaryChanged>>(_salaryChanged);
         services.AddSingleton<IIntegrationEventHandler<ContractEvents.EmployeeProfileChanged>>(_profileChanged);
     }
