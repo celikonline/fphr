@@ -75,7 +75,10 @@ public sealed class ResetPasswordValidator : AbstractValidator<ResetPasswordComm
     public ResetPasswordValidator(IOptions<IdentityOptions> options)
     {
         RuleFor(x => x.Token).NotEmpty();
-        RuleFor(x => x.NewPassword).NotEmpty().MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort);
+        RuleFor(x => x.NewPassword).Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .MinimumLength(options.Value.MinPasswordLength).WithMessage(IdentityErrors.PasswordTooShort)
+            .Must(PasswordPolicy.IsStrongEnough).WithMessage(IdentityErrors.PasswordTooWeak);
     }
 }
 
@@ -109,6 +112,11 @@ public sealed class ResetPasswordHandler(
         if (user is null)
         {
             return Error.NotFound(IdentityErrors.UserNotFound);
+        }
+
+        if (PasswordPolicy.ContainsEmailLocalPart(command.NewPassword, user.Email))
+        {
+            return Error.Validation(IdentityErrors.PasswordTooWeak);
         }
 
         user.SetPassword(hasher.Hash(command.NewPassword));

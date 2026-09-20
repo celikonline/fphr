@@ -1,17 +1,17 @@
 {
   "id": "senseik-044",
-  "title": "Çalışan veri doğrulama: gelecek tarihli doğum tarihi, tarih senkronu, alan temizleme, e-posta Türkçe karakter",
+  "title": "Çalışan veri doğrulama (doğum tarihi, izin hak ediş senkronizasyonu, Türkçe e-posta)",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "merged",
   "branch": "a/employee-data-validation",
-  "worktree": ".claude/worktrees/employee-validation",
+  "worktree": ".claude/worktrees/agent-afb5194a2f87a52f4",
   "acceptance": [
-    "Doğum tarihi gelecek bir tarih olamaz (validasyon eklendi) VE doğum tarihi > işe başlama tarihi tutarlılık kontrolü eklendi",
-    "KRİTİK: İşe başlama tarihi değiştirildiğinde, 'İzne esas hak ediş tarihi' de otomatik güncelleniyor VEYA kullanıcıya 'İzne esas hak ediş tarihi de güncellensin mi?' onayı soruluyor — sessizce eski/yanlış kalmıyor (mevcut senseik-007'nin BirthDate wiring düzeltmesiyle aynı ruhta, farklı alan)",
-    "'İzne esas hak ediş tarihi' alanındaki X (temizle) düğmesi çalışıyor — boş değer kaydedilebiliyor, eski değer geri gelmiyor",
-    "E-posta adreslerinde Türkçe karakter (ş,ü,ç,ğ,ö,ı) girildiğinde ya reddediliyor ya da ASCII/punycode'a normalize ediliyor (RFC 5321/5322 uyumluluğu için) — posta teslim edilemez sorunu önleniyor"
+    "Doğum tarihi gelecek bir tarih olamaz VE doğum tarihi > işe başlama tarihi olamaz — domain + application validator'da uygulandı (TAMAMLANDI)",
+    "KRİTİK: İşe başlama tarihi değiştiğinde 'İzne esas hak ediş tarihi' otomatik güncelleniyor — Employee tarafı (web formu dokunma takibi + ResolveLeaveAccrualStart) VE Leave profili (yeni EmployeeEmploymentDatesChanged event'i + Leave handler'ı ile hak ediş yeniden üretimi) (TAMAMLANDI)",
+    "'İzne esas hak ediş tarihi' temizle (X) düğmesi çalışıyor, boş değer kaydediliyor ve sonraki alakasız kayıtlarda da geri gelmiyor (migration'sız; yalnızca işe başlama tarihi değişince yeniden türetilir) (TAMAMLANDI)",
+    "E-posta adreslerinde Türkçe karakter (ş,ü,ç,ğ,ö,ı) reddediliyor — Employee modülüne özel EmployeeEmailRules (TAMAMLANDI)"
   ],
-  "merge_gate": "dotnet test (Employee modülü) + demo verisindeki mevcut Türkçe karakterli e-postalar için geriye dönük bir düzeltme/migrasyon planı not edildi",
+  "merge_gate": "dotnet test Employee.Tests + Leave.Tests yeşil (Employee'de yalnızca dev'de de kırık olan 4 PaymentsIntegrationTests DI hatası), web tsc + eslint temiz; Türkçe karakterli e-posta geriye dönük düzeltme planı handoff §4.1 — ayrıntı handoff 'Merge Gate Durumu'",
   "handoff": "docs/handoffs/employee-data-validation.md",
-  "source": "1. Tur Test Bulgu Dokümanı § C-01, C-02, C-03, C-04 (C-02 YÜKSEK — 274 gün fazla izin hakkı örneği doğrulanmış, gerçek veri bütünlüğü riski)."
+  "source": "1. Tur Test Bulgu Dokümanı § C-01, C-02, C-03, C-04 (C-02 YÜKSEK — 274 gün fazla izin hakkı örneği)"
 }

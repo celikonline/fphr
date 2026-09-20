@@ -2,7 +2,7 @@
   "id": "senseik-007",
   "title": "50 yaş istisnası / ek kıdem günü (A-01 Regresyon)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/age-50-exception",
   "worktree": ".claude/worktrees/age-exception",
   "acceptance": [

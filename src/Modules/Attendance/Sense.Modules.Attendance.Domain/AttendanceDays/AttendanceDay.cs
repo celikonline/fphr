@@ -121,7 +121,7 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
             return guard;
         }
 
-        if (overrideWorkedMinutes < 0)
+        if (overrideWorkedMinutes is < 0 or > AttendanceLimits.MaxMinutesPerDay)
         {
             return Error.Validation(AttendanceDomainErrors.OverrideMinutesInvalid);
         }
@@ -156,6 +156,36 @@ public sealed class AttendanceDay : TenantAggregateRoot<Guid>
 
         ResolutionState = AttendanceResolutionState.Ignored;
         return Result.Success();
+    }
+
+    /// <summary>
+    /// İzinli günde çalışma çapraz kontrolü (senseik-029): Leave.Contracts üzerinden bu günün onaylı bir izin
+    /// talebiyle kesiştiği öğrenildiğinde <see cref="AttendanceAnomaly.WorkedWhileOnLeave"/> bayrağını ekler; artık
+    /// kesişmiyorsa (izin iptal edildi/tarihi değişti) kaldırır. Yalnız fiilen bir giriş/çıkış kaydı olan günlerde
+    /// anlamlıdır - izin gününde hiç kayıt yoksa bu zaten normal bir izin günüdür, anomali değildir. Recompute'un
+    /// aksine tek başına Application katmanınca (Leave lookup sonrası) çağrılır, çünkü günün kendi planı/kaydı bu
+    /// bilgiyi taşımaz. Zaten çözümlenmiş/yok sayılmış bir güne yeni bayrak eklenmesi günü yeniden Unresolved yapar -
+    /// Recompute'un her yeniden hesaplamada yaptığıyla aynı kural; bayrak kalkınca başka anomali kalmadıysa gün
+    /// tekrar Resolved sayılır.
+    /// </summary>
+    public void ApplyLeaveOverlap(bool overlapsApprovedLeave)
+    {
+        var shouldFlag = overlapsApprovedLeave && (CheckIn is not null || CheckOut is not null);
+        var currentlyFlagged = (Anomalies & AttendanceAnomaly.WorkedWhileOnLeave) != 0;
+        if (shouldFlag == currentlyFlagged)
+        {
+            return;
+        }
+
+        Anomalies = shouldFlag ? Anomalies | AttendanceAnomaly.WorkedWhileOnLeave : Anomalies & ~AttendanceAnomaly.WorkedWhileOnLeave;
+        if (shouldFlag)
+        {
+            ResolutionState = AttendanceResolutionState.Unresolved;
+        }
+        else if (Anomalies == AttendanceAnomaly.None)
+        {
+            ResolutionState = AttendanceResolutionState.Resolved;
+        }
     }
 
     private Result EnsureResolvable()

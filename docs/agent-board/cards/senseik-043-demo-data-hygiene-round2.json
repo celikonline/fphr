@@ -2,14 +2,15 @@
   "id": "senseik-043",
   "title": "Demo veri hijyeni round 2: İngilizce departman/şirket adları, cinsiyet verisi hep 'Unspecified'",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "merged",
   "branch": "a/demo-data-hygiene-round2",
   "worktree": ".claude/worktrees/demo-hygiene-2",
   "acceptance": [
     "Demo departman adları (Finance/Sales) Türkçeleştirildi (Finans/Satış), şirket adı (Headquarters→Genel Merkez), çalışma takvimi adı (General work schedule→Genel Çalışma Takvimi)",
     "58 demo çalışanının cinsiyet verisi gerçekçi bir dağılımla dolduruldu (hepsi 'Unspecified' kalmasın) — Raporlar → Cinsiyet Dağılımı demo sunumunda anlamlı görünüyor"
   ],
-  "merge_gate": "Manuel tarama: demo ortamında İngilizce/boş görünen alan kalmıyor",
+  "merge_gate": "Manuel tarama: demo ortamında İngilizce/boş görünen alan kalmıyor (demo DB yeniden seed edilmeli — mevcut demo tenant eski İngilizce departman adlarını korur).",
   "handoff": "docs/handoffs/demo-data-hygiene-round2.md",
-  "source": "1. Tur Test Bulgu Dokümanı § B-07, C-06 (DÜŞÜK ama müşteri demosunda izlenim riski — senseik-017'nin kapsamı farklıydı, org şeması odaklıydı)."
+  "source": "1. Tur Test Bulgu Dokümanı § B-07, C-06 (DÜŞÜK ama müşteri demosunda izlenim riski — senseik-017'nin kapsamı farklıydı, org şeması odaklıydı).",
+  "resolution": "Departman/şirket adları Türkçeleştirildi (Satış/Yazılım Geliştirme/İnsan Kaynakları/Finans, Genel Merkez), attendance.work_schedule.default.name → \"Genel Çalışma Takvimi\", 58 demo çalışanda Gender isim havuzundan türetiliyor (29 E / 29 K). Doğrulama turu (2026-09-19): dev üzerine rebase, dotnet build Sense.Api + Sense.Migrator 0 hata, Sense.Tests.Integration SeedData 16/16 (DemoGenderFor için 4 yeni test dahil). Detay: docs/handoffs/demo-data-hygiene-round2.md."
 }

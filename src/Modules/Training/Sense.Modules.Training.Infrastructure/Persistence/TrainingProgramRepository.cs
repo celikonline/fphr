@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Domain;
 
 namespace Sense.Modules.Training.Infrastructure.Persistence;

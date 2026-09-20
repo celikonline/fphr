@@ -4,6 +4,8 @@ using Sense.Modules.Attendance.Domain.AttendanceDays;
 using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
+using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -196,6 +198,11 @@ public sealed class EmployeeAvailabilityRepository(AttendanceDbContext context) 
             .ToListAsync(cancellationToken);
 }
 
+public sealed class SelfCheckInRepository(AttendanceDbContext context) : ISelfCheckInRepository
+{
+    public void Add(SelfCheckIn checkIn) => context.SelfCheckIns.Add(checkIn);
+}
+
 public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context) : ICompensatoryWorkLedgerRepository
 {
     public void Add(CompensatoryWorkLedger ledger) => context.CompensatoryWorkLedgers.Add(ledger);
@@ -215,6 +222,33 @@ public sealed class CompensatoryWorkLedgerRepository(AttendanceDbContext context
             .Where(l => l.EmployeeId == employeeId && l.WeekStart >= from && l.WeekStart <= to)
             .OrderBy(l => l.WeekStart)
             .ToListAsync(cancellationToken);
+}
+
+public sealed class MonthlyTimesheetApprovalRepository(AttendanceDbContext context) : IMonthlyTimesheetApprovalRepository
+{
+    public void Add(MonthlyTimesheetApproval approval) => context.MonthlyTimesheetApprovals.Add(approval);
+
+    public async Task<MonthlyTimesheetApproval?> FindAsync(Guid employeeId, DateOnly periodMonth, CancellationToken cancellationToken = default)
+    {
+        var normalized = MonthlyTimesheetApproval.NormalizeToMonthStart(periodMonth);
+        return await context.MonthlyTimesheetApprovals
+            .FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.PeriodMonth == normalized, cancellationToken)
+            ?? context.MonthlyTimesheetApprovals.Local.FirstOrDefault(a => a.EmployeeId == employeeId && a.PeriodMonth == normalized);
+    }
+
+    public async Task<IReadOnlyList<MonthlyTimesheetApproval>> ListForPeriodAsync(
+        IReadOnlyCollection<Guid> employeeIds, DateOnly periodMonth, CancellationToken cancellationToken = default)
+    {
+        if (employeeIds.Count == 0)
+        {
+            return [];
+        }
+
+        var normalized = MonthlyTimesheetApproval.NormalizeToMonthStart(periodMonth);
+        return await context.MonthlyTimesheetApprovals
+            .Where(a => employeeIds.Contains(a.EmployeeId) && a.PeriodMonth == normalized)
+            .ToListAsync(cancellationToken);
+    }
 }
 
 public sealed class EqualizationPeriodRepository(AttendanceDbContext context) : IEqualizationPeriodRepository

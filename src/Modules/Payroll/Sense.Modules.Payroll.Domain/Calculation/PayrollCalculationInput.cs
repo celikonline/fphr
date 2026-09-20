@@ -22,6 +22,44 @@ namespace Sense.Modules.Payroll.Domain.Calculation;
 /// unlike the meal benefit's SGK/GV-excess handling. Defaults to 0 so existing callers/golden-set tests are
 /// unaffected until a caller wires <c>IExpensePayoutReader</c>.
 /// </param>
+/// <param name="AdditionalTaxableEarnings">
+/// senseik-019 2d: fazla mesai (<see cref="OvertimePayCalculator"/>) + hafta tatili/resmî tatil ücreti
+/// (<see cref="HolidayPayCalculator"/>) gibi maktu ücrete ek, vergiye/SGK'ya tabi kazançların toplamı - gross'a
+/// eklenir (SGK_BASE/GV_BASE/STAMP_TAX hepsi bunu içerir, tıpkı maktu ücret gibi). Callerlar bu tutarı kendileri
+/// hesaplar (senseik-012/014'ün Attendance/Leave verisi henüz yok - bkz. handoff); 0 = önceki davranış.
+/// </param>
+/// <param name="IncentiveEligible">
+/// senseik-019 2a: 5510 md.81 5 puanlık SGK işveren teşviki uygulanır mı (<see cref="PayrollLegislationSnapshot.SgkEmployerDiscountRate"/>).
+/// BASİTLEŞTİRME: gerçek uygunluk kontrolü (teşvik kanunu kodunun SGK'nın güncel listesiyle eşleşmesi, işyeri bazlı
+/// başvuru durumu) bu sürümde yapılmıyor - Application katmanı yalnızca profildeki IncentiveLawCode'un dolu olmasına
+/// bakıyor (bkz. handoff).
+/// </param>
+/// <param name="DisabilityDegree">
+/// senseik-019 2b: GVK md.31 engelli çalışan gelir vergisi matrah indirimi derecesi (0=yok, 1/2/3. derece - en ağırı
+/// 1). GV_BASE'den <see cref="PayrollLegislationSnapshot"/>'taki ilgili derecenin aylık tutarı düşülür (matrah 0'ın
+/// altına inmez), MINWAGE_EXEMPTION_GV'den ÖNCE.
+/// </param>
+/// <param name="AdvanceDeductionTotal">
+/// senseik-019 2c: TB-7 Expense köprüsü (<c>IExpensePayoutReader.OpenAdvanceBalance</c>) üzerinden gelen kapanmamış
+/// avans bakiyesi - kesinti öncesi net ücreti (ve varsa icra/nafaka kesintisini) aşamayacak şekilde NET'ten düşülür.
+/// </param>
+/// <param name="GarnishmentOrders">
+/// senseik-019 2c: çalışanın aktif icra/nafaka emirleri (<see cref="GarnishmentCalculator"/> İİK m.83 kuralını
+/// uygular). Null/boş = kesinti yok (önceki davranış).
+/// </param>
+/// <param name="UnionDuesAmount">
+/// Sendika aidatı / dayanışma aidatı (11.3.07-bordro.md "Sendika / TİS", #58): this period's dues, already computed
+/// by <c>Unions.UnionDuesCalculator</c> from the employee's current <c>EmployeeUnionMembership</c> (Application
+/// layer resolves the membership; the calculator stays pure). Deducted straight from NET (DEDUCTIONS step) - it does
+/// not touch SGK/GV/DV bases (dues are a post-tax deduction, not exempt pay). Defaults to 0 so existing golden-set
+/// tests are unaffected. Collective-agreement (TİS) terms and retroactive difference payroll are out of scope this
+/// slice (deferred: faz3-durum-takibi.md #58).
+/// </param>
+/// <param name="ProratedPaidDays">
+/// Kıst (partial-month) ücret: the number of paid days on a 30-day basis (1..29) when the employee was hired or left
+/// mid-month; the maktu brüt ücret, the SGK taban/tavan and the asgari ücret istisnaları are all scaled by
+/// <c>ProratedPaidDays / 30</c>. Null (or >= 30) = full month, the pre-existing behaviour.
+/// </param>
 public sealed record PayrollCalculationInput(
     decimal GrossMonthlySalary,
     int WorkedDays,
@@ -30,4 +68,11 @@ public sealed record PayrollCalculationInput(
     decimal MealDailyAmount,
     decimal PriorCumulativeGvBase,
     DateOnly AsOfDate,
-    decimal ExpenseReimbursement = 0m);
+    decimal ExpenseReimbursement = 0m,
+    decimal AdditionalTaxableEarnings = 0m,
+    bool IncentiveEligible = false,
+    int DisabilityDegree = 0,
+    decimal AdvanceDeductionTotal = 0m,
+    IReadOnlyList<GarnishmentDeductionInput>? GarnishmentOrders = null,
+    decimal UnionDuesAmount = 0m,
+    int? ProratedPaidDays = null);

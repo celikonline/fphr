@@ -41,6 +41,23 @@ describe("LeaveService", () => {
       expect(result).toEqual(mockResponse.data);
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/leave/me/balances");
     });
+
+    it("resolves raw seeded leave-type keys in balances to Turkish names", async () => {
+      const mockResponse = {
+        data: {
+          employeeId: "employee-1",
+          ruleSetId: "rule-set-1",
+          hireDate: "2020-01-01",
+          leaveAccrualStartDate: "2020-01-01",
+          balances: [{ leaveTypeName: "leave.type.sick", leaveTypeCode: "sick", balance: { availableBalance: 5 } }],
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyBalances();
+
+      expect(result.balances[0].leaveTypeName).toBe("Hastalık izni");
+    });
   });
 
   describe("getMyRequests", () => {
@@ -64,6 +81,20 @@ describe("LeaveService", () => {
 
       expect(result).toEqual(mockResponse.data);
       expect(apiClient.get).toHaveBeenCalledWith("/api/v1/leave/me/leave-types");
+    });
+
+    it("resolves raw seeded leave-type keys to Turkish names (senseik-039: the API no longer localizes them)", async () => {
+      const mockResponse = {
+        data: [
+          { id: "type-1", code: "annual", name: "leave.type.annual" },
+          { id: "type-2", code: "custom", name: "Özel izin" },
+        ],
+      };
+      (apiClient.get as jest.Mock).mockResolvedValue(mockResponse);
+
+      const result = await leaveService.getMyRequestableLeaveTypes();
+
+      expect(result.map((type) => type.name)).toEqual(["Yıllık izin", "Özel izin"]);
     });
   });
 

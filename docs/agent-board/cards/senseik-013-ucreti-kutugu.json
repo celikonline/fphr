@@ -2,7 +2,7 @@
   "id": "senseik-013",
   "title": "Ücret kütüğü + maaş/banka hesabı ekranları (G-01 Aşama 1)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/payroll-salary-registry",
   "worktree": ".claude/worktrees/payroll-stage1",
   "acceptance": [

@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.Employee.Api;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Tests.Shared.Fixtures;
 using Shouldly;
 using Xunit;
@@ -52,7 +54,7 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
         }
 
         // The tenant query filter reads the ambient ITenantContext, so the read needs its own scope too.
-        var queries = new EmployeeAnalyticsQueries(context);
+        var queries = NewQueries(context);
         int headcount;
         using (TenantContextSetter!.BeginScope(tenantId))
         {
@@ -80,7 +82,7 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
             await context.SaveChangesAsync();
         }
 
-        var queries = new EmployeeAnalyticsQueries(context);
+        var queries = NewQueries(context);
         CareerPathChangeCounts counts;
         using (TenantContextSetter!.BeginScope(tenantId))
         {
@@ -108,7 +110,7 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
             await context.SaveChangesAsync();
         }
 
-        var queries = new EmployeeAnalyticsQueries(context);
+        var queries = NewQueries(context);
         IReadOnlyDictionary<string, int> counts;
         using (TenantContextSetter!.BeginScope(tenantId))
         {
@@ -147,7 +149,7 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
             await context.SaveChangesAsync();
         }
 
-        var queries = new EmployeeAnalyticsQueries(context);
+        var queries = NewQueries(context);
         TerminationCounts counts;
         using (TenantContextSetter!.BeginScope(tenantId))
         {
@@ -173,7 +175,7 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
             await context.SaveChangesAsync();
         }
 
-        var queries = new EmployeeAnalyticsQueries(context);
+        var queries = NewQueries(context);
         IReadOnlyList<GenderByOrgUnitCount> counts;
         using (TenantContextSetter!.BeginScope(tenantId))
         {
@@ -184,6 +186,67 @@ public sealed class EmployeeAnalyticsQueriesTests : TestFixture
         counts.Single(c => c.OrgUnitId == unitId).Gender.ShouldBe(nameof(Gender.Female));
         counts.Single(c => c.OrgUnitId == null).Count.ShouldBe(1);
     }
+
+    /// <summary>
+    /// senseik-046: two employees under different Title-level units of the same Department must land in one
+    /// Department bucket (unlike GetGenderByOrgUnitAsync, which would keep them apart under their raw, Title-level
+    /// OrgUnitId); an employee placed directly on the Department, and one with no Department ancestor at all
+    /// (Company-level), are both handled too.
+    /// </summary>
+    [Fact]
+    public async Task GetGenderByDepartmentAsync_RollsUpTitleLevelAssignments_OntoTheirDepartmentAncestor()
+    {
+        var tenantId = Guid.NewGuid();
+        var companyType = Guid.NewGuid();
+        var departmentType = Guid.NewGuid();
+        var titleType = Guid.NewGuid();
+        var company = Guid.NewGuid();
+        var sales = Guid.NewGuid();
+        var salesRepTitle = Guid.NewGuid();
+        var salesLeadTitle = Guid.NewGuid();
+        var context = ServiceProvider!.GetRequiredService<EmployeeDbContext>();
+
+        var orgUnits = Substitute.For<IOrgUnitLookup>();
+        orgUnits.ListActiveTypesAsync(tenantId, Arg.Any<CancellationToken>()).Returns(new List<OrgUnitTypeInfo>
+        {
+            new(companyType, "Company", "Şirket", 1),
+            new(departmentType, "Department", "Departman", 2),
+            new(titleType, "Title", "Ünvan", 3),
+        });
+        orgUnits.ListActiveUnitsAsync(tenantId, Arg.Any<CancellationToken>()).Returns(new List<OrgUnitInfo>
+        {
+            new(company, companyType, null, "Acme"),
+            new(sales, departmentType, company, "Satış"),
+            new(salesRepTitle, titleType, sales, "Satış Temsilcisi"),
+            new(salesLeadTitle, titleType, sales, "Satış Lideri"),
+        });
+
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            // Two different Title-level units, same Department ancestor - must roll up together.
+            context.Employees.Add(NewActiveEmployee(tenantId, "A", "Rep", gender: Gender.Female, orgUnitId: salesRepTitle));
+            context.Employees.Add(NewActiveEmployee(tenantId, "B", "Lead", gender: Gender.Female, orgUnitId: salesLeadTitle));
+            // Placed directly on the Department: no Title level below it, still counts under Sales.
+            context.Employees.Add(NewActiveEmployee(tenantId, "C", "DeptOnly", gender: Gender.Male, orgUnitId: sales));
+            // Company-level: no Department ancestor at all.
+            context.Employees.Add(NewActiveEmployee(tenantId, "D", "CompanyOnly", gender: Gender.Male, orgUnitId: company));
+            await context.SaveChangesAsync();
+        }
+
+        var queries = NewQueries(context, orgUnits);
+        IReadOnlyList<GenderByOrgUnitCount> counts;
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            counts = await queries.GetGenderByDepartmentAsync(tenantId, CancellationToken.None);
+        }
+
+        counts.Single(c => c.OrgUnitId == sales && c.Gender == nameof(Gender.Female)).Count.ShouldBe(2);
+        counts.Single(c => c.OrgUnitId == sales && c.Gender == nameof(Gender.Male)).Count.ShouldBe(1);
+        counts.Single(c => c.OrgUnitId == null).Count.ShouldBe(1);
+    }
+
+    private static EmployeeAnalyticsQueries NewQueries(EmployeeDbContext context, IOrgUnitLookup? orgUnits = null) =>
+        new(context, orgUnits ?? Substitute.For<IOrgUnitLookup>());
 
     private static EmployeeEntity NewActiveEmployee(
         Guid tenantId, string firstName, string lastName, DateOnly? hireDate = null, Gender gender = Gender.Unspecified, Guid? orgUnitId = null) =>

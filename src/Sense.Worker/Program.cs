@@ -32,6 +32,7 @@ using Sense.Modules.Payroll.Infrastructure.Persistence;
 using Sense.Modules.Performance.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Modules.Training.Infrastructure;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
@@ -44,6 +45,8 @@ using Sense.Shared.Infrastructure.Persistence.Outbox;
 
 var builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory });
 builder.Services.AddSenseCore(builder.Configuration);
+// Documents' visa approval handler (senseik-001) copies template documents server-side through IFileStorage (MinIO:*).
+builder.Services.AddFileStorage(builder.Configuration);
 // Every module's outbox receives both Aggregate.Raise(...) domain events (AuditTenantInterceptor collects them on
 // SaveChanges) and explicit IIntegrationEventOutbox writes. EventTypeRegistry must know each polled module's
 // Domain+Contracts assemblies or OutboxProcessor retries forever with "Event type could not be resolved".
@@ -108,6 +111,16 @@ if (!string.IsNullOrWhiteSpace(redisConnection))
 builder.Services.AddScoped<IEmployeeContactLookup, EmployeeContactLookup>();
 builder.Services.AddScoped<IUserProfileLookup, UserProfileLookup>();
 builder.Services.AddScoped<IRoleAssignmentLookup, RoleAssignmentLookup>();
+// Attendance's ITenantLocalClock (registered by AddAttendanceCoreServices for both hosts) resolves the tenant time zone
+// through this Identity read contract; without it the host fails DI validation at startup.
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.ITenantRepository, TenantRepository>();
+builder.Services.AddScoped<ITenantTimeZoneLookup, TenantTimeZoneLookup>();
+// Identity's EmployeeTerminated handler (G-3-01) disables the terminated employee's login; it lives in the Application
+// assembly the Worker does not scan, so it is registered explicitly with the repositories it needs.
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.IUserRepository, UserRepository>();
+builder.Services.AddScoped<Sense.Modules.Identity.Domain.IRoleRepository, RoleRepository>();
+builder.Services.AddScoped<Sense.Modules.Identity.Application.IIdentityUnitOfWork>(sp => sp.GetRequiredService<IdentityDbContext>());
+builder.Services.AddScoped<Sense.Shared.Contracts.Events.IIntegrationEventHandler<Sense.Modules.Employee.Contracts.Events.EmployeeTerminated>, Sense.Modules.Identity.Application.Users.EmployeeTerminatedHandler>();
 // Documents' EmployeeHired handler materializes requirements through this Employee read contract.
 builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
@@ -129,6 +142,13 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Leave.Domain.ILeaveRuleSetRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Leave.Infrastructure.Persistence.LeaveDbContext>>();
 builder.Services.AddLeaveBalanceRecalculationJob();
+// AddModuleHandlers above scans the Leave Infrastructure assembly, which also holds the API-only company ledger query
+// handler (senseik-048). It needs IDataScopeService/report readers that only the API host registers and the Worker never
+// serves queries, so drop it here or the host fails DI validation at startup.
+Microsoft.Extensions.DependencyInjection.Extensions.ServiceCollectionDescriptorExtensions.RemoveAll<
+    Sense.Shared.Contracts.Messaging.IQueryHandler<
+        Sense.Modules.Leave.Application.Ledger.GetCompanyLeaveLedgerQuery,
+        Sense.Modules.Leave.Application.Ledger.CompanyLeaveLedgerDto>>(builder.Services);
 
 // Attendance consumes EmployeeHired (default work schedule assignment, Source=Hire) and publishes WorkScheduleAssigned
 // for Leave to eventually replace its Monday–Friday placeholder (roadmap #23).
@@ -154,6 +174,8 @@ builder.Services.AddPayrollServices(builder.Configuration);
 builder.Services.AddPayrollIntegrationEventHandlers();
 builder.Services.AddPayrollChangeDetectionJob();
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+// PayrollPeriodCalculationService reads the disability degree (engelli vergi indirimi) through this Employee contract.
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();
 builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
@@ -200,6 +222,7 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Module
 // but drained anyway so EventTypeRegistry knows the types (see the note at the top of this file).
 builder.Services.AddModuleDbContext<ExpenseDbContext>(builder.Configuration, ExpenseDbContext.SchemaName);
 builder.Services.AddExpenseCoreServices();
+builder.Services.AddExpenseIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     ExpenseDbContext.SchemaName,
     typeof(Sense.Modules.Expense.Contracts.ExpensePermissions).Assembly,
@@ -261,6 +284,20 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
     typeof(OhsDbContext).Assembly,
     typeof(Sense.Modules.OccupationalSafety.Contracts.OhsPermissions).Assembly);
+
+// Training (Faz 4 #72: ön koşul eğitim + mentör atama): no cross-module events yet - DbContext + handler scanning
+// only, kept consistent with the other modules so future integration events (e.g. a completion notification) have
+// somewhere to land.
+builder.Services.AddModuleDbContext<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>(
+    builder.Configuration, Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext.SchemaName);
+builder.Services.AddTrainingCoreServices();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext.SchemaName,
+    typeof(Sense.Modules.Training.Domain.TrainingProgram).Assembly,
+    typeof(Sense.Modules.Training.Application.TrainingErrors).Assembly,
+    typeof(Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext).Assembly,
+    typeof(Sense.Modules.Training.Contracts.TrainingPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>>();
 
 await builder.Build().RunAsync();
 

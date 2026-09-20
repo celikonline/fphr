@@ -1,4 +1,5 @@
 using Sense.Api.SeedData;
+using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Shouldly;
@@ -93,9 +94,11 @@ public sealed class DemoEmployeeSeedTests
     public void DemoTitleFor_GivesOverflowHrUsers_DistinctDepartmentTitles_NotTheDirectorTitle()
     {
         var headquarters = NewUnit("Headquarters", CompanyTypeId);
-        var hrDepartment = NewUnit("HR", DepartmentTypeId, headquarters.Id);
+        // DemoTitleFor looks up SeedDataConstants.DemoDepartments by unit.Name, so this unit's name must match
+        // the (now Turkish) demo department name for the lookup below to resolve (senseik-043).
+        var hrDepartment = NewUnit("İnsan Kaynakları", DepartmentTypeId, headquarters.Id);
         var cursors = new Dictionary<Guid, int>();
-        var hrSpec = SeedDataConstants.DemoDepartments.Single(d => d.Name == "HR");
+        var hrSpec = SeedDataConstants.DemoDepartments.Single(d => d.Name == "İnsan Kaynakları");
 
         var firstOverflowTitle = DataSeeder.DemoTitleFor(hrDepartment, headquarters, RolesOf(SystemRoleCodes.HR), cursors);
         var secondOverflowTitle = DataSeeder.DemoTitleFor(hrDepartment, headquarters, RolesOf(SystemRoleCodes.HR), cursors);
@@ -104,5 +107,80 @@ public sealed class DemoEmployeeSeedTests
         secondOverflowTitle.ShouldBe(hrSpec.Titles[1 % hrSpec.Titles.Count]);
         firstOverflowTitle.ShouldNotBe(SeedDataConstants.DemoHrTitle);
         secondOverflowTitle.ShouldNotBe(SeedDataConstants.DemoHrTitle);
+    }
+
+    // senseik-043: demo Gender is derived from the first name so Reports -> Cinsiyet Dağılımı is meaningful.
+    [Fact]
+    public void DemoGenderPools_AreDisjoint_SoAPickedNameMapsToExactlyOneGender()
+    {
+        SeedDataConstants.TurkishMaleFirstNames.Intersect(SeedDataConstants.TurkishFemaleFirstNames, StringComparer.OrdinalIgnoreCase)
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void DemoGenderFor_MapsEveryPoolNameToItsPoolsGender()
+    {
+        SeedDataConstants.TurkishFemaleFirstNames.ShouldAllBe(name => DataSeeder.DemoGenderFor(name) == Gender.Female);
+        SeedDataConstants.TurkishMaleFirstNames.ShouldAllBe(name => DataSeeder.DemoGenderFor(name) == Gender.Male);
+    }
+
+    [Theory]
+    [InlineData("Olena", Gender.Female)] // fixed foreign account, not in the Turkish pools
+    [InlineData("Test", Gender.Male)] // fixed "Test Yaş" account falls back to Male
+    public void DemoGenderFor_HandlesTheFixedAccountsOutsideThePools(string firstName, Gender expected)
+    {
+        DataSeeder.DemoGenderFor(firstName).ShouldBe(expected);
+    }
+
+    /// <summary>
+    /// senseik-045: every seeded demo employee used to have a null ContractType/EmploymentType, so
+    /// EmployeeCompleteness.IsMissingInfo flagged all 56 of them - a badge that flags everyone is useless. The fixed,
+    /// documented login accounts (README.md "Demo kullanıcılar") must never show it, so they must always resolve a
+    /// contract/employment type.
+    /// </summary>
+    [Theory]
+    [InlineData("owner@demo.local")]
+    [InlineData("ik@demo.local")]
+    [InlineData("bordro@demo.local")]
+    [InlineData("yonetici@demo.local")]
+    [InlineData("calisan@demo.local")]
+    [InlineData("denetci@demo.local")]
+    [InlineData("testyas@demo.local")]
+    public void IsFixedDemoAccount_RecognizesEveryDocumentedLoginAccount(string email)
+    {
+        DataSeeder.IsFixedDemoAccount(email).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsFixedDemoAccount_IsFalse_ForARandomlyGeneratedEmployeeEmail()
+    {
+        DataSeeder.IsFixedDemoAccount("ahmet.yilmaz@democompany.com").ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesInterns_FixedTermInternship()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Intern));
+
+        contractType.ShouldBe(ContractType.FixedTerm);
+        employmentType.ShouldBe(EmploymentType.Intern);
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesContractors_FixedTermContractWork()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Contractor));
+
+        contractType.ShouldBe(ContractType.FixedTerm);
+        employmentType.ShouldBe(EmploymentType.Contract);
+    }
+
+    [Fact]
+    public void DemoContractInfoFor_GivesEveryoneElse_IndefiniteFullTime()
+    {
+        var (contractType, employmentType) = DataSeeder.DemoContractInfoFor(RolesOf(SystemRoleCodes.Employee));
+
+        contractType.ShouldBe(ContractType.Indefinite);
+        employmentType.ShouldBe(EmploymentType.FullTime);
     }
 }

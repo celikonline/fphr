@@ -58,7 +58,7 @@ public sealed partial class Employee
 
     public static Result ValidateContactInfo(EmployeeContactInfo info)
     {
-        if (Normalize(info.PersonalEmail) is { } personalEmail && !EmailAddress.IsValid(personalEmail))
+        if (Normalize(info.PersonalEmail) is { } personalEmail && !EmployeeEmailRules.IsValid(personalEmail))
         {
             return Error.Validation(EmployeeDomainErrors.PersonalEmailInvalid);
         }

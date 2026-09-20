@@ -2,7 +2,7 @@
   "id": "senseik-012",
   "title": "Fazla mesai: ücret oranları + 270 saat sayacı + serbest zaman takibi (F-05)",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/overtime-rates-limit",
   "worktree": ".claude/worktrees/overtime-calc",
   "acceptance": [

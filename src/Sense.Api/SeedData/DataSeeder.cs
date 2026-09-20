@@ -3,7 +3,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Sense.Modules.Announcements.Infrastructure.Persistence;
 using Sense.Modules.Documents.Domain.Documents;
+using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Employee.Domain.Employees;
@@ -23,14 +25,14 @@ using Sense.Modules.Leave.Domain.Profiles;
 using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure.Persistence;
-using Sense.Modules.Announcements.Infrastructure.Persistence;
+using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain.Companies;
 using Sense.Modules.Organization.Domain.HolidayCalendars;
 using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
-using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
@@ -52,6 +54,7 @@ public partial class DataSeeder(
     LeaveDbContext leaveCtx,
     LeaveBalanceService leaveBalances,
     ILeaveDayCalculator leaveDayCalculator,
+    IHolidayCalendarLookup holidayCalendars,
     ITenantContextSetter tenantContextSetter,
     AnnouncementsDbContext announcementsCtx,
     OhsDbContext ohsCtx)
@@ -109,6 +112,8 @@ public partial class DataSeeder(
             if (_demoLeaveSeed is { } demoLeave)
             {
                 await SeedDemoLeaveAsync(demoLeave, cancellationToken);
+                // kart senseik-030: sample overtime data for the new monthly overtime report + pay conversion demo.
+                await SeedDemoOvertimeAsync(demoLeave, cancellationToken);
             }
 
             await employeeCtx.SaveChangesAsync(cancellationToken);
@@ -281,11 +286,11 @@ public partial class DataSeeder(
             user.SetPassword(seedPasswordHash);
         }
 
-        // Organization: system hierarchy levels + demo tree (Headquarters -> Sales/Engineering/HR/Finance),
+        // Organization: system hierarchy levels + demo tree (Genel Merkez -> Satış/Yazılım Geliştirme/İnsan Kaynakları/Finans),
         // matching the shape web/src/services/organization.service.ts already mocks (Item 20 frontend).
         var orgUnitTypes = SeedOrgUnitTypes(tenant.Id);
 
-        var headquarters = CreateOrgUnitOrThrow(tenant.Id, orgUnitTypes.Company, parentId: null, name: "Headquarters");
+        var headquarters = CreateOrgUnitOrThrow(tenant.Id, orgUnitTypes.Company, parentId: null, name: "Genel Merkez");
         organizationCtx.OrgUnits.Add(headquarters);
 
         var demoHolidayCalendar = SeedTrHolidayCalendar(tenant.Id);
@@ -301,14 +306,15 @@ public partial class DataSeeder(
 
         // Locations (roadmap Faz 0 item #6): matches the 3 sample rows web/src/services/locations.service.ts
         // used to mock before this item wired the real backend, so a manual QA pass sees the same data.
-        var istanbulHq = CreateLocationOrThrow(tenant.Id, "İstanbul HQ", LocationType.Office, "TR", "Maslak, İstanbul");
+        // İstanbul HQ also carries a demo SGK işyeri sicil numarası (senseik-010/F-03), otherwise invisible in manual QA.
+        var istanbulHq = CreateLocationOrThrow(tenant.Id, "İstanbul HQ", LocationType.Office, "TR", "Maslak, İstanbul", "1071234.567-8.9-0");
         var ankaraOffice = CreateLocationOrThrow(tenant.Id, "Ankara Office", LocationType.Office, "TR", "Çankaya, Ankara");
         var izmirOffice = CreateLocationOrThrow(tenant.Id, "İzmir Office", LocationType.Office, "TR", "Konak, İzmir");
         organizationCtx.Locations.AddRange(istanbulHq, ankaraOffice, izmirOffice);
 
         headquarters.AssignLocation(istanbulHq.Id);
-        departments.First(d => d.Name == "Sales").AssignLocation(ankaraOffice.Id);
-        departments.First(d => d.Name == "Engineering").AssignLocation(izmirOffice.Id);
+        departments.First(d => d.Name == "Satış").AssignLocation(ankaraOffice.Id);
+        departments.First(d => d.Name == "Yazılım Geliştirme").AssignLocation(izmirOffice.Id);
 
         // Şirket etkinlik takvimi (senseik-027): birkaç manuel örnek etkinlik türü; doğum günü ve izin başlangıcı
         // türetmeleri aşağıdaki employees/leave seed'inden otomatik gelir.
@@ -324,6 +330,7 @@ public partial class DataSeeder(
         var titles = new DemoTitleCatalog(tenant.Id, orgUnitTypes.Title, organizationCtx);
         var employees = SeedDemoEmployees(tenant.Id, demoUsers, roleAssignments, headquarters, departments, titles);
         _demoLeaveSeed = new DemoLeaveSeed(tenant.Id, tenant.Slug, employees);
+        SeedDemoSalaries(employees);
 
         // senseik-018 (E-01): hand-authored audit trail (see SeedDemoAuditLog) - the seeder's own SaveChanges
         // cannot produce per-person attribution through the interceptor (single SystemUser actor for the batch).
@@ -334,6 +341,11 @@ public partial class DataSeeder(
 
         // senseik-028: sample shared company files (separate table from the employee-scoped Documents above)
         await SeedSharedCompanyFilesAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), cancellationToken);
+
+        // senseik-045 (acceptance #3): personnel document metadata for a handful of employees, so the Documents
+        // module's own screens/reports show a realistic mix of uploaded/missing instead of nobody ever having
+        // uploaded anything.
+        await SeedEmployeeDocumentMetadataAsync(tenant.Id, demoUsers.FirstOrDefault()?.Id ?? Guid.NewGuid(), employees, cancellationToken);
 
         logger.LogInformation(
             "Demo profile seeded: 1 tenant, {UserCount} users, {RoleCount} roles, {DocCount} documents, {OrgUnitCount} org units ({TitleCount} titles), {LocationCount} locations, {EmployeeCount} employees",
@@ -370,6 +382,84 @@ public partial class DataSeeder(
                 var doc = docResult.Value;
                 doc.ConfirmUpload($"etag_{Guid.NewGuid():N}", size);
                 documentsCtx.Documents.Add(doc);
+            }
+        }
+
+        await documentsCtx.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Per-employee document metadata (senseik-045 acceptance #3): type + status records only, no real files.
+    /// Seeds the tenant's onboarding-required document type catalog directly (mirrors
+    /// DocumentTypeProvisioningService.EnsureSeededAsync's lazy per-tenant copy of <see cref="DocumentTypeSeed"/>,
+    /// but the seeder runs outside a query/command handler so it can't reuse that lazy path), then for a handful of
+    /// demo employees marks roughly two-thirds of the onboarding-required types Uploaded (with a matching Document
+    /// row) and leaves the rest Missing - a believable mid-onboarding spread instead of the whole roster sitting at
+    /// either 0% or 100% document coverage.
+    /// </summary>
+    private async Task SeedEmployeeDocumentMetadataAsync(Guid tenantId, Guid uploadedBy, IReadOnlyList<DemoEmployee> demoEmployees, CancellationToken cancellationToken)
+    {
+        if (uploadedBy == Guid.Empty || demoEmployees.Count == 0)
+        {
+            return;
+        }
+
+        // Seed the whole system catalog, not only the types sampled below: DocumentTypeProvisioningService.EnsureSeededAsync
+        // skips seeding once the tenant has any type, so a partial copy here would leave the tenant without every
+        // non-onboarding/optional/conditional type for good.
+        var typeDefinitions = new List<DocumentTypeDefinition>();
+        foreach (var row in DocumentTypeSeed.SystemDefinitions())
+        {
+            var result = DocumentTypeDefinition.Create(
+                tenantId, row.Code, row.Name, row.Stage, row.IsRequired, row.Condition, row.RenewalPeriodDays,
+                row.Quantity, row.IsSensitive, row.DefaultRetentionDays, isSystem: true, row.SortOrder);
+            if (result.IsSuccess)
+            {
+                typeDefinitions.Add(result.Value);
+            }
+        }
+
+        documentsCtx.DocumentTypeDefinitions.AddRange(typeDefinitions);
+        var onboardingRequiredTypes = typeDefinitions
+            .Where(type => type.Stage == DocumentTypeStage.Onboarding && type.IsRequired)
+            .ToList();
+
+        // A handful of employees is enough to show the spread without materializing all ~57 employees x 11 types.
+        const int SampleEmployeeCount = 8;
+        foreach (var demoEmployee in demoEmployees.Take(SampleEmployeeCount))
+        {
+            foreach (var type in onboardingRequiredTypes)
+            {
+                var requirementResult = EmployeeDocumentRequirement.Materialize(tenantId, demoEmployee.Employee.Id, type.Id, dueDate: null);
+                if (requirementResult.IsFailure)
+                {
+                    continue;
+                }
+
+                var requirement = requirementResult.Value;
+
+                // ~2/3 of the required types uploaded, the rest left Missing.
+                if (_random.Next(0, 3) != 0)
+                {
+                    var docResult = Document.Create(
+                        tenantId: tenantId,
+                        title: type.Name,
+                        fileKey: $"documents/employees/{demoEmployee.Employee.Id}/{type.Code}.pdf",
+                        contentType: "application/pdf",
+                        size: 1024 * 64,
+                        uploadedBy: uploadedBy,
+                        bucketName: "documents");
+
+                    if (docResult.IsSuccess)
+                    {
+                        var doc = docResult.Value;
+                        doc.ConfirmUpload($"etag_{Guid.NewGuid():N}", 1024 * 64);
+                        documentsCtx.Documents.Add(doc);
+                        requirement.MarkUploaded(doc.Id);
+                    }
+                }
+
+                documentsCtx.EmployeeDocumentRequirements.Add(requirement);
             }
         }
 

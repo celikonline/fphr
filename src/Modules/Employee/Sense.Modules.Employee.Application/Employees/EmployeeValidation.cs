@@ -31,8 +31,15 @@ public static class EmployeeInfoRules
     /// (EmployeeSensitiveAccess.PreserveSensitiveFields) - validating that masked string against TcKimlik would
     /// otherwise reject a request that never touches NationalId.
     /// </summary>
-    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info, EmployeeSensitiveAccess sensitiveAccess)
+    /// <param name="nationalityProvided">
+    /// Update requests may leave Nationality unsent (the stored value is kept, senseik-058); the nationality-conditioned
+    /// rules then cannot be judged from the request alone and are skipped here - Employee.Validate re-checks them
+    /// against the merged info in the handler. Null = always provided (create).
+    /// </param>
+    public static void Apply<T>(AbstractValidator<T> v, Func<T, EmployeeInfo> info, EmployeeSensitiveAccess sensitiveAccess, Func<T, bool>? nationalityProvided = null)
     {
+        bool NationalityKnown(T x) => nationalityProvided?.Invoke(x) ?? true;
+
         v.RuleFor(x => info(x).FirstName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.FirstName));
         v.RuleFor(x => info(x).LastName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.LastName));
         v.RuleFor(x => info(x).NationalId)
@@ -41,14 +48,45 @@ public static class EmployeeInfoRules
             .WithMessage(EmployeeDomainErrors.NationalIdInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
         v.RuleFor(x => info(x).WorkEmail)
-            .Must(e => string.IsNullOrWhiteSpace(e) || EmailAddress.IsValid(e.Trim()))
+            .Must(e => string.IsNullOrWhiteSpace(e) || EmployeeEmailRules.IsValid(e.Trim()))
             .WithMessage(EmployeeDomainErrors.WorkEmailInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.WorkEmail));
         v.RuleFor(x => info(x).PersonalEmail)
-            .Must(e => string.IsNullOrWhiteSpace(e) || EmailAddress.IsValid(e.Trim()))
+            .Must(e => string.IsNullOrWhiteSpace(e) || EmployeeEmailRules.IsValid(e.Trim()))
             .WithMessage(EmployeeDomainErrors.PersonalEmailInvalid)
             .OverridePropertyName(nameof(EmployeeInfo.PersonalEmail));
+        // Doğum tarihi gelecekte olamaz; doğum tarihinden sonra işe girilemez (senseik-044) - domain kuralının
+        // FluentValidation aynası (alan bazlı 400 için).
+        v.RuleFor(x => info(x).BirthDate)
+            .Must(bd => bd is null || bd <= DateOnly.FromDateTime(DateTime.UtcNow))
+            .WithMessage(EmployeeDomainErrors.BirthDateInFuture)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        v.RuleFor(x => info(x))
+            .Must(i => i.BirthDate is null || i.HireDate is null || i.BirthDate <= i.HireDate)
+            .WithMessage(EmployeeDomainErrors.BirthDateAfterHireDate)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        // Makul tarih sınırları + işe girişte asgari yaş 15 (4857 md.71): Employee.Validate ile aynı EmployeeDateRules
+        // kaynağı; alan bazlı 400 için.
+        v.RuleFor(x => info(x).BirthDate)
+            .Must(bd => EmployeeDateRules.CheckBirthDate(bd) is null)
+            .WithMessage(EmployeeDomainErrors.BirthDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd >= EmployeeDateRules.EarliestDate)
+            .WithMessage(EmployeeDomainErrors.HireDateTooEarly)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x).HireDate)
+            .Must(hd => hd is null || hd <= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(EmployeeDateRules.MaxHireDateMonthsAhead))
+            .WithMessage(EmployeeDomainErrors.HireDateTooFarInFuture)
+            .OverridePropertyName(nameof(EmployeeInfo.HireDate));
+        v.RuleFor(x => info(x))
+            .Must(i => EmployeeDateRules.CheckMinimumAge(i.BirthDate, i.HireDate) is null)
+            .WithMessage(EmployeeDomainErrors.MinimumAge)
+            .OverridePropertyName(nameof(EmployeeInfo.BirthDate));
         v.RuleFor(x => info(x).WorkPhone).MaximumLength(EmployeeLimits.PhoneMaxLength).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).WorkPhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.WorkPhone));
+        v.RuleFor(x => info(x).MobilePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.MobilePhone));
+        v.RuleFor(x => info(x).HomePhone).Must(PhoneFormat.IsValid).WithMessage(EmployeeDomainErrors.PhoneInvalid).OverridePropertyName(nameof(EmployeeInfo.HomePhone));
         v.RuleFor(x => info(x).ChildCount).GreaterThanOrEqualTo(0)
             .When(x => info(x).ChildCount is not null)
             .WithMessage(EmployeeDomainErrors.ChildCountInvalid)
@@ -60,6 +98,7 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x).AddressLine).MaximumLength(EmployeeLimits.AddressLineMaxLength).OverridePropertyName(nameof(EmployeeInfo.AddressLine));
         v.RuleFor(x => info(x).City).MaximumLength(EmployeeLimits.CityMaxLength).OverridePropertyName(nameof(EmployeeInfo.City));
         v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeMaxLength).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
+        v.RuleFor(x => info(x).PostalCode).MaximumLength(EmployeeLimits.PostalCodeInputMaxLength).WithMessage(EmployeeDomainErrors.PostalCodeInvalid).OverridePropertyName(nameof(EmployeeInfo.PostalCode));
 
         v.RuleFor(x => info(x).SicilNumarasi).MaximumLength(EmployeeLimits.SicilNumarasiMaxLength).OverridePropertyName(nameof(EmployeeInfo.SicilNumarasi));
         v.RuleFor(x => info(x).ForeignIdNumber).MaximumLength(EmployeeLimits.ForeignIdNumberLength).OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
@@ -71,19 +110,20 @@ public static class EmployeeInfoRules
         v.RuleFor(x => info(x))
             .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
                        i.Nationality != Nationality.Turkish || !TcKimlik.Of(i.NationalId.Trim()).IsForeign)
-            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WhenAsync(async (x, ct) => NationalityKnown(x) && await sensitiveAccess.CanViewAsync(ct))
             .WithMessage(EmployeeDomainErrors.NationalIdForeignPrefixForTurkish)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
         v.RuleFor(x => info(x))
             .Must(i => string.IsNullOrWhiteSpace(i.NationalId) || !TcKimlik.IsValid(i.NationalId) ||
                        i.Nationality != Nationality.Foreign || TcKimlik.Of(i.NationalId.Trim()).IsForeign)
-            .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))
+            .WhenAsync(async (x, ct) => NationalityKnown(x) && await sensitiveAccess.CanViewAsync(ct))
             .WithMessage(EmployeeDomainErrors.NationalIdNotForeignForForeignNational)
             .OverridePropertyName(nameof(EmployeeInfo.NationalId));
 
         // Not sensitive-view gated: ForeignIdNumber/PassportNumber are not masked like NationalId.
         v.RuleFor(x => info(x))
             .Must(i => i.Nationality != Nationality.Foreign || !string.IsNullOrWhiteSpace(i.ForeignIdNumber) || !string.IsNullOrWhiteSpace(i.PassportNumber))
+            .When(NationalityKnown)
             .WithMessage(EmployeeDomainErrors.ForeignIdentificationRequired)
             .OverridePropertyName(nameof(EmployeeInfo.ForeignIdNumber));
     }
@@ -127,6 +167,15 @@ public sealed class EmployeeReferenceValidator(ITenantContext tenant, IEmployeeR
             await employees.SicilNumarasiTakenAsync(info.SicilNumarasi.Trim(), existing?.Id, ct).ConfigureAwait(false))
         {
             return Error.Conflict(EmployeeErrors.SicilNumarasiTaken);
+        }
+
+        // Work e-mail is the login/notification address: unique per tenant, case-insensitively. On update only a
+        // changed address is checked, so legacy duplicates never block unrelated edits.
+        if (info.WorkEmail?.Trim() is { Length: > 0 } workEmail &&
+            !string.Equals(existing?.WorkEmail?.Trim(), workEmail, StringComparison.OrdinalIgnoreCase) &&
+            await employees.WorkEmailTakenAsync(workEmail, existing?.Id, ct).ConfigureAwait(false))
+        {
+            return Error.Conflict(EmployeeErrors.WorkEmailTaken);
         }
 
         return Result.Success();

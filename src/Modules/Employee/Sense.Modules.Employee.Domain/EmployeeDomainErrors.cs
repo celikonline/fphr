@@ -11,14 +11,41 @@ public static class EmployeeDomainErrors
     public const string WorkEmailInvalid = "employee.work_email_invalid";
     public const string PersonalEmailInvalid = "employee.personal_email_invalid";
     public const string WorkPhoneTooLong = "employee.work_phone_too_long";
+
+    /// <summary>Doğum tarihi bugünden ileri bir tarih olamaz (senseik-044).</summary>
+    public const string BirthDateInFuture = "employee.birth_date_in_future";
+
+    /// <summary>Doğum tarihi işe başlama tarihinden sonra olamaz (senseik-044).</summary>
+    public const string BirthDateAfterHireDate = "employee.birth_date_after_hire_date";
+
+    /// <summary>Doğum tarihi 1900-01-01'den önce olamaz (veri girişi hatası koruması).</summary>
+    public const string BirthDateTooEarly = "employee.birth_date_too_early";
+
+    /// <summary>İşe giriş tarihi 1900-01-01'den önce olamaz.</summary>
+    public const string HireDateTooEarly = "employee.hire_date_too_early";
+
+    /// <summary>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</summary>
+    public const string HireDateTooFarInFuture = "employee.hire_date_too_far_in_future";
+
+    /// <summary>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 md.71).</summary>
+    public const string MinimumAge = "employee.minimum_age";
     public const string ManagerSelf = "employee.manager_self";
     public const string ManagerCycle = "employee.manager_cycle";
+
+    /// <summary>A mentor relationship is not hierarchical (no cycle check needed), only self-assignment is rejected.</summary>
+    public const string MentorSelf = "employee.mentor_self";
     public const string ChildCountInvalid = "employee.child_count_invalid";
     public const string MobilePhoneTooLong = "employee.mobile_phone_too_long";
     public const string HomePhoneTooLong = "employee.home_phone_too_long";
     public const string AddressLineTooLong = "employee.address_line_too_long";
     public const string CityTooLong = "employee.city_too_long";
     public const string PostalCodeTooLong = "employee.postal_code_too_long";
+
+    /// <summary>Free-typed phone contains characters other than digits, spaces, "+ - . / ( )" or has an implausible digit count.</summary>
+    public const string PhoneInvalid = "employee.phone_invalid";
+
+    /// <summary>Postal code longer than <see cref="EmployeeLimits.PostalCodeInputMaxLength"/> (input rule; the column itself stays 20 wide).</summary>
+    public const string PostalCodeInvalid = "employee.postal_code_invalid";
     public const string SuspendInvalidStatus = "employee.suspend_invalid_status";
     public const string ReactivateNotSuspended = "employee.reactivate_not_suspended";
 
@@ -157,6 +184,9 @@ public static class EmployeeLimits
     public const int AddressLineMaxLength = 250;
     public const int CityMaxLength = 100;
     public const int PostalCodeMaxLength = 20;
+
+    /// <summary>Longest postal code accepted from users (Turkish codes are 5 digits, foreign ones rarely exceed 10); the DB column stays PostalCodeMaxLength wide so no migration is needed.</summary>
+    public const int PostalCodeInputMaxLength = 10;
     public const int CareerNoteMaxLength = 500;
     public const int SalaryNoteMaxLength = 500;
     public const int BankNameMaxLength = 100;

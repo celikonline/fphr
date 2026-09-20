@@ -3,6 +3,7 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Kernel.Results;
@@ -105,6 +106,12 @@ public interface IMonthlyTimesheetApprovalRepository
     /// <summary>Aylık puantaj ızgarası (S-11): every existing approval row for these employees in this period, in one query.</summary>
     Task<IReadOnlyList<MonthlyTimesheetApproval>> ListForPeriodAsync(
         IReadOnlyCollection<Guid> employeeIds, DateOnly periodMonth, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Write-once audit log (S-31); no update/remove - see <see cref="SelfCheckIn"/>.</summary>
+public interface ISelfCheckInRepository
+{
+    void Add(SelfCheckIn checkIn);
 }
 
 public interface ICompensatoryWorkLedgerRepository

@@ -494,30 +494,30 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000025"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 30000.00m,
+                            DecimalValue = 33030.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.MinimumWage.Gross",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - aylık brüt asgari ücret"
+                            Source = "2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf - aylık brüt asgari ücret"
                         },
                         new
                         {
                             Id = new Guid("00000008-0000-0000-0000-000000000026"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 30000.00m,
+                            DecimalValue = 33030.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Sgk.Floor",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK prim matrahı alt sınırı (asgari ücrete eşit)"
+                            Source = "5510 s. Kanun md.82; 2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf - SGK prim matrahı alt sınırı (asgari ücrete eşit)"
                         },
                         new
                         {
                             Id = new Guid("00000008-0000-0000-0000-000000000027"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 225000.00m,
+                            DecimalValue = 247725.00m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.Sgk.Ceiling",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı)"
+                            Source = "5510 s. Kanun md.82; 2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı = 247.725 TL)"
                         },
                         new
                         {
@@ -606,8 +606,8 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
                             EffectiveFrom = new DateOnly(2026, 1, 1),
                             Key = "Payroll.IncomeTax.Brackets",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - GVK md.103 kümülatif gelir vergisi tarifesi (%15/20/27/35/40)",
-                            ValueJson = "[{\"upperBound\":158000,\"rate\":0.15},{\"upperBound\":330000,\"rate\":0.20},{\"upperBound\":1200000,\"rate\":0.27},{\"upperBound\":4300000,\"rate\":0.35},{\"upperBound\":null,\"rate\":0.40}]"
+                            Source = "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; kaynak: https://www.memurlar.net/haber/1155986/2026-gelir-vergisi-dilimlerini-gosteren-teblig-r-g-de-yayimlandi.html",
+                            ValueJson = "[{\"upperBound\":190000,\"rate\":0.15},{\"upperBound\":400000,\"rate\":0.20},{\"upperBound\":1500000,\"rate\":0.27},{\"upperBound\":5300000,\"rate\":0.35},{\"upperBound\":null,\"rate\":0.40}]"
                         },
                         new
                         {
@@ -644,10 +644,21 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Id = new Guid("00000008-0000-0000-0000-000000000040"),
                             Country = "TR",
                             CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
-                            DecimalValue = 55000.00m,
+                            DecimalValue = 64948.77m,
                             EffectiveFrom = new DateOnly(2026, 1, 1),
+                            EffectiveTo = new DateOnly(2026, 6, 30),
                             Key = "Severance.CeilingGross",
-                            Source = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md) - kıdem tazminatı tavanı (bir hizmet yılı için azami brüt tutar, İş K. m.14)"
+                            Source = "Hazine ve Maliye Bakanlığı Mali ve Sosyal Haklar Genelgesi (kıdem tazminatı tavanı, 6 ayda bir); kaynak: https://www.csgb.gov.tr/%C4%B1statistikler/calisma-hayati-%C4%B1statistikleri/kidem-tazminati-tavan-miktari/ - 01.01.2026-30.06.2026 kıdem tazminatı tavanı 64.948,77 TL (bir hizmet yılı için azami brüt tutar, İş K. m.14)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000046"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 73729.87m,
+                            EffectiveFrom = new DateOnly(2026, 7, 1),
+                            Key = "Severance.CeilingGross",
+                            Source = "Hazine ve Maliye Bakanlığı Mali ve Sosyal Haklar Genelgesi (kıdem tazminatı tavanı, 6 ayda bir); kaynak: https://www.csgb.gov.tr/%C4%B1statistikler/calisma-hayati-%C4%B1statistikleri/kidem-tazminati-tavan-miktari/ - 01.07.2026-31.12.2026 kıdem tazminatı tavanı 73.729,87 TL"
                         },
                         new
                         {
@@ -658,6 +669,46 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                             Key = "Notice.WeeksBySeniorityTiers",
                             Source = "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)",
                             ValueJson = "[{\"upperBoundDays\":183,\"weeks\":2},{\"upperBoundDays\":548,\"weeks\":4},{\"upperBoundDays\":1095,\"weeks\":6},{\"upperBoundDays\":null,\"weeks\":8}]"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000042"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 1.5m,
+                            EffectiveFrom = new DateOnly(2003, 6, 10),
+                            Key = "Leave.Breastfeeding.HoursPerDay",
+                            Source = "4857 s. İş Kanunu md.74 (RG 10.06.2003/25134)/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000043"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 6900.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree1",
+                            Source = "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000044"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 4000.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree2",
+                            Source = "193 s. GVK md.31 - II. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000008-0000-0000-0000-000000000045"),
+                            Country = "TR",
+                            CreatedAt = new DateTime(2026, 9, 15, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DecimalValue = 1700.00m,
+                            EffectiveFrom = new DateOnly(2026, 1, 1),
+                            Key = "Payroll.Disability.MonthlyTaxReduction.Degree3",
+                            Source = "193 s. GVK md.31 - III. derece engellilik indirimi, Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)"
                         });
                 });
 
@@ -1425,6 +1476,72 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_leave_types_tenant_id_rule_set_id");
 
                     b.ToTable("leave_types", "leave");
+                });
+
+            modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("actor");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("details");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("resource");
+
+                    b.Property<string>("ResourceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resource_id");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_log_entries");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id");
+
+                    b.HasIndex("TenantId", "OccurredAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id_occurred_at");
+
+                    b.ToTable("audit_log_entries", "leave");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

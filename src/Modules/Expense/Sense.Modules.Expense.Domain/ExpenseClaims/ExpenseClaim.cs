@@ -68,6 +68,11 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Rule(ExpenseDomainErrors.ClaimNotDraft);
         }
 
+        if (HasOtherCurrency(null, currency))
+        {
+            return Error.Rule(ExpenseDomainErrors.ClaimCurrencyMismatch);
+        }
+
         var validated = ExpenseItem.Create(Id, categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description);
         if (validated.IsFailure)
         {
@@ -91,6 +96,11 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
         if (item is null)
         {
             return Error.NotFound(ExpenseDomainErrors.ItemNotFound);
+        }
+
+        if (HasOtherCurrency(itemId, currency))
+        {
+            return Error.Rule(ExpenseDomainErrors.ClaimCurrencyMismatch);
         }
 
         var updated = item.Update(categoryId, amount, receiptDate, taxRate, currency, receiptFileId, description);
@@ -183,6 +193,10 @@ public sealed class ExpenseClaim : TenantAggregateRoot<Guid>, IAuditLogged
         return Result.Success();
     }
 
+    /// <summary>One currency per claim (no FX conversion): true when another item (not <paramref name="exceptItemId"/>) uses a different currency.</summary>
+    private bool HasOtherCurrency(Guid? exceptItemId, string currency) =>
+        _items.Any(i => i.Id != exceptItemId && !string.Equals(i.Currency, currency.Trim(), StringComparison.OrdinalIgnoreCase));
+
     private void RecalculateTotal() => TotalAmount = _items.Sum(i => i.Amount);
 
     private static string? Trim(string? value) =>
@@ -273,6 +287,11 @@ public sealed class ExpenseItem : Entity<Guid>
             return Error.Validation(ExpenseDomainErrors.ItemAmountInvalid);
         }
 
+        if (amount > ExpenseLimits.MaxAmount)
+        {
+            return Error.Validation(ExpenseDomainErrors.ItemAmountTooLarge);
+        }
+
         if (taxRate is < 0 or > 100)
         {
             return Error.Validation(ExpenseDomainErrors.ItemTaxRateInvalid);
@@ -281,6 +300,11 @@ public sealed class ExpenseItem : Entity<Guid>
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != ExpenseLimits.CurrencyLength)
         {
             return Error.Validation(ExpenseDomainErrors.ItemCurrencyRequired);
+        }
+
+        if (!ExpenseLimits.AllowedCurrencies.Contains(currency.Trim().ToUpperInvariant()))
+        {
+            return Error.Validation(ExpenseDomainErrors.ItemCurrencyUnsupported);
         }
 
         return null;

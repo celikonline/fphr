@@ -9,9 +9,11 @@ using Sense.Modules.Workflow.Infrastructure.Messaging;
 using Sense.Modules.Workflow.Infrastructure.Persistence;
 using Sense.Modules.Workflow.Infrastructure.Resolvers;
 using Sense.Modules.Workflow.Infrastructure.Services;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Workflow.Api;
 
@@ -31,7 +33,14 @@ public sealed class WorkflowModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<WorkflowDbContext>(configuration, WorkflowDbContext.SchemaName);
+        // senseik-049: Identity dışına genişletilen denetim izi - IdentityModule'deki IdentityAuditLogInterceptor
+        // deseninin aynısı, paylaşımlı AuditLogInterceptor ile (bkz. Sense.Shared.Infrastructure.Persistence.Audit).
+        // Approval sürecinin genel durumu (Pending/Approved/Rejected) burada, ApprovalRequest üzerinden loglanır.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<WorkflowDbContext>(
+            configuration, WorkflowDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<WorkflowDbContext>>();
 
         // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor,
         // and Contracts events (ApprovalCompleted/ApprovalRejected) map to this module's outbox (IIntegrationEventOutbox).

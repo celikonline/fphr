@@ -1,10 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Employee.Infrastructure.Lookups;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Leave.Domain;
@@ -48,12 +52,18 @@ public sealed class LeaveIntegrationTests : TestFixture
             typeof(LeaveDbContext).Assembly,
             typeof(ILeaveRuleSetRepository).Assembly,
             typeof(Attendance.Contracts.IWorkScheduleReadService).Assembly);
+
+        // senseik-007 (age-50-exception): EmployeeHiredHandler needs IEmployeeBirthDateLookup - same registration as
+        // OvertimeTests/LeaveBalanceRecalculationJobTests; without it every EmployeeHired publish fails DI resolution.
+        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
     }
 
     protected override async Task OnDatabaseReadyAsync()
     {
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
         await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
+        await ServiceProvider.GetRequiredService<EmployeeDbContext>().Database.MigrateAsync();
     }
 
     [Fact]
@@ -67,6 +77,9 @@ public sealed class LeaveIntegrationTests : TestFixture
         services.AddModuleDbContext<LeaveDbContext>(configuration, LeaveDbContext.SchemaName);
         services.AddLeaveCoreServices(configuration);
         services.AddLeaveIntegrationEventHandlers();
+        // senseik-055: isolated ServiceCollection, built independently of ConfigureServices above - needs its own
+        // IEmployeeBirthDateLookup stub for EmployeeHiredHandler to resolve.
+        services.AddSingleton(Substitute.For<IEmployeeBirthDateLookup>());
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
         using var scope = provider.CreateScope();

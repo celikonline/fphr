@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 
 namespace Sense.Modules.Payroll.Infrastructure.Persistence;
 
@@ -90,5 +92,63 @@ public sealed class EmployeePayrollProfileRepository(PayrollDbContext context) :
         await context.EmployeePayrollProfiles
             .Where(p => p.EmployeeId == employeeId && p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
             .OrderByDescending(p => p.ValidFrom)
+            .FirstOrDefaultAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeePayrollProfile>> ListActiveAsOfAsync(DateOnly asOf, CancellationToken cancellationToken = default) =>
+        await context.EmployeePayrollProfiles
+            .Where(p => p.ValidFrom <= asOf && (p.ValidTo == null || asOf <= p.ValidTo))
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class GarnishmentOrderRepository(PayrollDbContext context) : IGarnishmentOrderRepository
+{
+    public void Add(GarnishmentOrder order) => context.GarnishmentOrders.Add(order);
+
+    public async Task<GarnishmentOrder?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders.FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<GarnishmentOrder>> ListActiveByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders
+            .Where(o => o.EmployeeId == employeeId && o.ClosedDate == null)
+            .OrderBy(o => o.StartDate)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<GarnishmentOrder>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.GarnishmentOrders
+            .Where(o => o.EmployeeId == employeeId)
+            .OrderByDescending(o => o.StartDate)
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class UnionRepository(PayrollDbContext context) : IUnionRepository
+{
+    public void Add(Union union) => context.Unions.Add(union);
+
+    public async Task<Union?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.Unions.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<Union>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.Unions.OrderBy(u => u.Name).ToListAsync(cancellationToken);
+}
+
+public sealed class EmployeeUnionMembershipRepository(PayrollDbContext context) : IEmployeeUnionMembershipRepository
+{
+    public void Add(EmployeeUnionMembership membership) => context.EmployeeUnionMemberships.Add(membership);
+
+    public void Remove(EmployeeUnionMembership membership) => context.EmployeeUnionMemberships.Remove(membership);
+
+    public async Task<EmployeeUnionMembership?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.EmployeeUnionMemberships.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<EmployeeUnionMembership>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.EmployeeUnionMemberships
+            .Where(m => m.EmployeeId == employeeId)
+            .OrderByDescending(m => m.MembershipDate)
+            .ToListAsync(cancellationToken);
+
+    public async Task<EmployeeUnionMembership?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default) =>
+        await context.EmployeeUnionMemberships
+            .Where(m => m.EmployeeId == employeeId && m.MembershipDate <= asOf && (m.EndDate == null || asOf <= m.EndDate))
+            .OrderByDescending(m => m.MembershipDate)
             .FirstOrDefaultAsync(cancellationToken);
 }

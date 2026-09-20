@@ -67,7 +67,7 @@ public partial class DataSeeder
         // pool seeds several HR/HRSpecialist accounts) lands in the real HR department like any other HR staff,
         // instead of collapsing onto the same Headquarters title node (H-04: "Ayşe Demir" vs "Deniz Balci").
         var hrDirectorAssigned = false;
-        var hrDepartment = departments.FirstOrDefault(d => d.Name == "HR");
+        var hrDepartment = departments.FirstOrDefault(d => d.Name == "İnsan Kaynakları");
 
         foreach (var user in users)
         {
@@ -83,7 +83,7 @@ public partial class DataSeeder
             var titleName = DemoTitleFor(orgUnit, headquarters, userRoles, titleCursors);
             var placementUnit = titleName is null ? orgUnit : titles.GetOrCreate(orgUnit, titleName);
 
-            var info = NextDemoEmployeeInfo(user);
+            var info = NextDemoEmployeeInfo(user, userRoles);
             if (FixedDemoAccountTenure.TryGetValue(user.Email, out var tenure))
             {
                 // Fixed login accounts get a hire date whose anniversary is a few months back, so the current annual leave
@@ -101,7 +101,7 @@ public partial class DataSeeder
             user.LinkEmployee(employee.Id);
             EnqueueHiredIfActive(tenantId, employee);
             created.Add((employee, orgUnit));
-            result.Add(new DemoEmployee(employee, user.Email));
+            result.Add(new DemoEmployee(employee, user.Email, titleName));
 
             if (isExecutive && headquarters.ManagerEmployeeId is null)
             {
@@ -245,7 +245,33 @@ public partial class DataSeeder
     /// </summary>
     private static readonly HashSet<string> FixedDemoForeignAccounts = new(StringComparer.OrdinalIgnoreCase) { "yabanci@demo.local" };
 
-    private EmployeeInfo NextDemoEmployeeInfo(User user)
+    /// <summary>
+    /// senseik-043: demo Gender came out all "Unspecified" (Reports -> Cinsiyet Dağılımı showed nothing useful).
+    /// Derived from the first name rather than tracked separately, so it can never drift from
+    /// <see cref="GenerateDemoUsersWithRoles"/>'s alternating male/female pool pick; names outside both seed pools
+    /// (the fixed "Test Yaş" account) fall back to Male, "Olena" (the fixed foreign account) is female but not in
+    /// the Turkish name pool, so it is special-cased here.
+    /// </summary>
+    private static readonly HashSet<string> DemoFemaleFirstNames =
+        new(SeedDataConstants.TurkishFemaleFirstNames, StringComparer.OrdinalIgnoreCase) { "Olena" };
+
+    /// <summary>Lower-cases a name for use in a work e-mail address and folds the Turkish letters to ASCII: the Employee
+    /// module rejects non-ASCII addresses (EmployeeEmailRules, senseik-044), so "Bülent" must become "bulent".</summary>
+    internal static string ToAsciiEmailPart(string name) => string.Concat(name.Select(c => c switch
+    {
+        'ç' or 'Ç' => 'c',
+        'ğ' or 'Ğ' => 'g',
+        'ı' or 'İ' or 'I' => 'i',
+        'ö' or 'Ö' => 'o',
+        'ş' or 'Ş' => 's',
+        'ü' or 'Ü' => 'u',
+        _ => char.ToLowerInvariant(c),
+    }));
+
+    internal static Gender DemoGenderFor(string firstName) =>
+        DemoFemaleFirstNames.Contains(firstName) ? Gender.Female : Gender.Male;
+
+    private EmployeeInfo NextDemoEmployeeInfo(User user, List<Role> userRoles)
     {
         var birthDate = new DateOnly(1970, 1, 1).AddDays(_random.Next(0, 365 * 33));
         var hireDate = new DateOnly(2015, 1, 1).AddDays(_random.Next(0, 365 * 11));
@@ -253,15 +279,61 @@ public partial class DataSeeder
         var personalEmail = _random.Next(0, 3) == 0
             ? null
             : $"{AsciiFold(user.FirstName)}.{AsciiFold(user.LastName)}{_random.Next(1, 100)}@example.com";
+        var gender = DemoGenderFor(user.FirstName);
+        var (contractType, employmentType) = NextDemoContractInfo(user, userRoles);
 
         if (FixedDemoForeignAccounts.Contains(user.Email))
         {
             return new EmployeeInfo(
                 user.FirstName, user.LastName, NationalId: null, user.Email, personalEmail, phone, hireDate, birthDate,
-                Nationality: Nationality.Foreign, ForeignIdNumber: NextForeignIdNumber());
+                Gender: gender, Nationality: Nationality.Foreign, ForeignIdNumber: NextForeignIdNumber(),
+                ContractType: contractType, EmploymentType: employmentType);
         }
 
-        return new EmployeeInfo(user.FirstName, user.LastName, NextNationalId(), user.Email, personalEmail, phone, hireDate, birthDate);
+        return new EmployeeInfo(
+            user.FirstName, user.LastName, NextNationalId(), user.Email, personalEmail, phone, hireDate, birthDate,
+            Gender: gender, ContractType: contractType, EmploymentType: employmentType);
+    }
+
+    /// <summary>
+    /// Contract/employment type for a demo employee (senseik-045, "Eksik bilgi" 56/56): both fields used to be left
+    /// null for every seeded employee, so <see cref="EmployeeCompleteness.IsMissingInfo"/> flagged the entire demo
+    /// roster - a badge that flags everyone tells the user nothing. The fixed, documented login accounts (README.md)
+    /// always get both fields filled - showing "Eksik bilgi" on the very account someone just logged in as would be
+    /// confusing - but about a fifth of the 50 randomly generated employees are deliberately left without them, so
+    /// the badge now shows a realistic minority instead of the whole roster.
+    /// </summary>
+    private (ContractType? ContractType, EmploymentType? EmploymentType) NextDemoContractInfo(User user, List<Role> userRoles)
+    {
+        if (!IsFixedDemoAccount(user.Email) && _random.Next(0, 5) == 0)
+        {
+            return (null, null);
+        }
+
+        var (contractType, employmentType) = DemoContractInfoFor(userRoles);
+        return (contractType, employmentType);
+    }
+
+    /// <summary>Whether <paramref name="email"/> belongs to one of the fixed, documented (README.md) demo login accounts.</summary>
+    internal static bool IsFixedDemoAccount(string email) =>
+        FixedDemoAccounts.Any(a => string.Equals(a.Email, email, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Role-appropriate contract/employment type when a demo employee's record is filled in: interns and
+    /// contractors get a fixed-term contract with the matching employment type, everyone else the usual
+    /// indefinite/full-time pairing.</summary>
+    internal static (ContractType ContractType, EmploymentType EmploymentType) DemoContractInfoFor(List<Role> userRoles)
+    {
+        if (userRoles.Any(role => role.Code == SystemRoleCodes.Intern))
+        {
+            return (ContractType.FixedTerm, EmploymentType.Intern);
+        }
+
+        if (userRoles.Any(role => role.Code == SystemRoleCodes.Contractor))
+        {
+            return (ContractType.FixedTerm, EmploymentType.Contract);
+        }
+
+        return (ContractType.Indefinite, EmploymentType.FullTime);
     }
 
     private static string AsciiFold(string value)
@@ -383,7 +455,8 @@ public partial class DataSeeder
     {
         var users = new List<User>();
         var roleAssignments = new Dictionary<Guid, List<Role>>();
-        var firstNames = SeedDataConstants.TurkishFirstNames;
+        var maleFirstNames = SeedDataConstants.TurkishMaleFirstNames;
+        var femaleFirstNames = SeedDataConstants.TurkishFemaleFirstNames;
         var lastNames = SeedDataConstants.TurkishLastNames;
 
         // Role distribution for 50 employees
@@ -407,9 +480,13 @@ public partial class DataSeeder
         {
             for (int i = 0; i < count && userCount < 50; i++)
             {
+                // senseik-043: alternate the gendered name pool per slot so the 50 random employees land on an
+                // exact 25/25 split - DemoGenderFor below derives Gender straight back from whichever pool the
+                // picked first name came from, so name and Gender never disagree.
+                var firstNames = userCount % 2 == 0 ? maleFirstNames : femaleFirstNames;
                 var firstName = firstNames[_random.Next(firstNames.Length)];
                 var lastName = lastNames[_random.Next(lastNames.Length)];
-                var email = $"{firstName.ToLowerInvariant()}.{lastName.ToLowerInvariant()}@democompany.com".Replace(" ", "");
+                var email = $"{ToAsciiEmailPart(firstName)}.{ToAsciiEmailPart(lastName)}@democompany.com".Replace(" ", "");
 
                 // Ensure unique email (simple deduplication)
                 var emailSuffix = 0;

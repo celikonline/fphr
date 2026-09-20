@@ -1,0 +1,19 @@
+{
+  "id": "senseik-057",
+  "title": "Ayarlar → Modüller: kiracı bazında ürün modüllerini aç/kapa (API 403 filtresi + web gizleme)",
+  "owner": "pc-a",
+  "state": "merged",
+  "branch": "a/module-toggle-settings",
+  "worktree": ".claude/worktrees/module-toggle",
+  "acceptance": [
+    "Tek katalog Sense.Shared.Contracts/Modules/ProductModules: 10 temel (kapatılamaz) + 9 kapatılabilir modül",
+    "Identity: Tenant.ModuleSettings (jsonb module_settings, kapalı anahtar listesi) + migration AddTenantModuleSettings",
+    "GET/PUT /api/v1/identity/settings/modules; PUT identity.modules.manage (Owner/Admin joker ile), temel/bilinmeyen anahtar 400 module.not_toggleable / module.unknown",
+    "/identity/me features.disabledModules herkese döner (bypass yok)",
+    "Global ModuleAccessFilter: kapalı modül controller'ı 403 module.disabled; temel modüller, Modüller ayar ucu ve destek (ModuleAccessExempt) hiç engellenmez; HybridCache, PUT'ta geçersizlenir",
+    "Web: Ayarlar > Sistem ayarları > Modüller sayfası (tr/en/de), kapatmada onay; sidebar/uygulamalar/ayarlar kartları, ana sayfa widget'ları, çalışan kartı sekmeleri gizlenir; kapalı modül rotası 'Bu modül kapalı' sayfası gösterir"
+  ],
+  "merge_gate": "dotnet build src/Sense.Api + Identity/Architecture testleri + web tsc/eslint/vitest yeşil; Testcontainers entegrasyon testleri (ModuleToggleIntegrationTests) Docker açıkken koşulmalı",
+  "handoff": "docs/handoffs/module-toggle-settings.md",
+  "source": "Ürün teslimi (Pazartesi) — modül aç/kapa talebi"
+}

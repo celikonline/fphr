@@ -230,4 +230,27 @@ describe("useVisibleItems", () => {
 
     expect(result.current).toHaveLength(2);
   });
+
+  it("hides items whose path belongs to a module the tenant turned off (senseik-057)", () => {
+    mockUseAuthStore.mockImplementation((selector) => {
+      if (typeof selector === "function") {
+        return selector({
+          user: { permissions: [] },
+          features: { accessSettingsBypass: true, access: {}, disabledModules: ["leave"] },
+        });
+      }
+      return undefined;
+    });
+
+    const items = [
+      { id: "leave", path: "/app/leave" },
+      { id: "calendar", path: "/app/leave/calendar" },
+      { id: "payroll", path: "/app/payroll/periods" },
+      { id: "employees", path: "/app/employees" },
+    ];
+
+    const { result } = renderHook(() => useVisibleItems(items));
+
+    expect(result.current.map((i) => i.id)).toEqual(["payroll", "employees"]);
+  });
 });

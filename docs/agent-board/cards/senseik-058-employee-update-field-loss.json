@@ -1,0 +1,17 @@
+{
+  "id": "senseik-058",
+  "title": "Çalışan güncelleme (PUT /employees/{id}) sicil no, uyruk, yabancı kimlik no, pasaport no ve SGK meslek kodunu sessizce siliyor (veri kaybı)",
+  "owner": "pc-a",
+  "state": "review",
+  "branch": "a/employee-update-field-loss",
+  "worktree": ".claude/worktrees/employee-update-fields",
+  "acceptance": [
+    "UpdateEmployeeCommand/EmployeeRequest bu 5 alanı taşıyor; istemci göndermezse (null/yok) kayıtlı değer korunuyor — çalışan kartı bölüm kaydı, eski web/mobil/entegrasyon istemcisi hiçbirini silmiyor, uyruk Turkish'e sıfırlanmıyor",
+    "İstemcinin gönderdiği değerler kalıcı oluyor (create + update); metin alanlarında boş string açık temizleme (uyruk boşaltılamaz, yalnızca değiştirilir)",
+    "Uyruk gönderilmeyen güncellemede FluentValidation'ın uyruk-koşullu kuralları yanlış pozitif vermiyor (yabancı çalışanın 99'lu kimliği 'Türk uyruklu' sanılmıyor); birleştirilmiş bilgi Employee.Validate ile yine doğrulanıyor",
+    "Birim testleri (Docker'sız) her alanın veri kaybı olmadığını, gönderilen değerin kalıcı olduğunu ve boş string ile temizlemeyi kanıtlıyor; web toEmployeeInput yeni alanları göndermiyor (test)"
+  ],
+  "merge_gate": "dotnet build (Employee + Sense.Api) + Employee.Tests (Category!=Integration) + pnpm exec tsc --noEmit + eslint src + vitest employees.service.test.ts yeşil",
+  "handoff": "docs/handoffs/employee-update-field-loss.md",
+  "source": "Önceki ajan raporu (doğrulanmamış iddia) — senseik-009/010 ile eklenen alanların Update yolunda taşınmaması; kodla doğrulandı (bkz. handoff)."
+}

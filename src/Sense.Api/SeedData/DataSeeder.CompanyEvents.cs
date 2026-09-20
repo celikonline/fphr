@@ -21,10 +21,10 @@ public partial class DataSeeder
         AddCompanyEventOrThrow(tenantId, "Aylık Genel Toplantı", "Şirket geneli bilgilendirme toplantısı.",
             today.AddDays(7), CompanyEventType.Meeting, visibilityOrgUnitId: null, createdByUserId);
 
-        var engineering = departments.FirstOrDefault(d => d.Name == "Engineering");
+        var engineering = departments.FirstOrDefault(d => d.Name == "Yazılım Geliştirme");
         if (engineering is not null)
         {
-            AddCompanyEventOrThrow(tenantId, "Sprint Planlama", "Engineering ekibi sprint planlama toplantısı.",
+            AddCompanyEventOrThrow(tenantId, "Sprint Planlama", "Yazılım Geliştirme ekibi sprint planlama toplantısı.",
                 today.AddDays(3), CompanyEventType.Meeting, engineering.Id, createdByUserId);
         }
     }

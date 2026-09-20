@@ -21,7 +21,9 @@
     "type_unpaid": "Ücretsiz izin",
     "type_foster_care": "Koruyucu aile izni",
     "type_template_remote_work": "Uzaktan Çalışma",
-    "type_template_birthday": "Doğum günü izni"
+    "type_template_birthday": "Doğum günü izni",
+    "type_breastfeeding": "Süt izni",
+    "type_disabled_child": "Engelli/süreğen hastalıklı çocuk izni"
   },
   "code": {
     "custom": "Özel izin",
@@ -38,7 +40,9 @@
     "unpaid": "Ücretsiz izin",
     "fosterCare": "Koruyucu aile izni",
     "remoteWork": "Uzaktan Çalışma",
-    "birthday": "Doğum günü izni"
+    "birthday": "Doğum günü izni",
+    "breastfeeding": "Süt izni",
+    "disabledChild": "Engelli/süreğen hastalıklı çocuk izni"
   },
   "status": {
     "pending": "Bekliyor",
@@ -557,6 +561,33 @@
       "dateRequired": "Tarih zorunludur.",
       "hoursInvalid": "Geç kalma süresi 0 ile 24 saat arasında olmalıdır.",
       "reasonRequired": "Gerekçe zorunludur."
+    }
+  },
+  "companyLedger": {
+    "title": "Şirket izin/mesai defteri",
+    "subtitle": "Bu ay kimler izinde, yıllık izin birikimi en yüksek çalışanlar ve 270 saati aşan fazla mesailer - filtrelenebilir tek liste.",
+    "allUnits": "Tüm birimler",
+    "previousMonth": "Önceki ay",
+    "nextMonth": "Sonraki ay",
+    "includeTerminated": "İşten ayrılanları da göster",
+    "onlyOnLeave": "Sadece bu ay izinde olanlar",
+    "onlyOverLimit": "Sadece {{hours}} saati aşan fazla mesailer",
+    "onlyOverLimitGeneric": "Sadece yıllık sınırı aşan fazla mesailer",
+    "onLeave": "İzinde",
+    "notOnLeave": "—",
+    "overtimeLimitExceeded": "Sınır aşıldı",
+    "overtimeLimitOk": "—",
+    "export": "Excel'e aktar",
+    "exportSuccess": "Rapor oluşturuldu, indirme başladı.",
+    "exportError": "Rapor oluşturulamadı.",
+    "empty": "Seçilen filtrelerle gösterilecek çalışan yok.",
+    "columns": {
+      "employee": "Çalışan",
+      "unit": "Birim",
+      "onLeave": "Bu ay izinde mi",
+      "annualBalance": "Yıllık izin bakiyesi",
+      "overtimeHours": "Yıllık fazla mesai (saat)",
+      "overtimeLimit": "270 saat sınırı"
     }
   }
 }

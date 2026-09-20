@@ -68,9 +68,16 @@ internal static class TimesheetWeekEvaluator
 [RequiresPermission("attendance.timesheet.view")]
 public sealed record GetTimesheetWeekSummaryQuery(Guid EmployeeId, DateOnly WeekStart) : IQuery<TimesheetWeekSummaryDto>;
 
-public sealed class GetTimesheetWeekSummaryHandler(IAttendanceDayRepository days, IWorkScheduleReadService schedules)
+public sealed class GetTimesheetWeekSummaryHandler(IAttendanceDayRepository days, IWorkScheduleReadService schedules, IDataScopeService dataScope)
     : IQueryHandler<GetTimesheetWeekSummaryQuery, TimesheetWeekSummaryDto>
 {
-    public async Task<Result<TimesheetWeekSummaryDto>> Handle(GetTimesheetWeekSummaryQuery query, CancellationToken cancellationToken) =>
-        await TimesheetWeekEvaluator.EvaluateAsync(days, schedules, query.EmployeeId, query.WeekStart, cancellationToken);
+    public async Task<Result<TimesheetWeekSummaryDto>> Handle(GetTimesheetWeekSummaryQuery query, CancellationToken cancellationToken)
+    {
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.TimesheetView.Key, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        }
+
+        return await TimesheetWeekEvaluator.EvaluateAsync(days, schedules, query.EmployeeId, query.WeekStart, cancellationToken);
+    }
 }

@@ -24,6 +24,12 @@ public sealed class EmployeeTerminatedAssetAuditHandler(
         var open = await assets.ListByEmployeeAsync(integrationEvent.EmployeeId, cancellationToken);
         foreach (var asset in open)
         {
+            // Idempotent: a redelivered/duplicately registered handler must not write the audit event twice.
+            if (await assets.HasUnreturnedTerminationAuditAsync(asset.TenantId, asset.Id, integrationEvent.EmployeeId, cancellationToken))
+            {
+                continue;
+            }
+
             outbox.Enqueue(new AssetUnreturnedAtTermination(asset.TenantId, asset.Id, integrationEvent.EmployeeId));
         }
 

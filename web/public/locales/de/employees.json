@@ -35,11 +35,13 @@
     "withAccount": "Mit Konto",
     "withoutAccount": "Ohne Konto",
     "missingInfo": "Fehlende Angaben",
+    "missingInfoBadge": "Fehlende Angaben ({{count}})",
     "missingInfoHint": "Eingestellt, aber Ausweisnummer, Eintritts-/Geburtsdatum, Einheit, Vertrags- oder Beschäftigungsart sind leer."
   },
   "columns": {
     "name": "Name",
-    "orgUnit": "Einheit",
+    "department": "Abteilung",
+    "title": "Titel",
     "manager": "Führungskraft",
     "workEmail": "Dienstliche E-Mail",
     "workPhone": "Diensttelefon",

@@ -1,0 +1,18 @@
+{
+  "id": "senseik-060",
+  "title": "\"Aylık Puantaj\" web ekranı: ay toplamları + gün şeridi, Onayla / Tümünü Onayla (S-11, package A5; senseik-056 API'sinin istemcisi)",
+  "owner": "pc-b",
+  "state": "review",
+  "branch": "b/attendance-monthly-timesheet-web",
+  "worktree": ".claude/worktrees/monthly-timesheet-web",
+  "acceptance": [
+    "/app/attendance/monthly-timesheet: ay seçici (önceki/sonraki) + opsiyonel birim filtresi; her görünür çalışan için çalışılan gün/saat, eksik gün, fazla mesai, ücretli/ücretsiz/raporlu izin günü, onay durumu ve alt toplam satırı gösterilir (GET attendance/timesheet/monthly)",
+    "Satır açılınca gün şeridi (attendance/timesheet/team/month verisi) gösterilir; izinli günde çalışma (workedWhileOnLeave) anomalisi turuncu/ayrı rozetle ve satırda sayacıyla işaretlenir; gün verisi yüklenemezse toplamlar yine görünür",
+    "\"Onayla\" (POST monthly/employees/{id}/approve; onaylı satırda \"Yeniden onayla\") ve \"Tümünü Onayla\" (onay modalı sonrası POST monthly/approve-all, onaylanan sayısı toast'ı; hepsi onaylıysa buton pasif); attendance.timesheet.approve olmayan kullanıcıda tüm onay butonları gizlenir",
+    "403 → yerelleştirilmiş yetki mesajı, diğer hatalar (400 doğrulama dahil) sunucunun detail alanı ile toast; route attendance.timesheet.view ile korunur (navigation.ts → route-permissions), /app/attendance öneki ile attendance modülüne bağlıdır (senseik-057 modül kapatınca gizlenir); tr/en/de metinler",
+    "vitest: sayfa (grid, tek onay, Tümünü Onayla onay modalı, 403/400, yetkisiz, gün verisi hatası, NoAccess) + saf yardımcılar; tsc 0 hata, eslint 0 hata"
+  ],
+  "merge_gate": "web: tsc --noEmit, eslint src, vitest (yeni testler + route-permissions/modules/use-nav-visibility) yeşil. Docker/dotnet gerekmez (backend değişmedi). Not: src/i18n.locales.test.ts 'de carries no untranslated placeholder markers' testi dev'de zaten kırmızı (de/attendance.json teamTimesheet.* anahtarları), bu karttan bağımsız.",
+  "handoff": "docs/handoffs/attendance-monthly-timesheet-web.md",
+  "source": "docs/analysis/kolayik-video/11.3.06-pdks-puantaj-vardir-takvim.md (S-11 \"Aylık Puantaj\"); faz2-durum-takibi.md A5; senseik-056 handoff (\"Web ekranı YOK\")"
+}

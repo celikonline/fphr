@@ -203,7 +203,7 @@ function WorkSchedules() {
                       </Button>
                     </>
                   )}
-                  {canManage && !schedule.isDefault && (
+                  {canManage && !schedule.isDefault && schedule.isActive && (
                     <Button
                       type="button"
                       size="xs"
@@ -215,7 +215,7 @@ function WorkSchedules() {
                       {t("attendance:workSchedules.makeDefault")}
                     </Button>
                   )}
-                  {canManage && (
+                  {canManage && !(schedule.isDefault && schedule.isActive) && (
                     <Button
                       type="button"
                       size="xs"

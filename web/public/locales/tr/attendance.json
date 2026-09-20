@@ -1,4 +1,39 @@
 {
+  "selfCheckIn": {
+    "title": "Self-servis check-in",
+    "subtitle": "QR kod okutarak ya da konumunuzla giriş-çıkış kaydı oluşturun.",
+    "currentStatus": "Şu anki durum",
+    "statusInside": "İçeride",
+    "statusOutside": "Dışarıda",
+    "todayCheckIn": "Bugün giriş: {{time}}",
+    "todayCheckOut": "çıkış: {{time}}",
+    "checkIn": "Giriş yap",
+    "checkOut": "Çıkış yap",
+    "qrTitle": "QR kod ile",
+    "qrHint": "Lokasyon girişindeki QR kodu taratın (mobil) ya da kodu buraya yazın.",
+    "qrCodePlaceholder": "Örn. AB12CD34",
+    "gpsTitle": "Konumumla",
+    "gpsHint": "Cihazınızın GPS konumu gönderilir; lokasyona bir geofence tanımlıysa mesafe doğrulanır.",
+    "gpsButton": "Konumumla {{action}}",
+    "geolocationUnsupported": "Tarayıcınız konum paylaşımını desteklemiyor.",
+    "geolocationDenied": "Konum izni verilmedi ya da alınamadı. Lütfen tarayıcı ayarlarından izin verin.",
+    "checkedInAt": "{{time}} itibarıyla giriş kaydedildi.",
+    "checkedOutAt": "{{time}} itibarıyla çıkış kaydedildi.",
+    "lastCheckIn": "Son giriş: {{time}} · {{location}}",
+    "lastCheckOut": "Son çıkış: {{time}} · {{location}}",
+    "unknownLocation": "lokasyon bilgisi yok",
+    "qrGeofenceHint": "Lokasyona geofence tanımlıysa konumunuz da doğrulanır (tarayıcı konum izni istenir)."
+  },
+  "liveBoard": {
+    "title": "Canlı içeride/dışarıda",
+    "subtitle": "O an kim işte, kim değil — 30 saniyede bir güncellenir.",
+    "insideCount": "{{count}} / {{total}} içeride",
+    "employee": "Çalışan",
+    "status": "Durum",
+    "inside": "İçeride",
+    "outside": "Dışarıda",
+    "empty": "Görüntülenecek çalışan yok."
+  },
   "empty": "Bu dönemde kayıt yok.",
   "genericError": "İşlem sırasında bir hata oluştu.",
   "previousMonth": "Önceki ay",
@@ -33,7 +68,8 @@
     "lateLeave": "Geç çıkış",
     "overwork": "Fazla çalışma",
     "underwork": "Az çalışma",
-    "unplannedWork": "Plansız çalışma"
+    "unplannedWork": "Plansız çalışma",
+    "workedWhileOnLeave": "İzinli günde çalışma"
   },
   "resolutionState": {
     "unresolved": "Çözülmedi",
@@ -106,6 +142,47 @@
       "assigned": "Atanan çalışan"
     },
     "workingDayCount": "{{count}} gün"
+  },
+  "monthlyTimesheet": {
+    "title": "Aylık Puantaj",
+    "subtitle": "Görüntüleme yetkiniz olan çalışanların ay toplamları, izin günleri ve ay sonu onay durumu.",
+    "empty": "Bu ay için gösterilecek çalışan yok.",
+    "totals": "Toplam",
+    "pendingCount": "{{pending}} / {{total}} çalışan onay bekliyor",
+    "col": {
+      "workedDays": "Çalışılan gün",
+      "workedHours": "Çalışılan saat",
+      "missingDays": "Eksik gün",
+      "overtimeHours": "Fazla mesai (saat)",
+      "paidLeaveDays": "Ücretli izin (gün)",
+      "unpaidLeaveDays": "Ücretsiz izin (gün)",
+      "sickLeaveDays": "Raporlu (gün)",
+      "anomalies": "Uyuşmazlıklar",
+      "status": "Durum",
+      "action": "İşlem"
+    },
+    "noAnomalies": "Sorun yok",
+    "anomalyDays": "{{count}} gün uyuşmazlık",
+    "toggleDays": "{{name}} gün detayını aç/kapat",
+    "daysUnavailable": "Gün detayı yüklenemedi.",
+    "hourUnit": "sa",
+    "approvedState": "Onaylandı",
+    "approvedAt": "Onay tarihi: {{date}}",
+    "pendingState": "Onay bekliyor",
+    "locked": "Bordro dönemi kilitli",
+    "approve": "Onayla",
+    "reapprove": "Yeniden onayla",
+    "approveRow": "{{name}} puantajını onayla",
+    "approved": "Puantaj onaylandı.",
+    "readOnly": "Bu ekranı yalnızca görüntüleyebilirsiniz; puantaj onaylamak için yetkiniz yok.",
+    "forbidden": "Bu işlem için yetkiniz yok ya da çalışan yetki alanınızın dışında.",
+    "approveAll": {
+      "button": "Tümünü Onayla",
+      "confirmTitle": "Tüm puantajları onayla",
+      "confirmMessage": "{{month}} ayında onay bekleyen {{count}} çalışanın puantajı onaylanacak. Onaydan önce izinli günde çalışma kontrolü yeniden yapılır. Devam edilsin mi?",
+      "done": "{{count}} çalışanın puantajı onaylandı.",
+      "nothing": "Onaylanacak puantaj bulunamadı."
+    }
   },
   "teamTimesheet": {
     "title": "Ekip puantajı",

@@ -29,6 +29,12 @@ public sealed class LeaveEmployeeBalancesController : ApiControllerBase
     public async Task<IActionResult> Balances(Guid employeeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetEmployeeLeaveBalancesQuery(employeeId), ct));
 
+    /// <summary>senseik-036 md.7: hastalık izni 6 hafta devamsızlık eşiği sayacı (4857 md.25/I-b, bilgi amaçlı).</summary>
+    [HttpGet("sick-leave-absence-status")]
+    [ProducesResponseType<SickLeaveAbsenceStatusDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SickLeaveAbsenceStatus(Guid employeeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetEmployeeSickLeaveAbsenceStatusQuery(employeeId), ct));
+
     [HttpGet("requests")]
     [ProducesResponseType<IReadOnlyList<LeaveRequestDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Requests(Guid employeeId, [FromServices] IErrorLocalizer localizer, [FromQuery] int take = PagingDefaults.MaxPageSize, CancellationToken ct = default) =>

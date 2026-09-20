@@ -1,5 +1,6 @@
 using NSubstitute;
-using Sense.Shared.Contracts.Tenants;
+using Sense.Shared.Contracts.Context;
+using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Application.Enrollments;
 using Sense.Modules.Training.Contracts;
 using Sense.Modules.Training.Domain;
@@ -16,7 +17,7 @@ public class EnrollmentQueriesTests
         // Arrange
         var tenantId = Guid.NewGuid();
         var programId = Guid.NewGuid();
-        var query = new ListEnrollmentsQuery(tenantId, programId);
+        var query = new ListEnrollmentsQuery(programId);
 
         var repository = Substitute.For<IEnrollmentRepository>();
         repository.GetByTrainingProgramIdAsync(tenantId, programId, Arg.Any<CancellationToken>())
@@ -42,7 +43,7 @@ public class EnrollmentQueriesTests
         // Arrange
         var tenantId = Guid.NewGuid();
         var enrollmentId = Guid.NewGuid();
-        var query = new GetEnrollmentQuery(enrollmentId, tenantId);
+        var query = new GetEnrollmentQuery(enrollmentId);
 
         var enrollment = Enrollment.Create(
             Guid.NewGuid(),
@@ -68,24 +69,10 @@ public class EnrollmentQueriesTests
     }
 
     [Fact]
-    public void ListEnrollmentsValidator_WithEmptyTenantId_ShouldFail()
-    {
-        // Arrange
-        var query = new ListEnrollmentsQuery(Guid.Empty, Guid.NewGuid());
-        var validator = new ListEnrollmentsValidator();
-
-        // Act
-        var result = validator.Validate(query);
-
-        // Assert
-        Assert.False(result.IsValid);
-    }
-
-    [Fact]
     public void GetEnrollmentValidator_WithEmptyEnrollmentId_ShouldFail()
     {
         // Arrange
-        var query = new GetEnrollmentQuery(Guid.Empty, Guid.NewGuid());
+        var query = new GetEnrollmentQuery(Guid.Empty);
         var validator = new GetEnrollmentValidator();
 
         // Act

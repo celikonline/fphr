@@ -26,11 +26,21 @@ public static class LeaveRequestErrors
     public const string Overlap = "leave.errors.overlap";
     public const string AbovePerRequestLimit = "leave.errors.above_per_request_limit";
     public const string BelowMinDays = "leave.errors.below_min_days";
+    public const string AnnualMinimumBlock = "leave.errors.annual_minimum_block";
     public const string AboveMaxDays = "leave.errors.above_max_days";
     public const string InsufficientBalance = "leave.errors.insufficient_balance";
     public const string DescriptionRequired = "leave.errors.description_required";
     public const string NotOwner = "leave.request.not_owner";
     public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
+
+    /// <summary>
+    /// senseik-037: the request's end date falls in a year the effective holiday calendar has no religious
+    /// (Ramazan/Kurban Bayramı) entries seeded for yet. Non-blocking - surfaced via LeaveRequestPreviewDto.Warnings,
+    /// same as InsufficientBalance, so a future-dated request past the seeded years still goes through but flags the
+    /// calendar as needing a refresh instead of silently allowing it (previously a live risk - see IHolidayCalendarLookup
+    /// .GetLastDefinedReligiousHolidayYearAsync's doc comment).
+    /// </summary>
+    public const string HolidayCalendarYearUndefined = "leave.errors.holiday_calendar_year_undefined";
 }
 
 public sealed record LeaveRequestDto(

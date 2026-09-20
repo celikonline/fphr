@@ -221,4 +221,22 @@ public sealed class GetMeHandlerTests
         result.IsSuccess.ShouldBeTrue();
         result.Value.Features.MfaSetupRequired.ShouldBeFalse();
     }
+
+    /// <summary>senseik-057: kiracının kapattığı modüller /me features.disabledModules ile herkese (bypass yok) döner.</summary>
+    [Fact]
+    public async Task Handle_TenantDisabledModules_AreExposedInFeatures_EvenForBypassRoles()
+    {
+        var tenant = Tenant.Create("acme", "Acme", DateTime.UtcNow, trialDays: 0, "tr-TR", "Europe/Istanbul").Value;
+        tenant.UpdateModuleSettings(TenantModuleSettings.WithDisabled(["payroll", "leave"]));
+
+        var role = Role.CreateSystem(tenant.Id, SystemRoleCodes.Owner);
+        var user = User.Create(tenant.Id, "sahip@example.com", "Hesap", "Sahibi", "tr").Value;
+        user.SetRoles([role.Id]);
+
+        var handler = NormalHandlerFor(tenant, user, role, out _);
+        var result = await handler.Handle(new GetMeQuery(), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Features.DisabledModules.ShouldBe(["leave", "payroll"]);
+    }
 }

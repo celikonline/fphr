@@ -2,7 +2,7 @@
   "id": "senseik-042",
   "title": "Küçük UI hataları: halka grafik merkezi, etiketsiz çift rozet, düğmelerin ilk tıklamada tepki vermemesi",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/minor-ui-fixes",
   "worktree": ".claude/worktrees/minor-ui-fixes",
   "acceptance": [

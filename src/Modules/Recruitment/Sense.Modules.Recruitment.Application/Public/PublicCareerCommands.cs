@@ -6,6 +6,7 @@ using Sense.Modules.Recruitment.Domain.Candidates;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Kernel.Results;
+using Sense.Shared.Kernel.ValueObjects;
 
 namespace Sense.Modules.Recruitment.Application.Public;
 
@@ -33,6 +34,7 @@ public sealed class SubmitCareerApplicationValidator : AbstractValidator<SubmitC
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(RecruitmentLimits.NameMaxLength);
         RuleFor(x => x.Email).NotEmpty().EmailAddress().MaximumLength(RecruitmentLimits.EmailMaxLength);
         RuleFor(x => x.Phone).MaximumLength(RecruitmentLimits.PhoneMaxLength);
+        RuleFor(x => x.Phone).Must(PhoneFormat.IsValid).WithMessage(RecruitmentDomainErrors.CandidatePhoneInvalid);
         RuleFor(x => x.PrivacyNoticeVersion).NotEmpty().MaximumLength(RecruitmentLimits.PrivacyNoticeVersionMaxLength);
         RuleFor(x => x.KvkkAccepted).Equal(true);
     }

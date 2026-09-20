@@ -75,7 +75,7 @@ describe("ProtectedRoute hydration gate (senseik-042)", () => {
     useAuthStore.setState({
       hasHydrated: false,
       token: fakeJwt(),
-      user: { id: "u1", email: "a@b.com", name: "A", roles: [], permissions: ["employee.employees.create"] },
+      user: { id: "u1", email: "a@b.com", name: "A", roles: [], roleLabels: [], permissions: ["employee.employees.create"] },
       features: null,
     });
 
@@ -100,7 +100,7 @@ describe("ProtectedRoute hydration gate (senseik-042)", () => {
     useAuthStore.setState({
       hasHydrated: true,
       token: fakeJwt(),
-      user: { id: "u1", email: "a@b.com", name: "A", roles: [], permissions: ["employee.employees.create"] },
+      user: { id: "u1", email: "a@b.com", name: "A", roles: [], roleLabels: [], permissions: ["employee.employees.create"] },
       features: null,
     });
 

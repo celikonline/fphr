@@ -17,6 +17,16 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Employee.Api.Controllers;
 
 /// <summary>Create/update body for an employee record.</summary>
+/// <param name="ClearLeaveAccrualStartDate">
+/// "İzne esas hak ediş tarihi" temizle (X) sinyali (senseik-044): true iken alan, HireDate'i takip eden varsayılan
+/// mantığı atlayarak açıkça boşa (null) ayarlanır - <paramref name="LeaveAccrualStartDate"/>'in null gönderilmesi
+/// zaten "dokunulmadı, otomatik takip devam etsin" anlamına geldiği için ayrı bir sinyale ihtiyaç var.
+/// </param>
+/// <param name="SicilNumarasi">
+/// senseik-058: SicilNumarasi/Nationality/ForeignIdNumber/PassportNumber/SgkOccupationCode are "keep when absent" on update:
+/// an omitted/null value preserves the stored one (never wipes it); an empty string clears a text field. On create,
+/// an omitted Nationality defaults to "turkish".
+/// </param>
 public sealed record EmployeeRequest(
     string FirstName,
     string LastName,
@@ -43,7 +53,13 @@ public sealed record EmployeeRequest(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null);
+    DateOnly? LeaveAccrualStartDate = null,
+    bool ClearLeaveAccrualStartDate = false,
+    string? SicilNumarasi = null,
+    Nationality? Nationality = null,
+    string? ForeignIdNumber = null,
+    string? PassportNumber = null,
+    string? SgkOccupationCode = null);
 
 /// <summary>"Pozisyon ekle" / edit body for a career record (changeType/employmentType as camelCase enum strings).</summary>
 public sealed record CareerRecordRequest(
@@ -119,3 +135,6 @@ public sealed record EmployeeListFilterRequest
 }
 
 public sealed record BulkAssignManagerRequest(EmployeeSelection Selection, Guid ManagerEmployeeId);
+
+/// <summary>Mentor assignment body ("mentör atama", Faz 4 #72); null clears the mentor.</summary>
+public sealed record AssignMentorRequest(Guid? MentorEmployeeId);

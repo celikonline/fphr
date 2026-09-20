@@ -29,6 +29,8 @@ public sealed class InitiateUploadValidator : AbstractValidator<InitiateUploadCo
             .GreaterThan(0)
             .LessThanOrEqualTo(DocumentsLimits.MaxFileSize);
         RuleFor(x => x.BucketName).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.BucketName));
+        RuleFor(x => x.BucketName).Matches("^[a-z0-9][a-z0-9-]*$").When(x => !string.IsNullOrEmpty(x.BucketName));
+        UploadFilePolicy.ApplyRules(this, x => x.FileName, x => x.ContentType);
     }
 }
 
@@ -61,6 +63,8 @@ public sealed class InitiateMyUploadValidator : AbstractValidator<InitiateMyUplo
             .GreaterThan(0)
             .LessThanOrEqualTo(DocumentsLimits.MaxFileSize);
         RuleFor(x => x.BucketName).MaximumLength(50).When(x => !string.IsNullOrEmpty(x.BucketName));
+        RuleFor(x => x.BucketName).Matches("^[a-z0-9][a-z0-9-]*$").When(x => !string.IsNullOrEmpty(x.BucketName));
+        UploadFilePolicy.ApplyRules(this, x => x.FileName, x => x.ContentType);
     }
 }
 
@@ -147,9 +151,22 @@ internal static class UploadCore
         string? bucketName,
         CancellationToken cancellationToken)
     {
+        // Defence in depth behind the validators: nothing user-typed (separators, "..", control chars) reaches the
+        // storage key or the stored title, and a disallowed type never gets a presigned URL.
+        var safeName = UploadFilePolicy.SanitizeFileName(fileName);
+        if (safeName.Length == 0)
+        {
+            return Error.Validation(DocumentsErrors.FileNameInvalid);
+        }
+
+        if (!UploadFilePolicy.IsAllowed(safeName, contentType))
+        {
+            return Error.Validation(DocumentsErrors.FileTypeNotAllowed);
+        }
+
         try
         {
-            var fileKey = $"{Guid.CreateVersion7().ToString("N")}/{fileName}";
+            var fileKey = $"{Guid.CreateVersion7().ToString("N")}/{safeName}";
             var resolvedBucket = bucketName ?? "documents";
 
             // Initiate upload in storage
@@ -163,7 +180,7 @@ internal static class UploadCore
             // Create document aggregate in Pending state
             var doc = Document.Create(
                 tenant.TenantId,
-                fileName,
+                safeName,
                 fileKey,
                 contentType,
                 fileSizeBytes,
@@ -207,18 +224,30 @@ internal static class UploadCore
             return doc.Error;
         }
 
+        // A second confirm (or confirming a deleted document) is a client error, not a server failure.
+        if (doc.Value.Status != DocumentStatus.Pending)
+        {
+            return Error.Conflict(DocumentsErrors.UploadNotPending);
+        }
+
         try
         {
-            // Confirm upload with storage (validates ETag)
-            await fileStorage.ConfirmUploadAsync(
+            // Confirm upload with storage (validates the object exists and the ETag matches) and read the
+            // authoritative size; the client-reported actualFileSizeBytes is deliberately ignored.
+            var storedSize = await fileStorage.ConfirmUploadAsync(
                 tenant.TenantId,
                 doc.Value.BucketName,
                 doc.Value.FileKey,
                 eTag,
                 cancellationToken);
 
+            if (storedSize <= 0 || storedSize > DocumentsLimits.MaxFileSize)
+            {
+                return Error.Rule(DocumentsErrors.UploadedFileInvalid);
+            }
+
             // Update document state
-            doc.Value.ConfirmUpload(eTag, actualFileSizeBytes);
+            doc.Value.ConfirmUpload(eTag, storedSize);
             if (expiryDate is not null)
             {
                 doc.Value.SetExpiryDate(expiryDate);
@@ -229,6 +258,11 @@ internal static class UploadCore
                 doc.Value.Title,
                 doc.Value.UploadedAt,
                 doc.Value.ExpiryDate);
+        }
+        catch (Exception ex) when (ex is StorageObjectNotFoundException or StorageETagMismatchException)
+        {
+            logger.LogWarning(ex, "Upload confirmation rejected for document {DocumentId}.", documentId);
+            return Error.Rule(DocumentsErrors.UploadedFileInvalid);
         }
         catch (InvalidOperationException ex)
         {

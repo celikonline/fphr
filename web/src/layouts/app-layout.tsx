@@ -12,6 +12,7 @@ import { APP_LAUNCHER_ITEMS, NAV_FOOTER_ITEMS, NAV_ITEMS, navIconColor, type Nav
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import MfaSetupGuard from "@/components/mfa-setup-guard";
+import ModuleRouteGuard from "@/components/module-disabled";
 import classes from "./app-layout.module.css";
 
 const ACTIVE_APPS = APP_LAUNCHER_ITEMS.filter((item) => item.phase === undefined);
@@ -342,7 +343,9 @@ export default function AppLayout() {
             <main className="min-w-0 flex-1 overflow-auto">
               {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
               <RouteBoundary>
-                <MfaSetupGuard />
+                <ModuleRouteGuard>
+                  <MfaSetupGuard />
+                </ModuleRouteGuard>
               </RouteBoundary>
             </main>
           </div>

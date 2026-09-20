@@ -34,6 +34,13 @@ public enum AttendanceAnomaly
 
     /// <summary>Check-in/out recorded on a day the schedule marks as not working.</summary>
     UnplannedWork = 1 << 8,
+
+    /// <summary>
+    /// İzinli günde çalışma (senseik-029): check-in/out recorded on a day the employee has an approved leave request
+    /// covering - a Leave.Contracts cross-check (<see cref="AttendanceDay.ApplyLeaveOverlap"/>), not something the
+    /// day's own plan/record can detect on its own, so it is applied as a separate pass rather than inside Recompute.
+    /// </summary>
+    WorkedWhileOnLeave = 1 << 9,
 }
 
 /// <summary>How an anomaly was handled (11.3.6 "Çözüm etkisi"); resolution actions land in package A3.</summary>
@@ -50,6 +57,9 @@ public enum AttendanceDaySource
     Manual = 0,
     Import = 1,
     Device = 2,
+
+    /// <summary>Self-servis QR/GPS check-in (S-31) - the employee's own device, not a manual HR entry or a batch PDKS import/device feed.</summary>
+    SelfService = 3,
 }
 
 /// <summary>
@@ -91,7 +101,8 @@ public static class AnomalyResolutionAdvisor
             actions.Add(AnomalyResolutionAction.CreateLeaveRequest);
         }
 
-        if ((anomalies & (AttendanceAnomaly.NoData | AttendanceAnomaly.MissingCheckIn | AttendanceAnomaly.MissingCheckOut | AttendanceAnomaly.UnplannedWork)) != 0)
+        if ((anomalies & (AttendanceAnomaly.NoData | AttendanceAnomaly.MissingCheckIn | AttendanceAnomaly.MissingCheckOut | AttendanceAnomaly.UnplannedWork
+                | AttendanceAnomaly.WorkedWhileOnLeave)) != 0)
         {
             actions.Add(AnomalyResolutionAction.SetWorkedHours);
         }

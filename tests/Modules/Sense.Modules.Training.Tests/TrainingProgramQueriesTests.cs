@@ -1,5 +1,6 @@
 using NSubstitute;
-using Sense.Shared.Contracts.Tenants;
+using Sense.Shared.Contracts.Context;
+using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Application.Programs;
 using Sense.Modules.Training.Domain;
 using Xunit;
@@ -15,7 +16,7 @@ public class TrainingProgramQueriesTests
         // Arrange
         var tenantId = Guid.NewGuid();
         var programId = Guid.NewGuid();
-        var query = new GetTrainingProgramQuery(programId, tenantId);
+        var query = new GetTrainingProgramQuery(programId);
 
         var program = TrainingProgram.Create(
             tenantId,
@@ -51,7 +52,7 @@ public class TrainingProgramQueriesTests
         // Arrange
         var tenantId = Guid.NewGuid();
         var programId = Guid.NewGuid();
-        var query = new GetTrainingProgramQuery(programId, tenantId);
+        var query = new GetTrainingProgramQuery(programId);
 
         var repository = Substitute.For<ITrainingProgramRepository>();
         repository.GetByIdAsync(tenantId, programId, Arg.Any<CancellationToken>())
@@ -73,21 +74,7 @@ public class TrainingProgramQueriesTests
     public void GetTrainingProgramValidator_WithEmptyProgramId_ShouldFail()
     {
         // Arrange
-        var query = new GetTrainingProgramQuery(Guid.Empty, Guid.NewGuid());
-        var validator = new GetTrainingProgramValidator();
-
-        // Act
-        var result = validator.Validate(query);
-
-        // Assert
-        Assert.False(result.IsValid);
-    }
-
-    [Fact]
-    public void GetTrainingProgramValidator_WithEmptyTenantId_ShouldFail()
-    {
-        // Arrange
-        var query = new GetTrainingProgramQuery(Guid.NewGuid(), Guid.Empty);
+        var query = new GetTrainingProgramQuery(Guid.Empty);
         var validator = new GetTrainingProgramValidator();
 
         // Act

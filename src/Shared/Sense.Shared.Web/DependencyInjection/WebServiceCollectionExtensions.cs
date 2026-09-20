@@ -63,7 +63,11 @@ public static class WebServiceCollectionExtensions
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status401Unauthorized));
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status403Forbidden));
                 options.Filters.Add(new ProducesResponseTypeAttribute(typeof(ProblemDetails), StatusCodes.Status404NotFound));
+
+                // senseik-057: kiracının kapattığı modüllerin uçları 403 module.disabled (bkz. ModuleAccessFilter).
+                options.Filters.Add<ModuleAccessFilter>();
             })
+            .ConfigureApiBehaviorOptions(o => o.InvalidModelStateResponseFactory = ErrorHandling.ModelStateProblemFactory.Create)
             .AddJsonOptions(o =>
             {
                 o.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
@@ -198,6 +202,7 @@ public static class WebServiceCollectionExtensions
             limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymous, httpContext => CreatePartition(httpContext, options.PublicAnonymous));
             limiter.AddPolicy(RateLimitPolicyNames.PublicAnonymousWrite, httpContext => CreatePartition(httpContext, options.PublicAnonymousWrite));
+            limiter.AddPolicy(RateLimitPolicyNames.AuthAttempt, httpContext => CreatePartition(httpContext, options.AuthAttempt));
             limiter.OnRejected = WriteRateLimitProblemAsync;
         });
 

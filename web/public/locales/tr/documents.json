@@ -165,5 +165,117 @@
       "quotaExceeded": "Bu dosya yüklendiğinde depolama kotası aşılır.",
       "rolesRequired": "Role kısıtlı görünürlük için en az bir rol seçilmelidir."
     }
+  },
+  "visa": {
+    "my": {
+      "title": "Vize belgesi taleplerim",
+      "subtitle": "Seyahatiniz için vize belgesi talep edin; onaylanınca belgeler dosyanıza eklenir.",
+      "newRequest": "Yeni vize talebi",
+      "empty": "Henüz vize belgesi talebiniz yok.",
+      "columns": {
+        "country": "Ülke",
+        "visaType": "Vize tipi",
+        "travel": "Seyahat tarihleri",
+        "process": "Süreç",
+        "status": "Durum",
+        "createdAt": "Talep tarihi",
+        "actions": "Belgeler"
+      },
+      "documents": {
+        "show": "Belgeleri gör",
+        "title": "Teslim edilen belgeler",
+        "empty": "Bu talep için teslim edilmiş belge yok.",
+        "download": "İndir",
+        "loadFailed": "Belgeler yüklenemedi."
+      },
+      "rejectedNoReason": "Onaylayıcı talebi reddetti.",
+      "rejectedReason": "Ret gerekçesi: {{reason}}",
+      "awaitingHint": "Onay bekleniyor: karar onaylayıcının gelen kutusunda.",
+      "submitted": "Vize belgesi talebiniz onaya gönderildi.",
+      "loadFailed": "Vize talepleri yüklenemedi."
+    },
+    "form": {
+      "title": "Yeni vize belgesi talebi",
+      "description": "Talebiniz tanımlı onaylayıcıya iletilir; onaylanınca belgeler dosyanıza eklenir.",
+      "process": "Vize süreci",
+      "processPlaceholder": "Süreç seçin (isteğe bağlı)",
+      "country": "Ülke kodu",
+      "countryHint": "2-3 harfli ülke kodu, örn. DE, GB, US.",
+      "visaType": "Vize tipi",
+      "visaTypePlaceholder": "Vize tipini seçin",
+      "travelStart": "Seyahat başlangıcı",
+      "travelEnd": "Seyahat bitişi",
+      "notes": "Açıklama",
+      "notesPlaceholder": "Seyahatin amacı, davet eden kurum vb.",
+      "submit": "Talebi gönder",
+      "validation": {
+        "datesRequired": "Seyahat başlangıç ve bitiş tarihleri zorunludur.",
+        "datesOrder": "Seyahat bitişi başlangıçtan önce olamaz.",
+        "countryFormat": "Ülke kodu 2-3 harften oluşmalıdır (örn. DE).",
+        "visaTypeRequired": "Vize tipi seçin."
+      },
+      "genericError": "Talep gönderilemedi."
+    },
+    "status": {
+      "pending": "Hazırlanıyor",
+      "awaitingApproval": "Onay bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi",
+      "completed": "Tamamlandı"
+    },
+    "type": {
+      "tourist": "Turistik",
+      "business": "İş / ticari",
+      "work": "Çalışma",
+      "student": "Öğrenci",
+      "transit": "Transit"
+    },
+    "settings": {
+      "title": "Vize belge süreçleri",
+      "subtitle": "Vize belgesi taleplerinin onaylayıcısını, süreç tanımlarını ve onay sonrası çalışana teslim edilecek şablon belgeleri yönetin.",
+      "approver": {
+        "title": "Onaylayıcı",
+        "description": "Tüm vize belgesi talepleri bu kişinin gelen kutusuna düşer. Tanımlı değilse çalışanlar talep oluşturamaz.",
+        "placeholder": "Onaylayıcı seçin",
+        "notConfigured": "Onaylayıcı tanımlı değil; çalışanlar vize talebi oluşturamıyor."
+      },
+      "templates": {
+        "title": "Teslim edilecek şablon belgeler",
+        "description": "Talep onaylandığında bu belgelerin kopyası çalışanın dosyasına eklenir (ör. dilekçe örneği, kontrol listesi).",
+        "placeholder": "Şablon belge seçin",
+        "empty": "Seçilebilir belge yok. Önce bir şablon belge yükleyin.",
+        "upload": "Şablon belge yükle",
+        "uploaded": "Belge yüklendi ve seçime eklendi.",
+        "uploadFailed": "Belge yüklenemedi."
+      },
+      "save": "Ayarları kaydet",
+      "saved": "Vize ayarları kaydedildi.",
+      "processes": {
+        "title": "Vize süreçleri",
+        "subtitle": "Çalışanların talep formunda seçebildiği süreç şablonları.",
+        "add": "Süreç ekle",
+        "addTitle": "Yeni vize süreci",
+        "editTitle": "Vize sürecini düzenle",
+        "empty": "Tanımlı süreç yok.",
+        "columns": {
+          "name": "Ad",
+          "country": "Ülke",
+          "status": "Durum"
+        },
+        "name": "Süreç adı",
+        "country": "Ülke kodu (isteğe bağlı)",
+        "countryHint": "Boş bırakılırsa süreç tek bir ülkeye bağlı değildir (ör. Schengen).",
+        "active": "Aktif",
+        "inactive": "Pasif",
+        "deactivate": "Pasifleştir",
+        "reactivate": "Aktifleştir",
+        "saved": "Süreç kaydedildi.",
+        "statusSaved": "Süreç durumu güncellendi.",
+        "duplicate": "Bu adla bir süreç zaten var.",
+        "countryInvalid": "Ülke kodu 2-3 harften oluşmalıdır."
+      },
+      "genericError": "İşlem tamamlanamadı.",
+      "loadFailed": "Vize ayarları yüklenemedi."
+    }
   }
 }

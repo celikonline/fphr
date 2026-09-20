@@ -11,6 +11,7 @@ using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Leave.Infrastructure.Persistence;
 
@@ -42,6 +43,19 @@ public sealed class LeaveDbContext(DbContextOptions<LeaveDbContext> options, ITe
 
     /// <summary>Not yet migrated (ADR-0005: Leave's one open migration slot is HalfDayAndHourlyLeave) - pending model change until the next request.</summary>
     public DbSet<AbsenceRecord> AbsenceRecords => Set<AbsenceRecord>();
+
+    /// <summary>senseik-049: leave.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>
+    /// AuditLogEntryConfiguration ÖNCE uygulanmalı - bkz. EmployeeDbContext'teki aynı override'ın doc comment'i
+    /// (ModuleDbContext.OnModelCreating'in Tenant query filter/index döngüsü base çağrısı sırasında çalışır).
+    /// </summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class LeaveTables

@@ -35,6 +35,10 @@ public static class LeaveServiceCollectionExtensions
         // Raporlar menüsü katkıları (roadmap #44/#70) - API-only: IEmployeeReportReader/IOrgUnitLookup implementasyonları Worker'da yok.
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveBalanceSummaryReportProvider>();
         services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveRequestsReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.LeaveReconciliationReportProvider>();
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.OvertimeMonthlyReportProvider>();
+        // senseik-048: şirket geneli izin/fazla mesai defterinin Excel çıktısı (ekranın "Dışa aktar" butonu ve Raporlar → İzinler kataloğu paylaşır).
+        services.AddScoped<Sense.Modules.Reporting.Contracts.IReportProvider, Reporting.CompanyLeaveLedgerReportProvider>();
         return services;
     }
 
@@ -58,6 +62,8 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IAbsenceReader, AbsenceReader>();
         services.AddScoped<ILeaveUsageReader, Lookups.LeaveUsageReader>();
         services.AddScoped<ILeaveDayReader, Lookups.LeaveDayReader>();
+        // Attendance'ın "izinli günde çalışma" detektörü (senseik-029) - AttendanceDay ile aynı Api/Worker kapsamı.
+        services.AddScoped<IApprovedLeaveDateLookup, Lookups.ApprovedLeaveDateLookup>();
         // Workflow.Contracts.IApprovalRequestSummaryProvider: inbox/decision detail for "Leave"/"Overtime" ApprovalRequests.
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.LeaveApprovalRequestSummaryProvider>();
         services.AddScoped<Sense.Modules.Workflow.Contracts.IApprovalRequestSummaryProvider, Lookups.OvertimeApprovalRequestSummaryProvider>();
@@ -82,6 +88,7 @@ public static class LeaveServiceCollectionExtensions
     public static IServiceCollection AddLeaveIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeHired>, EmployeeHiredHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeEmploymentDatesChanged>, EmployeeEmploymentDatesChangedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, LeaveApprovalCompletedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, LeaveApprovalRejectedHandler>();
         services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, OvertimeApprovalCompletedHandler>();

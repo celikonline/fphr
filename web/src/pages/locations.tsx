@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef, SortingState } from "@tanstack/react-table";
-import { MapPin, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { Button, Card, Group, Modal, Select, Stack, Text, TextInput, Title } from "@mantine/core";
+import { MapPin, Pencil, Plus, QrCode, Search, Trash2 } from "lucide-react";
+import { Button, Card, CopyButton, Group, Modal, NumberInput, Select, Stack, Text, TextInput, Title } from "@mantine/core";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { RowIconButton } from "@/components/ui/row-icon-button";
 import ConfirmDialog from "@/components/confirm-dialog";
@@ -18,6 +18,8 @@ import {
   createLocation,
   deleteLocation,
   listLocations,
+  regenerateLocationSelfCheckInCode,
+  setLocationGeofence,
   updateLocation,
   LOCATION_TYPES,
   type Location,
@@ -36,16 +38,23 @@ const COLUMN_VISIBILITY_KEY = "senseik.locations.grid.columns";
 /** Fields the list endpoint can sort by (ListLocationsHandler.Sort). */
 type LocationSortField = "name" | "type" | "countryCode";
 
-const schema = z.object({
-  name: z.string().min(1),
-  type: z.enum(LOCATION_TYPES as [LocationType, ...LocationType[]]),
-  countryCode: z
-    .string()
-    .trim()
-    .length(2)
-    .transform((v) => v.toUpperCase()),
-  address: z.string().optional(),
-});
+/** Geofence alanları hep birlikte boş ya da hep birlikte dolu olmalı (backend Location.SetGeofence ile aynı kural); yarıçap merkez olmadan anlamsız. */
+const schema = z
+  .object({
+    name: z.string().min(1),
+    type: z.enum(LOCATION_TYPES as [LocationType, ...LocationType[]]),
+    countryCode: z
+      .string()
+      .trim()
+      .length(2)
+      .transform((v) => v.toUpperCase()),
+    address: z.string().optional(),
+    sgkIsyeriSicilNo: z.string().optional(),
+    latitude: z.number().min(-90).max(90).nullable(),
+    longitude: z.number().min(-180).max(180).nullable(),
+    radiusMeters: z.number().positive().nullable(),
+  })
+  .refine((v) => (v.latitude === null) === (v.longitude === null), { message: "geofence", path: ["longitude"] });
 
 type FormValues = z.infer<typeof schema>;
 
@@ -87,6 +96,7 @@ export default function LocationsPage() {
 
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
+  const [regenerateTarget, setRegenerateTarget] = useState<Location | null>(null);
 
   const {
     register,
@@ -96,11 +106,11 @@ export default function LocationsPage() {
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { name: "", type: "office", countryCode: "TR", address: "" },
+    defaultValues: { name: "", type: "office", countryCode: "TR", address: "", sgkIsyeriSicilNo: "", latitude: null, longitude: null, radiusMeters: null },
   });
 
   function openCreate() {
-    reset({ name: "", type: "office", countryCode: "TR", address: "" });
+    reset({ name: "", type: "office", countryCode: "TR", address: "", sgkIsyeriSicilNo: "", latitude: null, longitude: null, radiusMeters: null });
     setDialog({ open: true });
   }
 
@@ -110,14 +120,23 @@ export default function LocationsPage() {
       type: location.type,
       countryCode: location.countryCode,
       address: location.address ?? "",
+      sgkIsyeriSicilNo: location.sgkIsyeriSicilNo ?? "",
+      latitude: location.latitude,
+      longitude: location.longitude,
+      radiusMeters: location.geofenceRadiusMeters,
     });
     setDialog({ open: true, location });
   }
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["locations"] });
 
+  /** Konum kaydından sonra geofence'i de senkronize eder (üçü boşsa temizler) - S-31 self-servis GPS check-in. */
+  async function saveGeofence(location: Location, values: FormValues): Promise<Location> {
+    return setLocationGeofence(location.id, { latitude: values.latitude, longitude: values.longitude, radiusMeters: values.radiusMeters });
+  }
+
   const createMutation = useMutation({
-    mutationFn: createLocation,
+    mutationFn: async (values: FormValues) => saveGeofence(await createLocation(values), values),
     onSuccess: () => {
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("locations:createSuccess") });
@@ -127,11 +146,22 @@ export default function LocationsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...input }: { id: string } & FormValues) => updateLocation(id, input),
+    mutationFn: async ({ id, ...values }: { id: string } & FormValues) => saveGeofence(await updateLocation(id, values), values),
     onSuccess: () => {
       invalidate();
       toast({ variant: "success", title: t("common:success"), description: t("locations:updateSuccess") });
       setDialog({ open: false });
+    },
+    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("locations:genericError") }),
+  });
+
+  const regenerateMutation = useMutation({
+    mutationFn: regenerateLocationSelfCheckInCode,
+    onSuccess: (updated) => {
+      invalidate();
+      toast({ variant: "success", title: t("common:success"), description: t("locations:regenerateSuccess") });
+      setRegenerateTarget(null);
+      setDialog((current) => (current.open && current.location?.id === updated.id ? { open: true, location: updated } : current));
     },
     onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("locations:genericError") }),
   });
@@ -210,6 +240,13 @@ export default function LocationsPage() {
       header: t("locations:address"),
       meta: { label: t("locations:address") },
       cell: ({ row }) => row.original.address ?? "—",
+    },
+    {
+      id: "sgkIsyeriSicilNo",
+      enableSorting: false,
+      header: t("locations:sgkIsyeriSicilNo"),
+      meta: { label: t("locations:sgkIsyeriSicilNo") },
+      cell: ({ row }) => row.original.sgkIsyeriSicilNo ?? "—",
     },
     ...(canManage
       ? [
@@ -308,6 +345,11 @@ export default function LocationsPage() {
                           {location.address}
                         </Text>
                       )}
+                      {location.sgkIsyeriSicilNo && (
+                        <Text size="xs" c="dimmed">
+                          {t("locations:sgkIsyeriSicilNo")}: {location.sgkIsyeriSicilNo}
+                        </Text>
+                      )}
                     </div>
                     {canManage && (
                       <Group gap={4} wrap="nowrap">
@@ -368,6 +410,92 @@ export default function LocationsPage() {
               {...register("countryCode")}
             />
             <TextInput id="loc-address" label={t("locations:address")} {...register("address")} />
+            <TextInput
+              id="loc-sgk-isyeri-sicil-no"
+              label={t("locations:sgkIsyeriSicilNo")}
+              {...register("sgkIsyeriSicilNo")}
+            />
+
+            <Text size="sm" fw={500} mt="xs">
+              {t("locations:geofenceTitle")}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {t("locations:geofenceHint")}
+            </Text>
+            <Group grow>
+              <Controller
+                control={control}
+                name="latitude"
+                render={({ field }) => (
+                  <NumberInput
+                    id="loc-latitude"
+                    label={t("locations:latitude")}
+                    placeholder="39.925533"
+                    decimalScale={6}
+                    value={field.value ?? ""}
+                    onChange={(v) => field.onChange(v === "" ? null : Number(v))}
+                    error={errors.latitude ? t("locations:geofenceInvalid") : undefined}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="longitude"
+                render={({ field }) => (
+                  <NumberInput
+                    id="loc-longitude"
+                    label={t("locations:longitude")}
+                    placeholder="32.866287"
+                    decimalScale={6}
+                    value={field.value ?? ""}
+                    onChange={(v) => field.onChange(v === "" ? null : Number(v))}
+                    error={errors.longitude ? t("locations:geofenceInvalid") : undefined}
+                  />
+                )}
+              />
+            </Group>
+            <Controller
+              control={control}
+              name="radiusMeters"
+              render={({ field }) => (
+                <NumberInput
+                  id="loc-radius"
+                  label={t("locations:geofenceRadius")}
+                  description={t("locations:geofenceRadiusHint")}
+                  placeholder="150"
+                  min={1}
+                  value={field.value ?? ""}
+                  onChange={(v) => field.onChange(v === "" ? null : Number(v))}
+                />
+              )}
+            />
+
+            {dialog.location && (
+              <div>
+                <Text size="sm" fw={500}>
+                  {t("locations:selfCheckInCode")}
+                </Text>
+                <Group gap="xs" mt={4}>
+                  <Text size="sm" ff="monospace">
+                    {dialog.location.selfCheckInCode}
+                  </Text>
+                  <CopyButton value={dialog.location.selfCheckInCode}>
+                    {({ copied, copy }) => (
+                      <Button size="compact-xs" variant="subtle" leftSection={<QrCode size={14} />} onClick={copy}>
+                        {copied ? t("locations:copied") : t("locations:copy")}
+                      </Button>
+                    )}
+                  </CopyButton>
+                  <Button size="compact-xs" variant="subtle" color="red" onClick={() => setRegenerateTarget(dialog.location ?? null)}>
+                    {t("locations:regenerateCode")}
+                  </Button>
+                </Group>
+                <Text size="xs" c="dimmed" mt={4}>
+                  {t("locations:selfCheckInCodeHint")}
+                </Text>
+              </div>
+            )}
+
             <Group justify="flex-end" gap="sm">
               <Button type="button" variant="default" onClick={closeDialog} disabled={isSaving}>
                 {t("common:cancel")}
@@ -386,6 +514,16 @@ export default function LocationsPage() {
         description={t("locations:deleteConfirmDescription", { name: deleteTarget?.name ?? "" })}
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         isLoading={deleteMutation.isPending}
+      />
+
+      <ConfirmDialog
+        open={regenerateTarget !== null}
+        onOpenChange={(open) => !open && setRegenerateTarget(null)}
+        title={t("locations:regenerateConfirmTitle")}
+        description={t("locations:regenerateConfirmDescription", { name: regenerateTarget?.name ?? "" })}
+        confirmLabel={t("locations:regenerateCode")}
+        onConfirm={() => regenerateTarget && regenerateMutation.mutate(regenerateTarget.id)}
+        isLoading={regenerateMutation.isPending}
       />
     </div>
   );

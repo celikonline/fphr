@@ -273,6 +273,10 @@ public sealed class EmployeeImportSnapshot
         ByNationalId = employees.Where(e => e.NationalId is not null).GroupBy(e => e.NationalId!).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
         // Status rename (Faz 1a): Inactive -> Terminated is the closest equivalent to "not usable as a manager match".
         ActiveByFullName = employees.Where(e => e.Status != EmployeeStatus.Terminated).ToLookup(e => ImportValueParser.MatchKey(e.DisplayName));
+        ActiveIdByWorkEmail = employees
+            .Where(e => e.Status != EmployeeStatus.Terminated && !string.IsNullOrWhiteSpace(e.WorkEmail))
+            .GroupBy(e => e.WorkEmail!.Trim(), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First().Id, StringComparer.OrdinalIgnoreCase);
         ManagerMap = employees.ToDictionary(e => e.Id, e => e.ManagerEmployeeId);
         Types = types.OrderBy(t => t.SortOrder).ToList();
         UnitsByType = units.GroupBy(u => u.TypeId).ToDictionary(g => g.Key, g => g.ToLookup(u => ImportValueParser.MatchKey(u.Name)));
@@ -295,6 +299,9 @@ public sealed class EmployeeImportSnapshot
     public IReadOnlyDictionary<string, EmployeeRow> ByNationalId { get; }
 
     public ILookup<string, EmployeeRow> ActiveByFullName { get; }
+
+    /// <summary>Non-terminated employees by work e-mail (case-insensitive) - a row may not claim an address another employee already uses.</summary>
+    public IReadOnlyDictionary<string, Guid> ActiveIdByWorkEmail { get; }
 
     /// <summary>Simulated manager hierarchy, updated as rows pass validation so cycles across rows are caught.</summary>
     public Dictionary<Guid, Guid?> ManagerMap { get; }

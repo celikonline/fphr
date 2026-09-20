@@ -1,0 +1,18 @@
+{
+  "id": "senseik-056",
+  "title": "\"Aylık Puantaj\" ızgarası: attendance+leave özet görünümü, Onayla / Tümünü Onayla (S-11, package A5)",
+  "owner": "pc-b",
+  "state": "review",
+  "branch": "b/attendance-monthly-timesheet-approval",
+  "worktree": ".claude/worktrees/wf_9fd15ce6-2c5-2",
+  "acceptance": [
+    "GET /attendance/timesheet/monthly bir ay + opsiyonel org birimi için her görünür çalışanı worked/missing/overtime (Attendance) + paid/unpaid/sick izin günü (Leave) + onay durumu ile tek satırda döner; ne attendance ne leave verisi olan çalışan da sıfırlanmış bir satır alır",
+    "POST /attendance/timesheet/monthly/employees/{employeeId}/approve (senseik-029 handler'ı) tek çalışanın ayını, önce izinli-günde-çalışma çapraz kontrolünü yeniden çalıştırarak onaylar (attendance.timesheet.approve) ve çalışan veri kapsamı dışındaysa 403 döner; var olan onay üstüne tekrar onaylamak hata değil, Reapprove",
+    "POST /attendance/timesheet/monthly/approve-all görünür (veri kapsamı + opsiyonel org birimi) tüm çalışanları onaylar, zaten onaylanmış satırları atlar, yeni onaylananlar için tek Leave sorgusuyla aynı izin çapraz kontrolünü çalıştırır ve o turda onaylanan sayıyı döner",
+    "Manager rolü attendance.timesheet.approve iznini attendance.timesheet.resolve ile aynı şekilde (Team kapsamı) alır; Timekeeper almaz (11.3.06 rol eşlemesi: 'approve yok')",
+    "dotnet test (Attendance + Identity rol testleri, konteyner gerektirmeyenler) MonthlyTimesheetApproval* yeşil; has-pending-model-changes temiz; 056'nın kendi migration'ı yok (dev'deki 20260919080107 tek kaynak)"
+  ],
+  "merge_gate": "dotnet build (Api + testler) + Attendance/Identity konteynersiz testler yeşil; has-pending-model-changes temiz. Docker kapalıydı: Testcontainers testleri (AttendanceLeaveCrossCheckAndReportingTests) bu turda ÇALIŞTIRILMADI. Web ekranı kapsam dışı (ayrı kart).",
+  "handoff": "docs/handoffs/attendance-monthly-timesheet-approval.md",
+  "source": "docs/analysis/kolayik-video (S-11 \"Aylık Puantaj\" ekranı, package A5) — worktree wf_9fd15ce6-2c5-2; ilk sürüm eski bir dev noktasından (ae376e4) açılmıştı, 19 Eylül'de dev (senseik-029 dahil) üzerine rebase edilip uzlaştırıldı."
+}

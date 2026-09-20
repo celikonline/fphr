@@ -11,6 +11,7 @@ public static class AttendanceDomainErrors
     public const string ScheduleIsDefault = "attendance.errors.schedule_is_default";
     public const string ScheduleHasEmployees = "attendance.errors.schedule_has_employees";
     public const string ScheduleInactive = "attendance.errors.schedule_inactive";
+    public const string ScheduleDefaultCannotDeactivate = "attendance.errors.schedule_default_cannot_deactivate";
     public const string AssignmentEffectiveDateInPast = "attendance.assignment.effective_date_in_past";
     public const string DayNotFound = "attendance.day.not_found";
     public const string DayCheckOutBeforeCheckIn = "attendance.day.check_out_before_check_in";
@@ -30,6 +31,8 @@ public static class AttendanceDomainErrors
     public const string ShiftWeeklyHoursExceeded = "attendance.shift.weekly_hours_exceeded";
     public const string ShiftWeeklyDaysExceeded = "attendance.shift.weekly_days_exceeded";
     public const string ShiftAvailabilityConflict = "attendance.shift.availability_conflict";
+    public const string ShiftRestPeriodTooShort = "attendance.shift.rest_period_too_short";
+    public const string ShiftBreakTooShort = "attendance.shift.break_too_short";
     public const string AvailabilityTimeRangeInvalid = "attendance.availability.time_range_invalid";
     public const string AvailabilityAlreadyCancelled = "attendance.availability.already_cancelled";
     public const string AvailabilityNotFound = "attendance.availability.not_found";
@@ -50,4 +53,7 @@ public static class AttendanceLimits
 {
     public const int NameMaxLength = 200;
     public const int DaysPerWeek = 7;
+
+    /// <summary>A calendar day has 24 hours: no single day can carry more worked minutes than this.</summary>
+    public const int MaxMinutesPerDay = 24 * 60;
 }

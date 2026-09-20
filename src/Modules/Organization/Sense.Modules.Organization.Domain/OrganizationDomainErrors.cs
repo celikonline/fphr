@@ -40,6 +40,7 @@ public static class OrganizationDomainErrors
     public const string LocationTypeInvalid = "organization.location.type_invalid";
     public const string LocationCountryCodeInvalid = "organization.location.country_code_invalid";
     public const string LocationAlreadyInactive = "organization.location.already_inactive";
+    public const string LocationGeofenceInvalid = "organization.location.geofence_invalid";
 
     public const string CostCenterNotFound = "organization.cost_center.not_found";
     public const string CostCenterCodeRequired = "organization.cost_center.code_required";
@@ -81,4 +82,7 @@ public static class OrganizationLimits
 
     /// <summary>Cost center code (Faz 2, S-4); short and immutable once created (referenced by Payroll/Analytics later).</summary>
     public const int CostCenterCodeMaxLength = 30;
+
+    /// <summary>SGK "işyeri sicil numarası" (APHB, senseik-010/F-03); free text, no fixed structure enforced here.</summary>
+    public const int SgkIsyeriSicilNoMaxLength = 30;
 }

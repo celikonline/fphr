@@ -3,7 +3,8 @@
     "Leave": "Urlaub",
     "Advance": "Vorschuss",
     "Expense": "Spesen",
-    "Overtime": "Überstunden"
+    "Overtime": "Überstunden",
+    "VisaDocument": "Visumsunterlagen"
   },
   "policies": {
     "listTitle": "Genehmigungsprozesse",

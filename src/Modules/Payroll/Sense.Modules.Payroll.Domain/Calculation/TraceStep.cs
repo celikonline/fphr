@@ -1,3 +1,5 @@
+using Sense.Modules.Payroll.Domain.Garnishments;
+
 namespace Sense.Modules.Payroll.Domain.Calculation;
 
 /// <summary>
@@ -22,11 +24,15 @@ public sealed record TraceStep(
     IReadOnlyList<TraceParameterRef> ParameterRefs);
 
 /// <summary>Result of <see cref="PayrollCalculator.Calculate"/>: the full step trace plus the headline amounts a <c>Payslip</c> stores.</summary>
+/// <param name="GarnishmentApplied">senseik-019 2c: per-order amount <see cref="GarnishmentCalculator"/> applied this
+/// month, so the caller can post it to each <see cref="Garnishments.GarnishmentOrder"/>'s balance. Empty when the
+/// input had no active orders.</param>
 public sealed record PayrollCalculationResult(
     IReadOnlyList<TraceStep> Steps,
     decimal GrossAmount,
     decimal NetAmount,
-    decimal EmployerCost)
+    decimal EmployerCost,
+    IReadOnlyList<GarnishmentAppliedAmount> GarnishmentApplied)
 {
     public TraceStep Step(string code) => Steps.Single(s => s.Code == code);
 }
@@ -40,6 +46,7 @@ public static class PayrollTraceStepCodes
     public const string SgkEmployee = "SGK_EMPLOYEE";
     public const string UnempEmployee = "UNEMP_EMPLOYEE";
     public const string GvBase = "GV_BASE";
+    public const string DisabilityReduction = "DISABILITY_REDUCTION";
     public const string CumulativeBase = "CUMULATIVE_BASE";
     public const string IncomeTax = "INCOME_TAX";
     public const string MinWageExemptionGv = "MINWAGE_EXEMPTION_GV";

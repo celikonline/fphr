@@ -2,7 +2,7 @@
   "id": "senseik-020",
   "title": "Sol menü için küçültme/büyütme (collapse/expand) özelliği",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/sidebar-collapse-toggle",
   "worktree": ".claude/worktrees/sidebar-collapse",
   "acceptance": [

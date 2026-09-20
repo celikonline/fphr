@@ -5,6 +5,9 @@ public static class PerformanceErrors
 {
     public const string EmployeeInvalid = "performance.goal.employee_invalid";
     public const string NoEmployeeForUser = "performance.no_employee_for_user";
+
+    /// <summary>Çağıranın performans izni bu çalışanı kapsamıyor (veri kapsamı: Self/Team/Department/... dışında).</summary>
+    public const string EmployeeNotInScope = "performance.employee.not_in_scope";
     public const string FormCycleClosed = "performance.form.cycle_closed";
 
     /// <summary>4857 md.18 fesih delili gerekçesi: kapatılmış bir dönemin (ReviewCycle.Close, terminal) formu bir daha

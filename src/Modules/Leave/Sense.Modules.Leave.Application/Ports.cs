@@ -43,11 +43,14 @@ public sealed class LeaveDayCalculator(IWorkScheduleReader schedules, IHolidayCa
     public async Task<LeaveDayCount> CalculateAsync(
         Guid tenantId, Guid employeeId, DateOnly start, DateOnly end, bool countsNonWorkingDays, CancellationToken cancellationToken = default)
     {
-        // The Saturday rule (roadmap #23) can add a Saturday up to 6 days past `end` (a Mon–Fri request's own week);
-        // both predicates are fetched over that wider window so LeaveDayCounter never sees an unresolved date.
+        // The Saturday rule (roadmap #23) inspects the whole Mon–Fri of every touched week: the days BEFORE `start`
+        // (to see whether the week is fully requested) and the Saturday up to 6 days past `end`. Both predicates are
+        // fetched over that wider window; otherwise unresolved pre-start working days read as "not a working day" and
+        // the rule would wrongly add a Saturday to a single-Friday request.
+        var scheduleWindowStart = LeaveDayCounter.MondayOf(start);
         var scheduleWindowEnd = end.AddDays(6);
-        var isWorkingDay = await schedules.GetWorkingDayPredicateAsync(tenantId, employeeId, start, scheduleWindowEnd, cancellationToken);
-        var includeSaturdayWhenFullWeek = await schedules.GetIncludeSaturdayWhenFullWeekPredicateAsync(tenantId, employeeId, start, scheduleWindowEnd, cancellationToken);
+        var isWorkingDay = await schedules.GetWorkingDayPredicateAsync(tenantId, employeeId, scheduleWindowStart, scheduleWindowEnd, cancellationToken);
+        var includeSaturdayWhenFullWeek = await schedules.GetIncludeSaturdayWhenFullWeekPredicateAsync(tenantId, employeeId, scheduleWindowStart, scheduleWindowEnd, cancellationToken);
         var calendar = await holidays.ResolveCalendarAsync(tenantId, null, null, cancellationToken);
         var holidayMap = calendar is null
             ? new Dictionary<DateOnly, string>()
@@ -69,6 +72,8 @@ public static class StatutoryLeaveResolver
         LegislationParameterKeys.AnnualOldAgeMin, LegislationParameterKeys.AnnualAgeExceptionMinDays, LegislationParameterKeys.PaternityDays,
         LegislationParameterKeys.MaternityPreBirthWeeks, LegislationParameterKeys.MaternityPostBirthWeeks, LegislationParameterKeys.MarriageDays,
         LegislationParameterKeys.BereavementDays, LegislationParameterKeys.FosterCareDays, LegislationParameterKeys.PaidMilitaryServiceDays,
+        LegislationParameterKeys.BreastfeedingHoursPerDay,
+        LegislationParameterKeys.DisabledChildDaysPerYear, LegislationParameterKeys.JobSearchMinHoursPerDay,
     ];
 
     public static async Task<StatutoryLeaveDurations> ResolveAsync(ILegislationParameterReader reader, DateOnly asOf, CancellationToken cancellationToken)
@@ -99,6 +104,9 @@ public static class StatutoryLeaveResolver
             D(LegislationParameterKeys.MarriageDays, fallback.MarriageDays),
             D(LegislationParameterKeys.BereavementDays, fallback.BereavementDays),
             D(LegislationParameterKeys.FosterCareDays, fallback.FosterCareDays),
-            D(LegislationParameterKeys.PaidMilitaryServiceDays, fallback.PaidMilitaryServiceDays));
+            D(LegislationParameterKeys.PaidMilitaryServiceDays, fallback.PaidMilitaryServiceDays),
+            D(LegislationParameterKeys.BreastfeedingHoursPerDay, fallback.BreastfeedingHoursPerDay),
+            D(LegislationParameterKeys.DisabledChildDaysPerYear, fallback.DisabledChildDaysPerYear),
+            D(LegislationParameterKeys.JobSearchMinHoursPerDay, fallback.JobSearchMinHoursPerDay));
     }
 }

@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Sense.Modules.Employee.Application;
 using Sense.Modules.Employee.Application.Career;
 using Sense.Modules.Employee.Application.Employees;
 using Sense.Modules.Employee.Application.EmploymentPeriods;
@@ -11,7 +12,10 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Shared.Contracts.Bulk;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Sense.Shared.Contracts.Paging;
+using Sense.Shared.Kernel.Results;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Employee.Api.Controllers;
@@ -48,10 +52,21 @@ public sealed class EmployeesController : ApiControllerBase
     /// <summary>Self-service edit ("Self-servis düzenleme"): own contact fields + own employee-editable custom field values.</summary>
     [HttpPut("me/profile")]
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> UpdateMyProfile([FromBody] UpdateMyProfileRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(
+    [Consumes("application/json")]
+    public async Task<IActionResult> UpdateMyProfile([FromBody] System.Text.Json.JsonElement body, CancellationToken ct)
+    {
+        // Boş gövde ({}) mevcut iletişim verisini silmesin diye reddedilir (bkz. MyProfileRequestParser).
+        var jsonOptions = HttpContext.RequestServices.GetRequiredService<IOptions<Microsoft.AspNetCore.Mvc.JsonOptions>>().Value.JsonSerializerOptions;
+        var request = MyProfileRequestParser.Parse(body, jsonOptions);
+        if (request is null)
+        {
+            return Problem(Error.Validation(EmployeeErrors.ProfileUpdateEmpty));
+        }
+
+        return FromResult(await Dispatcher.Send(
             new UpdateMyProfileCommand(request.PersonalEmail, request.MobilePhone, request.HomePhone, request.AddressLine, request.City, request.PostalCode, request.CustomFieldValues),
             ct));
+    }
 
     /// <summary>Employee card (404 when missing or outside the caller's data scope).</summary>
     [HttpGet(ApiRoutes.IdParam)]
@@ -68,7 +83,9 @@ public sealed class EmployeesController : ApiControllerBase
                 request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
-                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate),
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate,
+                request.ClearLeaveAccrualStartDate, request.SicilNumarasi, request.Nationality, request.ForeignIdNumber, request.PassportNumber,
+                request.SgkOccupationCode),
             ct));
 
     /// <summary>Updates an employee record.</summary>
@@ -80,7 +97,9 @@ public sealed class EmployeesController : ApiControllerBase
                 request.WorkPhone, request.HireDate, request.BirthDate, request.OrgUnitId, request.ManagerEmployeeId,
                 request.Gender, request.MaritalStatus, request.ChildCount, request.EducationStatus, request.HighestEducationLevel,
                 request.MilitaryStatus, request.DisabilityDegree, request.BloodType, request.MobilePhone, request.HomePhone,
-                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate),
+                request.AddressLine, request.City, request.PostalCode, request.ContractType, request.EmploymentType, request.LeaveAccrualStartDate,
+                request.ClearLeaveAccrualStartDate, request.SicilNumarasi, request.Nationality, request.ForeignIdNumber, request.PassportNumber,
+                request.SgkOccupationCode),
             ct));
 
     /// <summary>Career timeline, newest first (an employee without stored history shows its current values as one implicit Hire record).</summary>
@@ -272,6 +291,11 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<BulkOperationResult>(StatusCodes.Status200OK)]
     public async Task<IActionResult> BulkAssignManager([FromBody] BulkAssignManagerRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new BulkAssignManagerCommand(request.Selection, request.ManagerEmployeeId), ct));
+
+    /// <summary>Assigns (or clears, with a null body value) the onboarding mentor ("mentör atama", Faz 4 #72) - independent of the manager hierarchy.</summary>
+    [HttpPut(ApiRoutes.IdParam + "/mentor")]
+    public async Task<IActionResult> AssignMentor(Guid id, [FromBody] AssignMentorRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AssignMentorCommand(id, request.MentorEmployeeId), ct));
 
     /// <summary>Company directory of active employees.</summary>
     [HttpGet("directory")]

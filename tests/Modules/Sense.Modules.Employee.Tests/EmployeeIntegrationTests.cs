@@ -198,6 +198,26 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task AssignMentor_ValidatesMentorExists_AndClears()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+        var units = await SeedOrgUnitsAsync(tenantId);
+
+        var newHire = await CreateAsync("Yeni", "Çalışan", orgUnitId: units.Root);
+        var mentor = await CreateAsync("Deneyimli", "Mentör", orgUnitId: units.Root);
+
+        ShouldFail(await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, Guid.NewGuid())), EmployeeErrors.MentorNotFound);
+        ShouldFail(await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, newHire.Id)), EmployeeDomainErrors.MentorSelf);
+
+        (await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, mentor.Id))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetEmployeeQuery(newHire.Id))).Value.MentorEmployeeId.ShouldBe(mentor.Id);
+
+        (await ExecuteCommandAsync(new AssignMentorCommand(newHire.Id, null))).IsSuccess.ShouldBeTrue();
+        (await ExecuteQueryAsync(new GetEmployeeQuery(newHire.Id))).Value.MentorEmployeeId.ShouldBeNull();
+    }
+
+    [Fact]
     public async Task OrgChartDirectoryAndBirthdays_AreCompanyWideAndActiveOnly()
     {
         var tenantId = Guid.NewGuid();
@@ -225,7 +245,8 @@ public sealed class EmployeeIntegrationTests : TestFixture
         directory.TotalCount.ShouldBe(3);
         directory.Items.Select(d => d.DisplayName).ShouldBe(["Ceyda Başkan", "Deniz Geliştirici"]);
         var byUnit = (await ExecuteQueryAsync(new GetEmployeeDirectoryQuery(new PagedQuery { Q = "tolga" }, units.Sales))).Value;
-        byUnit.Items.ShouldHaveSingleItem().ShouldBe(new DirectoryEntryDto(cto.Id, "Tolga Teknik", units.Sales, null, "+90 212 000 00 01"));
+        // Placed directly on the Department (no Title level below it): TitleName is null, DepartmentName is resolved.
+        byUnit.Items.ShouldHaveSingleItem().ShouldBe(new DirectoryEntryDto(cto.Id, "Tolga Teknik", units.Sales, null, "+90 212 000 00 01", null, "Sales"));
 
         var within30 = (await ExecuteQueryAsync(new GetUpcomingBirthdaysQuery())).Value;
         within30.ShouldHaveSingleItem().ShouldBe(new UpcomingBirthdayDto(ceo.Id, "Ceyda Başkan", units.Root, BirthdayCalculator.NextBirthday(ceo.BirthDate!.Value, today)));
@@ -498,6 +519,12 @@ public sealed class EmployeeIntegrationTests : TestFixture
         new(id, firstName, lastName, null, null, null, null, null, null, orgUnitId, managerId);
 
     private static void ShouldFail<T>(Result<T> result, string code)
+    {
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(code);
+    }
+
+    private static void ShouldFail(Result result, string code)
     {
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(code);

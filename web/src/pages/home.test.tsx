@@ -72,9 +72,10 @@ function signInWithDirectoryPermissionOnly() {
       email: "user@example.com",
       name: "Test User",
       roles: [],
+      roleLabels: [],
       permissions: ["employee.directory.view"],
     },
-    features: { access: {} as never, accessSettingsBypass: false },
+    features: { access: {} as never, accessSettingsBypass: false, mfaSetupRequired: false, disabledModules: [] },
   });
 }
 

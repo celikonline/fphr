@@ -2,7 +2,7 @@
   "id": "senseik-027",
   "title": "Şirket etkinlik takvimi (yeni özellik — sıfırdan)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/company-event-calendar",
   "worktree": ".claude/worktrees/company-event-calendar",
   "acceptance": [

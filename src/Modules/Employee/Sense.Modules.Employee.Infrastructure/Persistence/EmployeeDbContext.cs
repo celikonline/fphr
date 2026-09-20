@@ -10,6 +10,7 @@ using Sense.Modules.Employee.Domain.Subcontractors;
 using Sense.Modules.Employee.Domain.Terminations;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 using Sense.Shared.Kernel.ValueObjects;
 // Alias uses a name other than "Employee" - see Sense.Modules.Employee.Domain.Repositories.cs for why.
 using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
@@ -31,6 +32,22 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
     public DbSet<TerminationReason> TerminationReasons => Set<TerminationReason>();
 
     public DbSet<Subcontractor> Subcontractors => Set<Subcontractor>();
+
+    /// <summary>senseik-049: employee.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>
+    /// AuditLogEntryConfiguration ÖNCE uygulanmalı: ModuleDbContext.OnModelCreating kendi içinde
+    /// modelBuilder.Model.GetEntityTypes() üzerinde dönüp ITenantEntity için otomatik Tenant query filter +
+    /// index ekliyor - bu döngü base çağrısı sırasında çalışır, base'ten SONRA eklenen bir entity o döngüyü
+    /// kaçırır (AuditLogEntry ITenantEntity, o filtreyi/index'i almalı - Identity'ninki ApplyConfigurationsFromAssembly
+    /// ile zaten döngüden ÖNCE eklendiği için bu sorunu hiç yaşamamıştı).
+    /// </summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class EmployeeTables
@@ -115,6 +132,7 @@ public sealed class EmployeeConfiguration : IEntityTypeConfiguration<EmployeeEnt
         b.HasIndex(x => new { x.TenantId, x.Status });
         b.HasIndex(x => x.OrgUnitId);
         b.HasIndex(x => x.ManagerEmployeeId);
+        b.HasIndex(x => x.MentorEmployeeId);
         b.HasIndex(x => x.TerminationReasonId);
 
         // One employee record per Identity user, when linked; NULL (not-yet-linked) rows are excluded

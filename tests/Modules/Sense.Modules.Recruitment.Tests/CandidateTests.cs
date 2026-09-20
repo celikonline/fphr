@@ -27,6 +27,23 @@ public sealed class CandidateTests
     }
 
     [Fact]
+    public void Create_And_UpdateContactInfo_StoreEmailLowerCased()
+    {
+        var candidate = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "Ada.Yilmaz@EXAMPLE.com", null).Value;
+        candidate.Email.ShouldBe("ada.yilmaz@example.com");
+
+        candidate.UpdateContactInfo("Ada", "Yılmaz", "X@Example.COM", null).IsSuccess.ShouldBeTrue();
+        candidate.Email.ShouldBe("x@example.com");
+    }
+
+    [Fact]
+    public void NormalizeEmail_UsesInvariantCasing_NotCurrentCulture()
+    {
+        // "I" must become "i" (not the Turkish dotless "ı") regardless of the machine culture.
+        Candidate.NormalizeEmail("INFO@EXAMPLE.COM").ShouldBe("info@example.com");
+    }
+
+    [Fact]
     public void Create_InvalidEmail_IsRejected()
     {
         var result = Candidate.Create(Guid.NewGuid(), "Ada", "Yılmaz", "not-an-email", null);
@@ -62,5 +79,25 @@ public sealed class CandidateTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(RecruitmentDomainErrors.CandidateAlreadyAnonymized);
+    }
+}
+
+/// <summary>Regression: candidate phone accepted any text.</summary>
+public sealed class CandidatePhoneValidationTests
+{
+    [Theory]
+    [InlineData("abc", false)]
+    [InlineData("0532 123 45 67", true)]
+    [InlineData(null, true)]
+    public async Task Validators_CheckPhoneFormat(string? phone, bool valid)
+    {
+        var ct = TestContext.Current.CancellationToken;
+
+        (await new Sense.Modules.Recruitment.Application.Candidates.CreateCandidateValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Candidates.CreateCandidateCommand("Ada", "Y", "ada@example.com", phone), ct)).IsValid.ShouldBe(valid);
+        (await new Sense.Modules.Recruitment.Application.Candidates.UpdateCandidateValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Candidates.UpdateCandidateCommand(Guid.NewGuid(), "Ada", "Y", "ada@example.com", phone), ct)).IsValid.ShouldBe(valid);
+        (await new Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationValidator()
+            .ValidateAsync(new Sense.Modules.Recruitment.Application.Public.SubmitCareerApplicationCommand("slug", "Ada", "Y", "ada@example.com", phone, "2026-09", true), ct)).IsValid.ShouldBe(valid);
     }
 }

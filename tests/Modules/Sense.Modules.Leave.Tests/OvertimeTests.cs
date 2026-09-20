@@ -126,6 +126,36 @@ public sealed class OvertimeDomainTests
         OvertimeConversion.ToTimeOff(request, OvertimeMinutesBasis.Payable, 1.5m, 450, Guid.NewGuid(), null, DateTime.UtcNow, null).Error.Code
             .ShouldBe(LeaveDomainErrors.OvertimeAlreadyConverted);
     }
+
+    /// <summary>Kart senseik-030: "Kind=Pay" - no ledger math, snapshots the request's own %25/%50 pay-rate multiplier, still blocks a second conversion.</summary>
+    [Fact]
+    public void ConvertToPay_SnapshotsRequestRate_AndBlocksSecondConversion()
+    {
+        var request = OvertimeRequest.Submit(
+            Guid.NewGuid(), Guid.NewGuid(), Monday, new TimeOnly(17, 0), 180, OvertimeDayKind.Workday, 60, null,
+            OvertimeRequestSource.Manual, DateTime.UtcNow, null, null, OvertimePayRateKind.Rate25).Value;
+
+        OvertimeConversion.ToPay(request, OvertimeMinutesBasis.Payable, null, DateTime.UtcNow, null).Error.Code
+            .ShouldBe(LeaveDomainErrors.OvertimeNotApproved);
+
+        var approval = Guid.NewGuid();
+        request.AttachApproval(approval);
+        request.Approve(approval, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+
+        var payable = OvertimeConversion.ToPay(request, OvertimeMinutesBasis.Payable, null, DateTime.UtcNow, "nakde çevir").Value;
+        payable.Kind.ShouldBe(OvertimeConversionKind.Pay);
+        payable.BasisMinutes.ShouldBe(120); // PayableMinutes (180 duration − 60 overlap)
+        payable.ResultMinutes.ShouldBe(120); // Pay does not transform minutes - the amount is Payroll's own math.
+        payable.ResultDays.ShouldBe(0m);
+        payable.RateSnapshot.ShouldBe(1.25m); // request.PayRateMultiplier snapshot (Rate25), not a conversion-specific rate.
+        payable.LeaveTypeId.ShouldBeNull();
+        payable.LedgerEntryId.ShouldBeNull();
+        payable.UsedByDate.ShouldBeNull();
+
+        request.MarkConverted(payable.Id).IsSuccess.ShouldBeTrue();
+        OvertimeConversion.ToPay(request, OvertimeMinutesBasis.Payable, null, DateTime.UtcNow, null).Error.Code
+            .ShouldBe(LeaveDomainErrors.OvertimeAlreadyConverted);
+    }
 }
 
 /// <summary>Overtime submit → Workflow "Overtime" approval (substituted) → ApprovalCompleted via IEventBus → conversion posts an ExtraGrant row.</summary>
@@ -136,6 +166,14 @@ public sealed class OvertimeIntegrationTests : TestFixture
     private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();
     private readonly IDataScopeService _dataScope = Substitute.For<IDataScopeService>();
+
+    /// <summary>The submit handlers reject work dates after tenant-local today; the scenarios below use fixed 2026-09/10 dates, so "now" is pinned after all of them.</summary>
+    private static readonly TimeProvider AfterAllTestDates = new PinnedTimeProvider(new DateTimeOffset(2026, 10, 10, 12, 0, 0, TimeSpan.Zero));
+
+    private sealed class PinnedTimeProvider(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
 
     protected override void ConfigureServices(IServiceCollection services)
     {
@@ -202,14 +240,14 @@ public sealed class OvertimeIntegrationTests : TestFixture
         // Monday 2026-09-14 17:00 for 3 h: 1 h inside the placeholder 09–18 schedule; no consent yet → warnings, still submitted.
         var monday = new DateOnly(2026, 9, 14);
         var submitted = await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(17, 0), 180, "sayım"), CancellationToken.None), _currentUser, _workflow);
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(17, 0), 180, "sayım"), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates);
         submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
         submitted.Value.PayableMinutes.ShouldBe(120);
         submitted.Value.Warnings.ShouldContain(OvertimeWarnings.ConsentMissing);
         submitted.Value.Warnings.ShouldContain(OvertimeWarnings.OverlapsSchedule);
 
         (await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(19, 0), 60, null), CancellationToken.None), _currentUser, _workflow))
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(monday, new TimeOnly(19, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates))
             .Error.Code.ShouldBe(OvertimeErrors.Overlap);
 
         await bus.Publish(new ApprovalCompleted(tenantId, approvalId, ApprovalRequestTypes.Overtime, submitted.Value.Id, employeeId));
@@ -255,11 +293,11 @@ public sealed class OvertimeIntegrationTests : TestFixture
         revoked.Value.RevocationEffectiveAt.ShouldBe(new DateOnly(2026, 10, 1));
 
         var inNotice = await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 9, 26), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow);
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 9, 26), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates);
         inNotice.IsSuccess.ShouldBeTrue(inNotice.IsFailure ? inNotice.Error.Code : null);
         inNotice.Value.Warnings.ShouldBeEmpty(); // Saturday, consent still in effect during notice
         (await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
-            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 10, 3), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow))
+            h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 10, 3), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates))
             .Error.Code.ShouldBe(OvertimeErrors.ConsentRevoked);
     }
 
@@ -367,5 +405,61 @@ public sealed class OvertimeIntegrationTests : TestFixture
         line.Rate25Minutes.ShouldBe(120); // rate25 talebi hiç dönüştürülmedi -> nakit.
         line.Rate50Minutes.ShouldBe(0); // rate50 talebi dönüştürüldü -> nakit kovasından düşer.
         line.TimeOffConvertedMinutes.ShouldBe(180); // 120dk x 1.5.
+    }
+
+    /// <summary>
+    /// Kart senseik-030: ConvertOvertimeToPayHandler bir Kind=Pay dönüşümü kaydeder, talebi tek seferlik dönüşüme kilitler
+    /// ve outbox'a OvertimeConvertedToPay yazar (Payroll'un dirty-flag mekanizmasının tetikleyicisi). Reader tarafında
+    /// hiç dönüştürülmemiş talep ile Kind=Pay dönüştürülmüş talep aynı nakit kovasına düşmeye devam eder - kontrat
+    /// değişmedi, IOvertimePayrollReader zaten "Posted TimeOff değilse nakit" kuralını uyguluyor.
+    /// </summary>
+    [Fact]
+    public async Task ConvertOvertimeToPayHandler_PostsConversion_WithoutLedgerRow_AndKeepsCashBucket()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid requestId;
+
+        using (var write = ServiceProvider!.CreateScope())
+        {
+            var db = write.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var request = OvertimeRequest.Submit(
+                tenantId, employeeId, new DateOnly(2026, 9, 3), new TimeOnly(17, 0), 120, OvertimeDayKind.Workday, 0, null,
+                OvertimeRequestSource.Manual, DateTime.UtcNow, null, null, OvertimePayRateKind.Rate50).Value;
+            var approvalId = Guid.NewGuid();
+            request.AttachApproval(approvalId);
+            request.Approve(approvalId, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            db.OvertimeRequests.Add(request);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            requestId = request.Id;
+        }
+
+        _dataScope.CanAccessEmployeeAsync(LeavePermissions.OvertimesConvert.Key, employeeId, Arg.Any<CancellationToken>()).Returns(true);
+
+        var converted = await RunAsync<ConvertOvertimeToPayHandler, OvertimeConversionDto>(
+            h => h.Handle(new ConvertOvertimeToPayCommand(employeeId, requestId, OvertimeMinutesBasis.Payable, "nakde çevir"), CancellationToken.None),
+            _currentUser, _dataScope);
+        converted.IsSuccess.ShouldBeTrue(converted.IsFailure ? converted.Error.Code : null);
+        converted.Value.Kind.ShouldBe(OvertimeConversionKind.Pay);
+        converted.Value.LedgerEntryId.ShouldBeNull();
+        converted.Value.Rate.ShouldBe(1.5m); // request.PayRateMultiplier snapshot (Rate50).
+
+        using (var verify = ServiceProvider.CreateScope())
+        {
+            var db = verify.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var request = await db.OvertimeRequests.SingleAsync(r => r.Id == requestId);
+            request.ConversionId.ShouldBe(converted.Value.Id);
+            (await db.LedgerEntries.AnyAsync(e => e.SourceRefId == converted.Value.Id, TestContext.Current.CancellationToken)).ShouldBeFalse();
+            var outboxTypes = await db.OutboxMessages.Where(m => m.TenantId == tenantId).Select(m => m.Type).ToListAsync();
+            outboxTypes.ShouldContain(t => t.EndsWith(nameof(Contracts.Events.OvertimeConvertedToPay), StringComparison.Ordinal));
+        }
+
+        // Kontrat tarafı: Kind=Pay dönüştürülmüş talep hâlâ Rate50 nakit kovasında (TimeOff'tan farklı olarak).
+        using var read = ServiceProvider.CreateScope();
+        var reader = read.ServiceProvider.GetRequiredService<IOvertimePayrollReader>();
+        var line = (await reader.GetAsync(tenantId, 2026, 9, [employeeId], TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
+        line.Rate50Minutes.ShouldBe(120);
+        line.TimeOffConvertedMinutes.ShouldBe(0);
     }
 }

@@ -36,10 +36,16 @@ public sealed class ListMyGoalsHandler(ICurrentUser currentUser, IGoalRepository
 [RequiresPermission("performance.goals.view")]
 public sealed record ListGoalsByEmployeeQuery(Guid EmployeeId) : IQuery<IReadOnlyList<GoalDto>>;
 
-public sealed class ListGoalsByEmployeeHandler(IGoalRepository goals) : IQueryHandler<ListGoalsByEmployeeQuery, IReadOnlyList<GoalDto>>
+public sealed class ListGoalsByEmployeeHandler(IGoalRepository goals, IDataScopeService dataScope)
+    : IQueryHandler<ListGoalsByEmployeeQuery, IReadOnlyList<GoalDto>>
 {
     public async Task<Result<IReadOnlyList<GoalDto>>> Handle(ListGoalsByEmployeeQuery query, CancellationToken cancellationToken)
     {
+        if (!await dataScope.CanAccessEmployeeAsync(PerformancePermissions.GoalsView.Key, query.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(PerformanceErrors.EmployeeNotInScope);
+        }
+
         var list = await goals.ListByEmployeeAsync(query.EmployeeId, cancellationToken);
         IReadOnlyList<GoalDto> dtos = list.Select(g => GoalMapper.ToDto(g)).ToList();
         return Result.Success(dtos);

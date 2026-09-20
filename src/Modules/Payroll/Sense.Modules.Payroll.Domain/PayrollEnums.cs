@@ -59,3 +59,11 @@ public enum PayrollPaymentMethod
     Bank = 0,
     Cash = 1,
 }
+
+/// <summary>İcra/nafaka kesinti emri türü (senseik-019 2c, İİK m.83): nafakada kesinti oranı sınırı yoktur, icrada
+/// net ücretin 1/4'ü ile sınırlıdır - bkz. <see cref="Calculation.GarnishmentCalculator"/>.</summary>
+public enum GarnishmentType
+{
+    Icra = 0,
+    Nafaka = 1,
+}

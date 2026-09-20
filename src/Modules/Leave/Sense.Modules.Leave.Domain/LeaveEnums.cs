@@ -18,6 +18,12 @@ public enum LeaveTypeCode
     FosterCare = 12,
     RemoteWork = 13,
     Birthday = 14,
+
+    /// <summary>"Süt izni" (4857 md.74/son): 1 yaşından küçük çocuk için günde toplam en fazla 1,5 saat (senseik-036).</summary>
+    Breastfeeding = 15,
+
+    /// <summary>"Engelli/süreğen hastalıklı çocuk izni" (4857 Ek md.2 son fıkra): yılda en fazla 10 gün ücretli (senseik-036).</summary>
+    DisabledChild = 16,
 }
 
 public enum LeaveLimitType

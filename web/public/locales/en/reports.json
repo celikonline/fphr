@@ -38,12 +38,42 @@
       "requests": {
         "label": "Leave report",
         "description": "Leave requests in the selected date range: type, duration, status, request and decision dates."
+      },
+      "company_ledger": {
+        "label": "Company-wide leave/overtime ledger",
+        "description": "Excel export of the company-wide view next to \"My Leave\"/\"My Overtime\": who is on leave in the selected month, annual leave balance and annual overtime (270-hour limit)."
       }
     },
     "finance": {
       "salaries": {
         "label": "Salary list report",
         "description": "Salary records in effect today: amount, currency, net/gross, pay frequency and transport/meal allowances."
+      }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Monthly timesheet summary report",
+          "description": "Per employee for the selected month: recorded/worked days, worked, overtime and night hours; late arrival, early leave, missing day, worked-while-on-leave and unresolved anomaly counts."
+        },
+        "closing": {
+          "label": "Month-end closing (accountant) report",
+          "description": "The monthly timesheet summary plus paid, unpaid and sick leave days, whether the month is approved and the approval date."
+        }
+      }
+    },
+    "recruitment": {
+      "overview": {
+        "label": "Overview report",
+        "description": "Applications per job posting broken down by pipeline stage: new application, screening, interview, offer, hired, rejected and total. Optional application date range."
+      },
+      "daily_counts": {
+        "label": "Daily counts report",
+        "description": "New applications and newly added candidates for every day in the selected date range (days with none appear as zero)."
+      },
+      "candidates_export": {
+        "label": "Candidate list export",
+        "description": "Candidates: contact details, source, tags and the postings applied to with their current stage. Optional created-date range."
       }
     }
   },
@@ -104,7 +134,7 @@
       "currentYear": "Current year"
     },
     "empty": "No indicator data for the selected period.",
-    "scopedNote": "Your permission is unit-scoped, so only the per-unit distribution is shown.",
+    "scopedNote": "Your permission is unit-scoped, so only the per-unit and per-department distribution is shown.",
     "cards": {
       "headcount": "Active headcount",
       "turnover": "Turnover rate",
@@ -121,7 +151,7 @@
     "charts": {
       "gender": "Gender distribution",
       "genderByUnit": "Headcount by unit and gender",
-      "department": "Headcount by unit",
+      "department": "Headcount by department",
       "leaveByType": "Leave usage by type ({{year}})",
       "careerMoves": "Career change types",
       "noData": "No data to show",
@@ -147,6 +177,7 @@
     "TURNOVER_RATE": { "label": "Turnover rate" },
     "EARLY_TURNOVER_RATE": { "label": "Early attrition share (first 6 months)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Gender distribution by unit" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Gender distribution by department" },
     "dimensions": {
       "Promotion": "Promotion",
       "LateralMove": "Lateral move",

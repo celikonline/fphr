@@ -2,9 +2,9 @@
   "id": "senseik-037",
   "title": "Dini bayramlar (Ramazan/Kurban) çok yıllı takvime yüklensin",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "merged",
   "branch": "a/holiday-calendar-multiyear",
-  "worktree": ".claude/worktrees/holiday-calendar",
+  "worktree": ".claude/worktrees/agent-aef97e9c81b808a9b",
   "acceptance": [
     "Ramazan ve Kurban Bayramı kayıtları artık sadece 2026 için değil, en az 5 yıl ileriye (2027-2031) yüklü",
     "Sabit tarihli resmi tatiller (1 Ocak, 23 Nisan vb.) gibi 'Her yıl' tekrar tipine geçirilemiyorsa (hicri takvime bağlı, sabit gün değil), her yıl için ayrı satır + 'takvim güncellenmeli' uyarı mekanizması eklendi",

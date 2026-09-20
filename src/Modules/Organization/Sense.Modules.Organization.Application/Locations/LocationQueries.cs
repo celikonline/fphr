@@ -68,5 +68,6 @@ public sealed class ListLocationsHandler(ILocationRepository locations) : IQuery
         return ordered ?? source;
     }
 
-    internal static LocationDto ToDto(Location l) => new(l.Id, l.Name, l.Type, l.CountryCode, l.Address, l.IsActive);
+    internal static LocationDto ToDto(Location l) =>
+        new(l.Id, l.Name, l.Type, l.CountryCode, l.Address, l.IsActive, l.SgkIsyeriSicilNo, l.Latitude, l.Longitude, l.GeofenceRadiusMeters, l.SelfCheckInCode);
 }

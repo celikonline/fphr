@@ -55,3 +55,24 @@ public sealed class SecurityPolicyController : ApiControllerBase
     public async Task<IActionResult> Update([FromBody] SecurityPolicyRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new UpdateSecurityPolicyCommand(request.RequireMfaForRoles), ct));
 }
+
+public sealed record ModuleSettingsRequest(IReadOnlyList<string>? DisabledModules);
+
+/// <summary>
+/// Ayarlar &gt; Sistem ayarları &gt; Modüller sayfası (senseik-057): kiracı için ürün modüllerini aç/kapa.
+/// Identity temel modüldür, bu uçlar ModuleAccessFilter tarafından hiçbir zaman engellenmez.
+/// </summary>
+[ApiVersion(ApiRoutes.DefaultVersion)]
+[Route(IdentityRoutes.Settings + "/modules")]
+[Authorize]
+public sealed class ModuleSettingsController : ApiControllerBase
+{
+    [HttpGet]
+    [ProducesResponseType<ModuleSettingsDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get(CancellationToken ct) => FromResult(await Dispatcher.Query(new GetModuleSettingsQuery(), ct));
+
+    [HttpPut]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update([FromBody] ModuleSettingsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateModuleSettingsCommand(request.DisabledModules ?? []), ct));
+}

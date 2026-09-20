@@ -87,6 +87,9 @@ public static class LegislationParameterKeys
     public const string FosterCareDays = "Leave.FosterCare.Days";
     public const string PaidMilitaryServiceDays = "Leave.PaidMilitaryService.Days";
     public const string JobSearchMinHoursPerDay = "Leave.JobSearch.MinHoursPerDay";
+
+    /// <summary>senseik-036: 4857 md.74/son - 1 yaşından küçük çocuk için günde toplam süt izni saati.</summary>
+    public const string BreastfeedingHoursPerDay = "Leave.Breastfeeding.HoursPerDay";
     public const string OvertimeAnnualLimitHours = "Overtime.AnnualLimitHours";
     public const string OvertimeCompTimeExpiryMonths = "Overtime.CompTimeExpiryMonths";
     public const string OvertimeConsentRevocationNoticeDays = "Overtime.ConsentRevocationNoticeDays";
@@ -110,6 +113,11 @@ public static class LegislationParameterKeys
 
     /// <summary>Faz 3 P2 (11.3.07-bordro.md "Yemek varyant kuralları"): 0/1 decimal, whether the meal+market card variant gets the Cash/MealCardOnly exemption.</summary>
     public const string PayrollMealMarketCardExemptionApplies = "Payroll.Meal.MarketCard.ExemptionApplies";
+
+    // senseik-019 2b (GVK md.31 engelli çalışan gelir vergisi matrah indirimi): aylık sabit tutar, dereceye göre.
+    public const string PayrollDisabilityMonthlyTaxReductionDegree1 = "Payroll.Disability.MonthlyTaxReduction.Degree1";
+    public const string PayrollDisabilityMonthlyTaxReductionDegree2 = "Payroll.Disability.MonthlyTaxReduction.Degree2";
+    public const string PayrollDisabilityMonthlyTaxReductionDegree3 = "Payroll.Disability.MonthlyTaxReduction.Degree3";
 
     // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"). Seeded via a Leave migration
     // (ADR 0008: single owner table leave.legislation_parameters) - Employee only reads them through this reader.

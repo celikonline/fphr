@@ -34,7 +34,7 @@ public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRe
     {
         // Query is automatically filtered by tenant via global filter in DbContext
         var documents = await context.Documents
-            .Where(d => d.Status != DocumentStatus.Deleted)
+            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null)
             .OrderByDescending(d => d.UploadedAt)
             .Skip(skip)
             .Take(take)
@@ -43,11 +43,19 @@ public sealed class DocumentRepository(DocumentsDbContext context) : IDocumentRe
         return documents.AsReadOnly();
     }
 
+    public async Task<IReadOnlyList<Document>> ListByVisaRequestAsync(
+        Guid visaDocumentRequestId, CancellationToken cancellationToken = default) =>
+        await context.Documents
+            .AsNoTracking()
+            .Where(d => d.VisaDocumentRequestId == visaDocumentRequestId && d.Status != DocumentStatus.Deleted)
+            .OrderBy(d => d.Title)
+            .ToListAsync(cancellationToken);
+
     public async Task<int> CountByTenantAsync(CancellationToken cancellationToken = default)
     {
         // Query is automatically filtered by tenant via global filter in DbContext
         return await context.Documents
-            .Where(d => d.Status != DocumentStatus.Deleted)
+            .Where(d => d.Status != DocumentStatus.Deleted && d.VisaDocumentRequestId == null)
             .CountAsync(cancellationToken);
     }
 

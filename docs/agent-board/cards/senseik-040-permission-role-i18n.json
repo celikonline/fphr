@@ -2,7 +2,7 @@
   "id": "senseik-040",
   "title": "Yetki matrisi (~170 izin), rol adları ve rapor kırılım değerleri İngilizce",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/permission-role-i18n",
   "worktree": ".claude/worktrees/permission-role-i18n",
   "acceptance": [

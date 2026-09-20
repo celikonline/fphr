@@ -9,10 +9,13 @@ using Sense.Shared.Web.Controllers;
 namespace Sense.Modules.Organization.Api.Controllers;
 
 /// <summary>Request to create a location.</summary>
-public sealed record CreateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address);
+public sealed record CreateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address, string? SgkIsyeriSicilNo = null);
 
 /// <summary>Request to update a location.</summary>
-public sealed record UpdateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address);
+public sealed record UpdateLocationRequest(string Name, LocationType Type, string CountryCode, string? Address, string? SgkIsyeriSicilNo = null);
+
+/// <summary>Request to set/clear a location's geofence (S-31); all-null clears it.</summary>
+public sealed record SetLocationGeofenceRequest(double? Latitude, double? Longitude, int? RadiusMeters);
 
 /// <summary>
 /// Physical location management (office/store/warehouse/factory/remote + country, roadmap Faz 0 item #6).
@@ -33,13 +36,25 @@ public sealed class LocationsController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateLocationRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateLocationCommand(request.Name, request.Type, request.CountryCode, request.Address), ct));
+        FromResult(await Dispatcher.Send(new CreateLocationCommand(request.Name, request.Type, request.CountryCode, request.Address, request.SgkIsyeriSicilNo), ct));
 
-    /// <summary>Updates a location's name/type/country/address.</summary>
+    /// <summary>Updates a location's name/type/country/address/SGK işyeri sicil no.</summary>
     [HttpPut(ApiRoutes.IdParam)]
     [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateLocationRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new UpdateLocationCommand(id, request.Name, request.Type, request.CountryCode, request.Address), ct));
+        FromResult(await Dispatcher.Send(new UpdateLocationCommand(id, request.Name, request.Type, request.CountryCode, request.Address, request.SgkIsyeriSicilNo), ct));
+
+    /// <summary>Sets/clears the GPS geofence used by Attendance's self-servis GPS check-in (S-31).</summary>
+    [HttpPut(ApiRoutes.IdParam + "/geofence")]
+    [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SetGeofence(Guid id, [FromBody] SetLocationGeofenceRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new SetLocationGeofenceCommand(id, request.Latitude, request.Longitude, request.RadiusMeters), ct));
+
+    /// <summary>Rotates the QR self-servis check-in code (S-31); the old printed QR stops working immediately.</summary>
+    [HttpPost(ApiRoutes.IdParam + "/self-checkin-code/regenerate")]
+    [ProducesResponseType<LocationDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RegenerateSelfCheckInCode(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RegenerateLocationSelfCheckInCodeCommand(id), ct));
 
     /// <summary>Soft delete: sets IsActive=false (409 if an active org unit still references this location).</summary>
     [HttpDelete(ApiRoutes.IdParam)]

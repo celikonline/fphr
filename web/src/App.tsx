@@ -32,6 +32,7 @@ const CompanyStructurePage = lazy(() => import("@/pages/settings/company-structu
 const HolidayCalendarsPage = lazy(() => import("@/pages/settings/holiday-calendars"));
 const AccessSettingsPage = lazy(() => import("@/pages/settings/access-settings"));
 const SecurityPolicyPage = lazy(() => import("@/pages/settings/security-policy"));
+const ModuleSettingsPage = lazy(() => import("@/pages/settings/modules"));
 const SupportAccessPage = lazy(() => import("@/pages/settings/support-access"));
 const DataTransferPage = lazy(() => import("@/pages/settings/data-transfer"));
 const DataTransferJobPage = lazy(() => import("@/pages/settings/data-transfer-job"));
@@ -58,6 +59,7 @@ const MyLeavePage = lazy(() => import("@/pages/leave/my-leave"));
 const LeaveRuleSetsPage = lazy(() => import("@/pages/settings/leave-rule-sets"));
 const LeaveCalendarPage = lazy(() => import("@/pages/leave/leave-calendar"));
 const MyOvertimesPage = lazy(() => import("@/pages/leave/my-overtimes"));
+const CompanyLeaveLedgerPage = lazy(() => import("@/pages/leave/company-leave-ledger"));
 const JobPostingsPage = lazy(() => import("@/pages/recruitment/job-postings"));
 const JobPostingDetailPage = lazy(() => import("@/pages/recruitment/job-posting-detail"));
 const CandidatesPage = lazy(() => import("@/pages/recruitment/candidates"));
@@ -70,14 +72,19 @@ const ExpensePaymentsAdminPage = lazy(() => import("@/pages/expense-payments-adm
 const MyTimesheetPage = lazy(() => import("@/pages/attendance/my-timesheet"));
 const MyShiftsPage = lazy(() => import("@/pages/attendance/my-shifts"));
 const TeamTimesheetPage = lazy(() => import("@/pages/attendance/team-timesheet"));
+const MonthlyTimesheetPage = lazy(() => import("@/pages/attendance/monthly-timesheet"));
 const DeviceLogImportPage = lazy(() => import("@/pages/attendance/device-log-import"));
 const ShiftPlanPage = lazy(() => import("@/pages/attendance/shift-plan"));
+const SelfCheckInPage = lazy(() => import("@/pages/attendance/self-check-in"));
+const LiveBoardPage = lazy(() => import("@/pages/attendance/live-board"));
 const WorkSchedulesPage = lazy(() => import("@/pages/settings/work-schedules"));
 const MyGoalsPage = lazy(() => import("@/pages/performance/my-goals"));
 const TeamGoalsPage = lazy(() => import("@/pages/performance/team-goals"));
 const ReviewCyclesPage = lazy(() => import("@/pages/performance/review-cycles"));
 const CompanyCalendarPage = lazy(() => import("@/pages/company-calendar"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
+const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
+const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -124,6 +131,7 @@ export default function App() {
             <Route path="leaves" element={<Navigate to="/app/leave" replace />} />
             <Route path="calendar" element={<Navigate to="/app/leave/calendar" replace />} />
             <Route path="requests" element={<RequestsPage />} />
+            <Route path="requests/visa" element={<VisaRequestsPage />} />
             <Route path="shared-files" element={<SharedFilesPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="support" element={<SupportPage />} />
@@ -136,6 +144,7 @@ export default function App() {
             <Route path="leave/calendar" element={<LeaveCalendarPage />} />
             <Route path="leave/overtimes" element={<MyOvertimesPage />} />
             <Route path="company-calendar" element={<CompanyCalendarPage />} />
+            <Route path="leave/company-ledger" element={<CompanyLeaveLedgerPage />} />
             <Route path="payments" element={<PaymentsPage />} />
             <Route path="expenses/payments" element={<ExpensePaymentsAdminPage />} />
             <Route path="payroll/periods" element={<PayrollPeriodsPage />} />
@@ -143,8 +152,11 @@ export default function App() {
             <Route path="attendance/timesheet" element={<MyTimesheetPage />} />
             <Route path="attendance/shifts" element={<MyShiftsPage />} />
             <Route path="attendance/team-timesheet" element={<TeamTimesheetPage />} />
+            <Route path="attendance/monthly-timesheet" element={<MonthlyTimesheetPage />} />
             <Route path="attendance/device-logs/import" element={<DeviceLogImportPage />} />
             <Route path="attendance/shift-plan" element={<ShiftPlanPage />} />
+            <Route path="attendance/self-check-in" element={<SelfCheckInPage />} />
+            <Route path="attendance/live-board" element={<LiveBoardPage />} />
 
             <Route path="performance/goals" element={<MyGoalsPage />} />
             <Route path="performance/team-goals" element={<TeamGoalsPage />} />
@@ -174,18 +186,11 @@ export default function App() {
             <Route path="settings/company/ohs-hazard-classification" element={<OhsHazardClassificationPage />} />
             <Route path="settings/company/ohs-risk-assessments" element={<OhsRiskAssessmentsPage />} />
             <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
-            <Route
-              path="settings/rules/*"
-              element={
-                <ComingSoonPage
-                  titleKey="settings.rules"
-                  phase={1}
-                  itemKeys={["settings.visaProcesses"]}
-                />
-              }
-            />
+            <Route path="settings/rules/visa-processes" element={<VisaProcessesPage />} />
+            <Route path="settings/rules" element={<Navigate to="/app/settings/rules/work-calendars" replace />} />
             <Route path="settings/system/access" element={<AccessSettingsPage />} />
             <Route path="settings/system/security-policy" element={<SecurityPolicyPage />} />
+            <Route path="settings/system/modules" element={<ModuleSettingsPage />} />
             <Route path="settings/system/users-roles" element={<UsersRolesPage />} />
             <Route path="settings/system/audit-log" element={<AuditLogPage />} />
             <Route path="settings/system/support-access" element={<SupportAccessPage />} />

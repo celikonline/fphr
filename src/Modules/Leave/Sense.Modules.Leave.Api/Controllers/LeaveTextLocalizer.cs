@@ -1,4 +1,5 @@
 using Sense.Modules.Leave.Application.Calendar;
+using Sense.Modules.Leave.Application.Ledger;
 using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
 using Sense.Shared.Kernel.Results;
@@ -25,10 +26,10 @@ internal static class LeaveTextLocalizer
             ? result
             : result.Value with { LeaveTypeName = localizer.MessageOrText(result.Value.LeaveTypeName) };
 
-    public static Result<IReadOnlyList<RequestableLeaveTypeDto>> Localize(this Result<IReadOnlyList<RequestableLeaveTypeDto>> result, IErrorLocalizer localizer) =>
-        result.IsFailure
-            ? result
-            : Result.Success<IReadOnlyList<RequestableLeaveTypeDto>>(result.Value.Select(t => t with { Name = localizer.MessageOrText(t.Name) }).ToList());
+    // senseik-039: RequestableLeaveTypeDto için burada bir Localize() overload'u VARDI ve kaldırıldı — Accept-Language
+    // başlığına göre (kullanıcının uygulama içi dil tercihinden bağımsız) sunucu tarafında çeviriyordu, bu da
+    // "+ Talep" açılır listesinin diğer izin ekranlarıyla (frontend i18n'e dayanan) tutarsız görünmesine yol
+    // açıyordu. Bkz. MyLeaveController.LeaveTypes ve web/src/pages/leave/my-leave.tsx buildRequestableTypes.
 
     public static Result<LeaveRequestDetailDto> Localize(this Result<LeaveRequestDetailDto> result, IErrorLocalizer localizer) =>
         result.IsFailure || result.Value.LeaveTypeName is null
@@ -58,4 +59,15 @@ internal static class LeaveTextLocalizer
             : new LeaveRequestPreviewResponse(
                 result.Value.Days, result.Value.WeeklyRestDays, result.Value.PublicHolidayDays,
                 result.Value.Warnings.Select(error => new LeavePreviewWarning(error.Code, localizer.Message(error))).ToList(), result.Value.TeamOverlap);
+
+    /// <summary>senseik-048: company-wide ledger rows carry the same seeded-type resource keys as the calendar/requests DTOs above.</summary>
+    public static Result<CompanyLeaveLedgerDto> Localize(this Result<CompanyLeaveLedgerDto> result, IErrorLocalizer localizer) =>
+        result.IsFailure
+            ? result
+            : result.Value with
+            {
+                Rows = result.Value.Rows
+                    .Select(r => r.LeaveTypeName is null ? r : r with { LeaveTypeName = localizer.MessageOrText(r.LeaveTypeName) })
+                    .ToList(),
+            };
 }

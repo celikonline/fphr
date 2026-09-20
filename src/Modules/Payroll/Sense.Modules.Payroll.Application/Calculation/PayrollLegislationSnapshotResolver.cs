@@ -33,12 +33,15 @@ public static class PayrollLegislationSnapshotResolver
             MealIncomeTaxDailyExemption: await Decimal(reader, LegislationParameterKeys.PayrollMealIncomeTaxDailyExemption, asOf, cancellationToken),
             MealSgkDailyExemptionRate: await Decimal(reader, LegislationParameterKeys.PayrollMealSgkDailyExemptionRate, asOf, cancellationToken),
             MealMarketCardExemptionApplies: await Decimal(reader, LegislationParameterKeys.PayrollMealMarketCardExemptionApplies, asOf, cancellationToken) != 0m,
+            DisabilityMonthlyTaxReductionDegree1: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree1, asOf, cancellationToken),
+            DisabilityMonthlyTaxReductionDegree2: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree2, asOf, cancellationToken),
+            DisabilityMonthlyTaxReductionDegree3: await Decimal(reader, LegislationParameterKeys.PayrollDisabilityMonthlyTaxReductionDegree3, asOf, cancellationToken),
             AsOf: asOf);
     }
 
     private static async Task<decimal> Decimal(ILegislationParameterReader reader, string key, DateOnly asOf, CancellationToken cancellationToken) =>
         await reader.GetDecimalAsync(key, asOf, cancellationToken).ConfigureAwait(false) ?? throw MissingParameter(key, asOf);
 
-    private static InvalidOperationException MissingParameter(string key, DateOnly asOf) =>
-        new($"LegislationParameter '{key}' has no value effective on {asOf:yyyy-MM-dd} (ADR 0008 seed missing or not yet migrated).");
+    private static LegislationParameterMissingException MissingParameter(string key, DateOnly asOf) =>
+        new(key, asOf);
 }

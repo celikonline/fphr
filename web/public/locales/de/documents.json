@@ -165,5 +165,117 @@
       "quotaExceeded": "Beim Hochladen dieser Datei würde das Speicherkontingent überschritten.",
       "rolesRequired": "Für rollenbeschränkte Sichtbarkeit muss mindestens eine Rolle ausgewählt werden."
     }
+  },
+  "visa": {
+    "my": {
+      "title": "Meine Visumsanträge",
+      "subtitle": "Beantragen Sie Visumsunterlagen für Ihre Reise; nach der Genehmigung werden sie Ihrer Akte hinzugefügt.",
+      "newRequest": "Neuer Visumsantrag",
+      "empty": "Sie haben noch keine Visumsanträge.",
+      "columns": {
+        "country": "Land",
+        "visaType": "Visumtyp",
+        "travel": "Reisedaten",
+        "process": "Prozess",
+        "status": "Status",
+        "createdAt": "Beantragt am",
+        "actions": "Unterlagen"
+      },
+      "documents": {
+        "show": "Unterlagen ansehen",
+        "title": "Zugestellte Unterlagen",
+        "empty": "Für diesen Antrag wurden keine Unterlagen zugestellt.",
+        "download": "Herunterladen",
+        "loadFailed": "Die Unterlagen konnten nicht geladen werden."
+      },
+      "rejectedNoReason": "Der Genehmiger hat den Antrag abgelehnt.",
+      "rejectedReason": "Begründung: {{reason}}",
+      "awaitingHint": "Genehmigung ausstehend: Die Entscheidung liegt im Posteingang des Genehmigers.",
+      "submitted": "Ihr Visumsantrag wurde zur Genehmigung gesendet.",
+      "loadFailed": "Visumsanträge konnten nicht geladen werden."
+    },
+    "form": {
+      "title": "Neuer Visumsantrag",
+      "description": "Ihr Antrag geht an den festgelegten Genehmiger; nach der Genehmigung werden die Unterlagen Ihrer Akte hinzugefügt.",
+      "process": "Visumsprozess",
+      "processPlaceholder": "Prozess wählen (optional)",
+      "country": "Ländercode",
+      "countryHint": "2-3-stelliger Ländercode, z. B. DE, GB, US.",
+      "visaType": "Visumtyp",
+      "visaTypePlaceholder": "Visumtyp wählen",
+      "travelStart": "Reisebeginn",
+      "travelEnd": "Reiseende",
+      "notes": "Anmerkungen",
+      "notesPlaceholder": "Reisezweck, einladende Organisation usw.",
+      "submit": "Antrag senden",
+      "validation": {
+        "datesRequired": "Reisebeginn und Reiseende sind erforderlich.",
+        "datesOrder": "Das Reiseende darf nicht vor dem Reisebeginn liegen.",
+        "countryFormat": "Der Ländercode muss aus 2-3 Buchstaben bestehen (z. B. DE).",
+        "visaTypeRequired": "Wählen Sie einen Visumtyp."
+      },
+      "genericError": "Der Antrag konnte nicht gesendet werden."
+    },
+    "status": {
+      "pending": "In Vorbereitung",
+      "awaitingApproval": "Genehmigung ausstehend",
+      "approved": "Genehmigt",
+      "rejected": "Abgelehnt",
+      "completed": "Abgeschlossen"
+    },
+    "type": {
+      "tourist": "Touristisch",
+      "business": "Geschäftlich",
+      "work": "Arbeit",
+      "student": "Student",
+      "transit": "Transit"
+    },
+    "settings": {
+      "title": "Visumsdokumentprozesse",
+      "subtitle": "Verwalten Sie den Genehmiger für Visumsanträge, die Prozessdefinitionen und die Vorlagendokumente, die nach der Genehmigung an die Mitarbeitenden zugestellt werden.",
+      "approver": {
+        "title": "Genehmiger",
+        "description": "Jeder Visumsantrag landet im Posteingang dieser Person. Ohne Genehmiger können Mitarbeitende keine Anträge stellen.",
+        "placeholder": "Genehmiger wählen",
+        "notConfigured": "Kein Genehmiger festgelegt; Mitarbeitende können keine Visumsanträge stellen."
+      },
+      "templates": {
+        "title": "Zuzustellende Vorlagendokumente",
+        "description": "Bei Genehmigung eines Antrags wird eine Kopie dieser Dokumente in die Akte der Mitarbeitenden gelegt (z. B. Musterschreiben, Checkliste).",
+        "placeholder": "Vorlagendokumente wählen",
+        "empty": "Keine Dokumente zur Auswahl. Laden Sie zuerst ein Vorlagendokument hoch.",
+        "upload": "Vorlagendokument hochladen",
+        "uploaded": "Dokument hochgeladen und zur Auswahl hinzugefügt.",
+        "uploadFailed": "Das Dokument konnte nicht hochgeladen werden."
+      },
+      "save": "Einstellungen speichern",
+      "saved": "Visumseinstellungen gespeichert.",
+      "processes": {
+        "title": "Visumsprozesse",
+        "subtitle": "Prozessvorlagen, die Mitarbeitende im Antragsformular wählen können.",
+        "add": "Prozess hinzufügen",
+        "addTitle": "Neuer Visumsprozess",
+        "editTitle": "Visumsprozess bearbeiten",
+        "empty": "Keine Prozesse definiert.",
+        "columns": {
+          "name": "Name",
+          "country": "Land",
+          "status": "Status"
+        },
+        "name": "Prozessname",
+        "country": "Ländercode (optional)",
+        "countryHint": "Leer lassen, wenn der Prozess nicht an ein einzelnes Land gebunden ist (z. B. Schengen).",
+        "active": "Aktiv",
+        "inactive": "Inaktiv",
+        "deactivate": "Deaktivieren",
+        "reactivate": "Reaktivieren",
+        "saved": "Prozess gespeichert.",
+        "statusSaved": "Prozessstatus aktualisiert.",
+        "duplicate": "Ein Prozess mit diesem Namen existiert bereits.",
+        "countryInvalid": "Der Ländercode muss aus 2-3 Buchstaben bestehen."
+      },
+      "genericError": "Der Vorgang konnte nicht abgeschlossen werden.",
+      "loadFailed": "Visumseinstellungen konnten nicht geladen werden."
+    }
   }
 }

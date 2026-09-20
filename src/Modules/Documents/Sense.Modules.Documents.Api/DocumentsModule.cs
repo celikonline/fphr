@@ -36,11 +36,10 @@ public sealed class DocumentsModule : IModule
         // Register MediatR handlers for this module
         services.AddModuleHandlers(DocumentsDbContext.SchemaName, typeof(Application.DocumentsErrors).Assembly, typeof(DocumentsDbContext).Assembly);
 
-        // Register repositories
-        services.AddScoped<IDocumentRepository, DocumentRepository>();
+        // Shared company files (senseik-028)
         services.AddScoped<ISharedCompanyFileRepository, SharedCompanyFileRepository>();
 
-        // Document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
+        // Document/visa/document type catalog + requirement tracker repos, provisioning/materialization services, unit of work
         services.AddDocumentsCoreServices();
 
         // Reporting catalog provider (API host only, mirrors EmployeeModule): it takes IStringLocalizer<SharedResource>,

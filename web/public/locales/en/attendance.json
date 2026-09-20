@@ -1,4 +1,39 @@
 {
+  "selfCheckIn": {
+    "title": "Self check-in",
+    "subtitle": "Record your check-in/check-out by scanning a QR code or sharing your location.",
+    "currentStatus": "Current status",
+    "statusInside": "Checked in",
+    "statusOutside": "Checked out",
+    "todayCheckIn": "Checked in today: {{time}}",
+    "todayCheckOut": "checked out: {{time}}",
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "qrTitle": "By QR code",
+    "qrHint": "Scan the QR code posted at the location's entrance (mobile), or type the code here.",
+    "qrCodePlaceholder": "e.g. AB12CD34",
+    "gpsTitle": "By my location",
+    "gpsHint": "Your device's GPS location is sent; if the location has a geofence, the distance is validated.",
+    "gpsButton": "{{action}} with my location",
+    "geolocationUnsupported": "Your browser does not support sharing your location.",
+    "geolocationDenied": "Location permission was denied or unavailable. Please allow it in your browser settings.",
+    "checkedInAt": "Checked in at {{time}}.",
+    "checkedOutAt": "Checked out at {{time}}.",
+    "lastCheckIn": "Last check-in: {{time}} · {{location}}",
+    "lastCheckOut": "Last check-out: {{time}} · {{location}}",
+    "unknownLocation": "no location info",
+    "qrGeofenceHint": "If the location has a geofence, your position is validated too (the browser asks for location access)."
+  },
+  "liveBoard": {
+    "title": "Live in/out board",
+    "subtitle": "Who's currently in and who isn't — refreshes every 30 seconds.",
+    "insideCount": "{{count}} / {{total}} inside",
+    "employee": "Employee",
+    "status": "Status",
+    "inside": "Inside",
+    "outside": "Outside",
+    "empty": "No employees to show."
+  },
   "empty": "No records for this period.",
   "genericError": "Something went wrong.",
   "previousMonth": "Previous month",
@@ -33,7 +68,8 @@
     "lateLeave": "Late leave",
     "overwork": "Overwork",
     "underwork": "Underwork",
-    "unplannedWork": "Unplanned work"
+    "unplannedWork": "Unplanned work",
+    "workedWhileOnLeave": "Worked while on leave"
   },
   "resolutionState": {
     "unresolved": "Unresolved",
@@ -106,6 +142,47 @@
       "assigned": "Assigned employees"
     },
     "workingDayCount": "{{count}} days"
+  },
+  "monthlyTimesheet": {
+    "title": "Monthly timesheet",
+    "subtitle": "Month totals, leave days and month-end approval status for the employees you can view.",
+    "empty": "No employees to show for this month.",
+    "totals": "Total",
+    "pendingCount": "{{pending}} of {{total}} employees awaiting approval",
+    "col": {
+      "workedDays": "Days worked",
+      "workedHours": "Hours worked",
+      "missingDays": "Missing days",
+      "overtimeHours": "Overtime (hours)",
+      "paidLeaveDays": "Paid leave (days)",
+      "unpaidLeaveDays": "Unpaid leave (days)",
+      "sickLeaveDays": "Sick leave (days)",
+      "anomalies": "Discrepancies",
+      "status": "Status",
+      "action": "Action"
+    },
+    "noAnomalies": "No issues",
+    "anomalyDays": "{{count}} days with discrepancies",
+    "toggleDays": "Toggle daily detail for {{name}}",
+    "daysUnavailable": "Daily detail could not be loaded.",
+    "hourUnit": "h",
+    "approvedState": "Approved",
+    "approvedAt": "Approved on {{date}}",
+    "pendingState": "Awaiting approval",
+    "locked": "Payroll period is locked",
+    "approve": "Approve",
+    "reapprove": "Re-approve",
+    "approveRow": "Approve {{name}}'s timesheet",
+    "approved": "Timesheet approved.",
+    "readOnly": "You can view this screen only; you do not have permission to approve timesheets.",
+    "forbidden": "You do not have permission for this action, or the employee is outside your data scope.",
+    "approveAll": {
+      "button": "Approve all",
+      "confirmTitle": "Approve all timesheets",
+      "confirmMessage": "The timesheets of {{count}} employees awaiting approval for {{month}} will be approved. The worked-while-on-leave check is re-run before approval. Continue?",
+      "done": "{{count}} timesheets approved.",
+      "nothing": "There were no timesheets to approve."
+    }
   },
   "teamTimesheet": {
     "title": "Team timesheet",

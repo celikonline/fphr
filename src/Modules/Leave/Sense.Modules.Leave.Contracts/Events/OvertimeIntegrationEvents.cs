@@ -22,3 +22,16 @@ public sealed record OvertimeConvertedToTimeOff(
 /// <summary>Published when a written overtime consent is recorded (11.3.9 "Leave.OvertimeConsentRecorded").</summary>
 public sealed record OvertimeConsentRecorded(Guid TenantId, Guid ConsentId, Guid EmployeeId, DateOnly GivenAt, bool CoversNightWork)
     : IntegrationEvent(TenantId);
+
+/// <summary>
+/// Published when approved overtime was explicitly converted to cash pay (kart senseik-030). No ledger row - Payroll is
+/// expected to consume this the same way it consumes <c>LeaveCancelled</c> today (see
+/// <c>Sense.Modules.Payroll.Application.Events.PayslipDirtyFlagHandlers</c>, whose doc comment already names this event
+/// as "deferred, to be wired when Leave adds it"): flag the Open payroll period covering <paramref name="WorkDate"/>
+/// dirty so the next calculation re-reads <c>Leave.Contracts.IOvertimePayrollReader</c> for the actual cash amount
+/// (Leave does not compute money - no salary access, Modules_TalkOnlyThroughContracts). This is a recalculation
+/// trigger only; it deliberately does not carry an amount.
+/// </summary>
+public sealed record OvertimeConvertedToPay(
+    Guid TenantId, Guid OvertimeRequestId, Guid ConversionId, Guid EmployeeId, DateOnly WorkDate, string MinutesBasis, int BasisMinutes, decimal RateMultiplier)
+    : IntegrationEvent(TenantId);

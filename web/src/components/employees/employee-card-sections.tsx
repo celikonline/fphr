@@ -201,6 +201,11 @@ export function GeneralSection({ employee }: SectionProps) {
   const [contractType, setContractType] = useState<ContractType | null>(employee.contractType);
   const [employmentType, setEmploymentType] = useState<EmploymentType | null>(employee.employmentType);
   const [leaveAccrualStartDate, setLeaveAccrualStartDate] = useState(employee.leaveAccrualStartDate ?? "");
+  // Tracks whether the user actually touched the picker in this edit session - as opposed to it merely showing the
+  // employee's current value. Needed so an unrelated field edit (e.g. hireDate) doesn't resend the displayed value
+  // as an explicit override, which would silently defeat the backend's "follow hireDate automatically" default
+  // (senseik-044): only a real touch may set an explicit value or the temizle (X) signal.
+  const [leaveAccrualStartDateTouched, setLeaveAccrualStartDateTouched] = useState(false);
   const mutation = useEmployeeUpdate(employee, () => setEditing(false), (error) => setErrors(serverFieldErrors(error)));
 
   function startEdit() {
@@ -209,6 +214,7 @@ export function GeneralSection({ employee }: SectionProps) {
     setContractType(employee.contractType);
     setEmploymentType(employee.employmentType);
     setLeaveAccrualStartDate(employee.leaveAccrualStartDate ?? "");
+    setLeaveAccrualStartDateTouched(false);
     setEditing(true);
   }
 
@@ -216,8 +222,16 @@ export function GeneralSection({ employee }: SectionProps) {
     event.preventDefault();
     const found = validateGeneral(values, t);
     setErrors(found);
-    if (Object.keys(found).length === 0)
-      mutation.mutate({ ...generalValuesToInput(values), contractType, employmentType, leaveAccrualStartDate: leaveAccrualStartDate || null });
+    if (Object.keys(found).length === 0) {
+      // Untouched -> omit both (backend keeps following hireDate); touched+empty -> explicit clear; touched+set ->
+      // explicit value. Never resend the pre-filled display value untouched (see state comment above).
+      const accrualOverrides = leaveAccrualStartDateTouched
+        ? leaveAccrualStartDate
+          ? { leaveAccrualStartDate }
+          : { clearLeaveAccrualStartDate: true }
+        : {};
+      mutation.mutate({ ...generalValuesToInput(values), contractType, employmentType, ...accrualOverrides });
+    }
   }
 
   const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
@@ -268,7 +282,10 @@ export function GeneralSection({ employee }: SectionProps) {
                   value={leaveAccrualStartDate}
                   disabled={mutation.isPending}
                   clearable
-                  onChange={setLeaveAccrualStartDate}
+                  onChange={(value) => {
+                    setLeaveAccrualStartDate(value);
+                    setLeaveAccrualStartDateTouched(true);
+                  }}
                 />
               </Input.Wrapper>
             </div>

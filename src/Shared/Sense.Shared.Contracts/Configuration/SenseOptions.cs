@@ -204,6 +204,9 @@ public sealed class RateLimitingOptions
 
     /// <summary>Anonim yazma uçları (ör. POST başvuru, şifre sıfırlama) için daha sıkı politika.</summary>
     public RateLimitPolicyOptions PublicAnonymousWrite { get; set; } = new() { PermitLimit = RateLimitingDefaults.PublicAnonymousWritePermitLimit };
+
+    /// <summary>Kimlik doğrulama uçları (giriş, e-posta onay linki ile karar) için parola/token denemesine karşı politika.</summary>
+    public RateLimitPolicyOptions AuthAttempt { get; set; } = new() { PermitLimit = RateLimitingDefaults.AuthAttemptPermitLimit };
 }
 
 public sealed class RateLimitPolicyOptions
@@ -219,6 +222,7 @@ public static class RateLimitingDefaults
 {
     public const int PublicAnonymousPermitLimit = 30;
     public const int PublicAnonymousWritePermitLimit = 5;
+    public const int AuthAttemptPermitLimit = 10;
     public const int WindowSeconds = 60;
 }
 
@@ -227,4 +231,5 @@ public static class RateLimitPolicyNames
 {
     public const string PublicAnonymous = "public-anonymous";
     public const string PublicAnonymousWrite = "public-anonymous-write";
+    public const string AuthAttempt = "auth-attempt";
 }

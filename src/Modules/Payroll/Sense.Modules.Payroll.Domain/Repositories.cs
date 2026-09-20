@@ -1,6 +1,8 @@
+using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
 using Sense.Modules.Payroll.Domain.Profiles;
+using Sense.Modules.Payroll.Domain.Unions;
 
 namespace Sense.Modules.Payroll.Domain;
 
@@ -71,4 +73,50 @@ public interface IEmployeePayrollProfileRepository
 
     /// <summary>The version in effect on <paramref name="asOf"/>, if any.</summary>
     Task<EmployeePayrollProfile?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Every profile version active tenant-wide on <paramref name="asOf"/> (senseik-010/F-03: the Organizasyon/Şirket
+    /// profil ekranı's read-only "aktif teşvik türleri" summary aggregates across all employees, not just one).
+    /// </summary>
+    Task<IReadOnlyList<EmployeePayrollProfile>> ListActiveAsOfAsync(DateOnly asOf, CancellationToken cancellationToken = default);
+}
+
+/// <summary>senseik-019 2c: icra/nafaka kesinti emirleri.</summary>
+public interface IGarnishmentOrderRepository
+{
+    void Add(GarnishmentOrder order);
+
+    Task<GarnishmentOrder?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Açık (kapanmamış) emirler - PayrollPeriodCalculationService'in her dönem uyguladığı liste, oluşturulma
+    /// sırasına göre (FIFO, GarnishmentCalculator'ın icra havuzu paylaşımı için).</summary>
+    Task<IReadOnlyList<GarnishmentOrder>> ListActiveByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Çalışanın kapalılar dahil tüm emirleri, en yeni önce ("Kesintiler" ekranı).</summary>
+    Task<IReadOnlyList<GarnishmentOrder>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+public interface IUnionRepository
+{
+    void Add(Union union);
+
+    Task<Union?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Union>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+public interface IEmployeeUnionMembershipRepository
+{
+    void Add(EmployeeUnionMembership membership);
+
+    void Remove(EmployeeUnionMembership membership);
+
+    Task<EmployeeUnionMembership?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every membership record of the employee, newest MembershipDate first.</summary>
+    Task<IReadOnlyList<EmployeeUnionMembership>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>The membership in effect on <paramref name="asOf"/> (MembershipDate ≤ asOf ≤ EndDate/open), if any -
+    /// used by <c>PayrollPeriodCalculationService</c> to resolve the period's dues via <c>UnionDuesCalculator</c>.</summary>
+    Task<EmployeeUnionMembership?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
 }

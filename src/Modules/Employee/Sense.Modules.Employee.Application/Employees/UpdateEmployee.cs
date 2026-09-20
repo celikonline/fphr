@@ -22,7 +22,16 @@ using EmployeeEntity = Sense.Modules.Employee.Domain.Employees.Employee;
 
 namespace Sense.Modules.Employee.Application.Employees;
 
-/// <summary>Updates an employee record (same body as create); out-of-scope targets return 404 (IScopedRequest).</summary>
+/// <summary>
+/// Updates an employee record (same body as create); out-of-scope targets return 404 (IScopedRequest).
+/// <para>
+/// senseik-058: <see cref="SicilNumarasi"/>, <see cref="Nationality"/>, <see cref="ForeignIdNumber"/>,
+/// <see cref="PassportNumber"/> and <see cref="SgkOccupationCode"/> are "keep when absent" fields: a null value means the
+/// client did not send it (older web build, mobile, integrations) and the stored value is preserved - it is never wiped
+/// (<see cref="ToInfo(EmployeeEntity)"/>). An explicit clear is an empty/whitespace string for the text fields (the domain
+/// normalizes it to null); <see cref="Nationality"/> is never empty, so it can only be changed, not cleared.
+/// </para>
+/// </summary>
 [RequiresPermission(EmployeePermissions.EmployeesUpdateKey)]
 public sealed record UpdateEmployeeCommand(
     Guid Id,
@@ -51,14 +60,40 @@ public sealed record UpdateEmployeeCommand(
     string? PostalCode = null,
     ContractType? ContractType = null,
     EmploymentType? EmploymentType = null,
-    DateOnly? LeaveAccrualStartDate = null) : ICommand<EmployeeDetailDto>, IScopedRequest
+    DateOnly? LeaveAccrualStartDate = null,
+    bool ClearLeaveAccrualStartDate = false,
+    string? SicilNumarasi = null,
+    Nationality? Nationality = null,
+    string? ForeignIdNumber = null,
+    string? PassportNumber = null,
+    string? SgkOccupationCode = null) : ICommand<EmployeeDetailDto>, IScopedRequest
 {
     public Guid? TargetEmployeeId => Id;
 
+    /// <summary>True when the client sent a Nationality (otherwise the stored one is kept).</summary>
+    public bool NationalityProvided => Nationality is not null;
+
+    /// <summary>
+    /// What the request itself says (validation only - the stored aggregate is not known there): an unsent
+    /// <see cref="Nationality"/> shows up as the domain default, so callers gate the nationality-conditioned rules on
+    /// <see cref="NationalityProvided"/>.
+    /// </summary>
     public EmployeeInfo ToInfo() => new(
         FirstName, LastName, NationalId, WorkEmail, PersonalEmail, WorkPhone, HireDate, BirthDate,
         Gender, MaritalStatus, ChildCount, EducationStatus, HighestEducationLevel, MilitaryStatus, DisabilityDegree, BloodType,
-        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate);
+        MobilePhone, HomePhone, AddressLine, City, PostalCode, ContractType, EmploymentType, LeaveAccrualStartDate,
+        SicilNumarasi, Nationality ?? Domain.Employees.Nationality.Turkish, ForeignIdNumber, PassportNumber, SgkOccupationCode,
+        ClearLeaveAccrualStartDate);
+
+    /// <summary>The effective update: request values, with the "keep when absent" fields taken from <paramref name="existing"/> when not sent.</summary>
+    public EmployeeInfo ToInfo(EmployeeEntity existing) => ToInfo() with
+    {
+        SicilNumarasi = SicilNumarasi ?? existing.SicilNumarasi,
+        Nationality = Nationality ?? existing.Nationality,
+        ForeignIdNumber = ForeignIdNumber ?? existing.ForeignIdNumber,
+        PassportNumber = PassportNumber ?? existing.PassportNumber,
+        SgkOccupationCode = SgkOccupationCode ?? existing.SgkOccupationCode,
+    };
 }
 
 public sealed class UpdateEmployeeValidator : AbstractValidator<UpdateEmployeeCommand>
@@ -66,7 +101,7 @@ public sealed class UpdateEmployeeValidator : AbstractValidator<UpdateEmployeeCo
     public UpdateEmployeeValidator(EmployeeSensitiveAccess sensitiveAccess)
     {
         RuleFor(x => x.Id).NotEmpty();
-        EmployeeInfoRules.Apply(this, x => x.ToInfo(), sensitiveAccess);
+        EmployeeInfoRules.Apply(this, x => x.ToInfo(), sensitiveAccess, x => x.NationalityProvided);
     }
 }
 
@@ -89,7 +124,7 @@ public sealed class UpdateEmployeeHandler(
         }
 
         var employee = found.Value;
-        var info = command.ToInfo();
+        var info = command.ToInfo(employee);
         if (!await sensitiveAccess.CanViewAsync(cancellationToken).ConfigureAwait(false))
         {
             info = EmployeeSensitiveAccess.PreserveSensitiveFields(info, employee);
@@ -106,6 +141,8 @@ public sealed class UpdateEmployeeHandler(
         var placementChanged = orgUnitChanged || managerChanged || command.EmploymentType != employee.EmploymentType;
         var previousBirthDate = employee.BirthDate;
         var previousDisabilityDegree = employee.DisabilityDegree;
+        var previousHireDate = employee.HireDate;
+        var previousAccrualStart = employee.LeaveAccrualStartDate ?? employee.HireDate;
 
         // Unit/manager/employment type now live on the career timeline: materialize the initial record first (so a
         // hire-date correction can realign it), then route the change through the aggregate's career rules.
@@ -147,6 +184,13 @@ public sealed class UpdateEmployeeHandler(
         if (updated.Value && employee.HireDate is { } hireDate)
         {
             outbox.Enqueue(new Contracts.Events.EmployeeHired(tenant.TenantId, employee.Id, hireDate, employee.LeaveAccrualStartDate ?? hireDate) { ActorUserId = currentUser.UserId });
+        }
+        else if (employee.HireDate is { } currentHireDate &&
+                 (currentHireDate != previousHireDate || (employee.LeaveAccrualStartDate ?? currentHireDate) != previousAccrualStart))
+        {
+            // Already hired: EmployeeHired never fires again, so Leave needs the corrected dates explicitly (senseik-044, C-02).
+            outbox.Enqueue(new Contracts.Events.EmployeeEmploymentDatesChanged(
+                tenant.TenantId, employee.Id, currentHireDate, employee.LeaveAccrualStartDate ?? currentHireDate) { ActorUserId = currentUser.UserId });
         }
 
         if (employee.BirthDate != previousBirthDate || employee.DisabilityDegree != previousDisabilityDegree)

@@ -132,7 +132,7 @@ public sealed class CancelApprovalRequestHandler(IApprovalRequestRepository requ
 /// <summary>Approves/rejects a pending task the caller is the assignee of (directly, or via a matching fallback role queue).</summary>
 [RequiresPermission("workflow.inbox.decide")]
 public sealed record DecideApprovalTaskCommand(
-    Guid TaskId, Guid DecidingEmployeeId, ApprovalOutcome Outcome, string? Comment, ApprovalChannel Channel, string? IpAddress, string? UserAgent) : ICommand;
+    Guid TaskId, Guid DecidingEmployeeId, ApprovalOutcome? Outcome, string? Comment, ApprovalChannel Channel, string? IpAddress, string? UserAgent) : ICommand;
 
 public sealed class DecideApprovalTaskValidator : AbstractValidator<DecideApprovalTaskCommand>
 {
@@ -140,6 +140,7 @@ public sealed class DecideApprovalTaskValidator : AbstractValidator<DecideApprov
     {
         RuleFor(x => x.TaskId).NotEmpty();
         RuleFor(x => x.DecidingEmployeeId).NotEmpty();
+        RuleFor(x => x.Outcome).NotNull().IsInEnum();
         RuleFor(x => x.Comment).MaximumLength(WorkflowLimits.CommentMaxLength);
     }
 }
@@ -171,7 +172,7 @@ public sealed class DecideApprovalTaskHandler(
         }
 
         var decided = request.Decide(
-            task.StepNumber, command.DecidingEmployeeId, command.Outcome, command.Comment, wasOverride: false,
+            task.StepNumber, command.DecidingEmployeeId, command.Outcome!.Value, command.Comment, wasOverride: false,
             command.Channel, command.IpAddress, command.UserAgent, clock.GetUtcNow().UtcDateTime);
         if (decided.IsFailure)
         {
@@ -187,7 +188,7 @@ public sealed class DecideApprovalTaskHandler(
 /// <summary>Decides a pending task on someone else's behalf (Admin override) - skips the assignee/fallback-role check DecideApprovalTaskCommand enforces.</summary>
 [RequiresPermission("workflow.request.override")]
 public sealed record OverrideDecideApprovalTaskCommand(
-    Guid TaskId, Guid DecidingEmployeeId, ApprovalOutcome Outcome, string? Comment, ApprovalChannel Channel, string? IpAddress, string? UserAgent) : ICommand;
+    Guid TaskId, Guid DecidingEmployeeId, ApprovalOutcome? Outcome, string? Comment, ApprovalChannel Channel, string? IpAddress, string? UserAgent) : ICommand;
 
 public sealed class OverrideDecideApprovalTaskValidator : AbstractValidator<OverrideDecideApprovalTaskCommand>
 {
@@ -195,6 +196,7 @@ public sealed class OverrideDecideApprovalTaskValidator : AbstractValidator<Over
     {
         RuleFor(x => x.TaskId).NotEmpty();
         RuleFor(x => x.DecidingEmployeeId).NotEmpty();
+        RuleFor(x => x.Outcome).NotNull().IsInEnum();
         RuleFor(x => x.Comment).MaximumLength(WorkflowLimits.CommentMaxLength);
     }
 }
@@ -216,8 +218,14 @@ public sealed class OverrideDecideApprovalTaskHandler(
         var request = loaded.Value;
         var task = request.Tasks.Single(t => t.Id == command.TaskId);
 
+        // Override, atanan kontrolünü atlar ama kimse kendi talebini onaylayamaz (self-approval).
+        if (request.RequesterEmployeeId == command.DecidingEmployeeId)
+        {
+            return Error.Rule(WorkflowErrors.SelfApprovalNotAllowed);
+        }
+
         var decided = request.Decide(
-            task.StepNumber, command.DecidingEmployeeId, command.Outcome, command.Comment, wasOverride: true,
+            task.StepNumber, command.DecidingEmployeeId, command.Outcome!.Value, command.Comment, wasOverride: true,
             command.Channel, command.IpAddress, command.UserAgent, clock.GetUtcNow().UtcDateTime);
         if (decided.IsFailure)
         {
@@ -231,13 +239,14 @@ public sealed class OverrideDecideApprovalTaskHandler(
 }
 
 /// <summary>Decides a task via the single-use link in the "you have a pending approval" email. Public, unauthenticated.</summary>
-public sealed record DecideByEmailTokenCommand(string Token, ApprovalOutcome Outcome, string? Comment, string? IpAddress, string? UserAgent) : ICommand;
+public sealed record DecideByEmailTokenCommand(string Token, ApprovalOutcome? Outcome, string? Comment, string? IpAddress, string? UserAgent) : ICommand;
 
 public sealed class DecideByEmailTokenValidator : AbstractValidator<DecideByEmailTokenCommand>
 {
     public DecideByEmailTokenValidator()
     {
         RuleFor(x => x.Token).NotEmpty();
+        RuleFor(x => x.Outcome).NotNull().IsInEnum();
         RuleFor(x => x.Comment).MaximumLength(WorkflowLimits.CommentMaxLength);
     }
 }
@@ -289,7 +298,7 @@ public sealed class DecideByEmailTokenHandler(
         }
 
         var decided = request.Decide(
-            task.StepNumber, decidingEmployeeId, command.Outcome, command.Comment, wasOverride: false,
+            task.StepNumber, decidingEmployeeId, command.Outcome!.Value, command.Comment, wasOverride: false,
             ApprovalChannel.Email, command.IpAddress, command.UserAgent, now);
         if (decided.IsFailure)
         {

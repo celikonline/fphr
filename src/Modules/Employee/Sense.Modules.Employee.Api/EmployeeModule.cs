@@ -16,10 +16,12 @@ using Sense.Modules.Employee.Domain.CustomFields;
 using Sense.Modules.Employee.Domain.Employees;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Employee.Api;
 
@@ -39,7 +41,13 @@ public sealed class EmployeeModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        // senseik-049: Identity dışına genişletilen denetim izi - IdentityModule'deki IdentityAuditLogInterceptor
+        // deseninin aynısı, paylaşımlı AuditLogInterceptor ile (bkz. Sense.Shared.Infrastructure.Persistence.Audit).
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<EmployeeDbContext>(
+            configuration, EmployeeDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<EmployeeDbContext>>();
 
         // Handlers/validators live in the Application assembly (EmployeePermissions is in Contracts, so it must not be the scan anchor).
         // Contracts assembly is also required: EmployeeHired/EmployeeSuspended/EmployeeReactivated live there, and
@@ -64,8 +72,12 @@ public sealed class EmployeeModule : IModule
         services.AddScoped<ITerminationReasonRepository, TerminationReasonRepository>();
         services.AddScoped<TerminationReasonProvisioningService>();
 
-        // senseik-006/F-01: one-time SGK exit code backfill (not auto-run - see TerminationReasonCorrectionService's doc comment).
+        // senseik-006/F-01: SGK exit code backfill service (run at API startup by TerminationReasonCorrectionHostedService below).
         services.AddScoped<TerminationReasonCorrectionService>();
+
+        // Runs the correction at API startup for every writable tenant (idempotent; Worker does not load this module).
+        services.AddScoped<TerminationReasonCorrectionSynchronizer>();
+        services.AddHostedService<TerminationReasonCorrectionHostedService>();
         services.AddScoped<JobSecurityEvaluator>();
         services.AddScoped<CollectiveDismissalEvaluator>();
 
@@ -119,6 +131,9 @@ public sealed class EmployeeModule : IModule
         // Cross-module contract consumed by Payroll (severance/notice estimate, senseik-011 F-06); API-only (no
         // Worker consumer), so unlike IEmployeeSalaryLookup/IEmployeeBirthDateLookup it needs no Sense.Worker registration.
         services.AddScoped<IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
+
+        // Cross-module contract consumed by Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi)
+        services.AddScoped<IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 
         // Cross-module contract consumed by Leave (EmployeeHired -> EmployeeLeaveProfile.BirthDate, 4857 md.53/IV
         // yaş istisnası; also read in bulk by LeaveBalanceRecalculationJob's nightly backfill/resync pass)

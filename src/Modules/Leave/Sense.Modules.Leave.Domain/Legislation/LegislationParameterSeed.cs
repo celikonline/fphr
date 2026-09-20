@@ -31,6 +31,11 @@ public static class LegislationParameterSeed
     /// </summary>
     private const string PayrollDraft2026 = "Taslak 2026 bordro parametresi - mali müşavirle doğrulanmalı (11.3.07-bordro.md)";
 
+    /// <summary>2026 asgari ücret (brüt 33.030 TL / net 28.075,50 TL), 01.01.2026 - ÇSGB duyurusu (senseik QA teslim testi bulgu 7 ile doğrulandı).</summary>
+    private const string MinWage2026Source = "2026 asgari ücret, Resmî Gazete (yürürlük 01.01.2026); kaynak: https://www.csgb.gov.tr/Media/gm2fekds/asgari-%C3%BCcret-2026.pdf";
+
+    private const string SeveranceCeilingGenelge = "Hazine ve Maliye Bakanlığı Mali ve Sosyal Haklar Genelgesi (kıdem tazminatı tavanı, 6 ayda bir); kaynak: https://www.csgb.gov.tr/%C4%B1statistikler/calisma-hayati-%C4%B1statistikleri/kidem-tazminati-tavan-miktari/";
+
     public static IReadOnlyList<LegislationParameter> All { get; } =
     [
         P(1, "Leave.Annual.Tier1.Days", 14m, Law4857, null, Md53 + " - 1-5 yıl (5 dahil)"),
@@ -59,9 +64,9 @@ public static class LegislationParameterSeed
         P(24, "Overtime.ConsentRevocationNoticeDays", 30m, Regulation2017, null, "Fazla Çalışma Yönetmeliği md.9 (RG 25.08.2017/30165) - onay 30 gün önceden yazılı bildirimle geri alınır"),
 
         // Payroll (Faz 3 P1) - see PayrollDraft2026 doc comment above.
-        P(25, "Payroll.MinimumWage.Gross", 30000.00m, Payroll2026, null, PayrollDraft2026 + " - aylık brüt asgari ücret"),
-        P(26, "Payroll.Sgk.Floor", 30000.00m, Payroll2026, null, PayrollDraft2026 + " - SGK prim matrahı alt sınırı (asgari ücrete eşit)"),
-        P(27, "Payroll.Sgk.Ceiling", 225000.00m, Payroll2026, null, PayrollDraft2026 + " - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı)"),
+        P(25, "Payroll.MinimumWage.Gross", 33030.00m, Payroll2026, null, MinWage2026Source + " - aylık brüt asgari ücret"),
+        P(26, "Payroll.Sgk.Floor", 33030.00m, Payroll2026, null, "5510 s. Kanun md.82; " + MinWage2026Source + " - SGK prim matrahı alt sınırı (asgari ücrete eşit)"),
+        P(27, "Payroll.Sgk.Ceiling", 247725.00m, Payroll2026, null, "5510 s. Kanun md.82; " + MinWage2026Source + " - SGK prim matrahı üst sınırı (asgari ücretin 7,5 katı = 247.725 TL)"),
         P(28, "Payroll.Sgk.EmployeeRate", 0.14m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işçi hissesi (malullük/yaşlılık/ölüm + genel sağlık) %14"),
         P(29, "Payroll.Unemployment.EmployeeRate", 0.01m, Payroll2026, null, "4447 s. İşsizlik Sigortası Kanunu md.49 - işsizlik sigortası işçi payı %1"),
         P(30, "Payroll.Sgk.EmployerRate", 0.205m, Payroll2026, null, "5510 s. Kanun md.81 - SGK işveren hissesi (indirimsiz) %20,5"),
@@ -71,8 +76,8 @@ public static class LegislationParameterSeed
         P(34, "Payroll.Meal.IncomeTax.DailyExemption", 240.00m, Payroll2026, null, PayrollDraft2026 + " - nakit/yalnız yemek kartı günlük gelir vergisi istisnası"),
         P(35, "Payroll.Meal.Sgk.DailyExemptionRate", 0.2365m, Payroll2026, null, PayrollDraft2026 + " - SGK Genelgesi yaklaşımı: günlük brüt asgari ücretin %23,65'i SGK'dan istisna"),
         PJson(36, "Payroll.IncomeTax.Brackets", Payroll2026, null,
-            """[{"upperBound":158000,"rate":0.15},{"upperBound":330000,"rate":0.20},{"upperBound":1200000,"rate":0.27},{"upperBound":4300000,"rate":0.35},{"upperBound":null,"rate":0.40}]""",
-            PayrollDraft2026 + " - GVK md.103 kümülatif gelir vergisi tarifesi (%15/20/27/35/40)"),
+            """[{"upperBound":190000,"rate":0.15},{"upperBound":400000,"rate":0.20},{"upperBound":1500000,"rate":0.27},{"upperBound":5300000,"rate":0.35},{"upperBound":null,"rate":0.40}]""",
+            "193 s. GVK md.103 - 2026 ücret gelirleri tarifesi (%15/20/27/35/40; 190.000/400.000/1.500.000/5.300.000), 332 Sıra No.lu Gelir Vergisi Genel Tebliği; kaynak: https://www.memurlar.net/haber/1155986/2026-gelir-vergisi-dilimlerini-gosteren-teblig-r-g-de-yayimlandi.html"),
 
         // Employee job-security scope check (Faz 1a E5a, 11.3.03 "İşten ayrılış sihirbazı"): approximated with total
         // active tenant headcount (no iş kolu/business-line grouping in the codebase yet - see JobSecurityEvaluator).
@@ -85,10 +90,20 @@ public static class LegislationParameterSeed
         // Severance/notice estimate (senseik-011, F-06 "İşten ayrılış sihirbazı"): kıdem tazminatı tavanı 6 ayda bir
         // güncellenir (taslak değer - mali müşavirle doğrulanmalı, PayrollDraft2026 ile aynı çekince). İhbar tablosu
         // İş K. m.17'nin kıdem/hafta eşiklerini gün cinsinden kodlar (183/548/1095 gün ~ 6 ay/1,5 yıl/3 yıl).
-        P(40, "Severance.CeilingGross", 55000.00m, Payroll2026, null, PayrollDraft2026 + " - kıdem tazminatı tavanı (bir hizmet yılı için azami brüt tutar, İş K. m.14)"),
+        P(40, "Severance.CeilingGross", 64948.77m, Payroll2026, new DateOnly(2026, 6, 30), SeveranceCeilingGenelge + " - 01.01.2026-30.06.2026 kıdem tazminatı tavanı 64.948,77 TL (bir hizmet yılı için azami brüt tutar, İş K. m.14)"),
+        P(46, "Severance.CeilingGross", 73729.87m, new DateOnly(2026, 7, 1), null, SeveranceCeilingGenelge + " - 01.07.2026-31.12.2026 kıdem tazminatı tavanı 73.729,87 TL"),
         PJson(41, "Notice.WeeksBySeniorityTiers", Payroll2026, null,
             """[{"upperBoundDays":183,"weeks":2},{"upperBoundDays":548,"weeks":4},{"upperBoundDays":1095,"weeks":6},{"upperBoundDays":null,"weeks":8}]""",
             "4857 s. İş Kanunu md.17 - ihbar önel tablosu (6 aya kadar 2 hafta, 6 ay-1,5 yıl 4 hafta, 1,5-3 yıl 6 hafta, 3 yıldan fazla 8 hafta)"),
+
+        // senseik-036 (izin türü seed düzeltme paketi): süt izni saati (4857 md.74/son; 7578 s.K. bu hükmü değiştirmedi).
+        P(42, "Leave.Breastfeeding.HoursPerDay", 1.5m, Law4857, null, Md74 + "/son - 1 yaşından küçük çocuk için günde toplam süt izni (saat)"),
+
+        // Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi) - taslak aylık tutarlar,
+        // her yıl GİB tarafından güncellenir; PayrollDraft2026 doc comment'teki gibi mali müşavirle doğrulanmalı.
+        P(43, "Payroll.Disability.MonthlyTaxReduction.Degree1", 6900.00m, Payroll2026, null, "193 s. GVK md.31 - I. derece (en ağır) engellilik indirimi, " + PayrollDraft2026),
+        P(44, "Payroll.Disability.MonthlyTaxReduction.Degree2", 4000.00m, Payroll2026, null, "193 s. GVK md.31 - II. derece engellilik indirimi, " + PayrollDraft2026),
+        P(45, "Payroll.Disability.MonthlyTaxReduction.Degree3", 1700.00m, Payroll2026, null, "193 s. GVK md.31 - III. derece engellilik indirimi, " + PayrollDraft2026),
     ];
 
     private static LegislationParameter P(int n, string key, decimal value, DateOnly from, DateOnly? to, string source) =>

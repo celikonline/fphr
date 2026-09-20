@@ -30,12 +30,13 @@ public sealed class TrHolidaySeedFileTests
         file.Name.ShouldNotBeNullOrWhiteSpace();
         file.Entries.ShouldNotBeEmpty();
 
-        // The 7 fixed-date national holidays from the roadmap item's spec must be present and recurring.
+        // The 7 fixed-date national holidays from the roadmap item's spec, plus the 28 Ekim Cumhuriyet Bayramı
+        // arifesi half-day added by senseik-036 (2429 s.K. m.2/A) - all fixed Gregorian dates, so recurring.
         string[] expectedRecurringNames =
         [
             "Yılbaşı", "Ulusal Egemenlik ve Çocuk Bayramı", "Emek ve Dayanışma Günü",
             "Atatürk'ü Anma, Gençlik ve Spor Bayramı", "Demokrasi ve Millî Birlik Günü",
-            "Zafer Bayramı", "Cumhuriyet Bayramı",
+            "Zafer Bayramı", "Cumhuriyet Bayramı", "Cumhuriyet Bayramı Arifesi (13.00'ten itibaren yarım gün)",
         ];
         var recurring = file.Entries.Where(e => e.RecurringAnnually).ToList();
         recurring.Select(e => e.Name).ShouldBe(expectedRecurringNames, ignoreOrder: true);
@@ -62,6 +63,40 @@ public sealed class TrHolidaySeedFileTests
                 // not silently treated as permanent data (see HolidayCalendarEntry's class doc comment).
                 entry.Note.ShouldNotBeNullOrWhiteSpace($"Non-recurring entry '{entry.Name}' must document why it needs periodic refresh.");
             }
+        }
+    }
+
+    /// <summary>
+    /// senseik-037: the religious-holiday (non-recurring) entries must be seeded at least 5 years ahead of the
+    /// current one, so IHolidayCalendarLookup.GetLastDefinedReligiousHolidayYearAsync's "calendar needs a refresh"
+    /// warning (see LeaveRequestPreview.BuildHolidayCalendarCoverageWarningAsync) does not fire for ordinary
+    /// near-term leave planning. A hardcoded lower bound (2031) is used instead of "today + 5" so this test fails
+    /// loudly, rather than silently drifting green, once that year is actually reached without a refresh.
+    /// </summary>
+    [Fact]
+    public void SeedFile_ReligiousHolidays_AreSeededAtLeastFiveYearsAhead()
+    {
+        var path = FindSeedFilePath();
+        var json = File.ReadAllText(path);
+        var file = JsonSerializer.Deserialize<SeedFile>(json, JsonOptions)!;
+
+        var byYear = file.Entries
+            .Where(e => !e.RecurringAnnually)
+            .GroupBy(e => DateOnly.ParseExact(e.Date!, "yyyy-MM-dd", CultureInfo.InvariantCulture).Year)
+            .ToDictionary(g => g.Key, g => g.Select(e => e.Name).ToList());
+
+        const int minimumLastCoveredYear = 2031;
+        byYear.Keys.Max().ShouldBeGreaterThanOrEqualTo(minimumLastCoveredYear);
+
+        // Every year 2027..2031 must have both bayrams in full (Ramazan: arife + 3 days, Kurban: arife + 4 days) -
+        // not just a gap-tolerant max.
+        for (var year = 2027; year <= minimumLastCoveredYear; year++)
+        {
+            byYear.ShouldContainKey(year, $"Year {year} is missing religious holiday entries.");
+            var names = byYear[year];
+            names.Count(n => n.StartsWith("Ramazan Bayramı", StringComparison.Ordinal)).ShouldBe(4, $"Year {year}: Ramazan Bayramı entries.");
+            names.Count(n => n.StartsWith("Kurban Bayramı", StringComparison.Ordinal)).ShouldBe(5, $"Year {year}: Kurban Bayramı entries.");
+            names.Distinct().Count().ShouldBe(names.Count, $"Year {year} has duplicate holiday entries.");
         }
     }
 

@@ -9,6 +9,13 @@
     <ProjectReference Include="../../../src/Modules/Attendance/Sense.Modules.Attendance.Domain/Sense.Modules.Attendance.Domain.csproj" />
     <ProjectReference Include="../../../src/Modules/Attendance/Sense.Modules.Attendance.Infrastructure/Sense.Modules.Attendance.Infrastructure.csproj" />
     <ProjectReference Include="../../../src/Modules/Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Reporting/Sense.Modules.Reporting.Contracts/Sense.Modules.Reporting.Contracts.csproj" />
+    <!-- İzinli günde çalışma detektörü + ay sonu kapatma raporu (senseik-029) testleri gerçek Postgres üzerinde Leave ile birlikte çalışır. -->
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Application/Sense.Modules.Leave.Application.csproj" />
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Domain/Sense.Modules.Leave.Domain.csproj" />
+    <ProjectReference Include="../../../src/Modules/Leave/Sense.Modules.Leave.Infrastructure/Sense.Modules.Leave.Infrastructure.csproj" />
     <ProjectReference Include="../../../src/Shared/Sense.Shared.Infrastructure/Sense.Shared.Infrastructure.csproj" />
     <ProjectReference Include="../../Sense.Tests.Shared/Sense.Tests.Shared.csproj" />
   </ItemGroup>

@@ -4,6 +4,7 @@ import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
 import { Hourglass } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
+import type { ToggleableModuleKey } from "@/config/modules";
 import type { EmployeeDetail } from "@/services/employees.service";
 import { ASSETS_CARD_TAB_PERMISSIONS, AssetsSection } from "./assets-section";
 import { CareerSection } from "./career-section";
@@ -28,6 +29,8 @@ export interface EmployeeCardTab {
   permission?: string | string[];
   /** Hidden unless this tenant access setting is effective for the user. */
   accessSetting?: AccessSettingKey;
+  /** Hidden when this toggleable module is turned off for the tenant (Ayarlar → Modüller, senseik-057). */
+  module?: ToggleableModuleKey;
   /** Roadmap phase badge ("Faz 1b") for a tab whose module is not built yet. */
   phase?: string;
   component: ComponentType<EmployeeCardTabProps>;
@@ -95,9 +98,9 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     component: PaymentsSection,
   },
   { key: "documents", labelKey: "employees:card.tabs.documents", permission: DOCUMENTS_CARD_TAB_PERMISSIONS, component: DocumentsSection },
-  { key: "assets", labelKey: "employees:card.tabs.assets", permission: ASSETS_CARD_TAB_PERMISSIONS, component: AssetsSection },
-  { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, component: LeaveSection },
-  { key: "overtime", labelKey: "employees:card.tabs.overtime", permission: OVERTIME_CARD_TAB_PERMISSION, component: OvertimeSection },
+  { key: "assets", labelKey: "employees:card.tabs.assets", permission: ASSETS_CARD_TAB_PERMISSIONS, module: "assets", component: AssetsSection },
+  { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, module: "leave", component: LeaveSection },
+  { key: "overtime", labelKey: "employees:card.tabs.overtime", permission: OVERTIME_CARD_TAB_PERMISSION, module: "leave", component: OvertimeSection },
   { key: "other", labelKey: "employees:card.tabs.other", component: tabPlaceholder("other") },
   { key: "account", labelKey: "employees:card.tabs.account", component: AccountSection },
 ];
@@ -106,9 +109,15 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
 export function useVisibleEmployeeCardTabs(): EmployeeCardTab[] {
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const isAccessSettingEnabled = useAuthStore((state) => state.isAccessSettingEnabled);
+  const isModuleEnabled = useAuthStore((state) => state.isModuleEnabled);
 
   const allowed = (permission: EmployeeCardTab["permission"]) =>
     !permission || (Array.isArray(permission) ? permission.some((key) => hasPermission(key)) : hasPermission(permission));
 
-  return EMPLOYEE_CARD_TABS.filter((tab) => allowed(tab.permission) && (!tab.accessSetting || isAccessSettingEnabled(tab.accessSetting)));
+  return EMPLOYEE_CARD_TABS.filter(
+    (tab) =>
+      allowed(tab.permission) &&
+      (!tab.accessSetting || isAccessSettingEnabled(tab.accessSetting)) &&
+      (!tab.module || isModuleEnabled(tab.module)),
+  );
 }

@@ -25,4 +25,10 @@ public sealed record PayrollLegislationSnapshot(
     decimal MealSgkDailyExemptionRate,
     /// <summary>Whether the meal+market card variant gets the same exemption as Cash/MealCardOnly (11.3.07-bordro.md "Meal.MarketCard.ExemptionApplies"; current draft: false, fully taxed).</summary>
     bool MealMarketCardExemptionApplies,
+    /// <summary>GVK md.31 engelli çalışan gelir vergisi matrah indirimi - I. derece (en ağır) aylık tutarı; senseik-019 2a/2b.</summary>
+    decimal DisabilityMonthlyTaxReductionDegree1,
+    /// <summary>GVK md.31 - II. derece aylık tutar.</summary>
+    decimal DisabilityMonthlyTaxReductionDegree2,
+    /// <summary>GVK md.31 - III. derece aylık tutar.</summary>
+    decimal DisabilityMonthlyTaxReductionDegree3,
     DateOnly AsOf);

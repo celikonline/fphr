@@ -4,4 +4,7 @@ namespace Sense.Modules.Assets.Application;
 public static class AssetsErrors
 {
     public const string NoEmployeeForUser = "assets.no_employee_for_user";
+
+    public const string EmployeeNotFound = "assets.employee_not_found";
+    public const string IssuedBeforeHire = "assets.issued_before_hire";
 }

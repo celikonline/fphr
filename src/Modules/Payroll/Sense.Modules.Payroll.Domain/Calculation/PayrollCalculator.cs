@@ -23,9 +23,16 @@ public static class PayrollCalculator
     {
         Guard.Against(input.GrossMonthlySalary <= 0m, "GrossMonthlySalary must be positive.");
         Guard.Positive(input.WorkedDays, nameof(input.WorkedDays));
+        Guard.Against(input.AdditionalTaxableEarnings < 0m, "AdditionalTaxableEarnings cannot be negative.");
+        Guard.Against(input.AdvanceDeductionTotal < 0m, "AdvanceDeductionTotal cannot be negative.");
         if (!Enum.IsDefined(input.MealVariant))
         {
             throw new NotSupportedException($"Meal benefit variant '{input.MealVariant}' is not a known value.");
+        }
+
+        if (input.DisabilityDegree is < 0 or > 3)
+        {
+            throw new NotSupportedException($"DisabilityDegree '{input.DisabilityDegree}' is not a known value (0=yok, 1/2/3. derece).");
         }
 
         var steps = new List<TraceStep>();
@@ -39,12 +46,15 @@ public static class PayrollCalculator
             "workedDays (Attendance eksik gün girdisi yok - tam ay varsayımı, TODO roadmap #23)",
             days, []));
 
-        // EARNINGS
-        var gross = input.GrossMonthlySalary;
+        // EARNINGS (maktu ücret + varsa fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar, senseik-019 2d)
+        // Kıst ücret (işe giriş/çıkış ayı): 30 gün esasıyla orantı; tam ayda 1 (önceki davranış birebir korunur).
+        var proration = input.ProratedPaidDays is { } paidDays and > 0 and < 30 ? paidDays / 30m : 1m;
+        var baseSalary = proration == 1m ? input.GrossMonthlySalary : Round(input.GrossMonthlySalary * proration);
+        var gross = Round(baseSalary + input.AdditionalTaxableEarnings);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Earnings, "payroll.trace.step.earnings",
-            Map(("grossMonthlySalary", gross)),
-            "gross (maktu aylık ücret; değişken kalem yok - FM/ek ödeme P4 kapsamı)",
+            Map(("baseSalary", baseSalary), ("additionalTaxableEarnings", input.AdditionalTaxableEarnings), ("grossTotal", gross)),
+            "maktu aylık ücret + fazla mesai/hafta tatili/resmî tatil gibi ek vergiye tabi kazançlar (varsa)",
             gross, []));
 
         // Meal benefit (11.3.07-bordro.md "Yemek varyant kuralları", worked-day pro-rated):
@@ -82,10 +92,12 @@ public static class PayrollCalculator
         var mealNetAddition = input.MealVariant == MealBenefitVariant.InKind ? 0m : mealTotal;
 
         // SGK_BASE
-        var sgkBase = Math.Clamp(gross + mealSgkExcess, p.SgkFloor, p.SgkCeiling);
+        var sgkFloor = Round(p.SgkFloor * proration);
+        var sgkCeiling = Round(p.SgkCeiling * proration);
+        var sgkBase = Math.Clamp(gross + mealSgkExcess, sgkFloor, sgkCeiling);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.SgkBase, "payroll.trace.step.sgk_base",
-            Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", p.SgkFloor), ("sgkCeiling", p.SgkCeiling)),
+            Map(("gross", gross), ("mealSgkExcess", mealSgkExcess), ("sgkFloor", sgkFloor), ("sgkCeiling", sgkCeiling)),
             "clamp(gross + yemek SGK istisna aşımı, taban, tavan)",
             Round(sgkBase),
             [Ref("Payroll.Sgk.Floor", p.SgkFloor, p), Ref("Payroll.Sgk.Ceiling", p.SgkCeiling, p)]));
@@ -114,12 +126,36 @@ public static class PayrollCalculator
             "gross + yemek GV istisna aşımı - SGK_EMPLOYEE - UNEMP_EMPLOYEE",
             gvBase, []));
 
+        // DISABILITY_REDUCTION (GVK md.31, senseik-019 2b): matrah indirimi, MINWAGE_EXEMPTION_GV'den ÖNCE uygulanır.
+        var disabilityMonthlyReduction = input.DisabilityDegree switch
+        {
+            1 => p.DisabilityMonthlyTaxReductionDegree1,
+            2 => p.DisabilityMonthlyTaxReductionDegree2,
+            3 => p.DisabilityMonthlyTaxReductionDegree3,
+            _ => 0m,
+        };
+        var gvBaseAfterDisability = Math.Max(0m, gvBase - disabilityMonthlyReduction);
+        var appliedDisabilityReduction = Round(gvBase - gvBaseAfterDisability);
+        steps.Add(new TraceStep(
+            order++, PayrollTraceStepCodes.DisabilityReduction, "payroll.trace.step.disability_reduction",
+            new Dictionary<string, string>
+            {
+                ["gvBase"] = Format(gvBase),
+                ["disabilityDegree"] = input.DisabilityDegree.ToString(CultureInfo.InvariantCulture),
+                ["disabilityMonthlyReduction"] = Format(disabilityMonthlyReduction),
+            },
+            "GVK md.31 engelli çalışan gelir vergisi matrah indirimi (varsa derece bazlı aylık tutar), matrah 0'ın altına inmez",
+            appliedDisabilityReduction,
+            disabilityMonthlyReduction > 0m
+                ? [Ref($"Payroll.Disability.MonthlyTaxReduction.Degree{input.DisabilityDegree}", disabilityMonthlyReduction, p)]
+                : []));
+
         // CUMULATIVE_BASE
-        var cumulativeBase = Round(input.PriorCumulativeGvBase + gvBase);
+        var cumulativeBase = Round(input.PriorCumulativeGvBase + gvBaseAfterDisability);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.CumulativeBase, "payroll.trace.step.cumulative_base",
-            Map(("priorCumulativeGvBase", input.PriorCumulativeGvBase), ("gvBase", gvBase)),
-            "önceki aylar kümülatif matrahı + bu ayın GV_BASE",
+            Map(("priorCumulativeGvBase", input.PriorCumulativeGvBase), ("gvBaseAfterDisability", gvBaseAfterDisability)),
+            "önceki aylar kümülatif matrahı + bu ayın (engelli indirimi sonrası) GV_BASE",
             cumulativeBase, []));
 
         // INCOME_TAX (bracket breakdown, cumulative method)
@@ -144,13 +180,14 @@ public static class PayrollCalculator
             segments.Select((s, i) => Ref($"Payroll.IncomeTax.Brackets[{i}]", s.Rate, p)).ToList()));
 
         // MINWAGE_EXEMPTION_GV (derived: minimum wage's own GV base at the first bracket rate - see type doc)
-        var minWageGvBase = Round(p.MinimumWageGross * (1m - p.SgkEmployeeRate - p.UnemploymentEmployeeRate));
+        var minWageGross = Round(p.MinimumWageGross * proration);
+        var minWageGvBase = Round(minWageGross * (1m - p.SgkEmployeeRate - p.UnemploymentEmployeeRate));
         var firstBracketRate = p.IncomeTaxBrackets[0].Rate;
         var minWageExemptionGv = Round(minWageGvBase * firstBracketRate);
         var incomeTaxAfterExemption = Math.Max(0m, incomeTax - minWageExemptionGv);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.MinWageExemptionGv, "payroll.trace.step.minwage_exemption_gv",
-            Map(("minimumWageGross", p.MinimumWageGross), ("minWageGvBase", minWageGvBase), ("firstBracketRate", firstBracketRate), ("incomeTaxBeforeExemption", incomeTax)),
+            Map(("minimumWageGross", minWageGross), ("minWageGvBase", minWageGvBase), ("firstBracketRate", firstBracketRate), ("incomeTaxBeforeExemption", incomeTax)),
             "min(incomeTax, asgari ücret GV matrahı * ilk dilim oranı)",
             Round(incomeTax - incomeTaxAfterExemption),
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p)]));
@@ -164,31 +201,43 @@ public static class PayrollCalculator
             stampTax, [Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
 
         // MINWAGE_EXEMPTION_DV
-        var minWageStampExemption = Round(p.MinimumWageGross * p.StampTaxRate);
+        var minWageStampExemption = Round(minWageGross * p.StampTaxRate);
         var stampTaxAfterExemption = Math.Max(0m, stampTax - minWageStampExemption);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.MinWageExemptionDv, "payroll.trace.step.minwage_exemption_dv",
-            Map(("minimumWageGross", p.MinimumWageGross), ("rate", p.StampTaxRate), ("stampTaxBeforeExemption", stampTax)),
+            Map(("minimumWageGross", minWageGross), ("rate", p.StampTaxRate), ("stampTaxBeforeExemption", stampTax)),
             "min(stampTax, asgari ücret * damga vergisi oranı)",
             Round(stampTax - stampTaxAfterExemption),
             [Ref("Payroll.MinimumWage.Gross", p.MinimumWageGross, p), Ref("Payroll.StampTax.Rate", p.StampTaxRate, p)]));
 
-        // DEDUCTIONS (empty this slice: avans/icra/nafaka/sendika/BES → P3/P5)
+        // NET_BEFORE_DEDUCTIONS (masraf iadesi vergisiz eklenir - TB-7 Expense köprüsü, S-13; SGK/GV/damga matrahlarına
+        // hiç girmez). İİK m.83 icra tavanı bu tutar üzerinden hesaplandığı için DEDUCTIONS'tan önce bulunur.
+        var expenseReimbursement = input.ExpenseReimbursement;
+        var netBeforeDeductions = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement);
+
+        // DEDUCTIONS (senseik-019 2c: icra/nafaka + avans mahsubu; #58: sendika/dayanışma aidatı -
+        // UnionDuesCalculator ile Application katmanında hesaplanıp buraya girdi olarak geliyor, motor DB'ye
+        // bakmıyor, İİK m.83 tavanına tabi değil; BES kesintisi hâlâ kapsam dışı)
+        var garnishmentOrders = input.GarnishmentOrders ?? [];
+        var garnishmentResult = GarnishmentCalculator.Calculate(netBeforeDeductions, garnishmentOrders);
+        var advanceDeduction = Math.Min(Math.Max(0m, netBeforeDeductions - garnishmentResult.TotalDeduction), input.AdvanceDeductionTotal);
+        var unionDues = input.UnionDuesAmount;
+        var deductionsTotal = Round(garnishmentResult.TotalDeduction + advanceDeduction + unionDues);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Deductions, "payroll.trace.step.deductions",
-            new Dictionary<string, string>(),
-            "kesinti kalemi yok (avans/icra/nafaka/sendika/BES - P3/P5 kapsamına bırakıldı)",
-            0m, []));
+            Map(("netBeforeDeductions", netBeforeDeductions), ("garnishmentDeductionTotal", garnishmentResult.TotalDeduction), ("advanceDeductionTotal", advanceDeduction), ("unionDues", unionDues)),
+            "icra/nafaka (İİK m.83, GarnishmentCalculator) + avans mahsubu (kalan nete kadar) + sendika/dayanışma aidatı - BES kapsam dışı (P6+)",
+            deductionsTotal, []));
 
-        // NET (masraf iadesi vergisiz eklenir - TB-7 Expense köprüsü, S-13; SGK/GV/damga matrahlarına hiç girmez)
-        var expenseReimbursement = input.ExpenseReimbursement;
-        var net = Round(gross - sgkEmployee - unempEmployee - incomeTaxAfterExemption - stampTaxAfterExemption + mealNetAddition + expenseReimbursement);
+        // NET
+        var net = Round(netBeforeDeductions - deductionsTotal);
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.Net, "payroll.trace.step.net",
             Map(("gross", gross), ("sgkEmployee", sgkEmployee), ("unempEmployee", unempEmployee),
                 ("incomeTaxAfterExemption", incomeTaxAfterExemption), ("stampTaxAfterExemption", stampTaxAfterExemption),
-                ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement)),
-            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz)",
+                ("mealNetAddition", mealNetAddition), ("expenseReimbursement", expenseReimbursement),
+                ("deductionsTotal", deductionsTotal)),
+            "gross - SGK_EMPLOYEE - UNEMP_EMPLOYEE - INCOME_TAX(istisna sonrası) - STAMP_TAX(istisna sonrası) + nakit ödenen yemek (ayni hariç) + masraf iadesi (vergisiz) - DEDUCTIONS (icra/nafaka/avans/sendika aidatı)",
             net, []));
 
         // EMPLOYER_SGK
@@ -199,12 +248,21 @@ public static class PayrollCalculator
             "sgkBase * SGK işveren oranı",
             employerSgk, [Ref("Payroll.Sgk.EmployerRate", p.SgkEmployerRate, p)]));
 
-        // EMPLOYER_DISCOUNT (TODO: 5-point incentive eligibility not implemented this slice - see PayrollLegislationSnapshot.SgkEmployerDiscountRate)
+        // EMPLOYER_DISCOUNT (senseik-019 2a: 5510 md.81 5 puanlık teşvik, profildeki IncentiveLawCode doluysa uygulanır - bkz. PayrollCalculationInput.IncentiveEligible doc)
+        var employerDiscount = input.IncentiveEligible ? Round(sgkBase * p.SgkEmployerDiscountRate) : 0m;
         steps.Add(new TraceStep(
             order++, PayrollTraceStepCodes.EmployerDiscount, "payroll.trace.step.employer_discount",
-            Map(("sgkBase", sgkBase), ("discountRate", p.SgkEmployerDiscountRate)),
-            "5 puanlık SGK işveren teşviki - uygunluk hesaplanmadı (TODO P2+, teşvik kanunu kodu profil alanı gerekiyor), Output=0",
-            0m, [Ref("Payroll.Sgk.EmployerDiscountRate", p.SgkEmployerDiscountRate, p)]));
+            new Dictionary<string, string>
+            {
+                ["sgkBase"] = Format(sgkBase),
+                ["discountRate"] = Format(p.SgkEmployerDiscountRate),
+                ["incentiveEligible"] = input.IncentiveEligible ? "1" : "0",
+            },
+            input.IncentiveEligible
+                ? "sgkBase * 5 puanlık SGK işveren teşvik oranı"
+                : "teşvike uygun değil (IncentiveLawCode boş) - Output=0",
+            employerDiscount,
+            input.IncentiveEligible ? [Ref("Payroll.Sgk.EmployerDiscountRate", p.SgkEmployerDiscountRate, p)] : []));
 
         // EMPLOYER_UNEMP
         var employerUnemp = Round(sgkBase * p.UnemploymentEmployerRate);
@@ -215,14 +273,14 @@ public static class PayrollCalculator
             employerUnemp, [Ref("Payroll.Unemployment.EmployerRate", p.UnemploymentEmployerRate, p)]));
 
         // EMPLOYER_COST
-        var employerCost = Round(gross + employerSgk - 0m + employerUnemp);
+        var employerCost = Round(gross + employerSgk - employerDiscount + employerUnemp);
         steps.Add(new TraceStep(
             order, PayrollTraceStepCodes.EmployerCost, "payroll.trace.step.employer_cost",
-            Map(("gross", gross), ("employerSgk", employerSgk), ("employerDiscount", 0m), ("employerUnemp", employerUnemp)),
+            Map(("gross", gross), ("employerSgk", employerSgk), ("employerDiscount", employerDiscount), ("employerUnemp", employerUnemp)),
             "gross + EMPLOYER_SGK - EMPLOYER_DISCOUNT + EMPLOYER_UNEMP",
             employerCost, []));
 
-        return new PayrollCalculationResult(steps, Round(gross), net, employerCost);
+        return new PayrollCalculationResult(steps, Round(gross), net, employerCost, garnishmentResult.AppliedAmounts);
     }
 
     private static decimal Round(decimal value) => decimal.Round(value, 2, MidpointRounding.AwayFromZero);

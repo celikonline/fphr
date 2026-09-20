@@ -3,6 +3,7 @@ using System.Text.Json;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Organization.Contracts;
+using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Calculation;
@@ -111,10 +112,18 @@ public sealed class OpenPayrollPeriodValidator : AbstractValidator<OpenPayrollPe
     }
 }
 
-public sealed class OpenPayrollPeriodHandler(ITenantContext tenant, IPayrollPeriodRepository periods) : ICommandHandler<OpenPayrollPeriodCommand, Guid>
+public sealed class OpenPayrollPeriodHandler(ITenantContext tenant, IPayrollPeriodRepository periods, TimeProvider clock) : ICommandHandler<OpenPayrollPeriodCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(OpenPayrollPeriodCommand command, CancellationToken cancellationToken)
     {
+        // Statutory parameters (tax brackets, SGK ceilings) only exist for the seeded years: a period far outside the
+        // window can never be calculated, so refuse it up front (400) instead of failing at run time.
+        var maxYear = clock.GetUtcNow().Year + 1;
+        if (command.Year < PayrollLimits.MinPeriodYear || command.Year > maxYear)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodYearOutOfRange, ("minYear", PayrollLimits.MinPeriodYear), ("maxYear", maxYear));
+        }
+
         if (await periods.FindByYearMonthAsync(command.Year, command.Month, cancellationToken) is not null)
         {
             return Error.Conflict(PayrollDomainErrors.PeriodAlreadyOpen);
@@ -157,8 +166,18 @@ public sealed class RecalculateAllPayslipsHandler(
             return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
         }
 
-        var employeeIds = await employeeDirectory.ListActiveEmployeeIdsAsync(tenant.TenantId, cancellationToken);
-        return await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+        // Active employees hired by period end + those terminated on/after the period start (exit-month payslip).
+        var periodStart = new DateOnly(period.Year, period.Month, 1);
+        var periodEnd = new DateOnly(period.Year, period.Month, DateTime.DaysInMonth(period.Year, period.Month));
+        var employeeIds = await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(tenant.TenantId, periodStart, periodEnd, cancellationToken);
+        try
+        {
+            return await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+        }
+        catch (LegislationParameterMissingException ex)
+        {
+            return LegislationMissingError.From(ex);
+        }
     }
 }
 
@@ -183,7 +202,14 @@ public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository per
             return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
         }
 
-        return await calculation.RecalculateDirtyAsync(period, cancellationToken);
+        try
+        {
+            return await calculation.RecalculateDirtyAsync(period, cancellationToken);
+        }
+        catch (LegislationParameterMissingException ex)
+        {
+            return LegislationMissingError.From(ex);
+        }
     }
 }
 

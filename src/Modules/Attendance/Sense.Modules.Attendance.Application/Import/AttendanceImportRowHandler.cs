@@ -80,20 +80,20 @@ public sealed class AttendanceImportRowHandler(
         var anyChange = false;
         foreach (var plan in plans)
         {
-            var (start, end, minutes, breakMinutes) = await PlannedDayResolver.ResolveAsync(schedules, plan.EmployeeId, plan.Date, cancellationToken).ConfigureAwait(false);
-            var existing = await days.FindByEmployeeAndDateAsync(plan.EmployeeId, plan.Date, cancellationToken).ConfigureAwait(false);
-            if (existing is not null)
+            var wasExisting = await days.FindByEmployeeAndDateAsync(plan.EmployeeId, plan.Date, cancellationToken).ConfigureAwait(false) is not null;
+            var upserted = await AttendanceDayUpsert.UpsertAsync(
+                days, schedules, tenant.TenantId, plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut,
+                AttendanceDaySource.Import, overnight: false, cancellationToken).ConfigureAwait(false);
+            if (upserted.IsFailure)
             {
-                existing.UpdateRecord(plan.CheckIn, plan.CheckOut, start, end, minutes, breakMinutes, AttendanceDaySource.Import);
-                results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Updated, plan.NationalId, existing.Id, []);
-            }
-            else
-            {
-                var day = AttendanceDay.Record(tenant.TenantId, plan.EmployeeId, plan.Date, plan.CheckIn, plan.CheckOut, start, end, minutes, breakMinutes, AttendanceDaySource.Import);
-                days.Add(day);
-                results[plan.RowNumber] = new ImportRowResult(plan.RowNumber, ImportRowOutcome.Inserted, plan.NationalId, day.Id, []);
+                results[plan.RowNumber] = new ImportRowResult(
+                    plan.RowNumber, ImportRowOutcome.Error, plan.NationalId, null,
+                    [new ImportRowError(AttendanceImportColumns.CheckOut, AttendanceImportErrorCodes.CheckOutBeforeCheckIn)]);
+                continue;
             }
 
+            results[plan.RowNumber] = new ImportRowResult(
+                plan.RowNumber, wasExisting ? ImportRowOutcome.Updated : ImportRowOutcome.Inserted, plan.NationalId, upserted.Value.Id, []);
             anyChange = true;
         }
 

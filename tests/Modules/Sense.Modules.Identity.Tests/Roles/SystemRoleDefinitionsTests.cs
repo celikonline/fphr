@@ -18,6 +18,7 @@ public sealed class SystemRoleDefinitionsTests
             "organization.approval_assignments.manage", "billing.invoices.view", "analytics.kpi.view",
             "identity.users.view", "identity.users.manage", "identity.users.invite", "identity.users.suspend",
             "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view",
+            "attendance.timesheet.view", "attendance.timesheet.resolve", "attendance.timesheet.approve",
         }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
@@ -57,6 +58,20 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldContain("employee.directory.view");
         keys.ShouldContain("employee.orgchart.view");
         keys.ShouldNotContain("employee.salary.view");
+    }
+
+    /// <summary>senseik-056: "Aylık Puantaj" Onayla / Tümünü Onayla - Manager approves their own team (Team scope), HR/Admin/Owner
+    /// via wildcards, Timekeeper explicitly not ("approve yok" in the 11.3.06 role mapping), self-service roles never.</summary>
+    [Fact]
+    public void MonthlyTimesheetApprove_GoesToManagerAndHr_ButNotTimekeeperOrSelfService()
+    {
+        Resolve(SystemRoleCodes.Manager).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.HR).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Admin).ShouldContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Timekeeper).ShouldNotContain("attendance.timesheet.approve");
+        Resolve(SystemRoleCodes.Timekeeper).ShouldContain("attendance.timesheet.resolve");
+        Resolve(SystemRoleCodes.Employee).ShouldNotContain("attendance.timesheet.approve");
+        SystemRoleDefinitions.Get(SystemRoleCodes.Manager).Scope.ShouldBe(DataScope.Team);
     }
 
     [Fact]
@@ -109,4 +124,26 @@ public sealed class SystemRoleDefinitionsTests
 
     private static List<string> Resolve(string roleCode) =>
         SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), Catalog).Select(p => p.Permission).ToList();
+
+    /// <summary>QA teslim testi bulgu 12: the employee-facing expense page lists categories when adding a line, so every
+    /// role that owns expense.my.claims must also read (only read) the category catalog.</summary>
+    [Theory]
+    [InlineData(SystemRoleCodes.Employee)]
+    [InlineData(SystemRoleCodes.Intern)]
+    [InlineData(SystemRoleCodes.Manager)]
+    [InlineData(SystemRoleCodes.PayrollSpecialist)]
+    public void ExpenseClaimOwners_CanReadTheCategoryCatalog_ButNotManageIt(string roleCode)
+    {
+        IReadOnlyList<Permission> catalog =
+        [
+            .. new[] { "expense.my.claims", "expense.categories.view", "expense.categories.manage" }
+                .Select(k => new Permission(k, "expense", k, "Test")),
+        ];
+
+        var keys = SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), catalog).Select(p => p.Permission).ToList();
+
+        keys.ShouldContain("expense.my.claims");
+        keys.ShouldContain("expense.categories.view");
+        keys.ShouldNotContain("expense.categories.manage");
+    }
 }

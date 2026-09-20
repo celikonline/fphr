@@ -3,6 +3,9 @@
     "Leave": "Leave",
     "Advance": "Advance",
     "Expense": "Expense",
-    "Overtime": "Overtime"
+    "ExpenseClaim": "Expense",
+    "Overtime": "Overtime",
+    "Requisition": "Job requisition",
+    "VisaDocument": "Visa document"
   }
 }

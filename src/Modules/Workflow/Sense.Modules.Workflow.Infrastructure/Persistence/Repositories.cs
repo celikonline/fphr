@@ -47,8 +47,11 @@ public sealed class ApprovalRequestRepository(WorkflowDbContext context) : IAppr
         Guid employeeId, IReadOnlyCollection<string> fallbackRoleCodes, CancellationToken cancellationToken = default)
     {
         var roleCodes = fallbackRoleCodes.ToList();
+        // A task stays Pending after its request is cancelled (withdrawn/edited) or rejected at an earlier step, so the
+        // request must still be Pending - otherwise the approver sees dead items that fail with RequestNotPending.
         return await context.ApprovalTasks
             .Where(t => t.Status == ApprovalTaskStatus.Pending
+                && context.ApprovalRequests.Any(r => r.Id == t.ApprovalRequestId && r.Status == ApprovalRequestStatus.Pending)
                 && (t.ApproverEmployeeId == employeeId || (t.FallbackRoleCode != null && roleCodes.Contains(t.FallbackRoleCode))))
             .ToListAsync(cancellationToken);
     }

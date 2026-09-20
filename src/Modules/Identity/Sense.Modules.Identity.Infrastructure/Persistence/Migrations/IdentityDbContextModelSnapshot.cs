@@ -990,6 +990,26 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                                 .HasConstraintName("fk_tenants_tenants_id");
                         });
 
+                    b.OwnsOne("Sense.Modules.Identity.Domain.Tenants.TenantModuleSettings", "ModuleSettings", b1 =>
+                        {
+                            b1.Property<Guid>("TenantId");
+
+                            b1.PrimitiveCollection<string>("DisabledModules")
+                                .IsRequired();
+
+                            b1.HasKey("TenantId");
+
+                            b1.ToTable("tenants", "identity");
+
+                            b1
+                                .ToJson("module_settings")
+                                .HasColumnType("jsonb");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TenantId")
+                                .HasConstraintName("fk_tenants_tenants_id");
+                        });
+
                     b.OwnsOne("Sense.Modules.Identity.Domain.Tenants.TenantSecurityPolicy", "SecurityPolicy", b1 =>
                         {
                             b1.Property<Guid>("TenantId");
@@ -1011,6 +1031,9 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("AccessSettings")
+                        .IsRequired();
+
+                    b.Navigation("ModuleSettings")
                         .IsRequired();
 
                     b.Navigation("SecurityPolicy")

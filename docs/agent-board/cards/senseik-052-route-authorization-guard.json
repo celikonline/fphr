@@ -2,9 +2,9 @@
   "id": "senseik-052",
   "title": "Yetkisiz sayfa engellenmiyor (boş/bozuk gösteriliyor) + sol menü rol bazında filtrelenmiyor",
   "owner": "pc-a",
-  "state": "backlog",
+  "state": "merged",
   "branch": "a/route-authorization-guard",
-  "worktree": ".claude/worktrees/route-guard",
+  "worktree": ".claude/worktrees/agent-a7f444d3e057a9d25",
   "acceptance": [
     "Bir kullanıcı erişim yetkisi olmayan bir rotaya (örn. /app/settings/system/users-roles) gittiğinde açık bir 403/'Bu sayfaya erişim yetkiniz yok' ekranı görüyor — boş tablo/bozuk görünüm yerine",
     "Sol menü, kullanıcının rolüne göre filtrelenmiş öğeleri gösteriyor (yetkisi olmayan menü başlıkları hiç görünmüyor) — mevcut ekran-bazlı görünürlük mantığı zaten var, menüye de uygulanıyor",

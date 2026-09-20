@@ -64,6 +64,12 @@ public interface IPermissionCacheInvalidator
     Task InvalidateTenantAsync(Guid tenantId, CancellationToken ct);
 }
 
+/// <summary>Kiracının modül aç/kapa önbelleğini (IModuleAccessService) geçersiz kılar (senseik-057, Modüller sayfası "Kaydet").</summary>
+public interface IModuleSettingsCacheInvalidator
+{
+    Task InvalidateTenantAsync(Guid tenantId, CancellationToken ct);
+}
+
 /// <summary>Kimlik e-postaları (davet, parola sıfırlama). Şablon anahtarı + veri; gönderim Notifications altyapısında.</summary>
 public interface IIdentityMailer
 {

@@ -44,6 +44,7 @@
   <data name="problem.title.too_many_requests" xml:space="preserve"><value>Too many requests</value></data>
 
   <data name="general.null_value" xml:space="preserve"><value>Value cannot be empty.</value></data>
+  <data name="general.invalid_field" xml:space="preserve"><value>The field is invalid or missing.</value></data>
   <data name="general.validation_error" xml:space="preserve"><value>The submitted data failed validation.</value></data>
   <data name="general.concurrency_conflict" xml:space="preserve"><value>The record was modified by another user; refresh and try again.</value></data>
   <data name="general.request_cancelled" xml:space="preserve"><value>The client cancelled the request.</value></data>
@@ -52,6 +53,7 @@
   <data name="general.rate_limit_exceeded" xml:space="preserve"><value>Too many requests were sent; please try again later.</value></data>
 
   <data name="auth.unauthenticated" xml:space="preserve"><value>Authentication required.</value></data>
+  <data name="auth.forbidden_generic" xml:space="preserve"><value>You are not allowed to perform this action.</value></data>
   <data name="auth.forbidden" xml:space="preserve"><value>The '{permission}' permission is required for this action.</value></data>
   <data name="auth.feature_disabled" xml:space="preserve"><value>This feature has been turned off in your company's access settings.</value></data>
   <data name="auth.out_of_scope" xml:space="preserve"><value>Record not found.</value></data>
@@ -70,6 +72,9 @@
   <data name="tenant.invalid_slug" xml:space="preserve"><value>The company address may only contain lowercase letters, digits and hyphens (3–40 characters).</value></data>
   <data name="tenant.slug_taken" xml:space="preserve"><value>This company address is already in use.</value></data>
   <data name="tenant.not_found" xml:space="preserve"><value>Company account not found.</value></data>
+  <data name="module.disabled" xml:space="preserve"><value>This module is turned off for your company. An administrator can turn it on under Settings   <data name="tenant.not_found" xml:space="preserve"><value>Company account not found.</value></data>gt; Modules.</value></data>
+  <data name="module.unknown" xml:space="preserve"><value>Unknown module: {module}</value></data>
+  <data name="module.not_toggleable" xml:space="preserve"><value>Core modules cannot be turned off: {module}</value></data>
   <data name="tenant.closed" xml:space="preserve"><value>A closed company account cannot be modified.</value></data>
 
   <data name="user.invalid_email" xml:space="preserve"><value>Invalid e-mail address.</value></data>
@@ -93,8 +98,11 @@
   <data name="role.not_found" xml:space="preserve"><value>Role not found.</value></data>
   <data name="role.system_readonly" xml:space="preserve"><value>System roles cannot be modified or deleted.</value></data>
   <data name="role.locked" xml:space="preserve"><value>The permissions of the Owner role cannot be changed.</value></data>
+  <data name="user.password_too_weak" xml:space="preserve"><value>The password is too weak: use at least three of upper case, lower case, digits and symbols, and avoid common passwords or your e-mail address.</value></data>
   <data name="role.in_use" xml:space="preserve"><value>The role is assigned to {count} users; remove the assignments first.</value></data>
   <data name="role.unknown_permission" xml:space="preserve"><value>Unknown permission: {permission}</value></data>
+  <data name="role.permission_not_held" xml:space="preserve"><value>You cannot grant a role a permission (or a wider data scope) that you do not hold yourself: {permission}</value></data>
+  <data name="role.own_role_readonly" xml:space="preserve"><value>You cannot change the permissions of a role assigned to you.</value></data>
 
   <data name="invitation.not_found" xml:space="preserve"><value>Invitation not found.</value></data>
   <data name="invitation.already_accepted" xml:space="preserve"><value>The invitation has already been accepted.</value></data>
@@ -106,7 +114,7 @@
   <data name="roles.admin.name" xml:space="preserve"><value>System Administrator</value></data>
   <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions except billing.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>HR Manager</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, GDPR.</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, KVKK (Turkish data protection law).</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>HR Specialist</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>Subset of HR Manager: no salary visibility, payroll, termination or compensation approvals.</value></data>
   <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Payroll Specialist</value></data>
@@ -147,6 +155,7 @@
   <data name="identity.tenant.view" xml:space="preserve"><value>View company account details</value></data>
   <data name="identity.tenant.manage" xml:space="preserve"><value>Change company account settings</value></data>
   <data name="identity.security.manage" xml:space="preserve"><value>Manage security policy</value></data>
+  <data name="identity.modules.manage" xml:space="preserve"><value>Turn modules on/off</value></data>
   <data name="identity.api_keys.manage" xml:space="preserve"><value>Manage API keys</value></data>
   <data name="identity.audit.view" xml:space="preserve"><value>View audit log</value></data>
   <data name="identity.audit.sensitive_view" xml:space="preserve"><value>View sensitive fields in audit log</value></data>
@@ -160,6 +169,7 @@
   <data name="employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
   <data name="employee.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
   <data name="employee.manager_not_found" xml:space="preserve"><value>The selected manager was not found or is inactive.</value></data>
+  <data name="employee.mentor_not_found" xml:space="preserve"><value>The selected mentor was not found or is inactive.</value></data>
   <data name="employee.national_id_taken" xml:space="preserve"><value>This national ID is already registered to another employee.</value></data>
   <data name="employee.status_invalid" xml:space="preserve"><value>Invalid employee status.</value></data>
   <data name="employee.days_out_of_range" xml:space="preserve"><value>Days must be between 0 and 366.</value></data>
@@ -168,16 +178,26 @@
   <data name="employee.name_too_long" xml:space="preserve"><value>First and last name can be at most 100 characters.</value></data>
   <data name="employee.national_id_invalid" xml:space="preserve"><value>Invalid Turkish national ID number.</value></data>
   <data name="employee.work_email_invalid" xml:space="preserve"><value>Invalid work e-mail.</value></data>
+  <data name="employee.profile.update_empty" xml:space="preserve"><value>At least one field to update must be provided.</value></data>
   <data name="employee.personal_email_invalid" xml:space="preserve"><value>Invalid personal e-mail.</value></data>
   <data name="employee.work_phone_too_long" xml:space="preserve"><value>Work phone can be at most 30 characters.</value></data>
+  <data name="employee.birth_date_in_future" xml:space="preserve"><value>Birth date cannot be a future date.</value></data>
+  <data name="employee.birth_date_after_hire_date" xml:space="preserve"><value>Birth date cannot be after the hire date.</value></data>
+  <data name="employee.birth_date_too_early" xml:space="preserve"><value>Birth date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_early" xml:space="preserve"><value>Hire date cannot be before 1900-01-01.</value></data>
+  <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>Hire date can be at most 12 months in the future.</value></data>
+  <data name="employee.minimum_age" xml:space="preserve"><value>A person under 15 at the hire date cannot be employed (Labour Act 4857, art. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
+  <data name="employee.mentor_self" xml:space="preserve"><value>An employee cannot be their own mentor.</value></data>
   <data name="employee.child_count_invalid" xml:space="preserve"><value>Child count cannot be negative.</value></data>
   <data name="employee.mobile_phone_too_long" xml:space="preserve"><value>Mobile phone can be at most 30 characters.</value></data>
   <data name="employee.home_phone_too_long" xml:space="preserve"><value>Home phone can be at most 30 characters.</value></data>
   <data name="employee.address_line_too_long" xml:space="preserve"><value>Address can be at most 250 characters.</value></data>
   <data name="employee.city_too_long" xml:space="preserve"><value>City can be at most 100 characters.</value></data>
   <data name="employee.postal_code_too_long" xml:space="preserve"><value>Postal code can be at most 20 characters.</value></data>
+  <data name="employee.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
+  <data name="employee.postal_code_invalid" xml:space="preserve"><value>Postal code can be at most 10 characters.</value></data>
   <data name="employee.suspend_invalid_status" xml:space="preserve"><value>Only active employees can be suspended.</value></data>
   <data name="employee.reactivate_not_suspended" xml:space="preserve"><value>Only suspended employees can be reactivated.</value></data>
   <data name="employee.terminate_invalid_status" xml:space="preserve"><value>Only active or suspended employees can be terminated.</value></data>
@@ -191,6 +211,7 @@
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>The new hire date must be after the previous exit date.</value></data>
   <data name="employee.sicil_numarasi_too_long" xml:space="preserve"><value>The registry number can be at most 30 characters.</value></data>
   <data name="employee.sicil_numarasi_taken" xml:space="preserve"><value>This registry number is already registered to another employee.</value></data>
+  <data name="employee.work_email_taken" xml:space="preserve"><value>This work e-mail is already used by another employee.</value></data>
   <data name="employee.national_id_foreign_prefix_for_turkish" xml:space="preserve"><value>A Turkish employee cannot have a national ID starting with 99 (foreign ID format).</value></data>
   <data name="employee.national_id_not_foreign_for_foreign_national" xml:space="preserve"><value>A foreign employee's national ID, if provided, must be in the foreign ID format (starting with 99).</value></data>
   <data name="employee.foreign_identification_required" xml:space="preserve"><value>A foreign employee requires at least one of Foreign ID Number or Passport Number.</value></data>
@@ -432,6 +453,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="IMPORT_INVALID_PHONE" xml:space="preserve"><value>Invalid phone number: '{value}'.</value></data>
   <data name="IMPORT_VALUE_TOO_LONG" xml:space="preserve"><value>The value can be at most {max} characters.</value></data>
   <data name="IMPORT_DUPLICATE_ROW" xml:space="preserve"><value>This national ID also appears on row {row} of the file.</value></data>
+  <data name="IMPORT_DUPLICATE_WORK_EMAIL" xml:space="preserve"><value>This work e-mail is already used by another employee or by another row of the file.</value></data>
   <data name="IMPORT_NAME_MISMATCH" xml:space="preserve"><value>The name of the employee matching this national ID differs from the file ({value}).</value></data>
   <data name="IMPORT_NO_MATCH" xml:space="preserve"><value>No employee is registered with this national ID (Update only mode does not create records).</value></data>
   <data name="IMPORT_LOOKUP_NOT_FOUND" xml:space="preserve"><value>'{value}' was not found; it must be defined first.</value></data>
@@ -582,6 +604,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="workflow.task.not_found" xml:space="preserve"><value>Approval task not found.</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>This task is no longer the current step.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>You are not authorized to decide this approval task.</value></data>
+  <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>You cannot decide on your own request.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>This approval link is invalid.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>This approval link has expired.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>This approval link has already been used.</value></data>
@@ -617,6 +640,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.ledger.amount_zero" xml:space="preserve"><value>Days cannot be zero.</value></data>
   <data name="leave.ledger.reason_required" xml:space="preserve"><value>A reason is required.</value></data>
   <data name="leave.profile.not_found" xml:space="preserve"><value>The employee's leave profile was not found.</value></data>
+  <data name="performance.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's performance data.</value></data>
+  <data name="documents.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's personnel documents.</value></data>
   <data name="leave.employee.not_in_scope" xml:space="preserve"><value>You are not allowed to access this employee's leave data.</value></data>
   <data name="leave.employee.not_linked" xml:space="preserve"><value>Your user is not linked to an employee record.</value></data>
   <data name="leave.errors.invalid_range" xml:space="preserve"><value>End date cannot be before start date.</value></data>
@@ -633,6 +658,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.type.paid_military_service" xml:space="preserve"><value>Paid military service leave</value></data>
   <data name="leave.type.unpaid" xml:space="preserve"><value>Unpaid leave</value></data>
   <data name="leave.type.foster_care" xml:space="preserve"><value>Foster care leave</value></data>
+  <data name="leave.type.breastfeeding" xml:space="preserve"><value>Breastfeeding leave</value></data>
+  <data name="leave.type.disabled_child" xml:space="preserve"><value>Disabled/chronically ill child leave</value></data>
   <data name="leave.type.template.remote_work" xml:space="preserve"><value>Remote Work</value></data>
   <data name="leave.type.template.birthday" xml:space="preserve"><value>Birthday leave</value></data>
   <data name="leave.requests.read" xml:space="preserve"><value>View leave requests</value></data>
@@ -648,9 +675,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.overlap" xml:space="preserve"><value>You already have a pending or approved leave on these dates.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>At most {max} days can be requested at once for this leave type.</value></data>
   <data name="leave.errors.below_min_days" xml:space="preserve"><value>At least {min} days must be requested for this leave type.</value></data>
+  <data name="leave.errors.annual_minimum_block" xml:space="preserve"><value>When annual leave is split, one part must be at least {min} days (Labour Act art. 56/3); this request would leave too little for a {min}-day part.</value></data>
   <data name="leave.errors.above_max_days" xml:space="preserve"><value>At most {max} days can be requested for this leave type.</value></data>
   <data name="leave.errors.insufficient_balance" xml:space="preserve"><value>Insufficient leave balance (available: {available} days).</value></data>
   <data name="leave.errors.description_required" xml:space="preserve"><value>A description is required for this leave type.</value></data>
+  <data name="leave.errors.holiday_calendar_year_undefined" xml:space="preserve"><value>This request falls in {year}; the official holiday calendar has no religious holiday (Ramazan/Kurban Bayramı) dates defined for that year yet. Please update the calendar.</value></data>
   <data name="leave.overtimes.read" xml:space="preserve"><value>View overtime</value></data>
   <data name="leave.my.overtimes" xml:space="preserve"><value>Manage my overtime requests</value></data>
   <data name="leave.overtimes.create_on_behalf" xml:space="preserve"><value>Add overtime for employees</value></data>
@@ -667,6 +696,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.overtime_nothing_to_convert" xml:space="preserve"><value>There is no payable time to convert.</value></data>
   <data name="leave.errors.overtime_overlap" xml:space="preserve"><value>You already have pending or approved overtime in these hours.</value></data>
   <data name="leave.errors.overtime_consent_revoked" xml:space="preserve"><value>The employee's overtime consent revocation is in effect on this date.</value></data>
+  <data name="leave.errors.overtime_future_date" xml:space="preserve"><value>Overtime cannot be requested for a day that has not been worked yet.</value></data>
+  <data name="leave.errors.overtime_invalid_pay_rate_kind" xml:space="preserve"><value>Invalid overtime pay rate.</value></data>
   <data name="leave.errors.overtime_override_payable_not_allowed" xml:space="preserve"><value>You are not allowed to convert the full duration.</value></data>
   <data name="leave.overtime_consent.not_found" xml:space="preserve"><value>Overtime consent not found.</value></data>
   <data name="leave.overtime_consent.already_revoked" xml:space="preserve"><value>This overtime consent has already been revoked.</value></data>
@@ -690,6 +721,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.warnings.usage_type_missing_in_rule_set" xml:space="preserve"><value>The employee's "{leaveType}" usage belongs to a type with no counterpart in the new rule set; it no longer counts toward balances.</value></data>
   <data name="leave.absences.view" xml:space="preserve"><value>View absence records</value></data>
   <data name="leave.absences.manage" xml:space="preserve"><value>Manage absence records</value></data>
+  <data name="leave.company_ledger.read" xml:space="preserve"><value>View company leave/overtime ledger</value></data>
   <data name="leave.absence.not_found" xml:space="preserve"><value>Absence record not found.</value></data>
   <data name="leave.absence.note_too_long" xml:space="preserve"><value>The note can be at most 500 characters.</value></data>
   <data name="leave.absence.hours_invalid" xml:space="preserve"><value>Hours must be between 0 and 24.</value></data>
@@ -711,6 +743,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>The default work schedule cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>A work schedule assigned to employees cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>This work schedule is inactive.</value></data>
+  <data name="attendance.errors.schedule_default_cannot_deactivate" xml:space="preserve"><value>The default work schedule cannot be deactivated; make another schedule the default first.</value></data>
   <data name="attendance.employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
   <data name="attendance.employee.not_in_scope" xml:space="preserve"><value>You do not have access to this employee.</value></data>
   <data name="attendance.work_schedule.default.name" xml:space="preserve"><value>General work schedule</value></data>
@@ -726,6 +759,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.period.not_open" xml:space="preserve"><value>The payroll period is not open.</value></data>
   <data name="payroll.payslip.not_found" xml:space="preserve"><value>Payslip not found.</value></data>
   <data name="payroll.errors.period_month_invalid" xml:space="preserve"><value>Period month must be between 1 and 12.</value></data>
+  <data name="payroll.errors.period_year_out_of_range" xml:space="preserve"><value>Period year must be between {minYear} and {maxYear}.</value></data>
+  <data name="payroll.errors.legislation_parameter_missing" xml:space="preserve"><value>No statutory parameter is defined for {date}: {parameter}. Payroll/severance cannot be calculated; update the legislation parameters.</value></data>
+  <data name="payroll.errors.severance_termination_date_invalid" xml:space="preserve"><value>The termination date cannot be before the hire date and can be at most one year ahead.</value></data>
   <data name="payroll.errors.gross_amount_invalid" xml:space="preserve"><value>Gross amount must be greater than zero.</value></data>
   <data name="payroll.errors.worked_days_invalid" xml:space="preserve"><value>Worked days must be greater than zero.</value></data>
   <data name="payroll.errors.meal_variant_not_supported" xml:space="preserve"><value>This meal benefit variant is not supported yet.</value></data>
@@ -752,6 +788,25 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Input data changed after the last calculation (automatic reconciliation)</value></data>
+  <data name="payroll.courtorder.manage" xml:space="preserve"><value>Manage garnishment (icra/nafaka) orders</value></data>
+  <data name="payroll.declarations.export" xml:space="preserve"><value>Download payroll declaration files (APHB, bank payment, accounting voucher)</value></data>
+  <data name="payroll.errors.garnishment_case_reference_required" xml:space="preserve"><value>A case/decision reference must be entered.</value></data>
+  <data name="payroll.errors.garnishment_installment_invalid" xml:space="preserve"><value>The monthly installment amount must be greater than zero.</value></data>
+  <data name="payroll.errors.garnishment_balance_invalid" xml:space="preserve"><value>The remaining balance must be greater than zero.</value></data>
+  <data name="payroll.errors.garnishment_already_closed" xml:space="preserve"><value>This garnishment order is already closed.</value></data>
+  <data name="payroll.errors.garnishment_date_range_invalid" xml:space="preserve"><value>The closing date cannot be before the start date.</value></data>
+  <data name="payroll.garnishment.not_found" xml:space="preserve"><value>Garnishment order not found.</value></data>
+
+  <!-- Payroll (Faz 3 P5): union / solidarity dues (EmployeeUnionMembership) -->
+  <data name="payroll.union.manage" xml:space="preserve"><value>Manage unions and memberships</value></data>
+  <data name="payroll.union.not_found" xml:space="preserve"><value>Union not found.</value></data>
+  <data name="payroll.errors.union_name_required" xml:space="preserve"><value>The union name is required.</value></data>
+  <data name="payroll.errors.union_name_too_long" xml:space="preserve"><value>The union name is too long.</value></data>
+  <data name="payroll.union_membership.not_found" xml:space="preserve"><value>Union membership not found.</value></data>
+  <data name="payroll.errors.union_membership_union_required" xml:space="preserve"><value>A union must be selected.</value></data>
+  <data name="payroll.errors.union_membership_date_range_invalid" xml:space="preserve"><value>Invalid dates (the notification/end date cannot be before the membership date).</value></data>
+  <data name="payroll.errors.union_membership_dues_value_invalid" xml:space="preserve"><value>The dues value is invalid for this rule.</value></data>
+  <data name="payroll.errors.union_membership_already_open" xml:space="preserve"><value>The employee already has an open union membership.</value></data>
 
   <!-- Recruitment (Faz 6 R0): job posting/candidate/application core -->
   <data name="recruitment.postings.read" xml:space="preserve"><value>View Job Postings</value></data>
@@ -774,6 +829,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="recruitment.candidate.not_found" xml:space="preserve"><value>Candidate not found.</value></data>
   <data name="recruitment.candidate.name_required" xml:space="preserve"><value>The candidate's first and last name are required.</value></data>
   <data name="recruitment.candidate.email_required" xml:space="preserve"><value>Enter a valid e-mail address.</value></data>
+  <data name="recruitment.candidate.phone_invalid" xml:space="preserve"><value>Invalid phone number. Use only digits, spaces and + - . / ( ).</value></data>
   <data name="recruitment.candidate.already_anonymized" xml:space="preserve"><value>Candidate data has already been anonymized.</value></data>
   <data name="recruitment.application.not_found" xml:space="preserve"><value>Application not found.</value></data>
   <data name="recruitment.application.already_terminal" xml:space="preserve"><value>This application is Hired/Rejected; its stage cannot be changed.</value></data>
@@ -821,9 +877,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.day.not_found" xml:space="preserve"><value>Attendance day not found.</value></data>
   <data name="attendance.day.no_anomaly_to_resolve" xml:space="preserve"><value>This day has no anomaly to resolve.</value></data>
   <data name="attendance.day.already_resolved" xml:space="preserve"><value>This day has already been resolved or ignored.</value></data>
-  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.day.override_minutes_invalid" xml:space="preserve"><value>Worked minutes must be between 0 and 24 hours (1440 minutes).</value></data>
   <data name="attendance.day.anomaly_action_not_allowed" xml:space="preserve"><value>This action is not valid for the day's anomaly type.</value></data>
   <data name="attendance.timesheet.resolve" xml:space="preserve"><value>Resolve timesheet anomalies</value></data>
+  <data name="attendance.timesheet.approve" xml:space="preserve"><value>Approve monthly timesheet (month-end close)</value></data>
   <data name="attendance.shift.view" xml:space="preserve"><value>View shift plan</value></data>
   <data name="attendance.shift.plan" xml:space="preserve"><value>Plan shifts</value></data>
   <data name="attendance.shift.publish" xml:space="preserve"><value>Publish shifts</value></data>
@@ -842,6 +899,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.shift.weekly_hours_exceeded" xml:space="preserve"><value>The weekly working hours limit was exceeded.</value></data>
   <data name="attendance.shift.weekly_days_exceeded" xml:space="preserve"><value>The weekly working days limit was exceeded.</value></data>
   <data name="attendance.shift.availability_conflict" xml:space="preserve"><value>The employee reported being unavailable for this date/time.</value></data>
+  <data name="attendance.shift.rest_period_too_short" xml:space="preserve"><value>There must be at least 11 hours of uninterrupted rest between two shifts.</value></data>
+  <data name="attendance.shift.break_too_short" xml:space="preserve"><value>The shift break cannot be shorter than the minimum break configured in the settings.</value></data>
   <data name="attendance.shift.self" xml:space="preserve"><value>View my own shifts</value></data>
   <data name="attendance.availability.self" xml:space="preserve"><value>Report my own availability</value></data>
   <data name="attendance.availability.view" xml:space="preserve"><value>View employee availability</value></data>
@@ -850,6 +909,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.availability.not_found" xml:space="preserve"><value>Availability entry not found.</value></data>
   <data name="attendance.availability.not_owner" xml:space="preserve"><value>This availability entry does not belong to you.</value></data>
   <data name="attendance.availability.date_in_past" xml:space="preserve"><value>Availability cannot be submitted for a past date.</value></data>
+  <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Invalid date range: the start date cannot be after the end date.</value></data>
+  <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>A timesheet record cannot be entered for a future date.</value></data>
+  <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>A period that has not started yet cannot be approved.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>
@@ -860,7 +922,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.equalization.anchor_month_invalid" xml:space="preserve"><value>The anchor month must be between 1 and 12.</value></data>
   <data name="attendance.equalization.period_not_open" xml:space="preserve"><value>This equalization period is not open.</value></data>
   <data name="attendance.equalization.period_not_yet_ended" xml:space="preserve"><value>The equalization period has not ended yet.</value></data>
-  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes cannot be negative.</value></data>
+  <data name="attendance.equalization.minutes_invalid" xml:space="preserve"><value>Worked minutes must be between 0 and 24 hours (1440 minutes).</value></data>
+  <data name="attendance.my.checkin" xml:space="preserve"><value>Record my own check-in/out via QR/GPS</value></data>
+  <data name="attendance.board.view" xml:space="preserve"><value>View the live in/out board</value></data>
+  <data name="attendance.self_checkin.invalid_code" xml:space="preserve"><value>Invalid QR code. Please scan the location's code again.</value></data>
+  <data name="attendance.self_checkin.location_not_found" xml:space="preserve"><value>The given location was not found or is inactive.</value></data>
+  <data name="organization.location.geofence_invalid" xml:space="preserve"><value>The geofence is invalid: latitude/longitude must be provided together (latitude -90..90, longitude -180..180) and the radius must be positive.</value></data>
+  <data name="attendance.self_checkin.coordinates_required" xml:space="preserve"><value>This location requires your position: please allow location access and try again.</value></data>
+  <data name="attendance.self_checkin.outside_geofence" xml:space="preserve"><value>Your location is outside this location's allowed area; check-in was rejected.</value></data>
   <data name="attendance.day.check_out_before_check_in" xml:space="preserve"><value>Check-out time cannot be before check-in time.</value></data>
   <data name="attendance.timesheet.import" xml:space="preserve"><value>Import timesheets (PDKS)</value></data>
   <data name="attendance.import.error.invalid_time" xml:space="preserve"><value>Invalid time: '{value}'. Use HH:mm format.</value></data>
@@ -888,6 +957,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Check-in time (HH:mm); may be left blank.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Check-out time</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Check-out time (HH:mm); may be left blank.</value></data>
+  <data name="documents.file_name_invalid" xml:space="preserve"><value>Invalid file name.</value></data>
+  <data name="documents.file_type_not_allowed" xml:space="preserve"><value>This file type is not allowed. Allowed: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
+  <data name="documents.upload_not_pending" xml:space="preserve"><value>This document upload was already confirmed or the document can no longer be uploaded.</value></data>
+  <data name="documents.uploaded_file_invalid" xml:space="preserve"><value>No valid uploaded file was found in storage for this document; upload the file and try again.</value></data>
   <data name="document_type.not_found" xml:space="preserve"><value>Document type not found.</value></data>
   <data name="document_type.code_required" xml:space="preserve"><value>Document type code is required.</value></data>
   <data name="document_type.code_too_long" xml:space="preserve"><value>Document type code is too long.</value></data>
@@ -922,6 +995,27 @@ The report you requested has been generated. Click the link to view and download
   <data name="shared_company_file.upload_initiation_failed" xml:space="preserve"><value>Failed to initiate the file upload.</value></data>
   <data name="shared_company_file.confirmation_failed" xml:space="preserve"><value>Failed to confirm the file upload.</value></data>
   <data name="shared_company_file.deletion_failed" xml:space="preserve"><value>Failed to delete the file.</value></data>
+
+  <!-- senseik-001-vize-belgesi: visa document request -->
+  <data name="visa_document_process.not_found" xml:space="preserve"><value>Visa process not found.</value></data>
+  <data name="visa_document_process.name_required" xml:space="preserve"><value>Visa process name is required.</value></data>
+  <data name="visa_document_process.name_too_long" xml:space="preserve"><value>Visa process name is too long.</value></data>
+  <data name="visa_document_process.already_exists" xml:space="preserve"><value>This visa process already exists.</value></data>
+  <data name="visa_document_request.not_found" xml:space="preserve"><value>Visa document request not found.</value></data>
+  <data name="visa_document_request.invalid_travel_dates" xml:space="preserve"><value>Travel end date cannot be before the start date.</value></data>
+  <data name="visa_document_request.country_code_required" xml:space="preserve"><value>Country code is required.</value></data>
+  <data name="visa_document_request.visa_type_required" xml:space="preserve"><value>Visa type is required.</value></data>
+  <data name="visa_document_request.already_submitted" xml:space="preserve"><value>This request has already been submitted for approval.</value></data>
+  <data name="visa_document_request.approver_not_configured" xml:space="preserve"><value>No visa approver is configured. Please contact your system administrator.</value></data>
+  <data name="visa_document_request.invalid_status_transition" xml:space="preserve"><value>The request cannot move from its current status to this one.</value></data>
+  <data name="visa_document_request.delivery_failed" xml:space="preserve"><value>Visa documents could not be copied into the employee's folder.</value></data>
+  <data name="visa_document_request.invalid_visa_type" xml:space="preserve"><value>Invalid visa type.</value></data>
+  <data name="visa_document_request.invalid_country_code" xml:space="preserve"><value>The country code must be 2-3 letters (e.g. DE).</value></data>
+  <data name="visa_document_request.process_unavailable" xml:space="preserve"><value>The selected visa process does not exist or is inactive.</value></data>
+  <data name="visa_document_request.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your account.</value></data>
+  <data name="visa_settings.template_invalid" xml:space="preserve"><value>A template document was not found, is not active or belongs to an employee folder; only company documents can be used as templates.</value></data>
+  <data name="documents.my.visa_requests" xml:space="preserve"><value>Request visa documents</value></data>
+  <data name="documents.visa.manage" xml:space="preserve"><value>Manage visa settings</value></data>
 
   <!-- Integrations (Faz 8 #61): external payroll webhook -->
   <data name="integrations.webhooks.manage" xml:space="preserve"><value>Manage webhook subscriptions</value></data>
@@ -959,9 +1053,14 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.item.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="expense.item.tax_rate_invalid" xml:space="preserve"><value>Tax rate must be between 0 and 100.</value></data>
   <data name="expense.item.currency_required" xml:space="preserve"><value>Enter a valid currency code (e.g. TRY).</value></data>
+  <data name="expense.item.amount_too_large" xml:space="preserve"><value>The amount cannot exceed 10,000,000.</value></data>
+  <data name="expense.item.currency_unsupported" xml:space="preserve"><value>Unsupported currency. Enter a valid ISO 4217 code (TRY, USD, EUR, GBP, CHF, JPY, CNY, SAR, AED, RUB).</value></data>
+  <data name="expense.item.receipt_date_in_future" xml:space="preserve"><value>The receipt date cannot be in the future.</value></data>
+  <data name="expense.claim.currency_mismatch" xml:space="preserve"><value>All items of an expense claim must use the same currency.</value></data>
   <data name="expense.advance.not_found" xml:space="preserve"><value>Advance request not found.</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
+  <data name="expense.advance.amount_too_large" xml:space="preserve"><value>The advance amount cannot exceed 10,000,000.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Installment count is invalid.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>An advance cannot be marked paid before it is approved.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
@@ -981,6 +1080,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="asset.already_assigned" xml:space="preserve"><value>This asset is already assigned to an employee or retired.</value></data>
   <data name="asset.not_assigned" xml:space="preserve"><value>This asset is not currently assigned.</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>An assigned asset cannot be retired; it must be returned first.</value></data>
+  <data name="asset.serial_number_in_use" xml:space="preserve"><value>A device with this serial number is currently assigned to another employee.</value></data>
+  <data name="asset.return_before_issue" xml:space="preserve"><value>The return date cannot be before the issue date.</value></data>
+  <data name="assets.employee_not_found" xml:space="preserve"><value>Employee not found.</value></data>
+  <data name="assets.issued_before_hire" xml:space="preserve"><value>The issue date cannot be before the employee's hire date.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
   <!-- Reporting (Reports menu - roadmap #70) -->
   <data name="report_execution.report_key_required" xml:space="preserve"><value>Report key is required.</value></data>
@@ -1065,11 +1168,56 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.col.effectiveFrom" xml:space="preserve"><value>Effective from</value></data>
   <data name="report.col.transportAllowance" xml:space="preserve"><value>Transport allowance</value></data>
   <data name="report.col.mealAllowance" xml:space="preserve"><value>Meal allowance</value></data>
+  <data name="report.col.workDate" xml:space="preserve"><value>Date</value></data>
+  <data name="report.col.startTime" xml:space="preserve"><value>Start time</value></data>
+  <data name="report.col.durationMinutes" xml:space="preserve"><value>Duration (minutes)</value></data>
+  <data name="report.col.payableMinutes" xml:space="preserve"><value>Payable minutes</value></data>
+  <data name="report.col.payRateKind" xml:space="preserve"><value>Pay rate</value></data>
+  <data name="report.col.conversionKind" xml:space="preserve"><value>Conversion type</value></data>
+  <data name="report.col.conversionStatus" xml:space="preserve"><value>Conversion status</value></data>
+  <data name="report.col.reconciliationPeriod" xml:space="preserve"><value>Period</value></data>
+  <data name="report.col.reconciliationUsageDetail" xml:space="preserve"><value>Leave used</value></data>
+  <data name="report.col.reconciliationEmployeeSignature" xml:space="preserve"><value>Employee signature</value></data>
+  <data name="report.col.reconciliationEmployeeSignatureDate" xml:space="preserve"><value>Signed on</value></data>
+  <data name="report.col.reconciliationHrApproval" xml:space="preserve"><value>HR approval</value></data>
+  <data name="report.col.reconciliationHrApprovalDate" xml:space="preserve"><value>Approved on</value></data>
+  <data name="report.col.reconciliationNoUsage" xml:space="preserve"><value>No leave used</value></data>
   <data name="report.sheet.employeeList" xml:space="preserve"><value>Employee list</value></data>
   <data name="report.sheet.leaveBalanceSummary" xml:space="preserve"><value>Leave balance</value></data>
   <data name="report.sheet.leaveRequests" xml:space="preserve"><value>Leave report</value></data>
+  <data name="report.sheet.leaveReconciliation" xml:space="preserve"><value>Leave reconciliation form</value></data>
+  <data name="report.sheet.overtimeMonthly" xml:space="preserve"><value>Overtime report</value></data>
+  <data name="report.col.onLeave" xml:space="preserve"><value>On leave</value></data>
+  <data name="report.col.leaveStart" xml:space="preserve"><value>Leave start</value></data>
+  <data name="report.col.leaveEnd" xml:space="preserve"><value>Leave end</value></data>
+  <data name="report.col.overtimeHoursYtd" xml:space="preserve"><value>Annual overtime (hours)</value></data>
+  <data name="report.col.overtimeLimitExceeded" xml:space="preserve"><value>Exceeds annual limit</value></data>
+  <data name="report.sheet.companyLeaveLedger" xml:space="preserve"><value>Company leave/overtime ledger</value></data>
   <data name="report.sheet.missingDocuments" xml:space="preserve"><value>Missing documents</value></data>
   <data name="report.sheet.salaries" xml:space="preserve"><value>Salary list</value></data>
+  <data name="report.col.email" xml:space="preserve"><value>Email</value></data>
+  <data name="report.col.phone" xml:space="preserve"><value>Phone</value></data>
+  <data name="report.col.tags" xml:space="preserve"><value>Tags</value></data>
+  <data name="report.col.applications" xml:space="preserve"><value>Applications</value></data>
+  <data name="report.col.createdAt" xml:space="preserve"><value>Created at</value></data>
+  <data name="report.col.date" xml:space="preserve"><value>Date</value></data>
+  <data name="report.col.newApplications" xml:space="preserve"><value>New applications</value></data>
+  <data name="report.col.newCandidates" xml:space="preserve"><value>New candidates</value></data>
+  <data name="report.sheet.recruitmentDailyCounts" xml:space="preserve"><value>Daily counts</value></data>
+  <data name="report.sheet.recruitmentCandidatesExport" xml:space="preserve"><value>Candidate list</value></data>
+  <data name="report.col.jobPosting" xml:space="preserve"><value>Job posting</value></data>
+  <data name="report.col.totalApplications" xml:space="preserve"><value>Total applications</value></data>
+  <data name="report.sheet.recruitmentOverview" xml:space="preserve"><value>Overview</value></data>
+  <data name="report.enum.CandidateSource.Manual" xml:space="preserve"><value>Added manually</value></data>
+  <data name="report.enum.CandidateSource.CareerSite" xml:space="preserve"><value>Career site</value></data>
+  <data name="report.enum.CandidateSource.Referral" xml:space="preserve"><value>Referral</value></data>
+  <data name="report.enum.CandidateSource.Other" xml:space="preserve"><value>Other</value></data>
+  <data name="report.enum.ApplicationStage.Applied" xml:space="preserve"><value>New application</value></data>
+  <data name="report.enum.ApplicationStage.Screening" xml:space="preserve"><value>Screening</value></data>
+  <data name="report.enum.ApplicationStage.Interview" xml:space="preserve"><value>Interview</value></data>
+  <data name="report.enum.ApplicationStage.Offer" xml:space="preserve"><value>Offer</value></data>
+  <data name="report.enum.ApplicationStage.Hired" xml:space="preserve"><value>Hired</value></data>
+  <data name="report.enum.ApplicationStage.Rejected" xml:space="preserve"><value>Rejected</value></data>
   <data name="report.enum.EmployeeStatus.Draft" xml:space="preserve"><value>Draft</value></data>
   <data name="report.enum.EmployeeStatus.Active" xml:space="preserve"><value>Active</value></data>
   <data name="report.enum.EmployeeStatus.Suspended" xml:space="preserve"><value>Suspended</value></data>
@@ -1116,6 +1264,33 @@ The report you requested has been generated. Click the link to view and download
   <data name="report.enum.DocumentRequirementStatus.Missing" xml:space="preserve"><value>Missing</value></data>
   <data name="report.enum.DocumentRequirementStatus.Uploaded" xml:space="preserve"><value>Uploaded</value></data>
   <data name="report.enum.DocumentRequirementStatus.Waived" xml:space="preserve"><value>Waived</value></data>
+  <data name="report.enum.Boolean.True" xml:space="preserve"><value>Yes</value></data>
+  <data name="report.enum.Boolean.False" xml:space="preserve"><value>No</value></data>
+  <!-- Attendance timesheet reports (senseik-029) -->
+  <data name="report.col.recordedDays" xml:space="preserve"><value>Recorded days</value></data>
+  <data name="report.col.workedDays" xml:space="preserve"><value>Worked days</value></data>
+  <data name="report.col.workedHours" xml:space="preserve"><value>Worked hours</value></data>
+  <data name="report.col.overtimeHours" xml:space="preserve"><value>Overtime (hours)</value></data>
+  <data name="report.col.nightHours" xml:space="preserve"><value>Night work (hours)</value></data>
+  <data name="report.col.lateArrivalCount" xml:space="preserve"><value>Late arrivals</value></data>
+  <data name="report.col.earlyLeaveCount" xml:space="preserve"><value>Early leaves</value></data>
+  <data name="report.col.missingDayCount" xml:space="preserve"><value>Missing days</value></data>
+  <data name="report.col.workedWhileOnLeaveCount" xml:space="preserve"><value>Worked while on leave</value></data>
+  <data name="report.col.unresolvedAnomalyCount" xml:space="preserve"><value>Unresolved anomalies</value></data>
+  <data name="report.col.paidLeaveDays" xml:space="preserve"><value>Paid leave days</value></data>
+  <data name="report.col.unpaidLeaveDays" xml:space="preserve"><value>Unpaid leave days</value></data>
+  <data name="report.col.sickLeaveDays" xml:space="preserve"><value>Sick leave days</value></data>
+  <data name="report.col.monthClosed" xml:space="preserve"><value>Month closed</value></data>
+  <data name="report.col.closedAt" xml:space="preserve"><value>Closed at</value></data>
+  <data name="report.sheet.attendanceMonthlySummary" xml:space="preserve"><value>Monthly timesheet summary</value></data>
+  <data name="report.sheet.attendanceMonthlyClosing" xml:space="preserve"><value>Month-end closing - Accountant report</value></data>
+  <data name="report.enum.OvertimePayRateKind.Rate25" xml:space="preserve"><value>25%</value></data>
+  <data name="report.enum.OvertimePayRateKind.Rate50" xml:space="preserve"><value>50%</value></data>
+  <data name="report.enum.OvertimeConversionKind.Pay" xml:space="preserve"><value>Pay</value></data>
+  <data name="report.enum.OvertimeConversionKind.TimeOff" xml:space="preserve"><value>Time off</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Posted" xml:space="preserve"><value>Posted</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Reversed" xml:space="preserve"><value>Reversed</value></data>
+  <data name="report.enum.OvertimeConversionStatus.Expired" xml:space="preserve"><value>Expired</value></data>
   <data name="report_execution.parameter_required" xml:space="preserve"><value>A required report filter is missing.</value></data>
   <data name="report_execution.parameter_invalid" xml:space="preserve"><value>A report filter value is invalid.</value></data>
   <data name="report_execution.scope_empty" xml:space="preserve"><value>No employees in your scope match these filters.</value></data>
@@ -1146,4 +1321,18 @@ The report you requested has been generated. Click the link to view and download
   <data name="company_event.visibility_org_unit_not_found" xml:space="preserve"><value>The selected org unit was not found.</value></data>
   <data name="company_calendar.invalid_range" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
   <data name="company_calendar.range_too_large" xml:space="preserve"><value>The calendar range cannot exceed {max} days.</value></data>
+
+  <!-- Training (Faz 4 #72: prerequisite training + mentor assignment) -->
+  <data name="training.program.title_required" xml:space="preserve"><value>Program title is required and can be at most 200 characters.</value></data>
+  <data name="training.program.invalid_date_range" xml:space="preserve"><value>The start date must be before the end date.</value></data>
+  <data name="training.program.cannot_activate" xml:space="preserve"><value>Only draft programs can be activated.</value></data>
+  <data name="training.program.cannot_modify_archived" xml:space="preserve"><value>Archived programs cannot be modified.</value></data>
+  <data name="training.program.cannot_modify_closed" xml:space="preserve"><value>Closed programs cannot be modified.</value></data>
+  <data name="training.program.not_found" xml:space="preserve"><value>Training program not found.</value></data>
+  <data name="training.enrollment.not_found" xml:space="preserve"><value>Enrollment record not found.</value></data>
+  <data name="training.enrollment.already_completed" xml:space="preserve"><value>This enrollment is already marked completed.</value></data>
+  <data name="training.enrollment.duplicate" xml:space="preserve"><value>This employee is already enrolled in this program.</value></data>
+  <data name="training.enrollment.prerequisite_not_completed" xml:space="preserve"><value>The prerequisite training must be completed before enrolling in this program.</value></data>
+  <data name="training.requirement.self_reference" xml:space="preserve"><value>A training program cannot be its own prerequisite.</value></data>
+  <data name="training.requirement.not_found" xml:space="preserve"><value>Prerequisite requirement not found.</value></data>
 </root>

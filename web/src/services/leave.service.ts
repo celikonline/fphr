@@ -24,7 +24,9 @@ export type LeaveTypeCode =
   | "unpaid"
   | "fosterCare"
   | "remoteWork"
-  | "birthday";
+  | "birthday"
+  | "breastfeeding"
+  | "disabledChild";
 export type LeaveLimitType = "unlimited" | "perRequest" | "perYear";
 export type NegativeBalanceMode = "none" | "unlimited" | "limited";
 export type AccrualFrequency = "yearly" | "monthly" | "daily";
@@ -72,6 +74,12 @@ export interface EmployeeLeaveBalances {
   hireDate: string;
   leaveAccrualStartDate: string;
   balances: LeaveBalanceItem[];
+}
+
+/** `SickLeaveAbsenceStatusDto` (senseik-036 md.7, 4857 md.25/I-b) - informational only, see the handler's doc comment. */
+export interface SickLeaveAbsenceStatus {
+  usedDaysLast12Months: number;
+  thresholdReached: boolean;
 }
 
 export interface LeaveLedgerEntry {
@@ -170,7 +178,12 @@ export interface LeaveRuleSetAssignmentResult {
   warnings: { employeeId: string; code: string; message: string }[];
 }
 
-/** `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types, `name` localized by the API. */
+/**
+ * `RequestableLeaveTypeDto` (`GET /leave/me/leave-types`): active self-service types. `name` HAM haliyle gelir
+ * (ör. "leave.type.annual") — senseik-039 öncesi API bunu Accept-Language başlığına göre (uygulama içi dil
+ * tercihinden bağımsız) çeviriyordu, bu da "+ Talep" açılır listesinin diğer izin ekranlarıyla tutarsız
+ * görünmesine yol açıyordu. Çağıran taraf `useLeaveName()` ile çözmeli (bkz. my-leave.tsx buildRequestableTypes).
+ */
 export interface RequestableLeaveType {
   id: string;
   code: LeaveTypeCode;
@@ -315,6 +328,16 @@ export async function getEmployeeLeaveLedger(employeeId: string, leaveTypeId?: s
   const { data } = await apiClient.get<LeaveLedgerEntry[]>(`${LEAVE_BASE}/employees/${employeeId}/ledger`, {
     params: leaveTypeId ? { leaveTypeId } : undefined,
   });
+  return data;
+}
+
+export async function getEmployeeSickLeaveAbsenceStatus(employeeId: string): Promise<SickLeaveAbsenceStatus> {
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/employees/${employeeId}/sick-leave-absence-status`);
+  return data;
+}
+
+export async function getMySickLeaveAbsenceStatus(): Promise<SickLeaveAbsenceStatus> {
+  const { data } = await apiClient.get<SickLeaveAbsenceStatus>(`${LEAVE_BASE}/me/sick-leave-absence-status`);
   return data;
 }
 
@@ -684,5 +707,51 @@ export async function recordOvertimeConsent(employeeId: string, input: OvertimeC
 /** Written revocation notice; the API returns the updated consent with `revocationEffectiveAt`. */
 export async function revokeOvertimeConsent(employeeId: string, id: string, noticeAt: string): Promise<OvertimeConsent> {
   const { data } = await apiClient.post<OvertimeConsent>(`${LEAVE_BASE}/employees/${employeeId}/overtime-consents/${id}/revoke`, { noticeAt });
+  return data;
+}
+
+// ---------------------------------------------------------------- Company-wide leave/overtime ledger (senseik-048; leave.company_ledger.read)
+
+/** `CompanyLeaveLedgerRowDto`: one employee row - `leaveStartDate`/`leaveEndDate`/`leaveTypeName` are set only when `isOnLeaveInPeriod`. */
+export interface CompanyLeaveLedgerRow {
+  employeeId: string;
+  firstName: string;
+  lastName: string;
+  orgPath?: string | null;
+  isOnLeaveInPeriod: boolean;
+  leaveStartDate?: string | null;
+  leaveEndDate?: string | null;
+  leaveTypeName?: string | null;
+  /** Annual leave balance projected as of today; missing when the employee's rule set has no active Annual-coded type. */
+  annualLeaveBalance?: number | null;
+  overtimeHoursYtd: number;
+  overtimeLimitExceeded: boolean;
+}
+
+/** `CompanyLeaveLedgerDto`: `overtimeLimitHours` is the legal/tenant limit in force (Overtime.AnnualLimitHours, default 270) - drives the "exceeds limit" label. */
+export interface CompanyLeaveLedger {
+  year: number;
+  month: number;
+  overtimeLimitHours: number;
+  rows: CompanyLeaveLedgerRow[];
+}
+
+export interface CompanyLeaveLedgerQuery {
+  year: number;
+  month: number;
+  orgUnitId?: string | null;
+  includeTerminated: boolean;
+}
+
+/** leave.company_ledger.read - company-wide "who is on leave / balance ranking / annual overtime limit" screen, next to "İzinlerim"/"Fazla mesailerim". */
+export async function getCompanyLeaveLedger(query: CompanyLeaveLedgerQuery): Promise<CompanyLeaveLedger> {
+  const { data } = await apiClient.get<CompanyLeaveLedger>(`${LEAVE_BASE}/company/ledger`, {
+    params: {
+      year: query.year,
+      month: query.month,
+      includeTerminated: query.includeTerminated,
+      ...(query.orgUnitId ? { orgUnitId: query.orgUnitId } : {}),
+    },
+  });
   return data;
 }

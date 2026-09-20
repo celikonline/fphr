@@ -2,7 +2,7 @@
   "id": "senseik-025",
   "title": "Login şirket seçim popup'ı — daha profesyonel tasarım + kapat/yeniden dene akışı",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/login-tenant-select-redesign",
   "worktree": ".claude/worktrees/tenant-select-redesign",
   "acceptance": [

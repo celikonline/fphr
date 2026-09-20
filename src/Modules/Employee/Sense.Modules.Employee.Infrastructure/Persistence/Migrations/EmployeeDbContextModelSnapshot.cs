@@ -465,6 +465,10 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasDefaultValue("Unspecified")
                         .HasColumnName("marital_status");
 
+                    b.Property<Guid?>("MentorEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("mentor_employee_id");
+
                     b.Property<string>("MilitaryStatus")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
@@ -585,6 +589,9 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("ManagerEmployeeId")
                         .HasDatabaseName("ix_employees_manager_employee_id");
+
+                    b.HasIndex("MentorEmployeeId")
+                        .HasDatabaseName("ix_employees_mentor_employee_id");
 
                     b.HasIndex("OrgUnitId")
                         .HasDatabaseName("ix_employees_org_unit_id");
@@ -1011,6 +1018,72 @@ namespace Sense.Modules.Employee.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_termination_reasons_tenant_id_is_active");
 
                     b.ToTable("termination_reasons", "employee");
+                });
+
+            modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("actor");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("details");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("resource");
+
+                    b.Property<string>("ResourceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resource_id");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_log_entries");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id");
+
+                    b.HasIndex("TenantId", "OccurredAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id_occurred_at");
+
+                    b.ToTable("audit_log_entries", "employee");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

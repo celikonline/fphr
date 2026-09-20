@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Domain;
 
 namespace Sense.Modules.Training.Infrastructure.Persistence;
@@ -30,5 +31,17 @@ public sealed class EnrollmentRepository(TrainingDbContext context) : IEnrollmen
         return await context.Enrollments
             .Where(e => e.TenantId == tenantId && e.EmployeeId == employeeId)
             .ToListAsync(ct);
+    }
+
+    public async Task UpdateAsync(Enrollment enrollment, CancellationToken ct = default)
+    {
+        context.Enrollments.Update(enrollment);
+        await Task.CompletedTask;
+    }
+
+    public async Task DeleteAsync(Enrollment enrollment, CancellationToken ct = default)
+    {
+        context.Enrollments.Remove(enrollment);
+        await Task.CompletedTask;
     }
 }

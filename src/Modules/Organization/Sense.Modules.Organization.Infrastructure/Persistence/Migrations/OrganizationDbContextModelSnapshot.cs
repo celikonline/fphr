@@ -383,9 +383,21 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
 
+                    b.Property<int?>("GeofenceRadiusMeters")
+                        .HasColumnType("integer")
+                        .HasColumnName("geofence_radius_meters");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("latitude");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision")
+                        .HasColumnName("longitude");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
@@ -400,6 +412,17 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
+
+                    b.Property<string>("SelfCheckInCode")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character varying(12)")
+                        .HasColumnName("self_check_in_code");
+
+                    b.Property<string>("SgkIsyeriSicilNo")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("sgk_isyeri_sicil_no");
 
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
@@ -417,6 +440,10 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId", "Name")
                         .HasDatabaseName("ix_locations_tenant_id_name");
+
+                    b.HasIndex("TenantId", "SelfCheckInCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_locations_tenant_id_self_check_in_code");
 
                     b.ToTable("locations", "org");
                 });

@@ -38,12 +38,42 @@
       "requests": {
         "label": "Urlaubsbericht",
         "description": "Urlaubsanträge im gewählten Zeitraum: Art, Dauer, Status, Antrags- und Entscheidungsdatum."
+      },
+      "company_ledger": {
+        "label": "Unternehmensweites Urlaubs-/Überstundenregister",
+        "description": "Excel-Export der unternehmensweiten Ansicht neben \"Mein Urlaub\"/\"Meine Überstunden\": wer im gewählten Monat im Urlaub ist, Jahresurlaubssaldo und Jahresüberstunden (270-Stunden-Grenze)."
       }
     },
     "finance": {
       "salaries": {
         "label": "Gehaltsliste",
         "description": "Heute gültige Gehaltsdatensätze: Betrag, Währung, netto/brutto, Zahlungsrhythmus sowie Fahrt- und Essenszuschuss."
+      }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Monatliche Zeiterfassungsübersicht",
+          "description": "Pro Mitarbeiter für den gewählten Monat: erfasste/gearbeitete Tage, Arbeits-, Überstunden- und Nachtstunden; Anzahl Verspätungen, frühe Gehzeiten, Fehltage, Arbeit an Urlaubstagen und offene Abweichungen."
+        },
+        "closing": {
+          "label": "Monatsabschlussbericht (Steuerberater)",
+          "description": "Die monatliche Zeiterfassungsübersicht plus bezahlte, unbezahlte und Krankheitstage sowie ob und wann der Monat genehmigt wurde."
+        }
+      }
+    },
+    "recruitment": {
+      "overview": {
+        "label": "Übersichtsbericht",
+        "description": "Bewerbungen je Stellenanzeige nach Pipeline-Phase: neue Bewerbung, Vorauswahl, Interview, Angebot, eingestellt, abgelehnt und gesamt. Optionaler Bewerbungszeitraum."
+      },
+      "daily_counts": {
+        "label": "Bericht Tageszahlen",
+        "description": "Neue Bewerbungen und neu angelegte Kandidaten für jeden Tag im gewählten Zeitraum (Tage ohne Einträge erscheinen mit null)."
+      },
+      "candidates_export": {
+        "label": "Kandidatenlisten-Export",
+        "description": "Kandidaten: Kontaktdaten, Quelle, Tags sowie die Stellen, auf die sie sich beworben haben, mit aktueller Phase. Optionaler Zeitraum der Anlage."
       }
     }
   },
@@ -104,7 +134,7 @@
       "currentYear": "Laufendes Jahr"
     },
     "empty": "Keine Kennzahlen für den gewählten Zeitraum.",
-    "scopedNote": "Ihre Berechtigung ist auf Einheiten beschränkt, daher wird nur die Verteilung je Einheit angezeigt.",
+    "scopedNote": "Ihre Berechtigung ist auf Einheiten beschränkt, daher wird nur die Verteilung je Einheit und Abteilung angezeigt.",
     "cards": {
       "headcount": "Aktiver Personalstand",
       "turnover": "Fluktuationsrate",
@@ -121,7 +151,7 @@
     "charts": {
       "gender": "Geschlechterverteilung",
       "genderByUnit": "Personalstand nach Einheit und Geschlecht",
-      "department": "Personalstand nach Einheit",
+      "department": "Personalstand nach Abteilung",
       "leaveByType": "Urlaubsnutzung nach Art ({{year}})",
       "careerMoves": "Arten von Karriereänderungen",
       "noData": "Keine Daten vorhanden",
@@ -147,6 +177,7 @@
     "TURNOVER_RATE": { "label": "Fluktuationsrate" },
     "EARLY_TURNOVER_RATE": { "label": "Frühfluktuation (erste 6 Monate)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Geschlechterverteilung nach Einheit" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Geschlechterverteilung nach Abteilung" },
     "dimensions": {
       "Promotion": "Beförderung",
       "LateralMove": "Lateraler Wechsel",

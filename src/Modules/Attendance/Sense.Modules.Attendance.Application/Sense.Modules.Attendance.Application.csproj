@@ -11,6 +11,8 @@
     <ProjectReference Include="../../Leave/Sense.Modules.Leave.Contracts/Sense.Modules.Leave.Contracts.csproj" />
     <!-- Monthly puantaj (package A5) reads public holidays via Organization.Contracts.IHolidayCalendarLookup. -->
     <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <!-- Self-servis check-in (S-31) stamps punches in the tenant's local time via Identity.Contracts.ITenantTimeZoneLookup. -->
+    <ProjectReference Include="../../Identity/Sense.Modules.Identity.Contracts/Sense.Modules.Identity.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>
   <ItemGroup>

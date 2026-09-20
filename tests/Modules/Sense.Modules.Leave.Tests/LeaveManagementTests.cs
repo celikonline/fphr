@@ -5,7 +5,10 @@ using NSubstitute;
 using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Employee.Infrastructure.Lookups;
+using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Application.Calendar;
@@ -230,12 +233,18 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
         services.AddSingleton(holidays);
+
+        // senseik-007 (age-50-exception): EmployeeHiredHandler needs IEmployeeBirthDateLookup - same registration as
+        // OvertimeTests/LeaveBalanceRecalculationJobTests; without it every EmployeeHired publish fails DI resolution.
+        services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);
+        services.AddScoped<IEmployeeBirthDateLookup, EmployeeBirthDateLookup>();
     }
 
     protected override async Task OnDatabaseReadyAsync()
     {
         await ServiceProvider!.GetRequiredService<LeaveDbContext>().Database.MigrateAsync();
         await ServiceProvider.GetRequiredService<AttendanceDbContext>().Database.MigrateAsync();
+        await ServiceProvider.GetRequiredService<EmployeeDbContext>().Database.MigrateAsync();
     }
 
     private async Task<Result<T>> RunAsync<THandler, T>(Func<THandler, Task<Result<T>>> run, params object[] args)
@@ -386,6 +395,7 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         // group heading - the heading needs the requester's org unit name, best-effort resolved via IOrgUnitLookup.
         var (tenantId, employeeId, annualId) = await HireAsync();
         _currentUser.EmployeeId.Returns(employeeId);
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), employeeId, Arg.Any<CancellationToken>()).Returns(true);
         using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
         var monday = NextWeekMonday();
 

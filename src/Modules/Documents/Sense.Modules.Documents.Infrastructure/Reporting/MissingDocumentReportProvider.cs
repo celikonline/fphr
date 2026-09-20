@@ -32,7 +32,7 @@ public sealed class MissingDocumentReportProvider(
 
     public async Task<ReportFileResult> GenerateAsync(Guid tenantId, IReadOnlyDictionary<string, string> parameters, CancellationToken cancellationToken)
     {
-        var (items, _) = await requirements.ListReportAsync(status: null, skip: 0, take: int.MaxValue, cancellationToken);
+        var (items, _) = await requirements.ListReportAsync(status: null, skip: 0, take: int.MaxValue, employeeIds: null, cancellationToken);
 
         var typeMap = new Dictionary<Guid, DocumentTypeDefinition>();
         foreach (var typeId in items.Select(i => i.DocumentTypeId).Distinct())

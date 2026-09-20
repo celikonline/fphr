@@ -2,7 +2,7 @@
   "id": "senseik-026",
   "title": "İzin talebi onay ekranında çakışan izinler için görsel takvim/hücre görünümü",
   "owner": "pc-b",
-  "state": "review",
+  "state": "merged",
   "branch": "b/leave-overlap-calendar-view",
   "worktree": ".claude/worktrees/leave-overlap-view",
   "acceptance": [

@@ -32,4 +32,14 @@ public interface IEmployeeAnalyticsQueries
 
     /// <summary>Active-employee headcount grouped by (OrgUnitId, Gender). The caller resolves OrgUnitId to a display name via Organization.Contracts.</summary>
     Task<IReadOnlyList<GenderByOrgUnitCount>> GetGenderByOrgUnitAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Active-employee headcount grouped by (Department-level org unit id, Gender) - unlike
+    /// <see cref="GetGenderByOrgUnitAsync"/>, which groups by each employee's raw (usually deepest, e.g. Title-level)
+    /// OrgUnitId, this walks the org placement chain (senseik-046, same resolution as the employee card's
+    /// DepartmentName and GetDepartmentDistributionHandler) so employees under different titles in the same
+    /// department are counted together. Null groups employees with no Department-level ancestor (unassigned or
+    /// placed above Department, e.g. directly on the company).
+    /// </summary>
+    Task<IReadOnlyList<GenderByOrgUnitCount>> GetGenderByDepartmentAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }

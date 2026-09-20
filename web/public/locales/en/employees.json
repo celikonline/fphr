@@ -35,11 +35,13 @@
     "withAccount": "With account",
     "withoutAccount": "Without account",
     "missingInfo": "Missing info",
+    "missingInfoBadge": "Missing info ({{count}})",
     "missingInfoHint": "Hired, but the national ID, hire/birth date, unit, contract type or employment type is empty."
   },
   "columns": {
     "name": "Name",
-    "orgUnit": "Unit",
+    "department": "Department",
+    "title": "Title",
     "manager": "Manager",
     "workEmail": "Work email",
     "workPhone": "Work phone",

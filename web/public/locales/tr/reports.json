@@ -38,12 +38,42 @@
       "requests": {
         "label": "İzin raporu",
         "description": "Seçilen tarih aralığındaki izin talepleri: tür, süre, durum, talep ve karar tarihi."
+      },
+      "company_ledger": {
+        "label": "Şirket geneli izin/fazla mesai defteri",
+        "description": "\"İzinlerim\"/\"Fazla mesailerim\" ekranındaki şirket geneli görünümün Excel çıktısı: seçilen ayda kimler izinde, yıllık izin bakiyesi ve yıllık fazla mesai (270 saat sınırı)."
       }
     },
     "finance": {
       "salaries": {
         "label": "Maaş listesi raporu",
         "description": "Bugün geçerli maaş kayıtları: tutar, para birimi, net/brüt, ödeme düzeni ve yol/yemek yardımı."
+      }
+    },
+    "attendance": {
+      "monthly": {
+        "summary": {
+          "label": "Aylık puantaj özeti raporu",
+          "description": "Seçilen ay için çalışan başına kayıtlı/çalışılan gün, çalışılan, fazla mesai ve gece saatleri; geç kalma, erken çıkış, eksik gün, izinli günde çalışma ve çözülmemiş uyuşmazlık sayıları."
+        },
+        "closing": {
+          "label": "Ay sonu kapatma (mali müşavir) raporu",
+          "description": "Aylık puantaj özetine ek olarak ücretli, ücretsiz ve raporlu izin günleri ile ayın onaylanıp onaylanmadığı ve onay tarihi."
+        }
+      }
+    },
+    "recruitment": {
+      "overview": {
+        "label": "Genel bakış raporu",
+        "description": "İlan bazında başvuruların aşamalara göre dağılımı: yeni başvuru, ön eleme, mülakat, teklif, işe alındı, reddedildi ve toplam. İsteğe bağlı başvuru tarihi aralığı."
+      },
+      "daily_counts": {
+        "label": "Günlük sayılar raporu",
+        "description": "Seçilen tarih aralığındaki her gün için yeni başvuru ve yeni eklenen aday sayısı (adayı olmayan günler sıfır olarak yer alır)."
+      },
+      "candidates_export": {
+        "label": "Aday listesi dışa aktarımı",
+        "description": "Adaylar: iletişim bilgileri, kaynak, etiketler ve başvurulan ilanlar ile güncel aşamaları. İsteğe bağlı oluşturulma tarihi aralığı."
       }
     }
   },
@@ -104,7 +134,7 @@
       "currentYear": "Cari yıl"
     },
     "empty": "Seçili dönem için gösterge verisi yok.",
-    "scopedNote": "Yetkiniz birim kapsamında olduğu için yalnızca birim bazlı dağılım gösterilir.",
+    "scopedNote": "Yetkiniz birim kapsamında olduğu için yalnızca birim ve departman bazlı dağılım gösterilir.",
     "cards": {
       "headcount": "Aktif kadro",
       "turnover": "İşten ayrılma oranı",
@@ -121,7 +151,7 @@
     "charts": {
       "gender": "Cinsiyet dağılımı",
       "genderByUnit": "Birim ve cinsiyete göre kadro",
-      "department": "Birim bazında kadro",
+      "department": "Departman bazında kadro",
       "leaveByType": "İzin türlerine göre kullanım ({{year}})",
       "careerMoves": "Kariyer değişim türleri",
       "noData": "Gösterilecek veri yok",
@@ -147,6 +177,7 @@
     "TURNOVER_RATE": { "label": "İşten ayrılma oranı" },
     "EARLY_TURNOVER_RATE": { "label": "Erken ayrılma payı (ilk 6 ay)" },
     "GENDER_RATIO_BY_UNIT": { "label": "Birim bazında cinsiyet dağılımı" },
+    "GENDER_RATIO_BY_DEPARTMENT": { "label": "Departman bazında cinsiyet dağılımı" },
     "dimensions": {
       "Promotion": "Terfi",
       "LateralMove": "Yatay geçiş",

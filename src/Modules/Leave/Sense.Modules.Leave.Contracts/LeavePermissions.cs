@@ -88,8 +88,19 @@ public static class LeavePermissions
     public static readonly Permission AbsencesManage = new(
         "leave.absences.manage", Module, "Devamsızlık Kaydı Yönetimi", Group, "Çalışanların devamsızlık kayıtlarını işleme ve geri alma");
 
+    /// <summary>
+    /// senseik-048: şirket geneli izin/fazla mesai defteri ("bu ay kimler izinde", bakiye sıralaması, 270 saat sınır
+    /// aşımı). HR/HRSpecialist zaten "leave.*" joker deseniyle, Owner/Admin "*" ile bunu otomatik alır -
+    /// SystemRoleDefinitions'a ayrıca eklenmedi. Not: mevcut "leave.*.read" / "*.read" joker desenleri (PayrollSpecialist,
+    /// Timekeeper, Auditor, ApiIntegration) de bu anahtarı eşler - veri yine ReportEmployeeSet üzerinden rolün veri kapsamıyla
+    /// (ör. Timekeeper = Departman) sınırlanır. Manager açık listeyle tanımlı, almaz.
+    /// </summary>
+    public static readonly Permission CompanyLedgerRead = new(
+        "leave.company_ledger.read", Module, "Şirket İzin/Fazla Mesai Defterini Görüntüleme", Group,
+        "Şirket genelinde kimin izinde olduğunu, yıllık izin bakiyelerini ve yıllık fazla mesai sınırı aşımlarını görüntüleme");
+
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
-         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead, AbsencesView, AbsencesManage];
+         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead];
 }

@@ -21,6 +21,7 @@ import {
   LogOut,
   MapPin,
   Network,
+  NotebookText,
   Package,
   Palmtree,
   PieChart,
@@ -43,11 +44,15 @@ import {
   FolderOpen,
   HardHat,
   ClipboardCheck,
+  Blocks,
+  QrCode,
+  MonitorCheck,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
 /** Corporate palette keys from mantine-theme.ts usable for per-item icon accents. */
-export type CorporateColorKey = "brand" | "navy" | "blue" | "cyan" | "teal" | "orange" | "gold" | "steel";
+export type CorporateColorKey =
+  "brand" | "navy" | "blue" | "cyan" | "teal" | "orange" | "gold" | "steel";
 
 export interface NavItem {
   key: string;
@@ -69,7 +74,9 @@ export interface NavItem {
 
 /** CSS var for a NavItem's icon accent, for use as the lucide icon's `color` prop or a styles override. */
 export function navIconColor(item: NavItem): string {
-  return item.iconColor ? `var(--mantine-color-${item.iconColor}-6)` : "var(--mantine-primary-color-filled)";
+  return item.iconColor
+    ? `var(--mantine-color-${item.iconColor}-6)`
+    : "var(--mantine-primary-color-filled)";
 }
 
 /** Settings hub card permissions, reused so the "Ayarlar" menu entry shows whenever any card would. */
@@ -93,12 +100,16 @@ export const SETTINGS_PERMISSIONS = {
   documentTypes: ["documents.document_types.view", "documents.document_types.manage"],
   missingDocuments: ["documents.requirements.view"],
   assetCategories: ["assets.categories.view", "assets.categories.manage"],
-  expenseCategories: ["expense.categories.manage"],
+  expenseCategories: ["expense.categories.view", "expense.categories.manage"],
   recruitmentFormTemplates: ["recruitment.form_templates.read"],
   recruitmentAutomationRules: ["recruitment.automation_rules.read"],
   workSchedules: ["attendance.workschedule.view"],
+  // senseik-001: vize belge süreçleri (approver, template documents, process definitions).
+  visaProcesses: ["documents.visa.manage"],
   ohsHazardClassification: ["ohs.hazard_classifications.view", "ohs.hazard_classifications.manage"],
   ohsRiskAssessments: ["ohs.risk_assessments.view", "ohs.risk_assessments.manage"],
+  // senseik-057: read = identity.tenant.view (same as Erişim ayarları), change = identity.modules.manage.
+  modules: ["identity.tenant.view", "identity.modules.manage"],
 } as const satisfies Record<string, readonly string[]>;
 
 const ANY_SETTINGS_PERMISSION = Array.from(new Set(Object.values(SETTINGS_PERMISSIONS).flat()));
@@ -141,6 +152,17 @@ export const NAV_ITEMS: NavItem[] = [
     iconColor: "orange",
   },
   {
+    // senseik-048: "İzinlerim"/"Fazla mesailerim" YANINDA şirket geneli görünüm (İK Müdürü/Hesap Sahibi) - ayrı bir
+    // izinle (leave.company_ledger.read) kapılı, HR/HRSpecialist "leave.*" ve Owner/Admin "*" joker desenleriyle
+    // otomatik alır (SystemRoleDefinitions'a append edilmedi, doğrulandı - bkz. LeavePermissions.CompanyLedgerRead).
+    key: "companyLedger",
+    labelKey: "nav.companyLedger",
+    path: "/app/leave/company-ledger",
+    icon: NotebookText,
+    permissions: ["leave.company_ledger.read"],
+    iconColor: "teal",
+  },
+  {
     key: "leaveRules",
     labelKey: "nav.leaveRules",
     path: "/app/settings/leave/rule-sets",
@@ -148,7 +170,13 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["leave.rule_sets.read"],
     iconColor: "steel",
   },
-  { key: "requests", labelKey: "nav.requests", path: "/app/requests", icon: ClipboardList, iconColor: "gold" },
+  {
+    key: "requests",
+    labelKey: "nav.requests",
+    path: "/app/requests",
+    icon: ClipboardList,
+    iconColor: "gold",
+  },
   { key: "apps", labelKey: "nav.apps", path: "/app/apps", icon: AppWindow, iconColor: "navy" },
   {
     key: "reports",
@@ -187,9 +215,21 @@ export const NAV_ITEMS: NavItem[] = [
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
-  { key: "support", labelKey: "nav.support", path: "/app/support", icon: LifeBuoy, iconColor: "orange" },
+  {
+    key: "support",
+    labelKey: "nav.support",
+    path: "/app/support",
+    icon: LifeBuoy,
+    iconColor: "orange",
+  },
   { key: "trust", labelKey: "nav.trust", path: "/app/trust", icon: ShieldCheck, iconColor: "teal" },
-  { key: "account", labelKey: "nav.account", path: "/app/account", icon: UserCircle, iconColor: "navy" },
+  {
+    key: "account",
+    labelKey: "nav.account",
+    path: "/app/account",
+    icon: UserCircle,
+    iconColor: "navy",
+  },
 ];
 
 /** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
@@ -252,6 +292,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
+    key: "monthlyTimesheet",
+    labelKey: "apps.monthlyTimesheet",
+    path: "/app/attendance/monthly-timesheet",
+    icon: ClipboardCheck,
+    permissions: ["attendance.timesheet.view"],
+    iconColor: "navy",
+  },
+  {
     key: "shiftPlan",
     labelKey: "apps.shiftPlan",
     path: "/app/attendance/shift-plan",
@@ -266,6 +314,22 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Upload,
     permissions: ["attendance.timesheet.import"],
     iconColor: "orange",
+  },
+  {
+    key: "selfCheckIn",
+    labelKey: "apps.selfCheckIn",
+    path: "/app/attendance/self-check-in",
+    icon: QrCode,
+    permissions: ["attendance.my.checkin"],
+    iconColor: "teal",
+  },
+  {
+    key: "liveBoard",
+    labelKey: "apps.liveBoard",
+    path: "/app/attendance/live-board",
+    icon: MonitorCheck,
+    permissions: ["attendance.board.view"],
+    iconColor: "navy",
   },
   {
     key: "payroll",
@@ -291,7 +355,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     permissions: ["expense.claims.view", "expense.advances.view"],
     iconColor: "blue",
   },
-  { key: "performance", labelKey: "apps.performance", path: "/app/performance/goals", icon: Target, permissions: ["performance.my.goals"], iconColor: "gold" },
+  {
+    key: "performance",
+    labelKey: "apps.performance",
+    path: "/app/performance/goals",
+    icon: Target,
+    permissions: ["performance.my.goals"],
+    iconColor: "gold",
+  },
   {
     key: "performanceReviewCycles",
     labelKey: "apps.performanceReviewCycles",
@@ -507,8 +578,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         descriptionKey: "settings.visaProcessesDesc",
         path: "/app/settings/rules/visa-processes",
         icon: Stamp,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 1,
+        permissions: SETTINGS_PERMISSIONS.visaProcesses,
       },
     ],
   },
@@ -531,6 +601,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/system/security-policy",
         icon: Lock,
         permissions: SETTINGS_PERMISSIONS.securityPolicy,
+      },
+      {
+        key: "modules",
+        labelKey: "settings.modules",
+        descriptionKey: "settings.modulesDesc",
+        path: "/app/settings/system/modules",
+        icon: Blocks,
+        permissions: SETTINGS_PERMISSIONS.modules,
       },
       {
         key: "usersRoles",

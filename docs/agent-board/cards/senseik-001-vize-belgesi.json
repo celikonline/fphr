@@ -2,9 +2,9 @@
   "id": "senseik-001",
   "title": "Vize belgesi talebi ve süreci (Faz 1)",
   "owner": "pc-a",
-  "state": "running",
+  "state": "review",
   "branch": "a/visa-document-request",
-  "worktree": ".claude/worktrees/visa",
+  "worktree": ".claude/worktrees/wf_9fd15ce6-2c5-1",
   "acceptance": [
     "Çalışan vize belgesi talebi oluşturabiliyor; talep Documents modülünde kalıcı",
     "Onay akışı Workflow motorunun mevcut state machine'ini kullanıyor (yeni motor yazılmıyor)",
@@ -13,5 +13,6 @@
   ],
   "merge_gate": "dotnet build + dotnet test + pnpm --filter web typecheck + eslint temiz",
   "handoff": "docs/handoffs/visa-document-request.md",
-  "source": "11.7-yol-haritasi.md Faz 1 (vize belgesi); form testi raporunda 'Vize Belge Talebi' eksik işaretli"
+  "source": "11.7-yol-haritasi.md Faz 1 (vize belgesi); form testi raporunda 'Vize Belge Talebi' eksik işaretli",
+  "merge_gate_status": "dotnet build (Documents.Api/Sense.Api/Migrator/Worker) + Documents.Tests 180/180 + Architecture 56/56 + web tsc/eslint/vitest yeşil; Testcontainers/entegrasyon testleri ve gerçek MinIO/Workflow uçtan uca Docker kapalı olduğu için ÇALIŞTIRILMADI - CI'da doğrulanmalı"
 }

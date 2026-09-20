@@ -34,10 +34,24 @@ public sealed class MyLeaveController : ApiControllerBase
     public async Task<IActionResult> Ledger([FromQuery] Guid? leaveTypeId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListMyLeaveLedgerQuery(leaveTypeId), ct));
 
+    // senseik-039: burada artık .Localize(localizer) ÇAĞRILMIYOR. Localizer, HTTP Accept-Language başlığından
+    // (tarayıcı/işletim sistemi diline göre) kültür belirliyor — bu, kullanıcının uygulama içi dil tercihiyle
+    // (react-i18next, localStorage'da tutulur) ASLA garanti bağlantılı değil. İki tercih uyuşmadığında bu uç nokta
+    // "+ Talep" açılır listesinde İngilizce isim döndürüyordu, oysa aynı ham anahtarlar (leave.type.annual vb.)
+    // Ayarlar/takvim/izin defteri gibi her yerde frontend'in kendi `useLeaveName()` hook'uyla (uygulama dili baz
+    // alınarak) doğru şekilde çözülüyordu. Kalıcı düzeltme: isimleri ham anahtar olarak bırak — tıpkı
+    // LeaveRuleSet.types[].name ve EmployeeLeaveBalances.balances[].leaveTypeName gibi — ve çözümlemeyi tek
+    // otorite olan frontend i18n'e devret (bkz. web/src/pages/leave/my-leave.tsx buildRequestableTypes).
+
+    /// <summary>senseik-036 md.7: hastalık izni 6 hafta devamsızlık eşiği sayacı (4857 md.25/I-b, bilgi amaçlı).</summary>
+    [HttpGet("sick-leave-absence-status")]
+    [ProducesResponseType<SickLeaveAbsenceStatusDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SickLeaveAbsenceStatus(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetMySickLeaveAbsenceStatusQuery(), ct));
     [HttpGet("leave-types")]
     [ProducesResponseType<IReadOnlyList<RequestableLeaveTypeDto>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> LeaveTypes([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
-        FromResult((await Dispatcher.Query(new ListMyRequestableLeaveTypesQuery(), ct)).Localize(localizer));
+    public async Task<IActionResult> LeaveTypes(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListMyRequestableLeaveTypesQuery(), ct));
 
     [HttpGet("requests")]
     [ProducesResponseType<IReadOnlyList<LeaveRequestDto>>(StatusCodes.Status200OK)]

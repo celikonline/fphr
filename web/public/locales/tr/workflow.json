@@ -3,7 +3,8 @@
     "Leave": "İzin",
     "Advance": "Avans",
     "Expense": "Harcama",
-    "Overtime": "Fazla mesai"
+    "Overtime": "Fazla mesai",
+    "VisaDocument": "Vize belgesi"
   },
   "policies": {
     "listTitle": "Onay süreçleri",

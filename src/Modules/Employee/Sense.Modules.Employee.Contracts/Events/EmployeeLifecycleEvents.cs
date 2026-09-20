@@ -25,6 +25,14 @@ public enum SuspensionReason
 /// </summary>
 public sealed record EmployeeHired(Guid TenantId, Guid EmployeeId, DateOnly HireDate, DateOnly LeaveAccrualStartDate) : IntegrationEvent(TenantId);
 
+/// <summary>
+/// Raised when an already-hired employee's <paramref name="HireDate"/> or effective "İzne esas hak ediş tarihi"
+/// (<paramref name="LeaveAccrualStartDate"/>, falls back to HireDate when unset) changes through the core record edit
+/// (senseik-044, C-02). <see cref="EmployeeHired"/> fires only once, so without this event Leave's profile keeps the
+/// original dates and keeps accruing entitlement from them. Never raised for a no-op or for the first-hire transition.
+/// </summary>
+public sealed record EmployeeEmploymentDatesChanged(Guid TenantId, Guid EmployeeId, DateOnly HireDate, DateOnly LeaveAccrualStartDate) : IntegrationEvent(TenantId);
+
 /// <summary>Raised when an Active employee is suspended (askıya alındı); the Identity account is not touched by this event.</summary>
 public sealed record EmployeeSuspended(Guid TenantId, Guid EmployeeId, SuspensionReason Reason) : IntegrationEvent(TenantId);
 

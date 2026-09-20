@@ -13,6 +13,7 @@ using Sense.Modules.Identity.Domain;
 using Sense.Modules.Identity.Infrastructure.Messaging;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Modules.Identity.Infrastructure.Security;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Configuration;
 using Sense.Shared.Contracts.Modules;
@@ -65,16 +66,22 @@ public sealed class IdentityModule : IModule
         services.AddScoped<IImpersonationGrantRepository, ImpersonationGrantRepository>();
         services.AddScoped<IUnitAuthorizationRepository, UnitAuthorizationRepository>();
         services.AddScoped<IIdentityReadStore, IdentityReadStore>();
-        services.AddScoped<IAuditLogReadStore, AuditLogReadStore>();
+
+        // senseik-049: audit-log okuma tarafı artık çoklu kaynak - bkz. IAuditLogSource'un doc comment'i.
+        services.AddScoped<IAuditLogSource, IdentityAuditLogSource>();
 
         services.AddScoped<PermissionService>();
         services.AddScoped<IPermissionService>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IPermissionCacheInvalidator>(sp => sp.GetRequiredService<PermissionService>());
         services.AddScoped<IDataScopeService, DataScopeService>();
         services.AddScoped<IAccessSettingsService, AccessSettingsService>();
+        services.AddScoped<ModuleAccessService>();
+        services.AddScoped<IModuleAccessService>(sp => sp.GetRequiredService<ModuleAccessService>());
+        services.AddScoped<IModuleSettingsCacheInvalidator>(sp => sp.GetRequiredService<ModuleAccessService>());
         services.AddScoped<IImpersonationSessionValidator, ImpersonationSessionValidator>();
 
         services.AddScoped<AccessTypeGuard>();
+        services.AddScoped<Sense.Modules.Identity.Application.Roles.RolePermissionGrantGuard>();
         services.AddScoped<EmployeeInvitationService>();
 
         // Mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşır (API başlangıcı).
@@ -98,6 +105,9 @@ public sealed class IdentityModule : IModule
 
         // Cross-module read contract consumed by Career (Faz 9): slug → tenantId, pasif kiracı için null (ADR-0007)
         services.AddScoped<ITenantSlugLookup, TenantSlugLookup>();
+
+        // Cross-module read contract consumed by Attendance (S-31 self-servis check-in): tenant IANA saat dilimi
+        services.AddScoped<ITenantTimeZoneLookup, TenantTimeZoneLookup>();
         services.AddSingleton<IPermissionCatalog>(sp => new PermissionCatalog(sp.GetRequiredService<IReadOnlyList<IModule>>()));
 
         services.AddSingleton<IPasswordHasher, AspNetPasswordHasher>();

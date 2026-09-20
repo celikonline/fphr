@@ -33,6 +33,7 @@ public static class LeaveDomainErrors
     public const string OvertimeNotPending = "leave.overtime.not_pending";
     public const string OvertimeInvalidDuration = "leave.errors.overtime_invalid_duration";
     public const string OvertimeInvalidOverlap = "leave.errors.overtime_invalid_overlap";
+    public const string OvertimeInvalidPayRateKind = "leave.errors.overtime_invalid_pay_rate_kind";
     public const string OvertimeNotApproved = "leave.errors.overtime_not_approved";
     public const string OvertimeAlreadyConverted = "leave.errors.overtime_already_converted";
     public const string OvertimeInvalidRate = "leave.errors.overtime_invalid_rate";

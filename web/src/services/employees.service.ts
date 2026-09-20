@@ -3,7 +3,13 @@
  * Grid standard `?page&pageSize&sort&q` plus employee filters; sort fields: displayName, firstName, lastName, hireDate, status ("-field" = desc).
  */
 import { apiClient } from "@senseik/api-client";
-import type { BulkOperationResult, EmployeeFilter, EmployeeSelection, PagedQueryParams, PagedResult } from "@/types";
+import type {
+  BulkOperationResult,
+  EmployeeFilter,
+  EmployeeSelection,
+  PagedQueryParams,
+  PagedResult,
+} from "@/types";
 import type { CustomFieldDataType, CustomFieldSection } from "@/services/custom-fields.service";
 
 const EMPLOYEES_BASE = "/v1/employees";
@@ -21,8 +27,10 @@ export type EmployeeSortField = "displayName" | "firstName" | "lastName" | "hire
 export type Gender = "unspecified" | "male" | "female" | "other";
 export type MaritalStatus = "unspecified" | "single" | "married" | "divorced";
 export type EducationStatus = "student" | "graduate";
-export type HighestEducationLevel = "primary" | "middleSchool" | "highSchool" | "associate" | "bachelor" | "master" | "doctorate";
-export type MilitaryStatus = "notCompleted" | "completed" | "deferred" | "exempt" | "draftEvader" | "absentee";
+export type HighestEducationLevel =
+  "primary" | "middleSchool" | "highSchool" | "associate" | "bachelor" | "master" | "doctorate";
+export type MilitaryStatus =
+  "notCompleted" | "completed" | "deferred" | "exempt" | "draftEvader" | "absentee";
 export type DisabilityDegree = "none" | "first" | "second" | "third";
 export type BloodType = "oPos" | "oNeg" | "aPos" | "aNeg" | "bPos" | "bNeg" | "abPos" | "abNeg";
 export type ContractType = "indefinite" | "fixedTerm";
@@ -39,7 +47,14 @@ export type EmploymentType =
   | "agencyWorker"
   | "subcontractor";
 /** Employee.SuspensionReason.ToString() (like Status, pre-stringified server-side: exact PascalCase member name). */
-export type SuspensionReason = "MilitaryService" | "UnionOffice" | "LongUnpaidLeave" | "Detention" | "HealthReport" | "ForceMajeure" | "Other";
+export type SuspensionReason =
+  | "MilitaryService"
+  | "UnionOffice"
+  | "LongUnpaidLeave"
+  | "Detention"
+  | "HealthReport"
+  | "ForceMajeure"
+  | "Other";
 
 export interface EmployeeListItem {
   id: string;
@@ -61,8 +76,13 @@ export interface EmployeeListItem {
   employmentType: EmploymentType | null;
   /** "Eksik bilgi" badge: a hired record with an unfilled personnel field (drafts are never flagged). */
   hasMissingInfo: boolean;
+  /** Count of unfilled personnel fields behind hasMissingInfo, for the badge text ("Eksik bilgi (2)"). */
+  missingInfoFieldCount: number;
   /** "Title" level unit of the placement chain (card view); missing when unplaced. */
   titleName?: string | null;
+  /** "Department" level unit of the placement chain (senseik-046: the grid's "Birim" column showed the raw, usually
+   * Title-level, org unit before this existed) - missing when the employee has no Department-level ancestor. */
+  departmentName?: string | null;
 }
 
 /**
@@ -171,6 +191,22 @@ export interface EmployeeInput {
   employmentType?: EmploymentType | null;
   /** Omitted/null keeps the stored value (or defaults it to hireDate the first time one is set). */
   leaveAccrualStartDate?: string | null;
+  /**
+   * "Temizle" (X) sinyali (senseik-044): true gönderildiğinde alan HireDate takibini atlayıp açıkça boşa (null)
+   * ayarlanır - `leaveAccrualStartDate: null` göndermek zaten "dokunulmadı" anlamına geldiği için (yukarıdaki not),
+   * gerçek bir temizleme isteğini bundan ayırmak için bu ayrı bayrak gerekiyor.
+   */
+  clearLeaveAccrualStartDate?: boolean;
+  /**
+   * senseik-058: sicil numarası / uyruk / yabancı kimlik no / pasaport no / SGK meslek kodu are "keep when absent" -
+   * omitted (or null) preserves the stored value on update; an empty string clears a text field. `toEmployeeInput`
+   * deliberately does not send them (the card does not display them yet), so a section save cannot wipe them.
+   */
+  sicilNumarasi?: string | null;
+  nationality?: "turkish" | "foreign";
+  foreignIdNumber?: string | null;
+  passportNumber?: string | null;
+  sgkOccupationCode?: string | null;
 }
 
 export interface DirectoryEntry {
@@ -180,6 +216,10 @@ export interface DirectoryEntry {
   workEmail: string | null;
   /** Null when the "work phone numbers" access setting is off for the caller. */
   workPhone: string | null;
+  /** Title/Department level of the org placement chain (senseik-046), resolved server-side so a caller with
+   * directory.view but not organization.units.read (e.g. Bordro/Puantör) still sees it instead of "—". */
+  titleName?: string | null;
+  departmentName?: string | null;
 }
 
 export interface OrgChartNode {
@@ -210,7 +250,9 @@ function compact<T extends object>(params: T): Partial<T> {
   ) as Partial<T>;
 }
 
-export async function listEmployees(params: ListEmployeesParams = {}): Promise<PagedResult<EmployeeListItem>> {
+export async function listEmployees(
+  params: ListEmployeesParams = {}
+): Promise<PagedResult<EmployeeListItem>> {
   const { includeSubUnits, ...rest } = params;
   const { data } = await apiClient.get<PagedResult<EmployeeListItem>>(EMPLOYEES_BASE, {
     params: compact({ ...rest, includeSubUnits: includeSubUnits || undefined }),
@@ -238,18 +280,26 @@ export async function updateEmployee(id: string, input: EmployeeInput): Promise<
   return data;
 }
 
-export async function bulkAssignManager(selection: EmployeeSelection, managerEmployeeId: string): Promise<BulkOperationResult> {
-  const { data } = await apiClient.post<BulkOperationResult>(`${EMPLOYEES_BASE}/bulk/assign-manager`, {
-    selection,
-    managerEmployeeId,
-  });
+export async function bulkAssignManager(
+  selection: EmployeeSelection,
+  managerEmployeeId: string
+): Promise<BulkOperationResult> {
+  const { data } = await apiClient.post<BulkOperationResult>(
+    `${EMPLOYEES_BASE}/bulk/assign-manager`,
+    {
+      selection,
+      managerEmployeeId,
+    }
+  );
   return data;
 }
 
 export async function getEmployeeDirectory(
   params: PagedQueryParams & { orgUnitId?: string | null } = {}
 ): Promise<PagedResult<DirectoryEntry>> {
-  const { data } = await apiClient.get<PagedResult<DirectoryEntry>>(`${EMPLOYEES_BASE}/directory`, { params: compact(params) });
+  const { data } = await apiClient.get<PagedResult<DirectoryEntry>>(`${EMPLOYEES_BASE}/directory`, {
+    params: compact(params),
+  });
   return data;
 }
 
@@ -259,7 +309,9 @@ export async function getOrgChart(): Promise<OrgChartNode[]> {
 }
 
 export async function getUpcomingBirthdays(days = 30): Promise<UpcomingBirthday[]> {
-  const { data } = await apiClient.get<UpcomingBirthday[]>(`${EMPLOYEES_BASE}/upcoming-birthdays`, { params: { days } });
+  const { data } = await apiClient.get<UpcomingBirthday[]>(`${EMPLOYEES_BASE}/upcoming-birthdays`, {
+    params: { days },
+  });
   return data;
 }
 
@@ -271,7 +323,9 @@ export interface DepartmentDistributionItem {
 }
 
 export async function getDepartmentDistribution(): Promise<DepartmentDistributionItem[]> {
-  const { data } = await apiClient.get<DepartmentDistributionItem[]>(`${EMPLOYEES_BASE}/department-distribution`);
+  const { data } = await apiClient.get<DepartmentDistributionItem[]>(
+    `${EMPLOYEES_BASE}/department-distribution`
+  );
   return data;
 }
 
@@ -280,7 +334,10 @@ export async function getDepartmentDistribution(): Promise<DepartmentDistributio
  * militaryStatus, disabilityDegree, bloodType) round-trip whatever the detail held (masked/null without
  * employee.sensitive.view) - the server always preserves the real stored values for a caller who cannot see them.
  */
-export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<EmployeeInput> = {}): EmployeeInput {
+export function toEmployeeInput(
+  detail: EmployeeDetail,
+  overrides: Partial<EmployeeInput> = {}
+): EmployeeInput {
   return {
     firstName: detail.firstName,
     lastName: detail.lastName,
@@ -307,7 +364,11 @@ export function toEmployeeInput(detail: EmployeeDetail, overrides: Partial<Emplo
     postalCode: detail.postalCode,
     contractType: detail.contractType,
     employmentType: detail.employmentType,
-    leaveAccrualStartDate: detail.leaveAccrualStartDate ?? null,
+    // Deliberately omitted (not defaulted to detail.leaveAccrualStartDate): the backend treats a missing/null value
+    // as "untouched, keep following HireDate automatically" (senseik-044) - resending the currently-displayed value
+    // on every unrelated section save would pin it and silently defeat that auto-follow behavior. Only the section
+    // that actually edits this field (GeneralSection) should pass leaveAccrualStartDate/clearLeaveAccrualStartDate
+    // as an explicit override.
     ...overrides,
   };
 }
@@ -335,7 +396,9 @@ export interface EmployeeOrgLevelOption {
 }
 
 export async function listOrgLevelOptions(): Promise<EmployeeOrgLevelOption[]> {
-  const { data } = await apiClient.get<EmployeeOrgLevelOption[]>("/v1/organization/unit-types", { params: { activeOnly: true } });
+  const { data } = await apiClient.get<EmployeeOrgLevelOption[]>("/v1/organization/unit-types", {
+    params: { activeOnly: true },
+  });
   return data;
 }
 
@@ -393,18 +456,36 @@ export async function getMyCareer(): Promise<CareerRecord[]> {
   return data;
 }
 
-export async function addCareerRecord(employeeId: string, input: CareerRecordInput): Promise<CareerRecord[]> {
-  const { data } = await apiClient.post<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career`, input);
+export async function addCareerRecord(
+  employeeId: string,
+  input: CareerRecordInput
+): Promise<CareerRecord[]> {
+  const { data } = await apiClient.post<CareerRecord[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/career`,
+    input
+  );
   return data;
 }
 
-export async function updateCareerRecord(employeeId: string, recordId: string, input: CareerRecordInput): Promise<CareerRecord[]> {
-  const { data } = await apiClient.put<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`, input);
+export async function updateCareerRecord(
+  employeeId: string,
+  recordId: string,
+  input: CareerRecordInput
+): Promise<CareerRecord[]> {
+  const { data } = await apiClient.put<CareerRecord[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`,
+    input
+  );
   return data;
 }
 
-export async function deleteCareerRecord(employeeId: string, recordId: string): Promise<CareerRecord[]> {
-  const { data } = await apiClient.delete<CareerRecord[]>(`${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`);
+export async function deleteCareerRecord(
+  employeeId: string,
+  recordId: string
+): Promise<CareerRecord[]> {
+  const { data } = await apiClient.delete<CareerRecord[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/career/${recordId}`
+  );
   return data;
 }
 
@@ -414,8 +495,14 @@ export async function deleteCareerRecord(employeeId: string, recordId: string): 
  * HR/admin write path: only the entries present in `values` change (definitionId -> raw value; null clears it). Any
  * active definition may be set - a sensitive one without employee.sensitive.view is silently preserved server-side.
  */
-export async function setEmployeeCustomFields(employeeId: string, values: Record<string, string | null>): Promise<CustomFieldValue[]> {
-  const { data } = await apiClient.put<CustomFieldValue[]>(`${EMPLOYEES_BASE}/${employeeId}/custom-fields`, { values });
+export async function setEmployeeCustomFields(
+  employeeId: string,
+  values: Record<string, string | null>
+): Promise<CustomFieldValue[]> {
+  const { data } = await apiClient.put<CustomFieldValue[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/custom-fields`,
+    { values }
+  );
   return data;
 }
 
@@ -525,7 +612,8 @@ export interface TerminateEmployeeResult {
   openAssetCount: number;
 }
 
-export type EmploymentPeriodSource = "hire" | "rehire" | "groupTransfer" | "businessTransfer" | "import";
+export type EmploymentPeriodSource =
+  "hire" | "rehire" | "groupTransfer" | "businessTransfer" | "import";
 
 export interface EmploymentPeriod {
   id: string;
@@ -567,57 +655,100 @@ export interface RehireEmployeeResult {
   employmentHistory: EmploymentHistory;
 }
 
-export async function suspendEmployee(employeeId: string, reason: SuspensionReason): Promise<EmployeeDetail> {
-  const { data } = await apiClient.post<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/suspend`, { reason });
-  return data;
-}
-
-export async function reactivateEmployee(employeeId: string): Promise<EmployeeDetail> {
-  const { data } = await apiClient.post<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/reactivate`);
-  return data;
-}
-
-export async function getTerminationReasons(includeInactive = false): Promise<TerminationReason[]> {
-  const { data } = await apiClient.get<TerminationReason[]>(`${EMPLOYEES_BASE}/termination-reasons`, { params: { includeInactive } });
-  return data;
-}
-
-export async function createTerminationReason(input: TerminationReasonInput): Promise<TerminationReason> {
-  const { data } = await apiClient.post<TerminationReason>(`${EMPLOYEES_BASE}/termination-reasons`, input);
-  return data;
-}
-
-export async function updateTerminationReason(reasonId: string, input: TerminationReasonInput): Promise<TerminationReason> {
-  const { data } = await apiClient.put<TerminationReason>(`${EMPLOYEES_BASE}/termination-reasons/${reasonId}`, input);
-  return data;
-}
-
-export async function setTerminationReasonActive(reasonId: string, active: boolean): Promise<TerminationReason> {
-  const { data } = await apiClient.post<TerminationReason>(
-    `${EMPLOYEES_BASE}/termination-reasons/${reasonId}/${active ? "reactivate" : "deactivate"}`,
-  );
-  return data;
-}
-
-export async function getCollectiveDismissalStatus(asOf?: string): Promise<CollectiveDismissalStatus> {
-  const { data } = await apiClient.get<CollectiveDismissalStatus>(`${EMPLOYEES_BASE}/collective-dismissal-status`, {
-    params: asOf ? { asOf } : undefined,
+export async function suspendEmployee(
+  employeeId: string,
+  reason: SuspensionReason
+): Promise<EmployeeDetail> {
+  const { data } = await apiClient.post<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/suspend`, {
+    reason,
   });
   return data;
 }
 
-export async function terminateEmployee(employeeId: string, input: TerminateEmployeeInput): Promise<TerminateEmployeeResult> {
-  const { data } = await apiClient.post<TerminateEmployeeResult>(`${EMPLOYEES_BASE}/${employeeId}/terminate`, input);
+export async function reactivateEmployee(employeeId: string): Promise<EmployeeDetail> {
+  const { data } = await apiClient.post<EmployeeDetail>(
+    `${EMPLOYEES_BASE}/${employeeId}/reactivate`
+  );
+  return data;
+}
+
+export async function getTerminationReasons(includeInactive = false): Promise<TerminationReason[]> {
+  const { data } = await apiClient.get<TerminationReason[]>(
+    `${EMPLOYEES_BASE}/termination-reasons`,
+    { params: { includeInactive } }
+  );
+  return data;
+}
+
+export async function createTerminationReason(
+  input: TerminationReasonInput
+): Promise<TerminationReason> {
+  const { data } = await apiClient.post<TerminationReason>(
+    `${EMPLOYEES_BASE}/termination-reasons`,
+    input
+  );
+  return data;
+}
+
+export async function updateTerminationReason(
+  reasonId: string,
+  input: TerminationReasonInput
+): Promise<TerminationReason> {
+  const { data } = await apiClient.put<TerminationReason>(
+    `${EMPLOYEES_BASE}/termination-reasons/${reasonId}`,
+    input
+  );
+  return data;
+}
+
+export async function setTerminationReasonActive(
+  reasonId: string,
+  active: boolean
+): Promise<TerminationReason> {
+  const { data } = await apiClient.post<TerminationReason>(
+    `${EMPLOYEES_BASE}/termination-reasons/${reasonId}/${active ? "reactivate" : "deactivate"}`
+  );
+  return data;
+}
+
+export async function getCollectiveDismissalStatus(
+  asOf?: string
+): Promise<CollectiveDismissalStatus> {
+  const { data } = await apiClient.get<CollectiveDismissalStatus>(
+    `${EMPLOYEES_BASE}/collective-dismissal-status`,
+    {
+      params: asOf ? { asOf } : undefined,
+    }
+  );
+  return data;
+}
+
+export async function terminateEmployee(
+  employeeId: string,
+  input: TerminateEmployeeInput
+): Promise<TerminateEmployeeResult> {
+  const { data } = await apiClient.post<TerminateEmployeeResult>(
+    `${EMPLOYEES_BASE}/${employeeId}/terminate`,
+    input
+  );
   return data;
 }
 
 export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {
-  const { data } = await apiClient.get<EmploymentHistory>(`${EMPLOYEES_BASE}/${employeeId}/employment-periods`);
+  const { data } = await apiClient.get<EmploymentHistory>(
+    `${EMPLOYEES_BASE}/${employeeId}/employment-periods`
+  );
   return data;
 }
 
-export async function rehireEmployee(employeeId: string, input: RehireEmployeeInput): Promise<RehireEmployeeResult> {
-  const { data } = await apiClient.post<RehireEmployeeResult>(`${EMPLOYEES_BASE}/${employeeId}/rehire`, input);
+export async function rehireEmployee(
+  employeeId: string,
+  input: RehireEmployeeInput
+): Promise<RehireEmployeeResult> {
+  const { data } = await apiClient.post<RehireEmployeeResult>(
+    `${EMPLOYEES_BASE}/${employeeId}/rehire`,
+    input
+  );
   return data;
 }
 
@@ -626,7 +757,12 @@ export async function rehireEmployee(employeeId: string, input: RehireEmployeeIn
 /** "TİS kapsamı": member, solidarity dues, union-approved coverage, or explicitly out of scope. */
 export type UnionCoverageType = "member" | "solidarityDues" | "unionApproved" | "outOfScope";
 
-export const UNION_COVERAGE_TYPES: UnionCoverageType[] = ["member", "solidarityDues", "unionApproved", "outOfScope"];
+export const UNION_COVERAGE_TYPES: UnionCoverageType[] = [
+  "member",
+  "solidarityDues",
+  "unionApproved",
+  "outOfScope",
+];
 
 /** Special-category personal data (KVKK md.6): only returned with employee.union.view, name stored encrypted. */
 export interface UnionMembership {
@@ -655,22 +791,42 @@ export interface UnionMembershipInput {
 }
 
 export async function getUnionMemberships(employeeId: string): Promise<UnionMembership[]> {
-  const { data } = await apiClient.get<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships`);
+  const { data } = await apiClient.get<UnionMembership[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/union-memberships`
+  );
   return data;
 }
 
-export async function addUnionMembership(employeeId: string, input: UnionMembershipInput): Promise<UnionMembership[]> {
-  const { data } = await apiClient.post<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships`, input);
+export async function addUnionMembership(
+  employeeId: string,
+  input: UnionMembershipInput
+): Promise<UnionMembership[]> {
+  const { data } = await apiClient.post<UnionMembership[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/union-memberships`,
+    input
+  );
   return data;
 }
 
-export async function updateUnionMembership(employeeId: string, membershipId: string, input: UnionMembershipInput): Promise<UnionMembership[]> {
-  const { data } = await apiClient.put<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`, input);
+export async function updateUnionMembership(
+  employeeId: string,
+  membershipId: string,
+  input: UnionMembershipInput
+): Promise<UnionMembership[]> {
+  const { data } = await apiClient.put<UnionMembership[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`,
+    input
+  );
   return data;
 }
 
-export async function deleteUnionMembership(employeeId: string, membershipId: string): Promise<UnionMembership[]> {
-  const { data } = await apiClient.delete<UnionMembership[]>(`${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`);
+export async function deleteUnionMembership(
+  employeeId: string,
+  membershipId: string
+): Promise<UnionMembership[]> {
+  const { data } = await apiClient.delete<UnionMembership[]>(
+    `${EMPLOYEES_BASE}/${employeeId}/union-memberships/${membershipId}`
+  );
   return data;
 }
 
@@ -700,7 +856,9 @@ export interface SubcontractorInput {
 }
 
 export async function getSubcontractors(includeInactive = false): Promise<Subcontractor[]> {
-  const { data } = await apiClient.get<Subcontractor[]>(`${EMPLOYEES_BASE}/subcontractors`, { params: { includeInactive } });
+  const { data } = await apiClient.get<Subcontractor[]>(`${EMPLOYEES_BASE}/subcontractors`, {
+    params: { includeInactive },
+  });
   return data;
 }
 
@@ -709,20 +867,35 @@ export async function createSubcontractor(input: SubcontractorInput): Promise<Su
   return data;
 }
 
-export async function updateSubcontractor(subcontractorId: string, input: SubcontractorInput): Promise<Subcontractor> {
-  const { data } = await apiClient.put<Subcontractor>(`${EMPLOYEES_BASE}/subcontractors/${subcontractorId}`, input);
+export async function updateSubcontractor(
+  subcontractorId: string,
+  input: SubcontractorInput
+): Promise<Subcontractor> {
+  const { data } = await apiClient.put<Subcontractor>(
+    `${EMPLOYEES_BASE}/subcontractors/${subcontractorId}`,
+    input
+  );
   return data;
 }
 
-export async function setSubcontractorActive(subcontractorId: string, active: boolean): Promise<Subcontractor> {
+export async function setSubcontractorActive(
+  subcontractorId: string,
+  active: boolean
+): Promise<Subcontractor> {
   const { data } = await apiClient.post<Subcontractor>(
-    `${EMPLOYEES_BASE}/subcontractors/${subcontractorId}/${active ? "reactivate" : "deactivate"}`,
+    `${EMPLOYEES_BASE}/subcontractors/${subcontractorId}/${active ? "reactivate" : "deactivate"}`
   );
   return data;
 }
 
 /** Links the employee to a subcontractor; null unlinks them (tenant's own staff). */
-export async function linkEmployeeSubcontractor(employeeId: string, subcontractorId: string | null): Promise<EmployeeDetail> {
-  const { data } = await apiClient.put<EmployeeDetail>(`${EMPLOYEES_BASE}/${employeeId}/subcontractor`, { subcontractorId });
+export async function linkEmployeeSubcontractor(
+  employeeId: string,
+  subcontractorId: string | null
+): Promise<EmployeeDetail> {
+  const { data } = await apiClient.put<EmployeeDetail>(
+    `${EMPLOYEES_BASE}/${employeeId}/subcontractor`,
+    { subcontractorId }
+  );
   return data;
 }

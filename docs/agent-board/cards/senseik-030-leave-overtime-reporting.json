@@ -2,16 +2,16 @@
   "id": "senseik-030",
   "title": "İzin/fazla mesai raporlama: mutabakat formu, aylık mesai raporu, fazla mesai ödemeye çevirme",
   "owner": "pc-b",
-  "state": "backlog",
+  "state": "merged",
   "branch": "b/leave-overtime-reporting",
   "worktree": ".claude/worktrees/leave-overtime-reporting",
   "acceptance": [
-    "İzin mutabakat formu: çalışanın dönem içi izin kullanımını özetleyen, imzalanabilir/indirilebilir bir rapor (Excel/PDF)",
-    "Aylık fazla mesai raporu: onaylanan fazla mesailerin dönem bazlı Excel dökümü (mevcut LeaveReportProviderTests.cs/IReportProvider deseniyle genişletme)",
-    "Fazla mesai → ödemeye çevirme: OvertimeConversion.Kind=Pay şu an implemente değil (kod içi yorum: 'Pay ... come later') — bu kartta tamamlanmalı, Expense/Payroll'a nasıl bağlanacağı (PayrollAdjustment) netleştirilmeli",
-    "'Kendin Oluştur' özel rapor motoru bu kartın KAPSAMI DIŞI — ayrı, büyük bir özellik (backlog'a not düş, bu kartta yapma)"
+    "İzin mutabakat formu: çalışanın dönem içi izin kullanımını özetleyen, imzalanabilir/indirilebilir bir rapor (Excel/PDF) — YAPILDI: LeaveReconciliationReportProvider (leave.reconciliation.form), Excel (PDF için IDocumentRenderer implementasyonu yok, handoff'ta not düşüldü), imza/onay sütunları boş bırakılıyor",
+    "Aylık fazla mesai raporu: onaylanan fazla mesailerin dönem bazlı Excel dökümü (mevcut LeaveReportProviderTests.cs/IReportProvider deseniyle genişletme) — YAPILDI: OvertimeMonthlyReportProvider (leave.overtime.monthly), Ay/Yıl filtresi (ResolveMonthYearRange)",
+    "Fazla mesai → ödemeye çevirme: OvertimeConversion.Kind=Pay şu an implemente değil (kod içi yorum: 'Pay ... come later') — bu kartta tamamlanmalı, Expense/Payroll'a nasıl bağlanacağı (PayrollAdjustment) netleştirilmeli — YAPILDI: OvertimeConversion.ToPay + ConvertOvertimeToPayCommand/Handler; Payroll bağlantısı Contracts üzerinden: (a) zaten var olan pull-portu IOvertimePayrollReader Kind=Pay'i nakit kovasına otomatik dahil ediyor (senseik-012'den beri hazırmış, doğrulandı), (b) yeni OvertimeConvertedToPay integration event'i (PayslipDirtyFlagHandlers.cs'in zaten beklediği isim) Payroll'un ileride dirty-flag/yeniden hesap tetikleyicisi olarak tüketmesi için outbox'a yazılıyor — Payroll tarafına dosya dokunulmadı (senseik-019 paralel/henüz başlamamış), handoff'ta tüketim deseni net yazıldı",
+    "'Kendin Oluştur' özel rapor motoru bu kartın KAPSAMI DIŞI — ayrı, büyük bir özellik (backlog'a not düş, bu kartta yapma) — YAPILMADI (kapsam dışı bırakıldı, handoff'ta backlog notu var)"
   ],
   "merge_gate": "dotnet test (Leave/Reporting) + demo seed'de örnek mutabakat formu ve mesai raporu üretiliyor",
   "handoff": "docs/handoffs/leave-overtime-reporting.md",
-  "source": "Kullanıcı isteği (2026-09-18) — kolayik.com/izin-fazla-mesai-yonetimi rakip analizi. NOT: senseik-012 (fazla mesai oranları) implementasyonuyla AYNI ANDA çalışabilir/çakışabilir (OvertimeRequest/OvertimeConversion'a dokunuyor) — bu kart o dalga merge olana kadar BAŞLATILMAMALI."
+  "source": "Kullanıcı isteği (2026-09-18) — kolayik.com/izin-fazla-mesai-yonetimi rakip analizi. NOT: senseik-012 (fazla mesai oranları) zaten dev'e merge edilmişti (kart açılışında bloke uyarısı geçersizleşmişti) — güncel dev'den (origin/dev @ 90de9e2) yeni branch açılarak devam edildi."
 }

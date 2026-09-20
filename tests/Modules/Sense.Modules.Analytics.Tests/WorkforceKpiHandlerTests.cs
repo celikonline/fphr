@@ -31,6 +31,8 @@ public sealed class WorkforceKpiHandlerTests
             .Returns(new TerminationCounts(0, 0));
         _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<GenderByOrgUnitCount>());
+        _employeeAnalytics.GetGenderByDepartmentAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount>());
         _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<OrgUnitInfo>());
         // null = Company scope (unrestricted) - the existing tests below all assume the full 5-KPI set; the
@@ -226,13 +228,19 @@ public sealed class WorkforceKpiHandlerTests
     }
 
     [Fact]
-    public async Task RestrictedScope_OnlyReturnsGenderRatioByUnit_FilteredToAccessibleUnits()
+    public async Task RestrictedScope_OnlyReturnsGenderRatioByUnitAndDepartment_FilteredToAccessibleUnits()
     {
         var accessibleUnit = Guid.NewGuid();
         var otherUnit = Guid.NewGuid();
         _dataScope.GetAccessibleOrgUnitIdsAsync(AnalyticsPermissions.KpiView.Key, Arg.Any<CancellationToken>())
             .Returns(new HashSet<Guid> { accessibleUnit });
         _employeeAnalytics.GetGenderByOrgUnitAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount>
+            {
+                new(accessibleUnit, "Female", 2),
+                new(otherUnit, "Male", 5),
+            });
+        _employeeAnalytics.GetGenderByDepartmentAsync(_tenantId, Arg.Any<CancellationToken>())
             .Returns(new List<GenderByOrgUnitCount>
             {
                 new(accessibleUnit, "Female", 2),
@@ -245,12 +253,46 @@ public sealed class WorkforceKpiHandlerTests
         var result = await handler.Handle(
             new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
 
-        // Only the unit breakdown KPI - the four tenant-wide aggregates are excluded rather than shown unscoped.
-        result.Value.Count.ShouldBe(1);
+        // Only the two unit/department breakdown KPIs - the four tenant-wide aggregates are excluded rather than
+        // shown unscoped.
+        result.Value.Count.ShouldBe(2);
         var byUnit = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit);
         byUnit.Value.ShouldBe(2m);
         byUnit.Breakdown.ShouldHaveSingleItem();
         byUnit.Breakdown[0].Dimension.ShouldBe("Erişilebilir Birim / Female");
+        var byDepartment = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByDepartment);
+        byDepartment.Value.ShouldBe(2m);
+        byDepartment.Breakdown.ShouldHaveSingleItem();
+        byDepartment.Breakdown[0].Dimension.ShouldBe("Erişilebilir Birim / Female");
         await _employeeAnalytics.DidNotReceive().GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>());
+    }
+
+    /// <summary>senseik-046: GENDER_RATIO_BY_DEPARTMENT is built the same way as GENDER_RATIO_BY_UNIT, just fed the
+    /// Department-rolled-up counts (EmployeeAnalyticsQueries.GetGenderByDepartmentAsync does the actual rollup -
+    /// covered in Employee.Tests) - here it only needs its own KPI key/label and to read the right source list.</summary>
+    [Fact]
+    public async Task GenderRatioByDepartment_UsesDepartmentRolledUpCounts_UnderItsOwnKpiKey()
+    {
+        var departmentUnit = Guid.NewGuid();
+        _employeeAnalytics.GetActiveHeadcountAsync(_tenantId, Arg.Any<CancellationToken>()).Returns(20);
+        _employeeAnalytics.GetCareerPathChangeCountsAsync(_tenantId, Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns(new CareerPathChangeCounts(0, 0, 0, 0));
+        _employeeAnalytics.GetGenderHeadcountAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new Dictionary<string, int>());
+        _employeeAnalytics.GetGenderByDepartmentAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<GenderByOrgUnitCount> { new(departmentUnit, "Female", 10), new(departmentUnit, "Male", 5) });
+        _orgUnits.ListActiveUnitsAsync(_tenantId, Arg.Any<CancellationToken>())
+            .Returns(new List<OrgUnitInfo> { new(departmentUnit, Guid.NewGuid(), null, "Satış Departmanı") });
+
+        var handler = CreateHandler();
+        var result = await handler.Handle(
+            new GetWorkforceKpisQuery(new DateOnly(2026, 1, 1), new DateOnly(2026, 12, 31)), CancellationToken.None);
+
+        var byDepartment = result.Value.Single(k => k.Key == KpiKeys.GenderRatioByDepartment);
+        byDepartment.Value.ShouldBe(15m);
+        byDepartment.Breakdown.Single(b => b.Dimension == "Satış Departmanı / Female").Count.ShouldBe(10);
+        byDepartment.Breakdown.Single(b => b.Dimension == "Satış Departmanı / Male").Count.ShouldBe(5);
+        // GENDER_RATIO_BY_UNIT stays independent - the handler's default (empty) stub for it must not leak in.
+        result.Value.Single(k => k.Key == KpiKeys.GenderRatioByUnit).Breakdown.ShouldBeEmpty();
     }
 }

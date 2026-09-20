@@ -1,0 +1,60 @@
+# İzin modülü denetim raporu — 2026-09-20
+
+**Kapsam:** Uçtan uca elle test (web arayüzü, compose stack: web `:13000`, api `:18080`, güncel `dev` kodundan yeniden build edildi).
+**Roller:** `owner@demo.local` (Ahmet Yılmaz), `ik@demo.local` (Ayşe Demir, İK Direktörü), `bordro@demo.local` (Mehmet, bordro).
+**Bu raporda yalnızca çalışmayan / hatalı / tutarsız bulunanlar vardır.** Çalışan akışlar en sonda tek paragrafta özetlenmiştir.
+
+Önem: **Y** = yüksek (veri/iş kuralı bozuluyor), **O** = orta, **D** = düşük (kozmetik/UX).
+
+## Çözüm durumu (2026-09-20)
+
+| Bulgu | Durum |
+|-------|-------|
+| A1 | **Çözüldü** (commit edilmedi). `ApprovalRequestRepository.ListInboxTasksAsync` artık yalnızca isteği hâlâ `Pending` olan görevleri döndürüyor; iptal/geri çekme/önceki adımda ret sonrası kalan görevler onay kutusundan düştü. Yeni test: `ListInboxTasks_ExcludesTasksOfCancelledAndRejectedRequests`. Workflow testleri 9/9; canlıda owner kutusu 2 ölü karttan 0'a indi. |
+| A2 | **Çözüldü** (commit edilmedi). `WorkSchedule.MakeDefault` pasif takvimi reddediyor (409 `schedule_inactive`), `SetActive(false)` varsayılan takvimi reddediyor (409 `schedule_default_cannot_deactivate`, TR/EN çeviri eklendi); web'de pasifken "Varsayılan yap" ve varsayılanda "Pasifleştir" gizlendi. 2 yeni domain testi (Attendance 8/8); API canlıda doğrulandı. |
+| A3–A12, B1–B9 | Görev olarak açıldı (kartlar: tatil takvimi, vekil/belge, cinsiyet uygunluğu, oturum, bakiye gösterimi, ülke combobox, UI/UX tutarlılık, preview doğrulaması + politika kararları). |
+
+## A. İşlevsel ve süreçsel bulgular
+
+| # | Önem | Bulgu | Nasıl tekrarlanır / kanıt | Kök neden |
+|---|------|-------|---------------------------|-----------|
+| A1 | **Y** | **Geri çekilen veya düzenlenen izin talebinin onay görevi onaycının kutusunda kalıyor.** Geri çekilen talep "Onay kutusu"nda hâlâ görünür; onaylanmak istenince "Onay talebi artık bekleme durumunda değil." hatası verir. Talep düzenlenince (revizyon) aynı talep **iki kart** olarak listelenir. | Ayşe: izin talebi oluştur → düzenle (5–6 Ekim); ikinci talebi geri çek (12 Ekim). Ahmet → Onay kutusu: 12 Ekim + 5–6 Ekim ×2 görünür. DB: `workflow.approval_requests.status = Cancelled` iken `workflow.approval_tasks.status = Pending` kalıyor. | İptal/geri çekmede `approval_tasks` kapatılmıyor; inbox sorgusu request durumuna bakmıyor. |
+| A2 | **Y** | **Pasif (Pasifleştir) çalışma takvimi "Varsayılan yap" ile varsayılan olabiliyor.** Yeni işe girenler pasif takvime atanır. | Ayarlar → Çalışma takvimleri → yeni takvim ekle → Pasifleştir → satırdaki "Varsayılan yap" hâlâ görünür ve "Varsayılan çalışma takvimi güncellendi." başarı verir. | Varsayılan yapma eylemi aktiflik kontrol etmiyor; pasifken düğme gizlenmiyor. |
+| A3 | **O** | **Tatil takvimi yönetimi eksik: düzenleme ve silme yok.** Yanlış eklenen tatil veya takvim geri alınamıyor; test verisi temizlenemedi. | Ayarlar → Tatil takvimleri: satırlarda eylem yok. API yalnızca `GET`, `POST` (takvim), `POST {id}/entries` — `PUT`/`DELETE` yok (`HolidayCalendarsController`). | Özellik yazılmamış. |
+| A4 | **O** | **Yarım günlük arife izin hesabında tam gün resmî tatil sayılıyor.** 28 Ekim (Cumhuriyet Bayramı Arifesi, 13:00'ten itibaren yarım gün) için `preview` → `days=0, publicHolidayDays=1`. Çalışan sabah çalıştığı hâlde 0,5 gün izin düşülmüyor; 26–28 Ekim talebi 2 gün hesaplandı (2,5 olmalı). | `GET /leave/me/requests/preview?leaveTypeId=…&start=2026-10-28&end=2026-10-28`. | `org.holiday_calendar_entries` tablosunda yarım gün alanı yok; "yarım gün" yalnızca ad metninde. Ramazan/Kurban arifeleri de aynı (2026–2031). |
+| A5 | **O** | **"Vekil ataması zorunlu" ve "Belge zorunlu" izin türü ayarları etkisiz.** Türde açılabiliyor ama talep formunda vekil seçimi/belge yükleme alanı yok, sunucuda da doğrulanmıyor (yalnızca açıklama zorunluluğu uygulanıyor). | İzin kuralları → tür düzenle: iki anahtar var. `LeaveRequestRules.cs` yalnızca açıklamayı doğrular; `leave-request-dialog.tsx` bu alanları kullanmıyor. | Ayar yüzeyi var, uygulama yok. |
+| A6 | **O** | **Cinsiyete bağlı izin türleri filtrelenmiyor.** Kadın çalışan (Ayşe Demir, `Female`) "Babalık izni" talep edebiliyor; "Doğum izni"/"Süt izni" tüm çalışanlara açık. | İzinlerim → + Talep → tür listesinde 14 türün tamamı. Leave modülünde cinsiyet kuralı yok (kod taraması). | Uygunluk kuralı (cinsiyet/koşul) tanımlı değil. |
+| A7 | **O** | **Oturum, sayfa yenilendikten sonra en geç 15 dk'da düşüyor.** Yenileme (refresh) token'ı yalnızca bellekte; tam sayfa yüklemede kaybolunca access token (15 dk) bitince sessiz yenileme denenmiyor, kullanıcı `/login`'e atılıyor, formdaki veri kaybolur. | Giriş yap → sayfayı yenile → 15 dk sonra herhangi bir istek: API günlüğünde `IDX10223 token expired` + `401`, **refresh çağrısı yok**. Yenilemesiz gezinmede refresh çalışıyor. | `auth.store.ts`: `partialize` yalnızca `user/features`; refresh token kalıcı tutulmuyor (XSS gerekçesiyle bilinçli, ancak S-53'ün amacıyla çelişiyor). |
+| A8 | **D–O** | **"Toplam hak edilen" değerleri mantıksız.** Yıllık 10 gün limitli "Engelli/süreğen hastalıklı çocuk izni" için Ayşe'de 65,44, Ali'de 45,04; yeni eklenen 7 günlük "QA Test İzni" için 28 gün (işe giriş tarihinden geriye birikim). Kart başlığı "Toplam kullanılan: 0 / 10 gün" ile çelişiyor. "Bakiyeyi yeniden hesapla" sonrası değişmiyor. | Çalışan kartı → İzinler → Özet. | Ömür boyu tahakkuk toplamı gösteriliyor; "Sıfırlansın" devir modunda anlamsız. |
+| A9 | **D–O** | **Talep formundaki "Kullanılabilir bakiye" bekleyen talepleri düşmüyor, sunucu düşüyor.** Form 77 gün gösterirken 4 gün bekleyen talep varken sunucu "kullanılabilir: 73,0000 gün" der. | Bekleyen talepler varken bakiye aşan talep dene. | Ön yüz `availableBalance` ile sunucu kontrolü farklı kaynaktan. |
+| A10 | **D** | **Geçmiş tarihli talep ve gerekçesiz ret serbest.** 1–2 Eylül (geçmiş) izin talebi hiçbir uyarı/politika olmadan gönderildi; ret için yorum zorunlu değil. Hafta sonuna (Pazar) devamsızlık kaydı eklenebiliyor. | İzinlerim / Onay kutusu / Çalışan kartı → Devamsızlık. | Geriye dönük süre, ret gerekçesi ve iş günü doğrulaması yok (ürün kararı gerektirir). |
+| A11 | **D** | **Seed verisinde tutarsız izne dönüşüm satırı:** 7 Eyl fazla mesai, esas 2 sa × 1,25 → "Eklenen süre 2 sa, Eklenen gün 0, İzin türü —" (2 sa 30 dk beklenir). Yeni dönüşüm doğru hesaplandı (1,5 sa × 1,5 = 2 sa 15 dk = 0,3 gün). | Çalışan kartı (Ali Şahin) → Fazla mesailer → İzne dönüşümler. | Muhtemelen bozuk seed; veri düzeltilmeli. |
+| A12 | **D** | **Preview API yanlış sorgu parametresinde 400 yerine 200 dönüyor** (`start`/`end` yerine başka ad → varsayılan tarihlerle `days=0, publicHolidayDays=1`). | `GET /leave/me/requests/preview?leaveTypeId=…&startDate=…&endDate=…` | Zorunlu parametre doğrulaması yok. |
+
+## B. Bileşen ve UI/UX bulguları
+
+| # | Önem | Bulgu | Öneri |
+|---|------|-------|-------|
+| B1 | **O** | **"Ülke kodu" serbest metin kutusu** (Yeni tatil takvimi). Yalnızca "2 harfli" kontrolü var; `ZZ` gibi geçersiz kod kabul edildi ve kaydedildi. Bu, izin ekranlarında tespit edilen tek "combobox olmalıydı ama textbox" örneği; diğer tüm seçimli alanlar (tür, birim, limit, kural seti, birim/organizasyon, onaylayan, kaynak) zaten combobox. | ISO 3166-1 ülke **combobox** (aranabilir); varsayılan `TR`. |
+| B2 | **D** | **Form diyalogları tutarsız hizalanıyor.** İzin talebi, tür, çalışan kural seti (`FormModal`) soldan açılıyor; fazla mesai talebi/ekle, devamsızlık, bakiye düzeltme, yeniden adlandır/atama, iptal diyalogları (düz `Modal`) ortadan açılıyor. `senseik-021` kararı "form diyalogları sola". | Çok alanlı formların tümünü `FormModal`'a taşı (`overtime-shared.tsx`, `absences-panel.tsx`, `leave-section.tsx`, `leave-rule-sets.tsx`). |
+| B3 | **D–O** | **Fazla mesai talebi diyaloğu dışarı tıklamayla kapanıyor ve girilen veri kayboluyor** (`closeOnClickOutside` kapatılmamış). İzin talebi diyaloğunda kapalı. | Aynı davranışı tüm formlarda uygula. |
+| B4 | **D** | **Eski doğrulama mesajı kalıyor:** "Başlangıç ve bitiş tarihi zorunludur." iki tarih de seçildikten sonra ekranda duruyor. Çakışma/bakiye hataları hem alan altında hem formun altında **iki kez** yazılıyor. Bakiye mesajında `73,0000 gün` (4 ondalık). | Hata durumunu alan değişince temizle; tek yerde göster; sayıyı biçimle. |
+| B5 | **D** | **Saatlik izin önizlemesi çelişkili:** saat aralığı geçersizken hem "Hesaplanan gün: 1" hem "saat aralığı … geçersiz" gösteriliyor. | Geçersiz saat aralığında gün hesabını gizle. |
+| B6 | **D** | **Bakiye düzeltme formunda tek hata mesajı:** boş gönderimde yalnızca "İzin türü seçin." çıkıyor; Gün ve Gerekçe alanları işaretlenmiyor. | Tüm zorunlu alanları alan bazında işaretle. |
+| B7 | **D** | **Onay süreçleri boş durumu iki kez yazılıyor** ("Henüz onay süreci yok…" ×2). | Tek boş durum bileşeni. |
+| B8 | **D** | **Erişilebilirlik:** izin talebi satırında ilk eylem düğmesinin `aria-label`'ı yok; `leave-request-dialog.tsx`'te `Input.Wrapper id="leave-hour-start"` ile içindeki `TimePicker id="leave-hour-start"` **aynı id**. | Etiket ver; wrapper id'sini kaldır/farklılaştır. |
+| B9 | **D** | **Devre dışı bırakma onaysız uygulanıyor** (izin türü "Devre dışı bırak" hemen etkili; tüm çalışan bakiyelerini etkiler). Silme/atama diyaloglarında onay var. | Etki alanını belirten onay. |
+
+## C. Doğrulanamayanlar (araç kısıtı, bulgu değil)
+
+- Saatlik izin türlerinde (Yeni iş arama/Süt izni) **geçerli saat aralığıyla** başarılı kayıt: saat alanı düzenlenirken otomasyon güvenilir çalışmadı; yalnızca "bitiş ≤ başlangıç" reddinin çalıştığı görüldü. Elle bir kez denenmeli.
+- "Excel'e aktar" (Şirket izin/mesai defteri) indirme onayı gerektirdiği için tıklanmadı.
+- Onay süreci (approval flow) kaydetme adımı yönlendirmeyi değiştireceğinden çalıştırılmadı; form alanları/doğrulama denendi.
+
+## D. Test sonrası kalıntılar (temizlik gerekiyor)
+
+Silinemeyenler (A3; izin türü silme yok): `QA Takvim` (ülke `ZZ`) tatil takvimi + `QA Özel Tatil` (15 Kas 2026); `QA Test İzni (düzenlendi)` izin türü (pasif, varsayılan kural setinde). Geri alınanlar: kural seti (silindi), çalışma takvimi (silindi, varsayılan yeniden Genel), bakiye düzeltmesi (+2/−2), Ayşe'nin QA izinleri (iptal, bakiye 77'ye döndü). Kalanlar: Ali Şahin'e ait 15 Eyl fazla mesai (onay bekliyor) + 14 Eyl dönüşümü (0,3 gün ekstra izin), ters kayıtlı devamsızlık, geri alma bildirimli fazla çalışma onayı; Ayşe'nin reddedilen/geri çekilen QA talepleri; ölü onay görevleri (A1).
+
+## E. Sorunsuz çalışan akışlar (özet)
+
+Giriş (3 rol); İzinlerim bakiye/tablo/ayrıntı paneli; izin talebi oluştur/düzenle/geri çek/reddedileni yeniden gönder; alan doğrulamaları (zorunlu tarih, açıklama, tür başına azami gün, çakışma, bakiye aşımı, saat aralığı); onay kutusu onayla/reddet/"yerine karar ver" ve kararın izin kaydına yansıması; İzin takvimi (Gün/Hafta/Ay, ay gezinme, birim listesi); Şirket defteri (filtreler, sayfalama); İzin kuralları (tür ekle/düzenle/pasifleştir/etkinleştir, kural seti kopyala/yeniden adlandır/ata/sil); çalışan kartı (İzin ekle — onay atlayarak, izin iptali + iade, bakiye düzeltme, bakiye yeniden hesaplama, devamsızlık ekle/ters kayıt, fazla mesai ekle/izne dönüştür/onay kaydet/geri al); Talep hub'ı; Tatil takvimi oluşturma/tatil ekleme; Çalışma takvimi oluştur/yeniden adlandır/pasifleştir/sil; bordro rolünün salt-okunur kısıtı ve API'de 403 yetki kontrolleri.

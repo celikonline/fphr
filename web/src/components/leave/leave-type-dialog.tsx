@@ -56,6 +56,8 @@ const CODES: LeaveTypeCode[] = [
   "paidMilitaryService",
   "unpaid",
   "fosterCare",
+  "breastfeeding",
+  "disabledChild",
   "remoteWork",
   "birthday",
 ];
@@ -154,7 +156,10 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
       <form onSubmit={submit}>
         <Stack gap="lg">
           <Fieldset legend={t("leave:types.section.general")}>
-            <div className="grid gap-4 sm:grid-cols-2">
+            {/* senseik-038: fieldset varsayılan olarak min-content genişlikte boyutlanır; bu da doğrudan
+                altındaki CSS Grid'in minmax(0,1fr) kolonlarıyla çakışıp grid'i 0px genişliğe çökertiyordu.
+                w-full (width:100%) grid'i fieldset'in tam genişliğine zorlayarak çakışmayı çözer. */}
+            <div className="grid w-full gap-4 sm:grid-cols-2">
               <Select
                 id="leave-type-code"
                 label={t("leave:ruleSets.col.code")}
@@ -255,7 +260,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                   )}
                 </Group>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <Select
                     id="leave-type-negativeBalance"
                     label={t("leave:types.negativeBalance")}
@@ -279,7 +284,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                   )}
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid w-full gap-4 sm:grid-cols-3">
                   <Select
                     id="leave-type-accrualFrequency"
                     label={t("leave:ruleSets.col.accrual")}
@@ -309,7 +314,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                   />
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <Select
                     id="leave-type-carryOverMode"
                     label={t("leave:ruleSets.col.carryOver")}
@@ -345,7 +350,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
           </Fieldset>
 
           <Fieldset legend={t("leave:types.section.rules")}>
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid w-full gap-4 sm:grid-cols-3">
               <NumberInput
                 id="leave-type-minConsecutiveDays"
                 label={t("leave:types.minConsecutiveDays")}
@@ -389,7 +394,7 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
               inputWrapperOrder={["label", "input", "description"]}
             />
             <Divider my="md" />
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid w-full gap-2 sm:grid-cols-2">
               <Checkbox
                 label={t("leave:types.requiresDescription")}
                 checked={settings.requiresDescription}

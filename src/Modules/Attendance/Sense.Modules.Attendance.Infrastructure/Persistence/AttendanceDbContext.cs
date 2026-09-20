@@ -7,6 +7,7 @@ using Sense.Modules.Attendance.Domain.Availability;
 using Sense.Modules.Attendance.Domain.Compensatory;
 using Sense.Modules.Attendance.Domain.Equalization;
 using Sense.Modules.Attendance.Domain.MonthlyTimesheet;
+using Sense.Modules.Attendance.Domain.SelfCheckIns;
 using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
@@ -43,6 +44,7 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
     public DbSet<MonthlyTimesheetApproval> MonthlyTimesheetApprovals => Set<MonthlyTimesheetApproval>();
 
     public DbSet<EqualizationPeriod> EqualizationPeriods => Set<EqualizationPeriod>();
+    public DbSet<SelfCheckIn> SelfCheckIns => Set<SelfCheckIn>();
 }
 
 internal static class AttendanceTables
@@ -58,6 +60,7 @@ internal static class AttendanceTables
     public const string CompensatoryWorkLedgers = "compensatory_work_ledgers";
     public const string MonthlyTimesheetApprovals = "monthly_timesheet_approvals";
     public const string EqualizationPeriods = "equalization_periods";
+    public const string SelfCheckIns = "self_check_ins";
     public const int OverrideReasonMaxLength = 1000;
     public const int LinkedEntityTypeMaxLength = 50;
     public const int NoteMaxLength = 1000;
@@ -186,6 +189,20 @@ public sealed class EmployeeAvailabilityConfiguration : IEntityTypeConfiguration
     }
 }
 
+public sealed class SelfCheckInConfiguration : IEntityTypeConfiguration<SelfCheckIn>
+{
+    public void Configure(EntityTypeBuilder<SelfCheckIn> b)
+    {
+        b.ToTable(AttendanceTables.SelfCheckIns);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Direction).HasConversion<string>();
+        b.Property(x => x.Method).HasConversion<string>();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.TimestampUtc });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
 public sealed class CompensatoryWorkLedgerConfiguration : IEntityTypeConfiguration<CompensatoryWorkLedger>
 {
     public void Configure(EntityTypeBuilder<CompensatoryWorkLedger> b)
@@ -195,6 +212,18 @@ public sealed class CompensatoryWorkLedgerConfiguration : IEntityTypeConfigurati
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.Status).HasConversion<string>();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.WeekStart }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class MonthlyTimesheetApprovalConfiguration : IEntityTypeConfiguration<MonthlyTimesheetApproval>
+{
+    public void Configure(EntityTypeBuilder<MonthlyTimesheetApproval> b)
+    {
+        b.ToTable(AttendanceTables.MonthlyTimesheetApprovals);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.PeriodMonth }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

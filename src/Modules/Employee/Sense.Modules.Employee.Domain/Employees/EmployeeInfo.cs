@@ -5,6 +5,12 @@ using Sense.Shared.Kernel.ValueObjects;
 namespace Sense.Modules.Employee.Domain.Employees;
 
 /// <summary>Editable personal/contact/employment fields of an employee, validated together by <see cref="Employee.Create"/> and <see cref="Employee.UpdateInfo"/>.</summary>
+/// <param name="ClearLeaveAccrualStartDate">
+/// Explicit "temizle" (X) signal for "İzne esas hak ediş tarihi" (senseik-044): a full-replace PUT cannot tell "field
+/// left untouched, let it keep following HireDate" apart from "field explicitly cleared" when both send
+/// <see langword="null"/> for <paramref name="LeaveAccrualStartDate"/> - this flag disambiguates the latter and wins
+/// over the default-follow logic in <see cref="Employee"/>.
+/// </param>
 public sealed record EmployeeInfo(
     string FirstName,
     string LastName,
@@ -34,4 +40,5 @@ public sealed record EmployeeInfo(
     Nationality Nationality = Nationality.Turkish,
     string? ForeignIdNumber = null,
     string? PassportNumber = null,
-    string? SgkOccupationCode = null);
+    string? SgkOccupationCode = null,
+    bool ClearLeaveAccrualStartDate = false);

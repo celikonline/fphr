@@ -18,7 +18,7 @@ const REQUEST_TYPES: RequestTypeCard[] = [
   { key: "overtime", icon: Clock, to: "/app/leave/overtimes?new=1" },
   { key: "advance", icon: CreditCard, to: "/app/payments?new=advance" },
   { key: "expense", icon: Receipt, to: "/app/payments?new=expense" },
-  { key: "visa", icon: Stamp, phase: 4 },
+  { key: "visa", icon: Stamp, to: "/app/requests/visa?new=1" },
 ];
 
 /**
@@ -32,8 +32,9 @@ export default function RequestsPage() {
   const canOvertime = usePermission("leave.my.overtimes");
   const canAdvance = usePermission("expense.my.advances");
   const canExpense = usePermission("expense.my.claims");
+  const canVisa = usePermission("documents.my.visa_requests");
 
-  const availability: Record<string, boolean> = { leave: canLeave, overtime: canOvertime, advance: canAdvance, expense: canExpense, visa: true };
+  const availability: Record<string, boolean> = { leave: canLeave, overtime: canOvertime, advance: canAdvance, expense: canExpense, visa: canVisa };
   const visible = REQUEST_TYPES.filter((type) => availability[type.key]);
 
   return (

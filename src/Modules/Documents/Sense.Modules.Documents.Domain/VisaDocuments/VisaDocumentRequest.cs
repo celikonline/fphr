@@ -174,9 +174,9 @@ public sealed class VisaDocumentRequest : TenantAggregateRoot<Guid>, IAuditLogge
     }
 
     /// <summary>
-    /// Reject the request with a reason. Transitions status to Rejected and records the rejection details.
+    /// Reject the request, optionally with a reason (Workflow's ApprovalRejected carries none). Transitions status to Rejected and records the rejection details.
     /// </summary>
-    public void Reject(string rejectionReason, Guid? rejectedBy = null)
+    public void Reject(string? rejectionReason, Guid? rejectedBy = null)
     {
         if (Status != VisaDocumentRequestStatus.AwaitingApproval)
         {
@@ -184,7 +184,7 @@ public sealed class VisaDocumentRequest : TenantAggregateRoot<Guid>, IAuditLogge
         }
 
         Status = VisaDocumentRequestStatus.Rejected;
-        RejectionReason = rejectionReason;
+        RejectionReason = string.IsNullOrWhiteSpace(rejectionReason) ? null : rejectionReason.Trim();
         RejectedBy = rejectedBy;
         RejectedAt = DateTime.UtcNow;
     }

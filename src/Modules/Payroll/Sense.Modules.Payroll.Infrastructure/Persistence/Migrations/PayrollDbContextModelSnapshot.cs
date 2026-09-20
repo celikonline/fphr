@@ -23,6 +23,78 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Garnishments.GarnishmentOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CaseReference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("case_reference");
+
+                    b.Property<DateOnly?>("ClosedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("closed_date");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<decimal>("MonthlyInstallmentAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("monthly_installment_amount");
+
+                    b.Property<decimal>("RemainingBalance")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("remaining_balance");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_garnishment_orders");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_garnishment_orders_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "ClosedDate")
+                        .HasDatabaseName("ix_garnishment_orders_tenant_id_employee_id_closed_date");
+
+                    b.ToTable("garnishment_orders", "payroll");
+                });
+
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.Payslips.Payslip", b =>
                 {
                     b.Property<Guid>("Id")
@@ -36,6 +108,11 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
+
+                    b.Property<decimal>("CumulativeGvBase")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("cumulative_gv_base");
 
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uuid")
@@ -463,6 +540,134 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_employee_payroll_profiles_tenant_id_employee_id_valid_from");
 
                     b.ToTable("employee_payroll_profiles", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Unions.EmployeeUnionMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CoverageType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("coverage_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("DuesRule")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("dues_rule");
+
+                    b.Property<decimal>("DuesValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("dues_value");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<DateOnly>("MembershipDate")
+                        .HasColumnType("date")
+                        .HasColumnName("membership_date");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<DateOnly>("NotifiedToEmployerAt")
+                        .HasColumnType("date")
+                        .HasColumnName("notified_to_employer_at");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<Guid>("UnionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("union_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_employee_union_memberships");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_employee_union_memberships_tenant_id");
+
+                    b.HasIndex("TenantId", "EmployeeId", "MembershipDate")
+                        .HasDatabaseName("ix_employee_union_memberships_tenant_id_employee_id_membership");
+
+                    b.ToTable("employee_union_memberships", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.Unions.Union", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("IndustryBranchCode")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("industry_branch_code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_unions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_unions_tenant_id");
+
+                    b.HasIndex("TenantId", "Name")
+                        .HasDatabaseName("ix_unions_tenant_id_name");
+
+                    b.ToTable("unions", "payroll");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

@@ -2,7 +2,7 @@
   "id": "senseik-011",
   "title": "İşten çıkışta tazminat hesabı: kıdem + ihbar + yıllık izin (F-06)",
   "owner": "pc-a",
-  "state": "review",
+  "state": "merged",
   "branch": "a/exit-severance-calc",
   "worktree": ".claude/worktrees/exit-severance",
   "acceptance": [

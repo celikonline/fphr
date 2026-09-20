@@ -28,6 +28,15 @@ export interface Location {
   countryCode: string;
   address: string | null;
   isActive: boolean;
+  /** SGK işyeri sicil numarası (senseik-010/F-03): çok işyerli şirketler için per-location tanımlanır. */
+  sgkIsyeriSicilNo: string | null;
+  /** Geofence merkezi (S-31 self-servis GPS check-in); üçü de null olabilir - henüz ayarlanmamış demektir. */
+  latitude: number | null;
+  longitude: number | null;
+  /** Yarıçap (metre); null ise merkez ayarlı olsa bile mesafe doğrulaması yapılmaz, konum yalnız kaydedilir. */
+  geofenceRadiusMeters: number | null;
+  /** QR self-servis check-in kodu (S-31): girişe asılan posterin kodladığı değer. */
+  selfCheckInCode: string;
 }
 
 export interface LocationInput {
@@ -35,6 +44,13 @@ export interface LocationInput {
   type: LocationType;
   countryCode: string;
   address?: string | null;
+  sgkIsyeriSicilNo?: string | null;
+}
+
+export interface LocationGeofenceInput {
+  latitude: number | null;
+  longitude: number | null;
+  radiusMeters: number | null;
 }
 
 const LOCATIONS_BASE = "/v1/organization/locations";
@@ -61,4 +77,16 @@ export async function updateLocation(id: string, input: LocationInput): Promise<
 
 export async function deleteLocation(id: string): Promise<void> {
   await apiClient.delete(`${LOCATIONS_BASE}/${id}`);
+}
+
+/** Geofence merkezi/yarıçapını ayarlar veya temizler (üçü de null → temizler); attendance self-servis GPS check-in bunu kullanır. */
+export async function setLocationGeofence(id: string, input: LocationGeofenceInput): Promise<Location> {
+  const { data } = await apiClient.put<Location>(`${LOCATIONS_BASE}/${id}/geofence`, input);
+  return normalize(data);
+}
+
+/** QR self-servis check-in kodunu yeniler; önceki basılı QR anında geçersiz olur (sızan/fotoğrafı paylaşılan poster için). */
+export async function regenerateLocationSelfCheckInCode(id: string): Promise<Location> {
+  const { data } = await apiClient.post<Location>(`${LOCATIONS_BASE}/${id}/self-checkin-code/regenerate`, null);
+  return normalize(data);
 }

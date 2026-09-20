@@ -137,6 +137,24 @@ describe("LeaveTypeDialog (senseik-021 form modal alignment)", () => {
   });
 });
 
+describe("LeaveTypeDialog (senseik-038 fieldset/grid width regression)", () => {
+  it("keeps every direct CSS Grid inside a Fieldset at full width (w-full)", () => {
+    // fieldset varsayılan olarak min-content genişlikte boyutlanır; bu, doğrudan altındaki CSS Grid'in
+    // minmax(0,1fr) kolonlarıyla çakışıp grid'i 0px genişliğe çökertiyordu (Ayarlar > İzin kuralları >
+    // Düzenle tek karakter genişliğinde bir şeride dönüşüyordu). Erişilebilirlik sorgularıyla ifade
+    // edilemeyen saf bir CSS regresyon koruması olduğundan burada querySelector kullanılıyor.
+    // Mantine `Modal` içeriğini `document.body`'e portallıyor — RTL'nin `render()`'dan dönen `container`'ı
+    // yalnız ilk mount div'ini kapsıyor, portallanan içeriği görmüyor; bu yüzden `document.body` üzerinden ara.
+    renderDialog(seededAnnualType());
+
+    const grids = document.body.querySelectorAll<HTMLDivElement>(".grid");
+    expect(grids.length).toBeGreaterThanOrEqual(6);
+    grids.forEach((grid) => {
+      expect(grid.classList.contains("w-full")).toBe(true);
+    });
+  });
+});
+
 describe("LeaveTypeDialog (senseik-008 Bug 1)", () => {
   it("shows the resolved leave name, not the raw seed key, in the name field", () => {
     renderDialog(seededAnnualType());

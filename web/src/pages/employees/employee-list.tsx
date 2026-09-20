@@ -282,7 +282,7 @@ function EmployeeGrid() {
           {row.original.hasMissingInfo && (
             <Tooltip label={t("employees:filters.missingInfoHint")}>
               <Badge size="xs" variant="light" color="orange">
-                {t("employees:filters.missingInfo")}
+                {t("employees:filters.missingInfoBadge", { count: row.original.missingInfoFieldCount })}
               </Badge>
             </Tooltip>
           )}
@@ -290,11 +290,22 @@ function EmployeeGrid() {
       ),
     },
     {
-      id: "orgUnit",
+      // senseik-046: this used to be a single "orgUnit" column labeled "Birim" that showed the employee's raw,
+      // usually deepest (Title-level), OrgUnitId - so it displayed a title where a department was expected. Split
+      // into the two org placement chain levels the employee card already distinguishes (departmentName/titleName),
+      // both resolved server-side and independent of the client-side unitNames lookup's permission requirement.
+      id: "department",
       enableSorting: false,
-      header: t("employees:columns.orgUnit"),
-      meta: { label: t("employees:columns.orgUnit") },
-      cell: ({ row }) => (row.original.orgUnitId && unitNames.get(row.original.orgUnitId)) || "—",
+      header: t("employees:columns.department"),
+      meta: { label: t("employees:columns.department") },
+      cell: ({ row }) => row.original.departmentName ?? "—",
+    },
+    {
+      id: "title",
+      enableSorting: false,
+      header: t("employees:columns.title"),
+      meta: { label: t("employees:columns.title") },
+      cell: ({ row }) => row.original.titleName ?? "—",
     },
     {
       id: "manager",

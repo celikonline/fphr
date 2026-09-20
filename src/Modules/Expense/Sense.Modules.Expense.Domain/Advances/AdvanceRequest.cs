@@ -72,9 +72,19 @@ public sealed class AdvanceRequest : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(ExpenseDomainErrors.AdvanceAmountInvalid);
         }
 
+        if (amount > ExpenseLimits.MaxAmount)
+        {
+            return Error.Validation(ExpenseDomainErrors.AdvanceAmountTooLarge);
+        }
+
         if (string.IsNullOrWhiteSpace(currency) || currency.Trim().Length != ExpenseLimits.CurrencyLength)
         {
             return Error.Validation(ExpenseDomainErrors.ItemCurrencyRequired);
+        }
+
+        if (!ExpenseLimits.AllowedCurrencies.Contains(currency.Trim().ToUpperInvariant()))
+        {
+            return Error.Validation(ExpenseDomainErrors.ItemCurrencyUnsupported);
         }
 
         if (isInstallmentRequested && installmentCount is not (> 0 and <= ExpenseLimits.MaxInstallments))

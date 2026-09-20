@@ -36,6 +36,13 @@ public interface IAuditLogged
 {
     /// <summary>Denetim kaydında maskelenecek hassas alan adları.</summary>
     static virtual IReadOnlySet<string> SensitiveFields => new HashSet<string>(StringComparer.Ordinal);
+
+    /// <summary>
+    /// senseik-049: bir Modified SaveChanges'ta alan bazında öncesi/sonrası diff'i üretilecek kritik alan adları
+    /// (KVKK m.12 - "hangi alan değişti"). Boşsa (varsayılan) Details eski davranışa döner: "{Resource} {action}".
+    /// Yalnız gerçekten kritik alanları listelemek gerekir - Create/Delete eylemlerinde kullanılmaz.
+    /// </summary>
+    static virtual IReadOnlyList<string> AuditedFields => [];
 }
 
 /// <summary>KVKK gereği anonimleştirilebilen aggregate.</summary>
