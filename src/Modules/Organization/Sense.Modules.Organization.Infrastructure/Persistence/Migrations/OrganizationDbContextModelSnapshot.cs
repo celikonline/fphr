@@ -320,6 +320,10 @@ namespace Sense.Modules.Organization.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("holiday_calendar_id");
 
+                    b.Property<bool>("IsHalfDay")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_half_day");
+
                     b.Property<bool>("IsRecurringAnnually")
                         .HasColumnType("boolean")
                         .HasColumnName("is_recurring_annually");

@@ -41,7 +41,7 @@ public sealed class ListHolidayCalendarEntriesHandler(IHolidayCalendarEntryRepos
     {
         var list = await entries.ListByCalendarAsync(query.HolidayCalendarId, cancellationToken);
         IReadOnlyList<HolidayCalendarEntryDto> dtos = list
-            .Select(e => new HolidayCalendarEntryDto(e.Id, e.HolidayCalendarId, e.Date, e.Name, e.IsRecurringAnnually))
+            .Select(e => new HolidayCalendarEntryDto(e.Id, e.HolidayCalendarId, e.Date, e.Name, e.IsRecurringAnnually, e.IsHalfDay))
             .ToList();
 
         return Result.Success(dtos);

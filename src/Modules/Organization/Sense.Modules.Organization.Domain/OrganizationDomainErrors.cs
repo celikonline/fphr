@@ -31,6 +31,8 @@ public static class OrganizationDomainErrors
     public const string HolidayCalendarNotFound = "organization.holiday_calendar.not_found";
     public const string HolidayCalendarNameRequired = "organization.holiday_calendar.name_required";
     public const string HolidayCalendarCountryCodeRequired = "organization.holiday_calendar.country_code_required";
+    public const string HolidayCalendarCountryCodeInvalid = "organization.holiday_calendar.country_code_invalid";
+    public const string HolidayCalendarSystemImmutable = "organization.holiday_calendar.system_immutable";
 
     public const string HolidayCalendarEntryCalendarIdRequired = "organization.holiday_calendar_entry.calendar_id_required";
     public const string HolidayCalendarEntryNameRequired = "organization.holiday_calendar_entry.name_required";

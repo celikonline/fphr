@@ -320,6 +320,11 @@
   <data name="organization.unit_type.inactive" xml:space="preserve"><value>Pasif bir seviyede birim oluşturulamaz.</value></data>
   <data name="organization.company.not_found" xml:space="preserve"><value>Şirket bulunamadı.</value></data>
   <data name="organization.holiday_calendar.not_found" xml:space="preserve"><value>Tatil takvimi bulunamadı.</value></data>
+  <data name="organization.holiday_calendar_entry.not_found" xml:space="preserve"><value>Tatil günü bulunamadı.</value></data>
+  <data name="organization.holiday_calendar.country_code_invalid" xml:space="preserve"><value>Ülke kodu geçerli bir ISO 3166-1 alfa-2 kodu olmalıdır (ör. TR).</value></data>
+  <data name="organization.holiday_calendar.system_immutable" xml:space="preserve"><value>Sistem tatil takvimi salt okunurdur; yeniden adlandırılamaz, silinemez veya günleri değiştirilemez.</value></data>
+  <data name="organization.holiday_calendar.in_use" xml:space="preserve"><value>Bu tatil takvimi bir şirkete atanmış olduğu için silinemez. Önce şirketin takvimini değiştirin.</value></data>
+  <data name="organization.holiday_calendars.delete" xml:space="preserve"><value>Tatil takvimi silme</value></data>
   <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Gün sayısı 0 ile 366 arasında olmalıdır.</value></data>
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Şirket yapısı seviyelerini yönetme</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Şirket ekleme</value></data>

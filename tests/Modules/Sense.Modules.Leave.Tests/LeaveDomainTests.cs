@@ -39,6 +39,81 @@ public sealed class LeaveDayCounterTests
         result.WeeklyRestDays.ShouldBe(0);
     }
 
+    private static readonly IReadOnlySet<DateOnly> CumhuriyetArifesi = new HashSet<DateOnly> { new(2026, 10, 28) };
+
+    [Fact]
+    public void HalfDayHoliday_SingleWorkingDay_CountsHalfADay()
+    {
+        // Wed 2026-10-28 is Cumhuriyet Bayramı Arifesi (13.00'ten itibaren yarım gün): the employee works the morning.
+        var holidays = new Dictionary<DateOnly, string> { [new DateOnly(2026, 10, 28)] = "Cumhuriyet Bayramı Arifesi" };
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 28), new DateOnly(2026, 10, 28), LeaveDayCounter.MondayToFriday, holidays,
+            countsNonWorkingDays: false, halfDayHolidays: CumhuriyetArifesi);
+
+        result.Days.ShouldBe(0.5m);
+        result.PublicHolidayDays.ShouldBe(0, "a half-day holiday is not a fully excluded public holiday");
+        result.Breakdown.Single().Kind.ShouldBe(LeaveDayKind.PublicHoliday);
+        result.Breakdown.Single().HolidayName.ShouldBe("Cumhuriyet Bayramı Arifesi");
+    }
+
+    [Fact]
+    public void HalfDayHoliday_RangeAcrossArifeAndFullHoliday_CountsHalfPlusWorkdays()
+    {
+        // Mon 26 .. Thu 29 Oct: two workdays + arife (0.5) + Cumhuriyet Bayramı (full holiday, excluded) = 2.5.
+        var holidays = new Dictionary<DateOnly, string>
+        {
+            [new DateOnly(2026, 10, 28)] = "Cumhuriyet Bayramı Arifesi",
+            [new DateOnly(2026, 10, 29)] = "Cumhuriyet Bayramı",
+        };
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 29), LeaveDayCounter.MondayToFriday, holidays,
+            countsNonWorkingDays: false, halfDayHolidays: CumhuriyetArifesi);
+
+        result.Days.ShouldBe(2.5m);
+        result.PublicHolidayDays.ShouldBe(1);
+    }
+
+    [Fact]
+    public void FullDayHoliday_WithHalfDaySetPresent_StaysExcluded()
+    {
+        var holidays = new Dictionary<DateOnly, string> { [new DateOnly(2026, 10, 29)] = "Cumhuriyet Bayramı" };
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 29), new DateOnly(2026, 10, 29), LeaveDayCounter.MondayToFriday, holidays,
+            countsNonWorkingDays: false, halfDayHolidays: CumhuriyetArifesi);
+
+        result.Days.ShouldBe(0m);
+        result.PublicHolidayDays.ShouldBe(1);
+    }
+
+    [Fact]
+    public void HalfDayHoliday_OnAWeeklyRestDay_IsNotCounted()
+    {
+        // Sat 2026-10-31 flagged as a half-day holiday: the employee is off anyway, so nothing is deducted.
+        var saturday = new DateOnly(2026, 10, 31);
+        var holidays = new Dictionary<DateOnly, string> { [saturday] = "Arife" };
+
+        var result = LeaveDayCounter.Count(
+            saturday, saturday, LeaveDayCounter.MondayToFriday, holidays,
+            countsNonWorkingDays: false, halfDayHolidays: new HashSet<DateOnly> { saturday });
+
+        result.Days.ShouldBe(0m);
+    }
+
+    [Fact]
+    public void HalfDayHoliday_CalendarDayType_CountsAFullDay()
+    {
+        var holidays = new Dictionary<DateOnly, string> { [new DateOnly(2026, 10, 28)] = "Cumhuriyet Bayramı Arifesi" };
+
+        var result = LeaveDayCounter.Count(
+            new DateOnly(2026, 10, 28), new DateOnly(2026, 10, 28), LeaveDayCounter.MondayToFriday, holidays,
+            countsNonWorkingDays: true, halfDayHolidays: CumhuriyetArifesi);
+
+        result.Days.ShouldBe(1m);
+    }
+
     private static readonly IReadOnlyDictionary<DateOnly, string> NoHolidays = new Dictionary<DateOnly, string>();
 
     /// <summary>"Pazartesi'den Cuma'ya izin alırsa Cumartesi'yi ekle" (roadmap #23, 11.3.5/11.3.6).</summary>

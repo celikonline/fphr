@@ -17,6 +17,8 @@ public static class OrganizationErrors
     public const string HolidayDaysOutOfRange = "organization.holidays.days_out_of_range";
 
     public const string HolidayCalendarNotFound = "organization.holiday_calendar.not_found";
+    public const string HolidayCalendarEntryNotFound = "organization.holiday_calendar_entry.not_found";
+    public const string HolidayCalendarInUse = "organization.holiday_calendar.in_use";
     public const string CompanyNotFound = "organization.company.not_found";
     public const string LocationNotFound = "organization.location.not_found";
     public const string LocationInUse = "organization.location.in_use";

@@ -13,12 +13,14 @@
     { "name": "Cumhuriyet Bayramı", "month": 10, "day": 29, "recurringAnnually": true },
     {
       "name": "Cumhuriyet Bayramı Arifesi (13.00'ten itibaren yarım gün)",
+      "halfDay": true,
       "month": 10,
       "day": 28,
       "recurringAnnually": true
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2026-03-19",
       "recurringAnnually": false,
       "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
@@ -43,6 +45,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2026-05-26",
       "recurringAnnually": false,
       "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
@@ -73,6 +76,7 @@
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2027-03-08",
       "recurringAnnually": false,
       "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
@@ -97,6 +101,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2027-05-15",
       "recurringAnnually": false,
       "note": "Estimated only - lunar calendar; confirm against the official Diyanet takvimi and refresh yearly."
@@ -127,6 +132,7 @@
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2028-02-25",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -151,6 +157,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2028-05-04",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -181,6 +188,7 @@
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2029-02-13",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -205,6 +213,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2029-04-23",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -235,6 +244,7 @@
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2030-02-03",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -259,6 +269,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2030-04-12",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -289,6 +300,7 @@
     },
     {
       "name": "Ramazan Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2031-01-23",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."
@@ -313,6 +325,7 @@
     },
     {
       "name": "Kurban Bayramı Arifesi (yarım gün)",
+      "halfDay": true,
       "date": "2031-04-01",
       "recurringAnnually": false,
       "note": "senseik-037: Diyanet İşleri Başkanlığı hesaplamalı dini günler takvimine göre (vakithesaplama.diyanet.gov.tr) - lunar calendar; refresh/confirm yearly."

@@ -186,6 +186,11 @@ public sealed class HolidayCalendarRepository(OrganizationDbContext context) : I
 {
     public void Add(HolidayCalendar calendar) => context.HolidayCalendars.Add(calendar);
 
+    public void Remove(HolidayCalendar calendar) => context.HolidayCalendars.Remove(calendar);
+
+    public async Task<bool> IsAssignedToCompanyAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default) =>
+        await context.Companies.AnyAsync(c => c.HolidayCalendarId == holidayCalendarId, cancellationToken);
+
     public async Task<Result<HolidayCalendar>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var calendar = await context.HolidayCalendars.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
@@ -211,6 +216,11 @@ public sealed class HolidayCalendarRepository(OrganizationDbContext context) : I
 public sealed class HolidayCalendarEntryRepository(OrganizationDbContext context) : IHolidayCalendarEntryRepository
 {
     public void Add(HolidayCalendarEntry entry) => context.HolidayCalendarEntries.Add(entry);
+
+    public void Remove(HolidayCalendarEntry entry) => context.HolidayCalendarEntries.Remove(entry);
+
+    public async Task<HolidayCalendarEntry?> FindAsync(Guid holidayCalendarId, Guid entryId, CancellationToken cancellationToken = default) =>
+        await context.HolidayCalendarEntries.FirstOrDefaultAsync(e => e.Id == entryId && e.HolidayCalendarId == holidayCalendarId, cancellationToken);
 
     public async Task<IReadOnlyList<HolidayCalendarEntry>> ListByCalendarAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default) =>
         await context.HolidayCalendarEntries

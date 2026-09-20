@@ -194,13 +194,10 @@ public partial class DataSeeder
         Guid tenantId, DateOnly start, DateOnly end, bool countsNonWorkingDays, CancellationToken cancellationToken)
     {
         var calendar = await holidayCalendars.ResolveCalendarAsync(tenantId, null, null, cancellationToken);
-        var holidayMap = calendar is null
-            ? new Dictionary<DateOnly, string>()
-            : (await holidayCalendars.GetHolidaysAsync(tenantId, calendar.Id, start, end, cancellationToken))
-                .GroupBy(h => h.Date)
-                .ToDictionary(g => g.Key, g => g.First().Name);
+        var occurrences = calendar is null ? [] : await holidayCalendars.GetHolidaysAsync(tenantId, calendar.Id, start, end, cancellationToken);
+        var (holidayMap, halfDayHolidays) = HolidayDayMaps.Build(occurrences);
 
-        return LeaveDayCounter.Count(start, end, LeaveDayCounter.MondayToFriday, holidayMap, countsNonWorkingDays);
+        return LeaveDayCounter.Count(start, end, LeaveDayCounter.MondayToFriday, holidayMap, countsNonWorkingDays, halfDayHolidays: halfDayHolidays);
     }
 
     private static void ThrowIfFailed(Result result)

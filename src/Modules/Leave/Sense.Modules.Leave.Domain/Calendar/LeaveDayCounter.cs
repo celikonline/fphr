@@ -8,24 +8,29 @@ public enum LeaveDayKind
 }
 
 /// <summary>One day of a leave calculation breakdown ("CalculationBreakdown").</summary>
-public sealed record LeaveDay(DateOnly Date, LeaveDayKind Kind, bool Counted, string? HolidayName);
+/// <param name="HalfDayHoliday">A half-day (arife) holiday on a working day: it is <paramref name="Counted"/> but as 0.5 day.</param>
+public sealed record LeaveDay(DateOnly Date, LeaveDayKind Kind, bool Counted, string? HolidayName, bool HalfDayHoliday = false);
 
 public sealed record LeaveDayCount(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<LeaveDay> Breakdown);
 
 /// <summary>
 /// Counts leave days in [start, end]: working days exclude weekly rest days and public holidays (md.53 - hafta tatili ve
-/// UBGT izinden sayılmaz); calendar-day types (<c>CountsNonWorkingDays</c>) count every day. Half-day holidays are not
-/// modelled yet.
+/// UBGT izinden sayılmaz); calendar-day types (<c>CountsNonWorkingDays</c>) count every day. A half-day holiday
+/// (arife, <paramref name="halfDayHolidays"/>) on a working day is worked in the morning, so it deducts 0.5 day
+/// (and is not a fully excluded <see cref="LeaveDayCount.PublicHolidayDays"/>); on a rest day it deducts nothing.
 /// </summary>
 public static class LeaveDayCounter
 {
+    private const decimal HalfDay = 0.5m;
+
     public static LeaveDayCount Count(
         DateOnly start,
         DateOnly end,
         Func<DateOnly, bool> isWorkingDay,
         IReadOnlyDictionary<DateOnly, string> holidays,
         bool countsNonWorkingDays,
-        Func<DateOnly, bool>? includeSaturdayWhenFullWeek = null)
+        Func<DateOnly, bool>? includeSaturdayWhenFullWeek = null,
+        IReadOnlySet<DateOnly>? halfDayHolidays = null)
     {
         var days = new List<LeaveDay>();
         var rest = 0;
@@ -33,7 +38,9 @@ public static class LeaveDayCounter
         for (var date = start; date <= end; date = date.AddDays(1))
         {
             var kind = holidays.ContainsKey(date) ? LeaveDayKind.PublicHoliday : isWorkingDay(date) ? LeaveDayKind.Workday : LeaveDayKind.WeeklyRest;
-            var counted = countsNonWorkingDays || kind == LeaveDayKind.Workday;
+            var halfDayHoliday = !countsNonWorkingDays && kind == LeaveDayKind.PublicHoliday
+                && halfDayHolidays?.Contains(date) == true && isWorkingDay(date);
+            var counted = countsNonWorkingDays || kind == LeaveDayKind.Workday || halfDayHoliday;
             if (!counted && kind == LeaveDayKind.WeeklyRest)
             {
                 rest++;
@@ -43,7 +50,7 @@ public static class LeaveDayCounter
                 holidayCount++;
             }
 
-            days.Add(new LeaveDay(date, kind, counted, holidays.GetValueOrDefault(date)));
+            days.Add(new LeaveDay(date, kind, counted, holidays.GetValueOrDefault(date), halfDayHoliday));
         }
 
         // Calendar-day types already count every day; the Saturday rule only matters where weekly rest is excluded.
@@ -52,7 +59,7 @@ public static class LeaveDayCounter
             ApplySaturdayRule(days, start, end, isWorkingDay, includeSaturdayWhenFullWeek, ref rest);
         }
 
-        return new LeaveDayCount(days.Count(d => d.Counted), rest, holidayCount, days);
+        return new LeaveDayCount(days.Sum(d => d.Counted ? (d.HalfDayHoliday ? HalfDay : 1m) : 0m), rest, holidayCount, days);
     }
 
     /// <summary>

@@ -52,13 +52,22 @@ public sealed class LeaveDayCalculator(IWorkScheduleReader schedules, IHolidayCa
         var isWorkingDay = await schedules.GetWorkingDayPredicateAsync(tenantId, employeeId, scheduleWindowStart, scheduleWindowEnd, cancellationToken);
         var includeSaturdayWhenFullWeek = await schedules.GetIncludeSaturdayWhenFullWeekPredicateAsync(tenantId, employeeId, scheduleWindowStart, scheduleWindowEnd, cancellationToken);
         var calendar = await holidays.ResolveCalendarAsync(tenantId, null, null, cancellationToken);
-        var holidayMap = calendar is null
-            ? new Dictionary<DateOnly, string>()
-            : (await holidays.GetHolidaysAsync(tenantId, calendar.Id, start, end, cancellationToken))
-                .GroupBy(h => h.Date)
-                .ToDictionary(g => g.Key, g => g.First().Name);
+        var occurrences = calendar is null ? [] : await holidays.GetHolidaysAsync(tenantId, calendar.Id, start, end, cancellationToken);
+        var (holidayMap, halfDayHolidays) = HolidayDayMaps.Build(occurrences);
 
-        return LeaveDayCounter.Count(start, end, isWorkingDay, holidayMap, countsNonWorkingDays, includeSaturdayWhenFullWeek);
+        return LeaveDayCounter.Count(start, end, isWorkingDay, holidayMap, countsNonWorkingDays, includeSaturdayWhenFullWeek, halfDayHolidays);
+    }
+}
+
+/// <summary>Turns holiday occurrences into the per-date inputs of <see cref="LeaveDayCounter"/>; a date is a half-day holiday only when every holiday on it is one.</summary>
+public static class HolidayDayMaps
+{
+    public static (IReadOnlyDictionary<DateOnly, string> Holidays, IReadOnlySet<DateOnly> HalfDayHolidays) Build(IEnumerable<UpcomingHoliday> occurrences)
+    {
+        var byDate = occurrences.GroupBy(h => h.Date).ToList();
+        return (
+            byDate.ToDictionary(g => g.Key, g => g.First().Name),
+            byDate.Where(g => g.All(h => h.IsHalfDay)).Select(g => g.Key).ToHashSet());
     }
 }
 

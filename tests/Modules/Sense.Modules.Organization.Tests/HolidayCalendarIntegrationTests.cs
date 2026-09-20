@@ -135,4 +135,67 @@ public sealed class HolidayCalendarIntegrationTests : TestFixture
 
         (await new HolidayCalendarLookup(db).GetLastDefinedReligiousHolidayYearAsync(tenantId)).ShouldBeNull();
     }
+
+    /// <summary>Audit A4: the half-day flag survives persistence and reaches the cross-module lookup.</summary>
+    [Fact]
+    public async Task GetHolidaysAsync_ExposesTheHalfDayFlag()
+    {
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var calendar = HolidayCalendar.Create(tenantId, "Türkiye Resmi Tatilleri", "TR", isSystemDefined: true).Value;
+        db.HolidayCalendars.Add(calendar);
+        db.HolidayCalendarEntries.Add(HolidayCalendarEntry.Create(
+            tenantId, calendar.Id, new DateOnly(2000, 10, 28), "Cumhuriyet Bayramı Arifesi", isRecurringAnnually: true, isHalfDay: true).Value);
+        db.HolidayCalendarEntries.Add(HolidayCalendarEntry.Create(
+            tenantId, calendar.Id, new DateOnly(2000, 10, 29), "Cumhuriyet Bayramı", isRecurringAnnually: true).Value);
+        await db.SaveChangesAsync();
+
+        var holidays = await new HolidayCalendarLookup(db).GetHolidaysAsync(tenantId, calendar.Id, new DateOnly(2026, 10, 26), new DateOnly(2026, 10, 30));
+
+        holidays.Single(h => h.Date == new DateOnly(2026, 10, 28)).IsHalfDay.ShouldBeTrue();
+        holidays.Single(h => h.Date == new DateOnly(2026, 10, 29)).IsHalfDay.ShouldBeFalse();
+    }
+
+    /// <summary>Audit A3: removing a calendar drops its entries, and "assigned to a company" is detectable.</summary>
+    [Fact]
+    public async Task RemoveCalendar_CascadesToEntries_AndAssignmentIsDetected()
+    {
+        var db = ServiceProvider!.GetRequiredService<OrganizationDbContext>();
+        await db.Database.MigrateAsync();
+
+        var tenantId = Guid.NewGuid();
+        using var scope = TenantContextSetter!.BeginScope(tenantId);
+
+        var typeResults = OrgUnitTypeCatalog.CreateAll(tenantId);
+        foreach (var result in typeResults)
+        {
+            db.OrgUnitTypes.Add(result.Value);
+        }
+
+        var companyTypeId = typeResults.Single(r => r.Value.Code == OrgUnitTypeCodes.Company).Value.Id;
+        var unit = OrgUnit.Create(tenantId, companyTypeId, parentId: null, name: "Headquarters").Value;
+        db.OrgUnits.Add(unit);
+
+        var assigned = HolidayCalendar.Create(tenantId, "Atanmış", "DE", isSystemDefined: false).Value;
+        var free = HolidayCalendar.Create(tenantId, "Boş", "DE", isSystemDefined: false).Value;
+        db.HolidayCalendars.AddRange(assigned, free);
+        db.HolidayCalendarEntries.Add(HolidayCalendarEntry.Create(tenantId, free.Id, new DateOnly(2026, 11, 15), "QA Özel Tatil", isRecurringAnnually: false).Value);
+        db.Companies.Add(Company.Create(tenantId, unit.Id, assigned.Id).Value);
+        await db.SaveChangesAsync();
+
+        var calendars = new HolidayCalendarRepository(db);
+        (await calendars.IsAssignedToCompanyAsync(assigned.Id)).ShouldBeTrue();
+        (await calendars.IsAssignedToCompanyAsync(free.Id)).ShouldBeFalse();
+
+        calendars.Remove(free);
+        await db.SaveChangesAsync();
+        db.ChangeTracker.Clear();
+
+        (await db.HolidayCalendars.AnyAsync(c => c.Id == free.Id)).ShouldBeFalse();
+        (await db.HolidayCalendarEntries.AnyAsync(e => e.HolidayCalendarId == free.Id)).ShouldBeFalse();
+    }
 }

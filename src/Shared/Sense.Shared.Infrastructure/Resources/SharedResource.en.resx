@@ -311,6 +311,11 @@
   <data name="organization.unit_type.inactive" xml:space="preserve"><value>Units cannot be created on an inactive level.</value></data>
   <data name="organization.company.not_found" xml:space="preserve"><value>Company not found.</value></data>
   <data name="organization.holiday_calendar.not_found" xml:space="preserve"><value>Holiday calendar not found.</value></data>
+  <data name="organization.holiday_calendar_entry.not_found" xml:space="preserve"><value>Holiday entry not found.</value></data>
+  <data name="organization.holiday_calendar.country_code_invalid" xml:space="preserve"><value>The country code must be a valid ISO 3166-1 alpha-2 code (e.g. TR).</value></data>
+  <data name="organization.holiday_calendar.system_immutable" xml:space="preserve"><value>The system holiday calendar is read-only; it cannot be renamed, deleted or have its days changed.</value></data>
+  <data name="organization.holiday_calendar.in_use" xml:space="preserve"><value>This holiday calendar is assigned to a company and cannot be deleted. Change the company's calendar first.</value></data>
+  <data name="organization.holiday_calendars.delete" xml:space="preserve"><value>Delete holiday calendars</value></data>
   <data name="organization.holidays.days_out_of_range" xml:space="preserve"><value>Days must be between 0 and 366.</value></data>
   <data name="organization.unit_types.manage" xml:space="preserve"><value>Manage organization structure levels</value></data>
   <data name="organization.companies.create" xml:space="preserve"><value>Add companies</value></data>

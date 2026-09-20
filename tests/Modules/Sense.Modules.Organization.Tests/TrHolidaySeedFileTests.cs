@@ -100,6 +100,22 @@ public sealed class TrHolidaySeedFileTests
         }
     }
 
+    /// <summary>
+    /// Audit A4: every arife ("yarım gün" in its name) is flagged halfDay so leave counting deducts 0.5 day, and no
+    /// other entry is - the flag, not the name text, is what the Leave module reads.
+    /// </summary>
+    [Fact]
+    public void SeedFile_HalfDayFlag_MatchesTheArifeEntries()
+    {
+        var file = JsonSerializer.Deserialize<SeedFile>(File.ReadAllText(FindSeedFilePath()), JsonOptions)!;
+
+        var arifes = file.Entries.Where(e => e.Name.Contains("yarım gün", StringComparison.Ordinal)).ToList();
+
+        arifes.Count.ShouldBe(1 + 6 * 2, "28 Ekim + Ramazan/Kurban arifesi for 2026-2031");
+        arifes.ShouldAllBe(e => e.HalfDay);
+        file.Entries.Except(arifes).ShouldAllBe(e => !e.HalfDay);
+    }
+
     private static string FindSeedFilePath()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
@@ -129,5 +145,6 @@ public sealed class TrHolidaySeedFileTests
         [property: JsonPropertyName("day")] int? Day,
         [property: JsonPropertyName("date")] string? Date,
         [property: JsonPropertyName("recurringAnnually")] bool RecurringAnnually,
-        [property: JsonPropertyName("note")] string? Note);
+        [property: JsonPropertyName("note")] string? Note,
+        [property: JsonPropertyName("halfDay")] bool HalfDay = false);
 }

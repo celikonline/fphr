@@ -144,7 +144,7 @@ public partial class DataSeeder
         foreach (var entry in seed.Entries)
         {
             var date = ResolveSeedEntryDate(entry);
-            var entryResult = HolidayCalendarEntry.Create(tenantId, calendar.Id, date, entry.Name, entry.RecurringAnnually);
+            var entryResult = HolidayCalendarEntry.Create(tenantId, calendar.Id, date, entry.Name, entry.RecurringAnnually, entry.HalfDay);
             if (entryResult.IsFailure)
             {
                 throw new InvalidOperationException($"Failed to seed holiday entry '{entry.Name}': {entryResult.Error}");
@@ -209,7 +209,8 @@ public partial class DataSeeder
         [property: JsonPropertyName("day")] int? Day,
         [property: JsonPropertyName("date")] string? Date,
         [property: JsonPropertyName("recurringAnnually")] bool RecurringAnnually,
-        [property: JsonPropertyName("note")] string? Note);
+        [property: JsonPropertyName("note")] string? Note,
+        [property: JsonPropertyName("halfDay")] bool HalfDay = false);
 
     private static Location CreateLocationOrThrow(Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null)
     {
