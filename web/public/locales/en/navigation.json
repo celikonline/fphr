@@ -22,8 +22,10 @@
     "trust": "Trust & security",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
+    "back": "Back",
     "workflowInbox": "Approval inbox",
-    "sharedFiles": "Shared files"
+    "sharedFiles": "Shared files",
+    "platformTenants": "Companies (Platform)"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

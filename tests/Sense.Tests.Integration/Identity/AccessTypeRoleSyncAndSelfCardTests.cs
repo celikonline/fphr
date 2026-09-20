@@ -109,7 +109,8 @@ public sealed class AccessTypeRoleSyncAndSelfCardTests : IdentityStackTestBase
             roles.Single(r => r.Id == customRoleId).Permissions.Select(p => p.Permission).ShouldBe([Stale]);
             roles.Single(r => r.Code == SystemRoleCodes.HR).Permissions.Select(p => p.Permission)
                 .ShouldBe(SystemRoleDefinitions.Get(SystemRoleCodes.HR).Resolve(Guid.Empty, catalog.All).Select(p => p.Permission), ignoreOrder: true);
-            roles.Single(r => r.Code == SystemRoleCodes.Owner).Permissions.Count.ShouldBe(catalog.All.Count);
+            // Owner tüm kataloğu alır — platform (süper admin) izinleri hariç: onlar yalnız platform kiracısındaki SuperAdmin'e aittir.
+            roles.Single(r => r.Code == SystemRoleCodes.Owner).Permissions.Count.ShouldBe(catalog.All.Count(p => !PlatformPermissions.IsPlatformKey(p.Key)));
         }
 
         (await synchronizer.SyncAllTenantsAsync(Ct)).ShouldBe(0);

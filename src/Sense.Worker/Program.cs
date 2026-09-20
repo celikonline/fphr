@@ -13,6 +13,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Organization.Infrastructure;
 using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Expense.Infrastructure;
 using Sense.Modules.Expense.Infrastructure.Persistence;
@@ -77,6 +78,9 @@ builder.Services.AddModuleHandlers(
     typeof(OrganizationDbContext).Assembly,
     typeof(IOrgUnitRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<OrganizationDbContext>>();
+// Organization consumes Identity's TenantProvisioned (new tenant → unit types, root company, TR holiday calendar); registered
+// explicitly since this host does not scan Organization's Application assembly.
+builder.Services.AddOrganizationIntegrationEventHandlers();
 
 // Employee lifecycle integration events (EmployeeHired/Suspended/Reactivated) consumed by Leave/Workflow.
 builder.Services.AddModuleDbContext<EmployeeDbContext>(builder.Configuration, EmployeeDbContext.SchemaName);

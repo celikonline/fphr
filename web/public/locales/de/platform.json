@@ -1,0 +1,52 @@
+{
+  "title": "Unternehmen",
+  "subtitle": "Alle Unternehmen (Mandanten) der Plattform ansehen und neue anlegen.",
+  "add": "Unternehmen anlegen",
+  "empty": "Noch keine Unternehmen.",
+  "platformBadge": "Plattform",
+  "columns": {
+    "name": "Unternehmen",
+    "slug": "Adresse (Slug)",
+    "status": "Status",
+    "createdAt": "Erstellt"
+  },
+  "status": {
+    "trial": "Testphase",
+    "active": "Aktiv",
+    "suspended": "Gesperrt",
+    "closed": "Geschlossen"
+  },
+  "dialog": {
+    "title": "Neues Unternehmen anlegen",
+    "companyName": "Unternehmensname",
+    "slug": "Unternehmensadresse (Slug)",
+    "slugHint": "Wird auf der Anmeldeseite verwendet. Nur Kleinbuchstaben, Ziffern und Bindestriche; 3-40 Zeichen.",
+    "ownerSection": "Erster Benutzer (Owner)",
+    "ownerFirstName": "Vorname",
+    "ownerLastName": "Nachname",
+    "ownerEmail": "E-Mail",
+    "ownerPhone": "Telefon",
+    "ownerMode": "Wie sollen die Anmeldedaten bereitgestellt werden?",
+    "modeInvite": "Einladungs-E-Mail",
+    "modePassword": "Passwort festlegen",
+    "modeInviteHint": "Der Owner legt sein Passwort über den Link in der E-Mail selbst fest; Sie sehen es nie.",
+    "modePasswordHint": "Das Konto wird sofort mit dem von Ihnen festgelegten Passwort aktiviert. Das Passwort müssen Sie dem Owner separat mitteilen.",
+    "password": "Passwort",
+    "passwordHint": "Mindestens 10 Zeichen mit Buchstaben, Ziffern und einem Sonderzeichen.",
+    "submit": "Unternehmen anlegen"
+  },
+  "created": {
+    "invited": "Unternehmen angelegt. Eine Einladungs-E-Mail wurde an den Owner gesendet.",
+    "withPassword": "Unternehmen angelegt. Der Owner kann sich mit dem festgelegten Passwort anmelden."
+  },
+  "errors": {
+    "generic": "Das Unternehmen konnte nicht angelegt werden. Bitte versuchen Sie es erneut.",
+    "loadFailed": "Die Unternehmensliste konnte nicht geladen werden.",
+    "slugTaken": "Diese Unternehmensadresse ist bereits vergeben.",
+    "slugInvalid": "Die Unternehmensadresse muss 3-40 Zeichen lang sein und darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten.",
+    "companyRequired": "Der Unternehmensname ist erforderlich.",
+    "ownerNameRequired": "Vor- und Nachname des Owners sind erforderlich.",
+    "ownerEmailInvalid": "Geben Sie eine gültige E-Mail-Adresse ein.",
+    "passwordTooShort": "Das Passwort muss mindestens 10 Zeichen lang sein."
+  }
+}

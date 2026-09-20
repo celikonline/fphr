@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
+using Sense.Modules.Organization.Infrastructure;
 using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Organization.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Modules;
@@ -52,6 +53,9 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IHolidayCalendarEntryRepository, HolidayCalendarEntryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<ICostCenterRepository, CostCenterRepository>();
+
+        // Yeni kiracı Organization varsayılanları (wizard "hazırla" komutu); olay işleyicisi Worker'da kayıtlıdır.
+        services.AddOrganizationTenantBootstrap();
 
         // Cross-module read contracts consumed by other modules (see IOrgUnitLookup / ILocationLookup)
         services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();

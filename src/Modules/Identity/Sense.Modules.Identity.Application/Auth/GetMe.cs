@@ -51,7 +51,7 @@ public sealed class GetMeHandler(
             return new MeDto(
                 platformUser.Id, platformUser.Email, platformUser.FirstName, platformUser.LastName, EmployeeId: null,
                 platformUser.PreferredLanguage, platformUser.MfaEnabled,
-                new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone),
+                new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone, tenant.IsSetupCompleted),
                 Roles: [],
                 Permissions: [],
                 Scopes: new Dictionary<string, DataScope>(StringComparer.Ordinal),
@@ -82,7 +82,7 @@ public sealed class GetMeHandler(
 
         return new MeDto(
             user.Id, user.Email, user.FirstName, user.LastName, user.EmployeeId, user.PreferredLanguage, user.MfaEnabled,
-            new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone),
+            new TenantDto(tenant.Id, tenant.Slug, tenant.Name, tenant.TaxNumber, tenant.Status.ToString(), tenant.TrialEndsAt, tenant.Locale, tenant.TimeZone, tenant.IsSetupCompleted),
             userRoles.Select(r => new RoleRefDto(r.Id, r.Code, r.Name)).ToList(),
             effective.Order(StringComparer.Ordinal).ToList(),
             scopes,

@@ -300,6 +300,10 @@ namespace Sense.Modules.Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("settings_json");
 
+                    b.Property<DateTime?>("SetupCompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("setup_completed_at");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(40)

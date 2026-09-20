@@ -19,14 +19,37 @@ public sealed record SystemRoleDefinition(string Code, DataScope Scope, IReadOnl
     {
         var include = Include.Select(PermissionPatterns.ToRegex).ToList();
         var exclude = Exclude.Select(PermissionPatterns.ToRegex).ToList();
+
+        // Platform anahtarları ("platform.*") yalnız "platform." ile başlayan AÇIK bir desenle verilir; "*", "*.manage",
+        // "identity.*" gibi genel jokerler onları asla eşlemez (Owner/Admin/ITAdmin/Auditor süper admin yetkisi almasın).
+        var platformInclude = Include
+            .Where(pattern => pattern.StartsWith(PlatformPermissions.Prefix, StringComparison.Ordinal))
+            .Select(PermissionPatterns.ToRegex)
+            .ToList();
+
         foreach (var p in catalog)
         {
-            if (include.Any(r => r.IsMatch(p.Key)) && !exclude.Any(r => r.IsMatch(p.Key)))
+            var included = PlatformPermissions.IsPlatformKey(p.Key)
+                ? platformInclude.Any(r => r.IsMatch(p.Key))
+                : include.Any(r => r.IsMatch(p.Key));
+
+            if (included && !exclude.Any(r => r.IsMatch(p.Key)))
             {
                 yield return new RolePermission(roleId, p.Key, (int)Scope);
             }
         }
     }
+}
+
+/// <summary>
+/// Sistem rolü → izin listesi çözümlemesi (seed ve senkronizasyon için tek kaynak). Kilitli Owner rolü tüm kataloğu alır,
+/// ANCAK platform izinleri hariç (<see cref="PlatformPermissions"/>).
+/// </summary>
+public static class SystemRolePermissionResolver
+{
+    public static List<RolePermission> Resolve(Role role, IReadOnlyList<Permission> catalog) => role.IsLocked
+        ? catalog.Where(p => !PlatformPermissions.IsPlatformKey(p.Key)).Select(p => new RolePermission(role.Id, p.Key, (int)DataScope.Company)).ToList()
+        : SystemRoleDefinitions.Get(role.Code).Resolve(role.Id, catalog).ToList();
 }
 
 /// <summary>Joker desen sözdizimi: '*' = herhangi bir karakter dizisi.</summary>
@@ -177,5 +200,13 @@ public static class SystemRoleDefinitions
             [.. PermissionPatterns.Sensitive]),
     ];
 
-    public static SystemRoleDefinition Get(string code) => All.Single(r => string.Equals(r.Code, code, StringComparison.OrdinalIgnoreCase));
+    /// <summary>
+    /// Süper admin: yalnız platform izinleri. <see cref="All"/>'a KASITLI olarak dahil değil — <see cref="All"/> her müşteri
+    /// kiracısına seed edilir; bu rol yalnız platform kiracısında oluşturulur (<see cref="SystemRoleCodes.ForTenant"/>).
+    /// </summary>
+    public static readonly SystemRoleDefinition SuperAdmin =
+        new(SystemRoleCodes.SuperAdmin, DataScope.Company, [PlatformPermissions.Wildcard], []);
+
+    public static SystemRoleDefinition Get(string code) =>
+        All.Append(SuperAdmin).Single(r => string.Equals(r.Code, code, StringComparison.OrdinalIgnoreCase));
 }

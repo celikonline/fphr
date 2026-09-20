@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Domain.Roles;
+using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
@@ -40,9 +41,12 @@ public sealed partial class SystemRolePermissionSynchronizer(
     {
         using var scope = tenantSetter.BeginScope(tenantId);
 
+        var slug = await db.Tenants.AsNoTracking().Where(t => t.Id == tenantId).Select(t => t.Slug).FirstOrDefaultAsync(ct).ConfigureAwait(false);
         var systemRoles = await db.Roles.Where(r => r.IsSystem).ToListAsync(ct).ConfigureAwait(false);
         var changed = 0;
-        foreach (var code in SystemRoleCodes.All)
+
+        // SuperAdmin gibi platforma özel roller yalnız platform kiracısında oluşturulur/senkronize edilir.
+        foreach (var code in SystemRoleCodes.ForTenant(PlatformTenant.IsPlatform(slug)))
         {
             var role = systemRoles.FirstOrDefault(r => string.Equals(r.Code, code, StringComparison.OrdinalIgnoreCase));
             if (role is null)
@@ -70,9 +74,7 @@ public sealed partial class SystemRolePermissionSynchronizer(
         return changed;
     }
 
-    private List<RolePermission> Desired(Role role) => role.IsLocked
-        ? catalog.All.Select(p => new RolePermission(role.Id, p.Key, (int)DataScope.Company)).ToList()
-        : Application.Roles.SystemRoleDefinitions.Get(role.Code).Resolve(role.Id, catalog.All).ToList();
+    private List<RolePermission> Desired(Role role) => Application.Roles.SystemRolePermissionResolver.Resolve(role, catalog.All);
 
     [LoggerMessage(EventId = 2100, Level = LogLevel.Information, Message = "System role permissions synchronized for tenant {TenantId}: {ChangedRoles} role(s) changed")]
     private static partial void LogTenantSynced(ILogger logger, Guid tenantId, int changedRoles);

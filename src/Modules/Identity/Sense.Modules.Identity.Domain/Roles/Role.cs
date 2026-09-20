@@ -47,7 +47,8 @@ public sealed class Role : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(IdentityDomainErrors.RoleInvalidCode);
         }
 
-        if (SystemRoleCodes.All.Contains(c, StringComparer.OrdinalIgnoreCase))
+        if (SystemRoleCodes.All.Contains(c, StringComparer.OrdinalIgnoreCase)
+            || SystemRoleCodes.PlatformOnly.Contains(c, StringComparer.OrdinalIgnoreCase))
         {
             return Error.Conflict(IdentityDomainErrors.RoleSystemCode);
         }
@@ -210,11 +211,21 @@ public static class SystemRoleCodes
     public const string Contractor = "Contractor";
     public const string ApiIntegration = "ApiIntegration";
 
+    /// <summary>Platform (süper admin) rolü: yalnız <see cref="Tenants.PlatformTenant"/> kiracısında seed edilir, müşteri kiracılarına verilmez.</summary>
+    public const string SuperAdmin = "SuperAdmin";
+
+    /// <summary>Müşteri kiracılarının her birine seed edilen sistem rolleri.</summary>
     public static readonly IReadOnlyList<string> All =
     [
         Owner, Admin, HR, HRSpecialist, PayrollSpecialist, Finance, Manager, Timekeeper, Recruiter, Interviewer,
         Auditor, ExternalAccountant, ITAdmin, Employee, Intern, Contractor, ApiIntegration,
     ];
+
+    /// <summary>Yalnız platform kiracısına özel sistem rolleri (<see cref="All"/>'a ek olarak orada seed edilir).</summary>
+    public static readonly IReadOnlyList<string> PlatformOnly = [SuperAdmin];
+
+    /// <summary>Verilen kiracıda seed/senkronize edilecek sistem rolü kodları.</summary>
+    public static IReadOnlyList<string> ForTenant(bool isPlatformTenant) => isPlatformTenant ? [.. All, .. PlatformOnly] : All;
 
     /// <summary>Yerelleştirme anahtarları: roles.{code}.name / roles.{code}.description</summary>
     public static string NameKey(string code) => string.Concat(ResourcePrefix, code.ToLowerInvariant(), NameSuffix);

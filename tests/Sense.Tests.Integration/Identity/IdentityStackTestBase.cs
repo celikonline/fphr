@@ -79,7 +79,7 @@ public abstract class IdentityStackTestBase : TestFixture
         using (TenantContextSetter!.BeginScope(tenant.Id, tenant.Slug))
         {
             db.Tenants.Add(tenant);
-            RegisterTenantHandler.SeedSystemRoles(tenant.Id, Get<IPermissionCatalog>(), Get<IRoleRepository>());
+            TenantRoleSeeder.SeedSystemRoles(tenant.Id, Get<IPermissionCatalog>(), Get<IRoleRepository>(), PlatformTenant.IsPlatform(slug));
             await db.SaveChangesAsync();
         }
 

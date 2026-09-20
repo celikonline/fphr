@@ -15,6 +15,8 @@ export interface MeTenant {
   trialEndsAt: string | null;
   locale: string;
   timeZone: string;
+  /** false → the owner still has to finish the first-run setup wizard. Older backends omit it (treated as done). */
+  setupCompleted?: boolean;
 }
 
 export interface MeRole {

@@ -22,8 +22,10 @@
     "trust": "Güven ve güvenlik",
     "collapseSidebar": "Menüyü daralt",
     "expandSidebar": "Menüyü genişlet",
+    "back": "Geri",
     "workflowInbox": "Onay kutusu",
-    "sharedFiles": "Ortak dosyalar"
+    "sharedFiles": "Ortak dosyalar",
+    "platformTenants": "Şirketler (Platform)"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {

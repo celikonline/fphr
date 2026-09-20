@@ -13,6 +13,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tek doğruluk kaynağı Sense.Api/SeedData/holidays (DataSeeder ve TrHolidaySeedFileTests aynı dosyayı okur); burada yalnız
+         gömülür, böylece Worker ve API'nin ikisi de kiracı bootstrap'inde aynı TR resmi tatil verisini dosya yolu varsaymadan okur. -->
+    <EmbeddedResource Include="../../../Sense.Api/SeedData/holidays/tr-official-holidays.json"
+                      LogicalName="Sense.Modules.Organization.Infrastructure.tr-official-holidays.json"
+                      Link="Persistence/Seed/tr-official-holidays.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <!-- Design-time only, for `dotnet ef migrations add` (design-time factory: OrganizationDbContextFactory). -->

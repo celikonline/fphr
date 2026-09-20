@@ -39,6 +39,12 @@ public static class IdentityPermissions
     /// <summary>Erişim ayarları kısıtlarını aşar (Owner/Admin joker ile, HR açıkça); çalışan tipi kullanıcılara verilmez.</summary>
     public const string AccessSettingsBypass = AccessSettingPermissions.Bypass;
 
+    /// <summary>
+    /// Platform (süper admin): yeni şirket (kiracı) oluşturma ve kiracı listesi. Joker ("*") ve Owner kilitli rolü bu
+    /// anahtarı ALMAZ (bkz. <see cref="PlatformPermissions"/>); yalnız açıkça "platform.*" içeren SuperAdmin rolü alır.
+    /// </summary>
+    public const string PlatformTenantsManage = PlatformPermissions.TenantsManage;
+
     public static class Groups
     {
         public const string Users = "identity.group.users";
@@ -49,6 +55,7 @@ public static class IdentityPermissions
         public const string Impersonation = "identity.group.impersonation";
         public const string UnitAuthorizations = "identity.group.unit_authorizations";
         public const string AccessSettings = "identity.group.access_settings";
+        public const string Platform = "identity.group.platform";
     }
 
     public static readonly IReadOnlyList<Permission> All =
@@ -72,5 +79,21 @@ public static class IdentityPermissions
         new(UnitAuthorizationsRead, Module, UnitAuthorizationsRead, Groups.UnitAuthorizations),
         new(AccessSettingsBypass, Module, AccessSettingsBypass, Groups.AccessSettings),
         new(ModulesManage, Module, ModulesManage, Groups.Account),
+        new(PlatformTenantsManage, Module, PlatformTenantsManage, Groups.Platform),
     ];
+}
+
+/// <summary>
+/// Platform düzeyi izinler: müşteri kiracılarının hiçbir rolüne (Owner/Admin jokeri dahil) verilmez. Rol çözümlemesi
+/// (<see cref="Roles.SystemRolePermissionResolver"/>) bu anahtarları yalnız "platform." ile başlayan açık bir desen eşlerse verir.
+/// </summary>
+public static class PlatformPermissions
+{
+    public const string Prefix = "platform.";
+
+    public const string Wildcard = Prefix + "*";
+
+    public const string TenantsManage = "platform.tenants.manage";
+
+    public static bool IsPlatformKey(string permissionKey) => permissionKey.StartsWith(Prefix, StringComparison.Ordinal);
 }

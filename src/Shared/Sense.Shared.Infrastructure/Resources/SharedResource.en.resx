@@ -186,6 +186,8 @@
   <data name="employee.birth_date_too_early" xml:space="preserve"><value>Birth date cannot be before 1900-01-01.</value></data>
   <data name="employee.hire_date_too_early" xml:space="preserve"><value>Hire date cannot be before 1900-01-01.</value></data>
   <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>Hire date can be at most 12 months in the future.</value></data>
+  <data name="employee.termination_date_too_far_in_future" xml:space="preserve"><value>Termination date can be at most 6 months in the future.</value></data>
+  <data name="employee.name_invalid_characters" xml:space="preserve"><value>First and last names cannot contain "&lt;", "&gt;" or control characters.</value></data>
   <data name="employee.minimum_age" xml:space="preserve"><value>A person under 15 at the hire date cannot be employed (Labour Act 4857, art. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
@@ -368,6 +370,14 @@
   <data name="impersonation.not_revocable" xml:space="preserve"><value>This support access cannot be revoked.</value></data>
   <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Only platform staff can request support access.</value></data>
   <data name="impersonation.forbidden" xml:space="preserve"><value>You are not allowed to use this support access.</value></data>
+  <data name="roles.superadmin.name" xml:space="preserve"><value>Super Admin</value></data>
+  <data name="roles.superadmin.description" xml:space="preserve"><value>Platform administrator: creates new companies (tenants). Exists only in the platform account.</value></data>
+  <data name="platform.tenants.manage" xml:space="preserve"><value>Create companies and list companies (platform)</value></data>
+  <data name="identity.group.platform" xml:space="preserve"><value>Platform administration</value></data>
+  <data name="platform.staff_required" xml:space="preserve"><value>This action can only be performed with the platform (super admin) account.</value></data>
+  <data name="tenant.owner_password_required" xml:space="preserve"><value>An owner password is required when creating with a password.</value></data>
+  <data name="tenant.invalid_locale" xml:space="preserve"><value>Unsupported language/region selected.</value></data>
+  <data name="tenant.invalid_timezone" xml:space="preserve"><value>Invalid time zone.</value></data>
   <data name="impersonation.reason_required" xml:space="preserve"><value>A reason is required (max 500 characters).</value></data>
   <data name="impersonation.status_invalid" xml:space="preserve"><value>Invalid status filter.</value></data>
   <data name="identity.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
@@ -406,6 +416,39 @@ The report you requested has been generated. Click the link to view and download
   <data name="field.company_name" xml:space="preserve"><value>Company name</value></data>
   <data name="field.email" xml:space="preserve"><value>E-mail</value></data>
   <data name="field.first_name" xml:space="preserve"><value>First name</value></data>
+  <data name="field.amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="field.currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="field.days" xml:space="preserve"><value>Number of days</value></data>
+  <data name="field.reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="field.description" xml:space="preserve"><value>Description</value></data>
+  <data name="field.comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="field.note" xml:space="preserve"><value>Note</value></data>
+  <data name="field.title" xml:space="preserve"><value>Title</value></data>
+  <data name="field.installment_count" xml:space="preserve"><value>Installment count</value></data>
+  <data name="field.duration_minutes" xml:space="preserve"><value>Duration (minutes)</value></data>
+  <data name="field.start_date" xml:space="preserve"><value>Start date</value></data>
+  <data name="field.end_date" xml:space="preserve"><value>End date</value></data>
+  <data name="field.start_time" xml:space="preserve"><value>Start time</value></data>
+  <data name="field.end_time" xml:space="preserve"><value>End time</value></data>
+  <data name="field.work_date" xml:space="preserve"><value>Work date</value></data>
+  <data name="field.requested_date" xml:space="preserve"><value>Requested date</value></data>
+  <data name="field.effective_date" xml:space="preserve"><value>Effective date</value></data>
+  <data name="field.hire_date" xml:space="preserve"><value>Hire date</value></data>
+  <data name="field.birth_date" xml:space="preserve"><value>Birth date</value></data>
+  <data name="field.termination_date" xml:space="preserve"><value>Termination date</value></data>
+  <data name="field.leave_type_id" xml:space="preserve"><value>Leave type</value></data>
+  <data name="field.employee_id" xml:space="preserve"><value>Employee</value></data>
+  <data name="field.org_unit_id" xml:space="preserve"><value>Unit</value></data>
+  <data name="field.year" xml:space="preserve"><value>Year</value></data>
+  <data name="field.month" xml:space="preserve"><value>Month</value></data>
+  <data name="field.quantity" xml:space="preserve"><value>Quantity</value></data>
+  <data name="field.tax_rate" xml:space="preserve"><value>VAT rate</value></data>
+  <data name="field.iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="field.address" xml:space="preserve"><value>Address</value></data>
+  <data name="field.country_code" xml:space="preserve"><value>Country code</value></data>
+  <data name="field.postal_code" xml:space="preserve"><value>Postal code</value></data>
+  <data name="field.file_name" xml:space="preserve"><value>File name</value></data>
+  <data name="field.content_type" xml:space="preserve"><value>Content type</value></data>
   <data name="field.language" xml:space="preserve"><value>Language</value></data>
   <data name="field.last_name" xml:space="preserve"><value>Last name</value></data>
   <data name="field.name" xml:space="preserve"><value>Name</value></data>
@@ -1084,6 +1127,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="expense.advance.amount_too_large" xml:space="preserve"><value>The advance amount cannot exceed 10,000,000.</value></data>
+  <data name="expense.advance.date_out_of_range" xml:space="preserve"><value>The advance's requested date can be at most 30 days in the past and 90 days ahead.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Installment count is invalid.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>An advance cannot be marked paid before it is approved.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>

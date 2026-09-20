@@ -195,6 +195,8 @@
   <data name="employee.birth_date_too_early" xml:space="preserve"><value>Doğum tarihi 1900-01-01 öncesi olamaz.</value></data>
   <data name="employee.hire_date_too_early" xml:space="preserve"><value>İşe giriş tarihi 1900-01-01 öncesi olamaz.</value></data>
   <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</value></data>
+  <data name="employee.termination_date_too_far_in_future" xml:space="preserve"><value>İşten çıkış tarihi bugünden en fazla 6 ay ileride olabilir.</value></data>
+  <data name="employee.name_invalid_characters" xml:space="preserve"><value>Ad ve soyad "&lt;", "&gt;" veya kontrol karakteri içeremez.</value></data>
   <data name="employee.minimum_age" xml:space="preserve"><value>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 sayılı İş Kanunu md. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
@@ -377,6 +379,14 @@
   <data name="impersonation.not_revocable" xml:space="preserve"><value>Bu destek erişimi iptal edilemez.</value></data>
   <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Destek erişimi yalnız platform personeli tarafından talep edilebilir.</value></data>
   <data name="impersonation.forbidden" xml:space="preserve"><value>Bu destek erişimini kullanma yetkiniz yok.</value></data>
+  <data name="roles.superadmin.name" xml:space="preserve"><value>Süper Admin</value></data>
+  <data name="roles.superadmin.description" xml:space="preserve"><value>Platform yöneticisi: yeni şirket (kiracı) oluşturur. Yalnız platform hesabında bulunur.</value></data>
+  <data name="platform.tenants.manage" xml:space="preserve"><value>Şirket oluşturma ve şirket listesi (platform)</value></data>
+  <data name="identity.group.platform" xml:space="preserve"><value>Platform yönetimi</value></data>
+  <data name="platform.staff_required" xml:space="preserve"><value>Bu işlem yalnız platform (süper admin) hesabıyla yapılabilir.</value></data>
+  <data name="tenant.owner_password_required" xml:space="preserve"><value>Parola ile oluşturmada Owner parolası zorunludur.</value></data>
+  <data name="tenant.invalid_locale" xml:space="preserve"><value>Desteklenmeyen dil/bölge seçildi.</value></data>
+  <data name="tenant.invalid_timezone" xml:space="preserve"><value>Geçersiz saat dilimi.</value></data>
   <data name="impersonation.reason_required" xml:space="preserve"><value>Gerekçe zorunludur (en fazla 500 karakter).</value></data>
   <data name="impersonation.status_invalid" xml:space="preserve"><value>Geçersiz durum filtresi.</value></data>
   <data name="identity.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
@@ -415,6 +425,39 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Şirket adı</value></data>
   <data name="field.email" xml:space="preserve"><value>E-posta</value></data>
   <data name="field.first_name" xml:space="preserve"><value>Ad</value></data>
+  <data name="field.amount" xml:space="preserve"><value>Tutar</value></data>
+  <data name="field.currency" xml:space="preserve"><value>Para birimi</value></data>
+  <data name="field.days" xml:space="preserve"><value>Gün sayısı</value></data>
+  <data name="field.reason" xml:space="preserve"><value>Gerekçe</value></data>
+  <data name="field.description" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="field.comment" xml:space="preserve"><value>Yorum</value></data>
+  <data name="field.note" xml:space="preserve"><value>Not</value></data>
+  <data name="field.title" xml:space="preserve"><value>Başlık</value></data>
+  <data name="field.installment_count" xml:space="preserve"><value>Taksit sayısı</value></data>
+  <data name="field.duration_minutes" xml:space="preserve"><value>Süre (dakika)</value></data>
+  <data name="field.start_date" xml:space="preserve"><value>Başlangıç tarihi</value></data>
+  <data name="field.end_date" xml:space="preserve"><value>Bitiş tarihi</value></data>
+  <data name="field.start_time" xml:space="preserve"><value>Başlangıç saati</value></data>
+  <data name="field.end_time" xml:space="preserve"><value>Bitiş saati</value></data>
+  <data name="field.work_date" xml:space="preserve"><value>Çalışma tarihi</value></data>
+  <data name="field.requested_date" xml:space="preserve"><value>Talep tarihi</value></data>
+  <data name="field.effective_date" xml:space="preserve"><value>Geçerlilik tarihi</value></data>
+  <data name="field.hire_date" xml:space="preserve"><value>İşe giriş tarihi</value></data>
+  <data name="field.birth_date" xml:space="preserve"><value>Doğum tarihi</value></data>
+  <data name="field.termination_date" xml:space="preserve"><value>İşten çıkış tarihi</value></data>
+  <data name="field.leave_type_id" xml:space="preserve"><value>İzin türü</value></data>
+  <data name="field.employee_id" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="field.org_unit_id" xml:space="preserve"><value>Birim</value></data>
+  <data name="field.year" xml:space="preserve"><value>Yıl</value></data>
+  <data name="field.month" xml:space="preserve"><value>Ay</value></data>
+  <data name="field.quantity" xml:space="preserve"><value>Miktar</value></data>
+  <data name="field.tax_rate" xml:space="preserve"><value>KDV oranı</value></data>
+  <data name="field.iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="field.address" xml:space="preserve"><value>Adres</value></data>
+  <data name="field.country_code" xml:space="preserve"><value>Ülke kodu</value></data>
+  <data name="field.postal_code" xml:space="preserve"><value>Posta kodu</value></data>
+  <data name="field.file_name" xml:space="preserve"><value>Dosya adı</value></data>
+  <data name="field.content_type" xml:space="preserve"><value>İçerik türü</value></data>
   <data name="field.language" xml:space="preserve"><value>Dil</value></data>
   <data name="field.last_name" xml:space="preserve"><value>Soyad</value></data>
   <data name="field.name" xml:space="preserve"><value>Ad</value></data>
@@ -1093,6 +1136,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>Avans talebi, onay bekleme durumunda değil.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Tutar sıfırdan büyük olmalıdır.</value></data>
   <data name="expense.advance.amount_too_large" xml:space="preserve"><value>Avans tutarı en fazla 10.000.000 olabilir.</value></data>
+  <data name="expense.advance.date_out_of_range" xml:space="preserve"><value>Avans talep tarihi bugünden en fazla 30 gün öncesi ve 90 gün sonrası olabilir.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Taksit sayısı geçersiz.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>Avans onaylanmadan ödendi olarak işaretlenemez.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>

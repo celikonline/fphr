@@ -1,0 +1,95 @@
+{
+  "title": "Company setup",
+  "subtitle": "Get the {{company}} account ready in a few steps. You can change everything you enter here later under Settings.",
+  "preparing": "Preparing your company workspace...",
+  "steps": {
+    "company": "Company details",
+    "calendar": "Calendar and location",
+    "structure": "Organization",
+    "modules": "Modules and users"
+  },
+  "actions": {
+    "back": "Back",
+    "next": "Save and continue",
+    "skip": "Skip this step",
+    "finish": "Finish setup",
+    "finishing": "Finishing..."
+  },
+  "errors": {
+    "generic": "The action could not be completed. Please try again.",
+    "load": "The information could not be loaded.",
+    "nameRequired": "Company name is required.",
+    "finish": "Setup could not be completed. Please try again."
+  },
+  "company": {
+    "heading": "Company details",
+    "description": "Your company's name, language and working schedule. These are used in calendar, leave and payroll calculations.",
+    "name": "Company name",
+    "taxNumber": "Tax number",
+    "locale": "Language and region",
+    "timeZone": "Time zone",
+    "address": "Address",
+    "city": "City",
+    "country": "Country",
+    "workingDays": "Working days",
+    "hoursStart": "Work starts",
+    "hoursEnd": "Work ends",
+    "days": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    },
+    "locales": {
+      "tr-TR": "Türkçe (Türkiye)",
+      "en-US": "English (United States)",
+      "de-DE": "Deutsch (Deutschland)"
+    }
+  },
+  "calendar": {
+    "heading": "Holiday calendar and first location",
+    "description": "The Turkish official holidays were already added to your company. Pick another calendar if you like and add your head office.",
+    "calendarLabel": "Holiday calendar",
+    "calendarNone": "No calendar assigned",
+    "locationHeading": "Head location",
+    "locationExists": "Your company already has {{count}} location(s); use Settings > Locations to add more.",
+    "locationName": "Location name",
+    "locationType": "Location type",
+    "locationCountry": "Country code",
+    "locationAddress": "Address",
+    "locationHint": "Leave empty to skip adding a location.",
+    "types": {
+      "office": "Office",
+      "store": "Store",
+      "warehouse": "Warehouse",
+      "factory": "Factory",
+      "remote": "Remote"
+    }
+  },
+  "structure": {
+    "heading": "Organization structure",
+    "description": "Add your company's departments. You can edit sub-units and managers later under Settings > Company structure.",
+    "existing": "Existing departments",
+    "departmentsLabel": "New departments",
+    "departmentsHint": "Write one department name per line.",
+    "departmentsPlaceholder": "Human Resources\nFinance\nSales",
+    "noDepartmentType": "The department unit type was not found; skip this step and add them under Settings."
+  },
+  "modules": {
+    "heading": "Modules and users",
+    "description": "Turn off the modules you will not use and invite your first team members.",
+    "modulesHeading": "Optional modules",
+    "usersHeading": "Invite users",
+    "usersDescription": "The invited person sets their own password from the emailed link.",
+    "email": "Email",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "role": "Role",
+    "invite": "Send invitation",
+    "invited": "Invitation sent: {{email}}",
+    "invalid": "Enter a first name, last name, a valid email and pick a role."
+  }
+}

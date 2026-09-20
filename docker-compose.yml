@@ -44,6 +44,10 @@ services:
       Frontend__BaseUrl: http://localhost:${WEB_PORT:-13000}
       Seeding__Enabled: "true"
       Seeding__Profile: ${SEED_PROFILE:-demo}
+      # Süper admin (platform hesabı): e-posta + parola verilirse API açılışında idempotent oluşturulur (yeni şirket açabilen
+      # tek hesap). Boş bırakılırsa atlanır. Parola en az 10 karakter ve güçlü olmalı; mevcut hesabın parolasını değiştirmez.
+      Platform__SuperAdmin__Email: ${PLATFORM_SUPERADMIN_EMAIL:-}
+      Platform__SuperAdmin__Password: ${PLATFORM_SUPERADMIN_PASSWORD:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
       # Observability (profile "obs" ile jaeger/loki/prometheus/grafana ayaktaysa veri akar; değilse exporter'lar sessizce düşer).
       Observability__OtlpEndpoint: http://jaeger:4317

@@ -17,6 +17,9 @@ public interface ITenantRepository
 
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct);
 
+    /// <summary>Tüm kiracılar (kiracı filtresi yok; <c>Tenant</c> kiracıya ait bir varlık değildir) — yalnız platform (süper admin) listesi için, en yeni önce.</summary>
+    Task<IReadOnlyList<Tenant>> ListAsync(CancellationToken ct);
+
     void Add(Tenant tenant);
 }
 

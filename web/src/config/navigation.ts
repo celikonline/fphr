@@ -212,6 +212,16 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["documents.company.view"],
     iconColor: "gold",
   },
+  // Süper admin (platform kiracısı): yeni şirket oluşturma/listeleme. Yalnız `platform.tenants.manage` sahibi görür ve
+  // ROUTE_ACCESS bu girdiden türediği için URL ile de erişilemez.
+  {
+    key: "platformTenants",
+    labelKey: "nav.platformTenants",
+    path: "/app/platform/tenants",
+    icon: Building2,
+    permissions: ["platform.tenants.manage"],
+    iconColor: "brand",
+  },
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [

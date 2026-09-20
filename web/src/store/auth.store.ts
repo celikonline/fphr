@@ -20,7 +20,7 @@ export interface User {
   employeeId?: string | null;
   preferredLanguage?: string;
   mfaEnabled?: boolean;
-  tenant?: { id: string; name: string; slug: string } | null;
+  tenant?: { id: string; name: string; slug: string; setupCompleted?: boolean } | null;
 }
 
 export interface TenantChoice {
@@ -185,7 +185,9 @@ export function toUser(me: MeResponse): User {
     employeeId: me.employeeId,
     preferredLanguage: me.preferredLanguage,
     mfaEnabled: me.mfaEnabled,
-    tenant: me.tenant ? { id: me.tenant.id, name: me.tenant.name, slug: me.tenant.slug } : null,
+    tenant: me.tenant
+      ? { id: me.tenant.id, name: me.tenant.name, slug: me.tenant.slug, setupCompleted: me.tenant.setupCompleted }
+      : null,
   };
 }
 

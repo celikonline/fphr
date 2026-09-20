@@ -22,8 +22,10 @@
     "trust": "Vertrauen & Sicherheit",
     "collapseSidebar": "Menü einklappen",
     "expandSidebar": "Menü ausklappen",
+    "back": "Zurück",
     "workflowInbox": "Genehmigungs-Posteingang",
-    "sharedFiles": "Gemeinsame Dateien"
+    "sharedFiles": "Gemeinsame Dateien",
+    "platformTenants": "Unternehmen (Plattform)"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {

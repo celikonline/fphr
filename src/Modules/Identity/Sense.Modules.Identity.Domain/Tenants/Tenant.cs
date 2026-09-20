@@ -73,6 +73,17 @@ public sealed class Tenant : AggregateRoot<Guid>
 
     public string? SuspendReason { get; private set; }
 
+    /// <summary>
+    /// İlk kurulum sihirbazının tamamlandığı an (UTC). null = kurulum bekliyor: Owner sihirbazı bitirene kadar uygulamaya
+    /// alınmaz. Sihirbaz eklenmeden önce var olan kiracılar ve platform kiracısı migrasyon/bootstrap ile tamamlanmış işaretlenir.
+    /// </summary>
+    public DateTime? SetupCompletedAt { get; private set; }
+
+    public bool IsSetupCompleted => SetupCompletedAt is not null;
+
+    /// <summary>Kurulum sihirbazını tamamlandı işaretler; idempotent (ilk tamamlanma zamanı korunur).</summary>
+    public void CompleteSetup(DateTime nowUtc) => SetupCompletedAt ??= nowUtc;
+
     /// <param name="trialDays">Deneme süresi (ayar); 0 → deneme yok, doğrudan Active.</param>
     public static Result<Tenant> Create(string slug, string name, DateTime nowUtc, int trialDays, string locale, string timeZone, Guid? id = null)
     {

@@ -45,7 +45,9 @@ const DocumentTypesPage = lazy(() => import("@/pages/settings/document-types"));
 const MissingDocumentsReportPage = lazy(() => import("@/pages/settings/missing-documents-report"));
 const AssetCategoriesPage = lazy(() => import("@/pages/settings/asset-categories"));
 const ExpenseCategoriesPage = lazy(() => import("@/pages/settings/expense-categories"));
-const OhsHazardClassificationPage = lazy(() => import("@/pages/settings/ohs-hazard-classification"));
+const OhsHazardClassificationPage = lazy(
+  () => import("@/pages/settings/ohs-hazard-classification")
+);
 const OhsRiskAssessmentsPage = lazy(() => import("@/pages/settings/ohs-risk-assessments"));
 const PayrollPeriodsPage = lazy(() => import("@/pages/payroll/periods"));
 const PayrollPeriodDetailPage = lazy(() => import("@/pages/payroll/period-detail"));
@@ -65,8 +67,12 @@ const JobPostingDetailPage = lazy(() => import("@/pages/recruitment/job-posting-
 const CandidatesPage = lazy(() => import("@/pages/recruitment/candidates"));
 const TrustPage = lazy(() => import("@/pages/trust"));
 const JobRequisitionsPage = lazy(() => import("@/pages/recruitment/job-requisitions"));
-const RecruitmentFormTemplatesPage = lazy(() => import("@/pages/settings/recruitment-form-templates"));
-const RecruitmentAutomationRulesPage = lazy(() => import("@/pages/settings/recruitment-automation-rules"));
+const RecruitmentFormTemplatesPage = lazy(
+  () => import("@/pages/settings/recruitment-form-templates")
+);
+const RecruitmentAutomationRulesPage = lazy(
+  () => import("@/pages/settings/recruitment-automation-rules")
+);
 const PaymentsPage = lazy(() => import("@/pages/payments"));
 const ExpensePaymentsAdminPage = lazy(() => import("@/pages/expense-payments-admin"));
 const MyTimesheetPage = lazy(() => import("@/pages/attendance/my-timesheet"));
@@ -85,6 +91,8 @@ const CompanyCalendarPage = lazy(() => import("@/pages/company-calendar"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
 const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
 const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
+const PlatformTenantsPage = lazy(() => import("@/pages/platform/tenants"));
+const SetupWizardPage = lazy(() => import("@/pages/setup/setup-wizard"));
 
 const STRUCTURE_PATH = "/app/settings/company/structure";
 
@@ -166,8 +174,14 @@ export default function App() {
             <Route path="recruitment/postings/:id" element={<JobPostingDetailPage />} />
             <Route path="recruitment/candidates" element={<CandidatesPage />} />
             <Route path="recruitment/requisitions" element={<JobRequisitionsPage />} />
-            <Route path="settings/recruitment/form-templates" element={<RecruitmentFormTemplatesPage />} />
-            <Route path="settings/recruitment/automation-rules" element={<RecruitmentAutomationRulesPage />} />
+            <Route
+              path="settings/recruitment/form-templates"
+              element={<RecruitmentFormTemplatesPage />}
+            />
+            <Route
+              path="settings/recruitment/automation-rules"
+              element={<RecruitmentAutomationRulesPage />}
+            />
 
             <Route path="settings" element={<SettingsHomePage />} />
             <Route path="settings/company/structure" element={<CompanyStructurePage />} />
@@ -176,36 +190,72 @@ export default function App() {
             <Route path="settings/company/profile" element={<CompanyProfilePage />} />
             <Route path="settings/company/approval-flows" element={<ApprovalFlowsPage />} />
             <Route path="settings/company/custom-fields" element={<CustomFieldsPage />} />
-            <Route path="settings/company/termination-reasons" element={<TerminationReasonsPage />} />
+            <Route
+              path="settings/company/termination-reasons"
+              element={<TerminationReasonsPage />}
+            />
             <Route path="settings/company/cost-centers" element={<CostCentersPage />} />
             <Route path="settings/company/subcontractors" element={<SubcontractorsPage />} />
             <Route path="settings/company/document-types" element={<DocumentTypesPage />} />
-            <Route path="settings/company/missing-documents" element={<MissingDocumentsReportPage />} />
+            <Route
+              path="settings/company/missing-documents"
+              element={<MissingDocumentsReportPage />}
+            />
             <Route path="settings/company/asset-categories" element={<AssetCategoriesPage />} />
             <Route path="settings/company/expense-categories" element={<ExpenseCategoriesPage />} />
-            <Route path="settings/company/ohs-hazard-classification" element={<OhsHazardClassificationPage />} />
-            <Route path="settings/company/ohs-risk-assessments" element={<OhsRiskAssessmentsPage />} />
+            <Route
+              path="settings/company/ohs-hazard-classification"
+              element={<OhsHazardClassificationPage />}
+            />
+            <Route
+              path="settings/company/ohs-risk-assessments"
+              element={<OhsRiskAssessmentsPage />}
+            />
             <Route path="settings/rules/work-calendars" element={<WorkSchedulesPage />} />
             <Route path="settings/rules/visa-processes" element={<VisaProcessesPage />} />
-            <Route path="settings/rules" element={<Navigate to="/app/settings/rules/work-calendars" replace />} />
+            <Route
+              path="settings/rules"
+              element={<Navigate to="/app/settings/rules/work-calendars" replace />}
+            />
             <Route path="settings/system/access" element={<AccessSettingsPage />} />
             <Route path="settings/system/security-policy" element={<SecurityPolicyPage />} />
             <Route path="settings/system/modules" element={<ModuleSettingsPage />} />
             <Route path="settings/system/users-roles" element={<UsersRolesPage />} />
             <Route path="settings/system/audit-log" element={<AuditLogPage />} />
             <Route path="settings/system/support-access" element={<SupportAccessPage />} />
-            <Route path="settings/system/billing" element={<ComingSoonPage titleKey="settings.billing" phase={8} />} />
+            <Route
+              path="settings/system/billing"
+              element={<ComingSoonPage titleKey="settings.billing" phase={8} />}
+            />
             <Route path="settings/data-transfer" element={<DataTransferPage />} />
             <Route path="settings/data-transfer/jobs/:id" element={<DataTransferJobPage />} />
             <Route path="settings/leave/rule-sets" element={<LeaveRuleSetsPage />} />
 
+            {/* Platform (süper admin): rota izni navigation.ts girdisinden (ROUTE_ACCESS) gelir, sayfa ayrıca kendini de korur */}
+            <Route path="platform/tenants" element={<PlatformTenantsPage />} />
+
+            {/* İlk kurulum sihirbazı: SetupGuard (app-layout) kurulumu bitmemiş Owner'ı buraya yönlendirir */}
+            <Route path="setup" element={<SetupWizardPage />} />
+
             {/* Old paths (pre settings IA) */}
             <Route path="organization" element={<Navigate to={STRUCTURE_PATH} replace />} />
             <Route path="positions" element={<Navigate to={STRUCTURE_PATH} replace />} />
-            <Route path="locations" element={<Navigate to="/app/settings/company/locations" replace />} />
-            <Route path="company-profile" element={<Navigate to="/app/settings/company/profile" replace />} />
-            <Route path="users-roles" element={<Navigate to="/app/settings/system/users-roles" replace />} />
-            <Route path="audit-log" element={<Navigate to="/app/settings/system/audit-log" replace />} />
+            <Route
+              path="locations"
+              element={<Navigate to="/app/settings/company/locations" replace />}
+            />
+            <Route
+              path="company-profile"
+              element={<Navigate to="/app/settings/company/profile" replace />}
+            />
+            <Route
+              path="users-roles"
+              element={<Navigate to="/app/settings/system/users-roles" replace />}
+            />
+            <Route
+              path="audit-log"
+              element={<Navigate to="/app/settings/system/audit-log" replace />}
+            />
           </Route>
 
           {/* Default redirect */}

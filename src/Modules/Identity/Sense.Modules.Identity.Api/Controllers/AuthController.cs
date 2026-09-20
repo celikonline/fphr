@@ -115,7 +115,7 @@ public sealed class MeController : ApiControllerBase
     private MeDto Localize(MeDto me) => me with
     {
         Roles = me.Roles
-            .Select(r => SystemRoleCodes.All.Contains(r.Code)
+            .Select(r => SystemRoleCodes.All.Contains(r.Code) || SystemRoleCodes.PlatformOnly.Contains(r.Code)
                 ? r with { Name = Localizer.MessageOrText(SystemRoleCodes.NameKey(r.Code)) }
                 : r)
             .ToList(),
@@ -144,19 +144,30 @@ public sealed class MeController : ApiControllerBase
         FromResult(await Dispatcher.Send(new DisableMfaCommand(request.Code), ct));
 }
 
-public sealed record RegisterTenantRequest(string CompanyName, string Slug, string OwnerEmail, string OwnerFirstName, string OwnerLastName, string Password, string? Phone, string? Language);
+/// <param name="OwnerMode"><c>invite</c>: Owner davet e-postasıyla parolasını kendisi belirler; <c>password</c>: <paramref name="Password"/> ile doğrudan etkin açılır.</param>
+public sealed record CreateTenantRequest(
+    string CompanyName, string Slug, string OwnerEmail, string OwnerFirstName, string OwnerLastName,
+    TenantOwnerMode OwnerMode, string? Password, string? Phone, string? Language);
 
-/// <summary>Şirket (kiracı) tanımlama: self-signup.</summary>
+/// <summary>
+/// Şirket (kiracı) yönetimi — yalnız süper admin (platform kiracısındaki <c>IsPlatformStaff</c> kullanıcı, <c>platform.tenants.manage</c>).
+/// Herkese açık self-signup kaldırıldı.
+/// </summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route(IdentityRoutes.Tenants)]
+[Authorize]
 public sealed class TenantsController : ApiControllerBase
 {
-    [HttpPost("register")]
-    [AllowAnonymous]
-    [ProducesResponseType<RegisterTenantResult>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Register([FromBody] RegisterTenantRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new RegisterTenantCommand(request.CompanyName, request.Slug, request.OwnerEmail, request.OwnerFirstName,
-            request.OwnerLastName, request.Password, request.Phone, request.Language), ct));
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<TenantSummaryDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> List(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListTenantsQuery(), ct));
+
+    [HttpPost]
+    [ProducesResponseType<CreateTenantResult>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Create([FromBody] CreateTenantRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CreateTenantCommand(request.CompanyName, request.Slug, request.OwnerEmail, request.OwnerFirstName,
+            request.OwnerLastName, request.OwnerMode, request.Password, request.Phone, request.Language), ct));
 }
 
 public sealed record AcceptInvitationRequest(string Token, string Password, bool PrivacyNoticeAccepted, string? PrivacyNoticeVersion);

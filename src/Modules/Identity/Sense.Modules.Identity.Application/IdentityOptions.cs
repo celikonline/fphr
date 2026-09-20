@@ -31,9 +31,6 @@ public sealed class IdentityOptions
     public string DefaultLocale { get; set; } = IdentityDefaults.DefaultLocale;
 
     public string DefaultTimeZone { get; set; } = IdentityDefaults.DefaultTimeZone;
-
-    /// <summary>Self-signup açık mı (kapalıysa yalnız platform admin kiracı açar).</summary>
-    public bool AllowSelfRegistration { get; set; } = true;
 }
 
 public static class IdentityDefaults
@@ -161,6 +158,10 @@ public static class IdentityErrors
     public const string ImpersonationNotRevocable = "impersonation.not_revocable";
     public const string ImpersonationRequiresPlatformStaff = "impersonation.requires_platform_staff";
     public const string ImpersonationForbidden = "impersonation.forbidden";
+    public const string PlatformStaffRequired = "platform.staff_required";
+    public const string TenantOwnerPasswordRequired = "tenant.owner_password_required";
+    public const string TenantInvalidLocale = "tenant.invalid_locale";
+    public const string TenantInvalidTimeZone = "tenant.invalid_timezone";
     public const string ImpersonationReasonRequired = "impersonation.reason_required";
     public const string ImpersonationStatusInvalid = "impersonation.status_invalid";
 
