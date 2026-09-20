@@ -34,8 +34,9 @@ public sealed record TeamOverlapEmployeeDto(Guid EmployeeId, string Name, DateOn
 /// </summary>
 public sealed record TeamOverlapDto(int Count, IReadOnlyList<TeamOverlapEmployeeDto> Employees, string? OrgUnitName = null);
 
-/// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing.</summary>
-public sealed record LeaveRequestPreviewDto(decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null, int OverlappingApprovedCount = 0);
+/// <summary>Live day count of a leave request draft; rule violations come back in <c>Warnings</c> instead of failing. <c>SaturdayIncluded</c> shows whether Saturday is counted in <c>Days</c>.</summary>
+public sealed record LeaveRequestPreviewDto(
+    decimal Days, int WeeklyRestDays, int PublicHolidayDays, IReadOnlyList<Error> Warnings, TeamOverlapDto? TeamOverlap = null, int OverlappingApprovedCount = 0, bool SaturdayIncluded = false);
 
 internal static class LeaveRequestPreview
 {
@@ -105,7 +106,19 @@ internal static class LeaveRequestPreview
             LeaveUnit.HalfDay => LeavePartialDay.HalfDayFraction,
             _ => count.Days,
         };
-        return new LeaveRequestPreviewDto(days, count.WeeklyRestDays, count.PublicHolidayDays, warnings);
+
+        // O-2: Check if Saturday is included in the date range (senseik-042)
+        var saturdayIncluded = false;
+        for (var date = start; date <= end; date = date.AddDays(1))
+        {
+            if (date.DayOfWeek == DayOfWeek.Saturday)
+            {
+                saturdayIncluded = true;
+                break;
+            }
+        }
+
+        return new LeaveRequestPreviewDto(days, count.WeeklyRestDays, count.PublicHolidayDays, warnings, TeamOverlap: null, OverlappingApprovedCount: 0, SaturdayIncluded: saturdayIncluded);
     }
 
     /// <summary>
