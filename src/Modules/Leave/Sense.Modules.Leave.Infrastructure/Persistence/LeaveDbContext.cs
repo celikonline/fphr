@@ -35,6 +35,9 @@ public sealed class LeaveDbContext(DbContextOptions<LeaveDbContext> options, ITe
 
     public DbSet<LeaveRequest> Requests => Set<LeaveRequest>();
 
+    /// <summary>Denetim A5-belge: talebe eklenen belgeler (dosya Documents modülünde).</summary>
+    public DbSet<LeaveRequestAttachment> RequestAttachments => Set<LeaveRequestAttachment>();
+
     public DbSet<OvertimeRequest> OvertimeRequests => Set<OvertimeRequest>();
 
     public DbSet<OvertimeConsent> OvertimeConsents => Set<OvertimeConsent>();
@@ -66,6 +69,7 @@ internal static class LeaveTables
     public const string LedgerEntries = "ledger_entries";
     public const string LegislationParameters = "legislation_parameters";
     public const string Requests = "leave_requests";
+    public const string RequestAttachments = "leave_request_attachments";
     public const string OvertimeRequests = "overtime_requests";
     public const string OvertimeConsents = "overtime_consents";
     public const string OvertimeConversions = "overtime_conversions";
@@ -220,6 +224,20 @@ public sealed class LeaveRequestConfiguration : IEntityTypeConfiguration<LeaveRe
         // Leave calendar: active requests overlapping a date window.
         b.HasIndex(x => new { x.TenantId, x.StartDate, x.EndDate });
         b.Ignore(x => x.IsActive);
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class LeaveRequestAttachmentConfiguration : IEntityTypeConfiguration<LeaveRequestAttachment>
+{
+    public void Configure(EntityTypeBuilder<LeaveRequestAttachment> b)
+    {
+        b.ToTable(LeaveTables.RequestAttachments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.FileName).HasMaxLength(LeaveLimits.AttachmentFileNameMaxLength).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.LeaveRequestId });
+        b.HasIndex(x => new { x.TenantId, x.LeaveRequestId, x.DocumentId }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

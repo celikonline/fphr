@@ -158,9 +158,9 @@ describe("LeaveRequestDialog substitute (denetim A5)", () => {
     expect(save.mock.calls[0][0].substituteEmployeeId).toBeUndefined();
   });
 
-  it("reminds the requester to hand in the document when the type requires one", () => {
+  it("reminds the requester to upload the document when the type requires one", () => {
     renderDialog(typeOption({ requiresDocument: true }));
 
-    expect(screen.getByText(/belge \(rapor vb\.\) gerekir/)).toBeTruthy();
+    expect(screen.getByText(/belge \(rapor vb\.\) yükleyin/)).toBeTruthy();
   });
 });

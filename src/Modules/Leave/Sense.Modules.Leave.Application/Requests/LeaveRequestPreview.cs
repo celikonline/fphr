@@ -88,6 +88,11 @@ internal static class LeaveRequestPreview
             warnings.Add(valid.Error);
         }
 
+        if (type.RequiresDocument)
+        {
+            warnings.Add(Error.Validation(LeaveRequestErrors.DocumentRequired));
+        }
+
         if (await BuildHolidayCalendarCoverageWarningAsync(holidays, tenantId, end, ct) is { } coverageWarning)
         {
             warnings.Add(coverageWarning);

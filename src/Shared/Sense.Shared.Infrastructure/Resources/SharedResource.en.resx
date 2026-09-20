@@ -721,6 +721,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.substitute_is_requester" xml:space="preserve"><value>The substitute cannot be the employee requesting the leave.</value></data>
   <data name="leave.errors.substitute_not_found" xml:space="preserve"><value>The selected substitute was not found or is not active.</value></data>
   <data name="leave.errors.substitute_on_leave" xml:space="preserve"><value>The selected substitute is also on leave on these dates.</value></data>
+  <data name="leave.errors.document_required" xml:space="preserve"><value>You must attach a document for this leave type.</value></data>
+  <data name="leave.errors.document_not_found" xml:space="preserve"><value>The attached document was not found or has been deleted.</value></data>
+  <data name="leave.errors.attachment_not_found" xml:space="preserve"><value>This request has no such document attachment.</value></data>
+  <data name="leave.errors.invalid_attachment" xml:space="preserve"><value>The document attachment is invalid.</value></data>
   <data name="leave.requests.cancel_approved" xml:space="preserve"><value>Cancel leave requests</value></data>
   <data name="leave.my.calendar" xml:space="preserve"><value>View the leave calendar</value></data>
   <data name="leave.calendar.read" xml:space="preserve"><value>View the team leave calendar</value></data>
@@ -927,6 +931,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Invalid date range: the start date cannot be after the end date.</value></data>
   <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>A timesheet record cannot be entered for a future date.</value></data>
   <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>A period that has not started yet cannot be approved.</value></data>
+  <data name="attendance.timesheet.month_not_complete" xml:space="preserve"><value>A month that has not ended yet cannot be closed.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>

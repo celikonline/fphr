@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Requests;
@@ -53,7 +54,8 @@ public sealed class LeaveSubstituteTests
         employees.ExistsActiveAsync(Arg.Any<Guid>(), substituteId, Arg.Any<CancellationToken>()).Returns(substituteExists);
         var rules = new LeaveRequestRules(
             Substitute.For<IEmployeeLeaveProfileRepository>(), Substitute.For<ILeaveRuleSetRepository>(), requests, Substitute.For<ILeaveLedgerRepository>(),
-            Substitute.For<ILeaveDayCalculator>(), null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees);
+            Substitute.For<ILeaveDayCalculator>(), null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees,
+            Substitute.For<IDocumentAttachmentLookup>());
         return new Fixture(rules, set.Types.Single(t => t.Code == LeaveTypeCode.Marriage), Guid.NewGuid(), substituteId, requests, employees);
     }
 

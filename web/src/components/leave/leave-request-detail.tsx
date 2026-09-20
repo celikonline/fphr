@@ -91,6 +91,19 @@ export function LeaveRequestDetailSheet({ requestId, scope, load, typeName, foot
                   {detail.description || "—"}
                 </Text>
               </Field>
+              {detail.attachments !== null && detail.attachments !== undefined && detail.attachments.length > 0 && (
+                <Field label={t("leave:detail.attachments")}>
+                  <ul className="flex flex-col gap-1">
+                    {detail.attachments.map((attachment) => (
+                      <li key={attachment.documentId}>
+                        <Text span size="sm">
+                          {attachment.fileName}
+                        </Text>
+                      </li>
+                    ))}
+                  </ul>
+                </Field>
+              )}
               {detail.previousRequestId && (
                 <Text size="xs" c="dimmed">
                   {t("leave:detail.resubmissionOf")}

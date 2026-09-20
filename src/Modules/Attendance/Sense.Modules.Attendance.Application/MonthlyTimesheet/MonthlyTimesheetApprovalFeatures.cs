@@ -43,8 +43,12 @@ public sealed class ApproveMonthlyTimesheetHandler(
             return Error.Validation(AttendanceErrors.PeriodNotStarted);
         }
 
-        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
+        if (await MonthlyPeriodGuard.IsIncompleteAsync(localClock, tenant.TenantId, monthStart, cancellationToken))
+        {
+            return Error.Validation(AttendanceErrors.MonthNotComplete);
+        }
 
+        var monthEnd = monthStart.AddMonths(1).AddDays(-1);
         var records = await days.ListForEmployeeAsync(command.EmployeeId, monthStart, monthEnd, cancellationToken);
         await leaveOverlap.ApplyRangeAsync(tenant.TenantId, records, monthStart, monthEnd, cancellationToken);
 
@@ -178,6 +182,11 @@ public sealed class ApproveAllMonthlyTimesheetsHandler(
             return Error.Validation(AttendanceErrors.PeriodNotStarted);
         }
 
+        if (await MonthlyPeriodGuard.IsIncompleteAsync(localClock, tenant.TenantId, periodMonth, cancellationToken))
+        {
+            return Error.Validation(AttendanceErrors.MonthNotComplete);
+        }
+
         var alreadyApproved = (await approvals.ListForPeriodAsync(employeeIds, periodMonth, cancellationToken))
             .Select(a => a.EmployeeId).ToHashSet();
         var toApprove = employeeIds.Where(id => !alreadyApproved.Contains(id)).ToList();
@@ -226,12 +235,19 @@ internal static class VisibleTimesheetEmployees
     }
 }
 
-/// <summary>A monthly timesheet can only be closed once its month has begun (tenant-local date); the still-running current month may be closed early, but a future month may not.</summary>
+/// <summary>A monthly timesheet can only be closed once its month has ended (tenant-local date): closing the still-running month early is rejected, as is a future month.</summary>
 internal static class MonthlyPeriodGuard
 {
     public static async Task<bool> IsNotStartedAsync(ITenantLocalClock localClock, Guid tenantId, DateOnly periodMonthStart, CancellationToken cancellationToken)
     {
         var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenantId, cancellationToken)).Local);
         return periodMonthStart > localToday;
+    }
+
+    /// <summary>True while the month is still running (tenant-local date has not reached the month's last day).</summary>
+    public static async Task<bool> IsIncompleteAsync(ITenantLocalClock localClock, Guid tenantId, DateOnly periodMonthStart, CancellationToken cancellationToken)
+    {
+        var localToday = DateOnly.FromDateTime((await localClock.NowAsync(tenantId, cancellationToken)).Local);
+        return localToday < periodMonthStart.AddMonths(1).AddDays(-1);
     }
 }

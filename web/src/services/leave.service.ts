@@ -162,6 +162,15 @@ export interface LeaveRequestDetail extends LeaveRequest {
   remainingBalance?: number | null;
   /** "Çakışan İzinler": same org unit, active leave over this request's dates, excluding the requester. */
   teamOverlap?: LeaveTeamOverlap | null;
+  /** Denetim A5-belge: attached documents (file names are snapshots taken at attach time). */
+  attachments?: LeaveRequestAttachment[] | null;
+}
+
+/** `LeaveRequestAttachmentDto`: one file linked to a request; the bytes live in the Documents module. */
+export interface LeaveRequestAttachment {
+  documentId: string;
+  fileName: string;
+  attachedAt: string;
 }
 
 /** `LeaveCalendarEntryDto`: masked entries (sensitive type or hidden type name) carry no type fields. */
@@ -316,6 +325,8 @@ export interface LeaveRequestInput {
   halfDayPeriod?: LeaveHalfDayPeriod;
   /** Required by types with `requiresSubstitute`. */
   substituteEmployeeId?: string;
+  /** Denetim A5-belge: Documents `documentId`s; required by types with `requiresDocument` (submit only). */
+  documentIds?: string[];
 }
 
 export async function listLeaveRuleSets(): Promise<LeaveRuleSet[]> {
@@ -416,6 +427,16 @@ export async function updatePendingLeaveRequest(id: string, input: LeaveRequestI
 
 export async function withdrawLeaveRequest(id: string): Promise<void> {
   await apiClient.post(`${LEAVE_BASE}/me/requests/${id}/withdraw`);
+}
+
+/** Denetim A5-belge: links an Active Documents file to a pending own request (idempotent). */
+export async function attachMyLeaveDocument(requestId: string, documentId: string): Promise<void> {
+  await apiClient.post(`${LEAVE_BASE}/me/requests/${requestId}/attachments`, { documentId });
+}
+
+/** Denetim A5-belge: unlinks a file from a pending own request. 404 leave.errors.attachment_not_found. */
+export async function detachMyLeaveDocument(requestId: string, documentId: string): Promise<void> {
+  await apiClient.delete(`${LEAVE_BASE}/me/requests/${requestId}/attachments/${documentId}`);
 }
 
 /** `AdjustLeaveBalanceRequest` ("Bakiye düzeltmesi"): signed days, mandatory reason. */

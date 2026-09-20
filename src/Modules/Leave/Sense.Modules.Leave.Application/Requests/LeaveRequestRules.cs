@@ -1,5 +1,6 @@
 using System.Globalization;
 using FluentValidation;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Contracts;
@@ -30,7 +31,8 @@ public sealed class LeaveRequestRules(
     ILeaveDayCalculator dayCalculator,
     LeaveBalanceService balances,
     LeaveBackdatePolicy backdatePolicy,
-    IEmployeeLookup employees)
+    IEmployeeLookup employees,
+    IDocumentAttachmentLookup documents)
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
@@ -186,6 +188,31 @@ public sealed class LeaveRequestRules(
         return substituteLeave.Any(r => r.ConflictsWith(start, end, startTime, endTime, halfDayPeriod))
             ? Error.Conflict(LeaveRequestErrors.SubstituteOnLeave)
             : Result.Success();
+    }
+
+    /// <summary>
+    /// Denetim raporu A5 "Belge": RequiresDocument türünde talep, Active durumda en az bir belge eki ister. Önizleme
+    /// (henüz belge yok) asla uyarmasın diye <see cref="ValidateAsync"/> dışında tutulur (vekildeki desen).
+    /// <paramref name="bypass"/> ("onay sürecine girmeden" doğrudan onaylanan İK/işveren kaydı ile içe aktarma ve
+    /// Attendance anomalisi gibi sistem girişleri) belgeyi atlar: sorumluluk kaydı oluşturandadır.
+    /// </summary>
+    public async Task<Result> ValidateDocumentAsync(
+        Guid tenantId, LeaveType type, IReadOnlyCollection<Guid> documentIds, CancellationToken ct, bool bypass = false)
+    {
+        if (bypass || !type.RequiresDocument)
+        {
+            return Result.Success();
+        }
+
+        if (documentIds.Count == 0)
+        {
+            return Error.Validation(LeaveRequestErrors.DocumentRequired);
+        }
+
+        var active = await documents.GetActiveAsync(tenantId, documentIds, ct);
+        return active.Count == documentIds.Count
+            ? Result.Success()
+            : Error.Validation(LeaveRequestErrors.DocumentNotFound);
     }
 
     private async Task<bool> HasBookedBlockInPeriodAsync(Guid employeeId, LeaveType type, LeaveBalance projected, Guid? editedRequestId, CancellationToken ct)

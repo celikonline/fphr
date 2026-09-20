@@ -54,6 +54,8 @@ public static class LeaveServiceCollectionExtensions
         services.AddScoped<IEmployeeLeaveProfileRepository, EmployeeLeaveProfileRepository>();
         services.AddScoped<ILeaveLedgerRepository, LeaveLedgerRepository>();
         services.AddScoped<ILeaveRequestRepository, LeaveRequestRepository>();
+        // Denetim A5-belge: talebe eklenen belgeler (Api + Worker ortak; kural denetimi yalnız Api'de).
+        services.AddScoped<ILeaveRequestAttachmentRepository, LeaveRequestAttachmentRepository>();
         services.AddScoped<ILegislationParameterReader, LegislationParameterReader>();
         services.AddScoped<LeaveBalanceService>();
         services.AddScoped<IOvertimeRequestRepository, OvertimeRequestRepository>();

@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application;
 using Sense.Modules.Leave.Application.Requests;
@@ -90,7 +91,7 @@ public sealed class LeaveGenderEligibilityTests
             .Returns(new LeaveDayCount(2m, 0, 0, []));
         var employees = Substitute.For<IEmployeeLookup>();
         employees.GetGenderAsync(Arg.Any<Guid>(), employeeId, Arg.Any<CancellationToken>()).Returns(gender);
-        var rules = new LeaveRequestRules(profiles, ruleSets, requests, Substitute.For<ILeaveLedgerRepository>(), days, null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees);
+        var rules = new LeaveRequestRules(profiles, ruleSets, requests, Substitute.For<ILeaveLedgerRepository>(), days, null!, new LeaveBackdatePolicy(new FixedTimeProvider(new DateTimeOffset(2026, 9, 20, 0, 0, 0, TimeSpan.Zero))), employees, Substitute.For<IDocumentAttachmentLookup>());
         return new Fixture(rules, set, employeeId, employees);
     }
 

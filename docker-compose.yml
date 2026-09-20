@@ -102,7 +102,9 @@ services:
         # Baked into the JS bundle at build time (see web/Dockerfile) - must be the URL the
         # *browser* reaches the API on, i.e. the host-published API_PORT, not the api service's
         # container-internal address.
-        VITE_API_BASE_URL: http://localhost:${API_PORT:-18080}/api
+        # Same-origin: nginx in the web container proxies /api to the api service (web/nginx.conf).
+        # Override with WEB_API_BASE_URL=http://localhost:18080/api to call the API port directly.
+        VITE_API_BASE_URL: ${WEB_API_BASE_URL:-/api}
     container_name: senseik-web
     ports:
       - "${WEB_PORT:-13000}:8080"

@@ -120,7 +120,8 @@ public sealed record LeaveRequestDetailDto(
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
     string? LeaveTypeName, Guid? PreviousRequestId, DateTime? CancelledAt, string? CancellationReason, string EmployeeName, LeaveApprovalDto? Approval,
     TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null,
-    decimal? RemainingBalance = null, TeamOverlapDto? TeamOverlap = null, Guid? SubstituteEmployeeId = null, string? SubstituteName = null);
+    decimal? RemainingBalance = null, TeamOverlapDto? TeamOverlap = null, Guid? SubstituteEmployeeId = null, string? SubstituteName = null,
+    IReadOnlyList<LeaveRequestAttachmentDto>? Attachments = null);
 
 public sealed class LeaveRequestDetailBuilder(
     ITenantContext tenant,
@@ -129,6 +130,7 @@ public sealed class LeaveRequestDetailBuilder(
     IEmployeeDirectory employees,
     IEmployeeLookup employeeLookup,
     ILeaveRequestRepository requests,
+    ILeaveRequestAttachmentRepository attachments,
     LeaveBalanceService balances,
     IApprovalRequestLookup approvals,
     IOrgUnitLookup orgUnits)
@@ -179,13 +181,15 @@ public sealed class LeaveRequestDetailBuilder(
 
         var remainingBalance = await ResolveRemainingBalanceAsync(request, cancellationToken);
         var teamOverlap = await ResolveTeamOverlapAsync(request, cancellationToken);
+        var attached = await attachments.ListByRequestAsync(request.Id, cancellationToken);
 
         return new LeaveRequestDetailDto(
             dto.Id, dto.EmployeeId, dto.LeaveTypeId, dto.LeaveTypeCode, dto.StartDate, dto.EndDate, dto.CalculatedDays, dto.Description, dto.Status, dto.Source,
             dto.ApprovalRequestId, dto.RevisionNo, dto.SubmittedAt, dto.DecidedAt, dto.LeaveTypeName, dto.PreviousRequestId, dto.CancelledAt, dto.CancellationReason,
             names.GetValueOrDefault(request.EmployeeId) ?? string.Empty, approval, dto.StartTime, dto.EndTime, dto.HalfDayPeriod,
             remainingBalance, teamOverlap, request.SubstituteEmployeeId,
-            request.SubstituteEmployeeId is { } substitute ? names.GetValueOrDefault(substitute) : null);
+            request.SubstituteEmployeeId is { } substitute ? names.GetValueOrDefault(substitute) : null,
+            attached.Select(a => new LeaveRequestAttachmentDto(a.DocumentId, a.FileName, a.AttachedAt)).ToList());
     }
 
     /// <summary>"Kalan İzin Bakiyesi": the employee's current available balance for this request's leave type (PerYear types only, else null).</summary>

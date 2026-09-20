@@ -239,13 +239,18 @@
     "substitute": "Vekil",
     "substituteHint": "İzin süresince işlerinizi devralacak çalışan.",
     "substitutePlaceholder": "Vekil seçin",
-    "documentHint": "Bu izin türü için belge (rapor vb.) gerekir; belgeyi insan kaynaklarına teslim edin.",
+    "documentHint": "Bu izin türü için belge (rapor vb.) yükleyin; bekleyen talebe sonradan da eklenebilir.",
+    "document": "Belge",
+    "documentUploadHint": "PDF, resim veya Office dosyası seçin; önce Documents'a yüklenir.",
+    "documentUploading": "Belge yükleniyor…",
+    "documentRemove": "Kaldır",
     "validation": {
       "typeRequired": "İzin türü seçin.",
       "datesRequired": "Başlangıç ve bitiş tarihi zorunludur.",
       "range": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
       "descriptionRequired": "Bu izin türünde açıklama zorunludur.",
       "substituteRequired": "Bu izin türünde vekil seçimi zorunludur.",
+      "documentRequired": "Bu izin türünde belge eklemek zorunludur.",
       "timeRequired": "Başlangıç ve bitiş saatini girin; bitiş saati başlangıçtan sonra olmalıdır.",
       "halfDayRequired": "Sabah veya öğleden sonra seçin."
     },
@@ -344,6 +349,7 @@
     "timeRange": "Saat aralığı",
     "remainingBalance": "Kalan izin bakiyesi",
     "substitute": "Vekil",
+    "attachments": "Belgeler",
     "overlappingLeaves": {
       "title": "Çakışan izinler ({{count}})",
       "more": "+{{count}} kişi daha (listelenmedi)",

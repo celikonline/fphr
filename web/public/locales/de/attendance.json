@@ -214,12 +214,12 @@
       "durationRequired": "Geben Sie die Dauer ein.",
       "leaveTypeRequired": "Wählen Sie eine Urlaubsart aus."
     },
-    "week": "[DE] Week",
-    "month": "[DE] Month",
-    "breakApplied": "[DE] Break: {{m}} min",
-    "nightMinutes": "[DE] Night: {{m}} min",
-    "dailyLimitExceeded": "[DE] Exceeded the 11-hour daily limit (art. 63)",
-    "nightLimitExceeded": "[DE] Exceeded the 7.5-hour night-work limit (art. 69)"
+    "week": "Woche",
+    "month": "Monat",
+    "breakApplied": "Pause: {{m}} Min.",
+    "nightMinutes": "Nacht: {{m}} Min.",
+    "dailyLimitExceeded": "11-Stunden-Tagesgrenze überschritten (Art. 63)",
+    "nightLimitExceeded": "7,5-Stunden-Nachtarbeitsgrenze überschritten (Art. 69)"
   },
   "shiftLock": {
     "scheduledLockDate": "Geplantes Sperrdatum"

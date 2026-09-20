@@ -78,7 +78,7 @@ public sealed class MyLeaveController : ApiControllerBase
         FromResult((await Dispatcher.Send(
             new SubmitLeaveRequestCommand(
                 request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId,
-                request.StartTime, request.EndTime, request.HalfDayPeriod, request.SubstituteEmployeeId), ct))
+                request.StartTime, request.EndTime, request.HalfDayPeriod, request.SubstituteEmployeeId, request.DocumentIds), ct))
             .Localize(localizer));
 
     [HttpPut("requests/" + ApiRoutes.IdParam)]
@@ -94,4 +94,16 @@ public sealed class MyLeaveController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Withdraw(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new WithdrawLeaveRequestCommand(id), ct));
+
+    /// <summary>Denetim A5-belge: bekleyen talebe belge ekleme (talep sahibi).</summary>
+    [HttpPost("requests/" + ApiRoutes.IdParam + "/attachments")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> AttachDocument(Guid id, [FromBody] AttachLeaveDocumentBody request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AttachMyLeaveDocumentCommand(id, request.DocumentId), ct));
+
+    /// <summary>Denetim A5-belge: bekleyen talepten belge çıkarma (talep sahibi).</summary>
+    [HttpDelete("requests/" + ApiRoutes.IdParam + "/attachments/{documentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DetachDocument(Guid id, Guid documentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DetachMyLeaveDocumentCommand(id, documentId), ct));
 }

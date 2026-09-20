@@ -3,6 +3,7 @@ using Sense.Modules.Assets.Contracts.Events;
 using Sense.Modules.Documents.Application;
 using Sense.Modules.Documents.Application.DocumentTypes;
 using Sense.Modules.Documents.Application.VisaDocuments;
+using Sense.Modules.Documents.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Infrastructure.Persistence;
 using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
@@ -25,6 +26,9 @@ public static class DocumentsServiceCollectionExtensions
         services.AddScoped<IDocumentTypeDefinitionRepository, DocumentTypeDefinitionRepository>();
         services.AddScoped<IEmployeeDocumentRequirementRepository, EmployeeDocumentRequirementRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
+        // Denetim A5-belge: Leave taleplerine eklenen belgeleri doğrular (LeaveRequestRules); her iki host'ta da
+        // DocumentsDbContext kayıtlı olduğundan (Api: DocumentsModule, Worker: Program.cs) burada kayıt yeterli.
+        services.AddScoped<IDocumentAttachmentLookup, Lookups.DocumentAttachmentLookup>();
         services.AddScoped<DocumentTypeProvisioningService>();
         services.AddScoped<DocumentRequirementMaterializationService>();
         // Visa document requests (senseik-001): the approval handlers registered by AddDocumentsIntegrationEventHandlers run

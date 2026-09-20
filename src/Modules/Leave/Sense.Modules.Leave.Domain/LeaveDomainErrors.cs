@@ -27,6 +27,7 @@ public static class LeaveDomainErrors
     public const string RequestPartialDayTimeInvalid = "leave.errors.partial_day_time_invalid";
     public const string RequestNotCancellable = "leave.errors.request_not_cancellable";
     public const string RequestCancellationReasonRequired = "leave.errors.cancellation_reason_required";
+    public const string RequestInvalidAttachment = "leave.errors.invalid_attachment";
     public const string RuleSetIsDefault = "leave.errors.rule_set_is_default";
     public const string RuleSetHasEmployees = "leave.errors.rule_set_has_employees";
     public const string OvertimeNotFound = "leave.overtime.not_found";
@@ -65,4 +66,7 @@ public static class LeaveLimits
     public const int MaxWaitingPeriodMonths = 24;
     public const int IdempotencyKeyMaxLength = 200;
     public const int AbsenceNoteMaxLength = 500;
+
+    /// <summary>Ekli dosya adı anlık görüntüsü (işletim sistemi yol sınırı altında).</summary>
+    public const int AttachmentFileNameMaxLength = 260;
 }

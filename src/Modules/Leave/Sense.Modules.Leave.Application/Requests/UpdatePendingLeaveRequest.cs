@@ -27,7 +27,8 @@ public sealed record UpdatePendingLeaveRequestCommand(
     TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null) : ICommand;
 
 public sealed class UpdatePendingLeaveRequestHandler(
-    ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, IWorkflowService workflow)
+    ITenantContext tenant, ICurrentUser currentUser, LeaveRequestRules rules, ILeaveRequestRepository requests, ILeaveRequestAttachmentRepository attachments,
+    IWorkflowService workflow)
     : ICommandHandler<UpdatePendingLeaveRequestCommand>
 {
     public async Task<Result> Handle(UpdatePendingLeaveRequestCommand command, CancellationToken cancellationToken)
@@ -62,6 +63,14 @@ public sealed class UpdatePendingLeaveRequestHandler(
         if (substitute.IsFailure)
         {
             return substitute.Error;
+        }
+
+        // Tür değişmiş olabilir: mevcut ekler yeni türün belge kuralını hâlâ karşılamalı.
+        var attachedIds = (await attachments.ListByRequestAsync(request.Id, cancellationToken)).Select(a => a.DocumentId).ToList();
+        var documents = await rules.ValidateDocumentAsync(tenant.TenantId, valid.Value.Type, attachedIds, cancellationToken);
+        if (documents.IsFailure)
+        {
+            return documents.Error;
         }
 
         if (request.ApprovalRequestId is { } previousApproval)

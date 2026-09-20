@@ -62,6 +62,8 @@ public sealed class CompanyLeaveLedgerTests : TestFixture
         services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
         services.AddAttendanceCoreServices(configuration);
         services.AddLeaveServices(configuration);
+        // Denetim A5-belge: LeaveRequestRules'un Documents bağı (bu dosyadaki senaryolar belge kuralı dışı).
+        services.AddSingleton(DocumentLookupDoubles.Permissive());
         services.AddModuleHandlers(
             LeaveDbContext.SchemaName,
             typeof(LeaveErrors).Assembly,

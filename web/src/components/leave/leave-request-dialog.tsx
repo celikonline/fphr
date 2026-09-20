@@ -1,14 +1,15 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Button, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Users } from "lucide-react";
+import { FileText, Users, X } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormModal } from "@/components/ui/form-modal";
 import { TimePicker } from "@/components/ui/time-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { uploadDocumentFile } from "@/services/documents.service";
 import type {
   LeaveHalfDayPeriod,
   LeaveRequest,
@@ -18,6 +19,7 @@ import type {
   LeaveRequestPreviewInput,
   LeaveUnit,
 } from "@/services/leave.service";
+import { attachMyLeaveDocument, detachMyLeaveDocument } from "@/services/leave.service";
 import { useDays } from "./leave-shared";
 import { formatTimeOnly } from "./overtime-shared";
 
@@ -56,6 +58,12 @@ interface LeaveRequestDialogProps {
   requesterEmployeeId?: string;
   /** Resolves the substitute's name when editing/resubmitting a request that only carries the id. */
   loadDetail?: (requestId: string) => Promise<LeaveRequestDetail>;
+  /**
+   * Denetim A5-belge: enables the document upload section. `"me"` uploads through the caller's own
+   * Documents quota (`documents.my.files`); `"hr"` through the HR quota (`documents.files.create`).
+   * Editing a pending request only happens self-service, so live attach/detach always uses the "me" endpoints.
+   */
+  documentUploadScope?: "me" | "hr";
   onClose: () => void;
   onSaved: () => void;
 }
@@ -84,6 +92,7 @@ export function LeaveRequestDialog({
   allowBypass = false,
   requesterEmployeeId,
   loadDetail,
+  documentUploadScope,
   onClose,
   onSaved,
 }: LeaveRequestDialogProps) {
@@ -111,6 +120,54 @@ export function LeaveRequestDialog({
     enabled: !!loadDetail && !!source && !!substitute && !substitute.displayName,
     retry: false,
   });
+
+  // Denetim A5-belge: staged document ids ({id, name}). Create mode sends them with the submit; edit mode
+  // links/unlinks them live (the update endpoint only re-validates what is already linked).
+  const [stagedDocs, setStagedDocs] = useState<{ id: string; name: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const docsLoadedFor = useRef<string | null>(null);
+  const attachmentsQuery = useQuery({
+    queryKey: ["leave", "request-detail", previewScope, editing?.id ?? null, "attachments"],
+    queryFn: () => loadDetail!(editing!.id),
+    enabled: !!loadDetail && !!editing && !!documentUploadScope,
+    retry: false,
+  });
+  useEffect(() => {
+    if (editing && attachmentsQuery.data && docsLoadedFor.current !== editing.id) {
+      docsLoadedFor.current = editing.id;
+      setStagedDocs((attachmentsQuery.data.attachments ?? []).map((a) => ({ id: a.documentId, name: a.fileName })));
+    }
+  }, [editing, attachmentsQuery.data]);
+
+  async function uploadDocument(file: File | null) {
+    if (!file || !documentUploadScope) return;
+    setError(null);
+    setUploading(true);
+    try {
+      const documentId = await uploadDocumentFile(file, "documents", documentUploadScope);
+      if (editing) {
+        await attachMyLeaveDocument(editing.id, documentId);
+      }
+      setStagedDocs((prev) => [...prev, { id: documentId, name: file.name }]);
+    } catch (err) {
+      setError(getApiErrorMessage(err, t("leave:genericError")));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function removeDocument(doc: { id: string; name: string }) {
+    setError(null);
+    try {
+      if (editing) {
+        await detachMyLeaveDocument(editing.id, doc.id);
+      }
+    } catch (err) {
+      setError(getApiErrorMessage(err, t("leave:genericError")));
+      return;
+    }
+    setStagedDocs((prev) => prev.filter((d) => d.id !== doc.id));
+  }
 
   /** Wraps a field setter so editing the field clears the stale form-level error. */
   function edit<T>(setter: (value: T) => void) {
@@ -192,6 +249,7 @@ export function LeaveRequestDialog({
     if (unit === "halfDay" && !halfDayPeriod) return setError(t("leave:form.validation.halfDayRequired"));
     if (selected?.requiresDescription && !description.trim()) return setError(t("leave:form.validation.descriptionRequired"));
     if (selected?.requiresSubstitute && !substitute) return setError(t("leave:form.validation.substituteRequired"));
+    if (selected?.requiresDocument && stagedDocs.length === 0) return setError(t("leave:form.validation.documentRequired"));
     setError(null);
     mutation.mutate({
       leaveTypeId,
@@ -202,10 +260,13 @@ export function LeaveRequestDialog({
       endTime: unit === "hourly" ? `${endTime}:00` : undefined,
       halfDayPeriod: unit === "halfDay" ? (halfDayPeriod as LeaveHalfDayPeriod) : undefined,
       substituteEmployeeId: selected?.requiresSubstitute ? substitute?.id : undefined,
+      // Edit mode links/unlinks live above; only a fresh submit carries the staged ids.
+      documentIds: !editing && selected?.requiresDocument ? stagedDocs.map((doc) => doc.id) : undefined,
     });
   }
 
-  const busy = mutation.isPending;
+  const busy = mutation.isPending || uploading;
+  const showDocuments = !!documentUploadScope && (!!selected?.requiresDocument || stagedDocs.length > 0);
 
   // A submit error the live preview already shows (conflict/balance) is not repeated under the form.
   const timeRangeMessage = t("leave:form.validation.timeRequired");
@@ -390,6 +451,46 @@ export function LeaveRequestDialog({
                 minRows={3}
                 onChange={(e) => edit(setDescription)(e.currentTarget.value)}
               />
+              {showDocuments && (
+                <Stack gap="xs">
+                  <Input.Wrapper
+                    id="leave-document-field"
+                    labelProps={{ htmlFor: "leave-document" }}
+                    label={t("leave:form.document")}
+                    description={t("leave:form.documentUploadHint")}
+                    withAsterisk={!!selected?.requiresDocument}
+                  >
+                    <input
+                      id="leave-document"
+                      type="file"
+                      aria-label={t("leave:form.document")}
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                      disabled={busy}
+                      onChange={(e) => {
+                        void uploadDocument(e.currentTarget.files?.[0] ?? null);
+                        e.currentTarget.value = "";
+                      }}
+                    />
+                  </Input.Wrapper>
+                  {uploading && (
+                    <Text size="xs" c="dimmed">
+                      {t("leave:form.documentUploading")}
+                    </Text>
+                  )}
+                  {stagedDocs.map((doc) => (
+                    <Group key={doc.id} gap="xs" wrap="nowrap">
+                      <FileText size={16} aria-hidden />
+                      <Text size="sm" className="min-w-0 flex-1 truncate">
+                        {doc.name}
+                      </Text>
+                      <Button type="button" variant="subtle" color="red" size="xs" disabled={busy} onClick={() => void removeDocument(doc)}>
+                        <X size={14} aria-hidden />
+                        {t("leave:form.documentRemove")}
+                      </Button>
+                    </Group>
+                  ))}
+                </Stack>
+              )}
               {allowBypass && (
                 <Paper withBorder p="sm">
                   <Switch
