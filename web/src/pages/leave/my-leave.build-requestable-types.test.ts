@@ -83,3 +83,47 @@ describe("buildRequestableTypes (senseik-039)", () => {
     expect(option.name).toBe("[çevrildi] leave.type.sick");
   });
 });
+
+// A9: the server's request check deducts pending requests; the form must show the same number (77 - 4 = 73), not 77.
+describe("buildRequestableTypes available balance (A9)", () => {
+  const balanceItem = (pendingDays?: number): EmployeeLeaveBalances["balances"][number] => ({
+    leaveTypeName: "leave.type.annual",
+    leaveTypeCode: "annual",
+    ...(pendingDays === undefined ? {} : { pendingDays }),
+    balance: {
+      leaveTypeId: "type-1",
+      availableBalance: 77,
+      currentBalance: 77,
+      totalAccrued: 77,
+      totalUsed: 0,
+      adjustments: 0,
+      futureApprovedInPeriod: 0,
+      currentPeriodFrom: "2026-01-01",
+      currentPeriodTo: "2026-12-31",
+      currentPeriodUsed: 0,
+      lastPeriodAccrued: 0,
+      nextPeriodApproved: 0,
+      carriedOverIntoPeriod: 0,
+      extraGrants: 0,
+      nextAccrualDate: "2027-01-01",
+    },
+  });
+
+  it("subtracts pending request days from the available balance (types call succeeded)", () => {
+    const balances: EmployeeLeaveBalances = { ...emptyBalances(), balances: [balanceItem(4)] };
+    const [option] = buildRequestableTypes(balances, [requestableType()], stubLeaveName);
+    expect(option.availableBalance).toBe(73);
+  });
+
+  it("subtracts pending request days in the balance-only fallback too", () => {
+    const balances: EmployeeLeaveBalances = { ...emptyBalances(), balances: [balanceItem(4)] };
+    const [option] = buildRequestableTypes(balances, undefined, stubLeaveName);
+    expect(option.availableBalance).toBe(73);
+  });
+
+  it("keeps the balance unchanged when the API sends no pending days", () => {
+    const balances: EmployeeLeaveBalances = { ...emptyBalances(), balances: [balanceItem()] };
+    const [option] = buildRequestableTypes(balances, [requestableType()], stubLeaveName);
+    expect(option.availableBalance).toBe(77);
+  });
+});

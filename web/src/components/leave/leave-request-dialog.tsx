@@ -206,7 +206,10 @@ export function LeaveRequestDialog({
                     )}
                     {selected.availableBalance !== null && (
                       <Text size="xs" c="dimmed">
-                        {t("leave:form.available", { days: days(selected.availableBalance) })}
+                        {t("leave:form.available", {
+                          // Editing a pending request: its own days are not held against itself (server excludes it too).
+                          days: days(selected.availableBalance + (editing?.status === "pending" && editing.leaveTypeId === selected.id ? editing.calculatedDays : 0)),
+                        })}
                       </Text>
                     )}
                     {selected.perRequestMaxDays !== null && (

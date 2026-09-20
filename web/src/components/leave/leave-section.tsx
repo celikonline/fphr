@@ -20,6 +20,7 @@ import {
   getMyLeaveRequests,
   previewEmployeeLeaveRequest,
   recalculateLeaveBalances,
+  requestableBalance,
   type LeaveAdjustmentInput,
   type LeaveRequest,
   type LeaveRequestStatus,
@@ -97,7 +98,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
   }, [ruleSetQuery.data, balancesQuery.data, leaveName]);
   // İzin Ekle: every active type of the rule set (self-service flag does not apply on behalf); balance types when the rule set is not readable.
   const addLeaveTypes = useMemo<LeaveRequestTypeOption[]>(() => {
-    const available = new Map((balancesQuery.data?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
+    const available = new Map((balancesQuery.data?.balances ?? []).map((item) => [item.balance.leaveTypeId, requestableBalance(item)]));
     if (ruleSetQuery.data) {
       return [...ruleSetQuery.data.types]
         .filter((type) => !type.settings.isDisabled)
@@ -119,7 +120,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
       description: null,
       requiresDescription: false,
       perRequestMaxDays: null,
-      availableBalance: item.balance.availableBalance,
+      availableBalance: requestableBalance(item),
     }));
   }, [ruleSetQuery.data, balancesQuery.data, leaveName]);
 

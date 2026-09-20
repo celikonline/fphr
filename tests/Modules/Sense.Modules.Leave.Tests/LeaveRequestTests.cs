@@ -11,6 +11,7 @@ using Sense.Modules.Employee.Contracts.Events;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
 using Sense.Modules.Leave.Application;
+using Sense.Modules.Leave.Application.Balances;
 using Sense.Modules.Leave.Application.Calendar;
 using Sense.Modules.Leave.Application.Requests;
 using Sense.Modules.Leave.Application.RuleSets;
@@ -293,6 +294,44 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         usage.Amount.ShouldBe(-4m);
         usage.EffectiveDate.ShouldBe(monday);
         usage.SourceRefId.ShouldBe(submitted.Value.Id);
+    }
+
+    /// <summary>
+    /// A9: the balance screen/request form and the server's request check must agree - pending requests are deducted by
+    /// the check, so the balances DTO exposes them (<c>PendingDays</c>) and the over-limit message shows a tidy number.
+    /// </summary>
+    [Fact]
+    public async Task PendingRequests_AreExposedOnBalances_AndTheInsufficientBalanceMessageArgIsNotPaddedWithZeros()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        await ServiceProvider!.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        Guid annualId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            annualId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        (await SubmitAsync(tenantId, annualId, monday, monday.AddDays(3))).IsSuccess.ShouldBeTrue();
+
+        using var scope = ServiceProvider.CreateScope();
+        var balances = await ActivatorUtilities.CreateInstance<GetMyLeaveBalancesHandler>(scope.ServiceProvider, _currentUser)
+            .Handle(new GetMyLeaveBalancesQuery(), CancellationToken.None);
+        var annual = balances.Value.Balances.Single(b => b.LeaveTypeCode == LeaveTypeCode.Annual);
+        annual.PendingDays.ShouldBe(4m);
+        annual.Balance.AvailableBalance.ShouldBe(14m);
+
+        var tooLong = await SubmitAsync(tenantId, annualId, monday.AddDays(7), monday.AddDays(7 + 13));
+        tooLong.Error.Code.ShouldBe(LeaveRequestErrors.InsufficientBalance);
+        tooLong.Error.Args!["available"].ShouldBe("10");
     }
 
     /// <summary>

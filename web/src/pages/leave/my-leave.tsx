@@ -20,6 +20,7 @@ import {
   getMyLeaveRequests,
   getMyRequestableLeaveTypes,
   previewMyLeaveRequest,
+  requestableBalance,
   submitLeaveRequest,
   updatePendingLeaveRequest,
   withdrawLeaveRequest,
@@ -294,7 +295,7 @@ export function buildRequestableTypes(
   types: RequestableLeaveType[] | undefined,
   leaveName: (name: string) => string,
 ): LeaveRequestTypeOption[] {
-  const available = new Map((balances?.balances ?? []).map((item) => [item.balance.leaveTypeId, item.balance.availableBalance]));
+  const available = new Map((balances?.balances ?? []).map((item) => [item.balance.leaveTypeId, requestableBalance(item)]));
   if (types) {
     return types.map((type) => ({
       id: type.id,
@@ -313,6 +314,6 @@ export function buildRequestableTypes(
     description: null,
     requiresDescription: false,
     perRequestMaxDays: null,
-    availableBalance: item.balance.availableBalance,
+    availableBalance: requestableBalance(item),
   }));
 }
