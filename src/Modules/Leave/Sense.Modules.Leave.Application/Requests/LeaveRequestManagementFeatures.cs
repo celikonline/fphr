@@ -301,3 +301,52 @@ public sealed class GetEmployeeLeaveRequestHandler(IDataScopeService dataScope, 
             : await details.BuildAsync(request, forRequester: false, cancellationToken);
     }
 }
+
+/// <summary>Y-4 (senseik-045): HR approves a Pending leave request that has no workflow (ApprovalRequestId is null).</summary>
+[RequiresPermission("leave.requests.approve_without_workflow")]
+public sealed record ApproveLeaveRequestWithoutWorkflowCommand(Guid EmployeeId, Guid RequestId) : ICommand<LeaveRequestDto>;
+
+public sealed class ApproveLeaveRequestWithoutWorkflowHandler(
+    IDataScopeService dataScope, ILeaveRequestRepository requests, ILeaveLedgerRepository ledger,
+    IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, LeaveBalanceService balances, TimeProvider clock)
+    : ICommandHandler<ApproveLeaveRequestWithoutWorkflowCommand, LeaveRequestDto>
+{
+    public async Task<Result<LeaveRequestDto>> Handle(ApproveLeaveRequestWithoutWorkflowCommand command, CancellationToken cancellationToken)
+    {
+        if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.RequestsApproveWithoutWorkflow.Key, command.EmployeeId, cancellationToken))
+        {
+            return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        var request = await requests.FindByIdAsync(command.RequestId, cancellationToken);
+        if (request is null || request.EmployeeId != command.EmployeeId)
+        {
+            return Error.NotFound(LeaveDomainErrors.RequestNotFound);
+        }
+
+        if (request.Status != LeaveRequestStatus.Pending || request.ApprovalRequestId is not null)
+        {
+            return Error.Conflict(LeaveDomainErrors.RequestNotPending);
+        }
+
+        var now = clock.GetUtcNow().UtcDateTime;
+        var approved = request.ApproveWithoutWorkflow(now);
+        if (approved.IsFailure)
+        {
+            return approved.Error;
+        }
+
+        var usage = LeaveLedgerEntry.Usage(request.TenantId, request.EmployeeId, request.LeaveTypeId, request.CalculatedDays, request.StartDate, LeaveLedgerSource.Request, request.Id);
+        ledger.AddRange([usage]);
+
+        if (await profiles.FindByEmployeeIdAsync(request.EmployeeId, cancellationToken) is { } profile
+            && await ruleSets.GetByIdAsync(profile.RuleSetId, cancellationToken) is { IsSuccess: true } ruleSet)
+        {
+            await balances.RecalculateAsync(profile, ruleSet.Value, cancellationToken, [usage]);
+        }
+
+        requests.Add(request);
+        var dtos = await LeaveRequestMapper.ToDtosAsync(request.EmployeeId, [request], profiles, ruleSets, cancellationToken);
+        return dtos.Count > 0 ? dtos[0] : LeaveRequestMapper.ToDto(request, "");
+    }
+}
