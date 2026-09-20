@@ -13,6 +13,8 @@ public static class LeaveErrors
     public const string OverridePayableNotAllowed = "leave.errors.overtime_override_payable_not_allowed";
     public const string ResubmissionSourceInvalid = "leave.errors.resubmission_source_invalid";
     public const string CalendarRangeTooLarge = "leave.errors.calendar_range_too_large";
+    public const string PreviewParametersRequired = "leave.errors.preview_parameters_required";
+    public const string PreviewRangeTooLarge = "leave.errors.preview_range_too_large";
     public const string AbsenceNotFound = "leave.absence.not_found";
 
     /// <summary>G-5-09: an Unexcused/Excused absence cannot be recorded on a date already covered by an Approved full-day leave.</summary>
