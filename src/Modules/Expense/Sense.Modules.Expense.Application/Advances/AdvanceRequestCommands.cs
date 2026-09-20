@@ -23,9 +23,15 @@ public sealed class CreateAdvanceRequestValidator : AbstractValidator<CreateAdva
     public CreateAdvanceRequestValidator()
     {
         RuleFor(x => x.Amount).GreaterThan(0);
+        RuleFor(x => x.RequestedDate)
+            .Must(date => date is not { } d || IsWithinAllowedWindow(d, DateOnly.FromDateTime(DateTime.UtcNow)))
+            .WithMessage(ExpenseDomainErrors.AdvanceDateOutOfRange);
         RuleFor(x => x.Currency).NotEmpty().Length(3);
         RuleFor(x => x.InstallmentCount).InclusiveBetween(1, ExpenseLimits.MaxInstallments).When(x => x.IsInstallmentRequested);
     }
+
+    internal static bool IsWithinAllowedWindow(DateOnly requestedDate, DateOnly today) =>
+        requestedDate >= today.AddDays(-ExpenseLimits.AdvanceDateMaxPastDays) && requestedDate <= today.AddDays(ExpenseLimits.AdvanceDateMaxFutureDays);
 }
 
 public sealed class CreateAdvanceRequestHandler(

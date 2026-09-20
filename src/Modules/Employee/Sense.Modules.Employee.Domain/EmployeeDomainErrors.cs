@@ -27,6 +27,12 @@ public static class EmployeeDomainErrors
     /// <summary>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</summary>
     public const string HireDateTooFarInFuture = "employee.hire_date_too_far_in_future";
 
+    /// <summary>Ad/soyad "&lt;" "&gt;" veya kontrol karakteri içeremez.</summary>
+    public const string NameInvalidCharacters = "employee.name_invalid_characters";
+
+    /// <summary>İşten çıkış tarihi bugünden en fazla 6 ay ileride olabilir.</summary>
+    public const string TerminationDateTooFarInFuture = "employee.termination_date_too_far_in_future";
+
     /// <summary>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 md.71).</summary>
     public const string MinimumAge = "employee.minimum_age";
     public const string ManagerSelf = "employee.manager_self";

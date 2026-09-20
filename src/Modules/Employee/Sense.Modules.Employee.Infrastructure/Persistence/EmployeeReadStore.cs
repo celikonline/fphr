@@ -164,17 +164,21 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
 
         if (!string.IsNullOrWhiteSpace(c.Q))
         {
-            var pattern = ContainsPattern(c.Q);
             var searchNationalId = c.SearchNationalId;
-            // O-3: Use Unaccent for Turkish character matching (ş=s, ı=i, ü=u, etc.) - senseik-042
-            var unaccentedPattern = EF.Functions.Unaccent(pattern);
-            query = query.Where(e =>
-                EF.Functions.ILike(EF.Functions.Unaccent(e.DisplayName), unaccentedPattern, LikeEscape.ToString()) ||
-                EF.Functions.ILike(EF.Functions.Unaccent(e.FirstName), unaccentedPattern, LikeEscape.ToString()) ||
-                EF.Functions.ILike(EF.Functions.Unaccent(e.LastName), unaccentedPattern, LikeEscape.ToString()) ||
-                (e.WorkEmail != null && EF.Functions.ILike(e.WorkEmail, pattern, LikeEscape.ToString())) ||
-                (e.PersonalEmail != null && EF.Functions.ILike(e.PersonalEmail, pattern, LikeEscape.ToString())) ||
-                (searchNationalId && e.NationalId != null && EF.Functions.ILike(e.NationalId, pattern, LikeEscape.ToString())));
+            // Every whitespace-separated term must match somewhere, so "Demir Ayşe" finds "Ayşe Demir". Names are
+            // compared accent-folded (ş=s, ı=i, İ=I, ...) so an ASCII keyboard finds Turkish names; Unaccent must
+            // stay inside the lambda so EF translates it to SQL instead of evaluating it on the client.
+            foreach (var term in c.Q.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pattern = ContainsPattern(term);
+                query = query.Where(e =>
+                    EF.Functions.ILike(EF.Functions.Unaccent(e.DisplayName), EF.Functions.Unaccent(pattern), LikeEscape.ToString()) ||
+                    EF.Functions.ILike(EF.Functions.Unaccent(e.FirstName), EF.Functions.Unaccent(pattern), LikeEscape.ToString()) ||
+                    EF.Functions.ILike(EF.Functions.Unaccent(e.LastName), EF.Functions.Unaccent(pattern), LikeEscape.ToString()) ||
+                    (e.WorkEmail != null && EF.Functions.ILike(e.WorkEmail, pattern, LikeEscape.ToString())) ||
+                    (e.PersonalEmail != null && EF.Functions.ILike(e.PersonalEmail, pattern, LikeEscape.ToString())) ||
+                    (searchNationalId && e.NationalId != null && EF.Functions.ILike(e.NationalId, pattern, LikeEscape.ToString())));
+            }
         }
 
         return query;

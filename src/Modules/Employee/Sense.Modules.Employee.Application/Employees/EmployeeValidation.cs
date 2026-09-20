@@ -40,8 +40,12 @@ public static class EmployeeInfoRules
     {
         bool NationalityKnown(T x) => nationalityProvided?.Invoke(x) ?? true;
 
-        v.RuleFor(x => info(x).FirstName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.FirstName));
-        v.RuleFor(x => info(x).LastName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength).OverridePropertyName(nameof(EmployeeInfo.LastName));
+        v.RuleFor(x => info(x).FirstName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength)
+            .Must(EmployeeNameRules.IsSafe).WithMessage(EmployeeDomainErrors.NameInvalidCharacters)
+            .OverridePropertyName(nameof(EmployeeInfo.FirstName));
+        v.RuleFor(x => info(x).LastName).NotEmpty().MaximumLength(EmployeeLimits.NameMaxLength)
+            .Must(EmployeeNameRules.IsSafe).WithMessage(EmployeeDomainErrors.NameInvalidCharacters)
+            .OverridePropertyName(nameof(EmployeeInfo.LastName));
         v.RuleFor(x => info(x).NationalId)
             .Must(id => string.IsNullOrWhiteSpace(id) || TcKimlik.IsValid(id))
             .WhenAsync((_, ct) => sensitiveAccess.CanViewAsync(ct))

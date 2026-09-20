@@ -169,14 +169,17 @@ public static class WebServiceCollectionExtensions
     public static IApplicationBuilder UseSenseLocalization(this IApplicationBuilder app)
     {
         var localizer = app.ApplicationServices.GetRequiredService<Microsoft.Extensions.Localization.IStringLocalizer<SharedResource>>();
-        ValidatorOptions.Global.DisplayNameResolver = (_, member, _) =>
+        ValidatorOptions.Global.DisplayNameResolver = (_, member, expression) =>
         {
-            if (member is null)
+            // Rules written through a delegate (x => info(x).FirstName) reach the resolver without a member; the
+            // expression body still names the property.
+            var name = member?.Name ?? (expression?.Body as System.Linq.Expressions.MemberExpression)?.Member.Name;
+            if (name is null)
             {
                 return null;
             }
 
-            var value = localizer[ValidationFieldKeys.For(member.Name)];
+            var value = localizer[ValidationFieldKeys.For(name)];
             return value.ResourceNotFound ? null : value.Value;
         };
 

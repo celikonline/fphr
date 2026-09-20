@@ -18,7 +18,7 @@ public sealed class LeaveApprovalRequestSummaryProvider(LeaveDbContext context) 
     {
         var request = await context.Requests.AsNoTracking()
             .Where(r => r.TenantId == tenantId && r.Id == subjectId)
-            .Select(r => new { r.StartDate, r.EndDate, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.CalculatedDays })
+            .Select(r => new { r.StartDate, r.EndDate, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.CalculatedDays, r.Description })
             .FirstOrDefaultAsync(cancellationToken);
         if (request is null)
         {
@@ -31,7 +31,7 @@ public sealed class LeaveApprovalRequestSummaryProvider(LeaveDbContext context) 
             .FirstOrDefaultAsync(cancellationToken);
 
         var summary = new LeaveApprovalSummary(
-            request.StartDate, request.EndDate, ToCamelCase(request.LeaveTypeCodeSnapshot.ToString()), leaveTypeName, request.CalculatedDays);
+            request.StartDate, request.EndDate, ToCamelCase(request.LeaveTypeCodeSnapshot.ToString()), leaveTypeName, request.CalculatedDays, request.Description);
         return new ApprovalRequestSummary(request.StartDate, Leave: summary);
     }
 

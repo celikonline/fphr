@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Expense.Application.Advances;
 using Sense.Modules.Expense.Application.ExpenseClaims;
 using Sense.Modules.Expense.Domain;
 using Sense.Modules.Expense.Domain.Advances;
@@ -17,6 +18,33 @@ public sealed class ExpenseInputLimitsTests
     private static readonly Guid EmployeeId = Guid.NewGuid();
     private static readonly Guid CategoryId = Guid.NewGuid();
     private static readonly DateOnly Today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    [Theory]
+    [InlineData(-31, false)]
+    [InlineData(-30, true)]
+    [InlineData(0, true)]
+    [InlineData(90, true)]
+    [InlineData(91, false)]
+    public void AdvanceValidator_RequestedDateOutsideTheWindow_IsRejected(int dayOffset, bool valid)
+    {
+        var command = new CreateAdvanceRequestCommand(1_000m, "TRY", Today.AddDays(dayOffset), false, null, null);
+
+        var result = new CreateAdvanceRequestValidator().Validate(command);
+
+        result.IsValid.ShouldBe(valid);
+        if (!valid)
+        {
+            result.Errors.ShouldContain(e => e.ErrorMessage == ExpenseDomainErrors.AdvanceDateOutOfRange);
+        }
+    }
+
+    [Fact]
+    public void AdvanceValidator_OmittedRequestedDate_IsAccepted()
+    {
+        var command = new CreateAdvanceRequestCommand(1_000m, "TRY", null, false, null, null);
+
+        new CreateAdvanceRequestValidator().Validate(command).IsValid.ShouldBeTrue();
+    }
 
     [Fact]
     public void AddItem_AmountAboveTheCap_IsRejected()
