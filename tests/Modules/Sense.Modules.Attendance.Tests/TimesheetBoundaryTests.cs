@@ -91,14 +91,25 @@ public sealed class TimesheetBoundaryTests
     }
 
     [Theory]
-    [InlineData(2026, 9, 1)]   // current month (running) may be closed early
     [InlineData(2026, 8, 1)]   // past month
-    [InlineData(2026, 9, 15)]  // any day of the month normalizes to its month start
-    public async Task ApproveMonth_CurrentOrPastMonth_IsAccepted(int year, int month, int day)
+    [InlineData(2026, 8, 15)]  // any day of the month normalizes to its month start
+    public async Task ApproveMonth_PastMonth_IsAccepted(int year, int month, int day)
     {
         var result = await CreateApproveHandler().Handle(new ApproveMonthlyTimesheetCommand(_employeeId, new DateOnly(year, month, day)), TestContext.Current.CancellationToken);
 
         result.IsSuccess.ShouldBeTrue();
+    }
+
+    /// <summary>Y-3 (ik-surec-testi 2026-09-20): the still-running month (tenant-local 19 Sep) cannot be closed early.</summary>
+    [Theory]
+    [InlineData(2026, 9, 1)]
+    [InlineData(2026, 9, 15)]
+    public async Task ApproveMonth_RunningMonth_IsRejected(int year, int month, int day)
+    {
+        var result = await CreateApproveHandler().Handle(new ApproveMonthlyTimesheetCommand(_employeeId, new DateOnly(year, month, day)), TestContext.Current.CancellationToken);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AttendanceErrors.MonthNotComplete);
     }
 
     [Fact]
@@ -115,6 +126,23 @@ public sealed class TimesheetBoundaryTests
 
         result.IsFailure.ShouldBeTrue();
         result.Error.Code.ShouldBe(AttendanceErrors.PeriodNotStarted);
+    }
+
+    /// <summary>Y-3 parity: "Tümünü Onayla" cannot close the still-running month either.</summary>
+    [Fact]
+    public async Task ApproveAll_RunningMonth_IsRejected()
+    {
+        var employees = Substitute.For<IEmployeeDirectory>();
+        _dataScope.GetVisibleEmployeeIdsAsync(AttendancePermissions.TimesheetApproveKey, Arg.Any<CancellationToken>())
+            .Returns((IReadOnlySet<Guid>?)new HashSet<Guid> { _employeeId });
+        var handler = new ApproveAllMonthlyTimesheetsHandler(
+            _tenant, Substitute.For<ICurrentUser>(), _dataScope, employees, Substitute.For<IMonthlyTimesheetApprovalRepository>(), _days,
+            new LeaveOverlapChecker(Substitute.For<IApprovedLeaveDateLookup>()), TimeProvider.System, _localClock);
+
+        var result = await handler.Handle(new ApproveAllMonthlyTimesheetsCommand(new DateOnly(2026, 9, 1), null), TestContext.Current.CancellationToken);
+
+        result.IsFailure.ShouldBeTrue();
+        result.Error.Code.ShouldBe(AttendanceErrors.MonthNotComplete);
     }
 }
 
