@@ -5,6 +5,7 @@ using Sense.Modules.Leave.Domain.Absences;
 using Sense.Modules.Leave.Domain.Balances;
 using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Profiles;
+using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Messaging;
@@ -13,7 +14,11 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Leave.Application.Balances;
 
-public sealed record LeaveBalanceDto(string LeaveTypeName, LeaveTypeCode LeaveTypeCode, LeaveBalance Balance);
+/// <summary>
+/// <see cref="PendingDays"/>: days of the employee's still-pending requests of this type. Not in the ledger yet, but the request
+/// check (<c>LeaveRequestRules</c>) deducts them from <c>Balance.AvailableBalance</c>; forms should show <c>AvailableBalance - PendingDays</c>.
+/// </summary>
+public sealed record LeaveBalanceDto(string LeaveTypeName, LeaveTypeCode LeaveTypeCode, LeaveBalance Balance, decimal PendingDays = 0m);
 
 public sealed record EmployeeLeaveBalancesDto(
     Guid EmployeeId, Guid RuleSetId, DateOnly HireDate, DateOnly LeaveAccrualStartDate, IReadOnlyList<LeaveBalanceDto> Balances);
@@ -53,12 +58,23 @@ internal static class LedgerMapper
 
 internal static class BalanceMapper
 {
-    public static EmployeeLeaveBalancesDto ToDto(EmployeeLeaveProfile profile, LeaveRuleSet set, IReadOnlyList<LeaveBalance> balances) =>
+    public static async Task<EmployeeLeaveBalancesDto> ToDtoAsync(
+        EmployeeLeaveProfile profile, LeaveRuleSet set, IReadOnlyList<LeaveBalance> balances, ILeaveRequestRepository requests, CancellationToken cancellationToken)
+    {
+        var pendingByType = (await requests.ListByEmployeeAsync(profile.EmployeeId, cancellationToken))
+            .Where(r => r.Status == LeaveRequestStatus.Pending)
+            .GroupBy(r => r.LeaveTypeId)
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.CalculatedDays));
+        return ToDto(profile, set, balances, pendingByType);
+    }
+
+    public static EmployeeLeaveBalancesDto ToDto(
+        EmployeeLeaveProfile profile, LeaveRuleSet set, IReadOnlyList<LeaveBalance> balances, IReadOnlyDictionary<Guid, decimal> pendingByType) =>
         new(profile.EmployeeId, set.Id, profile.HireDate, profile.LeaveAccrualStartDate,
             balances.Select(b =>
             {
                 var type = set.Types.First(t => t.Id == b.LeaveTypeId);
-                return new LeaveBalanceDto(type.Name, type.Code, b);
+                return new LeaveBalanceDto(type.Name, type.Code, b, pendingByType.GetValueOrDefault(b.LeaveTypeId));
             }).ToList());
 }
 
@@ -67,7 +83,8 @@ internal static class BalanceMapper
 public sealed record GetEmployeeLeaveBalancesQuery(Guid EmployeeId) : IQuery<EmployeeLeaveBalancesDto>;
 
 public sealed class GetEmployeeLeaveBalancesHandler(
-    IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, LeaveBalanceService balances)
+    IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, LeaveBalanceService balances,
+    ILeaveRequestRepository requests)
     : IQueryHandler<GetEmployeeLeaveBalancesQuery, EmployeeLeaveBalancesDto>
 {
     public async Task<Result<EmployeeLeaveBalancesDto>> Handle(GetEmployeeLeaveBalancesQuery query, CancellationToken cancellationToken)
@@ -79,7 +96,7 @@ public sealed class GetEmployeeLeaveBalancesHandler(
         }
 
         var (profile, set) = loaded.Value;
-        return BalanceMapper.ToDto(profile, set, await balances.ProjectAsync(profile, set, cancellationToken));
+        return await BalanceMapper.ToDtoAsync(profile, set, await balances.ProjectAsync(profile, set, cancellationToken), requests, cancellationToken);
     }
 }
 
@@ -88,7 +105,8 @@ public sealed class GetEmployeeLeaveBalancesHandler(
 public sealed record GetMyLeaveBalancesQuery : IQuery<EmployeeLeaveBalancesDto>;
 
 public sealed class GetMyLeaveBalancesHandler(
-    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, LeaveBalanceService balances)
+    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope, LeaveBalanceService balances,
+    ILeaveRequestRepository requests)
     : IQueryHandler<GetMyLeaveBalancesQuery, EmployeeLeaveBalancesDto>
 {
     public async Task<Result<EmployeeLeaveBalancesDto>> Handle(GetMyLeaveBalancesQuery query, CancellationToken cancellationToken)
@@ -105,7 +123,7 @@ public sealed class GetMyLeaveBalancesHandler(
         }
 
         var (profile, set) = loaded.Value;
-        return BalanceMapper.ToDto(profile, set, await balances.ProjectAsync(profile, set, cancellationToken));
+        return await BalanceMapper.ToDtoAsync(profile, set, await balances.ProjectAsync(profile, set, cancellationToken), requests, cancellationToken);
     }
 }
 

@@ -590,6 +590,36 @@ public sealed class LeaveBalanceEngineTests
     }
 
     [Fact]
+    public void Project_ResetCarryOver_TotalsCoverOnlyTheCurrentPeriod()
+    {
+        var type = AnnualType(CarryOverMode.Reset, annualDays: 7m, accrualTiming: AccrualTiming.StartOfPeriod);
+        var start = new DateOnly(2022, 1, 10);
+        var today = new DateOnly(2026, 9, 15);
+        var previous = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, today, [], null);
+        var usage = LeaveLedgerEntry.Usage(TenantId, EmployeeId, type.Id, 3m, new DateOnly(2025, 5, 5), LeaveLedgerSource.Request, null);
+
+        var balance = LeaveBalanceEngine.Project(type, start, today, [usage, .. previous]);
+
+        balance.TotalAccrued.ShouldBe(7m);
+        balance.TotalUsed.ShouldBe(0m);
+        balance.CurrentBalance.ShouldBe(7m);
+    }
+
+    [Fact]
+    public void Project_UnlimitedCarryOver_TotalAccruedKeepsLifetimeAccruals()
+    {
+        var type = AnnualType(CarryOverMode.Unlimited, annualDays: 20m, accrualTiming: AccrualTiming.StartOfPeriod);
+        var start = new DateOnly(2024, 1, 10);
+        var today = new DateOnly(2026, 9, 15);
+        var generated = LeaveBalanceEngine.Regenerate(type, TenantId, EmployeeId, start, null, today, [], null);
+
+        var balance = LeaveBalanceEngine.Project(type, start, today, generated);
+
+        balance.TotalAccrued.ShouldBe(generated.Where(e => e.Type == LeaveLedgerEntryType.Accrual).Sum(e => e.Amount));
+        balance.TotalAccrued.ShouldBeGreaterThan(balance.LastPeriodAccrued);
+    }
+
+    [Fact]
     public void CalendarYearStartOfPeriod_ProratesFirstPartialYear()
     {
         var set = LeaveRuleSet.Create(TenantId, "Set").Value;

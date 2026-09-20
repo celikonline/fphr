@@ -44,9 +44,20 @@ internal static class LeaveRequestPreview
         IHolidayCalendarLookup holidays, Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, Guid? editedRequestId, bool requireSelfService, CancellationToken ct,
         TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
     {
+        // Query binding turns a missing/misspelled parameter into Guid.Empty / 0001-01-01; reject it instead of previewing defaults.
+        if (leaveTypeId == Guid.Empty || start == default || end == default)
+        {
+            return Error.Validation(LeaveErrors.PreviewParametersRequired);
+        }
+
         if (end < start)
         {
             return Error.Validation(LeaveDomainErrors.RequestInvalidRange);
+        }
+
+        if (end.DayNumber - start.DayNumber + 1 > LeaveLimits.PreviewMaxRangeDays)
+        {
+            return Error.Validation(LeaveErrors.PreviewRangeTooLarge, ("max", LeaveLimits.PreviewMaxRangeDays));
         }
 
         var profile = await profiles.FindByEmployeeIdAsync(employeeId, ct);

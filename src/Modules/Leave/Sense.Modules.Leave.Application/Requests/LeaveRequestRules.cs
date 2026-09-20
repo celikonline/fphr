@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Leave.Application.Balances;
@@ -128,7 +129,8 @@ public sealed class LeaveRequestRules(
                 var floor = type.NegativeBalance == NegativeBalanceMode.Limited ? -(type.NegativeBalanceLimitDays ?? 0m) : 0m;
                 if (available - days < floor)
                 {
-                    return Error.Validation(LeaveRequestErrors.InsufficientBalance, ("available", available));
+                    // Days carry 4 decimals in the ledger; show "73" / "72,5" instead of "73,0000".
+                    return Error.Validation(LeaveRequestErrors.InsufficientBalance, ("available", available.ToString("0.##", CultureInfo.CurrentCulture)));
                 }
             }
 

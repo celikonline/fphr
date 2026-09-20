@@ -66,6 +66,13 @@ export interface LeaveBalanceItem {
   leaveTypeName: string;
   leaveTypeCode: LeaveTypeCode;
   balance: LeaveBalance;
+  /** Days of still-pending requests of this type; the server's request check deducts them from `availableBalance`. */
+  pendingDays?: number;
+}
+
+/** Balance a new request can draw on: `availableBalance` minus pending requests, i.e. what the server validates against. */
+export function requestableBalance(item: LeaveBalanceItem): number {
+  return item.balance.availableBalance - (item.pendingDays ?? 0);
 }
 
 export interface EmployeeLeaveBalances {

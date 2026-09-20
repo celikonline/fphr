@@ -58,6 +58,9 @@ public static class LeaveLimits
     public const int ReasonMaxLength = 1000;
     public const int CancellationReasonMaxLength = 500;
     public const int CalendarMaxRangeDays = 93;
+
+    /// <summary>Longest span the request preview endpoints accept (a year plus slack for split/overlapping periods).</summary>
+    public const int PreviewMaxRangeDays = 400;
     public const int MaxDays = 365;
     public const int MaxWaitingPeriodMonths = 24;
     public const int IdempotencyKeyMaxLength = 200;
