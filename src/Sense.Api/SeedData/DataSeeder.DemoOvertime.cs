@@ -1,4 +1,8 @@
+using Sense.Modules.Leave.Application.Overtime;
+using Sense.Modules.Leave.Domain;
+using Sense.Modules.Leave.Domain.Ledger;
 using Sense.Modules.Leave.Domain.Overtime;
+using Sense.Shared.Kernel.Results;
 
 namespace Sense.Api.SeedData;
 
@@ -24,16 +28,24 @@ public partial class DataSeeder
             return;
         }
 
+        var ruleSet = await leaveBalances.EnsureDefaultRuleSetAsync(seed.TenantId, cancellationToken);
+        var annualTypeId = ruleSet.Types.Single(t => t.Code == LeaveTypeCode.Annual).Id;
+
         var requestCount = 0;
+        // Employee: 2 sa × 1,25 → 2 sa 30 dk yıllık izne çevrilmiş (İzne dönüşümler satırı süre, gün ve izin türüyle dolu).
         requestCount += AddDemoOvertimeRequest(
-            seed.TenantId, employeeId, DemoOvertimeWorkDate(today, 12), new TimeOnly(18, 0), 120, OvertimePayRateKind.Rate25, "Ay sonu kapanışı", convertToPay: true);
+            seed.TenantId, employeeId, DemoOvertimeWorkDate(today, 12), new TimeOnly(18, 0), 120, OvertimePayRateKind.Rate25, "Ay sonu kapanışı",
+            DemoOvertimeConversionMode.TimeOff, annualTypeId);
         requestCount += AddDemoOvertimeRequest(
-            seed.TenantId, employeeId, DemoOvertimeWorkDate(today, 5), new TimeOnly(19, 0), 90, OvertimePayRateKind.Rate50, null, convertToPay: false);
+            seed.TenantId, employeeId, DemoOvertimeWorkDate(today, 5), new TimeOnly(19, 0), 90, OvertimePayRateKind.Rate50, null,
+            DemoOvertimeConversionMode.None, annualTypeId);
+        // Manager: the explicit Kind=Pay conversion demo (kart senseik-030) - a pay row has no leave type/days by design.
         requestCount += AddDemoOvertimeRequest(
-            seed.TenantId, managerId, DemoOvertimeWorkDate(today, 8), new TimeOnly(18, 30), 150, OvertimePayRateKind.Rate50, "Denetim hazırlığı", convertToPay: false);
+            seed.TenantId, managerId, DemoOvertimeWorkDate(today, 8), new TimeOnly(18, 30), 150, OvertimePayRateKind.Rate50, "Denetim hazırlığı",
+            DemoOvertimeConversionMode.Pay, annualTypeId);
 
         await leaveCtx.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("Demo overtime data seeded: {RequestCount} approved overtime requests (1 converted to pay)", requestCount);
+        logger.LogInformation("Demo overtime data seeded: {RequestCount} approved overtime requests (1 converted to time off, 1 to pay)", requestCount);
     }
 
     /// <summary>
@@ -53,10 +65,44 @@ public partial class DataSeeder
         return monthStart <= today ? monthStart : candidate;
     }
 
-    /// <summary>Adds one approved overtime request (placeholder approval id); optionally posts an explicit Kind=Pay conversion. Returns 1.</summary>
+    internal enum DemoOvertimeConversionMode
+    {
+        None,
+        Pay,
+        TimeOff,
+    }
+
+    /// <summary>One seeded overtime request with its optional conversion (and the ExtraGrant ledger row a time-off conversion posts).</summary>
+    internal sealed record DemoOvertime(OvertimeRequest Request, OvertimeConversion? Conversion, LeaveLedgerEntry? Grant);
+
+    /// <summary>Adds one approved overtime request (placeholder approval id) with its optional conversion. Returns 1.</summary>
     private int AddDemoOvertimeRequest(
         Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, OvertimePayRateKind payRateKind, string? description,
-        bool convertToPay)
+        DemoOvertimeConversionMode conversionMode, Guid annualTypeId)
+    {
+        var seeded = BuildDemoOvertime(tenantId, employeeId, workDate, startTime, durationMinutes, payRateKind, description, conversionMode, annualTypeId);
+        if (seeded.Conversion is not null)
+        {
+            leaveCtx.OvertimeConversions.Add(seeded.Conversion);
+        }
+
+        if (seeded.Grant is not null)
+        {
+            leaveCtx.LedgerEntries.Add(seeded.Grant);
+        }
+
+        leaveCtx.OvertimeRequests.Add(seeded.Request);
+        return 1;
+    }
+
+    /// <summary>
+    /// Builds the aggregates of one demo overtime request. A TimeOff conversion mirrors <c>ConvertOvertimeToTimeOffHandler</c>
+    /// (rate = the request's own multiplier, <see cref="OvertimeMath.DefaultDailyWorkMinutes"/>, ExtraGrant row linked to the
+    /// conversion) so the "İzne dönüşümler" row carries duration, days and leave type instead of a pay-style blank.
+    /// </summary>
+    internal static DemoOvertime BuildDemoOvertime(
+        Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, OvertimePayRateKind payRateKind, string? description,
+        DemoOvertimeConversionMode conversionMode, Guid annualTypeId)
     {
         var now = DateTime.UtcNow;
         var submittedAt = workDate.ToDateTime(new TimeOnly(21, 0), DateTimeKind.Utc);
@@ -77,19 +123,37 @@ public partial class DataSeeder
         request.AttachApproval(approvalId);
         ThrowIfFailed(request.Approve(approvalId, decidedAt));
 
-        if (convertToPay)
+        switch (conversionMode)
         {
-            var conversion = OvertimeConversion.ToPay(request, OvertimeMinutesBasis.Payable, null, decidedAt, "Demo: nakde çevrildi");
-            if (conversion.IsFailure)
-            {
-                throw new InvalidOperationException($"Failed to seed demo overtime conversion: {conversion.Error}");
-            }
+            case DemoOvertimeConversionMode.Pay:
+                var pay = OvertimeConversion.ToPay(request, OvertimeMinutesBasis.Payable, null, decidedAt, "Demo: nakde çevrildi");
+                ThrowIfConversionFailed(pay);
+                ThrowIfFailed(request.MarkConverted(pay.Value.Id));
+                return new DemoOvertime(request, pay.Value, null);
 
-            ThrowIfFailed(request.MarkConverted(conversion.Value.Id));
-            leaveCtx.OvertimeConversions.Add(conversion.Value);
+            case DemoOvertimeConversionMode.TimeOff:
+                var timeOff = OvertimeConversion.ToTimeOff(
+                    request, OvertimeMinutesBasis.Payable, request.PayRateMultiplier, OvertimeMath.DefaultDailyWorkMinutes, annualTypeId, null, decidedAt,
+                    "Demo: izne çevrildi", DateOnly.FromDateTime(decidedAt).AddMonths(ConvertOvertimeToTimeOffHandler.FallbackExpiryMonths));
+                ThrowIfConversionFailed(timeOff);
+                var grant = LeaveLedgerEntry.ExtraGrant(
+                    tenantId, employeeId, annualTypeId, timeOff.Value.ResultDays, DateOnly.FromDateTime(decidedAt), LeaveLedgerSource.OvertimeConversion,
+                    timeOff.Value.Id, "Demo: izne çevrildi");
+                ThrowIfConversionFailed(grant);
+                timeOff.Value.AttachLedgerEntry(grant.Value.Id);
+                ThrowIfFailed(request.MarkConverted(timeOff.Value.Id));
+                return new DemoOvertime(request, timeOff.Value, grant.Value);
+
+            default:
+                return new DemoOvertime(request, null, null);
         }
+    }
 
-        leaveCtx.OvertimeRequests.Add(request);
-        return 1;
+    private static void ThrowIfConversionFailed<T>(Result<T> result)
+    {
+        if (result.IsFailure)
+        {
+            throw new InvalidOperationException($"Failed to seed demo overtime conversion: {result.Error}");
+        }
     }
 }
