@@ -127,3 +127,16 @@ describe("buildRequestableTypes available balance (A9)", () => {
     expect(option.availableBalance).toBe(77);
   });
 });
+
+describe("buildRequestableTypes (denetim A5)", () => {
+  it("carries the substitute/document flags of the API type into the form option", () => {
+    const [option] = buildRequestableTypes(emptyBalances(), [requestableType({ requiresSubstitute: true, requiresDocument: true })], stubLeaveName);
+    expect(option.requiresSubstitute).toBe(true);
+    expect(option.requiresDocument).toBe(true);
+  });
+
+  it("treats a missing requiresSubstitute (older API build) as false", () => {
+    const [option] = buildRequestableTypes(emptyBalances(), [requestableType()], stubLeaveName);
+    expect(option.requiresSubstitute).toBe(false);
+  });
+});

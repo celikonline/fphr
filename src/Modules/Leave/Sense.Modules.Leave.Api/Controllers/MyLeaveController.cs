@@ -78,7 +78,7 @@ public sealed class MyLeaveController : ApiControllerBase
         FromResult((await Dispatcher.Send(
             new SubmitLeaveRequestCommand(
                 request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.PreviousRequestId,
-                request.StartTime, request.EndTime, request.HalfDayPeriod), ct))
+                request.StartTime, request.EndTime, request.HalfDayPeriod, request.SubstituteEmployeeId), ct))
             .Localize(localizer));
 
     [HttpPut("requests/" + ApiRoutes.IdParam)]
@@ -86,7 +86,8 @@ public sealed class MyLeaveController : ApiControllerBase
     public async Task<IActionResult> UpdatePending(Guid id, [FromBody] LeaveRequestBody request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(
             new UpdatePendingLeaveRequestCommand(
-                id, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.StartTime, request.EndTime, request.HalfDayPeriod),
+                id, request.LeaveTypeId, request.StartDate, request.EndDate, request.Description, request.StartTime, request.EndTime, request.HalfDayPeriod,
+                request.SubstituteEmployeeId),
             ct));
 
     [HttpPost("requests/" + ApiRoutes.IdParam + "/withdraw")]

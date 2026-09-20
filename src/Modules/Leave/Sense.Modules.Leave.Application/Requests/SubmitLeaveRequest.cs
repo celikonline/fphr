@@ -28,7 +28,7 @@ namespace Sense.Modules.Leave.Application.Requests;
 [RequiresPermission("leave.my.requests")]
 public sealed record SubmitLeaveRequestCommand(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null)
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class SubmitLeaveRequestValidator : AbstractValidator<SubmitLeaveRequestCommand>
@@ -64,10 +64,19 @@ public sealed class SubmitLeaveRequestHandler(
             return valid.Error;
         }
 
+        var substitute = await rules.ValidateSubstituteAsync(
+            tenant.TenantId, employeeId, valid.Value.Type, command.SubstituteEmployeeId, command.StartDate, command.EndDate,
+            command.StartTime, command.EndTime, command.HalfDayPeriod, cancellationToken);
+        if (substitute.IsFailure)
+        {
+            return substitute.Error;
+        }
+
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, employeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
             command.Description, command.PreviousRequestId is null ? LeaveRequestSource.SelfService : LeaveRequestSource.Resubmission,
-            clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null, command.PreviousRequestId, command.StartTime, command.EndTime, command.HalfDayPeriod);
+            clock.GetUtcNow().UtcDateTime, currentUser.IpAddress, null, command.PreviousRequestId, command.StartTime, command.EndTime, command.HalfDayPeriod,
+            command.SubstituteEmployeeId);
         if (submitted.IsFailure)
         {
             return submitted.Error;

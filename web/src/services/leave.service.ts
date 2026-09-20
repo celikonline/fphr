@@ -34,6 +34,8 @@ export type AccrualTiming = "endOfPeriod" | "startOfPeriod";
 export type AccrualBasis = "hireDate" | "calendarYear";
 export type CarryOverMode = "reset" | "unlimited" | "limited";
 export type LeaveUnit = "fullDay" | "halfDay" | "hourly";
+/** Mirrors `LeaveEligibleGender`: who may request a type (Babalık = male, Doğum/Süt = female). */
+export type LeaveEligibleGender = "any" | "female" | "male";
 /** Mirrors `HalfDayPeriod` (`LeaveUnit.HalfDay` requests only). */
 export type LeaveHalfDayPeriod = "morning" | "afternoon";
 export type LeaveLedgerEntryType = "openingBalance" | "accrual" | "carryOver" | "usage" | "adjustment" | "extraGrant" | "reversal";
@@ -128,6 +130,8 @@ export interface LeaveRequest {
   endTime?: string | null;
   /** Set for `LeaveUnit.HalfDay` requests; null for FullDay/Hourly. */
   halfDayPeriod?: LeaveHalfDayPeriod | null;
+  /** "Vekil": the colleague covering the requester (types with `requiresSubstitute`). */
+  substituteEmployeeId?: string | null;
 }
 
 /** `LeaveRequestDetailDto` approval step: the approver name is resolved by the API; a role step without a person has `fallbackRoleCode`. */
@@ -151,6 +155,8 @@ export interface LeaveRequestApproval {
 /** `LeaveRequestDetailDto` (`GET /leave/me/requests/{id}`, `/leave/employees/{employeeId}/requests/{id}`); `approval` is missing without a workflow. */
 export interface LeaveRequestDetail extends LeaveRequest {
   employeeName: string;
+  /** Resolved name of `substituteEmployeeId`; absent when no substitute or the lookup missed. */
+  substituteName?: string | null;
   approval?: LeaveRequestApproval | null;
   /** "Kalan İzin Bakiyesi": null for non-PerYear types or when the employee has no leave profile. */
   remainingBalance?: number | null;
@@ -203,6 +209,8 @@ export interface RequestableLeaveType {
   requiresDescription: boolean;
   requiresDocument: boolean;
   countsNonWorkingDays: boolean;
+  /** Absent on older API builds. */
+  requiresSubstitute?: boolean;
 }
 
 /** `TeamOverlapDto`: other approved/pending leaves in the same org unit over a date range (S-7), non-blocking info. */
@@ -275,6 +283,8 @@ export interface LeaveTypeSettings {
   allowSelfServiceRequest: boolean;
   isDisabled: boolean;
   isStatutory: boolean;
+  /** Absent on older API builds (treated as `any`). */
+  eligibleGender?: LeaveEligibleGender;
 }
 
 export interface LeaveType {
@@ -304,6 +314,8 @@ export interface LeaveRequestInput {
   endTime?: string;
   /** HalfDay request; omit for FullDay/Hourly. */
   halfDayPeriod?: LeaveHalfDayPeriod;
+  /** Required by types with `requiresSubstitute`. */
+  substituteEmployeeId?: string;
 }
 
 export async function listLeaveRuleSets(): Promise<LeaveRuleSet[]> {

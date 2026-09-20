@@ -28,6 +28,7 @@ import {
   type AccrualFrequency,
   type AccrualTiming,
   type CarryOverMode,
+  type LeaveEligibleGender,
   type LeaveLimitType,
   type LeaveRuleSet,
   type LeaveSeniorityTier,
@@ -68,6 +69,7 @@ const ACCRUAL_TIMINGS: AccrualTiming[] = ["endOfPeriod", "startOfPeriod"];
 const ACCRUAL_BASES: AccrualBasis[] = ["hireDate", "calendarYear"];
 const CARRY_OVER_MODES: CarryOverMode[] = ["reset", "unlimited", "limited"];
 const UNITS: LeaveUnit[] = ["fullDay", "halfDay", "hourly"];
+const ELIGIBLE_GENDERS: LeaveEligibleGender[] = ["any", "female", "male"];
 
 function defaultSettings(): LeaveTypeSettings {
   return {
@@ -102,6 +104,7 @@ function defaultSettings(): LeaveTypeSettings {
     allowSelfServiceRequest: true,
     isDisabled: false,
     isStatutory: false,
+    eligibleGender: "any",
   };
 }
 
@@ -381,6 +384,18 @@ export function LeaveTypeDialog({ ruleSet, editing, onClose }: { ruleSet: LeaveR
                 disabled={busy}
               />
             </div>
+            <Select
+              id="leave-type-eligibleGender"
+              mt="md"
+              label={t("leave:types.eligibleGender")}
+              description={t("leave:types.eligibleGenderHint")}
+              data={ELIGIBLE_GENDERS.map((option) => ({ value: option, label: t(`leave:eligibleGender.${option}`) }))}
+              value={settings.eligibleGender ?? "any"}
+              onChange={(value) => value && set("eligibleGender", value as LeaveEligibleGender)}
+              allowDeselect={false}
+              disabled={busy}
+              inputWrapperOrder={["label", "input", "description"]}
+            />
             <NumberInput
               id="leave-type-waitingPeriodMonths"
               mt="md"

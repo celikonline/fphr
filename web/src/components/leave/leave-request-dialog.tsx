@@ -4,11 +4,20 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Alert, Button, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Users } from "lucide-react";
+import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormModal } from "@/components/ui/form-modal";
 import { TimePicker } from "@/components/ui/time-picker";
 import { getApiErrorMessage } from "@/lib/api-error";
-import type { LeaveHalfDayPeriod, LeaveRequest, LeaveRequestInput, LeaveRequestPreview, LeaveRequestPreviewInput, LeaveUnit } from "@/services/leave.service";
+import type {
+  LeaveHalfDayPeriod,
+  LeaveRequest,
+  LeaveRequestDetail,
+  LeaveRequestInput,
+  LeaveRequestPreview,
+  LeaveRequestPreviewInput,
+  LeaveUnit,
+} from "@/services/leave.service";
 import { useDays } from "./leave-shared";
 import { formatTimeOnly } from "./overtime-shared";
 
@@ -21,6 +30,9 @@ export interface LeaveRequestTypeOption {
   availableBalance: number | null;
   /** Drives the partial-day fields below; defaults to `fullDay` when the caller cannot look it up (e.g. balance-only fallback). */
   unit?: LeaveUnit;
+  /** Type flags (denetim A5): a substitute picker / a "hand in the document" hint show up when set. */
+  requiresSubstitute?: boolean;
+  requiresDocument?: boolean;
 }
 
 interface LeaveRequestDialogProps {
@@ -40,6 +52,10 @@ interface LeaveRequestDialogProps {
   /** Saves the request; `bypassApproval` is only sent when `allowBypass` shows the switch. */
   save: (input: LeaveRequestInput, bypassApproval: boolean) => Promise<unknown>;
   allowBypass?: boolean;
+  /** The employee the leave is for; never offered as their own substitute. */
+  requesterEmployeeId?: string;
+  /** Resolves the substitute's name when editing/resubmitting a request that only carries the id. */
+  loadDetail?: (requestId: string) => Promise<LeaveRequestDetail>;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -66,6 +82,8 @@ export function LeaveRequestDialog({
   preview,
   save,
   allowBypass = false,
+  requesterEmployeeId,
+  loadDetail,
   onClose,
   onSaved,
 }: LeaveRequestDialogProps) {
@@ -81,7 +99,18 @@ export function LeaveRequestDialog({
   const [endTime, setEndTime] = useState(source?.endTime ? formatTimeOnly(source.endTime) : "");
   const [halfDayPeriod, setHalfDayPeriod] = useState<LeaveHalfDayPeriod | "">(source?.halfDayPeriod ?? "");
   const [bypassApproval, setBypassApproval] = useState(false);
+  const [substitute, setSubstitute] = useState<PickedEmployee | null>(
+    source?.substituteEmployeeId
+      ? { id: source.substituteEmployeeId, displayName: (source as Partial<LeaveRequestDetail>).substituteName ?? "" }
+      : null,
+  );
   const [error, setError] = useState<string | null>(null);
+  const substituteNameQuery = useQuery({
+    queryKey: ["leave", "request-detail", previewScope, source?.id ?? null],
+    queryFn: () => loadDetail!(source!.id),
+    enabled: !!loadDetail && !!source && !!substitute && !substitute.displayName,
+    retry: false,
+  });
 
   /** Wraps a field setter so editing the field clears the stale form-level error. */
   function edit<T>(setter: (value: T) => void) {
@@ -162,6 +191,7 @@ export function LeaveRequestDialog({
     if (unit === "hourly" && (!startTime || !endTime || endTime <= startTime)) return setError(t("leave:form.validation.timeRequired"));
     if (unit === "halfDay" && !halfDayPeriod) return setError(t("leave:form.validation.halfDayRequired"));
     if (selected?.requiresDescription && !description.trim()) return setError(t("leave:form.validation.descriptionRequired"));
+    if (selected?.requiresSubstitute && !substitute) return setError(t("leave:form.validation.substituteRequired"));
     setError(null);
     mutation.mutate({
       leaveTypeId,
@@ -171,6 +201,7 @@ export function LeaveRequestDialog({
       startTime: unit === "hourly" ? `${startTime}:00` : undefined,
       endTime: unit === "hourly" ? `${endTime}:00` : undefined,
       halfDayPeriod: unit === "halfDay" ? (halfDayPeriod as LeaveHalfDayPeriod) : undefined,
+      substituteEmployeeId: selected?.requiresSubstitute ? substitute?.id : undefined,
     });
   }
 
@@ -235,6 +266,11 @@ export function LeaveRequestDialog({
                     {selected.perRequestMaxDays !== null && (
                       <Text size="xs" c="dimmed">
                         {t("leave:form.perRequestMax", { days: days(selected.perRequestMaxDays) })}
+                      </Text>
+                    )}
+                    {selected.requiresDocument && (
+                      <Text size="xs" c="dimmed">
+                        {t("leave:form.documentHint")}
                       </Text>
                     )}
                   </Stack>
@@ -324,6 +360,24 @@ export function LeaveRequestDialog({
                     </Text>
                   )}
                 </Alert>
+              )}
+              {selected?.requiresSubstitute && (
+                <EmployeePicker
+                  id="leave-substitute"
+                  useDirectory
+                  label={t("leave:form.substitute")}
+                  description={t("leave:form.substituteHint")}
+                  placeholder={t("leave:form.substitutePlaceholder")}
+                  withAsterisk
+                  disabled={busy}
+                  excludeId={requesterEmployeeId}
+                  value={
+                    substitute
+                      ? { ...substitute, displayName: substitute.displayName || substituteNameQuery.data?.substituteName || t("leave:form.substitute") }
+                      : null
+                  }
+                  onChange={setSubstitute}
+                />
               )}
               <Textarea
                 id="leave-description"

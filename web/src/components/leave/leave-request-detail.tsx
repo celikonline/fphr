@@ -74,6 +74,7 @@ export function LeaveRequestDetailSheet({ requestId, scope, load, typeName, foot
                   {formatTimeOnly(detail.startTime)}–{formatTimeOnly(detail.endTime)}
                 </Field>
               )}
+              {detail.substituteEmployeeId && <Field label={t("leave:detail.substitute")}>{detail.substituteName || "—"}</Field>}
               <Field label={t("leave:requests.source")}>{t(`leave:requestSource.${detail.source}`)}</Field>
               <Field label={t("leave:detail.revision")}>{detail.revisionNo}</Field>
               <Field label={t("leave:detail.submittedAt")}>{formatDateTime(detail.submittedAt, i18n.language)}</Field>

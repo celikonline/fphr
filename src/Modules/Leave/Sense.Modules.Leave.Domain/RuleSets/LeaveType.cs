@@ -59,7 +59,8 @@ public sealed record LeaveTypeSettings(
     bool IsSensitive = false,
     bool AllowSelfServiceRequest = true,
     bool IsDisabled = false,
-    bool IsStatutory = false)
+    bool IsStatutory = false,
+    LeaveEligibleGender EligibleGender = LeaveEligibleGender.Any)
 {
     public Result Validate()
     {
@@ -197,6 +198,9 @@ public sealed class LeaveType : TenantEntity<Guid>
     /// <summary>Seeded statutory type: cannot be deleted, only disabled.</summary>
     public bool IsStatutory { get; private set; }
 
+    /// <summary>Who may request the type: Any (default) or one gender (Babalık = Male, Doğum/Süt = Female). Unknown employee gender never restricts.</summary>
+    public LeaveEligibleGender EligibleGender { get; private set; }
+
     public bool HasBalance => LimitType == LeaveLimitType.PerYear;
 
     public LeaveTypeSettings ToSettings() => new(
@@ -204,7 +208,7 @@ public sealed class LeaveType : TenantEntity<Guid>
         NegativeBalance, NegativeBalanceLimitDays, AccrualFrequency, AccrualTiming, AccrualBasis, CarryOverMode, CarryOverMaxDays,
         _seniorityTiers.Select(t => new LeaveSeniorityTier(t.AfterYears, t.Comparison, t.ExtraDays)).ToList(),
         MinConsecutiveDays, MaxConsecutiveDays, Unit, RequiresDescription, RequiresSubstitute, RequiresDocument, WaitingPeriodMonths,
-        CountsNonWorkingDays, CountsTowardAccrualService, ShowTypeNameOnCalendar, IsSensitive, AllowSelfServiceRequest, IsDisabled, IsStatutory);
+        CountsNonWorkingDays, CountsTowardAccrualService, ShowTypeNameOnCalendar, IsSensitive, AllowSelfServiceRequest, IsDisabled, IsStatutory, EligibleGender);
 
     internal void Update(LeaveTypeSettings settings) => Apply(settings with { IsStatutory = IsStatutory });
 
@@ -248,5 +252,6 @@ public sealed class LeaveType : TenantEntity<Guid>
         AllowSelfServiceRequest = s.AllowSelfServiceRequest;
         IsDisabled = s.IsDisabled;
         IsStatutory = s.IsStatutory;
+        EligibleGender = s.EligibleGender;
     }
 }

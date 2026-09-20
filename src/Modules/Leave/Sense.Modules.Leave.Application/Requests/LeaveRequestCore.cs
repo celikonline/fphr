@@ -32,6 +32,11 @@ public static class LeaveRequestErrors
     public const string DescriptionRequired = "leave.errors.description_required";
     public const string NotOwner = "leave.request.not_owner";
     public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
+    public const string GenderNotEligible = "leave.errors.gender_not_eligible";
+    public const string SubstituteRequired = "leave.errors.substitute_required";
+    public const string SubstituteIsRequester = "leave.errors.substitute_is_requester";
+    public const string SubstituteNotFound = "leave.errors.substitute_not_found";
+    public const string SubstituteOnLeave = "leave.errors.substitute_on_leave";
 
     /// <summary>Denetim A10: self-servis talebin başlangıcı kiracı yerel bugününden en fazla LeaveBackdatePolicy.SelfServiceMaxBackdateDays gün geriye gidebilir.</summary>
     public const string StartDateTooFarInPast = "leave.errors.start_date_too_far_past";
@@ -46,18 +51,33 @@ public static class LeaveRequestErrors
     public const string HolidayCalendarYearUndefined = "leave.errors.holiday_calendar_year_undefined";
 }
 
+/// <summary>
+/// Denetim raporu A6: whether an employee's recorded gender satisfies a type's <see cref="LeaveEligibleGender"/>. Only a
+/// known Male/Female gender is ever restricted: an unrecorded (<c>Unspecified</c>), <c>Other</c> or unknown (null) gender
+/// applies no restriction - the request then relies on the normal HR approval instead of blocking on missing data.
+/// </summary>
+public static class LeaveGenderEligibility
+{
+    public static bool IsEligible(LeaveEligibleGender required, EmployeeGender? gender) => required switch
+    {
+        LeaveEligibleGender.Female => gender is not EmployeeGender.Male,
+        LeaveEligibleGender.Male => gender is not EmployeeGender.Female,
+        _ => true,
+    };
+}
+
 public sealed record LeaveRequestDto(
     Guid Id, Guid EmployeeId, Guid LeaveTypeId, LeaveTypeCode LeaveTypeCode, DateOnly StartDate, DateOnly EndDate, decimal CalculatedDays,
     string? Description, LeaveRequestStatus Status, LeaveRequestSource Source, Guid? ApprovalRequestId, int RevisionNo, DateTime SubmittedAt, DateTime? DecidedAt,
     string? LeaveTypeName = null, Guid? PreviousRequestId = null, DateTime? CancelledAt = null, string? CancellationReason = null,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null);
 
 internal static class LeaveRequestMapper
 {
     public static LeaveRequestDto ToDto(LeaveRequest r, string? typeName = null) =>
         new(r.Id, r.EmployeeId, r.LeaveTypeId, r.LeaveTypeCodeSnapshot, r.StartDate, r.EndDate, r.CalculatedDays, r.Description, r.Status, r.Source,
             r.ApprovalRequestId, r.RevisionNo, r.SubmittedAt, r.DecidedAt, typeName, r.PreviousRequestId, r.CancelledAt, r.CancellationReason,
-            r.StartTime, r.EndTime, r.HalfDayPeriod);
+            r.StartTime, r.EndTime, r.HalfDayPeriod, r.SubstituteEmployeeId);
 
     /// <summary>
     /// Maps requests with the leave type name (stored name; seeded types carry a resource key the API localizes) from the employee's
