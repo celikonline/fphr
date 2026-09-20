@@ -78,6 +78,7 @@ const mockApiClient = vi.hoisted(() => ({
 vi.mock("@senseik/api-client", () => ({
   apiClient: mockApiClient,
   AUTH_TOKEN_STORAGE_KEY: "auth_token",
+  REFRESH_TOKEN_STORAGE_KEY: "refresh_token",
 }));
 
 vi.mock("@/services/me.service", () => ({
@@ -94,6 +95,7 @@ describe("auth.store refresh() (S-53: token refresh, not just an instant logout)
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
     useAuthStore.setState({ token: null, refreshToken: null, user: null, features: null, error: null, isLoading: false });
   });
 
@@ -119,6 +121,9 @@ describe("auth.store refresh() (S-53: token refresh, not just an instant logout)
     expect(useAuthStore.getState().token).toBe("new-access-token");
     expect(useAuthStore.getState().refreshToken).toBe("new-refresh-token");
     expect(localStorage.getItem("auth_token")).toBe("new-access-token");
+    // Rotated refresh token is kept in sessionStorage (not localStorage) so it survives F5 but not the tab.
+    expect(sessionStorage.getItem("refresh_token")).toBe("new-refresh-token");
+    expect(localStorage.getItem("refresh_token")).toBeNull();
   });
 
   it("returns false (never throws) when the backend rejects the refresh token", async () => {
@@ -129,5 +134,141 @@ describe("auth.store refresh() (S-53: token refresh, not just an instant logout)
     // The old (now-invalid) tokens are left in place - api-client's handleResponseError is the one
     // that decides to end the session, so refresh() itself must not clear state.
     expect(useAuthStore.getState().refreshToken).toBe("revoked-refresh-token");
+  });
+});
+
+// ADR-0009: the refresh token lives in sessionStorage so a full page reload (F5) keeps the session refreshable.
+// `vi.resetModules()` + a fresh import stands in for the page reload: module state is rebuilt from storage only.
+function fakeJwt(expiresInSeconds: number): string {
+  const payload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + expiresInSeconds }));
+  return `header.${payload}.signature`;
+}
+
+type AuthStoreModule = typeof import("./auth.store");
+
+async function reloadStore(): Promise<AuthStoreModule> {
+  vi.resetModules();
+  return import("./auth.store");
+}
+
+describe("auth.store refresh token storage (ADR-0009: F5 must not end the session)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it("restores the refresh token from sessionStorage after a reload, so refresh() works instead of returning false", async () => {
+    localStorage.setItem("auth_token", fakeJwt(600));
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+    mockApiClient.post.mockResolvedValue({ data: { accessToken: "rotated-access", refreshToken: "rotated-refresh" } });
+
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    expect(reloaded.getState().refreshToken).toBe("tab-refresh-token");
+    await expect(reloaded.getState().refresh()).resolves.toBe(true);
+    expect(mockApiClient.post).toHaveBeenCalledWith(
+      `${AUTH_BASE}/refresh`,
+      { refreshToken: "tab-refresh-token" },
+      expect.objectContaining({ skipAuthRetry: true }),
+    );
+    expect(sessionStorage.getItem("refresh_token")).toBe("rotated-refresh");
+  });
+
+  it("never persists the refresh token in localStorage (any copy there outlives the tab and is XSS-exfiltrable)", async () => {
+    mockApiClient.post.mockResolvedValue({ data: { accessToken: "a", refreshToken: "rotated-secret" } });
+    sessionStorage.setItem("refresh_token", "seed");
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    await reloaded.getState().refresh();
+    reloaded.getState().setToken("access", "explicit-secret");
+
+    const localDump = JSON.stringify({ ...localStorage });
+    expect(localDump).not.toContain("rotated-secret");
+    expect(localDump).not.toContain("explicit-secret");
+    expect(sessionStorage.getItem("refresh_token")).toBe("explicit-secret");
+  });
+
+  it("refreshes an already-expired access token during hydration and only then reports hasHydrated", async () => {
+    localStorage.setItem("auth_token", fakeJwt(-60));
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+    let resolveRefresh!: (value: unknown) => void;
+    mockApiClient.post.mockReturnValue(new Promise((resolve) => (resolveRefresh = resolve)));
+
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    // Refresh still in flight: the route guard must keep showing its loader, not bounce to /login.
+    expect(reloaded.getState().hasHydrated).toBe(false);
+    const freshAccess = fakeJwt(900);
+    resolveRefresh({ data: { accessToken: freshAccess, refreshToken: "rotated-refresh" } });
+
+    await waitFor(() => expect(reloaded.getState().hasHydrated).toBe(true));
+    expect(reloaded.getState().token).toBe(freshAccess);
+    expect(localStorage.getItem("auth_token")).toBe(freshAccess);
+  });
+
+  it("does not call the API on hydration when the access token is still valid", async () => {
+    localStorage.setItem("auth_token", fakeJwt(600));
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    await waitFor(() => expect(reloaded.getState().hasHydrated).toBe(true));
+    expect(mockApiClient.post).not.toHaveBeenCalled();
+  });
+
+  it("still reports hasHydrated when the expired session's refresh token is rejected", async () => {
+    localStorage.setItem("auth_token", fakeJwt(-60));
+    sessionStorage.setItem("refresh_token", "revoked");
+    mockApiClient.post.mockRejectedValue(new Error("401"));
+
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    await waitFor(() => expect(reloaded.getState().hasHydrated).toBe(true));
+    expect(reloaded.getState().isAuthenticated()).toBe(false);
+  });
+
+  it("logout() clears every client-side copy (access token, refresh token, in-memory state)", async () => {
+    localStorage.setItem("auth_token", fakeJwt(600));
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+    mockApiClient.post.mockResolvedValue({ data: undefined });
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    reloaded.getState().logout();
+
+    expect(localStorage.getItem("auth_token")).toBeNull();
+    expect(sessionStorage.getItem("refresh_token")).toBeNull();
+    expect(reloaded.getState().token).toBeNull();
+    expect(reloaded.getState().refreshToken).toBeNull();
+    expect(reloaded.getState().user).toBeNull();
+  });
+
+  it("logout() best-effort revokes the refresh token server-side with an explicit bearer header", async () => {
+    const access = fakeJwt(600);
+    localStorage.setItem("auth_token", access);
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+    mockApiClient.post.mockResolvedValue({ data: undefined });
+    const { useAuthStore: reloaded } = await reloadStore();
+
+    reloaded.getState().logout();
+
+    expect(mockApiClient.post).toHaveBeenCalledWith(
+      `${AUTH_BASE}/logout`,
+      { refreshToken: "tab-refresh-token", allSessions: false },
+      expect.objectContaining({ headers: { Authorization: `Bearer ${access}` }, skipAuthRetry: true }),
+    );
+  });
+
+  it("logout() skips the server call when the access token is already expired and never throws", async () => {
+    localStorage.setItem("auth_token", fakeJwt(-60));
+    sessionStorage.setItem("refresh_token", "tab-refresh-token");
+    mockApiClient.post.mockRejectedValue(new Error("network"));
+    const { useAuthStore: reloaded } = await reloadStore();
+    await waitFor(() => expect(reloaded.getState().hasHydrated).toBe(true));
+    mockApiClient.post.mockClear();
+
+    expect(() => reloaded.getState().logout()).not.toThrow();
+    expect(mockApiClient.post).not.toHaveBeenCalled();
+    expect(sessionStorage.getItem("refresh_token")).toBeNull();
   });
 });

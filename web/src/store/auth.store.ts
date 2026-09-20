@@ -1,7 +1,7 @@
 import axios from "axios";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { AUTH_TOKEN_STORAGE_KEY, apiClient } from "@senseik/api-client";
+import { AUTH_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY, apiClient } from "@senseik/api-client";
 import { getMe, type MeResponse } from "@/services/me.service";
 import { getImpersonatorId } from "@/lib/jwt";
 import type { AccessSettingKey, AccessSettings, MeFeatures } from "@/types";
@@ -96,6 +96,60 @@ function readStoredToken(): string | null {
   }
 }
 
+/*
+ * Refresh token storage (docs/adr/0009-web-refresh-token-storage.md).
+ * The refresh token lives in sessionStorage ONLY: it survives a full page reload (F5) but is dropped when the
+ * tab/browser closes, so a reload no longer kicks the user to /login once the 15-min access token expires.
+ * Never move it to localStorage or zustand `persist`: it is long-lived and rotated, so any XSS payload could
+ * exfiltrate it and outlive the tab. Accepted residual risk: script running in this origin can read
+ * sessionStorage during the session (same exposure as the access token); the proper fix is an httpOnly cookie
+ * (ADR "Sonraki adım"). A tab duplicated/forked from this one carries a copy that goes stale after a rotation.
+ */
+function readStoredRefreshToken(): string | null {
+  try {
+    return sessionStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredRefreshToken(refreshToken: string | null | undefined): void {
+  try {
+    if (refreshToken) {
+      sessionStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+    } else {
+      sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    }
+  } catch {
+    // Refresh token stays in memory only: survives navigation, not a reload.
+  }
+}
+
+/** Drops every client-side copy of the session credentials (access token, refresh token). */
+function clearStoredCredentials(): void {
+  safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+  writeStoredRefreshToken(null);
+}
+
+/**
+ * Best-effort server-side revocation on logout, so a copied refresh token is worthless. Never throws and
+ * never triggers api-client's session-expired redirect (`skipAuthRetry` + skipped when the access token is
+ * already expired, since a 401 here would otherwise toast "session expired" right after the user chose to leave).
+ */
+async function revokeRefreshToken(accessToken: string | null, refreshToken: string | null): Promise<void> {
+  if (!accessToken || !refreshToken || isJwtExpired(accessToken)) return;
+  try {
+    await apiClient.post(
+      `${AUTH_BASE}/logout`,
+      { refreshToken, allSessions: false },
+      // Explicit header: the request interceptor reads localStorage, which logout() has already cleared.
+      { headers: { Authorization: `Bearer ${accessToken}` }, skipAuthRetry: true },
+    );
+  } catch {
+    // The server-side token simply expires on its own; the local session is already gone.
+  }
+}
+
 /** True when the JWT `exp` claim is in the past (or the token is unreadable). */
 function isJwtExpired(token: string): boolean {
   try {
@@ -154,6 +208,7 @@ async function establishSession(
 ): Promise<void> {
   // api-client attaches this key as the Bearer token, so /me (and every other service) is authenticated.
   safeStorageSet(AUTH_TOKEN_STORAGE_KEY, tokens.accessToken);
+  writeStoredRefreshToken(tokens.refreshToken);
   const me = await getMe();
 
   set({
@@ -215,15 +270,18 @@ interface AuthStore {
 // the store's own `set` from the creator instead - it is available the moment the creator runs,
 // which always happens before hydration.
 let setAuthState: ((partial: Partial<AuthStore>) => void) | null = null;
+let getAuthState: (() => AuthStore) | null = null;
 
 export const useAuthStore = create<AuthStore>()(
   persist(
     (set, get) => {
       setAuthState = set;
+      getAuthState = get;
       return {
         user: null,
         token: typeof window === "undefined" ? null : readStoredToken(),
-        refreshToken: null,
+        // Read synchronously (like `token`) so a refresh right after F5 finds it - see readStoredRefreshToken().
+        refreshToken: typeof window === "undefined" ? null : readStoredRefreshToken(),
         features: null,
         isLoading: false,
         error: null,
@@ -255,7 +313,7 @@ export const useAuthStore = create<AuthStore>()(
             await establishSession(set, data.tokens);
             return { status: "ok" };
           } catch (error) {
-            safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+            clearStoredCredentials();
             const message = toErrorMessage(error);
             set({
               token: null,
@@ -282,7 +340,7 @@ export const useAuthStore = create<AuthStore>()(
             await establishSession(set, data.tokens);
             return { status: "ok" };
           } catch (error) {
-            safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+            clearStoredCredentials();
             const message = toErrorMessage(error);
             set({
               token: null,
@@ -297,7 +355,9 @@ export const useAuthStore = create<AuthStore>()(
         },
 
         logout: () => {
-          safeStorageRemove(AUTH_TOKEN_STORAGE_KEY);
+          const { token, refreshToken } = get();
+          clearStoredCredentials();
+          void revokeRefreshToken(token, refreshToken);
           set({ user: null, token: null, refreshToken: null, features: null, error: null });
         },
 
@@ -315,6 +375,7 @@ export const useAuthStore = create<AuthStore>()(
 
         setToken: (token, refreshToken) => {
           safeStorageSet(AUTH_TOKEN_STORAGE_KEY, token);
+          writeStoredRefreshToken(refreshToken);
           set({ token, refreshToken });
         },
 
@@ -337,6 +398,7 @@ export const useAuthStore = create<AuthStore>()(
               { skipAuthRetry: true },
             );
             safeStorageSet(AUTH_TOKEN_STORAGE_KEY, data.accessToken);
+            writeStoredRefreshToken(data.refreshToken);
             set({ token: data.accessToken, refreshToken: data.refreshToken });
             return true;
           } catch {
@@ -373,10 +435,10 @@ export const useAuthStore = create<AuthStore>()(
     {
       name: "auth-store",
       version: 2,
-      // Tokens are intentionally NOT persisted: a single copy lives in memory plus the
-      // api-client key for the current tab. Persisting them would keep a second, long-lived
-      // copy in localStorage that any XSS payload could exfiltrate after the tab closes.
-      // (Full mitigation is httpOnly cookies + refresh rotation - a backend change.)
+      // Tokens are intentionally NOT part of the zustand-persisted blob (localStorage): the access token
+      // has its own api-client key and the refresh token lives in sessionStorage (tab-lifetime only),
+      // so no long-lived copy survives the browser closing - see readStoredRefreshToken() and
+      // docs/adr/0009-web-refresh-token-storage.md. (Full mitigation is an httpOnly cookie - backend change.)
       partialize: (state) => ({
         user: state.user,
         features: state.features,
@@ -393,8 +455,18 @@ export const useAuthStore = create<AuthStore>()(
       // Runs once storage has been read, whether or not there was anything to restore (including
       // storage being unavailable) - `hasHydrated` must flip in every case or the app would hang
       // on the loading screen in private-browsing mode.
-      onRehydrateStorage: () => () => {
-        setAuthState?.({ hasHydrated: true });
+      // After a reload the access token may already have expired (F5 after >15 min, restored tab): when a
+      // refresh token survived in sessionStorage, rotate it BEFORE flipping `hasHydrated`, otherwise
+      // ProtectedRoute would treat the expired token as "logged out" and send the user to /login.
+      onRehydrateStorage: () => (hydrated) => {
+        // `get()` can still be empty when this runs synchronously inside `create()`; fall back to the callback's state.
+        const state = getAuthState?.() ?? hydrated;
+        const needsRefresh = !!state?.refreshToken && (!state.token || isJwtExpired(state.token));
+        if (!state || !needsRefresh) {
+          setAuthState?.({ hasHydrated: true });
+          return;
+        }
+        void state.refresh().finally(() => setAuthState?.({ hasHydrated: true }));
       },
     }
   )

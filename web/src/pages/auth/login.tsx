@@ -7,7 +7,6 @@ import {
   Avatar,
   Button,
   Card,
-  Checkbox,
   Group,
   Menu,
   Modal,
@@ -146,7 +145,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [tenantChoices, setTenantChoices] = useState<TenantChoice[] | null>(null);
@@ -433,13 +431,9 @@ export default function LoginPage() {
             classNames={{ input: classes.input }}
           />
 
-          <Group mt="md" justify="space-between" wrap="nowrap">
-            <Checkbox
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.currentTarget.checked)}
-              label={t("auth:rememberMe")}
-              styles={{ label: { color: "var(--mantine-color-dimmed)" } }}
-            />
+          {/* "Beni hatırla" was removed: it never did anything (state was never read). The session lasts as long as the
+              tab - see docs/adr/0009-web-refresh-token-storage.md; a real persistent session needs the httpOnly cookie. */}
+          <Group mt="md" justify="flex-end" wrap="nowrap">
             <Text component={Link} to="/forgot-password" size="sm" fw={500} c="dimmed" style={{ textDecoration: "none" }}>
               {t("auth:forgotPassword")}
             </Text>
