@@ -96,6 +96,7 @@ public sealed class EmployeeWorkScheduleAssignmentConfiguration : IEntityTypeCon
         b.HasKey(x => x.Id);
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.Source).HasConversion<string>();
+        b.Property(x => x.EffectiveTo);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.EffectiveFrom }).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.WorkScheduleId });
         b.Ignore(x => x.DomainEvents);

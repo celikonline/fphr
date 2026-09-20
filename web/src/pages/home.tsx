@@ -11,6 +11,7 @@ import { avatarColor, initials } from "@/components/employees/employee-badges";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
+import { getCompanyCalendar, type CompanyCalendarEntry, type CompanyEventType } from "@/services/company-calendar.service";
 import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, getTeamLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
@@ -23,6 +24,7 @@ const DonutChart = lazy(() => import("@mantine/charts").then((m) => ({ default: 
 const HOLIDAY_DAYS = 90;
 const BIRTHDAY_DAYS = 30;
 const UPCOMING_LEAVE_DAYS = 30;
+const UPCOMING_EVENT_DAYS = 30;
 const LIST_LIMIT = 3;
 const BIRTHDAY_LIMIT = 5;
 const REQUEST_LIMIT = 4;
@@ -781,19 +783,78 @@ function DepartmentDistributionWidget() {
   );
 }
 
-function PlannedWidget({ title, icon, phase, description }: { title: string; icon: ReactNode; phase: number; description: string }) {
-  const { t } = useTranslation(["navigation"]);
+/** Upcoming company events in the next `UPCOMING_EVENT_DAYS` days (senseik-061): manual
+ * company events/meetings plus derived birthdays/leave starts from the company calendar endpoint. */
+const EVENT_DOT: Record<CompanyEventType, string> = {
+  companyEvent: "var(--mantine-color-blue-6)",
+  meeting: "var(--mantine-color-orange-6)",
+  birthday: "var(--mantine-color-pink-6)",
+  leaveStart: "var(--mantine-color-teal-6)",
+};
+
+function EventsWidget() {
+  const { t, i18n } = useTranslation(["home", "companyCalendar", "navigation"]);
+  // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
+  const [{ from, to }] = useState(() => {
+    const today = new Date();
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + UPCOMING_EVENT_DAYS);
+    return { from: toDateOnly(today), to: toDateOnly(end) };
+  });
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["home", "upcoming-events", from, to],
+    queryFn: () => getCompanyCalendar({ from, to }),
+    retry: retryUnlessClientError,
+  });
+  const entries: CompanyCalendarEntry[] = useMemo(
+    () =>
+      [...(data ?? [])]
+        .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, i18n.language))
+        .slice(0, LIST_LIMIT),
+    [data, i18n.language],
+  );
+
   return (
     <WidgetCard
-      title={title}
-      icon={icon}
-      action={
-        <Badge variant="outline" color="gray" className="shrink-0">
-          {t("navigation:phase", { phase })}
-        </Badge>
-      }
+      title={t("home:events.title")}
+      icon={<CalendarDays size={18} />}
+      action={<LinkMenu items={[{ to: "/app/company-calendar", label: t("navigation:apps.companyCalendar") }]} />}
     >
-      <WidgetMessage>{description}</WidgetMessage>
+      {isLoading ? (
+        <WidgetSkeleton />
+      ) : error && getApiErrorStatus(error) !== 404 ? (
+        <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
+      ) : entries.length === 0 ? (
+        <WidgetMessage>{t("home:events.empty", { days: UPCOMING_EVENT_DAYS })}</WidgetMessage>
+      ) : (
+        <>
+          <RowList
+            items={entries}
+            rowKey={(entry) => entry.id ?? `${entry.type}-${entry.employeeId ?? entry.title}-${entry.date}`}
+            render={(entry) => (
+              <>
+                <Group gap="sm" wrap="nowrap" className="min-w-0">
+                  <span
+                    className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: EVENT_DOT[entry.type] }}
+                    aria-hidden
+                  />
+                  <div className="min-w-0">
+                    <Text size="sm" truncate>
+                      {entry.title}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {t(`companyCalendar:type.${entry.type}`)}
+                    </Text>
+                  </div>
+                </Group>
+                <Amount date={daysUntil(entry.date) <= 0 ? t("home:today") : formatDateOnly(entry.date, i18n.language, SHORT_DATE)} />
+              </>
+            )}
+          />
+          <Divider mt="md" />
+          <FooterLink to="/app/company-calendar" label={t("home:events.viewCalendar")} />
+        </>
+      )}
     </WidgetCard>
   );
 }
@@ -815,7 +876,10 @@ export default function HomePage() {
   const showOrgInfo = useAccessSetting("showOrgInfo");
   const showBirthdays = useAccessSetting("showUpcomingBirthdays");
   const showLeaves = useAccessSetting("showUpcomingLeaves");
-  const showEvents = useAccessSetting("showEventCalendar") && announcementsEnabled;
+  // The company calendar endpoint enforces `announcements.my.events` itself; checking it here keeps the
+  // widget hidden (instead of 403-ing) for roles without the grant, same as the other gated widgets.
+  const canViewEvents = usePermission("announcements.my.events") && announcementsEnabled;
+  const showEvents = useAccessSetting("showEventCalendar") && canViewEvents;
 
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
   const columns: ReactNode[][] = [
@@ -826,15 +890,7 @@ export default function HomePage() {
       canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
       showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,
       canViewHolidays && <HolidaysWidget key="holidays" />,
-      showEvents && (
-        <PlannedWidget
-          key="events"
-          title={t("home:events.title")}
-          icon={<CalendarDays size={18} />}
-          phase={4}
-          description={t("home:events.planned")}
-        />
-      ),
+      showEvents && <EventsWidget key="events" />,
     ],
   ].map((column) => column.filter(Boolean));
   const hasAnyWidget = columns.some((column) => column.length > 0);

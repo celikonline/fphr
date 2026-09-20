@@ -23,12 +23,14 @@ public sealed class EmployeeWorkScheduleAssignment : TenantAggregateRoot<Guid>
     }
 
     private EmployeeWorkScheduleAssignment(
-        Guid id, Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, WorkScheduleAssignmentSource source, Guid? assignedByUserId)
+        Guid id, Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, DateOnly? effectiveTo,
+        WorkScheduleAssignmentSource source, Guid? assignedByUserId)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
         WorkScheduleId = workScheduleId;
         EffectiveFrom = effectiveFrom;
+        EffectiveTo = effectiveTo;
         Source = source;
         AssignedByUserId = assignedByUserId;
     }
@@ -39,11 +41,21 @@ public sealed class EmployeeWorkScheduleAssignment : TenantAggregateRoot<Guid>
 
     public DateOnly EffectiveFrom { get; private set; }
 
+    /// <summary>Null means this is the employee's active work-schedule assignment.</summary>
+    public DateOnly? EffectiveTo { get; private set; }
+
     public WorkScheduleAssignmentSource Source { get; private set; }
 
     public Guid? AssignedByUserId { get; private set; }
 
     public static EmployeeWorkScheduleAssignment Create(
-        Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, WorkScheduleAssignmentSource source, Guid? assignedByUserId) =>
-        new(Guid.CreateVersion7(), tenantId, employeeId, workScheduleId, effectiveFrom, source, assignedByUserId);
+        Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, DateOnly? effectiveTo,
+        WorkScheduleAssignmentSource source, Guid? assignedByUserId) =>
+        new(Guid.CreateVersion7(), tenantId, employeeId, workScheduleId, effectiveFrom, effectiveTo, source, assignedByUserId);
+
+    public void UpdatePeriod(DateOnly effectiveFrom, DateOnly? effectiveTo)
+    {
+        EffectiveFrom = effectiveFrom;
+        EffectiveTo = effectiveTo;
+    }
 }

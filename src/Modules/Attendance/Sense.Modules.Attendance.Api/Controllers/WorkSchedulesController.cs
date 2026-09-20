@@ -16,7 +16,9 @@ public sealed record UpdateWorkScheduleDaysRequest(IReadOnlyList<WorkScheduleDay
 
 public sealed record SetWorkScheduleActiveRequest(bool IsActive);
 
-public sealed record AssignWorkScheduleRequest(IReadOnlyList<Guid> EmployeeIds, DateOnly EffectiveFrom);
+public sealed record AssignWorkScheduleRequest(IReadOnlyList<Guid> EmployeeIds, DateOnly EffectiveFrom, DateOnly? EffectiveTo);
+
+public sealed record UpdateWorkScheduleAssignmentRequest(DateOnly EffectiveFrom, DateOnly? EffectiveTo);
 
 /// <summary>Ayarlar &gt; Kurallar &gt; Çalışma takvimleri (11.3.6).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -65,24 +67,36 @@ public sealed class WorkSchedulesController : ApiControllerBase
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new DeleteWorkScheduleCommand(id), ct));
 
-    /// <summary>Çalışanlar &gt; Toplu işlemler &gt; Çalışma takvimi ekle (also the single-employee card assignment).</summary>
+/// <summary>Çalışanlar &gt; Toplu işlemler &gt; Çalışma takvimi ekle (also the single-employee card assignment).</summary>
     [HttpPost(ApiRoutes.IdParam + "/assign")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Assign(Guid id, [FromBody] AssignWorkScheduleRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new AssignWorkScheduleCommand(id, request.EmployeeIds, request.EffectiveFrom), ct));
+      FromResult(await Dispatcher.Send(new AssignWorkScheduleCommand(id, request.EmployeeIds, request.EffectiveFrom, request.EffectiveTo), ct));
+
+    /// <summary>Çalışma takvimi atamasını güncelle (11.3.6 Düzenle).</summary>
+    [HttpPut("assignments/{assignmentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> UpdateAssignment(Guid assignmentId, [FromBody] UpdateWorkScheduleAssignmentRequest request, CancellationToken ct) =>
+      FromResult(await Dispatcher.Send(new UpdateWorkScheduleAssignmentCommand(assignmentId, request.EffectiveFrom, request.EffectiveTo), ct));
+
+    /// <summary>Çalışma takvimi atamasını sil (11.3.6 Sil).</summary>
+    [HttpDelete("assignments/{assignmentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteAssignment(Guid assignmentId, CancellationToken ct) =>
+      FromResult(await Dispatcher.Send(new DeleteWorkScheduleAssignmentCommand(assignmentId), ct));
 
     /// <summary>Çalışan kartı "Kariyer &gt; Çalışma Takvimi": dated assignment history (HR/yönetici tarafı).</summary>
     [HttpGet("employees/{employeeId:guid}/assignments")]
     [ProducesResponseType<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> ListAssignments(Guid employeeId, [FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
-        FromResult((await Dispatcher.Query(new ListEmployeeWorkScheduleAssignmentsQuery(employeeId), ct)).LocalizeAssignments(localizer));
+      FromResult((await Dispatcher.Query(new ListEmployeeWorkScheduleAssignmentsQuery(employeeId), ct)).LocalizeAssignments(localizer));
 
     /// <summary>Çalışan kartı "Kariyer &gt; Çalışma Takvimi": own card (self-service).</summary>
     [HttpGet("me/assignments")]
     [ProducesResponseType<IReadOnlyList<EmployeeWorkScheduleAssignmentDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> MyAssignments([FromServices] IErrorLocalizer localizer, CancellationToken ct) =>
-        FromResult((await Dispatcher.Query(new GetMyWorkScheduleAssignmentsQuery(), ct)).LocalizeAssignments(localizer));
-}
+      FromResult((await Dispatcher.Query(new GetMyWorkScheduleAssignmentsQuery(), ct)).LocalizeAssignments(localizer));
+  }
 
 /// <summary>The seeded default schedule stores a resource key as its name ("attendance.work_schedule.default.name"); the API returns it translated.</summary>
 internal static class WorkScheduleTextLocalizer

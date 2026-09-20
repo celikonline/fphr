@@ -24,7 +24,7 @@ public sealed class EmployeeHiredHandler(
         var schedule = await assignmentService.EnsureDefaultScheduleAsync(integrationEvent.TenantId, cancellationToken);
         await assignmentService.AssignAsync(
             integrationEvent.TenantId, integrationEvent.EmployeeId, schedule.Id, integrationEvent.HireDate,
-            WorkScheduleAssignmentSource.Hire, assignedByUserId: null, cancellationToken);
+            null, WorkScheduleAssignmentSource.Hire, null, cancellationToken);
 
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }

@@ -33,7 +33,8 @@
   },
   "events": {
     "title": "Etkinlik Takvimi",
-    "planned": "Etkinlik takvimi Faz 4 ile geliyor; toplantı ve etkinlikler burada listelenecek."
+    "empty": "Önümüzdeki {{days}} gün içinde etkinlik yok.",
+    "viewCalendar": "Takvimde Gör"
   },
   "orgInfo": {
     "title": "Personel Kartım",
