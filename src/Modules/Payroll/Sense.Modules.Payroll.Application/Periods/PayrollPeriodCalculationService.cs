@@ -30,11 +30,20 @@ public static class PayrollSkipReasons
     public const string CalculationFailed = "calculation_failed";
 }
 
+/// <summary>senseik-019 2a: non-blocking warning from payroll run (e.g. cumulative GV_BASE unavailable for mid-year employee).</summary>
+public sealed record PayrollWarning(Guid EmployeeId, string Code, string? Details = null);
+
 /// <summary>Outcome of one <see cref="PayrollPeriodCalculationService"/> run. Employees are skipped (not counted in
 /// <see cref="CalculatedCount"/>) when they have no payroll profile/salary record, a non-Monthly WageBasis, a Net
 /// SalaryType, were not employed in the period, have no worked day, or their calculation failed; each skipped
-/// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.</summary>
-public sealed record PayrollPeriodRunSummary(Guid RunId, int CalculatedCount, int SkippedCount, IReadOnlyList<PayrollSkippedEmployee> Skipped);
+/// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.
+/// <see cref="Warnings"/> contains non-blocking issues like missing prior cumulative GV base for mid-year employees.</summary>
+public sealed record PayrollPeriodRunSummary(
+    Guid RunId, int CalculatedCount, int SkippedCount, IReadOnlyList<PayrollSkippedEmployee> Skipped,
+    IReadOnlyList<PayrollWarning> Warnings = default!)
+{
+    public IReadOnlyList<PayrollWarning> Warnings { get; } = Warnings ?? [];
+}
 
 /// <summary>
 /// 11.3.07-bordro.md "Dönem hesabı" akışı (P3): for every candidate employee, resolves current salary + payroll
@@ -73,12 +82,13 @@ public sealed class PayrollPeriodCalculationService(
 
         var calculated = 0;
         var skipped = new List<PayrollSkippedEmployee>();
+        var warnings = new List<PayrollWarning>();
         foreach (var employeeId in employeeIds)
         {
             string? skipReason;
             try
             {
-                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, cancellationToken);
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -97,7 +107,7 @@ public sealed class PayrollPeriodCalculationService(
             }
         }
 
-        return new PayrollPeriodRunSummary(runId, calculated, skipped.Count, skipped);
+        return new PayrollPeriodRunSummary(runId, calculated, skipped.Count, skipped, warnings);
     }
 
     /// <summary>Recalculates only the employees with an active dirty flag in this period ("Değişenleri yeniden hesapla", §4);
@@ -108,9 +118,9 @@ public sealed class PayrollPeriodCalculationService(
         return await RecalculateAllAsync(period, activeFlags.Select(f => f.EmployeeId).Distinct().ToList(), cancellationToken);
     }
 
-    /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code.</summary>
+    /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code. Accumulates warnings in the provided list.</summary>
     private async Task<string?> CalculateOneAsync(
-        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, CancellationToken cancellationToken)
+        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, CancellationToken cancellationToken)
     {
         var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
 
@@ -193,6 +203,11 @@ public sealed class PayrollPeriodCalculationService(
         // senseik-019 2a: kümülatif GV matrahı devri - önceki dönemin Payslip'inden okunur (yıl başında veya önceki
         // dönem/payslip yoksa 0'dan başlanır, örn. yıl içinde işe giren çalışan).
         var priorCumulativeGvBase = await ResolvePriorCumulativeGvBaseAsync(period, employeeId, cancellationToken);
+        if (priorCumulativeGvBase == 0 && period.Month > 1)
+        {
+            logger.LogWarning("Payroll period {Year}-{Month}: Employee {EmployeeId} has no prior cumulative GV base; tax bracket may be underreported.", period.Year, period.Month, employeeId);
+            warnings.Add(new PayrollWarning(employeeId, "missing_prior_cumulative_gv_base", $"Month {period.Month}: no prior payslip found"));
+        }
 
         // senseik-019 2a: BASİTLEŞTİRME - gerçek teşvik uygunluk kontrolü (SGK'nın güncel kanun kodu listesiyle
         // eşleşme, işyeri bazlı başvuru durumu) bu sürümde yapılmıyor, bkz. PayrollCalculationInput.IncentiveEligible.
