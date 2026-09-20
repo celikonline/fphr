@@ -41,9 +41,13 @@ public static class OrganizationPermissions
     public static readonly Permission HolidayCalendarsRead = new(
         "organization.holiday_calendars.read", Module, "Tatil Takvimlerini Görüntüleme", Group, "Tatil takvimlerini ve içerdikleri günleri görüntüleme");
 
-    /// <summary>Add entries to a calendar, or assign a calendar to a Company.</summary>
+    /// <summary>Rename a calendar, add/edit/remove its entries, or assign a calendar to a Company.</summary>
     public static readonly Permission HolidayCalendarsUpdate = new(
-        "organization.holiday_calendars.update", Module, "Tatil Takvimi Güncelleme", Group, "Bir tatil takvimine gün ekleme veya bir şirkete takvim atama");
+        "organization.holiday_calendars.update", Module, "Tatil Takvimi Güncelleme", Group, "Bir tatil takvimini yeniden adlandırma, gün ekleme/düzenleme/silme veya bir şirkete takvim atama");
+
+    /// <summary>Delete a tenant-custom holiday calendar (not the system calendar, not one assigned to a Company).</summary>
+    public static readonly Permission HolidayCalendarsDelete = new(
+        "organization.holiday_calendars.delete", Module, "Tatil Takvimi Silme", Group, "Kiracıya özel bir tatil takvimini silme");
 
     /// <summary>Create a location (roadmap Faz 0 item #6: office/store/warehouse/factory/remote + country).</summary>
     public static readonly Permission LocationsCreate = new(
@@ -100,7 +104,7 @@ public static class OrganizationPermissions
     /// <summary>All Organization module permissions.</summary>
     public static IEnumerable<Permission> All =>
         [UnitsCreate, UnitsRead, UnitsUpdate, UnitsDelete,
-         HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate,
+         HolidayCalendarsCreate, HolidayCalendarsRead, HolidayCalendarsUpdate, HolidayCalendarsDelete,
          LocationsCreate, LocationsRead, LocationsUpdate, LocationsDelete,
          UnitTypesManage, CompaniesCreate, CompanyProfileManage, HolidaysView, ApprovalAssignmentsManage,
          CostCentersView, CostCentersManage];

@@ -46,7 +46,7 @@ public sealed class HolidayCalendarLookup(OrganizationDbContext context) : IHoli
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         return entries
-            .Select(e => new UpcomingHoliday(NextOccurrence(e, today), e.Name))
+            .Select(e => new UpcomingHoliday(NextOccurrence(e, today), e.Name, e.IsHalfDay))
             .Where(h => h.Date >= today)
             .OrderBy(h => h.Date)
             .Take(count)
@@ -102,7 +102,7 @@ public sealed class HolidayCalendarLookup(OrganizationDbContext context) : IHoli
             .ToListAsync(cancellationToken);
 
         return entries
-            .SelectMany(e => e.OccurrencesBetween(from, to).Select(date => new UpcomingHoliday(date, e.Name)))
+            .SelectMany(e => e.OccurrencesBetween(from, to).Select(date => new UpcomingHoliday(date, e.Name, e.IsHalfDay)))
             .OrderBy(h => h.Date)
             .ThenBy(h => h.Name, StringComparer.Ordinal)
             .ToList();

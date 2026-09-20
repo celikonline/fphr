@@ -151,6 +151,8 @@ export interface HolidayCalendarEntry {
   date: string;
   name: string;
   isRecurringAnnually: boolean;
+  /** Arife-style half-day holiday: leave counting deducts 0.5 day. Omitted (false) by older API builds. */
+  isHalfDay?: boolean;
 }
 
 export async function listHolidayCalendars(): Promise<HolidayCalendar[]> {
@@ -168,12 +170,40 @@ export async function listHolidayCalendarEntries(calendarId: string): Promise<Ho
   return data;
 }
 
-export async function addHolidayCalendarEntry(
-  calendarId: string,
-  input: { date: string; name: string; isRecurringAnnually: boolean },
-): Promise<HolidayCalendarEntry> {
+export interface HolidayCalendarEntryInput {
+  date: string;
+  name: string;
+  isRecurringAnnually: boolean;
+  isHalfDay: boolean;
+}
+
+export async function addHolidayCalendarEntry(calendarId: string, input: HolidayCalendarEntryInput): Promise<HolidayCalendarEntry> {
   const { data } = await apiClient.post<HolidayCalendarEntry>(`${HOLIDAY_CALENDARS}/${calendarId}/entries`, input);
   return data;
+}
+
+/** Renames a tenant-custom calendar (the system calendar is read-only, 422). */
+export async function renameHolidayCalendar(calendarId: string, name: string): Promise<HolidayCalendar> {
+  const { data } = await apiClient.put<HolidayCalendar>(`${HOLIDAY_CALENDARS}/${calendarId}`, { name });
+  return data;
+}
+
+/** Deletes a tenant-custom calendar with its entries (422 for the system calendar, 409 while assigned to a company). */
+export async function deleteHolidayCalendar(calendarId: string): Promise<void> {
+  await apiClient.delete(`${HOLIDAY_CALENDARS}/${calendarId}`);
+}
+
+export async function updateHolidayCalendarEntry(
+  calendarId: string,
+  entryId: string,
+  input: HolidayCalendarEntryInput,
+): Promise<HolidayCalendarEntry> {
+  const { data } = await apiClient.put<HolidayCalendarEntry>(`${HOLIDAY_CALENDARS}/${calendarId}/entries/${entryId}`, input);
+  return data;
+}
+
+export async function deleteHolidayCalendarEntry(calendarId: string, entryId: string): Promise<void> {
+  await apiClient.delete(`${HOLIDAY_CALENDARS}/${calendarId}/entries/${entryId}`);
 }
 
 /** Default calendar for new companies: the seeded system TR calendar, else the first system one. */

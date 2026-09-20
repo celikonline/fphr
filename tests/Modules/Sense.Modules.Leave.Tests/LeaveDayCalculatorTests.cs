@@ -16,7 +16,10 @@ public sealed class LeaveDayCalculatorTests
     private static readonly Guid Tenant = Guid.NewGuid();
     private static readonly Guid Employee = Guid.NewGuid();
 
-    private static LeaveDayCalculator CreateCalculator(bool saturdayFlag, params DateOnly[] holidayDates)
+    private static LeaveDayCalculator CreateCalculator(bool saturdayFlag, params DateOnly[] holidayDates) =>
+        CreateCalculator(saturdayFlag, halfDayDates: [], holidayDates);
+
+    private static LeaveDayCalculator CreateCalculator(bool saturdayFlag, DateOnly[] halfDayDates, params DateOnly[] holidayDates)
     {
         var holidays = Substitute.For<IHolidayCalendarLookup>();
         var calendarId = Guid.NewGuid();
@@ -26,7 +29,7 @@ public sealed class LeaveDayCalculatorTests
             {
                 var from = call.ArgAt<DateOnly>(2);
                 var to = call.ArgAt<DateOnly>(3);
-                return (IReadOnlyList<UpcomingHoliday>)holidayDates.Where(d => d >= from && d <= to).Select(d => new UpcomingHoliday(d, "Tatil")).ToList();
+                return (IReadOnlyList<UpcomingHoliday>)holidayDates.Where(d => d >= from && d <= to).Select(d => new UpcomingHoliday(d, "Tatil", halfDayDates.Contains(d))).ToList();
             });
 
         return new LeaveDayCalculator(new WindowedScheduleReader(saturdayFlag), holidays);
@@ -34,6 +37,27 @@ public sealed class LeaveDayCalculatorTests
 
     private static Task<Sense.Modules.Leave.Domain.Calendar.LeaveDayCount> Count(LeaveDayCalculator calculator, DateOnly start, DateOnly end) =>
         calculator.CalculateAsync(Tenant, Employee, start, end, countsNonWorkingDays: false);
+
+    [Fact]
+    public async Task HalfDayHolidayFromCalendar_CountsHalfADay()
+    {
+        // 28 Ekim 2026 (Çarşamba) Cumhuriyet Bayramı Arifesi: yarım gün resmi tatil, yarım gün izin düşer.
+        var arife = new DateOnly(2026, 10, 28);
+        var result = await Count(CreateCalculator(saturdayFlag: false, halfDayDates: [arife], holidayDates: [arife]), arife, arife);
+        result.Days.ShouldBe(0.5m);
+    }
+
+    [Fact]
+    public async Task ArifeInsideARange_CountsHalfDayAndSkipsTheFullHoliday()
+    {
+        var arife = new DateOnly(2026, 10, 28);
+        var bayram = new DateOnly(2026, 10, 29);
+        var calculator = CreateCalculator(saturdayFlag: false, halfDayDates: [arife], holidayDates: [arife, bayram]);
+
+        var result = await Count(calculator, new DateOnly(2026, 10, 26), bayram);
+
+        result.Days.ShouldBe(2.5m);
+    }
 
     [Fact]
     public async Task SingleFriday_CountsOneDay_EvenWhenSaturdayRuleIsOn()

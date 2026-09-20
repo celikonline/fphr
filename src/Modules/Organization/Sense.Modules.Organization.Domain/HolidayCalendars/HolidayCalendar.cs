@@ -51,15 +51,38 @@ public sealed class HolidayCalendar : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(OrganizationDomainErrors.HolidayCalendarCountryCodeRequired);
         }
 
+        var normalizedCountryCode = countryCode.Trim().ToUpperInvariant();
+        if (!IsoCountryCodes.IsValid(normalizedCountryCode))
+        {
+            return Error.Validation(OrganizationDomainErrors.HolidayCalendarCountryCodeInvalid);
+        }
+
         var calendar = new HolidayCalendar(
             id ?? Guid.CreateVersion7(),
             tenantId,
             Guard.MaxLength(name.Trim(), OrganizationLimits.NameMaxLength),
-            Guard.MaxLength(countryCode.Trim().ToUpperInvariant(), OrganizationLimits.CountryCodeMaxLength),
+            normalizedCountryCode,
             isSystemDefined);
 
         calendar.Raise(new HolidayCalendarCreated(calendar.Id, tenantId, calendar.Name, calendar.CountryCode, isSystemDefined));
         return calendar;
+    }
+
+    /// <summary>Renames a tenant-custom calendar; the seeded system calendar is read-only.</summary>
+    public Result Rename(string name)
+    {
+        if (IsSystemDefined)
+        {
+            return Error.Rule(OrganizationDomainErrors.HolidayCalendarSystemImmutable);
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Error.Validation(OrganizationDomainErrors.HolidayCalendarNameRequired);
+        }
+
+        Name = Guard.MaxLength(name.Trim(), OrganizationLimits.NameMaxLength);
+        return Result.Success();
     }
 }
 

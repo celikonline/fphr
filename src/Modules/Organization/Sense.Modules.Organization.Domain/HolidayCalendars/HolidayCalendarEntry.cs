@@ -26,13 +26,14 @@ public sealed class HolidayCalendarEntry : TenantAggregateRoot<Guid>, IAuditLogg
     {
     }
 
-    private HolidayCalendarEntry(Guid id, Guid tenantId, Guid holidayCalendarId, DateOnly date, string name, bool isRecurringAnnually)
+    private HolidayCalendarEntry(Guid id, Guid tenantId, Guid holidayCalendarId, DateOnly date, string name, bool isRecurringAnnually, bool isHalfDay)
         : base(id, tenantId)
     {
         HolidayCalendarId = holidayCalendarId;
         Date = date;
         Name = name;
         IsRecurringAnnually = isRecurringAnnually;
+        IsHalfDay = isHalfDay;
     }
 
     /// <summary>The calendar this entry belongs to (same-module, same-schema FK - see OrganizationDbContext.HolidayCalendarEntryConfiguration).</summary>
@@ -47,8 +48,11 @@ public sealed class HolidayCalendarEntry : TenantAggregateRoot<Guid>, IAuditLogg
     /// <summary>True if this entry falls on the same Gregorian month/day every year (fixed-date national holidays); false for a one-off/shifting date (religious holidays, a specific company closure day).</summary>
     public bool IsRecurringAnnually { get; private set; }
 
+    /// <summary>True for an arife-style half-day holiday (e.g. 13.00'ten itibaren): the morning is worked, so leave counting deducts 0.5 day instead of excluding the whole day.</summary>
+    public bool IsHalfDay { get; private set; }
+
     public static Result<HolidayCalendarEntry> Create(
-        Guid tenantId, Guid holidayCalendarId, DateOnly date, string name, bool isRecurringAnnually, Guid? id = null)
+        Guid tenantId, Guid holidayCalendarId, DateOnly date, string name, bool isRecurringAnnually, bool isHalfDay = false, Guid? id = null)
     {
         if (holidayCalendarId == Guid.Empty)
         {
@@ -66,10 +70,26 @@ public sealed class HolidayCalendarEntry : TenantAggregateRoot<Guid>, IAuditLogg
             holidayCalendarId,
             date,
             Guard.MaxLength(name.Trim(), OrganizationLimits.NameMaxLength),
-            isRecurringAnnually);
+            isRecurringAnnually,
+            isHalfDay);
 
         entry.Raise(new HolidayCalendarEntryAdded(entry.Id, tenantId, holidayCalendarId, entry.Date, entry.Name, isRecurringAnnually));
         return entry;
+    }
+
+    /// <summary>Edits the holiday (date, name, yearly recurrence, half-day flag); the owning calendar never changes.</summary>
+    public Result Update(DateOnly date, string name, bool isRecurringAnnually, bool isHalfDay)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Error.Validation(OrganizationDomainErrors.HolidayCalendarEntryNameRequired);
+        }
+
+        Date = date;
+        Name = Guard.MaxLength(name.Trim(), OrganizationLimits.NameMaxLength);
+        IsRecurringAnnually = isRecurringAnnually;
+        IsHalfDay = isHalfDay;
+        return Result.Success();
     }
 
     /// <summary>True if this entry falls on <paramref name="candidate"/> - exact match when non-recurring, month/day match (any year) when recurring.</summary>

@@ -49,8 +49,8 @@ public interface IHolidayCalendarLookup
     Task<int?> GetLastDefinedReligiousHolidayYearAsync(Guid tenantId, CancellationToken cancellationToken = default);
 }
 
-/// <summary>One resolved upcoming holiday occurrence.</summary>
-public sealed record UpcomingHoliday(DateOnly Date, string Name);
+/// <summary>One resolved upcoming holiday occurrence; <paramref name="IsHalfDay"/> marks an arife-style half-day holiday (the morning is worked).</summary>
+public sealed record UpcomingHoliday(DateOnly Date, string Name, bool IsHalfDay = false);
 
 /// <summary>Identity and display name of a resolved holiday calendar.</summary>
 public sealed record HolidayCalendarRef(Guid Id, string Name);

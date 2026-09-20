@@ -110,6 +110,12 @@ public interface IHolidayCalendarRepository
 {
     void Add(HolidayCalendar calendar);
 
+    /// <summary>Removes the calendar; its entries go with it (DB cascade).</summary>
+    void Remove(HolidayCalendar calendar);
+
+    /// <summary>True when any Company of the current tenant has this calendar assigned.</summary>
+    Task<bool> IsAssignedToCompanyAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default);
+
     Task<Result<HolidayCalendar>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<HolidayCalendar>> ListByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
@@ -122,6 +128,11 @@ public interface IHolidayCalendarRepository
 public interface IHolidayCalendarEntryRepository
 {
     void Add(HolidayCalendarEntry entry);
+
+    void Remove(HolidayCalendarEntry entry);
+
+    /// <summary>The entry (tracked) if it belongs to the given calendar, else null.</summary>
+    Task<HolidayCalendarEntry?> FindAsync(Guid holidayCalendarId, Guid entryId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<HolidayCalendarEntry>> ListByCalendarAsync(Guid holidayCalendarId, CancellationToken cancellationToken = default);
 }
