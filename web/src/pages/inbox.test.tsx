@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,7 +9,7 @@ import trWorkflow from "../../public/locales/tr/workflow.json";
 import trCommon from "../../public/locales/tr/common.json";
 import trLeave from "../../public/locales/tr/leave.json";
 import WorkflowInboxPage from "./inbox";
-import type { InboxTaskDto } from "@/services/workflow.service";
+import { decideTask, type InboxTaskDto } from "@/services/workflow.service";
 
 // senseik-047 D-01: the inbox card must show request-type-specific detail (overtime date/duration/reason, leave
 // date range/type/day count) from InboxTaskDto.summary, never the raw subjectId GUID.
@@ -71,6 +72,16 @@ beforeAll(() => {
       dispatchEvent: () => false,
     }),
   });
+  // The decide dialog's autosize Textarea needs ResizeObserver and document.fonts.
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  Object.defineProperty(document, "fonts", {
+    writable: true,
+    value: { addEventListener: () => {}, removeEventListener: () => {} },
+  });
 });
 
 function createTestI18n() {
@@ -115,5 +126,56 @@ describe("WorkflowInboxPage", () => {
     expect(await screen.findByText("Yıllık izin")).toBeTruthy();
     expect(screen.getByText("3 gün")).toBeTruthy();
     expect(screen.queryByText(LEAVE_SUBJECT_ID)).toBeNull();
+  });
+
+  // Ürün kararı (denetim A10): ret gerekçesi zorunlu, onayda yorum isteğe bağlı.
+  describe("decide dialog comment rule", () => {
+    async function openDecideDialog() {
+      const user = userEvent.setup();
+      renderInboxPage();
+      const [firstDecide] = await screen.findAllByRole("button", { name: "Karar ver" });
+      await user.click(firstDecide!);
+      return user;
+    }
+
+    it("blocks rejecting without a comment and shows the field error", async () => {
+      vi.mocked(decideTask).mockClear();
+      const user = await openDecideDialog();
+
+      await user.click(await screen.findByRole("button", { name: "Reddet" }));
+
+      expect(await screen.findByText(trWorkflow.inbox.rejectCommentRequired)).toBeTruthy();
+      expect(decideTask).not.toHaveBeenCalled();
+    });
+
+    it("treats a whitespace-only comment as missing", async () => {
+      vi.mocked(decideTask).mockClear();
+      const user = await openDecideDialog();
+
+      await user.type(await screen.findByRole("textbox"), "   ");
+      await user.click(screen.getByRole("button", { name: "Reddet" }));
+
+      expect(await screen.findByText(trWorkflow.inbox.rejectCommentRequired)).toBeTruthy();
+      expect(decideTask).not.toHaveBeenCalled();
+    });
+
+    it("rejects with the trimmed comment", async () => {
+      vi.mocked(decideTask).mockClear().mockResolvedValue(undefined as never);
+      const user = await openDecideDialog();
+
+      await user.type(await screen.findByRole("textbox"), " Bütçe uygun değil ");
+      await user.click(screen.getByRole("button", { name: "Reddet" }));
+
+      await waitFor(() => expect(decideTask).toHaveBeenCalledWith("task-overtime-1", { outcome: "rejected", comment: "Bütçe uygun değil" }));
+    });
+
+    it("approves without a comment", async () => {
+      vi.mocked(decideTask).mockClear().mockResolvedValue(undefined as never);
+      const user = await openDecideDialog();
+
+      await user.click(await screen.findByRole("button", { name: "Onayla" }));
+
+      await waitFor(() => expect(decideTask).toHaveBeenCalledWith("task-overtime-1", { outcome: "approved", comment: undefined }));
+    });
   });
 });

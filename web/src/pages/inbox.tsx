@@ -197,6 +197,7 @@ interface DecideDialogProps {
 function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDialogProps) {
   const { t } = useTranslation(["workflow", "common"]);
   const [comment, setComment] = useState("");
+  const [commentMissing, setCommentMissing] = useState(false);
   const isMobile = useMediaQuery("(max-width: 390px)");
   const touchButtonStyle = isMobile ? { minHeight: 40 } : undefined;
 
@@ -217,6 +218,15 @@ function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDial
     onError: (error) =>
       toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("common:errorGeneric")) }),
   });
+
+  /** A rejection needs a reason (server-enforced too); approving keeps the comment optional. */
+  const decide = (outcome: DecideTaskPayload["outcome"]) => {
+    if (outcome === "rejected" && !comment.trim()) {
+      setCommentMissing(true);
+      return;
+    }
+    mutation.mutate(outcome);
+  };
 
   return (
     <Modal
@@ -256,7 +266,11 @@ function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDial
           label={t("workflow:inbox.comment")}
           placeholder={t("workflow:inbox.commentPlaceholder")}
           value={comment}
-          onChange={(e) => setComment(e.currentTarget.value)}
+          onChange={(e) => {
+            setComment(e.currentTarget.value);
+            setCommentMissing(false);
+          }}
+          error={commentMissing ? t("workflow:inbox.rejectCommentRequired") : undefined}
           disabled={mutation.isPending}
           autosize
           minRows={3}
@@ -269,12 +283,12 @@ function DecideDialog({ task, override, fields, onClose, onDecided }: DecideDial
             type="button"
             color="red"
             style={touchButtonStyle}
-            onClick={() => mutation.mutate("rejected")}
+            onClick={() => decide("rejected")}
             disabled={mutation.isPending}
           >
             {t("workflow:inbox.reject")}
           </Button>
-          <Button type="button" style={touchButtonStyle} onClick={() => mutation.mutate("approved")} disabled={mutation.isPending}>
+          <Button type="button" style={touchButtonStyle} onClick={() => decide("approved")} disabled={mutation.isPending}>
             {t("workflow:inbox.approve")}
           </Button>
         </Group>
