@@ -184,6 +184,10 @@ public partial class DataSeeder
                 request.AttachApproval(approvalId);
                 ThrowIfFailed(request.Reject(approvalId, decidedAt));
                 break;
+            case DemoLeaveOutcome.Pending:
+                // Pending request with no approval workflow: ApprovalRequestId stays null.
+                // This simulates requests waiting for HR workflow review (senseik-045: Y-4).
+                break;
         }
 
         leaveCtx.Requests.Add(request);
