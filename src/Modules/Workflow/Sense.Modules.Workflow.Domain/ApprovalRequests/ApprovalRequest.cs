@@ -172,6 +172,15 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
     }
 
     /// <summary>
+    /// Ürün kararı (denetim A10): reddederken yorum (ret gerekçesi) zorunlu, boş/boşluk kabul edilmez; onayda isteğe bağlı.
+    /// <see cref="Decide"/> bunu her kanal için uygular; tek kullanımlık e-posta token'ı tüketilmeden önce çağıran da kullanır.
+    /// </summary>
+    public static Result ValidateDecisionComment(ApprovalOutcome outcome, string? comment) =>
+        outcome == ApprovalOutcome.Rejected && string.IsNullOrWhiteSpace(comment)
+            ? Error.Validation(WorkflowDomainErrors.RejectionCommentRequired)
+            : Result.Success();
+
+    /// <summary>
     /// Records a decision on <paramref name="stepNumber"/>. Assignee/role/override authorization is the Application
     /// layer's job (it has access to caller identity, IRoleAssignmentLookup, and permission checks) - this method only
     /// enforces process invariants: the request is pending, the step is the current one, and its task is still pending.
@@ -184,6 +193,12 @@ public sealed class ApprovalRequest : TenantAggregateRoot<Guid>, IAuditLogged
         if (Status != ApprovalRequestStatus.Pending)
         {
             return Error.Rule(WorkflowDomainErrors.RequestNotPending);
+        }
+
+        var commentCheck = ValidateDecisionComment(outcome, comment);
+        if (commentCheck.IsFailure)
+        {
+            return commentCheck;
         }
 
         if (CurrentStepNumber != stepNumber)

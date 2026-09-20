@@ -266,6 +266,13 @@ public sealed class DecideByEmailTokenHandler(
             return Error.NotFound(WorkflowErrors.TokenInvalid);
         }
 
+        // Single-use token: reject a comment-less rejection before consuming it, so the user can retry with a comment.
+        var commentCheck = ApprovalRequest.ValidateDecisionComment(command.Outcome!.Value, command.Comment);
+        if (commentCheck.IsFailure)
+        {
+            return commentCheck;
+        }
+
         var token = loadedToken.Value;
         var now = clock.GetUtcNow().UtcDateTime;
         var used = token.MarkUsed(now);
