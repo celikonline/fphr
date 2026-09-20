@@ -42,6 +42,12 @@ if (typeof window !== "undefined" && /^http:\/\//i.test(baseURL)) {
 /** localStorage key holding the access token attached to every request. */
 export const AUTH_TOKEN_STORAGE_KEY = "auth_token";
 
+/**
+ * sessionStorage key holding the web app's refresh token (tab-lifetime only, never localStorage - see
+ * docs/adr/0009-web-refresh-token-storage.md). Kept here so `clearSession()` wipes it with the access token.
+ */
+export const REFRESH_TOKEN_STORAGE_KEY = "refresh_token";
+
 /** The web app's persisted auth store (zustand `persist` name in web/src/store/auth.store.ts). */
 const AUTH_STORE_STORAGE_KEY = "auth-store";
 
@@ -58,6 +64,7 @@ function clearSession(): void {
   try {
     localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
     localStorage.removeItem(AUTH_STORE_STORAGE_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
   } catch {
     // Storage unavailable - nothing to clear.
   }

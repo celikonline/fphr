@@ -81,6 +81,7 @@ describe("api-client 401 handling (S-53: silent session drops)", () => {
     // side effects we actually care about is simpler than replacing all of `window.location`.
     localStorage.setItem(TOKEN_KEY, "stale-token");
     localStorage.setItem(STORE_KEY, "{}");
+    sessionStorage.setItem("refresh_token", "stale-refresh");
 
     const error = authError(401);
     await expect(apiClientModule.handleResponseError(error)).rejects.toBe(error);
@@ -90,6 +91,8 @@ describe("api-client 401 handling (S-53: silent session drops)", () => {
     // clearSession() contract - otherwise the route guard would still see a "logged-in" user.
     expect(localStorage.getItem(TOKEN_KEY)).toBeNull();
     expect(localStorage.getItem(STORE_KEY)).toBeNull();
+    // The tab-lifetime refresh token (ADR-0009) must not survive an ended session either.
+    expect(sessionStorage.getItem("refresh_token")).toBeNull();
   });
 
   it("dedupes concurrent 401s (several requests failing at once) into a single refresh call", async () => {
