@@ -17,6 +17,9 @@ public static class LeaveErrors
 
     /// <summary>G-5-09: an Unexcused/Excused absence cannot be recorded on a date already covered by an Approved full-day leave.</summary>
     public const string AbsenceConflictsWithLeave = "leave.absence.conflicts_with_leave";
+
+    /// <summary>Denetim A10: an absence cannot be recorded on a day that is not a working day for the employee (weekly rest or public holiday).</summary>
+    public const string AbsenceNotOnWorkingDay = "leave.absence.not_working_day";
 }
 
 /// <summary>Non-blocking warning codes (localized in SharedResource.resx; the API returns code + message).</summary>

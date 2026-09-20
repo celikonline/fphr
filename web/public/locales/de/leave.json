@@ -533,6 +533,7 @@
     "title": "Fehlzeiten",
     "thresholdAlert": "Zur Prüfung durch HR: Die Schwelle nach Art. 25/II-g des türkischen Arbeitsgesetzes könnte überschritten sein. Ausschlussfrist (Art. 26): 6 Werktage ab Kenntnis des Arbeitgebers. Dies ist keine rechtliche Bewertung.",
     "conflictsWithLeave": "An diesem Datum kann keine Fehlzeit erfasst werden, weil bereits ein genehmigter Urlaub darauf liegt.",
+    "notWorkingDay": "An diesem Datum kann keine Fehlzeit erfasst werden, da es laut Arbeitsplan des Mitarbeiters kein Arbeitstag ist (Wochenende oder Feiertag).",
     "noAccess": "Sie haben keine Berechtigung, Fehlzeiteinträge einzusehen.",
     "empty": "Für dieses Jahr gibt es keine Fehlzeiteinträge.",
     "add": "Fehlzeit hinzufügen",

@@ -16,6 +16,7 @@ using Sense.Modules.Leave.Domain.Requests;
 using Sense.Modules.Leave.Domain.RuleSets;
 using Sense.Modules.Leave.Infrastructure;
 using Sense.Modules.Leave.Infrastructure.Persistence;
+using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
@@ -53,6 +54,18 @@ public sealed class AbsenceIntegrationTests : TestFixture
         services.AddLeaveServices(configuration);
         services.AddModuleHandlers(
             LeaveDbContext.SchemaName, typeof(LeaveErrors).Assembly, typeof(LeavePermissions).Assembly, typeof(LeaveDbContext).Assembly, typeof(ILeaveRuleSetRepository).Assembly, typeof(Attendance.Contracts.IWorkScheduleReadService).Assembly);
+
+        // RecordAbsenceHandler now only accepts working days (denetim A10). No employee is hired in these tests, so the real
+        // schedule reader would report every day closed; a Monday-Friday reader and an empty holiday calendar stand in for it.
+        var schedules = Substitute.For<IWorkScheduleReader>();
+        schedules.GetWorkingDayPredicateAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns((Func<DateOnly, bool>)(d => d.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday)));
+        schedules.GetIncludeSaturdayWhenFullWeekPredicateAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<DateOnly>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>())
+            .Returns((Func<DateOnly, bool>)(_ => false));
+        services.AddSingleton(schedules);
+        var holidays = Substitute.For<IHolidayCalendarLookup>();
+        holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
+        services.AddSingleton(holidays);
 
         _currentUser.UserId.Returns(Guid.NewGuid());
         _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>()).Returns(true);

@@ -320,7 +320,9 @@ function AddAbsenceDialog({ employeeId, onClose, onSaved }: AddAbsenceDialogProp
       setError(
         problem?.code === "leave.absence.conflicts_with_leave"
           ? t("leave:absences.conflictsWithLeave")
-          : getApiErrorMessage(err, t("leave:genericError")),
+          : problem?.code === "leave.absence.not_working_day"
+            ? t("leave:absences.notWorkingDay")
+            : getApiErrorMessage(err, t("leave:genericError")),
       );
     },
   });

@@ -733,6 +733,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>This absence record has already been reversed.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>A reversal record cannot itself be reversed.</value></data>
   <data name="leave.absence.conflicts_with_leave" xml:space="preserve"><value>An absence cannot be recorded on this date because an approved leave already covers it.</value></data>
+  <data name="leave.absence.not_working_day" xml:space="preserve"><value>An absence cannot be recorded on this date because it is not a working day in the employee's work schedule (weekend or public holiday).</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>View work schedules</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Manage work schedules</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Assign work schedules</value></data>

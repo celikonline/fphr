@@ -742,6 +742,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>Bu devamsızlık kaydı zaten ters çevrilmiş.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>Bir ters kayıt tekrar ters çevrilemez.</value></data>
   <data name="leave.absence.conflicts_with_leave" xml:space="preserve"><value>Bu tarihte onaylı izin bulunduğu için devamsızlık girilemez.</value></data>
+  <data name="leave.absence.not_working_day" xml:space="preserve"><value>Bu tarih çalışanın çalışma takvimine göre iş günü olmadığı (hafta sonu veya resmî tatil) için devamsızlık girilemez.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>Çalışma takvimlerini görüntüleme</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Çalışma takvimlerini yönetme</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Çalışma takvimi atama</value></data>
