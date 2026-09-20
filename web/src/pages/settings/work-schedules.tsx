@@ -83,7 +83,9 @@ function WorkSchedules() {
   const canAssign = usePermission("attendance.workschedule.assign");
   const queryClient = useQueryClient();
   const query = useQuery({ queryKey: SCHEDULES_KEY, queryFn: () => listWorkSchedules(true) });
-  const schedules = [...(query.data ?? [])].sort((a, b) => Number(b.isDefault) - Number(a.isDefault) || a.name.localeCompare(b.name));
+  const schedules = [...(query.data ?? [])].sort(
+    (a, b) => Number(b.isDefault) - Number(a.isDefault) || a.name.localeCompare(b.name)
+  );
 
   const [creating, setCreating] = useState(false);
   const [renaming, setRenaming] = useState<WorkSchedule | null>(null);
@@ -92,7 +94,11 @@ function WorkSchedules() {
   const [deleting, setDeleting] = useState<WorkSchedule | null>(null);
 
   const onError = (error: unknown) =>
-    toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("attendance:genericError")) });
+    toast({
+      variant: "destructive",
+      title: t("common:error"),
+      description: getApiErrorMessage(error, t("attendance:genericError")),
+    });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: SCHEDULES_KEY });
 
@@ -100,7 +106,11 @@ function WorkSchedules() {
     mutationFn: (schedule: WorkSchedule) => setDefaultWorkSchedule(schedule.id),
     onSuccess: async () => {
       await invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("attendance:workSchedules.defaultSet") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("attendance:workSchedules.defaultSet"),
+      });
     },
     onError,
   });
@@ -116,7 +126,11 @@ function WorkSchedules() {
     onSuccess: async () => {
       setDeleting(null);
       await invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("attendance:workSchedules.deleted") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("attendance:workSchedules.deleted"),
+      });
     },
     onError: (error) => {
       setDeleting(null);
@@ -136,7 +150,9 @@ function WorkSchedules() {
           <Text span inherit fw={500}>
             {row.original.name}
           </Text>
-          {row.original.isDefault && <Badge size="sm">{t("attendance:workSchedules.default")}</Badge>}
+          {row.original.isDefault && (
+            <Badge size="sm">{t("attendance:workSchedules.default")}</Badge>
+          )}
           {!row.original.isActive && (
             <Badge size="sm" variant="outline" color="gray">
               {t("attendance:workSchedules.inactive")}
@@ -150,7 +166,10 @@ function WorkSchedules() {
       accessorFn: (row) => row.days.filter((d) => d.isWorkingDay).length,
       header: t("attendance:workSchedules.col.days"),
       meta: { label: t("attendance:workSchedules.col.days") },
-      cell: ({ row }) => t("attendance:workSchedules.workingDayCount", { count: row.original.days.filter((d) => d.isWorkingDay).length }),
+      cell: ({ row }) =>
+        t("attendance:workSchedules.workingDayCount", {
+          count: row.original.days.filter((d) => d.isWorkingDay).length,
+        }),
     },
     {
       id: "weeklyMinutes",
@@ -184,60 +203,102 @@ function WorkSchedules() {
               const deleteBlocked = schedule.isDefault
                 ? t("attendance:workSchedules.deleteBlockedDefault")
                 : schedule.assignedEmployeeCount > 0
-                  ? t("attendance:workSchedules.deleteBlockedEmployees", { count: schedule.assignedEmployeeCount })
+                  ? t("attendance:workSchedules.deleteBlockedEmployees", {
+                      count: schedule.assignedEmployeeCount,
+                    })
                   : null;
               return (
                 <Group gap="xs" justify="flex-end" wrap="nowrap">
                   {canAssign && (
-                    <Button type="button" size="xs" variant="subtle" leftSection={<UserPlus size={14} />} onClick={() => setAssigning(schedule)}>
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="subtle"
+                      leftSection={<UserPlus size={14} />}
+                      onClick={() => setAssigning(schedule)}
+                    >
                       {t("attendance:workSchedules.assign")}
                     </Button>
                   )}
                   {canManage && (
                     <>
-                      <Button type="button" size="xs" variant="subtle" leftSection={<Pencil size={14} />} onClick={() => setEditingDays(schedule)}>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="subtle"
+                        leftSection={<Pencil size={14} />}
+                        onClick={() => setEditingDays(schedule)}
+                      >
                         {t("attendance:workSchedules.editDays")}
                       </Button>
-                      <Button type="button" size="xs" variant="subtle" onClick={() => setRenaming(schedule)}>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="subtle"
+                        onClick={() => setRenaming(schedule)}
+                      >
                         {t("common:edit")}
                       </Button>
                     </>
                   )}
-                  {canManage && !schedule.isDefault && (
+                  {canManage && !schedule.isDefault && schedule.isActive && (
                     <Button
                       type="button"
                       size="xs"
                       variant="subtle"
                       leftSection={<Star size={14} />}
-                      loading={setDefaultMutation.isPending && setDefaultMutation.variables?.id === schedule.id}
+                      loading={
+                        setDefaultMutation.isPending &&
+                        setDefaultMutation.variables?.id === schedule.id
+                      }
                       onClick={() => setDefaultMutation.mutate(schedule)}
                     >
                       {t("attendance:workSchedules.makeDefault")}
                     </Button>
                   )}
-                  {canManage && (
+                  {canManage && !(schedule.isDefault && schedule.isActive) && (
                     <Button
                       type="button"
                       size="xs"
                       variant="subtle"
                       color={schedule.isActive ? "gray" : "teal"}
-                      loading={setActiveMutation.isPending && setActiveMutation.variables?.id === schedule.id}
+                      loading={
+                        setActiveMutation.isPending &&
+                        setActiveMutation.variables?.id === schedule.id
+                      }
                       onClick={() => setActiveMutation.mutate(schedule)}
                     >
-                      {schedule.isActive ? t("attendance:workSchedules.deactivate") : t("attendance:workSchedules.activate")}
+                      {schedule.isActive
+                        ? t("attendance:workSchedules.deactivate")
+                        : t("attendance:workSchedules.activate")}
                     </Button>
                   )}
                   {canManage &&
                     (deleteBlocked ? (
                       <Tooltip label={deleteBlocked} multiline maw={260}>
                         <span tabIndex={0} aria-label={deleteBlocked}>
-                          <Button type="button" size="xs" variant="subtle" color="red" disabled style={{ pointerEvents: "none" }} leftSection={<Trash2 size={14} />}>
+                          <Button
+                            type="button"
+                            size="xs"
+                            variant="subtle"
+                            color="red"
+                            disabled
+                            style={{ pointerEvents: "none" }}
+                            leftSection={<Trash2 size={14} />}
+                          >
                             {t("common:delete")}
                           </Button>
                         </span>
                       </Tooltip>
                     ) : (
-                      <Button type="button" size="xs" variant="subtle" color="red" leftSection={<Trash2 size={14} />} onClick={() => setDeleting(schedule)}>
+                      <Button
+                        type="button"
+                        size="xs"
+                        variant="subtle"
+                        color="red"
+                        leftSection={<Trash2 size={14} />}
+                        onClick={() => setDeleting(schedule)}
+                      >
                         {t("common:delete")}
                       </Button>
                     ))}
@@ -289,14 +350,24 @@ function WorkSchedules() {
 
       {creating && <ScheduleFormDialog mode="create" onClose={() => setCreating(false)} />}
       {renaming && <RenameDialog schedule={renaming} onClose={() => setRenaming(null)} />}
-      {editingDays && <ScheduleFormDialog mode="edit" schedule={editingDays} onClose={() => setEditingDays(null)} />}
-      {assigning && <AssignWorkScheduleDialog schedule={assigning} onClose={() => setAssigning(null)} />}
+      {editingDays && (
+        <ScheduleFormDialog
+          mode="edit"
+          schedule={editingDays}
+          onClose={() => setEditingDays(null)}
+        />
+      )}
+      {assigning && (
+        <AssignWorkScheduleDialog schedule={assigning} onClose={() => setAssigning(null)} />
+      )}
 
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}
         title={t("attendance:workSchedules.deleteTitle")}
-        description={t("attendance:workSchedules.deleteDescription", { name: deleting?.name ?? "" })}
+        description={t("attendance:workSchedules.deleteDescription", {
+          name: deleting?.name ?? "",
+        })}
         isLoading={deleteMutation.isPending}
         onConfirm={() => deleting && deleteMutation.mutate(deleting)}
       />
@@ -314,7 +385,11 @@ function RenameDialog({ schedule, onClose }: { schedule: WorkSchedule; onClose: 
     mutationFn: (value: string) => renameWorkSchedule(schedule.id, value),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: SCHEDULES_KEY });
-      toast({ variant: "success", title: t("common:success"), description: t("attendance:workSchedules.renamed") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("attendance:workSchedules.renamed"),
+      });
       onClose();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
@@ -360,24 +435,51 @@ function RenameDialog({ schedule, onClose }: { schedule: WorkSchedule; onClose: 
 }
 
 /** "Yeni çalışma takvimi ekle" / "Günleri düzenle": name (create only) + 7 günlük saat tablosu. */
-function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edit"; schedule?: WorkSchedule; onClose: () => void }) {
+function ScheduleFormDialog({
+  mode,
+  schedule,
+  onClose,
+}: {
+  mode: "create" | "edit";
+  schedule?: WorkSchedule;
+  onClose: () => void;
+}) {
   const { t } = useTranslation(["attendance", "common"]);
   const queryClient = useQueryClient();
   const [name, setName] = useState(schedule?.name.slice(0, NAME_MAX_LENGTH) ?? "");
-  const [includeSaturday, setIncludeSaturday] = useState(schedule?.includeSaturdayWhenFullWeek ?? true);
+  const [includeSaturday, setIncludeSaturday] = useState(
+    schedule?.includeSaturdayWhenFullWeek ?? true
+  );
   const [days, setDays] = useState<WorkScheduleDay[]>(() => {
     if (!schedule) return defaultDays();
     const byDay = new Map(schedule.days.map((d) => [d.dayOfWeek, d]));
-    return WEEK_DAYS_MONDAY_FIRST.map((dayOfWeek) => byDay.get(dayOfWeek) ?? { dayOfWeek, isWorkingDay: false, start: null, end: null, breakStart: null, breakEnd: null });
+    return WEEK_DAYS_MONDAY_FIRST.map(
+      (dayOfWeek) =>
+        byDay.get(dayOfWeek) ?? {
+          dayOfWeek,
+          isWorkingDay: false,
+          start: null,
+          end: null,
+          breakStart: null,
+          breakEnd: null,
+        }
+    );
   });
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (mode === "create") {
-        await createWorkSchedule({ name: name.trim(), days, includeSaturdayWhenFullWeek: includeSaturday });
+        await createWorkSchedule({
+          name: name.trim(),
+          days,
+          includeSaturdayWhenFullWeek: includeSaturday,
+        });
       } else {
-        await updateWorkScheduleDays(schedule!.id, { days, includeSaturdayWhenFullWeek: includeSaturday });
+        await updateWorkScheduleDays(schedule!.id, {
+          days,
+          includeSaturdayWhenFullWeek: includeSaturday,
+        });
       }
     },
     onSuccess: async () => {
@@ -385,7 +487,11 @@ function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edi
       toast({
         variant: "success",
         title: t("common:success"),
-        description: t(mode === "create" ? "attendance:workSchedules.created" : "attendance:workSchedules.daysUpdated"),
+        description: t(
+          mode === "create"
+            ? "attendance:workSchedules.created"
+            : "attendance:workSchedules.daysUpdated"
+        ),
       });
       onClose();
     },
@@ -398,13 +504,23 @@ function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edi
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (mode === "create" && !name.trim()) return setError(t("attendance:workSchedules.nameRequired"));
+    if (mode === "create" && !name.trim())
+      return setError(t("attendance:workSchedules.nameRequired"));
     setError(null);
     mutation.mutate();
   }
 
   return (
-    <Modal opened onClose={onClose} size="42rem" title={t(mode === "create" ? "attendance:workSchedules.addTitle" : "attendance:workSchedules.editDaysTitle")}>
+    <Modal
+      opened
+      onClose={onClose}
+      size="42rem"
+      title={t(
+        mode === "create"
+          ? "attendance:workSchedules.addTitle"
+          : "attendance:workSchedules.editDaysTitle"
+      )}
+    >
       <form onSubmit={submit}>
         <Stack gap="md">
           {mode === "create" && (
@@ -427,9 +543,22 @@ function ScheduleFormDialog({ mode, schedule, onClose }: { mode: "create" | "edi
                   checked={day.isWorkingDay}
                   disabled={mutation.isPending}
                   onChange={(e) =>
-                    updateDay(day.dayOfWeek, e.currentTarget.checked
-                      ? { isWorkingDay: true, start: day.start ?? "09:00:00", end: day.end ?? "18:00:00" }
-                      : { isWorkingDay: false, start: null, end: null, breakStart: null, breakEnd: null })
+                    updateDay(
+                      day.dayOfWeek,
+                      e.currentTarget.checked
+                        ? {
+                            isWorkingDay: true,
+                            start: day.start ?? "09:00:00",
+                            end: day.end ?? "18:00:00",
+                          }
+                        : {
+                            isWorkingDay: false,
+                            start: null,
+                            end: null,
+                            breakStart: null,
+                            breakEnd: null,
+                          }
+                    )
                   }
                 />
                 {day.isWorkingDay ? (
@@ -509,7 +638,13 @@ function todayDateOnly(): string {
  * Unlike the leave rule-set assign flow this is all-or-nothing (no per-employee warnings) — a scope/not-found
  * failure for any selected employee rejects the whole request (`AssignWorkScheduleHandler`).
  */
-function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedule; onClose: () => void }) {
+function AssignWorkScheduleDialog({
+  schedule,
+  onClose,
+}: {
+  schedule: WorkSchedule;
+  onClose: () => void;
+}) {
   const { t } = useTranslation(["attendance", "common", "employees"]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -525,7 +660,14 @@ function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedul
 
   const employeesQuery = useQuery({
     queryKey: ["employees", "work-schedule-assign", debounced],
-    queryFn: () => listEmployees({ page: 1, pageSize: 20, q: debounced || undefined, status: "Active", sort: "displayName" }),
+    queryFn: () =>
+      listEmployees({
+        page: 1,
+        pageSize: 20,
+        q: debounced || undefined,
+        status: "Active",
+        sort: "displayName",
+      }),
     retry: false,
   });
 
@@ -533,7 +675,11 @@ function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedul
     mutationFn: () => assignWorkSchedule(schedule.id, [...selected.keys()], effectiveFrom),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: SCHEDULES_KEY });
-      toast({ variant: "success", title: t("common:success"), description: t("attendance:workSchedules.assigned", { count: selected.size }) });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("attendance:workSchedules.assigned", { count: selected.size }),
+      });
       onClose();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("attendance:genericError"))),
@@ -565,7 +711,12 @@ function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedul
           <Text size="sm" c="dimmed">
             {t("attendance:workSchedules.assignDescription", { name: schedule.name })}
           </Text>
-          <DatePicker id="work-schedule-assign-effective-from" value={effectiveFrom} disabled={busy} onChange={setEffectiveFrom} />
+          <DatePicker
+            id="work-schedule-assign-effective-from"
+            value={effectiveFrom}
+            disabled={busy}
+            onChange={setEffectiveFrom}
+          />
           {chips.length > 0 && (
             <Group gap={6}>
               {chips.map(([id, name]) => (
@@ -619,8 +770,13 @@ function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedul
                       py={8}
                       checked={selected.has(employee.id)}
                       disabled={busy}
-                      onChange={(e) => toggle(employee.id, employee.displayName, e.currentTarget.checked)}
-                      styles={{ body: { alignItems: "center" }, labelWrapper: { minWidth: 0, flex: 1 } }}
+                      onChange={(e) =>
+                        toggle(employee.id, employee.displayName, e.currentTarget.checked)
+                      }
+                      styles={{
+                        body: { alignItems: "center" },
+                        labelWrapper: { minWidth: 0, flex: 1 },
+                      }}
                       label={
                         <>
                           <Text span size="sm" display="block" truncate="end">
@@ -649,7 +805,9 @@ function AssignWorkScheduleDialog({ schedule, onClose }: { schedule: WorkSchedul
               {t("common:cancel")}
             </Button>
             <Button type="submit" loading={busy} disabled={selected.size === 0}>
-              {busy ? t("common:saving") : t("attendance:workSchedules.assignSubmit", { count: selected.size })}
+              {busy
+                ? t("common:saving")
+                : t("attendance:workSchedules.assignSubmit", { count: selected.size })}
             </Button>
           </Group>
         </Stack>

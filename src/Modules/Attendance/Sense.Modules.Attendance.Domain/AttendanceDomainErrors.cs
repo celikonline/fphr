@@ -11,6 +11,7 @@ public static class AttendanceDomainErrors
     public const string ScheduleIsDefault = "attendance.errors.schedule_is_default";
     public const string ScheduleHasEmployees = "attendance.errors.schedule_has_employees";
     public const string ScheduleInactive = "attendance.errors.schedule_inactive";
+    public const string ScheduleDefaultCannotDeactivate = "attendance.errors.schedule_default_cannot_deactivate";
     public const string AssignmentEffectiveDateInPast = "attendance.assignment.effective_date_in_past";
     public const string DayNotFound = "attendance.day.not_found";
     public const string DayCheckOutBeforeCheckIn = "attendance.day.check_out_before_check_in";

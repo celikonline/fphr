@@ -103,17 +103,34 @@ public sealed class WorkSchedule : TenantAggregateRoot<Guid>
     }
 
     /// <summary>"Varsayılan yap": exactly one default schedule per tenant afterwards (new employees get it).</summary>
-    public void MakeDefault(IEnumerable<WorkSchedule> tenantSchedules)
+    public Result MakeDefault(IEnumerable<WorkSchedule> tenantSchedules)
     {
+        // New employees are assigned the default schedule, so an inactive one must never become the default.
+        if (!IsActive)
+        {
+            return Error.Conflict(AttendanceDomainErrors.ScheduleInactive);
+        }
+
         foreach (var other in tenantSchedules.Where(s => s.Id != Id))
         {
             other.IsDefault = false;
         }
 
         IsDefault = true;
+        return Result.Success();
     }
 
-    public void SetActive(bool isActive) => IsActive = isActive;
+    /// <summary>The default schedule cannot be deactivated - pick another default first.</summary>
+    public Result SetActive(bool isActive)
+    {
+        if (!isActive && IsDefault)
+        {
+            return Error.Conflict(AttendanceDomainErrors.ScheduleDefaultCannotDeactivate);
+        }
+
+        IsActive = isActive;
+        return Result.Success();
+    }
 
     /// <summary>Delete guard: the default schedule and schedules employees are still assigned to cannot be deleted.</summary>
     public Result EnsureDeletable(int assignedEmployeeCount)

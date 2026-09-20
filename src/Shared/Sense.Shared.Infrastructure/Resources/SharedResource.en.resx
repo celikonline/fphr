@@ -743,6 +743,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>The default work schedule cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>A work schedule assigned to employees cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>This work schedule is inactive.</value></data>
+  <data name="attendance.errors.schedule_default_cannot_deactivate" xml:space="preserve"><value>The default work schedule cannot be deactivated; make another schedule the default first.</value></data>
   <data name="attendance.employee.not_found" xml:space="preserve"><value>Employee not found.</value></data>
   <data name="attendance.employee.not_in_scope" xml:space="preserve"><value>You do not have access to this employee.</value></data>
   <data name="attendance.work_schedule.default.name" xml:space="preserve"><value>General work schedule</value></data>

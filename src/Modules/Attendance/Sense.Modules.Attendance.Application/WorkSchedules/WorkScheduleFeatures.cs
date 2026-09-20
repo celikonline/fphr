@@ -150,8 +150,7 @@ public sealed class SetDefaultWorkScheduleHandler(IWorkScheduleRepository schedu
             return schedule.Error;
         }
 
-        schedule.Value.MakeDefault(await schedules.ListAsync(includeInactive: true, cancellationToken));
-        return Result.Success();
+        return schedule.Value.MakeDefault(await schedules.ListAsync(includeInactive: true, cancellationToken));
     }
 }
 
@@ -168,8 +167,7 @@ public sealed class SetWorkScheduleActiveHandler(IWorkScheduleRepository schedul
             return schedule.Error;
         }
 
-        schedule.Value.SetActive(command.IsActive);
-        return Result.Success();
+        return schedule.Value.SetActive(command.IsActive);
     }
 }
 

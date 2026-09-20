@@ -73,6 +73,34 @@ public sealed class WorkScheduleDomainTests
     }
 
     [Fact]
+    public void MakeDefault_RejectsAnInactiveSchedule_AndLeavesTheCurrentDefaultUntouched()
+    {
+        var tenantId = Guid.NewGuid();
+        var a = WorkSchedule.CreateDefault(tenantId, "a");
+        var b = WorkSchedule.Create(tenantId, "b", MonToFri(new TimeOnly(9, 0), new TimeOnly(17, 0))).Value;
+        b.SetActive(false).IsSuccess.ShouldBeTrue();
+
+        var result = b.MakeDefault([a, b]);
+
+        result.Error.Code.ShouldBe(AttendanceDomainErrors.ScheduleInactive);
+        a.IsDefault.ShouldBeTrue();
+        b.IsDefault.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void SetActive_RejectsDeactivatingTheDefaultSchedule_ButAllowsOtherSchedules()
+    {
+        var tenantId = Guid.NewGuid();
+        var a = WorkSchedule.CreateDefault(tenantId, "a");
+        var b = WorkSchedule.Create(tenantId, "b", MonToFri(new TimeOnly(9, 0), new TimeOnly(17, 0))).Value;
+
+        a.SetActive(false).Error.Code.ShouldBe(AttendanceDomainErrors.ScheduleDefaultCannotDeactivate);
+        a.IsActive.ShouldBeTrue();
+        b.SetActive(false).IsSuccess.ShouldBeTrue();
+        b.IsActive.ShouldBeFalse();
+    }
+
+    [Fact]
     public void EnsureDeletable_RejectsTheDefaultSchedule_AndSchedulesWithAssignedEmployees()
     {
         var tenantId = Guid.NewGuid();
