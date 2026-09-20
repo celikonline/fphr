@@ -94,6 +94,11 @@
     "halfDay": "Yarım gün",
     "hourly": "Saatlik"
   },
+  "eligibleGender": {
+    "any": "Herkes",
+    "female": "Yalnızca kadın",
+    "male": "Yalnızca erkek"
+  },
   "negativeBalance": {
     "none": "Kapalı",
     "unlimited": "Limitsiz eksi bakiye",
@@ -142,6 +147,8 @@
     "maxConsecutiveDays": "En fazla ardışık gün",
     "waitingPeriodMonths": "Bekleme süresi (ay)",
     "waitingPeriodMonthsHint": "İşe başlamadan sonra bu tür talep edilemeyen süre.",
+    "eligibleGender": "Uygun cinsiyet",
+    "eligibleGenderHint": "Yalnızca seçilen cinsiyetteki çalışanlar bu türü talep edebilir; cinsiyeti kayıtlı olmayan çalışanlara kısıtlama uygulanmaz.",
     "requiresDescription": "Açıklama zorunlu",
     "requiresSubstitute": "Vekil ataması zorunlu",
     "requiresDocument": "Belge zorunlu",
@@ -229,11 +236,16 @@
     "perRequestMax": "Bir talepte en fazla {{days}} gün.",
     "calculatedDays": "Hesaplanan gün: {{days}}",
     "typesLimited": "Yalnız bakiyeli izin türleri listeleniyor.",
+    "substitute": "Vekil",
+    "substituteHint": "İzin süresince işlerinizi devralacak çalışan.",
+    "substitutePlaceholder": "Vekil seçin",
+    "documentHint": "Bu izin türü için belge (rapor vb.) gerekir; belgeyi insan kaynaklarına teslim edin.",
     "validation": {
       "typeRequired": "İzin türü seçin.",
       "datesRequired": "Başlangıç ve bitiş tarihi zorunludur.",
       "range": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
       "descriptionRequired": "Bu izin türünde açıklama zorunludur.",
+      "substituteRequired": "Bu izin türünde vekil seçimi zorunludur.",
       "timeRequired": "Başlangıç ve bitiş saatini girin; bitiş saati başlangıçtan sonra olmalıdır.",
       "halfDayRequired": "Sabah veya öğleden sonra seçin."
     },
@@ -329,6 +341,7 @@
     "halfDayPeriod": "Gün dilimi",
     "timeRange": "Saat aralığı",
     "remainingBalance": "Kalan izin bakiyesi",
+    "substitute": "Vekil",
     "overlappingLeaves": {
       "title": "Çakışan izinler ({{count}})",
       "more": "+{{count}} kişi daha (listelenmedi)",

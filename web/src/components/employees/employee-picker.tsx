@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Check, Search } from "lucide-react";
 import { Combobox, Group, InputBase, ScrollArea, Text, useCombobox } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { listEmployees } from "@/services/employees.service";
+import { getEmployeeDirectory, listEmployees } from "@/services/employees.service";
 
 export interface PickedEmployee {
   id: string;
@@ -25,6 +25,11 @@ interface EmployeePickerProps {
   description?: ReactNode;
   error?: ReactNode;
   withAsterisk?: boolean;
+  /**
+   * Search the company directory (`employee.directory.view`, granted to every employee and not data-scoped) instead of the
+   * employee list (`employee.employees.read`, data-scoped): use it where a self-service user picks a colleague (leave substitute).
+   */
+  useDirectory?: boolean;
 }
 
 /** Searchable single-employee combobox backed by `GET /v1/employees?q` (active employees). */
@@ -40,6 +45,7 @@ export default function EmployeePicker({
   description,
   error,
   withAsterisk,
+  useDirectory = false,
 }: EmployeePickerProps) {
   const { t } = useTranslation(["employees"]);
   const [search, setSearch] = useState("");
@@ -55,8 +61,11 @@ export default function EmployeePicker({
   const open = combobox.dropdownOpened;
 
   const { data, isFetching } = useQuery({
-    queryKey: ["employees", "picker", debounced],
-    queryFn: () => listEmployees({ page: 1, pageSize: 10, q: debounced || undefined, status: "Active", sort: "displayName" }),
+    queryKey: ["employees", "picker", useDirectory ? "directory" : "list", debounced],
+    queryFn: () =>
+      useDirectory
+        ? getEmployeeDirectory({ page: 1, pageSize: 10, q: debounced || undefined, sort: "displayName" })
+        : listEmployees({ page: 1, pageSize: 10, q: debounced || undefined, status: "Active", sort: "displayName" }),
     enabled: open,
   });
 

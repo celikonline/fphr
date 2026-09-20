@@ -191,3 +191,35 @@ describe("LeaveTypeDialog (senseik-008 Bug 1)", () => {
     expect(payload.name).toBe("Özel yıllık izin türü");
   });
 });
+
+describe("LeaveTypeDialog (denetim A6 eligible gender)", () => {
+  function seededPaternityType(): LeaveType {
+    const annual = seededAnnualType();
+    return {
+      ...annual,
+      id: "type-2",
+      settings: { ...annual.settings, code: "paternity", name: "leave.type.paternity", limitType: "perRequest", perRequestMaxDays: 10, annualDays: null, eligibleGender: "male" },
+    };
+  }
+
+  it("shows the stored eligible gender and sends it back on save", async () => {
+    const user = userEvent.setup();
+    renderDialog(seededPaternityType());
+
+    const select = screen.getByRole("combobox", { name: /Uygun cinsiyet/ }) as HTMLInputElement;
+    expect(select.value).toBe("Yalnızca erkek");
+
+    await user.click(screen.getByRole("button", { name: /Kaydet/ }));
+
+    expect(updateLeaveType).toHaveBeenCalled();
+    const calls = vi.mocked(updateLeaveType).mock.calls;
+    const [, , payload] = calls[calls.length - 1];
+    expect(payload.eligibleGender).toBe("male");
+  });
+
+  it("defaults a new type to everyone", () => {
+    renderDialog(null);
+
+    expect((screen.getByRole("combobox", { name: /Uygun cinsiyet/ }) as HTMLInputElement).value).toBe("Herkes");
+  });
+});
