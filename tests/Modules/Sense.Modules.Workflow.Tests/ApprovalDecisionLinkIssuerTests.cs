@@ -90,7 +90,7 @@ public sealed class ApprovalDecisionLinkIssuerTests : TestFixture
         {
             var db = decideScope.ServiceProvider.GetRequiredService<WorkflowDbContext>();
             var reloaded = (await decideScope.ServiceProvider.GetRequiredService<IApprovalRequestRepository>().GetByIdAsync(twoSteps.Id)).Value;
-            reloaded.Decide(1, approver1, ApprovalOutcome.Rejected, null, false, ApprovalChannel.Web, null, null, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            reloaded.Decide(1, approver1, ApprovalOutcome.Rejected, "declined", false, ApprovalChannel.Web, null, null, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
             await db.SaveChangesAsync();
         }
 

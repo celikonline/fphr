@@ -182,7 +182,7 @@ public sealed class ApprovalRequestIntegrationTests : TestFixture
             var cancelled = Submit(new ApprovalTaskSeed(1, approver, null, true));
             var rejected = Submit(new ApprovalTaskSeed(1, secondApprover, null, true), new ApprovalTaskSeed(2, approver, null, true));
             cancelled.Cancel(Guid.NewGuid(), DateTime.UtcNow).IsSuccess.ShouldBeTrue();
-            rejected.Decide(1, secondApprover, ApprovalOutcome.Rejected, null, false, ApprovalChannel.Web, null, null, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            rejected.Decide(1, secondApprover, ApprovalOutcome.Rejected, "declined", false, ApprovalChannel.Web, null, null, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
 
             requests.Add(pending);
             requests.Add(cancelled);
@@ -232,7 +232,7 @@ public sealed class ApprovalRequestIntegrationTests : TestFixture
             var requests = decideScope.ServiceProvider.GetRequiredService<IApprovalRequestRepository>();
             var request = (await requests.GetByIdAsync(requestId)).Value;
 
-            var decide = request.Decide(1, approver1, ApprovalOutcome.Rejected, null, false, ApprovalChannel.Web, null, null, DateTime.UtcNow);
+            var decide = request.Decide(1, approver1, ApprovalOutcome.Rejected, "declined", false, ApprovalChannel.Web, null, null, DateTime.UtcNow);
             decide.IsSuccess.ShouldBeTrue();
 
             // An optional step's reject does not terminate the request - it still advances normally.

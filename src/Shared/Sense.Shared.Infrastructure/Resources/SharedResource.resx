@@ -619,6 +619,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="workflow.task.not_current" xml:space="preserve"><value>Bu görev artık sırada değil.</value></data>
   <data name="workflow.task.assignee_mismatch" xml:space="preserve"><value>Bu onay görevine karar verme yetkiniz yok.</value></data>
   <data name="workflow.task.self_approval_not_allowed" xml:space="preserve"><value>Kendi talebiniz için onay kararı veremezsiniz.</value></data>
+  <data name="workflow.task.rejection_comment_required" xml:space="preserve"><value>Bir talebi reddederken gerekçe (yorum) yazmanız zorunludur.</value></data>
   <data name="workflow.token.invalid" xml:space="preserve"><value>Onay bağlantısı geçersiz.</value></data>
   <data name="workflow.token.expired" xml:space="preserve"><value>Onay bağlantısının süresi dolmuş.</value></data>
   <data name="workflow.token.already_used" xml:space="preserve"><value>Onay bağlantısı daha önce kullanılmış.</value></data>
@@ -686,6 +687,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.partial_day_requires_single_date" xml:space="preserve"><value>Yarım gün veya saatlik izin yalnız tek bir gün için alınabilir.</value></data>
   <data name="leave.errors.partial_day_time_invalid" xml:space="preserve"><value>Bu izin türü için saat aralığı veya yarım gün seçimi eksik ya da geçersiz.</value></data>
   <data name="leave.errors.type_not_available" xml:space="preserve"><value>Bu izin türü talep edilemez.</value></data>
+  <data name="leave.errors.start_date_too_far_past" xml:space="preserve"><value>İzin başlangıç tarihi bugünden en fazla {max} gün öncesi olabilir. Daha eski tarihli izin için İK'dan talep girmesini isteyin.</value></data>
   <data name="leave.errors.overlap" xml:space="preserve"><value>Bu tarihlerde bekleyen veya onaylı başka bir izniniz var.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>Bu izin türünde bir talepte en fazla {max} gün alınabilir.</value></data>
   <data name="leave.errors.below_min_days" xml:space="preserve"><value>Bu izin türünde en az {min} gün talep edilmelidir.</value></data>
@@ -747,6 +749,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.absence.already_reversed" xml:space="preserve"><value>Bu devamsızlık kaydı zaten ters çevrilmiş.</value></data>
   <data name="leave.absence.reversal_not_reversible" xml:space="preserve"><value>Bir ters kayıt tekrar ters çevrilemez.</value></data>
   <data name="leave.absence.conflicts_with_leave" xml:space="preserve"><value>Bu tarihte onaylı izin bulunduğu için devamsızlık girilemez.</value></data>
+  <data name="leave.absence.not_working_day" xml:space="preserve"><value>Bu tarih çalışanın çalışma takvimine göre iş günü olmadığı (hafta sonu veya resmî tatil) için devamsızlık girilemez.</value></data>
   <data name="attendance.workschedule.view" xml:space="preserve"><value>Çalışma takvimlerini görüntüleme</value></data>
   <data name="attendance.workschedule.manage" xml:space="preserve"><value>Çalışma takvimlerini yönetme</value></data>
   <data name="attendance.workschedule.assign" xml:space="preserve"><value>Çalışma takvimi atama</value></data>

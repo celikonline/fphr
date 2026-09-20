@@ -535,6 +535,7 @@
     "title": "Devamsızlık",
     "thresholdAlert": "İK değerlendirmesi için bilgi: 4857 md.25/II-g eşiği aşılmış olabilir. Hak düşürücü süre (md.26): öğrenmeden itibaren 6 iş günü. Bu bir hukuki değerlendirme değildir.",
     "conflictsWithLeave": "Bu tarihte onaylı izin bulunduğu için devamsızlık girilemez.",
+    "notWorkingDay": "Bu tarih çalışanın çalışma takvimine göre iş günü olmadığı (hafta sonu veya resmî tatil) için devamsızlık girilemez.",
     "noAccess": "Devamsızlık kayıtlarını görüntüleme yetkiniz yok.",
     "empty": "Bu yıl için devamsızlık kaydı yok.",
     "add": "Devamsızlık ekle",

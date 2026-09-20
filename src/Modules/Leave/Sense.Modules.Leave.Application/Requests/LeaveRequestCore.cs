@@ -33,6 +33,9 @@ public static class LeaveRequestErrors
     public const string NotOwner = "leave.request.not_owner";
     public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
 
+    /// <summary>Denetim A10: self-servis talebin başlangıcı kiracı yerel bugününden en fazla LeaveBackdatePolicy.SelfServiceMaxBackdateDays gün geriye gidebilir.</summary>
+    public const string StartDateTooFarInPast = "leave.errors.start_date_too_far_past";
+
     /// <summary>
     /// senseik-037: the request's end date falls in a year the effective holiday calendar has no religious
     /// (Ramazan/Kurban Bayramı) entries seeded for yet. Non-blocking - surfaced via LeaveRequestPreviewDto.Warnings,

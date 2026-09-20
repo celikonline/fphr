@@ -80,7 +80,8 @@ public sealed class RecordAbsenceValidator : AbstractValidator<RecordAbsenceComm
 }
 
 public sealed class RecordAbsenceHandler(
-    ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, IAbsenceRecordRepository absences, ILeaveRequestRepository leaveRequests)
+    ITenantContext tenant, ICurrentUser currentUser, IDataScopeService dataScope, IAbsenceRecordRepository absences, ILeaveRequestRepository leaveRequests,
+    ILeaveDayCalculator dayCalculator)
     : ICommandHandler<RecordAbsenceCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordAbsenceCommand command, CancellationToken cancellationToken)
@@ -88,6 +89,14 @@ public sealed class RecordAbsenceHandler(
         if (!await dataScope.CanAccessEmployeeAsync(LeavePermissions.AbsencesManage.Key, command.EmployeeId, cancellationToken))
         {
             return Error.Forbidden(LeaveErrors.EmployeeNotInScope);
+        }
+
+        // Denetim A10: an absence only makes sense on a day the employee was due to work. The same day calculation leave
+        // requests use (work schedule + the tenant's holiday calendar) decides: zero days = weekly rest or public holiday.
+        var dayCount = await dayCalculator.CalculateAsync(tenant.TenantId, command.EmployeeId, command.Date, command.Date, countsNonWorkingDays: false, cancellationToken);
+        if (dayCount.Days <= 0m)
+        {
+            return Error.Rule(LeaveErrors.AbsenceNotOnWorkingDay);
         }
 
         // G-5-09: Unexcused/Excused cannot be recorded on a date an Approved full-day leave already covers; HalfDay/Hourly

@@ -535,6 +535,7 @@
     "title": "Absences",
     "thresholdAlert": "For HR review: the Labour Code art.25/II-g threshold may have been exceeded. Statute of limitations (art.26): 6 business days from the date the employer learned of it. This is not a legal assessment.",
     "conflictsWithLeave": "An absence cannot be recorded on this date because an approved leave already covers it.",
+    "notWorkingDay": "An absence cannot be recorded on this date because it is not a working day in the employee's work schedule (weekend or public holiday).",
     "noAccess": "You don't have permission to view absence records.",
     "empty": "No absence records for this year.",
     "add": "Add absence",

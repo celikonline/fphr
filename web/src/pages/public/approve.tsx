@@ -51,6 +51,7 @@ export default function ApproveTokenPage() {
   const { t } = useTranslation(["workflow", "common"]);
   const { token = "" } = useParams();
   const [comment, setComment] = useState("");
+  const [commentMissing, setCommentMissing] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
 
   const mutation = useMutation({
@@ -65,6 +66,15 @@ export default function ApproveTokenPage() {
     },
   });
 
+  /** A rejection needs a reason (server-enforced too); approving keeps the comment optional. */
+  const decide = (outcome: DecideByTokenPayload["outcome"]) => {
+    if (outcome === "rejected" && !comment.trim()) {
+      setCommentMissing(true);
+      return;
+    }
+    mutation.mutate(outcome);
+  };
+
   if (!token) return <ResultMessage result="error" />;
   if (result) return <ResultMessage result={result} />;
 
@@ -77,16 +87,20 @@ export default function ApproveTokenPage() {
           label={t("workflow:publicDecision.comment")}
           placeholder={t("workflow:publicDecision.commentPlaceholder")}
           value={comment}
-          onChange={(e) => setComment(e.currentTarget.value)}
+          onChange={(e) => {
+            setComment(e.currentTarget.value);
+            setCommentMissing(false);
+          }}
+          error={commentMissing ? t("workflow:publicDecision.rejectCommentRequired") : undefined}
           disabled={mutation.isPending}
           autosize
           minRows={3}
         />
         <Group grow gap="xs">
-          <Button type="button" color="red" onClick={() => mutation.mutate("rejected")} disabled={mutation.isPending}>
+          <Button type="button" color="red" onClick={() => decide("rejected")} disabled={mutation.isPending}>
             {t("workflow:publicDecision.reject")}
           </Button>
-          <Button type="button" onClick={() => mutation.mutate("approved")} disabled={mutation.isPending}>
+          <Button type="button" onClick={() => decide("approved")} disabled={mutation.isPending}>
             {t("workflow:publicDecision.approve")}
           </Button>
         </Group>

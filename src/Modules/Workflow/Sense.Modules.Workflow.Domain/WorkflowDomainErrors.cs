@@ -23,6 +23,9 @@ public static class WorkflowDomainErrors
     public const string TaskNotPending = "workflow.task.not_pending";
     public const string TaskAssigneeMismatch = "workflow.task.assignee_mismatch";
 
+    /// <summary>Ürün kararı (denetim A10): bir görevi reddederken yorum (ret gerekçesi) zorunlu; onayda isteğe bağlı.</summary>
+    public const string RejectionCommentRequired = "workflow.task.rejection_comment_required";
+
     public const string TokenNotFound = "workflow.token.not_found";
     public const string TokenExpired = "workflow.token.expired";
     public const string TokenAlreadyUsed = "workflow.token.already_used";
