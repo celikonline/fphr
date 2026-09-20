@@ -1,0 +1,18 @@
+{
+  "id": "senseik-061",
+  "title": "Ana sayfa Etkinlik Takvimi widget'ı + etkinlik düzenleme",
+  "owner": "pc-a",
+  "state": "ready",
+  "branch": "a/home-event-calendar-widget",
+  "worktree": ".claude/worktrees/home-event-calendar-widget",
+  "acceptance": [
+    "Ana sayfadaki 'Etkinlik Takvimi' yer tutucusu (Faz 4 rozetli PlannedWidget, home.tsx) gerçek bir widget'a dönüşür: önümüzdeki 14 günün etkinlikleri (manuel etkinlik/toplantı, doğum günü, izin başlangıcı) tarih sırasıyla, tür rengiyle listelenir; boş durumda anlamlı mesaj",
+    "Widget yalnız Home.ShowEventCalendar erişim ayarı açık ve Announcements modülü etkinse görünür; GetCompanyCalendarQuery sunucuda da [RequiresAccessSetting(AccessSettingKeys.HomeShowEventCalendar)] ile korunur (yalnız ana sayfa çağrısı için; /app/company-calendar sayfası ayarla kısıtlanmaz)",
+    "Widget'tan 'Takvimde Gör' bağlantısı /app/company-calendar sayfasına gider; İK (announcements.events.manage) widget'tan da 'Etkinlik oluştur' diyaloğunu açabilir",
+    "Etkinlik düzenleme: UpdateCompanyEvent komutu (başlık, açıklama, tarih, tür, görünürlük), PUT /announcements/events/{id}, takvim sayfasında düzenle eylemi; türetilmiş (doğum günü/izin) girdiler düzenlenemez",
+    "tr/en/de i18n, vitest (widget boş/dolu/erişim kapalı), Announcements birim + API testleri"
+  ],
+  "merge_gate": "dotnet build + dotnet test (Announcements) + pnpm exec tsc --noEmit + eslint + demo seed'de widget'ta doğum günü, izin başlangıcı ve manuel etkinlik görünür",
+  "handoff": "docs/handoffs/home-event-calendar-widget.md",
+  "source": "Kullanıcı isteği (2026-09-20, ana sayfa ekran görüntüsü: 'Etkinlik Takvimi — Faz 4 ile geliyor'). faz4-durum-takibi.md #71; docs/handoffs/company-event-calendar.md 'MVP kapsamı dışı' madde 3 (Update yok) ve 5 (ana sayfa widget'ı yok)."
+}

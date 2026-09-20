@@ -1,0 +1,17 @@
+{
+  "id": "senseik-062",
+  "title": "Şirket etkinlik takvimi kapsam genişletme (çok günlü/saatli etkinlik, alt birim görünürlüğü)",
+  "owner": "pc-a",
+  "state": "backlog",
+  "branch": "a/company-event-scope-expansion",
+  "worktree": ".",
+  "acceptance": [
+    "Çok günlü ve saatli etkinlik: CompanyEvent'e StartsAt/EndsAt/AllDay (+ isteğe bağlı Location/MeetingUrl) eklenir (migration); takvim ay grid'i çok günlü etkinliği aralık boyunca gösterir; mevcut tek günlü kayıtlar EventDate'ten migrate edilir",
+    "Görünürlük alt birim ağacını kapsar: bir birime kısıtlı etkinliği o birimin alt birimlerindeki çalışanlar da görür (Organization.Contracts.IOrgUnitLookup.GetSelfAndDescendantIdsAsync; sorgu başına N+1 olmayacak şekilde toplu)",
+    "Contractor / ExternalAccountant rolleri için announcements.my.events erişimi gerçek ihtiyaç doğrulanırsa SystemRoleDefinitions'a eklenir (aksi hâlde kasıtlı dışlama belgelenir)",
+    "senseik-024 (Outlook tarzı takvim bileşeni) ile ortak bileşen değerlendirmesi: yalnız gerçek ihtiyaç varsa ortaklaştır (YAGNI)"
+  ],
+  "merge_gate": "dotnet build + dotnet test + pnpm exec tsc --noEmit + eslint; migration Migrator ile temiz veritabanında ve senseik-061 sonrası mevcut demo veride uygulanır",
+  "handoff": "docs/handoffs/company-event-scope-expansion.md",
+  "source": "docs/handoffs/company-event-calendar.md 'MVP kapsamı dışı bırakılanlar' madde 1, 2, 6, 7; faz4-durum-takibi.md #71. Çıkış kriteri: senseik-061 merge edildi ve çok günlü/saatli etkinlik için gerçek kullanım ihtiyacı (İK/ürün) teyit edildi."
+}
