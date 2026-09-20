@@ -214,6 +214,13 @@ public static class LeaveBalanceEngine
         var futureApproved = Used(inPeriod.Where(e => e.EffectiveDate > today));
         var currentBalance = pastInPeriod.Where(e => !IsUsage(e)).Sum(e => e.Amount) - currentPeriodUsed;
 
+        // "Sıfırlansın" types forfeit everything at the period boundary, so lifetime sums of earlier periods are meaningless.
+        var resetsEachPeriod = type.CarryOverMode == CarryOverMode.Reset;
+        var totalAccrued = resetsEachPeriod
+            ? accruedInPeriod
+            : entries.Where(e => e.Type == LeaveLedgerEntryType.Accrual && e.EffectiveDate <= today).Sum(e => e.Amount);
+        var totalUsed = resetsEachPeriod ? currentPeriodUsed : Used(entries.Where(e => e.EffectiveDate <= today));
+
         var negativeLimit = type.NegativeBalance switch
         {
             NegativeBalanceMode.Limited => type.NegativeBalanceLimitDays,
@@ -226,8 +233,8 @@ public static class LeaveBalanceEngine
             period.From,
             period.To,
             period.To.AddDays(1),
-            TotalAccrued: entries.Where(e => e.Type == LeaveLedgerEntryType.Accrual && e.EffectiveDate <= today).Sum(e => e.Amount),
-            TotalUsed: Used(entries.Where(e => e.EffectiveDate <= today)),
+            TotalAccrued: totalAccrued,
+            TotalUsed: totalUsed,
             ExtraGrants: pastInPeriod.Where(e => e.Type == LeaveLedgerEntryType.ExtraGrant).Sum(e => e.Amount),
             Adjustments: pastInPeriod.Where(e => e.Type is LeaveLedgerEntryType.Adjustment or LeaveLedgerEntryType.OpeningBalance).Sum(e => e.Amount),
             CarriedOverIntoPeriod: carriedIn,
