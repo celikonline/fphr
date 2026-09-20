@@ -239,13 +239,18 @@
     "substitute": "Substitute",
     "substituteHint": "The colleague who will cover your work during the leave.",
     "substitutePlaceholder": "Choose a substitute",
-    "documentHint": "This leave type needs a supporting document (e.g. a report); hand it to human resources.",
+    "documentHint": "This leave type needs a supporting document (e.g. a report); upload it here, or attach it later while the request is pending.",
+    "document": "Document",
+    "documentUploadHint": "Choose a PDF, image or Office file; it is uploaded to Documents first.",
+    "documentUploading": "Uploading document…",
+    "documentRemove": "Remove",
     "validation": {
       "typeRequired": "Select a leave type.",
       "datesRequired": "Start and end dates are required.",
       "range": "End date cannot be before the start date.",
       "descriptionRequired": "A description is required for this leave type.",
       "substituteRequired": "A substitute is required for this leave type.",
+      "documentRequired": "A document is required for this leave type.",
       "timeRequired": "Enter a start and end time; the end time must be after the start time.",
       "halfDayRequired": "Select morning or afternoon."
     },
@@ -344,6 +349,7 @@
     "timeRange": "Time range",
     "remainingBalance": "Remaining leave balance",
     "substitute": "Substitute",
+    "attachments": "Documents",
     "overlappingLeaves": {
       "title": "Overlapping leaves ({{count}})",
       "more": "+{{count}} more (not listed)",

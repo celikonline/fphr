@@ -360,6 +360,7 @@ export function LeaveSection({ employee }: { employee: EmployeeDetail }) {
           typesHint={ruleSetQuery.data ? undefined : t("leave:form.typesLimited")}
           previewScope={employee.id}
           preview={(input) => previewEmployeeLeaveRequest(employee.id, input)}
+          documentUploadScope="hr"
           save={(input, bypassApproval) => createLeaveRequestOnBehalf(employee.id, { ...input, bypassApproval })}
           allowBypass={canBypassApproval}
           requesterEmployeeId={employee.id}

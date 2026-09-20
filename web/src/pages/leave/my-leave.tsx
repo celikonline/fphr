@@ -240,6 +240,7 @@ function MyLeave({ canBalances, canRequests }: { canBalances: boolean; canReques
           loadDetail={getMyLeaveRequest}
           requesterEmployeeId={employeeId ?? undefined}
           preview={previewMyLeaveRequest}
+          documentUploadScope="me"
           save={(input) =>
             dialog.mode === "edit"
               ? updatePendingLeaveRequest(dialog.request.id, input)
