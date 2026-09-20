@@ -931,6 +931,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Invalid date range: the start date cannot be after the end date.</value></data>
   <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>A timesheet record cannot be entered for a future date.</value></data>
   <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>A period that has not started yet cannot be approved.</value></data>
+  <data name="attendance.timesheet.month_not_complete" xml:space="preserve"><value>A month that has not ended yet cannot be closed.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>View compensatory work debt</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Record compensatory work</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Compensatory work ledger entry not found.</value></data>

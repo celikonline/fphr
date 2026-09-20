@@ -14,6 +14,9 @@ public static class AttendanceErrors
     /// <summary>A monthly timesheet cannot be approved before its month has started (tenant-local date).</summary>
     public const string PeriodNotStarted = "attendance.timesheet.period_not_started";
 
+    /// <summary>A monthly timesheet cannot be closed while its month is still running (tenant-local date).</summary>
+    public const string MonthNotComplete = "attendance.timesheet.month_not_complete";
+
     /// <summary>S-31: no active Location has this QR self-servis check-in code for the tenant.</summary>
     public const string SelfCheckInInvalidCode = "attendance.self_checkin.invalid_code";
 

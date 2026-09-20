@@ -942,6 +942,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.timesheet.date_range_invalid" xml:space="preserve"><value>Tarih aralığı geçersiz: başlangıç bitişten sonra olamaz.</value></data>
   <data name="attendance.timesheet.date_in_future" xml:space="preserve"><value>Gelecek tarihli puantaj kaydı girilemez.</value></data>
   <data name="attendance.timesheet.period_not_started" xml:space="preserve"><value>Henüz başlamamış bir dönemin puantajı onaylanamaz.</value></data>
+  <data name="attendance.timesheet.month_not_complete" xml:space="preserve"><value>Henüz bitmemiş bir ayın puantajı kapatılamaz.</value></data>
   <data name="attendance.compensatory.view" xml:space="preserve"><value>Telafi çalışması borcunu görüntüleme</value></data>
   <data name="attendance.compensatory.manage" xml:space="preserve"><value>Telafi çalışması işleme</value></data>
   <data name="attendance.compensatory.not_found" xml:space="preserve"><value>Telafi kaydı bulunamadı.</value></data>
