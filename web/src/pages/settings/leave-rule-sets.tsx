@@ -11,7 +11,6 @@ import {
   CloseButton,
   Group,
   List,
-  Modal,
   NavLink,
   Paper,
   ScrollArea,
@@ -24,6 +23,7 @@ import {
 } from "@mantine/core";
 import { AlertTriangle, Copy, Pencil, Plus, ScrollText, Search, Star, Trash2, UserPlus } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
+import { FormModal } from "@/components/ui/form-modal";
 import ConfirmDialog from "@/components/confirm-dialog";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -308,7 +308,7 @@ function RenameRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
   }
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.renameTitle")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.renameTitle")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -338,7 +338,7 @@ function RenameRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }
 
@@ -393,7 +393,7 @@ function AssignRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
   }
 
   return (
-    <Modal opened onClose={onClose} size="32rem" title={t("leave:ruleSets.assignTitle")}>
+    <FormModal opened onClose={onClose} size="32rem" title={t("leave:ruleSets.assignTitle")} closeOnClickOutside={false}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {t("leave:ruleSets.assignDescription", { name: leaveName(set.name) })}
@@ -521,7 +521,7 @@ function AssignRuleSetDialog({ set, onClose }: { set: LeaveRuleSet; onClose: () 
           </form>
         )}
       </Stack>
-    </Modal>
+    </FormModal>
   );
 }
 
@@ -533,7 +533,7 @@ function limitText(settings: LeaveTypeSettings, t: (key: string) => string, days
 
 type LeaveTypeRow = LeaveRuleSet["types"][number];
 
-function LeaveTypesTable({
+export function LeaveTypesTable({
   set,
   canManageTypes,
   onEdit,
@@ -546,12 +546,20 @@ function LeaveTypesTable({
   const leaveName = useLeaveName();
   const days = useDays();
   const queryClient = useQueryClient();
+  const [disabling, setDisabling] = useState<LeaveTypeRow | null>(null);
 
   const toggleDisabledMutation = useMutation({
     mutationFn: (row: LeaveTypeRow) => setLeaveTypeDisabled(set.id, row.id, !row.settings.isDisabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: RULE_SETS_KEY }),
     onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("leave:genericError")) }),
+    onSettled: () => setDisabling(null),
   });
+
+  /** Enabling applies right away; disabling affects every assigned employee, so it asks first (B9). */
+  function requestToggle(row: LeaveTypeRow) {
+    if (row.settings.isDisabled) toggleDisabledMutation.mutate(row);
+    else setDisabling(row);
+  }
 
   // Disabled types render muted; DataTable rows take no class, so every cell carries it.
   const text = (row: LeaveTypeRow, value: string) => (
@@ -635,7 +643,7 @@ function LeaveTypesTable({
                   variant="subtle"
                   color={row.original.settings.isDisabled ? "teal" : "red"}
                   loading={toggleDisabledMutation.isPending && toggleDisabledMutation.variables?.id === row.original.id}
-                  onClick={() => toggleDisabledMutation.mutate(row.original)}
+                  onClick={() => requestToggle(row.original)}
                 >
                   {row.original.settings.isDisabled ? t("leave:ruleSets.enable") : t("leave:ruleSets.disable")}
                 </Button>
@@ -659,6 +667,18 @@ function LeaveTypesTable({
         <DataTableViewOptions table={table} className="h-9 px-3" />
       </Group>
       <DataTable table={table} />
+      <ConfirmDialog
+        open={Boolean(disabling)}
+        onOpenChange={(open) => !open && setDisabling(null)}
+        title={t("leave:ruleSets.disableTitle")}
+        description={t("leave:ruleSets.disableDescription", {
+          type: disabling ? leaveName(disabling.settings.name) : "",
+          count: set.assignedEmployeeCount,
+        })}
+        confirmLabel={t("leave:ruleSets.disable")}
+        isLoading={toggleDisabledMutation.isPending}
+        onConfirm={() => disabling && toggleDisabledMutation.mutate(disabling)}
+      />
     </Stack>
   );
 }
@@ -688,7 +708,7 @@ function CloneRuleSetDialog({ source, onClose, onCloned }: { source: LeaveRuleSe
   }
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.cloneTitle")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:ruleSets.cloneTitle")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -718,6 +738,6 @@ function CloneRuleSetDialog({ source, onClose, onCloned }: { source: LeaveRuleSe
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }

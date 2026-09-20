@@ -2,10 +2,11 @@ import { useCallback, useMemo, useState, type FormEvent, type ReactNode } from "
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Alert, Badge, Button, Card, Group, Input, Modal, NumberInput, Progress, Radio, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
+import { Alert, Badge, Button, Card, Group, Input, NumberInput, Progress, Radio, Stack, Text, Textarea, type BadgeProps } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FormModal } from "@/components/ui/form-modal";
 import { TimePicker } from "@/components/ui/time-picker";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -351,7 +352,7 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={() => (submission ? onSaved(submission) : onClose())} title={title} size="lg">
+    <FormModal opened onClose={() => (submission ? onSaved(submission) : onClose())} title={title} size="lg" closeOnClickOutside={false}>
       <Stack gap="md">
         <Text size="sm" c="dimmed">
           {dialogDescription}
@@ -469,6 +470,6 @@ export function OvertimeRequestDialog({ title, description: dialogDescription, s
           </form>
         )}
       </Stack>
-    </Modal>
+    </FormModal>
   );
 }

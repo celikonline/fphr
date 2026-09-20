@@ -2,11 +2,12 @@ import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Alert, Button, Card, Group, Input, Modal, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
+import { Alert, Button, Card, Group, Input, NumberInput, Select, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { AlertTriangle, RotateCcw, UserX } from "lucide-react";
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FormModal } from "@/components/ui/form-modal";
 import { RowIconButton } from "@/components/ui/row-icon-button";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -339,7 +340,7 @@ function AddAbsenceDialog({ employeeId, onClose, onSaved }: AddAbsenceDialogProp
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:absences.addTitle")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:absences.addTitle")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Input.Wrapper id="absence-date" label={t("leave:absences.date")} withAsterisk>
@@ -394,7 +395,7 @@ function AddAbsenceDialog({ employeeId, onClose, onSaved }: AddAbsenceDialogProp
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }
 
@@ -427,7 +428,7 @@ function ReverseAbsenceDialog({ employeeId, absence, onClose, onReversed }: Reve
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:absences.reverseTitle")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:absences.reverseTitle")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -462,6 +463,6 @@ function ReverseAbsenceDialog({ employeeId, absence, onClose, onReversed }: Reve
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }

@@ -83,6 +83,14 @@ export function LeaveRequestDialog({
   const [bypassApproval, setBypassApproval] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** Wraps a field setter so editing the field clears the stale form-level error. */
+  function edit<T>(setter: (value: T) => void) {
+    return (value: T) => {
+      setError(null);
+      setter(value);
+    };
+  }
+
   // A pending request's type may be missing from the list (e.g. no longer self-service); keep it selectable.
   const options =
     source && !types.some((type) => type.id === source.leaveTypeId)
@@ -120,7 +128,10 @@ export function LeaveRequestDialog({
     endTime: draftEndTime,
     halfDayPeriod: draftHalfDayPeriod as LeaveHalfDayPeriod | "",
   };
-  const canPreview = !!draft.leaveTypeId && !!draft.startDate && !!draft.endDate && draft.endDate >= draft.startDate;
+  // With an invalid hourly range the day count would contradict the range hint, so no preview is computed or shown.
+  const hourlyRangeInvalid = unit === "hourly" && (!draft.startTime || !draft.endTime || draft.endTime <= draft.startTime);
+  const hourlyRangeReversed = unit === "hourly" && !!draft.startTime && !!draft.endTime && draft.endTime <= draft.startTime;
+  const canPreview = !!draft.leaveTypeId && !!draft.startDate && !!draft.endDate && draft.endDate >= draft.startDate && !hourlyRangeInvalid;
   const previewQuery = useQuery({
     queryKey: ["leave", "preview", previewScope, draft, editing?.id ?? null],
     queryFn: () =>
@@ -165,6 +176,15 @@ export function LeaveRequestDialog({
 
   const busy = mutation.isPending;
 
+  // A submit error the live preview already shows (conflict/balance) is not repeated under the form.
+  const timeRangeMessage = t("leave:form.validation.timeRequired");
+  const previewMessages = [
+    ...(hourlyRangeReversed ? [timeRangeMessage] : []),
+    ...(previewQuery.isError ? [getApiErrorMessage(previewQuery.error, t("leave:genericError"))] : []),
+    ...(previewQuery.data?.warnings ?? []).map((warning) => warning.message),
+  ];
+  const visibleError = error && !previewMessages.includes(error) ? error : null;
+
   return (
     // senseik-041 Bug 3: this dialog has two date pickers (start/end) whose calendar popovers are portalled outside
     // the modal's own DOM subtree; a stray click meant only to dismiss an open calendar could otherwise land on
@@ -191,7 +211,7 @@ export function LeaveRequestDialog({
                   placeholder={t("leave:form.type")}
                   description={typesHint}
                   value={leaveTypeId || null}
-                  onChange={(value) => setLeaveTypeId(value ?? "")}
+                  onChange={edit((value: string | null) => setLeaveTypeId(value ?? ""))}
                   allowDeselect={false}
                   disabled={busy}
                   data={options.map((type) => ({ value: type.id, label: type.name }))}
@@ -218,12 +238,12 @@ export function LeaveRequestDialog({
                 )}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input.Wrapper id="leave-start" label={t("leave:form.startDate")} withAsterisk>
-                  <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={setStartDate} />
+                <Input.Wrapper id="leave-start-field" labelProps={{ htmlFor: "leave-start" }} label={t("leave:form.startDate")} withAsterisk>
+                  <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={edit(setStartDate)} />
                 </Input.Wrapper>
                 {unit === "fullDay" ? (
-                  <Input.Wrapper id="leave-end" label={t("leave:form.endDate")} withAsterisk>
-                    <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={setEndDate} />
+                  <Input.Wrapper id="leave-end-field" labelProps={{ htmlFor: "leave-end" }} label={t("leave:form.endDate")} withAsterisk>
+                    <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={edit(setEndDate)} />
                   </Input.Wrapper>
                 ) : (
                   <Input.Wrapper label={t("leave:form.endDate")}>
@@ -240,7 +260,7 @@ export function LeaveRequestDialog({
                   withAsterisk
                   placeholder={t("leave:form.halfDayPeriod")}
                   value={halfDayPeriod || null}
-                  onChange={(value) => setHalfDayPeriod((value as LeaveHalfDayPeriod) ?? "")}
+                  onChange={edit((value: string | null) => setHalfDayPeriod((value as LeaveHalfDayPeriod) ?? ""))}
                   allowDeselect={false}
                   disabled={busy}
                   data={[
@@ -251,13 +271,18 @@ export function LeaveRequestDialog({
               )}
               {unit === "hourly" && (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Input.Wrapper id="leave-hour-start" label={t("leave:form.hourlyStart")} withAsterisk>
-                    <TimePicker id="leave-hour-start" value={startTime} disabled={busy} onChange={setStartTime} />
+                  <Input.Wrapper id="leave-hour-start-field" labelProps={{ htmlFor: "leave-hour-start" }} label={t("leave:form.hourlyStart")} withAsterisk>
+                    <TimePicker id="leave-hour-start" value={startTime} disabled={busy} onChange={edit(setStartTime)} />
                   </Input.Wrapper>
-                  <Input.Wrapper id="leave-hour-end" label={t("leave:form.hourlyEnd")} withAsterisk>
-                    <TimePicker id="leave-hour-end" value={endTime} disabled={busy} onChange={setEndTime} />
+                  <Input.Wrapper id="leave-hour-end-field" labelProps={{ htmlFor: "leave-hour-end" }} label={t("leave:form.hourlyEnd")} withAsterisk>
+                    <TimePicker id="leave-hour-end" value={endTime} disabled={busy} onChange={edit(setEndTime)} />
                   </Input.Wrapper>
                 </div>
+              )}
+              {hourlyRangeReversed && (
+                <Text size="sm" c="red" role="alert">
+                  {timeRangeMessage}
+                </Text>
               )}
               {canPreview && (
                 <Paper withBorder p="sm" bg="var(--mantine-color-default-hover)" aria-live="polite">
@@ -306,7 +331,7 @@ export function LeaveRequestDialog({
                 maxLength={2000}
                 autosize
                 minRows={3}
-                onChange={(e) => setDescription(e.currentTarget.value)}
+                onChange={(e) => edit(setDescription)(e.currentTarget.value)}
               />
               {allowBypass && (
                 <Paper withBorder p="sm">
@@ -322,9 +347,9 @@ export function LeaveRequestDialog({
                   />
                 </Paper>
               )}
-              {error && (
+              {visibleError && (
                 <Text size="sm" c="red" role="alert">
-                  {error}
+                  {visibleError}
                 </Text>
               )}
               <Group justify="flex-end" gap="xs">

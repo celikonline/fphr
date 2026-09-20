@@ -1,8 +1,9 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Alert, Badge, Button, Divider, Drawer, Group, Modal, Paper, Skeleton, Stack, Text, Textarea } from "@mantine/core";
+import { Alert, Badge, Button, Divider, Drawer, Group, Paper, Skeleton, Stack, Text, Textarea } from "@mantine/core";
 import { CheckCircle2, Circle, CircleDot, XCircle } from "lucide-react";
+import { FormModal } from "@/components/ui/form-modal";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import { cancelLeaveRequest, type LeaveApprovalStep, type LeaveRequest, type LeaveRequestDetail } from "@/services/leave.service";
@@ -229,7 +230,7 @@ export function CancelLeaveRequestDialog({ employeeId, request, typeName, onClos
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="28rem" title={t("leave:cancel.title")}>
+    <FormModal opened onClose={onClose} size="28rem" title={t("leave:cancel.title")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -265,6 +266,6 @@ export function CancelLeaveRequestDialog({ employeeId, request, typeName, onClos
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }

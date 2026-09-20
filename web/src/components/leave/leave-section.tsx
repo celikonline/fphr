@@ -1,9 +1,10 @@
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Anchor, Button, Card, Group, Input, Menu, Modal, NumberInput, Select, Skeleton, Stack, Tabs, Text, Textarea, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Anchor, Button, Card, Group, Input, Menu, NumberInput, Select, Skeleton, Stack, Tabs, Text, Textarea, Title, Tooltip } from "@mantine/core";
 import { Ban, Eye, ListChecks, ListOrdered, MoreVertical } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { FormModal } from "@/components/ui/form-modal";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -408,14 +409,22 @@ interface AdjustBalanceDialogProps {
   onSaved: () => void;
 }
 
+interface AdjustFieldErrors {
+  type?: string;
+  days?: string;
+  date?: string;
+  reason?: string;
+}
+
 /** "Bakiye düzeltmesi": signed Adjustment ledger row with a mandatory reason (PerYear types only). */
-function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: AdjustBalanceDialogProps) {
+export function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: AdjustBalanceDialogProps) {
   const { t } = useTranslation(["leave", "common"]);
   const [leaveTypeId, setLeaveTypeId] = useState(typeOptions.length === 1 ? typeOptions[0].id : "");
   const [days, setDays] = useState("");
   const [effectiveDate, setEffectiveDate] = useState(todayDateOnly());
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AdjustFieldErrors>({});
 
   const mutation = useMutation({
     mutationFn: (input: LeaveAdjustmentInput) => adjustLeaveBalance(employeeId, input),
@@ -423,13 +432,23 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
     onError: (err) => setError(getApiErrorMessage(err, t("leave:genericError"))),
   });
 
+  /** Clears one field's validation message as soon as the field is edited. */
+  function clearFieldError(field: keyof AdjustFieldErrors) {
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     const parsed = Number(days);
-    if (!leaveTypeId) return setError(t("leave:actions.validation.typeRequired"));
-    if (days.trim() === "" || !Number.isFinite(parsed) || parsed === 0) return setError(t("leave:actions.validation.daysInvalid"));
-    if (!effectiveDate) return setError(t("leave:actions.validation.dateRequired"));
-    if (!reason.trim()) return setError(t("leave:actions.validation.reasonRequired"));
+    // Every required field is marked at once (B6), not just the first missing one.
+    const nextErrors: AdjustFieldErrors = {
+      type: leaveTypeId ? undefined : t("leave:actions.validation.typeRequired"),
+      days: days.trim() === "" || !Number.isFinite(parsed) || parsed === 0 ? t("leave:actions.validation.daysInvalid") : undefined,
+      date: effectiveDate ? undefined : t("leave:actions.validation.dateRequired"),
+      reason: reason.trim() ? undefined : t("leave:actions.validation.reasonRequired"),
+    };
+    setFieldErrors(nextErrors);
+    if (Object.values(nextErrors).some(Boolean)) return;
     setError(null);
     mutation.mutate({ leaveTypeId, days: parsed, effectiveDate, reason: reason.trim() });
   }
@@ -437,7 +456,7 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
   const busy = mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} size="32rem" title={t("leave:actions.adjust")}>
+    <FormModal opened onClose={onClose} size="32rem" title={t("leave:actions.adjust")} closeOnClickOutside={false}>
       <form onSubmit={submit}>
         <Stack gap="md">
           <Text size="sm" c="dimmed">
@@ -449,7 +468,11 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
             withAsterisk
             placeholder={t("leave:actions.type")}
             value={leaveTypeId || null}
-            onChange={(value) => setLeaveTypeId(value ?? "")}
+            onChange={(value) => {
+              setLeaveTypeId(value ?? "");
+              clearFieldError("type");
+            }}
+            error={fieldErrors.type}
             allowDeselect={false}
             disabled={busy}
             data={typeOptions.map((option) => ({ value: option.id, label: option.name }))}
@@ -464,10 +487,22 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
               decimalScale={2}
               value={days}
               disabled={busy}
-              onChange={(value) => setDays(String(value))}
+              error={fieldErrors.days}
+              onChange={(value) => {
+                setDays(String(value));
+                clearFieldError("days");
+              }}
             />
-            <Input.Wrapper id="adjust-date" label={t("leave:actions.effectiveDate")} withAsterisk>
-              <DatePicker id="adjust-date" value={effectiveDate} disabled={busy} onChange={setEffectiveDate} />
+            <Input.Wrapper id="adjust-date-field" labelProps={{ htmlFor: "adjust-date" }} label={t("leave:actions.effectiveDate")} error={fieldErrors.date} withAsterisk>
+              <DatePicker
+                id="adjust-date"
+                value={effectiveDate}
+                disabled={busy}
+                onChange={(value) => {
+                  setEffectiveDate(value);
+                  clearFieldError("date");
+                }}
+              />
             </Input.Wrapper>
           </div>
           <Textarea
@@ -479,7 +514,11 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
             disabled={busy}
             autosize
             minRows={3}
-            onChange={(e) => setReason(e.currentTarget.value)}
+            error={fieldErrors.reason}
+            onChange={(e) => {
+              setReason(e.currentTarget.value);
+              clearFieldError("reason");
+            }}
           />
           {error && (
             <Text size="sm" c="red" role="alert">
@@ -496,6 +535,6 @@ function AdjustBalanceDialog({ employeeId, typeOptions, onClose, onSaved }: Adju
           </Group>
         </Stack>
       </form>
-    </Modal>
+    </FormModal>
   );
 }
