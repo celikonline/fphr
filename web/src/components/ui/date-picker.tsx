@@ -16,6 +16,8 @@ export interface DatePickerProps {
   min?: string;
   max?: string;
   disabled?: boolean;
+  /** Marks the input with the error styling (the message itself lives on the surrounding `Input.Wrapper`). */
+  invalid?: boolean;
   placeholder?: string;
   /** Shows a clear button while a value is set (optional fields and filters). */
   clearable?: boolean;
@@ -58,6 +60,7 @@ export function DatePicker({
   min,
   max,
   disabled,
+  invalid,
   placeholder,
   clearable,
   className,
@@ -107,6 +110,7 @@ export function DatePicker({
         maxDate={max || undefined}
         defaultDate={value || min || undefined}
         disabled={disabled}
+        error={invalid || undefined}
         placeholder={placeholder ?? t("common:pickDate")}
         clearable={clearable}
         clearButtonProps={{ "aria-label": t("common:clear") }}

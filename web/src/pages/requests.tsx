@@ -38,7 +38,7 @@ export default function RequestsPage() {
   const visible = REQUEST_TYPES.filter((type) => availability[type.key]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2">
           {t("navigation:nav.requests")}

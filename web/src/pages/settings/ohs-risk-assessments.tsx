@@ -10,6 +10,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
+import { daysUntil, formatDateOnly } from "@/lib/dates";
 import { listLocations } from "@/services/locations.service";
 import { listRiskAssessments, recordRiskAssessment, type HazardClass, type RiskAssessment } from "@/services/ohs.service";
 
@@ -20,6 +21,24 @@ const HAZARD_CLASS_COLOR: Record<HazardClass, string> = { low: "green", medium: 
 
 function today(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+/** Renewal date in the app-wide date style; a date already in the past carries a red "overdue" badge. */
+function DueDate({ value }: { value: string }) {
+  const { t, i18n } = useTranslation(["ohs"]);
+  const overdue = daysUntil(value) < 0;
+  return (
+    <Group gap={6} wrap="nowrap">
+      <Text size="sm" c={overdue ? "red" : undefined}>
+        {formatDateOnly(value, i18n.language)}
+      </Text>
+      {overdue && (
+        <Badge color="red" variant="light" size="sm">
+          {t("ohs:riskAssessments.overdue")}
+        </Badge>
+      )}
+    </Group>
+  );
 }
 
 function assessmentErrorMessage(error: unknown, t: (key: string) => string): string {
@@ -38,7 +57,7 @@ export default function OhsRiskAssessmentsPage() {
 }
 
 function OhsRiskAssessmentsAdmin() {
-  const { t } = useTranslation(["ohs", "common"]);
+  const { t, i18n } = useTranslation(["ohs", "common"]);
   const canManage = usePermission("ohs.risk_assessments.manage");
   const isMobile = useMediaQuery("(max-width: 390px)");
 
@@ -79,12 +98,14 @@ function OhsRiskAssessmentsAdmin() {
       accessorKey: "assessmentDate",
       header: t("ohs:riskAssessments.columns.assessmentDate"),
       meta: { label: t("ohs:riskAssessments.columns.assessmentDate") },
+      cell: ({ row }) => formatDateOnly(row.original.assessmentDate, i18n.language),
     },
     {
       id: "nextDueDate",
       accessorKey: "nextDueDate",
       header: t("ohs:riskAssessments.columns.nextDueDate"),
       meta: { label: t("ohs:riskAssessments.columns.nextDueDate") },
+      cell: ({ row }) => <DueDate value={row.original.nextDueDate} />,
     },
     {
       id: "preparedBy",
@@ -97,7 +118,7 @@ function OhsRiskAssessmentsAdmin() {
   const table = useDataTable({ columns, data: assessments, getRowId: (a) => a.id });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -140,7 +161,7 @@ function AssessmentsMobileList({
   isLoading: boolean;
   locationName: (id: string) => string;
 }) {
-  const { t } = useTranslation(["ohs", "common"]);
+  const { t, i18n } = useTranslation(["ohs", "common"]);
 
   if (isLoading) return <Skeleton h={160} />;
 
@@ -166,8 +187,14 @@ function AssessmentsMobileList({
               {t(`ohs:enum.hazardClass.${assessment.hazardClassAtAssessment}`)}
             </Badge>
             <Text size="xs" c="dimmed">
-              {assessment.assessmentDate} — {t("ohs:riskAssessments.columns.nextDueDate")}: {assessment.nextDueDate}
+              {formatDateOnly(assessment.assessmentDate, i18n.language)}
             </Text>
+            <Group gap={6} wrap="nowrap">
+              <Text size="xs" c="dimmed">
+                {t("ohs:riskAssessments.columns.nextDueDate")}:
+              </Text>
+              <DueDate value={assessment.nextDueDate} />
+            </Group>
             <Text size="xs" c="dimmed">
               {assessment.preparedBy}
             </Text>

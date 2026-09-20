@@ -39,6 +39,18 @@
         "label": "Urlaubsbericht",
         "description": "Urlaubsanträge im gewählten Zeitraum: Art, Dauer, Status, Antrags- und Entscheidungsdatum."
       },
+      "overtime": {
+        "monthly": {
+          "label": "Monatlicher Überstundenbericht",
+          "description": "Genehmigte Überstundenanträge des gewählten Monats: Dauer, Vergütungssatz und gegebenenfalls Umwandlung in Freizeit oder Auszahlung."
+        }
+      },
+      "reconciliation": {
+        "form": {
+          "label": "Urlaubsabstimmungsformular",
+          "description": "Übersicht der im gewählten Zeitraum genommenen genehmigten Urlaube je Mitarbeiter, druckbar mit leeren Spalten für Unterschrift und HR-Freigabe."
+        }
+      },
       "company_ledger": {
         "label": "Unternehmensweites Urlaubs-/Überstundenregister",
         "description": "Excel-Export der unternehmensweiten Ansicht neben \"Mein Urlaub\"/\"Meine Überstunden\": wer im gewählten Monat im Urlaub ist, Jahresurlaubssaldo und Jahresüberstunden (270-Stunden-Grenze)."

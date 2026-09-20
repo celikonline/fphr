@@ -39,6 +39,18 @@
         "label": "Leave report",
         "description": "Leave requests in the selected date range: type, duration, status, request and decision dates."
       },
+      "overtime": {
+        "monthly": {
+          "label": "Monthly overtime report",
+          "description": "Approved overtime requests for the selected month: duration, pay rate and, where applicable, conversion to leave or payment."
+        }
+      },
+      "reconciliation": {
+        "form": {
+          "label": "Leave reconciliation form",
+          "description": "Summary of the approved leave each employee used in the selected period, printable with blank columns for the employee's signature and HR approval."
+        }
+      },
       "company_ledger": {
         "label": "Company-wide leave/overtime ledger",
         "description": "Excel export of the company-wide view next to \"My Leave\"/\"My Overtime\": who is on leave in the selected month, annual leave balance and annual overtime (270-hour limit)."

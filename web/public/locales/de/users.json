@@ -68,5 +68,25 @@
     "location": "Standort",
     "company": "Unternehmen",
     "custom": "Benutzerdefiniert"
+  },
+  "roleNames": {
+    "Owner": "Kontoinhaber",
+    "Admin": "Systemadministrator",
+    "HR": "HR-Manager",
+    "HRSpecialist": "HR-Sachbearbeiter",
+    "PayrollSpecialist": "Lohnbuchhalter",
+    "Finance": "Finanzen",
+    "Manager": "Führungskraft",
+    "Timekeeper": "Zeiterfassung",
+    "Recruiter": "Recruiter",
+    "Interviewer": "Interviewer",
+    "Auditor": "Prüfer",
+    "ExternalAccountant": "Externer Steuerberater",
+    "ITAdmin": "IT-Administrator",
+    "Employee": "Mitarbeiter",
+    "Intern": "Praktikant",
+    "Contractor": "Externer Dienstleister",
+    "ApiIntegration": "Integration (Servicekonto)",
+    "SuperAdmin": "Super-Admin"
   }
 }

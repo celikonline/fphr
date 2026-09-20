@@ -44,7 +44,7 @@ export default function SupportPage() {
   const { t } = useTranslation(["support", "navigation", "common"]);
 
   return (
-    <div className="mx-auto max-w-5xl p-6 md:p-10">
+    <div className="max-w-5xl p-6 md:p-10">
       <Group gap="xs" mb="lg">
         <LifeBuoy size={28} className="text-orange-500" />
         <Title order={2}>{t("navigation:nav.support")}</Title>

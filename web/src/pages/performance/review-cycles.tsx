@@ -83,7 +83,7 @@ function ReviewCycles() {
   const canManageView = usePermission("performance.reviews.view");
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-10">
+    <div className="max-w-4xl space-y-6 p-4 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <CalendarRange className="h-6 w-6" /> {t("performance:reviewCycles.title")}

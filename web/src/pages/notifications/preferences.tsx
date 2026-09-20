@@ -68,7 +68,7 @@ function NotificationPreferences() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={2} className="flex items-center gap-2">
           <BellRing size={24} /> {t("notifications:preferences.title")}

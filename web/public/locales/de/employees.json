@@ -16,7 +16,7 @@
   "unknownUnit": "Unbekannte Einheit",
   "unknownEmployee": "Unbekannte:r Mitarbeitende:r",
   "noUnit": "Keine Einheit",
-  "phase": "Phase {{phase}}",
+  "phase": "Demnächst",
   "create": {
     "button": "Neue:n Mitarbeitende:n hinzufügen",
     "title": "Neue:n Mitarbeitende:n hinzufügen",
@@ -350,7 +350,7 @@
     "tabNotes": {
       "leave": "Urlaubssalden und -anträge erscheinen hier, sobald das Urlaubsmodul verfügbar ist.",
       "overtime": "Überstundeneinträge und -anträge erscheinen hier, sobald das Urlaubs-/Überstundenmodul verfügbar ist.",
-      "other": "Schulungen werden in späteren Phasen in diesem Tab ergänzt."
+      "other": "Schulungsnachweise sind in diesem Tab noch nicht verfügbar."
     },
     "noAccountHint": "Diese Person hat noch kein Benutzerkonto. Senden Sie über das Drei-Punkte-Menü eine Einladung, um eines anzulegen.",
     "accessTypeHint": "Nur Kontoinhaber:innen können die Rolle „Kontoinhaber:in“ vergeben oder entziehen.",

@@ -205,7 +205,7 @@ function LeaveCalendar() {
   };
 
   return (
-    <div className={`${classes.root} mx-auto flex max-w-[96rem] flex-col gap-6 p-6 md:p-10`}>
+    <div className={`${classes.root} flex max-w-[96rem] flex-col gap-6 p-6 md:p-10`}>
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <CalendarDays className="h-6 w-6" /> {t("leave:calendar.title")}

@@ -38,7 +38,8 @@
       "locationRequired": "Standort ist erforderlich.",
       "preparedByRequired": "Erstellt von ist erforderlich.",
       "hazardClassificationMissing": "Für diesen Standort muss zuerst eine Gefahrenklasse zugewiesen werden."
-    }
+    },
+    "overdue": "Überfällig"
   },
   "enum": {
     "hazardClass": {

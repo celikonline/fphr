@@ -78,7 +78,7 @@ function AssetCategoriesAdmin() {
   const table = useDataTable({ columns, data: categories, getRowId: (c) => c.id });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">

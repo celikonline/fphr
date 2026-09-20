@@ -16,6 +16,9 @@
     },
     "approval": {
       "task_assigned": "Ein Antrag wartet auf meine Genehmigung"
+    },
+    "documents": {
+      "expiry_reminder": "Ein Dokument läuft demnächst ab"
     }
   },
   "preferences": {
@@ -33,7 +36,8 @@
   "category": {
     "account": "Konto",
     "request": "Anträge",
-    "approval": "Genehmigungen"
+    "approval": "Genehmigungen",
+    "reminder": "Erinnerungen"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"

@@ -72,10 +72,18 @@ export function validateGeneral(values: EmployeeGeneralValues, t: TFn): FieldErr
   return errors;
 }
 
-/** Maps ProblemDetails `errors` (PascalCase property names) onto form fields. */
+/** Conflict codes (ProblemDetails `code`, no `errors` map) that belong to one form field. */
+const CODE_FIELDS: Record<string, EmployeeGeneralField> = {
+  "employee.work_email_taken": "workEmail",
+  "employee.national_id_taken": "nationalId",
+};
+
+/** Maps ProblemDetails `errors` (PascalCase property names) and field-bound conflict codes onto form fields. */
 export function serverFieldErrors(error: unknown): FieldErrors {
   const problem = getApiProblem(error);
   const result: FieldErrors = {};
+  const codeField = problem?.code ? CODE_FIELDS[problem.code] : undefined;
+  if (codeField && problem?.detail) result[codeField] = problem.detail;
   for (const [key, messages] of Object.entries(problem?.errors ?? {})) {
     const field = (key.charAt(0).toLowerCase() + key.slice(1)) as EmployeeGeneralField;
     if (field in EMPTY_GENERAL_VALUES && messages.length > 0) result[field] = messages[0];

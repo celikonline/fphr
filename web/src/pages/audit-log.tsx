@@ -27,6 +27,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
+import { formatDateTime } from "@/lib/dates";
 import {
   exportAuditEventsCsv,
   listAuditActionTypes,
@@ -148,7 +149,7 @@ export default function AuditLogPage() {
   }
 
   function formatTimestamp(value: string) {
-    return new Date(value).toLocaleString(i18n.language === "tr" ? "tr-TR" : "en-US");
+    return formatDateTime(value, i18n.language);
   }
 
   function changeSorting(next: SortingState) {
@@ -197,6 +198,7 @@ export default function AuditLogPage() {
       enableSorting: false,
       header: t("audit:resource"),
       meta: { label: t("audit:resource") },
+      cell: ({ row }) => auditResourceLabel(t, row.original.resource),
     },
     {
       id: "source",
@@ -226,7 +228,7 @@ export default function AuditLogPage() {
   if (getApiErrorStatus(error) === 403) return <NoAccess />;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -346,6 +348,11 @@ function AuditDetailsCell({
   );
 }
 
+/** Backend entity class name ("OvertimeRequest") as a localized label; an entity without a translation keeps its raw name. */
+function auditResourceLabel(t: (key: string, options?: Record<string, unknown>) => string, resource: string): string {
+  return t(`audit:resourceTypes.${resource}`, { defaultValue: resource });
+}
+
 /** ≤390px card list mirroring the desktop table's columns (Faz 1 tur 1 FE md.3). */
 function AuditLogMobileList({
   items,
@@ -388,7 +395,7 @@ function AuditLogMobileList({
             </Text>
             <Group gap={6} wrap="wrap">
               <Text size="sm" c="dimmed">
-                {event.resource}
+                {auditResourceLabel(t, event.resource)}
               </Text>
               <AuditSourceLabel source={event.source} t={t} />
             </Group>

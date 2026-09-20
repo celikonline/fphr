@@ -82,7 +82,7 @@ function PayrollPeriodDetail() {
 
   if (periodQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl p-6 md:p-10">
+      <div className="max-w-4xl p-6 md:p-10">
         <Text c="dimmed">{t("common:loading")}</Text>
       </div>
     );
@@ -90,7 +90,7 @@ function PayrollPeriodDetail() {
 
   if (periodQuery.isError || !periodQuery.data) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+      <div className="max-w-4xl space-y-6 p-6 md:p-10">
         <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
           <ArrowLeft size={14} /> {t("payroll:periods.title")}
         </Link>
@@ -105,7 +105,7 @@ function PayrollPeriodDetail() {
   );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
         <ArrowLeft size={14} /> {t("payroll:periods.title")}
       </Link>

@@ -7,7 +7,7 @@ export default function NoAccess() {
   const { t } = useTranslation(["common"]);
 
   return (
-    <div className="mx-auto max-w-3xl p-6 md:p-10">
+    <div className="max-w-3xl p-6 md:p-10">
       <Card withBorder padding="xl">
         <Stack align="center" gap="xs" ta="center" py="md">
           <Text c="dimmed" lh={0}>

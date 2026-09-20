@@ -16,6 +16,9 @@
     },
     "approval": {
       "task_assigned": "Onayımı bekleyen bir talep olduğunda"
+    },
+    "documents": {
+      "expiry_reminder": "Belge süresi dolmak üzere olduğunda"
     }
   },
   "preferences": {
@@ -33,7 +36,8 @@
   "category": {
     "account": "Hesap",
     "request": "Talepler",
-    "approval": "Onaylar"
+    "approval": "Onaylar",
+    "reminder": "Hatırlatmalar"
   },
   "types": {
     "documentExpiryReminder": "Belge süresi dolmak üzere"

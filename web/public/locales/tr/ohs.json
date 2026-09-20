@@ -38,7 +38,8 @@
       "locationRequired": "Konum seçimi zorunludur.",
       "preparedByRequired": "Hazırlayan alanı zorunludur.",
       "hazardClassificationMissing": "Bu konum için önce tehlike sınıfı atanmalı."
-    }
+    },
+    "overdue": "Süresi geçti"
   },
   "enum": {
     "hazardClass": {

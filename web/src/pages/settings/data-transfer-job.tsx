@@ -46,7 +46,7 @@ function DataTransferJob() {
   const isFinished = job ? FINISHED_JOB_STATUSES.includes(job.status) : false;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Stack gap="sm" align="flex-start">
         <Button
           component={Link}

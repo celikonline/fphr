@@ -10,7 +10,7 @@ export function ModuleDisabledPage({ moduleKey }: { moduleKey: string }) {
   const { t } = useTranslation(["settings", "common"]);
 
   return (
-    <div className="mx-auto max-w-3xl p-6 md:p-10">
+    <div className="max-w-3xl p-6 md:p-10">
       <Card withBorder padding="xl" data-testid="module-disabled">
         <Stack align="center" gap="xs" ta="center" py="md">
           <Text c="dimmed" lh={0}>

@@ -15,7 +15,7 @@ export default function AppsPage() {
   const activeApps = useVisibleItems(ACTIVE_APPS);
 
   return (
-    <Stack gap="lg" className="mx-auto max-w-5xl p-6 md:p-10">
+    <Stack gap="lg" className="max-w-5xl p-6 md:p-10">
       <div>
         <Title order={1} fz={24}>
           <Group gap="xs" component="span">

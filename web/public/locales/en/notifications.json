@@ -16,6 +16,9 @@
     },
     "approval": {
       "task_assigned": "A request is waiting for my approval"
+    },
+    "documents": {
+      "expiry_reminder": "A document is about to expire"
     }
   },
   "preferences": {
@@ -33,7 +36,8 @@
   "category": {
     "account": "Account",
     "request": "Requests",
-    "approval": "Approvals"
+    "approval": "Approvals",
+    "reminder": "Reminders"
   },
   "types": {
     "documentExpiryReminder": "Document expiring soon"

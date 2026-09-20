@@ -294,7 +294,7 @@ export default function AccountPage() {
   const currentLanguage = LANGUAGES.find((lang) => i18n.resolvedLanguage?.startsWith(lang.value))?.value ?? "tr";
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} fz={24}>
           <Group gap="xs" component="span">

@@ -68,5 +68,25 @@
     "location": "Location",
     "company": "Company",
     "custom": "Custom"
+  },
+  "roleNames": {
+    "Owner": "Account Owner",
+    "Admin": "System Administrator",
+    "HR": "HR Manager",
+    "HRSpecialist": "HR Specialist",
+    "PayrollSpecialist": "Payroll Specialist",
+    "Finance": "Finance",
+    "Manager": "Manager",
+    "Timekeeper": "Timekeeper",
+    "Recruiter": "Recruiter",
+    "Interviewer": "Interviewer",
+    "Auditor": "Auditor",
+    "ExternalAccountant": "External Accountant",
+    "ITAdmin": "IT Administrator",
+    "Employee": "Employee",
+    "Intern": "Intern",
+    "Contractor": "Contractor",
+    "ApiIntegration": "Integration (Service Account)",
+    "SuperAdmin": "Super Admin"
   }
 }

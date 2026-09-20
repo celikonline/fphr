@@ -183,7 +183,7 @@ function JobPostingDetail() {
 
   if (postingQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-5xl p-6 md:p-10">
+      <div className="max-w-5xl p-6 md:p-10">
         <Text c="dimmed">{t("common:loading")}</Text>
       </div>
     );
@@ -191,7 +191,7 @@ function JobPostingDetail() {
 
   if (postingQuery.isError || !postingQuery.data) {
     return (
-      <div className="mx-auto max-w-5xl p-6 md:p-10">
+      <div className="max-w-5xl p-6 md:p-10">
         <Text c="red">{getApiErrorMessage(postingQuery.error, t("recruitment:genericError"))}</Text>
       </div>
     );
@@ -200,7 +200,7 @@ function JobPostingDetail() {
   const posting = postingQuery.data;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-5xl space-y-6 p-6 md:p-10">
       <Link to="/app/recruitment/postings" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
         <ArrowLeft size={14} /> {t("recruitment:postings.title")}
       </Link>

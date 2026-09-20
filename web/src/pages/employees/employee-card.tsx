@@ -48,7 +48,7 @@ export default function EmployeeCardPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-4 p-6 md:p-10">
+      <div className="max-w-5xl space-y-4 p-6 md:p-10">
         <Skeleton h={80} />
         <Skeleton h={256} />
       </div>
@@ -61,7 +61,7 @@ export default function EmployeeCardPage() {
     const notFound = status === 404 || (!error && !employee);
     const iconColor = "var(--mantine-color-dimmed)";
     return (
-      <div className="mx-auto max-w-3xl p-6 md:p-10">
+      <div className="max-w-3xl p-6 md:p-10">
         <Card withBorder padding="xl">
           <Stack align="center" gap="sm" ta="center">
             {forbidden ? <Lock size={32} color={iconColor} /> : <SearchX size={32} color={iconColor} />}
@@ -90,7 +90,7 @@ export default function EmployeeCardPage() {
   const ActiveTab = active.component;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-5xl space-y-6 p-6 md:p-10">
       <Button
         component={Link}
         to="/app/employees"

@@ -32,6 +32,7 @@ import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
 import { getApiProblem } from "@/lib/api-error";
 import { enumLabel } from "@/lib/i18n-enum";
+import { roleDisplayName } from "@/lib/role-name";
 import {
   bulkAssignRole,
   deriveAccessType,
@@ -78,7 +79,7 @@ export default function UsersRolesPage() {
   const canManage = usePermission("identity.users.manage");
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <UsersIcon className="h-6 w-6" /> {t("users:title")}
@@ -393,7 +394,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
         <Group gap={4}>
           {row.original.roles.slice(0, 2).map((r) => (
             <Badge key={r.id} variant="outline" color="gray">
-              {r.name ?? r.code}
+              {roleDisplayName(t, r)}
             </Badge>
           ))}
           {row.original.roles.length > 2 && (
@@ -578,7 +579,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                     <Badge {...STATUS_BADGE[user.status]}>{t(`users:status.${user.status}`)}</Badge>
                     {user.roles.slice(0, 2).map((r) => (
                       <Badge key={r.id} variant="outline" color="gray">
-                        {r.name ?? r.code}
+                        {roleDisplayName(t, r)}
                       </Badge>
                     ))}
                     {user.roles.length > 2 && (

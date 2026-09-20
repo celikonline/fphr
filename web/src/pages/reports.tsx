@@ -86,7 +86,7 @@ export default function ReportsPage() {
   const activeTab = tab ?? (canUseReports ? "reports" : "kpis");
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
+    <div className="max-w-7xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <BarChart3 size={28} className="text-indigo-600" /> {t("reports:title")}

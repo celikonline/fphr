@@ -220,7 +220,7 @@ export default function OrgChartPage() {
 
   if (getApiErrorStatus(error) === 403) {
     return (
-      <div className="mx-auto max-w-3xl p-6 md:p-10">
+      <div className="max-w-3xl p-6 md:p-10">
         <Card withBorder padding="xl">
           <Stack align="center" gap="sm" ta="center">
             <EyeOff size={32} color="var(--mantine-color-dimmed)" />

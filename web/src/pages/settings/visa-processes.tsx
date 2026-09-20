@@ -37,7 +37,7 @@ export default function VisaProcessesPage() {
 function VisaProcessesAdmin() {
   const { t } = useTranslation(["documents"]);
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-5xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <Stamp className="h-6 w-6" /> {t("documents:visa.settings.title")}

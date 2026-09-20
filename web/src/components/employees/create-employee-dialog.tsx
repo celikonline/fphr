@@ -110,7 +110,10 @@ export default function CreateEmployeeDialog({ open, onOpenChange }: CreateEmplo
             values={values}
             errors={errors}
             disabled={mutation.isPending}
-            onChange={(field, value) => setValues((prev) => ({ ...prev, [field]: value }))}
+            onChange={(field, value) => {
+              setValues((prev) => ({ ...prev, [field]: value }));
+              setErrors((prev) => ({ ...prev, [field]: undefined }));
+            }}
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <OrgUnitSelect

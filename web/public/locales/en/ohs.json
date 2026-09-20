@@ -38,7 +38,8 @@
       "locationRequired": "Location is required.",
       "preparedByRequired": "Prepared by is required.",
       "hazardClassificationMissing": "This location needs a hazard class assigned first."
-    }
+    },
+    "overdue": "Overdue"
   },
   "enum": {
     "hazardClass": {

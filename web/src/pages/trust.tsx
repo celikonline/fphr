@@ -18,7 +18,7 @@ export default function TrustPage() {
   const { t } = useTranslation(["trust"]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <ShieldCheck className="h-6 w-6" /> {t("trust:title")}

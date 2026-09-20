@@ -16,7 +16,7 @@
   "unknownUnit": "Bilinmeyen birim",
   "unknownEmployee": "Bilinmeyen çalışan",
   "noUnit": "Birim yok",
-  "phase": "Faz {{phase}}",
+  "phase": "Yakında",
   "create": {
     "button": "Yeni çalışan ekle",
     "title": "Yeni çalışan ekle",
@@ -350,7 +350,7 @@
     "tabNotes": {
       "leave": "İzin bakiyeleri ve talepleri İzin modülü devreye girdiğinde bu sekmede görünecek.",
       "overtime": "Fazla mesai kayıtları ve talepleri İzin/Fazla mesai modülü devreye girdiğinde bu sekmede görünecek.",
-      "other": "Eğitimler sonraki fazlarda bu sekmeye eklenecek."
+      "other": "Eğitim kayıtları bu sekmede henüz kullanılamıyor."
     },
     "noAccountHint": "Bu çalışanın henüz kullanıcı hesabı yok. Üç nokta menüsünden davetiye göndererek hesap oluşturabilirsiniz.",
     "accessTypeHint": "Hesap sahibi rolünü yalnızca bir hesap sahibi verebilir veya kaldırabilir.",

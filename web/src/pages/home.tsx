@@ -896,7 +896,7 @@ export default function HomePage() {
   const hasAnyWidget = columns.some((column) => column.length > 0);
 
   return (
-    <div className="mx-auto max-w-6xl p-5 md:p-7">
+    <div className="max-w-6xl p-5 md:p-7">
       {hasAnyWidget ? (
         <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-3">
           {columns.map((column, index) => (
