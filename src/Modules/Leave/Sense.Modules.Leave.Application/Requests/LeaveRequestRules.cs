@@ -27,7 +27,8 @@ public sealed class LeaveRequestRules(
     ILeaveRequestRepository requests,
     ILeaveLedgerRepository ledger,
     ILeaveDayCalculator dayCalculator,
-    LeaveBalanceService balances)
+    LeaveBalanceService balances,
+    LeaveBackdatePolicy backdatePolicy)
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
@@ -36,6 +37,12 @@ public sealed class LeaveRequestRules(
         if (end < start)
         {
             return Error.Validation(LeaveDomainErrors.RequestInvalidRange);
+        }
+
+        // Only the employee's own request is bounded; HR entering leave on behalf (requireSelfService: false) may backdate freely.
+        if (requireSelfService && start < await backdatePolicy.EarliestSelfServiceStartAsync(tenantId, ct))
+        {
+            return Error.Rule(LeaveRequestErrors.StartDateTooFarInPast, ("max", LeaveBackdatePolicy.SelfServiceMaxBackdateDays));
         }
 
         var profile = await profiles.FindByEmployeeIdAsync(employeeId, ct);

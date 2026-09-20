@@ -28,6 +28,7 @@ public static class LeaveServiceCollectionExtensions
         services.AddLeaveCoreServices(configuration);
         services.AddScoped<IWorkScheduleReader, WorkScheduleReaderAdapter>();
         services.AddScoped<ILeaveDayCalculator, LeaveDayCalculator>();
+        services.AddScoped<LeaveBackdatePolicy>();
         services.AddScoped<LeaveRequestRules>();
         services.AddScoped<OvertimeRequestRules>();
         services.AddScoped<LeaveRequestDetailBuilder>();

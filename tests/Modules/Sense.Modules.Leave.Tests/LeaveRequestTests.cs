@@ -183,7 +183,7 @@ public sealed class LeaveRequestStateTests
 /// <summary>Submit → Workflow start (substituted IWorkflowService) → ApprovalCompleted/ApprovalRejected through IEventBus, on real PostgreSQL.</summary>
 [Collection("PostgreSQL")]
 [Trait("Category", "Integration")]
-public sealed class LeaveRequestIntegrationTests : TestFixture
+public sealed partial class LeaveRequestIntegrationTests : TestFixture
 {
     private readonly IWorkflowService _workflow = Substitute.For<IWorkflowService>();
     private readonly ICurrentUser _currentUser = Substitute.For<ICurrentUser>();

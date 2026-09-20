@@ -682,6 +682,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="leave.errors.partial_day_requires_single_date" xml:space="preserve"><value>Yarım gün veya saatlik izin yalnız tek bir gün için alınabilir.</value></data>
   <data name="leave.errors.partial_day_time_invalid" xml:space="preserve"><value>Bu izin türü için saat aralığı veya yarım gün seçimi eksik ya da geçersiz.</value></data>
   <data name="leave.errors.type_not_available" xml:space="preserve"><value>Bu izin türü talep edilemez.</value></data>
+  <data name="leave.errors.start_date_too_far_past" xml:space="preserve"><value>İzin başlangıç tarihi bugünden en fazla {max} gün öncesi olabilir. Daha eski tarihli izin için İK'dan talep girmesini isteyin.</value></data>
   <data name="leave.errors.overlap" xml:space="preserve"><value>Bu tarihlerde bekleyen veya onaylı başka bir izniniz var.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>Bu izin türünde bir talepte en fazla {max} gün alınabilir.</value></data>
   <data name="leave.errors.below_min_days" xml:space="preserve"><value>Bu izin türünde en az {min} gün talep edilmelidir.</value></data>

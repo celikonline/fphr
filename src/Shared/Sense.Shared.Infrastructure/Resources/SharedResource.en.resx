@@ -673,6 +673,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="leave.errors.partial_day_requires_single_date" xml:space="preserve"><value>A half-day or hourly leave request can only cover a single day.</value></data>
   <data name="leave.errors.partial_day_time_invalid" xml:space="preserve"><value>This leave type requires a valid time range or half-day selection.</value></data>
   <data name="leave.errors.type_not_available" xml:space="preserve"><value>This leave type cannot be requested.</value></data>
+  <data name="leave.errors.start_date_too_far_past" xml:space="preserve"><value>The leave start date can be at most {max} days before today. For older dates, ask HR to enter the leave for you.</value></data>
   <data name="leave.errors.overlap" xml:space="preserve"><value>You already have a pending or approved leave on these dates.</value></data>
   <data name="leave.errors.above_per_request_limit" xml:space="preserve"><value>At most {max} days can be requested at once for this leave type.</value></data>
   <data name="leave.errors.below_min_days" xml:space="preserve"><value>At least {min} days must be requested for this leave type.</value></data>
