@@ -29,6 +29,10 @@ public interface IEmployeeWorkScheduleAssignmentRepository
 {
     void Add(EmployeeWorkScheduleAssignment assignment);
 
+    void Remove(EmployeeWorkScheduleAssignment assignment);
+
+    Task<Result<EmployeeWorkScheduleAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     /// <summary>The assignment in effect on <paramref name="date"/> (latest EffectiveFrom on or before it), or null if none.</summary>
     Task<EmployeeWorkScheduleAssignment?> FindEffectiveOnAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default);
 

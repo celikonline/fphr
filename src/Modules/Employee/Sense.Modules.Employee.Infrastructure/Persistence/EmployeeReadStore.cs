@@ -166,10 +166,12 @@ public sealed class EmployeeReadStore(EmployeeDbContext db, TimeProvider clock) 
         {
             var pattern = ContainsPattern(c.Q);
             var searchNationalId = c.SearchNationalId;
+            // O-3: Use Unaccent for Turkish character matching (ş=s, ı=i, ü=u, etc.) - senseik-042
+            var unaccentedPattern = EF.Functions.Unaccent(pattern);
             query = query.Where(e =>
-                EF.Functions.ILike(e.DisplayName, pattern, LikeEscape.ToString()) ||
-                EF.Functions.ILike(e.FirstName, pattern, LikeEscape.ToString()) ||
-                EF.Functions.ILike(e.LastName, pattern, LikeEscape.ToString()) ||
+                EF.Functions.ILike(EF.Functions.Unaccent(e.DisplayName), unaccentedPattern, LikeEscape.ToString()) ||
+                EF.Functions.ILike(EF.Functions.Unaccent(e.FirstName), unaccentedPattern, LikeEscape.ToString()) ||
+                EF.Functions.ILike(EF.Functions.Unaccent(e.LastName), unaccentedPattern, LikeEscape.ToString()) ||
                 (e.WorkEmail != null && EF.Functions.ILike(e.WorkEmail, pattern, LikeEscape.ToString())) ||
                 (e.PersonalEmail != null && EF.Functions.ILike(e.PersonalEmail, pattern, LikeEscape.ToString())) ||
                 (searchNationalId && e.NationalId != null && EF.Functions.ILike(e.NationalId, pattern, LikeEscape.ToString())));

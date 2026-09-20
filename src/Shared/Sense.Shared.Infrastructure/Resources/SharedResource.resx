@@ -768,6 +768,9 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="attendance.work_schedule.days_count_invalid" xml:space="preserve"><value>Çalışma takvimi haftanın 7 gününü de içermelidir.</value></data>
   <data name="attendance.work_schedule.day_range_invalid" xml:space="preserve"><value>Çalışma günü için başlangıç/bitiş saati eksik veya bitiş başlangıçtan önce.</value></data>
   <data name="attendance.work_schedule.day_break_invalid" xml:space="preserve"><value>Mola saatleri çalışma saatleri içinde ve tutarlı olmalıdır.</value></data>
+  <data name="attendance.assignment.not_found" xml:space="preserve"><value>Çalışma takvimi ataması bulunamadı.</value></data>
+  <data name="attendance.assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıç tarihinden önce olamaz.</value></data>
+  <data name="attendance.assignment.active_already_exists" xml:space="preserve"><value>Çalışanın zaten güncel bir çalışma takvimi ataması var.</value></data>
   <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>Varsayılan çalışma takvimi silinemez.</value></data>
   <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>Çalışanlara atanmış bir çalışma takvimi silinemez.</value></data>
   <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>Bu çalışma takvimi pasif durumda.</value></data>

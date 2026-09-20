@@ -643,12 +643,31 @@ export async function deleteWorkSchedule(id: string): Promise<void> {
 export async function assignWorkSchedule(
   id: string,
   employeeIds: string[],
-  effectiveFrom: string
+  effectiveFrom: string,
+  effectiveTo?: string | null
 ): Promise<void> {
   await apiClient.post(`${ATTENDANCE_BASE}/work-schedules/${id}/assign`, {
     employeeIds,
     effectiveFrom,
+    effectiveTo,
   });
+}
+
+/** Çalışma takvimi atamasını güncelle (11.3.6 Düzenle). */
+export async function updateWorkScheduleAssignment(
+  assignmentId: string,
+  effectiveFrom: string,
+  effectiveTo?: string | null
+): Promise<void> {
+  await apiClient.put(`${ATTENDANCE_BASE}/work-schedules/assignments/${assignmentId}`, {
+    effectiveFrom,
+    effectiveTo,
+  });
+}
+
+/** Çalışma takvimi atamasını sil (11.3.6 Sil). */
+export async function deleteWorkScheduleAssignment(assignmentId: string): Promise<void> {
+  await apiClient.delete(`${ATTENDANCE_BASE}/work-schedules/assignments/${assignmentId}`);
 }
 
 /** `WorkScheduleAssignmentSource` (11.3.6: tekil atama / toplu işlem / işe alım varsayılanı). */

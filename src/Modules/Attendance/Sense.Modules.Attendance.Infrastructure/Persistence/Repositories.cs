@@ -61,9 +61,17 @@ public sealed class EmployeeWorkScheduleAssignmentRepository(AttendanceDbContext
 {
     public void Add(EmployeeWorkScheduleAssignment assignment) => context.WorkScheduleAssignments.Add(assignment);
 
+    public void Remove(EmployeeWorkScheduleAssignment assignment) => context.WorkScheduleAssignments.Remove(assignment);
+
+    public async Task<Result<EmployeeWorkScheduleAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var assignment = await context.WorkScheduleAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return assignment is null ? Error.NotFound(AttendanceDomainErrors.AssignmentNotFound) : assignment;
+    }
+
     public async Task<EmployeeWorkScheduleAssignment?> FindEffectiveOnAsync(Guid employeeId, DateOnly date, CancellationToken cancellationToken = default) =>
         await context.WorkScheduleAssignments
-            .Where(a => a.EmployeeId == employeeId && a.EffectiveFrom <= date)
+            .Where(a => a.EmployeeId == employeeId && a.EffectiveFrom <= date && (a.EffectiveTo == null || a.EffectiveTo >= date))
             .OrderByDescending(a => a.EffectiveFrom)
             .FirstOrDefaultAsync(cancellationToken);
 

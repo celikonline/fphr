@@ -32,6 +32,8 @@ public static class OvertimeWarnings
     public const string NightConsentMissing = "leave.warnings.overtime_night_consent_missing";
     public const string OverlapsSchedule = "leave.warnings.overtime_overlaps_schedule";
     public const string AnnualLimitExceeded = "leave.warnings.overtime_annual_limit_exceeded";
+    public const string DailyLimitExceeded = "leave.warnings.overtime_daily_limit_exceeded";
+    public const string PastDateExceeded = "leave.warnings.overtime_past_date_exceeded";
 }
 
 public sealed record OvertimeRequestDto(
@@ -65,12 +67,22 @@ public sealed class OvertimeRequestRules(
 {
     public const decimal FallbackAnnualLimitHours = 270m;
 
-    public async Task<Result<OvertimeEvaluation>> EvaluateAsync(Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, CancellationToken ct)
+    public async Task<Result<OvertimeEvaluation>> EvaluateAsync(Guid tenantId, Guid employeeId, DateOnly workDate, TimeOnly startTime, int durationMinutes, CancellationToken ct, DateTime? now = null)
     {
         var warnings = new List<string>();
         var start = workDate.ToDateTime(startTime);
         var end = start.AddMinutes(durationMinutes);
         var lastDay = DateOnly.FromDateTime(end);
+
+        // O-1: Check if work date is more than 7 days in the past (senseik-042)
+        if (now is not null)
+        {
+            var today = await TenantLocalDateAsync(tenantId, now.Value, ct);
+            if (workDate < today.AddDays(-7))
+            {
+                warnings.Add(OvertimeWarnings.PastDateExceeded);
+            }
+        }
 
         var nearby = await requests.ListActiveAsync(employeeId, workDate.AddDays(-1), lastDay, ct);
         if (nearby.Any(r => r.Overlaps(start, end)))
@@ -115,6 +127,13 @@ public sealed class OvertimeRequestRules(
             : isWorkingDay(workDate) ? OvertimeDayKind.Workday
             : OvertimeDayKind.WeeklyRest;
 
+        // O-1: Check if total daily overtime (existing + new) exceeds 11 hours (660 minutes) - senseik-042
+        var sameDay = nearby.Where(r => r.WorkDate == workDate).Sum(r => r.DurationMinutes);
+        if (sameDay + durationMinutes > 660)
+        {
+            warnings.Add(OvertimeWarnings.DailyLimitExceeded);
+        }
+
         var (yearTotal, limitMinutes) = await GetAnnualUsageAsync(employeeId, workDate.Year, workDate, ct);
         if (yearTotal + durationMinutes > limitMinutes)
         {
@@ -152,7 +171,7 @@ public sealed class OvertimeRequestRules(
             return Error.Validation(OvertimeErrors.FutureDate);
         }
 
-        var evaluated = await EvaluateAsync(tenantId, employeeId, workDate, startTime, durationMinutes, ct);
+        var evaluated = await EvaluateAsync(tenantId, employeeId, workDate, startTime, durationMinutes, ct, now);
         if (evaluated.IsFailure)
         {
             return evaluated.Error;

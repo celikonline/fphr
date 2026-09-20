@@ -10,9 +10,7 @@ namespace Sense.Modules.Attendance.Application.WorkSchedules;
 
 /// <summary>
 /// Çalışan kartı "Kariyer &gt; Çalışma Takvimi" alt sekmesi (11.3.6): one dated assignment row. <see cref="EffectiveTo"/>
-/// is derived (the next assignment's EffectiveFrom minus one day; null on the chronologically last row, shown as "—"
-/// in the UI). <see cref="IsCurrent"/> is the row whose [EffectiveFrom, EffectiveTo] covers today - never the
-/// chronologically last row when that one is a future-dated assignment.
+/// stores its optional ending date. A row without an ending date is the active/current row.
 /// </summary>
 public sealed record EmployeeWorkScheduleAssignmentDto(
     Guid Id,
@@ -35,22 +33,15 @@ internal static class EmployeeWorkScheduleAssignmentMapper
         }
 
         var names = (await schedules.ListAsync(includeInactive: true, cancellationToken)).ToDictionary(s => s.Id, s => s.Name);
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        // Oldest first so each row can see the next one's EffectiveFrom (its own derived EffectiveTo).
-        var ordered = assignments.OrderBy(a => a.EffectiveFrom).ToList();
+        var ordered = assignments.OrderByDescending(a => a.EffectiveFrom).ToList();
         var result = new List<EmployeeWorkScheduleAssignmentDto>(ordered.Count);
         for (var i = 0; i < ordered.Count; i++)
         {
             var current = ordered[i];
-            var effectiveTo = i + 1 < ordered.Count ? ordered[i + 1].EffectiveFrom.AddDays(-1) : (DateOnly?)null;
-            var isCurrent = current.EffectiveFrom <= today && (effectiveTo is null || effectiveTo >= today);
             result.Add(new EmployeeWorkScheduleAssignmentDto(
                 current.Id, current.WorkScheduleId, names.GetValueOrDefault(current.WorkScheduleId, string.Empty),
-                current.EffectiveFrom, effectiveTo, isCurrent, current.Source, current.CreatedAt));
+                current.EffectiveFrom, current.EffectiveTo, current.EffectiveTo is null, current.Source, current.CreatedAt));
         }
-
-        // Newest first for display (Kariyer geçmişi ile aynı sıra - bkz. CareerSection).
-        result.Reverse();
         return result;
     }
 }

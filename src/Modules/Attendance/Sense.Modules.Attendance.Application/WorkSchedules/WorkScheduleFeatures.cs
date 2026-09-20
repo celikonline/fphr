@@ -202,7 +202,7 @@ public sealed class DeleteWorkScheduleHandler(IWorkScheduleRepository schedules)
 /// AttendanceDay history is never recomputed (11.3.6).
 /// </summary>
 [RequiresPermission("attendance.workschedule.assign")]
-public sealed record AssignWorkScheduleCommand(Guid WorkScheduleId, IReadOnlyList<Guid> EmployeeIds, DateOnly EffectiveFrom) : ICommand;
+public sealed record AssignWorkScheduleCommand(Guid WorkScheduleId, IReadOnlyList<Guid> EmployeeIds, DateOnly EffectiveFrom, DateOnly? EffectiveTo) : ICommand;
 
 public sealed class AssignWorkScheduleValidator : AbstractValidator<AssignWorkScheduleCommand>
 {
@@ -212,6 +212,7 @@ public sealed class AssignWorkScheduleValidator : AbstractValidator<AssignWorkSc
     {
         RuleFor(x => x.EmployeeIds).NotEmpty();
         RuleFor(x => x.EmployeeIds.Count).LessThanOrEqualTo(MaxEmployees).When(x => x.EmployeeIds is not null);
+        RuleFor(x => x.EffectiveTo).GreaterThanOrEqualTo(x => x.EffectiveFrom).When(x => x.EffectiveTo.HasValue);
     }
 }
 
@@ -221,6 +222,7 @@ public sealed class AssignWorkScheduleHandler(
     IWorkScheduleRepository schedules,
     IEmployeeLookup employeeLookup,
     IDataScopeService dataScope,
+    IEmployeeWorkScheduleAssignmentRepository assignments,
     WorkScheduleAssignmentService assignmentService)
     : ICommandHandler<AssignWorkScheduleCommand>
 {
@@ -244,10 +246,63 @@ public sealed class AssignWorkScheduleHandler(
                 return Error.NotFound(AttendanceErrors.EmployeeNotFound);
             }
 
+            if (command.EffectiveTo is null && (await assignments.ListForEmployeeAsync(employeeId, cancellationToken)).Any(a => a.EffectiveTo is null))
+            {
+                return Error.Conflict(AttendanceDomainErrors.AssignmentActiveAlreadyExists);
+            }
+
             await assignmentService.AssignAsync(
-                tenant.TenantId, employeeId, schedule.Value.Id, command.EffectiveFrom, WorkScheduleAssignmentSource.Bulk, currentUser.UserId, cancellationToken);
+                tenant.TenantId, employeeId, schedule.Value.Id, command.EffectiveFrom, command.EffectiveTo,
+                WorkScheduleAssignmentSource.Bulk, currentUser.UserId, cancellationToken);
         }
 
+        return Result.Success();
+    }
+}
+
+[RequiresPermission("attendance.workschedule.assign")]
+public sealed record UpdateWorkScheduleAssignmentCommand(Guid AssignmentId, DateOnly EffectiveFrom, DateOnly? EffectiveTo) : ICommand;
+
+public sealed class UpdateWorkScheduleAssignmentValidator : AbstractValidator<UpdateWorkScheduleAssignmentCommand>
+{
+    public UpdateWorkScheduleAssignmentValidator() =>
+        RuleFor(x => x.EffectiveTo).GreaterThanOrEqualTo(x => x.EffectiveFrom).When(x => x.EffectiveTo.HasValue);
+}
+
+public sealed class UpdateWorkScheduleAssignmentHandler(
+    IEmployeeWorkScheduleAssignmentRepository assignments, IDataScopeService dataScope)
+    : ICommandHandler<UpdateWorkScheduleAssignmentCommand>
+{
+    public async Task<Result> Handle(UpdateWorkScheduleAssignmentCommand command, CancellationToken cancellationToken)
+    {
+        var assignment = await assignments.GetByIdAsync(command.AssignmentId, cancellationToken);
+        if (assignment.IsFailure) return assignment.Error;
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.WorkScheduleAssign.Key, assignment.Value.EmployeeId, cancellationToken))
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+        if (command.EffectiveTo is null && (await assignments.ListForEmployeeAsync(assignment.Value.EmployeeId, cancellationToken))
+                .Any(a => a.Id != assignment.Value.Id && a.EffectiveTo is null))
+            return Error.Conflict(AttendanceDomainErrors.AssignmentActiveAlreadyExists);
+
+        assignment.Value.UpdatePeriod(command.EffectiveFrom, command.EffectiveTo);
+        return Result.Success();
+    }
+}
+
+[RequiresPermission("attendance.workschedule.assign")]
+public sealed record DeleteWorkScheduleAssignmentCommand(Guid AssignmentId) : ICommand;
+
+public sealed class DeleteWorkScheduleAssignmentHandler(
+    IEmployeeWorkScheduleAssignmentRepository assignments, IDataScopeService dataScope)
+    : ICommandHandler<DeleteWorkScheduleAssignmentCommand>
+{
+    public async Task<Result> Handle(DeleteWorkScheduleAssignmentCommand command, CancellationToken cancellationToken)
+    {
+        var assignment = await assignments.GetByIdAsync(command.AssignmentId, cancellationToken);
+        if (assignment.IsFailure) return assignment.Error;
+        if (!await dataScope.CanAccessEmployeeAsync(AttendancePermissions.WorkScheduleAssign.Key, assignment.Value.EmployeeId, cancellationToken))
+            return Error.Forbidden(AttendanceErrors.EmployeeNotInScope);
+
+        assignments.Remove(assignment.Value);
         return Result.Success();
     }
 }

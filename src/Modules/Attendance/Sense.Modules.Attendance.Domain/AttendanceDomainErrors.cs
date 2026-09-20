@@ -13,6 +13,9 @@ public static class AttendanceDomainErrors
     public const string ScheduleInactive = "attendance.errors.schedule_inactive";
     public const string ScheduleDefaultCannotDeactivate = "attendance.errors.schedule_default_cannot_deactivate";
     public const string AssignmentEffectiveDateInPast = "attendance.assignment.effective_date_in_past";
+    public const string AssignmentNotFound = "attendance.assignment.not_found";
+    public const string AssignmentEndBeforeStart = "attendance.assignment.end_before_start";
+    public const string AssignmentActiveAlreadyExists = "attendance.assignment.active_already_exists";
     public const string DayNotFound = "attendance.day.not_found";
     public const string DayCheckOutBeforeCheckIn = "attendance.day.check_out_before_check_in";
     public const string NoAnomalyToResolve = "attendance.day.no_anomaly_to_resolve";

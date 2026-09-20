@@ -818,6 +818,10 @@ namespace Sense.Modules.Attendance.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("effective_from");
 
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date")
+                        .HasColumnName("effective_to");
+
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uuid")
                         .HasColumnName("employee_id");

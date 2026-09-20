@@ -29,10 +29,11 @@ public sealed class WorkScheduleAssignmentService(
     }
 
     public async Task AssignAsync(
-        Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, WorkScheduleAssignmentSource source, Guid? assignedByUserId,
+        Guid tenantId, Guid employeeId, Guid workScheduleId, DateOnly effectiveFrom, DateOnly? effectiveTo,
+        WorkScheduleAssignmentSource source, Guid? assignedByUserId,
         CancellationToken cancellationToken)
     {
-        var assignment = EmployeeWorkScheduleAssignment.Create(tenantId, employeeId, workScheduleId, effectiveFrom, source, assignedByUserId);
+        var assignment = EmployeeWorkScheduleAssignment.Create(tenantId, employeeId, workScheduleId, effectiveFrom, effectiveTo, source, assignedByUserId);
         assignments.Add(assignment);
         outbox.Enqueue(new WorkScheduleAssigned(tenantId, employeeId, workScheduleId, effectiveFrom));
     }

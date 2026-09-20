@@ -759,6 +759,9 @@ The report you requested has been generated. Click the link to view and download
   <data name="attendance.work_schedule.days_count_invalid" xml:space="preserve"><value>A work schedule must cover all 7 days of the week.</value></data>
   <data name="attendance.work_schedule.day_range_invalid" xml:space="preserve"><value>A working day needs a start/end time, and end must be after start.</value></data>
   <data name="attendance.work_schedule.day_break_invalid" xml:space="preserve"><value>The break must be inside the working hours and internally consistent.</value></data>
+  <data name="attendance.assignment.not_found" xml:space="preserve"><value>Work schedule assignment not found.</value></data>
+  <data name="attendance.assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="attendance.assignment.active_already_exists" xml:space="preserve"><value>The employee already has a current work schedule assignment.</value></data>
   <data name="attendance.errors.schedule_is_default" xml:space="preserve"><value>The default work schedule cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_has_employees" xml:space="preserve"><value>A work schedule assigned to employees cannot be deleted.</value></data>
   <data name="attendance.errors.schedule_inactive" xml:space="preserve"><value>This work schedule is inactive.</value></data>

@@ -74,6 +74,10 @@ public static class LeavePermissions
     public static readonly Permission RequestsCancelApproved = new(
         "leave.requests.cancel_approved", Module, "İzin Talebi İptali", Group, "Çalışanların onaylanmış veya bekleyen izin taleplerini iptal etme");
 
+    /// <summary>Y-4 (senseik-045): Pending requests without workflow approval can be approved/rejected by HR directly.</summary>
+    public static readonly Permission RequestsApproveWithoutWorkflow = new(
+        "leave.requests.approve_without_workflow", Module, "Onay Süreci Olmadan İzin Onaylama", Group, "Onay sürecine dahil edilmeden bekleyen izin taleplerini onaylama/reddetme");
+
     /// <summary>İzin takvimi menu; "*.my.*" reaches every base role (visibility further limited by Calendar access settings).</summary>
     public static readonly Permission MyCalendar = new(
         "leave.my.calendar", Module, "İzin Takvimini Görüntüleme", Group, "İzin takvimini açma (kendi izniniz veya kiracının izin verdiği durumda herkesinki)");
@@ -102,5 +106,5 @@ public static class LeavePermissions
     public static IEnumerable<Permission> All =>
         [RuleSetsRead, RuleSetsManage, RuleSetsAssign, TypesManage, BalancesRead, BalancesAdjust, BalancesRecalculate, ExtraGrantsManage, MyBalances,
          RequestsRead, MyRequests, OvertimesRead, MyOvertimes, OvertimesCreateOnBehalf, OvertimesConvert, OvertimesOverridePayable, OvertimeConsentsManage,
-         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead];
+         RequestsCreateOnBehalf, RequestsBypassApproval, RequestsCancelApproved, RequestsApproveWithoutWorkflow, MyCalendar, CalendarRead, AbsencesView, AbsencesManage, CompanyLedgerRead];
 }

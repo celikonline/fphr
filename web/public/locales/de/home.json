@@ -33,7 +33,8 @@
   },
   "events": {
     "title": "Veranstaltungskalender",
-    "planned": "Der Veranstaltungskalender kommt in Phase 4; Besprechungen und Termine werden hier aufgeführt."
+    "empty": "In den nächsten {{days}} Tagen gibt es keine Termine.",
+    "viewCalendar": "Kalender anzeigen"
   },
   "orgInfo": {
     "title": "Meine Mitarbeiterkarte",

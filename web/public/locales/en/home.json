@@ -33,7 +33,8 @@
   },
   "events": {
     "title": "Event Calendar",
-    "planned": "The event calendar arrives in Phase 4; meetings and events will be listed here."
+    "empty": "No events in the next {{days}} days.",
+    "viewCalendar": "View calendar"
   },
   "orgInfo": {
     "title": "My Employee Card",
