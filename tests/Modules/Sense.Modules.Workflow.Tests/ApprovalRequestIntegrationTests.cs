@@ -162,6 +162,45 @@ public sealed class ApprovalRequestIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task ListInboxTasks_ExcludesTasksOfCancelledAndRejectedRequests()
+    {
+        var tenantId = Guid.NewGuid();
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var approver = Guid.NewGuid();
+        var secondApprover = Guid.NewGuid();
+        Guid pendingId, cancelledId, rejectedId;
+
+        using (var writeScope = ServiceProvider!.CreateScope())
+        {
+            var db = writeScope.ServiceProvider.GetRequiredService<WorkflowDbContext>();
+            var requests = writeScope.ServiceProvider.GetRequiredService<IApprovalRequestRepository>();
+
+            ApprovalRequest Submit(params ApprovalTaskSeed[] steps) =>
+                ApprovalRequest.Submit(tenantId, "Leave", Guid.NewGuid(), Guid.NewGuid(), steps, null, null, null, false, true, DateTime.UtcNow, null, null).Value;
+
+            var pending = Submit(new ApprovalTaskSeed(1, approver, null, true));
+            var cancelled = Submit(new ApprovalTaskSeed(1, approver, null, true));
+            var rejected = Submit(new ApprovalTaskSeed(1, secondApprover, null, true), new ApprovalTaskSeed(2, approver, null, true));
+            cancelled.Cancel(Guid.NewGuid(), DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+            rejected.Decide(1, secondApprover, ApprovalOutcome.Rejected, null, false, ApprovalChannel.Web, null, null, DateTime.UtcNow).IsSuccess.ShouldBeTrue();
+
+            requests.Add(pending);
+            requests.Add(cancelled);
+            requests.Add(rejected);
+            await db.SaveChangesAsync();
+            (pendingId, cancelledId, rejectedId) = (pending.Id, cancelled.Id, rejected.Id);
+        }
+
+        using var readScope = ServiceProvider!.CreateScope();
+        var repository = readScope.ServiceProvider.GetRequiredService<IApprovalRequestRepository>();
+
+        var inbox = await repository.ListInboxTasksAsync(approver, []);
+
+        inbox.Select(t => t.ApprovalRequestId).ShouldBe([pendingId]);
+        inbox.ShouldNotContain(t => t.ApprovalRequestId == cancelledId || t.ApprovalRequestId == rejectedId);
+    }
+
+    [Fact]
     public async Task Decide_OptionalStepRejected_DoesNotTerminateRequest_AdvancesNormally()
     {
         var tenantId = Guid.NewGuid();
