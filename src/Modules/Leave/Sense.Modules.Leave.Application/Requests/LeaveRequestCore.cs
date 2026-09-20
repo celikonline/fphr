@@ -32,6 +32,7 @@ public static class LeaveRequestErrors
     public const string DescriptionRequired = "leave.errors.description_required";
     public const string NotOwner = "leave.request.not_owner";
     public const string BypassNotAllowed = "leave.errors.bypass_approval_not_allowed";
+    public const string GenderNotEligible = "leave.errors.gender_not_eligible";
 
     /// <summary>
     /// senseik-037: the request's end date falls in a year the effective holiday calendar has no religious
@@ -41,6 +42,21 @@ public static class LeaveRequestErrors
     /// .GetLastDefinedReligiousHolidayYearAsync's doc comment).
     /// </summary>
     public const string HolidayCalendarYearUndefined = "leave.errors.holiday_calendar_year_undefined";
+}
+
+/// <summary>
+/// Denetim raporu A6: whether an employee's recorded gender satisfies a type's <see cref="LeaveEligibleGender"/>. Only a
+/// known Male/Female gender is ever restricted: an unrecorded (<c>Unspecified</c>), <c>Other</c> or unknown (null) gender
+/// applies no restriction - the request then relies on the normal HR approval instead of blocking on missing data.
+/// </summary>
+public static class LeaveGenderEligibility
+{
+    public static bool IsEligible(LeaveEligibleGender required, EmployeeGender? gender) => required switch
+    {
+        LeaveEligibleGender.Female => gender is not EmployeeGender.Male,
+        LeaveEligibleGender.Male => gender is not EmployeeGender.Female,
+        _ => true,
+    };
 }
 
 public sealed record LeaveRequestDto(

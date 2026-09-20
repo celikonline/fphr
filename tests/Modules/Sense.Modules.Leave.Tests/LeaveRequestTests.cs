@@ -384,6 +384,41 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
         ledger.Value.ShouldContain(e => e.Type == LeaveLedgerEntryType.Usage && e.Amount == -2m && e.SourceRefId == created.Value.Id);
     }
 
+    /// <summary>Denetim raporu A6: the "+ Talep" list and the submit both honour a type's EligibleGender (Babalık = erkek, Doğum/Süt = kadın).</summary>
+    [Theory]
+    [InlineData(EmployeeGender.Female, LeaveTypeCode.Paternity, LeaveTypeCode.Maternity)]
+    [InlineData(EmployeeGender.Male, LeaveTypeCode.Maternity, LeaveTypeCode.Paternity)]
+    public async Task RequestableTypes_AndSubmit_HideAndRejectTheOtherGendersTypes(EmployeeGender gender, LeaveTypeCode blocked, LeaveTypeCode allowed)
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        ServiceProvider!.GetRequiredService<IEmployeeLookup>().GetGenderAsync(tenantId, employeeId, Arg.Any<CancellationToken>()).Returns(gender);
+        await ServiceProvider.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        using var scope = ServiceProvider.CreateScope();
+        var types = await ActivatorUtilities.CreateInstance<ListMyRequestableLeaveTypesHandler>(scope.ServiceProvider, _currentUser, Substitute.For<IDataScopeService>())
+            .Handle(new ListMyRequestableLeaveTypesQuery(), CancellationToken.None);
+        types.IsSuccess.ShouldBeTrue();
+        types.Value.ShouldNotContain(t => t.Code == blocked);
+        types.Value.ShouldContain(t => t.Code == allowed);
+        types.Value.ShouldContain(t => t.Code == LeaveTypeCode.Annual);
+
+        Guid blockedId;
+        using (var read = ServiceProvider.CreateScope())
+        {
+            blockedId = (await read.ServiceProvider.GetRequiredService<LeaveDbContext>().RuleSets.SingleAsync()).Types.Single(t => t.Code == blocked).Id;
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        (await SubmitAsync(tenantId, blockedId, monday, monday.AddDays(1))).Error.Code.ShouldBe(LeaveRequestErrors.GenderNotEligible);
+    }
+
     /// <summary>
     /// senseik-037: IHolidayCalendarLookup.GetLastDefinedReligiousHolidayYearAsync flags a request landing in a year
     /// the tenant's calendar has no religious-holiday (Ramazan/Kurban Bayramı) entries for - a non-blocking warning

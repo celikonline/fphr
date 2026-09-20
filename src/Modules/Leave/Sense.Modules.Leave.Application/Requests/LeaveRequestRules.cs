@@ -27,7 +27,8 @@ public sealed class LeaveRequestRules(
     ILeaveRequestRepository requests,
     ILeaveLedgerRepository ledger,
     ILeaveDayCalculator dayCalculator,
-    LeaveBalanceService balances)
+    LeaveBalanceService balances,
+    IEmployeeLookup employees)
 {
     public async Task<Result<(LeaveType Type, decimal Days)>> ValidateAsync(
         Guid tenantId, Guid employeeId, Guid leaveTypeId, DateOnly start, DateOnly end, string? description, Guid? editedRequestId, CancellationToken ct,
@@ -54,6 +55,12 @@ public sealed class LeaveRequestRules(
         if (type is null || type.IsDisabled || (requireSelfService && !type.AllowSelfServiceRequest))
         {
             return Error.Validation(LeaveRequestErrors.TypeNotAvailable);
+        }
+
+        if (type.EligibleGender != LeaveEligibleGender.Any
+            && !LeaveGenderEligibility.IsEligible(type.EligibleGender, await employees.GetGenderAsync(tenantId, employeeId, ct)))
+        {
+            return Error.Validation(LeaveRequestErrors.GenderNotEligible);
         }
 
         if (type.RequiresDescription && string.IsNullOrWhiteSpace(description))

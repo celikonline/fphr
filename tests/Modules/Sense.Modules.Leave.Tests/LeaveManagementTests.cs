@@ -234,6 +234,9 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
         holidays.ResolveCalendarAsync(Arg.Any<Guid>(), Arg.Any<Guid?>(), Arg.Any<Guid?>(), Arg.Any<CancellationToken>()).Returns((HolidayCalendarRef?)null);
         services.AddSingleton(holidays);
 
+        // LeaveRequestRules resolves IEmployeeLookup (gender-restricted types, denetim A6); unconfigured = unknown gender = no restriction.
+        services.AddSingleton(Substitute.For<IEmployeeLookup>());
+
         // senseik-007 (age-50-exception): EmployeeHiredHandler needs IEmployeeBirthDateLookup - same registration as
         // OvertimeTests/LeaveBalanceRecalculationJobTests; without it every EmployeeHired publish fails DI resolution.
         services.AddModuleDbContext<EmployeeDbContext>(configuration, EmployeeDbContext.SchemaName);

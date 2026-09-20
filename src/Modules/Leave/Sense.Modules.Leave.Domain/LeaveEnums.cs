@@ -67,6 +67,14 @@ public enum CarryOverMode
     Limited = 2,
 }
 
+/// <summary>Which employee gender may request a leave type (denetim raporu A6): Babalık = Male, Doğum/Süt = Female; Any = no restriction.</summary>
+public enum LeaveEligibleGender
+{
+    Any = 0,
+    Female = 1,
+    Male = 2,
+}
+
 public enum LeaveUnit
 {
     FullDay = 0,

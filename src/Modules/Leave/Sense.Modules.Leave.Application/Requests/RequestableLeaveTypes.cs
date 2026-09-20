@@ -33,7 +33,8 @@ public sealed record RequestableLeaveTypeDto(
 public sealed record ListMyRequestableLeaveTypesQuery : IQuery<IReadOnlyList<RequestableLeaveTypeDto>>;
 
 public sealed class ListMyRequestableLeaveTypesHandler(
-    ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope)
+    ITenantContext tenant, ICurrentUser currentUser, IEmployeeLeaveProfileRepository profiles, ILeaveRuleSetRepository ruleSets, IDataScopeService dataScope,
+    IEmployeeLookup employees)
     : IQueryHandler<ListMyRequestableLeaveTypesQuery, IReadOnlyList<RequestableLeaveTypeDto>>
 {
     public async Task<Result<IReadOnlyList<RequestableLeaveTypeDto>>> Handle(ListMyRequestableLeaveTypesQuery query, CancellationToken cancellationToken)
@@ -49,8 +50,10 @@ public sealed class ListMyRequestableLeaveTypesHandler(
             return loaded.Error;
         }
 
+        // Denetim raporu A6: gender-restricted types (Babalık/Doğum/Süt) are not offered to the other gender; the submit rules re-check.
+        var gender = await employees.GetGenderAsync(tenant.TenantId, employeeId, cancellationToken);
         IReadOnlyList<RequestableLeaveTypeDto> types = loaded.Value.RuleSet.Types
-            .Where(t => !t.IsDisabled && t.AllowSelfServiceRequest)
+            .Where(t => !t.IsDisabled && t.AllowSelfServiceRequest && LeaveGenderEligibility.IsEligible(t.EligibleGender, gender))
             .OrderBy(t => t.SortOrder)
             .Select(t => new RequestableLeaveTypeDto(
                 t.Id, t.Code, t.Name, t.Description, t.Unit, t.IsPaid, t.HasBalance, t.LimitType == LeaveLimitType.PerRequest ? t.PerRequestMaxDays : null,
