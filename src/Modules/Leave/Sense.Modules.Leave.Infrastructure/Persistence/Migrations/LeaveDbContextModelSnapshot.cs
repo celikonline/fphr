@@ -1208,6 +1208,10 @@ namespace Sense.Modules.Leave.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("submitted_user_agent");
 
+                    b.Property<Guid?>("SubstituteEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("substitute_employee_id");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");

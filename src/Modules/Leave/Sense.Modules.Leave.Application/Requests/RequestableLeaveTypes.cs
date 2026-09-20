@@ -22,7 +22,7 @@ namespace Sense.Modules.Leave.Application.Requests;
 
 public sealed record RequestableLeaveTypeDto(
     Guid Id, LeaveTypeCode Code, string Name, string? Description, LeaveUnit Unit, bool IsPaid, bool HasBalance, decimal? PerRequestMaxDays,
-    bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays);
+    bool RequiresDescription, bool RequiresDocument, bool CountsNonWorkingDays, bool RequiresSubstitute = false);
 
 /// <summary>
 /// "+ Talep": caller'ın kural setinin aktif, self-service türleri. `Name` ham haliyle döner (ör. "leave.type.annual");
@@ -57,7 +57,7 @@ public sealed class ListMyRequestableLeaveTypesHandler(
             .OrderBy(t => t.SortOrder)
             .Select(t => new RequestableLeaveTypeDto(
                 t.Id, t.Code, t.Name, t.Description, t.Unit, t.IsPaid, t.HasBalance, t.LimitType == LeaveLimitType.PerRequest ? t.PerRequestMaxDays : null,
-                t.RequiresDescription, t.RequiresDocument, t.CountsNonWorkingDays))
+                t.RequiresDescription, t.RequiresDocument, t.CountsNonWorkingDays, t.RequiresSubstitute))
             .ToList();
         return Result.Success(types);
     }

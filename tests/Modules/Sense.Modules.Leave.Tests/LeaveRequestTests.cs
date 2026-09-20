@@ -237,12 +237,15 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
     }
 
     private async Task<Result<LeaveRequestDto>> SubmitAsync(
-        Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null)
+        Guid tenantId, Guid leaveTypeId, DateOnly start, DateOnly end, TimeOnly? startTime = null, TimeOnly? endTime = null, HalfDayPeriod? halfDayPeriod = null,
+        Guid? substituteEmployeeId = null)
     {
         using var scope = ServiceProvider!.CreateScope();
         var handler = ActivatorUtilities.CreateInstance<SubmitLeaveRequestHandler>(scope.ServiceProvider, _currentUser, _workflow);
         var result = await handler.Handle(
-            new SubmitLeaveRequestCommand(leaveTypeId, start, end, null, StartTime: startTime, EndTime: endTime, HalfDayPeriod: halfDayPeriod), CancellationToken.None);
+            new SubmitLeaveRequestCommand(
+                leaveTypeId, start, end, null, StartTime: startTime, EndTime: endTime, HalfDayPeriod: halfDayPeriod, SubstituteEmployeeId: substituteEmployeeId),
+            CancellationToken.None);
         if (result.IsSuccess)
         {
             await scope.ServiceProvider.GetRequiredService<LeaveDbContext>().SaveChangesAsync();
@@ -417,6 +420,66 @@ public sealed class LeaveRequestIntegrationTests : TestFixture
 
         var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
         (await SubmitAsync(tenantId, blockedId, monday, monday.AddDays(1))).Error.Code.ShouldBe(LeaveRequestErrors.GenderNotEligible);
+    }
+
+    /// <summary>Denetim raporu A5: a RequiresSubstitute type needs an active substitute who is not the requester and not on leave; it is stored on the request.</summary>
+    [Fact]
+    public async Task Submit_TypeRequiringSubstitute_ValidatesAndPersistsTheSubstitute()
+    {
+        var tenantId = Guid.NewGuid();
+        var employeeId = Guid.NewGuid();
+        var substituteId = Guid.NewGuid();
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var accrualStart = today.AddYears(-1).AddDays(-10);
+        _currentUser.EmployeeId.Returns(employeeId);
+        _workflow.StartAsync(ApprovalRequestTypes.Leave, Arg.Any<Guid>(), employeeId, null, Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(Guid.NewGuid()));
+        ServiceProvider!.GetRequiredService<IEmployeeLookup>().ExistsActiveAsync(tenantId, substituteId, Arg.Any<CancellationToken>()).Returns(true);
+        await ServiceProvider.GetRequiredService<IEventBus>().Publish(new EmployeeHired(tenantId, employeeId, accrualStart, accrualStart));
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+
+        Guid marriageId;
+        using (var setup = ServiceProvider.CreateScope())
+        {
+            var db = setup.ServiceProvider.GetRequiredService<LeaveDbContext>();
+            var set = await db.RuleSets.SingleAsync();
+            var marriage = set.Types.Single(t => t.Code == LeaveTypeCode.Marriage);
+            set.UpdateType(marriage.Id, marriage.ToSettings() with { RequiresSubstitute = true }).IsSuccess.ShouldBeTrue();
+            await db.SaveChangesAsync();
+            marriageId = marriage.Id;
+        }
+
+        using (var read = ServiceProvider.CreateScope())
+        {
+            var types = await ActivatorUtilities.CreateInstance<ListMyRequestableLeaveTypesHandler>(read.ServiceProvider, _currentUser, Substitute.For<IDataScopeService>())
+                .Handle(new ListMyRequestableLeaveTypesQuery(), CancellationToken.None);
+            types.Value.Single(t => t.Id == marriageId).RequiresSubstitute.ShouldBeTrue();
+            types.Value.Single(t => t.Code == LeaveTypeCode.Annual).RequiresSubstitute.ShouldBeFalse();
+        }
+
+        var monday = today.AddDays(((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7 + 7);
+        (await SubmitAsync(tenantId, marriageId, monday, monday.AddDays(1))).Error.Code.ShouldBe(LeaveRequestErrors.SubstituteRequired);
+        (await SubmitAsync(tenantId, marriageId, monday, monday.AddDays(1), substituteEmployeeId: employeeId)).Error.Code.ShouldBe(LeaveRequestErrors.SubstituteIsRequester);
+        (await SubmitAsync(tenantId, marriageId, monday, monday.AddDays(1), substituteEmployeeId: Guid.NewGuid())).Error.Code.ShouldBe(LeaveRequestErrors.SubstituteNotFound);
+
+        using (var write = ServiceProvider.CreateScope())
+        {
+            var substituteLeave = LeaveRequest.Submit(
+                tenantId, substituteId, Guid.NewGuid(), LeaveTypeCode.Annual, monday.AddDays(1), monday.AddDays(3), 3m, null,
+                LeaveRequestSource.SelfService, DateTime.UtcNow, null, null).Value;
+            write.ServiceProvider.GetRequiredService<LeaveDbContext>().Requests.Add(substituteLeave);
+            await write.ServiceProvider.GetRequiredService<LeaveDbContext>().SaveChangesAsync();
+        }
+
+        (await SubmitAsync(tenantId, marriageId, monday, monday.AddDays(1), substituteEmployeeId: substituteId)).Error.Code.ShouldBe(LeaveRequestErrors.SubstituteOnLeave);
+
+        var later = monday.AddDays(14);
+        var submitted = await SubmitAsync(tenantId, marriageId, later, later.AddDays(1), substituteEmployeeId: substituteId);
+        submitted.IsSuccess.ShouldBeTrue(submitted.IsFailure ? submitted.Error.Code : null);
+        submitted.Value.SubstituteEmployeeId.ShouldBe(substituteId);
+        using var verify = ServiceProvider.CreateScope();
+        (await verify.ServiceProvider.GetRequiredService<LeaveDbContext>().Requests.SingleAsync(r => r.Id == submitted.Value.Id))
+            .SubstituteEmployeeId.ShouldBe(substituteId);
     }
 
     /// <summary>

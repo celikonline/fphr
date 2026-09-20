@@ -28,7 +28,7 @@ namespace Sense.Modules.Leave.Application.Requests;
 [RequiresPermission("leave.requests.create_on_behalf")]
 public sealed record CreateLeaveRequestOnBehalfCommand(
     Guid EmployeeId, Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null)
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null)
     : ICommand<LeaveRequestDto>;
 
 public sealed class CreateLeaveRequestOnBehalfValidator : AbstractValidator<CreateLeaveRequestOnBehalfCommand>
@@ -61,10 +61,19 @@ public sealed class CreateLeaveRequestOnBehalfHandler(
             return valid.Error;
         }
 
+        var substitute = await rules.ValidateSubstituteAsync(
+            tenant.TenantId, command.EmployeeId, valid.Value.Type, command.SubstituteEmployeeId, command.StartDate, command.EndDate,
+            command.StartTime, command.EndTime, command.HalfDayPeriod, cancellationToken);
+        if (substitute.IsFailure)
+        {
+            return substitute.Error;
+        }
+
         var now = clock.GetUtcNow().UtcDateTime;
         var submitted = LeaveRequest.Submit(
             tenant.TenantId, command.EmployeeId, valid.Value.Type.Id, valid.Value.Type.Code, command.StartDate, command.EndDate, valid.Value.Days,
-            command.Description, LeaveRequestSource.OnBehalf, now, currentUser.IpAddress, null, null, command.StartTime, command.EndTime, command.HalfDayPeriod);
+            command.Description, LeaveRequestSource.OnBehalf, now, currentUser.IpAddress, null, null, command.StartTime, command.EndTime, command.HalfDayPeriod,
+            command.SubstituteEmployeeId);
         if (submitted.IsFailure)
         {
             return submitted.Error;

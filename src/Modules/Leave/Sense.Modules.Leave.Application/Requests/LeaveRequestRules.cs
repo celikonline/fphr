@@ -149,6 +149,36 @@ public sealed class LeaveRequestRules(
         return (type, days);
     }
 
+    /// <summary>
+    /// Denetim raporu A5 "Vekil": a type with RequiresSubstitute needs one; any given substitute must be an active employee other
+    /// than the requester and must not have active leave clashing with the requested dates (same partial-day rules as the requester's
+    /// own overlap check). Kept apart from <see cref="ValidateAsync"/> so the live preview (which has no substitute yet) never warns.
+    /// </summary>
+    public async Task<Result> ValidateSubstituteAsync(
+        Guid tenantId, Guid employeeId, LeaveType type, Guid? substituteEmployeeId, DateOnly start, DateOnly end,
+        TimeOnly? startTime, TimeOnly? endTime, HalfDayPeriod? halfDayPeriod, CancellationToken ct)
+    {
+        if (substituteEmployeeId is not { } substituteId)
+        {
+            return type.RequiresSubstitute ? Error.Validation(LeaveRequestErrors.SubstituteRequired) : Result.Success();
+        }
+
+        if (substituteId == employeeId)
+        {
+            return Error.Validation(LeaveRequestErrors.SubstituteIsRequester);
+        }
+
+        if (!await employees.ExistsActiveAsync(tenantId, substituteId, ct))
+        {
+            return Error.Validation(LeaveRequestErrors.SubstituteNotFound);
+        }
+
+        var substituteLeave = await requests.ListActiveOverlappingAsync(substituteId, start, end, ct);
+        return substituteLeave.Any(r => r.ConflictsWith(start, end, startTime, endTime, halfDayPeriod))
+            ? Error.Conflict(LeaveRequestErrors.SubstituteOnLeave)
+            : Result.Success();
+    }
+
     private async Task<bool> HasBookedBlockInPeriodAsync(Guid employeeId, LeaveType type, LeaveBalance projected, Guid? editedRequestId, CancellationToken ct)
     {
         var booked = await requests.ListByEmployeeAsync(employeeId, ct);

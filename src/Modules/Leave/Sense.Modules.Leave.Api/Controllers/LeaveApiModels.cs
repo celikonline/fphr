@@ -33,13 +33,13 @@ public sealed record SetLeaveTypeDisabledRequest(bool Disabled);
 /// <summary>Self-service submit/edit body; <c>PreviousRequestId</c> (submit only) re-submits the caller's rejected request.</summary>
 public sealed record LeaveRequestBody(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, Guid? PreviousRequestId = null,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null);
 
 public sealed record CancelLeaveRequestBody(string Reason);
 
 public sealed record LeaveRequestOnBehalfBody(
     Guid LeaveTypeId, DateOnly StartDate, DateOnly EndDate, string? Description, bool BypassApproval,
-    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null);
+    TimeOnly? StartTime = null, TimeOnly? EndTime = null, HalfDayPeriod? HalfDayPeriod = null, Guid? SubstituteEmployeeId = null);
 
 public sealed record AdjustLeaveBalanceRequest(Guid LeaveTypeId, decimal Days, DateOnly EffectiveDate, string Reason);
 

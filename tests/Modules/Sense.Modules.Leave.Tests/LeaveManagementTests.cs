@@ -420,6 +420,34 @@ public sealed class LeaveManagementIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task Detail_ShowsTheSubstituteAndTheirName()
+    {
+        // Denetim raporu A5: HR adds leave on behalf with a substitute; the detail (approver view) carries the substitute's id and name.
+        var (tenantId, employeeId, annualId) = await HireAsync();
+        var substituteId = Guid.NewGuid();
+        _currentUser.EmployeeId.Returns(employeeId);
+        _dataScope.CanAccessEmployeeAsync(Arg.Any<string>(), employeeId, Arg.Any<CancellationToken>()).Returns(true);
+        ServiceProvider!.GetRequiredService<IEmployeeLookup>().ExistsActiveAsync(tenantId, substituteId, Arg.Any<CancellationToken>()).Returns(true);
+        using var tenantScope = TenantContextSetter!.BeginScope(tenantId);
+        var monday = NextWeekMonday();
+
+        var created = await RunAsync<CreateLeaveRequestOnBehalfHandler, LeaveRequestDto>(
+            h => h.Handle(
+                new CreateLeaveRequestOnBehalfCommand(employeeId, annualId, monday, monday.AddDays(1), null, true, SubstituteEmployeeId: substituteId), CancellationToken.None),
+            _currentUser, _dataScope, _workflow);
+        created.IsSuccess.ShouldBeTrue(created.IsFailure ? created.Error.Code : null);
+        created.Value.SubstituteEmployeeId.ShouldBe(substituteId);
+
+        using var verify = ServiceProvider.CreateScope();
+        var detail = await ActivatorUtilities.CreateInstance<GetMyLeaveRequestHandler>(verify.ServiceProvider, _currentUser, SubstituteDetails(verify.ServiceProvider))
+            .Handle(new GetMyLeaveRequestQuery(created.Value.Id), CancellationToken.None);
+
+        detail.IsSuccess.ShouldBeTrue(detail.IsFailure ? detail.Error.Code : null);
+        detail.Value.SubstituteEmployeeId.ShouldBe(substituteId);
+        detail.Value.SubstituteName.ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
     public async Task Resubmission_RequiresOwnRejectedRequest()
     {
         var (tenantId, employeeId, annualId) = await HireAsync();
