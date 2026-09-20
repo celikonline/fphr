@@ -11,5 +11,8 @@
       "WebSearch",
       "WebFetch(domain:www.zoho.com)"
     ]
+  },
+  "enabledPlugins": {
+    "ecc@ecc": true
   }
 }
