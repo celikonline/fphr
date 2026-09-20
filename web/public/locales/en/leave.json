@@ -287,6 +287,8 @@
     "disabled": "Disabled",
     "enable": "Enable",
     "disable": "Disable",
+    "disableTitle": "Disable leave type?",
+    "disableDescription": "If \"{{type}}\" is disabled, the leave balances and requests of the {{count}} employees assigned to this rule set are affected. You can enable it again later.",
     "visible": "Visible",
     "hidden": "Hidden",
     "nameRequired": "Name is required.",

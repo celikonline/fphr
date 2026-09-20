@@ -287,6 +287,8 @@
     "disabled": "Devre dışı",
     "enable": "Etkinleştir",
     "disable": "Devre dışı bırak",
+    "disableTitle": "İzin türü devre dışı bırakılsın mı?",
+    "disableDescription": "\"{{type}}\" izin türü devre dışı bırakılırsa bu kural setine atanmış {{count}} çalışanın izin bakiyeleri ve talepleri etkilenir. Daha sonra yeniden etkinleştirebilirsiniz.",
     "visible": "Görünür",
     "hidden": "Gizli",
     "nameRequired": "Ad zorunludur.",

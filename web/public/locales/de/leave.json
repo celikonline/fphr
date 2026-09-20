@@ -287,6 +287,8 @@
     "disabled": "Deaktiviert",
     "enable": "Aktivieren",
     "disable": "Deaktivieren",
+    "disableTitle": "Urlaubsart deaktivieren?",
+    "disableDescription": "Wird \"{{type}}\" deaktiviert, sind die Urlaubssalden und Anträge der {{count}} diesem Regelsatz zugeordneten Mitarbeitenden betroffen. Sie können sie später wieder aktivieren.",
     "visible": "Sichtbar",
     "hidden": "Ausgeblendet",
     "nameRequired": "Der Name ist erforderlich.",

@@ -110,11 +110,8 @@ function ApprovalFlows() {
             <Text fw={600} mb="sm">
               {t("workflow:policies.listTitle")}
             </Text>
-            {policies.length === 0 ? (
-              <Text size="sm" c="dimmed" p="xs">
-                {t("workflow:policies.empty")}
-              </Text>
-            ) : (
+            {/* The empty state is shown once, in the main pane; the list stays blank instead of repeating it (B7). */}
+            {policies.length > 0 && (
               <Stack gap={4}>
                 {policies.map((policy) => (
                   <NavLink
