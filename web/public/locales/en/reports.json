@@ -12,6 +12,17 @@
     "finance": "Finance",
     "other": "Other"
   },
+  "catalogView": {
+    "search": "Search reports",
+    "label": "View",
+    "cards": "Card view",
+    "grid": "List view",
+    "noResults": "No report matches your search.",
+    "columns": {
+      "report": "Report",
+      "category": "Category"
+    }
+  },
   "catalog": {
     "title": "Report types",
     "empty": "There are no ready-made reports you can access.",

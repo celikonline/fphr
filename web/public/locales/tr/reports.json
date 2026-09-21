@@ -12,6 +12,17 @@
     "finance": "Finans",
     "other": "Diğer"
   },
+  "catalogView": {
+    "search": "Rapor ara",
+    "label": "Görünüm",
+    "cards": "Kart görünümü",
+    "grid": "Liste görünümü",
+    "noResults": "Aramanızla eşleşen rapor bulunamadı.",
+    "columns": {
+      "report": "Rapor",
+      "category": "Kategori"
+    }
+  },
   "catalog": {
     "title": "Rapor türleri",
     "empty": "Erişebileceğiniz bir hazır rapor bulunmuyor.",

@@ -12,6 +12,17 @@
     "finance": "Finanzen",
     "other": "Sonstige"
   },
+  "catalogView": {
+    "search": "Berichte suchen",
+    "label": "Ansicht",
+    "cards": "Kartenansicht",
+    "grid": "Listenansicht",
+    "noResults": "Kein Bericht entspricht Ihrer Suche.",
+    "columns": {
+      "report": "Bericht",
+      "category": "Kategorie"
+    }
+  },
   "catalog": {
     "title": "Berichtstypen",
     "empty": "Es gibt keine vordefinierten Berichte, auf die Sie zugreifen können.",
