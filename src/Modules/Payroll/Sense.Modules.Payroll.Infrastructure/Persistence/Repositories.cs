@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
@@ -182,4 +183,20 @@ public sealed class PeriodClosingCheckRepository(PayrollDbContext context) : IPe
 
     public async Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default) =>
         await context.ClosingChecks.Where(c => c.PeriodId == periodId).ToListAsync(cancellationToken);
+}
+
+public sealed class PayrollAdjustmentRepository(PayrollDbContext context) : IPayrollAdjustmentRepository
+{
+    public void Add(PayrollAdjustment adjustment) => context.Adjustments.Add(adjustment);
+
+    public void Remove(PayrollAdjustment adjustment) => context.Adjustments.Remove(adjustment);
+
+    public async Task<PayrollAdjustment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollAdjustment>> ListByEmployeeAndMonthAsync(Guid employeeId, int year, int month, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.Where(a => a.EmployeeId == employeeId && a.Year == year && a.Month == month).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.Where(a => a.Year == year && a.Month == month).OrderBy(a => a.Label).ToListAsync(cancellationToken);
 }

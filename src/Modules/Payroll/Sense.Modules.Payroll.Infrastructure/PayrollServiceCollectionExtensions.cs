@@ -51,6 +51,7 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<SeveranceEstimator>();
         services.AddScoped<ExitSettlementNetService>();
         services.AddScoped<IPeriodClosingCheckRepository, PeriodClosingCheckRepository>();
+        services.AddScoped<IPayrollAdjustmentRepository, PayrollAdjustmentRepository>();
         services.AddScoped<ClosingChecklistService>();
         services.AddScoped<IClosingChecklistGate>(sp => sp.GetRequiredService<ClosingChecklistService>());
 

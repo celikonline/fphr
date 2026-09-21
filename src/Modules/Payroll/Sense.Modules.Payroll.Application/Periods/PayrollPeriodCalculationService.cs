@@ -69,6 +69,7 @@ public sealed class PayrollPeriodCalculationService(
     IEmployeeDisabilityLookup disabilityLookup,
     IEmployeeUnionMembershipRepository unionMemberships,
     IOvertimePayrollReader overtimeReader,
+    IPayrollAdjustmentRepository adjustmentRepository,
     ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -245,6 +246,9 @@ public sealed class PayrollPeriodCalculationService(
             ? 0m
             : OvertimePayCalculator.Calculate(grossMonthly, overtime.Rate25Minutes / 60m, overtime.Rate50Minutes / 60m);
 
+        // Prim, komisyon ve benzeri tek seferlik brüt ek kazançlar (Open dönemde girilir): fazla mesai gibi vergiye ve SGK ya tabi.
+        var adjustmentsTotal = ((await adjustmentRepository.ListByEmployeeAndMonthAsync(employeeId, period.Year, period.Month, cancellationToken)) ?? []).Sum(a => a.GrossAmount);
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
@@ -259,7 +263,7 @@ public sealed class PayrollPeriodCalculationService(
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
-            AdditionalTaxableEarnings: overtimePay,
+            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal,
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         var result = PayrollCalculator.Calculate(input, snapshot);

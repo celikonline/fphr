@@ -2,8 +2,10 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Payroll.Application.Declarations;
+using Sense.Modules.Payroll.Application.Adjustments;
 using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Payroll.Api.Controllers;
@@ -18,6 +20,9 @@ public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 /// read-only list/get/export actions require payroll.trace.view instead - both enforced on the commands/queries
 /// themselves via [RequiresPermission].
 /// </summary>
+/// <summary>Body of adding a one-off taxable earning to an employee.</summary>
+public sealed record AddPayrollAdjustmentRequest(Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount);
+
 /// <summary>Body of completing a manual closing check.</summary>
 public sealed record CompleteClosingCheckRequest(string? Note);
 
@@ -154,4 +159,22 @@ public sealed class PayrollPeriodsController : ApiControllerBase
         var result = await Dispatcher.Query(new ExportDeclarationSummaryQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>The period's one-off taxable earnings (prim, komisyon...), all employees.</summary>
+    [HttpGet("{id:guid}/adjustments")]
+    [ProducesResponseType<IReadOnlyList<PayrollAdjustmentDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Adjustments(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListPayrollAdjustmentsQuery(id), ct));
+
+    /// <summary>Adds a gross one-off earning to an employee in an open period; returns its id.</summary>
+    [HttpPost("{id:guid}/adjustments")]
+    [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> AddAdjustment(Guid id, [FromBody] AddPayrollAdjustmentRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new AddPayrollAdjustmentCommand(id, request.EmployeeId, request.Kind, request.Label, request.GrossAmount), ct));
+
+    /// <summary>Removes an earning while its period is still open.</summary>
+    [HttpDelete("~/api/v{version:apiVersion}/payroll/adjustments/{adjustmentId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> RemoveAdjustment(Guid adjustmentId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RemovePayrollAdjustmentCommand(adjustmentId), ct));
 }

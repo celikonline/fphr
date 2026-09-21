@@ -871,6 +871,10 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.bank_file_missing_accounts" xml:space="preserve"><value>Some employees have no primary bank account (IBAN); the file was not created. Complete the missing accounts.</value></data>
   <data name="payroll.errors.bank_file_no_payments" xml:space="preserve"><value>No payslip in the period has a net amount to pay.</value></data>
   <data name="payroll.errors.bank_file_total_mismatch" xml:space="preserve"><value>The file total does not match the payroll net total; the file was not created.</value></data>
+  <data name="payroll.adjustment.manage" xml:space="preserve"><value>Add bonus/commission earnings to payroll</value></data>
+  <data name="payroll.errors.adjustment_invalid" xml:space="preserve"><value>The earning needs a name (at most 200 characters) and an amount above zero.</value></data>
+  <data name="payroll.errors.adjustment_not_found" xml:space="preserve"><value>The earning was not found.</value></data>
+  <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Earnings can only be added or removed while the payroll period is open.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
@@ -1405,6 +1409,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="help_article.not_found" xml:space="preserve"><value>Help Center article not found.</value></data>
   <!-- Company event calendar (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>View the event calendar</value></data>
+  <data name="announcements.my.feed" xml:space="preserve"><value>My announcement feed</value></data>
   <data name="announcements.events.manage" xml:space="preserve"><value>Manage events</value></data>
   <data name="company_event.title_required" xml:space="preserve"><value>An event title is required and cannot exceed 200 characters.</value></data>
   <data name="company_event.description_too_long" xml:space="preserve"><value>Event description cannot exceed 2000 characters.</value></data>

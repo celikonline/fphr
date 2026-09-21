@@ -121,7 +121,8 @@ public sealed class PayrollPeriodCalculationServiceTests
         out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
         out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader,
         out IEmployeeUnionMembershipRepository unionMemberships, IPayrollPeriodRepository? periodsOverride = null,
-        Sense.Modules.Leave.Contracts.IOvertimePayrollReader? overtimeOverride = null)
+        Sense.Modules.Leave.Contracts.IOvertimePayrollReader? overtimeOverride = null,
+        IPayrollAdjustmentRepository? adjustmentsOverride = null)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -152,7 +153,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         return new PayrollPeriodCalculationService(
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
             workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup, unionMemberships,
-            overtimeReader,
+            overtimeReader, adjustmentsOverride ?? Substitute.For<IPayrollAdjustmentRepository>(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
     }
 
@@ -174,6 +175,26 @@ public sealed class PayrollPeriodCalculationServiceTests
 
         created.ShouldNotBeNull();
         created.GrossAmount.ShouldBe(52_777.75m);
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_AddsTheMonthsBonusToTheGross()
+    {
+        var adjustments = Substitute.For<IPayrollAdjustmentRepository>();
+        var employee = Guid.NewGuid();
+        adjustments.ListByEmployeeAndMonthAsync(employee, Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment>>(
+                [Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment.Create(TenantId, employee, 2026, 8, Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustmentKind.Bonus, "Prim", 10_000m).Value]));
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, adjustmentsOverride: adjustments);
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employee], CancellationToken.None);
+
+        created.ShouldNotBeNull();
+        created.GrossAmount.ShouldBe(60_000m);
     }
 
     [Fact]

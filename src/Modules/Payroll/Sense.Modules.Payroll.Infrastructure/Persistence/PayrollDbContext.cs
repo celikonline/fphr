@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
@@ -47,6 +48,8 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<PeriodClosingCheck> ClosingChecks => Set<PeriodClosingCheck>();
 
+    public DbSet<PayrollAdjustment> Adjustments => Set<PayrollAdjustment>();
+
     /// <summary>payroll.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -72,6 +75,7 @@ internal static class PayrollTables
     public const string ExitSettlements = "exit_settlements";
     public const string ExitSettlementLines = "exit_settlement_lines";
     public const string PeriodClosingChecks = "period_closing_checks";
+    public const string Adjustments = "payroll_adjustments";
     public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
@@ -269,6 +273,20 @@ public sealed class PeriodClosingCheckConfiguration : IEntityTypeConfiguration<P
         b.Property(x => x.WaiverReason).HasMaxLength(PayrollLimits.ClosingCheckTextMaxLength);
         b.Ignore(x => x.IsSatisfied);
         b.HasIndex(x => new { x.TenantId, x.PeriodId, x.Code }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class PayrollAdjustmentConfiguration : IEntityTypeConfiguration<PayrollAdjustment>
+{
+    public void Configure(EntityTypeBuilder<PayrollAdjustment> b)
+    {
+        b.ToTable(PayrollTables.Adjustments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Label).HasMaxLength(PayrollLimits.AdjustmentLabelMaxLength).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Year, x.Month });
         b.Ignore(x => x.DomainEvents);
     }
 }

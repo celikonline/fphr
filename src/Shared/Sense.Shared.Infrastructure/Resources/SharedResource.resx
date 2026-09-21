@@ -881,6 +881,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.bank_file_missing_accounts" xml:space="preserve"><value>Bazı çalışanların birincil banka hesabı (IBAN) yok; dosya oluşturulamadı. Eksik hesapları tamamlayın.</value></data>
   <data name="payroll.errors.bank_file_no_payments" xml:space="preserve"><value>Dönemde ödenecek net tutarı olan bordro yok.</value></data>
   <data name="payroll.errors.bank_file_total_mismatch" xml:space="preserve"><value>Dosya toplamı bordro net toplamıyla uyuşmuyor; dosya oluşturulmadı.</value></data>
+  <data name="payroll.adjustment.manage" xml:space="preserve"><value>Bordroya prim/komisyon gibi ek kazanç ekleme</value></data>
+  <data name="payroll.errors.adjustment_invalid" xml:space="preserve"><value>Ek kazanç için ad zorunludur (en fazla 200 karakter) ve tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.adjustment_not_found" xml:space="preserve"><value>Ek kazanç bulunamadı.</value></data>
+  <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Ek kazanç yalnızca açık bir bordro döneminde eklenebilir veya silinebilir.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
@@ -1408,6 +1412,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
   <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
+  <data name="announcements.my.feed" xml:space="preserve"><value>Duyuru akışım</value></data>
   <data name="announcements.events.manage" xml:space="preserve"><value>Etkinlik yönetimi</value></data>
   <data name="company_event.title_required" xml:space="preserve"><value>Etkinlik başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
   <data name="company_event.description_too_long" xml:space="preserve"><value>Etkinlik açıklaması 2000 karakteri aşamaz.</value></data>

@@ -1,3 +1,4 @@
+using Sense.Modules.Payroll.Domain.Adjustments;
 using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
@@ -148,4 +149,20 @@ public interface IPeriodClosingCheckRepository
 
     /// <summary>Every check of the period (empty until the checklist is first opened).</summary>
     Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>One-off taxable earnings (prim, komisyon) added to a payroll month.</summary>
+public interface IPayrollAdjustmentRepository
+{
+    void Add(PayrollAdjustment adjustment);
+
+    void Remove(PayrollAdjustment adjustment);
+
+    Task<PayrollAdjustment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every adjustment of one employee in one month (what the payroll run adds to that employee's gross).</summary>
+    Task<IReadOnlyList<PayrollAdjustment>> ListByEmployeeAndMonthAsync(Guid employeeId, int year, int month, CancellationToken cancellationToken = default);
+
+    /// <summary>Every adjustment of one month, all employees (the period's "Ek kazançlar" list).</summary>
+    Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default);
 }

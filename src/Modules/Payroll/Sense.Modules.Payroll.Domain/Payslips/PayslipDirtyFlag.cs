@@ -12,6 +12,9 @@ public static class PayslipDirtyFlagReasons
     /// <summary>Leave.Contracts.Events.OvertimeConvertedToPay: approved overtime paid in cash changes the month's earnings.</summary>
     public const string OvertimeChanged = "overtime_changed";
 
+    /// <summary>A one-off earning (prim, komisyon) was added to or removed from the month.</summary>
+    public const string AdjustmentChanged = "adjustment_changed";
+
     /// <summary>Employee.Contracts.Events.SalaryChanged.</summary>
     public const string SalaryChanged = "salary_changed";
 

@@ -36,6 +36,9 @@ public static class PayrollPermissions
     public static readonly Permission PeriodReopen = new(
         "payroll.period.reopen", Module, "payroll.period.reopen", Group, "Reopen an approved, paid or locked payroll period with a written reason");
 
+    public static readonly Permission AdjustmentManage = new(
+        "payroll.adjustment.manage", Module, "payroll.adjustment.manage", Group, "Add and remove one-off taxable earnings (bonus, commission) for an employee in an open payroll period");
+
     public static readonly Permission BankFileExport = new(
         "payroll.bankfile.export", Module, "payroll.bankfile.export", Group, "Download the bank payment file of an approved payroll period (contains employees' IBANs)");
 
@@ -54,5 +57,5 @@ public static class PayrollPermissions
     public static readonly Permission UnionManage = new(
         "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
 }

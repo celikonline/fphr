@@ -6,6 +6,9 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string AdjustmentInvalid = "payroll.errors.adjustment_invalid";
+    public const string AdjustmentNotFound = "payroll.errors.adjustment_not_found";
+    public const string AdjustmentPeriodNotOpen = "payroll.errors.adjustment_period_not_open";
     public const string BankFilePeriodNotApproved = "payroll.errors.bank_file_period_not_approved";
     public const string BankFileMissingAccounts = "payroll.errors.bank_file_missing_accounts";
     public const string BankFileNoPayments = "payroll.errors.bank_file_no_payments";
@@ -73,6 +76,7 @@ public static class PayrollLimits
     public const int ExitLineLabelMaxLength = 200;
     public const int ReopenReasonMaxLength = 500;
     public const int ClosingCheckTextMaxLength = 500;
+    public const int AdjustmentLabelMaxLength = 200;
 
     /// <summary>Calendar days assumed per month until Attendance provides the real calendar (roadmap: Payroll depends on Attendance, Faz 2).</summary>
     public const int DefaultCalendarDaysInMonth = 30;
