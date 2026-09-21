@@ -38,3 +38,11 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 - Çıkış hesabı (`ExitSettlement`) varsayılan vergi işaretleri bu dokümanla uyumludur (kıdem: yalnız damga, ihbar: GV + damga).
 - Kapanış kontrol listesine eklenecek otomatik kurallar: net maaşlı çalışan atlanmadı, işveren SGK oranı doğrulandı (manuel), yol yardımı işlendi.
 - Banka dosyası ve beyanname özeti mevcut bordro çıktılarını kullanır; yukarıdaki eksikler giderilene kadar bu çıktılar da eksik tutarı yansıtır.
+
+
+## Karar bekleyen / kapsam dışı kalanlar (2026-09-22)
+
+- **Arşiv:** kilitli dönemin bordroları değişmez; banka dosyası ve beyanname özeti onaylı/ödendi/kilitli her dönem için aynı çıktıyı yeniden üretir. Ayrı bir dosya arşivi bu nedenle eklenmedi; resmî belge saklama süresi (SMMM) gerekirse Documents modülüne kopya yazılır.
+- **Dekont eşleştirme:** bankanın dönüş dosyası formatı (banka bazlı) belirlenmeden yapılamaz; format ve banka listesi ürün kararı.
+- **Çok aşamalı onay:** Workflow modülü (PC-B) ile birlikte tasarlanmalı.
+- **İşveren SGK oranı (%20,5 / %20,75) ve engelli işveren payı teşviki:** SMMM doğrulaması gerekir; oran parametre olarak yönetiliyor, kod değişikliği gerekmez.
