@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, Landmark, Wallet } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Landmark, Wallet } from "lucide-react";
 import { Badge, Button, Card, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -15,6 +15,7 @@ import { PeriodActions } from "./period-actions";
 import { PeriodComparison } from "./period-comparison";
 import {
   downloadPayrollBankFile,
+  downloadPayrollDeclarationSummary,
   downloadPayrollPeriodExport,
   getPayrollPeriod,
   saveDownloadedPayrollFile,
@@ -69,6 +70,18 @@ function PayrollPeriodDetail() {
     queryKey: ["payroll", "periods", id, selectedCostCenterId],
     queryFn: () => getPayrollPeriod(id!, selectedCostCenterId ?? undefined),
     enabled: Boolean(id),
+  });
+
+  const canExportDeclarations = usePermission("payroll.declarations.export");
+  const declarationMutation = useMutation({
+    mutationFn: async () => {
+      const period = periodQuery.data;
+      const fallbackName = period ? `beyanname-ozeti_${period.year}-${String(period.month).padStart(2, "0")}.csv` : "beyanname-ozeti.csv";
+      return downloadPayrollDeclarationSummary(id!, fallbackName);
+    },
+    onSuccess: (file) => saveDownloadedPayrollFile(file),
+    onError: (error) =>
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.declarationError")) }),
   });
 
   const canExportBankFile = usePermission("payroll.bankfile.export");
@@ -160,6 +173,17 @@ function PayrollPeriodDetail() {
           >
             {t("payroll:periodDetail.exportButton")}
           </Button>
+          {canExportDeclarations && (
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<FileSpreadsheet size={16} />}
+              loading={declarationMutation.isPending}
+              onClick={() => declarationMutation.mutate()}
+            >
+              {t("payroll:periodDetail.declarationButton")}
+            </Button>
+          )}
           {canExportBankFile && period.status !== "open" && (
             <Button
               type="button"

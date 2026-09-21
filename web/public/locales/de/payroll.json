@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "declarationButton": "Erklärungsübersicht (CSV)",
+    "declarationError": "Die Erklärungsübersicht konnte nicht erstellt werden.",
     "bankFileButton": "Bankdatei herunterladen",
     "bankFileError": "Die Bankzahlungsdatei konnte nicht erstellt werden.",
     "actions": {

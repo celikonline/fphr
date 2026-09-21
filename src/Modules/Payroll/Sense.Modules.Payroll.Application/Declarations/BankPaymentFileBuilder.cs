@@ -27,12 +27,12 @@ public static class BankPaymentFileBuilder
         {
             var p = payments[i];
             text.Append((i + 1).ToString(CultureInfo.InvariantCulture)).Append(';')
-                .Append(Quote(p.EmployeeName)).Append(';')
+                .Append(CsvCells.Quote(p.EmployeeName)).Append(';')
                 .Append(p.Iban.Replace(" ", string.Empty, StringComparison.Ordinal)).Append(';')
-                .Append(Quote(p.BankName ?? string.Empty)).Append(';')
-                .Append(p.Amount.ToString("0.00", CultureInfo.InvariantCulture)).Append(';')
+                .Append(CsvCells.Quote(p.BankName ?? string.Empty)).Append(';')
+                .Append(CsvCells.Amount(p.Amount)).Append(';')
                 .Append(Currency).Append(';')
-                .Append(Quote(description)).Append("\r\n");
+                .Append(CsvCells.Quote(description)).Append("\r\n");
         }
 
         return text.ToString();
@@ -43,11 +43,4 @@ public static class BankPaymentFileBuilder
 
     /// <summary>UTF-8 with a BOM, so Excel and most bank portals read the Turkish characters right.</summary>
     public static byte[] Encode(string csv) => new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
-
-    /// <summary>Quotes a text cell; a leading = + - @ would make a spreadsheet run it as a formula, so it gets a leading apostrophe.</summary>
-    private static string Quote(string value)
-    {
-        var safe = value.Length > 0 && "=+-@\t\r".Contains(value[0], StringComparison.Ordinal) ? "'" + value : value;
-        return "\"" + safe.Replace("\"", "\"\"", StringComparison.Ordinal).Replace("\r", " ", StringComparison.Ordinal).Replace("\n", " ", StringComparison.Ordinal) + "\"";
-    }
 }

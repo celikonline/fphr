@@ -319,3 +319,17 @@ export async function downloadPayrollBankFile(id: string, fallbackName: string):
     throw await unwrapBlobError(error);
   }
 }
+
+/** Downloads the MUHSGK / SGK premium data set of a period as CSV for reconciliation (`payroll.declarations.export`); not the official declaration format. */
+export async function downloadPayrollDeclarationSummary(id: string, fallbackName: string): Promise<DownloadedPayrollFile> {
+  try {
+    const response = await apiClient.get<Blob>(`${PAYROLL_BASE}/periods/${id}/declaration-summary`, { responseType: "blob" });
+    const disposition = response.headers["content-disposition"];
+    return {
+      blob: response.data,
+      fileName: parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ?? fallbackName,
+    };
+  } catch (error) {
+    throw await unwrapBlobError(error);
+  }
+}

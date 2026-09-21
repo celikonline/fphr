@@ -146,4 +146,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
         var result = await Dispatcher.Query(new ExportBankPaymentFileQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>Downloads the MUHSGK / SGK premium data set (per-employee premiums and taxes, with totals) as a CSV for reconciliation; not the official declaration format.</summary>
+    [HttpGet("{id:guid}/declaration-summary")]
+    public async Task<IActionResult> DeclarationSummary(Guid id, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new ExportDeclarationSummaryQuery(id), ct);
+        return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
+    }
 }

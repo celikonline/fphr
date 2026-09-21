@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "declarationButton": "Beyanname özeti (CSV)",
+    "declarationError": "Beyanname özeti oluşturulamadı.",
     "bankFileButton": "Banka dosyası indir",
     "bankFileError": "Banka ödeme dosyası oluşturulamadı.",
     "actions": {

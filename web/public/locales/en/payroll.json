@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "declarationButton": "Declaration summary (CSV)",
+    "declarationError": "The declaration summary could not be created.",
     "bankFileButton": "Download bank file",
     "bankFileError": "The bank payment file could not be created.",
     "actions": {
