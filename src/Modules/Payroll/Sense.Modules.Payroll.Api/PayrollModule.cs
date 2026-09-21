@@ -49,5 +49,10 @@ public sealed class PayrollModule : IModule
             typeof(IPayrollPeriodRepository).Assembly,
             typeof(PayrollPermissions).Assembly);
         services.AddPayrollServices(configuration);
+
+        // The closing checklist reads the employee directory, which only the API host provides (Sense.Worker has no consumer for it).
+        services.AddScoped<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>();
+        services.AddScoped<Sense.Modules.Payroll.Application.Closing.IClosingChecklistGate>(
+            sp => sp.GetRequiredService<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>());
     }
 }

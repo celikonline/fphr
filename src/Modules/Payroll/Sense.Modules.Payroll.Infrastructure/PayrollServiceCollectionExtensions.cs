@@ -52,8 +52,6 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<ExitSettlementNetService>();
         services.AddScoped<IPeriodClosingCheckRepository, PeriodClosingCheckRepository>();
         services.AddScoped<IPayrollAdjustmentRepository, PayrollAdjustmentRepository>();
-        services.AddScoped<ClosingChecklistService>();
-        services.AddScoped<IClosingChecklistGate>(sp => sp.GetRequiredService<ClosingChecklistService>());
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
