@@ -310,7 +310,8 @@
       "assets": "Inventar",
       "performance": "Leistung",
       "announcements": "Ankündigungen & Firmenkalender",
-      "occupationalSafety": "Arbeitsschutz"
+      "occupationalSafety": "Arbeitsschutz",
+      "training": "Schulungen"
     },
     "descriptions": {
       "identity": "Benutzer, Rollen, Berechtigungen und Anmeldung",
@@ -331,7 +332,8 @@
       "assets": "Inventarzuweisungen und Kategorien",
       "performance": "Ziele und Beurteilungszyklen",
       "announcements": "Ankündigungen und Firmen-Veranstaltungskalender",
-      "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen"
+      "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen",
+      "training": "Schulungsprogramme, Teilnahmen und Pflichtschulungen"
     }
   }
 }

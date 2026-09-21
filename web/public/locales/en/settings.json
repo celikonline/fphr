@@ -310,7 +310,8 @@
       "assets": "Assets",
       "performance": "Performance",
       "announcements": "Announcements & company calendar",
-      "occupationalSafety": "Occupational health & safety"
+      "occupationalSafety": "Occupational health & safety",
+      "training": "Training"
     },
     "descriptions": {
       "identity": "Users, roles, permissions and sign-in",
@@ -331,7 +332,8 @@
       "assets": "Asset assignments and categories",
       "performance": "Goals and review cycles",
       "announcements": "Announcements and company event calendar",
-      "occupationalSafety": "Hazard class and risk assessments"
+      "occupationalSafety": "Hazard class and risk assessments",
+      "training": "Training programs, enrollments and required trainings"
     }
   }
 }

@@ -58,6 +58,7 @@ public sealed class ModuleSettingsUseCasesTests
     [Theory]
     [InlineData("Sense.Modules.Leave.Api", "leave", true)]
     [InlineData("Sense.Modules.OccupationalSafety.Api", "occupationalSafety", true)]
+    [InlineData("Sense.Modules.Training.Api", "training", true)]
     [InlineData("Sense.Modules.Identity.Api", "identity", false)]
     [InlineData("Sense.Modules.DataTransfer.Api", "dataTransfer", false)]
     public void FromAssemblyName_MapsModuleApiAssemblies(string assemblyName, string expectedKey, bool toggleable)
@@ -84,7 +85,7 @@ public sealed class ModuleSettingsUseCasesTests
             ["identity", "organization", "employee", "workflow", "notifications", "documents", "dataTransfer", "reporting", "analytics", "integrations"],
             ignoreOrder: true);
         ProductModules.All.Where(m => m.IsToggleable).Select(m => m.Key).ShouldBe(
-            ["leave", "attendance", "payroll", "recruitment", "expense", "assets", "performance", "announcements", "occupationalSafety"],
+            ["leave", "attendance", "payroll", "recruitment", "expense", "assets", "performance", "announcements", "occupationalSafety", "training"],
             ignoreOrder: true);
         ProductModules.All.Select(m => m.Key).ShouldBeUnique();
     }

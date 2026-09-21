@@ -27,6 +27,7 @@ export const TOGGLEABLE_MODULE_KEYS = [
   "performance",
   "announcements",
   "occupationalSafety",
+  "training",
 ] as const;
 
 export type CoreModuleKey = (typeof CORE_MODULE_KEYS)[number];

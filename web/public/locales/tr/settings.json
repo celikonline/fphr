@@ -310,7 +310,8 @@
       "assets": "Zimmet",
       "performance": "Performans",
       "announcements": "Duyurular ve şirket takvimi",
-      "occupationalSafety": "İş sağlığı ve güvenliği"
+      "occupationalSafety": "İş sağlığı ve güvenliği",
+      "training": "Eğitim"
     },
     "descriptions": {
       "identity": "Kullanıcılar, roller, yetkiler ve oturum",
@@ -331,7 +332,8 @@
       "assets": "Zimmet takibi ve kategorileri",
       "performance": "Hedefler ve değerlendirme dönemleri",
       "announcements": "Duyurular ve şirket etkinlik takvimi",
-      "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri"
+      "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri",
+      "training": "Eğitim programları, katılımlar ve zorunlu eğitimler"
     }
   }
 }

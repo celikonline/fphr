@@ -33,6 +33,7 @@ public static class ProductModuleKeys
     public const string Performance = "performance";
     public const string Announcements = "announcements";
     public const string OccupationalSafety = "occupationalSafety";
+    public const string Training = "training";
 }
 
 /// <summary>
@@ -69,6 +70,7 @@ public static class ProductModules
         new(ProductModuleKeys.Performance, "Performance", IsToggleable: true),
         new(ProductModuleKeys.Announcements, "Announcements", IsToggleable: true),
         new(ProductModuleKeys.OccupationalSafety, "OccupationalSafety", IsToggleable: true),
+        new(ProductModuleKeys.Training, "Training", IsToggleable: true),
     ];
 
     private static readonly Dictionary<string, ProductModule> ByKey = All.ToDictionary(m => m.Key, StringComparer.Ordinal);
