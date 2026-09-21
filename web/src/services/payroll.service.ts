@@ -226,3 +226,40 @@ export async function lockPayrollPeriod(id: string): Promise<void> {
 export async function reopenPayrollPeriod(id: string, reason: string): Promise<void> {
   await apiClient.post(`${PAYROLL_BASE}/periods/${id}/reopen`, { reason });
 }
+
+export type ClosingStage = "preparation" | "calculation" | "legal" | "archive";
+
+/** `ClosingCheckDto`: one item of a period's closing checklist. */
+export interface ClosingCheck {
+  code: string;
+  stage: ClosingStage;
+  kind: "automatic" | "manual";
+  severity: "blocker" | "warning";
+  status: "pending" | "passed" | "failed" | "waived";
+  detail?: string | null;
+  waiverReason?: string | null;
+  decidedAt?: string | null;
+  isSatisfied: boolean;
+}
+
+/** The period's closing checklist (`payroll.trace.view`); a never-opened checklist comes back as the template, all pending. */
+export async function getClosingChecklist(periodId: string): Promise<ClosingCheck[]> {
+  const { data } = await apiClient.get<ClosingCheck[]>(`${PAYROLL_BASE}/periods/${periodId}/closing-checks`);
+  return data;
+}
+
+/** Opens the checklist if needed and re-runs its automatic rules (`payroll.period.approve`). */
+export async function runClosingChecks(periodId: string): Promise<ClosingCheck[]> {
+  const { data } = await apiClient.post<ClosingCheck[]>(`${PAYROLL_BASE}/periods/${periodId}/closing-checks/run`);
+  return data;
+}
+
+/** Ticks a manual item off (`payroll.period.approve`). */
+export async function completeClosingCheck(periodId: string, code: string, note?: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${periodId}/closing-checks/${code}/complete`, { note: note ?? null });
+}
+
+/** Waives an item with a written reason (`payroll.period.approve`). */
+export async function waiveClosingCheck(periodId: string, code: string, reason: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${periodId}/closing-checks/${code}/waive`, { reason });
+}

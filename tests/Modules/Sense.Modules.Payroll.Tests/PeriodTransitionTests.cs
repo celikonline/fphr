@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -41,12 +42,30 @@ public sealed class PeriodTransitionTests
         return flags;
     }
 
+    private static IClosingChecklistGate Gate(bool openBlockers)
+    {
+        var gate = Substitute.For<IClosingChecklistGate>();
+        gate.HasOpenBlockersBeforeApprovalAsync(Arg.Any<PayrollPeriod>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(openBlockers));
+        return gate;
+    }
+
+    [Fact]
+    public async Task Approve_IsRefused_WhileABlockingClosingCheckIsOpen()
+    {
+        var period = PeriodIn(PayrollPeriodStatus.Open);
+
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: true)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodHasOpenBlockers);
+        period.Status.ShouldBe(PayrollPeriodStatus.Open);
+    }
+
     [Fact]
     public async Task Approve_MovesAnOpenPeriodToApproved()
     {
         var period = PeriodIn(PayrollPeriodStatus.Open);
 
-        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: false)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         period.Status.ShouldBe(PayrollPeriodStatus.Approved);
@@ -57,7 +76,7 @@ public sealed class PeriodTransitionTests
     {
         var period = PeriodIn(PayrollPeriodStatus.Open);
 
-        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(2)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(2), Gate(openBlockers: false)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodHasDirtyPayslips);
         period.Status.ShouldBe(PayrollPeriodStatus.Open);

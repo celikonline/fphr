@@ -871,6 +871,10 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>Dönem zaten açık; yeniden açılamaz.</value></data>
   <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>Yeniden açma gerekçesi zorunludur (en fazla 500 karakter).</value></data>
   <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Değişen ve yeniden hesaplanmamış bordrolar var; dönemi onaylamadan önce "Değişenleri yeniden hesapla" çalıştırın.</value></data>
+  <data name="payroll.errors.closing_check_not_found" xml:space="preserve"><value>Kapanış kontrol maddesi bulunamadı.</value></data>
+  <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>Otomatik kontrol elle tamamlanamaz; kuralı çalıştırın veya gerekçeyle muaf tutun.</value></data>
+  <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>Muafiyet gerekçesi zorunludur (en fazla 500 karakter).</value></data>
+  <data name="payroll.errors.period_has_open_blockers" xml:space="preserve"><value>Engelleyen kapanış kontrolleri tamamlanmadı; kontrol listesinde başarısız veya bekleyen maddeleri giderin ya da gerekçeyle muaf tutun.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>

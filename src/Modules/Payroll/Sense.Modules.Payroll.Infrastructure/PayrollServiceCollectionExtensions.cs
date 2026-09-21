@@ -6,6 +6,7 @@ using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
+using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Modules.Payroll.Application.Severance;
 using Sense.Modules.Payroll.Application.Ports;
@@ -49,6 +50,9 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IExitSettlementRepository, ExitSettlementRepository>();
         services.AddScoped<SeveranceEstimator>();
         services.AddScoped<ExitSettlementNetService>();
+        services.AddScoped<IPeriodClosingCheckRepository, PeriodClosingCheckRepository>();
+        services.AddScoped<ClosingChecklistService>();
+        services.AddScoped<IClosingChecklistGate>(sp => sp.GetRequiredService<ClosingChecklistService>());
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.

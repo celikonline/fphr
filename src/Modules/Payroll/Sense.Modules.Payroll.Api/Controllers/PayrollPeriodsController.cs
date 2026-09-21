@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Payroll.Application.Declarations;
+using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
 using Sense.Shared.Web.Controllers;
 
@@ -17,6 +18,12 @@ public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 /// read-only list/get/export actions require payroll.trace.view instead - both enforced on the commands/queries
 /// themselves via [RequiresPermission].
 /// </summary>
+/// <summary>Body of completing a manual closing check.</summary>
+public sealed record CompleteClosingCheckRequest(string? Note);
+
+/// <summary>Body of waiving a closing check: why it may be skipped.</summary>
+public sealed record WaiveClosingCheckRequest(string Reason);
+
 /// <summary>Body of "Yeniden aç": why the period is reopened.</summary>
 public sealed record ReopenPayrollPeriodRequest(string Reason);
 
@@ -101,4 +108,28 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Reopen(Guid id, [FromBody] ReopenPayrollPeriodRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new ReopenPayrollPeriodCommand(id, request.Reason), ct));
+
+    /// <summary>The period's closing checklist; a never-opened checklist shows the template with every item pending.</summary>
+    [HttpGet("{id:guid}/closing-checks")]
+    [ProducesResponseType<IReadOnlyList<ClosingCheckDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ClosingChecks(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetClosingChecklistQuery(id), ct));
+
+    /// <summary>Opens the checklist if needed and re-runs its automatic rules.</summary>
+    [HttpPost("{id:guid}/closing-checks/run")]
+    [ProducesResponseType<IReadOnlyList<ClosingCheckDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> RunClosingChecks(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new RunClosingChecksCommand(id), ct));
+
+    /// <summary>Ticks a manual checklist item off (optional note).</summary>
+    [HttpPost("{id:guid}/closing-checks/{code}/complete")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CompleteClosingCheck(Guid id, string code, [FromBody] CompleteClosingCheckRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CompleteClosingCheckCommand(id, code, request.Note), ct));
+
+    /// <summary>Waives a checklist item with a written reason.</summary>
+    [HttpPost("{id:guid}/closing-checks/{code}/waive")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> WaiveClosingCheck(Guid id, string code, [FromBody] WaiveClosingCheckRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new WaiveClosingCheckCommand(id, code, request.Reason), ct));
 }

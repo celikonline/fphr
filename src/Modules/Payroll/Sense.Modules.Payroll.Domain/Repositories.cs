@@ -1,3 +1,4 @@
+using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -138,4 +139,13 @@ public interface IExitSettlementRepository
 
     /// <summary>Every settlement of the employee, newest termination first.</summary>
     Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>The closing checklist of a payroll period.</summary>
+public interface IPeriodClosingCheckRepository
+{
+    void Add(PeriodClosingCheck check);
+
+    /// <summary>Every check of the period (empty until the checklist is first opened).</summary>
+    Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default);
 }

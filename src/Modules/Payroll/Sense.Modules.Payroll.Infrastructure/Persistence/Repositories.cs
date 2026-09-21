@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -173,4 +174,12 @@ public sealed class ExitSettlementRepository(PayrollDbContext context) : IExitSe
             .Where(x => x.EmployeeId == employeeId)
             .OrderByDescending(x => x.TerminationDate)
             .ToListAsync(cancellationToken);
+}
+
+public sealed class PeriodClosingCheckRepository(PayrollDbContext context) : IPeriodClosingCheckRepository
+{
+    public void Add(PeriodClosingCheck check) => context.ClosingChecks.Add(check);
+
+    public async Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default) =>
+        await context.ClosingChecks.Where(c => c.PeriodId == periodId).ToListAsync(cancellationToken);
 }

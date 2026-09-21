@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Closing;
 using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
@@ -44,6 +45,8 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<ExitSettlement> ExitSettlements => Set<ExitSettlement>();
 
+    public DbSet<PeriodClosingCheck> ClosingChecks => Set<PeriodClosingCheck>();
+
     /// <summary>payroll.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -68,6 +71,7 @@ internal static class PayrollTables
     public const string EmployeeUnionMemberships = "employee_union_memberships";
     public const string ExitSettlements = "exit_settlements";
     public const string ExitSettlementLines = "exit_settlement_lines";
+    public const string PeriodClosingChecks = "period_closing_checks";
     public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
@@ -246,5 +250,25 @@ public sealed class ExitSettlementLineConfiguration : IEntityTypeConfiguration<E
         b.Property(x => x.Label).HasMaxLength(PayrollLimits.ExitLineLabelMaxLength).IsRequired();
         b.Ignore(x => x.Treatment);
         b.HasIndex(x => x.ExitSettlementId);
+    }
+}
+
+public sealed class PeriodClosingCheckConfiguration : IEntityTypeConfiguration<PeriodClosingCheck>
+{
+    public void Configure(EntityTypeBuilder<PeriodClosingCheck> b)
+    {
+        b.ToTable(PayrollTables.PeriodClosingChecks);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Code).HasMaxLength(PayrollTables.EnumCodeLength * 2).IsRequired();
+        b.Property(x => x.Stage).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Severity).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Status).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Detail).HasMaxLength(PayrollLimits.ClosingCheckTextMaxLength);
+        b.Property(x => x.WaiverReason).HasMaxLength(PayrollLimits.ClosingCheckTextMaxLength);
+        b.Ignore(x => x.IsSatisfied);
+        b.HasIndex(x => new { x.TenantId, x.PeriodId, x.Code }).IsUnique();
+        b.Ignore(x => x.DomainEvents);
     }
 }

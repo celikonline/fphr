@@ -1,4 +1,5 @@
 using FluentValidation;
+using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Domain;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
@@ -7,13 +8,14 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Payroll.Application.Periods;
 
 /// <summary>
-/// Approves a calculated period (Open → Approved). Refused while any payslip still carries an active "Değişti" flag: an
-/// approval must cover figures that were recalculated after the last change.
+/// Approves a calculated period (Open → Approved). Refused while any payslip still carries an active "Değişti" flag (an
+/// approval must cover figures recalculated after the last change) and while a blocking closing check of the preparation
+/// or calculation stage is failed or pending; a waiver with a reason clears a check.
 /// </summary>
 [RequiresPermission("payroll.period.approve")]
 public sealed record ApprovePayrollPeriodCommand(Guid PeriodId) : ICommand;
 
-public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods, IPayslipDirtyFlagRepository dirtyFlags)
+public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods, IPayslipDirtyFlagRepository dirtyFlags, IClosingChecklistGate checklist)
     : ICommandHandler<ApprovePayrollPeriodCommand>
 {
     public async Task<Result> Handle(ApprovePayrollPeriodCommand command, CancellationToken cancellationToken)
@@ -27,6 +29,11 @@ public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods
         if ((await dirtyFlags.ListActiveByPeriodAsync(period.Id, cancellationToken)).Count > 0)
         {
             return Error.Validation(PayrollDomainErrors.PeriodHasDirtyPayslips);
+        }
+
+        if (await checklist.HasOpenBlockersBeforeApprovalAsync(period, cancellationToken))
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodHasOpenBlockers);
         }
 
         return period.Approve();
