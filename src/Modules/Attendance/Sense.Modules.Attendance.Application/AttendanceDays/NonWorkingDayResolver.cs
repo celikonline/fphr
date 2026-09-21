@@ -21,6 +21,9 @@ public sealed class NonWorkingDays
         _holidays = holidays;
     }
 
+    /// <summary>True when the tenant's holiday calendar marks the date as an official holiday (leave days excluded).</summary>
+    public bool IsHoliday(DateOnly date) => _holidays.Contains(date);
+
     public bool Contains(Guid employeeId, DateOnly date) => _holidays.Contains(date) || _leave.Contains((employeeId, date));
 }
 

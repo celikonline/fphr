@@ -49,8 +49,13 @@ public sealed class AttendanceMonthlySummaryReader(AttendanceDbContext context, 
             var excusedDays = workingDays.Count(d => nonWorking.Contains(group.Key, d) && !workedDates.Contains(d));
             var missingDays = Math.Max(workingDays.Count - workedDays - excusedDays, 0);
 
+            var scheduled = workingDays.ToHashSet();
+            var holidayWorked = workedDates.Count(nonWorking.IsHoliday);
+            var restDayWorked = workedDates.Count(d => d.DayOfWeek == DayOfWeek.Sunday && !scheduled.Contains(d) && !nonWorking.IsHoliday(d));
+
             summaries.Add(new AttendanceMonthlySummary(
-                group.Key, workedDays, Math.Round(workedMinutesTotal / 60m, 2), missingDays, Math.Round(overtimeMinutes / 60m, 2), isPeriodLocked));
+                group.Key, workedDays, Math.Round(workedMinutesTotal / 60m, 2), missingDays, Math.Round(overtimeMinutes / 60m, 2), isPeriodLocked,
+                holidayWorked, restDayWorked));
         }
 
         return summaries;

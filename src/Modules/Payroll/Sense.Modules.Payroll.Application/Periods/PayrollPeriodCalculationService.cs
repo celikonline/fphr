@@ -272,6 +272,11 @@ public sealed class PayrollPeriodCalculationService(
         var adjustmentsTotal = monthAdjustments.Where(a => !a.IsNet).Sum(a => a.GrossAmount);
         var netAdjustmentsTotal = monthAdjustments.Where(a => a.IsNet).Sum(a => a.GrossAmount);
 
+        // Hafta tatili / resmî tatilde çalışma (4857 md.46-47): aylık ücretli için tatil günü ücrete dahildir, çalışılan her tatil günü +1 günlük ücret ek kazançtır.
+        var holidayPay = workedTime is { PublicHolidayDaysWorked: > 0 } or { WeeklyRestDaysWorked: > 0 }
+            ? HolidayPayCalculator.Calculate(grossMonthly, calendarDays, workedTime.WeeklyRestDaysWorked, workedTime.PublicHolidayDaysWorked)
+            : 0m;
+
         // Nakit yol yardımı: ayni (kart, servis) çalışana para ödemez; nakit olan çalıştığı gün kadar vergiye ve SGK ya tabi ek kazançtır.
         var transportPay = profile.TransportVariant == TransportVariant.Cash ? profile.TransportDailyAmount * workedDays : 0m;
 
@@ -289,7 +294,7 @@ public sealed class PayrollPeriodCalculationService(
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
-            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + extraGross,
+            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + holidayPay + extraGross,
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         // Net prim: brütleştirilir - çalışanın eline tam girilen net geçecek şekilde, ayın diğer kazançları ve dilim/kümülatif matrahla birlikte.

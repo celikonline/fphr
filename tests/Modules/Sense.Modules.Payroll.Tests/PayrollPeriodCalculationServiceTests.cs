@@ -275,6 +275,24 @@ public sealed class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
+    public async Task RecalculateAllAsync_PaysAnExtraDayForEachHolidayAndRestDayWorked()
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out var workedTime);
+        var employee = Guid.NewGuid();
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        workedTime.GetAsync(TenantId, employee, 2026, 3, Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<Sense.Modules.Payroll.Application.Ports.WorkedTimeSummary?>(new Sense.Modules.Payroll.Application.Ports.WorkedTimeSummary(31, 0, 0m, PublicHolidayDaysWorked: 1, WeeklyRestDaysWorked: 1)));
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employee], CancellationToken.None);
+
+        created.ShouldNotBeNull();
+        created.GrossAmount.ShouldBe(50_000m + HolidayPayCalculator.Calculate(50_000m, 31, 1, 1));
+    }
+
+    [Fact]
     public void ACashTransportProfile_NeedsADailyAmount_AndOtherVariantsKeepZero()
     {
         var cash = EmployeePayrollProfileData_(TransportVariant.Cash, 0m);

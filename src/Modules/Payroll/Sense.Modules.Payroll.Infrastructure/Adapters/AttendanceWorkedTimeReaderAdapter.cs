@@ -31,6 +31,6 @@ public sealed class AttendanceWorkedTimeReaderAdapter(IAttendanceMonthlySummaryR
         // truncating (a worked half-day should not simply disappear from the count).
         var workedDays = (int)Math.Round(match.WorkedDays, MidpointRounding.AwayFromZero);
         var missingDays = (int)Math.Round(match.MissingDays, MidpointRounding.AwayFromZero);
-        return new WorkedTimeSummary(workedDays, missingDays, match.OvertimeHours);
+        return new WorkedTimeSummary(workedDays, missingDays, match.OvertimeHours, match.PublicHolidayDaysWorked, match.WeeklyRestDaysWorked);
     }
 }
