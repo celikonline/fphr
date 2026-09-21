@@ -119,3 +119,17 @@ public interface ISubcontractorRepository
     /// <summary>Names of the given subcontractors (card/list display).</summary>
     Task<IReadOnlyDictionary<Guid, string>> GetNamesAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default);
 }
+
+/// <summary>Employee profile photo repository (at most one row per employee; the row id is the employee id).</summary>
+public interface IEmployeePhotoRepository
+{
+    void Add(EmployeePhoto photo);
+
+    void Remove(EmployeePhoto photo);
+
+    /// <summary>Tracked row for replace/delete; null when the employee has no photo.</summary>
+    Task<EmployeePhoto?> GetTrackedAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>Untracked row for serving; null when the employee has no photo.</summary>
+    Task<EmployeePhoto?> GetAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}

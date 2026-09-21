@@ -67,6 +67,17 @@ public static class EmployeeDomainErrors
     public const string RehireDateBeforePreviousExit = "employee.rehire_date_before_previous_exit";
 
     public const string SubcontractorNotFound = "employee.subcontractor_not_found";
+
+    /// <summary>Photo upload with no bytes.</summary>
+    public const string PhotoRequired = "employee.photo_required";
+
+    /// <summary>Photo larger than <see cref="EmployeeLimits.PhotoMaxBytes"/>.</summary>
+    public const string PhotoTooLarge = "employee.photo_too_large";
+
+    /// <summary>Photo bytes are not a JPEG, PNG or WebP image.</summary>
+    public const string PhotoTypeUnsupported = "employee.photo_type_unsupported";
+
+    public const string PhotoNotFound = "employee.photo_not_found";
     public const string SubcontractorNameRequired = "employee.subcontractor_name_required";
     public const string SubcontractorNameTooLong = "employee.subcontractor_name_too_long";
     public const string SubcontractorTaxNumberTooLong = "employee.subcontractor_tax_number_too_long";
@@ -180,6 +191,9 @@ public static class EmployeeDomainErrors
 public static class EmployeeLimits
 {
     public const int NameMaxLength = 100;
+
+    /// <summary>Profile photo size cap (2 MB); the web client downsizes larger images before uploading.</summary>
+    public const int PhotoMaxBytes = 2 * 1024 * 1024;
 
     /// <summary>"First Last": both names at max length plus the separating space.</summary>
     public const int DisplayNameMaxLength = (NameMaxLength * 2) + 1;

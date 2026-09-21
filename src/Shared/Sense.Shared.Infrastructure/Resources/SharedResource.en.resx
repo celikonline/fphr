@@ -221,6 +221,10 @@
   <data name="employee.passport_number_too_long" xml:space="preserve"><value>The passport number can be at most 20 characters.</value></data>
   <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>The SGK occupation code can be at most 20 characters.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Subcontractor not found.</value></data>
+  <data name="employee.photo_required" xml:space="preserve"><value>A photo file is required.</value></data>
+  <data name="employee.photo_too_large" xml:space="preserve"><value>The photo can be at most 2 MB.</value></data>
+  <data name="employee.photo_type_unsupported" xml:space="preserve"><value>The photo must be a JPEG, PNG or WebP image.</value></data>
+  <data name="employee.photo_not_found" xml:space="preserve"><value>The employee has no photo.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>The subcontractor name is required.</value></data>
   <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>The company name can be at most 200 characters.</value></data>
   <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>The tax number can be at most 20 characters.</value></data>

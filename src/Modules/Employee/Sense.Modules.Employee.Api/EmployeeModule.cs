@@ -90,6 +90,10 @@ public sealed class EmployeeModule : IModule
         // Subcontractor catalog (E5b): employees link to it; the İSG headcount threshold (Faz 7) reads that link.
         services.AddScoped<ISubcontractorRepository, SubcontractorRepository>();
 
+        // Profile photo (bytea row per employee, served through the API so data scope and tenant isolation apply).
+        services.AddScoped<IEmployeePhotoRepository, EmployeePhotoRepository>();
+        services.AddScoped<EmployeePhotoWriter>();
+
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();
         services.AddScoped<CareerService>();

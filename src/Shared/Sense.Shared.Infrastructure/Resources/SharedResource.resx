@@ -230,6 +230,10 @@
   <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>SGK meslek kodu en fazla 20 karakter olabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Alt işveren firma bulunamadı.</value></data>
+  <data name="employee.photo_required" xml:space="preserve"><value>Fotoğraf dosyası zorunludur.</value></data>
+  <data name="employee.photo_too_large" xml:space="preserve"><value>Fotoğraf en fazla 2 MB olabilir.</value></data>
+  <data name="employee.photo_type_unsupported" xml:space="preserve"><value>Fotoğraf JPEG, PNG veya WebP biçiminde olmalıdır.</value></data>
+  <data name="employee.photo_not_found" xml:space="preserve"><value>Çalışanın fotoğrafı yok.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>Alt işveren firma adı zorunludur.</value></data>
   <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>Firma adı en fazla 200 karakter olabilir.</value></data>
   <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>Vergi numarası en fazla 20 karakter olabilir.</value></data>

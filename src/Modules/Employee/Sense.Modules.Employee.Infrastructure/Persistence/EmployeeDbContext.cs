@@ -33,6 +33,8 @@ public sealed class EmployeeDbContext(DbContextOptions<EmployeeDbContext> option
 
     public DbSet<Subcontractor> Subcontractors => Set<Subcontractor>();
 
+    public DbSet<EmployeePhoto> EmployeePhotos => Set<EmployeePhoto>();
+
     /// <summary>senseik-049: employee.audit_log_entries - bkz. AuditLogEntry'nin doc comment'i (Outbox/Inbox'la aynı "paylaşımlı tip, modül şeması" deseni).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -64,6 +66,7 @@ internal static class EmployeeTables
     public const string CustomFieldValues = "custom_field_values";
     public const string TerminationReasons = "termination_reasons";
     public const string Subcontractors = "subcontractors";
+    public const string EmployeePhotos = "employee_photos";
 
     public const int StatusLength = 30;
 }
@@ -215,6 +218,20 @@ public sealed class EmploymentPeriodConfiguration : IEntityTypeConfiguration<Emp
 
         b.HasIndex(x => new { x.EmployeeId, x.StartDate });
         b.Ignore(x => x.IsOpen);
+    }
+}
+
+public sealed class EmployeePhotoConfiguration : IEntityTypeConfiguration<EmployeePhoto>
+{
+    private const int ContentTypeMaxLength = 30;
+
+    public void Configure(EntityTypeBuilder<EmployeePhoto> b)
+    {
+        b.ToTable(EmployeeTables.EmployeePhotos);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.ContentType).HasMaxLength(ContentTypeMaxLength).IsRequired();
+        b.Property(x => x.Content).HasColumnType("bytea").IsRequired();
+        b.Ignore(x => x.DomainEvents);
     }
 }
 

@@ -27,6 +27,38 @@ namespace Sense.Modules.Employee.Api.Controllers;
 [Authorize]
 public sealed class EmployeesController : ApiControllerBase
 {
+    /// <summary>Multipart overhead on top of the 2 MB photo cap.</summary>
+    private const long PhotoRequestBytes = Domain.EmployeeLimits.PhotoMaxBytes + (256 * 1024);
+
+    private async Task<IActionResult> SendPhotoAsync(IFormFile? file, Func<byte[], Sense.Shared.Contracts.Messaging.ICommand> createCommand, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return Problem(Error.Validation(Domain.EmployeeDomainErrors.PhotoRequired));
+        }
+
+        if (file.Length > Domain.EmployeeLimits.PhotoMaxBytes)
+        {
+            return Problem(Error.Rule(Domain.EmployeeDomainErrors.PhotoTooLarge));
+        }
+
+        using var buffer = new MemoryStream((int)file.Length);
+        await file.CopyToAsync(buffer, ct);
+        return FromResult(await Dispatcher.Send(createCommand(buffer.ToArray()), ct));
+    }
+
+    /// <summary>Serves the image inline with its ETag (conditional GET answers 304); private + revalidate so a replaced photo shows up immediately.</summary>
+    private IActionResult FromPhoto(Result<EmployeePhotoFile> result)
+    {
+        if (result.IsFailure)
+        {
+            return Problem(result.Error);
+        }
+
+        Response.Headers.CacheControl = "private, max-age=0, must-revalidate";
+        return File(result.Value.Content, result.Value.ContentType, lastModified: null, entityTag: new Microsoft.Net.Http.Headers.EntityTagHeaderValue(result.Value.ETag));
+    }
+
     /// <summary>Paged, searchable, sortable employee list filtered by the caller's data scope.</summary>
     [HttpGet]
     [ProducesResponseType<PagedResult<EmployeeListItemDto>>(StatusCodes.Status200OK)]
@@ -42,6 +74,42 @@ public sealed class EmployeesController : ApiControllerBase
     [ProducesResponseType<EmployeeDetailDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Me(CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetMyEmployeeQuery(), ct));
+
+    /// <summary>The caller's own profile photo (404 when none). Revalidated with the ETag on every load.</summary>
+    [HttpGet("me/photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MyPhoto(CancellationToken ct) =>
+        FromPhoto(await Dispatcher.Query(new GetMyPhotoQuery(), ct));
+
+    /// <summary>Sets/replaces the caller's own photo (multipart field "file": JPEG, PNG or WebP, at most 2 MB).</summary>
+    [HttpPut("me/photo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(PhotoRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = PhotoRequestBytes)]
+    public async Task<IActionResult> SetMyPhoto(IFormFile? file, CancellationToken ct) =>
+        await SendPhotoAsync(file, content => new SetMyPhotoCommand(content), ct);
+
+    [HttpDelete("me/photo")]
+    public async Task<IActionResult> DeleteMyPhoto(CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteMyPhotoCommand(), ct));
+
+    /// <summary>An employee's profile photo (404 when none).</summary>
+    [HttpGet(ApiRoutes.IdParam + "/photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Photo(Guid id, CancellationToken ct) =>
+        FromPhoto(await Dispatcher.Query(new GetEmployeePhotoQuery(id), ct));
+
+    /// <summary>Sets/replaces an employee's photo (multipart field "file": JPEG, PNG or WebP, at most 2 MB).</summary>
+    [HttpPut(ApiRoutes.IdParam + "/photo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(PhotoRequestBytes)]
+    [RequestFormLimits(MultipartBodyLengthLimit = PhotoRequestBytes)]
+    public async Task<IActionResult> SetPhoto(Guid id, IFormFile? file, CancellationToken ct) =>
+        await SendPhotoAsync(file, content => new SetEmployeePhotoCommand(id, content), ct);
+
+    [HttpDelete(ApiRoutes.IdParam + "/photo")]
+    public async Task<IActionResult> DeletePhoto(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new DeleteEmployeePhotoCommand(id), ct));
 
     /// <summary>The caller's own career timeline (read-only).</summary>
     [HttpGet("me/career")]
