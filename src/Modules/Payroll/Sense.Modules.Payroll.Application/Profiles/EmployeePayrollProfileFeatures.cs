@@ -28,7 +28,8 @@ public sealed record EmployeePayrollProfileDto(
     Guid? BankAccountId,
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
-    string? Notes);
+    string? Notes,
+    decimal TransportDailyAmount = 0m);
 
 internal static class EmployeePayrollProfileMapper
 {
@@ -36,7 +37,7 @@ internal static class EmployeePayrollProfileMapper
         profile.Id, profile.EmployeeId, profile.SgkWorkplaceCompanyId, profile.SgkWorkplaceLocationId,
         profile.ValidFrom, profile.ValidTo, profile.WageBasis, profile.SgkStatus, profile.IncentiveLawCode,
         profile.MealBenefitVariant, profile.MealDailyAmount, profile.TransportVariant, profile.PaymentMethod,
-        profile.BankAccountId, profile.SickDaysReducePay, profile.ExternalPayrollCode, profile.Notes);
+        profile.BankAccountId, profile.SickDaysReducePay, profile.ExternalPayrollCode, profile.Notes, profile.TransportDailyAmount);
 }
 
 /// <summary>Every dated version of an employee's payroll profile, newest ValidFrom first.</summary>

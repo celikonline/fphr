@@ -20,7 +20,8 @@ public sealed record EmployeePayrollProfileData(
     Guid? BankAccountId,
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
-    string? Notes);
+    string? Notes,
+    decimal TransportDailyAmount = 0m);
 
 /// <summary>
 /// One dated version of an employee's payroll parameters (11.3.7 "Bordro parametresi", P2): SGK workplace, wage basis,
@@ -67,6 +68,9 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
     public decimal MealDailyAmount { get; private set; }
 
     public TransportVariant TransportVariant { get; private set; }
+
+    /// <summary>Cash transport allowance per worked day (only for the Cash variant; card and shuttle are in kind and add no pay); 0 otherwise.</summary>
+    public decimal TransportDailyAmount { get; private set; }
 
     public PayrollPaymentMethod PaymentMethod { get; private set; }
 
@@ -115,6 +119,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
     private bool Apply(EmployeePayrollProfileData data)
     {
         var mealDailyAmount = RequiresMealAmount(data.MealBenefitVariant) ? data.MealDailyAmount : 0m;
+        var transportDailyAmount = data.TransportVariant == TransportVariant.Cash ? data.TransportDailyAmount : 0m;
         var incentiveLawCode = Trim(data.IncentiveLawCode);
         var externalPayrollCode = Trim(data.ExternalPayrollCode);
         var notes = Trim(data.Notes);
@@ -129,6 +134,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
                       MealBenefitVariant != data.MealBenefitVariant ||
                       MealDailyAmount != mealDailyAmount ||
                       TransportVariant != data.TransportVariant ||
+                      TransportDailyAmount != transportDailyAmount ||
                       PaymentMethod != data.PaymentMethod ||
                       BankAccountId != data.BankAccountId ||
                       SickDaysReducePay != data.SickDaysReducePay ||
@@ -145,6 +151,7 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
         MealBenefitVariant = data.MealBenefitVariant;
         MealDailyAmount = mealDailyAmount;
         TransportVariant = data.TransportVariant;
+        TransportDailyAmount = transportDailyAmount;
         PaymentMethod = data.PaymentMethod;
         BankAccountId = data.BankAccountId;
         SickDaysReducePay = data.SickDaysReducePay;
@@ -169,6 +176,11 @@ public sealed class EmployeePayrollProfile : TenantAggregateRoot<Guid>
         if (data.MealDailyAmount < 0m || (RequiresMealAmount(data.MealBenefitVariant) && data.MealDailyAmount <= 0m))
         {
             return Error.Validation(PayrollDomainErrors.ProfileMealAmountInvalid);
+        }
+
+        if (data.TransportDailyAmount < 0m || (data.TransportVariant == TransportVariant.Cash && data.TransportDailyAmount <= 0m))
+        {
+            return Error.Validation(PayrollDomainErrors.ProfileTransportAmountInvalid);
         }
 
         if (Trim(data.ExternalPayrollCode) is { Length: > PayrollLimits.ExternalPayrollCodeMaxLength })

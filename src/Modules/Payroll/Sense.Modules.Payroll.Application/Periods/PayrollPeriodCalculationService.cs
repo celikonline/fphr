@@ -249,6 +249,9 @@ public sealed class PayrollPeriodCalculationService(
         // Prim, komisyon ve benzeri tek seferlik brüt ek kazançlar (Open dönemde girilir): fazla mesai gibi vergiye ve SGK ya tabi.
         var adjustmentsTotal = ((await adjustmentRepository.ListByEmployeeAndMonthAsync(employeeId, period.Year, period.Month, cancellationToken)) ?? []).Sum(a => a.GrossAmount);
 
+        // Nakit yol yardımı: ayni (kart, servis) çalışana para ödemez; nakit olan çalıştığı gün kadar vergiye ve SGK ya tabi ek kazançtır.
+        var transportPay = profile.TransportVariant == TransportVariant.Cash ? profile.TransportDailyAmount * workedDays : 0m;
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
@@ -263,7 +266,7 @@ public sealed class PayrollPeriodCalculationService(
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
-            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal,
+            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay,
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         var result = PayrollCalculator.Calculate(input, snapshot);

@@ -19,7 +19,7 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 | 7 | Fazla mesai brüt, SGK ve vergileri değiştirir | ⚠️ | **Fazla mesai bağlandı** (2026-09-21): Leave'in onaylı %25/%50 dakikaları brüte eklenir, nakde çevirme olayı bordroyu "değişti" işaretler. Hafta tatili ve resmî tatil ücreti (`HolidayPayCalculator`) hâlâ bağlı değil |
 | 8 | Prim/ikramiye (net veya brüt) brüt, matrah ve vergiyi değiştirir | ⚠️ | **Brüt ek kazanç bağlandı** (2026-09-21): `PayrollAdjustment` ile açık dönemde prim/komisyon girilir, aynı ayın brütüne eklenir. **Net girilen prim** (brütleştirme) henüz yok |
 | 9 | Ücretsiz izin SGK gününü ve vergiyi azaltır; yıllık izin azaltmaz | ✅ / ⚠️ | Devamsızlık günleri `IAbsenceDaysReader` ile okunur; yıllık izin kesinti yapmaz. Tüm izin türlerinin eşlemesi ayrıca test edilmeli |
-| 10 | Yemek/yol/sosyal yardım kısmen SGK, GV, DV istisnası taşır | ⚠️ | Yemek: GV/SGK günlük istisna uygulanır. **Yol yardımı** profilde tutulur ama hesapta kullanılmaz. Çocuk/aile yardımı istisna tutarları modellenmedi |
+| 10 | Yemek/yol/sosyal yardım kısmen SGK, GV, DV istisnası taşır | ⚠️ | Yemek: GV/SGK günlük istisna uygulanır. **Yol yardımı bağlandı** (2026-09-21): profilde nakit günlük tutar tutulur, nakit ise çalışılan gün kadar vergiye ve SGK ya tabi kazanç olarak eklenir; ayni (kart, servis) para ödemez. Ayni yol yardımının tutar bazlı istisnası ve çocuk/aile yardımı istisna tutarları modellenmedi |
 | 11 | Kesintiler: icra yasal net üzerinden, özel kesintiler ele geçen net üzerinden | ✅ | `GarnishmentCalculator` İİK m.83 tavanı; avans ve sendika aidatı sonra |
 | 12 | Kıdem: SGK ve GV yok, yalnız damga vergisi | ✅ | Çıkış hesabı varsayılanı: yalnız damga |
 | 13 | İhbar: GV ve damga vergisi | ✅ | Çıkış hesabı varsayılanı: GV + damga, SGK yok |
@@ -30,7 +30,7 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 ## Doğrudan sonuçlar
 
 1. **Net maaşlı çalışan artık bordroya giriyor** (net→brüt bağlandı). Yine de atlanan çalışanı görmek için kapanış listesine "bordrosuz aktif çalışan" uyarısı eklendi. Çıkış hesabındaki günlük ücret hâlâ net kaydı brüt sayıyor.
-2. **Yol yardımı ve hafta/resmî tatil ücreti bordroya girmiyor (fazla mesai ve brüt ek ödeme bağlandı).** Yol yardımı için profilde tutar alanı da yok. Bu, dokümanın 4, 5 ve 7. bölümlerinin tamamını etkiler ve bordro doğruluğunu doğrudan bozar; kapanış planında "Faz 0.2 / 0.3" olarak öncelikli.
+2. **Hafta ve resmî tatil ücreti bordroya girmiyor** (fazla mesai, brüt ek ödeme ve nakit yol yardımı bağlandı). Bu, dokümanın 4, 5 ve 7. bölümlerinin tamamını etkiler ve bordro doğruluğunu doğrudan bozar; kapanış planında "Faz 0.2 / 0.3" olarak öncelikli.
 3. **İşveren SGK oranı %20,5 mi %20,75 mi?** Yasal parametre olduğu için SMMM onayı olmadan değiştirilmedi.
 
 ## Uygulamayla ilişkisi

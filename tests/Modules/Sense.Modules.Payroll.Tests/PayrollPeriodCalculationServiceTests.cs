@@ -37,6 +37,14 @@ public sealed class PayrollPeriodCalculationServiceTests
             MealBenefitVariant.None, 0m, TransportVariant.None, PayrollPaymentMethod.Bank, null,
             SickDaysReducePay: false, ExternalPayrollCode: null, Notes: null)).Value;
 
+    private static EmployeePayrollProfile ProfileWithTransport(Guid employeeId, TransportVariant variant, decimal dailyAmount) => EmployeePayrollProfile.Create(
+        TenantId, employeeId,
+        new EmployeePayrollProfileData(
+            SgkWorkplaceCompanyId, null, new DateOnly(2026, 1, 1), null,
+            WageBasis.Monthly, SgkStatus.Normal, null,
+            MealBenefitVariant.None, 0m, variant, PayrollPaymentMethod.Bank, null,
+            SickDaysReducePay: false, ExternalPayrollCode: null, Notes: null, TransportDailyAmount: dailyAmount)).Value;
+
     private static EmployeeCurrentSalary Salary(decimal amount = 50_000m) =>
         new(amount, "TRY", EmployeeSalaryType.Gross, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1));
 
@@ -196,6 +204,41 @@ public sealed class PayrollPeriodCalculationServiceTests
         created.ShouldNotBeNull();
         created.GrossAmount.ShouldBe(60_000m);
     }
+
+    [Theory]
+    [InlineData(TransportVariant.Cash, 800, true)]
+    [InlineData(TransportVariant.Card, 800, false)]
+    [InlineData(TransportVariant.Shuttle, 0, false)]
+    public async Task RecalculateAllAsync_CashTransportAddsTaxablePay_ButInKindTransportDoesNot(TransportVariant variant, int dailyAmount, bool paysCash)
+    {
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
+        var employee = Guid.NewGuid();
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(ProfileWithTransport(employee, variant, dailyAmount)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employee], CancellationToken.None);
+
+        var period = OpenPeriod();
+        var workedDays = DateTime.DaysInMonth(period.Year, period.Month);
+        created.ShouldNotBeNull();
+        created.GrossAmount.ShouldBe(50_000m + (paysCash ? dailyAmount * workedDays : 0));
+    }
+
+    [Fact]
+    public void ACashTransportProfile_NeedsADailyAmount_AndOtherVariantsKeepZero()
+    {
+        var cash = EmployeePayrollProfileData_(TransportVariant.Cash, 0m);
+        EmployeePayrollProfile.Validate(cash).Error.Code.ShouldBe(PayrollDomainErrors.ProfileTransportAmountInvalid);
+
+        var card = ProfileWithTransport(Guid.NewGuid(), TransportVariant.Card, 500m);
+        card.TransportDailyAmount.ShouldBe(0m);
+    }
+
+    private static EmployeePayrollProfileData EmployeePayrollProfileData_(TransportVariant variant, decimal dailyAmount) =>
+        new(SgkWorkplaceCompanyId, null, new DateOnly(2026, 1, 1), null, WageBasis.Monthly, SgkStatus.Normal, null,
+            MealBenefitVariant.None, 0m, variant, PayrollPaymentMethod.Bank, null, false, null, null, dailyAmount);
 
     [Fact]
     public async Task RecalculateAllAsync_ProducesAPayslipForEveryEmployeeWithAProfileAndSalary()

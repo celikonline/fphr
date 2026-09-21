@@ -875,6 +875,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.adjustment_invalid" xml:space="preserve"><value>The earning needs a name (at most 200 characters) and an amount above zero.</value></data>
   <data name="payroll.errors.adjustment_not_found" xml:space="preserve"><value>The earning was not found.</value></data>
   <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Earnings can only be added or removed while the payroll period is open.</value></data>
+  <data name="payroll.errors.profile_transport_amount_invalid" xml:space="preserve"><value>A cash transport allowance needs a daily amount above zero.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>

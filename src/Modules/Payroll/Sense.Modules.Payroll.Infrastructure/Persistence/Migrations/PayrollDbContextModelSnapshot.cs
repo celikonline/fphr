@@ -894,6 +894,11 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
 
+                    b.Property<decimal>("TransportDailyAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("transport_daily_amount");
+
                     b.Property<string>("TransportVariant")
                         .IsRequired()
                         .HasMaxLength(30)

@@ -26,7 +26,8 @@ public sealed record PayrollProfileRequest(
     Guid? BankAccountId,
     bool SickDaysReducePay,
     string? ExternalPayrollCode,
-    string? Notes);
+    string? Notes,
+    decimal TransportDailyAmount = 0m);
 
 /// <summary>
 /// Employee card > Ücret sekmesi > "Bordro parametreleri" (11.3.07 P2): the employee's dated
@@ -79,7 +80,8 @@ public sealed class EmployeePayrollProfilesController : ApiControllerBase
             request.BankAccountId,
             request.SickDaysReducePay,
             request.ExternalPayrollCode,
-            request.Notes);
+            request.Notes,
+            request.TransportDailyAmount);
 
         return request.ProfileId is { } profileId
             ? FromResult(await Dispatcher.Send(new UpdateEmployeePayrollProfileCommand(profileId, data), ct))
