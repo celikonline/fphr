@@ -66,7 +66,14 @@ function LoginThemeToggle() {
   const theme = useUIStore((state) => state.theme);
   const setTheme = useUIStore((state) => state.setTheme);
 
-  const icon = theme === "dark" ? <Moon size={16} /> : theme === "light" ? <Sun size={16} /> : <Monitor size={16} />;
+  const icon =
+    theme === "dark" ? (
+      <Moon size={16} />
+    ) : theme === "light" ? (
+      <Sun size={16} />
+    ) : (
+      <Monitor size={16} />
+    );
 
   return (
     <Menu position="bottom-end">
@@ -135,6 +142,11 @@ function writeStoredMfaToken(token: string | null) {
   } catch {
     // Storage unavailable (private mode, blocked cookies, ...) — MFA still works, just won't survive a reload.
   }
+}
+
+/** D-6: the demo credentials hint is for dev builds and the demo compose stack (VITE_SHOW_DEMO_CREDENTIALS=true) only. */
+function shouldShowDemoCredentials(): boolean {
+  return import.meta.env.DEV || import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === "true";
 }
 
 export default function LoginPage() {
@@ -285,7 +297,11 @@ export default function LoginPage() {
 
           <Stack mt={40} gap="sm">
             {FEATURES.map(({ icon: Icon, key, color }, index) => (
-              <div key={key} className={`${classes.feature} ${classes.reveal}`} style={revealDelay(320 + index * 80)}>
+              <div
+                key={key}
+                className={`${classes.feature} ${classes.reveal}`}
+                style={revealDelay(320 + index * 80)}
+              >
                 <ThemeIcon color={color} size={40} radius={10}>
                   <Icon size={20} />
                 </ThemeIcon>
@@ -305,7 +321,12 @@ export default function LoginPage() {
       {/* Form panel */}
       <main className={`flex flex-1 items-center justify-center px-6 py-16 ${classes.formPanel}`}>
         {mfaToken !== null ? (
-          <form className={`w-full max-w-sm ${classes.reveal}`} style={revealDelay(120)} onSubmit={handleMfaSubmit} noValidate>
+          <form
+            className={`w-full max-w-sm ${classes.reveal}`}
+            style={revealDelay(120)}
+            onSubmit={handleMfaSubmit}
+            noValidate
+          >
             <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
               <BrandMark />
               <Text fz={20} fw={800} lts={-0.4}>
@@ -364,102 +385,123 @@ export default function LoginPage() {
               {isLoading ? t("auth:mfa.submitting") : t("auth:mfa.submit")}
             </Button>
 
-            <Button mt="md" fullWidth variant="subtle" leftSection={<ArrowLeft size={16} />} onClick={handleBackToLogin} disabled={isLoading}>
+            <Button
+              mt="md"
+              fullWidth
+              variant="subtle"
+              leftSection={<ArrowLeft size={16} />}
+              onClick={handleBackToLogin}
+              disabled={isLoading}
+            >
               {t("auth:mfa.back")}
             </Button>
           </form>
         ) : (
-        <form className={`w-full max-w-sm ${classes.reveal}`} style={revealDelay(120)} onSubmit={handleSubmit} noValidate>
-          <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
-            <BrandMark />
-            <Text fz={20} fw={800} lts={-0.4}>
-              SenseİK
-            </Text>
-          </Group>
-
-          <div className={classes.accentBar} />
-          <Title order={2} mt="md" fz={30} fw={800} lh={1.2} lts={-0.6}>
-            {t("auth:welcomeBack")}
-          </Title>
-          <Text mt={8} size="sm" c="dimmed">
-            {t("auth:welcomeSubtitle")}
-          </Text>
-
-          {error && (
-            <Alert mt="lg" color="red" variant="light">
-              <Text size="sm" fw={500} c="red">
-                {error}
-              </Text>
-            </Alert>
-          )}
-
-          <TextInput
-            mt="xl"
-            size="md"
-            id="email"
-            type="email"
-            label={t("auth:email")}
-            autoComplete="username"
-            value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
-            placeholder={t("auth:emailPlaceholder")}
-            disabled={isLoading}
-            required
-            withAsterisk={false}
-            classNames={{ input: classes.input }}
-          />
-
-          <PasswordInput
-            mt="md"
-            size="md"
-            id="password"
-            label={t("auth:password")}
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.currentTarget.value)}
-            placeholder={t("auth:passwordPlaceholder")}
-            disabled={isLoading}
-            required
-            withAsterisk={false}
-            visible={showPassword}
-            onVisibilityChange={setShowPassword}
-            visibilityToggleIcon={PasswordToggleIcon}
-            visibilityToggleFocusable
-            visibilityToggleButtonProps={{
-              "aria-label": showPassword ? t("auth:hidePassword") : t("auth:showPassword"),
-            }}
-            classNames={{ input: classes.input }}
-          />
-
-          {/* "Beni hatırla" was removed: it never did anything (state was never read). The session lasts as long as the
-              tab - see docs/adr/0009-web-refresh-token-storage.md; a real persistent session needs the httpOnly cookie. */}
-          <Group mt="md" justify="flex-end" wrap="nowrap">
-            <Text component={Link} to="/forgot-password" size="sm" fw={500} c="dimmed" style={{ textDecoration: "none" }}>
-              {t("auth:forgotPassword")}
-            </Text>
-          </Group>
-
-          <Button
-            type="submit"
-            mt="xl"
-            h={48}
-            fullWidth
-            variant="gradient"
-            gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
-            rightSection={isLoading ? undefined : <ArrowRight size={18} />}
-            disabled={isLoading}
-            className={classes.submit}
+          <form
+            className={`w-full max-w-sm ${classes.reveal}`}
+            style={revealDelay(120)}
+            onSubmit={handleSubmit}
+            noValidate
           >
-            {isLoading ? t("auth:loggingIn") : t("auth:login")}
-          </Button>
+            <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
+              <BrandMark />
+              <Text fz={20} fw={800} lts={-0.4}>
+                SenseİK
+              </Text>
+            </Group>
 
-          <Text mt="lg" ta="center" size="sm" c="dimmed">
-            {t("auth:noAccount")}
-          </Text>
-          <Text mt="xl" ta="center" size="xs" c="dimmed" className={classes.demo}>
-            {t("auth:demoCredentials")}
-          </Text>
-        </form>
+            <div className={classes.accentBar} />
+            <Title order={2} mt="md" fz={30} fw={800} lh={1.2} lts={-0.6}>
+              {t("auth:welcomeBack")}
+            </Title>
+            <Text mt={8} size="sm" c="dimmed">
+              {t("auth:welcomeSubtitle")}
+            </Text>
+
+            {error && (
+              <Alert mt="lg" color="red" variant="light">
+                <Text size="sm" fw={500} c="red">
+                  {error}
+                </Text>
+              </Alert>
+            )}
+
+            <TextInput
+              mt="xl"
+              size="md"
+              id="email"
+              type="email"
+              label={t("auth:email")}
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.currentTarget.value)}
+              placeholder={t("auth:emailPlaceholder")}
+              disabled={isLoading}
+              required
+              withAsterisk={false}
+              classNames={{ input: classes.input }}
+            />
+
+            <PasswordInput
+              mt="md"
+              size="md"
+              id="password"
+              label={t("auth:password")}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.currentTarget.value)}
+              placeholder={t("auth:passwordPlaceholder")}
+              disabled={isLoading}
+              required
+              withAsterisk={false}
+              visible={showPassword}
+              onVisibilityChange={setShowPassword}
+              visibilityToggleIcon={PasswordToggleIcon}
+              visibilityToggleFocusable
+              visibilityToggleButtonProps={{
+                "aria-label": showPassword ? t("auth:hidePassword") : t("auth:showPassword"),
+              }}
+              classNames={{ input: classes.input }}
+            />
+
+            {/* "Beni hatırla" was removed: it never did anything (state was never read). The session lasts as long as the
+              tab - see docs/adr/0009-web-refresh-token-storage.md; a real persistent session needs the httpOnly cookie. */}
+            <Group mt="md" justify="flex-end" wrap="nowrap">
+              <Text
+                component={Link}
+                to="/forgot-password"
+                size="sm"
+                fw={500}
+                c="dimmed"
+                style={{ textDecoration: "none" }}
+              >
+                {t("auth:forgotPassword")}
+              </Text>
+            </Group>
+
+            <Button
+              type="submit"
+              mt="xl"
+              h={48}
+              fullWidth
+              variant="gradient"
+              gradient={{ from: "blue.6", to: "brand.6", deg: 120 }}
+              rightSection={isLoading ? undefined : <ArrowRight size={18} />}
+              disabled={isLoading}
+              className={classes.submit}
+            >
+              {isLoading ? t("auth:loggingIn") : t("auth:login")}
+            </Button>
+
+            <Text mt="lg" ta="center" size="sm" c="dimmed">
+              {t("auth:noAccount")}
+            </Text>
+            {shouldShowDemoCredentials() && (
+              <Text mt="xl" ta="center" size="xs" c="dimmed" className={classes.demo}>
+                {t("auth:demoCredentials")}
+              </Text>
+            )}
+          </form>
         )}
       </main>
 

@@ -10,9 +10,16 @@ import trNavigation from "../../public/locales/tr/navigation.json";
 import trCommon from "../../public/locales/tr/common.json";
 import { useAuthStore } from "@/store/auth.store";
 import HomePage from "./home";
+import { getLeaveCalendar, type LeaveCalendarEntry } from "@/services/leave.service";
+import { addDaysToDateOnly, toDateOnly } from "@/lib/dates";
 
 // senseik-042 (halka grafik merkezi): the donut's center must show the grand total headcount,
 // never a department name - the previous behavior showed the largest department's name/count.
+vi.mock("@/services/leave.service", async () => {
+  const actual = await vi.importActual<typeof import("@/services/leave.service")>("@/services/leave.service");
+  return { ...actual, getLeaveCalendar: vi.fn() };
+});
+
 vi.mock("@/services/employees.service", async () => {
   const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
   return {
@@ -111,5 +118,52 @@ describe("HomePage department distribution donut (senseik-042)", () => {
     // Neither department name is shown as the center label (the pre-fix behavior).
     expect(within(card).queryByText("Mühendislik")).toBeNull();
     expect(within(card).queryByText("Satış")).toBeNull();
+  });
+});
+
+// D-14: "Bugün" must mean "starts today"; a leave that began earlier is under way, a later one shows its start date.
+describe("HomePage upcoming leaves widget (D-14)", () => {
+  function leaveEntry(requestId: string, employeeName: string, startDate: string): LeaveCalendarEntry {
+    return {
+      requestId,
+      employeeId: requestId,
+      employeeName,
+      startDate,
+      endDate: addDaysToDateOnly(startDate, 5),
+      calculatedDays: 1,
+      status: "approved",
+      isMasked: false,
+    };
+  }
+
+  it("labels only leaves starting today as Bugün and already-started ones as ongoing", async () => {
+    const today = toDateOnly(new Date());
+    vi.mocked(getLeaveCalendar).mockResolvedValue([
+      leaveEntry("r1", "Ayşe Bugün", today),
+      leaveEntry("r2", "Mehmet Devam", addDaysToDateOnly(today, -2)),
+      leaveEntry("r3", "Zeynep Sonra", addDaysToDateOnly(today, 7)),
+    ]);
+    useAuthStore.setState({
+      hasHydrated: true,
+      token: "test-token",
+      user: {
+        id: "u1",
+        email: "user@example.com",
+        name: "Test User",
+        roles: [],
+        roleLabels: [],
+        permissions: ["leave.my.calendar"],
+      },
+      features: { access: {} as never, accessSettingsBypass: true, mfaSetupRequired: false, disabledModules: [] },
+    });
+    renderHome();
+
+    const widget = await screen.findByText("Yaklaşan İzinler");
+    const card = widget.closest(".mantine-Card-root") as HTMLElement;
+
+    expect(await within(card).findByText("Bugün")).toBeInTheDocument();
+    expect(within(card).getByText("Devam ediyor")).toBeInTheDocument();
+    expect(within(card).queryAllByText("Bugün")).toHaveLength(1);
+    expect(within(card).getByText("Zeynep Sonra")).toBeInTheDocument();
   });
 });

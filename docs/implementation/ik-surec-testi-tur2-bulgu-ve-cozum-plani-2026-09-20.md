@@ -36,7 +36,7 @@ Durum kodları: **Ç** = bu turda çözüldü · **H** = `HEAD`'de başka oturum
 
 | ID | Konu | Durum | Not |
 |---|---|---|---|
-| Y-1 | Denetim kaydı boşlukları | **A** | Aşağıda plan (§4). İşaretli ama bağlanmamış modüller: Expense, Organization, Documents, Recruitment, Performance, Training, Onboarding, Announcements, Assets, OccupationalSafety, Integrations. Bağlı: Identity, Employee, Leave, Workflow. Attendance/Payroll/izin defteri işaretsiz. |
+| Y-1 | Denetim kaydı boşlukları | **Ç (kısmen)** | **Expense** (avans/harcama), **Attendance** (aylık puantaj onayı) ve **Payroll** (bordro dönemi) artık denetim kaydına yazıyor (`<şema>.audit_log_entries` + migration, canlıda uygulandı; avans oluşturma denetim ekranında doğrulandı). Organization, Documents, Recruitment, Performance, Training, Announcements, Assets, OccupationalSafety ve Integrations de bağlandı (canlıda Organization doğrulandı). Yalnız **Onboarding** bağlı değil: kalıcılık katmanı (Infrastructure/DbContext) yok, ayrı karar gerekir. Ek olarak web: D-6 (demo ipucu bayrağı `WEB_SHOW_DEMO_CREDENTIALS`), O-14 (karar sonrası yenileme), D-14 ("Devam ediyor" etiketi), N-6 (klavyeyle tarih girişi) çözüldü. İzin bakiye defteri (`LeaveLedgerEntry`, düzeltmeler dahil) de işaretlendi; canlıda düzeltme denetimde `create LeaveLedgerEntry` olarak doğrulandı (defter satırı düzeyinde; alan bazlı diff ve okunur özet açık → §4.1). Bağlı: Identity, Employee, Leave, Workflow, Expense, Attendance, Payroll. |
 | Y-2 | Bordro kümülatif GV matrahı | **H** | `fdb551bc` uyarı ekledi; devir matrahı girişi (asıl çözüm) hâlâ açık → **K**. |
 | Y-3 | Bitmemiş ay puantaj onayı | **H/K** | Bitmemiş ay reddediliyor (`MonthNotComplete`). Tamamlanmış ayda çözülmemiş uyuşmazlıkla onay → **K**. |
 | Y-4 | Onaysız bekleyen izin talepleri | **H** | HR onay komutu + seed senaryosu eklendi; mevcut 9 demo talep canlıda hâlâ "bekliyor". |
@@ -68,7 +68,7 @@ Durum kodları: **Ç** = bu turda çözüldü · **H** = `HEAD`'de başka oturum
 
 ## 4. Çözüm planı (kalan işler, sırayla)
 
-1. **Y-1 Denetim kaydı kapsamı (Yüksek).** Her hedef modül için: `DbContext`'e `AuditLogEntry` eşlemesi
+1. **Y-1 Denetim kaydı kapsamı (Yüksek) — Expense, Attendance, Payroll, izin defteri tamam; kalan modüller açık.** Her hedef modül için: `DbContext`'e `AuditLogEntry` eşlemesi
    (`AuditLogEntryConfiguration` önce uygulanır) + modül DI'ında `AuditLogInterceptor` + `ModuleAuditLogSource<T>`
    + EF migration (`<schema>.audit_log_entries`) + canlıda migration. Sıra: **Expense** (avans/harcama), **Attendance**
    (`MonthlyTimesheetApproval` → `IAuditLogged`), **Payroll** (`PayrollPeriod`), **Organization** (tatil takvimi, birim),

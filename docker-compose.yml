@@ -109,6 +109,9 @@ services:
         # Same-origin: nginx in the web container proxies /api to the api service (web/nginx.conf).
         # Override with WEB_API_BASE_URL=http://localhost:18080/api to call the API port directly.
         VITE_API_BASE_URL: ${WEB_API_BASE_URL:-/api}
+        # Login page "Demo kullanıcıları" hint. This stack is the demo environment, so it defaults to on;
+        # set WEB_SHOW_DEMO_CREDENTIALS=false for production builds.
+        VITE_SHOW_DEMO_CREDENTIALS: ${WEB_SHOW_DEMO_CREDENTIALS:-true}
     container_name: senseik-web
     ports:
       - "${WEB_PORT:-13000}:8080"

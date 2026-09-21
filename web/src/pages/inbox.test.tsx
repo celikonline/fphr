@@ -212,5 +212,18 @@ describe("WorkflowInboxPage", () => {
 
       await waitFor(() => expect(decideTask).toHaveBeenCalledWith("task-overtime-1", { outcome: "approved", comment: undefined }));
     });
+
+    // O-14: leave/overtime lists must be refetched after a decision, not only the inbox.
+    it("refreshes the workflow and leave queries after a decision", async () => {
+      vi.mocked(decideTask).mockClear().mockResolvedValue(undefined as never);
+      const invalidateSpy = vi.spyOn(QueryClient.prototype, "invalidateQueries");
+      const user = await openDecideDialog();
+
+      await user.click(await screen.findByRole("button", { name: "Onayla" }));
+
+      await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["leave"] }));
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["workflow"] });
+      invalidateSpy.mockRestore();
+    });
   });
 });

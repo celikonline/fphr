@@ -3,6 +3,7 @@
   "subtitle": "Şirketinizde yaklaşan önemli günler.",
   "unavailable": "Bu bilgi şu anda gösterilemiyor.",
   "today": "Bugün",
+  "ongoing": "Devam ediyor",
   "inDays_one": "{{count}} gün sonra",
   "inDays_other": "{{count}} gün sonra",
   "noWidgets": "Ana sayfanızda gösterilecek bir bilgi yok.",

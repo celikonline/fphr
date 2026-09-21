@@ -480,7 +480,15 @@ function UpcomingLeavesWidget() {
               </Group>
               <Amount
                 days={`${days(entry.calculatedDays)}${t("home:daysSuffix")}`}
-                date={daysUntil(entry.startDate) <= 0 ? t("home:today") : formatDateOnly(entry.startDate, i18n.language, SHORT_DATE)}
+                date={
+                  // D-14: "Bugün" only when the leave really starts today; one that began earlier (e.g. over the weekend)
+                  // is already under way, so say that instead of pretending it starts today.
+                  daysUntil(entry.startDate) > 0
+                    ? formatDateOnly(entry.startDate, i18n.language, SHORT_DATE)
+                    : daysUntil(entry.startDate) === 0
+                      ? t("home:today")
+                      : t("home:ongoing")
+                }
               />
             </>
           )}

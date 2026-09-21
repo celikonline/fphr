@@ -33,6 +33,10 @@ COPY packages/api-client/ packages/api-client/
 ARG VITE_API_BASE_URL=http://localhost:8080/api
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
+# The login page's "Demo kullanıcıları" hint is hidden in production builds unless this is "true" (D-6).
+ARG VITE_SHOW_DEMO_CREDENTIALS=false
+ENV VITE_SHOW_DEMO_CREDENTIALS=$VITE_SHOW_DEMO_CREDENTIALS
+
 RUN pnpm --filter web build
 
 FROM nginx:alpine AS runtime

@@ -3,6 +3,7 @@
   "subtitle": "Upcoming important days at your company.",
   "unavailable": "This information can't be shown right now.",
   "today": "Today",
+  "ongoing": "Ongoing",
   "inDays_one": "In {{count}} day",
   "inDays_other": "In {{count}} days",
   "noWidgets": "There is nothing to show on your home page.",

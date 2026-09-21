@@ -10,6 +10,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatDateOnly } from "@/lib/dates";
+import { refreshAfterDecision } from "@/lib/decision-refresh";
 import { useLeaveName, useDays } from "@/components/leave/leave-shared";
 import { formatTimeOnly, useMinutes } from "@/components/leave/overtime-shared";
 import {
@@ -45,8 +46,9 @@ function WorkflowInbox() {
 
   const [decideTarget, setDecideTarget] = useState<{ task: InboxTaskDto; override: boolean } | null>(null);
 
+  /** O-14: also refreshes leave/overtime queries, twice more after a delay (the request status flips via the outbox). */
   function refresh() {
-    queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY });
+    refreshAfterDecision(queryClient);
   }
 
   /**
