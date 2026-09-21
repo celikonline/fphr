@@ -52,7 +52,7 @@ Durum kodları: **Ç** = bu turda çözüldü · **H** = `HEAD`'de başka oturum
 | O-8 | Avans sınırları | **Ç (kısmen)** | Talep tarihi −30/+90 gün penceresi. Maaş katı üst limiti → **K**. |
 | O-9 | IBAN'ın "Eksik bilgi" sayılması | **K** | |
 | O-10 | Çalışan onaylı izin iptal talebi | **K** | |
-| O-11 | Eksi bakiye/uzak tarih düzeltmesi uyarısı | **A** | Sert red önerilmez (İK düzeltmesi meşru); uyarı+onay diyaloğu önerilir. |
+| O-11 | Eksi bakiye/uzak tarih düzeltmesi uyarısı | **Ç** | Bakiye düzeltme diyaloğu, sonuç bakiye eksiye düşüyorsa veya etki tarihi bugünden 365 günden uzaksa uyarı gösterir; "Yine de kaydet" ile onaylanır (sert red yok). Web testleri eklendi. |
 | O-12 | Ad alanında HTML | **Ç** | `<`, `>`, kontrol karakterleri reddedilir; gerçek adlar etkilenmez. |
 | O-13 | Harcama kategorileri ekranı | **Ç** | Çeviri, `%undefined` yok; canlıda doğrulandı. |
 | O-14 | Onay sonrası gecikme | **A** | Outbox gecikmesi; arayüzde iyimser güncelleme/yeniden sorgu önerisi. |
@@ -64,7 +64,8 @@ Durum kodları: **Ç** = bu turda çözüldü · **H** = `HEAD`'de başka oturum
 | D-10, D-11 | Ortak dosya rol kısıtı; API ham `leave.type.*` adı | **A** | D-11: web çeviriye bağımlı, mobil için ayrı karar. |
 | D-12 | Erişilebilirlik | **Ç (kısmen)** | Alan hataları, kapat butonu aria-label. Kenar çubuğu adsız butonlar `app-layout.tsx`'te (başka oturum). |
 | D-13 | İSG tarih biçimi/uyarı | **Ç** | |
-| D-14, D-15 | Ana sayfa "Bugün" hafta sonu; rol açıklaması | **A** | |
+| D-14 | Ana sayfa "Bugün" hafta sonu | **A** | |
+| D-15 | Sistem Yöneticisi rol açıklaması | **Ç (metin)** | Admin `*` yetkisine sahip ve faturalama dahil (`SystemRoleDefinitions`, karar 11.3.01 #8); açıklama "Faturalama dahil tüm yönetim yetkileri" olarak düzeltildi (tr/en). Vize onaylayıcısı yapılandırma konusu, kod değişikliği yok. |
 
 ## 4. Çözüm planı (kalan işler, sırayla)
 

@@ -550,6 +550,13 @@
       "dateRequired": "Das Gültigkeitsdatum ist erforderlich.",
       "reasonRequired": "Der Grund ist erforderlich."
     },
+    "warnings": {
+      "title": "Vor dem Speichern prüfen",
+      "negativeBalance": "Nach dieser Korrektur beträgt der Saldo {{balance}} Tage (negativ).",
+      "farPast": "Das Gültigkeitsdatum liegt {{days}} Tage in der Vergangenheit; Salden früherer Perioden können betroffen sein.",
+      "farFuture": "Das Gültigkeitsdatum liegt {{days}} Tage in der Zukunft; der Saldo ändert sich bis dahin nicht.",
+      "confirm": "Trotzdem speichern"
+    },
     "addLeave": "Urlaub hinzufügen"
   },
   "absences": {

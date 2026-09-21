@@ -550,6 +550,13 @@
       "dateRequired": "Etki tarihi zorunludur.",
       "reasonRequired": "Gerekçe zorunludur."
     },
+    "warnings": {
+      "title": "Kaydetmeden önce kontrol edin",
+      "negativeBalance": "Bu düzeltmeden sonra bakiye {{balance}} gün olacak (eksiye düşüyor).",
+      "farPast": "Etki tarihi bugünden {{days}} gün önce; geçmiş dönemlerin bakiyesi etkilenebilir.",
+      "farFuture": "Etki tarihi bugünden {{days}} gün sonra; bakiye o tarihe kadar değişmeyecek.",
+      "confirm": "Yine de kaydet"
+    },
     "addLeave": "İzin Ekle"
   },
   "absences": {

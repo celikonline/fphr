@@ -550,6 +550,13 @@
       "dateRequired": "Effective date is required.",
       "reasonRequired": "Reason is required."
     },
+    "warnings": {
+      "title": "Check before saving",
+      "negativeBalance": "After this adjustment the balance will be {{balance}} days (negative).",
+      "farPast": "The effective date is {{days}} days in the past; balances of earlier periods may be affected.",
+      "farFuture": "The effective date is {{days}} days in the future; the balance will not change until then.",
+      "confirm": "Save anyway"
+    },
     "addLeave": "Add leave"
   },
   "absences": {
