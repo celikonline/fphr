@@ -121,6 +121,12 @@
     "workflowsSection": "Approvals and processes",
     "assetsExpenseSection": "Assets and expenses",
     "ohsSection": "Occupational health and safety",
-    "platformSection": "Platform and data"
+    "platformSection": "Platform and data",
+    "leaveRuleSets": "Leave rule sets",
+    "leaveRuleSetsDesc": "Rule sets and leave types",
+    "allSettings": "All settings",
+    "subnavLabel": "Settings menu",
+    "orgChart": "Org chart",
+    "orgChartDesc": "View the unit and employee hierarchy as a chart"
   }
 }

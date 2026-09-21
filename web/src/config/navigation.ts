@@ -431,6 +431,8 @@ export interface SettingsLink {
   path: string;
   icon: LucideIcon;
   permissions?: readonly string[];
+  /** Rota bir erişim ayarıyla da kapılıysa (route-guard aynı ayarı okur). */
+  accessSetting?: AccessSettingKey;
   phase?: number;
 }
 
@@ -462,6 +464,15 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/company/structure",
         icon: Network,
         permissions: SETTINGS_PERMISSIONS.structure,
+      },
+      {
+        key: "orgChart",
+        labelKey: "settings.orgChart",
+        descriptionKey: "settings.orgChartDesc",
+        path: "/app/employees/org-chart",
+        icon: GitBranch,
+        permissions: ["employee.orgchart.view"],
+        accessSetting: "showOrgChart",
       },
       {
         key: "locations",
@@ -501,6 +512,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         path: "/app/settings/rules/work-calendars",
         icon: CalendarClock,
         permissions: SETTINGS_PERMISSIONS.workSchedules,
+      },
+      {
+        key: "leaveRuleSets",
+        labelKey: "settings.leaveRuleSets",
+        descriptionKey: "settings.leaveRuleSetsDesc",
+        path: "/app/settings/leave/rule-sets",
+        icon: ScrollText,
+        permissions: ["leave.rule_sets.read"],
       },
       {
         key: "holidayCalendars",

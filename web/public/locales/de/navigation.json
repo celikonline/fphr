@@ -121,6 +121,12 @@
     "workflowsSection": "Genehmigungen und Prozesse",
     "assetsExpenseSection": "Anlagen und Ausgaben",
     "ohsSection": "Arbeitsschutz",
-    "platformSection": "Plattform und Daten"
+    "platformSection": "Plattform und Daten",
+    "leaveRuleSets": "Urlaubsregelsätze",
+    "leaveRuleSetsDesc": "Regelsätze und Urlaubsarten",
+    "allSettings": "Alle Einstellungen",
+    "subnavLabel": "Einstellungsmenü",
+    "orgChart": "Organigramm",
+    "orgChartDesc": "Einheiten- und Mitarbeiterhierarchie als Diagramm anzeigen"
   }
 }

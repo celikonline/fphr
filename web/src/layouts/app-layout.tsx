@@ -42,6 +42,7 @@ import {
 import { NotificationsMenu } from "@/components/notifications/notification-bell";
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
+import SettingsSubNav from "@/components/settings-subnav";
 import ModuleRouteGuard from "@/components/module-disabled";
 import classes from "./app-layout.module.css";
 
@@ -519,6 +520,9 @@ export default function AppLayout() {
             >
               <NavList collapsed />
             </aside>
+
+            {/* Ayar alt sayfalarında: gruplanmış ikinci ayarlar menüsü */}
+            <SettingsSubNav />
 
             <main className="min-w-0 flex-1 overflow-auto">
               {/* Keeps the sidebar and header on screen while the next page's chunk loads. */}
