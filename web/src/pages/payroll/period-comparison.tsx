@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { Badge, Card, Group, NumberInput, Skeleton, Switch, Table, Text, Title } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  Group,
+  NumberInput,
+  Skeleton,
+  Switch,
+  Table,
+  Text,
+  Title,
+} from "@mantine/core";
 import { formatMoney } from "@/lib/money";
 import { getPeriodComparison, type ComparisonLine } from "@/services/payroll.service";
 
@@ -27,12 +37,15 @@ export function PeriodComparison({ periodId }: { periodId: string }) {
     return <Skeleton h={120} />;
   }
 
-  const money = (amount: number | null | undefined) => (amount == null ? "—" : formatMoney(amount, "TRY", i18n.language));
-  const percent = (value: number | null | undefined) => (value == null ? "—" : `${value > 0 ? "+" : ""}${value.toFixed(2)}%`);
+  const money = (amount: number | null | undefined) =>
+    amount == null ? "—" : formatMoney(amount, "TRY", i18n.language);
+  const percent = (value: number | null | undefined) =>
+    value == null ? "—" : `${value > 0 ? "+" : ""}${value.toFixed(2)}%`;
   const lines = onlyExceeding ? data.lines.filter((line) => line.exceedsThreshold) : data.lines;
-  const previousLabel = new Intl.DateTimeFormat(i18n.language, { month: "long", year: "numeric" }).format(
-    new Date(data.previousYear, data.previousMonth - 1, 1),
-  );
+  const previousLabel = new Intl.DateTimeFormat(i18n.language, {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(data.previousYear, data.previousMonth - 1, 1));
 
   return (
     <Card withBorder padding="lg">
@@ -40,7 +53,9 @@ export function PeriodComparison({ periodId }: { periodId: string }) {
         <div>
           <Title order={4}>{t("payroll:comparison.title")}</Title>
           <Text size="xs" c="dimmed">
-            {data.previousPeriodId ? t("payroll:comparison.against", { period: previousLabel }) : t("payroll:comparison.noPrevious", { period: previousLabel })}
+            {data.previousPeriodId
+              ? t("payroll:comparison.against", { period: previousLabel })
+              : t("payroll:comparison.noPrevious", { period: previousLabel })}
           </Text>
         </div>
         <Group gap="md" align="flex-end">
@@ -55,7 +70,11 @@ export function PeriodComparison({ periodId }: { periodId: string }) {
             suffix="%"
             w={110}
           />
-          <Switch label={t("payroll:comparison.onlyExceeding")} checked={onlyExceeding} onChange={(event) => setOnlyExceeding(event.currentTarget.checked)} />
+          <Switch
+            label={t("payroll:comparison.onlyExceeding")}
+            checked={onlyExceeding}
+            onChange={(event) => setOnlyExceeding(event.currentTarget.checked)}
+          />
         </Group>
       </Group>
 

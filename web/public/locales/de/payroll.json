@@ -15,6 +15,25 @@
       "locked": "Gesperrt"
     }
   },
+  "adjustments": {
+    "title": "Zusätzliche Bezüge",
+    "subtitle": "Prämien, Provisionen und Leistungszahlungen werden brutto erfasst, der Abrechnung desselben Monats hinzugefügt und unterliegen SV und Steuer. Änderungen nur in offener Periode.",
+    "add": "Bezug hinzufügen",
+    "empty": "Keine zusätzlichen Bezüge in dieser Periode.",
+    "employee": "Mitarbeitende",
+    "kindLabel": "Art",
+    "name": "Bezeichnung",
+    "gross": "Bruttobetrag",
+    "save": "Speichern",
+    "remove": "Löschen",
+    "error": "Die Aktion konnte nicht ausgeführt werden.",
+    "kind": {
+      "bonus": "Prämie",
+      "commission": "Provision",
+      "performance": "Leistung",
+      "other": "Sonstiges"
+    }
+  },
   "comparison": {
     "title": "Vergleich mit dem Vormonat",
     "against": "Verglichen mit {{period}}.",

@@ -333,3 +333,39 @@ export async function downloadPayrollDeclarationSummary(id: string, fallbackName
     throw await unwrapBlobError(error);
   }
 }
+
+export type PayrollAdjustmentKind = "bonus" | "commission" | "performance" | "other";
+
+/** `PayrollAdjustmentDto`: a one-off gross earning (prim, komisyon...) of the period, with the employee's name. */
+export interface PayrollAdjustment {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  kind: PayrollAdjustmentKind;
+  label: string;
+  grossAmount: number;
+}
+
+export interface PayrollAdjustmentInput {
+  employeeId: string;
+  kind: PayrollAdjustmentKind;
+  label: string;
+  grossAmount: number;
+}
+
+/** The period's one-off taxable earnings, all employees (`payroll.trace.view`). */
+export async function listPayrollAdjustments(periodId: string): Promise<PayrollAdjustment[]> {
+  const { data } = await apiClient.get<PayrollAdjustment[]>(`${PAYROLL_BASE}/periods/${periodId}/adjustments`);
+  return data;
+}
+
+/** Adds a gross one-off earning in an open period (`payroll.adjustment.manage`); returns its id. */
+export async function addPayrollAdjustment(periodId: string, input: PayrollAdjustmentInput): Promise<string> {
+  const { data } = await apiClient.post<string>(`${PAYROLL_BASE}/periods/${periodId}/adjustments`, input);
+  return data;
+}
+
+/** Removes an earning while its period is still open (`payroll.adjustment.manage`). */
+export async function removePayrollAdjustment(adjustmentId: string): Promise<void> {
+  await apiClient.delete(`${PAYROLL_BASE}/adjustments/${adjustmentId}`);
+}

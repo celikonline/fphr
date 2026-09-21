@@ -15,6 +15,25 @@
       "locked": "Kilitli"
     }
   },
+  "adjustments": {
+    "title": "Ek kazançlar",
+    "subtitle": "Prim, komisyon ve performans ödemeleri brüt girilir, aynı ayın bordrosuna eklenir ve SGK ile vergiye tabidir. Yalnızca açık dönemde değişir.",
+    "add": "Ek kazanç ekle",
+    "empty": "Bu dönemde ek kazanç yok.",
+    "employee": "Çalışan",
+    "kindLabel": "Tür",
+    "name": "Ad",
+    "gross": "Brüt tutar",
+    "save": "Kaydet",
+    "remove": "Sil",
+    "error": "İşlem yapılamadı.",
+    "kind": {
+      "bonus": "Prim",
+      "commission": "Komisyon",
+      "performance": "Performans",
+      "other": "Diğer"
+    }
+  },
   "comparison": {
     "title": "Önceki ayla karşılaştırma",
     "against": "{{period}} ile karşılaştırılıyor.",
