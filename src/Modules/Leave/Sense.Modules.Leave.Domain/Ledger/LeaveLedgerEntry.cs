@@ -10,7 +10,7 @@ namespace Sense.Modules.Leave.Domain.Ledger;
 /// <see cref="EffectiveDate"/> of a Usage row is the leave START date - balance fields are projected by it, not by
 /// the time the row was recorded.
 /// </summary>
-public sealed class LeaveLedgerEntry : TenantEntity<Guid>
+public sealed class LeaveLedgerEntry : TenantEntity<Guid>, IAuditLogged
 {
     private LeaveLedgerEntry()
     {

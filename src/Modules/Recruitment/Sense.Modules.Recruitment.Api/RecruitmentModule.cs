@@ -7,10 +7,12 @@ using Sense.Modules.Recruitment.Domain;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.BackgroundJobs;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Recruitment.Api;
 
@@ -30,7 +32,12 @@ public sealed class RecruitmentModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<RecruitmentDbContext>(configuration, RecruitmentDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<RecruitmentDbContext>(
+            configuration, RecruitmentDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<RecruitmentDbContext>>();
 
         // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor
         // (see CLAUDE.md's AddModuleHandlers note - Contracts-assembly-only registration silently registers nothing).

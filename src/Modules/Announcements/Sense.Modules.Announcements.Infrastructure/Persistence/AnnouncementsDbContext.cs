@@ -4,6 +4,7 @@ using Sense.Modules.Announcements.Domain;
 using Sense.Modules.Announcements.Domain.Support;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Announcements.Infrastructure.Persistence;
 
@@ -20,4 +21,14 @@ public sealed class AnnouncementsDbContext(DbContextOptions<AnnouncementsDbConte
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<HelpSearchLog> HelpSearchLogs => Set<HelpSearchLog>();
     public DbSet<CompanyEvent> CompanyEvents => Set<CompanyEvent>();
+
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }

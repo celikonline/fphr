@@ -15,6 +15,7 @@ using Sense.Modules.Recruitment.Domain.JobRequisitions;
 using Sense.Modules.Recruitment.Domain.Tags;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Recruitment.Infrastructure.Persistence;
 
@@ -41,6 +42,16 @@ public sealed class RecruitmentDbContext(DbContextOptions<RecruitmentDbContext> 
     public DbSet<RecruitmentFormResponse> FormResponses => Set<RecruitmentFormResponse>();
 
     public DbSet<AutomationRule> AutomationRules => Set<AutomationRule>();
+
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class RecruitmentTables

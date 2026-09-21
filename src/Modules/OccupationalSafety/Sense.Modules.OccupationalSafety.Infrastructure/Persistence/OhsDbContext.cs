@@ -5,6 +5,7 @@ using Sense.Modules.OccupationalSafety.Domain.HazardClassifications;
 using Sense.Modules.OccupationalSafety.Domain.RiskAssessments;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 
@@ -19,6 +20,16 @@ public sealed class OhsDbContext(DbContextOptions<OhsDbContext> options, ITenant
     public DbSet<WorkplaceHazardClassification> HazardClassifications => Set<WorkplaceHazardClassification>();
 
     public DbSet<RiskAssessment> RiskAssessments => Set<RiskAssessment>();
+
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class OhsTables

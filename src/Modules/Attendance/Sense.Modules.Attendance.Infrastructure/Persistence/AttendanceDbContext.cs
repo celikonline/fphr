@@ -12,6 +12,7 @@ using Sense.Modules.Attendance.Domain.Shifts;
 using Sense.Modules.Attendance.Domain.WorkSchedules;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Attendance.Infrastructure.Persistence;
 
@@ -45,6 +46,16 @@ public sealed class AttendanceDbContext(DbContextOptions<AttendanceDbContext> op
 
     public DbSet<EqualizationPeriod> EqualizationPeriods => Set<EqualizationPeriod>();
     public DbSet<SelfCheckIn> SelfCheckIns => Set<SelfCheckIn>();
+
+    /// <summary>attendance.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class AttendanceTables

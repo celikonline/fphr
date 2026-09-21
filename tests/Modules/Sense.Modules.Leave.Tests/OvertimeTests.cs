@@ -297,7 +297,10 @@ public sealed class OvertimeIntegrationTests : TestFixture
         var inNotice = await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
             h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 9, 26), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates);
         inNotice.IsSuccess.ShouldBeTrue(inNotice.IsFailure ? inNotice.Error.Code : null);
-        inNotice.Value.Warnings.ShouldBeEmpty(); // Saturday, consent still in effect during notice
+        // Saturday, consent still in effect during notice. The pinned clock is 14 days after the work date, so the
+        // (non-blocking) past-date warning is expected; only the consent warnings must be absent.
+        inNotice.Value.Warnings.ShouldNotContain(OvertimeWarnings.ConsentMissing);
+        inNotice.Value.Warnings.ShouldNotContain(OvertimeWarnings.NightConsentMissing);
         (await RunAsync<SubmitMyOvertimeRequestHandler, OvertimeSubmissionDto>(
             h => h.Handle(new SubmitMyOvertimeRequestCommand(new DateOnly(2026, 10, 3), new TimeOnly(10, 0), 60, null), CancellationToken.None), _currentUser, _workflow, AfterAllTestDates))
             .Error.Code.ShouldBe(OvertimeErrors.ConsentRevoked);

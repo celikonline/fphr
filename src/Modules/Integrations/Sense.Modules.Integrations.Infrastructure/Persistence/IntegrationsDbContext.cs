@@ -7,6 +7,7 @@ using Sense.Modules.Integrations.Domain;
 using Sense.Modules.Integrations.Domain.Webhooks;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Integrations.Infrastructure.Persistence;
 
@@ -21,6 +22,16 @@ public sealed class IntegrationsDbContext(DbContextOptions<IntegrationsDbContext
     public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
 
     public DbSet<WebhookDeliveryLog> WebhookDeliveries => Set<WebhookDeliveryLog>();
+
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class IntegrationsTables

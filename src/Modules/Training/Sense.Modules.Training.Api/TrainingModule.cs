@@ -6,9 +6,11 @@ using Sense.Modules.Training.Contracts;
 using Sense.Modules.Training.Domain;
 using Sense.Modules.Training.Infrastructure;
 using Sense.Modules.Training.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Training.Api;
 
@@ -29,7 +31,12 @@ public sealed class TrainingModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<TrainingDbContext>(configuration, TrainingDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<TrainingDbContext>(
+            configuration, TrainingDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<TrainingDbContext>>();
 
         // Domain + Application + Infrastructure + Contracts assemblies: handlers/commands/queries + domain/integration
         // event types must resolve in OutboxProcessor (CLAUDE.md: Contracts-only registration silently registers nothing).

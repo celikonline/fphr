@@ -8,8 +8,10 @@ namespace Sense.Modules.Payroll.Domain.Periods;
 /// One tenant-month of payroll (11.3.7 "Dönemler"). This slice only creates/reads Open periods; Approved/Paid/Locked
 /// transitions, the "Değişenler" dirty-flag workflow and Submit/Lock actions are P3+.
 /// </summary>
-public sealed class PayrollPeriod : TenantAggregateRoot<Guid>
+public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
 {
+    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status)];
+
     private PayrollPeriod()
     {
     }
