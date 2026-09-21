@@ -9,6 +9,9 @@ namespace Sense.Modules.Payroll.Domain.Payslips;
 /// </summary>
 public static class PayslipDirtyFlagReasons
 {
+    /// <summary>Leave.Contracts.Events.OvertimeConvertedToPay: approved overtime paid in cash changes the month's earnings.</summary>
+    public const string OvertimeChanged = "overtime_changed";
+
     /// <summary>Employee.Contracts.Events.SalaryChanged.</summary>
     public const string SalaryChanged = "salary_changed";
 

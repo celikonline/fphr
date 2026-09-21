@@ -88,6 +88,7 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<EmployeeProfileChanged>, EmployeeProfileChangedDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<LeaveCancelled>, LeaveCancelledDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedSettlementHandler>();
+        services.AddScoped<IIntegrationEventHandler<OvertimeConvertedToPay>, OvertimeConvertedToPayDirtyFlagHandler>();
         return services;
     }
 

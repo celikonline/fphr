@@ -120,7 +120,8 @@ public sealed class PayrollPeriodCalculationServiceTests
         out IEmployeePayrollProfileRepository profiles, out IPayslipDirtyFlagRepository dirtyFlags,
         out IEmployeeSalaryLookup salaryLookup, out IWorkedTimeReader workedTimeReader,
         out IAbsenceDaysReader absenceDaysReader, out IExpensePayoutReader expensePayoutReader,
-        out IEmployeeUnionMembershipRepository unionMemberships, IPayrollPeriodRepository? periodsOverride = null)
+        out IEmployeeUnionMembershipRepository unionMemberships, IPayrollPeriodRepository? periodsOverride = null,
+        Sense.Modules.Leave.Contracts.IOvertimePayrollReader? overtimeOverride = null)
     {
         payslips = Substitute.For<IPayslipRepository>();
         payslips.FindByEmployeeAndPeriodAsync(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
@@ -135,6 +136,7 @@ public sealed class PayrollPeriodCalculationServiceTests
         absenceDaysReader = Substitute.For<IAbsenceDaysReader>();
         expensePayoutReader = Substitute.For<IExpensePayoutReader>();
         unionMemberships = Substitute.For<IEmployeeUnionMembershipRepository>();
+        var overtimeReader = overtimeOverride ?? Substitute.For<Sense.Modules.Leave.Contracts.IOvertimePayrollReader>();
 
         var tenant = Substitute.For<ITenantContext>();
         tenant.TenantId.Returns(TenantId);
@@ -150,7 +152,28 @@ public sealed class PayrollPeriodCalculationServiceTests
         return new PayrollPeriodCalculationService(
             payslips, traces, profiles, dirtyFlags, salaryLookup, Legislation(), tenant, TimeProvider.System,
             workedTimeReader, absenceDaysReader, expensePayoutReader, periods, garnishmentOrders, disabilityLookup, unionMemberships,
+            overtimeReader,
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
+    }
+
+    [Fact]
+    public async Task RecalculateAllAsync_AddsTheApprovedOvertimePayToTheGross()
+    {
+        var overtime = Substitute.For<Sense.Modules.Leave.Contracts.IOvertimePayrollReader>();
+        var employee = Guid.NewGuid();
+        // 10 hours at 25%: hourly 50,000 / 225 = 222.22; 10 * 222.22 * 1.25 = 2,777.75
+        overtime.GetAsync(TenantId, Arg.Any<int>(), Arg.Any<int>(), Arg.Any<IReadOnlyCollection<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Sense.Modules.Leave.Contracts.OvertimePayrollLine>>([new Sense.Modules.Leave.Contracts.OvertimePayrollLine(employee, 600, 0, 0)]));
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, overtimeOverride: overtime);
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+
+        await service.RecalculateAllAsync(OpenPeriod(), [employee], CancellationToken.None);
+
+        created.ShouldNotBeNull();
+        created.GrossAmount.ShouldBe(52_777.75m);
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
@@ -68,6 +69,7 @@ public sealed class PayrollPeriodCalculationService(
     IGarnishmentOrderRepository garnishmentOrderRepository,
     IEmployeeDisabilityLookup disabilityLookup,
     IEmployeeUnionMembershipRepository unionMemberships,
+    IOvertimePayrollReader overtimeReader,
     ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
@@ -228,6 +230,13 @@ public sealed class PayrollPeriodCalculationService(
         var membership = await unionMemberships.FindCurrentAsync(employeeId, periodStart, cancellationToken);
         var unionDuesAmount = UnionDuesCalculator.Calculate(membership, salary.Amount, calendarDays, periodStart);
 
+        // Fazla mesai (4857 md.41): Leave's approved overtime minutes (25%/50% rates, time-off conversions excluded) become a taxable
+        // earning added to the gross. Leave returns nothing for an employee without overtime, which leaves the gross unchanged.
+        var overtime = (await overtimeReader.GetAsync(tenant.TenantId, period.Year, period.Month, [employeeId], cancellationToken))?.FirstOrDefault(o => o.EmployeeId == employeeId);
+        var overtimePay = overtime is null
+            ? 0m
+            : OvertimePayCalculator.Calculate(salary.Amount, overtime.Rate25Minutes / 60m, overtime.Rate50Minutes / 60m);
+
         var input = new PayrollCalculationInput(
             GrossMonthlySalary: salary.Amount,
             WorkedDays: workedDays,
@@ -242,6 +251,7 @@ public sealed class PayrollPeriodCalculationService(
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
+            AdditionalTaxableEarnings: overtimePay,
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
