@@ -42,6 +42,9 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
     public async Task<Payslip?> FindByEmployeeAndPeriodAsync(Guid employeeId, Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PayrollPeriodId == payrollPeriodId, cancellationToken);
 
+    public async Task<IReadOnlyList<Payslip>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Payslips.Where(p => p.EmployeeId == employeeId).ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
 }

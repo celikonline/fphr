@@ -34,6 +34,9 @@ public interface IPayslipRepository
 
     Task<Payslip?> FindByEmployeeAndPeriodAsync(Guid employeeId, Guid payrollPeriodId, CancellationToken cancellationToken = default);
 
+    /// <summary>Every payslip of one employee across periods (employee card "Bordro" tab).</summary>
+    Task<IReadOnlyList<Payslip>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
     /// <summary>Every payslip of one period (ChangeDetectionRun scan, P3).</summary>
     Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default);
 }

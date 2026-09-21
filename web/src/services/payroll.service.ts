@@ -129,3 +129,80 @@ async function unwrapBlobError(error: unknown): Promise<unknown> {
   }
   return error;
 }
+
+/** `EmployeePayslipDto`: one payslip of an employee with its period (employee card "Bordro" tab). */
+export interface EmployeePayslip {
+  payslipId: string;
+  periodId: string;
+  year: number;
+  month: number;
+  periodStatus: PayrollPeriodStatus;
+  grossAmount: number;
+  netAmount: number;
+  employerCost: number;
+}
+
+/** Every payslip of the employee, newest period first (`payroll.trace.view`). */
+export async function listEmployeePayslips(employeeId: string): Promise<EmployeePayslip[]> {
+  const { data } = await apiClient.get<EmployeePayslip[]>(`${PAYROLL_BASE}/employees/${employeeId}/payslips`);
+  return data;
+}
+
+/** Downloads one payslip as the plain-text ücret pusulası (İş K. m.37); server file name via Content-Disposition, else fallbackName. */
+export async function downloadPayslipDocument(payslipId: string, fallbackName: string): Promise<DownloadedPayrollFile> {
+  try {
+    const response = await apiClient.get<Blob>(`${PAYROLL_BASE}/payslips/${payslipId}/document`, { responseType: "blob" });
+    const disposition = response.headers["content-disposition"];
+    return {
+      blob: response.data,
+      fileName: parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ?? fallbackName,
+    };
+  } catch (error) {
+    throw await unwrapBlobError(error);
+  }
+}
+
+/** `EmployeePayrollProfileDto` (camelCase enum JSON); the dated payroll settings the monthly run reads. */
+export interface EmployeePayrollProfile {
+  id: string;
+  employeeId: string;
+  validFrom: string;
+  validTo?: string | null;
+  wageBasis: "monthly" | "daily" | "weekly" | "hourly" | "yearly";
+  sgkStatus: "normal" | "retired" | "intern" | "apprentice" | "foreign";
+  incentiveLawCode?: string | null;
+  mealBenefitVariant: "none" | "cash" | "inKind" | "mealCardOnly" | "mealAndMarketCard";
+  mealDailyAmount: number;
+  transportVariant: "none" | "cash" | "card" | "shuttle";
+  paymentMethod: "bank" | "cash";
+  sickDaysReducePay: boolean;
+  externalPayrollCode?: string | null;
+  notes?: string | null;
+}
+
+/** The profile version in effect today (`payroll.profile.manage`), or null when the employee has none (404). */
+export async function getEmployeePayrollProfile(employeeId: string): Promise<EmployeePayrollProfile | null> {
+  const { data } = await apiClient.get<EmployeePayrollProfile>(`${PAYROLL_BASE}/employees/${employeeId}/profile`, {
+    validateStatus: (status) => status === 200 || status === 404,
+  });
+  return data && "wageBasis" in data ? data : null;
+}
+
+/** `GarnishmentOrderDto`: an icra/nafaka deduction order. */
+export interface GarnishmentOrder {
+  id: string;
+  employeeId: string;
+  type: "icra" | "nafaka";
+  caseReference: string;
+  monthlyInstallmentAmount: number;
+  remainingBalance: number;
+  startDate: string;
+  closedDate?: string | null;
+  isClosed: boolean;
+}
+
+/** The employee's garnishment orders including closed ones, newest first (`payroll.trace.view`). */
+export async function listGarnishmentOrders(employeeId: string): Promise<GarnishmentOrder[]> {
+  const { data } = await apiClient.get<GarnishmentOrder[]>(`${PAYROLL_BASE}/employees/${employeeId}/garnishment-orders`);
+  return data;
+}

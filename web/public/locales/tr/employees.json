@@ -340,6 +340,7 @@
       "customFields": "Özel alanlar",
       "career": "Kariyer",
       "payments": "Ödemeler",
+      "payroll": "Bordro",
       "documents": "Dosyalar",
       "assets": "Zimmet",
       "leave": "İzinler",
@@ -640,6 +641,95 @@
       "dateBeforeExit": "Yeni işe başlama tarihi önceki ayrılma tarihinden ({{date}}) sonra olmalıdır.",
       "submit": "Yeniden işe al",
       "success": "Çalışan yeniden işe alındı. İzne esas hak ediş tarihi: {{date}}."
+    }
+  },
+  "payrollTab": {
+    "profile": {
+      "title": "Bordro profili",
+      "empty": "Bu çalışan için tanımlı bir bordro profili yok.",
+      "validFrom": "Geçerlilik başlangıcı",
+      "wageBasis": "Ücret esası",
+      "sgkStatus": "SGK statüsü",
+      "incentive": "Teşvik kanun kodu",
+      "meal": "Yemek yardımı",
+      "transport": "Yol yardımı",
+      "paymentMethod": "Ödeme yöntemi",
+      "sickDays": "Hastalık günleri ücreti düşürür",
+      "externalCode": "Dış bordro kodu",
+      "notes": "Notlar",
+      "yes": "Evet",
+      "no": "Hayır",
+      "mealDaily": "{{amount}} / gün"
+    },
+    "payslips": {
+      "title": "Ücret pusulaları",
+      "empty": "Bu çalışan için hesaplanmış bordro yok.",
+      "columns": {
+        "period": "Dönem",
+        "status": "Dönem durumu",
+        "gross": "Brüt",
+        "net": "Net",
+        "employerCost": "İşveren maliyeti"
+      },
+      "download": "İndir",
+      "downloadError": "Ücret pusulası indirilemedi."
+    },
+    "garnishments": {
+      "title": "İcra ve nafaka kesintileri",
+      "empty": "Kayıtlı kesinti emri yok.",
+      "columns": {
+        "type": "Tür",
+        "case": "Dosya no",
+        "installment": "Aylık taksit",
+        "remaining": "Kalan borç",
+        "start": "Başlangıç",
+        "status": "Durum"
+      },
+      "open": "Açık",
+      "closed": "Kapalı"
+    },
+    "enum": {
+      "wageBasis": {
+        "monthly": "Aylık",
+        "daily": "Günlük",
+        "weekly": "Haftalık",
+        "hourly": "Saatlik",
+        "yearly": "Yıllık"
+      },
+      "sgkStatus": {
+        "normal": "Normal",
+        "retired": "Emekli",
+        "intern": "Stajyer",
+        "apprentice": "Çırak",
+        "foreign": "Yabancı"
+      },
+      "meal": {
+        "none": "Yok",
+        "cash": "Nakit",
+        "inKind": "Ayni",
+        "mealCardOnly": "Yemek kartı",
+        "mealAndMarketCard": "Yemek + market kartı"
+      },
+      "transport": {
+        "none": "Yok",
+        "cash": "Nakit",
+        "card": "Kart",
+        "shuttle": "Servis"
+      },
+      "paymentMethod": {
+        "bank": "Banka",
+        "cash": "Nakit"
+      },
+      "periodStatus": {
+        "open": "Açık",
+        "approved": "Onaylandı",
+        "paid": "Ödendi",
+        "locked": "Kilitli"
+      },
+      "garnishmentType": {
+        "icra": "İcra",
+        "nafaka": "Nafaka"
+      }
     }
   },
   "exitSettlement": {

@@ -12,6 +12,7 @@ import { CustomFieldsSection } from "./custom-fields-section";
 import { DOCUMENTS_CARD_TAB_PERMISSIONS, DocumentsSection } from "./documents-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
 import { PaymentsSection } from "./payments-section";
+import { PAYROLL_CARD_TAB_PERMISSIONS, PayrollSection } from "./payroll-section";
 import { SubcontractorSection } from "./subcontractor-section";
 import { UnionSection } from "./union-section";
 import { LEAVE_CARD_TAB_PERMISSIONS, LeaveSection } from "@/components/leave/leave-section";
@@ -97,6 +98,7 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     permission: ["employee.salary.view", "employee.employees.read", "employee.my.view"],
     component: PaymentsSection,
   },
+  { key: "payroll", labelKey: "employees:card.tabs.payroll", permission: PAYROLL_CARD_TAB_PERMISSIONS, module: "payroll", component: PayrollSection },
   { key: "documents", labelKey: "employees:card.tabs.documents", permission: DOCUMENTS_CARD_TAB_PERMISSIONS, component: DocumentsSection },
   { key: "assets", labelKey: "employees:card.tabs.assets", permission: ASSETS_CARD_TAB_PERMISSIONS, module: "assets", component: AssetsSection },
   { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, module: "leave", component: LeaveSection },

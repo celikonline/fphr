@@ -340,6 +340,7 @@
       "customFields": "Custom fields",
       "career": "Career",
       "payments": "Payments",
+      "payroll": "Payroll",
       "documents": "Files",
       "assets": "Assets",
       "leave": "Leave",
@@ -640,6 +641,95 @@
       "dateBeforeExit": "The new hire date must be after the previous exit date ({{date}}).",
       "submit": "Rehire",
       "success": "The employee is rehired. Leave accrual starts on {{date}}."
+    }
+  },
+  "payrollTab": {
+    "profile": {
+      "title": "Payroll profile",
+      "empty": "This employee has no payroll profile.",
+      "validFrom": "Valid from",
+      "wageBasis": "Wage basis",
+      "sgkStatus": "SGK status",
+      "incentive": "Incentive law code",
+      "meal": "Meal benefit",
+      "transport": "Transport benefit",
+      "paymentMethod": "Payment method",
+      "sickDays": "Sick days reduce pay",
+      "externalCode": "External payroll code",
+      "notes": "Notes",
+      "yes": "Yes",
+      "no": "No",
+      "mealDaily": "{{amount}} / day"
+    },
+    "payslips": {
+      "title": "Payslips",
+      "empty": "No payroll has been calculated for this employee.",
+      "columns": {
+        "period": "Period",
+        "status": "Period status",
+        "gross": "Gross",
+        "net": "Net",
+        "employerCost": "Employer cost"
+      },
+      "download": "Download",
+      "downloadError": "The payslip could not be downloaded."
+    },
+    "garnishments": {
+      "title": "Garnishments and alimony",
+      "empty": "No deduction orders recorded.",
+      "columns": {
+        "type": "Type",
+        "case": "Case no.",
+        "installment": "Monthly installment",
+        "remaining": "Remaining debt",
+        "start": "Start",
+        "status": "Status"
+      },
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "enum": {
+      "wageBasis": {
+        "monthly": "Monthly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "hourly": "Hourly",
+        "yearly": "Yearly"
+      },
+      "sgkStatus": {
+        "normal": "Normal",
+        "retired": "Retired",
+        "intern": "Intern",
+        "apprentice": "Apprentice",
+        "foreign": "Foreign"
+      },
+      "meal": {
+        "none": "None",
+        "cash": "Cash",
+        "inKind": "In kind",
+        "mealCardOnly": "Meal card",
+        "mealAndMarketCard": "Meal + market card"
+      },
+      "transport": {
+        "none": "None",
+        "cash": "Cash",
+        "card": "Card",
+        "shuttle": "Shuttle"
+      },
+      "paymentMethod": {
+        "bank": "Bank",
+        "cash": "Cash"
+      },
+      "periodStatus": {
+        "open": "Open",
+        "approved": "Approved",
+        "paid": "Paid",
+        "locked": "Locked"
+      },
+      "garnishmentType": {
+        "icra": "Enforcement",
+        "nafaka": "Alimony"
+      }
     }
   },
   "exitSettlement": {

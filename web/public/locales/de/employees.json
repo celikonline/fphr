@@ -340,6 +340,7 @@
       "customFields": "Benutzerdefinierte Felder",
       "career": "Karriere",
       "payments": "Zahlungen",
+      "payroll": "Lohn",
       "documents": "Dateien",
       "assets": "Arbeitsmittel",
       "leave": "Urlaub",
@@ -640,6 +641,95 @@
       "dateBeforeExit": "Das neue Eintrittsdatum muss nach dem vorherigen Austrittsdatum ({{date}}) liegen.",
       "submit": "Wiedereinstellen",
       "success": "Die Person wurde wiedereingestellt. Die Urlaubsansparung beginnt am {{date}}."
+    }
+  },
+  "payrollTab": {
+    "profile": {
+      "title": "Lohnprofil",
+      "empty": "Für diese Person gibt es kein Lohnprofil.",
+      "validFrom": "Gültig ab",
+      "wageBasis": "Entgeltbasis",
+      "sgkStatus": "SV-Status",
+      "incentive": "Förderungsgesetz-Code",
+      "meal": "Verpflegungszuschuss",
+      "transport": "Fahrtkostenzuschuss",
+      "paymentMethod": "Zahlungsweise",
+      "sickDays": "Krankheitstage mindern das Entgelt",
+      "externalCode": "Externer Lohncode",
+      "notes": "Notizen",
+      "yes": "Ja",
+      "no": "Nein",
+      "mealDaily": "{{amount}} / Tag"
+    },
+    "payslips": {
+      "title": "Lohnabrechnungen",
+      "empty": "Für diese Person wurde noch keine Abrechnung berechnet.",
+      "columns": {
+        "period": "Zeitraum",
+        "status": "Status",
+        "gross": "Brutto",
+        "net": "Netto",
+        "employerCost": "Arbeitgeberkosten"
+      },
+      "download": "Herunterladen",
+      "downloadError": "Die Lohnabrechnung konnte nicht heruntergeladen werden."
+    },
+    "garnishments": {
+      "title": "Pfändungen und Unterhalt",
+      "empty": "Keine Abzugsanordnungen erfasst.",
+      "columns": {
+        "type": "Art",
+        "case": "Aktenzeichen",
+        "installment": "Monatsrate",
+        "remaining": "Restschuld",
+        "start": "Beginn",
+        "status": "Status"
+      },
+      "open": "Offen",
+      "closed": "Geschlossen"
+    },
+    "enum": {
+      "wageBasis": {
+        "monthly": "Monatlich",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "hourly": "Stündlich",
+        "yearly": "Jährlich"
+      },
+      "sgkStatus": {
+        "normal": "Normal",
+        "retired": "Rentner",
+        "intern": "Praktikant",
+        "apprentice": "Auszubildender",
+        "foreign": "Ausländer"
+      },
+      "meal": {
+        "none": "Keiner",
+        "cash": "Bar",
+        "inKind": "Sachleistung",
+        "mealCardOnly": "Essenskarte",
+        "mealAndMarketCard": "Essens- + Marktkarte"
+      },
+      "transport": {
+        "none": "Keiner",
+        "cash": "Bar",
+        "card": "Karte",
+        "shuttle": "Shuttle"
+      },
+      "paymentMethod": {
+        "bank": "Bank",
+        "cash": "Bar"
+      },
+      "periodStatus": {
+        "open": "Offen",
+        "approved": "Genehmigt",
+        "paid": "Bezahlt",
+        "locked": "Gesperrt"
+      },
+      "garnishmentType": {
+        "icra": "Vollstreckung",
+        "nafaka": "Unterhalt"
+      }
     }
   },
   "exitSettlement": {
