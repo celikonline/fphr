@@ -1,4 +1,5 @@
 using System.Globalization;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Closing;
@@ -27,6 +28,7 @@ public sealed class ClosingChecklistService(
     IPayslipRepository payslips,
     IPayslipDirtyFlagRepository dirtyFlags,
     ILegislationParameterReader legislation,
+    IEmployeeDirectory employeeDirectory,
     TimeProvider clock) : IClosingChecklistGate
 {
     /// <summary>The period's checks, creating any that the catalog has and the period does not yet.</summary>
@@ -94,6 +96,12 @@ public sealed class ClosingChecklistService(
             case "NET_NOT_NEGATIVE":
                 var bad = (await payslips.ListByPeriodAsync(period.Id, cancellationToken)).Count(p => p.NetAmount < 0m || p.GrossAmount <= 0m);
                 return (bad == 0, bad == 0 ? null : bad.ToString(CultureInfo.InvariantCulture));
+
+            case "EMPLOYEES_WITHOUT_PAYSLIP":
+                // The run skips employees it cannot pay (net-salary records, no salary, no worked day); this makes that visible.
+                var paid = (await payslips.ListByPeriodAsync(period.Id, cancellationToken)).Select(p => p.EmployeeId).ToHashSet();
+                var unpaid = (await employeeDirectory.ListActiveEmployeeIdsAsync(period.TenantId, cancellationToken)).Count(id => !paid.Contains(id));
+                return (unpaid == 0, unpaid == 0 ? null : unpaid.ToString(CultureInfo.InvariantCulture));
 
             default:
                 // A catalog code with no rule yet stays failed rather than passing silently.

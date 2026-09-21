@@ -89,6 +89,7 @@
       "PAYSLIPS_GENERATED": "Dönem için bordro hesaplandı",
       "NO_DIRTY_PAYSLIPS": "Değişen ve yeniden hesaplanmamış bordro yok",
       "NET_NOT_NEGATIVE": "Net ücreti negatif veya brütü sıfır olan bordro yok",
+      "EMPLOYEES_WITHOUT_PAYSLIP": "Bordrosu olmayan aktif çalışan yok (net maaşlı veya maaş kaydı eksik olanlar atlanır)",
       "PARAMETERS_VERIFIED": "Asgari ücret, SGK ve vergi parametreleri doğrulandı; teşvik kodları ve süreleri kontrol edildi",
       "TRIAL_RUN": "Deneme bordrosu çalıştırıldı",
       "PREVIOUS_MONTH_COMPARISON": "Önceki ayla karşılaştırmalı analiz yapıldı",

@@ -89,6 +89,7 @@
       "PAYSLIPS_GENERATED": "Payroll has been calculated for the period",
       "NO_DIRTY_PAYSLIPS": "No changed payslip is left uncalculated",
       "NET_NOT_NEGATIVE": "No payslip with a negative net or zero gross",
+      "EMPLOYEES_WITHOUT_PAYSLIP": "No active employee is left without a payslip (net-salary or salary-less employees are skipped)",
       "PARAMETERS_VERIFIED": "Minimum wage, SGK and tax parameters verified; incentive codes and terms checked",
       "TRIAL_RUN": "Trial payroll run",
       "PREVIOUS_MONTH_COMPARISON": "Comparison with the previous month done",

@@ -1,4 +1,5 @@
 using NSubstitute;
+using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Closing;
@@ -28,6 +29,8 @@ public sealed class ClosingChecklistTests
 
         public bool LegislationPresent { get; set; }
 
+        public List<Guid> ActiveEmployees { get; } = [];
+
         public ClosingChecklistService Service()
         {
             var checks = Substitute.For<IPeriodClosingCheckRepository>();
@@ -42,7 +45,10 @@ public sealed class ClosingChecklistTests
                 Task.FromResult<IReadOnlyList<PayslipDirtyFlag>>(Enumerable.Range(0, DirtyFlags)
                     .Select(__ => (PayslipDirtyFlag)System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject(typeof(PayslipDirtyFlag))).ToList()));
 
-            return new ClosingChecklistService(checks, payslips, flags, Legislation(), new FixedClock(Now));
+            var directory = Substitute.For<IEmployeeDirectory>();
+            directory.ListActiveEmployeeIdsAsync(TenantId, Arg.Any<CancellationToken>()).Returns(_ => Task.FromResult<IReadOnlyList<Guid>>(ActiveEmployees.ToList()));
+
+            return new ClosingChecklistService(checks, payslips, flags, Legislation(), directory, new FixedClock(Now));
         }
 
         private ILegislationParameterReader Legislation()
@@ -158,6 +164,24 @@ public sealed class ClosingChecklistTests
 
         var present = await RunAndFind(new Fixture { LegislationPresent = true }, "LEGISLATION_PARAMETERS");
         present.Status.ShouldBe(ClosingCheckStatus.Passed);
+    }
+
+    [Fact]
+    public async Task EmployeesWithoutPayslip_WarnsAboutActiveEmployeesTheRunSkipped_ButDoesNotBlock()
+    {
+        var f = new Fixture();
+        var paidEmployee = Guid.NewGuid();
+        var skippedEmployee = Guid.NewGuid();
+        f.ActiveEmployees.AddRange([paidEmployee, skippedEmployee]);
+        var paid = PayslipOf(50_000m, 38_000m);
+        typeof(Payslip).GetProperty(nameof(Payslip.EmployeeId))!.SetValue(paid, paidEmployee);
+        f.Payslips.Add(paid);
+
+        var check = await RunAndFind(f, "EMPLOYEES_WITHOUT_PAYSLIP");
+
+        check.Status.ShouldBe(ClosingCheckStatus.Failed);
+        check.Detail.ShouldBe("1");
+        check.Severity.ShouldBe(ClosingCheckSeverity.Warning);
     }
 
     [Fact]

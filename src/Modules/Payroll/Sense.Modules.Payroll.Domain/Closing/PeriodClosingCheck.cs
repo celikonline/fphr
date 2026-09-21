@@ -54,6 +54,8 @@ public static class ClosingCheckCatalog
 {
     private static ClosingCheckDefinition Manual(string code, ClosingStage stage) => new(code, stage, ClosingCheckKind.Manual, ClosingCheckSeverity.Warning);
 
+    private static ClosingCheckDefinition AutoWarning(string code, ClosingStage stage) => new(code, stage, ClosingCheckKind.Automatic, ClosingCheckSeverity.Warning);
+
     private static ClosingCheckDefinition Auto(string code, ClosingStage stage) => new(code, stage, ClosingCheckKind.Automatic, ClosingCheckSeverity.Blocker);
 
     public static IReadOnlyList<ClosingCheckDefinition> All { get; } =
@@ -81,6 +83,7 @@ public static class ClosingCheckCatalog
         Auto("PAYSLIPS_GENERATED", ClosingStage.Calculation),
         Auto("NO_DIRTY_PAYSLIPS", ClosingStage.Calculation),
         Auto("NET_NOT_NEGATIVE", ClosingStage.Calculation),
+        AutoWarning("EMPLOYEES_WITHOUT_PAYSLIP", ClosingStage.Calculation),
         Manual("PARAMETERS_VERIFIED", ClosingStage.Calculation),
         Manual("TRIAL_RUN", ClosingStage.Calculation),
         Manual("PREVIOUS_MONTH_COMPARISON", ClosingStage.Calculation),

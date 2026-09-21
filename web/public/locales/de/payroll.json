@@ -89,6 +89,7 @@
       "PAYSLIPS_GENERATED": "Abrechnung für die Periode berechnet",
       "NO_DIRTY_PAYSLIPS": "Keine geänderte, nicht neu berechnete Abrechnung",
       "NET_NOT_NEGATIVE": "Keine Abrechnung mit negativem Netto oder Brutto null",
+      "EMPLOYEES_WITHOUT_PAYSLIP": "Keine aktive Person ohne Abrechnung (Netto-Gehalt oder fehlender Gehaltssatz wird übersprungen)",
       "PARAMETERS_VERIFIED": "Mindestlohn, SV- und Steuerparameter geprüft; Förderungscodes und Laufzeiten kontrolliert",
       "TRIAL_RUN": "Probeabrechnung durchgeführt",
       "PREVIOUS_MONTH_COMPARISON": "Vergleich mit dem Vormonat durchgeführt",
