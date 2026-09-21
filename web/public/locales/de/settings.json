@@ -1,7 +1,11 @@
 {
   "hub": {
     "title": "Einstellungen",
-    "subtitle": "Unternehmensdaten, Regeln, Systemeinstellungen und Datentransfer."
+    "subtitle": "Einstellungen nach Gruppen durchsuchen oder suchen.",
+    "searchPlaceholder": "Einstellungen suchen (z. B. Urlaub, Rolle, Dokument)",
+    "searchLabel": "Einstellungen suchen",
+    "noResults": "Keine Einstellungen für „{{query}}“ gefunden.",
+    "resultCount": "{{count}} Einstellungen gefunden"
   },
   "access": {
     "title": "Zugriffseinstellungen",

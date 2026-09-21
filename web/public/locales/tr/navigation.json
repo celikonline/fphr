@@ -58,7 +58,7 @@
     "companyCalendar": "Etkinlik takvimi"
   },
   "settings": {
-    "company": "Şirket bilgileri",
+    "company": "Şirket ve organizasyon",
     "structure": "Şirket yapısı",
     "structureDesc": "Hiyerarşi seviyeleri, birimler ve birim yetkilendirme",
     "holidayCalendars": "Tatil takvimleri",
@@ -89,12 +89,12 @@
     "ohsHazardClassificationDesc": "İşyeri konumlarının tehlike sınıfı geçmişi",
     "ohsRiskAssessments": "Risk değerlendirmeleri",
     "ohsRiskAssessmentsDesc": "Kayıtlı risk değerlendirmeleri ve yenileme tarihleri",
-    "rules": "Kurallar",
+    "rules": "Çalışma kuralları",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",
     "visaProcesses": "Vize belge süreçleri",
     "visaProcessesDesc": "Vize belgesi talep ve onay süreçleri",
-    "system": "Sistem ayarları",
+    "system": "Kullanıcılar ve güvenlik",
     "access": "Erişim ayarları",
     "accessDesc": "Çalışanların ana sayfa, hesap ve takvimde neleri göreceği",
     "securityPolicy": "Güvenlik politikası",
@@ -116,6 +116,11 @@
     "recruitmentFormTemplates": "Form şablonları",
     "recruitmentFormTemplatesDesc": "Geri bildirim, skor kart ve sonuç formu şablonları",
     "recruitmentAutomationRules": "Otomasyon kuralları",
-    "recruitmentAutomationRulesDesc": "Aşama geçişlerinde zorunlu form kuralları"
+    "recruitmentAutomationRulesDesc": "Aşama geçişlerinde zorunlu form kuralları",
+    "peopleSection": "Çalışan ve belgeler",
+    "workflowsSection": "Onay ve süreçler",
+    "assetsExpenseSection": "Varlık ve masraf",
+    "ohsSection": "İş sağlığı ve güvenliği",
+    "platformSection": "Platform ve veri"
   }
 }

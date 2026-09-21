@@ -1,7 +1,11 @@
 {
   "hub": {
     "title": "Settings",
-    "subtitle": "Company information, rules, system settings and data transfer."
+    "subtitle": "Browse settings by group or search for one.",
+    "searchPlaceholder": "Search settings (e.g. leave, role, document)",
+    "searchLabel": "Search settings",
+    "noResults": "No settings match “{{query}}”.",
+    "resultCount": "{{count}} settings found"
   },
   "access": {
     "title": "Access settings",

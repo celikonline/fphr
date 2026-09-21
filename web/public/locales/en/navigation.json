@@ -58,7 +58,7 @@
     "companyCalendar": "Event calendar"
   },
   "settings": {
-    "company": "Company information",
+    "company": "Company and organization",
     "structure": "Company structure",
     "structureDesc": "Hierarchy levels, units and unit authorization",
     "holidayCalendars": "Holiday calendars",
@@ -89,12 +89,12 @@
     "ohsRiskAssessments": "Risk assessments",
     "ohsRiskAssessmentsDesc": "Recorded risk assessments and their renewal due dates",
     "approvalFlowsDesc": "Approval steps per request type",
-    "rules": "Rules",
+    "rules": "Work rules",
     "workCalendars": "Work calendars",
     "workCalendarsDesc": "Working days and hours",
     "visaProcesses": "Visa document processes",
     "visaProcessesDesc": "Visa document request and approval flows",
-    "system": "System settings",
+    "system": "Users and security",
     "access": "Access settings",
     "accessDesc": "What employees can see on home, account and calendar",
     "securityPolicy": "Security policy",
@@ -116,6 +116,11 @@
     "recruitmentFormTemplates": "Form templates",
     "recruitmentFormTemplatesDesc": "Feedback, scorecard, and outcome form templates",
     "recruitmentAutomationRules": "Automation rules",
-    "recruitmentAutomationRulesDesc": "Mandatory-form rules on pipeline stage transitions"
+    "recruitmentAutomationRulesDesc": "Mandatory-form rules on pipeline stage transitions",
+    "peopleSection": "Employees and documents",
+    "workflowsSection": "Approvals and processes",
+    "assetsExpenseSection": "Assets and expenses",
+    "ohsSection": "Occupational health and safety",
+    "platformSection": "Platform and data"
   }
 }

@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
-import { ChevronRight, Settings } from "lucide-react";
-import { Badge, Card, Group, NavLink, SimpleGrid, Stack, Text, ThemeIcon, Title } from "@mantine/core";
+import { ChevronRight, Search, Settings } from "lucide-react";
+import { Badge, Card, Group, NavLink, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
 import { SETTINGS_SECTIONS, type SettingsLink, type SettingsSection } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
+
+const ALL_LINKS = SETTINGS_SECTIONS.flatMap((section) => section.links);
 
 function SettingsLinkRow({ link }: { link: SettingsLink }) {
   const { t } = useTranslation(["navigation"]);
@@ -42,10 +45,8 @@ function SettingsLinkRow({ link }: { link: SettingsLink }) {
   );
 }
 
-function SettingsSectionCard({ section }: { section: SettingsSection }) {
+function SettingsSectionCard({ section, links }: { section: SettingsSection; links: SettingsLink[] }) {
   const { t } = useTranslation(["navigation"]);
-  const links = useVisibleItems(section.links);
-  if (links.length === 0) return null;
 
   return (
     <Card withBorder padding="md">
@@ -61,9 +62,32 @@ function SettingsSectionCard({ section }: { section: SettingsSection }) {
   );
 }
 
-/** Ayarlar hub: Şirket bilgileri / Kurallar / Sistem ayarları / Veri aktar, each link permission-gated. */
+/**
+ * Ayarlar hub: işlevsel gruplara ayrılmış, her bağlantı yetki/modül durumuna göre filtrelenir.
+ * Arama başlık, açıklama ve grup adı üzerinde çalışır (yerel dile duyarlı, büyük/küçük harf ve baştaki/sondaki boşluk yok sayılır);
+ * grup adı eşleşirse grubun tüm bağlantıları gösterilir.
+ */
 export default function SettingsHomePage() {
-  const { t } = useTranslation(["settings"]);
+  const { t, i18n } = useTranslation(["settings", "navigation"]);
+  const [query, setQuery] = useState("");
+  const visibleLinks = useVisibleItems(ALL_LINKS);
+
+  const visibleKeys = new Set(visibleLinks.map((link) => link.key));
+  const locale = i18n.language;
+  const needle = query.trim().toLocaleLowerCase(locale);
+
+  const groups = SETTINGS_SECTIONS.map((section) => {
+    const sectionMatches = needle !== "" && t(section.labelKey, { ns: "navigation" }).toLocaleLowerCase(locale).includes(needle);
+    const links = section.links.filter((link) => {
+      if (!visibleKeys.has(link.key)) return false;
+      if (needle === "" || sectionMatches) return true;
+      const haystack = `${t(link.labelKey, { ns: "navigation" })} ${t(link.descriptionKey, { ns: "navigation" })}`;
+      return haystack.toLocaleLowerCase(locale).includes(needle);
+    });
+    return { section, links };
+  }).filter((group) => group.links.length > 0);
+
+  const resultCount = groups.reduce((sum, group) => sum + group.links.length, 0);
 
   return (
     <div className="max-w-5xl space-y-6 p-6 md:p-10">
@@ -74,9 +98,30 @@ export default function SettingsHomePage() {
         <Text c="dimmed">{t("settings:hub.subtitle")}</Text>
       </div>
 
+      <TextInput
+        type="search"
+        size="md"
+        value={query}
+        onChange={(event) => setQuery(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") setQuery("");
+        }}
+        placeholder={t("settings:hub.searchPlaceholder")}
+        aria-label={t("settings:hub.searchLabel")}
+        leftSection={<Search className="h-4 w-4" />}
+      />
+
+      {needle !== "" && (
+        <Text size="sm" c="dimmed" role="status" aria-live="polite">
+          {resultCount > 0
+            ? t("settings:hub.resultCount", { count: resultCount })
+            : t("settings:hub.noResults", { query: query.trim() })}
+        </Text>
+      )}
+
       <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-        {SETTINGS_SECTIONS.map((section) => (
-          <SettingsSectionCard key={section.key} section={section} />
+        {groups.map(({ section, links }) => (
+          <SettingsSectionCard key={section.key} section={section} links={links} />
         ))}
       </SimpleGrid>
     </div>

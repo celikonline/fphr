@@ -58,7 +58,7 @@
     "companyCalendar": "Veranstaltungskalender"
   },
   "settings": {
-    "company": "Unternehmensdaten",
+    "company": "Unternehmen und Organisation",
     "structure": "Unternehmensstruktur",
     "structureDesc": "Hierarchieebenen, Einheiten und Einheitsberechtigungen",
     "holidayCalendars": "Feiertagskalender",
@@ -89,12 +89,12 @@
     "ohsRiskAssessments": "Gefährdungsbeurteilungen",
     "ohsRiskAssessmentsDesc": "Erfasste Gefährdungsbeurteilungen und ihre Fälligkeitstermine",
     "approvalFlowsDesc": "Genehmigungsschritte je Antragsart",
-    "rules": "Regeln",
+    "rules": "Arbeitsregeln",
     "workCalendars": "Arbeitskalender",
     "workCalendarsDesc": "Arbeitstage und Arbeitszeiten",
     "visaProcesses": "Visumsdokumentprozesse",
     "visaProcessesDesc": "Antrags- und Genehmigungsabläufe für Visumsunterlagen",
-    "system": "Systemeinstellungen",
+    "system": "Benutzer und Sicherheit",
     "access": "Zugriffseinstellungen",
     "accessDesc": "Was Mitarbeitende auf Start, Konto und Kalender sehen",
     "securityPolicy": "Sicherheitsrichtlinie",
@@ -116,6 +116,11 @@
     "recruitmentFormTemplates": "Formularvorlagen",
     "recruitmentFormTemplatesDesc": "Vorlagen für Feedback-, Scorecard- und Ergebnisformulare",
     "recruitmentAutomationRules": "Automatisierungsregeln",
-    "recruitmentAutomationRulesDesc": "Pflichtformular-Regeln bei Übergängen zwischen Pipeline-Phasen"
+    "recruitmentAutomationRulesDesc": "Pflichtformular-Regeln bei Übergängen zwischen Pipeline-Phasen",
+    "peopleSection": "Mitarbeiter und Dokumente",
+    "workflowsSection": "Genehmigungen und Prozesse",
+    "assetsExpenseSection": "Anlagen und Ausgaben",
+    "ohsSection": "Arbeitsschutz",
+    "platformSection": "Plattform und Daten"
   }
 }

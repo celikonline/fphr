@@ -441,36 +441,12 @@ export interface SettingsSection {
   links: SettingsLink[];
 }
 
-/** Ayarlar hub tree (11.3.13 "Ayarlar ağacı"). */
+/** Ayarlar hub tree (11.3.13 "Ayarlar ağacı"): işlevsel yakınlığa göre gruplanmıştır; arama hub sayfasında yapılır. */
 export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     key: "company",
     labelKey: "settings.company",
     links: [
-      {
-        key: "structure",
-        labelKey: "settings.structure",
-        descriptionKey: "settings.structureDesc",
-        path: "/app/settings/company/structure",
-        icon: Network,
-        permissions: SETTINGS_PERMISSIONS.structure,
-      },
-      {
-        key: "holidayCalendars",
-        labelKey: "settings.holidayCalendars",
-        descriptionKey: "settings.holidayCalendarsDesc",
-        path: "/app/settings/company/holiday-calendars",
-        icon: CalendarDays,
-        permissions: SETTINGS_PERMISSIONS.holidayCalendars,
-      },
-      {
-        key: "locations",
-        labelKey: "settings.locations",
-        descriptionKey: "settings.locationsDesc",
-        path: "/app/settings/company/locations",
-        icon: MapPin,
-        permissions: SETTINGS_PERMISSIONS.locations,
-      },
       {
         key: "companyProfile",
         labelKey: "settings.companyProfile",
@@ -480,28 +456,20 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         permissions: SETTINGS_PERMISSIONS.companyProfile,
       },
       {
-        key: "approvalFlows",
-        labelKey: "settings.approvalFlows",
-        descriptionKey: "settings.approvalFlowsDesc",
-        path: "/app/settings/company/approval-flows",
-        icon: Workflow,
-        permissions: SETTINGS_PERMISSIONS.workflowPolicies,
+        key: "structure",
+        labelKey: "settings.structure",
+        descriptionKey: "settings.structureDesc",
+        path: "/app/settings/company/structure",
+        icon: Network,
+        permissions: SETTINGS_PERMISSIONS.structure,
       },
       {
-        key: "customFields",
-        labelKey: "settings.customFields",
-        descriptionKey: "settings.customFieldsDesc",
-        path: "/app/settings/company/custom-fields",
-        icon: ListChecks,
-        permissions: SETTINGS_PERMISSIONS.customFields,
-      },
-      {
-        key: "terminationReasons",
-        labelKey: "settings.terminationReasons",
-        descriptionKey: "settings.terminationReasonsDesc",
-        path: "/app/settings/company/termination-reasons",
-        icon: LogOut,
-        permissions: SETTINGS_PERMISSIONS.terminationReasons,
+        key: "locations",
+        labelKey: "settings.locations",
+        descriptionKey: "settings.locationsDesc",
+        path: "/app/settings/company/locations",
+        icon: MapPin,
+        permissions: SETTINGS_PERMISSIONS.locations,
       },
       {
         key: "costCenters",
@@ -519,6 +487,59 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: Building2,
         permissions: SETTINGS_PERMISSIONS.subcontractors,
       },
+    ],
+  },
+  {
+    key: "rules",
+    labelKey: "settings.rules",
+    path: "/app/settings/rules",
+    links: [
+      {
+        key: "workCalendars",
+        labelKey: "settings.workCalendars",
+        descriptionKey: "settings.workCalendarsDesc",
+        path: "/app/settings/rules/work-calendars",
+        icon: CalendarClock,
+        permissions: SETTINGS_PERMISSIONS.workSchedules,
+      },
+      {
+        key: "holidayCalendars",
+        labelKey: "settings.holidayCalendars",
+        descriptionKey: "settings.holidayCalendarsDesc",
+        path: "/app/settings/company/holiday-calendars",
+        icon: CalendarDays,
+        permissions: SETTINGS_PERMISSIONS.holidayCalendars,
+      },
+      {
+        key: "visaProcesses",
+        labelKey: "settings.visaProcesses",
+        descriptionKey: "settings.visaProcessesDesc",
+        path: "/app/settings/rules/visa-processes",
+        icon: Stamp,
+        permissions: SETTINGS_PERMISSIONS.visaProcesses,
+      },
+    ],
+  },
+  {
+    key: "people",
+    labelKey: "settings.peopleSection",
+    links: [
+      {
+        key: "customFields",
+        labelKey: "settings.customFields",
+        descriptionKey: "settings.customFieldsDesc",
+        path: "/app/settings/company/custom-fields",
+        icon: ListChecks,
+        permissions: SETTINGS_PERMISSIONS.customFields,
+      },
+      {
+        key: "terminationReasons",
+        labelKey: "settings.terminationReasons",
+        descriptionKey: "settings.terminationReasonsDesc",
+        path: "/app/settings/company/termination-reasons",
+        icon: LogOut,
+        permissions: SETTINGS_PERMISSIONS.terminationReasons,
+      },
       {
         key: "documentTypes",
         labelKey: "settings.documentTypes",
@@ -535,6 +556,42 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: FileWarning,
         permissions: SETTINGS_PERMISSIONS.missingDocuments,
       },
+    ],
+  },
+  {
+    key: "workflows",
+    labelKey: "settings.workflowsSection",
+    links: [
+      {
+        key: "approvalFlows",
+        labelKey: "settings.approvalFlows",
+        descriptionKey: "settings.approvalFlowsDesc",
+        path: "/app/settings/company/approval-flows",
+        icon: Workflow,
+        permissions: SETTINGS_PERMISSIONS.workflowPolicies,
+      },
+      {
+        key: "recruitmentFormTemplates",
+        labelKey: "settings.recruitmentFormTemplates",
+        descriptionKey: "settings.recruitmentFormTemplatesDesc",
+        path: "/app/settings/recruitment/form-templates",
+        icon: FileText,
+        permissions: SETTINGS_PERMISSIONS.recruitmentFormTemplates,
+      },
+      {
+        key: "recruitmentAutomationRules",
+        labelKey: "settings.recruitmentAutomationRules",
+        descriptionKey: "settings.recruitmentAutomationRulesDesc",
+        path: "/app/settings/recruitment/automation-rules",
+        icon: Workflow,
+        permissions: SETTINGS_PERMISSIONS.recruitmentAutomationRules,
+      },
+    ],
+  },
+  {
+    key: "assetsExpense",
+    labelKey: "settings.assetsExpenseSection",
+    links: [
       {
         key: "assetCategories",
         labelKey: "settings.assetCategories",
@@ -551,6 +608,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: Receipt,
         permissions: SETTINGS_PERMISSIONS.expenseCategories,
       },
+    ],
+  },
+  {
+    key: "ohs",
+    labelKey: "settings.ohsSection",
+    links: [
       {
         key: "ohsHazardClassification",
         labelKey: "settings.ohsHazardClassification",
@@ -570,32 +633,17 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     ],
   },
   {
-    key: "rules",
-    labelKey: "settings.rules",
-    path: "/app/settings/rules",
-    links: [
-      {
-        key: "workCalendars",
-        labelKey: "settings.workCalendars",
-        descriptionKey: "settings.workCalendarsDesc",
-        path: "/app/settings/rules/work-calendars",
-        icon: CalendarClock,
-        permissions: SETTINGS_PERMISSIONS.workSchedules,
-      },
-      {
-        key: "visaProcesses",
-        labelKey: "settings.visaProcesses",
-        descriptionKey: "settings.visaProcessesDesc",
-        path: "/app/settings/rules/visa-processes",
-        icon: Stamp,
-        permissions: SETTINGS_PERMISSIONS.visaProcesses,
-      },
-    ],
-  },
-  {
     key: "system",
     labelKey: "settings.system",
     links: [
+      {
+        key: "usersRoles",
+        labelKey: "settings.usersRoles",
+        descriptionKey: "settings.usersRolesDesc",
+        path: "/app/settings/system/users-roles",
+        icon: Users,
+        permissions: SETTINGS_PERMISSIONS.usersRoles,
+      },
       {
         key: "access",
         labelKey: "settings.access",
@@ -613,22 +661,6 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         permissions: SETTINGS_PERMISSIONS.securityPolicy,
       },
       {
-        key: "modules",
-        labelKey: "settings.modules",
-        descriptionKey: "settings.modulesDesc",
-        path: "/app/settings/system/modules",
-        icon: Blocks,
-        permissions: SETTINGS_PERMISSIONS.modules,
-      },
-      {
-        key: "usersRoles",
-        labelKey: "settings.usersRoles",
-        descriptionKey: "settings.usersRolesDesc",
-        path: "/app/settings/system/users-roles",
-        icon: Users,
-        permissions: SETTINGS_PERMISSIONS.usersRoles,
-      },
-      {
         key: "auditLog",
         labelKey: "settings.auditLog",
         descriptionKey: "settings.auditLogDesc",
@@ -644,21 +676,20 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: ShieldCheck,
         permissions: SETTINGS_PERMISSIONS.supportAccess,
       },
-      {
-        key: "billing",
-        labelKey: "settings.billing",
-        descriptionKey: "settings.billingDesc",
-        path: "/app/settings/system/billing",
-        icon: CreditCard,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 8,
-      },
     ],
   },
   {
-    key: "dataTransfer",
-    labelKey: "settings.dataTransferSection",
+    key: "platform",
+    labelKey: "settings.platformSection",
     links: [
+      {
+        key: "modules",
+        labelKey: "settings.modules",
+        descriptionKey: "settings.modulesDesc",
+        path: "/app/settings/system/modules",
+        icon: Blocks,
+        permissions: SETTINGS_PERMISSIONS.modules,
+      },
       {
         key: "dataTransfer",
         labelKey: "settings.dataTransfer",
@@ -667,27 +698,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: FileSpreadsheet,
         permissions: SETTINGS_PERMISSIONS.dataTransfer,
       },
-    ],
-  },
-  {
-    key: "recruitment",
-    labelKey: "settings.recruitmentSection",
-    links: [
       {
-        key: "recruitmentFormTemplates",
-        labelKey: "settings.recruitmentFormTemplates",
-        descriptionKey: "settings.recruitmentFormTemplatesDesc",
-        path: "/app/settings/recruitment/form-templates",
-        icon: FileText,
-        permissions: SETTINGS_PERMISSIONS.recruitmentFormTemplates,
-      },
-      {
-        key: "recruitmentAutomationRules",
-        labelKey: "settings.recruitmentAutomationRules",
-        descriptionKey: "settings.recruitmentAutomationRulesDesc",
-        path: "/app/settings/recruitment/automation-rules",
-        icon: Workflow,
-        permissions: SETTINGS_PERMISSIONS.recruitmentAutomationRules,
+        key: "billing",
+        labelKey: "settings.billing",
+        descriptionKey: "settings.billingDesc",
+        path: "/app/settings/system/billing",
+        icon: CreditCard,
+        permissions: SETTINGS_PERMISSIONS.tenantManage,
+        phase: 8,
       },
     ],
   },

@@ -1,7 +1,11 @@
 {
   "hub": {
     "title": "Ayarlar",
-    "subtitle": "Şirket bilgileri, kurallar, sistem ayarları ve veri aktarımı."
+    "subtitle": "Ayarları gruplara göre inceleyin veya arayın.",
+    "searchPlaceholder": "Ayarlarda ara (ör. izin, rol, belge)",
+    "searchLabel": "Ayarlarda ara",
+    "noResults": "“{{query}}” ile eşleşen ayar bulunamadı.",
+    "resultCount": "{{count}} ayar bulundu"
   },
   "access": {
     "title": "Erişim ayarları",
