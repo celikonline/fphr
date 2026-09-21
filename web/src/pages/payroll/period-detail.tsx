@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, Wallet } from "lucide-react";
+import { ArrowLeft, Download, Landmark, Wallet } from "lucide-react";
 import { Badge, Button, Card, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -14,6 +14,7 @@ import { ClosingChecklist } from "./closing-checklist";
 import { PeriodActions } from "./period-actions";
 import { PeriodComparison } from "./period-comparison";
 import {
+  downloadPayrollBankFile,
   downloadPayrollPeriodExport,
   getPayrollPeriod,
   saveDownloadedPayrollFile,
@@ -68,6 +69,18 @@ function PayrollPeriodDetail() {
     queryKey: ["payroll", "periods", id, selectedCostCenterId],
     queryFn: () => getPayrollPeriod(id!, selectedCostCenterId ?? undefined),
     enabled: Boolean(id),
+  });
+
+  const canExportBankFile = usePermission("payroll.bankfile.export");
+  const bankFileMutation = useMutation({
+    mutationFn: async () => {
+      const period = periodQuery.data;
+      const fallbackName = period ? `banka-odeme_${period.year}-${String(period.month).padStart(2, "0")}.csv` : "banka-odeme.csv";
+      return downloadPayrollBankFile(id!, fallbackName);
+    },
+    onSuccess: (file) => saveDownloadedPayrollFile(file),
+    onError: (error) =>
+      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.bankFileError")) }),
   });
 
   const exportMutation = useMutation({
@@ -147,6 +160,17 @@ function PayrollPeriodDetail() {
           >
             {t("payroll:periodDetail.exportButton")}
           </Button>
+          {canExportBankFile && period.status !== "open" && (
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<Landmark size={16} />}
+              loading={bankFileMutation.isPending}
+              onClick={() => bankFileMutation.mutate()}
+            >
+              {t("payroll:periodDetail.bankFileButton")}
+            </Button>
+          )}
         </Group>
       </Group>
 

@@ -876,6 +876,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>Muafiyet gerekçesi zorunludur (en fazla 500 karakter).</value></data>
   <data name="payroll.errors.period_has_open_blockers" xml:space="preserve"><value>Engelleyen kapanış kontrolleri tamamlanmadı; kontrol listesinde başarısız veya bekleyen maddeleri giderin ya da gerekçeyle muaf tutun.</value></data>
   <data name="payroll.errors.comparison_threshold_invalid" xml:space="preserve"><value>Sapma eşiği sıfırdan küçük olamaz.</value></data>
+  <data name="payroll.bankfile.export" xml:space="preserve"><value>Banka ödeme dosyasını indirme</value></data>
+  <data name="payroll.errors.bank_file_period_not_approved" xml:space="preserve"><value>Banka ödeme dosyası yalnızca onaylanmış, ödenmiş veya kilitli dönem için oluşturulur.</value></data>
+  <data name="payroll.errors.bank_file_missing_accounts" xml:space="preserve"><value>Bazı çalışanların birincil banka hesabı (IBAN) yok; dosya oluşturulamadı. Eksik hesapları tamamlayın.</value></data>
+  <data name="payroll.errors.bank_file_no_payments" xml:space="preserve"><value>Dönemde ödenecek net tutarı olan bordro yok.</value></data>
+  <data name="payroll.errors.bank_file_total_mismatch" xml:space="preserve"><value>Dosya toplamı bordro net toplamıyla uyuşmuyor; dosya oluşturulmadı.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>

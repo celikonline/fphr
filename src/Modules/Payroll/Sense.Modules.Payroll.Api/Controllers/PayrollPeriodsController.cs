@@ -138,4 +138,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [ProducesResponseType<PeriodComparisonDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Comparison(Guid id, [FromQuery] decimal? thresholdPercent, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new GetPeriodComparisonQuery(id, thresholdPercent), ct));
+
+    /// <summary>Downloads the bank payment list (generic CSV) of an approved, paid or locked period; contains IBANs (payroll.bankfile.export).</summary>
+    [HttpGet("{id:guid}/bank-file")]
+    public async Task<IActionResult> BankFile(Guid id, CancellationToken ct)
+    {
+        var result = await Dispatcher.Query(new ExportBankPaymentFileQuery(id), ct);
+        return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
+    }
 }

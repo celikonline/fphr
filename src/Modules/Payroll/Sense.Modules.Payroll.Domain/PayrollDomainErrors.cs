@@ -6,6 +6,10 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string BankFilePeriodNotApproved = "payroll.errors.bank_file_period_not_approved";
+    public const string BankFileMissingAccounts = "payroll.errors.bank_file_missing_accounts";
+    public const string BankFileNoPayments = "payroll.errors.bank_file_no_payments";
+    public const string BankFileTotalMismatch = "payroll.errors.bank_file_total_mismatch";
     public const string ComparisonThresholdInvalid = "payroll.errors.comparison_threshold_invalid";
     public const string ClosingCheckNotFound = "payroll.errors.closing_check_not_found";
     public const string ClosingCheckNotManual = "payroll.errors.closing_check_not_manual";

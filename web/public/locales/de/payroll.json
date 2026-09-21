@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "bankFileButton": "Bankdatei herunterladen",
+    "bankFileError": "Die Bankzahlungsdatei konnte nicht erstellt werden.",
     "actions": {
       "approve": "Periode genehmigen",
       "markPaid": "Als bezahlt markieren",

@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "bankFileButton": "Banka dosyası indir",
+    "bankFileError": "Banka ödeme dosyası oluşturulamadı.",
     "actions": {
       "approve": "Dönemi onayla",
       "markPaid": "Ödendi olarak işaretle",

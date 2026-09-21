@@ -118,6 +118,8 @@
     }
   },
   "periodDetail": {
+    "bankFileButton": "Download bank file",
+    "bankFileError": "The bank payment file could not be created.",
     "actions": {
       "approve": "Approve period",
       "markPaid": "Mark as paid",

@@ -305,3 +305,17 @@ export async function getPeriodComparison(periodId: string, thresholdPercent?: n
   });
   return data;
 }
+
+/** Downloads the bank payment list (generic CSV) of an approved, paid or locked period; it contains IBANs (`payroll.bankfile.export`). */
+export async function downloadPayrollBankFile(id: string, fallbackName: string): Promise<DownloadedPayrollFile> {
+  try {
+    const response = await apiClient.get<Blob>(`${PAYROLL_BASE}/periods/${id}/bank-file`, { responseType: "blob" });
+    const disposition = response.headers["content-disposition"];
+    return {
+      blob: response.data,
+      fileName: parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ?? fallbackName,
+    };
+  } catch (error) {
+    throw await unwrapBlobError(error);
+  }
+}
