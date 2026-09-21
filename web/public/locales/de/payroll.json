@@ -16,6 +16,21 @@
     }
   },
   "periodDetail": {
+    "actions": {
+      "approve": "Periode genehmigen",
+      "markPaid": "Als bezahlt markieren",
+      "lock": "Periode sperren",
+      "reopen": "Wieder öffnen",
+      "reason": "Grund für das Wiederöffnen",
+      "confirm": {
+        "approve": "Nach der Genehmigung kann die Periode nicht mehr neu berechnet werden. Bei geänderten, nicht neu berechneten Abrechnungen wird abgelehnt.",
+        "markPaid": "Die Gehaltszahlungen werden als erfolgt markiert.",
+        "lock": "Eine gesperrte Periode kann sich nicht mehr ändern; sie lässt sich nur mit Begründung wieder öffnen.",
+        "reopen": "Die Periode wird wieder geöffnet und kann neu berechnet werden. Der Grund wird im Audit-Log festgehalten."
+      },
+      "success": "Periode aktualisiert.",
+      "error": "Die Periode konnte nicht aktualisiert werden."
+    },
     "loadError": "Periode nicht gefunden oder Sie haben keinen Zugriff.",
     "exportError": "Die Lohnübersicht konnte nicht heruntergeladen werden.",
     "exportButton": "Excel herunterladen",

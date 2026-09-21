@@ -206,3 +206,23 @@ export async function listGarnishmentOrders(employeeId: string): Promise<Garnish
   const { data } = await apiClient.get<GarnishmentOrder[]>(`${PAYROLL_BASE}/employees/${employeeId}/garnishment-orders`);
   return data;
 }
+
+/** Approves the period (Open → Approved); the backend refuses while changed payslips are not recalculated (`payroll.period.approve`). */
+export async function approvePayrollPeriod(id: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${id}/approve`);
+}
+
+/** Marks the approved period as paid (Approved → Paid) (`payroll.period.approve`). */
+export async function markPayrollPeriodPaid(id: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${id}/mark-paid`);
+}
+
+/** Locks the paid period (Paid → Locked) (`payroll.period.lock`). */
+export async function lockPayrollPeriod(id: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${id}/lock`);
+}
+
+/** Reopens an approved, paid or locked period; the written reason is audited (`payroll.period.reopen`). */
+export async function reopenPayrollPeriod(id: string, reason: string): Promise<void> {
+  await apiClient.post(`${PAYROLL_BASE}/periods/${id}/reopen`, { reason });
+}

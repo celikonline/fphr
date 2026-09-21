@@ -10,6 +10,7 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
 import { getCostCenters } from "@/services/organization.service";
+import { PeriodActions } from "./period-actions";
 import {
   downloadPayrollPeriodExport,
   getPayrollPeriod,
@@ -146,6 +147,8 @@ function PayrollPeriodDetail() {
           </Button>
         </Group>
       </Group>
+
+      <PeriodActions periodId={period.id} status={period.status} />
 
       <Card withBorder padding="lg">
         {payslips.length === 0 ? (

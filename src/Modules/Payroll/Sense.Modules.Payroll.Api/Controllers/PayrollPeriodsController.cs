@@ -17,6 +17,9 @@ public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 /// read-only list/get/export actions require payroll.trace.view instead - both enforced on the commands/queries
 /// themselves via [RequiresPermission].
 /// </summary>
+/// <summary>Body of "Yeniden aç": why the period is reopened.</summary>
+public sealed record ReopenPayrollPeriodRequest(string Reason);
+
 [ApiVersion(ApiRoutes.DefaultVersion)]
 [Route("api/v{version:apiVersion}/payroll/periods")]
 [Authorize]
@@ -74,4 +77,28 @@ public sealed class PayrollPeriodsController : ApiControllerBase
         var result = await Dispatcher.Query(new ExportAphbFileQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>Approves the period (Open → Approved); refused while changed payslips are not recalculated.</summary>
+    [HttpPost("{id:guid}/approve")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Approve(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ApprovePayrollPeriodCommand(id), ct));
+
+    /// <summary>Marks the approved period as paid (Approved → Paid).</summary>
+    [HttpPost("{id:guid}/mark-paid")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> MarkPaid(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new MarkPayrollPeriodPaidCommand(id), ct));
+
+    /// <summary>Locks the paid period (Paid → Locked).</summary>
+    [HttpPost("{id:guid}/lock")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Lock(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new LockPayrollPeriodCommand(id), ct));
+
+    /// <summary>Reopens an approved, paid or locked period; a written reason is required and audited.</summary>
+    [HttpPost("{id:guid}/reopen")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Reopen(Guid id, [FromBody] ReopenPayrollPeriodRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ReopenPayrollPeriodCommand(id, request.Reason), ct));
 }

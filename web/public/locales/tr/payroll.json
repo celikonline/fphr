@@ -16,6 +16,21 @@
     }
   },
   "periodDetail": {
+    "actions": {
+      "approve": "Dönemi onayla",
+      "markPaid": "Ödendi olarak işaretle",
+      "lock": "Dönemi kilitle",
+      "reopen": "Yeniden aç",
+      "reason": "Yeniden açma gerekçesi",
+      "confirm": {
+        "approve": "Onaylandıktan sonra dönem yeniden hesaplanamaz. Değişen ve yeniden hesaplanmamış bordro varsa onay reddedilir.",
+        "markPaid": "Maaş ödemeleri yapıldı olarak işaretlenecek.",
+        "lock": "Kilitli dönem bir daha değiştirilemez; yalnızca gerekçeyle yeniden açılabilir.",
+        "reopen": "Dönem tekrar açık duruma alınır ve yeniden hesaplanabilir. Gerekçe denetim kaydına yazılır."
+      },
+      "success": "Dönem güncellendi.",
+      "error": "Dönem güncellenemedi."
+    },
     "loadError": "Dönem bulunamadı veya görüntüleme yetkiniz yok.",
     "exportError": "Bordro özeti indirilemedi.",
     "exportButton": "Excel indir",

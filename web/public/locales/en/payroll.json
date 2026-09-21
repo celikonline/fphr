@@ -16,6 +16,21 @@
     }
   },
   "periodDetail": {
+    "actions": {
+      "approve": "Approve period",
+      "markPaid": "Mark as paid",
+      "lock": "Lock period",
+      "reopen": "Reopen",
+      "reason": "Reason for reopening",
+      "confirm": {
+        "approve": "After approval the period can no longer be recalculated. Approval is refused while changed payslips are not recalculated.",
+        "markPaid": "The salary payments will be marked as made.",
+        "lock": "A locked period cannot change again; it can only be reopened with a reason.",
+        "reopen": "The period returns to open and can be recalculated. The reason is written to the audit log."
+      },
+      "success": "Period updated.",
+      "error": "The period could not be updated."
+    },
     "loadError": "Period not found or you don't have access.",
     "exportError": "The payroll summary could not be downloaded.",
     "exportButton": "Download Excel",

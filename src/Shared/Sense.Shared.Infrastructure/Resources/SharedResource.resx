@@ -865,6 +865,12 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.exit_settlement_line_invalid" xml:space="preserve"><value>Kalem adı zorunludur (en fazla 200 karakter) ve tutar sıfırdan büyük olmalıdır.</value></data>
   <data name="payroll.errors.exit_settlement_line_not_found" xml:space="preserve"><value>Çıkış hesabı kalemi bulunamadı.</value></data>
   <data name="payroll.errors.exit_settlement_line_not_removable" xml:space="preserve"><value>Otomatik hesaplanan kıdem, ihbar ve izin kalemleri silinemez; yalnızca düzenlenebilir.</value></data>
+  <data name="payroll.period.approve" xml:space="preserve"><value>Bordro dönemini onaylama ve ödendi işaretleme</value></data>
+  <data name="payroll.period.lock" xml:space="preserve"><value>Bordro dönemini kilitleme</value></data>
+  <data name="payroll.period.reopen" xml:space="preserve"><value>Bordro dönemini gerekçeyle yeniden açma</value></data>
+  <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>Dönem zaten açık; yeniden açılamaz.</value></data>
+  <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>Yeniden açma gerekçesi zorunludur (en fazla 500 karakter).</value></data>
+  <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Değişen ve yeniden hesaplanmamış bordrolar var; dönemi onaylamadan önce "Değişenleri yeniden hesapla" çalıştırın.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>

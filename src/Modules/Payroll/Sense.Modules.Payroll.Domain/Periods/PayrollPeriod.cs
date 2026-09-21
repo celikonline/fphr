@@ -10,7 +10,7 @@ namespace Sense.Modules.Payroll.Domain.Periods;
 /// </summary>
 public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
 {
-    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status)];
+    public static IReadOnlyList<string> AuditedFields { get; } = [nameof(Status), nameof(ReopenReason)];
 
     private PayrollPeriod()
     {
@@ -29,6 +29,11 @@ public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
     public int Month { get; private set; }
 
     public PayrollPeriodStatus Status { get; private set; }
+
+    /// <summary>Why the period was last reopened after approval ("Yeniden aç" needs a reason and its own permission); null if it never was.</summary>
+    public string? ReopenReason { get; private set; }
+
+    public DateTimeOffset? ReopenedAt { get; private set; }
 
     public static Result<PayrollPeriod> Create(Guid tenantId, int year, int month)
     {
@@ -77,6 +82,28 @@ public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
         }
 
         Status = PayrollPeriodStatus.Locked;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Sends an Approved, Paid or Locked period back to Open so it can be recalculated - a deliberate, audited exception to the
+    /// forward-only flow: it needs a written reason (kept with the time) and a stronger permission than Approve.
+    /// </summary>
+    public Result Reopen(string reason, DateTimeOffset now)
+    {
+        if (Status == PayrollPeriodStatus.Open)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodNotReopenable);
+        }
+
+        if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > PayrollLimits.ReopenReasonMaxLength)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodReopenReasonInvalid);
+        }
+
+        Status = PayrollPeriodStatus.Open;
+        ReopenReason = reason.Trim();
+        ReopenedAt = now;
         return Result.Success();
     }
 }

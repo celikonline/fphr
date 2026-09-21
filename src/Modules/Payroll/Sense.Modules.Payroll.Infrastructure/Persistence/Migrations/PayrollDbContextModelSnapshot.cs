@@ -616,6 +616,15 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("month");
 
+                    b.Property<string>("ReopenReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reopen_reason");
+
+                    b.Property<DateTimeOffset?>("ReopenedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reopened_at");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)

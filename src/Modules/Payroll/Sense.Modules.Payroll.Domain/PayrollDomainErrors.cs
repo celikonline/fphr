@@ -6,6 +6,7 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string PeriodHasDirtyPayslips = "payroll.errors.period_has_dirty_payslips";
     public const string PeriodAlreadyOpen = "payroll.errors.period_already_open";
     public const string PeriodYearOutOfRange = "payroll.errors.period_year_out_of_range";
 
@@ -32,6 +33,8 @@ public static class PayrollDomainErrors
 
     /// <summary>Çıkış hesabı: no frozen settlement exists for the employee (not terminated, or terminated before this feature).</summary>
     public const string ExitSettlementNotFound = "payroll.errors.exit_settlement_not_found";
+    public const string PeriodNotReopenable = "payroll.errors.period_not_reopenable";
+    public const string PeriodReopenReasonInvalid = "payroll.errors.period_reopen_reason_invalid";
     public const string ExitSettlementLineInvalid = "payroll.errors.exit_settlement_line_invalid";
     public const string ExitSettlementLineNotFound = "payroll.errors.exit_settlement_line_not_found";
     public const string ExitSettlementLineNotRemovable = "payroll.errors.exit_settlement_line_not_removable";
@@ -59,6 +62,7 @@ public static class PayrollDomainErrors
 public static class PayrollLimits
 {
     public const int ExitLineLabelMaxLength = 200;
+    public const int ReopenReasonMaxLength = 500;
 
     /// <summary>Calendar days assumed per month until Attendance provides the real calendar (roadmap: Payroll depends on Attendance, Faz 2).</summary>
     public const int DefaultCalendarDaysInMonth = 30;
