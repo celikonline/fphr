@@ -501,18 +501,23 @@ public sealed class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
-    public async Task RecalculateAllAsync_ReportsANetSalaryEmployeeAsSkippedWithAReason()
+    public async Task RecalculateAllAsync_GrossesUpANetSalary_SoTheEmployeeKeepsThatNet()
     {
-        var service = BuildService(out _, out _, out var profiles, out _, out var salaryLookup);
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup);
         var employeeId = Guid.NewGuid();
         GivenEmployee(profiles, salaryLookup, employeeId,
             new EmployeeCurrentSalary(40_000m, "TRY", EmployeeSalaryType.Net, EmployeePayFrequency.Monthly, new DateOnly(2026, 1, 1)));
 
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+
         var summary = await service.RecalculateAllAsync(SeptemberPeriod(), [employeeId], CancellationToken.None);
 
-        summary.CalculatedCount.ShouldBe(0);
-        summary.SkippedCount.ShouldBe(1);
-        summary.Skipped.ShouldBe([new PayrollSkippedEmployee(employeeId, PayrollSkipReasons.NetSalaryNotSupported)]);
+        summary.CalculatedCount.ShouldBe(1);
+        summary.SkippedCount.ShouldBe(0);
+        created.ShouldNotBeNull();
+        created.GrossAmount.ShouldBeGreaterThan(40_000m);
+        Math.Abs(created.NetAmount - 40_000m).ShouldBeLessThan(0.05m); // no meal, expenses or deductions in this profile
     }
 
     [Fact]

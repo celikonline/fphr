@@ -25,7 +25,6 @@ public static class PayrollSkipReasons
     public const string NoPayrollProfile = "no_payroll_profile";
     public const string WageBasisNotMonthly = "wage_basis_not_monthly";
     public const string NoSalaryRecord = "no_salary_record";
-    public const string NetSalaryNotSupported = "net_salary_not_supported";
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
     public const string CalculationFailed = "calculation_failed";
@@ -155,11 +154,6 @@ public sealed class PayrollPeriodCalculationService(
             return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
         }
 
-        if (salary.SalaryType != EmployeeSalaryType.Gross)
-        {
-            return PayrollSkipReasons.NetSalaryNotSupported; // NET_TO_GROSS_ITER is out of scope this slice (PayrollCalculator doc)
-        }
-
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
         // girdi - bkz. ResolvePriorCumulativeGvBaseAsync (bu metodun altında).
         // TB-7 Attendance köprüsü (roadmap #23): null (no adapter wired yet, or Attendance has no data for this
@@ -218,6 +212,20 @@ public sealed class PayrollPeriodCalculationService(
         // senseik-019 2b: GVK md.31 engelli çalışan gelir vergisi matrah indirimi derecesi.
         var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenant.TenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
 
+        // Net ücret (net→brüt): a fixed-net salary is grossed up with the same calculator so the employee keeps exactly that net after the
+        // month's premiums and taxes (cumulative bracket, exemptions and disability reduction included). Solved on a full month with no
+        // additions or deductions, then the normal run prorates that gross for a partial month and adds meal/overtime/deductions as usual.
+        var grossMonthly = salary.SalaryType == EmployeeSalaryType.Net
+            ? NetToGrossSolver.Solve(
+                salary.Amount,
+                candidateGross => PayrollCalculator.Calculate(
+                    new PayrollCalculationInput(
+                        GrossMonthlySalary: candidateGross, WorkedDays: calendarDays, CalendarDaysInMonth: calendarDays,
+                        MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m, PriorCumulativeGvBase: priorCumulativeGvBase,
+                        AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree),
+                    snapshot))
+            : salary.Amount;
+
         // senseik-019 2c: açık avans bakiyesi + aktif icra/nafaka emirleri.
         var advanceBalance = expensePayout?.OpenAdvanceBalance ?? 0m;
         var activeGarnishments = await garnishmentOrderRepository.ListActiveByEmployeeAsync(employeeId, cancellationToken) ?? [];
@@ -228,17 +236,17 @@ public sealed class PayrollPeriodCalculationService(
         // Sendika / dayanışma aidatı (11.3.07-bordro.md #58): pure UnionDuesCalculator decides eligibility for this
         // period from the current membership (or 0 if the employee has none) - the calculator never touches the DB.
         var membership = await unionMemberships.FindCurrentAsync(employeeId, periodStart, cancellationToken);
-        var unionDuesAmount = UnionDuesCalculator.Calculate(membership, salary.Amount, calendarDays, periodStart);
+        var unionDuesAmount = UnionDuesCalculator.Calculate(membership, grossMonthly, calendarDays, periodStart);
 
         // Fazla mesai (4857 md.41): Leave's approved overtime minutes (25%/50% rates, time-off conversions excluded) become a taxable
         // earning added to the gross. Leave returns nothing for an employee without overtime, which leaves the gross unchanged.
         var overtime = (await overtimeReader.GetAsync(tenant.TenantId, period.Year, period.Month, [employeeId], cancellationToken))?.FirstOrDefault(o => o.EmployeeId == employeeId);
         var overtimePay = overtime is null
             ? 0m
-            : OvertimePayCalculator.Calculate(salary.Amount, overtime.Rate25Minutes / 60m, overtime.Rate50Minutes / 60m);
+            : OvertimePayCalculator.Calculate(grossMonthly, overtime.Rate25Minutes / 60m, overtime.Rate50Minutes / 60m);
 
         var input = new PayrollCalculationInput(
-            GrossMonthlySalary: salary.Amount,
+            GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
             MealVariant: profile.MealBenefitVariant,

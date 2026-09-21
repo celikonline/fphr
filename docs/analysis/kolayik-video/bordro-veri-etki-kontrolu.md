@@ -15,7 +15,7 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 | 3 | Engellilik işveren SGK payını da etkiler | ❌ | Engelli işçi işveren prim teşviki hesaplanmıyor; `EmployerDiscountRate` hiç uygulanmıyor (kodda TODO P2+) |
 | 4 | İşçi SGK %14, işsizlik işçi %1, işveren işsizlik %2 | ✅ | Seed: `Payroll.Sgk.EmployeeRate`, `Payroll.Unemployment.*` |
 | 5 | İşveren SGK indirimsiz **%20,75** | ⚠️ | Seed **%20,5** (`Payroll.Sgk.EmployerRate = 0.205`). Fark 0,25 puan. İş kazası/meslek hastalığı primi işyerinin tehlike sınıfına bağlı olduğundan tek oran yaklaşıktır; SMMM ile doğrulanıp işyeri bazlı parametreye dönmeli |
-| 6 | Net ücret brütleştirilir (net→brüt) | ❌ | Net maaşlı çalışan **bordroya hiç girmiyor**: `NetSalaryNotSupported` ile atlanıyor. Çıkış hesabındaki günlük ücret de net kaydı olduğu gibi kullanıyor |
+| 6 | Net ücret brütleştirilir (net→brüt) | ⚠️ | **Bordro için bağlandı** (2026-09-21): `NetToGrossSolver` gerçek hesaplayıcıyı ikiye bölme ile çalıştırıp çalışana net kalan tutarı sabitler (dilim, kümülatif matrah, istisnalar dahil). **Çıkış hesabı** günlük ücreti hâlâ net kaydı olduğu gibi kullanıyor |
 | 7 | Fazla mesai brüt, SGK ve vergileri değiştirir | ⚠️ | **Fazla mesai bağlandı** (2026-09-21): Leave'in onaylı %25/%50 dakikaları brüte eklenir, nakde çevirme olayı bordroyu "değişti" işaretler. Hafta tatili ve resmî tatil ücreti (`HolidayPayCalculator`) hâlâ bağlı değil |
 | 8 | Prim/ikramiye (net veya brüt) brüt, matrah ve vergiyi değiştirir | ❌ | Dönem bazlı ek kazanç kalemi yok. Yalnızca çıkış hesabında elle satır var |
 | 9 | Ücretsiz izin SGK gününü ve vergiyi azaltır; yıllık izin azaltmaz | ✅ / ⚠️ | Devamsızlık günleri `IAbsenceDaysReader` ile okunur; yıllık izin kesinti yapmaz. Tüm izin türlerinin eşlemesi ayrıca test edilmeli |
@@ -29,7 +29,7 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 
 ## Doğrudan sonuçlar
 
-1. **Net maaşlı çalışan bordroda sessizce atlanıyor.** Kapanış kontrol listesindeki "bordro hesaplandı" kuralı yalnızca en az bir bordro olup olmadığına bakar; atlanan çalışanı yakalamaz. Önerilen kural: aktif ve maaş kaydı olan her çalışan için bordro var mı.
+1. **Net maaşlı çalışan artık bordroya giriyor** (net→brüt bağlandı). Yine de atlanan çalışanı görmek için kapanış listesine "bordrosuz aktif çalışan" uyarısı eklendi. Çıkış hesabındaki günlük ücret hâlâ net kaydı brüt sayıyor.
 2. **Ek ödeme, yol yardımı ve hafta/resmî tatil ücreti bordroya girmiyor (fazla mesai bağlandı).** Bu, dokümanın 4, 5 ve 7. bölümlerinin tamamını etkiler ve bordro doğruluğunu doğrudan bozar; kapanış planında "Faz 0.2 / 0.3" olarak öncelikli.
 3. **İşveren SGK oranı %20,5 mi %20,75 mi?** Yasal parametre olduğu için SMMM onayı olmadan değiştirilmedi.
 
