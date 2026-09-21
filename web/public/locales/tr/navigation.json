@@ -128,5 +128,13 @@
     "subnavLabel": "Ayarlar menüsü",
     "orgChart": "Organizasyon şeması",
     "orgChartDesc": "Birim ve çalışan hiyerarşisini şema olarak görüntüleyin"
+  },
+  "search": {
+    "label": "Ekran ara",
+    "placeholder": "Ekran ara…",
+    "nothing": "Sonuç bulunamadı",
+    "menu": "Menü",
+    "apps": "Uygulamalar",
+    "settings": "Ayarlar"
   }
 }

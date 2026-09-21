@@ -23,8 +23,8 @@ import {
   Building2,
   Grip,
   LogOut,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ChevronLeft,
+  ChevronRight,
   ShieldAlert,
   UserCircle,
 } from "lucide-react";
@@ -43,6 +43,7 @@ import { NotificationsMenu } from "@/components/notifications/notification-bell"
 import RouteBoundary from "@/components/route-boundary";
 import SetupGuard from "@/components/setup-guard";
 import SettingsSubNav from "@/components/settings-subnav";
+import ScreenSearch from "@/components/screen-search";
 import ModuleRouteGuard from "@/components/module-disabled";
 import classes from "./app-layout.module.css";
 
@@ -271,19 +272,27 @@ function NavItemLink({
   );
 }
 
-/** Desktop-only collapse/expand control for the sidebar; mobile always stays icon-only. */
-function SidebarToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+/**
+ * Collapse/expand control on the seam between the sidebar and the content. It stays invisible until the pointer
+ * nears the top of that seam (or the button gets keyboard focus), so it does not clutter the menu.
+ */
+function SidebarEdgeToggle({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const { t } = useTranslation(["navigation"]);
   const label = t(collapsed ? "navigation:nav.expandSidebar" : "navigation:nav.collapseSidebar");
-  const Icon = collapsed ? PanelLeftOpen : PanelLeftClose;
+  const Icon = collapsed ? ChevronRight : ChevronLeft;
 
   return (
-    <div
-      className={`hidden md:flex ${collapsed ? "justify-center" : "justify-end"} px-2 py-2 ${classes.footerNav}`}
-    >
+    <div className="group/edge absolute top-0 -right-4 z-20 h-16 w-8">
       <Tooltip label={label} position="right" openDelay={300}>
-        <ActionIcon variant="subtle" color="gray" size="md" aria-label={label} onClick={onToggle}>
-          <Icon size={18} />
+        <ActionIcon
+          variant="default"
+          size={26}
+          radius="xl"
+          aria-label={label}
+          onClick={onToggle}
+          className="absolute top-3 left-1/2 -translate-x-1/2 opacity-0 shadow-sm transition-opacity group-hover/edge:opacity-100 focus-visible:opacity-100"
+        >
+          <Icon size={16} />
         </ActionIcon>
       </Tooltip>
     </div>
@@ -493,6 +502,9 @@ export default function AppLayout() {
             <div className="flex min-w-0 flex-1 items-center justify-end gap-3 px-4 md:px-6">
               <BackButton />
               <Greeting />
+              <div className="hidden min-w-0 flex-1 sm:block md:max-w-sm">
+                <ScreenSearch />
+              </div>
               <TenantBadge />
               <AppsLauncher />
               <NotificationsButton />
@@ -502,16 +514,18 @@ export default function AppLayout() {
 
           <div className="flex min-h-0 flex-1">
             {/* Sidebar - full labels from md up, user can collapse to icon-only via SidebarToggle */}
-            <aside
-              data-testid="sidebar-desktop"
-              className={`hidden ${collapsed ? "w-14" : "w-52"} shrink-0 flex-col md:flex ${classes.sidebar}`}
-            >
-              <NavList collapsed={collapsed} />
-              <SidebarToggle
+            <div className="relative hidden shrink-0 md:flex">
+              <aside
+                data-testid="sidebar-desktop"
+                className={`${collapsed ? "w-14" : "w-52"} flex shrink-0 flex-col ${classes.sidebar}`}
+              >
+                <NavList collapsed={collapsed} />
+              </aside>
+              <SidebarEdgeToggle
                 collapsed={collapsed}
                 onToggle={() => setCollapsed((current) => !current)}
               />
-            </aside>
+            </div>
 
             {/* Mobile icon rail - always icon-only, unaffected by the desktop collapse preference */}
             <aside

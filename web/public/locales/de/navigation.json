@@ -128,5 +128,13 @@
     "subnavLabel": "Einstellungsmenü",
     "orgChart": "Organigramm",
     "orgChartDesc": "Einheiten- und Mitarbeiterhierarchie als Diagramm anzeigen"
+  },
+  "search": {
+    "label": "Bildschirme suchen",
+    "placeholder": "Bildschirme suchen…",
+    "nothing": "Keine Ergebnisse",
+    "menu": "Menü",
+    "apps": "Apps",
+    "settings": "Einstellungen"
   }
 }

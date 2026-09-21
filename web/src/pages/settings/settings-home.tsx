@@ -2,11 +2,23 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Search, Settings } from "lucide-react";
-import { Badge, Card, Group, NavLink, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
+import { Badge, Card, Group, NavLink, SegmentedControl, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
+import { useLocalStorage } from "@mantine/hooks";
 import { SETTINGS_SECTIONS, type SettingsLink, type SettingsSection } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 
 const ALL_LINKS = SETTINGS_SECTIONS.flatMap((section) => section.links);
+
+/** Per-viewer convenience (never sent to the server): how many columns the group cards are laid out in. */
+const COLUMNS_KEY = "senseik.settings.columns";
+const COLUMN_CHOICES = ["1", "2", "3"] as const;
+type ColumnChoice = (typeof COLUMN_CHOICES)[number];
+const DEFAULT_COLUMNS: ColumnChoice = "3";
+
+function gridCols(choice: ColumnChoice) {
+  const count = Number(choice);
+  return { base: 1, sm: Math.min(count, 2), lg: count };
+}
 
 function SettingsLinkRow({ link }: { link: SettingsLink }) {
   const { t } = useTranslation(["navigation"]);
@@ -70,6 +82,7 @@ function SettingsSectionCard({ section, links }: { section: SettingsSection; lin
 export default function SettingsHomePage() {
   const { t, i18n } = useTranslation(["settings", "navigation"]);
   const [query, setQuery] = useState("");
+  const [columns, setColumns] = useLocalStorage<ColumnChoice>({ key: COLUMNS_KEY, defaultValue: DEFAULT_COLUMNS });
   const visibleLinks = useVisibleItems(ALL_LINKS);
 
   const visibleKeys = new Set(visibleLinks.map((link) => link.key));
@@ -90,7 +103,7 @@ export default function SettingsHomePage() {
   const resultCount = groups.reduce((sum, group) => sum + group.links.length, 0);
 
   return (
-    <div className="max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-7xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <Settings className="h-6 w-6" /> {t("settings:hub.title")}
@@ -98,7 +111,9 @@ export default function SettingsHomePage() {
         <Text c="dimmed">{t("settings:hub.subtitle")}</Text>
       </div>
 
+      <Group gap="md" align="flex-start" wrap="nowrap">
       <TextInput
+        className="min-w-0 flex-1"
         type="search"
         size="md"
         value={query}
@@ -110,6 +125,15 @@ export default function SettingsHomePage() {
         aria-label={t("settings:hub.searchLabel")}
         leftSection={<Search className="h-4 w-4" />}
       />
+      <SegmentedControl
+        size="md"
+        visibleFrom="sm"
+        value={columns}
+        onChange={(value) => setColumns(value as ColumnChoice)}
+        data={COLUMN_CHOICES.map((choice) => ({ value: choice, label: choice }))}
+        aria-label={t("settings:hub.columns")}
+      />
+      </Group>
 
       {needle !== "" && (
         <Text size="sm" c="dimmed" role="status" aria-live="polite">
@@ -119,7 +143,7 @@ export default function SettingsHomePage() {
         </Text>
       )}
 
-      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
+      <SimpleGrid cols={gridCols(columns)} spacing="md">
         {groups.map(({ section, links }) => (
           <SettingsSectionCard key={section.key} section={section} links={links} />
         ))}

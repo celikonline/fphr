@@ -5,7 +5,8 @@
     "searchPlaceholder": "Search settings (e.g. leave, role, document)",
     "searchLabel": "Search settings",
     "noResults": "No settings match “{{query}}”.",
-    "resultCount": "{{count}} settings found"
+    "resultCount": "{{count}} settings found",
+    "columns": "Column count"
   },
   "access": {
     "title": "Access settings",

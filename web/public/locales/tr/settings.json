@@ -5,7 +5,8 @@
     "searchPlaceholder": "Ayarlarda ara (ör. izin, rol, belge)",
     "searchLabel": "Ayarlarda ara",
     "noResults": "“{{query}}” ile eşleşen ayar bulunamadı.",
-    "resultCount": "{{count}} ayar bulundu"
+    "resultCount": "{{count}} ayar bulundu",
+    "columns": "Kolon sayısı"
   },
   "access": {
     "title": "Erişim ayarları",

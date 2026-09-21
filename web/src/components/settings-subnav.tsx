@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { NavLink as RouterNavLink, useLocation } from "react-router";
 import { useTranslation } from "react-i18next";
-import { LayoutGrid } from "lucide-react";
-import { NavLink, ScrollArea, Stack, Text } from "@mantine/core";
+import { LayoutGrid, Search } from "lucide-react";
+import { NavLink, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
 import { SETTINGS_SECTIONS } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
 import classes from "@/layouts/app-layout.module.css";
@@ -19,16 +20,21 @@ export function isSettingsSubPage(pathname: string): boolean {
 
 /** Ayar alt sayfalarında ana kenar çubuğunun yanında gruplanmış ikinci ayarlar menüsü (yetki/modül filtreli, yalnızca masaüstü). */
 export default function SettingsSubNav() {
-  const { t } = useTranslation(["navigation"]);
+  const { t, i18n } = useTranslation(["navigation", "settings"]);
   const { pathname } = useLocation();
+  const [query, setQuery] = useState("");
   const visibleLinks = useVisibleItems(ALL_LINKS);
 
   if (!isSettingsSubPage(pathname)) return null;
 
   const visibleKeys = new Set(visibleLinks.map((link) => link.key));
+  const needle = query.trim().toLocaleLowerCase(i18n.language);
+  const matches = (labelKey: string, descriptionKey: string) =>
+    needle === "" ||
+    `${t(labelKey)} ${t(descriptionKey)}`.toLocaleLowerCase(i18n.language).includes(needle);
   const groups = SETTINGS_SECTIONS.map((section) => ({
     section,
-    links: section.links.filter((link) => visibleKeys.has(link.key)),
+    links: section.links.filter((link) => visibleKeys.has(link.key) && matches(link.labelKey, link.descriptionKey)),
   })).filter((group) => group.links.length > 0);
 
   return (
@@ -39,6 +45,18 @@ export default function SettingsSubNav() {
     >
       <ScrollArea className="min-h-0 flex-1" type="auto" offsetScrollbars>
         <Stack component="nav" gap="md" className="px-2 py-4">
+          <TextInput
+            type="search"
+            size="xs"
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") setQuery("");
+            }}
+            placeholder={t("settings:hub.searchPlaceholder")}
+            aria-label={t("settings:hub.searchLabel")}
+            leftSection={<Search size={14} />}
+          />
           <NavLink
             component={RouterNavLink}
             to={SETTINGS_HOME_PATH}
@@ -71,6 +89,11 @@ export default function SettingsSubNav() {
               })}
             </Stack>
           ))}
+          {needle !== "" && groups.length === 0 && (
+            <Text size="sm" c="dimmed" ta="center" role="status">
+              {t("navigation:search.nothing")}
+            </Text>
+          )}
         </Stack>
       </ScrollArea>
     </aside>

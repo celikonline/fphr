@@ -5,7 +5,8 @@
     "searchPlaceholder": "Einstellungen suchen (z. B. Urlaub, Rolle, Dokument)",
     "searchLabel": "Einstellungen suchen",
     "noResults": "Keine Einstellungen für „{{query}}“ gefunden.",
-    "resultCount": "{{count}} Einstellungen gefunden"
+    "resultCount": "{{count}} Einstellungen gefunden",
+    "columns": "Spaltenanzahl"
   },
   "access": {
     "title": "Zugriffseinstellungen",

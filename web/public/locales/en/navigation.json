@@ -128,5 +128,13 @@
     "subnavLabel": "Settings menu",
     "orgChart": "Org chart",
     "orgChartDesc": "View the unit and employee hierarchy as a chart"
+  },
+  "search": {
+    "label": "Search screens",
+    "placeholder": "Search screens…",
+    "nothing": "No results",
+    "menu": "Menu",
+    "apps": "Apps",
+    "settings": "Settings"
   }
 }
