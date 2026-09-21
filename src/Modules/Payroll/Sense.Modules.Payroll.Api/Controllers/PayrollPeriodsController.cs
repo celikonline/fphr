@@ -61,6 +61,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     public async Task<IActionResult> Run(Guid id, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new RecalculateAllPayslipsCommand(id), ct));
 
+    /// <summary>Deneme bordrosu: calculates the open period without saving anything.</summary>
+    [HttpGet("{id:guid}/preview")]
+    [ProducesResponseType<PayrollPreviewDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Preview(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new PreviewPayrollPeriodQuery(id), ct));
+
     /// <summary>Recalculates only the employees with an active dirty flag ("Değişenleri yeniden hesapla").</summary>
     [HttpPost("{id:guid}/recalculate-dirty")]
     [ProducesResponseType<PayrollPeriodRunSummary>(StatusCodes.Status200OK)]

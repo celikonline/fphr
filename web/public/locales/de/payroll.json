@@ -34,6 +34,21 @@
       "other": "Sonstiges"
     }
   },
+  "preview": {
+    "title": "Probeabrechnung",
+    "subtitle": "Berechnet die Periode wie der echte Lauf, speichert aber nichts, damit Summen und Nettobezüge vor der Erstellung der Abrechnungen geprüft werden können.",
+    "run": "Probelauf",
+    "calculated": "Berechnete Mitarbeitende",
+    "totalGross": "Brutto gesamt",
+    "totalNet": "Netto gesamt",
+    "totalEmployerCost": "Arbeitgeberkosten gesamt",
+    "skipped": "{{count}} Mitarbeitende konnten nicht berechnet werden (fehlendes Profil oder Gehalt).",
+    "employee": "Mitarbeitende",
+    "gross": "Brutto",
+    "net": "Netto",
+    "employerCost": "Arbeitgeberkosten",
+    "error": "Der Probelauf ist fehlgeschlagen."
+  },
   "comparison": {
     "title": "Vergleich mit dem Vormonat",
     "against": "Verglichen mit {{period}}.",

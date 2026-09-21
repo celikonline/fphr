@@ -369,3 +369,30 @@ export async function addPayrollAdjustment(periodId: string, input: PayrollAdjus
 export async function removePayrollAdjustment(adjustmentId: string): Promise<void> {
   await apiClient.delete(`${PAYROLL_BASE}/adjustments/${adjustmentId}`);
 }
+
+/** `PayrollPreviewLineDto`: one employee's figures in a deneme bordrosu. */
+export interface PayrollPreviewLine {
+  employeeId: string;
+  employeeName: string;
+  gross: number;
+  net: number;
+  employerCost: number;
+}
+
+/** `PayrollPreviewDto`: a full calculation of the open period that stores nothing. */
+export interface PayrollPreview {
+  calculatedCount: number;
+  skippedCount: number;
+  totalGross: number;
+  totalNet: number;
+  totalEmployerCost: number;
+  lines: PayrollPreviewLine[];
+  skipped: { employeeId: string; reason: string }[];
+  warnings: { employeeId: string; code: string; details?: string }[];
+}
+
+/** Deneme bordrosu: calculates the open period without saving payslips (`payroll.period.recalculate`). */
+export async function previewPayrollPeriod(periodId: string): Promise<PayrollPreview> {
+  const { data } = await apiClient.get<PayrollPreview>(`${PAYROLL_BASE}/periods/${periodId}/preview`);
+  return data;
+}

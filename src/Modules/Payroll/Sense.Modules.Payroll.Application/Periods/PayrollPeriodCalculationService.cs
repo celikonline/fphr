@@ -38,6 +38,12 @@ public sealed record PayrollWarning(Guid EmployeeId, string Code, string? Detail
 /// SalaryType, were not employed in the period, have no worked day, or their calculation failed; each skipped
 /// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.
 /// <see cref="Warnings"/> contains non-blocking issues like missing prior cumulative GV base for mid-year employees.</summary>
+/// <summary>One employee's figures in a deneme bordrosu.</summary>
+public sealed record PayrollPreviewLine(Guid EmployeeId, decimal Gross, decimal Net, decimal EmployerCost);
+
+/// <summary>A deneme bordrosu: the run summary (calculated / skipped / warnings) plus every calculated employee's figures.</summary>
+public sealed record PayrollPreviewResult(PayrollPeriodRunSummary Summary, IReadOnlyList<PayrollPreviewLine> Lines);
+
 public sealed record PayrollPeriodRunSummary(
     Guid RunId, int CalculatedCount, int SkippedCount, IReadOnlyList<PayrollSkippedEmployee> Skipped,
     IReadOnlyList<PayrollWarning> Warnings = default!)
@@ -75,7 +81,22 @@ public sealed class PayrollPeriodCalculationService(
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
     /// <summary>Recalculates every candidate employee (initial "Dönem aç → hesapla" run, and later "Tümünü yeniden hesapla").</summary>
-    public async Task<PayrollPeriodRunSummary> RecalculateAllAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken)
+    public Task<PayrollPeriodRunSummary> RecalculateAllAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken) =>
+        RunAsync(period, employeeIds, null, cancellationToken);
+
+    /// <summary>
+    /// Deneme bordrosu: runs the same calculation for every candidate employee but writes nothing - no payslip, trace, flag clearing or
+    /// garnishment balance - and returns the figures so they can be reviewed before the real run.
+    /// </summary>
+    public async Task<PayrollPreviewResult> PreviewAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken)
+    {
+        var lines = new List<PayrollPreviewLine>();
+        var summary = await RunAsync(period, employeeIds, lines, cancellationToken);
+        return new PayrollPreviewResult(summary, lines);
+    }
+
+    private async Task<PayrollPeriodRunSummary> RunAsync(
+        PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, List<PayrollPreviewLine>? preview, CancellationToken cancellationToken)
     {
         var runId = Guid.NewGuid();
         var periodStart = new DateOnly(period.Year, period.Month, 1);
@@ -90,7 +111,7 @@ public sealed class PayrollPeriodCalculationService(
             string? skipReason;
             try
             {
-                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, cancellationToken);
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -122,7 +143,7 @@ public sealed class PayrollPeriodCalculationService(
 
     /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code. Accumulates warnings in the provided list.</summary>
     private async Task<string?> CalculateOneAsync(
-        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, CancellationToken cancellationToken)
+        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, List<PayrollPreviewLine>? preview, CancellationToken cancellationToken)
     {
         var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
 
@@ -270,6 +291,13 @@ public sealed class PayrollPeriodCalculationService(
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
         var result = PayrollCalculator.Calculate(input, snapshot);
+
+        if (preview is not null)
+        {
+            // Deneme bordrosu: report the figures and stop before anything is persisted or mutated (garnishment balances, flags, traces).
+            preview.Add(new PayrollPreviewLine(employeeId, result.GrossAmount, result.NetAmount, result.EmployerCost));
+            return null;
+        }
 
         // senseik-019 2c: uygulanan icra/nafaka kesintilerini emir bakiyelerine işle (aynı DbContext'te izlenen
         // entity'ler - IPayrollUnitOfWork.SaveChangesAsync çağıran command handler'ın işlemiyle birlikte kaydedilir).

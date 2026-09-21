@@ -227,6 +227,26 @@ public sealed class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
+    public async Task PreviewAsync_ReturnsTheFigures_ButStoresNothing()
+    {
+        var service = BuildService(out var payslips, out var traces, out var profiles, out _, out var salaryLookup);
+        var employee = Guid.NewGuid();
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+
+        var preview = await service.PreviewAsync(OpenPeriod(), [employee], CancellationToken.None);
+
+        preview.Summary.CalculatedCount.ShouldBe(1);
+        var line = preview.Lines.ShouldHaveSingleItem();
+        line.EmployeeId.ShouldBe(employee);
+        line.Gross.ShouldBe(50_000m);
+        line.Net.ShouldBeGreaterThan(0m);
+        line.EmployerCost.ShouldBeGreaterThan(line.Gross);
+        payslips.DidNotReceive().Add(Arg.Any<Payslip>());
+        traces.DidNotReceive().Add(Arg.Any<PayslipCalculationTrace>());
+    }
+
+    [Fact]
     public void ACashTransportProfile_NeedsADailyAmount_AndOtherVariantsKeepZero()
     {
         var cash = EmployeePayrollProfileData_(TransportVariant.Cash, 0m);

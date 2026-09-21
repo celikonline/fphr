@@ -34,6 +34,21 @@
       "other": "Diğer"
     }
   },
+  "preview": {
+    "title": "Deneme bordrosu",
+    "subtitle": "Dönemi gerçek hesaplamayla aynı şekilde hesaplar ama hiçbir şey kaydetmez; bordroları oluşturmadan önce toplamları ve net ücretleri incelemek içindir.",
+    "run": "Deneme hesapla",
+    "calculated": "Hesaplanan çalışan",
+    "totalGross": "Toplam brüt",
+    "totalNet": "Toplam net",
+    "totalEmployerCost": "Toplam işveren maliyeti",
+    "skipped": "{{count}} çalışan hesaplanamadı (eksik profil veya maaş).",
+    "employee": "Çalışan",
+    "gross": "Brüt",
+    "net": "Net",
+    "employerCost": "İşveren maliyeti",
+    "error": "Deneme hesabı yapılamadı."
+  },
   "comparison": {
     "title": "Önceki ayla karşılaştırma",
     "against": "{{period}} ile karşılaştırılıyor.",

@@ -34,6 +34,21 @@
       "other": "Other"
     }
   },
+  "preview": {
+    "title": "Trial payroll",
+    "subtitle": "Calculates the period exactly like the real run but saves nothing, so you can review totals and net pay before generating payslips.",
+    "run": "Run trial",
+    "calculated": "Employees calculated",
+    "totalGross": "Total gross",
+    "totalNet": "Total net",
+    "totalEmployerCost": "Total employer cost",
+    "skipped": "{{count}} employees could not be calculated (missing profile or salary).",
+    "employee": "Employee",
+    "gross": "Gross",
+    "net": "Net",
+    "employerCost": "Employer cost",
+    "error": "The trial run failed."
+  },
   "comparison": {
     "title": "Comparison with the previous month",
     "against": "Compared with {{period}}.",
