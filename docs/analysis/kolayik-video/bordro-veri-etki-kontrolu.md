@@ -12,7 +12,7 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 |---|---|---|---|
 | 1 | AGİ kaldırıldı; medeni durum/çocuk sayısı net maaşı etkilemez | ✅ | AGİ hesaba eklenmedi (bilinçli). Kapanış listesinde yalnız parametre kontrolü olarak bırakılmalı |
 | 2 | Engellilik GV indirimi uygular | ✅ | `DisabilityMonthlyTaxReductionDegree1-3`, senseik-019 2b |
-| 3 | Engellilik işveren SGK payını da etkiler | ❌ | Engelli işçi işveren prim teşviki hesaplanmıyor; `EmployerDiscountRate` hiç uygulanmıyor (kodda TODO P2+) |
+| 3 | Engellilik işveren SGK payını da etkiler | ⚠️ | 5 puanlık işveren indirimi (`EmployerDiscountRate`) profildeki `IncentiveLawCode` doluysa uygulanır (senseik-019 2a). Engelli işçiye özgü tam işveren payı teşviki (kota/işyeri koşullu, devlet karşılar) otomatik değil; oran ve koşullar SMMM ile netleşmeden eklenmedi - engelli çalışanın profiline uygun teşvik kanun kodu girilerek indirim uygulanabilir |
 | 4 | İşçi SGK %14, işsizlik işçi %1, işveren işsizlik %2 | ✅ | Seed: `Payroll.Sgk.EmployeeRate`, `Payroll.Unemployment.*` |
 | 5 | İşveren SGK indirimsiz **%20,75** | ⚠️ | Seed **%20,5** (`Payroll.Sgk.EmployerRate = 0.205`). Fark 0,25 puan. İş kazası/meslek hastalığı primi işyerinin tehlike sınıfına bağlı olduğundan tek oran yaklaşıktır; SMMM ile doğrulanıp işyeri bazlı parametreye dönmeli |
 | 6 | Net ücret brütleştirilir (net→brüt) | ⚠️ | **Bordro için bağlandı** (2026-09-21): `NetToGrossSolver` gerçek hesaplayıcıyı ikiye bölme ile çalıştırıp çalışana net kalan tutarı sabitler (dilim, kümülatif matrah, istisnalar dahil). **Çıkış hesabı** günlük ücreti hâlâ net kaydı olduğu gibi kullanıyor |
