@@ -12,7 +12,7 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Payroll.Application.Adjustments;
 
 /// <summary>One-off taxable earning (prim, komisyon...) of a payroll month, with the employee's name.</summary>
-public sealed record PayrollAdjustmentDto(Guid Id, Guid EmployeeId, string EmployeeName, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount);
+public sealed record PayrollAdjustmentDto(Guid Id, Guid EmployeeId, string EmployeeName, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount, bool IsNet);
 
 /// <summary>The period's extra earnings ("Ek kazançlar"), all employees.</summary>
 [RequiresPermission("payroll.trace.view")]
@@ -37,7 +37,7 @@ public sealed class ListPayrollAdjustmentsHandler(
         {
             var contact = contacts.GetValueOrDefault(a.EmployeeId);
             var name = contact is null ? a.EmployeeId.ToString() : $"{contact.FirstName} {contact.LastName}".Trim();
-            return new PayrollAdjustmentDto(a.Id, a.EmployeeId, name, a.Kind, a.Label, a.GrossAmount);
+            return new PayrollAdjustmentDto(a.Id, a.EmployeeId, name, a.Kind, a.Label, a.GrossAmount, a.IsNet);
         }).ToList();
         return Result.Success(dtos);
     }
@@ -45,7 +45,7 @@ public sealed class ListPayrollAdjustmentsHandler(
 
 /// <summary>Adds a gross one-off earning to an employee's payroll in an <b>open</b> period and marks that payslip changed so the next run picks it up.</summary>
 [RequiresPermission("payroll.adjustment.manage")]
-public sealed record AddPayrollAdjustmentCommand(Guid PeriodId, Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount) : ICommand<Guid>;
+public sealed record AddPayrollAdjustmentCommand(Guid PeriodId, Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount, bool IsNet = false) : ICommand<Guid>;
 
 public sealed class AddPayrollAdjustmentValidator : AbstractValidator<AddPayrollAdjustmentCommand>
 {
@@ -76,7 +76,7 @@ public sealed class AddPayrollAdjustmentHandler(
             return Error.Validation(PayrollDomainErrors.AdjustmentPeriodNotOpen);
         }
 
-        var created = PayrollAdjustment.Create(tenant.TenantId, command.EmployeeId, period.Year, period.Month, command.Kind, command.Label, command.GrossAmount);
+        var created = PayrollAdjustment.Create(tenant.TenantId, command.EmployeeId, period.Year, period.Month, command.Kind, command.Label, command.GrossAmount, command.IsNet);
         if (created.IsFailure)
         {
             return Result.Failure<Guid>(created.Error);

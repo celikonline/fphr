@@ -43,6 +43,33 @@ public static class NetToGrossSolver
         return decimal.Round((low + high) / 2m, 2, MidpointRounding.AwayFromZero);
     }
 
+    /// <summary>
+    /// Net prim: the extra <b>gross</b> that, added on top of the month's other earnings, raises the employee's net by exactly <paramref name="netExtra"/>.
+    /// <paramref name="calculate"/> runs the month with a given extra gross; the marginal tax makes the gross-up larger than the net.
+    /// </summary>
+    public static decimal SolveExtra(decimal netExtra, Func<decimal, PayrollCalculationResult> calculate)
+    {
+        Guard.Against(netExtra <= 0m, "netExtra must be positive.");
+
+        var target = SalaryNet(calculate(0m)) + netExtra;
+        var low = netExtra;
+        var high = netExtra * UpperBoundFactor;
+        for (var i = 0; i < MaxIterations && high - low > Tolerance; i++)
+        {
+            var mid = (low + high) / 2m;
+            if (SalaryNet(calculate(mid)) < target)
+            {
+                low = mid;
+            }
+            else
+            {
+                high = mid;
+            }
+        }
+
+        return decimal.Round((low + high) / 2m, 2, MidpointRounding.AwayFromZero);
+    }
+
     /// <summary>Salary net of a calculation: gross minus the employee's premiums and the taxes payable, read from the NET step's inputs.</summary>
     public static decimal SalaryNet(PayrollCalculationResult result)
     {

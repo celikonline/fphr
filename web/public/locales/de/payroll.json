@@ -32,7 +32,10 @@
       "commission": "Provision",
       "performance": "Leistung",
       "other": "Sonstiges"
-    }
+    },
+    "isNet": "Betrag ist netto",
+    "isNetHint": "Wenn aktiviert, erhält die Person genau diesen Betrag; das Brutto wird in der Abrechnung berechnet.",
+    "netTag": "netto"
   },
   "preview": {
     "title": "Probeabrechnung",

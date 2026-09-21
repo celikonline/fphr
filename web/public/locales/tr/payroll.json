@@ -32,7 +32,10 @@
       "commission": "Komisyon",
       "performance": "Performans",
       "other": "Diğer"
-    }
+    },
+    "isNet": "Tutar net",
+    "isNetHint": "İşaretliyse çalışanın eline tam bu tutar geçer; brüt tutar bordroda otomatik hesaplanır.",
+    "netTag": "net"
   },
   "preview": {
     "title": "Deneme bordrosu",

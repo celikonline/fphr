@@ -344,6 +344,8 @@ export interface PayrollAdjustment {
   kind: PayrollAdjustmentKind;
   label: string;
   grossAmount: number;
+  /** True when the amount is a net the employee keeps (grossed up in payroll). Missing = gross. */
+  isNet?: boolean;
 }
 
 export interface PayrollAdjustmentInput {
@@ -351,6 +353,7 @@ export interface PayrollAdjustmentInput {
   kind: PayrollAdjustmentKind;
   label: string;
   grossAmount: number;
+  isNet?: boolean;
 }
 
 /** The period's one-off taxable earnings, all employees (`payroll.trace.view`). */

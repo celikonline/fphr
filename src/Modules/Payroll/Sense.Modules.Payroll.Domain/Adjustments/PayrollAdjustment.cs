@@ -24,7 +24,7 @@ public sealed class PayrollAdjustment : TenantAggregateRoot<Guid>
     {
     }
 
-    private PayrollAdjustment(Guid id, Guid tenantId, Guid employeeId, int year, int month, PayrollAdjustmentKind kind, string label, decimal grossAmount)
+    private PayrollAdjustment(Guid id, Guid tenantId, Guid employeeId, int year, int month, PayrollAdjustmentKind kind, string label, decimal grossAmount, bool isNet)
         : base(id, tenantId)
     {
         EmployeeId = employeeId;
@@ -33,6 +33,7 @@ public sealed class PayrollAdjustment : TenantAggregateRoot<Guid>
         Kind = kind;
         Label = label;
         GrossAmount = grossAmount;
+        IsNet = isNet;
     }
 
     public Guid EmployeeId { get; private set; }
@@ -45,10 +46,13 @@ public sealed class PayrollAdjustment : TenantAggregateRoot<Guid>
 
     public string Label { get; private set; } = string.Empty;
 
-    /// <summary>Gross amount added to the month's taxable earnings.</summary>
+    /// <summary>The entered amount: gross added to the month's taxable earnings, or - when <see cref="IsNet"/> - the net the employee must keep (grossed up at calculation).</summary>
     public decimal GrossAmount { get; private set; }
 
-    public static Result<PayrollAdjustment> Create(Guid tenantId, Guid employeeId, int year, int month, PayrollAdjustmentKind kind, string label, decimal grossAmount)
+    /// <summary>True when <see cref="GrossAmount"/> was agreed as a net amount (net prim); the payroll grosses it up.</summary>
+    public bool IsNet { get; private set; }
+
+    public static Result<PayrollAdjustment> Create(Guid tenantId, Guid employeeId, int year, int month, PayrollAdjustmentKind kind, string label, decimal grossAmount, bool isNet = false)
     {
         Guard.NotDefault(tenantId);
         Guard.NotDefault(employeeId);
@@ -62,6 +66,6 @@ public sealed class PayrollAdjustment : TenantAggregateRoot<Guid>
             return Error.Validation(PayrollDomainErrors.AdjustmentInvalid);
         }
 
-        return new PayrollAdjustment(Guid.NewGuid(), tenantId, employeeId, year, month, kind, label.Trim(), grossAmount);
+        return new PayrollAdjustment(Guid.NewGuid(), tenantId, employeeId, year, month, kind, label.Trim(), grossAmount, isNet);
     }
 }

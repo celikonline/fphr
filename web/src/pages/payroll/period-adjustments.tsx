@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Alert, Button, Card, Group, Modal, NumberInput, Select, Skeleton, Table, Text, TextInput, Title } from "@mantine/core";
+import { ActionIcon, Alert, Button, Card, Checkbox, Group, Modal, NumberInput, Select, Skeleton, Table, Text, TextInput, Title } from "@mantine/core";
 import { Plus, Trash2 } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { usePermission } from "@/components/permission-guard";
@@ -32,6 +32,7 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
   const [kind, setKind] = useState<PayrollAdjustmentKind>("bonus");
   const [label, setLabel] = useState("");
   const [amount, setAmount] = useState<number | string>("");
+  const [isNet, setIsNet] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const queryKey = ["payroll", "periods", periodId, "adjustments"];
@@ -44,11 +45,12 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
     setKind("bonus");
     setLabel("");
     setAmount("");
+    setIsNet(false);
     setError(null);
   };
 
   const add = useMutation({
-    mutationFn: () => addPayrollAdjustment(periodId, { employeeId: employee!.id, kind, label: label.trim(), grossAmount: Number(amount) }),
+    mutationFn: () => addPayrollAdjustment(periodId, { employeeId: employee!.id, kind, label: label.trim(), grossAmount: Number(amount), isNet }),
     onSuccess: async () => {
       await refresh();
       closeDialog();
@@ -106,7 +108,15 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
                   <Table.Td>{item.employeeName}</Table.Td>
                   <Table.Td>{t(`payroll:adjustments.kind.${item.kind}`)}</Table.Td>
                   <Table.Td>{item.label}</Table.Td>
-                  <Table.Td ta="right">{money(item.grossAmount)}</Table.Td>
+                  <Table.Td ta="right">
+                    {money(item.grossAmount)}
+                    {item.isNet && (
+                      <Text span size="xs" c="dimmed">
+                        {" "}
+                        ({t("payroll:adjustments.netTag")})
+                      </Text>
+                    )}
+                  </Table.Td>
                   <Table.Td>
                     {canManage && isOpen && (
                       <ActionIcon
@@ -146,6 +156,7 @@ export function PeriodAdjustments({ periodId, status }: { periodId: string; stat
           />
           <TextInput mt="sm" label={t("payroll:adjustments.name")} value={label} onChange={(event) => setLabel(event.currentTarget.value)} maxLength={200} required />
           <NumberInput mt="sm" label={t("payroll:adjustments.gross")} value={amount} onChange={setAmount} min={0} decimalScale={2} thousandSeparator="." decimalSeparator="," required />
+          <Checkbox mt="sm" label={t("payroll:adjustments.isNet")} description={t("payroll:adjustments.isNetHint")} checked={isNet} onChange={(event) => setIsNet(event.currentTarget.checked)} />
           {error && (
             <Alert color="red" mt="sm">
               {error}

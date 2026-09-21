@@ -247,6 +247,34 @@ public sealed class PayrollPeriodCalculationServiceTests
     }
 
     [Fact]
+    public async Task RecalculateAllAsync_GrossesUpANetBonus_SoTheEmployeeKeepsExactlyThatNet()
+    {
+        var employee = Guid.NewGuid();
+        var without = await CalculateWithBonus(employee, null);
+        var netBonus = Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment.Create(
+            TenantId, employee, 2026, 3, Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustmentKind.Bonus, "Net prim", 10_000m, isNet: true).Value;
+
+        var with = await CalculateWithBonus(employee, netBonus);
+
+        with.GrossAmount.ShouldBeGreaterThan(without.GrossAmount + 10_000m);
+        (with.NetAmount - without.NetAmount).ShouldBe(10_000m, 0.05m);
+    }
+
+    private static async Task<Payslip> CalculateWithBonus(Guid employee, Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment? bonus)
+    {
+        var adjustments = Substitute.For<IPayrollAdjustmentRepository>();
+        adjustments.ListByEmployeeAndMonthAsync(employee, Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IReadOnlyList<Sense.Modules.Payroll.Domain.Adjustments.PayrollAdjustment>>(bonus is null ? [] : [bonus]));
+        var service = BuildService(out var payslips, out _, out var profiles, out _, out var salaryLookup, out _, out _, out _, out _, adjustmentsOverride: adjustments);
+        profiles.FindCurrentAsync(employee, AsOf, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeePayrollProfile?>(Profile(employee)));
+        salaryLookup.GetSalaryAsOfAsync(TenantId, employee, Arg.Any<DateOnly>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeCurrentSalary?>(Salary(50_000m)));
+        Payslip? created = null;
+        payslips.When(p => p.Add(Arg.Any<Payslip>())).Do(call => created = call.Arg<Payslip>());
+        await service.RecalculateAllAsync(OpenPeriod(), [employee], CancellationToken.None);
+        return created!;
+    }
+
+    [Fact]
     public void ACashTransportProfile_NeedsADailyAmount_AndOtherVariantsKeepZero()
     {
         var cash = EmployeePayrollProfileData_(TransportVariant.Cash, 0m);

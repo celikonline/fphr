@@ -21,7 +21,7 @@ public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 /// themselves via [RequiresPermission].
 /// </summary>
 /// <summary>Body of adding a one-off taxable earning to an employee.</summary>
-public sealed record AddPayrollAdjustmentRequest(Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount);
+public sealed record AddPayrollAdjustmentRequest(Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount, bool IsNet = false);
 
 /// <summary>Body of completing a manual closing check.</summary>
 public sealed record CompleteClosingCheckRequest(string? Note);
@@ -176,7 +176,7 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [HttpPost("{id:guid}/adjustments")]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> AddAdjustment(Guid id, [FromBody] AddPayrollAdjustmentRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new AddPayrollAdjustmentCommand(id, request.EmployeeId, request.Kind, request.Label, request.GrossAmount), ct));
+        FromResult(await Dispatcher.Send(new AddPayrollAdjustmentCommand(id, request.EmployeeId, request.Kind, request.Label, request.GrossAmount, request.IsNet), ct));
 
     /// <summary>Removes an earning while its period is still open.</summary>
     [HttpDelete("~/api/v{version:apiVersion}/payroll/adjustments/{adjustmentId:guid}")]

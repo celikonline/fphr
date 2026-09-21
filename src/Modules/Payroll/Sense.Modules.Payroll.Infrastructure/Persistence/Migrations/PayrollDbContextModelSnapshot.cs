@@ -46,6 +46,12 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("gross_amount");
 
+                    b.Property<bool>("IsNet")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_net");
+
                     b.Property<string>("Kind")
                         .IsRequired()
                         .HasMaxLength(30)

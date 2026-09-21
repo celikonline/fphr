@@ -286,6 +286,7 @@ public sealed class PayrollAdjustmentConfiguration : IEntityTypeConfiguration<Pa
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.Property(x => x.Label).HasMaxLength(PayrollLimits.AdjustmentLabelMaxLength).IsRequired();
+        b.Property(x => x.IsNet).HasDefaultValue(false);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.Year, x.Month });
         b.Ignore(x => x.DomainEvents);
     }

@@ -32,7 +32,10 @@
       "commission": "Commission",
       "performance": "Performance",
       "other": "Other"
-    }
+    },
+    "isNet": "Amount is net",
+    "isNetHint": "If checked, the employee keeps exactly this amount; the gross is calculated in payroll.",
+    "netTag": "net"
   },
   "preview": {
     "title": "Trial payroll",
