@@ -47,6 +47,7 @@ import {
   Blocks,
   QrCode,
   MonitorCheck,
+  Megaphone,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -396,6 +397,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Users,
     permissions: ["performance.team.goals"],
     iconColor: "gold",
+  },
+  {
+    key: "announcements",
+    labelKey: "apps.announcements",
+    path: "/app/announcements",
+    icon: Megaphone,
+    permissions: ["announcements.my.feed", "announcements.announcements.manage"],
+    iconColor: "orange",
   },
   {
     key: "recruitmentCandidates",

@@ -1,0 +1,56 @@
+{
+  "title": "Ankündigungen",
+  "tabs": {
+    "feed": "Ankündigungen",
+    "manage": "Verwaltung"
+  },
+  "feed": {
+    "empty": "Derzeit gibt es keine veröffentlichten Ankündigungen.",
+    "loadError": "Ankündigungen konnten nicht geladen werden.",
+    "new": "Neu"
+  },
+  "manage": {
+    "create": "Neue Ankündigung",
+    "saveDraft": "Als Entwurf speichern",
+    "created": "Entwurf der Ankündigung erstellt.",
+    "publish": "Veröffentlichen",
+    "publishTitle": "„{{title}}\" veröffentlichen?",
+    "expiresHint": "Leer lassen, damit sie bis zur Archivierung sichtbar bleibt.",
+    "published": "Ankündigung veröffentlicht.",
+    "archive": "Archivieren",
+    "archiveTitle": "Ankündigung archivieren?",
+    "archiveDescription": "„{{title}}\" wird archiviert und aus dem Feed der Mitarbeitenden entfernt.",
+    "archived": "Ankündigung archiviert.",
+    "empty": "Noch keine Ankündigungen.",
+    "loadError": "Ankündigungen konnten nicht geladen werden.",
+    "actionFailed": "Die Aktion konnte nicht abgeschlossen werden."
+  },
+  "fields": {
+    "title": "Titel",
+    "content": "Inhalt",
+    "type": "Typ",
+    "priority": "Priorität",
+    "status": "Status",
+    "publishedAt": "Veröffentlicht",
+    "expiresAt": "Gültig bis",
+    "readers": "Gelesen von"
+  },
+  "types": {
+    "general": "Allgemein",
+    "hr": "Personal",
+    "policy": "Richtlinie",
+    "emergency": "Notfall"
+  },
+  "priorities": {
+    "low": "Niedrig",
+    "normal": "Normal",
+    "high": "Hoch",
+    "urgent": "Dringend"
+  },
+  "statuses": {
+    "draft": "Entwurf",
+    "published": "Veröffentlicht",
+    "expired": "Abgelaufen",
+    "archived": "Archiviert"
+  }
+}

@@ -45,6 +45,7 @@ i18n
       "payroll",
       "support",
       "companyCalendar",
+      "announcements",
       "ohs",
       "platform",
       "setup",

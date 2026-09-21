@@ -1,0 +1,56 @@
+{
+  "title": "Duyurular",
+  "tabs": {
+    "feed": "Duyurular",
+    "manage": "Yönetim"
+  },
+  "feed": {
+    "empty": "Şu an yayında duyuru yok.",
+    "loadError": "Duyurular yüklenemedi.",
+    "new": "Yeni"
+  },
+  "manage": {
+    "create": "Yeni duyuru",
+    "saveDraft": "Taslak olarak kaydet",
+    "created": "Duyuru taslağı oluşturuldu.",
+    "publish": "Yayınla",
+    "publishTitle": "\"{{title}}\" yayınlansın mı?",
+    "expiresHint": "Boş bırakılırsa duyuru arşivlenene kadar yayında kalır.",
+    "published": "Duyuru yayınlandı.",
+    "archive": "Arşivle",
+    "archiveTitle": "Duyuru arşivlensin mi?",
+    "archiveDescription": "\"{{title}}\" arşivlenecek ve çalışanların akışından kalkacak.",
+    "archived": "Duyuru arşivlendi.",
+    "empty": "Henüz duyuru yok.",
+    "loadError": "Duyurular yüklenemedi.",
+    "actionFailed": "İşlem tamamlanamadı."
+  },
+  "fields": {
+    "title": "Başlık",
+    "content": "İçerik",
+    "type": "Tür",
+    "priority": "Öncelik",
+    "status": "Durum",
+    "publishedAt": "Yayın tarihi",
+    "expiresAt": "Bitiş tarihi",
+    "readers": "Okuyan"
+  },
+  "types": {
+    "general": "Genel",
+    "hr": "İK",
+    "policy": "Politika",
+    "emergency": "Acil durum"
+  },
+  "priorities": {
+    "low": "Düşük",
+    "normal": "Normal",
+    "high": "Yüksek",
+    "urgent": "Acil"
+  },
+  "statuses": {
+    "draft": "Taslak",
+    "published": "Yayında",
+    "expired": "Süresi doldu",
+    "archived": "Arşivlendi"
+  }
+}

@@ -44,4 +44,10 @@ public sealed class AnnouncementReadRecordRepository(AnnouncementsDbContext cont
     public async Task<int> CountByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default) =>
         await context.AnnouncementReadRecords
             .CountAsync(r => r.TenantId == tenantId && r.AnnouncementId == announcementId, cancellationToken);
+
+    public async Task<IReadOnlyList<Guid>> GetReadAnnouncementIdsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.AnnouncementReadRecords
+            .Where(r => r.TenantId == tenantId && r.EmployeeId == employeeId)
+            .Select(r => r.AnnouncementId)
+            .ToListAsync(cancellationToken);
 }

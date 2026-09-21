@@ -24,6 +24,9 @@ public interface IAnnouncementReadRecordRepository
     Task<IReadOnlyList<AnnouncementReadRecord>> GetByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
 
     Task<int> CountByAnnouncementIdAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
+
+    /// <summary>Çalışanın okuduğu duyuruların id'leri (akıştaki okundu işareti için).</summary>
+    Task<IReadOnlyList<Guid>> GetReadAnnouncementIdsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Support ticket repository ("Desteğe bağlan", roadmap #69).</summary>

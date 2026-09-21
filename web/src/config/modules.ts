@@ -53,6 +53,7 @@ const MODULE_ROUTE_PREFIXES: ReadonlyArray<readonly [string, ToggleableModuleKey
   ["/app/settings/company/asset-categories", "assets"],
   ["/app/performance", "performance"],
   ["/app/company-calendar", "announcements"],
+  ["/app/announcements", "announcements"],
   ["/app/settings/company/ohs-hazard-classification", "occupationalSafety"],
   ["/app/settings/company/ohs-risk-assessments", "occupationalSafety"],
 ];

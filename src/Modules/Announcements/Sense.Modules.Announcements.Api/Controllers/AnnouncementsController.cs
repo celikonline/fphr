@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Announcements.Application.Announcements;
+using Sense.Modules.Announcements.Application.ReadRecords;
 using Sense.Modules.Announcements.Domain;
 using Sense.Shared.Web.Controllers;
 
@@ -21,6 +22,22 @@ public sealed class AnnouncementsController : ApiControllerBase
     [ProducesResponseType<IReadOnlyList<AnnouncementDto>>(StatusCodes.Status200OK)]
     public async Task<IActionResult> List([FromQuery] bool? publishedOnly, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListAnnouncementsQuery(publishedOnly), ct));
+
+    /// <summary>Çalışanın duyuru akışı: yayındaki (süresi geçmemiş) duyurular + okundu işareti.</summary>
+    [HttpGet("feed")]
+    [ProducesResponseType<IReadOnlyList<AnnouncementFeedItemDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Feed(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListMyAnnouncementFeedQuery(), ct));
+
+    [HttpPost(ApiRoutes.IdParam + "/read")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> MarkRead(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new MarkAnnouncementReadCommand(id), ct));
+
+    [HttpGet(ApiRoutes.IdParam + "/read-count")]
+    [ProducesResponseType<int>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ReadCount(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new CountAnnouncementReadersQuery(id), ct));
 
     [HttpGet(ApiRoutes.IdParam)]
     [ProducesResponseType<AnnouncementDto>(StatusCodes.Status200OK)]

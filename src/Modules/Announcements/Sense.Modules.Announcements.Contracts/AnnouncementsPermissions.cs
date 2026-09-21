@@ -43,6 +43,13 @@ public static class AnnouncementsPermissions
     public static readonly Permission ManageCalendar = new(
         "announcements.events.manage", Module, "Etkinlik yönetimi", CalendarGroup, "Şirket etkinliği oluşturma ve silme");
 
+    /// <summary>
+    /// Çalışanın duyuru akışı (yayındaki duyurular + okundu işareti). "announcements.feed.*" hiçbir gerçek anahtarla
+    /// eşleşmediği için çalışanlar duyuru göremiyordu; "*.my.*" deseniyle her temel role otomatik ulaşır.
+    /// </summary>
+    public static readonly Permission MyFeed = new(
+        "announcements.my.feed", Module, "Duyuru akışım", Group, "Yayındaki duyuruları okuma ve okundu olarak işaretleme");
+
     public static IEnumerable<Permission> All =>
-        [View, Manage, MySupportTickets, ManageSupportTickets, ViewCalendar, ManageCalendar];
+        [View, Manage, MySupportTickets, ManageSupportTickets, ViewCalendar, ManageCalendar, MyFeed];
 }
