@@ -30,6 +30,14 @@
     },
     "plugins": [
       "expo-local-authentication",
+      [
+        "expo-camera",
+        { "cameraPermission": "Lokasyon girişindeki QR kodu okutmak için kamera erişimi gerekir." }
+      ],
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Lokasyon geofence doğrulaması için konumunuz kullanılır." }
+      ],
       "expo-notifications",
       "expo-secure-store",
       [

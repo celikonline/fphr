@@ -8,6 +8,29 @@ describe("AttendanceService", () => {
     jest.clearAllMocks();
   });
 
+  describe("self check-in", () => {
+    it("reads whether the caller is currently checked in", async () => {
+      const data = { isCheckedIn: true, date: "2026-09-21", checkIn: "09:00:00" };
+      (apiClient.get as jest.Mock).mockResolvedValue({ data });
+
+      const result = await attendanceService.getMyCheckInStatus();
+
+      expect(result).toEqual(data);
+      expect(apiClient.get).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/status");
+    });
+
+    it("posts the scanned QR code with direction and position", async () => {
+      const data = { attendanceDayId: "day-1", date: "2026-09-21", direction: "in", time: "09:00:00" };
+      (apiClient.post as jest.Mock).mockResolvedValue({ data });
+      const input = { code: "AB12CD34", direction: "in" as const, latitude: 39.9, longitude: 32.8 };
+
+      const result = await attendanceService.qrCheckIn(input);
+
+      expect(result).toEqual(data);
+      expect(apiClient.post).toHaveBeenCalledWith("/api/v1/attendance/self-checkin/qr", input);
+    });
+  });
+
   describe("getMyAttendanceDays", () => {
     it("fetches the caller's own recorded days for a date range", async () => {
       const mockResponse = {

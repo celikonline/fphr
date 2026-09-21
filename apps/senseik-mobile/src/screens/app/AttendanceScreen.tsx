@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { AppStackParamList } from "@/types/navigation";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
@@ -48,6 +51,7 @@ function formatWorkedMinutes(minutes: number): string {
 }
 
 export default function AttendanceScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<AppStackParamList>>();
   const [monthDate, setMonthDate] = useState(() => new Date());
   const [summary, setSummary] = useState<MyTimesheetSummary | null>(null);
   const [days, setDays] = useState<AttendanceDay[]>([]);
@@ -105,6 +109,10 @@ export default function AttendanceScreen() {
     >
       <Text style={styles.title}>Puantajım</Text>
 
+      <TouchableOpacity style={styles.checkInButton} onPress={() => navigation.navigate("CheckIn")}>
+        <Text style={styles.checkInButtonText}>QR ile giriş / çıkış yap</Text>
+      </TouchableOpacity>
+
       {error && (
         <View style={styles.errorBanner}>
           <Text style={styles.errorText}>{error}</Text>
@@ -161,6 +169,18 @@ export default function AttendanceScreen() {
 }
 
 const styles = StyleSheet.create({
+  checkInButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    padding: spacing.md,
+    alignItems: "center",
+    marginBottom: spacing.lg
+  },
+  checkInButtonText: {
+    ...typography.body,
+    color: colors.white,
+    fontWeight: "600"
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background

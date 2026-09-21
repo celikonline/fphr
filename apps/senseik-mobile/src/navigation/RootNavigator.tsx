@@ -17,6 +17,7 @@ import PayrollScreen from "@/screens/app/PayrollScreen";
 import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
 import ProfileScreen from "@/screens/app/ProfileScreen";
 import SupportScreen from "@/screens/app/SupportScreen";
+import CheckInScreen from "@/screens/app/CheckInScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -113,6 +114,7 @@ function AppNavigator() {
         }}
       />
       <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
+      <AppStack.Screen name="CheckIn" component={CheckInScreen} options={{ title: "Giriş / Çıkış" }} />
     </AppStack.Navigator>
   );
 }

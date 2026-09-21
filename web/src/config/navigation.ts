@@ -390,6 +390,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "gold",
   },
   {
+    key: "performanceTeamGoals",
+    labelKey: "apps.performanceTeamGoals",
+    path: "/app/performance/team-goals",
+    icon: Users,
+    permissions: ["performance.team.goals"],
+    iconColor: "gold",
+  },
+  {
     key: "recruitmentCandidates",
     labelKey: "apps.recruitmentCandidates",
     path: "/app/recruitment/candidates",

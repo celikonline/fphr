@@ -10,6 +10,7 @@ import { Button, Card, CopyButton, Group, Modal, NumberInput, Select, Stack, Tex
 import { DataTable, DataTableViewOptions, useDataTable } from "@/components/ui/data-table";
 import { RowIconButton } from "@/components/ui/row-icon-button";
 import ConfirmDialog from "@/components/confirm-dialog";
+import LocationQrDialog from "@/components/locations/location-qr-dialog";
 import PaginationFooter from "@/components/pagination-footer";
 import { toast } from "@/hooks/use-toast";
 import { useAnyPermission } from "@/components/permission-guard";
@@ -97,6 +98,7 @@ export default function LocationsPage() {
   const [dialog, setDialog] = useState<DialogState>({ open: false });
   const [deleteTarget, setDeleteTarget] = useState<Location | null>(null);
   const [regenerateTarget, setRegenerateTarget] = useState<Location | null>(null);
+  const [qrTarget, setQrTarget] = useState<Location | null>(null);
 
   const {
     register,
@@ -486,6 +488,9 @@ export default function LocationsPage() {
                       </Button>
                     )}
                   </CopyButton>
+                  <Button size="compact-xs" variant="subtle" onClick={() => setQrTarget(dialog.location ?? null)}>
+                    {t("locations:showQr")}
+                  </Button>
                   <Button size="compact-xs" variant="subtle" color="red" onClick={() => setRegenerateTarget(dialog.location ?? null)}>
                     {t("locations:regenerateCode")}
                   </Button>
@@ -515,6 +520,8 @@ export default function LocationsPage() {
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
         isLoading={deleteMutation.isPending}
       />
+
+      <LocationQrDialog location={qrTarget} onClose={() => setQrTarget(null)} />
 
       <ConfirmDialog
         open={regenerateTarget !== null}
