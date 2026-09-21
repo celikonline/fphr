@@ -644,14 +644,47 @@
   },
   "exitSettlement": {
     "title": "Austrittsabrechnung",
-    "hint": "Beim Austritt berechnete und gespeicherte Beträge; spätere Gehalts- oder Gesetzesänderungen ändern sie nicht.",
+    "hint": "Beim Austritt berechnete Beträge und später hinzugefügte Positionen. Abfindung, Kündigungsentschädigung und Urlaub werden beim Austritt festgeschrieben.",
     "terminationDate": "Austrittsdatum",
-    "severance": "Abfindung",
-    "notice": "Kündigungsentschädigung",
-    "unusedLeave": "Urlaubsabgeltung",
-    "total": "Summe",
-    "seniority": "Betriebszugehörigkeit",
-    "calculatedAt": "Berechnet am"
+    "columns": {
+      "item": "Position",
+      "gross": "Brutto",
+      "sgk": "SV + Arbeitslosenvers.",
+      "incomeTax": "Einkommensteuer",
+      "stampTax": "Stempelsteuer",
+      "net": "Netto"
+    },
+    "totalRow": "Summe",
+    "kinds": {
+      "severance": "Abfindung",
+      "notice": "Kündigungsentschädigung",
+      "unusedLeave": "Urlaubsabgeltung",
+      "mutualRescissionPay": "Aufhebungsvergütung",
+      "extraPayment": "Zusatzzahlung",
+      "finalMonthWage": "Gehalt des Austrittsmonats",
+      "other": "Sonstiges"
+    },
+    "addLine": "Position hinzufügen",
+    "edit": "Bearbeiten",
+    "remove": "Löschen",
+    "recalculate": "Neu berechnen",
+    "netPending": "Der Nettobetrag konnte nicht berechnet werden (evtl. fehlt ein Gesetzesparameter). Bitte neu berechnen.",
+    "estimateNote": "Die Abzüge sind eine Schätzung; die steuerliche und sozialversicherungsrechtliche Behandlung hängt vom Vertrag ab. Vor der Auszahlung mit dem Steuerberater klären.",
+    "removeConfirm": "Diese Position löschen?",
+    "success": "Austrittsabrechnung aktualisiert.",
+    "dialog": {
+      "titleAdd": "Position hinzufügen",
+      "titleEdit": "Position bearbeiten",
+      "kind": "Positionsart",
+      "label": "Bezeichnung",
+      "grossAmount": "Bruttobetrag",
+      "taxes": "Abzüge anwenden?",
+      "sgkSubject": "SV- und Arbeitslosenbeitrag",
+      "incomeTaxSubject": "Einkommensteuer",
+      "stampTaxSubject": "Stempelsteuer",
+      "save": "Speichern",
+      "cancel": "Abbrechen"
+    }
   },
   "employmentPeriods": {
     "title": "Beschäftigungszeiträume",

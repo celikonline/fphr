@@ -27,6 +27,9 @@ public static class PayrollPermissions
         "payroll.severance.estimate", Module, "Estimate Severance", Group, "View a read-only severance/notice estimate for an employee");
 
     /// <summary>senseik-019 2c: icra/nafaka kesinti emirlerini açma/kapatma.</summary>
+    public static readonly Permission ExitSettlementManage = new(
+        "payroll.exitsettlement.manage", Module, "payroll.exitsettlement.manage", Group, "Add, edit and remove lines of an employee's exit settlement (ikale bedeli, ek ödeme, çıkış ayı ücreti) and recalculate its net");
+
     public static readonly Permission CourtOrderManage = new(
         "payroll.courtorder.manage", Module, "payroll.courtorder.manage", Group, "Create and close employees' garnishment (icra/nafaka) orders");
 
@@ -39,5 +42,5 @@ public static class PayrollPermissions
     public static readonly Permission UnionManage = new(
         "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, CourtOrderManage, DeclarationsExport, UnionManage];
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
 }

@@ -644,14 +644,47 @@
   },
   "exitSettlement": {
     "title": "Çıkış hesabı",
-    "hint": "Çıkışta hesaplanıp kaydedilen tutarlar; sonraki maaş veya mevzuat değişikliklerinden etkilenmez.",
+    "hint": "Çıkışta hesaplanan tutarlar ve sonradan eklenen kalemler. Kıdem, ihbar ve izin çıkışta dondurulur; sonraki maaş veya mevzuat değişikliği bunları etkilemez.",
     "terminationDate": "Çıkış tarihi",
-    "severance": "Kıdem tazminatı",
-    "notice": "İhbar tazminatı",
-    "unusedLeave": "Kullanılmamış izin ücreti",
-    "total": "Toplam",
-    "seniority": "Kıdem",
-    "calculatedAt": "Hesaplanma zamanı"
+    "columns": {
+      "item": "Kalem",
+      "gross": "Brüt",
+      "sgk": "SGK + işsizlik",
+      "incomeTax": "Gelir vergisi",
+      "stampTax": "Damga vergisi",
+      "net": "Net"
+    },
+    "totalRow": "Toplam",
+    "kinds": {
+      "severance": "Kıdem tazminatı",
+      "notice": "İhbar tazminatı",
+      "unusedLeave": "Kullanılmamış izin ücreti",
+      "mutualRescissionPay": "İkale bedeli",
+      "extraPayment": "Ek ödeme",
+      "finalMonthWage": "Çıkış ayı ücreti",
+      "other": "Diğer"
+    },
+    "addLine": "Kalem ekle",
+    "edit": "Düzenle",
+    "remove": "Sil",
+    "recalculate": "Yeniden hesapla",
+    "netPending": "Net tutar hesaplanamadı (mevzuat parametresi eksik olabilir). Yeniden hesaplamayı deneyin.",
+    "estimateNote": "Kesintiler tahminidir; ikale bedeli ve ek ödemelerin vergi/SGK durumu sözleşmeye göre değişir. Ödemeden önce mali müşavirle doğrulayın.",
+    "removeConfirm": "Bu kalem silinsin mi?",
+    "success": "Çıkış hesabı güncellendi.",
+    "dialog": {
+      "titleAdd": "Kalem ekle",
+      "titleEdit": "Kalemi düzenle",
+      "kind": "Kalem türü",
+      "label": "Kalem adı",
+      "grossAmount": "Brüt tutar",
+      "taxes": "Kesinti uygulansın mı?",
+      "sgkSubject": "SGK + işsizlik primi",
+      "incomeTaxSubject": "Gelir vergisi",
+      "stampTaxSubject": "Damga vergisi",
+      "save": "Kaydet",
+      "cancel": "İptal"
+    }
   },
   "employmentPeriods": {
     "title": "Çalışma dönemleri",

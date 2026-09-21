@@ -62,6 +62,11 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("employee_id");
 
+                    b.Property<decimal>("IncomeTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("income_tax");
+
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_date");
@@ -69,6 +74,15 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("ModifiedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("modified_user_id");
+
+                    b.Property<bool>("NetCalculated")
+                        .HasColumnType("boolean")
+                        .HasColumnName("net_calculated");
+
+                    b.Property<decimal>("NetTotal")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_total");
 
                     b.Property<decimal>("NoticeAmount")
                         .HasPrecision(18, 4)
@@ -83,6 +97,16 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("severance_amount");
+
+                    b.Property<decimal>("SgkDeduction")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("sgk_deduction");
+
+                    b.Property<decimal>("StampTax")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("stamp_tax");
 
                     b.Property<string>("StepsJson")
                         .IsRequired()
@@ -119,6 +143,101 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_exit_settlements_tenant_id_employee_id_termination_date");
 
                     b.ToTable("exit_settlements", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.ExitSettlements.ExitSettlementLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid>("ExitSettlementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("exit_settlement_id");
+
+                    b.Property<decimal>("GrossAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("gross_amount");
+
+                    b.Property<decimal>("IncomeTaxAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("income_tax_amount");
+
+                    b.Property<bool>("IncomeTaxSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("income_tax_subject");
+
+                    b.Property<bool>("IsAutomatic")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_automatic");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("label");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<decimal>("NetAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("net_amount");
+
+                    b.Property<decimal>("SgkAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("sgk_amount");
+
+                    b.Property<bool>("SgkSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sgk_subject");
+
+                    b.Property<decimal>("StampTaxAmount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("stamp_tax_amount");
+
+                    b.Property<bool>("StampTaxSubject")
+                        .HasColumnType("boolean")
+                        .HasColumnName("stamp_tax_subject");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_exit_settlement_lines");
+
+                    b.HasIndex("ExitSettlementId")
+                        .HasDatabaseName("ix_exit_settlement_lines_exit_settlement_id");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_exit_settlement_lines_tenant_id");
+
+                    b.ToTable("exit_settlement_lines", "payroll");
                 });
 
             modelBuilder.Entity("Sense.Modules.Payroll.Domain.Garnishments.GarnishmentOrder", b =>
@@ -955,6 +1074,21 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasFilter("processed_at IS NULL");
 
                     b.ToTable("outbox_messages", "payroll");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.ExitSettlements.ExitSettlementLine", b =>
+                {
+                    b.HasOne("Sense.Modules.Payroll.Domain.ExitSettlements.ExitSettlement", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("ExitSettlementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_exit_settlement_lines_exit_settlements_exit_settlement_id");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Payroll.Domain.ExitSettlements.ExitSettlement", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

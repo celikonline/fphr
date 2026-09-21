@@ -644,14 +644,47 @@
   },
   "exitSettlement": {
     "title": "Exit settlement",
-    "hint": "Amounts calculated and recorded at exit; later salary or legislation changes do not affect them.",
+    "hint": "Amounts calculated at exit plus lines added since. Severance, notice and leave are frozen at exit; later salary or legislation changes do not affect them.",
     "terminationDate": "Exit date",
-    "severance": "Severance pay",
-    "notice": "Notice pay",
-    "unusedLeave": "Unused leave pay",
-    "total": "Total",
-    "seniority": "Seniority",
-    "calculatedAt": "Calculated at"
+    "columns": {
+      "item": "Item",
+      "gross": "Gross",
+      "sgk": "SGK + unemployment",
+      "incomeTax": "Income tax",
+      "stampTax": "Stamp tax",
+      "net": "Net"
+    },
+    "totalRow": "Total",
+    "kinds": {
+      "severance": "Severance pay",
+      "notice": "Notice pay",
+      "unusedLeave": "Unused leave pay",
+      "mutualRescissionPay": "Mutual termination payment",
+      "extraPayment": "Extra payment",
+      "finalMonthWage": "Final month wage",
+      "other": "Other"
+    },
+    "addLine": "Add line",
+    "edit": "Edit",
+    "remove": "Delete",
+    "recalculate": "Recalculate",
+    "netPending": "The net could not be calculated (a legislation parameter may be missing). Try recalculating.",
+    "estimateNote": "Deductions are an estimate; the tax and SGK treatment of mutual-termination payments and extra payments depends on the contract. Confirm with an accountant before paying out.",
+    "removeConfirm": "Delete this line?",
+    "success": "Exit settlement updated.",
+    "dialog": {
+      "titleAdd": "Add line",
+      "titleEdit": "Edit line",
+      "kind": "Line type",
+      "label": "Line name",
+      "grossAmount": "Gross amount",
+      "taxes": "Apply deductions?",
+      "sgkSubject": "SGK + unemployment premium",
+      "incomeTaxSubject": "Income tax",
+      "stampTaxSubject": "Stamp tax",
+      "save": "Save",
+      "cancel": "Cancel"
+    }
   },
   "employmentPeriods": {
     "title": "Employment periods",

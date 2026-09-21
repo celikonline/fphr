@@ -48,6 +48,7 @@ public static class PayrollServiceCollectionExtensions
         // "Çıkış hesabı": frozen kıdem/ihbar/izin amounts per exit + the estimator it shares with the wizard preview.
         services.AddScoped<IExitSettlementRepository, ExitSettlementRepository>();
         services.AddScoped<SeveranceEstimator>();
+        services.AddScoped<ExitSettlementNetService>();
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.

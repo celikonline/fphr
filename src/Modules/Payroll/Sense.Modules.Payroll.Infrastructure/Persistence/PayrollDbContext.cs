@@ -67,6 +67,7 @@ internal static class PayrollTables
     public const string Unions = "unions";
     public const string EmployeeUnionMemberships = "employee_union_memberships";
     public const string ExitSettlements = "exit_settlements";
+    public const string ExitSettlementLines = "exit_settlement_lines";
     public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
@@ -229,6 +230,21 @@ public sealed class ExitSettlementConfiguration : IEntityTypeConfiguration<ExitS
         b.Property(x => x.Currency).HasMaxLength(PayrollTables.CurrencyLength).IsRequired();
         b.Property(x => x.StepsJson).HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.TerminationDate }).IsUnique();
+        b.HasMany(x => x.Lines).WithOne().HasForeignKey(l => l.ExitSettlementId).OnDelete(DeleteBehavior.Cascade);
         b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class ExitSettlementLineConfiguration : IEntityTypeConfiguration<ExitSettlementLine>
+{
+    public void Configure(EntityTypeBuilder<ExitSettlementLine> b)
+    {
+        b.ToTable(PayrollTables.ExitSettlementLines);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Label).HasMaxLength(PayrollLimits.ExitLineLabelMaxLength).IsRequired();
+        b.Ignore(x => x.Treatment);
+        b.HasIndex(x => x.ExitSettlementId);
     }
 }

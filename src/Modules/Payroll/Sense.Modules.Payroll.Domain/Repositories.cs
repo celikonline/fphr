@@ -127,6 +127,9 @@ public interface IExitSettlementRepository
 {
     void Add(ExitSettlement settlement);
 
+    /// <summary>A settlement with its lines.</summary>
+    Task<ExitSettlement?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     /// <summary>The settlement of one exit (one per employee and termination date; a rehire + second exit gets its own).</summary>
     Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default);
 

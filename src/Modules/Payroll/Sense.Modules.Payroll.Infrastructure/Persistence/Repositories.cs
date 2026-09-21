@@ -158,11 +158,15 @@ public sealed class ExitSettlementRepository(PayrollDbContext context) : IExitSe
 {
     public void Add(ExitSettlement settlement) => context.ExitSettlements.Add(settlement);
 
+    public async Task<ExitSettlement?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
     public async Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default) =>
-        await context.ExitSettlements.FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.TerminationDate == terminationDate, cancellationToken);
+        await context.ExitSettlements.Include(x => x.Lines).FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.TerminationDate == terminationDate, cancellationToken);
 
     public async Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.ExitSettlements
+            .Include(x => x.Lines)
             .Where(x => x.EmployeeId == employeeId)
             .OrderByDescending(x => x.TerminationDate)
             .ToListAsync(cancellationToken);

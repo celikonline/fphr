@@ -61,8 +61,10 @@ public sealed class ExitSettlementHandlerTests
         settlements.FindByEmployeeAndDateAsync(EmployeeId, TerminationDate, Arg.Any<CancellationToken>()).Returns(Task.FromResult(existing));
         var unitOfWork = Substitute.For<IPayrollUnitOfWork>();
         var estimator = new SeveranceEstimator(salary, seniority, leave, Legislation(legislationPresent), TimeProvider.System);
+        // Payroll's own legislation keys are absent here, so the net stays uncalculated; the net has its own tests.
+        var netService = new ExitSettlementNetService(Legislation(legislationPresent), Substitute.For<IPayrollPeriodRepository>(), Substitute.For<IPayslipRepository>());
         var handler = new EmployeeTerminatedSettlementHandler(
-            settlements, estimator, unitOfWork, TimeProvider.System, NullLogger<EmployeeTerminatedSettlementHandler>.Instance);
+            settlements, estimator, netService, unitOfWork, TimeProvider.System, NullLogger<EmployeeTerminatedSettlementHandler>.Instance);
         return (handler, settlements, unitOfWork);
     }
 

@@ -32,6 +32,9 @@ public static class PayrollDomainErrors
 
     /// <summary>Çıkış hesabı: no frozen settlement exists for the employee (not terminated, or terminated before this feature).</summary>
     public const string ExitSettlementNotFound = "payroll.errors.exit_settlement_not_found";
+    public const string ExitSettlementLineInvalid = "payroll.errors.exit_settlement_line_invalid";
+    public const string ExitSettlementLineNotFound = "payroll.errors.exit_settlement_line_not_found";
+    public const string ExitSettlementLineNotRemovable = "payroll.errors.exit_settlement_line_not_removable";
 
     // İcra/nafaka kesinti emirleri (senseik-019 2c)
     public const string GarnishmentCaseReferenceRequired = "payroll.errors.garnishment_case_reference_required";
@@ -55,6 +58,8 @@ public static class PayrollDomainErrors
 /// <summary>Domain limits.</summary>
 public static class PayrollLimits
 {
+    public const int ExitLineLabelMaxLength = 200;
+
     /// <summary>Calendar days assumed per month until Attendance provides the real calendar (roadmap: Payroll depends on Attendance, Faz 2).</summary>
     public const int DefaultCalendarDaysInMonth = 30;
 

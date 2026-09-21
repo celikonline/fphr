@@ -11,7 +11,22 @@ using Sense.Shared.Kernel.Results;
 
 namespace Sense.Modules.Payroll.Application.Severance;
 
-/// <summary>The frozen "Çıkış hesabı" of one exit, as the employee card shows it.</summary>
+/// <summary>One payment line with the deductions it was netted with.</summary>
+public sealed record ExitSettlementLineDto(
+    Guid Id,
+    ExitPayKind Kind,
+    string Label,
+    decimal GrossAmount,
+    bool SgkSubject,
+    bool IncomeTaxSubject,
+    bool StampTaxSubject,
+    bool IsAutomatic,
+    decimal SgkAmount,
+    decimal IncomeTaxAmount,
+    decimal StampTaxAmount,
+    decimal NetAmount);
+
+/// <summary>The "Çıkış hesabı" of one exit, as the employee card shows it: the frozen automatic amounts plus any lines added since, with the net.</summary>
 public sealed record ExitSettlementDto(
     Guid Id,
     Guid EmployeeId,
@@ -24,7 +39,13 @@ public sealed record ExitSettlementDto(
     decimal NoticeAmount,
     decimal UnusedLeaveAmount,
     decimal TotalAmount,
+    bool NetCalculated,
+    decimal SgkDeduction,
+    decimal IncomeTax,
+    decimal StampTax,
+    decimal NetTotal,
     DateTimeOffset CalculatedAt,
+    IReadOnlyList<ExitSettlementLineDto> Lines,
     IReadOnlyList<SeveranceTraceStepDto> Steps);
 
 /// <summary>The most recent exit settlement of the employee (a rehired employee may have several; the newest exit wins).</summary>
@@ -46,7 +67,11 @@ internal static class ExitSettlementMapper
 
     public static ExitSettlementDto ToDto(ExitSettlement s) => new(
         s.Id, s.EmployeeId, s.TerminationDate, s.CauseCategory, s.Currency, s.SeniorityDays, s.DailyGrossWage,
-        s.SeveranceAmount, s.NoticeAmount, s.UnusedLeaveAmount, s.TotalAmount, s.CalculatedAt,
+        s.SeveranceAmount, s.NoticeAmount, s.UnusedLeaveAmount, s.TotalAmount,
+        s.NetCalculated, s.SgkDeduction, s.IncomeTax, s.StampTax, s.NetTotal, s.CalculatedAt,
+        s.Lines.Select(l => new ExitSettlementLineDto(
+            l.Id, l.Kind, l.Label, l.GrossAmount, l.SgkSubject, l.IncomeTaxSubject, l.StampTaxSubject, l.IsAutomatic,
+            l.SgkAmount, l.IncomeTaxAmount, l.StampTaxAmount, l.NetAmount)).ToList(),
         JsonSerializer.Deserialize<List<SeveranceTraceStepDto>>(s.StepsJson, Json) ?? []);
 
     /// <summary>
@@ -75,6 +100,7 @@ internal static class ExitSettlementMapper
 public sealed class EmployeeTerminatedSettlementHandler(
     IExitSettlementRepository settlements,
     SeveranceEstimator estimator,
+    ExitSettlementNetService netService,
     IPayrollUnitOfWork unitOfWork,
     TimeProvider clock,
     ILogger<EmployeeTerminatedSettlementHandler> logger) : IIntegrationEventHandler<EmployeeTerminated>
@@ -107,7 +133,17 @@ public sealed class EmployeeTerminatedSettlementHandler(
             integrationEvent.EmployeeId, terminationDate, cause, e.Currency, e.SeniorityDays, e.DailyGrossWage,
             e.SeveranceAmount, e.NoticeAmount, e.UnusedLeaveAmount, e.TotalAmount, JsonSerializer.Serialize(e.Steps, ExitSettlementMapper.Json));
 
-        settlements.Add(ExitSettlement.Create(integrationEvent.TenantId, data, clock.GetUtcNow()));
+        var settlement = ExitSettlement.Create(integrationEvent.TenantId, data, clock.GetUtcNow());
+        var net = await netService.RecalculateAsync(settlement, cancellationToken);
+        if (net.IsFailure)
+        {
+            // The gross amounts are still worth keeping; the net can be recalculated once the legislation is there.
+            logger.LogWarning(
+                "Exit settlement net NOT calculated for {EmployeeId} (tenant {TenantId}): {ErrorCode}.",
+                integrationEvent.EmployeeId, integrationEvent.TenantId, net.Error.Code);
+        }
+
+        settlements.Add(settlement);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
