@@ -12,6 +12,7 @@ import { formatMoney } from "@/lib/money";
 import { getCostCenters } from "@/services/organization.service";
 import { ClosingChecklist } from "./closing-checklist";
 import { PeriodActions } from "./period-actions";
+import { PeriodComparison } from "./period-comparison";
 import {
   downloadPayrollPeriodExport,
   getPayrollPeriod,
@@ -150,6 +151,8 @@ function PayrollPeriodDetail() {
       </Group>
 
       <PeriodActions periodId={period.id} status={period.status} />
+
+      <PeriodComparison periodId={period.id} />
 
       <ClosingChecklist periodId={period.id} />
 

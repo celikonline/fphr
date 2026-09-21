@@ -15,6 +15,31 @@
       "locked": "Gesperrt"
     }
   },
+  "comparison": {
+    "title": "Vergleich mit dem Vormonat",
+    "against": "Verglichen mit {{period}}.",
+    "noPrevious": "Keine Abrechnungsperiode für {{period}}; der Vergleich ist leer.",
+    "threshold": "Abweichungsschwelle",
+    "onlyExceeding": "Nur Überschreitungen",
+    "headcount": "Personen",
+    "gross": "Brutto",
+    "net": "Netto",
+    "employerCost": "Arbeitgeberkosten",
+    "current": "Diese Periode",
+    "previous": "Vorperiode",
+    "exceeding": "{{count}} Zeile(n) über der Schwelle oder neu/ausgeschieden.",
+    "empty": "Keine Zeilen anzuzeigen.",
+    "employee": "Mitarbeitende",
+    "previousGross": "Brutto Vorperiode",
+    "currentGross": "Brutto aktuell",
+    "grossChange": "Brutto-Änderung",
+    "netChange": "Netto-Änderung",
+    "kind": {
+      "new": "Neu",
+      "left": "Ausgeschieden / nicht bezahlt",
+      "deviation": "Abweichung"
+    }
+  },
   "closing": {
     "title": "Abschluss-Checkliste",
     "subtitle": "Vorbereitung, Berechnung, gesetzliche Meldungen und Archiv vor der Genehmigung verfolgen. Bei offenen blockierenden Punkten kann die Periode nicht genehmigt werden.",

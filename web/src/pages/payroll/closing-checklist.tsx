@@ -1,7 +1,20 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Badge, Button, Card, Group, Modal, Progress, Skeleton, Stack, Text, Textarea, Title } from "@mantine/core";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  Progress,
+  Skeleton,
+  Stack,
+  Text,
+  Textarea,
+  Title,
+} from "@mantine/core";
 import { CheckCircle2, Circle, Play, ShieldOff, XCircle } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
@@ -34,11 +47,23 @@ export function ClosingChecklist({ periodId }: { periodId: string }) {
   const { data, isLoading } = useQuery({ queryKey, queryFn: () => getClosingChecklist(periodId) });
 
   const onError = (err: unknown) =>
-    toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(err, t("payroll:closing.error")) });
+    toast({
+      variant: "destructive",
+      title: t("common:error"),
+      description: getApiErrorMessage(err, t("payroll:closing.error")),
+    });
   const refresh = () => queryClient.invalidateQueries({ queryKey });
 
-  const run = useMutation({ mutationFn: () => runClosingChecks(periodId), onSuccess: refresh, onError });
-  const complete = useMutation({ mutationFn: (check: ClosingCheck) => completeClosingCheck(periodId, check.code), onSuccess: refresh, onError });
+  const run = useMutation({
+    mutationFn: () => runClosingChecks(periodId),
+    onSuccess: refresh,
+    onError,
+  });
+  const complete = useMutation({
+    mutationFn: (check: ClosingCheck) => completeClosingCheck(periodId, check.code),
+    onSuccess: refresh,
+    onError,
+  });
   const waive = useMutation({
     mutationFn: (check: ClosingCheck) => waiveClosingCheck(periodId, check.code, reason.trim()),
     onSuccess: async () => {
@@ -59,7 +84,9 @@ export function ClosingChecklist({ periodId }: { periodId: string }) {
   }
 
   const satisfied = data.filter((check) => check.isSatisfied).length;
-  const openBlockers = data.filter((check) => check.severity === "blocker" && !check.isSatisfied).length;
+  const openBlockers = data.filter(
+    (check) => check.severity === "blocker" && !check.isSatisfied
+  ).length;
 
   return (
     <Card withBorder padding="lg">
@@ -71,7 +98,13 @@ export function ClosingChecklist({ periodId }: { periodId: string }) {
           </Text>
         </div>
         {canManage && (
-          <Button variant="default" size="xs" leftSection={<Play size={14} />} loading={run.isPending} onClick={() => run.mutate()}>
+          <Button
+            variant="default"
+            size="xs"
+            leftSection={<Play size={14} />}
+            loading={run.isPending}
+            onClick={() => run.mutate()}
+          >
             {t("payroll:closing.run")}
           </Button>
         )}
@@ -96,7 +129,8 @@ export function ClosingChecklist({ periodId }: { periodId: string }) {
           return (
             <div key={stage}>
               <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb={6}>
-                {t(`payroll:closing.stage.${stage}`)} ({items.filter((c) => c.isSatisfied).length}/{items.length})
+                {t(`payroll:closing.stage.${stage}`)} ({items.filter((c) => c.isSatisfied).length}/
+                {items.length})
               </Text>
               <Stack gap={6}>
                 {items.map((check) => (
@@ -115,7 +149,12 @@ export function ClosingChecklist({ periodId }: { periodId: string }) {
         })}
       </Stack>
 
-      <Modal opened={waiving !== null} onClose={closeWaiver} title={t("payroll:closing.waiveTitle")} size="30rem">
+      <Modal
+        opened={waiving !== null}
+        onClose={closeWaiver}
+        title={t("payroll:closing.waiveTitle")}
+        size="30rem"
+      >
         {waiving && (
           <form
             onSubmit={(event) => {
@@ -199,7 +238,9 @@ function ChecklistRow({ check, canManage, completing, onComplete, onWaive }: Row
           </Group>
           {failed && (
             <Text size="xs" c="red.7">
-              {check.detail ? t("payroll:closing.failedWithDetail", { detail: check.detail }) : t("payroll:closing.failed")}
+              {check.detail
+                ? t("payroll:closing.failedWithDetail", { detail: check.detail })
+                : t("payroll:closing.failed")}
             </Text>
           )}
           {check.status === "passed" && check.kind === "manual" && check.detail && (

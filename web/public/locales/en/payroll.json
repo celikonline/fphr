@@ -15,6 +15,31 @@
       "locked": "Locked"
     }
   },
+  "comparison": {
+    "title": "Comparison with the previous month",
+    "against": "Compared with {{period}}.",
+    "noPrevious": "No payroll period for {{period}}; the comparison is empty.",
+    "threshold": "Deviation threshold",
+    "onlyExceeding": "Only those over the threshold",
+    "headcount": "People",
+    "gross": "Gross",
+    "net": "Net",
+    "employerCost": "Employer cost",
+    "current": "This period",
+    "previous": "Previous period",
+    "exceeding": "{{count}} row(s) exceed the threshold or are new/gone.",
+    "empty": "No rows to show.",
+    "employee": "Employee",
+    "previousGross": "Previous gross",
+    "currentGross": "Current gross",
+    "grossChange": "Gross change",
+    "netChange": "Net change",
+    "kind": {
+      "new": "New",
+      "left": "Left / not paid",
+      "deviation": "Deviation"
+    }
+  },
   "closing": {
     "title": "Closing checklist",
     "subtitle": "Track preparation, calculation, legal and archive steps before approving the period. The period cannot be approved while blocking items are open.",

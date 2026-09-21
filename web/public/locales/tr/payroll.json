@@ -15,6 +15,31 @@
       "locked": "Kilitli"
     }
   },
+  "comparison": {
+    "title": "Önceki ayla karşılaştırma",
+    "against": "{{period}} ile karşılaştırılıyor.",
+    "noPrevious": "{{period}} için bordro dönemi yok; karşılaştırma boş.",
+    "threshold": "Sapma eşiği",
+    "onlyExceeding": "Yalnız eşiği aşanlar",
+    "headcount": "Kişi",
+    "gross": "Brüt",
+    "net": "Net",
+    "employerCost": "İşveren maliyeti",
+    "current": "Bu dönem",
+    "previous": "Önceki dönem",
+    "exceeding": "{{count}} satır eşiği aşıyor veya yeni/ayrılan.",
+    "empty": "Gösterilecek satır yok.",
+    "employee": "Çalışan",
+    "previousGross": "Önceki brüt",
+    "currentGross": "Bu dönem brüt",
+    "grossChange": "Brüt değişim",
+    "netChange": "Net değişim",
+    "kind": {
+      "new": "Yeni",
+      "left": "Ayrıldı / ödenmedi",
+      "deviation": "Sapma"
+    }
+  },
   "closing": {
     "title": "Kapanış kontrol listesi",
     "subtitle": "Dönemi onaylamadan önce hazırlık, hesaplama, yasal işlemler ve arşiv adımlarını takip edin. Engelleyici maddeler giderilmeden dönem onaylanamaz.",

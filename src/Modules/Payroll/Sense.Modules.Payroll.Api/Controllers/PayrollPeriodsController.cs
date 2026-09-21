@@ -132,4 +132,10 @@ public sealed class PayrollPeriodsController : ApiControllerBase
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> WaiveClosingCheck(Guid id, string code, [FromBody] WaiveClosingCheckRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new WaiveClosingCheckCommand(id, code, request.Reason), ct));
+
+    /// <summary>The period against the previous month: totals and per-employee change; rows past the threshold (default 5%) come first.</summary>
+    [HttpGet("{id:guid}/comparison")]
+    [ProducesResponseType<PeriodComparisonDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Comparison(Guid id, [FromQuery] decimal? thresholdPercent, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new GetPeriodComparisonQuery(id, thresholdPercent), ct));
 }

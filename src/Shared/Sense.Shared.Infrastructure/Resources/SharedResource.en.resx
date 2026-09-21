@@ -865,6 +865,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>An automatic check cannot be ticked off by hand; run its rule or waive it with a reason.</value></data>
   <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>A waiver reason is required (at most 500 characters).</value></data>
   <data name="payroll.errors.period_has_open_blockers" xml:space="preserve"><value>Blocking closing checks are not done; fix the failed or pending items on the checklist or waive them with a reason.</value></data>
+  <data name="payroll.errors.comparison_threshold_invalid" xml:space="preserve"><value>The deviation threshold cannot be negative.</value></data>
   <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>

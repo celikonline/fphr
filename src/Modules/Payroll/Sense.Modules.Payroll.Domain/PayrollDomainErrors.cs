@@ -6,6 +6,7 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string ComparisonThresholdInvalid = "payroll.errors.comparison_threshold_invalid";
     public const string ClosingCheckNotFound = "payroll.errors.closing_check_not_found";
     public const string ClosingCheckNotManual = "payroll.errors.closing_check_not_manual";
     public const string ClosingWaiverReasonInvalid = "payroll.errors.closing_waiver_reason_invalid";

@@ -22,7 +22,13 @@ const REASON_MAX_LENGTH = 500;
  * Close-out actions of a payroll period: Onayla → Ödendi işaretle → Kilitle, and the audited "Yeniden aç" (written reason).
  * Each button shows only for the status it applies to and when the user holds the matching permission; the backend enforces both again.
  */
-export function PeriodActions({ periodId, status }: { periodId: string; status: PayrollPeriodStatus }) {
+export function PeriodActions({
+  periodId,
+  status,
+}: {
+  periodId: string;
+  status: PayrollPeriodStatus;
+}) {
   const { t } = useTranslation(["payroll", "common"]);
   const queryClient = useQueryClient();
   const canApprove = usePermission("payroll.period.approve");
@@ -53,7 +59,11 @@ export function PeriodActions({ periodId, status }: { periodId: string; status: 
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["payroll", "periods"] });
-      toast({ variant: "success", title: t("common:success"), description: t("payroll:periodDetail.actions.success") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("payroll:periodDetail.actions.success"),
+      });
       close();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("payroll:periodDetail.actions.error"))),
@@ -80,13 +90,23 @@ export function PeriodActions({ periodId, status }: { periodId: string; status: 
           </Button>
         )}
         {canReopenNow && (
-          <Button variant="default" color="red" leftSection={<RotateCcw size={16} />} onClick={() => setPending("reopen")}>
+          <Button
+            variant="default"
+            color="red"
+            leftSection={<RotateCcw size={16} />}
+            onClick={() => setPending("reopen")}
+          >
             {t("payroll:periodDetail.actions.reopen")}
           </Button>
         )}
       </Group>
 
-      <Modal opened={pending !== null} onClose={close} title={pending ? t(`payroll:periodDetail.actions.${pending}`) : ""} size="30rem">
+      <Modal
+        opened={pending !== null}
+        onClose={close}
+        title={pending ? t(`payroll:periodDetail.actions.${pending}`) : ""}
+        size="30rem"
+      >
         {pending && (
           <form
             onSubmit={(event) => {
@@ -119,7 +139,12 @@ export function PeriodActions({ periodId, status }: { periodId: string; status: 
               <Button variant="default" onClick={close}>
                 {t("common:cancel")}
               </Button>
-              <Button type="submit" color={pending === "reopen" ? "red" : undefined} loading={mutation.isPending} disabled={pending === "reopen" && reason.trim().length === 0}>
+              <Button
+                type="submit"
+                color={pending === "reopen" ? "red" : undefined}
+                loading={mutation.isPending}
+                disabled={pending === "reopen" && reason.trim().length === 0}
+              >
                 {t(`payroll:periodDetail.actions.${pending}`)}
               </Button>
             </Group>

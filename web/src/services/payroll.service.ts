@@ -263,3 +263,45 @@ export async function completeClosingCheck(periodId: string, code: string, note?
 export async function waiveClosingCheck(periodId: string, code: string, reason: string): Promise<void> {
   await apiClient.post(`${PAYROLL_BASE}/periods/${periodId}/closing-checks/${code}/waive`, { reason });
 }
+
+/** `ComparisonLineDto`: one employee's gross/net against the previous month. */
+export interface ComparisonLine {
+  employeeId: string;
+  employeeName: string;
+  kind: "both" | "new" | "left";
+  currentGross?: number | null;
+  previousGross?: number | null;
+  currentNet?: number | null;
+  previousNet?: number | null;
+  grossChangePercent?: number | null;
+  netChangePercent?: number | null;
+  exceedsThreshold: boolean;
+}
+
+export interface ComparisonTotals {
+  headcount: number;
+  gross: number;
+  net: number;
+  employerCost: number;
+}
+
+/** `PeriodComparisonDto`: the period against the previous calendar month; rows past the threshold come first. */
+export interface PeriodComparisonResult {
+  periodId: string;
+  previousPeriodId?: string | null;
+  previousYear: number;
+  previousMonth: number;
+  thresholdPercent: number;
+  current: ComparisonTotals;
+  previous: ComparisonTotals;
+  exceedingCount: number;
+  lines: ComparisonLine[];
+}
+
+/** Month-over-month comparison of a period (`payroll.trace.view`); the deviation threshold defaults to 5%. */
+export async function getPeriodComparison(periodId: string, thresholdPercent?: number): Promise<PeriodComparisonResult> {
+  const { data } = await apiClient.get<PeriodComparisonResult>(`${PAYROLL_BASE}/periods/${periodId}/comparison`, {
+    params: thresholdPercent === undefined ? undefined : { thresholdPercent },
+  });
+  return data;
+}
