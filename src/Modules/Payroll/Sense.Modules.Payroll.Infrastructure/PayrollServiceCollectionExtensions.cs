@@ -7,6 +7,7 @@ using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Application.Severance;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
@@ -44,6 +45,10 @@ public static class PayrollServiceCollectionExtensions
         // senseik-019 2c: icra/nafaka kesinti emirleri.
         services.AddScoped<IGarnishmentOrderRepository, GarnishmentOrderRepository>();
 
+        // "Çıkış hesabı": frozen kıdem/ihbar/izin amounts per exit + the estimator it shares with the wizard preview.
+        services.AddScoped<IExitSettlementRepository, ExitSettlementRepository>();
+        services.AddScoped<SeveranceEstimator>();
+
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
         services.AddScoped<IWorkedTimeReader, AttendanceWorkedTimeReaderAdapter>();
@@ -77,6 +82,7 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<SalaryChanged>, SalaryChangedDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<EmployeeProfileChanged>, EmployeeProfileChangedDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<LeaveCancelled>, LeaveCancelledDirtyFlagHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedSettlementHandler>();
         return services;
     }
 

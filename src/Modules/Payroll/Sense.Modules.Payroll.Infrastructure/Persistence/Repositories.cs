@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -151,4 +152,18 @@ public sealed class EmployeeUnionMembershipRepository(PayrollDbContext context) 
             .Where(m => m.EmployeeId == employeeId && m.MembershipDate <= asOf && (m.EndDate == null || asOf <= m.EndDate))
             .OrderByDescending(m => m.MembershipDate)
             .FirstOrDefaultAsync(cancellationToken);
+}
+
+public sealed class ExitSettlementRepository(PayrollDbContext context) : IExitSettlementRepository
+{
+    public void Add(ExitSettlement settlement) => context.ExitSettlements.Add(settlement);
+
+    public async Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements.FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.TerminationDate == terminationDate, cancellationToken);
+
+    public async Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements
+            .Where(x => x.EmployeeId == employeeId)
+            .OrderByDescending(x => x.TerminationDate)
+            .ToListAsync(cancellationToken);
 }

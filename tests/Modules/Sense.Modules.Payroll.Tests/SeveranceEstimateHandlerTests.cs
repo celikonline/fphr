@@ -35,7 +35,7 @@ public sealed class SeveranceEstimateHandlerTests
 
         // A reader with no rows: every parameter is "missing".
         reader ??= Substitute.For<ILegislationParameterReader>();
-        return new GetSeveranceEstimateHandler(tenant, salary, seniority, leave, reader, TimeProvider.System);
+        return new GetSeveranceEstimateHandler(tenant, new SeveranceEstimator(salary, seniority, leave, reader, TimeProvider.System));
     }
 
     [Fact]

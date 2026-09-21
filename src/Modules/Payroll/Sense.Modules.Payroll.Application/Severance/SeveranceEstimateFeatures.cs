@@ -36,47 +36,58 @@ public sealed record SeveranceEstimateDto(
 [RequiresPermission("payroll.severance.estimate")]
 public sealed record GetSeveranceEstimateQuery(Guid EmployeeId, DateOnly TerminationDate, SeveranceCauseCategory CauseCategory) : IQuery<SeveranceEstimateDto>;
 
-public sealed class GetSeveranceEstimateHandler(
-    ITenantContext tenant,
+public sealed class GetSeveranceEstimateHandler(ITenantContext tenant, SeveranceEstimator estimator) : IQueryHandler<GetSeveranceEstimateQuery, SeveranceEstimateDto>
+{
+    public Task<Result<SeveranceEstimateDto>> Handle(GetSeveranceEstimateQuery query, CancellationToken cancellationToken) =>
+        estimator.EstimateAsync(tenant.TenantId, query.EmployeeId, query.TerminationDate, query.CauseCategory, cancellationToken);
+}
+
+/// <summary>
+/// The kıdem/ihbar/izin computation shared by the read-only wizard estimate (<see cref="GetSeveranceEstimateHandler"/>)
+/// and the frozen exit settlement written when <c>EmployeeTerminated</c> arrives (<c>EmployeeTerminatedSettlementHandler</c>),
+/// so both always agree. Takes the tenant explicitly because the event handler has no request-scoped tenant.
+/// </summary>
+public sealed class SeveranceEstimator(
     IEmployeeSalaryLookup salaryLookup,
     IEmployeeSeniorityLookup seniorityLookup,
     ILeaveBalanceLookup leaveBalanceLookup,
     ILegislationParameterReader legislation,
-    TimeProvider clock) : IQueryHandler<GetSeveranceEstimateQuery, SeveranceEstimateDto>
+    TimeProvider clock)
 {
-    public async Task<Result<SeveranceEstimateDto>> Handle(GetSeveranceEstimateQuery query, CancellationToken cancellationToken)
+    public async Task<Result<SeveranceEstimateDto>> EstimateAsync(
+        Guid tenantId, Guid employeeId, DateOnly terminationDate, SeveranceCauseCategory causeCategory, CancellationToken cancellationToken)
     {
         // A hypothetical exit date must not precede the hire date nor lie more than ~1 year ahead (nonsense estimates such as year 2100).
         var today = DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime);
-        var employment = await salaryLookup.GetEmploymentDatesAsync(tenant.TenantId, query.EmployeeId, cancellationToken);
-        if ((employment?.HireDate is { } hireDate && query.TerminationDate < hireDate)
-            || query.TerminationDate > today.AddDays(PayrollLimits.MaxSeveranceTerminationDaysAhead))
+        var employment = await salaryLookup.GetEmploymentDatesAsync(tenantId, employeeId, cancellationToken);
+        if ((employment?.HireDate is { } hireDate && terminationDate < hireDate)
+            || terminationDate > today.AddDays(PayrollLimits.MaxSeveranceTerminationDaysAhead))
         {
             return Error.Validation(PayrollDomainErrors.SeveranceTerminationDateInvalid);
         }
 
-        var salary = await salaryLookup.GetCurrentSalaryAsync(tenant.TenantId, query.EmployeeId, cancellationToken);
+        var salary = await salaryLookup.GetCurrentSalaryAsync(tenantId, employeeId, cancellationToken);
         if (salary is null)
         {
             return Error.Validation(PayrollDomainErrors.SeveranceEstimateSalaryMissing);
         }
 
         var seniorityDays = await seniorityLookup.GetCountedSeniorityDaysAsync(
-            tenant.TenantId, query.EmployeeId, EmployeeSeniorityPurpose.Severance, query.TerminationDate, cancellationToken);
-        var unusedLeaveDays = await leaveBalanceLookup.GetRemainingAnnualLeaveDaysAsync(tenant.TenantId, query.EmployeeId, cancellationToken) ?? 0m;
+            tenantId, employeeId, EmployeeSeniorityPurpose.Severance, terminationDate, cancellationToken);
+        var unusedLeaveDays = await leaveBalanceLookup.GetRemainingAnnualLeaveDaysAsync(tenantId, employeeId, cancellationToken) ?? 0m;
 
         var dailyGrossWage = DailyGrossWage(salary);
         SeveranceLegislationSnapshot snapshot;
         try
         {
-            snapshot = await SeveranceLegislationSnapshotResolver.ResolveAsync(legislation, query.TerminationDate, cancellationToken);
+            snapshot = await SeveranceLegislationSnapshotResolver.ResolveAsync(legislation, terminationDate, cancellationToken);
         }
         catch (LegislationParameterMissingException ex)
         {
             return LegislationMissingError.From(ex);
         }
 
-        var input = new SeveranceInput(seniorityDays, query.CauseCategory, dailyGrossWage, unusedLeaveDays);
+        var input = new SeveranceInput(seniorityDays, causeCategory, dailyGrossWage, unusedLeaveDays);
         var result = SeveranceCalculator.Calculate(input, snapshot);
 
         return new SeveranceEstimateDto(

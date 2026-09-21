@@ -178,6 +178,9 @@ builder.Services.AddPayrollServices(builder.Configuration);
 builder.Services.AddPayrollIntegrationEventHandlers();
 builder.Services.AddPayrollChangeDetectionJob();
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+// EmployeeTerminatedSettlementHandler ("Çıkış hesabı") runs SeveranceEstimator, which also needs the counted-seniority port
+// (Leave core already provides ILeaveBalanceLookup and ILegislationParameterReader).
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
 // PayrollPeriodCalculationService reads the disability degree (engelli vergi indirimi) through this Employee contract.
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();

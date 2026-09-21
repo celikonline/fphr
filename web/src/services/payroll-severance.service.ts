@@ -47,3 +47,28 @@ export async function getSeveranceEstimate(
   });
   return data;
 }
+
+/** `ExitSettlementDto`: the amounts frozen when the employee was terminated (`ExitSettlementController`). */
+export interface ExitSettlement {
+  id: string;
+  employeeId: string;
+  terminationDate: string;
+  causeCategory: SeveranceCauseCategory;
+  currency: string;
+  seniorityDays: number;
+  dailyGrossWage: number;
+  severanceAmount: number;
+  noticeAmount: number;
+  unusedLeaveAmount: number;
+  totalAmount: number;
+  calculatedAt: string;
+  steps: SeveranceTraceStep[];
+}
+
+/** The employee's latest exit settlement, or null when none is recorded (404). */
+export async function getExitSettlement(employeeId: string): Promise<ExitSettlement | null> {
+  const { data } = await apiClient.get<ExitSettlement>(`${PAYROLL_EMPLOYEES_BASE}/${employeeId}/exit-settlement`, {
+    validateStatus: (status) => status === 200 || status === 404,
+  });
+  return data && "totalAmount" in data ? data : null;
+}

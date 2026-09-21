@@ -30,6 +30,9 @@ public static class PayrollDomainErrors
     /// <summary>senseik-011 (F-06): the severance/notice estimate needs a current salary record (Employee.Contracts.IEmployeeSalaryLookup) to derive a daily wage from.</summary>
     public const string SeveranceEstimateSalaryMissing = "payroll.errors.severance_estimate_salary_missing";
 
+    /// <summary>Çıkış hesabı: no frozen settlement exists for the employee (not terminated, or terminated before this feature).</summary>
+    public const string ExitSettlementNotFound = "payroll.errors.exit_settlement_not_found";
+
     // İcra/nafaka kesinti emirleri (senseik-019 2c)
     public const string GarnishmentCaseReferenceRequired = "payroll.errors.garnishment_case_reference_required";
     public const string GarnishmentInstallmentInvalid = "payroll.errors.garnishment_installment_invalid";

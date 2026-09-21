@@ -11,6 +11,7 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
 import { EmploymentPeriodsSection } from "./employment-periods-section";
+import { ExitSettlementSection } from "./exit-settlement-section";
 import { WorkScheduleSection } from "./work-schedule-section";
 import {
   addCareerRecord,
@@ -313,6 +314,8 @@ function CareerPositionTab({
       </Card>
 
       <EmploymentPeriodsSection employee={employee} />
+
+      <ExitSettlementSection employee={employee} />
 
       {dialog && (
         <CareerRecordDialog

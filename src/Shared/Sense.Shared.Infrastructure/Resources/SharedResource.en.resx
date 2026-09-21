@@ -852,6 +852,7 @@ The report you requested has been generated. Click the link to view and download
 
   <!-- Payroll (senseik-011, F-06): severance/notice/unused-leave estimate (exit wizard) -->
   <data name="payroll.severance.estimate" xml:space="preserve"><value>View the severance/notice estimate</value></data>
+  <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>

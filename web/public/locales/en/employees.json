@@ -642,6 +642,17 @@
       "success": "The employee is rehired. Leave accrual starts on {{date}}."
     }
   },
+  "exitSettlement": {
+    "title": "Exit settlement",
+    "hint": "Amounts calculated and recorded at exit; later salary or legislation changes do not affect them.",
+    "terminationDate": "Exit date",
+    "severance": "Severance pay",
+    "notice": "Notice pay",
+    "unusedLeave": "Unused leave pay",
+    "total": "Total",
+    "seniority": "Seniority",
+    "calculatedAt": "Calculated at"
+  },
   "employmentPeriods": {
     "title": "Employment periods",
     "empty": "No employment periods recorded.",

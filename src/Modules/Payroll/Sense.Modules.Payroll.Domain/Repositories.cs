@@ -1,3 +1,4 @@
+using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -119,4 +120,16 @@ public interface IEmployeeUnionMembershipRepository
     /// <summary>The membership in effect on <paramref name="asOf"/> (MembershipDate ≤ asOf ≤ EndDate/open), if any -
     /// used by <c>PayrollPeriodCalculationService</c> to resolve the period's dues via <c>UnionDuesCalculator</c>.</summary>
     Task<EmployeeUnionMembership?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
+}
+
+/// <summary>"Çıkış hesabı": frozen kıdem/ihbar/izin amounts written when an employee is terminated.</summary>
+public interface IExitSettlementRepository
+{
+    void Add(ExitSettlement settlement);
+
+    /// <summary>The settlement of one exit (one per employee and termination date; a rehire + second exit gets its own).</summary>
+    Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default);
+
+    /// <summary>Every settlement of the employee, newest termination first.</summary>
+    Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 }

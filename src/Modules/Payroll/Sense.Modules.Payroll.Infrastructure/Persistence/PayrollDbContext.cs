@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -41,6 +42,8 @@ public sealed class PayrollDbContext(DbContextOptions<PayrollDbContext> options,
 
     public DbSet<EmployeeUnionMembership> EmployeeUnionMemberships => Set<EmployeeUnionMembership>();
 
+    public DbSet<ExitSettlement> ExitSettlements => Set<ExitSettlement>();
+
     /// <summary>payroll.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -63,6 +66,8 @@ internal static class PayrollTables
     public const string GarnishmentOrders = "garnishment_orders";
     public const string Unions = "unions";
     public const string EmployeeUnionMemberships = "employee_union_memberships";
+    public const string ExitSettlements = "exit_settlements";
+    public const int CurrencyLength = 3;
     public const int EnumCodeLength = 30;
     public const int HashLength = 128;
     public const int ReasonCodeLength = 40;
@@ -209,6 +214,21 @@ public sealed class EmployeeUnionMembershipConfiguration : IEntityTypeConfigurat
         b.Property(x => x.CoverageType).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.Property(x => x.DuesRule).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
         b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.MembershipDate });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class ExitSettlementConfiguration : IEntityTypeConfiguration<ExitSettlement>
+{
+    public void Configure(EntityTypeBuilder<ExitSettlement> b)
+    {
+        b.ToTable(PayrollTables.ExitSettlements);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Id).ValueGeneratedNever();
+        b.Property(x => x.CauseCategory).HasConversion<string>().HasMaxLength(PayrollTables.EnumCodeLength);
+        b.Property(x => x.Currency).HasMaxLength(PayrollTables.CurrencyLength).IsRequired();
+        b.Property(x => x.StepsJson).HasColumnType(PersistenceDefaults.JsonbColumnType).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.EmployeeId, x.TerminationDate }).IsUnique();
         b.Ignore(x => x.DomainEvents);
     }
 }

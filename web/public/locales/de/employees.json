@@ -642,6 +642,17 @@
       "success": "Die Person wurde wiedereingestellt. Die Urlaubsansparung beginnt am {{date}}."
     }
   },
+  "exitSettlement": {
+    "title": "Austrittsabrechnung",
+    "hint": "Beim Austritt berechnete und gespeicherte Beträge; spätere Gehalts- oder Gesetzesänderungen ändern sie nicht.",
+    "terminationDate": "Austrittsdatum",
+    "severance": "Abfindung",
+    "notice": "Kündigungsentschädigung",
+    "unusedLeave": "Urlaubsabgeltung",
+    "total": "Summe",
+    "seniority": "Betriebszugehörigkeit",
+    "calculatedAt": "Berechnet am"
+  },
   "employmentPeriods": {
     "title": "Beschäftigungszeiträume",
     "empty": "Keine Beschäftigungszeiträume erfasst.",

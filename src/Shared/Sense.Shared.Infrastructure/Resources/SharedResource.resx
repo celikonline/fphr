@@ -862,6 +862,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (senseik-011, F-06): kıdem/ihbar/kullanılmamış izin ücreti tahmini (İşten ayrılış sihirbazı) -->
   <data name="payroll.severance.estimate" xml:space="preserve"><value>Kıdem/ihbar tazminatı tahminini görüntüleme</value></data>
+  <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>

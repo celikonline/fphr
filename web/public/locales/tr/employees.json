@@ -642,6 +642,17 @@
       "success": "Çalışan yeniden işe alındı. İzne esas hak ediş tarihi: {{date}}."
     }
   },
+  "exitSettlement": {
+    "title": "Çıkış hesabı",
+    "hint": "Çıkışta hesaplanıp kaydedilen tutarlar; sonraki maaş veya mevzuat değişikliklerinden etkilenmez.",
+    "terminationDate": "Çıkış tarihi",
+    "severance": "Kıdem tazminatı",
+    "notice": "İhbar tazminatı",
+    "unusedLeave": "Kullanılmamış izin ücreti",
+    "total": "Toplam",
+    "seniority": "Kıdem",
+    "calculatedAt": "Hesaplanma zamanı"
+  },
   "employmentPeriods": {
     "title": "Çalışma dönemleri",
     "empty": "Kayıtlı çalışma dönemi yok.",
