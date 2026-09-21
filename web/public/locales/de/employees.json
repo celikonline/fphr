@@ -328,14 +328,14 @@
     "statusLabel": "Mitarbeitende:r",
     "accountStatusLabel": "Konto",
     "sections": {
-      "general": "Allgemein",
+      "general": "Profil",
       "personal": "Persönliche Daten",
       "career": "Karriere",
       "customFields": "Benutzerdefinierte Felder",
       "account": "Konto"
     },
     "tabs": {
-      "general": "Allgemein",
+      "general": "Profil",
       "personal": "Persönliche Daten",
       "customFields": "Benutzerdefinierte Felder",
       "career": "Karriere",
@@ -356,7 +356,34 @@
     "accessTypeHint": "Nur Kontoinhaber:innen können die Rolle „Kontoinhaber:in“ vergeben oder entziehen.",
     "accessTypeSaved": "Zugriffsart aktualisiert.",
     "sensitiveHidden": "Sie haben keine Berechtigung, Wehrdienststatus, Grad der Behinderung oder Blutgruppe einzusehen.",
-    "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später."
+    "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später.",
+    "copy": "Kopieren",
+    "tenure": {
+      "years": "{{count}} J.",
+      "months": "{{count}} Mon.",
+      "days": "{{count}} T."
+    },
+    "profile": {
+      "tenure": "Betriebszugehörigkeit",
+      "company": "Unternehmen",
+      "department": "Abteilung",
+      "title": "Position",
+      "terminationDate": "Ausgeschieden am"
+    },
+    "groups": {
+      "manager": "Vorgesetzte(r)",
+      "contact": "Kontakt",
+      "access": "Zugang",
+      "citizenship": "Staatsangehörigkeit",
+      "education": "Bildung",
+      "address": "Adresse",
+      "personalContact": "Kontakt (privat)"
+    },
+    "completion": {
+      "title": "Vollständigkeit der Akte",
+      "completed": "Erledigt",
+      "remaining": "Offen"
+    }
   },
   "invite": {
     "send": "Einladung senden",
@@ -636,5 +663,13 @@
       "days": "{{count}} Tage",
       "since": "seit {{date}}"
     }
+  },
+  "photo": {
+    "change": "Foto ändern",
+    "upload": "Foto hochladen",
+    "remove": "Foto entfernen",
+    "uploaded": "Foto aktualisiert.",
+    "removed": "Foto entfernt.",
+    "failed": "Die Foto-Aktion konnte nicht abgeschlossen werden."
   }
 }

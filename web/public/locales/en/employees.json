@@ -328,14 +328,14 @@
     "statusLabel": "Employee",
     "accountStatusLabel": "Account",
     "sections": {
-      "general": "General",
+      "general": "Profile",
       "personal": "Personal details",
       "career": "Career",
       "customFields": "Custom fields",
       "account": "Account"
     },
     "tabs": {
-      "general": "General",
+      "general": "Profile",
       "personal": "Personal details",
       "customFields": "Custom fields",
       "career": "Career",
@@ -356,7 +356,34 @@
     "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
     "accessTypeSaved": "Access type updated.",
     "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type.",
-    "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later."
+    "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later.",
+    "copy": "Copy",
+    "tenure": {
+      "years": "{{count}} yr",
+      "months": "{{count}} mo",
+      "days": "{{count}} d"
+    },
+    "profile": {
+      "tenure": "Length of service",
+      "company": "Company",
+      "department": "Department",
+      "title": "Title",
+      "terminationDate": "Left on"
+    },
+    "groups": {
+      "manager": "Manager",
+      "contact": "Contact",
+      "access": "Access",
+      "citizenship": "Citizenship",
+      "education": "Education",
+      "address": "Address",
+      "personalContact": "Contact (personal)"
+    },
+    "completion": {
+      "title": "Profile completion",
+      "completed": "Completed",
+      "remaining": "Remaining"
+    }
   },
   "invite": {
     "send": "Send invitation",
@@ -636,5 +663,13 @@
       "days": "{{count}} days",
       "since": "since {{date}}"
     }
+  },
+  "photo": {
+    "change": "Change photo",
+    "upload": "Upload photo",
+    "remove": "Remove photo",
+    "uploaded": "Photo updated.",
+    "removed": "Photo removed.",
+    "failed": "The photo action could not be completed."
   }
 }

@@ -7,7 +7,8 @@ import { BarChart3, Cake, CalendarDays, Check, ChevronRight, Inbox as InboxIcon,
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { useModuleEnabled } from "@/hooks/use-module-enabled";
-import { avatarColor, initials } from "@/components/employees/employee-badges";
+import { avatarColor } from "@/components/employees/employee-badges";
+import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
 import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
@@ -256,9 +257,15 @@ function OrgInfoWidget() {
                 </Text>
               )}
             </div>
-            <Avatar size={88} radius="md" fz={28} color={avatarColor(employee.id)} styles={{ placeholder: { fontWeight: 500 } }}>
-              {initials(employee.firstName, employee.lastName)}
-            </Avatar>
+            <EmployeeAvatar
+              employeeId={employee.id}
+              firstName={employee.firstName}
+              lastName={employee.lastName}
+              size={88}
+              radius="md"
+              fz={28}
+              styles={{ placeholder: { fontWeight: 500 } }}
+            />
           </Group>
           {row(
             t("home:orgInfo.manager"),

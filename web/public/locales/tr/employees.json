@@ -328,14 +328,14 @@
     "statusLabel": "Çalışan",
     "accountStatusLabel": "Hesap",
     "sections": {
-      "general": "Genel",
+      "general": "Profil",
       "personal": "Kişisel bilgiler",
       "career": "Kariyer",
       "customFields": "Özel alanlar",
       "account": "Hesap"
     },
     "tabs": {
-      "general": "Genel",
+      "general": "Profil",
       "personal": "Kişisel bilgiler",
       "customFields": "Özel alanlar",
       "career": "Kariyer",
@@ -356,7 +356,34 @@
     "accessTypeHint": "Hesap sahibi rolünü yalnızca bir hesap sahibi verebilir veya kaldırabilir.",
     "accessTypeSaved": "Erişim türü güncellendi.",
     "sensitiveHidden": "Askerlik durumu, engellilik derecesi ve kan grubu alanları için görüntüleme yetkiniz yok.",
-    "leaveAccrualStartDateHint": "Gerçek tarih yazılır; ilk hak ediş sistemce 1 yıl sonra verilir"
+    "leaveAccrualStartDateHint": "Gerçek tarih yazılır; ilk hak ediş sistemce 1 yıl sonra verilir",
+    "copy": "Kopyala",
+    "tenure": {
+      "years": "{{count}} yıl",
+      "months": "{{count}} ay",
+      "days": "{{count}} gün"
+    },
+    "profile": {
+      "tenure": "Çalışma süresi",
+      "company": "Şirket",
+      "department": "Departman",
+      "title": "Unvan",
+      "terminationDate": "İşten ayrılış"
+    },
+    "groups": {
+      "manager": "Yöneticisi",
+      "contact": "İletişim",
+      "access": "Erişim",
+      "citizenship": "Vatandaşlık",
+      "education": "Eğitim",
+      "address": "Adres",
+      "personalContact": "İletişim (kişisel)"
+    },
+    "completion": {
+      "title": "Özlük doluluk oranı",
+      "completed": "Tamamlanan",
+      "remaining": "Kalan"
+    }
   },
   "invite": {
     "send": "Davetiye gönder",
@@ -636,5 +663,13 @@
       "days": "{{count}} gün",
       "since": "{{date}} tarihinden itibaren"
     }
+  },
+  "photo": {
+    "change": "Fotoğrafı değiştir",
+    "upload": "Fotoğraf yükle",
+    "remove": "Fotoğrafı kaldır",
+    "uploaded": "Fotoğraf güncellendi.",
+    "removed": "Fotoğraf kaldırıldı.",
+    "failed": "Fotoğraf işlemi tamamlanamadı."
   }
 }

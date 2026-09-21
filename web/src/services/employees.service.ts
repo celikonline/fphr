@@ -899,3 +899,32 @@ export async function linkEmployeeSubcontractor(
   );
   return data;
 }
+
+/** Photo target: an employee id, or "me" for the caller's own photo (`employee.my.view`, no directory permission needed). */
+export type EmployeePhotoTarget = string;
+export const OWN_PHOTO_TARGET = "me";
+
+const photoUrl = (target: EmployeePhotoTarget) => `${EMPLOYEES_BASE}/${target}/photo`;
+
+/** The photo bytes, or null when the employee has none (404) or the caller may not see it (403). Other failures throw. */
+export async function getEmployeePhoto(target: EmployeePhotoTarget): Promise<Blob | null> {
+  try {
+    const { data } = await apiClient.get<Blob>(photoUrl(target), { responseType: "blob" });
+    return data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 404 || status === 403) return null;
+    throw error;
+  }
+}
+
+/** Uploads/replaces a photo (JPEG, PNG or WebP, at most 2 MB - the caller downsizes first). */
+export async function uploadEmployeePhoto(target: EmployeePhotoTarget, photo: Blob): Promise<void> {
+  const form = new FormData();
+  form.append("file", photo, "photo");
+  await apiClient.put(photoUrl(target), form, { headers: { "Content-Type": "multipart/form-data" } });
+}
+
+export async function deleteEmployeePhoto(target: EmployeePhotoTarget): Promise<void> {
+  await apiClient.delete(photoUrl(target));
+}
