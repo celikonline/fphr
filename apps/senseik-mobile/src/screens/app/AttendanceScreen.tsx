@@ -1,5 +1,13 @@
 import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { AppStackParamList } from "@/types/navigation";
@@ -10,7 +18,7 @@ import {
   attendanceService,
   parseAnomalyFlags,
   type AttendanceDay,
-  type MyTimesheetSummary
+  type MyTimesheetSummary,
 } from "@/services/AttendanceService";
 
 /** First and last `DateOnly` ("yyyy-MM-dd") of the month containing `reference`. */
@@ -34,7 +42,11 @@ function formatMonthLabel(reference: Date): string {
 function formatDayLabel(value: string): string {
   const date = new Date(`${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
-  const label = date.toLocaleDateString("tr-TR", { weekday: "short", day: "2-digit", month: "short" });
+  const label = date.toLocaleDateString("tr-TR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+  });
   return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
@@ -65,7 +77,7 @@ export default function AttendanceScreen() {
       const range = monthRange(monthDate);
       const [summaryResult, daysResult] = await Promise.all([
         attendanceService.getMyTimesheetSummary(range),
-        attendanceService.getMyAttendanceDays(range)
+        attendanceService.getMyAttendanceDays(range),
       ]);
       setSummary(summaryResult);
       setDays([...daysResult].sort((a, b) => a.date.localeCompare(b.date)));
@@ -86,11 +98,11 @@ export default function AttendanceScreen() {
   }
 
   function goToPreviousMonth() {
-    setMonthDate(current => new Date(current.getFullYear(), current.getMonth() - 1, 1));
+    setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1));
   }
 
   function goToNextMonth() {
-    setMonthDate(current => new Date(current.getFullYear(), current.getMonth() + 1, 1));
+    setMonthDate((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
   }
 
   if (loading) {
@@ -144,7 +156,7 @@ export default function AttendanceScreen() {
       {days.length === 0 ? (
         <Text style={styles.emptyText}>Bu ay için kayıtlı puantaj günü yok.</Text>
       ) : (
-        days.map(day => {
+        days.map((day) => {
           const anomalyFlags = parseAnomalyFlags(day.anomalies);
           return (
             <View key={day.id} style={styles.card}>
@@ -159,7 +171,9 @@ export default function AttendanceScreen() {
               <Text style={styles.cardValue}>
                 {formatTime(day.checkIn)} – {formatTime(day.checkOut)}
               </Text>
-              <Text style={styles.cardSubtext}>{formatWorkedMinutes(day.workedMinutes)} çalışıldı</Text>
+              <Text style={styles.cardSubtext}>
+                {formatWorkedMinutes(day.workedMinutes)} çalışıldı
+              </Text>
             </View>
           );
         })
@@ -174,37 +188,37 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: spacing.md,
     alignItems: "center",
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   checkInButtonText: {
     ...typography.body,
     color: colors.white,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.xxxl
+    paddingBottom: spacing.xxxl,
   },
   centered: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.background
+    backgroundColor: colors.background,
   },
   title: {
     ...typography.h3,
     color: colors.text,
-    marginBottom: spacing.lg
+    marginBottom: spacing.lg,
   },
   sectionTitle: {
     ...typography.h4,
     color: colors.text,
     marginTop: spacing.xl,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   monthSelector: {
     flexDirection: "row",
@@ -214,27 +228,27 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   monthButton: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs
+    paddingVertical: spacing.xs,
   },
   monthButtonText: {
     ...typography.h4,
-    color: colors.primary
+    color: colors.primary,
   },
   monthLabel: {
     ...typography.body,
     color: colors.text,
-    fontWeight: "600"
+    fontWeight: "600",
   },
   summaryRow: {
     flexDirection: "row",
-    gap: spacing.sm
+    gap: spacing.sm,
   },
   summaryCard: {
-    flex: 1
+    flex: 1,
   },
   card: {
     backgroundColor: colors.white,
@@ -242,49 +256,49 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 12,
     padding: spacing.lg,
-    marginBottom: spacing.sm
+    marginBottom: spacing.sm,
   },
   cardLabel: {
     ...typography.bodySm,
-    color: colors.textSecondary
+    color: colors.textSecondary,
   },
   cardValue: {
     ...typography.h4,
     color: colors.text,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   cardSubtext: {
     ...typography.bodyXs,
     color: colors.textTertiary,
-    marginTop: spacing.xs
+    marginTop: spacing.xs,
   },
   emptyText: {
     ...typography.bodySm,
-    color: colors.textTertiary
+    color: colors.textTertiary,
   },
   errorBanner: {
     backgroundColor: "#fdecea",
     borderRadius: 8,
     padding: spacing.md,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
   },
   errorText: {
     ...typography.bodySm,
-    color: colors.error
+    color: colors.error,
   },
   dayHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center"
+    alignItems: "center",
   },
   anomalyBadge: {
     backgroundColor: colors.warning,
     borderRadius: 12,
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2
+    paddingVertical: 2,
   },
   anomalyBadgeText: {
     ...typography.caption,
-    color: colors.white
-  }
+    color: colors.white,
+  },
 });

@@ -5,14 +5,20 @@ import * as Location from "expo-location";
 import { colors } from "@/styles/colors";
 import { spacing } from "@/styles/spacing";
 import { typography } from "@/styles/typography";
-import { attendanceService, type MyCheckInStatus, type SelfCheckInResult } from "@/services/AttendanceService";
+import {
+  attendanceService,
+  type MyCheckInStatus,
+  type SelfCheckInResult,
+} from "@/services/AttendanceService";
 
 /** Best-effort device position; geofence'siz lokasyonda konum zorunlu olmadığı için izin/okuma hatası engel değildir. */
 async function tryGetPosition(): Promise<{ latitude: number; longitude: number } | undefined> {
   try {
     const permission = await Location.requestForegroundPermissionsAsync();
     if (permission.status !== "granted") return undefined;
-    const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+    const position = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
     return { latitude: position.coords.latitude, longitude: position.coords.longitude };
   } catch {
     return undefined;
@@ -72,7 +78,7 @@ export default function CheckInScreen() {
       const response = await attendanceService.qrCheckIn({
         code: data.trim().toUpperCase(),
         direction,
-        ...(position ?? {})
+        ...(position ?? {}),
       });
       setResult(response);
       await loadStatus();
@@ -90,7 +96,7 @@ export default function CheckInScreen() {
           style={styles.camera}
           facing="back"
           barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          onBarcodeScanned={event => void onScanned(event)}
+          onBarcodeScanned={(event) => void onScanned(event)}
         />
         <TouchableOpacity style={styles.secondaryButton} onPress={() => setScanning(false)}>
           <Text style={styles.secondaryButtonText}>Vazgeç</Text>
@@ -103,8 +109,8 @@ export default function CheckInScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>{status?.isCheckedIn ? "İçeridesiniz" : "Dışarıdasınız"}</Text>
       <Text style={styles.hint}>
-        Lokasyon girişindeki QR kodu okutarak {direction === "in" ? "giriş" : "çıkış"} kaydı oluşturun. Lokasyonda
-        geofence tanımlıysa konumunuz da doğrulanır.
+        Lokasyon girişindeki QR kodu okutarak {direction === "in" ? "giriş" : "çıkış"} kaydı
+        oluşturun. Lokasyonda geofence tanımlıysa konumunuz da doğrulanır.
       </Text>
 
       {error && (
@@ -137,12 +143,33 @@ const styles = StyleSheet.create({
   camera: { flex: 1, borderRadius: 8, overflow: "hidden", marginBottom: spacing.lg },
   title: { ...typography.h2, color: colors.text, marginBottom: spacing.sm },
   hint: { ...typography.bodySm, color: colors.textSecondary, marginBottom: spacing.lg },
-  primaryButton: { backgroundColor: colors.primary, borderRadius: 8, padding: spacing.lg, alignItems: "center" },
+  primaryButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    padding: spacing.lg,
+    alignItems: "center",
+  },
   primaryButtonText: { ...typography.body, color: colors.white, fontWeight: "600" },
-  secondaryButton: { borderWidth: 1, borderColor: colors.border, borderRadius: 8, padding: spacing.md, alignItems: "center" },
+  secondaryButton: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: spacing.md,
+    alignItems: "center",
+  },
   secondaryButtonText: { ...typography.body, color: colors.text },
-  errorBanner: { backgroundColor: "#fdecea", borderRadius: 8, padding: spacing.md, marginBottom: spacing.md },
+  errorBanner: {
+    backgroundColor: "#fdecea",
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
   errorText: { ...typography.bodySm, color: colors.error },
-  successBanner: { backgroundColor: "#e8f7ec", borderRadius: 8, padding: spacing.md, marginBottom: spacing.md },
-  successText: { ...typography.bodySm, color: colors.secondaryDark }
+  successBanner: {
+    backgroundColor: "#e8f7ec",
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  successText: { ...typography.bodySm, color: colors.secondaryDark },
 });

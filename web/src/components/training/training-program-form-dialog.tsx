@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Group, Input, Modal, NumberInput, Select, Stack, TextInput, Textarea } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Input,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  TextInput,
+  Textarea,
+} from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -25,7 +35,10 @@ interface TrainingProgramFormDialogProps {
 }
 
 /** Yeni eğitim programı (taslak) oluşturur; yayına alma listeden "Etkinleştir" ile yapılır. */
-export default function TrainingProgramFormDialog({ onClose, onCreated }: TrainingProgramFormDialogProps) {
+export default function TrainingProgramFormDialog({
+  onClose,
+  onCreated,
+}: TrainingProgramFormDialogProps) {
   const { t } = useTranslation(["training", "common"]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -45,7 +58,11 @@ export default function TrainingProgramFormDialog({ onClose, onCreated }: Traini
         maxCapacity: capacity === "" ? null : capacity,
       }),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("training:programs.created") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("training:programs.created"),
+      });
       onCreated();
       onClose();
     },
@@ -58,7 +75,12 @@ export default function TrainingProgramFormDialog({ onClose, onCreated }: Traini
   });
 
   const endBeforeStart = startDay !== "" && endDay !== "" && endDay < startDay;
-  const canSubmit = title.trim().length > 0 && startDay !== "" && endDay !== "" && !endBeforeStart && !mutation.isPending;
+  const canSubmit =
+    title.trim().length > 0 &&
+    startDay !== "" &&
+    endDay !== "" &&
+    !endBeforeStart &&
+    !mutation.isPending;
 
   return (
     <Modal opened onClose={onClose} title={t("training:programs.create")} centered size="lg">
@@ -83,7 +105,10 @@ export default function TrainingProgramFormDialog({ onClose, onCreated }: Traini
           <Select
             id="training-category"
             label={t("training:fields.category")}
-            data={TRAINING_CATEGORIES.map((value) => ({ value, label: t(`training:categories.${value}`) }))}
+            data={TRAINING_CATEGORIES.map((value) => ({
+              value,
+              label: t(`training:categories.${value}`),
+            }))}
             value={category}
             allowDeselect={false}
             onChange={(value) => value && setCategory(value as TrainingCategory)}
@@ -106,14 +131,23 @@ export default function TrainingProgramFormDialog({ onClose, onCreated }: Traini
             required
             error={endBeforeStart ? t("training:programs.endBeforeStart") : undefined}
           >
-            <DatePicker id="training-end" value={endDay} min={startDay || undefined} onChange={setEndDay} />
+            <DatePicker
+              id="training-end"
+              value={endDay}
+              min={startDay || undefined}
+              onChange={setEndDay}
+            />
           </Input.Wrapper>
         </Group>
         <Group justify="flex-end" gap="sm">
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!canSubmit} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
             {t("common:save")}
           </Button>
         </Group>

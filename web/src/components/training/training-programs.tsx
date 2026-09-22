@@ -49,7 +49,11 @@ export default function TrainingPrograms() {
   const activateMutation = useMutation({
     mutationFn: (id: string) => activateTrainingProgram(id),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("training:programs.activated") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("training:programs.activated"),
+      });
       refresh();
     },
     onError,
@@ -57,14 +61,20 @@ export default function TrainingPrograms() {
   const closeMutation = useMutation({
     mutationFn: (id: string) => closeTrainingProgram(id),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("training:programs.closed") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("training:programs.closed"),
+      });
       setCloseTarget(null);
       refresh();
     },
     onError,
   });
 
-  const programs = [...(programsQuery.data ?? [])].sort((a, b) => b.startDate.localeCompare(a.startDate));
+  const programs = [...(programsQuery.data ?? [])].sort((a, b) =>
+    b.startDate.localeCompare(a.startDate)
+  );
 
   return (
     <Stack gap="md">
@@ -116,21 +126,33 @@ export default function TrainingPrograms() {
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs" justify="flex-end" wrap="nowrap">
-                        <Button size="compact-sm" variant="light" onClick={() => setDetail(program)}>
+                        <Button
+                          size="compact-sm"
+                          variant="light"
+                          onClick={() => setDetail(program)}
+                        >
                           {t("training:programs.details")}
                         </Button>
                         {canManage && status === "draft" && (
                           <Button
                             size="compact-sm"
                             variant="subtle"
-                            loading={activateMutation.isPending && activateMutation.variables === program.id}
+                            loading={
+                              activateMutation.isPending &&
+                              activateMutation.variables === program.id
+                            }
                             onClick={() => activateMutation.mutate(program.id)}
                           >
                             {t("training:programs.activate")}
                           </Button>
                         )}
                         {canManage && (status === "draft" || status === "active") && (
-                          <Button size="compact-sm" variant="subtle" color="red" onClick={() => setCloseTarget(program)}>
+                          <Button
+                            size="compact-sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={() => setCloseTarget(program)}
+                          >
                             {t("training:programs.close")}
                           </Button>
                         )}
@@ -144,8 +166,16 @@ export default function TrainingPrograms() {
         </Table.ScrollContainer>
       )}
 
-      {createOpen && <TrainingProgramFormDialog onClose={() => setCreateOpen(false)} onCreated={refresh} />}
-      {detail && <TrainingProgramDetail program={detail} programs={programs} onClose={() => setDetail(null)} />}
+      {createOpen && (
+        <TrainingProgramFormDialog onClose={() => setCreateOpen(false)} onCreated={refresh} />
+      )}
+      {detail && (
+        <TrainingProgramDetail
+          program={detail}
+          programs={programs}
+          onClose={() => setDetail(null)}
+        />
+      )}
       <ConfirmDialog
         open={closeTarget !== null}
         onOpenChange={(open) => !open && setCloseTarget(null)}

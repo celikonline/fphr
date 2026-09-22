@@ -37,7 +37,10 @@ interface OnboardingTaskTableProps {
 }
 
 /** Checklist table: due date (overdue flagged), task, responsible, status; complete / waive for pending rows. */
-export default function OnboardingTaskTable({ items, showEmployee = true }: OnboardingTaskTableProps) {
+export default function OnboardingTaskTable({
+  items,
+  showEmployee = true,
+}: OnboardingTaskTableProps) {
   const { t, i18n } = useTranslation(["onboarding", "common"]);
   const canManage = usePermission("onboarding.tasks.manage");
   const queryClient = useQueryClient();
@@ -55,7 +58,11 @@ export default function OnboardingTaskTable({ items, showEmployee = true }: Onbo
   const completeMutation = useMutation({
     mutationFn: (id: string) => completeOnboardingTask(id),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("onboarding:tasks.completedToast") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("onboarding:tasks.completedToast"),
+      });
       refresh();
     },
     onError,
@@ -63,7 +70,11 @@ export default function OnboardingTaskTable({ items, showEmployee = true }: Onbo
   const waiveMutation = useMutation({
     mutationFn: ({ id, text }: { id: string; text: string }) => waiveOnboardingTask(id, text),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("onboarding:tasks.waivedToast") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("onboarding:tasks.waivedToast"),
+      });
       setWaiving(null);
       refresh();
     },
@@ -90,8 +101,14 @@ export default function OnboardingTaskTable({ items, showEmployee = true }: Onbo
               <Table.Tr key={item.id}>
                 <Table.Td>
                   <Group gap={4} wrap="nowrap">
-                    {item.isOverdue && <AlertTriangle size={14} color="var(--mantine-color-red-6)" />}
-                    <Text size="sm" c={item.isOverdue ? "red" : undefined} fw={item.isOverdue ? 600 : undefined}>
+                    {item.isOverdue && (
+                      <AlertTriangle size={14} color="var(--mantine-color-red-6)" />
+                    )}
+                    <Text
+                      size="sm"
+                      c={item.isOverdue ? "red" : undefined}
+                      fw={item.isOverdue ? 600 : undefined}
+                    >
                       {formatDateOnly(item.dueDate, i18n.language)}
                     </Text>
                   </Group>
@@ -130,7 +147,9 @@ export default function OnboardingTaskTable({ items, showEmployee = true }: Onbo
                         <Button
                           size="compact-sm"
                           variant="light"
-                          loading={completeMutation.isPending && completeMutation.variables === item.id}
+                          loading={
+                            completeMutation.isPending && completeMutation.variables === item.id
+                          }
                           onClick={() => completeMutation.mutate(item.id)}
                         >
                           {t("onboarding:tasks.complete")}
@@ -180,7 +199,9 @@ export default function OnboardingTaskTable({ items, showEmployee = true }: Onbo
             <Button
               disabled={!reason.trim()}
               loading={waiveMutation.isPending}
-              onClick={() => waiving && waiveMutation.mutate({ id: waiving.id, text: reason.trim() })}
+              onClick={() =>
+                waiving && waiveMutation.mutate({ id: waiving.id, text: reason.trim() })
+              }
             >
               {t("onboarding:tasks.waive")}
             </Button>

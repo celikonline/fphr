@@ -49,11 +49,19 @@ export default function AssetInventory() {
   const [page, setPage] = useState(1);
   const [dialog, setDialog] = useState<Dialog>(null);
 
-  const categoriesQuery = useQuery({ queryKey: ["assets", "categories"], queryFn: listAssetCategories });
+  const categoriesQuery = useQuery({
+    queryKey: ["assets", "categories"],
+    queryFn: listAssetCategories,
+  });
   const assetsQuery = useQuery({
     queryKey: ["assets", "inventory", status, categoryId, page],
     queryFn: () =>
-      listAssets({ page, pageSize: PAGE_SIZE, status: status ?? undefined, categoryId: categoryId ?? undefined }),
+      listAssets({
+        page,
+        pageSize: PAGE_SIZE,
+        status: status ?? undefined,
+        categoryId: categoryId ?? undefined,
+      }),
   });
 
   const categories = categoriesQuery.data ?? [];
@@ -63,7 +71,11 @@ export default function AssetInventory() {
   const retireMutation = useMutation({
     mutationFn: (id: string) => retireAsset(id),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("assets:inventory.retired") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("assets:inventory.retired"),
+      });
       setDialog(null);
       refresh();
     },
@@ -86,7 +98,10 @@ export default function AssetInventory() {
           <Select
             aria-label={t("assets:inventory.statusFilter")}
             placeholder={t("assets:inventory.allStatuses")}
-            data={ASSET_STATUSES.map((value) => ({ value, label: t(`assets:enum.status.${value}`) }))}
+            data={ASSET_STATUSES.map((value) => ({
+              value,
+              label: t(`assets:enum.status.${value}`),
+            }))}
             value={status}
             onChange={(value) => {
               setStatus(value as AssetStatus | null);
@@ -110,7 +125,10 @@ export default function AssetInventory() {
           />
         </Group>
         {canManage && (
-          <Button leftSection={<PackagePlus size={16} />} onClick={() => setDialog({ kind: "form", asset: null })}>
+          <Button
+            leftSection={<PackagePlus size={16} />}
+            onClick={() => setDialog({ kind: "form", asset: null })}
+          >
             {t("assets:inventory.create")}
           </Button>
         )}
@@ -149,7 +167,11 @@ export default function AssetInventory() {
                     </Badge>
                   </Table.Td>
                   <Table.Td>
-                    {asset.assignedEmployeeId ? <EmployeeNameLink id={asset.assignedEmployeeId} tab="assets" /> : "—"}
+                    {asset.assignedEmployeeId ? (
+                      <EmployeeNameLink id={asset.assignedEmployeeId} tab="assets" />
+                    ) : (
+                      "—"
+                    )}
                   </Table.Td>
                   <Table.Td>{asset.status === "assigned" ? date(asset.issuedAt) : "—"}</Table.Td>
                   {canManage && (
@@ -163,16 +185,31 @@ export default function AssetInventory() {
           </Table>
         </Table.ScrollContainer>
       )}
-      {result && result.totalPages > 1 && <PaginationFooter result={result} onPageChange={setPage} />}
+      {result && result.totalPages > 1 && (
+        <PaginationFooter result={result} onPageChange={setPage} />
+      )}
 
       {dialog?.kind === "form" && (
-        <AssetFormDialog asset={dialog.asset} categories={categories} onClose={() => setDialog(null)} onSaved={refresh} />
+        <AssetFormDialog
+          asset={dialog.asset}
+          categories={categories}
+          onClose={() => setDialog(null)}
+          onSaved={refresh}
+        />
       )}
       {dialog?.kind === "assign" && (
-        <AssignAssetFromInventoryDialog asset={dialog.asset} onClose={() => setDialog(null)} onDone={refresh} />
+        <AssignAssetFromInventoryDialog
+          asset={dialog.asset}
+          onClose={() => setDialog(null)}
+          onDone={refresh}
+        />
       )}
       {dialog?.kind === "return" && (
-        <ReturnAssetFromInventoryDialog asset={dialog.asset} onClose={() => setDialog(null)} onDone={refresh} />
+        <ReturnAssetFromInventoryDialog
+          asset={dialog.asset}
+          onClose={() => setDialog(null)}
+          onDone={refresh}
+        />
       )}
       <ConfirmDialog
         open={dialog?.kind === "retire"}
@@ -206,7 +243,12 @@ function RowActions({ asset, onOpen }: { asset: Asset; onOpen: (dialog: Dialog) 
         {t("assets:inventory.edit")}
       </Button>
       {asset.status === "unassigned" && (
-        <Button size="compact-sm" variant="subtle" color="red" onClick={() => onOpen({ kind: "retire", asset })}>
+        <Button
+          size="compact-sm"
+          variant="subtle"
+          color="red"
+          onClick={() => onOpen({ kind: "retire", asset })}
+        >
           {t("assets:inventory.retire")}
         </Button>
       )}

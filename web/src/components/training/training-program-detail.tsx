@@ -49,7 +49,8 @@ export const ENROLLMENT_STATUS_COLOR: Record<EnrollmentStatus, string> = {
 function useNotify() {
   const { t } = useTranslation(["training", "common"]);
   return {
-    ok: (description: string) => toast({ variant: "success", title: t("common:success"), description }),
+    ok: (description: string) =>
+      toast({ variant: "success", title: t("common:success"), description }),
     fail: (error: unknown) =>
       toast({
         variant: "destructive",
@@ -67,7 +68,11 @@ interface TrainingProgramDetailProps {
 }
 
 /** Program detayı: katılımcılar (ekle / tamamla / çıkar) ve ön koşul eğitimler. */
-export default function TrainingProgramDetail({ program, programs, onClose }: TrainingProgramDetailProps) {
+export default function TrainingProgramDetail({
+  program,
+  programs,
+  onClose,
+}: TrainingProgramDetailProps) {
   const { t } = useTranslation(["training"]);
   const canViewEnrollments = usePermission("training.enrollments.view");
 
@@ -115,7 +120,8 @@ function Participants({ program }: { program: TrainingProgram }) {
     onError: notify.fail,
   });
   const completeMutation = useMutation({
-    mutationFn: ({ id, cert }: { id: string; cert: string }) => completeEnrollment(id, cert.trim() || null),
+    mutationFn: ({ id, cert }: { id: string; cert: string }) =>
+      completeEnrollment(id, cert.trim() || null),
     onSuccess: () => {
       notify.ok(t("training:participants.completed"));
       setCompleting(null);
@@ -138,7 +144,10 @@ function Participants({ program }: { program: TrainingProgram }) {
         <Title order={5}>{t("training:participants.title")}</Title>
         {program.maxCapacity != null && (
           <Text size="sm" c={isFull ? "red" : "dimmed"}>
-            {t("training:participants.capacity", { count: enrollments.length, max: program.maxCapacity })}
+            {t("training:participants.capacity", {
+              count: enrollments.length,
+              max: program.maxCapacity,
+            })}
           </Text>
         )}
       </Group>
@@ -226,7 +235,10 @@ function Participants({ program }: { program: TrainingProgram }) {
                               size="compact-sm"
                               variant="subtle"
                               color="red"
-                              loading={removeMutation.isPending && removeMutation.variables === enrollment.id}
+                              loading={
+                                removeMutation.isPending &&
+                                removeMutation.variables === enrollment.id
+                              }
                               onClick={() => removeMutation.mutate(enrollment.id)}
                             >
                               {t("training:participants.remove")}
@@ -263,7 +275,9 @@ function Participants({ program }: { program: TrainingProgram }) {
             </Button>
             <Button
               loading={completeMutation.isPending}
-              onClick={() => completing && completeMutation.mutate({ id: completing.id, cert: certificate })}
+              onClick={() =>
+                completing && completeMutation.mutate({ id: completing.id, cert: certificate })
+              }
             >
               {t("training:participants.complete")}
             </Button>
@@ -274,7 +288,13 @@ function Participants({ program }: { program: TrainingProgram }) {
   );
 }
 
-function Requirements({ program, programs }: { program: TrainingProgram; programs: TrainingProgram[] }) {
+function Requirements({
+  program,
+  programs,
+}: {
+  program: TrainingProgram;
+  programs: TrainingProgram[];
+}) {
   const { t } = useTranslation(["training"]);
   const canManage = usePermission("training.programs.manage");
   const queryClient = useQueryClient();
@@ -282,13 +302,17 @@ function Requirements({ program, programs }: { program: TrainingProgram; program
   const [prerequisiteId, setPrerequisiteId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState(true);
   const queryKey = ["training", "requirements", program.id];
-  const requirementsQuery = useQuery({ queryKey, queryFn: () => listTrainingRequirements(program.id) });
+  const requirementsQuery = useQuery({
+    queryKey,
+    queryFn: () => listTrainingRequirements(program.id),
+  });
   const refresh = () => void queryClient.invalidateQueries({ queryKey });
 
   const requirements = requirementsQuery.data ?? [];
   const titleOf = (id: string) => programs.find((p) => p.id === id)?.title ?? "—";
   const candidates = programs.filter(
-    (p) => p.id !== program.id && !requirements.some((r) => r.prerequisiteTrainingProgramId === p.id)
+    (p) =>
+      p.id !== program.id && !requirements.some((r) => r.prerequisiteTrainingProgramId === p.id)
   );
 
   const addMutation = useMutation({
@@ -352,7 +376,11 @@ function Requirements({ program, programs }: { program: TrainingProgram; program
             onChange={(e) => setBlocks(e.currentTarget.checked)}
             mb={8}
           />
-          <Button onClick={() => addMutation.mutate()} disabled={!prerequisiteId} loading={addMutation.isPending}>
+          <Button
+            onClick={() => addMutation.mutate()}
+            disabled={!prerequisiteId}
+            loading={addMutation.isPending}
+          >
             {t("training:requirements.addButton")}
           </Button>
         </Group>

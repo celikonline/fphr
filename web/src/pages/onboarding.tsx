@@ -2,7 +2,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ListChecks } from "lucide-react";
-import { Button, Card, Group, Input, SegmentedControl, Skeleton, Stack, Tabs, Text, Title } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Input,
+  SegmentedControl,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import NoAccess from "@/components/no-access";
 import OnboardingTaskTable from "@/components/onboarding/onboarding-task-table";
@@ -59,7 +70,10 @@ function OnboardingScreen() {
 function PendingTasks() {
   const { t } = useTranslation(["onboarding"]);
   const [stage, setStage] = useState<OnboardingStage | "all">("all");
-  const query = useQuery({ queryKey: ["onboarding", "pending"], queryFn: listPendingOnboardingTasks });
+  const query = useQuery({
+    queryKey: ["onboarding", "pending"],
+    queryFn: listPendingOnboardingTasks,
+  });
   const items = (query.data ?? []).filter((item) => stage === "all" || item.stage === stage);
   const overdue = items.filter((item) => item.isOverdue).length;
 
@@ -71,7 +85,10 @@ function PendingTasks() {
           onChange={(value) => setStage(value as OnboardingStage | "all")}
           data={[
             { value: "all", label: t("onboarding:filters.all") },
-            ...ONBOARDING_STAGES.map((value) => ({ value, label: t(`onboarding:stages.${value}`) })),
+            ...ONBOARDING_STAGES.map((value) => ({
+              value,
+              label: t(`onboarding:stages.${value}`),
+            })),
           ]}
         />
         {overdue > 0 && (
@@ -111,7 +128,11 @@ function EmployeeChecklist() {
   const createMutation = useMutation({
     mutationFn: () => createEmployeeChecklist(employee!.id, stage, referenceDate),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("onboarding:checklist.created") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("onboarding:checklist.created"),
+      });
       void queryClient.invalidateQueries({ queryKey: ["onboarding"] });
     },
     onError: (error) =>
@@ -141,12 +162,23 @@ function EmployeeChecklist() {
               <SegmentedControl
                 value={stage}
                 onChange={(value) => setStage(value as OnboardingStage)}
-                data={ONBOARDING_STAGES.map((value) => ({ value, label: t(`onboarding:stages.${value}`) }))}
+                data={ONBOARDING_STAGES.map((value) => ({
+                  value,
+                  label: t(`onboarding:stages.${value}`),
+                }))}
               />
               <Input.Wrapper
-                label={t(stage === "onboarding" ? "onboarding:checklist.hireDate" : "onboarding:checklist.exitDate")}
+                label={t(
+                  stage === "onboarding"
+                    ? "onboarding:checklist.hireDate"
+                    : "onboarding:checklist.exitDate"
+                )}
               >
-                <DatePicker id="onboarding-reference-date" value={referenceDate} onChange={setReferenceDate} />
+                <DatePicker
+                  id="onboarding-reference-date"
+                  value={referenceDate}
+                  onChange={setReferenceDate}
+                />
               </Input.Wrapper>
               <Button
                 onClick={() => createMutation.mutate()}

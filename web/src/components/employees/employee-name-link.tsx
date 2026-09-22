@@ -24,7 +24,11 @@ export default function EmployeeNameLink({ id, tab }: EmployeeNameLinkProps) {
   });
   if (!query.data) return <>{query.isLoading ? "…" : "—"}</>;
   return (
-    <Anchor component={Link} to={tab ? `/app/employees/${id}/${tab}` : `/app/employees/${id}`} size="sm">
+    <Anchor
+      component={Link}
+      to={tab ? `/app/employees/${id}/${tab}` : `/app/employees/${id}`}
+      size="sm"
+    >
       {query.data.displayName}
     </Anchor>
   );

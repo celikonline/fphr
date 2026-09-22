@@ -54,20 +54,27 @@ export default function OnboardingTemplates() {
   const queryClient = useQueryClient();
   const notifyError = useNotifyError();
   const roleLabel = useRoleLabel();
-  const [editing, setEditing] = useState<OnboardingTaskTemplate | { stage: OnboardingStage } | null>(null);
+  const [editing, setEditing] = useState<
+    OnboardingTaskTemplate | { stage: OnboardingStage } | null
+  >(null);
   const query = useQuery({ queryKey: TEMPLATES_KEY, queryFn: listOnboardingTemplates });
   const refresh = () => void queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY });
 
   const seedMutation = useMutation({
     mutationFn: seedDefaultOnboardingTemplates,
     onSuccess: (count) => {
-      toast({ variant: "success", title: t("common:success"), description: t("onboarding:templates.seeded", { count }) });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("onboarding:templates.seeded", { count }),
+      });
       refresh();
     },
     onError: notifyError,
   });
   const activeMutation = useMutation({
-    mutationFn: ({ id, active }: { id: string; active: boolean }) => setOnboardingTemplateActive(id, active),
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      setOnboardingTemplateActive(id, active),
     onSuccess: refresh,
     onError: notifyError,
   });
@@ -100,7 +107,12 @@ export default function OnboardingTemplates() {
           <Stack key={stage} gap="sm">
             <Group justify="space-between">
               <Title order={5}>{t(`onboarding:stages.${stage}`)}</Title>
-              <Button size="xs" variant="light" leftSection={<Plus size={14} />} onClick={() => setEditing({ stage })}>
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<Plus size={14} />}
+                onClick={() => setEditing({ stage })}
+              >
                 {t("onboarding:templates.add")}
               </Button>
             </Group>
@@ -140,12 +152,19 @@ export default function OnboardingTemplates() {
                             aria-label={t("onboarding:fields.active")}
                             checked={template.isActive}
                             onChange={(e) =>
-                              activeMutation.mutate({ id: template.id, active: e.currentTarget.checked })
+                              activeMutation.mutate({
+                                id: template.id,
+                                active: e.currentTarget.checked,
+                              })
                             }
                           />
                         </Table.Td>
                         <Table.Td>
-                          <Button size="compact-sm" variant="subtle" onClick={() => setEditing(template)}>
+                          <Button
+                            size="compact-sm"
+                            variant="subtle"
+                            onClick={() => setEditing(template)}
+                          >
                             {t("onboarding:templates.edit")}
                           </Button>
                         </Table.Td>
@@ -171,9 +190,14 @@ export default function OnboardingTemplates() {
   );
 }
 
-function offsetLabel(days: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+function offsetLabel(
+  days: number,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
   if (days === 0) return t("onboarding:offset.sameDay");
-  return days < 0 ? t("onboarding:offset.before", { count: -days }) : t("onboarding:offset.after", { count: days });
+  return days < 0
+    ? t("onboarding:offset.before", { count: -days })
+    : t("onboarding:offset.after", { count: days });
 }
 
 interface TemplateDialogProps {
@@ -209,10 +233,16 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
         dueDateOffsetDays: offset,
         isMandatory: mandatory,
       };
-      return template ? updateOnboardingTemplate(template.id, input) : createOnboardingTemplate(input);
+      return template
+        ? updateOnboardingTemplate(template.id, input)
+        : createOnboardingTemplate(input);
     },
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("onboarding:templates.saved") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("onboarding:templates.saved"),
+      });
       onSaved();
       onClose();
     },
@@ -241,7 +271,11 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
         <NumberInput
           id="onboarding-template-offset"
           label={t("onboarding:fields.offset")}
-          description={t(stage === "onboarding" ? "onboarding:templates.offsetHintHire" : "onboarding:templates.offsetHintExit")}
+          description={t(
+            stage === "onboarding"
+              ? "onboarding:templates.offsetHintHire"
+              : "onboarding:templates.offsetHintExit"
+          )}
           value={offset}
           allowDecimal={false}
           onChange={(value) => setOffset(typeof value === "number" ? value : 0)}
@@ -255,7 +289,11 @@ function TemplateDialog({ template, stage, onClose, onSaved }: TemplateDialogPro
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!title.trim()} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!title.trim()}
+            loading={mutation.isPending}
+          >
             {t("common:save")}
           </Button>
         </Group>

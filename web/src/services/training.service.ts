@@ -93,7 +93,9 @@ export async function closeTrainingProgram(id: string): Promise<void> {
 }
 
 export async function listEnrollments(trainingProgramId: string): Promise<Enrollment[]> {
-  const { data } = await apiClient.get<Enrollment[]>(`${BASE}/enrollments`, { params: { trainingProgramId } });
+  const { data } = await apiClient.get<Enrollment[]>(`${BASE}/enrollments`, {
+    params: { trainingProgramId },
+  });
   return data;
 }
 
@@ -102,12 +104,21 @@ export async function getMyTrainings(): Promise<MyTraining[]> {
   return data;
 }
 
-export async function enrollEmployee(trainingProgramId: string, employeeId: string): Promise<string> {
-  const { data } = await apiClient.post<string>(`${BASE}/enrollments`, { trainingProgramId, employeeId });
+export async function enrollEmployee(
+  trainingProgramId: string,
+  employeeId: string
+): Promise<string> {
+  const { data } = await apiClient.post<string>(`${BASE}/enrollments`, {
+    trainingProgramId,
+    employeeId,
+  });
   return data;
 }
 
-export async function completeEnrollment(id: string, certificateNumber: string | null): Promise<void> {
+export async function completeEnrollment(
+  id: string,
+  certificateNumber: string | null
+): Promise<void> {
   await apiClient.post(`${BASE}/enrollments/${id}/complete`, { certificateNumber });
 }
 
@@ -116,8 +127,12 @@ export async function cancelEnrollment(id: string): Promise<void> {
   await apiClient.post(`${BASE}/enrollments/${id}/cancel`);
 }
 
-export async function listTrainingRequirements(trainingProgramId: string): Promise<TrainingRequirement[]> {
-  const { data } = await apiClient.get<TrainingRequirement[]>(`${BASE}/requirements`, { params: { trainingProgramId } });
+export async function listTrainingRequirements(
+  trainingProgramId: string
+): Promise<TrainingRequirement[]> {
+  const { data } = await apiClient.get<TrainingRequirement[]>(`${BASE}/requirements`, {
+    params: { trainingProgramId },
+  });
   return data;
 }
 

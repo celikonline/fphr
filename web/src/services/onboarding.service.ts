@@ -55,12 +55,17 @@ export async function listOnboardingTemplates(): Promise<OnboardingTaskTemplate[
   return data;
 }
 
-export async function createOnboardingTemplate(input: SaveTemplateInput): Promise<OnboardingTaskTemplate> {
+export async function createOnboardingTemplate(
+  input: SaveTemplateInput
+): Promise<OnboardingTaskTemplate> {
   const { data } = await apiClient.post<OnboardingTaskTemplate>(`${BASE}/templates`, input);
   return data;
 }
 
-export async function updateOnboardingTemplate(id: string, input: SaveTemplateInput): Promise<OnboardingTaskTemplate> {
+export async function updateOnboardingTemplate(
+  id: string,
+  input: SaveTemplateInput
+): Promise<OnboardingTaskTemplate> {
   const { data } = await apiClient.put<OnboardingTaskTemplate>(`${BASE}/templates/${id}`, input);
   return data;
 }
@@ -80,8 +85,12 @@ export async function listPendingOnboardingTasks(): Promise<OnboardingChecklistI
   return data;
 }
 
-export async function listEmployeeOnboardingTasks(employeeId: string): Promise<OnboardingChecklistItem[]> {
-  const { data } = await apiClient.get<OnboardingChecklistItem[]>(`${BASE}/employees/${employeeId}/tasks`);
+export async function listEmployeeOnboardingTasks(
+  employeeId: string
+): Promise<OnboardingChecklistItem[]> {
+  const { data } = await apiClient.get<OnboardingChecklistItem[]>(
+    `${BASE}/employees/${employeeId}/tasks`
+  );
   return data;
 }
 
