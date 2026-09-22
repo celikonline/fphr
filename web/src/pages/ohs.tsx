@@ -26,6 +26,7 @@ import {
   SgkNotifiedDialog,
   type LocationOption,
 } from "@/components/ohs/incident-dialogs";
+import OhsServicesPanel from "@/components/ohs/ohs-services";
 import { formatDateOnly } from "@/lib/dates";
 import { listLocations } from "@/services/locations.service";
 import {
@@ -41,8 +42,9 @@ const MY_REPORTS_KEY = ["ohs", "incidents", "my"] as const;
 export default function OhsPage() {
   const canIncidents = usePermission("ohs.incidents.view");
   const canReport = usePermission("ohs.my.incident_reports");
-  if (!canIncidents && !canReport) return <NoAccess />;
-  return <OhsScreen canIncidents={canIncidents} canReport={canReport} />;
+  const canServices = usePermission("ohs.services.view");
+  if (!canIncidents && !canReport && !canServices) return <NoAccess />;
+  return <OhsScreen canIncidents={canIncidents} canReport={canReport} canServices={canServices} />;
 }
 
 function useLocationOptions(): {
@@ -62,28 +64,46 @@ function useLocationOptions(): {
   };
 }
 
-function OhsScreen({ canIncidents, canReport }: { canIncidents: boolean; canReport: boolean }) {
+function OhsScreen({
+  canIncidents,
+  canReport,
+  canServices,
+}: {
+  canIncidents: boolean;
+  canReport: boolean;
+  canServices: boolean;
+}) {
   const { t } = useTranslation(["ohs"]);
+  const locations = useLocationOptions();
+  const tabs = [
+    canIncidents && { value: "incidents", label: t("ohs:page.incidents"), body: <IncidentRegister /> },
+    canServices && {
+      value: "services",
+      label: t("ohs:page.services"),
+      body: <OhsServicesPanel locations={locations} />,
+    },
+    canReport && { value: "mine", label: t("ohs:page.myReports"), body: <MyReports /> },
+  ].filter((tab) => tab !== false);
   return (
     <Stack gap="md">
       <Title order={2}>{t("ohs:page.title")}</Title>
-      {canIncidents && canReport ? (
-        <Tabs defaultValue="incidents" keepMounted={false}>
-          <Tabs.List>
-            <Tabs.Tab value="incidents">{t("ohs:page.incidents")}</Tabs.Tab>
-            <Tabs.Tab value="mine">{t("ohs:page.myReports")}</Tabs.Tab>
-          </Tabs.List>
-          <Tabs.Panel value="incidents" pt="md">
-            <IncidentRegister />
-          </Tabs.Panel>
-          <Tabs.Panel value="mine" pt="md">
-            <MyReports />
-          </Tabs.Panel>
-        </Tabs>
-      ) : canIncidents ? (
-        <IncidentRegister />
+      {tabs.length === 1 ? (
+        tabs[0].body
       ) : (
-        <MyReports />
+        <Tabs defaultValue={tabs[0].value} keepMounted={false}>
+          <Tabs.List>
+            {tabs.map((tab) => (
+              <Tabs.Tab key={tab.value} value={tab.value}>
+                {tab.label}
+              </Tabs.Tab>
+            ))}
+          </Tabs.List>
+          {tabs.map((tab) => (
+            <Tabs.Panel key={tab.value} value={tab.value} pt="md">
+              {tab.body}
+            </Tabs.Panel>
+          ))}
+        </Tabs>
       )}
     </Stack>
   );

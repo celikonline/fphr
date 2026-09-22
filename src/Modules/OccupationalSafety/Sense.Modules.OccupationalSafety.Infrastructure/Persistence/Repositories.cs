@@ -43,6 +43,34 @@ public sealed class WorkplaceHazardClassificationRepository(OhsDbContext context
     }
 }
 
+public sealed class SafetyAssignmentRepository(OhsDbContext context) : ISafetyAssignmentRepository
+{
+    public void Add(Domain.Services.SafetyAssignment assignment) => context.SafetyAssignments.Add(assignment);
+
+    public async Task<Result<Domain.Services.SafetyAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var assignment = await context.SafetyAssignments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return assignment is null ? Error.NotFound(OhsDomainErrors.AssignmentNotFound) : assignment;
+    }
+
+    public async Task<IReadOnlyList<Domain.Services.SafetyAssignment>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.SafetyAssignments.OrderByDescending(a => a.StartDate).ToListAsync(cancellationToken);
+}
+
+public sealed class OhsCommitteeMemberRepository(OhsDbContext context) : IOhsCommitteeMemberRepository
+{
+    public void Add(Domain.Services.OhsCommitteeMember member) => context.CommitteeMembers.Add(member);
+
+    public async Task<Result<Domain.Services.OhsCommitteeMember>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var member = await context.CommitteeMembers.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
+        return member is null ? Error.NotFound(OhsDomainErrors.AssignmentNotFound) : member;
+    }
+
+    public async Task<IReadOnlyList<Domain.Services.OhsCommitteeMember>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.CommitteeMembers.OrderBy(m => m.Role).ThenBy(m => m.PersonName).ToListAsync(cancellationToken);
+}
+
 public sealed class OhsIncidentRepository(OhsDbContext context) : IOhsIncidentRepository
 {
     public void Add(OhsIncident incident) => context.Incidents.Add(incident);

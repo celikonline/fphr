@@ -13,6 +13,13 @@ public sealed class EmployeeLookup(EmployeeDbContext context) : IEmployeeLookup
             e => e.TenantId == tenantId && e.Id == employeeId && e.Status != EmployeeStatus.Terminated,
             cancellationToken);
 
+    public async Task<IReadOnlyDictionary<Guid, int>> CountActiveByOrgUnitAsync(Guid tenantId, CancellationToken cancellationToken = default) =>
+        await context.Employees.AsNoTracking()
+            .Where(e => e.TenantId == tenantId && e.OrgUnitId != null && e.Status != EmployeeStatus.Terminated)
+            .GroupBy(e => e.OrgUnitId!.Value)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Key, g => g.Count, cancellationToken);
+
     public async Task<bool> AnyActiveInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default)
     {
         if (orgUnitIds.Count == 0)

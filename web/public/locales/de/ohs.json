@@ -53,7 +53,8 @@
     "incidents": "Unfälle & Beinaheunfälle",
     "myReports": "Meine Meldungen",
     "hazardLink": "Gefahrenklassen",
-    "riskLink": "Gefährdungsbeurteilungen"
+    "riskLink": "Gefährdungsbeurteilungen",
+    "services": "Arbeitsschutzdienste"
   },
   "incidents": {
     "record": "Ereignis erfassen",
@@ -111,5 +112,75 @@
     "empty": "Sie haben noch nichts gemeldet.",
     "underReview": "In Prüfung",
     "action": "Ergriffene Maßnahme"
+  },
+  "services": {
+    "complianceTitle": "Konformität je Standort",
+    "assignmentsTitle": "Fachkräfte und Betriebsärzte",
+    "committeeTitle": "Arbeitsschutzausschuss",
+    "addAssignment": "Bestellung hinzufügen",
+    "addMember": "Ausschussmitglied hinzufügen",
+    "assignmentTitle": "Bestellung Fachkraft / Betriebsarzt",
+    "memberTitle": "Mitglied des Arbeitsschutzausschusses",
+    "endAssignment": "Bestellung beenden",
+    "endMember": "Mitgliedschaft beenden",
+    "end": "Beenden",
+    "saved": "Gespeichert.",
+    "ended": "Beendet.",
+    "loadError": "Arbeitsschutzdienste konnten nicht geladen werden.",
+    "noClassifiedLocations": "Noch kein Standort hat eine Gefahrenklasse. Weisen Sie diese zuerst in den Einstellungen zu.",
+    "noAssignments": "Keine Bestellungen erfasst.",
+    "noMembers": "Keine Ausschussmitglieder erfasst.",
+    "since": "seit {{date}}",
+    "employeeCount_one": "{{count}} aktiver Mitarbeiter",
+    "employeeCount_other": "{{count}} aktive Mitarbeiter",
+    "minutesOf": "{{assigned}} / {{required}} Min./Monat",
+    "committeeRequired": "Ausschuss Pflicht: tagt alle {{months}} Monat(e) · {{members}} Mitglieder · Vertreter {{representatives}}/{{requiredRepresentatives}}",
+    "committeeNotRequired": "Unter 50 Mitarbeitern; kein Ausschuss erforderlich.",
+    "compliant": "Erfüllt die gesetzlichen Mindestanforderungen.",
+    "providerHint": "Firmenname, falls der Dienst extern (OSGB) erbracht wird.",
+    "minutesHint": "Vertraglich vereinbarte Einsatzzeit pro Monat (Minuten).",
+    "fields": {
+      "role": "Funktion",
+      "person": "Name",
+      "employee": "Mitarbeiter (optional)",
+      "certificateClass": "Zertifikatsklasse",
+      "certificateNumber": "Zertifikatsnr.",
+      "provider": "Dienstleister",
+      "monthlyMinutes": "Monatliche Zeit (Min.)",
+      "startDate": "Beginn",
+      "endDate": "Enddatum",
+      "period": "Zeitraum",
+      "committeeRole": "Ausschussfunktion"
+    },
+    "issues": {
+      "missing_safety_expert": "Keine Fachkraft für Arbeitssicherheit bestellt.",
+      "missing_physician": "Kein Betriebsarzt bestellt.",
+      "missing_other_health_personnel": "Sehr gefährlicher Betrieb ohne sonstiges Gesundheitspersonal.",
+      "insufficient_minutes_safety_expert": "Einsatzzeit der Fachkraft unter dem Minimum.",
+      "insufficient_minutes_physician": "Einsatzzeit des Betriebsarztes unter dem Minimum.",
+      "insufficient_minutes_other_health_personnel": "Einsatzzeit des Gesundheitspersonals unter dem Minimum.",
+      "certificate_class": "Die Zertifikatsklasse der Fachkraft passt nicht zur Gefahrenklasse.",
+      "committee_missing": "Ab 50 Mitarbeitern: Vorsitz und Sekretär fehlen im Ausschuss.",
+      "representatives": "Zu wenige Arbeitnehmervertreter."
+    },
+    "roles": {
+      "safetyExpert": "Fachkraft für Arbeitssicherheit",
+      "workplacePhysician": "Betriebsarzt",
+      "otherHealthPersonnel": "Sonstiges Gesundheitspersonal"
+    },
+    "committeeRoles": {
+      "chair": "Vorsitz (Arbeitgeber/Vertreter)",
+      "secretary": "Sekretär (Fachkraft für Arbeitssicherheit)",
+      "physician": "Betriebsarzt",
+      "hrRepresentative": "Personal-/Verwaltungsverantwortliche(r)",
+      "civilDefenseExpert": "Zivilschutzexperte",
+      "foreman": "Vorarbeiter/Meister",
+      "employeeRepresentative": "Arbeitnehmervertreter"
+    },
+    "certificates": {
+      "a": "Klasse A",
+      "b": "Klasse B",
+      "c": "Klasse C"
+    }
   }
 }

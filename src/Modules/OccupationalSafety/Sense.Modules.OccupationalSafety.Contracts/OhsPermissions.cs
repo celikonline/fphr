@@ -43,10 +43,20 @@ public static class OhsPermissions
         "ohs.my.incident_reports", Module, "Ramak Kala Bildirimlerim", Group,
         "Ramak kala olayı bildirme ve kendi bildirimlerini görüntüleme");
 
+    /// <summary>Faz 2: İSG uzmanı/işyeri hekimi görevlendirmeleri ve İSG kurulu (HR/HRSpecialist "ohs.*" ile alır).</summary>
+    public static readonly Permission ServicesView = new(
+        "ohs.services.view", Module, "İSG Hizmetlerini Görüntüleme", Group,
+        "Uzman/hekim görevlendirmelerini, İSG kurulunu ve lokasyon uyum durumunu görüntüleme");
+
+    public static readonly Permission ServicesManage = new(
+        "ohs.services.manage", Module, "İSG Hizmetlerini Yönetme", Group,
+        "Uzman/hekim görevlendirmesi ve İSG kurulu üyeliği ekleme/sonlandırma");
+
     public static IEnumerable<Permission> All =>
     [
         HazardClassificationsView, HazardClassificationsManage,
         RiskAssessmentsView, RiskAssessmentsManage,
         IncidentsView, IncidentsManage, MyIncidentReports,
+        ServicesView, ServicesManage,
     ];
 }

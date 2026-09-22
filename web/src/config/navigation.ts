@@ -396,7 +396,7 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     labelKey: "apps.ohs",
     path: "/app/ohs",
     icon: HardHat,
-    permissions: ["ohs.my.incident_reports", "ohs.incidents.view"],
+    permissions: ["ohs.my.incident_reports", "ohs.incidents.view", "ohs.services.view"],
     iconColor: "orange",
   },
   {

@@ -53,7 +53,8 @@
     "incidents": "Accidents & near misses",
     "myReports": "My reports",
     "hazardLink": "Hazard classes",
-    "riskLink": "Risk assessments"
+    "riskLink": "Risk assessments",
+    "services": "OHS services"
   },
   "incidents": {
     "record": "Record incident",
@@ -111,5 +112,75 @@
     "empty": "You have not reported anything yet.",
     "underReview": "Under review",
     "action": "Action taken"
+  },
+  "services": {
+    "complianceTitle": "Location compliance",
+    "assignmentsTitle": "Expert and physician assignments",
+    "committeeTitle": "OHS committee",
+    "addAssignment": "Add assignment",
+    "addMember": "Add committee member",
+    "assignmentTitle": "Expert / physician assignment",
+    "memberTitle": "OHS committee member",
+    "endAssignment": "End assignment",
+    "endMember": "End committee membership",
+    "end": "End",
+    "saved": "Saved.",
+    "ended": "Ended.",
+    "loadError": "OHS services could not be loaded.",
+    "noClassifiedLocations": "No location has a hazard class yet. Assign hazard classes in settings first.",
+    "noAssignments": "No assignments recorded.",
+    "noMembers": "No committee members recorded.",
+    "since": "since {{date}}",
+    "employeeCount_one": "{{count}} active employee",
+    "employeeCount_other": "{{count}} active employees",
+    "minutesOf": "{{assigned}} / {{required}} min/month",
+    "committeeRequired": "Committee required: meets every {{months}} month(s) · {{members}} members · representatives {{representatives}}/{{requiredRepresentatives}}",
+    "committeeNotRequired": "Under 50 employees; no OHS committee required.",
+    "compliant": "Meets the statutory minimums.",
+    "providerHint": "Company name if the service is outsourced (OSGB).",
+    "minutesHint": "Contracted monthly service time (minutes).",
+    "fields": {
+      "role": "Role",
+      "person": "Full name",
+      "employee": "Employee (optional)",
+      "certificateClass": "Certificate class",
+      "certificateNumber": "Certificate no.",
+      "provider": "Service provider",
+      "monthlyMinutes": "Monthly time (min)",
+      "startDate": "Start",
+      "endDate": "End date",
+      "period": "Period",
+      "committeeRole": "Committee role"
+    },
+    "issues": {
+      "missing_safety_expert": "No safety expert assigned.",
+      "missing_physician": "No workplace physician assigned.",
+      "missing_other_health_personnel": "Very hazardous workplace without other health personnel.",
+      "insufficient_minutes_safety_expert": "Safety expert time is below the minimum.",
+      "insufficient_minutes_physician": "Workplace physician time is below the minimum.",
+      "insufficient_minutes_other_health_personnel": "Other health personnel time is below the minimum.",
+      "certificate_class": "The expert's certificate class does not fit the hazard class.",
+      "committee_missing": "50+ employees: the committee has no chair and secretary.",
+      "representatives": "Not enough employee representatives."
+    },
+    "roles": {
+      "safetyExpert": "Safety expert",
+      "workplacePhysician": "Workplace physician",
+      "otherHealthPersonnel": "Other health personnel"
+    },
+    "committeeRoles": {
+      "chair": "Chair (employer/deputy)",
+      "secretary": "Secretary (safety expert)",
+      "physician": "Workplace physician",
+      "hrRepresentative": "HR / administration officer",
+      "civilDefenseExpert": "Civil defence expert",
+      "foreman": "Foreman",
+      "employeeRepresentative": "Employee representative"
+    },
+    "certificates": {
+      "a": "Class A",
+      "b": "Class B",
+      "c": "Class C"
+    }
   }
 }

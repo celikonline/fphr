@@ -2,7 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Sense.Modules.OccupationalSafety.Application;
 using Sense.Modules.OccupationalSafety.Domain.HazardClassifications;
+using Sense.Modules.OccupationalSafety.Domain;
 using Sense.Modules.OccupationalSafety.Domain.RiskAssessments;
+using Sense.Modules.OccupationalSafety.Domain.Services;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Audit;
@@ -25,6 +27,10 @@ public sealed class OhsDbContext(DbContextOptions<OhsDbContext> options, ITenant
 
     public DbSet<OhsIncident> Incidents => Set<OhsIncident>();
 
+    public DbSet<SafetyAssignment> SafetyAssignments => Set<SafetyAssignment>();
+
+    public DbSet<OhsCommitteeMember> CommitteeMembers => Set<OhsCommitteeMember>();
+
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
 
@@ -41,6 +47,9 @@ internal static class OhsTables
     public const string HazardClassifications = "hazard_classifications";
     public const string RiskAssessments = "risk_assessments";
     public const string Incidents = "incidents";
+    public const string SafetyAssignments = "safety_assignments";
+    public const string CommitteeMembers = "committee_members";
+    public const int ServiceEnumLength = 40;
     public const int IncidentKindLength = 30;
     public const int IncidentTextLength = 2000;
 
@@ -78,6 +87,35 @@ public sealed class OhsIncidentConfiguration : IEntityTypeConfiguration<OhsIncid
         b.Ignore(x => x.IsClosed);
         b.HasIndex(x => new { x.TenantId, x.EventDate });
         b.HasIndex(x => new { x.TenantId, x.ReportedByEmployeeId });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class SafetyAssignmentConfiguration : IEntityTypeConfiguration<SafetyAssignment>
+{
+    public void Configure(EntityTypeBuilder<SafetyAssignment> b)
+    {
+        b.ToTable(OhsTables.SafetyAssignments);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Role).HasConversion<string>().HasMaxLength(OhsTables.ServiceEnumLength).IsRequired();
+        b.Property(x => x.CertificateClass).HasConversion<string>().HasMaxLength(OhsTables.ServiceEnumLength);
+        b.Property(x => x.PersonName).HasMaxLength(OhsLimits.PersonNameMaxLength).IsRequired();
+        b.Property(x => x.CertificateNumber).HasMaxLength(OhsLimits.PersonNameMaxLength);
+        b.Property(x => x.ProviderName).HasMaxLength(OhsLimits.PersonNameMaxLength);
+        b.HasIndex(x => new { x.TenantId, x.LocationId });
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OhsCommitteeMemberConfiguration : IEntityTypeConfiguration<OhsCommitteeMember>
+{
+    public void Configure(EntityTypeBuilder<OhsCommitteeMember> b)
+    {
+        b.ToTable(OhsTables.CommitteeMembers);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Role).HasConversion<string>().HasMaxLength(OhsTables.ServiceEnumLength).IsRequired();
+        b.Property(x => x.PersonName).HasMaxLength(OhsLimits.PersonNameMaxLength).IsRequired();
+        b.HasIndex(x => new { x.TenantId, x.LocationId });
         b.Ignore(x => x.DomainEvents);
     }
 }

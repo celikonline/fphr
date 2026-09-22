@@ -22,6 +22,9 @@ public interface IEmployeeLookup
     /// <summary>True if any active (not Inactive) employee is assigned to one of the given org units.</summary>
     Task<bool> AnyActiveInOrgUnitsAsync(Guid tenantId, IReadOnlyCollection<Guid> orgUnitIds, CancellationToken cancellationToken = default);
 
+    /// <summary>Active (not terminated) employees per org unit; employees without a unit are not counted.</summary>
+    Task<IReadOnlyDictionary<Guid, int>> CountActiveByOrgUnitAsync(Guid tenantId, CancellationToken cancellationToken = default);
+
     /// <summary>The employee's org unit, or null if the employee does not exist or has no unit.</summary>
     Task<Guid?> GetOrgUnitIdAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
 

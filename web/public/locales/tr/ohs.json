@@ -53,7 +53,8 @@
     "incidents": "Kaza ve ramak kala",
     "myReports": "Bildirimlerim",
     "hazardLink": "Tehlike sınıfları",
-    "riskLink": "Risk değerlendirmeleri"
+    "riskLink": "Risk değerlendirmeleri",
+    "services": "İSG hizmetleri"
   },
   "incidents": {
     "record": "Olay kaydet",
@@ -111,5 +112,75 @@
     "empty": "Henüz bildiriminiz yok.",
     "underReview": "İnceleniyor",
     "action": "Alınan önlem"
+  },
+  "services": {
+    "complianceTitle": "Lokasyon uyum durumu",
+    "assignmentsTitle": "Uzman ve hekim görevlendirmeleri",
+    "committeeTitle": "İSG kurulu",
+    "addAssignment": "Görevlendirme ekle",
+    "addMember": "Kurul üyesi ekle",
+    "assignmentTitle": "Uzman / hekim görevlendirmesi",
+    "memberTitle": "İSG kurulu üyesi",
+    "endAssignment": "Görevlendirmeyi sonlandır",
+    "endMember": "Kurul üyeliğini sonlandır",
+    "end": "Sonlandır",
+    "saved": "Kaydedildi.",
+    "ended": "Sonlandırıldı.",
+    "loadError": "İSG hizmetleri yüklenemedi.",
+    "noClassifiedLocations": "Tehlike sınıfı atanmış lokasyon yok. Önce ayarlardan lokasyonlara tehlike sınıfı atayın.",
+    "noAssignments": "Kayıtlı görevlendirme yok.",
+    "noMembers": "Kayıtlı kurul üyesi yok.",
+    "since": "{{date}} tarihinden beri",
+    "employeeCount_one": "{{count}} aktif çalışan",
+    "employeeCount_other": "{{count}} aktif çalışan",
+    "minutesOf": "{{assigned}} / {{required}} dk/ay",
+    "committeeRequired": "Kurul zorunlu: {{months}} ayda bir toplanır · {{members}} üye · temsilci {{representatives}}/{{requiredRepresentatives}}",
+    "committeeNotRequired": "50 çalışanın altında; İSG kurulu zorunlu değil.",
+    "compliant": "Mevzuat asgarilerini karşılıyor.",
+    "providerHint": "Hizmet OSGB üzerinden alınıyorsa firma adı.",
+    "minutesHint": "Sözleşmedeki aylık hizmet süresi (dakika).",
+    "fields": {
+      "role": "Görev",
+      "person": "Ad soyad",
+      "employee": "Çalışan (isteğe bağlı)",
+      "certificateClass": "Belge sınıfı",
+      "certificateNumber": "Belge no",
+      "provider": "OSGB",
+      "monthlyMinutes": "Aylık süre (dk)",
+      "startDate": "Başlangıç",
+      "endDate": "Bitiş tarihi",
+      "period": "Dönem",
+      "committeeRole": "Kurul görevi"
+    },
+    "issues": {
+      "missing_safety_expert": "İş güvenliği uzmanı görevlendirilmemiş.",
+      "missing_physician": "İşyeri hekimi görevlendirilmemiş.",
+      "missing_other_health_personnel": "Çok tehlikeli işyerinde diğer sağlık personeli görevlendirilmemiş.",
+      "insufficient_minutes_safety_expert": "İş güvenliği uzmanı süresi asgari süreyi karşılamıyor.",
+      "insufficient_minutes_physician": "İşyeri hekimi süresi asgari süreyi karşılamıyor.",
+      "insufficient_minutes_other_health_personnel": "Diğer sağlık personeli süresi asgari süreyi karşılamıyor.",
+      "certificate_class": "Uzmanın belge sınıfı işyerinin tehlike sınıfına uygun değil.",
+      "committee_missing": "50+ çalışan: İSG kurulunda başkan ve sekreter tanımlı değil.",
+      "representatives": "Çalışan temsilcisi sayısı yetersiz."
+    },
+    "roles": {
+      "safetyExpert": "İş güvenliği uzmanı",
+      "workplacePhysician": "İşyeri hekimi",
+      "otherHealthPersonnel": "Diğer sağlık personeli"
+    },
+    "committeeRoles": {
+      "chair": "Başkan (işveren/vekili)",
+      "secretary": "Sekreter (iş güvenliği uzmanı)",
+      "physician": "İşyeri hekimi",
+      "hrRepresentative": "İK / idari işler sorumlusu",
+      "civilDefenseExpert": "Sivil savunma uzmanı",
+      "foreman": "Formen / ustabaşı",
+      "employeeRepresentative": "Çalışan temsilcisi"
+    },
+    "certificates": {
+      "a": "A sınıfı",
+      "b": "B sınıfı",
+      "c": "C sınıfı"
+    }
   }
 }

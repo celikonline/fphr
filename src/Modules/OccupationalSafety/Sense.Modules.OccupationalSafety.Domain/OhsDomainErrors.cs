@@ -26,6 +26,14 @@ public static class OhsDomainErrors
     public const string IncidentCorrectiveActionRequired = "ohs_incident.corrective_action_required";
     public const string IncidentAlreadyClosed = "ohs_incident.already_closed";
     public const string IncidentReporterNotEmployee = "ohs_incident.reporter_not_employee";
+
+    public const string AssignmentNotFound = "ohs_assignment.not_found";
+    public const string AssignmentLocationRequired = "ohs_assignment.location_required";
+    public const string AssignmentPersonRequired = "ohs_assignment.person_required";
+    public const string AssignmentMinutesInvalid = "ohs_assignment.minutes_invalid";
+    public const string AssignmentCertificateRequired = "ohs_assignment.certificate_required";
+    public const string AssignmentAlreadyEnded = "ohs_assignment.already_ended";
+    public const string AssignmentEndBeforeStart = "ohs_assignment.end_before_start";
 }
 
 /// <summary>Domain constants and length limits.</summary>
@@ -34,4 +42,5 @@ public static class OhsLimits
     public const int NoteMaxLength = 1000;
     public const int PreparedByMaxLength = 255;
     public const int IncidentDescriptionMaxLength = 2000;
+    public const int PersonNameMaxLength = 200;
 }
