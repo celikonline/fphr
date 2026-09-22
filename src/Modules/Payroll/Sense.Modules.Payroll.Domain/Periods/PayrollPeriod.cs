@@ -35,6 +35,9 @@ public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
 
     public DateTimeOffset? ReopenedAt { get; private set; }
 
+    /// <summary>Who last ran a full or dirty recalculation of this period (dört göz kuralı: <see cref="Approve"/> refuses this same user).</summary>
+    public Guid? LastCalculatedByUserId { get; private set; }
+
     public static Result<PayrollPeriod> Create(Guid tenantId, int year, int month)
     {
         Guard.NotDefault(tenantId);
@@ -52,16 +55,26 @@ public sealed class PayrollPeriod : TenantAggregateRoot<Guid>, IAuditLogged
     /// a real Status to build the Submit/MarkPaid/Lock workflow (approval gate, Workflow integration, permissions) on
     /// top of, rather than adding a full lifecycle here. No business rule is enforced beyond monotonic order.
     /// </summary>
-    public Result Approve()
+    public Result Approve(Guid? approvedByUserId)
     {
         if (Status != PayrollPeriodStatus.Open)
         {
             return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
         }
 
+        // Dört göz kuralı: bordroyu son hesaplayan kişi aynı dönemi onaylayamaz - hata payını azaltmak için ayrı bir
+        // yetkilinin gözden geçirmesi gerekir. Kullanıcı bilgisi yoksa (ör. eski veri, sistem çağrısı) kural uygulanmaz.
+        if (approvedByUserId is not null && LastCalculatedByUserId is not null && approvedByUserId == LastCalculatedByUserId)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodApprovalNeedsDifferentUser);
+        }
+
         Status = PayrollPeriodStatus.Approved;
         return Result.Success();
     }
+
+    /// <summary>Records who ran the last full or dirty recalculation, for the four-eyes check in <see cref="Approve"/>.</summary>
+    public void RecordCalculatedBy(Guid? userId) => LastCalculatedByUserId = userId;
 
     public Result MarkPaid()
     {

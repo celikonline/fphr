@@ -52,6 +52,21 @@
     "employerCost": "Arbeitgeberkosten",
     "error": "Der Probelauf ist fehlgeschlagen."
   },
+  "receiptMatching": {
+    "title": "Beleg-Abgleich",
+    "subtitle": "Laden Sie die Rückmeldedatei der Bank hoch (allgemeine CSV - IBAN, Betrag, optionale Statusspalte); übereinstimmende Zahlungen werden als bestätigt markiert, Abweichungen werden nur gemeldet, nie geändert.",
+    "filePlaceholder": "Beleg-CSV-Datei auswählen",
+    "match": "Abgleichen",
+    "error": "Der Abgleich ist fehlgeschlagen.",
+    "confirmed": "{{count}} Zahlungen bestätigt.",
+    "mismatchTitle": "Betrag stimmt nicht überein",
+    "employee": "Mitarbeitende",
+    "expected": "Erwartet",
+    "received": "Auf dem Beleg",
+    "rejectedTitle": "Von der Bank abgelehnt",
+    "unmatchedTitle": "In der Datei nicht gefunden",
+    "unrecognized": "{{count}} nicht zugeordnete Zeilen in der Datei wurden übersprungen."
+  },
   "comparison": {
     "title": "Vergleich mit dem Vormonat",
     "against": "Verglichen mit {{period}}.",

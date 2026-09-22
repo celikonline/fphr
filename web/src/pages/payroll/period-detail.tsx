@@ -15,6 +15,7 @@ import { PeriodActions } from "./period-actions";
 import { PeriodAdjustments } from "./period-adjustments";
 import { PeriodComparison } from "./period-comparison";
 import { PeriodPreview } from "./period-preview";
+import { PeriodReceiptMatching } from "./period-receipt-matching";
 import {
   downloadPayrollBankFile,
   downloadPayrollDeclarationSummary,
@@ -205,6 +206,8 @@ function PayrollPeriodDetail() {
       <PeriodAdjustments periodId={period.id} status={period.status} />
 
       <PeriodPreview periodId={period.id} status={period.status} />
+
+      <PeriodReceiptMatching periodId={period.id} status={period.status} />
 
       <PeriodComparison periodId={period.id} />
 

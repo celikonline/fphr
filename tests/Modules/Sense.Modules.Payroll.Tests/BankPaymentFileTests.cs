@@ -83,7 +83,7 @@ public sealed class BankPaymentFileTests
     private static PayrollPeriod ApprovedPeriod()
     {
         var period = PayrollPeriod.Create(TenantId, 2026, 8).Value;
-        period.Approve();
+        period.Approve(null);
         return period;
     }
 

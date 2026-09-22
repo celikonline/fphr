@@ -861,6 +861,8 @@ The report you requested has been generated. Click the link to view and download
   <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>The period is already open; there is nothing to reopen.</value></data>
   <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>A reason is required to reopen a period (at most 500 characters).</value></data>
   <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Some payslips changed and were not recalculated; run "Recalculate changed" before approving the period.</value></data>
+  <data name="payroll.errors.period_approval_needs_different_user" xml:space="preserve"><value>Whoever last calculated the period cannot approve it too; a different authorized user must approve (four-eyes rule).</value></data>
+  <data name="payroll.errors.receipt_csv_empty" xml:space="preserve"><value>No readable payment row was found in the receipt file; upload a CSV with an IBAN and an amount column.</value></data>
   <data name="payroll.errors.closing_check_not_found" xml:space="preserve"><value>The closing check was not found.</value></data>
   <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>An automatic check cannot be ticked off by hand; run its rule or waive it with a reason.</value></data>
   <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>A waiver reason is required (at most 500 characters).</value></data>

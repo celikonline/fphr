@@ -534,6 +534,10 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("net_amount");
 
+                    b.Property<DateTimeOffset?>("PaymentConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_confirmed_at");
+
                     b.Property<Guid>("PayrollPeriodId")
                         .HasColumnType("uuid")
                         .HasColumnName("payroll_period_id");
@@ -767,6 +771,10 @@ namespace Sense.Modules.Payroll.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("CreatedUserId")
                         .HasColumnType("uuid")
                         .HasColumnName("created_user_id");
+
+                    b.Property<Guid?>("LastCalculatedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("last_calculated_by_user_id");
 
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("timestamp with time zone")

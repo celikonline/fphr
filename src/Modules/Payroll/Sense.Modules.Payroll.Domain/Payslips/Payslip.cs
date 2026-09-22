@@ -53,6 +53,10 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
     /// (aynı takvim yılı içindeyse; Ocak'ta veya önceki ay hiç hesaplanmadıysa 0'dan başlanır).</summary>
     public decimal CumulativeGvBase { get; private set; }
 
+    /// <summary>When the bank's dekont (receipt) confirmed this payment matched by IBAN and amount; null until matched. A
+    /// recalculation invalidates it, since the figures it was matched against no longer hold.</summary>
+    public DateTimeOffset? PaymentConfirmedAt { get; private set; }
+
     public static Payslip CreateFirstVersion(
         Guid tenantId, Guid employeeId, Guid payrollPeriodId, string inputSnapshot, string inputHash,
         decimal grossAmount, decimal netAmount, decimal employerCost, decimal cumulativeGvBase = 0m)
@@ -74,6 +78,10 @@ public sealed class Payslip : TenantAggregateRoot<Guid>
         NetAmount = netAmount;
         EmployerCost = employerCost;
         CumulativeGvBase = cumulativeGvBase;
+        PaymentConfirmedAt = null;
         Version++;
     }
+
+    /// <summary>Records that a bank dekont matched this payslip's IBAN and net amount for this version.</summary>
+    public void ConfirmPayment(DateTimeOffset at) => PaymentConfirmedAt = at;
 }

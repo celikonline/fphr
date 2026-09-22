@@ -15,7 +15,7 @@ namespace Sense.Modules.Payroll.Application.Periods;
 [RequiresPermission("payroll.period.approve")]
 public sealed record ApprovePayrollPeriodCommand(Guid PeriodId) : ICommand;
 
-public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods, IPayslipDirtyFlagRepository dirtyFlags, IClosingChecklistGate checklist)
+public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods, IPayslipDirtyFlagRepository dirtyFlags, IClosingChecklistGate checklist, Sense.Shared.Contracts.Context.ICurrentUser currentUser)
     : ICommandHandler<ApprovePayrollPeriodCommand>
 {
     public async Task<Result> Handle(ApprovePayrollPeriodCommand command, CancellationToken cancellationToken)
@@ -36,7 +36,7 @@ public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods
             return Error.Validation(PayrollDomainErrors.PeriodHasOpenBlockers);
         }
 
-        return period.Approve();
+        return period.Approve(currentUser.UserId);
     }
 }
 

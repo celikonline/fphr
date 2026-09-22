@@ -150,7 +150,7 @@ public sealed class OpenPayrollPeriodHandler(ITenantContext tenant, IPayrollPeri
 public sealed record RecalculateAllPayslipsCommand(Guid PeriodId) : ICommand<PayrollPeriodRunSummary>;
 
 public sealed class RecalculateAllPayslipsHandler(
-    ITenantContext tenant, IPayrollPeriodRepository periods, IEmployeeDirectory employeeDirectory, PayrollPeriodCalculationService calculation)
+    ITenantContext tenant, ICurrentUser currentUser, IPayrollPeriodRepository periods, IEmployeeDirectory employeeDirectory, PayrollPeriodCalculationService calculation)
     : ICommandHandler<RecalculateAllPayslipsCommand, PayrollPeriodRunSummary>
 {
     public async Task<Result<PayrollPeriodRunSummary>> Handle(RecalculateAllPayslipsCommand command, CancellationToken cancellationToken)
@@ -172,7 +172,9 @@ public sealed class RecalculateAllPayslipsHandler(
         var employeeIds = await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(tenant.TenantId, periodStart, periodEnd, cancellationToken);
         try
         {
-            return await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+            var summary = await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+            period.RecordCalculatedBy(currentUser.UserId);
+            return summary;
         }
         catch (LegislationParameterMissingException ex)
         {
@@ -246,7 +248,7 @@ public sealed class PreviewPayrollPeriodHandler(
 [RequiresPermission("payroll.period.recalculate")]
 public sealed record RecalculateDirtyPayslipsCommand(Guid PeriodId) : ICommand<PayrollPeriodRunSummary>;
 
-public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository periods, PayrollPeriodCalculationService calculation)
+public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository periods, PayrollPeriodCalculationService calculation, ICurrentUser currentUser)
     : ICommandHandler<RecalculateDirtyPayslipsCommand, PayrollPeriodRunSummary>
 {
     public async Task<Result<PayrollPeriodRunSummary>> Handle(RecalculateDirtyPayslipsCommand command, CancellationToken cancellationToken)
@@ -264,7 +266,9 @@ public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository per
 
         try
         {
-            return await calculation.RecalculateDirtyAsync(period, cancellationToken);
+            var summary = await calculation.RecalculateDirtyAsync(period, cancellationToken);
+            period.RecordCalculatedBy(currentUser.UserId);
+            return summary;
         }
         catch (LegislationParameterMissingException ex)
         {

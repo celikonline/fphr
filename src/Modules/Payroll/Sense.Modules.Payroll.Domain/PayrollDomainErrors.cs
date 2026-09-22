@@ -14,12 +14,14 @@ public static class PayrollDomainErrors
     public const string BankFileMissingAccounts = "payroll.errors.bank_file_missing_accounts";
     public const string BankFileNoPayments = "payroll.errors.bank_file_no_payments";
     public const string BankFileTotalMismatch = "payroll.errors.bank_file_total_mismatch";
+    public const string ReceiptCsvEmpty = "payroll.errors.receipt_csv_empty";
     public const string ComparisonThresholdInvalid = "payroll.errors.comparison_threshold_invalid";
     public const string ClosingCheckNotFound = "payroll.errors.closing_check_not_found";
     public const string ClosingCheckNotManual = "payroll.errors.closing_check_not_manual";
     public const string ClosingWaiverReasonInvalid = "payroll.errors.closing_waiver_reason_invalid";
     public const string PeriodHasOpenBlockers = "payroll.errors.period_has_open_blockers";
     public const string PeriodHasDirtyPayslips = "payroll.errors.period_has_dirty_payslips";
+    public const string PeriodApprovalNeedsDifferentUser = "payroll.errors.period_approval_needs_different_user";
     public const string PeriodAlreadyOpen = "payroll.errors.period_already_open";
     public const string PeriodYearOutOfRange = "payroll.errors.period_year_out_of_range";
 

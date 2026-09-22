@@ -19,7 +19,7 @@ public sealed class PeriodTransitionTests
     private static PayrollPeriod PeriodIn(PayrollPeriodStatus status)
     {
         var period = PayrollPeriod.Create(TenantId, 2026, 8).Value;
-        if (status >= PayrollPeriodStatus.Approved) period.Approve();
+        if (status >= PayrollPeriodStatus.Approved) period.Approve(null);
         if (status >= PayrollPeriodStatus.Paid) period.MarkPaid();
         if (status >= PayrollPeriodStatus.Locked) period.Lock();
         return period;
@@ -49,12 +49,19 @@ public sealed class PeriodTransitionTests
         return gate;
     }
 
+    private static Sense.Shared.Contracts.Context.ICurrentUser CurrentUser(Guid? userId)
+    {
+        var user = Substitute.For<Sense.Shared.Contracts.Context.ICurrentUser>();
+        user.UserId.Returns(userId);
+        return user;
+    }
+
     [Fact]
     public async Task Approve_IsRefused_WhileABlockingClosingCheckIsOpen()
     {
         var period = PeriodIn(PayrollPeriodStatus.Open);
 
-        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: true)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: true), CurrentUser(Guid.NewGuid())).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodHasOpenBlockers);
         period.Status.ShouldBe(PayrollPeriodStatus.Open);
@@ -65,7 +72,7 @@ public sealed class PeriodTransitionTests
     {
         var period = PeriodIn(PayrollPeriodStatus.Open);
 
-        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: false)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: false), CurrentUser(Guid.NewGuid())).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
 
         result.IsSuccess.ShouldBeTrue();
         period.Status.ShouldBe(PayrollPeriodStatus.Approved);
@@ -76,10 +83,35 @@ public sealed class PeriodTransitionTests
     {
         var period = PeriodIn(PayrollPeriodStatus.Open);
 
-        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(2), Gate(openBlockers: false)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(2), Gate(openBlockers: false), CurrentUser(Guid.NewGuid())).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
 
         result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodHasDirtyPayslips);
         period.Status.ShouldBe(PayrollPeriodStatus.Open);
+    }
+
+    [Fact]
+    public async Task Approve_IsRefused_WhenTheApproverAlsoRanTheLastCalculation()
+    {
+        var userId = Guid.NewGuid();
+        var period = PeriodIn(PayrollPeriodStatus.Open);
+        period.RecordCalculatedBy(userId);
+
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: false), CurrentUser(userId)).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+
+        result.Error.Code.ShouldBe(PayrollDomainErrors.PeriodApprovalNeedsDifferentUser);
+        period.Status.ShouldBe(PayrollPeriodStatus.Open);
+    }
+
+    [Fact]
+    public async Task Approve_Succeeds_WhenADifferentUserApprovesThanWhoCalculated()
+    {
+        var period = PeriodIn(PayrollPeriodStatus.Open);
+        period.RecordCalculatedBy(Guid.NewGuid());
+
+        var result = await new ApprovePayrollPeriodHandler(Repository(period), DirtyFlags(0), Gate(openBlockers: false), CurrentUser(Guid.NewGuid())).Handle(new ApprovePayrollPeriodCommand(period.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        period.Status.ShouldBe(PayrollPeriodStatus.Approved);
     }
 
     [Fact]

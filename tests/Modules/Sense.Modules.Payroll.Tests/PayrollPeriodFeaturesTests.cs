@@ -23,7 +23,7 @@ public sealed class PayrollPeriodFeaturesTests
     private static PayrollPeriod LockedPeriod()
     {
         var period = PayrollPeriod.Create(TenantId, 2026, 3).Value;
-        period.Approve().IsSuccess.ShouldBeTrue();
+        period.Approve(null).IsSuccess.ShouldBeTrue();
         period.MarkPaid().IsSuccess.ShouldBeTrue();
         period.Lock().IsSuccess.ShouldBeTrue();
         return period;
@@ -39,7 +39,8 @@ public sealed class PayrollPeriodFeaturesTests
         var tenant = Substitute.For<Sense.Shared.Contracts.Context.ITenantContext>();
         tenant.TenantId.Returns(TenantId);
 
-        var handler = new RecalculateAllPayslipsHandler(tenant, periods, employeeDirectory, calculation: null!);
+        var currentUser = Substitute.For<Sense.Shared.Contracts.Context.ICurrentUser>();
+        var handler = new RecalculateAllPayslipsHandler(tenant, currentUser, periods, employeeDirectory, calculation: null!);
 
         var result = await handler.Handle(new RecalculateAllPayslipsCommand(period.Id), CancellationToken.None);
 
@@ -55,7 +56,7 @@ public sealed class PayrollPeriodFeaturesTests
         var periods = Substitute.For<IPayrollPeriodRepository>();
         periods.FindByIdAsync(period.Id, Arg.Any<CancellationToken>()).Returns(Task.FromResult<PayrollPeriod?>(period));
 
-        var handler = new RecalculateDirtyPayslipsHandler(periods, calculation: null!);
+        var handler = new RecalculateDirtyPayslipsHandler(periods, calculation: null!, Substitute.For<Sense.Shared.Contracts.Context.ICurrentUser>());
 
         var result = await handler.Handle(new RecalculateDirtyPayslipsCommand(period.Id), CancellationToken.None);
 
@@ -122,7 +123,7 @@ public sealed class PayrollPeriodFeaturesTests
             Substitute.For<Sense.Modules.Leave.Contracts.IOvertimePayrollReader>(), Substitute.For<IPayrollAdjustmentRepository>(),
             Microsoft.Extensions.Logging.Abstractions.NullLogger<PayrollPeriodCalculationService>.Instance);
 
-        var handler = new RecalculateAllPayslipsHandler(tenant, periods, employeeDirectory, calculation);
+        var handler = new RecalculateAllPayslipsHandler(tenant, Substitute.For<Sense.Shared.Contracts.Context.ICurrentUser>(), periods, employeeDirectory, calculation);
         var result = await handler.Handle(new RecalculateAllPayslipsCommand(period.Id), CancellationToken.None);
 
         result.IsFailure.ShouldBeTrue();

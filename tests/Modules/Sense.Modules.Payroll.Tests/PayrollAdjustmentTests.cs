@@ -75,7 +75,7 @@ public sealed class PayrollAdjustmentTests
     public async Task Add_IsRefused_OnceThePeriodIsApproved()
     {
         var period = PayrollPeriod.Create(TenantId, 2026, 8).Value;
-        period.Approve();
+        period.Approve(null);
         var (handler, adjustments) = AddHandler(period);
 
         var result = await handler.Handle(new AddPayrollAdjustmentCommand(period.Id, EmployeeId, PayrollAdjustmentKind.Bonus, "Prim", 1m), CancellationToken.None);
@@ -100,7 +100,7 @@ public sealed class PayrollAdjustmentTests
         (await handler.Handle(new RemovePayrollAdjustmentCommand(adjustment.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
         adjustments.Received(1).Remove(adjustment);
 
-        open.Approve();
+        open.Approve(null);
         (await handler.Handle(new RemovePayrollAdjustmentCommand(adjustment.Id), CancellationToken.None)).Error.Code.ShouldBe(PayrollDomainErrors.AdjustmentPeriodNotOpen);
     }
 }

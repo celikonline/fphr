@@ -52,6 +52,21 @@
     "employerCost": "Employer cost",
     "error": "The trial run failed."
   },
+  "receiptMatching": {
+    "title": "Receipt matching",
+    "subtitle": "Upload the bank's return file (generic CSV - IBAN, amount, optional status column); matching payments are marked confirmed, differences are only reported, never changed.",
+    "filePlaceholder": "Select receipt CSV file",
+    "match": "Match",
+    "error": "The receipts could not be matched.",
+    "confirmed": "{{count}} payments confirmed.",
+    "mismatchTitle": "Amount mismatch",
+    "employee": "Employee",
+    "expected": "Expected",
+    "received": "On receipt",
+    "rejectedTitle": "Rejected by the bank",
+    "unmatchedTitle": "Not found in the file",
+    "unrecognized": "{{count}} unmatched rows in the file were skipped."
+  },
   "comparison": {
     "title": "Comparison with the previous month",
     "against": "Compared with {{period}}.",

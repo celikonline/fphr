@@ -871,6 +871,8 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>Dönem zaten açık; yeniden açılamaz.</value></data>
   <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>Yeniden açma gerekçesi zorunludur (en fazla 500 karakter).</value></data>
   <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Değişen ve yeniden hesaplanmamış bordrolar var; dönemi onaylamadan önce "Değişenleri yeniden hesapla" çalıştırın.</value></data>
+  <data name="payroll.errors.period_approval_needs_different_user" xml:space="preserve"><value>Bordroyu son hesaplayan kişi aynı dönemi onaylayamaz; başka bir yetkili onaylamalı (dört göz kuralı).</value></data>
+  <data name="payroll.errors.receipt_csv_empty" xml:space="preserve"><value>Dekont dosyasında okunabilir bir ödeme satırı bulunamadı; IBAN ve tutar sütunlu bir CSV yükleyin.</value></data>
   <data name="payroll.errors.closing_check_not_found" xml:space="preserve"><value>Kapanış kontrol maddesi bulunamadı.</value></data>
   <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>Otomatik kontrol elle tamamlanamaz; kuralı çalıştırın veya gerekçeyle muaf tutun.</value></data>
   <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>Muafiyet gerekçesi zorunludur (en fazla 500 karakter).</value></data>

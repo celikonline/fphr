@@ -320,6 +320,36 @@ export async function downloadPayrollBankFile(id: string, fallbackName: string):
   }
 }
 
+/** One employee named in a `BankReceiptMatchSummary` bucket. */
+export interface BankReceiptSummaryLine {
+  employeeId: string;
+  employeeName: string;
+  amount: number;
+}
+
+/** An employee whose receipt amount differs from what payroll expected. */
+export interface BankReceiptMismatchLine {
+  employeeId: string;
+  employeeName: string;
+  expectedAmount: number;
+  receiptAmount: number;
+}
+
+/** Dekont eşleştirme sonucu: only `confirmedCount` payslips actually changed (marked paid-confirmed); the rest is reported for review. */
+export interface BankReceiptMatchSummary {
+  confirmedCount: number;
+  amountMismatches: BankReceiptMismatchLine[];
+  rejected: BankReceiptSummaryLine[];
+  unmatched: BankReceiptSummaryLine[];
+  unrecognizedRowCount: number;
+}
+
+/** Matches an uploaded bank return file (generic CSV: IBAN, amount, optional status) against the period's expected payments (`payroll.bankfile.export`). */
+export async function matchPayrollBankReceipts(periodId: string, csvContent: string): Promise<BankReceiptMatchSummary> {
+  const { data } = await apiClient.post<BankReceiptMatchSummary>(`${PAYROLL_BASE}/periods/${periodId}/receipts/match`, { csvContent });
+  return data;
+}
+
 /** Downloads the MUHSGK / SGK premium data set of a period as CSV for reconciliation (`payroll.declarations.export`); not the official declaration format. */
 export async function downloadPayrollDeclarationSummary(id: string, fallbackName: string): Promise<DownloadedPayrollFile> {
   try {

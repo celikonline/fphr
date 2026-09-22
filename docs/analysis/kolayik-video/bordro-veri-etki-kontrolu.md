@@ -43,6 +43,10 @@ Bu belge bir doğrulama notudur; yasal parametre veya hesap kuralı değiştirme
 ## Karar bekleyen / kapsam dışı kalanlar (2026-09-22)
 
 - **Arşiv:** kilitli dönemin bordroları değişmez; banka dosyası ve beyanname özeti onaylı/ödendi/kilitli her dönem için aynı çıktıyı yeniden üretir. Ayrı bir dosya arşivi bu nedenle eklenmedi; resmî belge saklama süresi (SMMM) gerekirse Documents modülüne kopya yazılır.
-- **Dekont eşleştirme:** bankanın dönüş dosyası formatı (banka bazlı) belirlenmeden yapılamaz; format ve banka listesi ürün kararı.
 - **Çok aşamalı onay:** Workflow modülü (PC-B) ile birlikte tasarlanmalı.
-- **İşveren SGK oranı (%20,5 / %20,75) ve engelli işveren payı teşviki:** SMMM doğrulaması gerekir; oran parametre olarak yönetiliyor, kod değişikliği gerekmez.
+
+### Kullanıcı kararları (2026-09-22) - uygulandı
+
+- **Onay zinciri → dört göz kuralı:** `PayrollPeriod.LastCalculatedByUserId` son hesaplayan kullanıcıyı tutar; `Approve` aynı kullanıcıysa `PeriodApprovalNeedsDifferentUser` ile reddeder. Workflow'a bağımlı değil, yalnızca Payroll içinde.
+- **Dekont eşleştirme → genel CSV:** banka bazlı format yerine herhangi bir bankanın dönüş dosyasından üretilebilecek genel CSV (IBAN;Tutar;Durum, sütun sırası ve ayraç esnek) esas alındı. `BankReceiptMatcher` (Domain) IBAN+tutar ile eşleştirir, durum metninde ret ifadesi varsa reddedilmiş sayar; eşleşen ödemenin bordrosu `PaymentConfirmedAt` ile işaretlenir, uyuşmayanlar/reddedilenler/dosyada bulunmayanlar yalnızca raporlanır, hiçbir şey otomatik değiştirilmez.
+- **İşveren SGK oranı → %20,5 kalsın:** seed değeri değiştirilmedi; SMMM onayı gelirse parametre ekranından güncellenir, kod değişikliği gerekmez.

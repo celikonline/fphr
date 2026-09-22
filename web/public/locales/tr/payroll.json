@@ -52,6 +52,21 @@
     "employerCost": "İşveren maliyeti",
     "error": "Deneme hesabı yapılamadı."
   },
+  "receiptMatching": {
+    "title": "Dekont eşleştirme",
+    "subtitle": "Bankadan gelen dönüş dosyasını (IBAN, tutar, isteğe bağlı durum sütunlu genel CSV) yükleyin; eşleşen ödemeler onaylanmış olarak işaretlenir, farklılıklar değiştirilmeden raporlanır.",
+    "filePlaceholder": "Dekont CSV dosyası seçin",
+    "match": "Eşleştir",
+    "error": "Dekont eşleştirilemedi.",
+    "confirmed": "{{count}} ödeme onaylandı.",
+    "mismatchTitle": "Tutar uyuşmuyor",
+    "employee": "Çalışan",
+    "expected": "Beklenen",
+    "received": "Dekonttaki",
+    "rejectedTitle": "Banka reddetti",
+    "unmatchedTitle": "Dosyada bulunamadı",
+    "unrecognized": "Dosyada eşleşmeyen {{count}} satır atlandı."
+  },
   "comparison": {
     "title": "Önceki ayla karşılaştırma",
     "against": "{{period}} ile karşılaştırılıyor.",

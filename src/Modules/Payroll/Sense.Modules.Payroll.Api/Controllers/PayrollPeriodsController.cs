@@ -23,6 +23,9 @@ public sealed record OpenPayrollPeriodRequest(int Year, int Month);
 /// <summary>Body of adding a one-off taxable earning to an employee.</summary>
 public sealed record AddPayrollAdjustmentRequest(Guid EmployeeId, PayrollAdjustmentKind Kind, string Label, decimal GrossAmount, bool IsNet = false);
 
+/// <summary>Body of uploading a bank return file to match against the period's expected payments.</summary>
+public sealed record MatchBankReceiptsRequest(string CsvContent);
+
 /// <summary>Body of completing a manual closing check.</summary>
 public sealed record CompleteClosingCheckRequest(string? Note);
 
@@ -157,6 +160,12 @@ public sealed class PayrollPeriodsController : ApiControllerBase
         var result = await Dispatcher.Query(new ExportBankPaymentFileQuery(id), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>Matches an uploaded bank return file (generic CSV: IBAN, amount, optional status) against the period's expected payments; confirmed payslips are marked paid-confirmed (payroll.bankfile.export).</summary>
+    [HttpPost("{id:guid}/receipts/match")]
+    [ProducesResponseType<BankReceiptMatchSummary>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> MatchReceipts(Guid id, [FromBody] MatchBankReceiptsRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new MatchBankReceiptsCommand(id, request.CsvContent), ct));
 
     /// <summary>Downloads the MUHSGK / SGK premium data set (per-employee premiums and taxes, with totals) as a CSV for reconciliation; not the official declaration format.</summary>
     [HttpGet("{id:guid}/declaration-summary")]
