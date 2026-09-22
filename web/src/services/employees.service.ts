@@ -122,7 +122,7 @@ export interface EmployeeDetail {
   managerDisplayName: string | null;
   userId: string | null;
   accountStatus: UserAccountStatus;
-  accessType: "Employee" | "HR" | "PayrollSpecialist" | null;
+  accessType: "Employee" | "Manager" | "HR" | "PayrollSpecialist" | null;
   lastInvitationSentAt: string | null;
   gender: Gender;
   maritalStatus: MaritalStatus;

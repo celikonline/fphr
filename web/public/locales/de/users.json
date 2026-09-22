@@ -44,9 +44,10 @@
   "editAccessType": "Benutzergruppe ändern",
   "dialogEditAccessTypeTitle": "Benutzergruppe für {{name}}",
   "accessTypeUpdateSuccess": "Benutzergruppe aktualisiert.",
-  "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
+  "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; die Abteilungsleitung sieht ihr Team und genehmigt dessen Urlaubs-, Spesen- und Zeitnachweisanträge; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
   "accessType.HR": "HR-Leitung",
   "accessType.PayrollSpecialist": "Buchhaltung",
+  "accessType.Manager": "Abteilungsleitung",
   "accessType.Employee": "Mitarbeiter",
   "accessType.none": "Nicht festgelegt",
   "genericError": "Etwas ist schiefgelaufen.",
@@ -73,6 +74,7 @@
     "Owner": "Kontoinhaber",
     "HR": "HR-Leitung",
     "PayrollSpecialist": "Buchhaltung",
+    "Manager": "Abteilungsleitung",
     "Employee": "Mitarbeiter",
     "SuperAdmin": "Super-Admin"
   }

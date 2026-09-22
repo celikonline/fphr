@@ -44,9 +44,10 @@
   "editAccessType": "Change user group",
   "dialogEditAccessTypeTitle": "User group for {{name}}",
   "accessTypeUpdateSuccess": "User group updated.",
-  "accessTypeHint": "HR Manager and Accounting can do everything in the company; Employee can only access their own information.",
+  "accessTypeHint": "HR Manager and Accounting can do everything in the company; Manager sees their team and approves its leave, expense and timesheet requests; Employee can only access their own information.",
   "accessType.HR": "HR Manager",
   "accessType.PayrollSpecialist": "Accounting",
+  "accessType.Manager": "Manager",
   "accessType.Employee": "Employee",
   "accessType.none": "Not set",
   "genericError": "Something went wrong.",
@@ -73,6 +74,7 @@
     "Owner": "Account Owner",
     "HR": "HR Manager",
     "PayrollSpecialist": "Accounting",
+    "Manager": "Manager",
     "Employee": "Employee",
     "SuperAdmin": "Super Admin"
   }

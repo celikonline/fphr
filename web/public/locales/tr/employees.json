@@ -65,6 +65,7 @@
   "accessType": {
     "HR": "İK Yöneticisi",
     "PayrollSpecialist": "Muhasebe",
+    "Manager": "Müdür",
     "Employee": "Çalışan"
   },
   "fields": {
@@ -366,7 +367,7 @@
       }
     },
     "noAccountHint": "Bu çalışanın henüz kullanıcı hesabı yok. Üç nokta menüsünden davetiye göndererek hesap oluşturabilirsiniz.",
-    "accessTypeHint": "İK Yöneticisi ve Muhasebe şirkette her şeyi yapabilir; Çalışan yalnız kendi bilgilerine erişir.",
+    "accessTypeHint": "İK Yöneticisi ve Muhasebe şirkette her şeyi yapabilir; Müdür kendi ekibini görür ve ekibinin onaylarını verir; Çalışan yalnız kendi bilgilerine erişir.",
     "accessTypeSaved": "Kullanıcı grubu güncellendi.",
     "sensitiveHidden": "Askerlik durumu, engellilik derecesi ve kan grubu alanları için görüntüleme yetkiniz yok.",
     "leaveAccrualStartDateHint": "Gerçek tarih yazılır; ilk hak ediş sistemce 1 yıl sonra verilir",

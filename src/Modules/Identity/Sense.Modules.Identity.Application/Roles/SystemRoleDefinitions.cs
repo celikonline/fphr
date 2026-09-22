@@ -74,8 +74,8 @@ public static class PermissionPatterns
 public static class SystemRoleDefinitions
 {
     /// <summary>
-    /// Dört kullanıcı grubu: İK Yöneticisi ve Muhasebe şirket içinde her şeyi yapabilir (platform izinleri hariç — o yalnız
-    /// <see cref="SuperAdmin"/>'de), Çalışan yalnız self-servis. Owner, ilk İK Yöneticisinin taşıdığı kilitli bayraktır
+    /// Kullanıcı grupları: İK Yöneticisi ve Muhasebe şirket içinde her şeyi yapabilir (platform izinleri hariç — o yalnız
+    /// <see cref="SuperAdmin"/>'de), Müdür kendi ekibini görür ve ekibinin onaylarını verir, Çalışan yalnız self-servis. Owner, ilk İK Yöneticisinin taşıdığı kilitli bayraktır
     /// (izinleri <see cref="SystemRolePermissionResolver"/> tüm katalogdan verir). Eski roller için bkz.
     /// <see cref="SystemRoleCodes.RetiredSuccessors"/>.
     /// </summary>
@@ -87,11 +87,24 @@ public static class SystemRoleDefinitions
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company, [PermissionPatterns.All], []),
 
+        // Müdür: ekip kapsamı (bağlı çalışanlar). İzin/harcama onayı Onay Kutusu'ndan, aylık puantaj onayı, vardiya
+        // planlama, ekip hedefleri, mülakat formu; maaş/hassas veri yok.
+        new(SystemRoleCodes.Manager, DataScope.Team,
+            ["workflow.inbox.*", "leave.requests.read", "leave.calendar.read", "leave.balances.read", "attendance.*.view",
+             "attendance.timesheet.resolve", "attendance.timesheet.approve", "attendance.shift.plan", "attendance.shift.publish",
+             "expense.claims.view", "expense.claims.approve", "expense.categories.view", "employee.*.view", "organization.*.view",
+             "performance.team.*", "performance.goals.*", "compensation.proposals.*", "training.*.view", "recruitment.interviews.*",
+             "reports.team.*", "documents.*.view", .. PermissionPatterns.SelfService],
+            [.. PermissionPatterns.Sensitive]),
+
         new(SystemRoleCodes.Employee, DataScope.Self,
             [.. PermissionPatterns.SelfService, "org.directory.view", "org.chart.view", "employee.directory.view", "employee.orgchart.view", "organization.holidays.view",
              "announcements.feed.*", "documents.company.view", "ai.assistant.use",
              // QA teslim testi bulgu 12: harcama kalemi eklerken kategori listesi (yalnız okuma).
-             "expense.categories.view"],
+             "expense.categories.view",
+             // Ekip yöneticileri artık Çalışan grubunda: izin/harcama onayı organizasyondaki yöneticiye atanır, bu yüzden
+             // Onay Kutusu herkese açık. İkisi de atama bazlıdır (ListInbox yalnız kendi görevleri, Decide AssigneeMismatch).
+             "workflow.inbox.view", "workflow.inbox.decide"],
             []),
     ];
 

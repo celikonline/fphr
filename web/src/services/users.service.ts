@@ -14,12 +14,13 @@ import type { PagedResult, PagedQueryParams } from "@/types";
 export type UserStatus = "invited" | "active" | "locked" | "disabled";
 export type DataScope = "self" | "team" | "department" | "location" | "company" | "custom";
 /**
- * "Kullanıcı grubu" quick-select (İK Yöneticisi / Muhasebe / Çalışan), mapped 1:1 to the `HR`, `PayrollSpecialist`
- * and `Employee` system role codes. İK Yöneticisi and Muhasebe can do everything in the company; Çalışan is self-service.
+ * "Kullanıcı grubu" quick-select (İK Yöneticisi / Muhasebe / Müdür / Çalışan), mapped 1:1 to the `HR`,
+ * `PayrollSpecialist`, `Manager` and `Employee` system role codes. İK Yöneticisi and Muhasebe can do everything in the
+ * company; Müdür sees their team and approves its requests; Çalışan is self-service.
  * Order = display order and `deriveAccessType` precedence.
  */
-export type AccessType = "HR" | "PayrollSpecialist" | "Employee";
-export const ACCESS_TYPES: readonly AccessType[] = ["HR", "PayrollSpecialist", "Employee"];
+export type AccessType = "HR" | "PayrollSpecialist" | "Manager" | "Employee";
+export const ACCESS_TYPES: readonly AccessType[] = ["HR", "PayrollSpecialist", "Manager", "Employee"];
 
 /**
  * System role codes never shown in company screens (role lists, role chips, role pickers): `Owner` is carried in the
@@ -112,9 +113,9 @@ export async function setUserRoles(userId: string, roleIds: string[]): Promise<v
 }
 
 /**
- * Derives the user group (HR / PayrollSpecialist / Employee) from a user's role codes (thin client-side projection -
- * the backend keeps the three roles mutually exclusive via `PUT .../access-type`). Precedence HR > PayrollSpecialist >
- * Employee, so an owner (who always also has HR) shows as İK Yöneticisi. Returns null when none of the three roles is
+ * Derives the user group (HR / PayrollSpecialist / Manager / Employee) from a user's role codes (thin client-side
+ * projection - the backend keeps the group roles mutually exclusive via `PUT .../access-type`). Precedence HR >
+ * PayrollSpecialist > Manager > Employee, so an owner (who always also has HR) shows as İK Yöneticisi. Returns null when none of the roles is
  * assigned (e.g. a role-less invited user).
  */
 export function deriveAccessType(roles: readonly RoleRef[]): AccessType | null {
