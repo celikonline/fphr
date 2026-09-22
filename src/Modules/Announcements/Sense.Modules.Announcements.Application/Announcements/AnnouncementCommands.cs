@@ -37,7 +37,8 @@ public sealed class CreateAnnouncementHandler(ITenantContext tenant, IAnnounceme
     public async Task<Result<Guid>> Handle(CreateAnnouncementCommand command, CancellationToken cancellationToken)
 #pragma warning restore CS1998
     {
-        var created = Announcement.Create(tenant.TenantId, command.Title, command.Content, command.Type, command.Priority, command.TargetAudience);
+        var sanitizedContent = AnnouncementContentSanitizer.Sanitize(command.Content);
+        var created = Announcement.Create(tenant.TenantId, command.Title, sanitizedContent, command.Type, command.Priority, command.TargetAudience);
         if (created.IsFailure)
         {
             return created.Error;
@@ -45,6 +46,45 @@ public sealed class CreateAnnouncementHandler(ITenantContext tenant, IAnnounceme
 
         announcements.Add(created.Value);
         return created.Value.Id;
+    }
+}
+
+/// <summary>Taslak duyuruyu düzenle (tam sayfa editör). Yalnızca taslak durumdayken serbesttir.</summary>
+[RequiresPermission("announcements.announcements.manage")]
+public sealed record UpdateAnnouncementCommand(
+    Guid AnnouncementId,
+    string Title,
+    string Content,
+    AnnouncementType Type,
+    AnnouncementPriority Priority,
+    string? TargetAudience = null) : ICommand;
+
+public sealed class UpdateAnnouncementValidator : AbstractValidator<UpdateAnnouncementCommand>
+{
+    public UpdateAnnouncementValidator()
+    {
+        RuleFor(x => x.AnnouncementId).NotEmpty();
+        RuleFor(x => x.Title).NotEmpty().MaximumLength(AnnouncementsLimits.TitleMaxLength);
+        RuleFor(x => x.Content).NotEmpty().MaximumLength(AnnouncementsLimits.ContentMaxLength);
+        RuleFor(x => x.Type).IsInEnum();
+        RuleFor(x => x.Priority).IsInEnum();
+        RuleFor(x => x.TargetAudience).MaximumLength(AnnouncementsLimits.TargetAudienceMaxLength);
+    }
+}
+
+public sealed class UpdateAnnouncementHandler(ITenantContext tenant, IAnnouncementRepository announcements)
+    : ICommandHandler<UpdateAnnouncementCommand>
+{
+    public async Task<Result> Handle(UpdateAnnouncementCommand command, CancellationToken cancellationToken)
+    {
+        var announcement = await announcements.GetByIdAsync(tenant.TenantId, command.AnnouncementId, cancellationToken);
+        if (announcement is null)
+        {
+            return Error.NotFound(AnnouncementDomainErrors.NotFound);
+        }
+
+        var sanitizedContent = AnnouncementContentSanitizer.Sanitize(command.Content);
+        return announcement.Update(command.Title, sanitizedContent, command.Type, command.Priority, command.TargetAudience);
     }
 }
 

@@ -32,8 +32,8 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasMaxLength(10000)
-                        .HasColumnType("character varying(10000)")
+                        .HasMaxLength(50000)
+                        .HasColumnType("character varying(50000)")
                         .HasColumnName("content");
 
                     b.Property<DateTime>("CreatedAt")
@@ -165,6 +165,89 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                         .HasDatabaseName("ix_announcement_read_records_tenant_id_announcement_id_employe");
 
                     b.ToTable("announcement_read_records", "announcements");
+                });
+
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.Attachments.AnnouncementAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AnnouncementId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("announcement_id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_confirmed");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("storage_key");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("uploaded_at");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by_user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_announcement_attachments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_announcement_attachments_tenant_id");
+
+                    b.HasIndex("TenantId", "AnnouncementId")
+                        .HasDatabaseName("ix_announcement_attachments_tenant_id_announcement_id");
+
+                    b.ToTable("announcement_attachments", "announcements");
                 });
 
             modelBuilder.Entity("Sense.Modules.Announcements.Domain.CompanyEvent", b =>

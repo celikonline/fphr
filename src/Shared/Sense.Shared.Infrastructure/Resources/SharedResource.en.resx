@@ -1403,6 +1403,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="announcement.cannot_publish" xml:space="preserve"><value>Only draft announcements can be published.</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>This announcement is already archived.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Announcement not found.</value></data>
+  <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Only draft announcements can be edited.</value></data>
+  <data name="announcement_attachment.not_found" xml:space="preserve"><value>Attachment not found.</value></data>
+  <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>This file type is not allowed.</value></data>
+  <data name="announcement_attachment.too_large" xml:space="preserve"><value>The file exceeds the allowed size.</value></data>
+  <data name="announcement_attachment.too_many" xml:space="preserve"><value>This announcement has reached its maximum number of attachments.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Read record not found.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>A ticket subject is required and cannot exceed 200 characters.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Ticket content is required.</value></data>

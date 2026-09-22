@@ -24,6 +24,7 @@ public static class AnnouncementsServiceCollectionExtensions
 
         services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
         services.AddScoped<IAnnouncementReadRecordRepository, AnnouncementReadRecordRepository>();
+        services.AddScoped<IAnnouncementAttachmentRepository, AnnouncementAttachmentRepository>();
         services.AddScoped<ISupportTicketRepository, SupportTicketRepository>();
         services.AddScoped<IHelpSearchLogRepository, HelpSearchLogRepository>();
         services.AddScoped<ICompanyEventRepository, CompanyEventRepository>();

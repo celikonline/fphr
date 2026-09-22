@@ -1,3 +1,4 @@
+using Sense.Modules.Announcements.Domain.Attachments;
 using Sense.Modules.Announcements.Domain.Support;
 
 namespace Sense.Modules.Announcements.Domain;
@@ -27,6 +28,20 @@ public interface IAnnouncementReadRecordRepository
 
     /// <summary>Çalışanın okuduğu duyuruların id'leri (akıştaki okundu işareti için).</summary>
     Task<IReadOnlyList<Guid>> GetReadAnnouncementIdsAsync(Guid tenantId, Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>Duyuru eki (gömülü resim veya indirilebilir dosya) repository.</summary>
+public interface IAnnouncementAttachmentRepository
+{
+    void Add(AnnouncementAttachment attachment);
+
+    void Remove(AnnouncementAttachment attachment);
+
+    Task<AnnouncementAttachment?> FindByIdAsync(Guid tenantId, Guid attachmentId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AnnouncementAttachment>> ListByAnnouncementAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
+
+    Task<int> CountConfirmedByAnnouncementAsync(Guid tenantId, Guid announcementId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>Support ticket repository ("Desteğe bağlan", roadmap #69).</summary>

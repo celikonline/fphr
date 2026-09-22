@@ -1412,6 +1412,11 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.cannot_publish" xml:space="preserve"><value>Yalnızca taslak duyurular yayınlanabilir.</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
+  <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Yalnızca taslak duyurular düzenlenebilir.</value></data>
+  <data name="announcement_attachment.not_found" xml:space="preserve"><value>Ek bulunamadı.</value></data>
+  <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor.</value></data>
+  <data name="announcement_attachment.too_large" xml:space="preserve"><value>Dosya boyutu izin verilen sınırı aşıyor.</value></data>
+  <data name="announcement_attachment.too_many" xml:space="preserve"><value>Bu duyuruya eklenebilecek azami dosya sayısına ulaşıldı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
   <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>

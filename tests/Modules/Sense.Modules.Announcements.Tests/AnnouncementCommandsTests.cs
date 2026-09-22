@@ -79,4 +79,83 @@ public class AnnouncementCommandsTests
         Assert.False(result.IsSuccess);
         Assert.Equal(AnnouncementDomainErrors.NotFound, result.Error.Code);
     }
+
+    [Fact]
+    public async Task UpdateAnnouncement_WhenDraft_ShouldChangeTitleAndContent()
+    {
+        var tenantId = Guid.NewGuid();
+        var announcement = Announcement.Create(tenantId, "Old title", "Old content", AnnouncementType.General, AnnouncementPriority.Normal).Value;
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var repository = Substitute.For<IAnnouncementRepository>();
+        repository.GetByIdAsync(tenantId, announcement.Id, Arg.Any<CancellationToken>()).Returns(announcement);
+
+        var handler = new UpdateAnnouncementHandler(tenant, repository);
+        var result = await handler.Handle(
+            new UpdateAnnouncementCommand(announcement.Id, "New title", "<p>New <strong>rich</strong> content</p>", AnnouncementType.HR, AnnouncementPriority.High), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("New title", announcement.Title);
+        Assert.Equal("<p>New <strong>rich</strong> content</p>", announcement.Content);
+        Assert.Equal(AnnouncementType.HR, announcement.Type);
+    }
+
+    [Fact]
+    public async Task UpdateAnnouncement_WhenAlreadyPublished_ShouldFail()
+    {
+        var tenantId = Guid.NewGuid();
+        var announcement = Announcement.Create(tenantId, "Title", "Content", AnnouncementType.General, AnnouncementPriority.Normal).Value;
+        announcement.Publish(Guid.NewGuid());
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var repository = Substitute.For<IAnnouncementRepository>();
+        repository.GetByIdAsync(tenantId, announcement.Id, Arg.Any<CancellationToken>()).Returns(announcement);
+
+        var handler = new UpdateAnnouncementHandler(tenant, repository);
+        var result = await handler.Handle(
+            new UpdateAnnouncementCommand(announcement.Id, "New title", "New content", AnnouncementType.General, AnnouncementPriority.Normal), CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(AnnouncementDomainErrors.CannotEditPublished, result.Error.Code);
+    }
+
+    [Fact]
+    public async Task CreateAnnouncement_StripsScriptTagsFromContent()
+    {
+        var tenantId = Guid.NewGuid();
+        var command = new CreateAnnouncementCommand(
+            "Title", "<p>Hello</p><script>alert('xss')</script>", AnnouncementType.General, AnnouncementPriority.Normal);
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var repository = Substitute.For<IAnnouncementRepository>();
+        Announcement? created = null;
+        repository.When(r => r.Add(Arg.Any<Announcement>())).Do(call => created = call.Arg<Announcement>());
+
+        var handler = new CreateAnnouncementHandler(tenant, repository);
+        await handler.Handle(command, CancellationToken.None);
+
+        Assert.NotNull(created);
+        Assert.DoesNotContain("<script", created!.Content, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("<p>Hello</p>", created.Content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnnouncementContentSanitizer_RemovesEventHandlerAttributes()
+    {
+        var sanitized = AnnouncementContentSanitizer.Sanitize("<img src=\"x.png\" onerror=\"alert(1)\" />");
+
+        Assert.DoesNotContain("onerror", sanitized, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void AnnouncementContentSanitizer_KeepsDataAttachmentIdForInlineImages()
+    {
+        var id = Guid.NewGuid();
+        var sanitized = AnnouncementContentSanitizer.Sanitize($"<img data-attachment-id=\"{id}\" alt=\"logo\" />");
+
+        Assert.Contains($"data-attachment-id=\"{id}\"", sanitized, StringComparison.Ordinal);
+    }
 }

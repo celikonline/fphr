@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Announcements.Application;
 using Sense.Modules.Announcements.Domain;
+using Sense.Modules.Announcements.Domain.Attachments;
 using Sense.Modules.Announcements.Domain.Support;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public sealed class AnnouncementsDbContext(DbContextOptions<AnnouncementsDbConte
 
     public DbSet<Announcement> Announcements => Set<Announcement>();
     public DbSet<AnnouncementReadRecord> AnnouncementReadRecords => Set<AnnouncementReadRecord>();
+    public DbSet<AnnouncementAttachment> AnnouncementAttachments => Set<AnnouncementAttachment>();
     public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
     public DbSet<HelpSearchLog> HelpSearchLogs => Set<HelpSearchLog>();
     public DbSet<CompanyEvent> CompanyEvents => Set<CompanyEvent>();

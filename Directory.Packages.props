@@ -50,6 +50,8 @@
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.*" />
     <PackageVersion Include="Scrutor" Version="6.*" />
     <PackageVersion Include="Scriban" Version="7.*" />
+    <!-- Allowlist HTML sanitizer for user-authored rich text (Announcements' full-page editor). -->
+    <PackageVersion Include="HtmlSanitizer" Version="9.*" />
   </ItemGroup>
 
   <ItemGroup Label="Infrastructure">
