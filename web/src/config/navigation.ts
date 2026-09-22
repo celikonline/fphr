@@ -244,7 +244,7 @@ export const NAV_FOOTER_ITEMS: NavItem[] = [
   },
 ];
 
-/** "Uygulamalar" launcher entries (header dropdown + /app/apps), ordered by module: general, attendance, payroll, expenses, performance, recruitment, analytics. Entries with a phase are shown disabled. */
+/** "Uygulamalar" launcher entries (header dropdown + /app/apps): related apps grouped, groups and items ordered by how often they are used (daily general/attendance first, admin tools last). Entries with a phase are shown disabled. */
 export const APP_LAUNCHER_ITEMS: NavItem[] = [
   {
     key: "workflowInbox",
@@ -253,6 +253,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Inbox,
     permissions: ["workflow.inbox.view"],
     iconColor: "teal",
+  },
+  {
+    key: "announcements",
+    labelKey: "apps.announcements",
+    path: "/app/announcements",
+    icon: Megaphone,
+    permissions: ["announcements.my.feed", "announcements.announcements.manage"],
+    iconColor: "orange",
   },
   {
     key: "companyCalendar",
@@ -272,28 +280,12 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
-    key: "dataTransfer",
-    labelKey: "apps.dataTransfer",
-    path: "/app/settings/data-transfer",
-    icon: FileSpreadsheet,
-    permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
-    iconColor: "blue",
-  },
-  {
     key: "timesheet",
     labelKey: "apps.timesheet",
     path: "/app/attendance/timesheet",
     icon: CalendarClock,
     permissions: ["attendance.my.timesheet"],
     iconColor: "orange",
-  },
-  {
-    key: "shifts",
-    labelKey: "apps.shifts",
-    path: "/app/attendance/shifts",
-    icon: CalendarRange,
-    permissions: ["attendance.shift.self"],
-    iconColor: "teal",
   },
   {
     key: "selfCheckIn",
@@ -310,6 +302,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Clock,
     permissions: ["leave.my.overtimes"],
     iconColor: "orange",
+  },
+  {
+    key: "shifts",
+    labelKey: "apps.shifts",
+    path: "/app/attendance/shifts",
+    icon: CalendarRange,
+    permissions: ["attendance.shift.self"],
+    iconColor: "teal",
   },
   {
     key: "teamTimesheet",
@@ -352,14 +352,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "orange",
   },
   {
-    key: "payroll",
-    labelKey: "apps.payroll",
-    path: "/app/payroll/periods",
-    icon: Wallet,
-    permissions: ["payroll.period.recalculate"],
-    iconColor: "navy",
-  },
-  {
     key: "expenses",
     labelKey: "apps.expenses",
     path: "/app/payments",
@@ -374,6 +366,46 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Wallet,
     permissions: ["expense.claims.view", "expense.advances.view"],
     iconColor: "blue",
+  },
+  {
+    key: "payroll",
+    labelKey: "apps.payroll",
+    path: "/app/payroll/periods",
+    icon: Wallet,
+    permissions: ["payroll.period.recalculate"],
+    iconColor: "navy",
+  },
+  {
+    key: "training",
+    labelKey: "apps.training",
+    path: "/app/training",
+    icon: GraduationCap,
+    permissions: ["training.my.enrollments", "training.programs.view"],
+    iconColor: "teal",
+  },
+  {
+    key: "assets",
+    labelKey: "apps.assets",
+    path: "/app/assets",
+    icon: Package,
+    permissions: ["assets.my.assets", "assets.assets.view"],
+    iconColor: "steel",
+  },
+  {
+    key: "ohs",
+    labelKey: "apps.ohs",
+    path: "/app/ohs",
+    icon: HardHat,
+    permissions: ["ohs.my.incident_reports", "ohs.incidents.view"],
+    iconColor: "orange",
+  },
+  {
+    key: "onboarding",
+    labelKey: "apps.onboarding",
+    path: "/app/onboarding",
+    icon: ListChecks,
+    permissions: ["onboarding.tasks.view"],
+    iconColor: "teal",
   },
   {
     key: "performance",
@@ -398,46 +430,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Users,
     permissions: ["performance.team.goals"],
     iconColor: "gold",
-  },
-  {
-    key: "announcements",
-    labelKey: "apps.announcements",
-    path: "/app/announcements",
-    icon: Megaphone,
-    permissions: ["announcements.my.feed", "announcements.announcements.manage"],
-    iconColor: "orange",
-  },
-  {
-    key: "assets",
-    labelKey: "apps.assets",
-    path: "/app/assets",
-    icon: Package,
-    permissions: ["assets.my.assets", "assets.assets.view"],
-    iconColor: "steel",
-  },
-  {
-    key: "training",
-    labelKey: "apps.training",
-    path: "/app/training",
-    icon: GraduationCap,
-    permissions: ["training.my.enrollments", "training.programs.view"],
-    iconColor: "teal",
-  },
-  {
-    key: "ohs",
-    labelKey: "apps.ohs",
-    path: "/app/ohs",
-    icon: HardHat,
-    permissions: ["ohs.my.incident_reports", "ohs.incidents.view"],
-    iconColor: "orange",
-  },
-  {
-    key: "onboarding",
-    labelKey: "apps.onboarding",
-    path: "/app/onboarding",
-    icon: ListChecks,
-    permissions: ["onboarding.tasks.view"],
-    iconColor: "teal",
   },
   {
     key: "recruitment",
@@ -469,6 +461,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/reports",
     icon: PieChart,
     permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
+    iconColor: "blue",
+  },
+  {
+    key: "dataTransfer",
+    labelKey: "apps.dataTransfer",
+    path: "/app/settings/data-transfer",
+    icon: FileSpreadsheet,
+    permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
     iconColor: "blue",
   },
 ];
