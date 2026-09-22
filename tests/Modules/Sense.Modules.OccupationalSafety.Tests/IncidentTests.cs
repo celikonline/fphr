@@ -4,7 +4,11 @@ using Sense.Modules.OccupationalSafety.Application.Incidents;
 using Sense.Modules.OccupationalSafety.Domain;
 using Sense.Modules.OccupationalSafety.Domain.Incidents;
 using Sense.Modules.Organization.Contracts;
+using Sense.Modules.OccupationalSafety.Contracts.Events;
+using Sense.Modules.OccupationalSafety.Infrastructure.BackgroundJobs;
+using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Xunit;
 
 namespace Sense.Modules.OccupationalSafety.Tests;
@@ -101,6 +105,7 @@ public class IncidentHandlerTests
     private readonly Guid _tenantId = Guid.NewGuid();
     private readonly ITenantContext _tenant = Substitute.For<ITenantContext>();
     private readonly IOhsIncidentRepository _incidents = Substitute.For<IOhsIncidentRepository>();
+    private readonly IIntegrationEventOutbox _outbox = Substitute.For<IIntegrationEventOutbox>();
     private readonly TimeProvider _clock = new FixedClock(new DateTimeOffset(2026, 9, 25, 9, 0, 0, TimeSpan.Zero));
 
     public IncidentHandlerTests() => _tenant.TenantId.Returns(_tenantId);
@@ -116,13 +121,15 @@ public class IncidentHandlerTests
         OhsIncident? added = null;
         _incidents.Add(Arg.Do<OhsIncident>(i => added = i));
 
-        var result = await new RecordIncidentHandler(_tenant, _incidents, employees, holidays, _clock).Handle(
+        var result = await new RecordIncidentHandler(_tenant, _incidents, employees, holidays, _clock, _outbox).Handle(
             new RecordIncidentCommand(OhsIncidentKind.WorkAccident, new DateOnly(2026, 9, 24), null, employeeId, "Elini kesti"),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         // Thursday accident, Friday holiday → Mon, Tue, Wed.
         Assert.Equal(new DateOnly(2026, 9, 30), added!.SgkNotificationDeadline);
+        _outbox.Received(1).Enqueue(Arg.Is<WorkAccidentRecorded>(e =>
+            e.EmployeeId == employeeId && e.IncidentId == added.Id && e.SgkNotificationDeadline == new DateOnly(2026, 9, 30)));
     }
 
     [Fact]
@@ -131,7 +138,7 @@ public class IncidentHandlerTests
         var employees = Substitute.For<IEmployeeLookup>();
         var holidays = Substitute.For<IHolidayCalendarLookup>();
 
-        var result = await new RecordIncidentHandler(_tenant, _incidents, employees, holidays, _clock).Handle(
+        var result = await new RecordIncidentHandler(_tenant, _incidents, employees, holidays, _clock, _outbox).Handle(
             new RecordIncidentCommand(OhsIncidentKind.WorkAccident, new DateOnly(2026, 9, 24), null, Guid.NewGuid(), "Kaza"),
             CancellationToken.None);
 
@@ -168,5 +175,59 @@ public class IncidentHandlerTests
         var result = await new ListIncidentsHandler(_incidents, _clock).Handle(new ListIncidentsQuery(), CancellationToken.None);
 
         Assert.True(Assert.Single(result.Value).IsSgkOverdue);
+    }
+}
+
+public class SgkNotificationReminderJobTests
+{
+    private sealed class FixedClock(DateTimeOffset now) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => now;
+    }
+
+    private static readonly TimeProvider Clock = new FixedClock(new DateTimeOffset(2026, 9, 22, 5, 0, 0, TimeSpan.Zero));
+
+    private static OhsIncident Accident(Guid tenantId, DateOnly deadline) =>
+        OhsIncident.Create(tenantId, OhsIncidentKind.WorkAccident, deadline.AddDays(-3), deadline.AddDays(-3), null,
+            Guid.NewGuid(), null, "Kaza", deadline).Value;
+
+    private static ScheduledJobContext Context(Guid tenantId) => new(tenantId, null, DateTimeOffset.UtcNow);
+
+    [Fact]
+    public async Task Job_PublishesDueSoonAndOverdueCounts()
+    {
+        var tenantId = Guid.NewGuid();
+        var today = new DateOnly(2026, 9, 22);
+        var incidents = Substitute.For<IOhsIncidentRepository>();
+        incidents.ListAwaitingSgkNotificationAsync(Arg.Any<CancellationToken>()).Returns(
+        [
+            Accident(tenantId, today.AddDays(-1)),
+            Accident(tenantId, today),
+            Accident(tenantId, today.AddDays(1)),
+            Accident(tenantId, today.AddDays(5)),
+        ]);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var job = new SgkNotificationReminderJobHandler(
+            incidents, outbox, Substitute.For<Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork>(), Clock);
+
+        await job.ExecuteAsync(Context(tenantId), CancellationToken.None);
+
+        outbox.Received(1).Enqueue(Arg.Is<SgkNotificationReminderDue>(e => e.DueSoonCount == 2 && e.OverdueCount == 1));
+    }
+
+    [Fact]
+    public async Task Job_PublishesNothing_WhenNoDeadlineIsNear()
+    {
+        var tenantId = Guid.NewGuid();
+        var incidents = Substitute.For<IOhsIncidentRepository>();
+        incidents.ListAwaitingSgkNotificationAsync(Arg.Any<CancellationToken>())
+            .Returns([Accident(tenantId, new DateOnly(2026, 9, 30))]);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+        var job = new SgkNotificationReminderJobHandler(
+            incidents, outbox, Substitute.For<Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork>(), Clock);
+
+        await job.ExecuteAsync(Context(tenantId), CancellationToken.None);
+
+        outbox.DidNotReceiveWithAnyArgs().Enqueue(default!);
     }
 }

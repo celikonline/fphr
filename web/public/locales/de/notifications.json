@@ -19,6 +19,9 @@
     },
     "documents": {
       "expiry_reminder": "Ein Dokument läuft demnächst ab"
+    },
+    "ohs": {
+      "sgk_notification_due": "Wenn die SGK-Meldefrist eines Arbeitsunfalls naht oder überschritten ist"
     }
   },
   "preferences": {

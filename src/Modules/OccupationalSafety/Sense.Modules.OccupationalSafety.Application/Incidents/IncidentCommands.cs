@@ -1,9 +1,11 @@
 using FluentValidation;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.OccupationalSafety.Contracts.Events;
 using Sense.Modules.OccupationalSafety.Domain;
 using Sense.Modules.OccupationalSafety.Domain.Incidents;
 using Sense.Modules.Organization.Contracts;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -29,7 +31,8 @@ public sealed class RecordIncidentHandler(
     IOhsIncidentRepository incidents,
     IEmployeeLookup employees,
     IHolidayCalendarLookup holidays,
-    TimeProvider clock) : ICommandHandler<RecordIncidentCommand, Guid>
+    TimeProvider clock,
+    IIntegrationEventOutbox outbox) : ICommandHandler<RecordIncidentCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RecordIncidentCommand command, CancellationToken cancellationToken)
     {
@@ -52,6 +55,11 @@ public sealed class RecordIncidentHandler(
         }
 
         incidents.Add(created.Value);
+        if (created.Value is { Kind: OhsIncidentKind.WorkAccident, EmployeeId: { } injured, SgkNotificationDeadline: { } due })
+        {
+            outbox.Enqueue(new WorkAccidentRecorded(tenant.TenantId, created.Value.Id, injured, command.EventDate, due));
+        }
+
         return created.Value.Id;
     }
 }

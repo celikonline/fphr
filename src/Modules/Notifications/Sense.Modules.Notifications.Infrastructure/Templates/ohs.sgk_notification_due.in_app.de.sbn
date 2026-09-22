@@ -1,0 +1,2 @@
+{{- subject = "SGK-Meldung Arbeitsunfall" -}}
+{{ if overdue_count != "0" }}Bei {{ overdue_count }} Arbeitsunfall/-unfällen ist die SGK-Meldefrist abgelaufen. {{ end }}{{ if due_soon_count != "0" }}{{ due_soon_count }} Arbeitsunfall/-unfälle müssen heute oder morgen an die SGK gemeldet werden.{{ end }}

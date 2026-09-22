@@ -71,6 +71,18 @@ public static class BackgroundJobSeeding
             Description = "Automatically lock shift periods that reached their due date",
             Payload = "{}"
         };
+
+        // İSG: per-tenant daily reminder for work accidents whose SGK notification deadline (3rd business day,
+        // 5510 md.13) is today/tomorrow or already missed (OccupationalSafety SgkNotificationReminderJobHandler).
+        // 08:00 Europe/Istanbul intent; same TimeZoneInfo caveat as the seeds above.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "OhsSgkNotificationReminder",
+            JobType = JobType.OhsSgkNotificationReminder,
+            CronExpression = "0 8 * * *", // 08:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Remind about work accidents approaching or past their SGK notification deadline",
+            Payload = "{}"
+        };
     }
 }
 

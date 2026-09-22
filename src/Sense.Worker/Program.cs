@@ -296,6 +296,8 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
     typeof(OhsDbContext).Assembly,
     typeof(Sense.Modules.OccupationalSafety.Contracts.OhsPermissions).Assembly);
+// WorkAccidentRecorded / SgkNotificationReminderDue are written to the ohs outbox and published from here.
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<OhsDbContext>>();
 
 // Training (Faz 4 #72: ön koşul eğitim + mentör atama): no cross-module events yet - DbContext + handler scanning
 // only, kept consistent with the other modules so future integration events (e.g. a completion notification) have
@@ -315,7 +317,6 @@ builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Module
 builder.Services.AddModuleDbContext<Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext>(
     builder.Configuration, Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName);
 builder.Services.AddOnboardingCoreServices();
-builder.Services.AddOnboardingIntegrationEventHandlers();
 builder.Services.AddModuleHandlers(
     Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName,
     typeof(Sense.Modules.Onboarding.Domain.Tasks.OnboardingTaskTemplate).Assembly,

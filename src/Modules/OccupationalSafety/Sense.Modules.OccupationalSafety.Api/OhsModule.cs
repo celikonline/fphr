@@ -50,5 +50,8 @@ public sealed class OhsModule : IModule
             typeof(OhsPermissions).Assembly);
 
         services.AddOhsCoreServices();
+        // Hangfire runs in Sense.Api (not Sense.Worker), same as Documents' expiry reminder.
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Sense.Modules.OccupationalSafety.Infrastructure.BackgroundJobs.SgkNotificationReminderJobHandler>();
     }
 }

@@ -20,6 +20,9 @@ public static class NotificationTemplateKeys
 
     /// <summary>Holders of documents.requirements.view: "N documents expiring soon / M already expired" (Documents.DocumentExpiryReminderDue). In-app only.</summary>
     public const string DocumentExpiryReminder = "documents.expiry_reminder";
+
+    /// <summary>Holders of ohs.incidents.manage: work accidents whose SGK notification deadline is near or missed (OccupationalSafety.SgkNotificationReminderDue).</summary>
+    public const string OhsSgkNotificationDue = "ohs.sgk_notification_due";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>

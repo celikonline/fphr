@@ -43,7 +43,7 @@ public sealed class OnboardingModule : IModule
             typeof(IOnboardingUnitOfWork).Assembly, // Application
             typeof(OnboardingDbContext).Assembly, // Infrastructure
             typeof(OnboardingPermissions).Assembly); // Contracts
+        // EmployeeHired/EmployeeTerminated handlers are registered by AddModuleHandlers' scan above.
         services.AddOnboardingCoreServices();
-        services.AddOnboardingIntegrationEventHandlers();
     }
 }

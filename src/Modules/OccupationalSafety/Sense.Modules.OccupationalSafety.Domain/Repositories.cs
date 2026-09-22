@@ -31,6 +31,9 @@ public interface IOhsIncidentRepository
     /// <summary>All incidents, newest EventDate first.</summary>
     Task<IReadOnlyList<OhsIncident>> ListAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>Open work accidents not yet notified to SGK (the daily reminder's input).</summary>
+    Task<IReadOnlyList<OhsIncident>> ListAwaitingSgkNotificationAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Incidents the employee reported through self-service, newest first.</summary>
     Task<IReadOnlyList<OhsIncident>> ListReportedByAsync(Guid employeeId, CancellationToken cancellationToken = default);
 }

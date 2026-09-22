@@ -58,6 +58,11 @@ public sealed class OhsIncidentRepository(OhsDbContext context) : IOhsIncidentRe
             .OrderByDescending(i => i.EventDate)
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<OhsIncident>> ListAwaitingSgkNotificationAsync(CancellationToken cancellationToken = default) =>
+        await context.Incidents
+            .Where(i => i.Kind == OhsIncidentKind.WorkAccident && i.SgkNotifiedOn == null && i.ClosedOn == null)
+            .ToListAsync(cancellationToken);
+
     public async Task<IReadOnlyList<OhsIncident>> ListReportedByAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
         await context.Incidents
             .Where(i => i.ReportedByEmployeeId == employeeId)

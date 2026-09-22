@@ -19,6 +19,9 @@
     },
     "documents": {
       "expiry_reminder": "A document is about to expire"
+    },
+    "ohs": {
+      "sgk_notification_due": "When a work accident's SGK notification deadline is near or missed"
     }
   },
   "preferences": {

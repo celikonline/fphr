@@ -19,6 +19,9 @@
     },
     "documents": {
       "expiry_reminder": "Belge süresi dolmak üzere olduğunda"
+    },
+    "ohs": {
+      "sgk_notification_due": "İş kazasının SGK bildirim süresi yaklaştığında ya da geçtiğinde"
     }
   },
   "preferences": {

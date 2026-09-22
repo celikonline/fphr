@@ -1,0 +1,2 @@
+{{- subject = "SGK iş kazası bildirimi" -}}
+{{ if overdue_count != "0" }}{{ overdue_count }} iş kazasının SGK bildirim süresi geçti. {{ end }}{{ if due_soon_count != "0" }}{{ due_soon_count }} iş kazasının SGK bildirim süresi bugün ya da yarın doluyor.{{ end }}
