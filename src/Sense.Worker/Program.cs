@@ -281,12 +281,14 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
 
-// Occupational Safety (İSG, senseik-015, Faz 0-1): hazard classification + risk assessments only - no cross-module
-// consumers or own-outbox writes yet (Documents' materialization hooks, committee/accident events, PPE zimmet are
-// later phases per the handoff doc), so just DbContext + handler scanning so its query/command handlers resolve -
-// mirrors Integrations' "no OutboxPollingService yet" note above.
+// Occupational Safety (İSG, senseik-015): hazard classification + risk assessments, and (senseik-015 devamı)
+// RecordIncidentHandler, which needs Employee's IEmployeeLookup to validate the reporting employee - registered
+// explicitly here since this host wires modules manually rather than through EmployeeModule.AddModule (mirrors the
+// other Employee.Contracts lookups above). No own-outbox writes yet (Documents' materialization hooks,
+// committee/accident events, PPE zimmet are later phases per the handoff doc).
 builder.Services.AddModuleDbContext<OhsDbContext>(builder.Configuration, OhsDbContext.SchemaName);
 builder.Services.AddOhsCoreServices();
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeLookup, EmployeeLookup>();
 builder.Services.AddModuleHandlers(
     OhsDbContext.SchemaName,
     typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
