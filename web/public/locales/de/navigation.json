@@ -110,7 +110,7 @@
     "modules": "Module",
     "modulesDesc": "Produktmodule unternehmensweit ein- oder ausschalten",
     "usersRoles": "Benutzer & Rollen",
-    "usersRolesDesc": "Benutzer, Zugriffsarten, Rollen und Berechtigungen",
+    "usersRolesDesc": "Benutzer, Benutzergruppen, Rollen und Berechtigungen",
     "auditLog": "Audit-Protokoll",
     "auditLogDesc": "Aufzeichnung von Benutzer- und Systemaktivitäten",
     "supportAccess": "Support-Zugriff",

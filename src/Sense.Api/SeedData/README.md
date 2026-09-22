@@ -7,7 +7,7 @@ This directory contains deterministic seed data generation for development and t
 ### Minimal Profile
 - **Tenant**: "Pilot Company" (TenantId: `a1b2c3d4-e5f6-4a5b-9c8d-7e6f5a4b3c2d`)
 - **User**: 1 admin user (admin@senseik.dev)
-- **Roles**: System.Admin
+- **Roles**: the four user groups; the admin is İK Yöneticisi (+ locked Owner flag)
 - **Purpose**: Quick setup for basic functionality testing
 - **Generation Time**: < 100ms
 
@@ -16,7 +16,11 @@ This directory contains deterministic seed data generation for development and t
 - **Users**: 6 fixed, memorable login accounts (`owner@demo.local`, `ik@demo.local`,
   `bordro@demo.local`, `yonetici@demo.local`, `calisan@demo.local`, `denetci@demo.local` —
   see root `README.md`) + 50 randomly generated employees with realistic Turkish names
-- **Roles**: All 17 system roles (Admin, HR, Finance, Manager, Employee, etc.)
+- **Roles**: the four user groups — İK Yöneticisi (`HR`), Muhasebe (`PayrollSpecialist`), Çalışan
+  (`Employee`) + the locked Owner flag carried by `owner@demo.local` (who is also İK Yöneticisi). Old role
+  names (Manager, Intern, Auditor…) remain demo personas for org placement only and map to a group
+  (`SystemRoleCodes.RetiredSuccessors`): e.g. `yonetici@` is a department manager but in the Çalışan
+  group, `denetci@` is İK Yöneticisi
 - **Organization**: Genel Merkez > 4 departments (Satış, Yazılım Geliştirme, İnsan Kaynakları,
   Finans) > ~21 Turkish job titles (Ünvan level); every employee sits on a title, so
   `Employee.OrgUnitId` is the deepest assignment like a real placement (department headcounts are

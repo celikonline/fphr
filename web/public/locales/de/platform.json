@@ -27,7 +27,7 @@
     "companyName": "Unternehmensname",
     "slug": "Unternehmensadresse (Slug)",
     "slugHint": "Wird auf der Anmeldeseite verwendet. Nur Kleinbuchstaben, Ziffern und Bindestriche; 3-40 Zeichen.",
-    "ownerSection": "Erster Benutzer (Owner)",
+    "ownerSection": "Erster Benutzer (HR-Leitung)",
     "ownerFirstName": "Vorname",
     "ownerLastName": "Nachname",
     "ownerEmail": "E-Mail",
@@ -35,15 +35,15 @@
     "ownerMode": "Wie sollen die Anmeldedaten bereitgestellt werden?",
     "modeInvite": "Einladungs-E-Mail",
     "modePassword": "Passwort festlegen",
-    "modeInviteHint": "Der Owner legt sein Passwort über den Link in der E-Mail selbst fest; Sie sehen es nie.",
-    "modePasswordHint": "Das Konto wird sofort mit dem von Ihnen festgelegten Passwort aktiviert. Das Passwort müssen Sie dem Owner separat mitteilen.",
+    "modeInviteHint": "Die HR-Leitung legt sein Passwort über den Link in der E-Mail selbst fest; Sie sehen es nie.",
+    "modePasswordHint": "Das Konto wird sofort mit dem von Ihnen festgelegten Passwort aktiviert. Das Passwort müssen Sie der HR-Leitung separat mitteilen.",
     "password": "Passwort",
     "passwordHint": "Mindestens 10 Zeichen mit Buchstaben, Ziffern und einem Sonderzeichen.",
     "submit": "Unternehmen anlegen"
   },
   "created": {
-    "invited": "Unternehmen angelegt. Eine Einladungs-E-Mail wurde an den Owner gesendet.",
-    "withPassword": "Unternehmen angelegt. Der Owner kann sich mit dem festgelegten Passwort anmelden."
+    "invited": "Unternehmen angelegt. Eine Einladungs-E-Mail wurde an die HR-Leitung gesendet.",
+    "withPassword": "Unternehmen angelegt. Die HR-Leitung kann sich mit dem festgelegten Passwort anmelden."
   },
   "errors": {
     "updateFailed": "Die Unternehmensdaten konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
@@ -52,7 +52,7 @@
     "slugTaken": "Diese Unternehmensadresse ist bereits vergeben.",
     "slugInvalid": "Die Unternehmensadresse muss 3-40 Zeichen lang sein und darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten.",
     "companyRequired": "Der Unternehmensname ist erforderlich.",
-    "ownerNameRequired": "Vor- und Nachname des Owners sind erforderlich.",
+    "ownerNameRequired": "Vor- und Nachname der HR-Leitung sind erforderlich.",
     "ownerEmailInvalid": "Geben Sie eine gültige E-Mail-Adresse ein.",
     "passwordTooShort": "Das Passwort muss mindestens 10 Zeichen lang sein."
   }

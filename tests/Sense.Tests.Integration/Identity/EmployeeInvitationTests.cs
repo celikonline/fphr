@@ -80,7 +80,7 @@ public sealed class EmployeeInvitationTests : IdentityStackTestBase
     {
         var tenantId = await SeedTenantAsync("invite-link");
         var ownerId = await SeedUserAsync(tenantId, "owner@acme.test", SystemRoleCodes.Owner);
-        var existingUserId = await SeedUserAsync(tenantId, "deniz@acme.test", SystemRoleCodes.Admin, active: false);
+        var existingUserId = await SeedUserAsync(tenantId, "deniz@acme.test", SystemRoleCodes.HR, active: false);
         var deniz = await SeedEmployeeAsync(tenantId, "Deniz", "Var", workEmail: "deniz@acme.test");
 
         var otherEmployee = await SeedEmployeeAsync(tenantId, "Ela", "Bağlı");

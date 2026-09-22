@@ -27,7 +27,7 @@
     "companyName": "Şirket adı",
     "slug": "Şirket adresi (slug)",
     "slugHint": "Giriş ekranında kullanılır. Yalnızca küçük harf, rakam ve tire; 3-40 karakter.",
-    "ownerSection": "İlk kullanıcı (Owner)",
+    "ownerSection": "İlk kullanıcı (İK Yöneticisi)",
     "ownerFirstName": "Ad",
     "ownerLastName": "Soyad",
     "ownerEmail": "E-posta",
@@ -35,15 +35,15 @@
     "ownerMode": "Giriş bilgisi nasıl verilsin?",
     "modeInvite": "Davet e-postası",
     "modePassword": "Parola belirle",
-    "modeInviteHint": "Owner e-postadaki bağlantıyla kendi parolasını belirler; parolayı siz görmezsiniz.",
-    "modePasswordHint": "Hesap belirlediğiniz parolayla doğrudan etkin açılır. Parolayı Owner'a ayrıca iletmeniz gerekir.",
+    "modeInviteHint": "İK Yöneticisi e-postadaki bağlantıyla kendi parolasını belirler; parolayı siz görmezsiniz.",
+    "modePasswordHint": "Hesap belirlediğiniz parolayla doğrudan etkin açılır. Parolayı İK Yöneticisine ayrıca iletmeniz gerekir.",
     "password": "Parola",
     "passwordHint": "En az 10 karakter; harf, rakam ve özel karakter içermeli.",
     "submit": "Şirketi oluştur"
   },
   "created": {
-    "invited": "Şirket oluşturuldu. Owner'a davet e-postası gönderildi.",
-    "withPassword": "Şirket oluşturuldu. Owner belirlediğiniz parolayla giriş yapabilir."
+    "invited": "Şirket oluşturuldu. İK Yöneticisine davet e-postası gönderildi.",
+    "withPassword": "Şirket oluşturuldu. İK Yöneticisi belirlediğiniz parolayla giriş yapabilir."
   },
   "errors": {
     "updateFailed": "Şirket bilgileri güncellenemedi. Lütfen tekrar deneyin.",
@@ -52,7 +52,7 @@
     "slugTaken": "Bu şirket adresi zaten kullanımda.",
     "slugInvalid": "Şirket adresi 3-40 karakter olmalı; yalnızca küçük harf, rakam ve tire içerebilir.",
     "companyRequired": "Şirket adı zorunludur.",
-    "ownerNameRequired": "Owner adı ve soyadı zorunludur.",
+    "ownerNameRequired": "İK Yöneticisinin adı ve soyadı zorunludur.",
     "ownerEmailInvalid": "Geçerli bir e-posta adresi girin.",
     "passwordTooShort": "Parola en az 10 karakter olmalıdır."
   }

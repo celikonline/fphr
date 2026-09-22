@@ -118,15 +118,15 @@
 
   <!-- Sistem rolleri -->
   <data name="roles.owner.name" xml:space="preserve"><value>Hesap Sahibi</value></data>
-  <data name="roles.owner.description" xml:space="preserve"><value>Tüm yetkiler; faturalama ve hesap yönetimi. Silinemez.</value></data>
+  <data name="roles.owner.description" xml:space="preserve"><value>Şirketi açan ilk İK Yöneticisinin arka planda taşıdığı kilitli yetki; ayrı bir grup değildir.</value></data>
   <data name="roles.admin.name" xml:space="preserve"><value>Sistem Yöneticisi</value></data>
   <data name="roles.admin.description" xml:space="preserve"><value>Faturalama dahil tüm yönetim yetkileri.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>İK Yöneticisi</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Özlük, izin, PDKS/puantaj, belge, duyuru, eğitim, zimmet, performans, ücret, işe alım, raporlar, KVKK.</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Şirket içinde tüm yetkiler: özlük, izin, puantaj, bordro, harcama, işe alım, raporlar, kullanıcılar ve ayarlar.</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>İK Uzmanı</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>İK Yöneticisinin alt kümesi: maaş görüntüleme, bordro ve fesih/ücret onayı yok.</value></data>
-  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Bordro Uzmanı</value></data>
-  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Bordro dönemleri, parametreler, kalemler, icra, SGK/MUHSGK, banka dosyası, puantaj kilidi.</value></data>
+  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Muhasebe</value></data>
+  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Şirket içinde tüm yetkiler: bordro, harcama ve avans ödemeleri, beyannameler, raporlar ve diğer tüm ekranlar.</value></data>
   <data name="roles.finance.name" xml:space="preserve"><value>Finans</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Harcama/avans son onay, banka ödeme listeleri, bütçe görünümü, faturalar.</value></data>
   <data name="roles.manager.name" xml:space="preserve"><value>Yönetici</value></data>
@@ -144,7 +144,7 @@
   <data name="roles.itadmin.name" xml:space="preserve"><value>BT Yöneticisi</value></data>
   <data name="roles.itadmin.description" xml:space="preserve"><value>Kullanıcı/rol, güvenlik politikası, SSO, API anahtarı, webhook, cihaz/QR noktası; İK verisi görüntüleme yok.</value></data>
   <data name="roles.employee.name" xml:space="preserve"><value>Çalışan</value></data>
-  <data name="roles.employee.description" xml:space="preserve"><value>Self-servis: profil, izin/FM/harcama/avans talebi, pusula, PDKS, duyuru, rehber, belgeler, eğitim, hedefler, asistan.</value></data>
+  <data name="roles.employee.description" xml:space="preserve"><value>Yalnız kendi bilgileri: profil, izin/fazla mesai/harcama/avans talepleri, giriş-çıkış, duyurular, belgeler.</value></data>
   <data name="roles.intern.name" xml:space="preserve"><value>Stajyer</value></data>
   <data name="roles.intern.description" xml:space="preserve"><value>Çalışan − pusula/avans; sınırlı rehber.</value></data>
   <data name="roles.contractor.name" xml:space="preserve"><value>Dış Kaynak</value></data>

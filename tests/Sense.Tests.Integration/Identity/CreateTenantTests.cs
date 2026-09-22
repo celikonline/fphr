@@ -90,7 +90,7 @@ public sealed class CreateTenantTests : IdentityStackTestBase
         await SeedPlatformAsync();
         var customer = await SeedTenantAsync("customer");
         var owner = await SeedUserAsync(customer, "owner@customer.test", SystemRoleCodes.Owner);
-        var admin = await SeedUserAsync(customer, "admin@customer.test", SystemRoleCodes.Admin);
+        var admin = await SeedUserAsync(customer, "admin@customer.test", SystemRoleCodes.HR);
 
         ActAs(customer, owner);
         ShouldFailWith(await ExecuteCommandAsync(NewTenant("sneaky", TenantOwnerMode.Password, StrongPassword)), ErrorCodes.Forbidden, ErrorType.Forbidden);

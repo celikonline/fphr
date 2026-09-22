@@ -11,7 +11,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import { listRoles } from "@/services/users.service";
+import { listRoles, visibleRoles } from "@/services/users.service";
 import {
   deleteSharedFile,
   getSharedFile,
@@ -226,7 +226,10 @@ function UploadDialog({ file, onClose }: { file: File; onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   const rolesQuery = useQuery({ queryKey: ["identity", "roles"], queryFn: listRoles, enabled: visibility === "restrictedToRoles" });
-  const roleOptions = useMemo(() => (rolesQuery.data ?? []).map((r) => ({ value: r.code, label: r.name ?? r.code })), [rolesQuery.data]);
+  const roleOptions = useMemo(
+    () => visibleRoles(rolesQuery.data ?? []).map((r) => ({ value: r.code, label: r.name ?? r.code })),
+    [rolesQuery.data]
+  );
 
   const mutation = useMutation({
     mutationFn: () => uploadSharedFile(file, { visibility, allowedRoles: visibility === "restrictedToRoles" ? allowedRoles : undefined }),

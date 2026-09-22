@@ -36,18 +36,23 @@ public sealed class UserAccountLookupIntegrationTests : TestFixture
         using var scope = TenantContextSetter!.BeginScope(tenantId);
 
         var owner = Role.CreateSystem(tenantId, SystemRoleCodes.Owner);
-        var admin = Role.CreateSystem(tenantId, SystemRoleCodes.Admin);
-        var employee = Role.CreateSystem(tenantId, SystemRoleCodes.Employee);
         var hr = Role.CreateSystem(tenantId, SystemRoleCodes.HR);
-        db.Roles.AddRange(owner, admin, employee, hr);
+        var payroll = Role.CreateSystem(tenantId, SystemRoleCodes.PayrollSpecialist);
+        var employee = Role.CreateSystem(tenantId, SystemRoleCodes.Employee);
+        // Henüz senkronize edilmemiş eski bir sistem rolü (Admin) erişim türü sayılmaz.
+        var retiredAdmin = Role.CreateSystem(tenantId, SystemRoleCodes.Admin);
+        db.Roles.AddRange(owner, hr, payroll, employee, retiredAdmin);
 
-        var ownerUser = NewUser(tenantId, "owner@acme.com", employee.Id, owner.Id);
+        // Owner + İK Yöneticisi → "HR" (Owner bir grup değil, İK Yöneticisiyle taşınan bayrak).
+        var ownerUser = NewUser(tenantId, "owner@acme.com", owner.Id, hr.Id);
         ownerUser.SetPassword("hash");
-        var adminUser = NewUser(tenantId, "admin@acme.com", employee.Id, admin.Id);
-        adminUser.Disable();
+        // Muhasebe + Çalışan → öncelik sırası HR, PayrollSpecialist, Employee.
+        var payrollUser = NewUser(tenantId, "payroll@acme.com", employee.Id, payroll.Id);
+        payrollUser.Disable();
         var invitedUser = NewUser(tenantId, "invited@acme.com", employee.Id);
-        var hrOnlyUser = NewUser(tenantId, "hr@acme.com", hr.Id);
-        db.Users.AddRange(ownerUser, adminUser, invitedUser, hrOnlyUser);
+        var ownerOnlyUser = NewUser(tenantId, "owner-only@acme.com", owner.Id);
+        var legacyUser = NewUser(tenantId, "legacy@acme.com", retiredAdmin.Id);
+        db.Users.AddRange(ownerUser, payrollUser, invitedUser, ownerOnlyUser, legacyUser);
 
         var invitation = Invitation.Create(tenantId, invitedUser.Id, invitedUser.Email, "token-hash", DateTime.UtcNow, TimeSpan.FromDays(7), ownerUser.Id);
         db.Invitations.Add(invitation);
@@ -55,16 +60,17 @@ public sealed class UserAccountLookupIntegrationTests : TestFixture
 
         var lookup = new UserAccountLookup(db);
         var unknown = Guid.NewGuid();
-        var result = await lookup.GetAsync(tenantId, [ownerUser.Id, adminUser.Id, invitedUser.Id, hrOnlyUser.Id, unknown], ct);
+        var result = await lookup.GetAsync(tenantId, [ownerUser.Id, payrollUser.Id, invitedUser.Id, ownerOnlyUser.Id, legacyUser.Id, unknown], ct);
 
         result.ContainsKey(unknown).ShouldBeFalse();
-        result[ownerUser.Id].ShouldBe(new UserAccountInfo(ownerUser.Id, UserAccountStatus.Active, SystemRoleCodes.Owner, null));
-        result[adminUser.Id].Status.ShouldBe(UserAccountStatus.Disabled);
-        result[adminUser.Id].AccessType.ShouldBe(SystemRoleCodes.Admin);
+        result[ownerUser.Id].ShouldBe(new UserAccountInfo(ownerUser.Id, UserAccountStatus.Active, SystemRoleCodes.HR, null));
+        result[payrollUser.Id].Status.ShouldBe(UserAccountStatus.Disabled);
+        result[payrollUser.Id].AccessType.ShouldBe(SystemRoleCodes.PayrollSpecialist);
         result[invitedUser.Id].Status.ShouldBe(UserAccountStatus.Invited);
         result[invitedUser.Id].AccessType.ShouldBe(SystemRoleCodes.Employee);
         result[invitedUser.Id].LastInvitationSentAt.ShouldNotBeNull();
-        result[hrOnlyUser.Id].AccessType.ShouldBeNull();
+        result[ownerOnlyUser.Id].AccessType.ShouldBeNull();
+        result[legacyUser.Id].AccessType.ShouldBeNull();
 
         (await lookup.GetAsync(Guid.NewGuid(), [ownerUser.Id], ct)).ShouldBeEmpty();
     }

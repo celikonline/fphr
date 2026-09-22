@@ -11,7 +11,7 @@
   "access": {
     "title": "Access settings",
     "subtitle": "Decide what employees can see on their home page, in their account and in the calendar.",
-    "scopeNotice": "Access settings only restrict users with the Employee access type; Account owners, Administrators and HR users are not affected. Changes take effect as soon as they are saved.",
+    "scopeNotice": "Access settings only restrict users in the Employee group; HR Manager and Accounting users are not affected. Changes take effect as soon as they are saved.",
     "readOnly": "You can view access settings but are not allowed to change them.",
     "loadError": "Access settings could not be loaded.",
     "saveSuccess": "Access settings saved.",

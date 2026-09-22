@@ -19,7 +19,7 @@ describe("security-policy.service", () => {
 
   describe("getSecurityPolicy", () => {
     it("fetches the security policy from the correct endpoint", async () => {
-      const mockPolicy: SecurityPolicy = { requireMfaForRoles: ["Owner", "Admin"] };
+      const mockPolicy: SecurityPolicy = { requireMfaForRoles: ["HR", "PayrollSpecialist"] };
       mockApiClient.get.mockResolvedValueOnce({ data: mockPolicy });
 
       const result = await securityPolicyService.getSecurityPolicy();

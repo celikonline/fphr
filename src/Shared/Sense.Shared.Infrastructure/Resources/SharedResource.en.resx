@@ -110,15 +110,15 @@
   <data name="invitation.user_active" xml:space="preserve"><value>The user is already active; no invitation needed.</value></data>
 
   <data name="roles.owner.name" xml:space="preserve"><value>Account Owner</value></data>
-  <data name="roles.owner.description" xml:space="preserve"><value>All permissions; billing and account management. Cannot be deleted.</value></data>
+  <data name="roles.owner.description" xml:space="preserve"><value>Locked permission carried in the background by the first HR Manager who opened the company; not a separate group.</value></data>
   <data name="roles.admin.name" xml:space="preserve"><value>System Administrator</value></data>
   <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions, including billing.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>HR Manager</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, KVKK (Turkish data protection law).</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Full access within the company: personnel, leave, timesheets, payroll, expenses, recruitment, reports, users and settings.</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>HR Specialist</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>Subset of HR Manager: no salary visibility, payroll, termination or compensation approvals.</value></data>
-  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Payroll Specialist</value></data>
-  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Payroll periods, parameters, pay items, garnishments, social security filings, bank files, timesheet locks.</value></data>
+  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Accounting</value></data>
+  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Full access within the company: payroll, expense and advance payments, declarations, reports and every other screen.</value></data>
   <data name="roles.finance.name" xml:space="preserve"><value>Finance</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Final approval of expenses/advances, bank payment lists, budget view, invoices.</value></data>
   <data name="roles.manager.name" xml:space="preserve"><value>Manager</value></data>
@@ -136,7 +136,7 @@
   <data name="roles.itadmin.name" xml:space="preserve"><value>IT Administrator</value></data>
   <data name="roles.itadmin.description" xml:space="preserve"><value>Users/roles, security policy, SSO, API keys, webhooks, devices/QR checkpoints; no HR data access.</value></data>
   <data name="roles.employee.name" xml:space="preserve"><value>Employee</value></data>
-  <data name="roles.employee.description" xml:space="preserve"><value>Self-service: profile, leave/overtime/expense/advance requests, payslips, attendance, announcements, directory, documents, training, goals, assistant.</value></data>
+  <data name="roles.employee.description" xml:space="preserve"><value>Own data only: profile, leave/overtime/expense/advance requests, check-in, announcements, documents.</value></data>
   <data name="roles.intern.name" xml:space="preserve"><value>Intern</value></data>
   <data name="roles.intern.description" xml:space="preserve"><value>Employee minus payslips/advances; limited directory.</value></data>
   <data name="roles.contractor.name" xml:space="preserve"><value>Contractor</value></data>

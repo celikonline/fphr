@@ -10,7 +10,7 @@ import {
   type ModuleSettings,
 } from "@/services/module-settings.service";
 import { completeTenantSetup, inviteUser } from "@/services/tenant-setup.service";
-import { listRoles, type Role } from "@/services/users.service";
+import { isHiddenRole, listRoles, type Role } from "@/services/users.service";
 import { useAuthStore } from "@/store/auth.store";
 import { StepActions, type SetupStepProps } from "./step-actions";
 
@@ -23,8 +23,9 @@ export default function ModulesUsersStep({ onBack }: Pick<SetupStepProps, "onBac
     queryKey: ["setup", "modules-users"],
     queryFn: async () => {
       const [modules, roles] = await Promise.all([getModuleSettings(), listRoles()]);
-      // Owner is locked to the person who created the company; everything else can be handed to an invited user.
-      return { modules, roles: roles.filter((role) => !role.isLocked) };
+      // Owner is locked to the person who created the company (and hidden in company screens); everything else can be
+      // handed to an invited user.
+      return { modules, roles: roles.filter((role) => !role.isLocked && !isHiddenRole(role.code)) };
     },
   });
 

@@ -8,7 +8,7 @@ namespace Sense.Modules.Identity.Tests.Roles;
 
 /// <summary>
 /// TALIMAT madde 2: Sistem rollerinin izin kapsamı.
-/// (a) 16 sistem rolünün her biri en az 1 izin taşır (boş rol yok)
+/// (a) Her müşteri sistem rolü (SystemRoleCodes.All) en az 1 izin taşır (boş rol yok)
 /// (b) Joker desenler (performance.*, billing.* vs.) — ya gerçek anahtar var ya da bilinçli rezervasyon
 /// (c) Owner rolü tüm sistem rollerinin izin kümesini kapsar (üst küme)
 /// </summary>
@@ -20,26 +20,7 @@ public sealed class SystemRoleCoverageTests
     [Fact]
     public void AllSystemRoles_HaveAtLeastOnePermission()
     {
-        var roleCodes = new[]
-        {
-            SystemRoleCodes.Owner,
-            SystemRoleCodes.Admin,
-            SystemRoleCodes.HR,
-            SystemRoleCodes.HRSpecialist,
-            SystemRoleCodes.PayrollSpecialist,
-            SystemRoleCodes.Finance,
-            SystemRoleCodes.Manager,
-            SystemRoleCodes.Timekeeper,
-            SystemRoleCodes.Recruiter,
-            SystemRoleCodes.Interviewer,
-            SystemRoleCodes.Auditor,
-            SystemRoleCodes.ExternalAccountant,
-            SystemRoleCodes.ITAdmin,
-            SystemRoleCodes.Employee,
-            SystemRoleCodes.Intern,
-            SystemRoleCodes.Contractor,
-            SystemRoleCodes.ApiIntegration,
-        };
+        var roleCodes = SystemRoleCodes.All;
 
         var emptyRoles = new List<string>();
 
@@ -94,15 +75,7 @@ public sealed class SystemRoleCoverageTests
     [Fact]
     public void OwnerRole_CapsulesAllOtherRolesPermissions()
     {
-        var otherRoleCodes = new[]
-        {
-            SystemRoleCodes.Admin, SystemRoleCodes.HR, SystemRoleCodes.HRSpecialist,
-            SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Finance, SystemRoleCodes.Manager,
-            SystemRoleCodes.Timekeeper, SystemRoleCodes.Recruiter, SystemRoleCodes.Interviewer,
-            SystemRoleCodes.Auditor, SystemRoleCodes.ExternalAccountant, SystemRoleCodes.ITAdmin,
-            SystemRoleCodes.Employee, SystemRoleCodes.Intern, SystemRoleCodes.Contractor,
-            SystemRoleCodes.ApiIntegration,
-        };
+        var otherRoleCodes = SystemRoleCodes.All.Where(c => c != SystemRoleCodes.Owner).ToList();
 
         var ownerRole = SystemRoleDefinitions.Get(SystemRoleCodes.Owner);
         var ownerPermissions = ownerRole.Resolve(Guid.NewGuid(), AllPermissions)

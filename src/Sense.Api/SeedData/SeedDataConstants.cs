@@ -66,9 +66,9 @@ public static class SeedDataConstants
     public const string DemoAdminTitle = "Bilgi Sistemleri Yöneticisi";
     public const string DemoHrTitle = "İnsan Kaynakları Direktörü";
 
-    // System roles that should be seeded (already defined in SystemRoleCodes)
-    // - Owner, Admin, HR, HRSpecialist, PayrollSpecialist, Finance, Manager, Timekeeper,
-    //   Recruiter, Interviewer, Auditor, ExternalAccountant, ITAdmin, Employee, Intern, Contractor, ApiIntegration
+    // System roles seeded per tenant: SystemRoleCodes.All — the four user groups (HR = İK Yöneticisi,
+    // PayrollSpecialist = Muhasebe, Employee = Çalışan) + the locked Owner flag. Old role codes (Manager, Intern...)
+    // survive only as demo "personas" for placement; see DataSeeder.PersonaRole / GroupRoleIdsFor.
 }
 
 /// <summary>One demo department and its job titles (see <see cref="SeedDataConstants.DemoDepartments"/>).</summary>

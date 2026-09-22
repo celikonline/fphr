@@ -23,7 +23,7 @@ import {
   type MaritalStatus,
   type MilitaryStatus,
 } from "@/services/employees.service";
-import { setUserAccessType, type AccessType } from "@/services/users.service";
+import { ACCESS_TYPES, setUserAccessType, type AccessType } from "@/services/users.service";
 import { AccountStatusBadge } from "./employee-badges";
 import { PersonalView, ProfileView } from "./employee-profile-view";
 import {
@@ -48,7 +48,6 @@ import {
   type FieldErrors,
 } from "./employee-form";
 
-const ACCESS_TYPES: AccessType[] = ["Employee", "Owner", "Admin"];
 const SENSITIVE_PERMISSION = "employee.sensitive.view";
 const EMPTY_ENUM_VALUE = "__none__";
 

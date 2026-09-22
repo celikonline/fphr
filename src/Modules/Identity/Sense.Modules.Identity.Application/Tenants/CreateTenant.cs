@@ -132,7 +132,8 @@ public sealed class CreateTenantHandler(
         }
 
         var owner = userResult.Value;
-        owner.SetRoles([seededRoles[SystemRoleCodes.Owner].Id]);
+        // İlk hesap İK Yöneticisidir; Owner arka planda "son hesap sahibi kaldırılamaz" korumasını taşır.
+        owner.SetRoles([seededRoles[SystemRoleCodes.Owner].Id, seededRoles[SystemRoleCodes.HR].Id]);
 
         if (command.OwnerMode == TenantOwnerMode.Password)
         {

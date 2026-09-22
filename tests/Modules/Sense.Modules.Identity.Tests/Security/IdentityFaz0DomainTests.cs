@@ -66,7 +66,7 @@ public sealed class IdentityFaz0DomainTests
     }
 
     [Fact]
-    public void AccessSettingsBypass_GoesToOwnerAdminAndHr_ButNotToEmployeeOrItAdmin()
+    public void AccessSettingsBypass_GoesToOwnerHrAndPayroll_ButNotToEmployee()
     {
         IReadOnlyList<Permission> catalog =
             [new(AccessSettingPermissions.Bypass, "identity", "x", "g"), new("identity.users.view", "identity", "x", "g"), new("employee.my.view", "employee", "x", "g")];
@@ -74,13 +74,9 @@ public sealed class IdentityFaz0DomainTests
         bool Has(string code) => SystemRoleDefinitions.Get(code).Resolve(Guid.NewGuid(), catalog).Any(p => p.Permission == AccessSettingPermissions.Bypass);
 
         Has(SystemRoleCodes.Owner).ShouldBeTrue();
-        Has(SystemRoleCodes.Admin).ShouldBeTrue();
         Has(SystemRoleCodes.HR).ShouldBeTrue();
+        Has(SystemRoleCodes.PayrollSpecialist).ShouldBeTrue();
         Has(SystemRoleCodes.Employee).ShouldBeFalse();
-        Has(SystemRoleCodes.Intern).ShouldBeFalse();
-        Has(SystemRoleCodes.Manager).ShouldBeFalse();
-        Has(SystemRoleCodes.ITAdmin).ShouldBeFalse();
-        Has(SystemRoleCodes.Auditor).ShouldBeFalse();
 
         SystemRoleDefinitions.Get(SystemRoleCodes.Employee).Resolve(Guid.NewGuid(), catalog).Select(p => p.Permission).ShouldContain("employee.my.view");
     }

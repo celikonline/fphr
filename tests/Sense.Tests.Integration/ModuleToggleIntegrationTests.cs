@@ -85,7 +85,7 @@ public sealed class ModuleToggleIntegrationTests : IdentityStackTestBase
     public async Task Update_RequiresModulesManagePermission()
     {
         var tenantId = await SeedTenantAsync("acme");
-        ActAs(tenantId, await SeedUserAsync(tenantId, "hr@acme.test", SystemRoleCodes.HR));
+        ActAs(tenantId, await SeedUserAsync(tenantId, "calisan@acme.test", SystemRoleCodes.Employee));
 
         var result = await ExecuteCommandAsync(new UpdateModuleSettingsCommand(["leave"]));
 

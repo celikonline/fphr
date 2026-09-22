@@ -21,46 +21,45 @@ namespace Sense.Tests.Integration.Identity;
 [Trait("Category", "Integration")]
 public sealed class AccessTypeRoleSyncAndSelfCardTests : IdentityStackTestBase
 {
+    /// <summary>Dört kullanıcı grubu: İK Yöneticisi ve Muhasebe kullanıcıları gruplar arası taşıyabilir; hesap sahibi (Owner)
+    /// seçilemez, İK Yöneticisiyle birlikte taşınır ve yalnız bir Owner düşürebilir; son aktif Owner düşürülemez.</summary>
     [Fact]
-    public async Task AccessType_OnlyOwnerTouchesOwner_AdminManagesAdminAndEmployee_HrNeither_LastOwnerKept()
+    public async Task UserGroup_HrAndAccountingManageGroups_OwnerFlagTravelsWithHr_OnlyOwnerDropsIt_LastOwnerKept()
     {
         var tenantId = await SeedTenantAsync("access-type");
         var ownerId = await SeedUserAsync(tenantId, "owner@acme.test", SystemRoleCodes.Owner);
-        var adminId = await SeedUserAsync(tenantId, "admin@acme.test", SystemRoleCodes.Admin);
         var hrId = await SeedUserAsync(tenantId, "hr@acme.test", SystemRoleCodes.HR);
+        var accountingId = await SeedUserAsync(tenantId, "muhasebe@acme.test", SystemRoleCodes.PayrollSpecialist);
         var targetId = await SeedUserAsync(tenantId, "target@acme.test", SystemRoleCodes.Employee);
+        var ownerRoleId = await RoleIdAsync(tenantId, SystemRoleCodes.Owner);
 
-        // Owner alone: cannot demote themselves.
+        // Owner alone: stepping out of İK Yöneticisi would drop the last Owner flag.
         ActAs(tenantId, ownerId);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.Admin)), IdentityErrors.UserLastOwner, ErrorType.Rule);
+        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.Employee)), IdentityErrors.UserLastOwner, ErrorType.Rule);
+        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.HR))).IsSuccess.ShouldBeTrue();
+        (await AccessTypeOfAsync(tenantId, ownerId)).ShouldBe(SystemRoleCodes.HR);
 
-        ActAs(tenantId, adminId);
-        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Admin))).IsSuccess.ShouldBeTrue();
-        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Employee))).IsSuccess.ShouldBeTrue();
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Owner)), IdentityErrors.AccessTypeOwnerOnly, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.Employee)), IdentityErrors.AccessTypeOwnerOnly, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserRolesCommand(targetId, [await RoleIdAsync(tenantId, SystemRoleCodes.Owner)])),
-            IdentityErrors.AccessTypeOwnerOnly, ErrorType.Forbidden);
+        // Owner is not a selectable group.
+        await Should.ThrowAsync<FluentValidation.ValidationException>(() => ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Owner)));
 
-        // senseik-050: HR Manager no longer carries identity.users.manage at all (identity management is
-        // System Administrator-only now), so every one of these is now rejected by AuthorizationBehaviour
-        // (generic ErrorCodes.Forbidden) before the request ever reaches AccessTypeGuard's Owner/Admin-specific
-        // domain rule (IdentityErrors.AccessTypeForbidden) - including the Employee-to-Employee no-op that used
-        // to succeed for HR.
         ActAs(tenantId, hrId);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Admin)), ErrorCodes.Forbidden, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserRolesCommand(adminId, [await RoleIdAsync(tenantId, SystemRoleCodes.HR)])),
-            ErrorCodes.Forbidden, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new CreateUserCommand("new@acme.test", "Yeni", "Yönetici", null, [await RoleIdAsync(tenantId, SystemRoleCodes.Admin)], null, false, null)),
-            ErrorCodes.Forbidden, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Employee)), ErrorCodes.Forbidden, ErrorType.Forbidden);
+        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.PayrollSpecialist))).IsSuccess.ShouldBeTrue();
+        (await AccessTypeOfAsync(tenantId, targetId)).ShouldBe(SystemRoleCodes.PayrollSpecialist);
 
+        ActAs(tenantId, accountingId);
+        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.HR))).IsSuccess.ShouldBeTrue();
+        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Employee))).IsSuccess.ShouldBeTrue();
+        (await AccessTypeOfAsync(tenantId, targetId)).ShouldBe(SystemRoleCodes.Employee);
+
+        // Only an Owner grants or removes the Owner flag, via any role-assignment path.
+        ShouldFailWith(await ExecuteCommandAsync(new SetUserRolesCommand(targetId, [ownerRoleId])), IdentityErrors.AccessTypeOwnerOnly, ErrorType.Forbidden);
+        ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.Employee)), IdentityErrors.AccessTypeOwnerOnly, ErrorType.Forbidden);
+
+        // A second owner lets the first one step down; the remaining one is then the last owner again.
         ActAs(tenantId, ownerId);
-        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Owner))).IsSuccess.ShouldBeTrue();
-        (await AccessTypeOfAsync(tenantId, targetId)).ShouldBe(SystemRoleCodes.Owner);
-
-        // With a second active owner the first may step down; the remaining one is then the last owner again.
-        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.Admin))).IsSuccess.ShouldBeTrue();
+        (await ExecuteCommandAsync(new SetUserRolesCommand(targetId, [ownerRoleId, await RoleIdAsync(tenantId, SystemRoleCodes.HR)]))).IsSuccess.ShouldBeTrue();
+        (await ExecuteCommandAsync(new SetUserAccessTypeCommand(ownerId, SystemRoleCodes.PayrollSpecialist))).IsSuccess.ShouldBeTrue();
+        (await AccessTypeOfAsync(tenantId, ownerId)).ShouldBe(SystemRoleCodes.PayrollSpecialist);
         ActAs(tenantId, targetId);
         ShouldFailWith(await ExecuteCommandAsync(new SetUserAccessTypeCommand(targetId, SystemRoleCodes.Employee)), IdentityErrors.UserLastOwner, ErrorType.Rule);
     }
@@ -116,49 +115,51 @@ public sealed class AccessTypeRoleSyncAndSelfCardTests : IdentityStackTestBase
         (await synchronizer.SyncAllTenantsAsync(Ct)).ShouldBe(0);
     }
 
-    /// <summary>senseik-050: existing tenants seeded before the HR/System-Administrator RBAC split still carry
-    /// identity-management grants (identity.users.manage/.suspend/.reset_mfa) on their HR role row. Sync must
-    /// strip those on the next run (permission-reduction scenario) while leaving identity.users.view/.invite -
-    /// and every other HR permission - untouched, and the HR user must be denied identity-management commands
-    /// afterwards even though they still pass AuthorizationBehaviour for permissions they keep.</summary>
+    /// <summary>Dört gruba geçiş: mevcut kiracıdaki eski sistem rollerinin kullanıcıları devralan gruba taşınır, eski roller
+    /// silinir, İK Yöneticisi olmayan hesap sahibine İK Yöneticisi eklenir; ikinci senkronizasyon hiçbir şey değiştirmez.</summary>
     [Fact]
-    public async Task SystemRoleSync_RemovesStaleIdentityManagementGrant_FromExistingHrRole()
+    public async Task SystemRoleSync_MovesUsersOfRetiredRolesToTheirGroup_RemovesRetiredRoles_AndGivesOwnersHr()
     {
-        var tenantId = await SeedTenantAsync("hr-rbac-separation");
-        var hrId = await SeedUserAsync(tenantId, "hr@acme.test", SystemRoleCodes.HR);
-        var targetId = await SeedUserAsync(tenantId, "target@acme.test", SystemRoleCodes.Employee);
+        var tenantId = await SeedTenantAsync("retired-roles");
+        var ownerId = await SeedUserAsync(tenantId, "owner@acme.test", SystemRoleCodes.Owner);
+        var managerId = await SeedUserAsync(tenantId, "manager@acme.test", null);
+        var financeId = await SeedUserAsync(tenantId, "finance@acme.test", null);
+        var specialistId = await SeedUserAsync(tenantId, "specialist@acme.test", null);
         var db = Get<IdentityDbContext>();
-        ActAs(tenantId, hrId);
 
-        // Simulate a pre-existing tenant: grant the legacy identity-management permissions directly, bypassing
-        // the (now narrower) role definition, the way a tenant seeded before this change would still have them.
+        // Simulate a tenant seeded before the four groups: retired system roles still exist and hold users.
         using (TenantContextSetter!.BeginScope(tenantId))
         {
-            var hrRole = await db.Roles.SingleAsync(r => r.Code == SystemRoleCodes.HR, Ct);
-            var legacy = hrRole.Permissions.ToList();
-            legacy.Add(new RolePermission(hrRole.Id, IdentityPermissions.UsersManage, (int)DataScope.Company));
-            legacy.Add(new RolePermission(hrRole.Id, IdentityPermissions.UsersSuspend, (int)DataScope.Company));
-            legacy.Add(new RolePermission(hrRole.Id, IdentityPermissions.UsersResetMfa, (int)DataScope.Company));
-            hrRole.ReplacePermissionsUnchecked(legacy);
+            foreach (var (userId, code) in new[] { (managerId, SystemRoleCodes.Manager), (financeId, SystemRoleCodes.Finance), (specialistId, SystemRoleCodes.HRSpecialist) })
+            {
+                var retired = Role.CreateSystem(tenantId, code);
+                db.Roles.Add(retired);
+                var user = await db.Users.SingleAsync(u => u.Id == userId, Ct);
+                user.SetRoles([retired.Id]);
+            }
+
             await db.SaveChangesAsync(Ct);
         }
 
-        var permissions = Get<IPermissionService>();
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersManage, Ct)).ShouldBeTrue();
-
         var synchronizer = Get<SystemRolePermissionSynchronizer>();
-        (await synchronizer.SyncAllTenantsAsync(Ct)).ShouldBe(1);
+        (await synchronizer.SyncAllTenantsAsync(Ct)).ShouldBeGreaterThan(0);
 
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersManage, Ct)).ShouldBeFalse();
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersSuspend, Ct)).ShouldBeFalse();
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersResetMfa, Ct)).ShouldBeFalse();
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersView, Ct)).ShouldBeTrue();
-        (await permissions.HasAsync(hrId, IdentityPermissions.UsersInvite, Ct)).ShouldBeTrue();
+        ActAs(tenantId, ownerId);
+        (await AccessTypeOfAsync(tenantId, managerId)).ShouldBe(SystemRoleCodes.Employee);
+        (await AccessTypeOfAsync(tenantId, financeId)).ShouldBe(SystemRoleCodes.PayrollSpecialist);
+        (await AccessTypeOfAsync(tenantId, specialistId)).ShouldBe(SystemRoleCodes.HR);
+        (await AccessTypeOfAsync(tenantId, ownerId)).ShouldBe(SystemRoleCodes.HR);
 
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserRolesCommand(targetId, [await RoleIdAsync(tenantId, SystemRoleCodes.HRSpecialist)])),
-            ErrorCodes.Forbidden, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new SetUserStatusCommand(targetId, false)), ErrorCodes.Forbidden, ErrorType.Forbidden);
-        ShouldFailWith(await ExecuteCommandAsync(new ResetUserMfaCommand(targetId)), ErrorCodes.Forbidden, ErrorType.Forbidden);
+        using (TenantContextSetter!.BeginScope(tenantId))
+        {
+            var codes = await db.Roles.AsNoTracking().Where(r => r.IsSystem).Select(r => r.Code).ToListAsync(Ct);
+            codes.ShouldBe(SystemRoleCodes.All, ignoreOrder: true);
+            (await db.Users.AsNoTracking().SingleAsync(u => u.Id == ownerId, Ct)).Roles.Count.ShouldBe(2);
+        }
+
+        var permissions = Get<IPermissionService>();
+        (await permissions.HasAsync(financeId, IdentityPermissions.UsersManage, Ct)).ShouldBeTrue();
+        (await permissions.HasAsync(managerId, IdentityPermissions.UsersManage, Ct)).ShouldBeFalse();
 
         (await synchronizer.SyncAllTenantsAsync(Ct)).ShouldBe(0);
     }

@@ -110,7 +110,7 @@
     "modules": "Modüller",
     "modulesDesc": "Ürün modüllerini şirket genelinde açma/kapatma",
     "usersRoles": "Kullanıcılar ve roller",
-    "usersRolesDesc": "Kullanıcılar, erişim türleri, roller ve izinler",
+    "usersRolesDesc": "Kullanıcılar, kullanıcı grupları, roller ve izinler",
     "auditLog": "Denetim kaydı",
     "auditLogDesc": "Kullanıcı ve sistem işlemlerinin kaydı",
     "supportAccess": "Destek erişimi",

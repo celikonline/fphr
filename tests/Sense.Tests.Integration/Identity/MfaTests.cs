@@ -162,7 +162,7 @@ public sealed class MfaTests : IdentityStackTestBase
     public async Task ResetUserMfa_ByAdmin_ClearsSecretAndDisablesMfa()
     {
         var tenantId = await SeedTenantAsync("mfa-admin-reset");
-        var adminId = await SeedUserAsync(tenantId, "yonetici@acme.test", SystemRoleCodes.Admin);
+        var adminId = await SeedUserAsync(tenantId, "yonetici@acme.test", SystemRoleCodes.HR);
         var targetId = await SeedUserAsync(tenantId, "hedef@acme.test", SystemRoleCodes.Employee);
 
         ActAs(tenantId, targetId);
@@ -181,7 +181,7 @@ public sealed class MfaTests : IdentityStackTestBase
     public async Task ResetUserMfa_OwnAccount_ReturnsConflict()
     {
         var tenantId = await SeedTenantAsync("mfa-admin-self-reset");
-        var adminId = await SeedUserAsync(tenantId, "kendi@acme.test", SystemRoleCodes.Admin);
+        var adminId = await SeedUserAsync(tenantId, "kendi@acme.test", SystemRoleCodes.HR);
         ActAs(tenantId, adminId);
 
         ShouldFailWith(await ExecuteCommandAsync(new ResetUserMfaCommand(adminId)), IdentityErrors.MfaSelfResetForbidden, ErrorType.Conflict);
@@ -192,7 +192,7 @@ public sealed class MfaTests : IdentityStackTestBase
     {
         var tenantAId = await SeedTenantAsync("mfa-admin-reset-tenant-a");
         var tenantBId = await SeedTenantAsync("mfa-admin-reset-tenant-b");
-        var adminId = await SeedUserAsync(tenantAId, "yonetici-a@acme.test", SystemRoleCodes.Admin);
+        var adminId = await SeedUserAsync(tenantAId, "yonetici-a@acme.test", SystemRoleCodes.HR);
         var otherTenantUserId = await SeedUserAsync(tenantBId, "kullanici-b@acme.test", SystemRoleCodes.Employee);
 
         ActAs(tenantAId, adminId);

@@ -199,10 +199,10 @@ public sealed class ModuleSettingsUseCasesTests
 
     [Theory]
     [InlineData("Owner", true)]
-    [InlineData("Admin", true)]
-    [InlineData("HR", false)]
+    [InlineData("HR", true)]
+    [InlineData("PayrollSpecialist", true)]
     [InlineData("Employee", false)]
-    public void ModulesManagePermission_GoesToOwnerAndAdminOnly(string roleCode, bool expected)
+    public void ModulesManagePermission_GoesToOwnerHrAndPayroll_ButNotEmployee(string roleCode, bool expected)
     {
         var definition = SystemRoleDefinitions.All.Single(d => d.Code == roleCode);
 

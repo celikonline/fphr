@@ -11,7 +11,7 @@
   "access": {
     "title": "Erişim ayarları",
     "subtitle": "Çalışanların ana sayfada, hesaplarında ve takvimde neleri görebileceğini belirleyin.",
-    "scopeNotice": "Erişim ayarları yalnızca Çalışan erişim türündeki kullanıcıları kısıtlar; Hesap sahibi, Yönetici ve İK kullanıcıları etkilenmez. Değişiklikler kaydedildiği anda geçerli olur.",
+    "scopeNotice": "Erişim ayarları yalnızca Çalışan grubundaki kullanıcıları kısıtlar; İK Yöneticisi ve Muhasebe kullanıcıları etkilenmez. Değişiklikler kaydedildiği anda geçerli olur.",
     "readOnly": "Erişim ayarlarını görüntüleyebilirsiniz ancak değiştirme yetkiniz yok.",
     "loadError": "Erişim ayarları yüklenemedi.",
     "saveSuccess": "Erişim ayarları kaydedildi.",

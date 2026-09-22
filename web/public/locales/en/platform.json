@@ -27,7 +27,7 @@
     "companyName": "Company name",
     "slug": "Company address (slug)",
     "slugHint": "Used on the sign-in screen. Lowercase letters, digits and hyphens only; 3-40 characters.",
-    "ownerSection": "First user (Owner)",
+    "ownerSection": "First user (HR Manager)",
     "ownerFirstName": "First name",
     "ownerLastName": "Last name",
     "ownerEmail": "Email",
@@ -35,15 +35,15 @@
     "ownerMode": "How should the sign-in details be provided?",
     "modeInvite": "Invitation email",
     "modePassword": "Set a password",
-    "modeInviteHint": "The owner sets their own password from the emailed link; you never see it.",
-    "modePasswordHint": "The account is activated right away with the password you set. You need to pass the password to the owner separately.",
+    "modeInviteHint": "The HR manager sets their own password from the emailed link; you never see it.",
+    "modePasswordHint": "The account is activated right away with the password you set. You need to pass the password to the HR manager separately.",
     "password": "Password",
     "passwordHint": "At least 10 characters, with letters, digits and a special character.",
     "submit": "Create company"
   },
   "created": {
-    "invited": "Company created. An invitation email was sent to the owner.",
-    "withPassword": "Company created. The owner can sign in with the password you set."
+    "invited": "Company created. An invitation email was sent to the HR manager.",
+    "withPassword": "Company created. The HR manager can sign in with the password you set."
   },
   "errors": {
     "updateFailed": "The company details could not be updated. Please try again.",
@@ -52,7 +52,7 @@
     "slugTaken": "This company address is already in use.",
     "slugInvalid": "The company address must be 3-40 characters and contain only lowercase letters, digits and hyphens.",
     "companyRequired": "Company name is required.",
-    "ownerNameRequired": "The owner's first and last name are required.",
+    "ownerNameRequired": "The HR manager's first and last name are required.",
     "ownerEmailInvalid": "Enter a valid email address.",
     "passwordTooShort": "The password must be at least 10 characters."
   }

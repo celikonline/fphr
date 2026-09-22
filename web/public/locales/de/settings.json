@@ -11,7 +11,7 @@
   "access": {
     "title": "Zugriffseinstellungen",
     "subtitle": "Legen Sie fest, was Mitarbeitende auf ihrer Startseite, in ihrem Konto und im Kalender sehen.",
-    "scopeNotice": "Zugriffseinstellungen schränken nur Benutzer mit der Zugriffsart „Mitarbeitende:r“ ein; Kontoinhaber:innen, Administrator:innen und HR-Benutzer sind nicht betroffen. Änderungen werden unmittelbar nach dem Speichern wirksam.",
+    "scopeNotice": "Zugriffseinstellungen schränken nur Benutzer der Gruppe „Mitarbeiter“ ein; Benutzer der Gruppen „HR-Leitung“ und „Buchhaltung“ sind nicht betroffen. Änderungen werden unmittelbar nach dem Speichern wirksam.",
     "readOnly": "Sie können die Zugriffseinstellungen einsehen, aber nicht ändern.",
     "loadError": "Die Zugriffseinstellungen konnten nicht geladen werden.",
     "saveSuccess": "Zugriffseinstellungen gespeichert.",
