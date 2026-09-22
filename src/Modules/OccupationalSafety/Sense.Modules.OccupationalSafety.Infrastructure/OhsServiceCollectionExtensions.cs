@@ -16,6 +16,8 @@ public static class OhsServiceCollectionExtensions
         services.AddScoped<IWorkplaceHazardClassificationRepository, WorkplaceHazardClassificationRepository>();
         services.AddScoped<IRiskAssessmentRepository, RiskAssessmentRepository>();
         services.AddScoped<IOhsIncidentRepository, OhsIncidentRepository>();
+        // Needs IEmployeeLookup + IOrgUnitLookup: registered by their modules in Sense.Api and explicitly in Sense.Worker.
+        services.AddScoped<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup, Lookups.OhsProfileLookup>();
         services.AddScoped<IOhsUnitOfWork>(sp => sp.GetRequiredService<OhsDbContext>());
         return services;
     }

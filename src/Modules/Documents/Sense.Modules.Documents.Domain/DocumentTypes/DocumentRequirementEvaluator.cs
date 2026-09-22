@@ -24,7 +24,8 @@ public sealed record EmployeeDocumentContext(
         DocumentRequirementCondition.HasIncentive => HasIncentive,
         DocumentRequirementCondition.UsesDisabilityTaxReduction => UsesDisabilityTaxReduction,
         DocumentRequirementCondition.ExConvictOrTerrorVictim => IsExConvictOrTerrorVictim,
-        DocumentRequirementCondition.RequiresPeriodicHealthCheck => IsUndergroundWorker,
+        // Underground work always required it; since senseik-015 Faz 5 a very hazardous workplace does too.
+        DocumentRequirementCondition.RequiresPeriodicHealthCheck => RequiresPeriodicHealthCheck || IsUndergroundWorker,
         DocumentRequirementCondition.RequiresDriving => RequiresDriving,
         DocumentRequirementCondition.HasOpenAssets => HasOpenAssets,
         DocumentRequirementCondition.VeryHazardousJob => IsVeryHazardousJob,

@@ -64,7 +64,7 @@ public sealed class EmployeeProfileChangedDocumentRequirementHandlerTests
         var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         return (types, requirements, materialization);
     }
 
@@ -139,7 +139,7 @@ public sealed class EmployeeProfileChangedDocumentRequirementHandlerTests
         var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
 
         var handler = new EmployeeProfileChangedDocumentRequirementHandler(materialization, unitOfWork, TimeProvider.System);

@@ -21,6 +21,12 @@ public interface IOrgUnitLookup
 
     /// <summary>All active org units of the tenant (flat; ParentId gives the tree).</summary>
     Task<IReadOnlyList<OrgUnitInfo>> ListActiveUnitsAsync(Guid tenantId, CancellationToken ct = default);
+
+    /// <summary>
+    /// The unit's workplace location: its own LocationId, else the nearest ancestor's. Null when no unit on the path
+    /// to the root has a location (or the unit does not exist). Used by OHS to find an employee's hazard class.
+    /// </summary>
+    Task<Guid?> GetEffectiveLocationIdAsync(Guid tenantId, Guid orgUnitId, CancellationToken ct = default);
 }
 
 /// <summary>Active hierarchy level (OrgUnitType) as seen by other modules.</summary>

@@ -56,7 +56,7 @@ public sealed class AssetEventDocumentRequirementHandlersTests
 
         var provisioning = new DocumentTypeProvisioningService(types);
         var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         return (types, requirements, assetLookup, materialization);
     }
 
@@ -109,7 +109,7 @@ public sealed class AssetEventDocumentRequirementHandlersTests
 
         var provisioning = new DocumentTypeProvisioningService(types);
         var incentiveLookup = Substitute.For<IEmployeeIncentiveLookup>();
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, assetLookup, incentiveLookup, provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         var unitOfWork = Substitute.For<IDocumentsUnitOfWork>();
         var handler = new AssetReturnedDocumentRequirementHandler(materialization, unitOfWork, TimeProvider.System);
 

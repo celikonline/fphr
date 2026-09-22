@@ -2,6 +2,7 @@ using Sense.Modules.Assets.Contracts;
 using Sense.Modules.Documents.Domain;
 using Sense.Modules.Documents.Domain.DocumentTypes;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.OccupationalSafety.Contracts;
 using Sense.Modules.Payroll.Contracts;
 using Sense.Shared.Contracts.Legislation;
 
@@ -21,7 +22,8 @@ public sealed class DocumentRequirementMaterializationService(
     IAssetLookup assetLookup,
     IEmployeeIncentiveLookup incentiveLookup,
     DocumentTypeProvisioningService provisioning,
-    ILegislationParameterReader legislation)
+    ILegislationParameterReader legislation,
+    IOhsProfileLookup ohsProfile)
 {
     /// <summary>Grace period (days) added to <c>dueDateBasis</c> for a materialized requirement's DueDate. A tenant-configurable TenantSettings value is a future enhancement, not built in this pass.</summary>
     public const int DefaultGraceDays = 30;
@@ -54,6 +56,11 @@ public sealed class DocumentRequirementMaterializationService(
         var signals = await eligibility.GetSignalsAsync(tenantId, employeeId, cancellationToken);
         var hasOpenAssets = await assetLookup.HasOpenAssetsAsync(tenantId, employeeId, cancellationToken);
         var hasIncentive = await incentiveLookup.HasActiveIncentiveAsync(tenantId, employeeId, dueDateBasis, cancellationToken);
+        // senseik-015 Faz 5: "çok tehlikeli" workplace (OHS classification of the employee's location). Periodic health
+        // checks are yearly there, matching PeriodicHealthCheck's 365-day renewal; the 3-/5-year periods of the other
+        // classes do not fit Documents' single fixed period and stay with OHS.
+        var isVeryHazardous = await ohsProfile.GetEmployeeHazardLevelAsync(tenantId, employeeId, dueDateBasis, cancellationToken)
+            == OhsHazardLevel.High;
 
         // Five signals are available cross-module today: BirthDate/DisabilityDegree/Nationality live on Employee
         // (Nationality/NonTurkishNational since senseik-009/F-02; BirthDate/DisabilityDegree are sensitive, only
@@ -63,7 +70,6 @@ public sealed class DocumentRequirementMaterializationService(
         // hardcoded false until their owning data exists:
         //  - UsesDisabilityTaxReduction: a distinct signal from HasIncentive - no owning data yet
         //  - ExConvictOrTerrorVictim: no such field anywhere yet (manual/HR-only data point)
-        //  - RequiresPeriodicHealthCheck / VeryHazardousJob: no job-hazard classification yet
         //  - RequiresDriving: no job/position attribute for this yet
         //  - HasOvertimeConsent: Leave's OvertimeConsent isn't wired as a cross-module signal yet
         //  - IsShiftWorker: Attendance shift scheduling doesn't exist yet
@@ -74,10 +80,10 @@ public sealed class DocumentRequirementMaterializationService(
             HasIncentive: hasIncentive,
             UsesDisabilityTaxReduction: false,
             IsExConvictOrTerrorVictim: false,
-            RequiresPeriodicHealthCheck: false,
+            RequiresPeriodicHealthCheck: isVeryHazardous,
             RequiresDriving: false,
             HasOpenAssets: hasOpenAssets,
-            IsVeryHazardousJob: false,
+            IsVeryHazardousJob: isVeryHazardous,
             HasOvertimeConsent: false,
             IsShiftWorker: false,
             IsUndergroundWorker: signals?.IsUndergroundWorker ?? false);
