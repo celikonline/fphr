@@ -185,6 +185,8 @@ builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSeniorityLo
 // PayrollPeriodCalculationService reads the disability degree (engelli vergi indirimi) through this Employee contract.
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();
+// RecordIncidentHandler (OHS) also needs the tenant's holiday calendar to classify an incident's date.
+builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IHolidayCalendarLookup, HolidayCalendarLookup>();
 builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
     typeof(Sense.Modules.Payroll.Contracts.PayrollPermissions).Assembly,
