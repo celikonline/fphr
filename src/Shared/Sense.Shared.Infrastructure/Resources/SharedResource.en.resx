@@ -122,7 +122,7 @@
   <data name="roles.finance.name" xml:space="preserve"><value>Finance</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Final approval of expenses/advances, bank payment lists, budget view, invoices.</value></data>
   <data name="roles.manager.name" xml:space="preserve"><value>Manager</value></data>
-  <data name="roles.manager.description" xml:space="preserve"><value>Team leave/overtime/expense approvals, team calendar, timesheets, performance, goals, raise proposals (own team only).</value></data>
+  <data name="roles.manager.description" xml:space="preserve"><value>Own team: leave/overtime/expense approvals, team calendar, monthly timesheet approval, shifts, goals, interview forms. No salaries.</value></data>
   <data name="roles.timekeeper.name" xml:space="preserve"><value>Timekeeper</value></data>
   <data name="roles.timekeeper.description" xml:space="preserve"><value>Attendance events, shift planning, timesheet calculation (no locking).</value></data>
   <data name="roles.recruiter.name" xml:space="preserve"><value>Recruiter</value></data>

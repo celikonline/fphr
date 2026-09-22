@@ -216,14 +216,15 @@ public static class SystemRoleCodes
     public const string SuperAdmin = "SuperAdmin";
 
     /// <summary>
-    /// Müşteri kiracılarının her birine seed edilen sistem rolleri: dört kullanıcı grubu (İK Yöneticisi, Muhasebe, Çalışan;
-    /// süper admin platform kiracısında) + Owner. Owner ayrı bir grup değildir: şirketi açan ilk İK Yöneticisine arka planda
+    /// Müşteri kiracılarının her birine seed edilen sistem rolleri: kullanıcı grupları (İK Yöneticisi, Muhasebe, Müdür,
+    /// Çalışan; süper admin platform kiracısında) + Owner. Owner ayrı bir grup değildir: şirketi açan ilk İK Yöneticisine arka planda
     /// verilen kilitli bayraktır (son hesap sahibi kaldırılamaz korumaları için).
     /// </summary>
-    public static readonly IReadOnlyList<string> All = [Owner, HR, PayrollSpecialist, Employee];
+    public static readonly IReadOnlyList<string> All = [Owner, HR, PayrollSpecialist, Manager, Employee];
 
-    /// <summary>Kullanıcıya seçilebilen gruplar (erişim türü seçicisi); Owner seçilemez, İK Yöneticisiyle birlikte taşınır.</summary>
-    public static readonly IReadOnlyList<string> UserGroups = [HR, PayrollSpecialist, Employee];
+    /// <summary>Kullanıcıya seçilebilen gruplar, yetkiden aza (erişim türü seçicisi ve öncelik sırası); Owner seçilemez,
+    /// İK Yöneticisiyle birlikte taşınır. Müdür (<see cref="Manager"/>) ara gruptur: kendi ekibinin onaylarını verir.</summary>
+    public static readonly IReadOnlyList<string> UserGroups = [HR, PayrollSpecialist, Manager, Employee];
 
     /// <summary>
     /// Kaldırılan eski sistem rolleri → devralan grup. Mevcut kiracılarda <c>SystemRolePermissionSynchronizer</c> bu rollerin
@@ -239,7 +240,6 @@ public static class SystemRoleCodes
         [Auditor] = HR,
         [Finance] = PayrollSpecialist,
         [ExternalAccountant] = PayrollSpecialist,
-        [Manager] = Employee,
         [Interviewer] = Employee,
         [Intern] = Employee,
         [Contractor] = Employee,

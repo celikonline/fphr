@@ -130,7 +130,7 @@ public sealed class AccessTypeRoleSyncAndSelfCardTests : IdentityStackTestBase
         // Simulate a tenant seeded before the four groups: retired system roles still exist and hold users.
         using (TenantContextSetter!.BeginScope(tenantId))
         {
-            foreach (var (userId, code) in new[] { (managerId, SystemRoleCodes.Manager), (financeId, SystemRoleCodes.Finance), (specialistId, SystemRoleCodes.HRSpecialist) })
+            foreach (var (userId, code) in new[] { (managerId, SystemRoleCodes.Interviewer), (financeId, SystemRoleCodes.Finance), (specialistId, SystemRoleCodes.HRSpecialist) })
             {
                 var retired = Role.CreateSystem(tenantId, code);
                 db.Roles.Add(retired);

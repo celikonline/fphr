@@ -28,6 +28,7 @@ public sealed class SystemRoleDefinitionsTests
             "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view", "identity.modules.manage",
             "attendance.timesheet.view", "attendance.timesheet.resolve", "attendance.timesheet.approve",
             "payroll.runs.approve", "payroll.salary.view", "expense.categories.view", "expense.categories.manage",
+            "workflow.inbox.view", "workflow.inbox.decide", "workflow.request.override", "workflow.policies.create",
             PlatformPermissions.TenantsManage,
         }
         .Concat(SelfServiceKeys)
@@ -80,7 +81,8 @@ public sealed class SystemRoleDefinitionsTests
 
         SystemRoleDefinitions.Get(SystemRoleCodes.Employee).Scope.ShouldBe(DataScope.Self);
         keys.ShouldBe(
-            [.. SelfServiceKeys, "employee.directory.view", "employee.orgchart.view", "organization.holidays.view", "expense.categories.view"],
+            [.. SelfServiceKeys, "employee.directory.view", "employee.orgchart.view", "organization.holidays.view", "expense.categories.view",
+             "workflow.inbox.view", "workflow.inbox.decide"],
             ignoreOrder: true);
     }
 
@@ -95,6 +97,39 @@ public sealed class SystemRoleDefinitionsTests
         keys.ShouldNotContain("employee.bank_accounts.edit");
         keys.ShouldNotContain("employee.sensitive.view");
         keys.ShouldNotContain("attendance.timesheet.approve");
+        keys.ShouldNotContain(PlatformPermissions.TenantsManage);
+    }
+
+    /// <summary>Ekip yöneticileri Çalışan grubunda: kendilerine atanan onayları görüp karar verebilmeli, ama başkası adına
+    /// karar veremez ve onay politikası yönetemez.</summary>
+    [Fact]
+    public void Employee_CanSeeAndDecideTheirOwnApprovalTasks_ButNotOverrideOrManagePolicies()
+    {
+        var keys = Resolve(SystemRoleCodes.Employee);
+
+        keys.ShouldContain("workflow.inbox.view");
+        keys.ShouldContain("workflow.inbox.decide");
+        keys.ShouldNotContain("workflow.request.override");
+        keys.ShouldNotContain("workflow.policies.create");
+    }
+
+    /// <summary>Müdür: ekip kapsamında izin/harcama/puantaj onayı ve ekip görünümü; maaş, kimlik yönetimi, platform yok.</summary>
+    [Fact]
+    public void Manager_ApprovesTheTeamsRequestsAtTeamScope_ButGetsNoSalaryIdentityOrEmployeeWrites()
+    {
+        var keys = Resolve(SystemRoleCodes.Manager);
+
+        SystemRoleDefinitions.Get(SystemRoleCodes.Manager).Scope.ShouldBe(DataScope.Team);
+        keys.ShouldContain("workflow.inbox.view");
+        keys.ShouldContain("workflow.inbox.decide");
+        keys.ShouldContain("attendance.timesheet.approve");
+        keys.ShouldContain("attendance.timesheet.view");
+        keys.ShouldContain("employee.directory.view");
+        keys.ShouldNotContain("workflow.request.override");
+        keys.ShouldNotContain(k => k.Contains(".salary.", StringComparison.Ordinal));
+        keys.ShouldNotContain("employee.sensitive.view");
+        keys.ShouldNotContain(k => k.StartsWith("identity.", StringComparison.Ordinal));
+        keys.ShouldNotContain("employee.employees.update");
         keys.ShouldNotContain(PlatformPermissions.TenantsManage);
     }
 

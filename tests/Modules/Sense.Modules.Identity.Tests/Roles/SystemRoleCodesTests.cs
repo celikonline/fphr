@@ -6,16 +6,17 @@ using Xunit;
 namespace Sense.Modules.Identity.Tests.Roles;
 
 /// <summary>
-/// Dört kullanıcı grubu modeli: müşteri kiracısı sistem rolleri Owner + İK Yöneticisi + Muhasebe + Çalışan; kaldırılan eski
+/// Kullanıcı grubu modeli: müşteri kiracısı sistem rolleri Owner + İK Yöneticisi + Muhasebe + Müdür + Çalışan; kaldırılan eski
 /// kodlar bir gruba devredilir ve özel rol kodu olarak kullanılamaz.
 /// </summary>
 public sealed class SystemRoleCodesTests
 {
     [Fact]
-    public void All_IsOwnerPlusTheThreeUserGroups()
+    public void All_IsOwnerPlusTheUserGroups()
     {
-        SystemRoleCodes.All.ShouldBe([SystemRoleCodes.Owner, SystemRoleCodes.HR, SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Employee]);
-        SystemRoleCodes.UserGroups.ShouldBe([SystemRoleCodes.HR, SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Employee]);
+        SystemRoleCodes.All.ShouldBe([SystemRoleCodes.Owner, SystemRoleCodes.HR, SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Manager, SystemRoleCodes.Employee]);
+        SystemRoleCodes.UserGroups.ShouldBe([SystemRoleCodes.HR, SystemRoleCodes.PayrollSpecialist, SystemRoleCodes.Manager, SystemRoleCodes.Employee]);
+        SystemRoleCodes.RetiredSuccessors.ShouldNotContainKey(SystemRoleCodes.Manager);
         SystemRoleCodes.UserGroups.ShouldNotContain(SystemRoleCodes.Owner);
     }
 
@@ -46,7 +47,6 @@ public sealed class SystemRoleCodesTests
     [InlineData(SystemRoleCodes.Auditor, SystemRoleCodes.HR)]
     [InlineData(SystemRoleCodes.Finance, SystemRoleCodes.PayrollSpecialist)]
     [InlineData(SystemRoleCodes.ExternalAccountant, SystemRoleCodes.PayrollSpecialist)]
-    [InlineData(SystemRoleCodes.Manager, SystemRoleCodes.Employee)]
     [InlineData(SystemRoleCodes.Interviewer, SystemRoleCodes.Employee)]
     [InlineData(SystemRoleCodes.Intern, SystemRoleCodes.Employee)]
     [InlineData(SystemRoleCodes.Contractor, SystemRoleCodes.Employee)]
@@ -57,7 +57,7 @@ public sealed class SystemRoleCodesTests
     }
 
     [Theory]
-    [InlineData("Manager")]
+    [InlineData("Timekeeper")]
     [InlineData("hrspecialist")]
     [InlineData("ADMIN")]
     public void CreateCustom_WithRetiredSystemCode_FailsWithSystemCodeConflict(string code)

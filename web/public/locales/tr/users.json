@@ -44,9 +44,10 @@
   "editAccessType": "Kullanıcı grubunu değiştir",
   "dialogEditAccessTypeTitle": "{{name}} için kullanıcı grubu",
   "accessTypeUpdateSuccess": "Kullanıcı grubu güncellendi.",
-  "accessTypeHint": "İK Yöneticisi ve Muhasebe şirkette her şeyi yapabilir; Çalışan yalnız kendi bilgilerine erişir.",
+  "accessTypeHint": "İK Yöneticisi ve Muhasebe şirkette her şeyi yapabilir; Müdür kendi ekibini görür ve ekibinin izin, harcama ve puantaj onaylarını verir; Çalışan yalnız kendi bilgilerine erişir.",
   "accessType.HR": "İK Yöneticisi",
   "accessType.PayrollSpecialist": "Muhasebe",
+  "accessType.Manager": "Müdür",
   "accessType.Employee": "Çalışan",
   "accessType.none": "Belirlenmedi",
   "genericError": "Bir şeyler ters gitti.",
@@ -73,6 +74,7 @@
     "Owner": "Hesap Sahibi",
     "HR": "İK Yöneticisi",
     "PayrollSpecialist": "Muhasebe",
+    "Manager": "Müdür",
     "Employee": "Çalışan",
     "SuperAdmin": "Süper Admin"
   }

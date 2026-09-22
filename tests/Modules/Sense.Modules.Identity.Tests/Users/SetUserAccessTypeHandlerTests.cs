@@ -155,12 +155,13 @@ public sealed class SetUserAccessTypeHandlerTests
     [Theory]
     [InlineData(SystemRoleCodes.HR, true)]
     [InlineData(SystemRoleCodes.PayrollSpecialist, true)]
+    [InlineData(SystemRoleCodes.Manager, true)]
     [InlineData(SystemRoleCodes.Employee, true)]
     [InlineData(SystemRoleCodes.Owner, false)]
     [InlineData(SystemRoleCodes.Admin, false)]
-    [InlineData(SystemRoleCodes.Manager, false)]
+    [InlineData(SystemRoleCodes.Timekeeper, false)]
     [InlineData(SystemRoleCodes.SuperAdmin, false)]
-    public void Validator_AcceptsOnlyTheThreeUserGroups(string accessType, bool valid)
+    public void Validator_AcceptsOnlyTheUserGroups(string accessType, bool valid)
     {
         var result = new SetUserAccessTypeValidator().Validate(new SetUserAccessTypeCommand(Guid.NewGuid(), accessType));
 

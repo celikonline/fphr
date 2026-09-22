@@ -65,6 +65,7 @@
   "accessType": {
     "HR": "HR Manager",
     "PayrollSpecialist": "Accounting",
+    "Manager": "Manager",
     "Employee": "Employee"
   },
   "fields": {
@@ -366,7 +367,7 @@
       }
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
-    "accessTypeHint": "HR Manager and Accounting can do everything in the company; Employee can only access their own information.",
+    "accessTypeHint": "HR Manager and Accounting can do everything in the company; Manager sees their team and approves its requests; Employee can only access their own information.",
     "accessTypeSaved": "User group updated.",
     "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type.",
     "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later.",

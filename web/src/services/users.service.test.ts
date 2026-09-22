@@ -30,6 +30,8 @@ describe("deriveAccessType", () => {
       "PayrollSpecialist"
     );
     expect(deriveAccessType([role("Employee"), role("PayrollSpecialist"), role("HR")])).toBe("HR");
+    expect(deriveAccessType([role("Employee"), role("Manager")])).toBe("Manager");
+    expect(deriveAccessType([role("Manager"), role("PayrollSpecialist")])).toBe("PayrollSpecialist");
   });
 
   it("ignores the removed legacy access types", () => {

@@ -129,8 +129,8 @@
   <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Şirket içinde tüm yetkiler: bordro, harcama ve avans ödemeleri, beyannameler, raporlar ve diğer tüm ekranlar.</value></data>
   <data name="roles.finance.name" xml:space="preserve"><value>Finans</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Harcama/avans son onay, banka ödeme listeleri, bütçe görünümü, faturalar.</value></data>
-  <data name="roles.manager.name" xml:space="preserve"><value>Yönetici</value></data>
-  <data name="roles.manager.description" xml:space="preserve"><value>Ekip izin/FM/harcama onayı, ekip takvimi, puantaj, performans, hedef, zam önerisi (yalnız kendi ekibi).</value></data>
+  <data name="roles.manager.name" xml:space="preserve"><value>Müdür</value></data>
+  <data name="roles.manager.description" xml:space="preserve"><value>Kendi ekibi: izin/fazla mesai/harcama onayı, ekip takvimi, aylık puantaj onayı, vardiya, hedefler, mülakat formları. Maaş görmez.</value></data>
   <data name="roles.timekeeper.name" xml:space="preserve"><value>Puantör</value></data>
   <data name="roles.timekeeper.description" xml:space="preserve"><value>PDKS hareket ekleme/düzeltme, vardiya planı, puantaj hesaplama (kilit yok).</value></data>
   <data name="roles.recruiter.name" xml:space="preserve"><value>İşe Alım Uzmanı</value></data>

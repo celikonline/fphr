@@ -66,8 +66,8 @@ public static class SeedDataConstants
     public const string DemoAdminTitle = "Bilgi Sistemleri Yöneticisi";
     public const string DemoHrTitle = "İnsan Kaynakları Direktörü";
 
-    // System roles seeded per tenant: SystemRoleCodes.All — the four user groups (HR = İK Yöneticisi,
-    // PayrollSpecialist = Muhasebe, Employee = Çalışan) + the locked Owner flag. Old role codes (Manager, Intern...)
+    // System roles seeded per tenant: SystemRoleCodes.All — the user groups (HR = İK Yöneticisi,
+    // PayrollSpecialist = Muhasebe, Manager = Müdür, Employee = Çalışan) + the locked Owner flag. Old role codes (Intern...)
     // survive only as demo "personas" for placement; see DataSeeder.PersonaRole / GroupRoleIdsFor.
 }
 

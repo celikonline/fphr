@@ -65,6 +65,7 @@
   "accessType": {
     "HR": "HR-Leitung",
     "PayrollSpecialist": "Buchhaltung",
+    "Manager": "Abteilungsleitung",
     "Employee": "Mitarbeiter"
   },
   "fields": {
@@ -366,7 +367,7 @@
       }
     },
     "noAccountHint": "Diese Person hat noch kein Benutzerkonto. Senden Sie über das Drei-Punkte-Menü eine Einladung, um eines anzulegen.",
-    "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
+    "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; die Abteilungsleitung sieht ihr Team und genehmigt dessen Anträge; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
     "accessTypeSaved": "Benutzergruppe aktualisiert.",
     "sensitiveHidden": "Sie haben keine Berechtigung, Wehrdienststatus, Grad der Behinderung oder Blutgruppe einzusehen.",
     "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später.",
