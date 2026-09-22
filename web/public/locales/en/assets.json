@@ -50,5 +50,29 @@
       "assigned": "Assigned",
       "retired": "Retired"
     }
+  },
+  "page": {
+    "title": "Assets",
+    "inventory": "Inventory",
+    "mine": "My assets",
+    "mineEmpty": "No assets are assigned to you."
+  },
+  "inventory": {
+    "create": "Add asset",
+    "editTitle": "Edit asset",
+    "edit": "Edit",
+    "saved": "Asset saved.",
+    "assignTitle": "Assign \"{{name}}\"",
+    "employee": "Employee",
+    "status": "Status",
+    "statusFilter": "Status filter",
+    "categoryFilter": "Category filter",
+    "allStatuses": "All statuses",
+    "allCategories": "All categories",
+    "empty": "No assets match this filter.",
+    "retire": "Retire",
+    "retireTitle": "Retire asset?",
+    "retireDescription": "\"{{name}}\" will be retired and can no longer be assigned.",
+    "retired": "Asset retired."
   }
 }

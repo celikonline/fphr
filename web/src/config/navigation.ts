@@ -407,6 +407,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "orange",
   },
   {
+    key: "assets",
+    labelKey: "apps.assets",
+    path: "/app/assets",
+    icon: Package,
+    permissions: ["assets.my.assets", "assets.assets.view"],
+    iconColor: "steel",
+  },
+  {
     key: "recruitmentCandidates",
     labelKey: "apps.recruitmentCandidates",
     path: "/app/recruitment/candidates",

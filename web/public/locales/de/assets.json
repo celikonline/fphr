@@ -50,5 +50,29 @@
       "assigned": "Zugewiesen",
       "retired": "Ausgemustert"
     }
+  },
+  "page": {
+    "title": "Arbeitsmittel",
+    "inventory": "Bestand",
+    "mine": "Meine Arbeitsmittel",
+    "mineEmpty": "Ihnen sind keine Arbeitsmittel zugewiesen."
+  },
+  "inventory": {
+    "create": "Arbeitsmittel hinzufügen",
+    "editTitle": "Arbeitsmittel bearbeiten",
+    "edit": "Bearbeiten",
+    "saved": "Arbeitsmittel gespeichert.",
+    "assignTitle": "„{{name}}\" zuweisen",
+    "employee": "Mitarbeitende",
+    "status": "Status",
+    "statusFilter": "Statusfilter",
+    "categoryFilter": "Kategoriefilter",
+    "allStatuses": "Alle Status",
+    "allCategories": "Alle Kategorien",
+    "empty": "Keine Arbeitsmittel entsprechen diesem Filter.",
+    "retire": "Ausmustern",
+    "retireTitle": "Arbeitsmittel ausmustern?",
+    "retireDescription": "„{{name}}\" wird ausgemustert und kann nicht mehr zugewiesen werden.",
+    "retired": "Arbeitsmittel ausgemustert."
   }
 }
