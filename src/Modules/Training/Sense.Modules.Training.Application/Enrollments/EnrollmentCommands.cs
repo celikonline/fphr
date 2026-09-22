@@ -42,6 +42,11 @@ public sealed class CreateEnrollmentHandler(
             return TrainingErrors.ProgramNotFound;
         }
 
+        if (program.Status is TrainingStatus.Closed or TrainingStatus.Archived)
+        {
+            return TrainingErrors.ProgramNotOpen;
+        }
+
         var existing = await enrollments.GetByEmployeeIdAsync(tenant.TenantId, command.EmployeeId, cancellationToken);
         if (existing.Any(e => e.TrainingProgramId == command.TrainingProgramId))
         {

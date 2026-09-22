@@ -46,6 +46,7 @@ i18n
       "support",
       "companyCalendar",
       "announcements",
+      "training",
       "ohs",
       "platform",
       "setup",

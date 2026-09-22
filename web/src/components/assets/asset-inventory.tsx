@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router";
 import { PackagePlus } from "lucide-react";
-import { Anchor, Badge, Button, Card, Group, Select, Skeleton, Stack, Table, Text } from "@mantine/core";
+import { Badge, Button, Card, Group, Select, Skeleton, Stack, Table, Text } from "@mantine/core";
 import ConfirmDialog from "@/components/confirm-dialog";
+import EmployeeNameLink from "@/components/employees/employee-name-link";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
 import {
@@ -15,7 +15,6 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
-import { getEmployee } from "@/services/employees.service";
 import {
   ASSET_STATUSES,
   listAssetCategories,
@@ -26,7 +25,6 @@ import {
 } from "@/services/assets.service";
 
 const PAGE_SIZE = 20;
-const EMPLOYEE_NAME_STALE_MS = 5 * 60_000;
 
 export const ASSET_STATUS_COLOR: Record<AssetStatus, string> = {
   unassigned: "gray",
@@ -151,7 +149,7 @@ export default function AssetInventory() {
                     </Badge>
                   </Table.Td>
                   <Table.Td>
-                    {asset.assignedEmployeeId ? <EmployeeName id={asset.assignedEmployeeId} /> : "—"}
+                    {asset.assignedEmployeeId ? <EmployeeNameLink id={asset.assignedEmployeeId} tab="assets" /> : "—"}
                   </Table.Td>
                   <Table.Td>{asset.status === "assigned" ? date(asset.issuedAt) : "—"}</Table.Td>
                   {canManage && (
@@ -213,21 +211,5 @@ function RowActions({ asset, onOpen }: { asset: Asset; onOpen: (dialog: Dialog) 
         </Button>
       )}
     </Group>
-  );
-}
-
-/** Resolves the assignee's name (cached per employee); falls back to a dash when the caller cannot read the record. */
-function EmployeeName({ id }: { id: string }) {
-  const query = useQuery({
-    queryKey: ["employees", "detail", id],
-    queryFn: () => getEmployee(id),
-    staleTime: EMPLOYEE_NAME_STALE_MS,
-    retry: false,
-  });
-  if (!query.data) return <>{query.isLoading ? "…" : "—"}</>;
-  return (
-    <Anchor component={Link} to={`/app/employees/${id}/assets`} size="sm">
-      {query.data.displayName}
-    </Anchor>
   );
 }

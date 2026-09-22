@@ -1,0 +1,81 @@
+{
+  "title": "Training",
+  "tabs": {
+    "programs": "Programs",
+    "mine": "My trainings"
+  },
+  "loadError": "Training data could not be loaded.",
+  "actionFailed": "The action could not be completed.",
+  "mine": {
+    "empty": "You are not enrolled in any training."
+  },
+  "fields": {
+    "title": "Program name",
+    "description": "Description",
+    "category": "Category",
+    "capacity": "Capacity",
+    "startDate": "Start",
+    "endDate": "End",
+    "dates": "Dates",
+    "status": "Status"
+  },
+  "categories": {
+    "technical": "Technical",
+    "compliance": "Compliance",
+    "softSkills": "Soft skills",
+    "custom": "Other"
+  },
+  "programStatuses": {
+    "draft": "Draft",
+    "active": "Active",
+    "closed": "Closed",
+    "archived": "Archived"
+  },
+  "enrollmentStatuses": {
+    "enrolled": "Enrolled",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "noShow": "No-show"
+  },
+  "programs": {
+    "create": "New program",
+    "created": "Training program created.",
+    "empty": "No training programs yet.",
+    "details": "Details",
+    "activate": "Activate",
+    "activated": "Program activated.",
+    "close": "Close",
+    "closed": "Program closed.",
+    "closeTitle": "Close program?",
+    "closeDescription": "\"{{title}}\" will be closed; no new participants can be added.",
+    "capacityHint": "Leave empty for unlimited.",
+    "endBeforeStart": "End cannot be before start."
+  },
+  "participants": {
+    "title": "Participants",
+    "employee": "Employee",
+    "certificate": "Certificate no.",
+    "certificateHint": "Optional; leave empty if no certificate was issued.",
+    "add": "Add participant",
+    "addButton": "Add",
+    "added": "Participant added.",
+    "complete": "Completed",
+    "completeTitle": "Mark training as completed",
+    "completed": "Enrollment completed.",
+    "remove": "Remove",
+    "removed": "Participant removed.",
+    "empty": "No participants yet.",
+    "capacity": "{{count}} / {{max}} people",
+    "closedHint": "Participants cannot be added to a closed program."
+  },
+  "requirements": {
+    "title": "Prerequisite trainings",
+    "empty": "No prerequisites defined.",
+    "add": "Add prerequisite",
+    "addButton": "Add",
+    "added": "Prerequisite added.",
+    "remove": "Remove prerequisite",
+    "blocking": "Required before enrolling",
+    "blocksLabel": "Block enrollment until completed"
+  }
+}

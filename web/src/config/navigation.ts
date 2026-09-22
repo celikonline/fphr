@@ -48,6 +48,7 @@ import {
   QrCode,
   MonitorCheck,
   Megaphone,
+  GraduationCap,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -413,6 +414,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: Package,
     permissions: ["assets.my.assets", "assets.assets.view"],
     iconColor: "steel",
+  },
+  {
+    key: "training",
+    labelKey: "apps.training",
+    path: "/app/training",
+    icon: GraduationCap,
+    permissions: ["training.my.enrollments", "training.programs.view"],
+    iconColor: "teal",
   },
   {
     key: "recruitmentCandidates",

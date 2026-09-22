@@ -1442,4 +1442,6 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="training.enrollment.prerequisite_not_completed" xml:space="preserve"><value>Bu programa kaydolmadan önce ön koşul eğitimin tamamlanmış olması gerekir.</value></data>
   <data name="training.requirement.self_reference" xml:space="preserve"><value>Bir eğitim programı kendi ön koşulu olamaz.</value></data>
   <data name="training.requirement.not_found" xml:space="preserve"><value>Ön koşul kuralı bulunamadı.</value></data>
+  <data name="training.enrollment.program_not_open" xml:space="preserve"><value>Kapalı ya da arşivlenmiş programa katılımcı eklenemez.</value></data>
+  <data name="training.my.enrollments" xml:space="preserve"><value>Eğitimlerim</value></data>
 </root>

@@ -22,6 +22,12 @@ public sealed class EnrollmentsController : ApiControllerBase
     public async Task<IActionResult> List([FromQuery] Guid? trainingProgramId, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListEnrollmentsQuery(trainingProgramId), ct));
 
+    /// <summary>"Eğitimlerim": çağıranın kendi katılım kayıtları (training.my.enrollments).</summary>
+    [HttpGet("my")]
+    [ProducesResponseType<IReadOnlyList<MyTrainingDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListMy(CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListMyTrainingsQuery(), ct));
+
     [HttpGet(ApiRoutes.IdParam)]
     [ProducesResponseType<EnrollmentDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Get(Guid id, CancellationToken ct) =>
