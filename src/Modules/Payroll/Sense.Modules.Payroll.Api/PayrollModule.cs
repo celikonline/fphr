@@ -6,9 +6,11 @@ using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Infrastructure;
 using Sense.Modules.Payroll.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Payroll.Api;
 
@@ -34,7 +36,12 @@ public sealed class PayrollModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<PayrollDbContext>(configuration, PayrollDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates (payroll periods) - same wiring as LeaveModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<PayrollDbContext>(
+            configuration, PayrollDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<PayrollDbContext>>();
         services.AddModuleHandlers(
             PayrollDbContext.SchemaName,
             typeof(PayrollLegislationSnapshotResolver).Assembly,
@@ -42,5 +49,10 @@ public sealed class PayrollModule : IModule
             typeof(IPayrollPeriodRepository).Assembly,
             typeof(PayrollPermissions).Assembly);
         services.AddPayrollServices(configuration);
+
+        // The closing checklist reads the employee directory, which only the API host provides (Sense.Worker has no consumer for it).
+        services.AddScoped<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>();
+        services.AddScoped<Sense.Modules.Payroll.Application.Closing.IClosingChecklistGate>(
+            sp => sp.GetRequiredService<Sense.Modules.Payroll.Application.Closing.ClosingChecklistService>());
     }
 }

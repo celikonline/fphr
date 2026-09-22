@@ -6,6 +6,7 @@ import i18next from "i18next";
 import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, Routes, Route } from "react-router";
 import trNavigation from "../../public/locales/tr/navigation.json";
+import trCommon from "../../public/locales/tr/common.json";
 import AppLayout from "./app-layout";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -24,6 +25,7 @@ vi.mock("@/hooks/use-access-setting", () => ({
 }));
 
 const mockUseAuthStore = useAuthStore as unknown as ReturnType<typeof vi.fn>;
+const mockLogout = vi.fn();
 
 // jsdom has no matchMedia/ResizeObserver/document.fonts; Mantine's Tooltip/Menu positioning
 // (Floating UI) needs one of these mounted to render without throwing.
@@ -59,10 +61,18 @@ beforeEach(() => {
   // Only items without a `permissions` list (e.g. "home") are relied on in these tests, so the
   // exact permission strings here don't matter - they just need to exist for state.hasPermission.
   const state = {
-    user: { id: "u1", firstName: "Ada", name: "Ada Lovelace", permissions: [] as string[] },
+    user: {
+      id: "u1",
+      firstName: "Ada",
+      lastName: "Lovelace",
+      email: "ada@acme.test",
+      name: "Ada Lovelace",
+      permissions: [] as string[],
+      tenant: { id: "t1", name: "Acme Anonim Şirketi", slug: "acme" },
+    },
     features: { accessSettingsBypass: true, access: {} },
     hasPermission: (permission: string) => state.user.permissions.includes(permission),
-    logout: vi.fn(),
+    logout: mockLogout,
   };
   mockUseAuthStore.mockImplementation((selector: (s: typeof state) => unknown) => selector(state));
 });
@@ -73,29 +83,89 @@ function createTestI18n() {
     lng: "tr",
     fallbackLng: "tr",
     defaultNS: "navigation",
-    ns: ["navigation"],
-    resources: { tr: { navigation: trNavigation } },
+    ns: ["navigation", "common"],
+    resources: { tr: { navigation: trNavigation, common: trCommon } },
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
   });
   return instance;
 }
 
-function renderAppLayout() {
+function renderAppLayout(initialEntries: string[] = ["/app"], initialIndex?: number) {
   return render(
     <I18nextProvider i18n={createTestI18n()}>
       <MantineProvider>
-        <MemoryRouter initialEntries={["/app"]}>
+        <MemoryRouter initialEntries={initialEntries} initialIndex={initialIndex}>
           <Routes>
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<div>Page content</div>} />
+              <Route path="reports" element={<div>Reports page</div>} />
             </Route>
           </Routes>
         </MemoryRouter>
       </MantineProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
+
+describe("AppLayout tenant badge", () => {
+  it("shows the name of the company the user is logged in to", () => {
+    renderAppLayout();
+
+    expect(
+      within(screen.getByTestId("tenant-badge")).getByText("Acme Anonim Şirketi")
+    ).toBeDefined();
+  });
+});
+
+describe("AppLayout user menu", () => {
+  it("opens from the top bar with the profile link and sign out", async () => {
+    const user = userEvent.setup();
+    renderAppLayout();
+
+    await user.click(screen.getByRole("button", { name: "Profilim" }));
+
+    expect(await screen.findByText("ada@acme.test")).toBeDefined();
+    expect(screen.getByText("Profilim").closest("a")?.getAttribute("href")).toBe("/app/account");
+
+    await user.click(screen.getByText("Çıkış Yap"));
+
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it("no longer lists the profile in the sidebar", () => {
+    renderAppLayout();
+
+    expect(within(screen.getByTestId("sidebar-desktop")).queryByText("Profilim")).toBeNull();
+  });
+});
+
+describe("AppLayout back button", () => {
+  it("is hidden on the home page", () => {
+    renderAppLayout();
+
+    expect(screen.queryByRole("button", { name: "Geri" })).toBeNull();
+  });
+
+  it("goes back in history on inner pages", async () => {
+    const user = userEvent.setup();
+    renderAppLayout(["/app", "/app/reports"], 1);
+
+    // The button is only shown off the home page, so its disappearance proves we landed on /app.
+    await user.click(screen.getByRole("button", { name: "Geri" }));
+
+    expect(screen.queryByRole("button", { name: "Geri" })).toBeNull();
+  });
+
+  it("goes home when the page was opened directly", async () => {
+    const user = userEvent.setup();
+    renderAppLayout(["/app/reports"]);
+
+    await user.click(screen.getByRole("button", { name: "Geri" }));
+
+    expect(screen.queryByRole("button", { name: "Geri" })).toBeNull();
+  });
+});
 
 describe("AppLayout sidebar collapse toggle", () => {
   it("expands by default and shows nav labels in the desktop sidebar", () => {

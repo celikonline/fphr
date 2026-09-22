@@ -7,7 +7,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { formatDateOnly, formatDateTime } from "@/lib/dates";
+import { formatDateTime } from "@/lib/dates";
 import {
   toEmployeeInput,
   updateEmployee,
@@ -23,8 +23,9 @@ import {
   type MaritalStatus,
   type MilitaryStatus,
 } from "@/services/employees.service";
-import { setUserAccessType, type AccessType } from "@/services/users.service";
+import { ACCESS_TYPES, setUserAccessType, type AccessType } from "@/services/users.service";
 import { AccountStatusBadge } from "./employee-badges";
+import { PersonalView, ProfileView } from "./employee-profile-view";
 import {
   BLOOD_TYPE_OPTIONS,
   CONTRACT_TYPE_OPTIONS,
@@ -47,7 +48,6 @@ import {
   type FieldErrors,
 } from "./employee-form";
 
-const ACCESS_TYPES: AccessType[] = ["Employee", "Owner", "Admin"];
 const SENSITIVE_PERMISSION = "employee.sensitive.view";
 const EMPTY_ENUM_VALUE = "__none__";
 
@@ -192,7 +192,7 @@ function EditFooter({ saving, onCancel }: { saving: boolean; onCancel: () => voi
 
 /** "Genel": identity and contact fields, plus employment/contract type. */
 export function GeneralSection({ employee }: SectionProps) {
-  const { t, i18n } = useTranslation(["employees", "common"]);
+  const { t } = useTranslation(["employees", "common"]);
   const canUpdate = usePermission("employee.employees.update");
   const canViewSensitive = usePermission(SENSITIVE_PERMISSION);
   const [editing, setEditing] = useState(false);
@@ -234,12 +234,14 @@ export function GeneralSection({ employee }: SectionProps) {
     }
   }
 
-  const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
   const disabledFields: ReadonlySet<EmployeeGeneralField> = canViewSensitive ? new Set() : new Set(["nationalId"]);
 
+  if (!editing) {
+    return <ProfileView employee={employee} editAction={canUpdate ? <EditButton onClick={startEdit} /> : undefined} />;
+  }
+
   return (
-    <SectionCard title={t("employees:card.sections.general")} action={canUpdate && !editing ? <EditButton onClick={startEdit} /> : undefined}>
-      {editing ? (
+    <SectionCard title={t("employees:card.sections.general")}>
         <form onSubmit={submit}>
           <Stack gap="md">
             <EmployeeGeneralFields
@@ -292,26 +294,6 @@ export function GeneralSection({ employee }: SectionProps) {
             <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
           </Stack>
         </form>
-      ) : (
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("employees:fields.firstName")}>{employee.firstName}</Field>
-          <Field label={t("employees:fields.lastName")}>{employee.lastName}</Field>
-          <Field label={t("employees:fields.nationalId")}>{employee.nationalId ?? "—"}</Field>
-          <Field label={t("employees:fields.workEmail")}>{employee.workEmail ?? "—"}</Field>
-          <Field label={t("employees:fields.personalEmail")}>{employee.personalEmail ?? "—"}</Field>
-          <Field label={t("employees:fields.workPhone")}>{employee.workPhone ?? "—"}</Field>
-          <Field label={t("employees:fields.hireDate")}>{date(employee.hireDate)}</Field>
-          <Field label={t("employees:fields.leaveAccrualStartDate")}>{date(employee.leaveAccrualStartDate)}</Field>
-          <Field label={t("employees:fields.positionStartDate")}>{date(employee.positionStartDate)}</Field>
-          <Field label={t("employees:fields.birthDate")}>{date(employee.birthDate)}</Field>
-          <Field label={t("employees:fields.contractType")}>
-            {employee.contractType ? t(`employees:enum.contractType.${employee.contractType}`) : "—"}
-          </Field>
-          <Field label={t("employees:fields.employmentType")}>
-            {employee.employmentType ? t(`employees:enum.employmentType.${employee.employmentType}`) : "—"}
-          </Field>
-        </dl>
-      )}
     </SectionCard>
   );
 }
@@ -387,16 +369,13 @@ export function PersonalSection({ employee }: SectionProps) {
     });
   }
 
-  const orDash = (value: string | null) => value ?? "—";
+
+  if (!editing) {
+    return <PersonalView employee={employee} editAction={canUpdate ? <EditButton onClick={startEdit} /> : undefined} />;
+  }
 
   return (
-    <SectionCard title={t("employees:card.sections.personal")} action={canUpdate && !editing ? <EditButton onClick={startEdit} /> : undefined}>
-      {!canViewSensitive && (
-        <Text size="xs" c="dimmed" mb="md">
-          {t("employees:card.sensitiveHidden")}
-        </Text>
-      )}
-      {editing ? (
+    <SectionCard title={t("employees:card.sections.personal")}>
         <form onSubmit={submit}>
           <Stack gap="md">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -521,31 +500,6 @@ export function PersonalSection({ employee }: SectionProps) {
             <EditFooter saving={mutation.isPending} onCancel={() => setEditing(false)} />
           </Stack>
         </form>
-      ) : (
-        <dl className="grid gap-4 sm:grid-cols-2">
-          <Field label={t("employees:fields.gender")}>{t(`employees:enum.gender.${employee.gender}`)}</Field>
-          <Field label={t("employees:fields.maritalStatus")}>{t(`employees:enum.maritalStatus.${employee.maritalStatus}`)}</Field>
-          <Field label={t("employees:fields.childCount")}>{employee.childCount ?? "—"}</Field>
-          <Field label={t("employees:fields.educationStatus")}>
-            {employee.educationStatus ? t(`employees:enum.educationStatus.${employee.educationStatus}`) : "—"}
-          </Field>
-          <Field label={t("employees:fields.highestEducationLevel")}>
-            {employee.highestEducationLevel ? t(`employees:enum.highestEducationLevel.${employee.highestEducationLevel}`) : "—"}
-          </Field>
-          <Field label={t("employees:fields.militaryStatus")}>
-            {employee.militaryStatus ? t(`employees:enum.militaryStatus.${employee.militaryStatus}`) : "—"}
-          </Field>
-          <Field label={t("employees:fields.disabilityDegree")}>
-            {employee.disabilityDegree ? t(`employees:enum.disabilityDegree.${employee.disabilityDegree}`) : "—"}
-          </Field>
-          <Field label={t("employees:fields.bloodType")}>{employee.bloodType ? t(`employees:enum.bloodType.${employee.bloodType}`) : "—"}</Field>
-          <Field label={t("employees:fields.mobilePhone")}>{orDash(employee.mobilePhone)}</Field>
-          <Field label={t("employees:fields.homePhone")}>{orDash(employee.homePhone)}</Field>
-          <Field label={t("employees:fields.addressLine")}>{orDash(employee.addressLine)}</Field>
-          <Field label={t("employees:fields.city")}>{orDash(employee.city)}</Field>
-          <Field label={t("employees:fields.postalCode")}>{orDash(employee.postalCode)}</Field>
-        </dl>
-      )}
     </SectionCard>
   );
 }

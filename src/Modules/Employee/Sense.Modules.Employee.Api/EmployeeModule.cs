@@ -90,6 +90,10 @@ public sealed class EmployeeModule : IModule
         // Subcontractor catalog (E5b): employees link to it; the İSG headcount threshold (Faz 7) reads that link.
         services.AddScoped<ISubcontractorRepository, SubcontractorRepository>();
 
+        // Profile photo (bytea row per employee, served through the API so data scope and tenant isolation apply).
+        services.AddScoped<IEmployeePhotoRepository, EmployeePhotoRepository>();
+        services.AddScoped<EmployeePhotoWriter>();
+
         // Career history (E2): shared by the career endpoints, PUT /employees/{id}, bulk assign-manager and the import
         services.AddScoped<OrgPlacementLoader>();
         services.AddScoped<CareerService>();
@@ -132,6 +136,9 @@ public sealed class EmployeeModule : IModule
         // Worker consumer), so unlike IEmployeeSalaryLookup/IEmployeeBirthDateLookup it needs no Sense.Worker registration.
         services.AddScoped<IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
 
+        // Cross-module contract consumed by Payroll's bank payment file (plain IBAN of the primary account; permission-gated export only).
+        services.AddScoped<IEmployeePayoutAccountLookup, EmployeePayoutAccountLookup>();
+
         // Cross-module contract consumed by Payroll (senseik-019 2b, GVK md.31 engelli çalışan gelir vergisi matrah indirimi)
         services.AddScoped<IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 
@@ -141,5 +148,14 @@ public sealed class EmployeeModule : IModule
 
         // Cross-module contract consumed by Recruitment (ATS to HR core bridge: candidate hire -> employee provisioning, Faz 9)
         services.AddScoped<IEmployeeProvisioning, EmployeeProvisioning>();
+
+        // Cross-module contracts consumed by Notifications (exit e-mail's çalışma belgesi attachment, announcement
+        // audience) - registered in Sense.Worker too, where the delivery processor and event handlers run.
+        services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
+        services.AddScoped<IEmployeeAudienceLookup, EmployeeAudienceLookup>();
+
+        // Hangfire runs in Sense.Api: daily birthday pass publishing EmployeeBirthdaysToday for Notifications.
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Infrastructure.BackgroundJobs.BirthdayGreetingJobHandler>();
     }
 }

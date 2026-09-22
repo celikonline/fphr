@@ -10,6 +10,7 @@
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <!-- Cross-module read contract only (IAssetLookup) + AssetAssigned/AssetReturned integration event types, per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Assets/Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
+    <ProjectReference Include="../../OccupationalSafety/Sense.Modules.OccupationalSafety.Contracts/Sense.Modules.OccupationalSafety.Contracts.csproj" />
     <!-- Cross-module write contract only (IWorkflowService, ApprovalStepInput), per Modules_TalkOnlyThroughContracts -->
     <ProjectReference Include="../../Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
     <!-- Cross-module read contract only (IEmployeeIncentiveLookup, senseik-010/F-03: HasIncentive materialization signal), per Modules_TalkOnlyThroughContracts -->

@@ -1,0 +1,76 @@
+{
+  "title": "Onboarding & offboarding",
+  "tabs": {
+    "pending": "Open tasks",
+    "employee": "Employee checklist",
+    "templates": "Templates"
+  },
+  "loadError": "Tasks could not be loaded.",
+  "actionFailed": "The action could not be completed.",
+  "filters": {
+    "all": "All"
+  },
+  "stages": {
+    "onboarding": "Onboarding",
+    "offboarding": "Offboarding"
+  },
+  "statuses": {
+    "pending": "Pending",
+    "completed": "Completed",
+    "waived": "Waived"
+  },
+  "roles": {
+    "hr": "HR",
+    "it": "IT",
+    "manager": "Manager",
+    "payroll": "Payroll"
+  },
+  "fields": {
+    "dueDate": "Due",
+    "employee": "Employee",
+    "task": "Task",
+    "stage": "Stage",
+    "responsible": "Responsible",
+    "status": "Status",
+    "mandatory": "Mandatory",
+    "offset": "Due (days offset)",
+    "active": "Active"
+  },
+  "offset": {
+    "sameDay": "Same day",
+    "before": "{{count}} days before",
+    "after": "{{count}} days after"
+  },
+  "tasks": {
+    "complete": "Done",
+    "completedToast": "Task completed.",
+    "waive": "Waive",
+    "waiveTitle": "Waive \"{{title}}\"?",
+    "waiveReason": "Reason",
+    "waivedToast": "Task waived.",
+    "waivedBecause": "Waived: {{reason}}",
+    "noPending": "No pending tasks.",
+    "overdueCount": "{{count}} tasks overdue"
+  },
+  "checklist": {
+    "createHint": "Checklists are created automatically at hire and exit. For employees hired before this module you can create one manually; existing tasks are not duplicated.",
+    "hireDate": "Hire date",
+    "exitDate": "Exit date",
+    "create": "Create checklist",
+    "created": "Checklist created.",
+    "empty": "No tasks for this employee."
+  },
+  "templates": {
+    "emptyHint": "No task templates yet. Load the recommended ones (SGK notifications, employment certificate, asset return, ...) and adjust them.",
+    "seed": "Load recommended templates",
+    "seeded": "{{count}} templates added.",
+    "add": "Add task",
+    "addTitle": "Add task template",
+    "edit": "Edit",
+    "editTitle": "Edit task template",
+    "saved": "Template saved.",
+    "stageEmpty": "No tasks for this stage.",
+    "offsetHintHire": "Relative to the hire date; negative means before it (e.g. SGK notification -1).",
+    "offsetHintExit": "Days after the exit date (e.g. SGK exit notification 10)."
+  }
+}

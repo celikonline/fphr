@@ -205,7 +205,7 @@ function LeaveCalendar() {
   };
 
   return (
-    <div className={`${classes.root} mx-auto flex max-w-[96rem] flex-col gap-6 p-6 md:p-10`}>
+    <div className={`${classes.root} flex min-h-full flex-col gap-6 p-6 md:p-10`}>
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <CalendarDays className="h-6 w-6" /> {t("leave:calendar.title")}
@@ -268,8 +268,8 @@ function LeaveCalendar() {
       </Group>
 
       {/* Paper and the sticky name column both use --mantine-color-body, so they match in both schemes. */}
-      <Paper withBorder className="overflow-hidden">
-        <div>
+      <Paper withBorder className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col">
           {query.isLoading ? (
             <div className="p-4">
               <Skeleton h={256} />
@@ -288,8 +288,9 @@ function LeaveCalendar() {
           ) : (
             <>
               {/* md+: employees × days grid (month: original cell size; week: wider columns, requirement 3) */}
-              <div className="hidden overflow-x-auto md:block">
-                <Box fz="xs" className="min-w-max">
+              <div className="hidden min-h-0 flex-1 overflow-auto md:flex">
+                {/* min-width 100% + max-content: the 1fr day columns stretch to fill a wide screen, and scroll when a month needs more. */}
+                <Box fz="xs" className="flex min-h-full flex-col" style={{ minWidth: "100%", width: "max-content" }}>
                   <div className={`${classes.headerRow} grid`} style={gridTemplate}>
                     <div className={`${classes.nameHeader} sticky left-0 z-20 px-3 py-2`}>{t("leave:calendar.employee")}</div>
                     {dates.map((date) => {
@@ -351,6 +352,18 @@ function LeaveCalendar() {
                       )}
                     </div>
                   ))}
+                  {/* Fills the space below the last employee so the day columns (and weekend/today shading) reach the bottom. */}
+                  <div className="grid flex-1" style={gridTemplate} aria-hidden>
+                    <div className={`${classes.nameCell} sticky left-0 z-20`} />
+                    {dates.map((date) => (
+                      <div
+                        key={toDateOnly(date)}
+                        className={classes.dayCell}
+                        data-weekend={isWeekend(date) || undefined}
+                        data-today={toDateOnly(date) === today || undefined}
+                      />
+                    ))}
+                  </div>
                 </Box>
               </div>
 

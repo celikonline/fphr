@@ -1,0 +1,15 @@
+{{-
+if is_high_priority == "true"
+  subject = "[Important] New announcement: " + announcement_title
+else
+  subject = "New announcement: " + announcement_title
+end
+-}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p><strong>{{ announcement_title | html.escape }}</strong></p>
+{{~ if announcement_excerpt ~}}
+<p>{{ announcement_excerpt | html.escape }}</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Read the announcement" action_url }}
+{{~ end ~}}

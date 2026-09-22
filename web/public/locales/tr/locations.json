@@ -41,5 +41,9 @@
   "regenerateCode": "Kodu yenile",
   "regenerateSuccess": "QR kodu yenilendi; eski basılı poster artık geçersiz.",
   "regenerateConfirmTitle": "QR kodu yenilensin mi?",
-  "regenerateConfirmDescription": "\"{{name}}\" lokasyonunun QR kodu yenilenecek. Girişe asılı mevcut QR poster hemen geçersiz olur; yeni kodu yeniden yazdırmanız gerekir."
+  "regenerateConfirmDescription": "\"{{name}}\" lokasyonunun QR kodu yenilenecek. Girişe asılı mevcut QR poster hemen geçersiz olur; yeni kodu yeniden yazdırmanız gerekir.",
+  "showQr": "QR'ı göster / yazdır",
+  "qrPosterTitle": "QR poster",
+  "print": "Yazdır",
+  "qrPosterInstruction": "Girişteki QR kodu telefonunuzdaki SenseİK uygulamasıyla okutarak giriş-çıkış yapın."
 }

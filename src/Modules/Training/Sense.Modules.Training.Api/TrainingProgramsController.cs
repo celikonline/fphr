@@ -23,6 +23,16 @@ public sealed class TrainingProgramsController : ApiControllerBase
     public async Task<IActionResult> ListTrainingPrograms([FromQuery] bool? activeOnly, CancellationToken ct) =>
         FromResult(await Dispatcher.Query(new ListTrainingProgramsQuery(activeOnly), ct));
 
+    [HttpPost(ApiRoutes.IdParam + "/activate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Activate(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new ActivateTrainingProgramCommand(id), ct));
+
+    [HttpPost(ApiRoutes.IdParam + "/close")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Close(Guid id, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new CloseTrainingProgramCommand(id), ct));
+
     [HttpGet(ApiRoutes.IdParam)]
     [ProducesResponseType<TrainingProgramDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetTrainingProgram(Guid id, CancellationToken ct) =>

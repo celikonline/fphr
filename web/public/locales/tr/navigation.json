@@ -22,14 +22,18 @@
     "trust": "Güven ve güvenlik",
     "collapseSidebar": "Menüyü daralt",
     "expandSidebar": "Menüyü genişlet",
+    "back": "Geri",
     "workflowInbox": "Onay kutusu",
-    "sharedFiles": "Ortak dosyalar"
+    "sharedFiles": "Ortak dosyalar",
+    "platformTenants": "Şirketler (Platform)"
   },
   "phase": "Faz {{phase}}",
   "comingSoon": {
     "description": "Bu özellik yol haritasında Faz {{phase}} kapsamında geliyor."
   },
   "apps": {
+    "searchPlaceholder": "Uygulama ara…",
+    "noResults": "Aramanızla eşleşen uygulama yok.",
     "viewAll": "Tüm uygulamalar",
     "subtitle": "Kullanabileceğiniz ve yakında gelecek uygulamalar.",
     "orgChart": "Organizasyon şeması",
@@ -48,6 +52,12 @@
     "expensePaymentsAdmin": "Masraf/avans ödemeleri",
     "performance": "Performans",
     "performanceReviewCycles": "Değerlendirme döngülerim",
+    "performanceTeamGoals": "Ekip hedefleri",
+    "announcements": "Duyurular",
+    "assets": "Zimmet",
+    "training": "Eğitim",
+    "ohs": "İSG",
+    "onboarding": "İşe alış ve çıkış",
     "recruitment": "İşe alım",
     "recruitmentCandidates": "Adaylar",
     "recruitmentRequisitions": "Talep formları",
@@ -56,7 +66,7 @@
     "companyCalendar": "Etkinlik takvimi"
   },
   "settings": {
-    "company": "Şirket bilgileri",
+    "company": "Şirket ve organizasyon",
     "structure": "Şirket yapısı",
     "structureDesc": "Hiyerarşi seviyeleri, birimler ve birim yetkilendirme",
     "holidayCalendars": "Tatil takvimleri",
@@ -87,12 +97,12 @@
     "ohsHazardClassificationDesc": "İşyeri konumlarının tehlike sınıfı geçmişi",
     "ohsRiskAssessments": "Risk değerlendirmeleri",
     "ohsRiskAssessmentsDesc": "Kayıtlı risk değerlendirmeleri ve yenileme tarihleri",
-    "rules": "Kurallar",
+    "rules": "Çalışma kuralları",
     "workCalendars": "Çalışma takvimleri",
     "workCalendarsDesc": "Çalışma günleri ve saatleri",
     "visaProcesses": "Vize belge süreçleri",
     "visaProcessesDesc": "Vize belgesi talep ve onay süreçleri",
-    "system": "Sistem ayarları",
+    "system": "Kullanıcılar ve güvenlik",
     "access": "Erişim ayarları",
     "accessDesc": "Çalışanların ana sayfa, hesap ve takvimde neleri göreceği",
     "securityPolicy": "Güvenlik politikası",
@@ -100,7 +110,7 @@
     "modules": "Modüller",
     "modulesDesc": "Ürün modüllerini şirket genelinde açma/kapatma",
     "usersRoles": "Kullanıcılar ve roller",
-    "usersRolesDesc": "Kullanıcılar, erişim türleri, roller ve izinler",
+    "usersRolesDesc": "Kullanıcılar, kullanıcı grupları, roller ve izinler",
     "auditLog": "Denetim kaydı",
     "auditLogDesc": "Kullanıcı ve sistem işlemlerinin kaydı",
     "supportAccess": "Destek erişimi",
@@ -114,6 +124,25 @@
     "recruitmentFormTemplates": "Form şablonları",
     "recruitmentFormTemplatesDesc": "Geri bildirim, skor kart ve sonuç formu şablonları",
     "recruitmentAutomationRules": "Otomasyon kuralları",
-    "recruitmentAutomationRulesDesc": "Aşama geçişlerinde zorunlu form kuralları"
+    "recruitmentAutomationRulesDesc": "Aşama geçişlerinde zorunlu form kuralları",
+    "peopleSection": "Çalışan ve belgeler",
+    "workflowsSection": "Onay ve süreçler",
+    "assetsExpenseSection": "Varlık ve masraf",
+    "ohsSection": "İş sağlığı ve güvenliği",
+    "platformSection": "Platform ve veri",
+    "leaveRuleSets": "İzin kural setleri",
+    "leaveRuleSetsDesc": "Kural setleri ve izin türleri",
+    "allSettings": "Tüm ayarlar",
+    "subnavLabel": "Ayarlar menüsü",
+    "orgChart": "Organizasyon şeması",
+    "orgChartDesc": "Birim ve çalışan hiyerarşisini şema olarak görüntüleyin"
+  },
+  "search": {
+    "label": "Ekran ara",
+    "placeholder": "Ekran ara…",
+    "nothing": "Sonuç bulunamadı",
+    "menu": "Menü",
+    "apps": "Uygulamalar",
+    "settings": "Ayarlar"
   }
 }

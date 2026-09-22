@@ -33,8 +33,10 @@ public sealed class IntegrationTraitConventionTests
 
         foreach (var type in allTypes)
         {
-            // Skip non-test classes (non-public, non-sealed, or obviously not test fixtures)
-            if (!type.IsPublic || type.Name.EndsWith("Tests") == false)
+            // Skip non-test classes (non-public, non-sealed, or obviously not test fixtures). This meta-test class is
+            // skipped too: its own tests are deliberately trait-less (see the class doc comment), so scanning it would
+            // always report them as violations.
+            if (!type.IsPublic || type.Name.EndsWith("Tests") == false || type == typeof(IntegrationTraitConventionTests))
             {
                 continue;
             }

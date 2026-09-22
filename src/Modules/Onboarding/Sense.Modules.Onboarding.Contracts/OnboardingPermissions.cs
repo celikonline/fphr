@@ -2,8 +2,7 @@ using Sense.Shared.Contracts.Security;
 
 namespace Sense.Modules.Onboarding.Contracts;
 
-/// <summary>Onboarding module permission definitions. Not yet wired into <c>SystemRoleDefinitions</c> - ADR-0012
-/// Kapı A is Domain/Application/Contracts only, no host registration this turn.</summary>
+/// <summary>Onboarding module permission definitions (HR/HRSpecialist get them through "onboarding.*").</summary>
 public static class OnboardingPermissions
 {
     private const string Module = "onboarding";

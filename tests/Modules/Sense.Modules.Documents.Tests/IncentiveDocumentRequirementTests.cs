@@ -63,7 +63,7 @@ public sealed class IncentiveDocumentRequirementTests
         incentiveLookup.HasActiveIncentiveAsync(TenantId, EmployeeId, HireDate, Arg.Any<CancellationToken>()).Returns(hasActiveIncentive);
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), incentiveLookup, provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), incentiveLookup, provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         return (types, requirements, materialization);
     }
 

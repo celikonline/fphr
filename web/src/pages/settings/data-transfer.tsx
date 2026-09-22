@@ -38,7 +38,7 @@ function DataTransferCenter() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={2} className="flex items-center gap-2">
           <ArrowLeftRight size={24} /> {t("dataTransfer:title")}

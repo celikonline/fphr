@@ -27,7 +27,7 @@ public partial class DataSeeder
         var hrEmployeeId = employees.FirstOrDefault(e => e.Email == "ik@demo.local")?.Employee.Id;
         // First of the 50 randomly generated employees (after the 6 fixed accounts) stands in for "a new hire".
         var newHireEmployeeId = employees.Skip(FixedDemoAccounts.Length).FirstOrDefault()?.Employee.Id;
-        var managerRoleId = roles.GetValueOrDefault(SystemRoleCodes.Manager)?.Id;
+        var managerRoleId = roles.GetValueOrDefault(SystemRoleCodes.Employee)?.Id;
 
         var now = DateTimeOffset.UtcNow;
         identityCtx.AuditLogEntries.AddRange(

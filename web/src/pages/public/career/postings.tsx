@@ -80,7 +80,7 @@ export default function CareerPostingsListPage() {
   useEffect(() => {
     document.title = `${t("recruitment:career.list.title")} · ${t("recruitment:career.list.pageTitleSuffix")}`;
     return () => {
-      document.title = "SenseİK - İK Platformu";
+      document.title = "SenseHR - İK Platformu";
     };
   }, [t]);
 

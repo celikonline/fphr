@@ -6,7 +6,7 @@ import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import trCommon from "../../../public/locales/tr/common.json";
-import { DatePicker } from "./date-picker";
+import { DatePicker, parseTypedDate } from "./date-picker";
 import type { HolidayCalendarEntry } from "@/services/structure.service";
 
 // senseik-041: date-picker.tsx regression tests (format, outside-click safety, calendar exclusivity, holiday marking).
@@ -76,7 +76,7 @@ describe("DatePicker (senseik-041)", () => {
   it("displays the value in dd.MM.yyyy format, not mm/dd/yyyy", () => {
     renderWithProviders(<DatePicker value="2026-09-18" onChange={vi.fn()} />);
 
-    expect(screen.getByRole("button", { name: "18.09.2026" })).toBeDefined();
+    expect(screen.getByDisplayValue("18.09.2026")).toBeDefined();
   });
 
   it("keeps the selected value and never calls onChange when the calendar is dismissed via an outside click", async () => {
@@ -89,11 +89,11 @@ describe("DatePicker (senseik-041)", () => {
       </div>,
     );
 
-    await user.click(screen.getByRole("button", { name: "18.09.2026" }));
+    await user.click(screen.getByDisplayValue("18.09.2026"));
     await user.click(screen.getByRole("button", { name: "Outside" }));
 
     expect(onChange).not.toHaveBeenCalled();
-    expect(screen.getByRole("button", { name: "18.09.2026" })).toBeDefined();
+    expect(screen.getByDisplayValue("18.09.2026")).toBeDefined();
   });
 
   it("closes the first calendar when a second date picker is opened right after (no overlapping popovers)", async () => {
@@ -108,10 +108,10 @@ describe("DatePicker (senseik-041)", () => {
       </div>,
     );
 
-    await user.click(screen.getByRole("button", { name: "05.09.2026" }));
+    await user.click(screen.getByDisplayValue("05.09.2026"));
     expect(await screen.findByTitle("Holiday A")).toBeDefined();
 
-    await user.click(screen.getByRole("button", { name: "20.09.2026" }));
+    await user.click(screen.getByDisplayValue("20.09.2026"));
     expect(await screen.findByTitle("Holiday B")).toBeDefined();
 
     // The first calendar must be fully unmounted, not just visually behind the second one (senseik-041 Bug 2).
@@ -123,8 +123,62 @@ describe("DatePicker (senseik-041)", () => {
     const user = userEvent.setup();
     renderWithProviders(<DatePicker value="2026-09-15" onChange={vi.fn()} holidayCalendarId="cal-tr" />);
 
-    await user.click(screen.getByRole("button", { name: "15.09.2026" }));
+    await user.click(screen.getByDisplayValue("15.09.2026"));
 
     expect(await screen.findByTitle("Cumhuriyet Bayramı")).toBeDefined();
+  });
+
+  // N-6: the field is also a text input, so a date can be typed as gg.aa.yyyy.
+  it("commits a typed dd.MM.yyyy date as a yyyy-MM-dd value", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderWithProviders(<DatePicker value="2026-09-18" onChange={onChange} />);
+
+    const input = screen.getByDisplayValue("18.09.2026");
+    await user.clear(input);
+    await user.type(input, "05.10.2026");
+    await user.tab();
+
+    expect(onChange).toHaveBeenLastCalledWith("2026-10-05");
+  });
+
+  it("ignores an impossible typed date and restores the previous value on blur", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderWithProviders(<DatePicker value="2026-09-18" onChange={onChange} />);
+
+    const input = screen.getByDisplayValue("18.09.2026");
+    await user.clear(input);
+    await user.type(input, "31.02.2026");
+    await user.tab();
+
+    expect(onChange).not.toHaveBeenCalled();
+    expect(screen.getByDisplayValue("18.09.2026")).toBeDefined();
+  });
+
+  it("clears the value when the typed text is emptied and the field is clearable", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    renderWithProviders(<DatePicker value="2026-09-18" onChange={onChange} clearable />);
+
+    await user.clear(screen.getByDisplayValue("18.09.2026"));
+
+    expect(onChange).toHaveBeenLastCalledWith("");
+  });
+});
+
+describe("parseTypedDate (N-6)", () => {
+  it("accepts dd.MM.yyyy, d.M.yyyy and yyyy-MM-dd", () => {
+    expect(parseTypedDate("05.10.2026")).toBe("2026-10-05");
+    expect(parseTypedDate("5.1.2026")).toBe("2026-01-05");
+    expect(parseTypedDate(" 2026-10-05 ")).toBe("2026-10-05");
+  });
+
+  it("rejects partial, impossible or ambiguous text", () => {
+    expect(parseTypedDate("")).toBeNull();
+    expect(parseTypedDate("05.10")).toBeNull();
+    expect(parseTypedDate("31.02.2026")).toBeNull();
+    expect(parseTypedDate("2026-02-30")).toBeNull();
+    expect(parseTypedDate("10/05/2026")).toBeNull();
   });
 });

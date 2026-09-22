@@ -27,6 +27,7 @@
     <ProjectReference Include="../Modules/Announcements/Sense.Modules.Announcements.Api/Sense.Modules.Announcements.Api.csproj" />
     <ProjectReference Include="../Modules/OccupationalSafety/Sense.Modules.OccupationalSafety.Api/Sense.Modules.OccupationalSafety.Api.csproj" />
     <ProjectReference Include="../Modules/Training/Sense.Modules.Training.Api/Sense.Modules.Training.Api.csproj" />
+    <ProjectReference Include="../Modules/Onboarding/Sense.Modules.Onboarding.Api/Sense.Modules.Onboarding.Api.csproj" />
   </ItemGroup>
 
   <ItemGroup>

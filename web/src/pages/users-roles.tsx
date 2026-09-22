@@ -32,7 +32,9 @@ import { toast } from "@/hooks/use-toast";
 import { usePermission } from "@/components/permission-guard";
 import { getApiProblem } from "@/lib/api-error";
 import { enumLabel } from "@/lib/i18n-enum";
+import { roleDisplayName } from "@/lib/role-name";
 import {
+  ACCESS_TYPES,
   bulkAssignRole,
   deriveAccessType,
   listPermissionGroups,
@@ -42,6 +44,8 @@ import {
   setUserAccessType,
   setUserRoles,
   setUserStatus,
+  visibleRoles,
+  withKeptHiddenRoleIds,
   type AccessType,
   type UserListItem,
   type UserStatus,
@@ -60,7 +64,8 @@ const SORT_COMPARERS: Record<string, UserComparer> = {
   name: (a, b, c) => c.compare(a.lastName, b.lastName) || c.compare(a.firstName, b.firstName),
   email: (a, b, c) => c.compare(a.email, b.email),
   status: (a, b, c) => c.compare(a.status, b.status),
-  accessType: (a, b, c) => c.compare(deriveAccessType(a.roles) ?? "", deriveAccessType(b.roles) ?? ""),
+  accessType: (a, b, c) =>
+    c.compare(deriveAccessType(a.roles) ?? "", deriveAccessType(b.roles) ?? ""),
   lastLogin: (a, b) => (a.lastLoginAt ?? "").localeCompare(b.lastLoginAt ?? ""),
 };
 
@@ -78,7 +83,7 @@ export default function UsersRolesPage() {
   const canManage = usePermission("identity.users.manage");
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <UsersIcon className="h-6 w-6" /> {t("users:title")}
@@ -133,7 +138,9 @@ function UserActionsMenu({
         <Menu.Item onClick={onToggleStatus}>
           {user.status === "disabled" ? t("users:activate") : t("users:deactivate")}
         </Menu.Item>
-        {user.mfaEnabled && <Menu.Item onClick={onResetMfa}>{t("users:mfaReset.action")}</Menu.Item>}
+        {user.mfaEnabled && (
+          <Menu.Item onClick={onResetMfa}>{t("users:mfaReset.action")}</Menu.Item>
+        )}
       </Menu.Dropdown>
     </Menu>
   );
@@ -177,15 +184,19 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
 
   const { data: roles } = useQuery({ queryKey: ["roles"], queryFn: listRoles });
 
-  const roleOptions = useMemo(() => (roles ?? []).map((r) => ({ value: r.id, label: r.name ?? r.code })), [roles]);
+  // Hidden system roles (Owner) never appear in filters/pickers; the bulk assign merges into each user's full role set.
+  const pickableRoles = useMemo(() => visibleRoles(roles ?? []), [roles]);
+  const roleOptions = useMemo(
+    () => pickableRoles.map((r) => ({ value: r.id, label: r.name ?? r.code })),
+    [pickableRoles]
+  );
 
   const filtered = useMemo(() => {
     const items = allUsers?.items ?? [];
     const needle = debouncedSearch.trim().toLowerCase();
     return items.filter((u) => {
       const matchesSearch =
-        !needle ||
-        `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(needle);
+        !needle || `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(needle);
       const matchesStatus = statusFilter === ALL_VALUE || u.status === statusFilter;
       const matchesRole = roleFilter === ALL_VALUE || u.roles.some((r) => r.id === roleFilter);
       return matchesSearch && matchesStatus && matchesRole;
@@ -202,7 +213,10 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
 
   const totalCount = sorted.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const pageItems = useMemo(() => sorted.slice((page - 1) * pageSize, page * pageSize), [sorted, page, pageSize]);
+  const pageItems = useMemo(
+    () => sorted.slice((page - 1) * pageSize, page * pageSize),
+    [sorted, page, pageSize]
+  );
   const pageResult = {
     page,
     totalPages,
@@ -217,29 +231,57 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) => setUserStatus(id, enabled),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("users:statusUpdateSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("users:statusUpdateSuccess"),
+      });
     },
-    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+    onError: () =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: t("users:genericError"),
+      }),
   });
 
   const rolesMutation = useMutation({
     mutationFn: ({ id, roleIds }: { id: string; roleIds: string[] }) => setUserRoles(id, roleIds),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("users:rolesUpdateSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("users:rolesUpdateSuccess"),
+      });
       setRolesDialogUser(null);
     },
-    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+    onError: () =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: t("users:genericError"),
+      }),
   });
 
   const accessTypeMutation = useMutation({
-    mutationFn: ({ id, accessType }: { id: string; accessType: AccessType }) => setUserAccessType(id, accessType),
+    mutationFn: ({ id, accessType }: { id: string; accessType: AccessType }) =>
+      setUserAccessType(id, accessType),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("users:accessTypeUpdateSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("users:accessTypeUpdateSuccess"),
+      });
       setAccessTypeDialogUser(null);
     },
-    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+    onError: () =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: t("users:genericError"),
+      }),
   });
 
   /** `identity.mfa.self_reset_forbidden` (S-12): the signed-in admin appears in their own list and tried to
@@ -248,25 +290,41 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
     mutationFn: (id: string) => resetUserMfa(id),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("users:mfaReset.success") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("users:mfaReset.success"),
+      });
     },
     onError: (err: unknown) => {
       const code = getApiProblem(err)?.code;
       const description =
-        code === "identity.mfa.self_reset_forbidden" ? t("users:mfaReset.errors.selfForbidden") : t("users:mfaReset.errors.generic");
+        code === "identity.mfa.self_reset_forbidden"
+          ? t("users:mfaReset.errors.selfForbidden")
+          : t("users:mfaReset.errors.generic");
       toast({ variant: "destructive", title: t("common:error"), description });
     },
   });
 
   const bulkMutation = useMutation({
-    mutationFn: ({ users, roleId }: { users: UserListItem[]; roleId: string }) => bulkAssignRole(users, roleId),
+    mutationFn: ({ users, roleId }: { users: UserListItem[]; roleId: string }) =>
+      bulkAssignRole(users, roleId),
     onSuccess: () => {
       invalidate();
-      toast({ variant: "success", title: t("common:success"), description: t("users:bulkAssignSuccess") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("users:bulkAssignSuccess"),
+      });
       setSelected(new Set());
       setBulkRoleId("");
     },
-    onError: () => toast({ variant: "destructive", title: t("common:error"), description: t("users:genericError") }),
+    onError: () =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: t("users:genericError"),
+      }),
   });
 
   function toggleSelectAllOnPage(checked: boolean) {
@@ -367,7 +425,9 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       header: t("users:statusFilter"),
       meta: { label: t("users:statusFilter") },
       cell: ({ row }) => (
-        <Badge {...STATUS_BADGE[row.original.status]}>{t(`users:status.${row.original.status}`)}</Badge>
+        <Badge {...STATUS_BADGE[row.original.status]}>
+          {t(`users:status.${row.original.status}`)}
+        </Badge>
       ),
     },
     {
@@ -391,16 +451,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       meta: { label: t("users:roles") },
       cell: ({ row }) => (
         <Group gap={4}>
-          {row.original.roles.slice(0, 2).map((r) => (
-            <Badge key={r.id} variant="outline" color="gray">
-              {r.name ?? r.code}
-            </Badge>
-          ))}
-          {row.original.roles.length > 2 && (
-            <Badge variant="outline" color="gray">
-              +{row.original.roles.length - 2}
-            </Badge>
-          )}
+          <RoleBadges roles={row.original.roles} t={t} />
         </Group>
       ),
     },
@@ -576,16 +627,7 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
                   </Group>
                   <Group gap={4} mt="xs" wrap="wrap">
                     <Badge {...STATUS_BADGE[user.status]}>{t(`users:status.${user.status}`)}</Badge>
-                    {user.roles.slice(0, 2).map((r) => (
-                      <Badge key={r.id} variant="outline" color="gray">
-                        {r.name ?? r.code}
-                      </Badge>
-                    ))}
-                    {user.roles.length > 2 && (
-                      <Badge variant="outline" color="gray">
-                        +{user.roles.length - 2}
-                      </Badge>
-                    )}
+                    <RoleBadges roles={user.roles} t={t} />
                     {user.mfaEnabled ? (
                       <Badge
                         variant="light"
@@ -623,9 +665,14 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
       {rolesDialogUser && (
         <EditRolesDialog
           user={rolesDialogUser}
-          roles={roles ?? []}
+          roles={pickableRoles}
           onClose={() => setRolesDialogUser(null)}
-          onSave={(roleIds) => rolesMutation.mutate({ id: rolesDialogUser.id, roleIds })}
+          onSave={(roleIds) =>
+            rolesMutation.mutate({
+              id: rolesDialogUser.id,
+              roleIds: withKeptHiddenRoleIds(rolesDialogUser.roles, roleIds),
+            })
+          }
           isSaving={rolesMutation.isPending}
           t={t}
         />
@@ -635,7 +682,9 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
         <EditAccessTypeDialog
           user={accessTypeDialogUser}
           onClose={() => setAccessTypeDialogUser(null)}
-          onSave={(accessType) => accessTypeMutation.mutate({ id: accessTypeDialogUser.id, accessType })}
+          onSave={(accessType) =>
+            accessTypeMutation.mutate({ id: accessTypeDialogUser.id, accessType })
+          }
           isSaving={accessTypeMutation.isPending}
           t={t}
         />
@@ -646,17 +695,28 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
           opened
           onClose={() => setStatusDialogUser(null)}
           title={
-            statusDialogUser.status === "disabled" ? t("users:activateConfirmTitle") : t("users:deactivateConfirmTitle")
+            statusDialogUser.status === "disabled"
+              ? t("users:activateConfirmTitle")
+              : t("users:deactivateConfirmTitle")
           }
           message={
             statusDialogUser.status === "disabled"
-              ? t("users:activateConfirmMessage", { name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}` })
-              : t("users:deactivateConfirmMessage", { name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}` })
+              ? t("users:activateConfirmMessage", {
+                  name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}`,
+                })
+              : t("users:deactivateConfirmMessage", {
+                  name: `${statusDialogUser.firstName} ${statusDialogUser.lastName}`,
+                })
           }
-          confirmLabel={statusDialogUser.status === "disabled" ? t("users:activate") : t("users:deactivate")}
+          confirmLabel={
+            statusDialogUser.status === "disabled" ? t("users:activate") : t("users:deactivate")
+          }
           danger={statusDialogUser.status !== "disabled"}
           onConfirm={() =>
-            statusMutation.mutateAsync({ id: statusDialogUser.id, enabled: statusDialogUser.status === "disabled" })
+            statusMutation.mutateAsync({
+              id: statusDialogUser.id,
+              enabled: statusDialogUser.status === "disabled",
+            })
           }
         />
       )}
@@ -678,7 +738,24 @@ function UsersTab({ canManage, t, locale }: { canManage: boolean; t: TFn; locale
   );
 }
 
-const ACCESS_TYPES: AccessType[] = ["Employee", "Owner", "Admin"];
+/** First two visible role chips + a "+N" overflow chip; hidden system roles (Owner) are never shown. */
+function RoleBadges({ roles, t }: { roles: UserListItem["roles"]; t: TFn }) {
+  const shown = visibleRoles(roles);
+  return (
+    <>
+      {shown.slice(0, 2).map((r) => (
+        <Badge key={r.id} variant="outline" color="gray">
+          {roleDisplayName(t, r)}
+        </Badge>
+      ))}
+      {shown.length > 2 && (
+        <Badge variant="outline" color="gray">
+          +{shown.length - 2}
+        </Badge>
+      )}
+    </>
+  );
+}
 
 function EditAccessTypeDialog({
   user,
@@ -708,7 +785,10 @@ function EditAccessTypeDialog({
           value={selected}
           onChange={(value) => value && setSelected(value as AccessType)}
           allowDeselect={false}
-          data={ACCESS_TYPES.map((type) => ({ value: type, label: enumLabel(t, "users:accessType", type) }))}
+          data={ACCESS_TYPES.map((type) => ({
+            value: type,
+            label: enumLabel(t, "users:accessType", type),
+          }))}
         />
         <Group justify="flex-end">
           <Button type="button" variant="default" onClick={onClose} disabled={isSaving}>
@@ -738,7 +818,10 @@ function EditRolesDialog({
   isSaving: boolean;
   t: TFn;
 }) {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(user.roles.map((r) => r.id)));
+  // `roles` is already the visible (pickable) list; hidden roles the user has are re-appended by the caller on save.
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(
+    () => new Set(visibleRoles(user.roles).map((r) => r.id))
+  );
 
   return (
     <Modal
@@ -781,8 +864,12 @@ function EditRolesDialog({
 }
 
 export function RolesTab({ t }: { t: TFn }) {
-  const { data: roles, isLoading } = useQuery({ queryKey: ["roles"], queryFn: listRoles });
-  const { data: permissionGroups } = useQuery({ queryKey: ["permission-groups"], queryFn: listPermissionGroups });
+  const { data: allRoles, isLoading } = useQuery({ queryKey: ["roles"], queryFn: listRoles });
+  const roles = useMemo(() => (allRoles ? visibleRoles(allRoles) : undefined), [allRoles]);
+  const { data: permissionGroups } = useQuery({
+    queryKey: ["permission-groups"],
+    queryFn: listPermissionGroups,
+  });
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
 
   // Default to the first role once roles load (guarded adjustment during render, not in an effect).
@@ -870,7 +957,9 @@ export function RolesTab({ t }: { t: TFn }) {
                   {selectedRole.permissions.map((perm) => (
                     <Paper component="li" key={perm.permission} withBorder px="sm" py={6}>
                       <Group justify="space-between" gap="xs" wrap="nowrap">
-                        <Text size="sm">{permissionMap.get(perm.permission)?.displayName ?? perm.permission}</Text>
+                        <Text size="sm">
+                          {permissionMap.get(perm.permission)?.displayName ?? perm.permission}
+                        </Text>
                         <Badge variant="outline" color="gray" className="shrink-0">
                           {t(`users:scope.${perm.scope}`)}
                         </Badge>

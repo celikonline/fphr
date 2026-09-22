@@ -6,6 +6,22 @@ public static class PayrollDomainErrors
     public const string PeriodNotFound = "payroll.period.not_found";
     public const string PeriodNotOpen = "payroll.period.not_open";
     public const string PeriodMonthInvalid = "payroll.errors.period_month_invalid";
+    public const string ProfileTransportAmountInvalid = "payroll.errors.profile_transport_amount_invalid";
+    public const string AdjustmentInvalid = "payroll.errors.adjustment_invalid";
+    public const string AdjustmentNotFound = "payroll.errors.adjustment_not_found";
+    public const string AdjustmentPeriodNotOpen = "payroll.errors.adjustment_period_not_open";
+    public const string BankFilePeriodNotApproved = "payroll.errors.bank_file_period_not_approved";
+    public const string BankFileMissingAccounts = "payroll.errors.bank_file_missing_accounts";
+    public const string BankFileNoPayments = "payroll.errors.bank_file_no_payments";
+    public const string BankFileTotalMismatch = "payroll.errors.bank_file_total_mismatch";
+    public const string ReceiptCsvEmpty = "payroll.errors.receipt_csv_empty";
+    public const string ComparisonThresholdInvalid = "payroll.errors.comparison_threshold_invalid";
+    public const string ClosingCheckNotFound = "payroll.errors.closing_check_not_found";
+    public const string ClosingCheckNotManual = "payroll.errors.closing_check_not_manual";
+    public const string ClosingWaiverReasonInvalid = "payroll.errors.closing_waiver_reason_invalid";
+    public const string PeriodHasOpenBlockers = "payroll.errors.period_has_open_blockers";
+    public const string PeriodHasDirtyPayslips = "payroll.errors.period_has_dirty_payslips";
+    public const string PeriodApprovalNeedsDifferentUser = "payroll.errors.period_approval_needs_different_user";
     public const string PeriodAlreadyOpen = "payroll.errors.period_already_open";
     public const string PeriodYearOutOfRange = "payroll.errors.period_year_out_of_range";
 
@@ -30,6 +46,14 @@ public static class PayrollDomainErrors
     /// <summary>senseik-011 (F-06): the severance/notice estimate needs a current salary record (Employee.Contracts.IEmployeeSalaryLookup) to derive a daily wage from.</summary>
     public const string SeveranceEstimateSalaryMissing = "payroll.errors.severance_estimate_salary_missing";
 
+    /// <summary>Çıkış hesabı: no frozen settlement exists for the employee (not terminated, or terminated before this feature).</summary>
+    public const string ExitSettlementNotFound = "payroll.errors.exit_settlement_not_found";
+    public const string PeriodNotReopenable = "payroll.errors.period_not_reopenable";
+    public const string PeriodReopenReasonInvalid = "payroll.errors.period_reopen_reason_invalid";
+    public const string ExitSettlementLineInvalid = "payroll.errors.exit_settlement_line_invalid";
+    public const string ExitSettlementLineNotFound = "payroll.errors.exit_settlement_line_not_found";
+    public const string ExitSettlementLineNotRemovable = "payroll.errors.exit_settlement_line_not_removable";
+
     // İcra/nafaka kesinti emirleri (senseik-019 2c)
     public const string GarnishmentCaseReferenceRequired = "payroll.errors.garnishment_case_reference_required";
     public const string GarnishmentInstallmentInvalid = "payroll.errors.garnishment_installment_invalid";
@@ -52,6 +76,11 @@ public static class PayrollDomainErrors
 /// <summary>Domain limits.</summary>
 public static class PayrollLimits
 {
+    public const int ExitLineLabelMaxLength = 200;
+    public const int ReopenReasonMaxLength = 500;
+    public const int ClosingCheckTextMaxLength = 500;
+    public const int AdjustmentLabelMaxLength = 200;
+
     /// <summary>Calendar days assumed per month until Attendance provides the real calendar (roadmap: Payroll depends on Attendance, Faz 2).</summary>
     public const int DefaultCalendarDaysInMonth = 30;
 

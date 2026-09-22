@@ -16,6 +16,25 @@
     },
     "approval": {
       "task_assigned": "A request is waiting for my approval"
+    },
+    "documents": {
+      "expiry_reminder": "A document is about to expire"
+    },
+    "ohs": {
+      "sgk_notification_due": "When a work accident's SGK notification deadline is near or missed"
+    },
+    "employee": {
+      "hired": "When a new employee starts",
+      "welcome": "Welcome e-mail when I start",
+      "terminated": "When an employee leaves",
+      "work_certificate": "Employment certificate on exit",
+      "birthday": "On my birthday"
+    },
+    "announcement": {
+      "published": "When a new announcement is published"
+    },
+    "payroll": {
+      "payslip_ready": "When my payslip is ready"
     }
   },
   "preferences": {
@@ -33,7 +52,11 @@
   "category": {
     "account": "Account",
     "request": "Requests",
-    "approval": "Approvals"
+    "approval": "Approvals",
+    "reminder": "Reminders",
+    "employee": "Employees",
+    "announcement": "Announcements",
+    "payroll": "Payroll"
   },
   "types": {
     "documentExpiryReminder": "Document expiring soon"

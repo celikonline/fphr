@@ -29,6 +29,7 @@ import { avatarColor } from "@/components/employees/employee-badges";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { disableMfa, enrollMfa, getMfaStatus, verifyMfaEnrollment, type MfaEnrollment } from "@/services/mfa.service";
+import { isHiddenRole } from "@/services/users.service";
 import { useAuthStore } from "@/store/auth.store";
 import { PALETTE_SWATCHES } from "@/lib/mantine-theme";
 import { PALETTES, useUIStore, type Palette, type Theme } from "@/store/ui.store";
@@ -294,7 +295,7 @@ export default function AccountPage() {
   const currentLanguage = LANGUAGES.find((lang) => i18n.resolvedLanguage?.startsWith(lang.value))?.value ?? "tr";
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} fz={24}>
           <Group gap="xs" component="span">
@@ -324,13 +325,15 @@ export default function AccountPage() {
           <ProfileRow label={t("account:email")}>{user?.email ?? "—"}</ProfileRow>
           <ProfileRow label={t("account:company")}>{user?.tenant?.name ?? "—"}</ProfileRow>
           <ProfileRow label={t("account:roles")}>
-            {user && user.roles.length > 0 ? (
+            {user && user.roles.some((role) => !isHiddenRole(role)) ? (
               <Group gap={4}>
-                {user.roles.map((role, index) => (
-                  <Badge key={role} variant="light" color="gray" tt="none">
-                    {user.roleLabels[index] ?? role}
-                  </Badge>
-                ))}
+                {user.roles.map((role, index) =>
+                  isHiddenRole(role) ? null : (
+                    <Badge key={role} variant="light" color="gray" tt="none">
+                      {user.roleLabels[index] ?? role}
+                    </Badge>
+                  )
+                )}
               </Group>
             ) : (
               "—"

@@ -11,6 +11,7 @@ import type {
   PagedResult,
 } from "@/types";
 import type { CustomFieldDataType, CustomFieldSection } from "@/services/custom-fields.service";
+import { parseContentDispositionFileName } from "@/services/data-transfer.service";
 
 const EMPLOYEES_BASE = "/v1/employees";
 
@@ -121,7 +122,7 @@ export interface EmployeeDetail {
   managerDisplayName: string | null;
   userId: string | null;
   accountStatus: UserAccountStatus;
-  accessType: "Employee" | "Owner" | "Admin" | null;
+  accessType: "Employee" | "HR" | "PayrollSpecialist" | null;
   lastInvitationSentAt: string | null;
   gender: Gender;
   maritalStatus: MaritalStatus;
@@ -734,6 +735,22 @@ export async function terminateEmployee(
   return data;
 }
 
+/** Çalışma belgesi (İş K. m.28) PDF of a terminated employee; needs `employee.employees.update`. */
+export async function downloadWorkCertificate(
+  employeeId: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const response = await apiClient.get<Blob>(`${EMPLOYEES_BASE}/${employeeId}/work-certificate`, {
+    responseType: "blob",
+  });
+  const disposition = response.headers["content-disposition"];
+  return {
+    blob: response.data,
+    fileName:
+      parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ??
+      "calisma-belgesi.pdf",
+  };
+}
+
 export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {
   const { data } = await apiClient.get<EmploymentHistory>(
     `${EMPLOYEES_BASE}/${employeeId}/employment-periods`
@@ -898,4 +915,33 @@ export async function linkEmployeeSubcontractor(
     { subcontractorId }
   );
   return data;
+}
+
+/** Photo target: an employee id, or "me" for the caller's own photo (`employee.my.view`, no directory permission needed). */
+export type EmployeePhotoTarget = string;
+export const OWN_PHOTO_TARGET = "me";
+
+const photoUrl = (target: EmployeePhotoTarget) => `${EMPLOYEES_BASE}/${target}/photo`;
+
+/** The photo bytes, or null when the employee has none (404) or the caller may not see it (403). Other failures throw. */
+export async function getEmployeePhoto(target: EmployeePhotoTarget): Promise<Blob | null> {
+  try {
+    const { data } = await apiClient.get<Blob>(photoUrl(target), { responseType: "blob" });
+    return data;
+  } catch (error) {
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 404 || status === 403) return null;
+    throw error;
+  }
+}
+
+/** Uploads/replaces a photo (JPEG, PNG or WebP, at most 2 MB - the caller downsizes first). */
+export async function uploadEmployeePhoto(target: EmployeePhotoTarget, photo: Blob): Promise<void> {
+  const form = new FormData();
+  form.append("file", photo, "photo");
+  await apiClient.put(photoUrl(target), form, { headers: { "Content-Type": "multipart/form-data" } });
+}
+
+export async function deleteEmployeePhoto(target: EmployeePhotoTarget): Promise<void> {
+  await apiClient.delete(photoUrl(target));
 }

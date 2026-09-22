@@ -15,6 +15,11 @@ export function formatDateOnly(value: string, locale: string, options: Intl.Date
   return new Intl.DateTimeFormat(locale, options).format(parseDateOnly(value));
 }
 
+/** Calendar date of a full timestamp, in the same "medium" style `formatDateOnly` uses. */
+export function formatDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(new Date(value));
+}
+
 export function formatDateTime(value: string | null | undefined, locale: string): string {
   if (!value) return "—";
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));

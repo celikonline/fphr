@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Documents.Domain.Documents;
@@ -29,6 +26,7 @@ using Sense.Modules.Organization.Domain.Locations;
 using Sense.Modules.Organization.Domain.OrgUnits;
 using Sense.Modules.Organization.Domain.OrgUnitTypes;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Modules.Organization.Infrastructure.Persistence.Seed;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Security;
@@ -123,94 +121,12 @@ public partial class DataSeeder
     }
 
     /// <summary>
-    /// Seeds one tenant's own copy of the system "Türkiye Resmi Tatilleri" calendar (roadmap Faz 0
-    /// item #5) from src/Sense.Api/SeedData/holidays/tr-official-holidays.json - deliberately data, not
-    /// hardcoded date constants, so a yearly religious-holiday refresh only touches the JSON file.
-    /// Adds the calendar and all its entries to organizationCtx; caller still owns SaveChangesAsync.
+    /// Seeds one tenant's own copy of the system "Türkiye Resmi Tatilleri" calendar (roadmap Faz 0 item #5). The data (embedded
+    /// src/Sense.Api/SeedData/holidays/tr-official-holidays.json) and its interpretation live in
+    /// <see cref="TrHolidayCalendarSeed"/>, shared with the runtime tenant bootstrap. Adds the calendar and all its entries to
+    /// organizationCtx; caller still owns SaveChangesAsync.
     /// </summary>
-    private HolidayCalendar SeedTrHolidayCalendar(Guid tenantId)
-    {
-        var seed = TrHolidaySeed.Value;
-
-        var calendarResult = HolidayCalendar.Create(tenantId, seed.Name, seed.CountryCode, isSystemDefined: true);
-        if (calendarResult.IsFailure)
-        {
-            throw new InvalidOperationException($"Failed to seed TR holiday calendar: {calendarResult.Error}");
-        }
-
-        var calendar = calendarResult.Value;
-        organizationCtx.HolidayCalendars.Add(calendar);
-
-        foreach (var entry in seed.Entries)
-        {
-            var date = ResolveSeedEntryDate(entry);
-            var entryResult = HolidayCalendarEntry.Create(tenantId, calendar.Id, date, entry.Name, entry.RecurringAnnually, entry.HalfDay);
-            if (entryResult.IsFailure)
-            {
-                throw new InvalidOperationException($"Failed to seed holiday entry '{entry.Name}': {entryResult.Error}");
-            }
-
-            organizationCtx.HolidayCalendarEntries.Add(entryResult.Value);
-        }
-
-        return calendar;
-    }
-
-    /// <summary>Arbitrary anchor year for recurring entries (see HolidayCalendarEntry's class doc comment) - only Month/Day are ever read back for those rows.</summary>
-    private const int RecurringHolidayAnchorYear = 2000;
-
-    private static DateOnly ResolveSeedEntryDate(HolidaySeedEntry entry)
-    {
-        if (entry.RecurringAnnually)
-        {
-            if (entry.Month is not { } month || entry.Day is not { } day)
-            {
-                throw new InvalidOperationException($"Recurring holiday seed entry '{entry.Name}' is missing Month/Day.");
-            }
-
-            return new DateOnly(RecurringHolidayAnchorYear, month, day);
-        }
-
-        if (string.IsNullOrWhiteSpace(entry.Date))
-        {
-            throw new InvalidOperationException($"Non-recurring holiday seed entry '{entry.Name}' is missing Date.");
-        }
-
-        return DateOnly.ParseExact(entry.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-    }
-
-    private static readonly Lazy<HolidaySeedFile> TrHolidaySeed = new(LoadTrHolidaySeedFile);
-
-    private static HolidaySeedFile LoadTrHolidaySeedFile()
-    {
-        var path = Path.Combine(AppContext.BaseDirectory, "SeedData", "holidays", "tr-official-holidays.json");
-        var json = File.ReadAllText(path);
-        var file = JsonSerializer.Deserialize<HolidaySeedFile>(json, JsonOptions);
-        if (file is null || file.Entries.Count == 0)
-        {
-            throw new InvalidOperationException($"TR holiday seed file at '{path}' is missing or empty.");
-        }
-
-        return file;
-    }
-
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-
-    /// <summary>Deserialization shape for tr-official-holidays.json; see SeedTrHolidayCalendar and HolidayCalendarEntry's class doc comment for the Month/Day vs Date design.</summary>
-    private sealed record HolidaySeedFile(
-        [property: JsonPropertyName("code")] string Code,
-        [property: JsonPropertyName("name")] string Name,
-        [property: JsonPropertyName("countryCode")] string CountryCode,
-        [property: JsonPropertyName("entries")] IReadOnlyList<HolidaySeedEntry> Entries);
-
-    private sealed record HolidaySeedEntry(
-        [property: JsonPropertyName("name")] string Name,
-        [property: JsonPropertyName("month")] int? Month,
-        [property: JsonPropertyName("day")] int? Day,
-        [property: JsonPropertyName("date")] string? Date,
-        [property: JsonPropertyName("recurringAnnually")] bool RecurringAnnually,
-        [property: JsonPropertyName("note")] string? Note,
-        [property: JsonPropertyName("halfDay")] bool HalfDay = false);
+    private HolidayCalendar SeedTrHolidayCalendar(Guid tenantId) => TrHolidayCalendarSeed.AddTo(organizationCtx, tenantId);
 
     private static Location CreateLocationOrThrow(Guid tenantId, string name, LocationType type, string countryCode, string? address, string? sgkIsyeriSicilNo = null)
     {

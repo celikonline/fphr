@@ -4,6 +4,7 @@ using Sense.Modules.Assets.Application;
 using Sense.Modules.Assets.Domain.Assets;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Assets.Infrastructure.Persistence;
 
@@ -18,6 +19,16 @@ public sealed class AssetsDbContext(DbContextOptions<AssetsDbContext> options, I
     public DbSet<AssetCategory> AssetCategories => Set<AssetCategory>();
 
     public DbSet<Asset> Assets => Set<Asset>();
+
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class AssetsTables
@@ -42,6 +53,7 @@ public sealed class AssetCategoryConfiguration : IEntityTypeConfiguration<AssetC
 
         b.Property(x => x.Code).HasMaxLength(AssetsTables.CodeLength).IsRequired();
         b.Property(x => x.Name).HasMaxLength(AssetsTables.NameLength).IsRequired();
+        b.Ignore(x => x.RequiresPeriodicReplacement);
 
         b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
 

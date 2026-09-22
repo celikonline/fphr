@@ -50,6 +50,47 @@ public sealed class OrgUnitLookup(OrganizationDbContext context) : IOrgUnitLooku
             .Select(t => new OrgUnitTypeInfo(t.Id, t.Code, t.Name, t.SortOrder))
             .ToListAsync(ct);
 
+    public async Task<Guid?> GetEffectiveLocationIdAsync(Guid tenantId, Guid orgUnitId, CancellationToken ct = default)
+    {
+        var units = await context.OrgUnits.AsNoTracking()
+            .Where(u => u.TenantId == tenantId)
+            .Select(u => new { u.Id, u.ParentId, u.LocationId })
+            .ToDictionaryAsync(u => u.Id, ct);
+        var visited = new HashSet<Guid>();
+        for (Guid? current = orgUnitId; current is { } id && units.TryGetValue(id, out var unit) && visited.Add(id); current = unit.ParentId)
+        {
+            if (unit.LocationId is { } locationId)
+            {
+                return locationId;
+            }
+        }
+
+        return null;
+    }
+
+    public async Task<IReadOnlyDictionary<Guid, Guid>> GetEffectiveLocationMapAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        var units = await context.OrgUnits.AsNoTracking()
+            .Where(u => u.TenantId == tenantId)
+            .Select(u => new { u.Id, u.ParentId, u.LocationId })
+            .ToDictionaryAsync(u => u.Id, ct);
+        var map = new Dictionary<Guid, Guid>();
+        foreach (var start in units.Keys)
+        {
+            var visited = new HashSet<Guid>();
+            for (Guid? current = start; current is { } id && units.TryGetValue(id, out var unit) && visited.Add(id); current = unit.ParentId)
+            {
+                if (unit.LocationId is { } locationId)
+                {
+                    map[start] = locationId;
+                    break;
+                }
+            }
+        }
+
+        return map;
+    }
+
     public async Task<IReadOnlyList<OrgUnitInfo>> ListActiveUnitsAsync(Guid tenantId, CancellationToken ct = default) =>
         await context.OrgUnits.AsNoTracking()
             .Where(u => u.TenantId == tenantId && u.IsActive)

@@ -159,10 +159,15 @@ public partial class DataSeeder(
         var tenant = tenantResult.Value;
         identityCtx.Tenants.Add(tenant);
 
-        // Create system roles (only Admin for minimal)
-        var adminRole = Role.CreateSystem(tenant.Id, SystemRoleCodes.Admin);
-        SeedRolePermissions(adminRole, SystemRoleCodes.Admin);
-        identityCtx.Roles.Add(adminRole);
+        // System roles: the four user groups; the admin is the company's first İK Yöneticisi (+ locked Owner flag).
+        var minimalRoles = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
+        foreach (var roleCode in SystemRoleCodes.All)
+        {
+            var role = Role.CreateSystem(tenant.Id, roleCode);
+            SeedRolePermissions(role, roleCode);
+            identityCtx.Roles.Add(role);
+            minimalRoles[roleCode] = role;
+        }
 
         // Create admin user
         var userResult = User.Create(
@@ -180,8 +185,7 @@ public partial class DataSeeder(
         var user = userResult.Value;
         identityCtx.Users.Add(user);
 
-        // Assign admin role
-        user.SetRoles([adminRole.Id]);
+        user.SetRoles([minimalRoles[SystemRoleCodes.Owner].Id, minimalRoles[SystemRoleCodes.HR].Id]);
 
         user.SetPassword(passwordHasher.Hash(SeedDataConstants.SeedUserPassword));
 
@@ -219,7 +223,7 @@ public partial class DataSeeder(
         rootUnit.AssignManager(adminEmployee.Id);
         EnqueueHiredIfActive(tenant.Id, adminEmployee);
 
-        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 1 role, 1 org unit, 1 location, 1 employee");
+        logger.LogInformation("Minimal profile seeded: 1 tenant, 1 user, 4 roles, 1 org unit, 1 location, 1 employee");
     }
 
     private async Task SeedDemoAsync(CancellationToken cancellationToken)
@@ -280,7 +284,7 @@ public partial class DataSeeder(
             var assignedRoles = roleAssignments.TryGetValue(user.Id, out var userRoles) ? userRoles : [];
             if (assignedRoles.Count > 0)
             {
-                user.SetRoles(assignedRoles.Select(r => r.Id).ToList());
+                user.SetRoles(GroupRoleIdsFor(assignedRoles, roles));
             }
             identityCtx.Users.Add(user);
             user.SetPassword(seedPasswordHash);

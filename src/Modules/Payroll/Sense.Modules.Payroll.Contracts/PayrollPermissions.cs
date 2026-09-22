@@ -27,6 +27,24 @@ public static class PayrollPermissions
         "payroll.severance.estimate", Module, "Estimate Severance", Group, "View a read-only severance/notice estimate for an employee");
 
     /// <summary>senseik-019 2c: icra/nafaka kesinti emirlerini açma/kapatma.</summary>
+    public static readonly Permission PeriodApprove = new(
+        "payroll.period.approve", Module, "payroll.period.approve", Group, "Approve a calculated payroll period and mark it as paid");
+
+    public static readonly Permission PeriodLock = new(
+        "payroll.period.lock", Module, "payroll.period.lock", Group, "Lock a paid payroll period so it can no longer change");
+
+    public static readonly Permission PeriodReopen = new(
+        "payroll.period.reopen", Module, "payroll.period.reopen", Group, "Reopen an approved, paid or locked payroll period with a written reason");
+
+    public static readonly Permission AdjustmentManage = new(
+        "payroll.adjustment.manage", Module, "payroll.adjustment.manage", Group, "Add and remove one-off taxable earnings (bonus, commission) for an employee in an open payroll period");
+
+    public static readonly Permission BankFileExport = new(
+        "payroll.bankfile.export", Module, "payroll.bankfile.export", Group, "Download the bank payment file of an approved payroll period (contains employees' IBANs)");
+
+    public static readonly Permission ExitSettlementManage = new(
+        "payroll.exitsettlement.manage", Module, "payroll.exitsettlement.manage", Group, "Add, edit and remove lines of an employee's exit settlement (ikale bedeli, ek ödeme, çıkış ayı ücreti) and recalculate its net");
+
     public static readonly Permission CourtOrderManage = new(
         "payroll.courtorder.manage", Module, "payroll.courtorder.manage", Group, "Create and close employees' garnishment (icra/nafaka) orders");
 
@@ -39,5 +57,5 @@ public static class PayrollPermissions
     public static readonly Permission UnionManage = new(
         "payroll.union.manage", Module, "payroll.union.manage", Group, "Manage unions and employees' union/collective-agreement membership and dues");
 
-    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, CourtOrderManage, DeclarationsExport, UnionManage];
+    public static IEnumerable<Permission> All => [TraceView, ProfileManage, PeriodRecalculate, SeveranceEstimate, PeriodApprove, PeriodLock, PeriodReopen, BankFileExport, AdjustmentManage, ExitSettlementManage, CourtOrderManage, DeclarationsExport, UnionManage];
 }

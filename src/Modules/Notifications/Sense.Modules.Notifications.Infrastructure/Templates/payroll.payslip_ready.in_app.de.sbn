@@ -1,0 +1,2 @@
+{{- subject = "Ihre Gehaltsabrechnung für " + period + " ist da" -}}
+Ihre Gehaltsabrechnung wurde an Ihre E-Mail-Adresse gesendet.

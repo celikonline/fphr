@@ -27,6 +27,9 @@ public static class ExpenseDomainErrors
     public const string AdvanceNotSubmitted = "expense.advance.not_submitted";
     public const string AdvanceAmountInvalid = "expense.advance.amount_invalid";
     public const string AdvanceAmountTooLarge = "expense.advance.amount_too_large";
+
+    /// <summary>Requested date is a typo-sized distance from today (see <see cref="ExpenseLimits.AdvanceDateMaxPastDays"/>).</summary>
+    public const string AdvanceDateOutOfRange = "expense.advance.date_out_of_range";
     public const string AdvanceInstallmentCountInvalid = "expense.advance.installment_count_invalid";
     public const string AdvanceAlreadyPaid = "expense.advance.already_paid";
 }
@@ -39,6 +42,12 @@ public static class ExpenseLimits
 
     /// <summary>Upper bound for a single expense item/advance amount (sanity limit against typos such as 99999999999).</summary>
     public const decimal MaxAmount = 10_000_000m;
+
+    /// <summary>An advance's requested date may lie at most this many days in the past (catches 2020-dated typos) ...</summary>
+    public const int AdvanceDateMaxPastDays = 30;
+
+    /// <summary>... and at most this many days ahead (payment planned for a coming month).</summary>
+    public const int AdvanceDateMaxFutureDays = 90;
 
     /// <summary>A receipt may be dated at most this many days ahead of today (time-zone slack), never further.</summary>
     public const int MaxReceiptDateDaysAhead = 1;

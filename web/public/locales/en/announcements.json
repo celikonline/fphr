@@ -1,0 +1,77 @@
+{
+  "title": "Announcements",
+  "tabs": {
+    "feed": "Announcements",
+    "manage": "Manage"
+  },
+  "feed": {
+    "empty": "There are no live announcements.",
+    "loadError": "Announcements could not be loaded.",
+    "new": "New"
+  },
+  "manage": {
+    "create": "New announcement",
+    "saveDraft": "Save as draft",
+    "created": "Announcement draft created.",
+    "publish": "Publish",
+    "publishTitle": "Publish \"{{title}}\"?",
+    "expiresHint": "Leave empty to keep it live until it is archived.",
+    "published": "Announcement published.",
+    "archive": "Archive",
+    "archiveTitle": "Archive announcement?",
+    "archiveDescription": "\"{{title}}\" will be archived and removed from employee feeds.",
+    "archived": "Announcement archived.",
+    "empty": "No announcements yet.",
+    "loadError": "Announcements could not be loaded.",
+    "actionFailed": "The action could not be completed.",
+    "edit": "Edit",
+    "notifyEmployees": "Send e-mail and notification to employees",
+    "notifyEmployeesHint": "Every active employee gets an e-mail and an in-app notification."
+  },
+  "fields": {
+    "title": "Title",
+    "content": "Content",
+    "type": "Type",
+    "priority": "Priority",
+    "status": "Status",
+    "publishedAt": "Published",
+    "expiresAt": "Expires on",
+    "readers": "Readers"
+  },
+  "types": {
+    "general": "General",
+    "hr": "HR",
+    "policy": "Policy",
+    "emergency": "Emergency"
+  },
+  "priorities": {
+    "low": "Low",
+    "normal": "Normal",
+    "high": "High",
+    "urgent": "Urgent"
+  },
+  "statuses": {
+    "draft": "Draft",
+    "published": "Published",
+    "expired": "Expired",
+    "archived": "Archived"
+  },
+  "editor": {
+    "newTitle": "New announcement",
+    "editTitle": "Edit announcement",
+    "contentPlaceholder": "Write the announcement...",
+    "saveDraftFirstTitle": "Save the draft first",
+    "saveDraftFirstHint": "Click \"Save as draft\" before adding images.",
+    "imageTooLarge": "The image exceeds 10 MB.",
+    "imageUploadFailed": "The image could not be uploaded.",
+    "attachments": "Attachments",
+    "removeAttachment": "Remove attachment",
+    "dropFileHere": "Click or drop a file to attach it",
+    "allowedFileTypes": "PDF, Word, Excel, PowerPoint or text file (up to 10 MB)",
+    "fileUploadFailed": "The file could not be uploaded.",
+    "fileTooLarge": "The file exceeds 10 MB.",
+    "fileTypeNotAllowed": "This file type is not allowed.",
+    "attachmentDeleteFailed": "The attachment could not be removed.",
+    "saved": "Changes saved."
+  }
+}

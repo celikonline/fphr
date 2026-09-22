@@ -63,7 +63,7 @@ function RecruitmentAutomationRules() {
   const stageOptions = APPLICATION_STAGES.map((s) => ({ value: s, label: t(`recruitment:applications.stages.${s}`) }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-5xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">

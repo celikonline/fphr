@@ -9,7 +9,7 @@ import trWorkflow from "../../public/locales/tr/workflow.json";
 import trCommon from "../../public/locales/tr/common.json";
 import trLeave from "../../public/locales/tr/leave.json";
 import WorkflowInboxPage from "./inbox";
-import { decideTask, type InboxTaskDto } from "@/services/workflow.service";
+import { decideTask, listInbox, type InboxTaskDto } from "@/services/workflow.service";
 
 // senseik-047 D-01: the inbox card must show request-type-specific detail (overtime date/duration/reason, leave
 // date range/type/day count) from InboxTaskDto.summary, never the raw subjectId GUID.
@@ -128,6 +128,41 @@ describe("WorkflowInboxPage", () => {
     expect(screen.queryByText(LEAVE_SUBJECT_ID)).toBeNull();
   });
 
+  // O-4 (ik-surec-testi-bulgu-raporu-2026-09-20): one date style per card, and the decision context when the API sends it.
+  it("formats the submission date like the other dates on the card", async () => {
+    renderInboxPage();
+
+    await screen.findByText("Yıllık izin");
+    expect(screen.getAllByText("8 Eyl 2026").length).toBeGreaterThan(0);
+    expect(screen.queryByText("08.09.2026")).toBeNull();
+  });
+
+  it("shows the employee's note, remaining balance and team overlap when the summary carries them", async () => {
+    vi.mocked(listInbox).mockResolvedValueOnce([
+      {
+        ...FIXTURES[1]!,
+        summary: {
+          requestDate: "2026-09-15",
+          leave: {
+            startDate: "2026-09-15",
+            endDate: "2026-09-17",
+            leaveTypeCode: "annual",
+            leaveTypeName: null,
+            days: 3,
+            description: "Aile ziyareti",
+            remainingBalance: 12,
+            teamOverlap: { count: 2, employees: [{ employeeId: "e1", name: "Ali Şahin", startDate: "2026-09-15", endDate: "2026-09-16" }, { employeeId: "e2", name: "Zeynep Arslan", startDate: "2026-09-16", endDate: "2026-09-17" }] },
+          },
+        },
+      },
+    ]);
+    renderInboxPage();
+
+    expect(await screen.findByText("Aile ziyareti")).toBeTruthy();
+    expect(screen.getByText("12 gün")).toBeTruthy();
+    expect(screen.getByText("2 kişi izinli: Ali Şahin, Zeynep Arslan")).toBeTruthy();
+  });
+
   // Ürün kararı (denetim A10): ret gerekçesi zorunlu, onayda yorum isteğe bağlı.
   describe("decide dialog comment rule", () => {
     async function openDecideDialog() {
@@ -176,6 +211,19 @@ describe("WorkflowInboxPage", () => {
       await user.click(await screen.findByRole("button", { name: "Onayla" }));
 
       await waitFor(() => expect(decideTask).toHaveBeenCalledWith("task-overtime-1", { outcome: "approved", comment: undefined }));
+    });
+
+    // O-14: leave/overtime lists must be refetched after a decision, not only the inbox.
+    it("refreshes the workflow and leave queries after a decision", async () => {
+      vi.mocked(decideTask).mockClear().mockResolvedValue(undefined as never);
+      const invalidateSpy = vi.spyOn(QueryClient.prototype, "invalidateQueries");
+      const user = await openDecideDialog();
+
+      await user.click(await screen.findByRole("button", { name: "Onayla" }));
+
+      await waitFor(() => expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["leave"] }));
+      expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ["workflow"] });
+      invalidateSpy.mockRestore();
     });
   });
 });

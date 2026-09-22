@@ -3,6 +3,7 @@ using Sense.Modules.Training.Application;
 using Sense.Modules.Training.Domain;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Training.Infrastructure.Persistence;
 
@@ -18,8 +19,12 @@ public sealed class TrainingDbContext(DbContextOptions<TrainingDbContext> option
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     public DbSet<TrainingRequirement> TrainingRequirements => Set<TrainingRequirement>();
 
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.ApplyConfiguration(new AuditLogEntryConfiguration());
         base.OnModelCreating(builder);
         ApplyConfigurations(builder);
     }

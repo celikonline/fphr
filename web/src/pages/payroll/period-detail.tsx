@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Download, Wallet } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, Landmark, Wallet } from "lucide-react";
 import { Badge, Button, Card, Group, Select, Stack, Table, Text, Title } from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
@@ -10,7 +10,15 @@ import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatMoney } from "@/lib/money";
 import { getCostCenters } from "@/services/organization.service";
+import { ClosingChecklist } from "./closing-checklist";
+import { PeriodActions } from "./period-actions";
+import { PeriodAdjustments } from "./period-adjustments";
+import { PeriodComparison } from "./period-comparison";
+import { PeriodPreview } from "./period-preview";
+import { PeriodReceiptMatching } from "./period-receipt-matching";
 import {
+  downloadPayrollBankFile,
+  downloadPayrollDeclarationSummary,
   downloadPayrollPeriodExport,
   getPayrollPeriod,
   saveDownloadedPayrollFile,
@@ -67,22 +75,64 @@ function PayrollPeriodDetail() {
     enabled: Boolean(id),
   });
 
+  const canExportDeclarations = usePermission("payroll.declarations.export");
+  const declarationMutation = useMutation({
+    mutationFn: async () => {
+      const period = periodQuery.data;
+      const fallbackName = period
+        ? `beyanname-ozeti_${period.year}-${String(period.month).padStart(2, "0")}.csv`
+        : "beyanname-ozeti.csv";
+      return downloadPayrollDeclarationSummary(id!, fallbackName);
+    },
+    onSuccess: (file) => saveDownloadedPayrollFile(file),
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.declarationError")),
+      }),
+  });
+
+  const canExportBankFile = usePermission("payroll.bankfile.export");
+  const bankFileMutation = useMutation({
+    mutationFn: async () => {
+      const period = periodQuery.data;
+      const fallbackName = period
+        ? `banka-odeme_${period.year}-${String(period.month).padStart(2, "0")}.csv`
+        : "banka-odeme.csv";
+      return downloadPayrollBankFile(id!, fallbackName);
+    },
+    onSuccess: (file) => saveDownloadedPayrollFile(file),
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.bankFileError")),
+      }),
+  });
+
   const exportMutation = useMutation({
     mutationFn: async () => {
       const period = periodQuery.data;
-      const fallbackName = period ? `bordro-${period.year}-${String(period.month).padStart(2, "0")}.xlsx` : "bordro.xlsx";
+      const fallbackName = period
+        ? `bordro-${period.year}-${String(period.month).padStart(2, "0")}.xlsx`
+        : "bordro.xlsx";
       return downloadPayrollPeriodExport(id!, fallbackName);
     },
     onSuccess: (file) => saveDownloadedPayrollFile(file),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.exportError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.exportError")),
+      }),
   });
 
   const payslips = useMemo(() => periodQuery.data?.payslips ?? [], [periodQuery.data]);
 
   if (periodQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl p-6 md:p-10">
+      <div className="max-w-4xl p-6 md:p-10">
         <Text c="dimmed">{t("common:loading")}</Text>
       </div>
     );
@@ -90,23 +140,32 @@ function PayrollPeriodDetail() {
 
   if (periodQuery.isError || !periodQuery.data) {
     return (
-      <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
-        <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+      <div className="max-w-4xl space-y-6 p-6 md:p-10">
+        <Link
+          to="/app/payroll/periods"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline"
+        >
           <ArrowLeft size={14} /> {t("payroll:periods.title")}
         </Link>
-        <Text c="red">{getApiErrorMessage(periodQuery.error, t("payroll:periodDetail.loadError"))}</Text>
+        <Text c="red">
+          {getApiErrorMessage(periodQuery.error, t("payroll:periodDetail.loadError"))}
+        </Text>
       </div>
     );
   }
 
   const period = periodQuery.data;
-  const periodLabel = new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long" }).format(
-    new Date(period.year, period.month - 1, 1),
-  );
+  const periodLabel = new Intl.DateTimeFormat(i18n.language, {
+    year: "numeric",
+    month: "long",
+  }).format(new Date(period.year, period.month - 1, 1));
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
-      <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
+      <Link
+        to="/app/payroll/periods"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline"
+      >
         <ArrowLeft size={14} /> {t("payroll:periods.title")}
       </Link>
 
@@ -121,7 +180,9 @@ function PayrollPeriodDetail() {
         </div>
         <Group gap="xs" wrap="wrap">
           <Select
-            placeholder={t("payroll:periodDetail.costCenterFilter", { defaultValue: "Maliyet merkezi seçin..." })}
+            placeholder={t("payroll:periodDetail.costCenterFilter", {
+              defaultValue: "Maliyet merkezi seçin...",
+            })}
             data={
               costCentersQuery.data?.map((cc) => ({
                 value: cc.id,
@@ -144,8 +205,42 @@ function PayrollPeriodDetail() {
           >
             {t("payroll:periodDetail.exportButton")}
           </Button>
+          {canExportDeclarations && (
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<FileSpreadsheet size={16} />}
+              loading={declarationMutation.isPending}
+              onClick={() => declarationMutation.mutate()}
+            >
+              {t("payroll:periodDetail.declarationButton")}
+            </Button>
+          )}
+          {canExportBankFile && period.status !== "open" && (
+            <Button
+              type="button"
+              variant="default"
+              leftSection={<Landmark size={16} />}
+              loading={bankFileMutation.isPending}
+              onClick={() => bankFileMutation.mutate()}
+            >
+              {t("payroll:periodDetail.bankFileButton")}
+            </Button>
+          )}
         </Group>
       </Group>
+
+      <PeriodActions periodId={period.id} status={period.status} />
+
+      <PeriodAdjustments periodId={period.id} status={period.status} />
+
+      <PeriodPreview periodId={period.id} status={period.status} />
+
+      <PeriodReceiptMatching periodId={period.id} status={period.status} />
+
+      <PeriodComparison periodId={period.id} />
+
+      <ClosingChecklist periodId={period.id} />
 
       <Card withBorder padding="lg">
         {payslips.length === 0 ? (
@@ -176,8 +271,12 @@ function PayrollPeriodDetail() {
                             {workedDays.text}
                           </Text>
                         </Table.Td>
-                        <Table.Td ta="right">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Table.Td>
-                        <Table.Td ta="right">{formatMoney(line.netAmount, "TRY", i18n.language)}</Table.Td>
+                        <Table.Td ta="right">
+                          {formatMoney(line.grossAmount, "TRY", i18n.language)}
+                        </Table.Td>
+                        <Table.Td ta="right">
+                          {formatMoney(line.netAmount, "TRY", i18n.language)}
+                        </Table.Td>
                       </Table.Tr>
                     );
                   })}

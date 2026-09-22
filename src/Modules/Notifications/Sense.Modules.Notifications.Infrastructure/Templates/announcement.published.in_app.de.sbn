@@ -1,0 +1,2 @@
+{{- subject = "Neue Ankündigung: " + announcement_title -}}
+{{ if announcement_excerpt }}{{ announcement_excerpt }}{{ else }}Zum Lesen der Ankündigung öffnen.{{ end }}

@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
     <ProjectReference Include="../Sense.Modules.Onboarding.Domain/Sense.Modules.Onboarding.Domain.csproj" />
+    <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>

@@ -1,0 +1,2 @@
+{{- subject = "SGK work accident notification" -}}
+{{ if overdue_count != "0" }}{{ overdue_count }} work accident(s) missed the SGK notification deadline. {{ end }}{{ if due_soon_count != "0" }}{{ due_soon_count }} work accident(s) must be notified to SGK today or tomorrow.{{ end }}

@@ -6,7 +6,9 @@ using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Payroll.Application;
 using Sense.Modules.Payroll.Application.Employees;
 using Sense.Modules.Payroll.Application.Events;
+using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Application.Severance;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
@@ -41,8 +43,18 @@ public static class PayrollServiceCollectionExtensions
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.
         services.AddScoped<IEmployeeIncentiveLookup, EmployeeIncentiveLookup>();
 
+        // Ücret pusulası PDF: the payslip download and Notifications' payslip e-mail attachment (both hosts).
+        services.AddScoped<IPayslipDocumentProvider, Application.Declarations.PayslipDocumentProvider>();
+
         // senseik-019 2c: icra/nafaka kesinti emirleri.
         services.AddScoped<IGarnishmentOrderRepository, GarnishmentOrderRepository>();
+
+        // "Çıkış hesabı": frozen kıdem/ihbar/izin amounts per exit + the estimator it shares with the wizard preview.
+        services.AddScoped<IExitSettlementRepository, ExitSettlementRepository>();
+        services.AddScoped<SeveranceEstimator>();
+        services.AddScoped<ExitSettlementNetService>();
+        services.AddScoped<IPeriodClosingCheckRepository, PeriodClosingCheckRepository>();
+        services.AddScoped<IPayrollAdjustmentRepository, PayrollAdjustmentRepository>();
 
         // TB-7 Attendance köprüsü (roadmap #23, S-8): Attendance.Contracts.IAttendanceMonthlySummaryReader landed
         // this tur - AttendanceWorkedTimeReaderAdapter mirrors Leave's WorkScheduleReaderAdapter registration.
@@ -77,6 +89,8 @@ public static class PayrollServiceCollectionExtensions
         services.AddScoped<IIntegrationEventHandler<SalaryChanged>, SalaryChangedDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<EmployeeProfileChanged>, EmployeeProfileChangedDirtyFlagHandler>();
         services.AddScoped<IIntegrationEventHandler<LeaveCancelled>, LeaveCancelledDirtyFlagHandler>();
+        services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedSettlementHandler>();
+        services.AddScoped<IIntegrationEventHandler<OvertimeConvertedToPay>, OvertimeConvertedToPayDirtyFlagHandler>();
         return services;
     }
 

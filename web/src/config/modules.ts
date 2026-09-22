@@ -27,6 +27,8 @@ export const TOGGLEABLE_MODULE_KEYS = [
   "performance",
   "announcements",
   "occupationalSafety",
+  "training",
+  "onboarding",
 ] as const;
 
 export type CoreModuleKey = (typeof CORE_MODULE_KEYS)[number];
@@ -52,6 +54,11 @@ const MODULE_ROUTE_PREFIXES: ReadonlyArray<readonly [string, ToggleableModuleKey
   ["/app/settings/company/asset-categories", "assets"],
   ["/app/performance", "performance"],
   ["/app/company-calendar", "announcements"],
+  ["/app/announcements", "announcements"],
+  ["/app/onboarding", "onboarding"],
+  ["/app/ohs", "occupationalSafety"],
+  ["/app/training", "training"],
+  ["/app/assets", "assets"],
   ["/app/settings/company/ohs-hazard-classification", "occupationalSafety"],
   ["/app/settings/company/ohs-risk-assessments", "occupationalSafety"],
 ];
@@ -60,7 +67,9 @@ const SORTED_PREFIXES = [...MODULE_ROUTE_PREFIXES].sort((a, b) => b[0].length - 
 
 /** Toggleable module that owns this app path, or null for core routes. Matches whole segments only. */
 export function moduleForPath(pathname: string): ToggleableModuleKey | null {
-  const match = SORTED_PREFIXES.find(([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  const match = SORTED_PREFIXES.find(
+    ([prefix]) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
   return match ? match[1] : null;
 }
 

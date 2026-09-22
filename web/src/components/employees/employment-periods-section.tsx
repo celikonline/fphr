@@ -1,18 +1,39 @@
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { Badge, Card, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Badge, Button, Card, Group, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { Download } from "lucide-react";
+import { usePermission } from "@/components/permission-guard";
+import { toast } from "@/hooks/use-toast";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateOnly } from "@/lib/dates";
-import { getEmploymentPeriods, type EmployeeDetail } from "@/services/employees.service";
+import {
+  downloadWorkCertificate,
+  getEmploymentPeriods,
+  type EmployeeDetail,
+} from "@/services/employees.service";
+import { saveDownloadedPayrollFile } from "@/services/payroll.service";
 
 /**
  * "Çalışma dönemleri ve kıdem" (E5a): every employment period of the employee plus the merged seniority they add up
  * to. An employee hired before periods were recorded shows a single implicit period built from the hire date.
  */
 export function EmploymentPeriodsSection({ employee }: { employee: EmployeeDetail }) {
-  const { t, i18n } = useTranslation(["employees"]);
+  const { t, i18n } = useTranslation(["employees", "common"]);
+  const canDownloadCertificate = usePermission("employee.employees.update");
   const { data, isLoading } = useQuery({
     queryKey: ["employment-periods", employee.id],
     queryFn: () => getEmploymentPeriods(employee.id),
+  });
+  // Çalışma belgesi (İş K. m.28): the same PDF the leaver received by e-mail.
+  const certificate = useMutation({
+    mutationFn: () => downloadWorkCertificate(employee.id),
+    onSuccess: saveDownloadedPayrollFile,
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("employees:workCertificate.failed")),
+      }),
   });
 
   if (isLoading) {
@@ -24,9 +45,20 @@ export function EmploymentPeriodsSection({ employee }: { employee: EmployeeDetai
 
   return (
     <Card withBorder padding="lg">
-      <Title order={4} mb="md">
-        {t("employees:employmentPeriods.title")}
-      </Title>
+      <Group justify="space-between" align="flex-start" mb="md" wrap="wrap">
+        <Title order={4}>{t("employees:employmentPeriods.title")}</Title>
+        {employee.status === "Terminated" && canDownloadCertificate && (
+          <Button
+            size="compact-sm"
+            variant="default"
+            leftSection={<Download size={14} />}
+            loading={certificate.isPending}
+            onClick={() => certificate.mutate()}
+          >
+            {t("employees:workCertificate.download")}
+          </Button>
+        )}
+      </Group>
 
       {!data || data.periods.length === 0 ? (
         <Text size="sm" c="dimmed">

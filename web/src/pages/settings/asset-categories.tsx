@@ -3,16 +3,35 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Package, Plus } from "lucide-react";
-import { Button, Card, Group, Modal, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Modal,
+  NumberInput,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
-import { createAssetCategory, listAssetCategories, updateAssetCategory, type AssetCategory } from "@/services/assets.service";
+import {
+  createAssetCategory,
+  listAssetCategories,
+  updateAssetCategory,
+  type AssetCategory,
+} from "@/services/assets.service";
 
 const CATEGORIES_QUERY_KEY = ["assets", "categories"] as const;
+
+/** Server limit (AssetsLimits.MaxReplacementIntervalDays). */
+const MAX_REPLACEMENT_DAYS = 3650;
 
 function categoryErrorMessage(error: unknown, t: (key: string) => string): string {
   const problem = getApiProblem(error);
@@ -60,6 +79,13 @@ function AssetCategoriesAdmin() {
       ),
     },
     {
+      id: "replacement",
+      header: t("assets:categories.columns.replacement"),
+      meta: { label: t("assets:categories.columns.replacement") },
+      enableSorting: false,
+      cell: ({ row }) => <ReplacementText days={row.original.replacementIntervalDays} />,
+    },
+    {
       id: "actions",
       header: "",
       meta: { label: t("common:actions"), headerClassName: "w-32" },
@@ -67,7 +93,12 @@ function AssetCategoriesAdmin() {
       cell: ({ row }) =>
         canManage && (
           <Group gap="xs" justify="flex-end" wrap="nowrap">
-            <Button type="button" size="xs" variant="subtle" onClick={() => setDialogTarget(row.original)}>
+            <Button
+              type="button"
+              size="xs"
+              variant="subtle"
+              onClick={() => setDialogTarget(row.original)}
+            >
               {t("common:edit")}
             </Button>
           </Group>
@@ -78,7 +109,7 @@ function AssetCategoriesAdmin() {
   const table = useDataTable({ columns, data: categories, getRowId: (c) => c.id });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -87,7 +118,11 @@ function AssetCategoriesAdmin() {
           <Text c="dimmed">{t("assets:categories.subtitle")}</Text>
         </div>
         {canManage && (
-          <Button type="button" leftSection={<Plus size={16} />} onClick={() => setDialogTarget("new")}>
+          <Button
+            type="button"
+            leftSection={<Plus size={16} />}
+            onClick={() => setDialogTarget("new")}
+          >
             {t("assets:categories.add")}
           </Button>
         )}
@@ -108,11 +143,17 @@ function AssetCategoriesAdmin() {
         />
       ) : (
         <Card withBorder padding={0}>
-          <DataTable table={table} isLoading={categoriesQuery.isLoading} emptyMessage={t("assets:categories.empty")} />
+          <DataTable
+            table={table}
+            isLoading={categoriesQuery.isLoading}
+            emptyMessage={t("assets:categories.empty")}
+          />
         </Card>
       )}
 
-      {dialogTarget && <CategoryDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />}
+      {dialogTarget && (
+        <CategoryDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />
+      )}
     </div>
   );
 }
@@ -155,6 +196,7 @@ function CategoriesMobileList({
               <Text size="xs" c="dimmed" ff="monospace">
                 {category.code}
               </Text>
+              <ReplacementText days={category.replacementIntervalDays} />
             </Stack>
             {canManage && (
               <Button type="button" size="xs" variant="subtle" onClick={() => onEdit(category)}>
@@ -168,26 +210,50 @@ function CategoriesMobileList({
   );
 }
 
-function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; onClose: () => void }) {
+/** KKD periodic replacement interval, or a dash when the category has none. */
+function ReplacementText({ days }: { days?: number | null }) {
+  const { t } = useTranslation(["assets"]);
+  return (
+    <Text size="sm" c={days ? undefined : "dimmed"}>
+      {days ? t("assets:categories.replacementEvery", { count: days }) : "—"}
+    </Text>
+  );
+}
+
+function CategoryDialog({
+  target,
+  onClose,
+}: {
+  target: AssetCategory | "new";
+  onClose: () => void;
+}) {
   const { t } = useTranslation(["assets", "common"]);
   const queryClient = useQueryClient();
   const editing = target === "new" ? null : target;
 
   const [code, setCode] = useState(editing?.code ?? "");
   const [name, setName] = useState(editing?.name ?? "");
+  const [replacementInput, setReplacementInput] = useState<number | string>(
+    editing?.replacementIntervalDays ?? ""
+  );
   const [error, setError] = useState<string | null>(null);
+  const intervalDays = replacementInput === "" ? null : Number(replacementInput);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (editing) {
-        await updateAssetCategory(editing.id, name.trim());
+        await updateAssetCategory(editing.id, name.trim(), intervalDays);
       } else {
-        await createAssetCategory(code.trim(), name.trim());
+        await createAssetCategory(code.trim(), name.trim(), intervalDays);
       }
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-      toast({ variant: "success", title: t("common:success"), description: t("assets:categories.saved") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("assets:categories.saved"),
+      });
       onClose();
     },
     onError: (err) => setError(categoryErrorMessage(err, t)),
@@ -197,12 +263,20 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
     event.preventDefault();
     if (!name.trim()) return setError(t("assets:categories.errors.nameRequired"));
     if (!editing && !code.trim()) return setError(t("assets:categories.errors.codeRequired"));
+    if (intervalDays !== null && (intervalDays < 1 || intervalDays > MAX_REPLACEMENT_DAYS)) {
+      return setError(t("assets:categories.errors.replacementInvalid"));
+    }
     setError(null);
     mutation.mutate();
   }
 
   return (
-    <Modal opened onClose={onClose} title={editing ? t("assets:categories.editTitle") : t("assets:categories.add")} size="32rem">
+    <Modal
+      opened
+      onClose={onClose}
+      title={editing ? t("assets:categories.editTitle") : t("assets:categories.add")}
+      size="32rem"
+    >
       <form onSubmit={submit}>
         <Stack gap="md">
           <TextInput
@@ -217,12 +291,26 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
           <TextInput
             id="category-code"
             label={t("assets:categories.columns.code")}
-            description={editing ? t("assets:categories.codeLocked") : t("assets:categories.codeHint")}
+            description={
+              editing ? t("assets:categories.codeLocked") : t("assets:categories.codeHint")
+            }
             withAsterisk={!editing}
             value={code}
             maxLength={100}
             onChange={(event) => setCode(event.currentTarget.value)}
             disabled={Boolean(editing) || mutation.isPending}
+            inputWrapperOrder={["label", "input", "description"]}
+          />
+          <NumberInput
+            id="category-replacement"
+            label={t("assets:categories.columns.replacement")}
+            description={t("assets:categories.replacementHint")}
+            value={replacementInput}
+            min={1}
+            max={MAX_REPLACEMENT_DAYS}
+            allowDecimal={false}
+            onChange={setReplacementInput}
+            disabled={mutation.isPending}
             inputWrapperOrder={["label", "input", "description"]}
           />
           {error && (

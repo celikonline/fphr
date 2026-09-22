@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sense.Modules.Onboarding.Application/Sense.Modules.Onboarding.Application.csproj" />
+    <ProjectReference Include="../Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
+    <ProjectReference Include="../Sense.Modules.Onboarding.Infrastructure/Sense.Modules.Onboarding.Infrastructure.csproj" />
+    <ProjectReference Include="../../../Shared/Sense.Shared.Web/Sense.Shared.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+</Project>

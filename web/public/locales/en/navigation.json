@@ -22,14 +22,18 @@
     "trust": "Trust & security",
     "collapseSidebar": "Collapse sidebar",
     "expandSidebar": "Expand sidebar",
+    "back": "Back",
     "workflowInbox": "Approval inbox",
-    "sharedFiles": "Shared files"
+    "sharedFiles": "Shared files",
+    "platformTenants": "Companies (Platform)"
   },
   "phase": "Phase {{phase}}",
   "comingSoon": {
     "description": "This feature is planned for Phase {{phase}} of the roadmap."
   },
   "apps": {
+    "searchPlaceholder": "Search apps…",
+    "noResults": "No apps match your search.",
     "viewAll": "All apps",
     "subtitle": "Apps you can use today and those coming soon.",
     "orgChart": "Org chart",
@@ -48,6 +52,12 @@
     "expensePaymentsAdmin": "Expense/advance payments",
     "performance": "Performance",
     "performanceReviewCycles": "My review cycles",
+    "performanceTeamGoals": "Team goals",
+    "announcements": "Announcements",
+    "assets": "Assets",
+    "training": "Training",
+    "ohs": "OHS",
+    "onboarding": "Onboarding",
     "recruitment": "Recruitment",
     "recruitmentCandidates": "Candidates",
     "recruitmentRequisitions": "Requisitions",
@@ -56,7 +66,7 @@
     "companyCalendar": "Event calendar"
   },
   "settings": {
-    "company": "Company information",
+    "company": "Company and organization",
     "structure": "Company structure",
     "structureDesc": "Hierarchy levels, units and unit authorization",
     "holidayCalendars": "Holiday calendars",
@@ -87,12 +97,12 @@
     "ohsRiskAssessments": "Risk assessments",
     "ohsRiskAssessmentsDesc": "Recorded risk assessments and their renewal due dates",
     "approvalFlowsDesc": "Approval steps per request type",
-    "rules": "Rules",
+    "rules": "Work rules",
     "workCalendars": "Work calendars",
     "workCalendarsDesc": "Working days and hours",
     "visaProcesses": "Visa document processes",
     "visaProcessesDesc": "Visa document request and approval flows",
-    "system": "System settings",
+    "system": "Users and security",
     "access": "Access settings",
     "accessDesc": "What employees can see on home, account and calendar",
     "securityPolicy": "Security policy",
@@ -100,7 +110,7 @@
     "modules": "Modules",
     "modulesDesc": "Turn product modules on or off company-wide",
     "usersRoles": "Users & roles",
-    "usersRolesDesc": "Users, access types, roles and permissions",
+    "usersRolesDesc": "Users, user groups, roles and permissions",
     "auditLog": "Audit log",
     "auditLogDesc": "Record of user and system activity",
     "supportAccess": "Support access",
@@ -114,6 +124,25 @@
     "recruitmentFormTemplates": "Form templates",
     "recruitmentFormTemplatesDesc": "Feedback, scorecard, and outcome form templates",
     "recruitmentAutomationRules": "Automation rules",
-    "recruitmentAutomationRulesDesc": "Mandatory-form rules on pipeline stage transitions"
+    "recruitmentAutomationRulesDesc": "Mandatory-form rules on pipeline stage transitions",
+    "peopleSection": "Employees and documents",
+    "workflowsSection": "Approvals and processes",
+    "assetsExpenseSection": "Assets and expenses",
+    "ohsSection": "Occupational health and safety",
+    "platformSection": "Platform and data",
+    "leaveRuleSets": "Leave rule sets",
+    "leaveRuleSetsDesc": "Rule sets and leave types",
+    "allSettings": "All settings",
+    "subnavLabel": "Settings menu",
+    "orgChart": "Org chart",
+    "orgChartDesc": "View the unit and employee hierarchy as a chart"
+  },
+  "search": {
+    "label": "Search screens",
+    "placeholder": "Search screens…",
+    "nothing": "No results",
+    "menu": "Menu",
+    "apps": "Apps",
+    "settings": "Settings"
   }
 }

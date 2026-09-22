@@ -2,7 +2,30 @@ using Sense.Modules.OccupationalSafety.Domain.HazardClassifications;
 using Sense.Modules.OccupationalSafety.Domain.RiskAssessments;
 using Sense.Shared.Kernel.Results;
 
+using Sense.Modules.OccupationalSafety.Domain.Incidents;
+
 namespace Sense.Modules.OccupationalSafety.Domain;
+
+/// <summary>İSG uzmanı / işyeri hekimi / DSP görevlendirmeleri.</summary>
+public interface ISafetyAssignmentRepository
+{
+    void Add(Services.SafetyAssignment assignment);
+
+    Task<Result<Services.SafetyAssignment>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>All assignments, newest start first (small per tenant: a few per location).</summary>
+    Task<IReadOnlyList<Services.SafetyAssignment>> ListAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>İSG kurulu üyelikleri.</summary>
+public interface IOhsCommitteeMemberRepository
+{
+    void Add(Services.OhsCommitteeMember member);
+
+    Task<Result<Services.OhsCommitteeMember>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Services.OhsCommitteeMember>> ListAsync(CancellationToken cancellationToken = default);
+}
 
 /// <summary>WorkplaceHazardClassification repository.</summary>
 public interface IWorkplaceHazardClassificationRepository
@@ -17,6 +40,23 @@ public interface IWorkplaceHazardClassificationRepository
 
     /// <summary>The classification in effect on <paramref name="asOf"/> for every location that has one, one row per location.</summary>
     Task<IReadOnlyList<WorkplaceHazardClassification>> ListCurrentForAllLocationsAsync(DateOnly asOf, CancellationToken cancellationToken = default);
+}
+
+/// <summary>OhsIncident (iş kazası / ramak kala) repository.</summary>
+public interface IOhsIncidentRepository
+{
+    void Add(OhsIncident incident);
+
+    Task<Result<OhsIncident>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>All incidents, newest EventDate first.</summary>
+    Task<IReadOnlyList<OhsIncident>> ListAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Open work accidents not yet notified to SGK (the daily reminder's input).</summary>
+    Task<IReadOnlyList<OhsIncident>> ListAwaitingSgkNotificationAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>Incidents the employee reported through self-service, newest first.</summary>
+    Task<IReadOnlyList<OhsIncident>> ListReportedByAsync(Guid employeeId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>RiskAssessment repository.</summary>

@@ -34,21 +34,54 @@
     "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
     "columns": {
       "name": "Ad",
-      "code": "Kod"
+      "code": "Kod",
+      "replacement": "Periyodik yenileme"
     },
     "errors": {
       "generic": "Kategori kaydedilemedi.",
       "loadFailed": "Kategoriler yüklenemedi.",
       "codeTaken": "Bu kod ile zaten bir kategori var.",
       "codeRequired": "Kod zorunludur.",
-      "nameRequired": "Ad zorunludur."
-    }
+      "nameRequired": "Ad zorunludur.",
+      "replacementInvalid": "Yenileme aralığı 1 ile 3650 gün arasında olmalıdır."
+    },
+    "replacementEvery_one": "{{count}} günde bir",
+    "replacementEvery_other": "{{count}} günde bir",
+    "replacementHint": "KKD gibi belirli aralıkla yenilenmesi gereken ekipman için gün sayısı; boş bırakılırsa yenileme takibi yapılmaz."
   },
   "enum": {
     "status": {
       "unassigned": "Boşta",
       "assigned": "Atanmış",
-      "retired": "Emekli"
+      "retired": "Kullanım dışı"
     }
+  },
+  "page": {
+    "title": "Zimmet",
+    "inventory": "Envanter",
+    "mine": "Zimmetlerim",
+    "mineEmpty": "Üzerinize kayıtlı zimmet yok."
+  },
+  "inventory": {
+    "create": "Zimmet ekle",
+    "editTitle": "Zimmeti düzenle",
+    "edit": "Düzenle",
+    "saved": "Zimmet kaydedildi.",
+    "assignTitle": "\"{{name}}\" zimmetini ata",
+    "employee": "Çalışan",
+    "status": "Durum",
+    "statusFilter": "Durum filtresi",
+    "categoryFilter": "Kategori filtresi",
+    "allStatuses": "Tüm durumlar",
+    "allCategories": "Tüm kategoriler",
+    "empty": "Bu filtreye uyan zimmet yok.",
+    "retire": "Kullanım dışı bırak",
+    "retireTitle": "Zimmet kullanım dışı bırakılsın mı?",
+    "retireDescription": "\"{{name}}\" kullanım dışı bırakılacak ve bir daha atanamayacak.",
+    "retired": "Zimmet kullanım dışı bırakıldı."
+  },
+  "replacement": {
+    "due": "Yenileme: {{date}}",
+    "overdue": "Yenileme gecikti ({{date}})"
   }
 }

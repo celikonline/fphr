@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Sense.Modules.Payroll.Domain;
+using Sense.Modules.Payroll.Domain.Adjustments;
+using Sense.Modules.Payroll.Domain.Closing;
+using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -40,6 +43,9 @@ public sealed class PayslipRepository(PayrollDbContext context) : IPayslipReposi
 
     public async Task<Payslip?> FindByEmployeeAndPeriodAsync(Guid employeeId, Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PayrollPeriodId == payrollPeriodId, cancellationToken);
+
+    public async Task<IReadOnlyList<Payslip>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Payslips.Where(p => p.EmployeeId == employeeId).ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default) =>
         await context.Payslips.Where(p => p.PayrollPeriodId == payrollPeriodId).ToListAsync(cancellationToken);
@@ -151,4 +157,46 @@ public sealed class EmployeeUnionMembershipRepository(PayrollDbContext context) 
             .Where(m => m.EmployeeId == employeeId && m.MembershipDate <= asOf && (m.EndDate == null || asOf <= m.EndDate))
             .OrderByDescending(m => m.MembershipDate)
             .FirstOrDefaultAsync(cancellationToken);
+}
+
+public sealed class ExitSettlementRepository(PayrollDbContext context) : IExitSettlementRepository
+{
+    public void Add(ExitSettlement settlement) => context.ExitSettlements.Add(settlement);
+
+    public async Task<ExitSettlement?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements.Include(x => x.Lines).FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+    public async Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements.Include(x => x.Lines).FirstOrDefaultAsync(x => x.EmployeeId == employeeId && x.TerminationDate == terminationDate, cancellationToken);
+
+    public async Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.ExitSettlements
+            .Include(x => x.Lines)
+            .Where(x => x.EmployeeId == employeeId)
+            .OrderByDescending(x => x.TerminationDate)
+            .ToListAsync(cancellationToken);
+}
+
+public sealed class PeriodClosingCheckRepository(PayrollDbContext context) : IPeriodClosingCheckRepository
+{
+    public void Add(PeriodClosingCheck check) => context.ClosingChecks.Add(check);
+
+    public async Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default) =>
+        await context.ClosingChecks.Where(c => c.PeriodId == periodId).ToListAsync(cancellationToken);
+}
+
+public sealed class PayrollAdjustmentRepository(PayrollDbContext context) : IPayrollAdjustmentRepository
+{
+    public void Add(PayrollAdjustment adjustment) => context.Adjustments.Add(adjustment);
+
+    public void Remove(PayrollAdjustment adjustment) => context.Adjustments.Remove(adjustment);
+
+    public async Task<PayrollAdjustment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollAdjustment>> ListByEmployeeAndMonthAsync(Guid employeeId, int year, int month, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.Where(a => a.EmployeeId == employeeId && a.Year == year && a.Month == month).ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default) =>
+        await context.Adjustments.Where(a => a.Year == year && a.Month == month).OrderBy(a => a.Label).ToListAsync(cancellationToken);
 }

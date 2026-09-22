@@ -157,7 +157,8 @@ export interface ExpenseCategory {
   id: string;
   code: string;
   nameKey: string;
-  defaultTaxRate: number | null;
+  /** Omitted by the API when null (`WhenWritingNull`). */
+  defaultTaxRate?: number | null;
   isActive: boolean;
   /** S-9 (Faz 7 tur 3): optional per-item cap; `null`/absent = no limit. Absent on older API responses. */
   maxAmount?: number | null;

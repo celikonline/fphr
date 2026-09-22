@@ -58,24 +58,9 @@ public sealed class MaterializeTasksForEmployeeHandler(
     public async Task<Result<IReadOnlyList<EmployeeOnboardingTaskDto>>> Handle(
         MaterializeTasksForEmployeeCommand command, CancellationToken cancellationToken)
     {
-        var activeTemplates = await templates.ListActiveByStageAsync(command.Stage, cancellationToken);
-
-        var created = new List<EmployeeOnboardingTaskDto>();
-        foreach (var template in activeTemplates)
-        {
-            var existing = await tasks.FindAsync(command.EmployeeId, template.Id, cancellationToken);
-            if (existing is not null)
-            {
-                continue;
-            }
-
-            var dueDate = command.ReferenceDate.AddDays(template.DueDateOffsetDays);
-            var task = EmployeeOnboardingTask.Materialize(tenant.TenantId, command.EmployeeId, template.Id, command.Stage, dueDate);
-            tasks.Add(task);
-            created.Add(EmployeeOnboardingTaskDto.From(task));
-        }
-
-        return Result.Success<IReadOnlyList<EmployeeOnboardingTaskDto>>(created);
+        var created = await OnboardingTaskMaterializer.MaterializeAsync(
+            tenant.TenantId, templates, tasks, command.EmployeeId, command.Stage, command.ReferenceDate, cancellationToken);
+        return Result.Success<IReadOnlyList<EmployeeOnboardingTaskDto>>(created.Select(EmployeeOnboardingTaskDto.From).ToList());
     }
 }
 

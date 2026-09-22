@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Domain.Roles;
+using Sense.Modules.Identity.Domain.Tenants;
 using Sense.Modules.Identity.Infrastructure.Persistence;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Contracts.Security;
@@ -40,9 +41,13 @@ public sealed partial class SystemRolePermissionSynchronizer(
     {
         using var scope = tenantSetter.BeginScope(tenantId);
 
+        var slug = await db.Tenants.AsNoTracking().Where(t => t.Id == tenantId).Select(t => t.Slug).FirstOrDefaultAsync(ct).ConfigureAwait(false);
         var systemRoles = await db.Roles.Where(r => r.IsSystem).ToListAsync(ct).ConfigureAwait(false);
         var changed = 0;
-        foreach (var code in SystemRoleCodes.All)
+        var current = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
+
+        // SuperAdmin gibi platforma özel roller yalnız platform kiracısında oluşturulur/senkronize edilir.
+        foreach (var code in SystemRoleCodes.ForTenant(PlatformTenant.IsPlatform(slug)))
         {
             var role = systemRoles.FirstOrDefault(r => string.Equals(r.Code, code, StringComparison.OrdinalIgnoreCase));
             if (role is null)
@@ -50,15 +55,19 @@ public sealed partial class SystemRolePermissionSynchronizer(
                 role = Role.CreateSystem(tenantId, code);
                 db.Roles.Add(role);
                 role.ReplacePermissionsUnchecked(Desired(role));
+                current[code] = role;
                 changed++;
                 continue;
             }
 
+            current[code] = role;
             if (role.SyncPermissionsUnchecked(Desired(role)))
             {
                 changed++;
             }
         }
+
+        changed += await MigrateToUserGroupsAsync(systemRoles, current, ct).ConfigureAwait(false);
 
         if (changed > 0)
         {
@@ -70,9 +79,58 @@ public sealed partial class SystemRolePermissionSynchronizer(
         return changed;
     }
 
-    private List<RolePermission> Desired(Role role) => role.IsLocked
-        ? catalog.All.Select(p => new RolePermission(role.Id, p.Key, (int)DataScope.Company)).ToList()
-        : Application.Roles.SystemRoleDefinitions.Get(role.Code).Resolve(role.Id, catalog.All).ToList();
+    /// <summary>
+    /// Dört gruba geçiş (idempotent): kaldırılan sistem rollerinin kullanıcıları <see cref="SystemRoleCodes.RetiredSuccessors"/>
+    /// grubuna taşınır ve eski roller silinir; İK Yöneticisi olmayan hesap sahiplerine (Owner) İK Yöneticisi eklenir.
+    /// </summary>
+    private async Task<int> MigrateToUserGroupsAsync(List<Role> systemRoles, Dictionary<string, Role> current, CancellationToken ct)
+    {
+        var retired = systemRoles.Where(r => SystemRoleCodes.RetiredSuccessors.ContainsKey(r.Code)).ToList();
+        var successorByRetiredId = retired
+            .Where(r => current.ContainsKey(SystemRoleCodes.RetiredSuccessors[r.Code]))
+            .ToDictionary(r => r.Id, r => current[SystemRoleCodes.RetiredSuccessors[r.Code]].Id);
+        var retiredIds = retired.Select(r => r.Id).ToList();
+        var ownerId = current.GetValueOrDefault(SystemRoleCodes.Owner)?.Id;
+        var hrId = current.GetValueOrDefault(SystemRoleCodes.HR)?.Id;
+
+        var users = await db.Users
+            .Where(u => u.Roles.Any(r => retiredIds.Contains(r.RoleId)) || (ownerId != null && u.Roles.Any(r => r.RoleId == ownerId)))
+            .ToListAsync(ct).ConfigureAwait(false);
+
+        var changed = 0;
+        foreach (var user in users)
+        {
+            var roleIds = user.Roles.Select(r => r.RoleId).ToList();
+            var target = roleIds
+                .Select(id => successorByRetiredId.TryGetValue(id, out var successor) ? successor : id)
+                .Where(id => !retiredIds.Contains(id))
+                .ToHashSet();
+            if (ownerId is { } owner && hrId is { } hr && target.Contains(owner))
+            {
+                target.Add(hr);
+            }
+
+            if (!target.SetEquals(roleIds))
+            {
+                user.SetRoles(target);
+                changed++;
+            }
+        }
+
+        if (retired.Count > 0)
+        {
+            db.Roles.RemoveRange(retired);
+            LogRetiredRolesRemoved(logger, retired.Count, changed);
+            changed += retired.Count;
+        }
+
+        return changed;
+    }
+
+    [LoggerMessage(EventId = 2102, Level = LogLevel.Information, Message = "Retired system roles removed: {RoleCount} role(s), {UserCount} user(s) moved to the four user groups")]
+    private static partial void LogRetiredRolesRemoved(ILogger logger, int roleCount, int userCount);
+
+    private List<RolePermission> Desired(Role role) => Application.Roles.SystemRolePermissionResolver.Resolve(role, catalog.All);
 
     [LoggerMessage(EventId = 2100, Level = LogLevel.Information, Message = "System role permissions synchronized for tenant {TenantId}: {ChangedRoles} role(s) changed")]
     private static partial void LogTenantSynced(ILogger logger, Guid tenantId, int changedRoles);

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Sense.Modules.Employee.Contracts;
+using Sense.Modules.Leave.Contracts;
 using Sense.Modules.Payroll.Application.Calculation;
 using Sense.Modules.Payroll.Application.Ports;
 using Sense.Modules.Payroll.Domain;
@@ -24,7 +25,6 @@ public static class PayrollSkipReasons
     public const string NoPayrollProfile = "no_payroll_profile";
     public const string WageBasisNotMonthly = "wage_basis_not_monthly";
     public const string NoSalaryRecord = "no_salary_record";
-    public const string NetSalaryNotSupported = "net_salary_not_supported";
     public const string NotEmployedInPeriod = "not_employed_in_period";
     public const string NoWorkedDays = "no_worked_days";
     public const string CalculationFailed = "calculation_failed";
@@ -38,6 +38,12 @@ public sealed record PayrollWarning(Guid EmployeeId, string Code, string? Detail
 /// SalaryType, were not employed in the period, have no worked day, or their calculation failed; each skipped
 /// employee is listed in <see cref="Skipped"/> with a machine-readable <see cref="PayrollSkipReasons"/> code.
 /// <see cref="Warnings"/> contains non-blocking issues like missing prior cumulative GV base for mid-year employees.</summary>
+/// <summary>One employee's figures in a deneme bordrosu.</summary>
+public sealed record PayrollPreviewLine(Guid EmployeeId, decimal Gross, decimal Net, decimal EmployerCost);
+
+/// <summary>A deneme bordrosu: the run summary (calculated / skipped / warnings) plus every calculated employee's figures.</summary>
+public sealed record PayrollPreviewResult(PayrollPeriodRunSummary Summary, IReadOnlyList<PayrollPreviewLine> Lines);
+
 public sealed record PayrollPeriodRunSummary(
     Guid RunId, int CalculatedCount, int SkippedCount, IReadOnlyList<PayrollSkippedEmployee> Skipped,
     IReadOnlyList<PayrollWarning> Warnings = default!)
@@ -68,12 +74,29 @@ public sealed class PayrollPeriodCalculationService(
     IGarnishmentOrderRepository garnishmentOrderRepository,
     IEmployeeDisabilityLookup disabilityLookup,
     IEmployeeUnionMembershipRepository unionMemberships,
+    IOvertimePayrollReader overtimeReader,
+    IPayrollAdjustmentRepository adjustmentRepository,
     ILogger<PayrollPeriodCalculationService> logger)
 {
     private static readonly System.Text.Json.JsonSerializerOptions StepsJsonOptions = new(System.Text.Json.JsonSerializerDefaults.Web);
 
     /// <summary>Recalculates every candidate employee (initial "Dönem aç → hesapla" run, and later "Tümünü yeniden hesapla").</summary>
-    public async Task<PayrollPeriodRunSummary> RecalculateAllAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken)
+    public Task<PayrollPeriodRunSummary> RecalculateAllAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken) =>
+        RunAsync(period, employeeIds, null, cancellationToken);
+
+    /// <summary>
+    /// Deneme bordrosu: runs the same calculation for every candidate employee but writes nothing - no payslip, trace, flag clearing or
+    /// garnishment balance - and returns the figures so they can be reviewed before the real run.
+    /// </summary>
+    public async Task<PayrollPreviewResult> PreviewAsync(PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, CancellationToken cancellationToken)
+    {
+        var lines = new List<PayrollPreviewLine>();
+        var summary = await RunAsync(period, employeeIds, lines, cancellationToken);
+        return new PayrollPreviewResult(summary, lines);
+    }
+
+    private async Task<PayrollPeriodRunSummary> RunAsync(
+        PayrollPeriod period, IReadOnlyCollection<Guid> employeeIds, List<PayrollPreviewLine>? preview, CancellationToken cancellationToken)
     {
         var runId = Guid.NewGuid();
         var periodStart = new DateOnly(period.Year, period.Month, 1);
@@ -88,7 +111,7 @@ public sealed class PayrollPeriodCalculationService(
             string? skipReason;
             try
             {
-                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, cancellationToken);
+                skipReason = await CalculateOneAsync(period, employeeId, periodStart, calendarDays, snapshot, runId, warnings, preview, cancellationToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -120,7 +143,7 @@ public sealed class PayrollPeriodCalculationService(
 
     /// <summary>Calculates one employee; returns null on success, otherwise the <see cref="PayrollSkipReasons"/> code. Accumulates warnings in the provided list.</summary>
     private async Task<string?> CalculateOneAsync(
-        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, CancellationToken cancellationToken)
+        PayrollPeriod period, Guid employeeId, DateOnly periodStart, int calendarDays, PayrollLegislationSnapshot snapshot, Guid runId, List<PayrollWarning> warnings, List<PayrollPreviewLine>? preview, CancellationToken cancellationToken)
     {
         var periodEnd = new DateOnly(period.Year, period.Month, calendarDays);
 
@@ -151,11 +174,6 @@ public sealed class PayrollPeriodCalculationService(
         if (salary is null)
         {
             return PayrollSkipReasons.NoSalaryRecord; // no salary record in force yet
-        }
-
-        if (salary.SalaryType != EmployeeSalaryType.Gross)
-        {
-            return PayrollSkipReasons.NetSalaryNotSupported; // NET_TO_GROSS_ITER is out of scope this slice (PayrollCalculator doc)
         }
 
         // Cross-month cumulative GV_BASE tracking (Ocak'tan itibaren kümülatif matrah) senseik-019 2a ile devreye
@@ -216,6 +234,20 @@ public sealed class PayrollPeriodCalculationService(
         // senseik-019 2b: GVK md.31 engelli çalışan gelir vergisi matrah indirimi derecesi.
         var disabilityDegree = await disabilityLookup.GetDegreeAsync(tenant.TenantId, employeeId, cancellationToken) ?? EmployeeDisabilityDegree.None;
 
+        // Net ücret (net→brüt): a fixed-net salary is grossed up with the same calculator so the employee keeps exactly that net after the
+        // month's premiums and taxes (cumulative bracket, exemptions and disability reduction included). Solved on a full month with no
+        // additions or deductions, then the normal run prorates that gross for a partial month and adds meal/overtime/deductions as usual.
+        var grossMonthly = salary.SalaryType == EmployeeSalaryType.Net
+            ? NetToGrossSolver.Solve(
+                salary.Amount,
+                candidateGross => PayrollCalculator.Calculate(
+                    new PayrollCalculationInput(
+                        GrossMonthlySalary: candidateGross, WorkedDays: calendarDays, CalendarDaysInMonth: calendarDays,
+                        MealVariant: MealBenefitVariant.None, MealDailyAmount: 0m, PriorCumulativeGvBase: priorCumulativeGvBase,
+                        AsOfDate: periodStart, DisabilityDegree: (int)disabilityDegree),
+                    snapshot))
+            : salary.Amount;
+
         // senseik-019 2c: açık avans bakiyesi + aktif icra/nafaka emirleri.
         var advanceBalance = expensePayout?.OpenAdvanceBalance ?? 0m;
         var activeGarnishments = await garnishmentOrderRepository.ListActiveByEmployeeAsync(employeeId, cancellationToken) ?? [];
@@ -226,10 +258,30 @@ public sealed class PayrollPeriodCalculationService(
         // Sendika / dayanışma aidatı (11.3.07-bordro.md #58): pure UnionDuesCalculator decides eligibility for this
         // period from the current membership (or 0 if the employee has none) - the calculator never touches the DB.
         var membership = await unionMemberships.FindCurrentAsync(employeeId, periodStart, cancellationToken);
-        var unionDuesAmount = UnionDuesCalculator.Calculate(membership, salary.Amount, calendarDays, periodStart);
+        var unionDuesAmount = UnionDuesCalculator.Calculate(membership, grossMonthly, calendarDays, periodStart);
 
-        var input = new PayrollCalculationInput(
-            GrossMonthlySalary: salary.Amount,
+        // Fazla mesai (4857 md.41): Leave's approved overtime minutes (25%/50% rates, time-off conversions excluded) become a taxable
+        // earning added to the gross. Leave returns nothing for an employee without overtime, which leaves the gross unchanged.
+        var overtime = (await overtimeReader.GetAsync(tenant.TenantId, period.Year, period.Month, [employeeId], cancellationToken))?.FirstOrDefault(o => o.EmployeeId == employeeId);
+        var overtimePay = overtime is null
+            ? 0m
+            : OvertimePayCalculator.Calculate(grossMonthly, overtime.Rate25Minutes / 60m, overtime.Rate50Minutes / 60m);
+
+        // Prim, komisyon ve benzeri tek seferlik brüt ek kazançlar (Open dönemde girilir): fazla mesai gibi vergiye ve SGK ya tabi.
+        var monthAdjustments = (await adjustmentRepository.ListByEmployeeAndMonthAsync(employeeId, period.Year, period.Month, cancellationToken)) ?? [];
+        var adjustmentsTotal = monthAdjustments.Where(a => !a.IsNet).Sum(a => a.GrossAmount);
+        var netAdjustmentsTotal = monthAdjustments.Where(a => a.IsNet).Sum(a => a.GrossAmount);
+
+        // Hafta tatili / resmî tatilde çalışma (4857 md.46-47): aylık ücretli için tatil günü ücrete dahildir, çalışılan her tatil günü +1 günlük ücret ek kazançtır.
+        var holidayPay = workedTime is { PublicHolidayDaysWorked: > 0 } or { WeeklyRestDaysWorked: > 0 }
+            ? HolidayPayCalculator.Calculate(grossMonthly, calendarDays, workedTime.WeeklyRestDaysWorked, workedTime.PublicHolidayDaysWorked)
+            : 0m;
+
+        // Nakit yol yardımı: ayni (kart, servis) çalışana para ödemez; nakit olan çalıştığı gün kadar vergiye ve SGK ya tabi ek kazançtır.
+        var transportPay = profile.TransportVariant == TransportVariant.Cash ? profile.TransportDailyAmount * workedDays : 0m;
+
+        PayrollCalculationInput BuildInput(decimal extraGross) => new(
+            GrossMonthlySalary: grossMonthly,
             WorkedDays: workedDays,
             CalendarDaysInMonth: calendarDays,
             MealVariant: profile.MealBenefitVariant,
@@ -242,9 +294,23 @@ public sealed class PayrollPeriodCalculationService(
             AdvanceDeductionTotal: advanceBalance,
             GarnishmentOrders: garnishmentInputs,
             UnionDuesAmount: unionDuesAmount,
+            AdditionalTaxableEarnings: overtimePay + adjustmentsTotal + transportPay + holidayPay + extraGross,
             ProratedPaidDays: isPartialMonth ? paidDays30 : null);
 
+        // Net prim: brütleştirilir - çalışanın eline tam girilen net geçecek şekilde, ayın diğer kazançları ve dilim/kümülatif matrahla birlikte.
+        var netBonusGross = netAdjustmentsTotal > 0m
+            ? NetToGrossSolver.SolveExtra(netAdjustmentsTotal, extra => PayrollCalculator.Calculate(BuildInput(extra), snapshot))
+            : 0m;
+        var input = BuildInput(netBonusGross);
+
         var result = PayrollCalculator.Calculate(input, snapshot);
+
+        if (preview is not null)
+        {
+            // Deneme bordrosu: report the figures and stop before anything is persisted or mutated (garnishment balances, flags, traces).
+            preview.Add(new PayrollPreviewLine(employeeId, result.GrossAmount, result.NetAmount, result.EmployerCost));
+            return null;
+        }
 
         // senseik-019 2c: uygulanan icra/nafaka kesintilerini emir bakiyelerine işle (aynı DbContext'te izlenen
         // entity'ler - IPayrollUnitOfWork.SaveChangesAsync çağıran command handler'ın işlemiyle birlikte kaydedilir).

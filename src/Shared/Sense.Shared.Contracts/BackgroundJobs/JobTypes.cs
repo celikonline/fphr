@@ -31,4 +31,10 @@ public enum JobType
 
     /// <summary>Faz 6: Automatically lock shift periods that are due (Attendance module).</summary>
     ShiftPeriodAutoLock = 9,
+
+    /// <summary>İSG: remind about work accidents whose SGK notification deadline is near or missed (OccupationalSafety module).</summary>
+    OhsSgkNotificationReminder = 10,
+
+    /// <summary>Daily birthday greetings: publishes the employees whose birthday is today (Employee module).</summary>
+    EmployeeBirthdayGreeting = 11,
 }

@@ -47,7 +47,9 @@ public sealed class Role : TenantAggregateRoot<Guid>, IAuditLogged
             return Error.Validation(IdentityDomainErrors.RoleInvalidCode);
         }
 
-        if (SystemRoleCodes.All.Contains(c, StringComparer.OrdinalIgnoreCase))
+        if (SystemRoleCodes.All.Contains(c, StringComparer.OrdinalIgnoreCase)
+            || SystemRoleCodes.PlatformOnly.Contains(c, StringComparer.OrdinalIgnoreCase)
+            || SystemRoleCodes.RetiredSuccessors.ContainsKey(c))
         {
             return Error.Conflict(IdentityDomainErrors.RoleSystemCode);
         }
@@ -210,11 +212,45 @@ public static class SystemRoleCodes
     public const string Contractor = "Contractor";
     public const string ApiIntegration = "ApiIntegration";
 
-    public static readonly IReadOnlyList<string> All =
-    [
-        Owner, Admin, HR, HRSpecialist, PayrollSpecialist, Finance, Manager, Timekeeper, Recruiter, Interviewer,
-        Auditor, ExternalAccountant, ITAdmin, Employee, Intern, Contractor, ApiIntegration,
-    ];
+    /// <summary>Platform (süper admin) rolü: yalnız <see cref="Tenants.PlatformTenant"/> kiracısında seed edilir, müşteri kiracılarına verilmez.</summary>
+    public const string SuperAdmin = "SuperAdmin";
+
+    /// <summary>
+    /// Müşteri kiracılarının her birine seed edilen sistem rolleri: dört kullanıcı grubu (İK Yöneticisi, Muhasebe, Çalışan;
+    /// süper admin platform kiracısında) + Owner. Owner ayrı bir grup değildir: şirketi açan ilk İK Yöneticisine arka planda
+    /// verilen kilitli bayraktır (son hesap sahibi kaldırılamaz korumaları için).
+    /// </summary>
+    public static readonly IReadOnlyList<string> All = [Owner, HR, PayrollSpecialist, Employee];
+
+    /// <summary>Kullanıcıya seçilebilen gruplar (erişim türü seçicisi); Owner seçilemez, İK Yöneticisiyle birlikte taşınır.</summary>
+    public static readonly IReadOnlyList<string> UserGroups = [HR, PayrollSpecialist, Employee];
+
+    /// <summary>
+    /// Kaldırılan eski sistem rolleri → devralan grup. Mevcut kiracılarda <c>SystemRolePermissionSynchronizer</c> bu rollerin
+    /// kullanıcılarını devralan gruba taşır ve rolleri siler; kodlar özel rol adı olarak da kullanılamaz.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> RetiredSuccessors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        [Admin] = HR,
+        [HRSpecialist] = HR,
+        [Recruiter] = HR,
+        [Timekeeper] = HR,
+        [ITAdmin] = HR,
+        [Auditor] = HR,
+        [Finance] = PayrollSpecialist,
+        [ExternalAccountant] = PayrollSpecialist,
+        [Manager] = Employee,
+        [Interviewer] = Employee,
+        [Intern] = Employee,
+        [Contractor] = Employee,
+        [ApiIntegration] = Employee,
+    };
+
+    /// <summary>Yalnız platform kiracısına özel sistem rolleri (<see cref="All"/>'a ek olarak orada seed edilir).</summary>
+    public static readonly IReadOnlyList<string> PlatformOnly = [SuperAdmin];
+
+    /// <summary>Verilen kiracıda seed/senkronize edilecek sistem rolü kodları.</summary>
+    public static IReadOnlyList<string> ForTenant(bool isPlatformTenant) => isPlatformTenant ? [.. All, .. PlatformOnly] : All;
 
     /// <summary>Yerelleştirme anahtarları: roles.{code}.name / roles.{code}.description</summary>
     public static string NameKey(string code) => string.Concat(ResourcePrefix, code.ToLowerInvariant(), NameSuffix);

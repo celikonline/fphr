@@ -37,7 +37,7 @@ public partial class DataSeeder
             1024 * 256,
             uploadedBy,
             SharedFileVisibility.RestrictedToRoles,
-            [SystemRoleCodes.HR, SystemRoleCodes.Admin]);
+            [SystemRoleCodes.HR, SystemRoleCodes.PayrollSpecialist]);
 
         await documentsCtx.SaveChangesAsync(cancellationToken);
     }

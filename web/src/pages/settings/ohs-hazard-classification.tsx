@@ -10,6 +10,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { formatDateOnly } from "@/lib/dates";
 import { listLocations, type Location } from "@/services/locations.service";
 import {
   listCurrentHazardClassifications,
@@ -35,7 +36,7 @@ export default function OhsHazardClassificationPage() {
 }
 
 function OhsHazardClassificationAdmin() {
-  const { t } = useTranslation(["ohs", "common"]);
+  const { t, i18n } = useTranslation(["ohs", "common"]);
   const canManage = usePermission("ohs.hazard_classifications.manage");
   const isMobile = useMediaQuery("(max-width: 390px)");
 
@@ -76,6 +77,7 @@ function OhsHazardClassificationAdmin() {
       accessorKey: "effectiveFrom",
       header: t("ohs:hazardClassification.columns.effectiveFrom"),
       meta: { label: t("ohs:hazardClassification.columns.effectiveFrom") },
+      cell: ({ row }) => formatDateOnly(row.original.effectiveFrom, i18n.language),
     },
     {
       id: "note",
@@ -103,7 +105,7 @@ function OhsHazardClassificationAdmin() {
   const table = useDataTable({ columns, data: classifications, getRowId: (c) => c.id });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -158,7 +160,7 @@ function ClassificationsMobileList({
   locationName: (id: string) => string;
   onEdit: (classification: HazardClassification) => void;
 }) {
-  const { t } = useTranslation(["ohs", "common"]);
+  const { t, i18n } = useTranslation(["ohs", "common"]);
 
   if (isLoading) return <Skeleton h={160} />;
 
@@ -185,7 +187,7 @@ function ClassificationsMobileList({
                 {t(`ohs:enum.hazardClass.${classification.hazardClass}`)}
               </Badge>
               <Text size="xs" c="dimmed">
-                {classification.effectiveFrom}
+                {formatDateOnly(classification.effectiveFrom, i18n.language)}
               </Text>
             </Stack>
             {canManage && (

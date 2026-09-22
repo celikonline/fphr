@@ -113,4 +113,15 @@ public sealed class DocumentRequirementEvaluatorTests
 
         resolved.ShouldBeEmpty();
     }
+
+    [Fact]
+    public void PeriodicHealthCheck_IsRequired_ForAVeryHazardousWorkplace()
+    {
+        var healthCheck = Type("HealthCheck", DocumentTypeStage.Conditional, isRequired: true, DocumentRequirementCondition.RequiresPeriodicHealthCheck);
+        var veryHazardous = NoSignals with { RequiresPeriodicHealthCheck = true, IsVeryHazardousJob = true };
+
+        var resolved = DocumentRequirementEvaluator.ResolveAtHire([healthCheck], veryHazardous);
+
+        resolved.ShouldHaveSingleItem();
+    }
 }

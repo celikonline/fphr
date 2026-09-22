@@ -6,10 +6,12 @@ namespace Sense.Modules.Attendance.Contracts;
 /// overridden) worked minutes; <see cref="MissingDays"/> is working days per the employee's schedule minus recorded
 /// working days (same projection <c>TimesheetWeekEvaluator</c> uses per week, here summed over the month);
 /// <see cref="OvertimeHours"/> is the sum of worked-minus-planned minutes on days worked more than planned.
-/// <see cref="IsPeriodLocked"/> reflects the month's <c>ShiftPlanLock</c> (Attendance's only period-lock concept).
+/// <see cref="PublicHolidayDaysWorked"/> counts official-holiday dates with recorded work and <see cref="WeeklyRestDaysWorked"/> Sundays worked that are not
+/// scheduled working days (4857 md.46/47: each earns one extra day's pay); <see cref="IsPeriodLocked"/> reflects the month's <c>ShiftPlanLock</c> (Attendance's only period-lock concept).
 /// </summary>
 public sealed record AttendanceMonthlySummary(
-    Guid EmployeeId, decimal WorkedDays, decimal WorkedHours, decimal MissingDays, decimal OvertimeHours, bool IsPeriodLocked);
+    Guid EmployeeId, decimal WorkedDays, decimal WorkedHours, decimal MissingDays, decimal OvertimeHours, bool IsPeriodLocked,
+    int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0);
 
 /// <summary>
 /// Cross-module read port (Payroll consumes this instead of guessing worked/missing days from its own data). An

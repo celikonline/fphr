@@ -20,6 +20,30 @@ public static class NotificationTemplateKeys
 
     /// <summary>Holders of documents.requirements.view: "N documents expiring soon / M already expired" (Documents.DocumentExpiryReminderDue). In-app only.</summary>
     public const string DocumentExpiryReminder = "documents.expiry_reminder";
+
+    /// <summary>Holders of ohs.incidents.manage: work accidents whose SGK notification deadline is near or missed (OccupationalSafety.SgkNotificationReminderDue).</summary>
+    public const string OhsSgkNotificationDue = "ohs.sgk_notification_due";
+
+    /// <summary>HR (employee.employees.update holders) + the new employee's manager: "a new employee starts" (Employee.EmployeeHired).</summary>
+    public const string EmployeeHired = "employee.hired";
+
+    /// <summary>The new employee: welcome e-mail (Employee.EmployeeHired). E-mail only.</summary>
+    public const string EmployeeWelcome = "employee.welcome";
+
+    /// <summary>HR + the leaving employee's manager: "an employee left" (Employee.EmployeeTerminated).</summary>
+    public const string EmployeeTerminated = "employee.terminated";
+
+    /// <summary>The leaving employee's personal e-mail: çalışma belgesi PDF attached (Employee.EmployeeTerminated). E-mail only, mandatory.</summary>
+    public const string EmployeeWorkCertificate = "employee.work_certificate";
+
+    /// <summary>The employee on their birthday (Employee.EmployeeBirthdaysToday).</summary>
+    public const string EmployeeBirthday = "employee.birthday";
+
+    /// <summary>Every active employee: a new announcement (Announcements.AnnouncementPublished with "notify employees").</summary>
+    public const string AnnouncementPublished = "announcement.published";
+
+    /// <summary>The employee: ücret pusulası PDF attached (Payroll.PayrollPeriodPaid).</summary>
+    public const string PayslipReady = "payroll.payslip_ready";
 }
 
 /// <summary>Delivery channels. Push (Expo/Web Push) is a later phase.</summary>

@@ -61,6 +61,27 @@ public sealed class TerminateEmployeeValidatorTests
     }
 
     [Fact]
+    public void Validate_TerminationDateYearsAhead_Fails()
+    {
+        var command = new TerminateEmployeeCommand(
+            Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddYears(5), Guid.NewGuid());
+
+        var result = _validator.Validate(command);
+
+        result.IsValid.ShouldBeFalse();
+        result.Errors.ShouldContain(e => e.ErrorMessage == EmployeeDomainErrors.TerminationDateTooFarInFuture);
+    }
+
+    [Fact]
+    public void Validate_TerminationDateWithinPlanningWindow_Passes()
+    {
+        var command = new TerminateEmployeeCommand(
+            Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(EmployeeDateRules.MaxTerminationDateMonthsAhead - 1), Guid.NewGuid());
+
+        _validator.Validate(command).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
     public void Validate_InvalidEnumValue_Fails()
     {
         var command = new TerminateEmployeeCommand(

@@ -85,6 +85,93 @@ namespace Sense.Modules.OccupationalSafety.Infrastructure.Persistence.Migrations
                     b.ToTable("hazard_classifications", "ohs");
                 });
 
+            modelBuilder.Entity("Sense.Modules.OccupationalSafety.Domain.Incidents.OhsIncident", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly?>("ClosedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("closed_on");
+
+                    b.Property<string>("CorrectiveAction")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("corrective_action");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly>("EventDate")
+                        .HasColumnType("date")
+                        .HasColumnName("event_date");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("kind");
+
+                    b.Property<Guid?>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid?>("ReportedByEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reported_by_employee_id");
+
+                    b.Property<DateOnly?>("SgkNotificationDeadline")
+                        .HasColumnType("date")
+                        .HasColumnName("sgk_notification_deadline");
+
+                    b.Property<DateOnly?>("SgkNotifiedOn")
+                        .HasColumnType("date")
+                        .HasColumnName("sgk_notified_on");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_incidents");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_incidents_tenant_id");
+
+                    b.HasIndex("TenantId", "EventDate")
+                        .HasDatabaseName("ix_incidents_tenant_id_event_date");
+
+                    b.HasIndex("TenantId", "ReportedByEmployeeId")
+                        .HasDatabaseName("ix_incidents_tenant_id_reported_by_employee_id");
+
+                    b.ToTable("incidents", "ohs");
+                });
+
             modelBuilder.Entity("Sense.Modules.OccupationalSafety.Domain.RiskAssessments.RiskAssessment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -151,6 +238,225 @@ namespace Sense.Modules.OccupationalSafety.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_risk_assessments_tenant_id_location_id");
 
                     b.ToTable("risk_assessments", "ohs");
+                });
+
+            modelBuilder.Entity("Sense.Modules.OccupationalSafety.Domain.Services.OhsCommitteeMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<string>("PersonName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("person_name");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("role");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_committee_members");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_committee_members_tenant_id");
+
+                    b.HasIndex("TenantId", "LocationId")
+                        .HasDatabaseName("ix_committee_members_tenant_id_location_id");
+
+                    b.ToTable("committee_members", "ohs");
+                });
+
+            modelBuilder.Entity("Sense.Modules.OccupationalSafety.Domain.Services.SafetyAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CertificateClass")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("certificate_class");
+
+                    b.Property<string>("CertificateNumber")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("certificate_number");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<Guid?>("EmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("employee_id");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<Guid>("LocationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("location_id");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<int>("MonthlyMinutes")
+                        .HasColumnType("integer")
+                        .HasColumnName("monthly_minutes");
+
+                    b.Property<string>("PersonName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("person_name");
+
+                    b.Property<string>("ProviderName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("provider_name");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("role");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_safety_assignments");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_safety_assignments_tenant_id");
+
+                    b.HasIndex("TenantId", "LocationId")
+                        .HasDatabaseName("ix_safety_assignments_tenant_id_location_id");
+
+                    b.ToTable("safety_assignments", "ohs");
+                });
+
+            modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("actor");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("details");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("resource");
+
+                    b.Property<string>("ResourceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resource_id");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_log_entries");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id");
+
+                    b.HasIndex("TenantId", "OccurredAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id_occurred_at");
+
+                    b.ToTable("audit_log_entries", "ohs");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

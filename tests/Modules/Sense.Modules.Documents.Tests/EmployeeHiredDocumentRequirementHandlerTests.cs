@@ -77,7 +77,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
             .Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(new EmployeeDocumentEligibilitySignals(IsUnder18: true, HasDisability: false, IsUndergroundWorker: false)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -108,7 +108,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 
@@ -139,7 +139,7 @@ public sealed class EmployeeHiredDocumentRequirementHandlerTests
         eligibility.GetSignalsAsync(TenantId, EmployeeId, Arg.Any<CancellationToken>()).Returns(Task.FromResult<EmployeeDocumentEligibilitySignals?>(null));
 
         var materialization = new DocumentRequirementMaterializationService(
-            types, requirements, eligibility, AssetLookup(), IncentiveLookup(), new DocumentTypeProvisioningService(types), Legislation());
+            types, requirements, eligibility, AssetLookup(), IncentiveLookup(), new DocumentTypeProvisioningService(types), Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         var unitOfWork = Substitute.For<Sense.Modules.Documents.Application.IDocumentsUnitOfWork>();
         var handler = new EmployeeHiredDocumentRequirementHandler(materialization, unitOfWork);
 

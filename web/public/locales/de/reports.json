@@ -12,6 +12,17 @@
     "finance": "Finanzen",
     "other": "Sonstige"
   },
+  "catalogView": {
+    "search": "Berichte suchen",
+    "label": "Ansicht",
+    "cards": "Kartenansicht",
+    "grid": "Listenansicht",
+    "noResults": "Kein Bericht entspricht Ihrer Suche.",
+    "columns": {
+      "report": "Bericht",
+      "category": "Kategorie"
+    }
+  },
   "catalog": {
     "title": "Berichtstypen",
     "empty": "Es gibt keine vordefinierten Berichte, auf die Sie zugreifen können.",
@@ -38,6 +49,18 @@
       "requests": {
         "label": "Urlaubsbericht",
         "description": "Urlaubsanträge im gewählten Zeitraum: Art, Dauer, Status, Antrags- und Entscheidungsdatum."
+      },
+      "overtime": {
+        "monthly": {
+          "label": "Monatlicher Überstundenbericht",
+          "description": "Genehmigte Überstundenanträge des gewählten Monats: Dauer, Vergütungssatz und gegebenenfalls Umwandlung in Freizeit oder Auszahlung."
+        }
+      },
+      "reconciliation": {
+        "form": {
+          "label": "Urlaubsabstimmungsformular",
+          "description": "Übersicht der im gewählten Zeitraum genommenen genehmigten Urlaube je Mitarbeiter, druckbar mit leeren Spalten für Unterschrift und HR-Freigabe."
+        }
       },
       "company_ledger": {
         "label": "Unternehmensweites Urlaubs-/Überstundenregister",

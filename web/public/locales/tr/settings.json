@@ -1,12 +1,17 @@
 {
   "hub": {
     "title": "Ayarlar",
-    "subtitle": "Şirket bilgileri, kurallar, sistem ayarları ve veri aktarımı."
+    "subtitle": "Ayarları gruplara göre inceleyin veya arayın.",
+    "searchPlaceholder": "Ayarlarda ara (ör. izin, rol, belge)",
+    "searchLabel": "Ayarlarda ara",
+    "noResults": "“{{query}}” ile eşleşen ayar bulunamadı.",
+    "resultCount": "{{count}} ayar bulundu",
+    "columns": "Kolon sayısı"
   },
   "access": {
     "title": "Erişim ayarları",
     "subtitle": "Çalışanların ana sayfada, hesaplarında ve takvimde neleri görebileceğini belirleyin.",
-    "scopeNotice": "Erişim ayarları yalnızca Çalışan erişim türündeki kullanıcıları kısıtlar; Hesap sahibi, Yönetici ve İK kullanıcıları etkilenmez. Değişiklikler kaydedildiği anda geçerli olur.",
+    "scopeNotice": "Erişim ayarları yalnızca Çalışan grubundaki kullanıcıları kısıtlar; İK Yöneticisi ve Muhasebe kullanıcıları etkilenmez. Değişiklikler kaydedildiği anda geçerli olur.",
     "readOnly": "Erişim ayarlarını görüntüleyebilirsiniz ancak değiştirme yetkiniz yok.",
     "loadError": "Erişim ayarları yüklenemedi.",
     "saveSuccess": "Erişim ayarları kaydedildi.",
@@ -310,7 +315,9 @@
       "assets": "Zimmet",
       "performance": "Performans",
       "announcements": "Duyurular ve şirket takvimi",
-      "occupationalSafety": "İş sağlığı ve güvenliği"
+      "occupationalSafety": "İş sağlığı ve güvenliği",
+      "training": "Eğitim",
+      "onboarding": "İşe alış ve çıkış"
     },
     "descriptions": {
       "identity": "Kullanıcılar, roller, yetkiler ve oturum",
@@ -331,7 +338,9 @@
       "assets": "Zimmet takibi ve kategorileri",
       "performance": "Hedefler ve değerlendirme dönemleri",
       "announcements": "Duyurular ve şirket etkinlik takvimi",
-      "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri"
+      "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri",
+      "training": "Eğitim programları, katılımlar ve zorunlu eğitimler",
+      "onboarding": "İşe giriş ve çıkış görev listeleri ile şablonları"
     }
   }
 }

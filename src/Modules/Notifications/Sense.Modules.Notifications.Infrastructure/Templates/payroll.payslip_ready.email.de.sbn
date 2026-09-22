@@ -1,0 +1,4 @@
+{{- subject = "Ihre Gehaltsabrechnung für " + period -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihr Gehalt für {{ period }} wurde ausgezahlt. Ihre Gehaltsabrechnung finden Sie im Anhang.</p>
+<p>Bei Fragen zu einzelnen Posten wenden Sie sich bitte an die Personalabteilung.</p>

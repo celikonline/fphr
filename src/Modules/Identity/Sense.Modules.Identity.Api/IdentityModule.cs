@@ -42,6 +42,7 @@ public sealed class IdentityModule : IModule
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<IdentityOptions>().Bind(configuration.GetSection(ConfigurationSections.Identity)).ValidateOnStart();
+        services.AddOptions<PlatformOptions>().Bind(configuration.GetSection(PlatformOptions.SectionName));
         services.AddOptions<JwtIssuerOptions>().Bind(configuration.GetSection(ConfigurationSections.Auth));
         services.AddOptions<FrontendOptions>().Bind(configuration.GetSection(ConfigurationSections.Frontend));
         services.AddOptions<EmailOptions>().Bind(configuration.GetSection(ConfigurationSections.Email));
@@ -51,7 +52,8 @@ public sealed class IdentityModule : IModule
         services.AddModuleDbContext<IdentityDbContext>(
             configuration, IdentityDbContext.SchemaName,
             (sp, options) => options.AddInterceptors(sp.GetRequiredService<IdentityAuditLogInterceptor>()));
-        services.AddModuleHandlers(IdentityDbContext.SchemaName, typeof(IdentityPermissions).Assembly, typeof(IdentityDbContext).Assembly);
+        // Contracts assembly too: TenantProvisioned (Identity.Contracts) must map to this module's outbox (IIntegrationEventOutbox).
+        services.AddModuleHandlers(IdentityDbContext.SchemaName, typeof(IdentityPermissions).Assembly, typeof(IdentityDbContext).Assembly, typeof(AccessSettingKeys).Assembly);
 
         // EmployeeTerminatedHandler (G-3-01) gibi doğrudan enjekte edilen integration event handler'ları için
         // (Performance/Assets modüllerindeki I*UnitOfWork kalıbıyla aynı; komut handler'ları UnitOfWorkBehaviour'dan geçer).
@@ -83,6 +85,10 @@ public sealed class IdentityModule : IModule
         services.AddScoped<AccessTypeGuard>();
         services.AddScoped<Sense.Modules.Identity.Application.Roles.RolePermissionGrantGuard>();
         services.AddScoped<EmployeeInvitationService>();
+
+        // Süper admin (platform kiracısı + IsPlatformStaff kullanıcı): yapılandırmadan idempotent; rol senkronizasyonundan ÖNCE çalışır.
+        services.AddScoped<PlatformBootstrapper>();
+        services.AddHostedService<PlatformBootstrapHostedService>();
 
         // Mevcut kiracıların sistem rollerine yeni izin anahtarlarını taşır (API başlangıcı).
         services.AddScoped<SystemRolePermissionSynchronizer>();

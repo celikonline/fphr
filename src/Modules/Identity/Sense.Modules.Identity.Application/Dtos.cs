@@ -3,7 +3,10 @@ using Sense.Shared.Contracts.Security;
 
 namespace Sense.Modules.Identity.Application;
 
-public sealed record TenantDto(Guid Id, string Slug, string Name, string? TaxNumber, string Status, DateTime? TrialEndsAt, string Locale, string TimeZone);
+/// <param name="SetupCompleted">İlk kurulum sihirbazı tamamlandı mı; false ise Owner kurulum sihirbazına yönlendirilir (varsayılan true: eski çağıranlar için güvenli).</param>
+public sealed record TenantDto(
+    Guid Id, string Slug, string Name, string? TaxNumber, string Status, DateTime? TrialEndsAt, string Locale, string TimeZone,
+    bool SetupCompleted = true);
 
 public sealed record UserListItemDto(
     Guid Id, string Email, string FirstName, string LastName, string? Phone, UserStatus Status, Guid? EmployeeId,

@@ -1,0 +1,59 @@
+{
+  "title": "Şirketler",
+  "subtitle": "Platformdaki tüm şirketleri (kiracıları) görüntüleyin ve yeni şirket oluşturun.",
+  "add": "Şirket oluştur",
+  "edit": "Şirketi düzenle",
+  "updated": "Şirket bilgileri güncellendi.",
+  "editDialog": {
+    "title": "Şirket bilgilerini düzenle",
+    "taxNumber": "Vergi numarası"
+  },
+  "empty": "Henüz şirket yok.",
+  "platformBadge": "Platform",
+  "columns": {
+    "name": "Şirket",
+    "slug": "Adres (slug)",
+    "status": "Durum",
+    "createdAt": "Oluşturulma"
+  },
+  "status": {
+    "trial": "Deneme",
+    "active": "Aktif",
+    "suspended": "Askıda",
+    "closed": "Kapalı"
+  },
+  "dialog": {
+    "title": "Yeni şirket oluştur",
+    "companyName": "Şirket adı",
+    "slug": "Şirket adresi (slug)",
+    "slugHint": "Giriş ekranında kullanılır. Yalnızca küçük harf, rakam ve tire; 3-40 karakter.",
+    "ownerSection": "İlk kullanıcı (İK Yöneticisi)",
+    "ownerFirstName": "Ad",
+    "ownerLastName": "Soyad",
+    "ownerEmail": "E-posta",
+    "ownerPhone": "Telefon",
+    "ownerMode": "Giriş bilgisi nasıl verilsin?",
+    "modeInvite": "Davet e-postası",
+    "modePassword": "Parola belirle",
+    "modeInviteHint": "İK Yöneticisi e-postadaki bağlantıyla kendi parolasını belirler; parolayı siz görmezsiniz.",
+    "modePasswordHint": "Hesap belirlediğiniz parolayla doğrudan etkin açılır. Parolayı İK Yöneticisine ayrıca iletmeniz gerekir.",
+    "password": "Parola",
+    "passwordHint": "En az 10 karakter; harf, rakam ve özel karakter içermeli.",
+    "submit": "Şirketi oluştur"
+  },
+  "created": {
+    "invited": "Şirket oluşturuldu. İK Yöneticisine davet e-postası gönderildi.",
+    "withPassword": "Şirket oluşturuldu. İK Yöneticisi belirlediğiniz parolayla giriş yapabilir."
+  },
+  "errors": {
+    "updateFailed": "Şirket bilgileri güncellenemedi. Lütfen tekrar deneyin.",
+    "generic": "Şirket oluşturulamadı. Lütfen tekrar deneyin.",
+    "loadFailed": "Şirket listesi yüklenemedi.",
+    "slugTaken": "Bu şirket adresi zaten kullanımda.",
+    "slugInvalid": "Şirket adresi 3-40 karakter olmalı; yalnızca küçük harf, rakam ve tire içerebilir.",
+    "companyRequired": "Şirket adı zorunludur.",
+    "ownerNameRequired": "İK Yöneticisinin adı ve soyadı zorunludur.",
+    "ownerEmailInvalid": "Geçerli bir e-posta adresi girin.",
+    "passwordTooShort": "Parola en az 10 karakter olmalıdır."
+  }
+}

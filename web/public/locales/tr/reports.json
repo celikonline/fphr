@@ -12,6 +12,17 @@
     "finance": "Finans",
     "other": "Diğer"
   },
+  "catalogView": {
+    "search": "Rapor ara",
+    "label": "Görünüm",
+    "cards": "Kart görünümü",
+    "grid": "Liste görünümü",
+    "noResults": "Aramanızla eşleşen rapor bulunamadı.",
+    "columns": {
+      "report": "Rapor",
+      "category": "Kategori"
+    }
+  },
   "catalog": {
     "title": "Rapor türleri",
     "empty": "Erişebileceğiniz bir hazır rapor bulunmuyor.",
@@ -38,6 +49,18 @@
       "requests": {
         "label": "İzin raporu",
         "description": "Seçilen tarih aralığındaki izin talepleri: tür, süre, durum, talep ve karar tarihi."
+      },
+      "overtime": {
+        "monthly": {
+          "label": "Aylık fazla mesai raporu",
+          "description": "Seçilen ayda onaylanan fazla mesai talepleri: süre, ücret oranı ve varsa izne veya ödemeye dönüşüm."
+        }
+      },
+      "reconciliation": {
+        "form": {
+          "label": "İzin mutabakat formu",
+          "description": "Seçilen dönemde çalışanların kullandığı onaylı izinlerin özeti; çalışan imzası ve İK onayı için boş sütunlarla yazdırılabilir."
+        }
       },
       "company_ledger": {
         "label": "Şirket geneli izin/fazla mesai defteri",

@@ -1,3 +1,6 @@
+using Sense.Modules.Payroll.Domain.Adjustments;
+using Sense.Modules.Payroll.Domain.Closing;
+using Sense.Modules.Payroll.Domain.ExitSettlements;
 using Sense.Modules.Payroll.Domain.Garnishments;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
@@ -32,6 +35,9 @@ public interface IPayslipRepository
     Task<Payslip?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     Task<Payslip?> FindByEmployeeAndPeriodAsync(Guid employeeId, Guid payrollPeriodId, CancellationToken cancellationToken = default);
+
+    /// <summary>Every payslip of one employee across periods (employee card "Bordro" tab).</summary>
+    Task<IReadOnlyList<Payslip>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
 
     /// <summary>Every payslip of one period (ChangeDetectionRun scan, P3).</summary>
     Task<IReadOnlyList<Payslip>> ListByPeriodAsync(Guid payrollPeriodId, CancellationToken cancellationToken = default);
@@ -119,4 +125,44 @@ public interface IEmployeeUnionMembershipRepository
     /// <summary>The membership in effect on <paramref name="asOf"/> (MembershipDate ≤ asOf ≤ EndDate/open), if any -
     /// used by <c>PayrollPeriodCalculationService</c> to resolve the period's dues via <c>UnionDuesCalculator</c>.</summary>
     Task<EmployeeUnionMembership?> FindCurrentAsync(Guid employeeId, DateOnly asOf, CancellationToken cancellationToken = default);
+}
+
+/// <summary>"Çıkış hesabı": frozen kıdem/ihbar/izin amounts written when an employee is terminated.</summary>
+public interface IExitSettlementRepository
+{
+    void Add(ExitSettlement settlement);
+
+    /// <summary>A settlement with its lines.</summary>
+    Task<ExitSettlement?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>The settlement of one exit (one per employee and termination date; a rehire + second exit gets its own).</summary>
+    Task<ExitSettlement?> FindByEmployeeAndDateAsync(Guid employeeId, DateOnly terminationDate, CancellationToken cancellationToken = default);
+
+    /// <summary>Every settlement of the employee, newest termination first.</summary>
+    Task<IReadOnlyList<ExitSettlement>> ListByEmployeeAsync(Guid employeeId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>The closing checklist of a payroll period.</summary>
+public interface IPeriodClosingCheckRepository
+{
+    void Add(PeriodClosingCheck check);
+
+    /// <summary>Every check of the period (empty until the checklist is first opened).</summary>
+    Task<IReadOnlyList<PeriodClosingCheck>> ListByPeriodAsync(Guid periodId, CancellationToken cancellationToken = default);
+}
+
+/// <summary>One-off taxable earnings (prim, komisyon) added to a payroll month.</summary>
+public interface IPayrollAdjustmentRepository
+{
+    void Add(PayrollAdjustment adjustment);
+
+    void Remove(PayrollAdjustment adjustment);
+
+    Task<PayrollAdjustment?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Every adjustment of one employee in one month (what the payroll run adds to that employee's gross).</summary>
+    Task<IReadOnlyList<PayrollAdjustment>> ListByEmployeeAndMonthAsync(Guid employeeId, int year, int month, CancellationToken cancellationToken = default);
+
+    /// <summary>Every adjustment of one month, all employees (the period's "Ek kazançlar" list).</summary>
+    Task<IReadOnlyList<PayrollAdjustment>> ListByMonthAsync(int year, int month, CancellationToken cancellationToken = default);
 }

@@ -64,3 +64,16 @@ public sealed class LeaveCancelledDirtyFlagHandler(PayslipDirtyFlagService flagg
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }
+
+/// <summary>Overtime converted to cash pay changes that month's earnings: flags the period covering the work date, so the next
+/// calculation re-reads Leave's <c>IOvertimePayrollReader</c> (the event carries no amount, only the trigger).</summary>
+public sealed class OvertimeConvertedToPayDirtyFlagHandler(PayslipDirtyFlagService flagging, IPayrollUnitOfWork unitOfWork) : IIntegrationEventHandler<OvertimeConvertedToPay>
+{
+    public async Task Handle(OvertimeConvertedToPay integrationEvent, CancellationToken cancellationToken)
+    {
+        await flagging.FlagAsync(
+            integrationEvent.TenantId, integrationEvent.EmployeeId, integrationEvent.WorkDate,
+            PayslipDirtyFlagReasons.OvertimeChanged, integrationEvent.EventId, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+    }
+}

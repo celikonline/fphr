@@ -3,11 +3,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sense.Modules.Organization.Contracts;
 using Sense.Modules.Organization.Domain;
+using Sense.Modules.Organization.Infrastructure;
 using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Organization.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Organization.Api;
 
@@ -31,7 +34,12 @@ public sealed class OrganizationModule : IModule
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
         // Register DbContext for this module
-        services.AddModuleDbContext<OrganizationDbContext>(configuration, OrganizationDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<OrganizationDbContext>(
+            configuration, OrganizationDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<OrganizationDbContext>>();
 
         // Register MediatR-style command/query handlers for this module
         // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor, and
@@ -52,6 +60,9 @@ public sealed class OrganizationModule : IModule
         services.AddScoped<IHolidayCalendarEntryRepository, HolidayCalendarEntryRepository>();
         services.AddScoped<ILocationRepository, LocationRepository>();
         services.AddScoped<ICostCenterRepository, CostCenterRepository>();
+
+        // Yeni kiracı Organization varsayılanları (wizard "hazırla" komutu); olay işleyicisi Worker'da kayıtlıdır.
+        services.AddOrganizationTenantBootstrap();
 
         // Cross-module read contracts consumed by other modules (see IOrgUnitLookup / ILocationLookup)
         services.AddScoped<IOrgUnitLookup, OrgUnitLookup>();

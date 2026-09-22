@@ -1,3 +1,4 @@
+using Sense.Modules.Identity.Application;
 using Sense.Modules.Identity.Application.Roles;
 using Sense.Modules.Identity.Domain.Roles;
 using Sense.Shared.Contracts.Security;
@@ -6,8 +7,15 @@ using Xunit;
 
 namespace Sense.Modules.Identity.Tests.Roles;
 
+/// <summary>
+/// Dört kullanıcı grubu modeli: İK Yöneticisi (HR) ve Muhasebe (PayrollSpecialist) şirket içinde her şeyi yapar (platform
+/// izinleri hariç), Çalışan yalnız self-servis + dizin/organizasyon şeması; süper admin yalnız şirket açar.
+/// </summary>
 public sealed class SystemRoleDefinitionsTests
 {
+    private static readonly string[] SelfServiceKeys =
+        ["employee.self.edit", "employee.my.view", "attendance.my.timesheet", "expense.my.claims", "me.profile.view"];
+
     private static readonly IReadOnlyList<Permission> Catalog =
     [
         .. new[]
@@ -17,133 +25,112 @@ public sealed class SystemRoleDefinitionsTests
             "employee.sensitive.view", "organization.holidays.view", "organization.units.read",
             "organization.approval_assignments.manage", "billing.invoices.view", "analytics.kpi.view",
             "identity.users.view", "identity.users.manage", "identity.users.invite", "identity.users.suspend",
-            "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view",
+            "identity.users.reset_mfa", "identity.users.impersonate", "identity.roles.view", "identity.modules.manage",
             "attendance.timesheet.view", "attendance.timesheet.resolve", "attendance.timesheet.approve",
-        }.Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
+            "payroll.runs.approve", "payroll.salary.view", "expense.categories.view", "expense.categories.manage",
+            PlatformPermissions.TenantsManage,
+        }
+        .Concat(SelfServiceKeys)
+        .Select(k => new Permission(k, k.Split('.')[0], k, "Test")),
     ];
 
-    [Theory]
-    [InlineData(SystemRoleCodes.Employee)]
-    [InlineData(SystemRoleCodes.Intern)]
-    public void SelfServiceRoles_GetDirectoryOrgChartAndHolidays_ButNotEmployeeRecords(string roleCode)
+    private static readonly string[] NonPlatformKeys =
+        [.. Catalog.Select(p => p.Key).Where(k => !PlatformPermissions.IsPlatformKey(k))];
+
+    [Fact]
+    public void Definitions_CoverExactlyTheCustomerSystemRoles()
     {
+        SystemRoleDefinitions.All.Select(d => d.Code).ShouldBe(SystemRoleCodes.All, ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData(SystemRoleCodes.Owner)]
+    [InlineData(SystemRoleCodes.HR)]
+    [InlineData(SystemRoleCodes.PayrollSpecialist)]
+    public void FullAccessGroups_GetEveryNonPlatformKey_AtCompanyScope(string roleCode)
+    {
+        var granted = SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), Catalog).ToList();
+
+        granted.Select(p => p.Permission).ShouldBe(NonPlatformKeys, ignoreOrder: true);
+        granted.ShouldAllBe(p => p.Scope == (int)DataScope.Company);
+        granted.ShouldNotContain(p => PlatformPermissions.IsPlatformKey(p.Permission));
+    }
+
+    [Theory]
+    [InlineData(SystemRoleCodes.HR)]
+    [InlineData(SystemRoleCodes.PayrollSpecialist)]
+    public void HrAndPayroll_GetFormerlyRestrictedKeys(string roleCode)
+    {
+        // Eski modelde İK Yöneticisinden/uzmanlardan alınan kimlik yönetimi, maaş/banka ve onay anahtarları artık iki grupta da var.
         var keys = Resolve(roleCode);
 
-        keys.ShouldBe(["employee.directory.view", "employee.orgchart.view", "organization.holidays.view"], ignoreOrder: true);
+        keys.ShouldContain("identity.users.manage");
+        keys.ShouldContain("identity.users.impersonate");
+        keys.ShouldContain("employee.salary.edit");
+        keys.ShouldContain("employee.bank_accounts.edit");
+        keys.ShouldContain("billing.invoices.view");
+        keys.ShouldContain("organization.approval_assignments.manage");
+        keys.ShouldContain("attendance.timesheet.approve");
     }
 
     [Fact]
-    public void HRSpecialist_GetsEmployeeWrites_ButNotSalary()
+    public void Employee_GetsSelfServiceDirectoryOrgChartAndHolidays_AtSelfScope()
     {
-        var keys = Resolve(SystemRoleCodes.HRSpecialist);
+        var keys = Resolve(SystemRoleCodes.Employee);
 
-        keys.ShouldContain("employee.employees.update");
-        keys.ShouldContain("employee.employees.bulk_update");
-        keys.ShouldNotContain("employee.salary.view");
-    }
-
-    /// <summary>G-10-18: HRSpecialist had `reports.*` (Reporting catalog) but not `analytics.*`, so the workforce
-    /// KPI dashboard was invisible to the day-to-day HR persona even though HR (the full-access role) already had it.</summary>
-    [Fact]
-    public void HRSpecialist_CanViewWorkforceKpis()
-    {
-        Resolve(SystemRoleCodes.HRSpecialist).ShouldContain("analytics.kpi.view");
+        SystemRoleDefinitions.Get(SystemRoleCodes.Employee).Scope.ShouldBe(DataScope.Self);
+        keys.ShouldBe(
+            [.. SelfServiceKeys, "employee.directory.view", "employee.orgchart.view", "organization.holidays.view", "expense.categories.view"],
+            ignoreOrder: true);
     }
 
     [Fact]
-    public void Manager_GetsViews_ButNotSalary()
+    public void Employee_GetsNoEmployeeRecordsSalaryIdentityOrPlatformKeys()
     {
-        var keys = Resolve(SystemRoleCodes.Manager);
+        var keys = Resolve(SystemRoleCodes.Employee);
 
-        keys.ShouldContain("employee.directory.view");
-        keys.ShouldContain("employee.orgchart.view");
-        keys.ShouldNotContain("employee.salary.view");
+        keys.ShouldNotContain(k => k.StartsWith("employee.employees.", StringComparison.Ordinal));
+        keys.ShouldNotContain(k => k.Contains(".salary.", StringComparison.Ordinal));
+        keys.ShouldNotContain(k => k.StartsWith("identity.", StringComparison.Ordinal));
+        keys.ShouldNotContain("employee.bank_accounts.edit");
+        keys.ShouldNotContain("employee.sensitive.view");
+        keys.ShouldNotContain("attendance.timesheet.approve");
+        keys.ShouldNotContain(PlatformPermissions.TenantsManage);
     }
 
-    /// <summary>senseik-056: "Aylık Puantaj" Onayla / Tümünü Onayla - Manager approves their own team (Team scope), HR/Admin/Owner
-    /// via wildcards, Timekeeper explicitly not ("approve yok" in the 11.3.06 role mapping), self-service roles never.</summary>
+    /// <summary>QA teslim testi bulgu 12: çalışan masraf kalemi eklerken kategori listesini okur (yalnız okuma).</summary>
     [Fact]
-    public void MonthlyTimesheetApprove_GoesToManagerAndHr_ButNotTimekeeperOrSelfService()
+    public void Employee_CanReadTheExpenseCategoryCatalog_ButNotManageIt()
     {
-        Resolve(SystemRoleCodes.Manager).ShouldContain("attendance.timesheet.approve");
-        Resolve(SystemRoleCodes.HR).ShouldContain("attendance.timesheet.approve");
-        Resolve(SystemRoleCodes.Admin).ShouldContain("attendance.timesheet.approve");
-        Resolve(SystemRoleCodes.Timekeeper).ShouldNotContain("attendance.timesheet.approve");
-        Resolve(SystemRoleCodes.Timekeeper).ShouldContain("attendance.timesheet.resolve");
-        Resolve(SystemRoleCodes.Employee).ShouldNotContain("attendance.timesheet.approve");
-        SystemRoleDefinitions.Get(SystemRoleCodes.Manager).Scope.ShouldBe(DataScope.Team);
-    }
-
-    [Fact]
-    public void SalaryEditAndBankAccounts_GoToHrAndPayroll_ButSalaryNeverToHRSpecialistOrManager()
-    {
-        Resolve(SystemRoleCodes.HR).ShouldContain("employee.salary.edit");
-        Resolve(SystemRoleCodes.HR).ShouldContain("employee.bank_accounts.edit");
-        Resolve(SystemRoleCodes.PayrollSpecialist).ShouldContain("employee.salary.edit");
-        Resolve(SystemRoleCodes.PayrollSpecialist).ShouldContain("employee.bank_accounts.edit");
-        Resolve(SystemRoleCodes.HRSpecialist).ShouldNotContain("employee.salary.edit");
-        Resolve(SystemRoleCodes.HRSpecialist).ShouldContain("employee.bank_accounts.edit");
-        Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.salary.edit");
-        Resolve(SystemRoleCodes.Manager).ShouldNotContain("employee.bank_accounts.edit");
-        Resolve(SystemRoleCodes.Auditor).ShouldNotContain("employee.sensitive.view");
-    }
-
-    /// <summary>senseik-050: HR Manager loses identity-management rights (create/edit users + role assignment,
-    /// 2FA reset, suspend/enable) - those stay with System Administrator (Owner/Admin) only - but keeps viewing
-    /// users and inviting them, since onboarding still needs that.</summary>
-    [Fact]
-    public void HR_LosesIdentityManagementPermissions_ButKeepsUserViewAndInvite()
-    {
-        var keys = Resolve(SystemRoleCodes.HR);
-
-        keys.ShouldContain("identity.users.view");
-        keys.ShouldContain("identity.users.invite");
-        keys.ShouldContain("identity.roles.view");
-        keys.ShouldNotContain("identity.users.manage");
-        keys.ShouldNotContain("identity.users.suspend");
-        keys.ShouldNotContain("identity.users.reset_mfa");
-        keys.ShouldNotContain("identity.users.impersonate");
-    }
-
-    [Fact]
-    public void Owner_And_Admin_BothGetBilling()
-    {
-        // Faz 8 #103: the source transcript has admins reaching billing while owners cannot — the plan direction
-        // (Owner keeps billing.*) was kept, but Admin's exclusion of it was lifted so both types get it now.
-        Resolve(SystemRoleCodes.Owner).ShouldContain("billing.invoices.view");
-        Resolve(SystemRoleCodes.Admin).ShouldContain("billing.invoices.view");
-    }
-
-    [Fact]
-    public void UnitApprovalPolicyAssignment_IsGrantedToHR_ButNotToHRSpecialistOrManager()
-    {
-        Resolve(SystemRoleCodes.HR).ShouldContain("organization.approval_assignments.manage");
-        Resolve(SystemRoleCodes.HRSpecialist).ShouldNotContain("organization.approval_assignments.manage");
-        Resolve(SystemRoleCodes.Manager).ShouldNotContain("organization.approval_assignments.manage");
-    }
-
-    private static List<string> Resolve(string roleCode) =>
-        SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), Catalog).Select(p => p.Permission).ToList();
-
-    /// <summary>QA teslim testi bulgu 12: the employee-facing expense page lists categories when adding a line, so every
-    /// role that owns expense.my.claims must also read (only read) the category catalog.</summary>
-    [Theory]
-    [InlineData(SystemRoleCodes.Employee)]
-    [InlineData(SystemRoleCodes.Intern)]
-    [InlineData(SystemRoleCodes.Manager)]
-    [InlineData(SystemRoleCodes.PayrollSpecialist)]
-    public void ExpenseClaimOwners_CanReadTheCategoryCatalog_ButNotManageIt(string roleCode)
-    {
-        IReadOnlyList<Permission> catalog =
-        [
-            .. new[] { "expense.my.claims", "expense.categories.view", "expense.categories.manage" }
-                .Select(k => new Permission(k, "expense", k, "Test")),
-        ];
-
-        var keys = SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), catalog).Select(p => p.Permission).ToList();
+        var keys = Resolve(SystemRoleCodes.Employee);
 
         keys.ShouldContain("expense.my.claims");
         keys.ShouldContain("expense.categories.view");
         keys.ShouldNotContain("expense.categories.manage");
     }
+
+    [Fact]
+    public void SuperAdmin_ResolvesToExactlyTenantCreation_AndNothingTenantLevel()
+    {
+        // "Süper admin yalnız şirket açabilir": gerçek kimlik kataloğu eklense bile yalnız platform.tenants.manage.
+        var keys = SystemRoleDefinitions.SuperAdmin.Resolve(Guid.NewGuid(), Catalog).Select(p => p.Permission).ToList();
+        var withIdentityCatalog = SystemRoleDefinitions.SuperAdmin.Resolve(Guid.NewGuid(), [.. IdentityPermissions.All, .. Catalog])
+            .Select(p => p.Permission).Distinct().ToList();
+
+        keys.ShouldBe([PlatformPermissions.TenantsManage]);
+        withIdentityCatalog.ShouldBe([PlatformPermissions.TenantsManage]);
+        SystemRoleDefinitions.Get(SystemRoleCodes.SuperAdmin).ShouldBeSameAs(SystemRoleDefinitions.SuperAdmin);
+    }
+
+    [Theory]
+    [MemberData(nameof(RetiredCodes))]
+    public void Get_RetiredCode_Throws(string retiredCode)
+    {
+        Should.Throw<InvalidOperationException>(() => SystemRoleDefinitions.Get(retiredCode));
+    }
+
+    public static TheoryData<string> RetiredCodes() => [.. SystemRoleCodes.RetiredSuccessors.Keys];
+
+    private static List<string> Resolve(string roleCode) =>
+        SystemRoleDefinitions.Get(roleCode).Resolve(Guid.NewGuid(), Catalog).Select(p => p.Permission).ToList();
 }

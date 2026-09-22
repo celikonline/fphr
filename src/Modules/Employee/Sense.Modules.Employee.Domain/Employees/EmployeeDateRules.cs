@@ -16,6 +16,12 @@ public static class EmployeeDateRules
     /// <summary>A hire date may be scheduled at most this many months ahead (planned starts; not years out).</summary>
     public const int MaxHireDateMonthsAhead = 12;
 
+    /// <summary>An exit may be recorded at most this many months ahead (notice periods are weeks, not years).</summary>
+    public const int MaxTerminationDateMonthsAhead = 6;
+
+    public static string? CheckTerminationDate(DateOnly terminationDate, DateOnly today) =>
+        terminationDate > today.AddMonths(MaxTerminationDateMonthsAhead) ? EmployeeDomainErrors.TerminationDateTooFarInFuture : null;
+
     public static string? CheckBirthDate(DateOnly? birthDate) =>
         birthDate is { } b && b < EarliestDate ? EmployeeDomainErrors.BirthDateTooEarly : null;
 

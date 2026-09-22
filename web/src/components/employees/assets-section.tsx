@@ -1,10 +1,24 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Text, TextInput, Textarea, Title } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Modal,
+  Select,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Textarea,
+  Title,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { PackagePlus, Undo2 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import ReplacementDueBadge from "@/components/assets/replacement-due-badge";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -52,7 +66,11 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
   const isMobile = useMediaQuery("(max-width: 390px)");
 
   const queryKey = ["assets", "employee-assets", employee.id, canViewAny] as const;
-  const { data: assets = [], isLoading, isError } = useQuery({
+  const {
+    data: assets = [],
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey,
     queryFn: () => (canViewAny ? getEmployeeAssets(employee.id) : getMyAssets()),
   });
@@ -63,16 +81,27 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
     enabled: canViewAny || canManage,
   });
 
-  const categoryName = (categoryId: string) => categoriesQuery.data?.find((c) => c.id === categoryId)?.name ?? categoryId;
+  const categoryName = (categoryId: string) =>
+    categoriesQuery.data?.find((c) => c.id === categoryId)?.name ?? categoryId;
 
   const returnMutation = useMutation({
-    mutationFn: ({ asset, returnedAt }: { asset: Asset; returnedAt: string }) => returnAsset(asset.id, returnedAt),
+    mutationFn: ({ asset, returnedAt }: { asset: Asset; returnedAt: string }) =>
+      returnAsset(asset.id, returnedAt),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey });
-      toast({ variant: "success", title: t("common:success"), description: t("assets:section.returned") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("assets:section.returned"),
+      });
       setReturning(null);
     },
-    onError: (error) => toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("assets:section.errors.generic")) }),
+    onError: (error) =>
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("assets:section.errors.generic")),
+      }),
   });
 
   if (isLoading) return <Skeleton h={200} />;
@@ -84,7 +113,12 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
       <Group justify="space-between" wrap="nowrap" mb="md">
         <Title order={4}>{t("assets:section.title")}</Title>
         {canManage && (
-          <Button type="button" size="sm" leftSection={<PackagePlus size={16} />} onClick={() => setAssigning(true)}>
+          <Button
+            type="button"
+            size="sm"
+            leftSection={<PackagePlus size={16} />}
+            onClick={() => setAssigning(true)}
+          >
             {t("assets:section.assign")}
           </Button>
         )}
@@ -111,10 +145,12 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
                   <Badge variant="filled" color={STATUS_COLOR[asset.status]}>
                     {t(`assets:enum.status.${asset.status}`)}
                   </Badge>
+                  <ReplacementDueBadge asset={asset} />
                 </Group>
                 <Text size="xs" c="dimmed">
                   {[
-                    asset.serialNumber && `${t("assets:section.serialNumber")}: ${asset.serialNumber}`,
+                    asset.serialNumber &&
+                      `${t("assets:section.serialNumber")}: ${asset.serialNumber}`,
                     asset.issuedAt && `${t("assets:section.issuedAt")}: ${date(asset.issuedAt)}`,
                   ]
                     .filter(Boolean)
@@ -122,7 +158,13 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
                 </Text>
               </Stack>
               {canManage && asset.status === "assigned" && (
-                <Button type="button" variant="subtle" size="sm" leftSection={<Undo2 size={14} />} onClick={() => setReturning(asset)}>
+                <Button
+                  type="button"
+                  variant="subtle"
+                  size="sm"
+                  leftSection={<Undo2 size={14} />}
+                  onClick={() => setReturning(asset)}
+                >
                   {t("assets:section.return")}
                 </Button>
               )}
@@ -160,7 +202,15 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
   );
 }
 
-function ReturnAssetForm({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () => void; onSubmit: (returnedAt: string) => void }) {
+function ReturnAssetForm({
+  busy,
+  onCancel,
+  onSubmit,
+}: {
+  busy: boolean;
+  onCancel: () => void;
+  onSubmit: (returnedAt: string) => void;
+}) {
   const { t } = useTranslation(["assets", "common"]);
   const [returnedAt, setReturnedAt] = useState(todayDateOnly());
 
@@ -176,7 +226,12 @@ function ReturnAssetForm({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
           <Text size="sm" fw={500}>
             {t("assets:section.returnedAt")}
           </Text>
-          <DatePicker id="asset-returnedAt" value={returnedAt} disabled={busy} onChange={setReturnedAt} />
+          <DatePicker
+            id="asset-returnedAt"
+            value={returnedAt}
+            disabled={busy}
+            onChange={setReturnedAt}
+          />
         </Stack>
         <Group justify="flex-end" gap="sm">
           <Button type="button" variant="default" onClick={onCancel} disabled={busy}>
@@ -200,7 +255,13 @@ interface AssignAssetDialogProps {
 }
 
 /** Assign either an existing unassigned asset (picked from a select) or a quickly-created new one. */
-function AssignAssetDialog({ employeeId, categories, queryKey, isMobile, onClose }: AssignAssetDialogProps) {
+function AssignAssetDialog({
+  employeeId,
+  categories,
+  queryKey,
+  isMobile,
+  onClose,
+}: AssignAssetDialogProps) {
   const { t } = useTranslation(["assets", "common"]);
   const queryClient = useQueryClient();
   const [assetId, setAssetId] = useState<string>(NEW_ASSET);
@@ -218,13 +279,25 @@ function AssignAssetDialog({ employeeId, categories, queryKey, isMobile, onClose
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const targetId = assetId === NEW_ASSET ? await createAsset({ categoryId: categoryId!, name: name.trim(), serialNumber: serialNumber.trim() || null, description: description.trim() || null }) : assetId;
+      const targetId =
+        assetId === NEW_ASSET
+          ? await createAsset({
+              categoryId: categoryId!,
+              name: name.trim(),
+              serialNumber: serialNumber.trim() || null,
+              description: description.trim() || null,
+            })
+          : assetId;
       await assignAsset(targetId, employeeId, issuedAt);
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey });
       void queryClient.invalidateQueries({ queryKey: ["assets", "unassigned"] });
-      toast({ variant: "success", title: t("common:success"), description: t("assets:section.assigned") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("assets:section.assigned"),
+      });
       onClose();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("assets:section.errors.generic"))),
@@ -245,10 +318,19 @@ function AssignAssetDialog({ employeeId, categories, queryKey, isMobile, onClose
   }
 
   const busy = mutation.isPending;
-  const existingOptions = (unassignedQuery.data?.items ?? []).map((asset) => ({ value: asset.id, label: asset.name }));
+  const existingOptions = (unassignedQuery.data?.items ?? []).map((asset) => ({
+    value: asset.id,
+    label: asset.name,
+  }));
 
   return (
-    <Modal opened onClose={onClose} title={t("assets:section.assignTitle")} size="32rem" fullScreen={isMobile}>
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("assets:section.assignTitle")}
+      size="32rem"
+      fullScreen={isMobile}
+    >
       <form onSubmit={submit}>
         <Stack gap="md">
           <Select
@@ -309,7 +391,12 @@ function AssignAssetDialog({ employeeId, categories, queryKey, isMobile, onClose
             <Text size="sm" fw={500}>
               {t("assets:section.issuedAt")}
             </Text>
-            <DatePicker id="asset-issuedAt" value={issuedAt} disabled={busy} onChange={setIssuedAt} />
+            <DatePicker
+              id="asset-issuedAt"
+              value={issuedAt}
+              disabled={busy}
+              onChange={setIssuedAt}
+            />
           </Stack>
           {error && (
             <Text size="sm" c="red">

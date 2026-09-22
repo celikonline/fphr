@@ -1,12 +1,17 @@
 {
   "hub": {
     "title": "Settings",
-    "subtitle": "Company information, rules, system settings and data transfer."
+    "subtitle": "Browse settings by group or search for one.",
+    "searchPlaceholder": "Search settings (e.g. leave, role, document)",
+    "searchLabel": "Search settings",
+    "noResults": "No settings match “{{query}}”.",
+    "resultCount": "{{count}} settings found",
+    "columns": "Column count"
   },
   "access": {
     "title": "Access settings",
     "subtitle": "Decide what employees can see on their home page, in their account and in the calendar.",
-    "scopeNotice": "Access settings only restrict users with the Employee access type; Account owners, Administrators and HR users are not affected. Changes take effect as soon as they are saved.",
+    "scopeNotice": "Access settings only restrict users in the Employee group; HR Manager and Accounting users are not affected. Changes take effect as soon as they are saved.",
     "readOnly": "You can view access settings but are not allowed to change them.",
     "loadError": "Access settings could not be loaded.",
     "saveSuccess": "Access settings saved.",
@@ -310,7 +315,9 @@
       "assets": "Assets",
       "performance": "Performance",
       "announcements": "Announcements & company calendar",
-      "occupationalSafety": "Occupational health & safety"
+      "occupationalSafety": "Occupational health & safety",
+      "training": "Training",
+      "onboarding": "Onboarding & offboarding"
     },
     "descriptions": {
       "identity": "Users, roles, permissions and sign-in",
@@ -331,7 +338,9 @@
       "assets": "Asset assignments and categories",
       "performance": "Goals and review cycles",
       "announcements": "Announcements and company event calendar",
-      "occupationalSafety": "Hazard class and risk assessments"
+      "occupationalSafety": "Hazard class and risk assessments",
+      "training": "Training programs, enrollments and required trainings",
+      "onboarding": "Hire and exit checklists and their templates"
     }
   }
 }

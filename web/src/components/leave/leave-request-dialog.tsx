@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Alert, Button, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
+import { Alert, Button, FileInput, Group, Input, Paper, Select, Stack, Switch, Text, Textarea } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { FileText, Users, X } from "lucide-react";
+import { FileText, Paperclip, Users, X } from "lucide-react";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FormModal } from "@/components/ui/form-modal";
@@ -114,6 +114,7 @@ export function LeaveRequestDialog({
       : null,
   );
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ type?: string; start?: string; end?: string }>({});
   const substituteNameQuery = useQuery({
     queryKey: ["leave", "request-detail", previewScope, source?.id ?? null],
     queryFn: () => loadDetail!(source!.id),
@@ -169,12 +170,22 @@ export function LeaveRequestDialog({
     setStagedDocs((prev) => prev.filter((d) => d.id !== doc.id));
   }
 
-  /** Wraps a field setter so editing the field clears the stale form-level error. */
-  function edit<T>(setter: (value: T) => void) {
+  /** Wraps a field setter so editing the field clears the stale form-level error (and the field's own error). */
+  function edit<T>(setter: (value: T) => void, field?: keyof typeof fieldErrors) {
     return (value: T) => {
       setError(null);
+      if (field) setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
       setter(value);
     };
+  }
+
+  /** Picking a start date pre-fills an empty end date with it: most requests are a single day. */
+  function changeStartDate(value: string) {
+    if (value && !endDate) {
+      setEndDate(value);
+      setFieldErrors((prev) => ({ ...prev, end: undefined }));
+    }
+    edit(setStartDate, "start")(value);
   }
 
   // A pending request's type may be missing from the list (e.g. no longer self-service); keep it selectable.
@@ -242,8 +253,16 @@ export function LeaveRequestDialog({
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    if (!leaveTypeId) return setError(t("leave:form.validation.typeRequired"));
-    if (!startDate || !endDate) return setError(t("leave:form.validation.datesRequired"));
+    const missing = {
+      type: leaveTypeId ? undefined : t("leave:form.validation.typeRequired"),
+      start: startDate ? undefined : t("leave:form.validation.startRequired"),
+      end: unit === "fullDay" && !endDate ? t("leave:form.validation.endRequired") : undefined,
+    };
+    if (missing.type || missing.start || missing.end) {
+      setError(null);
+      return setFieldErrors(missing);
+    }
+    setFieldErrors({});
     if (endDate < startDate) return setError(t("leave:form.validation.range"));
     if (unit === "hourly" && (!startTime || !endTime || endTime <= startTime)) return setError(t("leave:form.validation.timeRequired"));
     if (unit === "halfDay" && !halfDayPeriod) return setError(t("leave:form.validation.halfDayRequired"));
@@ -303,7 +322,8 @@ export function LeaveRequestDialog({
                   placeholder={t("leave:form.type")}
                   description={typesHint}
                   value={leaveTypeId || null}
-                  onChange={edit((value: string | null) => setLeaveTypeId(value ?? ""))}
+                  onChange={edit((value: string | null) => setLeaveTypeId(value ?? ""), "type")}
+                  error={fieldErrors.type}
                   allowDeselect={false}
                   disabled={busy}
                   data={options.map((type) => ({ value: type.id, label: type.name }))}
@@ -338,12 +358,31 @@ export function LeaveRequestDialog({
                 )}
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input.Wrapper id="leave-start-field" labelProps={{ htmlFor: "leave-start" }} label={t("leave:form.startDate")} withAsterisk>
-                  <DatePicker id="leave-start" value={startDate} disabled={busy} onChange={edit(setStartDate)} />
+                <Input.Wrapper
+                  id="leave-start-field"
+                  labelProps={{ htmlFor: "leave-start" }}
+                  label={t("leave:form.startDate")}
+                  withAsterisk
+                  error={fieldErrors.start}
+                >
+                  <DatePicker id="leave-start" value={startDate} disabled={busy} invalid={!!fieldErrors.start} onChange={changeStartDate} />
                 </Input.Wrapper>
                 {unit === "fullDay" ? (
-                  <Input.Wrapper id="leave-end-field" labelProps={{ htmlFor: "leave-end" }} label={t("leave:form.endDate")} withAsterisk>
-                    <DatePicker id="leave-end" value={endDate} min={startDate || undefined} disabled={busy} onChange={edit(setEndDate)} />
+                  <Input.Wrapper
+                    id="leave-end-field"
+                    labelProps={{ htmlFor: "leave-end" }}
+                    label={t("leave:form.endDate")}
+                    withAsterisk
+                    error={fieldErrors.end}
+                  >
+                    <DatePicker
+                      id="leave-end"
+                      value={endDate}
+                      min={startDate || undefined}
+                      disabled={busy}
+                      invalid={!!fieldErrors.end}
+                      onChange={edit(setEndDate, "end")}
+                    />
                   </Input.Wrapper>
                 ) : (
                   <Input.Wrapper label={t("leave:form.endDate")}>
@@ -453,25 +492,21 @@ export function LeaveRequestDialog({
               />
               {showDocuments && (
                 <Stack gap="xs">
-                  <Input.Wrapper
-                    id="leave-document-field"
-                    labelProps={{ htmlFor: "leave-document" }}
+                  {/* Always empty: a picked file is uploaded at once and listed below, so the input never keeps it. */}
+                  <FileInput
+                    id="leave-document"
                     label={t("leave:form.document")}
+                    aria-label={t("leave:form.document")}
                     description={t("leave:form.documentUploadHint")}
+                    placeholder={t("leave:form.documentPlaceholder")}
                     withAsterisk={!!selected?.requiresDocument}
-                  >
-                    <input
-                      id="leave-document"
-                      type="file"
-                      aria-label={t("leave:form.document")}
-                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt,.csv"
-                      disabled={busy}
-                      onChange={(e) => {
-                        void uploadDocument(e.currentTarget.files?.[0] ?? null);
-                        e.currentTarget.value = "";
-                      }}
-                    />
-                  </Input.Wrapper>
+                    leftSection={<Paperclip size={16} />}
+                    accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                    value={null}
+                    disabled={busy}
+                    onChange={(file) => void uploadDocument(file)}
+                    inputWrapperOrder={["label", "input", "description", "error"]}
+                  />
                   {uploading && (
                     <Text size="xs" c="dimmed">
                       {t("leave:form.documentUploading")}

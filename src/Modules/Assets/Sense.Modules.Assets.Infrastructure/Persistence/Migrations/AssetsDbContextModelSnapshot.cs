@@ -141,6 +141,10 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<int?>("ReplacementIntervalDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("replacement_interval_days");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
@@ -156,6 +160,72 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("ix_asset_categories_tenant_id_code");
 
                     b.ToTable("asset_categories", "assets");
+                });
+
+            modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("actor");
+
+                    b.Property<Guid?>("ActorUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_user_id");
+
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("details");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("resource");
+
+                    b.Property<string>("ResourceId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("resource_id");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("source");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_audit_log_entries");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id");
+
+                    b.HasIndex("TenantId", "OccurredAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_audit_log_entries_tenant_id_occurred_at");
+
+                    b.ToTable("audit_log_entries", "assets");
                 });
 
             modelBuilder.Entity("Sense.Shared.Infrastructure.Persistence.Outbox.InboxMessage", b =>

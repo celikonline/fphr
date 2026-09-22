@@ -1,0 +1,4 @@
+{{- subject = "İyi ki doğdunuz, " + recipient_name + "!" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Doğum gününüzü en içten dileklerimizle kutlar; sağlık, mutluluk ve başarı dolu bir yıl dileriz.</p>
+<p>Nice mutlu yıllara!</p>

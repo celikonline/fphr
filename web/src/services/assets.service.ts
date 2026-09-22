@@ -22,12 +22,16 @@ export interface Asset {
   assignedEmployeeId: string | null;
   issuedAt: string | null;
   returnedAt: string | null;
+  /** KKD (periodically replaced category): issue date + interval, only while assigned; omitted otherwise. */
+  replacementDueOn?: string | null;
 }
 
 export interface AssetCategory {
   id: string;
   code: string;
   name: string;
+  /** Periodic replacement interval in days (e.g. the seeded "ppe" category); omitted when none. */
+  replacementIntervalDays?: number | null;
 }
 
 export interface CreateAssetInput {
@@ -44,7 +48,7 @@ export interface UpdateAssetInput {
 }
 
 export async function listAssets(
-  params: PagedQueryParams & { employeeId?: string; status?: AssetStatus; categoryId?: string } = {},
+  params: PagedQueryParams & { employeeId?: string; status?: AssetStatus; categoryId?: string } = {}
 ): Promise<PagedResult<Asset>> {
   const { data } = await apiClient.get<PagedResult<Asset>>(ASSETS_BASE, { params });
   return data;
@@ -92,11 +96,29 @@ export async function listAssetCategories(): Promise<AssetCategory[]> {
   return data;
 }
 
-export async function createAssetCategory(code: string, name: string): Promise<string> {
-  const { data } = await apiClient.post<string>(`${ASSETS_BASE}/categories`, { code, name });
+export async function createAssetCategory(
+  code: string,
+  name: string,
+  replacementIntervalDays: number | null
+): Promise<string> {
+  const { data } = await apiClient.post<string>(`${ASSETS_BASE}/categories`, {
+    code,
+    name,
+    replacementIntervalDays,
+  });
   return data;
 }
 
-export async function updateAssetCategory(id: string, name: string): Promise<void> {
-  await apiClient.put(`${ASSETS_BASE}/categories/${id}`, { name });
+/** The server replaces the interval with what is sent (null clears it), so always pass the current value. */
+export async function updateAssetCategory(
+  id: string,
+  name: string,
+  replacementIntervalDays: number | null
+): Promise<void> {
+  await apiClient.put(`${ASSETS_BASE}/categories/${id}`, { name, replacementIntervalDays });
+}
+
+/** True when a KKD item's replacement date has passed (dates are "yyyy-MM-dd", compared as strings). */
+export function isReplacementOverdue(asset: Asset, todayIso: string): boolean {
+  return !!asset.replacementDueOn && asset.replacementDueOn < todayIso;
 }

@@ -9,7 +9,8 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
-import { formatDateOnly } from "@/lib/dates";
+import { formatDate, formatDateOnly } from "@/lib/dates";
+import { refreshAfterDecision } from "@/lib/decision-refresh";
 import { useLeaveName, useDays } from "@/components/leave/leave-shared";
 import { formatTimeOnly, useMinutes } from "@/components/leave/overtime-shared";
 import {
@@ -22,8 +23,6 @@ import {
 } from "@/services/workflow.service";
 
 const INBOX_QUERY_KEY = ["workflow", "inbox"] as const;
-/** `InboxTaskDto.submittedAt` is a full timestamp; TR short date only (matches the "onay bekleyenler" widget). */
-const SUBMITTED_DATE_OPTIONS: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
 
 export default function WorkflowInboxPage() {
   const canView = usePermission("workflow.inbox.view");
@@ -47,8 +46,9 @@ function WorkflowInbox() {
 
   const [decideTarget, setDecideTarget] = useState<{ task: InboxTaskDto; override: boolean } | null>(null);
 
+  /** O-14: also refreshes leave/overtime queries, twice more after a delay (the request status flips via the outbox). */
   function refresh() {
-    queryClient.invalidateQueries({ queryKey: INBOX_QUERY_KEY });
+    refreshAfterDecision(queryClient);
   }
 
   /**
@@ -76,6 +76,7 @@ function WorkflowInbox() {
     if (summary.leave) {
       const { leave } = summary;
       const typeLabel = leave.leaveTypeName ? leaveName(leave.leaveTypeName) : t(`leave:code.${leave.leaveTypeCode}`);
+      const overlapCount = leave.teamOverlap?.count ?? 0;
       return [
         requestDateField,
         {
@@ -84,6 +85,21 @@ function WorkflowInbox() {
         },
         { label: t("workflow:inbox.leaveType"), value: typeLabel },
         { label: t("workflow:inbox.days"), value: `${days(leave.days)} ${t("leave:days")}` },
+        ...(leave.remainingBalance != null
+          ? [{ label: t("workflow:inbox.remainingBalance"), value: `${days(leave.remainingBalance)} ${t("leave:days")}` }]
+          : []),
+        ...(leave.description?.trim() ? [{ label: t("workflow:inbox.description"), value: leave.description.trim() }] : []),
+        ...(leave.teamOverlap && overlapCount > 0
+          ? [
+              {
+                label: t("workflow:inbox.teamOverlap"),
+                value: t("workflow:inbox.teamOverlapValue", {
+                  count: overlapCount,
+                  names: leave.teamOverlap.employees.map((employee) => employee.name).join(", "),
+                }),
+              },
+            ]
+          : []),
       ];
     }
 
@@ -91,7 +107,7 @@ function WorkflowInbox() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={2} className="flex items-center gap-2">
           <InboxIcon size={24} /> {t("workflow:inbox.title")}
@@ -138,7 +154,7 @@ function WorkflowInbox() {
                   ? [
                       {
                         label: t("workflow:myRequests.submittedAt"),
-                        value: new Intl.DateTimeFormat(i18n.language, SUBMITTED_DATE_OPTIONS).format(new Date(task.submittedAt)),
+                        value: formatDate(task.submittedAt, i18n.language),
                       },
                     ]
                   : []),

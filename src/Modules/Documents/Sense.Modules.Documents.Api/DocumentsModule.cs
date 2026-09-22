@@ -7,10 +7,12 @@ using Sense.Modules.Documents.Domain.SharedFiles;
 using Sense.Modules.Documents.Infrastructure;
 using Sense.Modules.Documents.Infrastructure.BackgroundJobs;
 using Sense.Modules.Documents.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.BackgroundJobs;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Documents.Api;
 
@@ -31,7 +33,12 @@ public sealed class DocumentsModule : IModule
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
         // Register DbContext for this module
-        services.AddModuleDbContext<DocumentsDbContext>(configuration, DocumentsDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<DocumentsDbContext>(
+            configuration, DocumentsDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<DocumentsDbContext>>();
 
         // Register MediatR handlers for this module
         services.AddModuleHandlers(DocumentsDbContext.SchemaName, typeof(Application.DocumentsErrors).Assembly, typeof(DocumentsDbContext).Assembly);

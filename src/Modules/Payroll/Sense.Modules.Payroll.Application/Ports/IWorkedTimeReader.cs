@@ -7,7 +7,7 @@ namespace Sense.Modules.Payroll.Application.Ports;
 /// <see cref="OvertimeHours"/> are informational this slice, reserved for future pro-ration/overtime-pay work
 /// (P4+ - see PayrollCalculationInput's own TODO).
 /// </summary>
-public sealed record WorkedTimeSummary(int WorkedDays, int MissingDays, decimal OvertimeHours);
+public sealed record WorkedTimeSummary(int WorkedDays, int MissingDays, decimal OvertimeHours, int PublicHolidayDaysWorked = 0, int WeeklyRestDaysWorked = 0);
 
 /// <summary>
 /// Payroll's read port for the employee's monthly worked-time figures - deliberately narrow, mirrors Leave's

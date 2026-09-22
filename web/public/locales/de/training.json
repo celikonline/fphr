@@ -1,0 +1,81 @@
+{
+  "title": "Schulungen",
+  "tabs": {
+    "programs": "Programme",
+    "mine": "Meine Schulungen"
+  },
+  "loadError": "Schulungsdaten konnten nicht geladen werden.",
+  "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+  "mine": {
+    "empty": "Sie sind für keine Schulung angemeldet."
+  },
+  "fields": {
+    "title": "Programmname",
+    "description": "Beschreibung",
+    "category": "Kategorie",
+    "capacity": "Kapazität",
+    "startDate": "Beginn",
+    "endDate": "Ende",
+    "dates": "Termine",
+    "status": "Status"
+  },
+  "categories": {
+    "technical": "Fachlich",
+    "compliance": "Compliance",
+    "softSkills": "Soft Skills",
+    "custom": "Sonstige"
+  },
+  "programStatuses": {
+    "draft": "Entwurf",
+    "active": "Aktiv",
+    "closed": "Geschlossen",
+    "archived": "Archiviert"
+  },
+  "enrollmentStatuses": {
+    "enrolled": "Angemeldet",
+    "completed": "Abgeschlossen",
+    "cancelled": "Storniert",
+    "noShow": "Nicht erschienen"
+  },
+  "programs": {
+    "create": "Neues Programm",
+    "created": "Schulungsprogramm erstellt.",
+    "empty": "Noch keine Schulungsprogramme.",
+    "details": "Details",
+    "activate": "Aktivieren",
+    "activated": "Programm aktiviert.",
+    "close": "Schließen",
+    "closed": "Programm geschlossen.",
+    "closeTitle": "Programm schließen?",
+    "closeDescription": "„{{title}}\" wird geschlossen; neue Teilnehmende können nicht mehr hinzugefügt werden.",
+    "capacityHint": "Leer lassen für unbegrenzt.",
+    "endBeforeStart": "Das Ende darf nicht vor dem Beginn liegen."
+  },
+  "participants": {
+    "title": "Teilnehmende",
+    "employee": "Mitarbeitende",
+    "certificate": "Zertifikatsnr.",
+    "certificateHint": "Optional; leer lassen, wenn kein Zertifikat ausgestellt wurde.",
+    "add": "Teilnehmende hinzufügen",
+    "addButton": "Hinzufügen",
+    "added": "Teilnehmende hinzugefügt.",
+    "complete": "Abgeschlossen",
+    "completeTitle": "Schulung als abgeschlossen markieren",
+    "completed": "Teilnahme abgeschlossen.",
+    "remove": "Entfernen",
+    "removed": "Teilnehmende entfernt.",
+    "empty": "Noch keine Teilnehmenden.",
+    "capacity": "{{count}} / {{max}} Personen",
+    "closedHint": "Einem geschlossenen Programm können keine Teilnehmenden hinzugefügt werden."
+  },
+  "requirements": {
+    "title": "Voraussetzungen",
+    "empty": "Keine Voraussetzungen definiert.",
+    "add": "Voraussetzung hinzufügen",
+    "addButton": "Hinzufügen",
+    "added": "Voraussetzung hinzugefügt.",
+    "remove": "Voraussetzung entfernen",
+    "blocking": "Vor Anmeldung erforderlich",
+    "blocksLabel": "Anmeldung erst nach Abschluss erlauben"
+  }
+}

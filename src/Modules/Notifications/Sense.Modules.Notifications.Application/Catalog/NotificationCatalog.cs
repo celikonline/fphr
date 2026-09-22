@@ -10,6 +10,15 @@ public enum NotificationCategory
 
     /// <summary>Periodic digest-style reminders (e.g. documents nearing/past expiry), not tied to a single request.</summary>
     Reminder,
+
+    /// <summary>Employee lifecycle and personal occasions: hire, exit, welcome, work certificate, birthday.</summary>
+    Employee,
+
+    /// <summary>Company announcements.</summary>
+    Announcement,
+
+    /// <summary>Payroll documents (ücret pusulası).</summary>
+    Payroll,
 }
 
 /// <summary>
@@ -33,6 +42,7 @@ public static class NotificationCatalog
 {
     private static readonly string[] EmailAndInApp = [NotificationChannels.Email, NotificationChannels.InApp];
     private static readonly string[] InAppOnly = [NotificationChannels.InApp];
+    private static readonly string[] EmailOnly = [NotificationChannels.Email];
 
     public static IReadOnlyList<NotificationTemplateDefinition> All { get; } =
     [
@@ -41,6 +51,16 @@ public static class NotificationCatalog
         new(NotificationTemplateKeys.RequestRejected, NotificationCategory.Request, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.ApprovalTaskAssigned, NotificationCategory.Approval, EmailAndInApp, IsMandatory: false),
         new(NotificationTemplateKeys.DocumentExpiryReminder, NotificationCategory.Reminder, InAppOnly, IsMandatory: false),
+        // Missing the statutory SGK deadline is a legal breach, so this reminder cannot be switched off.
+        new(NotificationTemplateKeys.OhsSgkNotificationDue, NotificationCategory.Reminder, InAppOnly, IsMandatory: true),
+        new(NotificationTemplateKeys.EmployeeHired, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.EmployeeWelcome, NotificationCategory.Employee, EmailOnly, IsMandatory: false),
+        new(NotificationTemplateKeys.EmployeeTerminated, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
+        // 4857 md.28: the employer must hand out the çalışma belgesi, and the leaver has no account left to opt out with.
+        new(NotificationTemplateKeys.EmployeeWorkCertificate, NotificationCategory.Employee, EmailOnly, IsMandatory: true),
+        new(NotificationTemplateKeys.EmployeeBirthday, NotificationCategory.Employee, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.AnnouncementPublished, NotificationCategory.Announcement, EmailAndInApp, IsMandatory: false),
+        new(NotificationTemplateKeys.PayslipReady, NotificationCategory.Payroll, EmailAndInApp, IsMandatory: false),
     ];
 
     public static NotificationTemplateDefinition? Find(string key) =>

@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
@@ -172,5 +172,34 @@ describe("LoginPage tenant select popup (senseik-025)", () => {
     expect(login).toHaveBeenNthCalledWith(2, "multi@demo.local", "secret123", TENANTS[1].slug);
     await waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/app", { replace: true }));
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+});
+
+describe("LoginPage demo credentials hint (D-6)", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("shows the hint in dev builds", () => {
+    vi.stubEnv("DEV", true);
+    vi.stubEnv("VITE_SHOW_DEMO_CREDENTIALS", "false");
+    renderLogin(vi.fn());
+    expect(screen.queryByText(trAuth.demoCredentials)).not.toBeNull();
+  });
+
+  it("hides the hint in a production build unless VITE_SHOW_DEMO_CREDENTIALS is true", () => {
+    vi.stubEnv("DEV", false);
+    vi.stubEnv("VITE_SHOW_DEMO_CREDENTIALS", "false");
+    const { unmount } = renderLogin(vi.fn());
+    expect(screen.queryByText(trAuth.demoCredentials)).toBeNull();
+    unmount();
+
+    vi.stubEnv("VITE_SHOW_DEMO_CREDENTIALS", "true");
+    renderLogin(vi.fn());
+    expect(screen.queryByText(trAuth.demoCredentials)).not.toBeNull();
   });
 });

@@ -18,6 +18,9 @@ public sealed class TenantRepository(IdentityDbContext db) : ITenantRepository
 
     public Task<bool> SlugExistsAsync(string slug, CancellationToken ct) => db.Tenants.AnyAsync(t => t.Slug == slug, ct);
 
+    public async Task<IReadOnlyList<Tenant>> ListAsync(CancellationToken ct) =>
+        await db.Tenants.AsNoTracking().OrderByDescending(t => t.CreatedAt).ToListAsync(ct).ConfigureAwait(false);
+
     public void Add(Tenant tenant) => db.Tenants.Add(tenant);
 }
 

@@ -6,10 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import trLeave from "../../../public/locales/tr/leave.json";
 import trCommon from "../../../public/locales/tr/common.json";
+import { adjustLeaveBalance } from "@/services/leave.service";
 import { AdjustBalanceDialog } from "./leave-section";
 
 vi.mock("@/services/leave.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/leave.service")>("@/services/leave.service");
+  const actual = await vi.importActual<typeof import("@/services/leave.service")>(
+    "@/services/leave.service"
+  );
   return { ...actual, adjustLeaveBalance: vi.fn() };
 });
 
@@ -52,24 +55,31 @@ function createTestI18n() {
   return instance;
 }
 
-function renderDialog(onClose = vi.fn()) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+const TWO_TYPES = [
+  { id: "type-1", name: "Yıllık izin" },
+  { id: "type-2", name: "Mazeret izni" },
+];
+
+function renderDialog(
+  onClose = vi.fn(),
+  typeOptions: { id: string; name: string; currentBalance?: number }[] = TWO_TYPES
+) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   render(
     <I18nextProvider i18n={createTestI18n()}>
       <QueryClientProvider client={queryClient}>
         <MantineProvider>
           <AdjustBalanceDialog
             employeeId="employee-1"
-            typeOptions={[
-              { id: "type-1", name: "Yıllık izin" },
-              { id: "type-2", name: "Mazeret izni" },
-            ]}
+            typeOptions={typeOptions}
             onClose={onClose}
             onSaved={vi.fn()}
           />
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
   return { onClose };
 }
@@ -91,10 +101,47 @@ describe("AdjustBalanceDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: trCommon.save }));
     await screen.findByText(trLeave.actions.validation.reasonRequired);
 
-    fireEvent.change(screen.getByLabelText(new RegExp(trLeave.actions.reason)), { target: { value: "Düzeltme" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(trLeave.actions.reason)), {
+      target: { value: "Düzeltme" },
+    });
 
-    await waitFor(() => expect(screen.queryByText(trLeave.actions.validation.reasonRequired)).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByText(trLeave.actions.validation.reasonRequired)).toBeNull()
+    );
     expect(screen.getByText(trLeave.actions.validation.typeRequired)).not.toBeNull();
+  });
+
+  it("asks for confirmation before a correction that drives the balance negative (O-11)", async () => {
+    vi.mocked(adjustLeaveBalance).mockResolvedValue(undefined as never);
+    renderDialog(vi.fn(), [{ id: "type-1", name: "Yıllık izin", currentBalance: 3 }]);
+
+    fireEvent.change(screen.getByLabelText(/^Gün/), { target: { value: "-5" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(trLeave.actions.reason)), {
+      target: { value: "Düzeltme" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: trCommon.save }));
+
+    expect(await screen.findByText(trLeave.actions.warnings.title)).not.toBeNull();
+    expect(screen.getByText(/-2 gün olacak/)).not.toBeNull();
+    expect(adjustLeaveBalance).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: trLeave.actions.warnings.confirm }));
+    await waitFor(() => expect(adjustLeaveBalance).toHaveBeenCalledTimes(1));
+  });
+
+  it("saves immediately when nothing looks risky", async () => {
+    vi.mocked(adjustLeaveBalance).mockClear();
+    vi.mocked(adjustLeaveBalance).mockResolvedValue(undefined as never);
+    renderDialog(vi.fn(), [{ id: "type-1", name: "Yıllık izin", currentBalance: 10 }]);
+
+    fireEvent.change(screen.getByLabelText(/^Gün/), { target: { value: "-2" } });
+    fireEvent.change(screen.getByLabelText(new RegExp(trLeave.actions.reason)), {
+      target: { value: "Düzeltme" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: trCommon.save }));
+
+    await waitFor(() => expect(adjustLeaveBalance).toHaveBeenCalledTimes(1));
+    expect(screen.queryByText(trLeave.actions.warnings.title)).toBeNull();
   });
 
   it("opens left-aligned and ignores overlay clicks (B2/B3)", () => {

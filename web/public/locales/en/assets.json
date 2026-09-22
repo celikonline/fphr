@@ -34,15 +34,20 @@
     "codeLocked": "The code cannot be changed after creation.",
     "columns": {
       "name": "Name",
-      "code": "Code"
+      "code": "Code",
+      "replacement": "Periodic replacement"
     },
     "errors": {
       "generic": "The category could not be saved.",
       "loadFailed": "Categories could not be loaded.",
       "codeTaken": "A category with this code already exists.",
       "codeRequired": "Code is required.",
-      "nameRequired": "Name is required."
-    }
+      "nameRequired": "Name is required.",
+      "replacementInvalid": "The replacement interval must be between 1 and 3650 days."
+    },
+    "replacementEvery_one": "Every {{count}} day",
+    "replacementEvery_other": "Every {{count}} days",
+    "replacementHint": "Days between replacements for equipment such as PPE; leave empty for no replacement tracking."
   },
   "enum": {
     "status": {
@@ -50,5 +55,33 @@
       "assigned": "Assigned",
       "retired": "Retired"
     }
+  },
+  "page": {
+    "title": "Assets",
+    "inventory": "Inventory",
+    "mine": "My assets",
+    "mineEmpty": "No assets are assigned to you."
+  },
+  "inventory": {
+    "create": "Add asset",
+    "editTitle": "Edit asset",
+    "edit": "Edit",
+    "saved": "Asset saved.",
+    "assignTitle": "Assign \"{{name}}\"",
+    "employee": "Employee",
+    "status": "Status",
+    "statusFilter": "Status filter",
+    "categoryFilter": "Category filter",
+    "allStatuses": "All statuses",
+    "allCategories": "All categories",
+    "empty": "No assets match this filter.",
+    "retire": "Retire",
+    "retireTitle": "Retire asset?",
+    "retireDescription": "\"{{name}}\" will be retired and can no longer be assigned.",
+    "retired": "Asset retired."
+  },
+  "replacement": {
+    "due": "Replace by {{date}}",
+    "overdue": "Replacement overdue ({{date}})"
   }
 }

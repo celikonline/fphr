@@ -50,6 +50,9 @@ public static class InfrastructureServiceCollectionExtensions
         // Ortak "tablo -> Excel" dışa aktarma portu (Faz 1, TB-1); stateless, tüm modüller doğrudan enjekte edebilir.
         services.TryAddSingleton<IReportExporter, ExcelReportExporter>();
 
+        // Structured document -> PDF (ücret pusulası, çalışma belgesi); stateless QuestPDF writer.
+        services.TryAddSingleton<ISimplePdfWriter, QuestPdfSimpleWriter>();
+
         services.TryAddSingleton(TimeProvider.System);
 
         services.TryAddScoped<TenantContext>();

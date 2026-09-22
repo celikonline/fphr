@@ -8,7 +8,8 @@ public sealed record OvertimeApprovalSummary(DateOnly WorkDate, TimeOnly StartTi
 /// camelCased by the provider (e.g. "annual") to match the web's `leave:code.*` translation keys - it crosses this
 /// module boundary as a plain string, so the shared JsonStringEnumConverter's camelCase policy never sees it.
 /// </summary>
-public sealed record LeaveApprovalSummary(DateOnly StartDate, DateOnly EndDate, string LeaveTypeCode, string? LeaveTypeName, decimal Days);
+public sealed record LeaveApprovalSummary(
+    DateOnly StartDate, DateOnly EndDate, string LeaveTypeCode, string? LeaveTypeName, decimal Days, string? Description = null);
 
 /// <summary>
 /// Request-type-specific projection of an <c>ApprovalRequest</c>'s subject entity (a future LeaveRequest/OvertimeRequest/...),

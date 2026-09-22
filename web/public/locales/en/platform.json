@@ -1,0 +1,59 @@
+{
+  "title": "Companies",
+  "subtitle": "View every company (tenant) on the platform and create new ones.",
+  "add": "Create company",
+  "edit": "Edit company",
+  "updated": "Company details updated.",
+  "editDialog": {
+    "title": "Edit company details",
+    "taxNumber": "Tax number"
+  },
+  "empty": "No companies yet.",
+  "platformBadge": "Platform",
+  "columns": {
+    "name": "Company",
+    "slug": "Address (slug)",
+    "status": "Status",
+    "createdAt": "Created"
+  },
+  "status": {
+    "trial": "Trial",
+    "active": "Active",
+    "suspended": "Suspended",
+    "closed": "Closed"
+  },
+  "dialog": {
+    "title": "Create a new company",
+    "companyName": "Company name",
+    "slug": "Company address (slug)",
+    "slugHint": "Used on the sign-in screen. Lowercase letters, digits and hyphens only; 3-40 characters.",
+    "ownerSection": "First user (HR Manager)",
+    "ownerFirstName": "First name",
+    "ownerLastName": "Last name",
+    "ownerEmail": "Email",
+    "ownerPhone": "Phone",
+    "ownerMode": "How should the sign-in details be provided?",
+    "modeInvite": "Invitation email",
+    "modePassword": "Set a password",
+    "modeInviteHint": "The HR manager sets their own password from the emailed link; you never see it.",
+    "modePasswordHint": "The account is activated right away with the password you set. You need to pass the password to the HR manager separately.",
+    "password": "Password",
+    "passwordHint": "At least 10 characters, with letters, digits and a special character.",
+    "submit": "Create company"
+  },
+  "created": {
+    "invited": "Company created. An invitation email was sent to the HR manager.",
+    "withPassword": "Company created. The HR manager can sign in with the password you set."
+  },
+  "errors": {
+    "updateFailed": "The company details could not be updated. Please try again.",
+    "generic": "The company could not be created. Please try again.",
+    "loadFailed": "The company list could not be loaded.",
+    "slugTaken": "This company address is already in use.",
+    "slugInvalid": "The company address must be 3-40 characters and contain only lowercase letters, digits and hyphens.",
+    "companyRequired": "Company name is required.",
+    "ownerNameRequired": "The HR manager's first and last name are required.",
+    "ownerEmailInvalid": "Enter a valid email address.",
+    "passwordTooShort": "The password must be at least 10 characters."
+  }
+}

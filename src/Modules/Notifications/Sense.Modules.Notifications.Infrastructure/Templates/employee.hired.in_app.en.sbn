@@ -1,0 +1,2 @@
+{{- subject = "New employee: " + employee_name -}}
+{{ employee_name }} starts on {{ hire_date }}.

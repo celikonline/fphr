@@ -13,6 +13,7 @@ using Sense.Modules.Employee.Contracts;
 using Sense.Modules.Employee.Domain;
 using Sense.Modules.Employee.Infrastructure.Lookups;
 using Sense.Modules.Employee.Infrastructure.Persistence;
+using Sense.Modules.Organization.Infrastructure;
 using Sense.Modules.Organization.Infrastructure.Lookups;
 using Sense.Modules.Expense.Infrastructure;
 using Sense.Modules.Expense.Infrastructure.Persistence;
@@ -33,6 +34,7 @@ using Sense.Modules.Performance.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Modules.Training.Infrastructure;
+using Sense.Modules.Onboarding.Infrastructure;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
@@ -77,6 +79,9 @@ builder.Services.AddModuleHandlers(
     typeof(OrganizationDbContext).Assembly,
     typeof(IOrgUnitRepository).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<OrganizationDbContext>>();
+// Organization consumes Identity's TenantProvisioned (new tenant → unit types, root company, TR holiday calendar); registered
+// explicitly since this host does not scan Organization's Application assembly.
+builder.Services.AddOrganizationIntegrationEventHandlers();
 
 // Employee lifecycle integration events (EmployeeHired/Suspended/Reactivated) consumed by Leave/Workflow.
 builder.Services.AddModuleDbContext<EmployeeDbContext>(builder.Configuration, EmployeeDbContext.SchemaName);
@@ -123,6 +128,9 @@ builder.Services.AddScoped<Sense.Modules.Identity.Application.IIdentityUnitOfWor
 builder.Services.AddScoped<Sense.Shared.Contracts.Events.IIntegrationEventHandler<Sense.Modules.Employee.Contracts.Events.EmployeeTerminated>, Sense.Modules.Identity.Application.Users.EmployeeTerminatedHandler>();
 // Documents' EmployeeHired handler materializes requirements through this Employee read contract.
 builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
+// Notifications' announcement audience (every active employee) and the exit e-mail's çalışma belgesi PDF attachment.
+builder.Services.AddScoped<IEmployeeAudienceLookup, EmployeeAudienceLookup>();
+builder.Services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();
@@ -174,9 +182,14 @@ builder.Services.AddPayrollServices(builder.Configuration);
 builder.Services.AddPayrollIntegrationEventHandlers();
 builder.Services.AddPayrollChangeDetectionJob();
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSalaryLookup, EmployeeSalaryLookup>();
+// EmployeeTerminatedSettlementHandler ("Çıkış hesabı") runs SeveranceEstimator, which also needs the counted-seniority port
+// (Leave core already provides ILeaveBalanceLookup and ILegislationParameterReader).
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeSeniorityLookup, EmployeeSeniorityLookup>();
 // PayrollPeriodCalculationService reads the disability degree (engelli vergi indirimi) through this Employee contract.
 builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeDisabilityLookup, EmployeeDisabilityLookup>();
 builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IOrgUnitLookup, OrgUnitLookup>();
+// RecordIncidentHandler (OHS) also needs the tenant's holiday calendar to classify an incident's date.
+builder.Services.AddScoped<Sense.Modules.Organization.Contracts.IHolidayCalendarLookup, HolidayCalendarLookup>();
 builder.Services.AddModuleHandlers(
     PayrollDbContext.SchemaName,
     typeof(Sense.Modules.Payroll.Contracts.PayrollPermissions).Assembly,
@@ -273,17 +286,21 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Announcements.Contracts.AnnouncementsPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<AnnouncementsDbContext>>();
 
-// Occupational Safety (İSG, senseik-015, Faz 0-1): hazard classification + risk assessments only - no cross-module
-// consumers or own-outbox writes yet (Documents' materialization hooks, committee/accident events, PPE zimmet are
-// later phases per the handoff doc), so just DbContext + handler scanning so its query/command handlers resolve -
-// mirrors Integrations' "no OutboxPollingService yet" note above.
+// Occupational Safety (İSG, senseik-015): hazard classification + risk assessments, and (senseik-015 devamı)
+// RecordIncidentHandler, which needs Employee's IEmployeeLookup to validate the reporting employee - registered
+// explicitly here since this host wires modules manually rather than through EmployeeModule.AddModule (mirrors the
+// other Employee.Contracts lookups above). No own-outbox writes yet (Documents' materialization hooks,
+// committee/accident events, PPE zimmet are later phases per the handoff doc).
 builder.Services.AddModuleDbContext<OhsDbContext>(builder.Configuration, OhsDbContext.SchemaName);
 builder.Services.AddOhsCoreServices();
+builder.Services.AddScoped<Sense.Modules.Employee.Contracts.IEmployeeLookup, EmployeeLookup>();
 builder.Services.AddModuleHandlers(
     OhsDbContext.SchemaName,
     typeof(Sense.Modules.OccupationalSafety.Application.IOhsUnitOfWork).Assembly,
     typeof(OhsDbContext).Assembly,
     typeof(Sense.Modules.OccupationalSafety.Contracts.OhsPermissions).Assembly);
+// WorkAccidentRecorded / SgkNotificationReminderDue are written to the ohs outbox and published from here.
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<OhsDbContext>>();
 
 // Training (Faz 4 #72: ön koşul eğitim + mentör atama): no cross-module events yet - DbContext + handler scanning
 // only, kept consistent with the other modules so future integration events (e.g. a completion notification) have
@@ -298,6 +315,18 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext).Assembly,
     typeof(Sense.Modules.Training.Contracts.TrainingPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>>();
+
+// Onboarding: consumes EmployeeHired / EmployeeTerminated to materialize onboarding / offboarding checklists.
+builder.Services.AddModuleDbContext<Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext>(
+    builder.Configuration, Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName);
+builder.Services.AddOnboardingCoreServices();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName,
+    typeof(Sense.Modules.Onboarding.Domain.Tasks.OnboardingTaskTemplate).Assembly,
+    typeof(Sense.Modules.Onboarding.Application.IOnboardingUnitOfWork).Assembly,
+    typeof(Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext).Assembly,
+    typeof(Sense.Modules.Onboarding.Contracts.OnboardingPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext>>();
 
 await builder.Build().RunAsync();
 

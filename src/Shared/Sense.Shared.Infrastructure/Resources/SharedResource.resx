@@ -118,15 +118,15 @@
 
   <!-- Sistem rolleri -->
   <data name="roles.owner.name" xml:space="preserve"><value>Hesap Sahibi</value></data>
-  <data name="roles.owner.description" xml:space="preserve"><value>Tüm yetkiler; faturalama ve hesap yönetimi. Silinemez.</value></data>
+  <data name="roles.owner.description" xml:space="preserve"><value>Şirketi açan ilk İK Yöneticisinin arka planda taşıdığı kilitli yetki; ayrı bir grup değildir.</value></data>
   <data name="roles.admin.name" xml:space="preserve"><value>Sistem Yöneticisi</value></data>
-  <data name="roles.admin.description" xml:space="preserve"><value>Faturalama hariç tüm yönetim yetkileri.</value></data>
+  <data name="roles.admin.description" xml:space="preserve"><value>Faturalama dahil tüm yönetim yetkileri.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>İK Yöneticisi</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Özlük, izin, PDKS/puantaj, belge, duyuru, eğitim, zimmet, performans, ücret, işe alım, raporlar, KVKK.</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Şirket içinde tüm yetkiler: özlük, izin, puantaj, bordro, harcama, işe alım, raporlar, kullanıcılar ve ayarlar.</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>İK Uzmanı</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>İK Yöneticisinin alt kümesi: maaş görüntüleme, bordro ve fesih/ücret onayı yok.</value></data>
-  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Bordro Uzmanı</value></data>
-  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Bordro dönemleri, parametreler, kalemler, icra, SGK/MUHSGK, banka dosyası, puantaj kilidi.</value></data>
+  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Muhasebe</value></data>
+  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Şirket içinde tüm yetkiler: bordro, harcama ve avans ödemeleri, beyannameler, raporlar ve diğer tüm ekranlar.</value></data>
   <data name="roles.finance.name" xml:space="preserve"><value>Finans</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Harcama/avans son onay, banka ödeme listeleri, bütçe görünümü, faturalar.</value></data>
   <data name="roles.manager.name" xml:space="preserve"><value>Yönetici</value></data>
@@ -144,7 +144,7 @@
   <data name="roles.itadmin.name" xml:space="preserve"><value>BT Yöneticisi</value></data>
   <data name="roles.itadmin.description" xml:space="preserve"><value>Kullanıcı/rol, güvenlik politikası, SSO, API anahtarı, webhook, cihaz/QR noktası; İK verisi görüntüleme yok.</value></data>
   <data name="roles.employee.name" xml:space="preserve"><value>Çalışan</value></data>
-  <data name="roles.employee.description" xml:space="preserve"><value>Self-servis: profil, izin/FM/harcama/avans talebi, pusula, PDKS, duyuru, rehber, belgeler, eğitim, hedefler, asistan.</value></data>
+  <data name="roles.employee.description" xml:space="preserve"><value>Yalnız kendi bilgileri: profil, izin/fazla mesai/harcama/avans talepleri, giriş-çıkış, duyurular, belgeler.</value></data>
   <data name="roles.intern.name" xml:space="preserve"><value>Stajyer</value></data>
   <data name="roles.intern.description" xml:space="preserve"><value>Çalışan − pusula/avans; sınırlı rehber.</value></data>
   <data name="roles.contractor.name" xml:space="preserve"><value>Dış Kaynak</value></data>
@@ -195,6 +195,8 @@
   <data name="employee.birth_date_too_early" xml:space="preserve"><value>Doğum tarihi 1900-01-01 öncesi olamaz.</value></data>
   <data name="employee.hire_date_too_early" xml:space="preserve"><value>İşe giriş tarihi 1900-01-01 öncesi olamaz.</value></data>
   <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>İşe giriş tarihi bugünden en fazla 12 ay ileride olabilir.</value></data>
+  <data name="employee.termination_date_too_far_in_future" xml:space="preserve"><value>İşten çıkış tarihi bugünden en fazla 6 ay ileride olabilir.</value></data>
+  <data name="employee.name_invalid_characters" xml:space="preserve"><value>Ad ve soyad "&lt;", "&gt;" veya kontrol karakteri içeremez.</value></data>
   <data name="employee.minimum_age" xml:space="preserve"><value>İşe giriş tarihinde 15 yaşını doldurmamış kişi çalıştırılamaz (4857 sayılı İş Kanunu md. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>Çalışan kendi yöneticisi olamaz.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>Bu atama yönetici hiyerarşisinde döngü oluşturur.</value></data>
@@ -228,6 +230,10 @@
   <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>SGK meslek kodu en fazla 20 karakter olabilir.</value></data>
   <data name="employee.rehire_date_before_previous_exit" xml:space="preserve"><value>Yeni işe başlama tarihi önceki ayrılma tarihinden sonra olmalıdır.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Alt işveren firma bulunamadı.</value></data>
+  <data name="employee.photo_required" xml:space="preserve"><value>Fotoğraf dosyası zorunludur.</value></data>
+  <data name="employee.photo_too_large" xml:space="preserve"><value>Fotoğraf en fazla 2 MB olabilir.</value></data>
+  <data name="employee.photo_type_unsupported" xml:space="preserve"><value>Fotoğraf JPEG, PNG veya WebP biçiminde olmalıdır.</value></data>
+  <data name="employee.photo_not_found" xml:space="preserve"><value>Çalışanın fotoğrafı yok.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>Alt işveren firma adı zorunludur.</value></data>
   <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>Firma adı en fazla 200 karakter olabilir.</value></data>
   <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>Vergi numarası en fazla 20 karakter olabilir.</value></data>
@@ -377,6 +383,14 @@
   <data name="impersonation.not_revocable" xml:space="preserve"><value>Bu destek erişimi iptal edilemez.</value></data>
   <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Destek erişimi yalnız platform personeli tarafından talep edilebilir.</value></data>
   <data name="impersonation.forbidden" xml:space="preserve"><value>Bu destek erişimini kullanma yetkiniz yok.</value></data>
+  <data name="roles.superadmin.name" xml:space="preserve"><value>Süper Admin</value></data>
+  <data name="roles.superadmin.description" xml:space="preserve"><value>Platform yöneticisi: yeni şirket (kiracı) oluşturur. Yalnız platform hesabında bulunur.</value></data>
+  <data name="platform.tenants.manage" xml:space="preserve"><value>Şirket oluşturma ve şirket listesi (platform)</value></data>
+  <data name="identity.group.platform" xml:space="preserve"><value>Platform yönetimi</value></data>
+  <data name="platform.staff_required" xml:space="preserve"><value>Bu işlem yalnız platform (süper admin) hesabıyla yapılabilir.</value></data>
+  <data name="tenant.owner_password_required" xml:space="preserve"><value>Parola ile oluşturmada Owner parolası zorunludur.</value></data>
+  <data name="tenant.invalid_locale" xml:space="preserve"><value>Desteklenmeyen dil/bölge seçildi.</value></data>
+  <data name="tenant.invalid_timezone" xml:space="preserve"><value>Geçersiz saat dilimi.</value></data>
   <data name="impersonation.reason_required" xml:space="preserve"><value>Gerekçe zorunludur (en fazla 500 karakter).</value></data>
   <data name="impersonation.status_invalid" xml:space="preserve"><value>Geçersiz durum filtresi.</value></data>
   <data name="identity.org_unit_not_found" xml:space="preserve"><value>Seçilen birim bulunamadı veya pasif.</value></data>
@@ -415,6 +429,39 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="field.company_name" xml:space="preserve"><value>Şirket adı</value></data>
   <data name="field.email" xml:space="preserve"><value>E-posta</value></data>
   <data name="field.first_name" xml:space="preserve"><value>Ad</value></data>
+  <data name="field.amount" xml:space="preserve"><value>Tutar</value></data>
+  <data name="field.currency" xml:space="preserve"><value>Para birimi</value></data>
+  <data name="field.days" xml:space="preserve"><value>Gün sayısı</value></data>
+  <data name="field.reason" xml:space="preserve"><value>Gerekçe</value></data>
+  <data name="field.description" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="field.comment" xml:space="preserve"><value>Yorum</value></data>
+  <data name="field.note" xml:space="preserve"><value>Not</value></data>
+  <data name="field.title" xml:space="preserve"><value>Başlık</value></data>
+  <data name="field.installment_count" xml:space="preserve"><value>Taksit sayısı</value></data>
+  <data name="field.duration_minutes" xml:space="preserve"><value>Süre (dakika)</value></data>
+  <data name="field.start_date" xml:space="preserve"><value>Başlangıç tarihi</value></data>
+  <data name="field.end_date" xml:space="preserve"><value>Bitiş tarihi</value></data>
+  <data name="field.start_time" xml:space="preserve"><value>Başlangıç saati</value></data>
+  <data name="field.end_time" xml:space="preserve"><value>Bitiş saati</value></data>
+  <data name="field.work_date" xml:space="preserve"><value>Çalışma tarihi</value></data>
+  <data name="field.requested_date" xml:space="preserve"><value>Talep tarihi</value></data>
+  <data name="field.effective_date" xml:space="preserve"><value>Geçerlilik tarihi</value></data>
+  <data name="field.hire_date" xml:space="preserve"><value>İşe giriş tarihi</value></data>
+  <data name="field.birth_date" xml:space="preserve"><value>Doğum tarihi</value></data>
+  <data name="field.termination_date" xml:space="preserve"><value>İşten çıkış tarihi</value></data>
+  <data name="field.leave_type_id" xml:space="preserve"><value>İzin türü</value></data>
+  <data name="field.employee_id" xml:space="preserve"><value>Çalışan</value></data>
+  <data name="field.org_unit_id" xml:space="preserve"><value>Birim</value></data>
+  <data name="field.year" xml:space="preserve"><value>Yıl</value></data>
+  <data name="field.month" xml:space="preserve"><value>Ay</value></data>
+  <data name="field.quantity" xml:space="preserve"><value>Miktar</value></data>
+  <data name="field.tax_rate" xml:space="preserve"><value>KDV oranı</value></data>
+  <data name="field.iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="field.address" xml:space="preserve"><value>Adres</value></data>
+  <data name="field.country_code" xml:space="preserve"><value>Ülke kodu</value></data>
+  <data name="field.postal_code" xml:space="preserve"><value>Posta kodu</value></data>
+  <data name="field.file_name" xml:space="preserve"><value>Dosya adı</value></data>
+  <data name="field.content_type" xml:space="preserve"><value>İçerik türü</value></data>
   <data name="field.language" xml:space="preserve"><value>Dil</value></data>
   <data name="field.last_name" xml:space="preserve"><value>Soyad</value></data>
   <data name="field.name" xml:space="preserve"><value>Ad</value></data>
@@ -815,10 +862,38 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
 
   <!-- Payroll (senseik-011, F-06): kıdem/ihbar/kullanılmamış izin ücreti tahmini (İşten ayrılış sihirbazı) -->
   <data name="payroll.severance.estimate" xml:space="preserve"><value>Kıdem/ihbar tazminatı tahminini görüntüleme</value></data>
+  <data name="payroll.errors.exit_settlement_line_invalid" xml:space="preserve"><value>Kalem adı zorunludur (en fazla 200 karakter) ve tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.exit_settlement_line_not_found" xml:space="preserve"><value>Çıkış hesabı kalemi bulunamadı.</value></data>
+  <data name="payroll.errors.exit_settlement_line_not_removable" xml:space="preserve"><value>Otomatik hesaplanan kıdem, ihbar ve izin kalemleri silinemez; yalnızca düzenlenebilir.</value></data>
+  <data name="payroll.period.approve" xml:space="preserve"><value>Bordro dönemini onaylama ve ödendi işaretleme</value></data>
+  <data name="payroll.period.lock" xml:space="preserve"><value>Bordro dönemini kilitleme</value></data>
+  <data name="payroll.period.reopen" xml:space="preserve"><value>Bordro dönemini gerekçeyle yeniden açma</value></data>
+  <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>Dönem zaten açık; yeniden açılamaz.</value></data>
+  <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>Yeniden açma gerekçesi zorunludur (en fazla 500 karakter).</value></data>
+  <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Değişen ve yeniden hesaplanmamış bordrolar var; dönemi onaylamadan önce "Değişenleri yeniden hesapla" çalıştırın.</value></data>
+  <data name="payroll.errors.period_approval_needs_different_user" xml:space="preserve"><value>Bordroyu son hesaplayan kişi aynı dönemi onaylayamaz; başka bir yetkili onaylamalı (dört göz kuralı).</value></data>
+  <data name="payroll.errors.receipt_csv_empty" xml:space="preserve"><value>Dekont dosyasında okunabilir bir ödeme satırı bulunamadı; IBAN ve tutar sütunlu bir CSV yükleyin.</value></data>
+  <data name="payroll.errors.closing_check_not_found" xml:space="preserve"><value>Kapanış kontrol maddesi bulunamadı.</value></data>
+  <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>Otomatik kontrol elle tamamlanamaz; kuralı çalıştırın veya gerekçeyle muaf tutun.</value></data>
+  <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>Muafiyet gerekçesi zorunludur (en fazla 500 karakter).</value></data>
+  <data name="payroll.errors.period_has_open_blockers" xml:space="preserve"><value>Engelleyen kapanış kontrolleri tamamlanmadı; kontrol listesinde başarısız veya bekleyen maddeleri giderin ya da gerekçeyle muaf tutun.</value></data>
+  <data name="payroll.errors.comparison_threshold_invalid" xml:space="preserve"><value>Sapma eşiği sıfırdan küçük olamaz.</value></data>
+  <data name="payroll.bankfile.export" xml:space="preserve"><value>Banka ödeme dosyasını indirme</value></data>
+  <data name="payroll.errors.bank_file_period_not_approved" xml:space="preserve"><value>Banka ödeme dosyası yalnızca onaylanmış, ödenmiş veya kilitli dönem için oluşturulur.</value></data>
+  <data name="payroll.errors.bank_file_missing_accounts" xml:space="preserve"><value>Bazı çalışanların birincil banka hesabı (IBAN) yok; dosya oluşturulamadı. Eksik hesapları tamamlayın.</value></data>
+  <data name="payroll.errors.bank_file_no_payments" xml:space="preserve"><value>Dönemde ödenecek net tutarı olan bordro yok.</value></data>
+  <data name="payroll.errors.bank_file_total_mismatch" xml:space="preserve"><value>Dosya toplamı bordro net toplamıyla uyuşmuyor; dosya oluşturulmadı.</value></data>
+  <data name="payroll.adjustment.manage" xml:space="preserve"><value>Bordroya prim/komisyon gibi ek kazanç ekleme</value></data>
+  <data name="payroll.errors.adjustment_invalid" xml:space="preserve"><value>Ek kazanç için ad zorunludur (en fazla 200 karakter) ve tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.adjustment_not_found" xml:space="preserve"><value>Ek kazanç bulunamadı.</value></data>
+  <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Ek kazanç yalnızca açık bir bordro döneminde eklenebilir veya silinebilir.</value></data>
+  <data name="payroll.errors.profile_transport_amount_invalid" xml:space="preserve"><value>Nakit yol yardımı için günlük tutar sıfırdan büyük olmalıdır.</value></data>
+  <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>Bu çalışan için kayıtlı bir çıkış hesabı bulunamadı.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>Tahmin için çalışanın güncel bir maaş kaydı olmalıdır.</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Banka hesabı değişti</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>İzin kaydı değişti</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Girdi verisi hesap sonrası değişmiş (otomatik mutabakat)</value></data>
+  <data name="payroll.exitsettlement.manage" xml:space="preserve"><value>Çıkış hesabı kalemlerini yönetme</value></data>
   <data name="payroll.courtorder.manage" xml:space="preserve"><value>İcra/nafaka kesinti emirlerini yönetme</value></data>
   <data name="payroll.declarations.export" xml:space="preserve"><value>Bordro beyanname/dosyalarını (APHB, banka, muhasebe) indirme</value></data>
   <data name="payroll.errors.garnishment_case_reference_required" xml:space="preserve"><value>Dosya/karar referansı girilmelidir.</value></data>
@@ -1093,6 +1168,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>Avans talebi, onay bekleme durumunda değil.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Tutar sıfırdan büyük olmalıdır.</value></data>
   <data name="expense.advance.amount_too_large" xml:space="preserve"><value>Avans tutarı en fazla 10.000.000 olabilir.</value></data>
+  <data name="expense.advance.date_out_of_range" xml:space="preserve"><value>Avans talep tarihi bugünden en fazla 30 gün öncesi ve 90 gün sonrası olabilir.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Taksit sayısı geçersiz.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>Avans onaylanmadan ödendi olarak işaretlenemez.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>
@@ -1336,9 +1412,15 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="announcement.cannot_publish" xml:space="preserve"><value>Yalnızca taslak duyurular yayınlanabilir.</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>Duyuru zaten arşivlenmiş.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Duyuru bulunamadı.</value></data>
+  <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Yalnızca taslak duyurular düzenlenebilir.</value></data>
+  <data name="announcement_attachment.not_found" xml:space="preserve"><value>Ek bulunamadı.</value></data>
+  <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor.</value></data>
+  <data name="announcement_attachment.too_large" xml:space="preserve"><value>Dosya boyutu izin verilen sınırı aşıyor.</value></data>
+  <data name="announcement_attachment.too_many" xml:space="preserve"><value>Bu duyuruya eklenebilecek azami dosya sayısına ulaşıldı.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Okunma kaydı bulunamadı.</value></data>
   <!-- Şirket etkinlik takvimi (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>Etkinlik takvimini görüntüleme</value></data>
+  <data name="announcements.my.feed" xml:space="preserve"><value>Duyuru akışım</value></data>
   <data name="announcements.events.manage" xml:space="preserve"><value>Etkinlik yönetimi</value></data>
   <data name="company_event.title_required" xml:space="preserve"><value>Etkinlik başlığı gereklidir ve 200 karakteri aşamaz.</value></data>
   <data name="company_event.description_too_long" xml:space="preserve"><value>Etkinlik açıklaması 2000 karakteri aşamaz.</value></data>
@@ -1367,4 +1449,54 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="training.enrollment.prerequisite_not_completed" xml:space="preserve"><value>Bu programa kaydolmadan önce ön koşul eğitimin tamamlanmış olması gerekir.</value></data>
   <data name="training.requirement.self_reference" xml:space="preserve"><value>Bir eğitim programı kendi ön koşulu olamaz.</value></data>
   <data name="training.requirement.not_found" xml:space="preserve"><value>Ön koşul kuralı bulunamadı.</value></data>
+  <data name="training.enrollment.program_not_open" xml:space="preserve"><value>Kapalı ya da arşivlenmiş programa katılımcı eklenemez.</value></data>
+  <data name="training.my.enrollments" xml:space="preserve"><value>Eğitimlerim</value></data>
+  <data name="ohs.hazard_classifications.view" xml:space="preserve"><value>Tehlike sınıflarını görüntüleme</value></data>
+  <data name="ohs.hazard_classifications.manage" xml:space="preserve"><value>Tehlike sınıflarını yönetme</value></data>
+  <data name="ohs.risk_assessments.view" xml:space="preserve"><value>Risk değerlendirmelerini görüntüleme</value></data>
+  <data name="ohs.risk_assessments.manage" xml:space="preserve"><value>Risk değerlendirmelerini yönetme</value></data>
+  <data name="ohs_hazard_classification.not_found" xml:space="preserve"><value>Tehlike sınıfı kaydı bulunamadı.</value></data>
+  <data name="ohs_hazard_classification.invalid" xml:space="preserve"><value>Geçersiz tehlike sınıfı.</value></data>
+  <data name="ohs_hazard_classification.location_required" xml:space="preserve"><value>Lokasyon seçilmelidir.</value></data>
+  <data name="ohs_hazard_classification.effective_date_duplicate" xml:space="preserve"><value>Bu lokasyon için aynı tarihte başlayan bir sınıflandırma zaten var.</value></data>
+  <data name="ohs_risk_assessment.not_found" xml:space="preserve"><value>Risk değerlendirmesi bulunamadı.</value></data>
+  <data name="ohs_risk_assessment.location_required" xml:space="preserve"><value>Lokasyon seçilmelidir.</value></data>
+  <data name="ohs_risk_assessment.hazard_classification_missing" xml:space="preserve"><value>Lokasyonun değerlendirme tarihinde geçerli bir tehlike sınıfı yok; önce tehlike sınıfını tanımlayın.</value></data>
+  <data name="ohs_risk_assessment.prepared_by_required" xml:space="preserve"><value>Hazırlayan kişi/firma zorunludur.</value></data>
+  <data name="ohs.incidents.view" xml:space="preserve"><value>İş kazası ve ramak kala kayıtlarını görüntüleme</value></data>
+  <data name="ohs.incidents.manage" xml:space="preserve"><value>İş kazası ve ramak kala kayıtlarını yönetme</value></data>
+  <data name="ohs.my.incident_reports" xml:space="preserve"><value>Ramak kala bildirimlerim</value></data>
+  <data name="ohs_incident.not_found" xml:space="preserve"><value>İSG olay kaydı bulunamadı.</value></data>
+  <data name="ohs_incident.kind_invalid" xml:space="preserve"><value>Geçersiz olay türü.</value></data>
+  <data name="ohs_incident.date_in_future" xml:space="preserve"><value>Olay tarihi ileri bir tarih olamaz.</value></data>
+  <data name="ohs_incident.description_required" xml:space="preserve"><value>Olay açıklaması zorunludur.</value></data>
+  <data name="ohs_incident.employee_required" xml:space="preserve"><value>İş kazasında kazazede çalışan seçilmelidir.</value></data>
+  <data name="ohs_incident.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı ya da aktif değil.</value></data>
+  <data name="ohs_incident.sgk_deadline_required" xml:space="preserve"><value>İş kazasının SGK bildirim son günü hesaplanamadı.</value></data>
+  <data name="ohs_incident.sgk_not_applicable" xml:space="preserve"><value>SGK bildirimi yalnızca iş kazaları için kaydedilir.</value></data>
+  <data name="ohs_incident.sgk_date_invalid" xml:space="preserve"><value>Bildirim tarihi kaza tarihinden önce ya da ileri bir tarih olamaz.</value></data>
+  <data name="ohs_incident.sgk_not_notified" xml:space="preserve"><value>SGK'ya bildirilmemiş iş kazası kapatılamaz.</value></data>
+  <data name="ohs_incident.corrective_action_required" xml:space="preserve"><value>Kapatmak için düzeltici önlem yazılmalıdır.</value></data>
+  <data name="ohs_incident.already_closed" xml:space="preserve"><value>Olay zaten kapatılmış.</value></data>
+  <data name="ohs_incident.reporter_not_employee" xml:space="preserve"><value>Bildirim için çalışan kaydınız olmalıdır.</value></data>
+  <data name="onboarding.templates.manage" xml:space="preserve"><value>Oryantasyon şablonu yönetimi</value></data>
+  <data name="onboarding.tasks.view" xml:space="preserve"><value>Oryantasyon görevlerini görüntüleme</value></data>
+  <data name="onboarding.tasks.manage" xml:space="preserve"><value>Oryantasyon görevi yönetimi</value></data>
+  <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Görev şablonu bulunamadı.</value></data>
+  <data name="onboarding_task_template.title_required" xml:space="preserve"><value>Görev başlığı zorunludur.</value></data>
+  <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>Görev başlığı 200 karakteri aşamaz.</value></data>
+  <data name="onboarding_task_template.responsible_role_required" xml:space="preserve"><value>Sorumlu seçilmelidir.</value></data>
+  <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Görev bulunamadı.</value></data>
+  <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>Görev zaten tamamlanmış ya da muaf tutulmuş.</value></data>
+  <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>Muaf tutma nedeni zorunludur.</value></data>
+  <data name="ohs.services.view" xml:space="preserve"><value>İSG hizmetlerini görüntüleme</value></data>
+  <data name="ohs.services.manage" xml:space="preserve"><value>İSG hizmetlerini yönetme</value></data>
+  <data name="ohs_assignment.not_found" xml:space="preserve"><value>Kayıt bulunamadı.</value></data>
+  <data name="ohs_assignment.location_required" xml:space="preserve"><value>Lokasyon seçilmelidir.</value></data>
+  <data name="ohs_assignment.person_required" xml:space="preserve"><value>Kişi adı zorunludur.</value></data>
+  <data name="ohs_assignment.minutes_invalid" xml:space="preserve"><value>Aylık süre sıfırdan büyük olmalıdır.</value></data>
+  <data name="ohs_assignment.certificate_required" xml:space="preserve"><value>İş güvenliği uzmanı için belge sınıfı zorunludur.</value></data>
+  <data name="ohs_assignment.already_ended" xml:space="preserve"><value>Kayıt zaten sonlandırılmış.</value></data>
+  <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıçtan önce olamaz.</value></data>
+  <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>Yenileme aralığı 1 ile 3650 gün arasında olmalıdır.</value></data>
 </root>

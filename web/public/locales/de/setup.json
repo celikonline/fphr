@@ -1,0 +1,95 @@
+{
+  "title": "Unternehmenseinrichtung",
+  "subtitle": "Machen Sie das Konto {{company}} in wenigen Schritten startklar. Alles, was Sie hier eingeben, lässt sich später unter Einstellungen ändern.",
+  "preparing": "Ihr Unternehmensbereich wird vorbereitet...",
+  "steps": {
+    "company": "Unternehmensdaten",
+    "calendar": "Kalender und Standort",
+    "structure": "Organisation",
+    "modules": "Module und Benutzer"
+  },
+  "actions": {
+    "back": "Zurück",
+    "next": "Speichern und weiter",
+    "skip": "Diesen Schritt überspringen",
+    "finish": "Einrichtung abschließen",
+    "finishing": "Wird abgeschlossen..."
+  },
+  "errors": {
+    "generic": "Die Aktion konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut.",
+    "load": "Die Informationen konnten nicht geladen werden.",
+    "nameRequired": "Der Unternehmensname ist erforderlich.",
+    "finish": "Die Einrichtung konnte nicht abgeschlossen werden. Bitte versuchen Sie es erneut."
+  },
+  "company": {
+    "heading": "Unternehmensdaten",
+    "description": "Name, Sprache und Arbeitszeiten Ihres Unternehmens. Sie werden für Kalender-, Urlaubs- und Gehaltsberechnungen verwendet.",
+    "name": "Unternehmensname",
+    "taxNumber": "Steuernummer",
+    "locale": "Sprache und Region",
+    "timeZone": "Zeitzone",
+    "address": "Adresse",
+    "city": "Stadt",
+    "country": "Land",
+    "workingDays": "Arbeitstage",
+    "hoursStart": "Arbeitsbeginn",
+    "hoursEnd": "Arbeitsende",
+    "days": {
+      "mon": "Mo",
+      "tue": "Di",
+      "wed": "Mi",
+      "thu": "Do",
+      "fri": "Fr",
+      "sat": "Sa",
+      "sun": "So"
+    },
+    "locales": {
+      "tr-TR": "Türkçe (Türkiye)",
+      "en-US": "English (United States)",
+      "de-DE": "Deutsch (Deutschland)"
+    }
+  },
+  "calendar": {
+    "heading": "Feiertagskalender und erster Standort",
+    "description": "Die türkischen gesetzlichen Feiertage wurden Ihrem Unternehmen bereits hinzugefügt. Wählen Sie bei Bedarf einen anderen Kalender und fügen Sie Ihre Zentrale hinzu.",
+    "calendarLabel": "Feiertagskalender",
+    "calendarNone": "Kein Kalender zugewiesen",
+    "locationHeading": "Hauptstandort",
+    "locationExists": "Ihr Unternehmen hat bereits {{count}} Standort(e); weitere fügen Sie unter Einstellungen > Standorte hinzu.",
+    "locationName": "Standortname",
+    "locationType": "Standorttyp",
+    "locationCountry": "Ländercode",
+    "locationAddress": "Adresse",
+    "locationHint": "Leer lassen, um keinen Standort anzulegen.",
+    "types": {
+      "office": "Büro",
+      "store": "Filiale",
+      "warehouse": "Lager",
+      "factory": "Fabrik",
+      "remote": "Remote"
+    }
+  },
+  "structure": {
+    "heading": "Organisationsstruktur",
+    "description": "Fügen Sie die Abteilungen Ihres Unternehmens hinzu. Untereinheiten und Führungskräfte bearbeiten Sie später unter Einstellungen > Unternehmensstruktur.",
+    "existing": "Vorhandene Abteilungen",
+    "departmentsLabel": "Neue Abteilungen",
+    "departmentsHint": "Schreiben Sie pro Zeile einen Abteilungsnamen.",
+    "departmentsPlaceholder": "Personalwesen\nFinanzen\nVertrieb",
+    "noDepartmentType": "Der Einheitentyp Abteilung wurde nicht gefunden; überspringen Sie diesen Schritt und ergänzen Sie sie unter Einstellungen."
+  },
+  "modules": {
+    "heading": "Module und Benutzer",
+    "description": "Deaktivieren Sie Module, die Sie nicht nutzen, und laden Sie Ihre ersten Teammitglieder ein.",
+    "modulesHeading": "Optionale Module",
+    "usersHeading": "Benutzer einladen",
+    "usersDescription": "Die eingeladene Person legt ihr Passwort über den Link in der E-Mail selbst fest.",
+    "email": "E-Mail",
+    "firstName": "Vorname",
+    "lastName": "Nachname",
+    "role": "Rolle",
+    "invite": "Einladung senden",
+    "invited": "Einladung gesendet: {{email}}",
+    "invalid": "Geben Sie Vor- und Nachnamen, eine gültige E-Mail-Adresse ein und wählen Sie eine Rolle."
+  }
+}

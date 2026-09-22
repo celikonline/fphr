@@ -131,6 +131,11 @@ function renderDialog(type: LeaveRequestTypeOption, editing: LeaveRequest | null
   return { save, loadDetail };
 }
 
+/** Mantine's `FileInput` keeps the native control hidden behind its button-styled field. */
+function fileInput(): HTMLInputElement {
+  return document.querySelector<HTMLInputElement>('input[type="file"]')!;
+}
+
 async function fillDates(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("leave-start"), "2026-10-05");
   await user.type(screen.getByLabelText("leave-end"), "2026-10-05");
@@ -141,6 +146,12 @@ describe("LeaveRequestDialog document (denetim A5-belge)", () => {
     renderDialog(typeOption({ requiresDocument: true }));
 
     expect(screen.getByLabelText("Belge")).toBeTruthy();
+  });
+
+  it("renders the themed Mantine file input rather than a bare native control", () => {
+    renderDialog(typeOption({ requiresDocument: true }));
+
+    expect(screen.getByText(trLeave.form.documentPlaceholder)).toBeTruthy();
   });
 
   it("hides the upload section for an ordinary type", () => {
@@ -166,7 +177,7 @@ describe("LeaveRequestDialog document (denetim A5-belge)", () => {
     const { save } = renderDialog(typeOption({ requiresDocument: true }));
     await fillDates(user);
 
-    await user.upload(screen.getByLabelText("Belge"), new File(["bytes"], "rapor.pdf", { type: "application/pdf" }));
+    await user.upload(fileInput(), new File(["bytes"], "rapor.pdf", { type: "application/pdf" }));
     await waitFor(() => expect(screen.getByText("rapor.pdf")).toBeTruthy());
     expect(mockedUpload).toHaveBeenCalledWith(expect.any(File), "documents", "me");
 

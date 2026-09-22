@@ -7,10 +7,12 @@ using Sense.Modules.Attendance.Contracts;
 using Sense.Modules.Attendance.Domain;
 using Sense.Modules.Attendance.Infrastructure;
 using Sense.Modules.Attendance.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Import;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Attendance.Api;
 
@@ -30,7 +32,12 @@ public sealed class AttendanceModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<AttendanceDbContext>(configuration, AttendanceDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates (monthly timesheet approvals) - same wiring as LeaveModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<AttendanceDbContext>(
+            configuration, AttendanceDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<AttendanceDbContext>>();
         services.AddModuleHandlers(
             AttendanceDbContext.SchemaName,
             typeof(AttendanceErrors).Assembly,

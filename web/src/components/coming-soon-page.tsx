@@ -17,7 +17,7 @@ export default function ComingSoonPage({ titleKey, phase, itemKeys }: ComingSoon
   const { t } = useTranslation(["navigation", "common"]);
 
   return (
-    <div className="mx-auto max-w-3xl p-6 md:p-10">
+    <div className="max-w-3xl p-6 md:p-10">
       <Card withBorder padding="xl">
         <Stack align="center" gap="md">
           <ThemeIcon size={48} radius="xl" variant="light" color="gray">

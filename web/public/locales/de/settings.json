@@ -1,12 +1,17 @@
 {
   "hub": {
     "title": "Einstellungen",
-    "subtitle": "Unternehmensdaten, Regeln, Systemeinstellungen und Datentransfer."
+    "subtitle": "Einstellungen nach Gruppen durchsuchen oder suchen.",
+    "searchPlaceholder": "Einstellungen suchen (z. B. Urlaub, Rolle, Dokument)",
+    "searchLabel": "Einstellungen suchen",
+    "noResults": "Keine Einstellungen für „{{query}}“ gefunden.",
+    "resultCount": "{{count}} Einstellungen gefunden",
+    "columns": "Spaltenanzahl"
   },
   "access": {
     "title": "Zugriffseinstellungen",
     "subtitle": "Legen Sie fest, was Mitarbeitende auf ihrer Startseite, in ihrem Konto und im Kalender sehen.",
-    "scopeNotice": "Zugriffseinstellungen schränken nur Benutzer mit der Zugriffsart „Mitarbeitende:r“ ein; Kontoinhaber:innen, Administrator:innen und HR-Benutzer sind nicht betroffen. Änderungen werden unmittelbar nach dem Speichern wirksam.",
+    "scopeNotice": "Zugriffseinstellungen schränken nur Benutzer der Gruppe „Mitarbeiter“ ein; Benutzer der Gruppen „HR-Leitung“ und „Buchhaltung“ sind nicht betroffen. Änderungen werden unmittelbar nach dem Speichern wirksam.",
     "readOnly": "Sie können die Zugriffseinstellungen einsehen, aber nicht ändern.",
     "loadError": "Die Zugriffseinstellungen konnten nicht geladen werden.",
     "saveSuccess": "Zugriffseinstellungen gespeichert.",
@@ -310,7 +315,9 @@
       "assets": "Inventar",
       "performance": "Leistung",
       "announcements": "Ankündigungen & Firmenkalender",
-      "occupationalSafety": "Arbeitsschutz"
+      "occupationalSafety": "Arbeitsschutz",
+      "training": "Schulungen",
+      "onboarding": "On- und Offboarding"
     },
     "descriptions": {
       "identity": "Benutzer, Rollen, Berechtigungen und Anmeldung",
@@ -331,7 +338,9 @@
       "assets": "Inventarzuweisungen und Kategorien",
       "performance": "Ziele und Beurteilungszyklen",
       "announcements": "Ankündigungen und Firmen-Veranstaltungskalender",
-      "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen"
+      "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen",
+      "training": "Schulungsprogramme, Teilnahmen und Pflichtschulungen",
+      "onboarding": "Checklisten und Vorlagen für Eintritt und Austritt"
     }
   }
 }

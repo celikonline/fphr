@@ -48,6 +48,9 @@ public sealed class TerminateEmployeeValidator : AbstractValidator<TerminateEmpl
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.TerminationReasonId).NotEmpty();
+        RuleFor(x => x.TerminationDate)
+            .Must(date => EmployeeDateRules.CheckTerminationDate(date, DateOnly.FromDateTime(DateTime.UtcNow)) is null)
+            .WithMessage(EmployeeDomainErrors.TerminationDateTooFarInFuture);
         RuleFor(x => x.TerminationType).IsInEnum().When(x => x.TerminationType is not null);
 
         // Catches the case where the caller overrides both fields inconsistently. This is a partial check only -

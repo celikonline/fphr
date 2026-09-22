@@ -286,7 +286,7 @@ export default function CareerJobPostingPage() {
       document.title = `${postingQuery.data.title} · ${t("recruitment:career.list.pageTitleSuffix")}`;
     }
     return () => {
-      document.title = "SenseİK - İK Platformu";
+      document.title = "SenseHR - İK Platformu";
     };
   }, [postingQuery.data?.title, t]);
 

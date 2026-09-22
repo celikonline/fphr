@@ -16,7 +16,7 @@
   "unknownUnit": "Unbekannte Einheit",
   "unknownEmployee": "Unbekannte:r Mitarbeitende:r",
   "noUnit": "Keine Einheit",
-  "phase": "Phase {{phase}}",
+  "phase": "Demnächst",
   "create": {
     "button": "Neue:n Mitarbeitende:n hinzufügen",
     "title": "Neue:n Mitarbeitende:n hinzufügen",
@@ -63,9 +63,9 @@
     "disabled": "Deaktiviert"
   },
   "accessType": {
-    "Employee": "Mitarbeitende:r",
-    "Owner": "Kontoinhaber:in",
-    "Admin": "Administrator:in"
+    "HR": "HR-Leitung",
+    "PayrollSpecialist": "Buchhaltung",
+    "Employee": "Mitarbeiter"
   },
   "fields": {
     "firstName": "Vorname",
@@ -80,7 +80,7 @@
     "manager": "Führungskraft",
     "accountStatus": "Kontostatus",
     "lastInvitationSentAt": "Letzte Einladung gesendet",
-    "accessType": "Zugriffsart",
+    "accessType": "Benutzergruppe",
     "contractType": "Vertragsart",
     "employmentType": "Beschäftigungsart",
     "gender": "Geschlecht",
@@ -328,18 +328,19 @@
     "statusLabel": "Mitarbeitende:r",
     "accountStatusLabel": "Konto",
     "sections": {
-      "general": "Allgemein",
+      "general": "Profil",
       "personal": "Persönliche Daten",
       "career": "Karriere",
       "customFields": "Benutzerdefinierte Felder",
       "account": "Konto"
     },
     "tabs": {
-      "general": "Allgemein",
+      "general": "Profil",
       "personal": "Persönliche Daten",
       "customFields": "Benutzerdefinierte Felder",
       "career": "Karriere",
       "payments": "Zahlungen",
+      "payroll": "Lohn",
       "documents": "Dateien",
       "assets": "Arbeitsmittel",
       "leave": "Urlaub",
@@ -350,13 +351,52 @@
     "tabNotes": {
       "leave": "Urlaubssalden und -anträge erscheinen hier, sobald das Urlaubsmodul verfügbar ist.",
       "overtime": "Überstundeneinträge und -anträge erscheinen hier, sobald das Urlaubs-/Überstundenmodul verfügbar ist.",
-      "other": "Schulungen werden in späteren Phasen in diesem Tab ergänzt."
+      "other": "Schulungsnachweise sind in diesem Tab noch nicht verfügbar."
+    },
+    "other": {
+      "training": {
+        "title": "Schulungsnachweise",
+        "badge": "Demnächst",
+        "emptyTitle": "Noch keine Schulungsnachweise"
+      },
+      "shortcuts": {
+        "title": "Weitere Einträge",
+        "assets": "Dem Mitarbeiter zugewiesene Ausstattung",
+        "documents": "Personalakten und Dokumente"
+      }
     },
     "noAccountHint": "Diese Person hat noch kein Benutzerkonto. Senden Sie über das Drei-Punkte-Menü eine Einladung, um eines anzulegen.",
-    "accessTypeHint": "Nur Kontoinhaber:innen können die Rolle „Kontoinhaber:in“ vergeben oder entziehen.",
-    "accessTypeSaved": "Zugriffsart aktualisiert.",
+    "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
+    "accessTypeSaved": "Benutzergruppe aktualisiert.",
     "sensitiveHidden": "Sie haben keine Berechtigung, Wehrdienststatus, Grad der Behinderung oder Blutgruppe einzusehen.",
-    "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später."
+    "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später.",
+    "copy": "Kopieren",
+    "tenure": {
+      "years": "{{count}} J.",
+      "months": "{{count}} Mon.",
+      "days": "{{count}} T."
+    },
+    "profile": {
+      "tenure": "Betriebszugehörigkeit",
+      "company": "Unternehmen",
+      "department": "Abteilung",
+      "title": "Position",
+      "terminationDate": "Ausgeschieden am"
+    },
+    "groups": {
+      "manager": "Vorgesetzte(r)",
+      "contact": "Kontakt",
+      "access": "Zugang",
+      "citizenship": "Staatsangehörigkeit",
+      "education": "Bildung",
+      "address": "Adresse",
+      "personalContact": "Kontakt (privat)"
+    },
+    "completion": {
+      "title": "Vollständigkeit der Akte",
+      "completed": "Erledigt",
+      "remaining": "Offen"
+    }
   },
   "invite": {
     "send": "Einladung senden",
@@ -615,6 +655,139 @@
       "success": "Die Person wurde wiedereingestellt. Die Urlaubsansparung beginnt am {{date}}."
     }
   },
+  "payrollTab": {
+    "profile": {
+      "title": "Lohnprofil",
+      "empty": "Für diese Person gibt es kein Lohnprofil.",
+      "validFrom": "Gültig ab",
+      "wageBasis": "Entgeltbasis",
+      "sgkStatus": "SV-Status",
+      "incentive": "Förderungsgesetz-Code",
+      "meal": "Verpflegungszuschuss",
+      "transport": "Fahrtkostenzuschuss",
+      "paymentMethod": "Zahlungsweise",
+      "sickDays": "Krankheitstage mindern das Entgelt",
+      "externalCode": "Externer Lohncode",
+      "notes": "Notizen",
+      "yes": "Ja",
+      "no": "Nein",
+      "mealDaily": "{{amount}} / Tag"
+    },
+    "payslips": {
+      "title": "Lohnabrechnungen",
+      "empty": "Für diese Person wurde noch keine Abrechnung berechnet.",
+      "columns": {
+        "period": "Zeitraum",
+        "status": "Status",
+        "gross": "Brutto",
+        "net": "Netto",
+        "employerCost": "Arbeitgeberkosten"
+      },
+      "download": "Herunterladen",
+      "downloadError": "Die Lohnabrechnung konnte nicht heruntergeladen werden."
+    },
+    "garnishments": {
+      "title": "Pfändungen und Unterhalt",
+      "empty": "Keine Abzugsanordnungen erfasst.",
+      "columns": {
+        "type": "Art",
+        "case": "Aktenzeichen",
+        "installment": "Monatsrate",
+        "remaining": "Restschuld",
+        "start": "Beginn",
+        "status": "Status"
+      },
+      "open": "Offen",
+      "closed": "Geschlossen"
+    },
+    "enum": {
+      "wageBasis": {
+        "monthly": "Monatlich",
+        "daily": "Täglich",
+        "weekly": "Wöchentlich",
+        "hourly": "Stündlich",
+        "yearly": "Jährlich"
+      },
+      "sgkStatus": {
+        "normal": "Normal",
+        "retired": "Rentner",
+        "intern": "Praktikant",
+        "apprentice": "Auszubildender",
+        "foreign": "Ausländer"
+      },
+      "meal": {
+        "none": "Keiner",
+        "cash": "Bar",
+        "inKind": "Sachleistung",
+        "mealCardOnly": "Essenskarte",
+        "mealAndMarketCard": "Essens- + Marktkarte"
+      },
+      "transport": {
+        "none": "Keiner",
+        "cash": "Bar",
+        "card": "Karte",
+        "shuttle": "Shuttle"
+      },
+      "paymentMethod": {
+        "bank": "Bank",
+        "cash": "Bar"
+      },
+      "periodStatus": {
+        "open": "Offen",
+        "approved": "Genehmigt",
+        "paid": "Bezahlt",
+        "locked": "Gesperrt"
+      },
+      "garnishmentType": {
+        "icra": "Vollstreckung",
+        "nafaka": "Unterhalt"
+      }
+    }
+  },
+  "exitSettlement": {
+    "title": "Austrittsabrechnung",
+    "hint": "Beim Austritt berechnete Beträge und später hinzugefügte Positionen. Abfindung, Kündigungsentschädigung und Urlaub werden beim Austritt festgeschrieben.",
+    "terminationDate": "Austrittsdatum",
+    "columns": {
+      "item": "Position",
+      "gross": "Brutto",
+      "sgk": "SV + Arbeitslosenvers.",
+      "incomeTax": "Einkommensteuer",
+      "stampTax": "Stempelsteuer",
+      "net": "Netto"
+    },
+    "totalRow": "Summe",
+    "kinds": {
+      "severance": "Abfindung",
+      "notice": "Kündigungsentschädigung",
+      "unusedLeave": "Urlaubsabgeltung",
+      "mutualRescissionPay": "Aufhebungsvergütung",
+      "extraPayment": "Zusatzzahlung",
+      "finalMonthWage": "Gehalt des Austrittsmonats",
+      "other": "Sonstiges"
+    },
+    "addLine": "Position hinzufügen",
+    "edit": "Bearbeiten",
+    "remove": "Löschen",
+    "recalculate": "Neu berechnen",
+    "netPending": "Der Nettobetrag konnte nicht berechnet werden (evtl. fehlt ein Gesetzesparameter). Bitte neu berechnen.",
+    "estimateNote": "Die Abzüge sind eine Schätzung; die steuerliche und sozialversicherungsrechtliche Behandlung hängt vom Vertrag ab. Vor der Auszahlung mit dem Steuerberater klären.",
+    "removeConfirm": "Diese Position löschen?",
+    "success": "Austrittsabrechnung aktualisiert.",
+    "dialog": {
+      "titleAdd": "Position hinzufügen",
+      "titleEdit": "Position bearbeiten",
+      "kind": "Positionsart",
+      "label": "Bezeichnung",
+      "grossAmount": "Bruttobetrag",
+      "taxes": "Abzüge anwenden?",
+      "sgkSubject": "SV- und Arbeitslosenbeitrag",
+      "incomeTaxSubject": "Einkommensteuer",
+      "stampTaxSubject": "Stempelsteuer",
+      "save": "Speichern",
+      "cancel": "Abbrechen"
+    }
+  },
   "employmentPeriods": {
     "title": "Beschäftigungszeiträume",
     "empty": "Keine Beschäftigungszeiträume erfasst.",
@@ -636,5 +809,17 @@
       "days": "{{count}} Tage",
       "since": "seit {{date}}"
     }
+  },
+  "photo": {
+    "change": "Foto ändern",
+    "upload": "Foto hochladen",
+    "remove": "Foto entfernen",
+    "uploaded": "Foto aktualisiert.",
+    "removed": "Foto entfernt.",
+    "failed": "Die Foto-Aktion konnte nicht abgeschlossen werden."
+  },
+  "workCertificate": {
+    "download": "Arbeitsbescheinigung (PDF)",
+    "failed": "Die Arbeitsbescheinigung konnte nicht heruntergeladen werden."
   }
 }

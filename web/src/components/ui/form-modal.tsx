@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal } from "@mantine/core";
 
 /**
@@ -16,5 +17,6 @@ import { Modal } from "@mantine/core";
  * multi-field forms, not yes/no prompts.
  */
 export function FormModal(props: ComponentProps<typeof Modal>) {
-  return <Modal {...props} styles={{ inner: { justifyContent: "flex-start" } }} />;
+  const { t } = useTranslation("common");
+  return <Modal closeButtonProps={{ "aria-label": t("close") }} {...props} styles={{ inner: { justifyContent: "flex-start" } }} />;
 }

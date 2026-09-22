@@ -45,6 +45,33 @@ public sealed class Announcement : TenantAggregateRoot<Guid>, IAuditLogged
         };
     }
 
+    /// <summary>Taslak duyuruyu düzenle (tam sayfa editör: başlık/zengin içerik/tür/öncelik/hedef kitle). Yayınlanmış
+    /// bir duyuru artık okuyanlarca görülmüş sayılır; düzenleme yalnızca taslak durumdayken serbesttir.</summary>
+    public Result Update(string title, string content, AnnouncementType type, AnnouncementPriority priority, string? targetAudience = null)
+    {
+        if (Status != AnnouncementStatus.Draft)
+        {
+            return Error.Conflict(AnnouncementDomainErrors.CannotEditPublished);
+        }
+
+        if (string.IsNullOrWhiteSpace(title) || title.Length > 200)
+        {
+            return Error.Validation(AnnouncementDomainErrors.TitleRequired);
+        }
+
+        if (string.IsNullOrWhiteSpace(content) || content.Length > AnnouncementsLimits.ContentMaxLength)
+        {
+            return Error.Validation(AnnouncementDomainErrors.ContentRequired);
+        }
+
+        Title = title.Trim();
+        Content = content.Trim();
+        Type = type;
+        Priority = priority;
+        TargetAudience = targetAudience;
+        return Result.Success();
+    }
+
     /// <summary>Taslak duyuruyu yayınla.</summary>
     public Result Publish(Guid publishedBy, DateTime? expiresAt = null)
     {

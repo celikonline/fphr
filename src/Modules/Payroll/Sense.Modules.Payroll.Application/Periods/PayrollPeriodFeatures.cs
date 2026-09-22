@@ -150,7 +150,7 @@ public sealed class OpenPayrollPeriodHandler(ITenantContext tenant, IPayrollPeri
 public sealed record RecalculateAllPayslipsCommand(Guid PeriodId) : ICommand<PayrollPeriodRunSummary>;
 
 public sealed class RecalculateAllPayslipsHandler(
-    ITenantContext tenant, IPayrollPeriodRepository periods, IEmployeeDirectory employeeDirectory, PayrollPeriodCalculationService calculation)
+    ITenantContext tenant, ICurrentUser currentUser, IPayrollPeriodRepository periods, IEmployeeDirectory employeeDirectory, PayrollPeriodCalculationService calculation)
     : ICommandHandler<RecalculateAllPayslipsCommand, PayrollPeriodRunSummary>
 {
     public async Task<Result<PayrollPeriodRunSummary>> Handle(RecalculateAllPayslipsCommand command, CancellationToken cancellationToken)
@@ -172,7 +172,9 @@ public sealed class RecalculateAllPayslipsHandler(
         var employeeIds = await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(tenant.TenantId, periodStart, periodEnd, cancellationToken);
         try
         {
-            return await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+            var summary = await calculation.RecalculateAllAsync(period, employeeIds, cancellationToken);
+            period.RecordCalculatedBy(currentUser.UserId);
+            return summary;
         }
         catch (LegislationParameterMissingException ex)
         {
@@ -181,12 +183,72 @@ public sealed class RecalculateAllPayslipsHandler(
     }
 }
 
+/// <summary>One employee's figures in the deneme bordrosu, with the name.</summary>
+public sealed record PayrollPreviewLineDto(Guid EmployeeId, string EmployeeName, decimal Gross, decimal Net, decimal EmployerCost);
+
+/// <summary>Deneme bordrosu result: nothing is stored; totals cover only the calculated employees.</summary>
+public sealed record PayrollPreviewDto(
+    int CalculatedCount, int SkippedCount, decimal TotalGross, decimal TotalNet, decimal TotalEmployerCost,
+    IReadOnlyList<PayrollPreviewLineDto> Lines, IReadOnlyList<PayrollSkippedEmployee> Skipped, IReadOnlyList<PayrollWarning> Warnings);
+
+/// <summary>"Deneme bordrosu": runs the full calculation for an Open period without saving payslips, so figures can be reviewed first.</summary>
+[RequiresPermission("payroll.period.recalculate")]
+public sealed record PreviewPayrollPeriodQuery(Guid PeriodId) : IQuery<PayrollPreviewDto>;
+
+public sealed class PreviewPayrollPeriodHandler(
+    ITenantContext tenant, IPayrollPeriodRepository periods, IEmployeeDirectory employeeDirectory, PayrollPeriodCalculationService calculation)
+    : IQueryHandler<PreviewPayrollPeriodQuery, PayrollPreviewDto>
+{
+    public async Task<Result<PayrollPreviewDto>> Handle(PreviewPayrollPeriodQuery query, CancellationToken cancellationToken)
+    {
+        var period = await periods.FindByIdAsync(query.PeriodId, cancellationToken);
+        if (period is null)
+        {
+            return Error.NotFound(PayrollDomainErrors.PeriodNotFound);
+        }
+
+        if (period.Status != PayrollPeriodStatus.Open)
+        {
+            return Error.Validation(PayrollDomainErrors.PeriodNotOpen);
+        }
+
+        var periodStart = new DateOnly(period.Year, period.Month, 1);
+        var periodEnd = new DateOnly(period.Year, period.Month, DateTime.DaysInMonth(period.Year, period.Month));
+        var employeeIds = await employeeDirectory.ListPayrollCandidateEmployeeIdsAsync(tenant.TenantId, periodStart, periodEnd, cancellationToken);
+        PayrollPreviewResult result;
+        try
+        {
+            result = await calculation.PreviewAsync(period, employeeIds, cancellationToken);
+        }
+        catch (LegislationParameterMissingException ex)
+        {
+            return LegislationMissingError.From(ex);
+        }
+
+        var contacts = (await employeeDirectory.GetContactsAsync(tenant.TenantId, result.Lines.Select(l => l.EmployeeId).ToList(), cancellationToken))
+            .ToDictionary(c => c.EmployeeId);
+        IReadOnlyList<PayrollPreviewLineDto> lines = result.Lines
+            .Select(l =>
+            {
+                var contact = contacts.GetValueOrDefault(l.EmployeeId);
+                var name = contact is null ? l.EmployeeId.ToString() : $"{contact.FirstName} {contact.LastName}".Trim();
+                return new PayrollPreviewLineDto(l.EmployeeId, name, l.Gross, l.Net, l.EmployerCost);
+            })
+            .OrderBy(l => l.EmployeeName, StringComparer.CurrentCultureIgnoreCase)
+            .ToList();
+        return new PayrollPreviewDto(
+            result.Summary.CalculatedCount, result.Summary.SkippedCount,
+            lines.Sum(l => l.Gross), lines.Sum(l => l.Net), lines.Sum(l => l.EmployerCost),
+            lines, result.Summary.Skipped, result.Summary.Warnings);
+    }
+}
+
 /// <summary>Recalculates only employees with an active dirty flag in this period ("Değişenleri yeniden hesapla", akış
 /// §3). Same Open-period restriction as <see cref="RecalculateAllPayslipsCommand"/>.</summary>
 [RequiresPermission("payroll.period.recalculate")]
 public sealed record RecalculateDirtyPayslipsCommand(Guid PeriodId) : ICommand<PayrollPeriodRunSummary>;
 
-public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository periods, PayrollPeriodCalculationService calculation)
+public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository periods, PayrollPeriodCalculationService calculation, ICurrentUser currentUser)
     : ICommandHandler<RecalculateDirtyPayslipsCommand, PayrollPeriodRunSummary>
 {
     public async Task<Result<PayrollPeriodRunSummary>> Handle(RecalculateDirtyPayslipsCommand command, CancellationToken cancellationToken)
@@ -204,7 +266,9 @@ public sealed class RecalculateDirtyPayslipsHandler(IPayrollPeriodRepository per
 
         try
         {
-            return await calculation.RecalculateDirtyAsync(period, cancellationToken);
+            var summary = await calculation.RecalculateDirtyAsync(period, cancellationToken);
+            period.RecordCalculatedBy(currentUser.UserId);
+            return summary;
         }
         catch (LegislationParameterMissingException ex)
         {

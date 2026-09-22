@@ -41,5 +41,9 @@
   "regenerateCode": "Code erneuern",
   "regenerateSuccess": "QR-Code erneuert; das alte gedruckte Poster funktioniert nicht mehr.",
   "regenerateConfirmTitle": "QR-Code erneuern?",
-  "regenerateConfirmDescription": "Der QR-Code von \"{{name}}\" wird erneuert. Das aktuell ausgehängte Poster wird sofort ungültig; der neue Code muss neu gedruckt werden."
+  "regenerateConfirmDescription": "Der QR-Code von \"{{name}}\" wird erneuert. Das aktuell ausgehängte Poster wird sofort ungültig; der neue Code muss neu gedruckt werden.",
+  "showQr": "QR anzeigen / drucken",
+  "qrPosterTitle": "QR-Poster",
+  "print": "Drucken",
+  "qrPosterInstruction": "Scannen Sie diesen QR-Code mit der SenseİK-App, um ein- oder auszustempeln."
 }

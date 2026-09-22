@@ -17,6 +17,9 @@ public static class TrainingErrors
 
     public static readonly Error DuplicateEnrollment = Error.Conflict("training.enrollment.duplicate");
 
+    /// <summary>Kapalı ya da arşivlenmiş programa yeni katılımcı eklenemez.</summary>
+    public static readonly Error ProgramNotOpen = Error.Conflict("training.enrollment.program_not_open");
+
     /// <summary>A training program cannot be its own prerequisite.</summary>
     public static readonly Error RequirementSelfReference = Error.Validation("training.requirement.self_reference");
 

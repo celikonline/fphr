@@ -231,3 +231,17 @@ public sealed class SubcontractorRepository(EmployeeDbContext context) : ISubcon
             .ToDictionaryAsync(s => s.Id, s => s.Name, cancellationToken);
     }
 }
+
+/// <summary>EF Core-backed employee photo repository (tenant isolation via ModuleDbContext's global query filter).</summary>
+public sealed class EmployeePhotoRepository(EmployeeDbContext context) : IEmployeePhotoRepository
+{
+    public void Add(EmployeePhoto photo) => context.EmployeePhotos.Add(photo);
+
+    public void Remove(EmployeePhoto photo) => context.EmployeePhotos.Remove(photo);
+
+    public Task<EmployeePhoto?> GetTrackedAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        context.EmployeePhotos.FirstOrDefaultAsync(p => p.Id == employeeId, cancellationToken);
+
+    public Task<EmployeePhoto?> GetAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        context.EmployeePhotos.AsNoTracking().FirstOrDefaultAsync(p => p.Id == employeeId, cancellationToken);
+}

@@ -67,7 +67,7 @@ public sealed class WorkPermitDocumentRequirementTests
                 new EmployeeDocumentEligibilitySignals(IsUnder18: false, HasDisability: false, IsUndergroundWorker: false, IsForeignNational: isForeignNational)));
 
         var provisioning = new DocumentTypeProvisioningService(types);
-        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation());
+        var materialization = new DocumentRequirementMaterializationService(types, requirements, eligibility, AssetLookup(), IncentiveLookup(), provisioning, Legislation(), NSubstitute.Substitute.For<Sense.Modules.OccupationalSafety.Contracts.IOhsProfileLookup>());
         return (types, requirements, materialization);
     }
 

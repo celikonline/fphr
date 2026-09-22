@@ -8,6 +8,7 @@ using Sense.Modules.Documents.Domain.VisaDocuments;
 using Sense.Modules.Documents.Infrastructure.Persistence.Visa;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Documents.Infrastructure.Persistence;
 
@@ -35,8 +36,12 @@ public sealed class DocumentsDbContext(DbContextOptions<DocumentsDbContext> opti
 
     public DbSet<VisaSettings> VisaSettings => Set<VisaSettings>();
 
+    /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
         base.OnModelCreating(modelBuilder);
 
         // Visa documents configurations

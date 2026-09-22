@@ -2,6 +2,9 @@ import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
 import HttpBackend from "i18next-http-backend";
+import { applyDocumentLang } from "@/lib/document-lang";
+
+i18n.on("languageChanged", (language) => applyDocumentLang(language));
 
 i18n
   .use(HttpBackend)
@@ -42,7 +45,12 @@ i18n
       "payroll",
       "support",
       "companyCalendar",
+      "announcements",
+      "training",
+      "onboarding",
       "ohs",
+      "platform",
+      "setup",
     ],
     interpolation: {
       escapeValue: false,

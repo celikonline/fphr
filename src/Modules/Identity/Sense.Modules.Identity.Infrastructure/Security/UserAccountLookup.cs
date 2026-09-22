@@ -10,7 +10,7 @@ namespace Sense.Modules.Identity.Infrastructure.Security;
 /// <summary>Identity.Contracts.IUserAccountLookup: kullanıcı durumu + erişim tipi (sistem rolü) + son davet zamanı.</summary>
 public sealed class UserAccountLookup(IdentityDbContext db) : IUserAccountLookup
 {
-    private static readonly string[] AccessTypePrecedence = [SystemRoleCodes.Owner, SystemRoleCodes.Admin, SystemRoleCodes.Employee];
+    private static readonly string[] AccessTypePrecedence = [.. SystemRoleCodes.UserGroups];
 
     public async Task<IReadOnlyDictionary<Guid, UserAccountInfo>> GetAsync(Guid tenantId, IReadOnlyCollection<Guid> userIds, CancellationToken ct = default)
     {

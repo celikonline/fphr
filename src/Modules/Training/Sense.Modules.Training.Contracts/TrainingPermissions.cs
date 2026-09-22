@@ -19,6 +19,10 @@ public static class TrainingPermissions
     public static readonly Permission ManageEnrollments = new(
         "training.enrollments.manage", Module, "Katılım Yönetimi", Group, "Katılım kaydı oluşturma, güncelleme ve tamamlama işaretleme");
 
+    /// <summary>"Eğitimlerim": kendi katılım kayıtlarını görme; "*.my.*" deseniyle her temel role otomatik ulaşır.</summary>
+    public static readonly Permission MyEnrollments = new(
+        "training.my.enrollments", Module, "Eğitimlerim", Group, "Kendi eğitim kayıtlarını ve sertifikalarını görüntüleme");
+
     public static IEnumerable<Permission> All =>
-        [ViewPrograms, ManagePrograms, ViewEnrollments, ManageEnrollments];
+        [ViewPrograms, ManagePrograms, ViewEnrollments, ManageEnrollments, MyEnrollments];
 }

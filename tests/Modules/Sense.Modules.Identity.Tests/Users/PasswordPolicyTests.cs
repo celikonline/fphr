@@ -68,11 +68,29 @@ public sealed class PasswordPolicyTests
             .Errors.Select(e => e.ErrorMessage).ShouldBe([IdentityErrors.PasswordTooShort]);
 
     [Fact]
-    public void RegisterTenantValidator_RejectsPasswordContainingOwnerEmailLocalPart()
+    public void CreateTenantValidator_RejectsPasswordContainingOwnerEmailLocalPart()
     {
-        var validator = new RegisterTenantValidator(Options.Create(new IdentityOptions()));
-        var command = new RegisterTenantCommand("Acme", "acme", "kerem.aydin@acme.test", "Kerem", "Aydin", "Kerem.Aydin-2026x", null, null);
+        var validator = new CreateTenantValidator(Options.Create(new IdentityOptions()));
+        var command = new CreateTenantCommand("Acme", "acme", "kerem.aydin@acme.test", "Kerem", "Aydin", TenantOwnerMode.Password, "Kerem.Aydin-2026x", null, null);
 
         validator.Validate(command).Errors.ShouldContain(e => e.ErrorMessage == IdentityErrors.PasswordTooWeak);
+    }
+
+    [Fact]
+    public void CreateTenantValidator_InviteMode_DoesNotRequirePassword()
+    {
+        var validator = new CreateTenantValidator(Options.Create(new IdentityOptions()));
+        var command = new CreateTenantCommand("Acme", "acme", "kerem@acme.test", "Kerem", "Aydin", TenantOwnerMode.Invite, null, null, null);
+
+        validator.Validate(command).IsValid.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void CreateTenantValidator_PasswordMode_RequiresPassword()
+    {
+        var validator = new CreateTenantValidator(Options.Create(new IdentityOptions()));
+        var command = new CreateTenantCommand("Acme", "acme", "kerem@acme.test", "Kerem", "Aydin", TenantOwnerMode.Password, null, null, null);
+
+        validator.Validate(command).Errors.ShouldContain(e => e.ErrorMessage == IdentityErrors.TenantOwnerPasswordRequired);
     }
 }

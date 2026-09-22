@@ -1,0 +1,81 @@
+{
+  "title": "Eğitim",
+  "tabs": {
+    "programs": "Programlar",
+    "mine": "Eğitimlerim"
+  },
+  "loadError": "Eğitim bilgileri yüklenemedi.",
+  "actionFailed": "İşlem tamamlanamadı.",
+  "mine": {
+    "empty": "Kayıtlı olduğunuz bir eğitim yok."
+  },
+  "fields": {
+    "title": "Program adı",
+    "description": "Açıklama",
+    "category": "Kategori",
+    "capacity": "Kontenjan",
+    "startDate": "Başlangıç",
+    "endDate": "Bitiş",
+    "dates": "Tarihler",
+    "status": "Durum"
+  },
+  "categories": {
+    "technical": "Teknik",
+    "compliance": "Mevzuat / uyum",
+    "softSkills": "Kişisel gelişim",
+    "custom": "Diğer"
+  },
+  "programStatuses": {
+    "draft": "Taslak",
+    "active": "Aktif",
+    "closed": "Kapalı",
+    "archived": "Arşiv"
+  },
+  "enrollmentStatuses": {
+    "enrolled": "Kayıtlı",
+    "completed": "Tamamladı",
+    "cancelled": "İptal",
+    "noShow": "Katılmadı"
+  },
+  "programs": {
+    "create": "Yeni program",
+    "created": "Eğitim programı oluşturuldu.",
+    "empty": "Henüz eğitim programı yok.",
+    "details": "Detay",
+    "activate": "Etkinleştir",
+    "activated": "Program etkinleştirildi.",
+    "close": "Kapat",
+    "closed": "Program kapatıldı.",
+    "closeTitle": "Program kapatılsın mı?",
+    "closeDescription": "\"{{title}}\" kapatılacak; programa yeni katılımcı eklenemeyecek.",
+    "capacityHint": "Boş bırakılırsa sınırsız.",
+    "endBeforeStart": "Bitiş, başlangıçtan önce olamaz."
+  },
+  "participants": {
+    "title": "Katılımcılar",
+    "employee": "Çalışan",
+    "certificate": "Sertifika no",
+    "certificateHint": "İsteğe bağlı; sertifika verilmediyse boş bırakın.",
+    "add": "Katılımcı ekle",
+    "addButton": "Ekle",
+    "added": "Katılımcı eklendi.",
+    "complete": "Tamamlandı",
+    "completeTitle": "Eğitimi tamamlandı olarak işaretle",
+    "completed": "Katılım tamamlandı.",
+    "remove": "Çıkar",
+    "removed": "Katılımcı çıkarıldı.",
+    "empty": "Henüz katılımcı yok.",
+    "capacity": "{{count}} / {{max}} kişi",
+    "closedHint": "Kapalı programa yeni katılımcı eklenemez."
+  },
+  "requirements": {
+    "title": "Ön koşul eğitimler",
+    "empty": "Ön koşul tanımlı değil.",
+    "add": "Ön koşul ekle",
+    "addButton": "Ekle",
+    "added": "Ön koşul eklendi.",
+    "remove": "Ön koşulu kaldır",
+    "blocking": "Tamamlanmadan kayıt yok",
+    "blocksLabel": "Tamamlanmadan kayda izin verme"
+  }
+}

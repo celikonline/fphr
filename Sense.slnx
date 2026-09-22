@@ -41,9 +41,11 @@
     <Project Path="src/Modules/Identity/Sense.Modules.Identity.Infrastructure/Sense.Modules.Identity.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Onboarding/">
+    <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Api/Sense.Modules.Onboarding.Api.csproj" />
     <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Application/Sense.Modules.Onboarding.Application.csproj" />
     <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Contracts/Sense.Modules.Onboarding.Contracts.csproj" />
     <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Domain/Sense.Modules.Onboarding.Domain.csproj" />
+    <Project Path="src/Modules/Onboarding/Sense.Modules.Onboarding.Infrastructure/Sense.Modules.Onboarding.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Organization/">
     <Project Path="src/Modules/Organization/Sense.Modules.Organization.Api/Sense.Modules.Organization.Api.csproj" />

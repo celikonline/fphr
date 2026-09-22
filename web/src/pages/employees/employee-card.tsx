@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ActionIcon, Avatar, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Card, Group, Menu, Skeleton, Stack, Tabs, Text, Title, Tooltip } from "@mantine/core";
 import { ArrowLeft, Lock, LogOut, Mail, MoreVertical, PauseCircle, PlayCircle, SearchX, UserPlus } from "lucide-react";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
@@ -11,7 +11,8 @@ import { getApiErrorMessage, getApiErrorStatus } from "@/lib/api-error";
 import { getEmployee, getMyEmployee, type EmployeeDetail } from "@/services/employees.service";
 import { useAuthStore } from "@/store/auth.store";
 import { inviteEmployee } from "@/services/invitations.service";
-import { AccountStatusBadge, avatarColor, EmployeeStatusBadge, initials } from "@/components/employees/employee-badges";
+import { AccountStatusBadge, EmployeeStatusBadge } from "@/components/employees/employee-badges";
+import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useVisibleEmployeeCardTabs } from "@/components/employees/card-tabs";
 import { useOrgUnits } from "@/components/employees/use-org-units";
 import { EmployeeLifecycleDialogs, lifecycleActionsFor, type LifecycleAction } from "@/components/employees/lifecycle-actions";
@@ -48,7 +49,7 @@ export default function EmployeeCardPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-4 p-6 md:p-10">
+      <div className="max-w-5xl space-y-4 p-6 md:p-10">
         <Skeleton h={80} />
         <Skeleton h={256} />
       </div>
@@ -61,7 +62,7 @@ export default function EmployeeCardPage() {
     const notFound = status === 404 || (!error && !employee);
     const iconColor = "var(--mantine-color-dimmed)";
     return (
-      <div className="mx-auto max-w-3xl p-6 md:p-10">
+      <div className="max-w-3xl p-6 md:p-10">
         <Card withBorder padding="xl">
           <Stack align="center" gap="sm" ta="center">
             {forbidden ? <Lock size={32} color={iconColor} /> : <SearchX size={32} color={iconColor} />}
@@ -90,7 +91,7 @@ export default function EmployeeCardPage() {
   const ActiveTab = active.component;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6 md:p-10">
+    <div className="max-w-5xl space-y-6 p-6 md:p-10">
       <Button
         component={Link}
         to="/app/employees"
@@ -155,9 +156,7 @@ function CardHeaderBlock({ employee }: { employee: EmployeeDetail }) {
   return (
     <Card withBorder padding="lg">
       <Group gap="md" wrap="nowrap">
-        <Avatar size={64} radius="xl" color={avatarColor(employee.id)}>
-          {initials(employee.firstName, employee.lastName)}
-        </Avatar>
+        <EmployeeAvatar employeeId={employee.id} firstName={employee.firstName} lastName={employee.lastName} size={64} radius="xl" />
         <div className="min-w-0 flex-1">
           <Title order={1} size="h2" lineClamp={1}>
             {employee.displayName}

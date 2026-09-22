@@ -5,9 +5,11 @@ using Sense.Modules.Expense.Application;
 using Sense.Modules.Expense.Contracts;
 using Sense.Modules.Expense.Infrastructure;
 using Sense.Modules.Expense.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Expense.Api;
 
@@ -28,7 +30,12 @@ public sealed class ExpenseModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<ExpenseDbContext>(configuration, ExpenseDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates (advance requests, claims, categories) - same wiring as LeaveModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<ExpenseDbContext>(
+            configuration, ExpenseDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<ExpenseDbContext>>();
 
         // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor
         // (see WorkflowModule.AddModule's identical comment).

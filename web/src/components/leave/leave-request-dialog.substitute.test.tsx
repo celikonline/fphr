@@ -13,16 +13,37 @@ import type { LeaveRequestInput } from "@/services/leave.service";
 // Denetim raporu A5: a type with `requiresSubstitute` shows a required "Vekil" picker and the form sends `substituteEmployeeId`.
 // The real pickers hit the API / open portalled calendars; light stand-ins keep this test about the dialog's own wiring.
 vi.mock("@/components/employees/employee-picker", () => ({
-  default: ({ label, onChange, excludeId, useDirectory }: { label: string; onChange: (v: { id: string; displayName: string }) => void; excludeId?: string; useDirectory?: boolean }) => (
-    <button type="button" data-exclude={excludeId} data-directory={String(Boolean(useDirectory))} onClick={() => onChange({ id: "employee-2", displayName: "Ada Lovelace" })}>
+  default: ({
+    label,
+    onChange,
+    excludeId,
+    useDirectory,
+  }: {
+    label: string;
+    onChange: (v: { id: string; displayName: string }) => void;
+    excludeId?: string;
+    useDirectory?: boolean;
+  }) => (
+    <button
+      type="button"
+      data-exclude={excludeId}
+      data-directory={String(Boolean(useDirectory))}
+      onClick={() => onChange({ id: "employee-2", displayName: "Ada Lovelace" })}
+    >
       {label}
     </button>
   ),
 }));
 vi.mock("@/components/ui/date-picker", () => ({
-  DatePicker: ({ id, value, onChange }: { id: string; value: string; onChange: (v: string) => void }) => (
-    <input aria-label={id} value={value} onChange={(event) => onChange(event.target.value)} />
-  ),
+  DatePicker: ({
+    id,
+    value,
+    onChange,
+  }: {
+    id: string;
+    value: string;
+    onChange: (v: string) => void;
+  }) => <input aria-label={id} value={value} onChange={(event) => onChange(event.target.value)} />,
 }));
 
 beforeAll(() => {
@@ -78,8 +99,12 @@ function typeOption(overrides: Partial<LeaveRequestTypeOption> = {}): LeaveReque
 }
 
 function renderDialog(type: LeaveRequestTypeOption) {
-  const save = vi.fn<(input: LeaveRequestInput, bypassApproval: boolean) => Promise<unknown>>().mockResolvedValue(undefined);
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
+  const save = vi
+    .fn<(input: LeaveRequestInput, bypassApproval: boolean) => Promise<unknown>>()
+    .mockResolvedValue(undefined);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
   render(
     <I18nextProvider i18n={createTestI18n()}>
       <QueryClientProvider client={queryClient}>
@@ -91,7 +116,9 @@ function renderDialog(type: LeaveRequestTypeOption) {
             description="Açıklama"
             submitLabel="Gönder"
             previewScope="me"
-            preview={() => Promise.resolve({ days: 2, weeklyRestDays: 0, publicHolidayDays: 0, warnings: [] })}
+            preview={() =>
+              Promise.resolve({ days: 2, weeklyRestDays: 0, publicHolidayDays: 0, warnings: [] })
+            }
             save={save}
             requesterEmployeeId="employee-1"
             onClose={vi.fn()}
@@ -99,7 +126,7 @@ function renderDialog(type: LeaveRequestTypeOption) {
           />
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
   return { save };
 }
@@ -131,7 +158,9 @@ describe("LeaveRequestDialog substitute (denetim A5)", () => {
 
     await user.click(screen.getByRole("button", { name: "Gönder" }));
 
-    expect((await screen.findByRole("alert")).textContent).toBe("Bu izin türünde vekil seçimi zorunludur.");
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "Bu izin türünde vekil seçimi zorunludur."
+    );
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -144,7 +173,10 @@ describe("LeaveRequestDialog substitute (denetim A5)", () => {
     await user.click(screen.getByRole("button", { name: "Gönder" }));
 
     await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
-    expect(save.mock.calls[0][0]).toMatchObject({ leaveTypeId: "type-1", substituteEmployeeId: "employee-2" });
+    expect(save.mock.calls[0][0]).toMatchObject({
+      leaveTypeId: "type-1",
+      substituteEmployeeId: "employee-2",
+    });
   });
 
   it("sends no substitute for an ordinary type", async () => {
@@ -161,6 +193,6 @@ describe("LeaveRequestDialog substitute (denetim A5)", () => {
   it("reminds the requester to upload the document when the type requires one", () => {
     renderDialog(typeOption({ requiresDocument: true }));
 
-    expect(screen.getByText(/belge \(rapor vb\.\) yükleyin/)).toBeTruthy();
+    expect(screen.getByText(/belge \(rapor vb\.\) zorunludur/)).toBeTruthy();
   });
 });

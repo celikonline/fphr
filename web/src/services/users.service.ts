@@ -13,9 +13,39 @@ import type { PagedResult, PagedQueryParams } from "@/types";
 
 export type UserStatus = "invited" | "active" | "locked" | "disabled";
 export type DataScope = "self" | "team" | "department" | "location" | "company" | "custom";
-/** Item 2 (Faz 0): Employee/Owner/Admin quick-select, mapped 1:1 to the matching system role codes. */
-export type AccessType = "Employee" | "Owner" | "Admin";
-const ACCESS_TYPE_CODES: ReadonlySet<string> = new Set<AccessType>(["Employee", "Owner", "Admin"]);
+/**
+ * "Kullanıcı grubu" quick-select (İK Yöneticisi / Muhasebe / Çalışan), mapped 1:1 to the `HR`, `PayrollSpecialist`
+ * and `Employee` system role codes. İK Yöneticisi and Muhasebe can do everything in the company; Çalışan is self-service.
+ * Order = display order and `deriveAccessType` precedence.
+ */
+export type AccessType = "HR" | "PayrollSpecialist" | "Employee";
+export const ACCESS_TYPES: readonly AccessType[] = ["HR", "PayrollSpecialist", "Employee"];
+
+/**
+ * System role codes never shown in company screens (role lists, role chips, role pickers): `Owner` is carried in the
+ * background by the company's first İK Yöneticisi (last-owner protection, always paired with `HR`), `SuperAdmin` is
+ * platform-only.
+ */
+export const HIDDEN_ROLE_CODES: ReadonlySet<string> = new Set(["Owner", "SuperAdmin"]);
+
+export function isHiddenRole(code: string): boolean {
+  return HIDDEN_ROLE_CODES.has(code);
+}
+
+/** The roles a company screen may show - everything except {@link HIDDEN_ROLE_CODES}. */
+export function visibleRoles<T extends { code: string }>(roles: readonly T[]): T[] {
+  return roles.filter((role) => !isHiddenRole(role.code));
+}
+
+/**
+ * Role ids to save from a picker that never showed the hidden roles: the picked ids plus every hidden role the user
+ * already has, so saving the picker can't silently strip `Owner` (the backend rejects that as a last-owner /
+ * owner-only change).
+ */
+export function withKeptHiddenRoleIds(currentRoles: readonly RoleRef[], pickedRoleIds: readonly string[]): string[] {
+  const kept = currentRoles.filter((role) => isHiddenRole(role.code)).map((role) => role.id);
+  return Array.from(new Set([...pickedRoleIds, ...kept]));
+}
 
 export interface RoleRef {
   id: string;
@@ -82,13 +112,14 @@ export async function setUserRoles(userId: string, roleIds: string[]): Promise<v
 }
 
 /**
- * Derives the Employee/Owner/Admin "access type" from a user's role codes (thin client-side projection -
- * the backend keeps the three roles mutually exclusive via `PUT .../access-type`). Returns null when none
- * of the three access-type roles is assigned (e.g. a role-less invited user).
+ * Derives the user group (HR / PayrollSpecialist / Employee) from a user's role codes (thin client-side projection -
+ * the backend keeps the three roles mutually exclusive via `PUT .../access-type`). Precedence HR > PayrollSpecialist >
+ * Employee, so an owner (who always also has HR) shows as İK Yöneticisi. Returns null when none of the three roles is
+ * assigned (e.g. a role-less invited user).
  */
-export function deriveAccessType(roles: RoleRef[]): AccessType | null {
-  const match = roles.find((r) => ACCESS_TYPE_CODES.has(r.code));
-  return (match?.code as AccessType | undefined) ?? null;
+export function deriveAccessType(roles: readonly RoleRef[]): AccessType | null {
+  const codes = new Set(roles.map((r) => r.code));
+  return ACCESS_TYPES.find((type) => codes.has(type)) ?? null;
 }
 
 export async function setUserAccessType(userId: string, accessType: AccessType): Promise<void> {

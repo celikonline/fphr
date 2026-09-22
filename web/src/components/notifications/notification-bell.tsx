@@ -2,7 +2,17 @@ import { useState, type ReactElement } from "react";
 import { Link, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Group, Menu, ScrollArea, Stack, Text, Tooltip, type MenuProps } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Menu,
+  ScrollArea,
+  Stack,
+  Text,
+  Tooltip,
+  type MenuProps,
+  type TooltipProps,
+} from "@mantine/core";
 import { FileClock, Settings2, type LucideIcon } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import {
@@ -26,7 +36,8 @@ const PAGE_SIZE = 10;
 export function isSafeAppPath(url: string): boolean {
   if (!url.startsWith("/") || url.startsWith("//") || url.startsWith("/\\")) return false;
   const lower = url.toLowerCase();
-  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:")) return false;
+  if (lower.startsWith("javascript:") || lower.startsWith("data:") || lower.startsWith("vbscript:"))
+    return false;
   try {
     const parsed = new URL(url, "https://app.local");
     if (parsed.origin !== "https://app.local") return false;
@@ -39,7 +50,10 @@ export function isSafeAppPath(url: string): boolean {
 
 /** Icon shown next to the title for template keys that need one (i18n label: `notifications:types.*`). */
 const TEMPLATE_ICONS: Partial<Record<string, { icon: LucideIcon; labelKey: string }>> = {
-  "documents.expiry_reminder": { icon: FileClock, labelKey: "notifications:types.documentExpiryReminder" },
+  "documents.expiry_reminder": {
+    icon: FileClock,
+    labelKey: "notifications:types.documentExpiryReminder",
+  },
 };
 
 interface NotificationsMenuProps {
@@ -48,6 +62,8 @@ interface NotificationsMenuProps {
   renderTarget: (unread: number) => ReactElement;
   /** Shown around an icon-only trigger. */
   tooltip?: string;
+  /** Where the tooltip opens; defaults to "right" (sidebar placement). */
+  tooltipPosition?: TooltipProps["position"];
 }
 
 /** Polled unread badge, latest notifications dropdown, mark read. Renders nothing without the view permission. */
@@ -57,7 +73,12 @@ export function NotificationsMenu(props: NotificationsMenuProps) {
   return <NotificationsDropdown {...props} />;
 }
 
-function NotificationsDropdown({ position, renderTarget, tooltip }: NotificationsMenuProps) {
+function NotificationsDropdown({
+  position,
+  renderTarget,
+  tooltip,
+  tooltipPosition = "right",
+}: NotificationsMenuProps) {
   const { t, i18n } = useTranslation(["notifications"]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -81,7 +102,10 @@ function NotificationsDropdown({ position, renderTarget, tooltip }: Notification
 
   const unread = unreadQuery.data ?? 0;
   const items = listQuery.data?.items ?? [];
-  const dateFormat = new Intl.DateTimeFormat(i18n.language, { dateStyle: "short", timeStyle: "short" });
+  const dateFormat = new Intl.DateTimeFormat(i18n.language, {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
 
   function openItem(item: UserNotificationDto) {
     if (!item.readAt && canManage) markRead.mutate(item.id);
@@ -95,7 +119,7 @@ function NotificationsDropdown({ position, renderTarget, tooltip }: Notification
   return (
     <Menu opened={open} onChange={setOpen} position={position} width={320}>
       {tooltip ? (
-        <Tooltip label={tooltip} position="right" openDelay={300}>
+        <Tooltip label={tooltip} position={tooltipPosition} openDelay={300}>
           {target}
         </Tooltip>
       ) : (

@@ -33,7 +33,7 @@ public sealed class RolePermissionEscalationTests
         _catalog.Exists(Arg.Any<string>()).Returns(true);
         _tenant.TenantId.Returns(_tenantId);
         _current.UserId.Returns(_callerId);
-        _current.Roles.Returns(new HashSet<string> { "Manager", "Supervisors" });
+        _current.Roles.Returns(new HashSet<string> { SystemRoleCodes.Employee, "Supervisors" });
         _permissions.GetPermissionsAsync(_callerId, Arg.Any<CancellationToken>())
             .Returns((IReadOnlySet<string>)new HashSet<string> { Held });
         _permissions.GetScopeAsync(_callerId, Held, Arg.Any<CancellationToken>()).Returns(DataScope.Team);
@@ -101,10 +101,10 @@ public sealed class RolePermissionEscalationTests
     [Fact]
     public async Task SetPermissions_OnSystemRole_IsReadOnly_EvenForEmptyList()
     {
-        var admin = Role.CreateSystem(_tenantId, SystemRoleCodes.Admin);
-        _roles.GetByIdAsync(admin.Id, Arg.Any<CancellationToken>()).Returns(admin);
+        var hr = Role.CreateSystem(_tenantId, SystemRoleCodes.HR);
+        _roles.GetByIdAsync(hr.Id, Arg.Any<CancellationToken>()).Returns(hr);
 
-        var result = await SetHandler().Handle(new SetRolePermissionsCommand(admin.Id, []), CancellationToken.None);
+        var result = await SetHandler().Handle(new SetRolePermissionsCommand(hr.Id, []), CancellationToken.None);
 
         result.Error.Code.ShouldBe(IdentityDomainErrors.RoleSystemReadOnly);
     }

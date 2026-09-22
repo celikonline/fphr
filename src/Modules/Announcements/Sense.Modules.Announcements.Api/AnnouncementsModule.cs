@@ -5,9 +5,11 @@ using Sense.Modules.Announcements.Application;
 using Sense.Modules.Announcements.Contracts;
 using Sense.Modules.Announcements.Infrastructure;
 using Sense.Modules.Announcements.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Announcements.Api;
 
@@ -32,7 +34,12 @@ public sealed class AnnouncementsModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<AnnouncementsDbContext>(configuration, AnnouncementsDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<AnnouncementsDbContext>(
+            configuration, AnnouncementsDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<AnnouncementsDbContext>>();
 
         // Application + Contracts assemblies: Contracts' SupportTicketCreated/Answered integration event types
         // must resolve in OutboxProcessor, see CLAUDE.md's AddModuleHandlers note (Domain raises no domain events

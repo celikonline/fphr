@@ -4,7 +4,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { ActivityIndicator, View } from "react-native";
 import { useAuthStore } from "@/store/authStore";
-import { RootStackParamList, AuthStackParamList, AppStackParamList, MainTabsParamList } from "@/types/navigation";
+import {
+  RootStackParamList,
+  AuthStackParamList,
+  AppStackParamList,
+  MainTabsParamList,
+} from "@/types/navigation";
 
 // Screens (will be created)
 import LoginScreen from "@/screens/auth/LoginScreen";
@@ -17,6 +22,7 @@ import PayrollScreen from "@/screens/app/PayrollScreen";
 import ApprovalsScreen from "@/screens/app/ApprovalsScreen";
 import ProfileScreen from "@/screens/app/ProfileScreen";
 import SupportScreen from "@/screens/app/SupportScreen";
+import CheckInScreen from "@/screens/app/CheckInScreen";
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
@@ -27,7 +33,7 @@ function AuthNavigator() {
   return (
     <AuthStack.Navigator
       screenOptions={{
-        headerShown: false
+        headerShown: false,
       }}
     >
       <AuthStack.Screen name="Login" component={LoginScreen} />
@@ -43,7 +49,7 @@ function MainTabsNavigator() {
       screenOptions={{
         tabBarActiveTintColor: "#0066cc",
         tabBarInactiveTintColor: "#999999",
-        headerShown: true
+        headerShown: true,
       }}
     >
       <Tab.Screen
@@ -51,7 +57,7 @@ function MainTabsNavigator() {
         component={DashboardScreen}
         options={{
           title: "Anasayfa",
-          tabBarLabel: "Anasayfa"
+          tabBarLabel: "Anasayfa",
         }}
       />
       <Tab.Screen
@@ -59,7 +65,7 @@ function MainTabsNavigator() {
         component={AttendanceScreen}
         options={{
           title: "Puantaj",
-          tabBarLabel: "Puantaj"
+          tabBarLabel: "Puantaj",
         }}
       />
       <Tab.Screen
@@ -67,7 +73,7 @@ function MainTabsNavigator() {
         component={LeaveScreen}
         options={{
           title: "İzin",
-          tabBarLabel: "İzin"
+          tabBarLabel: "İzin",
         }}
       />
       <Tab.Screen
@@ -75,7 +81,7 @@ function MainTabsNavigator() {
         component={PayrollScreen}
         options={{
           title: "Bordro",
-          tabBarLabel: "Bordro"
+          tabBarLabel: "Bordro",
         }}
       />
       <Tab.Screen
@@ -83,7 +89,7 @@ function MainTabsNavigator() {
         component={ApprovalsScreen}
         options={{
           title: "Onaylarım",
-          tabBarLabel: "Onaylarım"
+          tabBarLabel: "Onaylarım",
         }}
       />
       <Tab.Screen
@@ -91,7 +97,7 @@ function MainTabsNavigator() {
         component={ProfileScreen}
         options={{
           title: "Profil",
-          tabBarLabel: "Profil"
+          tabBarLabel: "Profil",
         }}
       />
     </Tab.Navigator>
@@ -102,17 +108,22 @@ function AppNavigator() {
   return (
     <AppStack.Navigator
       screenOptions={{
-        headerShown: true
+        headerShown: true,
       }}
     >
       <AppStack.Screen
         name="MainTabs"
         component={MainTabsNavigator}
         options={{
-          headerShown: false
+          headerShown: false,
         }}
       />
       <AppStack.Screen name="Support" component={SupportScreen} options={{ title: "Destek" }} />
+      <AppStack.Screen
+        name="CheckIn"
+        component={CheckInScreen}
+        options={{ title: "Giriş / Çıkış" }}
+      />
     </AppStack.Navigator>
   );
 }
@@ -149,7 +160,7 @@ export function RootNavigator() {
     <NavigationContainer>
       <RootStack.Navigator
         screenOptions={{
-          headerShown: false
+          headerShown: false,
         }}
       >
         {!isAuthenticated ? (
@@ -157,7 +168,7 @@ export function RootNavigator() {
             name="Auth"
             component={AuthNavigator}
             options={{
-              animation: "none"
+              animation: "none",
             }}
           />
         ) : (
@@ -165,7 +176,7 @@ export function RootNavigator() {
             name="App"
             component={AppNavigator}
             options={{
-              animation: "none"
+              animation: "none",
             }}
           />
         )}

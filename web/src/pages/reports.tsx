@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router";
 import { useMutation, useQuery, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { BarChart3, CalendarDays, Check, ClipboardList, Download, FileSpreadsheet, Users, Wallet } from "lucide-react";
+import { BarChart3, Check, Download, FileSpreadsheet } from "lucide-react";
 import {
   Alert,
   Badge,
@@ -13,7 +13,6 @@ import {
   Input,
   MultiSelect,
   Select,
-  SimpleGrid,
   Skeleton,
   Stack,
   Switch,
@@ -29,6 +28,7 @@ import NoAccess from "@/components/no-access";
 import PaginationFooter from "@/components/pagination-footer";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import { useOrgUnits } from "@/components/employees/use-org-units";
+import { ReportCatalog, reportLabelKey } from "@/components/reports/report-catalog";
 import { WorkforceKpiPanel } from "@/components/reports/workforce-kpi-panel";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -37,7 +37,6 @@ import {
   downloadReportExecution,
   getReportCatalog,
   getReportExecution,
-  groupReportCatalog,
   listReportExecutions,
   REPORT_PARAMETER_KEYS,
   requestReport,
@@ -49,7 +48,7 @@ import {
   type ReportParameter,
 } from "@/services/reports.service";
 
-const EXECUTIONS_PAGE_SIZE = 10;
+const DEFAULT_EXECUTIONS_PAGE_SIZE = 10;
 
 const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
   queued: "gray",
@@ -57,18 +56,6 @@ const EXECUTION_STATUS_COLOR: Record<ReportExecutionStatus, string> = {
   succeeded: "green",
   failed: "red",
 };
-
-const CATEGORY_ICON: Record<string, typeof ClipboardList> = {
-  administrative: ClipboardList,
-  employee: Users,
-  leave: CalendarDays,
-  finance: Wallet,
-};
-
-/** Catalog keys are dotted ("leave.balance.summary"); i18n resolves them as a nested path under `catalog`. */
-function reportLabelKey(reportKey: string, field: "label" | "description"): string {
-  return `reports:catalog.${reportKey}.${field}`;
-}
 
 /**
  * Raporlar (Kolay İK "Raporlar" menüsü, roadmap #70): kategori → rapor türü → filtreler → oluştur → indir, altında
@@ -86,7 +73,7 @@ export default function ReportsPage() {
   const activeTab = tab ?? (canUseReports ? "reports" : "kpis");
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 p-6 md:p-10">
+    <div className="max-w-7xl space-y-6 p-6 md:p-10">
       <div>
         <Title order={1} size="h2" className="flex items-center gap-2">
           <BarChart3 size={28} className="text-indigo-600" /> {t("reports:title")}
@@ -132,6 +119,7 @@ function ReportCatalogAndHistory() {
   const queryClient = useQueryClient();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_EXECUTIONS_PAGE_SIZE);
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [searchParams, setSearchParams] = useSearchParams();
   const emailExecutionHandled = useRef(false);
@@ -143,8 +131,8 @@ function ReportCatalogAndHistory() {
   });
 
   const { data: executions, isLoading: executionsLoading, isFetching: executionsFetching } = useQuery({
-    queryKey: ["reports", "executions", page],
-    queryFn: () => listReportExecutions({ page, pageSize: EXECUTIONS_PAGE_SIZE }),
+    queryKey: ["reports", "executions", page, pageSize],
+    queryFn: () => listReportExecutions({ page, pageSize }),
     enabled: canViewHistory,
     placeholderData: (previous) => previous,
   });
@@ -183,7 +171,6 @@ function ReportCatalogAndHistory() {
       });
   }, [emailExecutionId, canViewHistory, downloadMutation, searchParams, setSearchParams, t]);
 
-  const groups = useMemo(() => groupReportCatalog(catalog ?? []), [catalog]);
   const selected = useMemo(() => (catalog ?? []).find((c) => c.key === selectedKey) ?? null, [catalog, selectedKey]);
 
   const columns: ColumnDef<ReportExecution>[] = [
@@ -253,53 +240,9 @@ function ReportCatalogAndHistory() {
     <Stack gap="xl">
       {canViewCatalog && (
         <div className="grid gap-4 lg:grid-cols-12">
-          <Stack gap="lg" className="lg:col-span-7">
-            <Title order={2} size="h4">
-              {t("reports:catalog.title")}
-            </Title>
-            {catalogLoading ? (
-              <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} h={96} radius="md" />
-                ))}
-              </SimpleGrid>
-            ) : groups.length === 0 ? (
-              <Card withBorder padding="lg" radius="md">
-                <Text c="dimmed" size="sm">
-                  {t("reports:catalog.empty")}
-                </Text>
-              </Card>
-            ) : (
-              groups.map((group) => {
-                const Icon = CATEGORY_ICON[group.categoryKey] ?? FileSpreadsheet;
-                return (
-                  <Stack key={group.categoryKey} gap="xs">
-                    <Group gap="xs">
-                      <ThemeIcon variant="light" color="indigo" size="sm" radius="sm">
-                        <Icon size={14} />
-                      </ThemeIcon>
-                      <Text fw={600} size="sm">
-                        {t(`reports:categories.${group.categoryKey}`, { defaultValue: t("reports:categories.other") })}
-                      </Text>
-                      <Badge variant="default" size="xs">
-                        {group.items.length}
-                      </Badge>
-                    </Group>
-                    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
-                      {group.items.map((item) => (
-                        <ReportCard
-                          key={item.key}
-                          item={item}
-                          selected={item.key === selectedKey}
-                          onSelect={() => setSelectedKey(item.key)}
-                        />
-                      ))}
-                    </SimpleGrid>
-                  </Stack>
-                );
-              })
-            )}
-          </Stack>
+          <div className="lg:col-span-7">
+            <ReportCatalog items={catalog ?? []} isLoading={catalogLoading} selectedKey={selectedKey} onSelect={setSelectedKey} />
+          </div>
 
           <div className="lg:col-span-5">
             {selected ? (
@@ -337,47 +280,20 @@ function ReportCatalogAndHistory() {
               <DataTable table={table} isLoading={executionsLoading} isFetching={executionsFetching} emptyMessage={t("reports:history.empty")} />
             </Card>
           )}
-          {executions && <PaginationFooter result={executions} onPageChange={setPage} />}
+          {executions && (
+            <PaginationFooter
+              result={executions}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={(size) => {
+                setPageSize(size);
+                setPage(1);
+              }}
+            />
+          )}
         </Stack>
       )}
     </Stack>
-  );
-}
-
-function ReportCard({ item, selected, onSelect }: { item: ReportCatalogItem; selected: boolean; onSelect: () => void }) {
-  const { t } = useTranslation(["reports"]);
-  return (
-    <Card
-      component="button"
-      type="button"
-      withBorder
-      padding="md"
-      radius="md"
-      ta="left"
-      onClick={onSelect}
-      aria-pressed={selected}
-      style={{
-        cursor: "pointer",
-        borderColor: selected ? "var(--mantine-color-indigo-5)" : undefined,
-        boxShadow: selected ? "0 0 0 1px var(--mantine-color-indigo-5)" : undefined,
-      }}
-    >
-      <Group justify="space-between" align="flex-start" wrap="nowrap">
-        <div>
-          <Text fw={600} size="sm">
-            {t(reportLabelKey(item.key, "label"), { defaultValue: item.key })}
-          </Text>
-          <Text size="xs" c="dimmed" mt={4} lh={1.5}>
-            {t(reportLabelKey(item.key, "description"), { defaultValue: "" })}
-          </Text>
-        </div>
-        {selected && (
-          <ThemeIcon variant="light" color="indigo" size="sm" radius="xl">
-            <Check size={12} />
-          </ThemeIcon>
-        )}
-      </Group>
-    </Card>
   );
 }
 

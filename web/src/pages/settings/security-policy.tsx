@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth.store";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { getSecurityPolicy, updateSecurityPolicy } from "@/services/security-policy.service";
-import { listRoles } from "@/services/users.service";
+import { listRoles, visibleRoles } from "@/services/users.service";
 import { SETTINGS_PERMISSIONS } from "@/config/navigation";
 import type { SecurityPolicy } from "@/types";
 
@@ -75,7 +75,7 @@ function SecurityPolicyForm() {
   const isError = policyQuery.isError || rolesQuery.isError;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6 md:p-10">
+    <div className="max-w-4xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -123,7 +123,8 @@ function SecurityPolicyForm() {
             {t("settings:securityPolicy.rolesTitle")}
           </Title>
           <Stack gap="md">
-            {rolesQuery.data.map((role) => (
+            {/* Hidden system roles (Owner) aren't listed; a code already in the policy stays in the draft untouched. */}
+            {visibleRoles(rolesQuery.data).map((role) => (
               <Group key={role.id} justify="space-between" align="center" gap="xl" wrap="nowrap">
                 <Text component="label" htmlFor={`mfa-role-${role.code}`} size="sm" fw={500}>
                   {t(`account:roleNames.${role.code}`, role.name ?? role.code)}

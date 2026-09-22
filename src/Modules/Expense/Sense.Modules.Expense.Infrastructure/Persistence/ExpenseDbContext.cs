@@ -5,6 +5,7 @@ using Sense.Modules.Expense.Domain.Advances;
 using Sense.Modules.Expense.Domain.ExpenseClaims;
 using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.Expense.Infrastructure.Persistence;
 
@@ -21,6 +22,16 @@ public sealed class ExpenseDbContext(DbContextOptions<ExpenseDbContext> options,
     public DbSet<ExpenseClaim> ExpenseClaims => Set<ExpenseClaim>();
 
     public DbSet<AdvanceRequest> AdvanceRequests => Set<AdvanceRequest>();
+
+    /// <summary>expense.audit_log_entries - shared AuditLogEntry type in the module's own schema (same pattern as Leave/Employee/Workflow).</summary>
+    public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
+
+    /// <summary>AuditLogEntryConfiguration must be applied BEFORE the base call (see LeaveDbContext.OnModelCreating).</summary>
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.ApplyConfiguration(new AuditLogEntryConfiguration());
+        base.OnModelCreating(modelBuilder);
+    }
 }
 
 internal static class ExpenseTables

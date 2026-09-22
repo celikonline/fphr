@@ -9,7 +9,7 @@ namespace Sense.Modules.Attendance.Domain.MonthlyTimesheet;
 /// correction is expected (HR re-runs "Tümünü Onayla" for the month), so this is a simple flag with history, not a
 /// lock.
 /// </summary>
-public sealed class MonthlyTimesheetApproval : TenantAggregateRoot<Guid>
+public sealed class MonthlyTimesheetApproval : TenantAggregateRoot<Guid>, IAuditLogged
 {
     private MonthlyTimesheetApproval()
     {

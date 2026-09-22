@@ -239,14 +239,16 @@
     "substitute": "Vekil",
     "substituteHint": "İzin süresince işlerinizi devralacak çalışan.",
     "substitutePlaceholder": "Vekil seçin",
-    "documentHint": "Bu izin türü için belge (rapor vb.) yükleyin; bekleyen talebe sonradan da eklenebilir.",
+    "documentHint": "Bu izin türü için belge (rapor vb.) zorunludur; talebi göndermeden önce yükleyin. Bekleyen talebe sonradan ek belge de eklenebilir.",
     "document": "Belge",
     "documentUploadHint": "PDF, resim veya Office dosyası seçin; önce Documents'a yüklenir.",
+    "documentPlaceholder": "Dosya seçin",
     "documentUploading": "Belge yükleniyor…",
     "documentRemove": "Kaldır",
     "validation": {
       "typeRequired": "İzin türü seçin.",
-      "datesRequired": "Başlangıç ve bitiş tarihi zorunludur.",
+      "startRequired": "Başlangıç tarihi zorunludur.",
+      "endRequired": "Bitiş tarihi zorunludur.",
       "range": "Bitiş tarihi başlangıç tarihinden önce olamaz.",
       "descriptionRequired": "Bu izin türünde açıklama zorunludur.",
       "substituteRequired": "Bu izin türünde vekil seçimi zorunludur.",
@@ -547,6 +549,13 @@
       "daysInvalid": "Gün sayısı sıfırdan farklı bir sayı olmalıdır.",
       "dateRequired": "Etki tarihi zorunludur.",
       "reasonRequired": "Gerekçe zorunludur."
+    },
+    "warnings": {
+      "title": "Kaydetmeden önce kontrol edin",
+      "negativeBalance": "Bu düzeltmeden sonra bakiye {{balance}} gün olacak (eksiye düşüyor).",
+      "farPast": "Etki tarihi bugünden {{days}} gün önce; geçmiş dönemlerin bakiyesi etkilenebilir.",
+      "farFuture": "Etki tarihi bugünden {{days}} gün sonra; bakiye o tarihe kadar değişmeyecek.",
+      "confirm": "Yine de kaydet"
     },
     "addLeave": "İzin Ekle"
   },

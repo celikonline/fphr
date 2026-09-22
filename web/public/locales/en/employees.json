@@ -16,7 +16,7 @@
   "unknownUnit": "Unknown unit",
   "unknownEmployee": "Unknown employee",
   "noUnit": "No unit",
-  "phase": "Phase {{phase}}",
+  "phase": "Coming soon",
   "create": {
     "button": "Add new employee",
     "title": "Add new employee",
@@ -63,9 +63,9 @@
     "disabled": "Disabled"
   },
   "accessType": {
-    "Employee": "Employee",
-    "Owner": "Account owner",
-    "Admin": "Administrator"
+    "HR": "HR Manager",
+    "PayrollSpecialist": "Accounting",
+    "Employee": "Employee"
   },
   "fields": {
     "firstName": "First name",
@@ -80,7 +80,7 @@
     "manager": "Manager",
     "accountStatus": "Account status",
     "lastInvitationSentAt": "Last invitation sent",
-    "accessType": "Access type",
+    "accessType": "User group",
     "contractType": "Contract type",
     "employmentType": "Employment type",
     "gender": "Gender",
@@ -328,18 +328,19 @@
     "statusLabel": "Employee",
     "accountStatusLabel": "Account",
     "sections": {
-      "general": "General",
+      "general": "Profile",
       "personal": "Personal details",
       "career": "Career",
       "customFields": "Custom fields",
       "account": "Account"
     },
     "tabs": {
-      "general": "General",
+      "general": "Profile",
       "personal": "Personal details",
       "customFields": "Custom fields",
       "career": "Career",
       "payments": "Payments",
+      "payroll": "Payroll",
       "documents": "Files",
       "assets": "Assets",
       "leave": "Leave",
@@ -350,13 +351,52 @@
     "tabNotes": {
       "leave": "Leave balances and requests appear here once the Leave module is available.",
       "overtime": "Overtime records and requests appear here once the Leave/Overtime module is available.",
-      "other": "Trainings are added to this tab in later phases."
+      "other": "Training records are not available in this tab yet."
+    },
+    "other": {
+      "training": {
+        "title": "Training records",
+        "badge": "Coming soon",
+        "emptyTitle": "No training records yet"
+      },
+      "shortcuts": {
+        "title": "Other records",
+        "assets": "Equipment assigned to the employee",
+        "documents": "Personnel files and documents"
+      }
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
-    "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
-    "accessTypeSaved": "Access type updated.",
+    "accessTypeHint": "HR Manager and Accounting can do everything in the company; Employee can only access their own information.",
+    "accessTypeSaved": "User group updated.",
     "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type.",
-    "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later."
+    "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later.",
+    "copy": "Copy",
+    "tenure": {
+      "years": "{{count}} yr",
+      "months": "{{count}} mo",
+      "days": "{{count}} d"
+    },
+    "profile": {
+      "tenure": "Length of service",
+      "company": "Company",
+      "department": "Department",
+      "title": "Title",
+      "terminationDate": "Left on"
+    },
+    "groups": {
+      "manager": "Manager",
+      "contact": "Contact",
+      "access": "Access",
+      "citizenship": "Citizenship",
+      "education": "Education",
+      "address": "Address",
+      "personalContact": "Contact (personal)"
+    },
+    "completion": {
+      "title": "Profile completion",
+      "completed": "Completed",
+      "remaining": "Remaining"
+    }
   },
   "invite": {
     "send": "Send invitation",
@@ -615,6 +655,139 @@
       "success": "The employee is rehired. Leave accrual starts on {{date}}."
     }
   },
+  "payrollTab": {
+    "profile": {
+      "title": "Payroll profile",
+      "empty": "This employee has no payroll profile.",
+      "validFrom": "Valid from",
+      "wageBasis": "Wage basis",
+      "sgkStatus": "SGK status",
+      "incentive": "Incentive law code",
+      "meal": "Meal benefit",
+      "transport": "Transport benefit",
+      "paymentMethod": "Payment method",
+      "sickDays": "Sick days reduce pay",
+      "externalCode": "External payroll code",
+      "notes": "Notes",
+      "yes": "Yes",
+      "no": "No",
+      "mealDaily": "{{amount}} / day"
+    },
+    "payslips": {
+      "title": "Payslips",
+      "empty": "No payroll has been calculated for this employee.",
+      "columns": {
+        "period": "Period",
+        "status": "Period status",
+        "gross": "Gross",
+        "net": "Net",
+        "employerCost": "Employer cost"
+      },
+      "download": "Download",
+      "downloadError": "The payslip could not be downloaded."
+    },
+    "garnishments": {
+      "title": "Garnishments and alimony",
+      "empty": "No deduction orders recorded.",
+      "columns": {
+        "type": "Type",
+        "case": "Case no.",
+        "installment": "Monthly installment",
+        "remaining": "Remaining debt",
+        "start": "Start",
+        "status": "Status"
+      },
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "enum": {
+      "wageBasis": {
+        "monthly": "Monthly",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "hourly": "Hourly",
+        "yearly": "Yearly"
+      },
+      "sgkStatus": {
+        "normal": "Normal",
+        "retired": "Retired",
+        "intern": "Intern",
+        "apprentice": "Apprentice",
+        "foreign": "Foreign"
+      },
+      "meal": {
+        "none": "None",
+        "cash": "Cash",
+        "inKind": "In kind",
+        "mealCardOnly": "Meal card",
+        "mealAndMarketCard": "Meal + market card"
+      },
+      "transport": {
+        "none": "None",
+        "cash": "Cash",
+        "card": "Card",
+        "shuttle": "Shuttle"
+      },
+      "paymentMethod": {
+        "bank": "Bank",
+        "cash": "Cash"
+      },
+      "periodStatus": {
+        "open": "Open",
+        "approved": "Approved",
+        "paid": "Paid",
+        "locked": "Locked"
+      },
+      "garnishmentType": {
+        "icra": "Enforcement",
+        "nafaka": "Alimony"
+      }
+    }
+  },
+  "exitSettlement": {
+    "title": "Exit settlement",
+    "hint": "Amounts calculated at exit plus lines added since. Severance, notice and leave are frozen at exit; later salary or legislation changes do not affect them.",
+    "terminationDate": "Exit date",
+    "columns": {
+      "item": "Item",
+      "gross": "Gross",
+      "sgk": "SGK + unemployment",
+      "incomeTax": "Income tax",
+      "stampTax": "Stamp tax",
+      "net": "Net"
+    },
+    "totalRow": "Total",
+    "kinds": {
+      "severance": "Severance pay",
+      "notice": "Notice pay",
+      "unusedLeave": "Unused leave pay",
+      "mutualRescissionPay": "Mutual termination payment",
+      "extraPayment": "Extra payment",
+      "finalMonthWage": "Final month wage",
+      "other": "Other"
+    },
+    "addLine": "Add line",
+    "edit": "Edit",
+    "remove": "Delete",
+    "recalculate": "Recalculate",
+    "netPending": "The net could not be calculated (a legislation parameter may be missing). Try recalculating.",
+    "estimateNote": "Deductions are an estimate; the tax and SGK treatment of mutual-termination payments and extra payments depends on the contract. Confirm with an accountant before paying out.",
+    "removeConfirm": "Delete this line?",
+    "success": "Exit settlement updated.",
+    "dialog": {
+      "titleAdd": "Add line",
+      "titleEdit": "Edit line",
+      "kind": "Line type",
+      "label": "Line name",
+      "grossAmount": "Gross amount",
+      "taxes": "Apply deductions?",
+      "sgkSubject": "SGK + unemployment premium",
+      "incomeTaxSubject": "Income tax",
+      "stampTaxSubject": "Stamp tax",
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
   "employmentPeriods": {
     "title": "Employment periods",
     "empty": "No employment periods recorded.",
@@ -636,5 +809,17 @@
       "days": "{{count}} days",
       "since": "since {{date}}"
     }
+  },
+  "photo": {
+    "change": "Change photo",
+    "upload": "Upload photo",
+    "remove": "Remove photo",
+    "uploaded": "Photo updated.",
+    "removed": "Photo removed.",
+    "failed": "The photo action could not be completed."
+  },
+  "workCertificate": {
+    "download": "Employment certificate (PDF)",
+    "failed": "Could not download the employment certificate."
   }
 }

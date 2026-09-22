@@ -16,12 +16,22 @@ public sealed class NotificationRecipientResolverTests
     private const string UnmappedPermissionKey = "documents.some.unmapped.key";
 
     [Fact]
-    public async Task ResolveByPermissionAsync_ReturnsEmployeeIds_OfRolesHoldingTheMappedPermission()
+    public async Task ResolveByPermissionAsync_ReturnsEmployeeIds_OfOwnerHrAndPayroll_Deduplicated()
     {
+        // Dört grup modeli: izni taşıyanlar Owner, İK Yöneticisi (HR) ve Muhasebe (PayrollSpecialist); Owner aynı zamanda HR
+        // olduğundan aynı çalışan iki rolde görünür ve bir kez döner. Çalışan grubu ve eski roller sorgulanmaz.
         var tenantId = Guid.NewGuid();
+        var ownerEmployeeId = Guid.NewGuid();
         var hrEmployeeId = Guid.NewGuid();
-        var managerEmployeeId = Guid.NewGuid();
-        var byRole = new Dictionary<string, Guid[]>(StringComparer.Ordinal) { ["HR"] = [hrEmployeeId], ["Manager"] = [managerEmployeeId] };
+        var payrollEmployeeId = Guid.NewGuid();
+        var byRole = new Dictionary<string, Guid[]>(StringComparer.Ordinal)
+        {
+            ["Owner"] = [ownerEmployeeId],
+            ["HR"] = [ownerEmployeeId, hrEmployeeId],
+            ["PayrollSpecialist"] = [payrollEmployeeId],
+            ["Employee"] = [Guid.NewGuid()],
+            ["Manager"] = [Guid.NewGuid()],
+        };
         var roleAssignments = Substitute.For<IRoleAssignmentLookup>();
         roleAssignments.ListEmployeeIdsInRoleAsync(tenantId, Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(call => byRole.GetValueOrDefault(call.ArgAt<string>(1), []));
@@ -29,11 +39,13 @@ public sealed class NotificationRecipientResolverTests
 
         var result = await resolver.ResolveByPermissionAsync(tenantId, PermittedPermissionKey, CancellationToken.None);
 
-        result.ShouldBe([hrEmployeeId, managerEmployeeId], ignoreOrder: true);
+        result.ShouldBe([ownerEmployeeId, hrEmployeeId, payrollEmployeeId], ignoreOrder: true);
+        await roleAssignments.DidNotReceive().ListEmployeeIdsInRoleAsync(tenantId, "Employee", Arg.Any<CancellationToken>());
+        await roleAssignments.DidNotReceive().ListEmployeeIdsInRoleAsync(tenantId, "Manager", Arg.Any<CancellationToken>());
     }
 
     [Fact]
-    public async Task ResolveByPermissionAsync_UnmappedPermission_FallsBackToOwnerAdminOnly_NoOtherRoleQueried()
+    public async Task ResolveByPermissionAsync_UnmappedPermission_FallsBackToOwnerHrAndPayroll_NoOtherRoleQueried()
     {
         var tenantId = Guid.NewGuid();
         var roleAssignments = Substitute.For<IRoleAssignmentLookup>();
@@ -44,8 +56,11 @@ public sealed class NotificationRecipientResolverTests
 
         result.ShouldBeEmpty();
         await roleAssignments.Received(1).ListEmployeeIdsInRoleAsync(tenantId, "Owner", Arg.Any<CancellationToken>());
-        await roleAssignments.Received(1).ListEmployeeIdsInRoleAsync(tenantId, "Admin", Arg.Any<CancellationToken>());
-        await roleAssignments.DidNotReceive().ListEmployeeIdsInRoleAsync(tenantId, "HR", Arg.Any<CancellationToken>());
+        await roleAssignments.Received(1).ListEmployeeIdsInRoleAsync(tenantId, "HR", Arg.Any<CancellationToken>());
+        await roleAssignments.Received(1).ListEmployeeIdsInRoleAsync(tenantId, "PayrollSpecialist", Arg.Any<CancellationToken>());
+        await roleAssignments.ReceivedWithAnyArgs(3).ListEmployeeIdsInRoleAsync(default, default!, TestContext.Current.CancellationToken);
+        await roleAssignments.DidNotReceive().ListEmployeeIdsInRoleAsync(tenantId, "Admin", Arg.Any<CancellationToken>());
+        await roleAssignments.DidNotReceive().ListEmployeeIdsInRoleAsync(tenantId, "Employee", Arg.Any<CancellationToken>());
     }
 
     [Fact]

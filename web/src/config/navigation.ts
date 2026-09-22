@@ -47,6 +47,8 @@ import {
   Blocks,
   QrCode,
   MonitorCheck,
+  Megaphone,
+  GraduationCap,
 } from "lucide-react";
 import type { AccessSettingKey } from "@/types";
 
@@ -212,6 +214,16 @@ export const NAV_ITEMS: NavItem[] = [
     permissions: ["documents.company.view"],
     iconColor: "gold",
   },
+  // Süper admin (platform kiracısı): yeni şirket oluşturma/listeleme. Yalnız `platform.tenants.manage` sahibi görür ve
+  // ROUTE_ACCESS bu girdiden türediği için URL ile de erişilemez.
+  {
+    key: "platformTenants",
+    labelKey: "nav.platformTenants",
+    path: "/app/platform/tenants",
+    icon: Building2,
+    permissions: ["platform.tenants.manage"],
+    iconColor: "brand",
+  },
 ];
 
 export const NAV_FOOTER_ITEMS: NavItem[] = [
@@ -232,8 +244,32 @@ export const NAV_FOOTER_ITEMS: NavItem[] = [
   },
 ];
 
-/** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
+/** "Uygulamalar" launcher entries (header dropdown + /app/apps): related apps grouped, groups and items ordered by how often they are used (daily general/attendance first, admin tools last). Entries with a phase are shown disabled. */
 export const APP_LAUNCHER_ITEMS: NavItem[] = [
+  {
+    key: "workflowInbox",
+    labelKey: "apps.workflowInbox",
+    path: "/app/inbox",
+    icon: Inbox,
+    permissions: ["workflow.inbox.view"],
+    iconColor: "teal",
+  },
+  {
+    key: "announcements",
+    labelKey: "apps.announcements",
+    path: "/app/announcements",
+    icon: Megaphone,
+    permissions: ["announcements.my.feed", "announcements.announcements.manage"],
+    iconColor: "orange",
+  },
+  {
+    key: "companyCalendar",
+    labelKey: "apps.companyCalendar",
+    path: "/app/company-calendar",
+    icon: CalendarDays,
+    permissions: ["announcements.my.events"],
+    iconColor: "cyan",
+  },
   {
     key: "orgChart",
     labelKey: "apps.orgChart",
@@ -244,19 +280,19 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
-    key: "dataTransfer",
-    labelKey: "apps.dataTransfer",
-    path: "/app/settings/data-transfer",
-    icon: FileSpreadsheet,
-    permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
-    iconColor: "blue",
+    key: "timesheet",
+    labelKey: "apps.timesheet",
+    path: "/app/attendance/timesheet",
+    icon: CalendarClock,
+    permissions: ["attendance.my.timesheet"],
+    iconColor: "orange",
   },
   {
-    key: "workflowInbox",
-    labelKey: "apps.workflowInbox",
-    path: "/app/inbox",
-    icon: Inbox,
-    permissions: ["workflow.inbox.view"],
+    key: "selfCheckIn",
+    labelKey: "apps.selfCheckIn",
+    path: "/app/attendance/self-check-in",
+    icon: QrCode,
+    permissions: ["attendance.my.checkin"],
     iconColor: "teal",
   },
   {
@@ -265,14 +301,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/leave/overtimes",
     icon: Clock,
     permissions: ["leave.my.overtimes"],
-    iconColor: "orange",
-  },
-  {
-    key: "timesheet",
-    labelKey: "apps.timesheet",
-    path: "/app/attendance/timesheet",
-    icon: CalendarClock,
-    permissions: ["attendance.my.timesheet"],
     iconColor: "orange",
   },
   {
@@ -308,22 +336,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "teal",
   },
   {
-    key: "deviceLogImport",
-    labelKey: "apps.deviceLogImport",
-    path: "/app/attendance/device-logs/import",
-    icon: Upload,
-    permissions: ["attendance.timesheet.import"],
-    iconColor: "orange",
-  },
-  {
-    key: "selfCheckIn",
-    labelKey: "apps.selfCheckIn",
-    path: "/app/attendance/self-check-in",
-    icon: QrCode,
-    permissions: ["attendance.my.checkin"],
-    iconColor: "teal",
-  },
-  {
     key: "liveBoard",
     labelKey: "apps.liveBoard",
     path: "/app/attendance/live-board",
@@ -332,12 +344,12 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "navy",
   },
   {
-    key: "payroll",
-    labelKey: "apps.payroll",
-    path: "/app/payroll/periods",
-    icon: Wallet,
-    permissions: ["payroll.period.recalculate"],
-    iconColor: "navy",
+    key: "deviceLogImport",
+    labelKey: "apps.deviceLogImport",
+    path: "/app/attendance/device-logs/import",
+    icon: Upload,
+    permissions: ["attendance.timesheet.import"],
+    iconColor: "orange",
   },
   {
     key: "expenses",
@@ -356,6 +368,46 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "blue",
   },
   {
+    key: "payroll",
+    labelKey: "apps.payroll",
+    path: "/app/payroll/periods",
+    icon: Wallet,
+    permissions: ["payroll.period.recalculate"],
+    iconColor: "navy",
+  },
+  {
+    key: "training",
+    labelKey: "apps.training",
+    path: "/app/training",
+    icon: GraduationCap,
+    permissions: ["training.my.enrollments", "training.programs.view"],
+    iconColor: "teal",
+  },
+  {
+    key: "assets",
+    labelKey: "apps.assets",
+    path: "/app/assets",
+    icon: Package,
+    permissions: ["assets.my.assets", "assets.assets.view"],
+    iconColor: "steel",
+  },
+  {
+    key: "ohs",
+    labelKey: "apps.ohs",
+    path: "/app/ohs",
+    icon: HardHat,
+    permissions: ["ohs.my.incident_reports", "ohs.incidents.view", "ohs.services.view"],
+    iconColor: "orange",
+  },
+  {
+    key: "onboarding",
+    labelKey: "apps.onboarding",
+    path: "/app/onboarding",
+    icon: ListChecks,
+    permissions: ["onboarding.tasks.view"],
+    iconColor: "teal",
+  },
+  {
     key: "performance",
     labelKey: "apps.performance",
     path: "/app/performance/goals",
@@ -369,6 +421,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/performance/review-cycles",
     icon: CalendarRange,
     permissions: ["performance.my.reviews"],
+    iconColor: "gold",
+  },
+  {
+    key: "performanceTeamGoals",
+    labelKey: "apps.performanceTeamGoals",
+    path: "/app/performance/team-goals",
+    icon: Users,
+    permissions: ["performance.team.goals"],
     iconColor: "gold",
   },
   {
@@ -404,12 +464,12 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "blue",
   },
   {
-    key: "companyCalendar",
-    labelKey: "apps.companyCalendar",
-    path: "/app/company-calendar",
-    icon: CalendarDays,
-    permissions: ["announcements.my.events"],
-    iconColor: "cyan",
+    key: "dataTransfer",
+    labelKey: "apps.dataTransfer",
+    path: "/app/settings/data-transfer",
+    icon: FileSpreadsheet,
+    permissions: [...SETTINGS_PERMISSIONS.dataTransfer],
+    iconColor: "blue",
   },
 ];
 
@@ -421,6 +481,8 @@ export interface SettingsLink {
   path: string;
   icon: LucideIcon;
   permissions?: readonly string[];
+  /** Rota bir erişim ayarıyla da kapılıysa (route-guard aynı ayarı okur). */
+  accessSetting?: AccessSettingKey;
   phase?: number;
 }
 
@@ -431,36 +493,12 @@ export interface SettingsSection {
   links: SettingsLink[];
 }
 
-/** Ayarlar hub tree (11.3.13 "Ayarlar ağacı"). */
+/** Ayarlar hub tree (11.3.13 "Ayarlar ağacı"): işlevsel yakınlığa göre gruplanmıştır; arama hub sayfasında yapılır. */
 export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     key: "company",
     labelKey: "settings.company",
     links: [
-      {
-        key: "structure",
-        labelKey: "settings.structure",
-        descriptionKey: "settings.structureDesc",
-        path: "/app/settings/company/structure",
-        icon: Network,
-        permissions: SETTINGS_PERMISSIONS.structure,
-      },
-      {
-        key: "holidayCalendars",
-        labelKey: "settings.holidayCalendars",
-        descriptionKey: "settings.holidayCalendarsDesc",
-        path: "/app/settings/company/holiday-calendars",
-        icon: CalendarDays,
-        permissions: SETTINGS_PERMISSIONS.holidayCalendars,
-      },
-      {
-        key: "locations",
-        labelKey: "settings.locations",
-        descriptionKey: "settings.locationsDesc",
-        path: "/app/settings/company/locations",
-        icon: MapPin,
-        permissions: SETTINGS_PERMISSIONS.locations,
-      },
       {
         key: "companyProfile",
         labelKey: "settings.companyProfile",
@@ -470,28 +508,29 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         permissions: SETTINGS_PERMISSIONS.companyProfile,
       },
       {
-        key: "approvalFlows",
-        labelKey: "settings.approvalFlows",
-        descriptionKey: "settings.approvalFlowsDesc",
-        path: "/app/settings/company/approval-flows",
-        icon: Workflow,
-        permissions: SETTINGS_PERMISSIONS.workflowPolicies,
+        key: "structure",
+        labelKey: "settings.structure",
+        descriptionKey: "settings.structureDesc",
+        path: "/app/settings/company/structure",
+        icon: Network,
+        permissions: SETTINGS_PERMISSIONS.structure,
       },
       {
-        key: "customFields",
-        labelKey: "settings.customFields",
-        descriptionKey: "settings.customFieldsDesc",
-        path: "/app/settings/company/custom-fields",
-        icon: ListChecks,
-        permissions: SETTINGS_PERMISSIONS.customFields,
+        key: "orgChart",
+        labelKey: "settings.orgChart",
+        descriptionKey: "settings.orgChartDesc",
+        path: "/app/employees/org-chart",
+        icon: GitBranch,
+        permissions: ["employee.orgchart.view"],
+        accessSetting: "showOrgChart",
       },
       {
-        key: "terminationReasons",
-        labelKey: "settings.terminationReasons",
-        descriptionKey: "settings.terminationReasonsDesc",
-        path: "/app/settings/company/termination-reasons",
-        icon: LogOut,
-        permissions: SETTINGS_PERMISSIONS.terminationReasons,
+        key: "locations",
+        labelKey: "settings.locations",
+        descriptionKey: "settings.locationsDesc",
+        path: "/app/settings/company/locations",
+        icon: MapPin,
+        permissions: SETTINGS_PERMISSIONS.locations,
       },
       {
         key: "costCenters",
@@ -509,6 +548,67 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: Building2,
         permissions: SETTINGS_PERMISSIONS.subcontractors,
       },
+    ],
+  },
+  {
+    key: "rules",
+    labelKey: "settings.rules",
+    path: "/app/settings/rules",
+    links: [
+      {
+        key: "workCalendars",
+        labelKey: "settings.workCalendars",
+        descriptionKey: "settings.workCalendarsDesc",
+        path: "/app/settings/rules/work-calendars",
+        icon: CalendarClock,
+        permissions: SETTINGS_PERMISSIONS.workSchedules,
+      },
+      {
+        key: "leaveRuleSets",
+        labelKey: "settings.leaveRuleSets",
+        descriptionKey: "settings.leaveRuleSetsDesc",
+        path: "/app/settings/leave/rule-sets",
+        icon: ScrollText,
+        permissions: ["leave.rule_sets.read"],
+      },
+      {
+        key: "holidayCalendars",
+        labelKey: "settings.holidayCalendars",
+        descriptionKey: "settings.holidayCalendarsDesc",
+        path: "/app/settings/company/holiday-calendars",
+        icon: CalendarDays,
+        permissions: SETTINGS_PERMISSIONS.holidayCalendars,
+      },
+      {
+        key: "visaProcesses",
+        labelKey: "settings.visaProcesses",
+        descriptionKey: "settings.visaProcessesDesc",
+        path: "/app/settings/rules/visa-processes",
+        icon: Stamp,
+        permissions: SETTINGS_PERMISSIONS.visaProcesses,
+      },
+    ],
+  },
+  {
+    key: "people",
+    labelKey: "settings.peopleSection",
+    links: [
+      {
+        key: "customFields",
+        labelKey: "settings.customFields",
+        descriptionKey: "settings.customFieldsDesc",
+        path: "/app/settings/company/custom-fields",
+        icon: ListChecks,
+        permissions: SETTINGS_PERMISSIONS.customFields,
+      },
+      {
+        key: "terminationReasons",
+        labelKey: "settings.terminationReasons",
+        descriptionKey: "settings.terminationReasonsDesc",
+        path: "/app/settings/company/termination-reasons",
+        icon: LogOut,
+        permissions: SETTINGS_PERMISSIONS.terminationReasons,
+      },
       {
         key: "documentTypes",
         labelKey: "settings.documentTypes",
@@ -525,6 +625,42 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: FileWarning,
         permissions: SETTINGS_PERMISSIONS.missingDocuments,
       },
+    ],
+  },
+  {
+    key: "workflows",
+    labelKey: "settings.workflowsSection",
+    links: [
+      {
+        key: "approvalFlows",
+        labelKey: "settings.approvalFlows",
+        descriptionKey: "settings.approvalFlowsDesc",
+        path: "/app/settings/company/approval-flows",
+        icon: Workflow,
+        permissions: SETTINGS_PERMISSIONS.workflowPolicies,
+      },
+      {
+        key: "recruitmentFormTemplates",
+        labelKey: "settings.recruitmentFormTemplates",
+        descriptionKey: "settings.recruitmentFormTemplatesDesc",
+        path: "/app/settings/recruitment/form-templates",
+        icon: FileText,
+        permissions: SETTINGS_PERMISSIONS.recruitmentFormTemplates,
+      },
+      {
+        key: "recruitmentAutomationRules",
+        labelKey: "settings.recruitmentAutomationRules",
+        descriptionKey: "settings.recruitmentAutomationRulesDesc",
+        path: "/app/settings/recruitment/automation-rules",
+        icon: Workflow,
+        permissions: SETTINGS_PERMISSIONS.recruitmentAutomationRules,
+      },
+    ],
+  },
+  {
+    key: "assetsExpense",
+    labelKey: "settings.assetsExpenseSection",
+    links: [
       {
         key: "assetCategories",
         labelKey: "settings.assetCategories",
@@ -541,6 +677,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: Receipt,
         permissions: SETTINGS_PERMISSIONS.expenseCategories,
       },
+    ],
+  },
+  {
+    key: "ohs",
+    labelKey: "settings.ohsSection",
+    links: [
       {
         key: "ohsHazardClassification",
         labelKey: "settings.ohsHazardClassification",
@@ -560,32 +702,17 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     ],
   },
   {
-    key: "rules",
-    labelKey: "settings.rules",
-    path: "/app/settings/rules",
-    links: [
-      {
-        key: "workCalendars",
-        labelKey: "settings.workCalendars",
-        descriptionKey: "settings.workCalendarsDesc",
-        path: "/app/settings/rules/work-calendars",
-        icon: CalendarClock,
-        permissions: SETTINGS_PERMISSIONS.workSchedules,
-      },
-      {
-        key: "visaProcesses",
-        labelKey: "settings.visaProcesses",
-        descriptionKey: "settings.visaProcessesDesc",
-        path: "/app/settings/rules/visa-processes",
-        icon: Stamp,
-        permissions: SETTINGS_PERMISSIONS.visaProcesses,
-      },
-    ],
-  },
-  {
     key: "system",
     labelKey: "settings.system",
     links: [
+      {
+        key: "usersRoles",
+        labelKey: "settings.usersRoles",
+        descriptionKey: "settings.usersRolesDesc",
+        path: "/app/settings/system/users-roles",
+        icon: Users,
+        permissions: SETTINGS_PERMISSIONS.usersRoles,
+      },
       {
         key: "access",
         labelKey: "settings.access",
@@ -603,22 +730,6 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         permissions: SETTINGS_PERMISSIONS.securityPolicy,
       },
       {
-        key: "modules",
-        labelKey: "settings.modules",
-        descriptionKey: "settings.modulesDesc",
-        path: "/app/settings/system/modules",
-        icon: Blocks,
-        permissions: SETTINGS_PERMISSIONS.modules,
-      },
-      {
-        key: "usersRoles",
-        labelKey: "settings.usersRoles",
-        descriptionKey: "settings.usersRolesDesc",
-        path: "/app/settings/system/users-roles",
-        icon: Users,
-        permissions: SETTINGS_PERMISSIONS.usersRoles,
-      },
-      {
         key: "auditLog",
         labelKey: "settings.auditLog",
         descriptionKey: "settings.auditLogDesc",
@@ -634,21 +745,20 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: ShieldCheck,
         permissions: SETTINGS_PERMISSIONS.supportAccess,
       },
-      {
-        key: "billing",
-        labelKey: "settings.billing",
-        descriptionKey: "settings.billingDesc",
-        path: "/app/settings/system/billing",
-        icon: CreditCard,
-        permissions: SETTINGS_PERMISSIONS.tenantManage,
-        phase: 8,
-      },
     ],
   },
   {
-    key: "dataTransfer",
-    labelKey: "settings.dataTransferSection",
+    key: "platform",
+    labelKey: "settings.platformSection",
     links: [
+      {
+        key: "modules",
+        labelKey: "settings.modules",
+        descriptionKey: "settings.modulesDesc",
+        path: "/app/settings/system/modules",
+        icon: Blocks,
+        permissions: SETTINGS_PERMISSIONS.modules,
+      },
       {
         key: "dataTransfer",
         labelKey: "settings.dataTransfer",
@@ -657,27 +767,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
         icon: FileSpreadsheet,
         permissions: SETTINGS_PERMISSIONS.dataTransfer,
       },
-    ],
-  },
-  {
-    key: "recruitment",
-    labelKey: "settings.recruitmentSection",
-    links: [
       {
-        key: "recruitmentFormTemplates",
-        labelKey: "settings.recruitmentFormTemplates",
-        descriptionKey: "settings.recruitmentFormTemplatesDesc",
-        path: "/app/settings/recruitment/form-templates",
-        icon: FileText,
-        permissions: SETTINGS_PERMISSIONS.recruitmentFormTemplates,
-      },
-      {
-        key: "recruitmentAutomationRules",
-        labelKey: "settings.recruitmentAutomationRules",
-        descriptionKey: "settings.recruitmentAutomationRulesDesc",
-        path: "/app/settings/recruitment/automation-rules",
-        icon: Workflow,
-        permissions: SETTINGS_PERMISSIONS.recruitmentAutomationRules,
+        key: "billing",
+        labelKey: "settings.billing",
+        descriptionKey: "settings.billingDesc",
+        path: "/app/settings/system/billing",
+        icon: CreditCard,
+        permissions: SETTINGS_PERMISSIONS.tenantManage,
+        phase: 8,
       },
     ],
   },

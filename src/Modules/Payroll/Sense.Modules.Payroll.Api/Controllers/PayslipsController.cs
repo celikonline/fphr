@@ -2,6 +2,7 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sense.Modules.Payroll.Application.Declarations;
+using Sense.Modules.Payroll.Application.Periods;
 using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Payroll.Api.Controllers;
@@ -20,4 +21,10 @@ public sealed class PayslipsController : ApiControllerBase
         var result = await Dispatcher.Query(new ExportPayslipDocumentQuery(payslipId), ct);
         return result.IsSuccess ? File(result.Value.Content, result.Value.ContentType, result.Value.FileName) : Problem(result.Error);
     }
+
+    /// <summary>Every payslip of one employee, newest period first (employee card "Bordro" tab).</summary>
+    [HttpGet("~/api/v{version:apiVersion}/payroll/employees/{employeeId:guid}/payslips")]
+    [ProducesResponseType<IReadOnlyList<EmployeePayslipDto>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListForEmployee(Guid employeeId, CancellationToken ct) =>
+        FromResult(await Dispatcher.Query(new ListEmployeePayslipsQuery(employeeId), ct));
 }

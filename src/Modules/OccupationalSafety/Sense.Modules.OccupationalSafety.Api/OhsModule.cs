@@ -5,9 +5,11 @@ using Sense.Modules.OccupationalSafety.Application;
 using Sense.Modules.OccupationalSafety.Contracts;
 using Sense.Modules.OccupationalSafety.Infrastructure;
 using Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
+using Sense.Shared.Contracts.Audit;
 using Sense.Shared.Contracts.Modules;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Infrastructure.DependencyInjection;
+using Sense.Shared.Infrastructure.Persistence.Audit;
 
 namespace Sense.Modules.OccupationalSafety.Api;
 
@@ -32,7 +34,12 @@ public sealed class OhsModule : IModule
 
     public void AddModule(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddModuleDbContext<OhsDbContext>(configuration, OhsDbContext.SchemaName);
+        // Audit trail for IAuditLogged aggregates - same wiring as LeaveModule/ExpenseModule.
+        services.AddScoped<AuditLogInterceptor>();
+        services.AddModuleDbContext<OhsDbContext>(
+            configuration, OhsDbContext.SchemaName,
+            (sp, options) => options.AddInterceptors(sp.GetRequiredService<AuditLogInterceptor>()));
+        services.AddScoped<IAuditLogSource, ModuleAuditLogSource<OhsDbContext>>();
 
         // Domain + Contracts assemblies too: their domain/integration event types must resolve in OutboxProcessor
         // (see AssetsModule.AddModule's identical comment).
@@ -43,5 +50,8 @@ public sealed class OhsModule : IModule
             typeof(OhsPermissions).Assembly);
 
         services.AddOhsCoreServices();
+        // Hangfire runs in Sense.Api (not Sense.Worker), same as Documents' expiry reminder.
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Sense.Modules.OccupationalSafety.Infrastructure.BackgroundJobs.SgkNotificationReminderJobHandler>();
     }
 }

@@ -105,6 +105,27 @@ public sealed class EmployeeIntegrationTests : TestFixture
     }
 
     [Fact]
+    public async Task List_SearchFoldsTurkishAccentsAndMatchesTermsInAnyOrder()
+    {
+        var tenantId = Guid.NewGuid();
+        SetUser(tenantId, platformAdmin: true);
+
+        var ayse = await CreateAsync("Ayşe", "Demir");
+        var ahmet = await CreateAsync("Ahmet", "Yılmaz");
+        var ali = await CreateAsync("Ali", "Şahin");
+        var ibrahim = await CreateAsync("İbrahim", "Çelik");
+
+        (await ListAsync(q: "ayse")).Select(e => e.Id).ShouldBe([ayse.Id]);
+        (await ListAsync(q: "yilmaz")).Select(e => e.Id).ShouldBe([ahmet.Id]);
+        (await ListAsync(q: "ali sahin")).Select(e => e.Id).ShouldBe([ali.Id]);
+        (await ListAsync(q: "Demir Ayşe")).Select(e => e.Id).ShouldBe([ayse.Id]);
+        (await ListAsync(q: "ıbrahim")).Select(e => e.Id).ShouldBe([ibrahim.Id]);
+        (await ListAsync(q: "IBRAHIM CELIK")).Select(e => e.Id).ShouldBe([ibrahim.Id]);
+        (await ListAsync(q: "  ")).Count.ShouldBe(4);
+        (await ListAsync(q: "ayse yilmaz")).ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task List_AppliesFiltersSortAccountStatusAndDataScope()
     {
         var tenantId = Guid.NewGuid();

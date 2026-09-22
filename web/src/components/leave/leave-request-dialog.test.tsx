@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import i18next from "i18next";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -109,15 +109,13 @@ function prefillRequest(overrides: Partial<LeaveRequest>): LeaveRequest {
 }
 
 describe("LeaveRequestDialog", () => {
-  it("clears the stale 'dates required' message once the form is edited (B4)", async () => {
+  it("shows an error under each empty date field instead of one form-level message (B4, D-12)", async () => {
     renderDialog({ types: [fullDayType] });
 
     fireEvent.click(screen.getByRole("button", { name: "Gönder" }));
-    expect(await screen.findByText(trLeave.form.validation.datesRequired)).not.toBeNull();
 
-    fireEvent.change(screen.getByLabelText(trLeave.form.description), { target: { value: "Aile ziyareti" } });
-
-    await waitFor(() => expect(screen.queryByText(trLeave.form.validation.datesRequired)).toBeNull());
+    expect(await screen.findByText(trLeave.form.validation.startRequired)).not.toBeNull();
+    expect(screen.getByText(trLeave.form.validation.endRequired)).not.toBeNull();
   });
 
   it("keeps the dialog open when the overlay is clicked (B3)", () => {

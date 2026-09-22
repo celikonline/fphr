@@ -20,7 +20,7 @@ export interface User {
   employeeId?: string | null;
   preferredLanguage?: string;
   mfaEnabled?: boolean;
-  tenant?: { id: string; name: string; slug: string } | null;
+  tenant?: { id: string; name: string; slug: string; setupCompleted?: boolean } | null;
 }
 
 export interface TenantChoice {
@@ -136,14 +136,17 @@ function clearStoredCredentials(): void {
  * never triggers api-client's session-expired redirect (`skipAuthRetry` + skipped when the access token is
  * already expired, since a 401 here would otherwise toast "session expired" right after the user chose to leave).
  */
-async function revokeRefreshToken(accessToken: string | null, refreshToken: string | null): Promise<void> {
+async function revokeRefreshToken(
+  accessToken: string | null,
+  refreshToken: string | null
+): Promise<void> {
   if (!accessToken || !refreshToken || isJwtExpired(accessToken)) return;
   try {
     await apiClient.post(
       `${AUTH_BASE}/logout`,
       { refreshToken, allSessions: false },
       // Explicit header: the request interceptor reads localStorage, which logout() has already cleared.
-      { headers: { Authorization: `Bearer ${accessToken}` }, skipAuthRetry: true },
+      { headers: { Authorization: `Bearer ${accessToken}` }, skipAuthRetry: true }
     );
   } catch {
     // The server-side token simply expires on its own; the local session is already gone.
@@ -185,7 +188,14 @@ export function toUser(me: MeResponse): User {
     employeeId: me.employeeId,
     preferredLanguage: me.preferredLanguage,
     mfaEnabled: me.mfaEnabled,
-    tenant: me.tenant ? { id: me.tenant.id, name: me.tenant.name, slug: me.tenant.slug } : null,
+    tenant: me.tenant
+      ? {
+          id: me.tenant.id,
+          name: me.tenant.name,
+          slug: me.tenant.slug,
+          setupCompleted: me.tenant.setupCompleted,
+        }
+      : null,
   };
 }
 
@@ -395,7 +405,7 @@ export const useAuthStore = create<AuthStore>()(
             const { data } = await apiClient.post<AuthTokensResponse>(
               `${AUTH_BASE}/refresh`,
               { refreshToken },
-              { skipAuthRetry: true },
+              { skipAuthRetry: true }
             );
             safeStorageSet(AUTH_TOKEN_STORAGE_KEY, data.accessToken);
             writeStoredRefreshToken(data.refreshToken);

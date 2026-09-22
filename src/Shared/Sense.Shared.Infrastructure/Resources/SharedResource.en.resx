@@ -110,15 +110,15 @@
   <data name="invitation.user_active" xml:space="preserve"><value>The user is already active; no invitation needed.</value></data>
 
   <data name="roles.owner.name" xml:space="preserve"><value>Account Owner</value></data>
-  <data name="roles.owner.description" xml:space="preserve"><value>All permissions; billing and account management. Cannot be deleted.</value></data>
+  <data name="roles.owner.description" xml:space="preserve"><value>Locked permission carried in the background by the first HR Manager who opened the company; not a separate group.</value></data>
   <data name="roles.admin.name" xml:space="preserve"><value>System Administrator</value></data>
-  <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions except billing.</value></data>
+  <data name="roles.admin.description" xml:space="preserve"><value>All administrative permissions, including billing.</value></data>
   <data name="roles.hr.name" xml:space="preserve"><value>HR Manager</value></data>
-  <data name="roles.hr.description" xml:space="preserve"><value>Personnel, leave, attendance/timesheets, documents, announcements, training, assets, performance, compensation, recruitment, reports, KVKK (Turkish data protection law).</value></data>
+  <data name="roles.hr.description" xml:space="preserve"><value>Full access within the company: personnel, leave, timesheets, payroll, expenses, recruitment, reports, users and settings.</value></data>
   <data name="roles.hrspecialist.name" xml:space="preserve"><value>HR Specialist</value></data>
   <data name="roles.hrspecialist.description" xml:space="preserve"><value>Subset of HR Manager: no salary visibility, payroll, termination or compensation approvals.</value></data>
-  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Payroll Specialist</value></data>
-  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Payroll periods, parameters, pay items, garnishments, social security filings, bank files, timesheet locks.</value></data>
+  <data name="roles.payrollspecialist.name" xml:space="preserve"><value>Accounting</value></data>
+  <data name="roles.payrollspecialist.description" xml:space="preserve"><value>Full access within the company: payroll, expense and advance payments, declarations, reports and every other screen.</value></data>
   <data name="roles.finance.name" xml:space="preserve"><value>Finance</value></data>
   <data name="roles.finance.description" xml:space="preserve"><value>Final approval of expenses/advances, bank payment lists, budget view, invoices.</value></data>
   <data name="roles.manager.name" xml:space="preserve"><value>Manager</value></data>
@@ -136,7 +136,7 @@
   <data name="roles.itadmin.name" xml:space="preserve"><value>IT Administrator</value></data>
   <data name="roles.itadmin.description" xml:space="preserve"><value>Users/roles, security policy, SSO, API keys, webhooks, devices/QR checkpoints; no HR data access.</value></data>
   <data name="roles.employee.name" xml:space="preserve"><value>Employee</value></data>
-  <data name="roles.employee.description" xml:space="preserve"><value>Self-service: profile, leave/overtime/expense/advance requests, payslips, attendance, announcements, directory, documents, training, goals, assistant.</value></data>
+  <data name="roles.employee.description" xml:space="preserve"><value>Own data only: profile, leave/overtime/expense/advance requests, check-in, announcements, documents.</value></data>
   <data name="roles.intern.name" xml:space="preserve"><value>Intern</value></data>
   <data name="roles.intern.description" xml:space="preserve"><value>Employee minus payslips/advances; limited directory.</value></data>
   <data name="roles.contractor.name" xml:space="preserve"><value>Contractor</value></data>
@@ -186,6 +186,8 @@
   <data name="employee.birth_date_too_early" xml:space="preserve"><value>Birth date cannot be before 1900-01-01.</value></data>
   <data name="employee.hire_date_too_early" xml:space="preserve"><value>Hire date cannot be before 1900-01-01.</value></data>
   <data name="employee.hire_date_too_far_in_future" xml:space="preserve"><value>Hire date can be at most 12 months in the future.</value></data>
+  <data name="employee.termination_date_too_far_in_future" xml:space="preserve"><value>Termination date can be at most 6 months in the future.</value></data>
+  <data name="employee.name_invalid_characters" xml:space="preserve"><value>First and last names cannot contain "&lt;", "&gt;" or control characters.</value></data>
   <data name="employee.minimum_age" xml:space="preserve"><value>A person under 15 at the hire date cannot be employed (Labour Act 4857, art. 71).</value></data>
   <data name="employee.manager_self" xml:space="preserve"><value>An employee cannot be their own manager.</value></data>
   <data name="employee.manager_cycle" xml:space="preserve"><value>This assignment would create a cycle in the manager hierarchy.</value></data>
@@ -219,6 +221,10 @@
   <data name="employee.passport_number_too_long" xml:space="preserve"><value>The passport number can be at most 20 characters.</value></data>
   <data name="employee.sgk_occupation_code_too_long" xml:space="preserve"><value>The SGK occupation code can be at most 20 characters.</value></data>
   <data name="employee.subcontractor_not_found" xml:space="preserve"><value>Subcontractor not found.</value></data>
+  <data name="employee.photo_required" xml:space="preserve"><value>A photo file is required.</value></data>
+  <data name="employee.photo_too_large" xml:space="preserve"><value>The photo can be at most 2 MB.</value></data>
+  <data name="employee.photo_type_unsupported" xml:space="preserve"><value>The photo must be a JPEG, PNG or WebP image.</value></data>
+  <data name="employee.photo_not_found" xml:space="preserve"><value>The employee has no photo.</value></data>
   <data name="employee.subcontractor_name_required" xml:space="preserve"><value>The subcontractor name is required.</value></data>
   <data name="employee.subcontractor_name_too_long" xml:space="preserve"><value>The company name can be at most 200 characters.</value></data>
   <data name="employee.subcontractor_tax_number_too_long" xml:space="preserve"><value>The tax number can be at most 20 characters.</value></data>
@@ -368,6 +374,14 @@
   <data name="impersonation.not_revocable" xml:space="preserve"><value>This support access cannot be revoked.</value></data>
   <data name="impersonation.requires_platform_staff" xml:space="preserve"><value>Only platform staff can request support access.</value></data>
   <data name="impersonation.forbidden" xml:space="preserve"><value>You are not allowed to use this support access.</value></data>
+  <data name="roles.superadmin.name" xml:space="preserve"><value>Super Admin</value></data>
+  <data name="roles.superadmin.description" xml:space="preserve"><value>Platform administrator: creates new companies (tenants). Exists only in the platform account.</value></data>
+  <data name="platform.tenants.manage" xml:space="preserve"><value>Create companies and list companies (platform)</value></data>
+  <data name="identity.group.platform" xml:space="preserve"><value>Platform administration</value></data>
+  <data name="platform.staff_required" xml:space="preserve"><value>This action can only be performed with the platform (super admin) account.</value></data>
+  <data name="tenant.owner_password_required" xml:space="preserve"><value>An owner password is required when creating with a password.</value></data>
+  <data name="tenant.invalid_locale" xml:space="preserve"><value>Unsupported language/region selected.</value></data>
+  <data name="tenant.invalid_timezone" xml:space="preserve"><value>Invalid time zone.</value></data>
   <data name="impersonation.reason_required" xml:space="preserve"><value>A reason is required (max 500 characters).</value></data>
   <data name="impersonation.status_invalid" xml:space="preserve"><value>Invalid status filter.</value></data>
   <data name="identity.org_unit_not_found" xml:space="preserve"><value>The selected unit was not found or is inactive.</value></data>
@@ -406,6 +420,39 @@ The report you requested has been generated. Click the link to view and download
   <data name="field.company_name" xml:space="preserve"><value>Company name</value></data>
   <data name="field.email" xml:space="preserve"><value>E-mail</value></data>
   <data name="field.first_name" xml:space="preserve"><value>First name</value></data>
+  <data name="field.amount" xml:space="preserve"><value>Amount</value></data>
+  <data name="field.currency" xml:space="preserve"><value>Currency</value></data>
+  <data name="field.days" xml:space="preserve"><value>Number of days</value></data>
+  <data name="field.reason" xml:space="preserve"><value>Reason</value></data>
+  <data name="field.description" xml:space="preserve"><value>Description</value></data>
+  <data name="field.comment" xml:space="preserve"><value>Comment</value></data>
+  <data name="field.note" xml:space="preserve"><value>Note</value></data>
+  <data name="field.title" xml:space="preserve"><value>Title</value></data>
+  <data name="field.installment_count" xml:space="preserve"><value>Installment count</value></data>
+  <data name="field.duration_minutes" xml:space="preserve"><value>Duration (minutes)</value></data>
+  <data name="field.start_date" xml:space="preserve"><value>Start date</value></data>
+  <data name="field.end_date" xml:space="preserve"><value>End date</value></data>
+  <data name="field.start_time" xml:space="preserve"><value>Start time</value></data>
+  <data name="field.end_time" xml:space="preserve"><value>End time</value></data>
+  <data name="field.work_date" xml:space="preserve"><value>Work date</value></data>
+  <data name="field.requested_date" xml:space="preserve"><value>Requested date</value></data>
+  <data name="field.effective_date" xml:space="preserve"><value>Effective date</value></data>
+  <data name="field.hire_date" xml:space="preserve"><value>Hire date</value></data>
+  <data name="field.birth_date" xml:space="preserve"><value>Birth date</value></data>
+  <data name="field.termination_date" xml:space="preserve"><value>Termination date</value></data>
+  <data name="field.leave_type_id" xml:space="preserve"><value>Leave type</value></data>
+  <data name="field.employee_id" xml:space="preserve"><value>Employee</value></data>
+  <data name="field.org_unit_id" xml:space="preserve"><value>Unit</value></data>
+  <data name="field.year" xml:space="preserve"><value>Year</value></data>
+  <data name="field.month" xml:space="preserve"><value>Month</value></data>
+  <data name="field.quantity" xml:space="preserve"><value>Quantity</value></data>
+  <data name="field.tax_rate" xml:space="preserve"><value>VAT rate</value></data>
+  <data name="field.iban" xml:space="preserve"><value>IBAN</value></data>
+  <data name="field.address" xml:space="preserve"><value>Address</value></data>
+  <data name="field.country_code" xml:space="preserve"><value>Country code</value></data>
+  <data name="field.postal_code" xml:space="preserve"><value>Postal code</value></data>
+  <data name="field.file_name" xml:space="preserve"><value>File name</value></data>
+  <data name="field.content_type" xml:space="preserve"><value>Content type</value></data>
   <data name="field.language" xml:space="preserve"><value>Language</value></data>
   <data name="field.last_name" xml:space="preserve"><value>Last name</value></data>
   <data name="field.name" xml:space="preserve"><value>Name</value></data>
@@ -805,11 +852,39 @@ The report you requested has been generated. Click the link to view and download
 
   <!-- Payroll (senseik-011, F-06): severance/notice/unused-leave estimate (exit wizard) -->
   <data name="payroll.severance.estimate" xml:space="preserve"><value>View the severance/notice estimate</value></data>
+  <data name="payroll.errors.exit_settlement_line_invalid" xml:space="preserve"><value>The line needs a name (at most 200 characters) and an amount above zero.</value></data>
+  <data name="payroll.errors.exit_settlement_line_not_found" xml:space="preserve"><value>The exit settlement line was not found.</value></data>
+  <data name="payroll.errors.exit_settlement_line_not_removable" xml:space="preserve"><value>The automatic severance, notice and leave lines cannot be removed, only edited.</value></data>
+  <data name="payroll.period.approve" xml:space="preserve"><value>Approve a payroll period and mark it paid</value></data>
+  <data name="payroll.period.lock" xml:space="preserve"><value>Lock a payroll period</value></data>
+  <data name="payroll.period.reopen" xml:space="preserve"><value>Reopen a payroll period with a reason</value></data>
+  <data name="payroll.errors.period_not_reopenable" xml:space="preserve"><value>The period is already open; there is nothing to reopen.</value></data>
+  <data name="payroll.errors.period_reopen_reason_invalid" xml:space="preserve"><value>A reason is required to reopen a period (at most 500 characters).</value></data>
+  <data name="payroll.errors.period_has_dirty_payslips" xml:space="preserve"><value>Some payslips changed and were not recalculated; run "Recalculate changed" before approving the period.</value></data>
+  <data name="payroll.errors.period_approval_needs_different_user" xml:space="preserve"><value>Whoever last calculated the period cannot approve it too; a different authorized user must approve (four-eyes rule).</value></data>
+  <data name="payroll.errors.receipt_csv_empty" xml:space="preserve"><value>No readable payment row was found in the receipt file; upload a CSV with an IBAN and an amount column.</value></data>
+  <data name="payroll.errors.closing_check_not_found" xml:space="preserve"><value>The closing check was not found.</value></data>
+  <data name="payroll.errors.closing_check_not_manual" xml:space="preserve"><value>An automatic check cannot be ticked off by hand; run its rule or waive it with a reason.</value></data>
+  <data name="payroll.errors.closing_waiver_reason_invalid" xml:space="preserve"><value>A waiver reason is required (at most 500 characters).</value></data>
+  <data name="payroll.errors.period_has_open_blockers" xml:space="preserve"><value>Blocking closing checks are not done; fix the failed or pending items on the checklist or waive them with a reason.</value></data>
+  <data name="payroll.errors.comparison_threshold_invalid" xml:space="preserve"><value>The deviation threshold cannot be negative.</value></data>
+  <data name="payroll.bankfile.export" xml:space="preserve"><value>Download the bank payment file</value></data>
+  <data name="payroll.errors.bank_file_period_not_approved" xml:space="preserve"><value>The bank payment file is only created for an approved, paid or locked period.</value></data>
+  <data name="payroll.errors.bank_file_missing_accounts" xml:space="preserve"><value>Some employees have no primary bank account (IBAN); the file was not created. Complete the missing accounts.</value></data>
+  <data name="payroll.errors.bank_file_no_payments" xml:space="preserve"><value>No payslip in the period has a net amount to pay.</value></data>
+  <data name="payroll.errors.bank_file_total_mismatch" xml:space="preserve"><value>The file total does not match the payroll net total; the file was not created.</value></data>
+  <data name="payroll.adjustment.manage" xml:space="preserve"><value>Add bonus/commission earnings to payroll</value></data>
+  <data name="payroll.errors.adjustment_invalid" xml:space="preserve"><value>The earning needs a name (at most 200 characters) and an amount above zero.</value></data>
+  <data name="payroll.errors.adjustment_not_found" xml:space="preserve"><value>The earning was not found.</value></data>
+  <data name="payroll.errors.adjustment_period_not_open" xml:space="preserve"><value>Earnings can only be added or removed while the payroll period is open.</value></data>
+  <data name="payroll.errors.profile_transport_amount_invalid" xml:space="preserve"><value>A cash transport allowance needs a daily amount above zero.</value></data>
+  <data name="payroll.errors.exit_settlement_not_found" xml:space="preserve"><value>No exit settlement is recorded for this employee.</value></data>
   <data name="payroll.errors.severance_estimate_salary_missing" xml:space="preserve"><value>The estimate needs the employee to have a current salary record.</value></data>
   <data name="payroll.dirty.reason.profile_changed" xml:space="preserve"><value>Payroll profile changed</value></data>
   <data name="payroll.dirty.reason.bank_changed" xml:space="preserve"><value>Bank account changed</value></data>
   <data name="payroll.dirty.reason.leave_changed" xml:space="preserve"><value>Leave record changed</value></data>
   <data name="payroll.dirty.reason.hash_mismatch" xml:space="preserve"><value>Input data changed after the last calculation (automatic reconciliation)</value></data>
+  <data name="payroll.exitsettlement.manage" xml:space="preserve"><value>Manage exit settlement lines</value></data>
   <data name="payroll.courtorder.manage" xml:space="preserve"><value>Manage garnishment (icra/nafaka) orders</value></data>
   <data name="payroll.declarations.export" xml:space="preserve"><value>Download payroll declaration files (APHB, bank payment, accounting voucher)</value></data>
   <data name="payroll.errors.garnishment_case_reference_required" xml:space="preserve"><value>A case/decision reference must be entered.</value></data>
@@ -1084,6 +1159,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="expense.advance.not_submitted" xml:space="preserve"><value>The advance request is not pending approval.</value></data>
   <data name="expense.advance.amount_invalid" xml:space="preserve"><value>Amount must be greater than zero.</value></data>
   <data name="expense.advance.amount_too_large" xml:space="preserve"><value>The advance amount cannot exceed 10,000,000.</value></data>
+  <data name="expense.advance.date_out_of_range" xml:space="preserve"><value>The advance's requested date can be at most 30 days in the past and 90 days ahead.</value></data>
   <data name="expense.advance.installment_count_invalid" xml:space="preserve"><value>Installment count is invalid.</value></data>
   <data name="expense.advance.already_paid" xml:space="preserve"><value>An advance cannot be marked paid before it is approved.</value></data>
   <data name="expense.no_employee_for_user" xml:space="preserve"><value>No employee record is linked to your user account.</value></data>
@@ -1327,6 +1403,11 @@ The report you requested has been generated. Click the link to view and download
   <data name="announcement.cannot_publish" xml:space="preserve"><value>Only draft announcements can be published.</value></data>
   <data name="announcement.already_archived" xml:space="preserve"><value>This announcement is already archived.</value></data>
   <data name="announcement.not_found" xml:space="preserve"><value>Announcement not found.</value></data>
+  <data name="announcement.cannot_edit_published" xml:space="preserve"><value>Only draft announcements can be edited.</value></data>
+  <data name="announcement_attachment.not_found" xml:space="preserve"><value>Attachment not found.</value></data>
+  <data name="announcement_attachment.type_not_allowed" xml:space="preserve"><value>This file type is not allowed.</value></data>
+  <data name="announcement_attachment.too_large" xml:space="preserve"><value>The file exceeds the allowed size.</value></data>
+  <data name="announcement_attachment.too_many" xml:space="preserve"><value>This announcement has reached its maximum number of attachments.</value></data>
   <data name="announcement_read_record.not_found" xml:space="preserve"><value>Read record not found.</value></data>
   <data name="support_ticket.subject_required" xml:space="preserve"><value>A ticket subject is required and cannot exceed 200 characters.</value></data>
   <data name="support_ticket.body_required" xml:space="preserve"><value>Ticket content is required.</value></data>
@@ -1336,6 +1417,7 @@ The report you requested has been generated. Click the link to view and download
   <data name="help_article.not_found" xml:space="preserve"><value>Help Center article not found.</value></data>
   <!-- Company event calendar (senseik-027, roadmap #71/P-19) -->
   <data name="announcements.my.events" xml:space="preserve"><value>View the event calendar</value></data>
+  <data name="announcements.my.feed" xml:space="preserve"><value>My announcement feed</value></data>
   <data name="announcements.events.manage" xml:space="preserve"><value>Manage events</value></data>
   <data name="company_event.title_required" xml:space="preserve"><value>An event title is required and cannot exceed 200 characters.</value></data>
   <data name="company_event.description_too_long" xml:space="preserve"><value>Event description cannot exceed 2000 characters.</value></data>
@@ -1358,4 +1440,54 @@ The report you requested has been generated. Click the link to view and download
   <data name="training.enrollment.prerequisite_not_completed" xml:space="preserve"><value>The prerequisite training must be completed before enrolling in this program.</value></data>
   <data name="training.requirement.self_reference" xml:space="preserve"><value>A training program cannot be its own prerequisite.</value></data>
   <data name="training.requirement.not_found" xml:space="preserve"><value>Prerequisite requirement not found.</value></data>
+  <data name="training.enrollment.program_not_open" xml:space="preserve"><value>Participants cannot be added to a closed or archived program.</value></data>
+  <data name="training.my.enrollments" xml:space="preserve"><value>My trainings</value></data>
+  <data name="ohs.hazard_classifications.view" xml:space="preserve"><value>View hazard classes</value></data>
+  <data name="ohs.hazard_classifications.manage" xml:space="preserve"><value>Manage hazard classes</value></data>
+  <data name="ohs.risk_assessments.view" xml:space="preserve"><value>View risk assessments</value></data>
+  <data name="ohs.risk_assessments.manage" xml:space="preserve"><value>Manage risk assessments</value></data>
+  <data name="ohs_hazard_classification.not_found" xml:space="preserve"><value>Hazard class record not found.</value></data>
+  <data name="ohs_hazard_classification.invalid" xml:space="preserve"><value>Invalid hazard class.</value></data>
+  <data name="ohs_hazard_classification.location_required" xml:space="preserve"><value>A location is required.</value></data>
+  <data name="ohs_hazard_classification.effective_date_duplicate" xml:space="preserve"><value>This location already has a classification starting on that date.</value></data>
+  <data name="ohs_risk_assessment.not_found" xml:space="preserve"><value>Risk assessment not found.</value></data>
+  <data name="ohs_risk_assessment.location_required" xml:space="preserve"><value>A location is required.</value></data>
+  <data name="ohs_risk_assessment.hazard_classification_missing" xml:space="preserve"><value>The location has no hazard class on the assessment date; assign one first.</value></data>
+  <data name="ohs_risk_assessment.prepared_by_required" xml:space="preserve"><value>The preparer is required.</value></data>
+  <data name="ohs.incidents.view" xml:space="preserve"><value>View work accidents and near misses</value></data>
+  <data name="ohs.incidents.manage" xml:space="preserve"><value>Manage work accidents and near misses</value></data>
+  <data name="ohs.my.incident_reports" xml:space="preserve"><value>My near-miss reports</value></data>
+  <data name="ohs_incident.not_found" xml:space="preserve"><value>Incident record not found.</value></data>
+  <data name="ohs_incident.kind_invalid" xml:space="preserve"><value>Invalid incident type.</value></data>
+  <data name="ohs_incident.date_in_future" xml:space="preserve"><value>The incident date cannot be in the future.</value></data>
+  <data name="ohs_incident.description_required" xml:space="preserve"><value>An incident description is required.</value></data>
+  <data name="ohs_incident.employee_required" xml:space="preserve"><value>A work accident must name the injured employee.</value></data>
+  <data name="ohs_incident.employee_not_found" xml:space="preserve"><value>The employee was not found or is not active.</value></data>
+  <data name="ohs_incident.sgk_deadline_required" xml:space="preserve"><value>The SGK notification deadline could not be calculated.</value></data>
+  <data name="ohs_incident.sgk_not_applicable" xml:space="preserve"><value>SGK notification applies to work accidents only.</value></data>
+  <data name="ohs_incident.sgk_date_invalid" xml:space="preserve"><value>The notification date cannot be before the accident or in the future.</value></data>
+  <data name="ohs_incident.sgk_not_notified" xml:space="preserve"><value>A work accident cannot be closed before it is notified to SGK.</value></data>
+  <data name="ohs_incident.corrective_action_required" xml:space="preserve"><value>A corrective action is required to close the incident.</value></data>
+  <data name="ohs_incident.already_closed" xml:space="preserve"><value>The incident is already closed.</value></data>
+  <data name="ohs_incident.reporter_not_employee" xml:space="preserve"><value>You need an employee record to report a near miss.</value></data>
+  <data name="onboarding.templates.manage" xml:space="preserve"><value>Manage onboarding templates</value></data>
+  <data name="onboarding.tasks.view" xml:space="preserve"><value>View onboarding tasks</value></data>
+  <data name="onboarding.tasks.manage" xml:space="preserve"><value>Manage onboarding tasks</value></data>
+  <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Task template not found.</value></data>
+  <data name="onboarding_task_template.title_required" xml:space="preserve"><value>A task title is required.</value></data>
+  <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>The task title cannot exceed 200 characters.</value></data>
+  <data name="onboarding_task_template.responsible_role_required" xml:space="preserve"><value>A responsible party is required.</value></data>
+  <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Task not found.</value></data>
+  <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>The task is already completed or waived.</value></data>
+  <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>A reason is required to waive the task.</value></data>
+  <data name="ohs.services.view" xml:space="preserve"><value>View OHS services</value></data>
+  <data name="ohs.services.manage" xml:space="preserve"><value>Manage OHS services</value></data>
+  <data name="ohs_assignment.not_found" xml:space="preserve"><value>Record not found.</value></data>
+  <data name="ohs_assignment.location_required" xml:space="preserve"><value>A location is required.</value></data>
+  <data name="ohs_assignment.person_required" xml:space="preserve"><value>A name is required.</value></data>
+  <data name="ohs_assignment.minutes_invalid" xml:space="preserve"><value>Monthly minutes must be greater than zero.</value></data>
+  <data name="ohs_assignment.certificate_required" xml:space="preserve"><value>A certificate class is required for a safety expert.</value></data>
+  <data name="ohs_assignment.already_ended" xml:space="preserve"><value>The record has already ended.</value></data>
+  <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>The replacement interval must be between 1 and 3650 days.</value></data>
 </root>

@@ -4,6 +4,7 @@
  * shapes mirror the backend DTOs (ApprovalPolicyDto, InboxTaskDto, ApprovalStatusDto, ...).
  */
 import { apiClient } from "@senseik/api-client";
+import type { LeaveTeamOverlap } from "./leave.service";
 
 const WORKFLOW_BASE = "/v1/workflow";
 const POLICIES = `${WORKFLOW_BASE}/policies`;
@@ -82,6 +83,12 @@ export interface LeaveApprovalSummaryDto {
   leaveTypeCode: string;
   leaveTypeName?: string | null;
   days: number;
+  /** Requester's own explanation. Not part of the summary projection yet: absent until the API adds it. */
+  description?: string | null;
+  /** Requester's remaining balance for this type (PerYear types only). Absent until the API adds it. */
+  remainingBalance?: number | null;
+  /** Same-unit leaves over the requested dates. Absent until the API adds it. */
+  teamOverlap?: LeaveTeamOverlap | null;
 }
 
 /**

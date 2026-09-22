@@ -3,6 +3,7 @@
   "subtitle": "Upcoming important days at your company.",
   "unavailable": "This information can't be shown right now.",
   "today": "Today",
+  "ongoing": "Ongoing",
   "inDays_one": "In {{count}} day",
   "inDays_other": "In {{count}} days",
   "noWidgets": "There is nothing to show on your home page.",
@@ -15,7 +16,9 @@
   },
   "birthdays": {
     "title": "Upcoming Birthdays",
-    "empty": "No birthdays in the next {{days}} days."
+    "empty": "No birthdays in the next {{days}} days.",
+    "previous": "Previous",
+    "next": "Next"
   },
   "leaves": {
     "title": "Upcoming Leave",
@@ -56,5 +59,10 @@
     "empty": "There are no employees to show.",
     "unassigned": "Unassigned",
     "total": "Total"
+  },
+  "announcements": {
+    "title": "Latest announcements",
+    "empty": "No published announcements.",
+    "new": "New"
   }
 }

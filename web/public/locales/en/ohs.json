@@ -38,13 +38,149 @@
       "locationRequired": "Location is required.",
       "preparedByRequired": "Prepared by is required.",
       "hazardClassificationMissing": "This location needs a hazard class assigned first."
-    }
+    },
+    "overdue": "Overdue"
   },
   "enum": {
     "hazardClass": {
       "low": "Low hazard",
       "medium": "Hazardous",
       "high": "Very hazardous"
+    }
+  },
+  "page": {
+    "title": "OHS",
+    "incidents": "Accidents & near misses",
+    "myReports": "My reports",
+    "hazardLink": "Hazard classes",
+    "riskLink": "Risk assessments",
+    "services": "OHS services"
+  },
+  "incidents": {
+    "record": "Record incident",
+    "recordTitle": "Work accident / near miss",
+    "recorded": "Incident recorded.",
+    "reportTitle": "Report a near miss",
+    "reported": "Your report was sent to the OHS team.",
+    "send": "Report",
+    "empty": "No work accidents or near misses recorded.",
+    "loadError": "OHS records could not be loaded.",
+    "actionFailed": "The action could not be completed.",
+    "kinds": {
+      "workAccident": "Work accident",
+      "nearMiss": "Near miss"
+    },
+    "statuses": {
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "fields": {
+      "kind": "Type",
+      "eventDate": "Date",
+      "employee": "Employee",
+      "injuredEmployee": "Injured employee",
+      "involvedEmployee": "Involved employee (optional)",
+      "location": "Location",
+      "description": "What happened",
+      "sgk": "SGK notification",
+      "status": "Status",
+      "sgkNotifiedOn": "Date notified to SGK",
+      "correctiveAction": "Corrective action"
+    },
+    "sgkHint": "A work accident must be notified to SGK within 3 business days; the deadline is calculated automatically.",
+    "reportHint": "What happened, where, and what would prevent it from happening again?",
+    "sgkDue": "Due {{date}}",
+    "sgkOverdue": "Overdue ({{date}})",
+    "sgkNotifiedOn": "Notified {{date}}",
+    "markSgk": "Notified to SGK",
+    "sgkTitle": "Record SGK notification",
+    "sgkSaved": "SGK notification recorded.",
+    "close": "Close",
+    "closeTitle": "Close with corrective action",
+    "closedToast": "Incident closed.",
+    "correctiveHint": "The measure taken to prevent a recurrence (e.g. railing installed, training given).",
+    "reportedBy": "Reported by:",
+    "summary": {
+      "open": "Open incidents",
+      "sgkPending": "Awaiting SGK notification",
+      "sgkOverdue": "SGK deadline missed"
+    }
+  },
+  "myReports": {
+    "intro": "Reporting hazards caught before anyone is hurt (wet floor, exposed cable, missing guard) prevents accidents.",
+    "report": "Report a near miss",
+    "empty": "You have not reported anything yet.",
+    "underReview": "Under review",
+    "action": "Action taken"
+  },
+  "services": {
+    "complianceTitle": "Location compliance",
+    "assignmentsTitle": "Expert and physician assignments",
+    "committeeTitle": "OHS committee",
+    "addAssignment": "Add assignment",
+    "addMember": "Add committee member",
+    "assignmentTitle": "Expert / physician assignment",
+    "memberTitle": "OHS committee member",
+    "endAssignment": "End assignment",
+    "endMember": "End committee membership",
+    "end": "End",
+    "saved": "Saved.",
+    "ended": "Ended.",
+    "loadError": "OHS services could not be loaded.",
+    "noClassifiedLocations": "No location has a hazard class yet. Assign hazard classes in settings first.",
+    "noAssignments": "No assignments recorded.",
+    "noMembers": "No committee members recorded.",
+    "since": "since {{date}}",
+    "employeeCount_one": "{{count}} active employee",
+    "employeeCount_other": "{{count}} active employees",
+    "minutesOf": "{{assigned}} / {{required}} min/month",
+    "committeeRequired": "Committee required: meets every {{months}} month(s) · {{members}} members · representatives {{representatives}}/{{requiredRepresentatives}}",
+    "committeeNotRequired": "Under 50 employees; no OHS committee required.",
+    "compliant": "Meets the statutory minimums.",
+    "providerHint": "Company name if the service is outsourced (OSGB).",
+    "minutesHint": "Contracted monthly service time (minutes).",
+    "fields": {
+      "role": "Role",
+      "person": "Full name",
+      "employee": "Employee (optional)",
+      "certificateClass": "Certificate class",
+      "certificateNumber": "Certificate no.",
+      "provider": "Service provider",
+      "monthlyMinutes": "Monthly time (min)",
+      "startDate": "Start",
+      "endDate": "End date",
+      "period": "Period",
+      "committeeRole": "Committee role"
+    },
+    "issues": {
+      "missing_safety_expert": "No safety expert assigned.",
+      "missing_physician": "No workplace physician assigned.",
+      "missing_other_health_personnel": "Very hazardous workplace without other health personnel.",
+      "insufficient_minutes_safety_expert": "Safety expert time is below the minimum.",
+      "insufficient_minutes_physician": "Workplace physician time is below the minimum.",
+      "insufficient_minutes_other_health_personnel": "Other health personnel time is below the minimum.",
+      "certificate_class": "The expert's certificate class does not fit the hazard class.",
+      "committee_missing": "50+ employees: the committee has no chair and secretary.",
+      "representatives": "Not enough employee representatives."
+    },
+    "roles": {
+      "safetyExpert": "Safety expert",
+      "workplacePhysician": "Workplace physician",
+      "otherHealthPersonnel": "Other health personnel"
+    },
+    "committeeRoles": {
+      "chair": "Chair (employer/deputy)",
+      "secretary": "Secretary (safety expert)",
+      "physician": "Workplace physician",
+      "hrRepresentative": "HR / administration officer",
+      "civilDefenseExpert": "Civil defence expert",
+      "foreman": "Foreman",
+      "employeeRepresentative": "Employee representative"
+    },
+    "certificates": {
+      "a": "Class A",
+      "b": "Class B",
+      "c": "Class C"
     }
   }
 }

@@ -25,6 +25,7 @@ import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { expenseCategoryName, isSystemExpenseCategory } from "@/lib/expense-category";
 import { formatMoney } from "@/lib/money";
 import {
   createExpenseCategory,
@@ -79,6 +80,7 @@ function ExpenseCategoriesAdmin() {
       accessorKey: "nameKey",
       header: t("expense:categoriesAdmin.columns.name"),
       meta: { label: t("expense:categoriesAdmin.columns.name") },
+      cell: ({ row }) => expenseCategoryName(t, row.original),
     },
     {
       id: "code",
@@ -96,7 +98,7 @@ function ExpenseCategoriesAdmin() {
       accessorKey: "defaultTaxRate",
       header: t("expense:categoriesAdmin.columns.defaultTaxRate"),
       meta: { label: t("expense:categoriesAdmin.columns.defaultTaxRate"), headerClassName: "w-40" },
-      cell: ({ row }) => (row.original.defaultTaxRate === null ? "—" : `%${row.original.defaultTaxRate}`),
+      cell: ({ row }) => (row.original.defaultTaxRate == null ? "—" : `%${row.original.defaultTaxRate}`),
     },
     {
       id: "maxAmount",
@@ -150,7 +152,7 @@ function ExpenseCategoriesAdmin() {
   const table = useDataTable({ columns, data: categories, getRowId: (r) => r.id });
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -231,7 +233,7 @@ function CategoriesMobileList({
         <Card key={category.id} withBorder padding="sm" radius="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">
             <Text size="sm" fw={500} truncate="end">
-              {category.nameKey}
+              {expenseCategoryName(t, category)}
             </Text>
             <Badge variant={category.isActive ? "light" : "outline"} color={category.isActive ? "green" : "gray"}>
               {category.isActive ? t("expense:categoriesAdmin.active") : t("expense:categoriesAdmin.inactive")}
@@ -368,6 +370,7 @@ function EditCategoryDialog({ category, onClose }: { category: ExpenseCategory; 
   const { t } = useTranslation(["expense", "common"]);
   const queryClient = useQueryClient();
 
+  const isSystem = isSystemExpenseCategory(category);
   const [name, setName] = useState(category.nameKey);
   const [maxAmount, setMaxAmount] = useState<string | number>(category.maxAmount ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -375,7 +378,8 @@ function EditCategoryDialog({ category, onClose }: { category: ExpenseCategory; 
   const mutation = useMutation({
     mutationFn: () =>
       updateExpenseCategory(category.id, {
-        name: name.trim(),
+        // Seeded categories keep their resource key: the server rejects a rename (409 system_immutable).
+        name: isSystem ? category.nameKey : name.trim(),
         maxAmount: maxAmount === "" ? null : Number(maxAmount),
       }),
     onSuccess: () => {
@@ -401,10 +405,10 @@ function EditCategoryDialog({ category, onClose }: { category: ExpenseCategory; 
             id="edit-category-name"
             label={t("expense:categoriesAdmin.columns.name")}
             withAsterisk
-            value={name}
+            value={isSystem ? expenseCategoryName(t, category) : name}
             maxLength={200}
             onChange={(event) => setName(event.currentTarget.value)}
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || isSystem}
           />
           <NumberInput
             id="edit-category-max-amount"

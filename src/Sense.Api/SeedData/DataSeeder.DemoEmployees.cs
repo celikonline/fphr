@@ -442,13 +442,36 @@ public partial class DataSeeder
             var user = userResult.Value;
             users.Add(user);
 
-            if (roles.TryGetValue(roleCode, out var role))
-            {
-                roleAssignments[user.Id] = [role];
-            }
+            roleAssignments[user.Id] = [PersonaRole(tenantId, roles, roleCode)];
         }
 
         return (users, roleAssignments);
+    }
+
+    /// <summary>
+    /// Demo "persona" (Manager, Intern, Auditor...): drives org placement/titles/contract types in <see cref="SeedDemoEmployees"/>.
+    /// Since the four user groups replaced the old system roles, a retired persona is a transient, never-persisted
+    /// <see cref="Role"/> carrying only its code; the user's real roles come from <see cref="GroupRoleIdsFor"/>.
+    /// </summary>
+    private static Role PersonaRole(Guid tenantId, Dictionary<string, Role> roles, string code) =>
+        roles.TryGetValue(code, out var role) ? role : Role.CreateSystem(tenantId, code);
+
+    /// <summary>Persona → persisted group role ids: retired personas map via <see cref="SystemRoleCodes.RetiredSuccessors"/>;
+    /// Owner (the company's first account) is İK Yöneticisi carrying the locked Owner flag.</summary>
+    internal static List<Guid> GroupRoleIdsFor(IEnumerable<Role> personas, Dictionary<string, Role> roles)
+    {
+        var codes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var persona in personas)
+        {
+            var code = SystemRoleCodes.RetiredSuccessors.GetValueOrDefault(persona.Code, persona.Code);
+            codes.Add(code);
+            if (code == SystemRoleCodes.Owner)
+            {
+                codes.Add(SystemRoleCodes.HR);
+            }
+        }
+
+        return codes.Where(roles.ContainsKey).Select(code => roles[code].Id).ToList();
     }
 
     private (List<User> Users, Dictionary<Guid, List<Role>> RoleAssignments) GenerateDemoUsersWithRoles(Guid tenantId, Dictionary<string, Role> roles)
@@ -509,11 +532,8 @@ public partial class DataSeeder
                     var user = userResult.Value;
                     users.Add(user);
 
-                    // Assign role
-                    if (roles.TryGetValue(roleName, out var role))
-                    {
-                        roleAssignments[user.Id] = new List<Role> { role };
-                    }
+                    // Persona (placement); the persisted group role is derived from it (GroupRoleIdsFor).
+                    roleAssignments[user.Id] = [PersonaRole(tenantId, roles, roleName)];
 
                     userCount++;
                 }

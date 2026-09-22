@@ -19,7 +19,7 @@ public sealed class AccessSettingsEnforcementTests : IdentityStackTestBase
     {
         var tenantId = await SeedTenantAsync("access-gate");
         var ownerId = await SeedUserAsync(tenantId, "owner@acme.test", SystemRoleCodes.Owner);
-        var adminId = await SeedUserAsync(tenantId, "admin@acme.test", SystemRoleCodes.Admin);
+        var adminId = await SeedUserAsync(tenantId, "admin@acme.test", SystemRoleCodes.PayrollSpecialist);
         var hrId = await SeedUserAsync(tenantId, "hr@acme.test", SystemRoleCodes.HR);
         var employeeRecord = await SeedEmployeeAsync(tenantId, "Ece", "Çalışan", workPhone: "+90 212 000 00 01");
         var employeeUserId = await SeedUserAsync(tenantId, "ece@acme.test", SystemRoleCodes.Employee, employeeRecord);

@@ -1,0 +1,95 @@
+{
+  "title": "Şirket kurulumu",
+  "subtitle": "{{company}} hesabını birkaç adımda kullanıma hazırlayın. Girdiğiniz her şeyi sonra Ayarlar'dan değiştirebilirsiniz.",
+  "preparing": "Şirket altyapınız hazırlanıyor...",
+  "steps": {
+    "company": "Şirket bilgileri",
+    "calendar": "Takvim ve lokasyon",
+    "structure": "Organizasyon",
+    "modules": "Modüller ve kullanıcılar"
+  },
+  "actions": {
+    "back": "Geri",
+    "next": "Kaydet ve devam et",
+    "skip": "Bu adımı geç",
+    "finish": "Kurulumu tamamla",
+    "finishing": "Tamamlanıyor..."
+  },
+  "errors": {
+    "generic": "İşlem tamamlanamadı. Lütfen tekrar deneyin.",
+    "load": "Bilgiler yüklenemedi.",
+    "nameRequired": "Şirket adı zorunludur.",
+    "finish": "Kurulum tamamlanamadı. Lütfen tekrar deneyin."
+  },
+  "company": {
+    "heading": "Şirket bilgileri",
+    "description": "Şirketinizin adı, dili ve çalışma düzeni. Bu bilgiler takvim, izin ve bordro hesaplarında kullanılır.",
+    "name": "Şirket adı",
+    "taxNumber": "Vergi numarası",
+    "locale": "Dil ve bölge",
+    "timeZone": "Saat dilimi",
+    "address": "Adres",
+    "city": "Şehir",
+    "country": "Ülke",
+    "workingDays": "Çalışma günleri",
+    "hoursStart": "Mesai başlangıcı",
+    "hoursEnd": "Mesai bitişi",
+    "days": {
+      "mon": "Pzt",
+      "tue": "Sal",
+      "wed": "Çar",
+      "thu": "Per",
+      "fri": "Cum",
+      "sat": "Cmt",
+      "sun": "Paz"
+    },
+    "locales": {
+      "tr-TR": "Türkçe (Türkiye)",
+      "en-US": "English (United States)",
+      "de-DE": "Deutsch (Deutschland)"
+    }
+  },
+  "calendar": {
+    "heading": "Tatil takvimi ve ilk lokasyon",
+    "description": "Türkiye resmi tatilleri şirketinize hazır olarak eklendi. İsterseniz başka bir takvim seçin ve merkez ofisinizi ekleyin.",
+    "calendarLabel": "Tatil takvimi",
+    "calendarNone": "Takvim atanmadı",
+    "locationHeading": "Merkez lokasyon",
+    "locationExists": "Şirketinizde zaten {{count}} lokasyon var; yenisini eklemek için Ayarlar > Lokasyonlar sayfasını kullanın.",
+    "locationName": "Lokasyon adı",
+    "locationType": "Lokasyon tipi",
+    "locationCountry": "Ülke kodu",
+    "locationAddress": "Adres",
+    "locationHint": "Boş bırakırsanız lokasyon eklenmez.",
+    "types": {
+      "office": "Ofis",
+      "store": "Mağaza",
+      "warehouse": "Depo",
+      "factory": "Fabrika",
+      "remote": "Uzaktan"
+    }
+  },
+  "structure": {
+    "heading": "Organizasyon yapısı",
+    "description": "Şirketinizin departmanlarını ekleyin. Alt birimleri ve yöneticileri sonra Ayarlar > Şirket yapısı sayfasından düzenleyebilirsiniz.",
+    "existing": "Mevcut departmanlar",
+    "departmentsLabel": "Yeni departmanlar",
+    "departmentsHint": "Her satıra bir departman adı yazın.",
+    "departmentsPlaceholder": "İnsan Kaynakları\nFinans\nSatış",
+    "noDepartmentType": "Departman birim tipi bulunamadı; bu adımı geçip Ayarlar'dan ekleyebilirsiniz."
+  },
+  "modules": {
+    "heading": "Modüller ve kullanıcılar",
+    "description": "Kullanmayacağınız modülleri kapatın ve ekibinizden ilk kullanıcıları davet edin.",
+    "modulesHeading": "İsteğe bağlı modüller",
+    "usersHeading": "Kullanıcı davet et",
+    "usersDescription": "Davet edilen kişi e-postadaki bağlantıyla parolasını kendisi belirler.",
+    "email": "E-posta",
+    "firstName": "Ad",
+    "lastName": "Soyad",
+    "role": "Rol",
+    "invite": "Davet gönder",
+    "invited": "Davet gönderildi: {{email}}",
+    "invalid": "Ad, soyad, geçerli bir e-posta ve rol seçin."
+  }
+}

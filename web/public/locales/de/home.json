@@ -3,6 +3,7 @@
   "subtitle": "Anstehende wichtige Termine in Ihrem Unternehmen.",
   "unavailable": "Diese Information kann derzeit nicht angezeigt werden.",
   "today": "Heute",
+  "ongoing": "Laufend",
   "inDays_one": "In {{count}} Tag",
   "inDays_other": "In {{count}} Tagen",
   "noWidgets": "Auf Ihrer Startseite gibt es nichts anzuzeigen.",
@@ -15,7 +16,9 @@
   },
   "birthdays": {
     "title": "Anstehende Geburtstage",
-    "empty": "In den nächsten {{days}} Tagen gibt es keine Geburtstage."
+    "empty": "In den nächsten {{days}} Tagen gibt es keine Geburtstage.",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "leaves": {
     "title": "Anstehender Urlaub",
@@ -56,5 +59,10 @@
     "empty": "Es gibt keine Mitarbeitenden zum Anzeigen.",
     "unassigned": "Nicht zugeordnet",
     "total": "Gesamt"
+  },
+  "announcements": {
+    "title": "Neueste Ankündigungen",
+    "empty": "Keine veröffentlichten Ankündigungen.",
+    "new": "Neu"
   }
 }

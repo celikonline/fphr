@@ -24,6 +24,11 @@ public sealed partial class SmtpEmailSender(IOptions<EmailOptions> options, ILog
             body.HtmlBody = message.HtmlBody;
         }
 
+        foreach (var attachment in message.Attachments ?? [])
+        {
+            body.Attachments.Add(attachment.FileName, attachment.Content, ContentType.Parse(attachment.ContentType));
+        }
+
         mime.Body = body.ToMessageBody();
 
         using var client = new SmtpClient();

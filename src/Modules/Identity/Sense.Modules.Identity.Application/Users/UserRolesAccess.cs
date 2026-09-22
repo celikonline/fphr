@@ -56,10 +56,10 @@ public sealed class SetUserRolesHandler(IUserRepository users, IRoleRepository r
 }
 
 /// <summary>
-/// Erişim türü hızlı seçici (çalışan kartı / Kullanıcılar ekranı): Employee/Owner/Admin sistem rollerinden yalnız
-/// biri kalır, kullanıcının sahip olduğu diğer roller (HR.Manager vb.) korunur. Ayrı bir izin yerine mevcut
-/// UsersManage kullanılır (bu modülde kullanıcı CRUD/rol ataması zaten tek bir "manage" izniyle korunuyor).
-/// Owner'ı yalnız Owner verir/düşürür, Admin'i Owner veya Admin (<see cref="AccessTypeGuard"/>); son aktif Owner düşürülemez.
+/// Kullanıcı grubu seçici (çalışan kartı / Kullanıcılar ekranı): İK Yöneticisi / Muhasebe / Çalışan gruplarından yalnız
+/// biri kalır, kullanıcının özel rolleri korunur. Ayrı bir izin yerine mevcut UsersManage kullanılır. Hesap sahibi (Owner)
+/// seçilemez: İK Yöneticisiyle birlikte taşınır, başka gruba geçen hesap sahibinden düşer — bunu yalnız bir Owner
+/// yapabilir (<see cref="AccessTypeGuard"/>) ve son aktif Owner düşürülemez.
 /// </summary>
 [RequiresPermission(IdentityPermissions.UsersManage)]
 public sealed record SetUserAccessTypeCommand(Guid UserId, string AccessType) : ICommand;
@@ -69,7 +69,7 @@ public sealed class SetUserAccessTypeValidator : AbstractValidator<SetUserAccess
     public SetUserAccessTypeValidator()
     {
         RuleFor(x => x.AccessType)
-            .Must(v => v is SystemRoleCodes.Employee or SystemRoleCodes.Owner or SystemRoleCodes.Admin)
+            .Must(v => SystemRoleCodes.UserGroups.Contains(v))
             .WithMessage(IdentityErrors.AccessTypeInvalid);
     }
 }
@@ -77,7 +77,6 @@ public sealed class SetUserAccessTypeValidator : AbstractValidator<SetUserAccess
 public sealed class SetUserAccessTypeHandler(IUserRepository users, IRoleRepository roles, AccessTypeGuard accessTypeGuard, IPermissionCacheInvalidator cache)
     : ICommandHandler<SetUserAccessTypeCommand>
 {
-    private static readonly string[] AccessTypeCodes = [SystemRoleCodes.Employee, SystemRoleCodes.Owner, SystemRoleCodes.Admin];
 
     public async Task<Result> Handle(SetUserAccessTypeCommand command, CancellationToken cancellationToken)
     {
@@ -88,7 +87,7 @@ public sealed class SetUserAccessTypeHandler(IUserRepository users, IRoleReposit
         }
 
         var accessTypeRoles = new Dictionary<string, Role>(StringComparer.OrdinalIgnoreCase);
-        foreach (var code in AccessTypeCodes)
+        foreach (var code in SystemRoleCodes.UserGroups)
         {
             var role = await roles.GetByCodeAsync(code, cancellationToken).ConfigureAwait(false);
             if (role is not null)
@@ -102,9 +101,14 @@ public sealed class SetUserAccessTypeHandler(IUserRepository users, IRoleReposit
             return Error.NotFound(IdentityErrors.RoleNotFound);
         }
 
+        var ownerRole = await roles.GetByCodeAsync(SystemRoleCodes.Owner, cancellationToken).ConfigureAwait(false);
+        var keepsOwner = string.Equals(command.AccessType, SystemRoleCodes.HR, StringComparison.OrdinalIgnoreCase);
         var accessTypeRoleIds = accessTypeRoles.Values.Select(r => r.Id).ToHashSet();
         var currentRoleIds = user.Roles.Select(r => r.RoleId).ToList();
-        var newRoleIds = currentRoleIds.Where(id => !accessTypeRoleIds.Contains(id)).Append(targetRole.Id).ToList();
+        var newRoleIds = currentRoleIds
+            .Where(id => !accessTypeRoleIds.Contains(id) && (keepsOwner || id != ownerRole?.Id))
+            .Append(targetRole.Id)
+            .ToList();
 
         var allowed = await accessTypeGuard.EnsureCanChangeAsync(currentRoleIds, newRoleIds, cancellationToken).ConfigureAwait(false);
         if (allowed.IsFailure)
@@ -112,8 +116,8 @@ public sealed class SetUserAccessTypeHandler(IUserRepository users, IRoleReposit
             return allowed.Error;
         }
 
-        var currentlyOwner = accessTypeRoles.TryGetValue(SystemRoleCodes.Owner, out var ownerRole) && user.HasRole(ownerRole.Id);
-        if (currentlyOwner && user.Status == UserStatus.Active && !string.Equals(command.AccessType, SystemRoleCodes.Owner, StringComparison.OrdinalIgnoreCase))
+        var currentlyOwner = ownerRole is not null && user.HasRole(ownerRole.Id);
+        if (currentlyOwner && user.Status == UserStatus.Active && !keepsOwner)
         {
             var owners = await users.CountActiveOwnersAsync(cancellationToken).ConfigureAwait(false);
             if (owners <= 1)

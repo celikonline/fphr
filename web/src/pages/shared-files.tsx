@@ -11,7 +11,7 @@ import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import { listRoles } from "@/services/users.service";
+import { listRoles, visibleRoles } from "@/services/users.service";
 import {
   deleteSharedFile,
   getSharedFile,
@@ -142,7 +142,7 @@ function SharedFilesScreen() {
   const quota = quotaQuery.data;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-6 md:p-10">
+    <div className="max-w-6xl space-y-6 p-6 md:p-10">
       <Group justify="space-between" align="flex-start" gap="sm">
         <div>
           <Title order={1} size="h2" className="flex items-center gap-2">
@@ -226,7 +226,10 @@ function UploadDialog({ file, onClose }: { file: File; onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
 
   const rolesQuery = useQuery({ queryKey: ["identity", "roles"], queryFn: listRoles, enabled: visibility === "restrictedToRoles" });
-  const roleOptions = useMemo(() => (rolesQuery.data ?? []).map((r) => ({ value: r.code, label: r.name ?? r.code })), [rolesQuery.data]);
+  const roleOptions = useMemo(
+    () => visibleRoles(rolesQuery.data ?? []).map((r) => ({ value: r.code, label: r.name ?? r.code })),
+    [rolesQuery.data]
+  );
 
   const mutation = useMutation({
     mutationFn: () => uploadSharedFile(file, { visibility, allowedRoles: visibility === "restrictedToRoles" ? allowedRoles : undefined }),
