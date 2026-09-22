@@ -424,6 +424,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "teal",
   },
   {
+    key: "ohs",
+    labelKey: "apps.ohs",
+    path: "/app/ohs",
+    icon: HardHat,
+    permissions: ["ohs.my.incident_reports", "ohs.incidents.view"],
+    iconColor: "orange",
+  },
+  {
     key: "recruitmentCandidates",
     labelKey: "apps.recruitmentCandidates",
     path: "/app/recruitment/candidates",

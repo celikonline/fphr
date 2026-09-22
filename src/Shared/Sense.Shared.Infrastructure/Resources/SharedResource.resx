@@ -1444,4 +1444,32 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="training.requirement.not_found" xml:space="preserve"><value>Ön koşul kuralı bulunamadı.</value></data>
   <data name="training.enrollment.program_not_open" xml:space="preserve"><value>Kapalı ya da arşivlenmiş programa katılımcı eklenemez.</value></data>
   <data name="training.my.enrollments" xml:space="preserve"><value>Eğitimlerim</value></data>
+  <data name="ohs.hazard_classifications.view" xml:space="preserve"><value>Tehlike sınıflarını görüntüleme</value></data>
+  <data name="ohs.hazard_classifications.manage" xml:space="preserve"><value>Tehlike sınıflarını yönetme</value></data>
+  <data name="ohs.risk_assessments.view" xml:space="preserve"><value>Risk değerlendirmelerini görüntüleme</value></data>
+  <data name="ohs.risk_assessments.manage" xml:space="preserve"><value>Risk değerlendirmelerini yönetme</value></data>
+  <data name="ohs_hazard_classification.not_found" xml:space="preserve"><value>Tehlike sınıfı kaydı bulunamadı.</value></data>
+  <data name="ohs_hazard_classification.invalid" xml:space="preserve"><value>Geçersiz tehlike sınıfı.</value></data>
+  <data name="ohs_hazard_classification.location_required" xml:space="preserve"><value>Lokasyon seçilmelidir.</value></data>
+  <data name="ohs_hazard_classification.effective_date_duplicate" xml:space="preserve"><value>Bu lokasyon için aynı tarihte başlayan bir sınıflandırma zaten var.</value></data>
+  <data name="ohs_risk_assessment.not_found" xml:space="preserve"><value>Risk değerlendirmesi bulunamadı.</value></data>
+  <data name="ohs_risk_assessment.location_required" xml:space="preserve"><value>Lokasyon seçilmelidir.</value></data>
+  <data name="ohs_risk_assessment.hazard_classification_missing" xml:space="preserve"><value>Lokasyonun değerlendirme tarihinde geçerli bir tehlike sınıfı yok; önce tehlike sınıfını tanımlayın.</value></data>
+  <data name="ohs_risk_assessment.prepared_by_required" xml:space="preserve"><value>Hazırlayan kişi/firma zorunludur.</value></data>
+  <data name="ohs.incidents.view" xml:space="preserve"><value>İş kazası ve ramak kala kayıtlarını görüntüleme</value></data>
+  <data name="ohs.incidents.manage" xml:space="preserve"><value>İş kazası ve ramak kala kayıtlarını yönetme</value></data>
+  <data name="ohs.my.incident_reports" xml:space="preserve"><value>Ramak kala bildirimlerim</value></data>
+  <data name="ohs_incident.not_found" xml:space="preserve"><value>İSG olay kaydı bulunamadı.</value></data>
+  <data name="ohs_incident.kind_invalid" xml:space="preserve"><value>Geçersiz olay türü.</value></data>
+  <data name="ohs_incident.date_in_future" xml:space="preserve"><value>Olay tarihi ileri bir tarih olamaz.</value></data>
+  <data name="ohs_incident.description_required" xml:space="preserve"><value>Olay açıklaması zorunludur.</value></data>
+  <data name="ohs_incident.employee_required" xml:space="preserve"><value>İş kazasında kazazede çalışan seçilmelidir.</value></data>
+  <data name="ohs_incident.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı ya da aktif değil.</value></data>
+  <data name="ohs_incident.sgk_deadline_required" xml:space="preserve"><value>İş kazasının SGK bildirim son günü hesaplanamadı.</value></data>
+  <data name="ohs_incident.sgk_not_applicable" xml:space="preserve"><value>SGK bildirimi yalnızca iş kazaları için kaydedilir.</value></data>
+  <data name="ohs_incident.sgk_date_invalid" xml:space="preserve"><value>Bildirim tarihi kaza tarihinden önce ya da ileri bir tarih olamaz.</value></data>
+  <data name="ohs_incident.sgk_not_notified" xml:space="preserve"><value>SGK'ya bildirilmemiş iş kazası kapatılamaz.</value></data>
+  <data name="ohs_incident.corrective_action_required" xml:space="preserve"><value>Kapatmak için düzeltici önlem yazılmalıdır.</value></data>
+  <data name="ohs_incident.already_closed" xml:space="preserve"><value>Olay zaten kapatılmış.</value></data>
+  <data name="ohs_incident.reporter_not_employee" xml:space="preserve"><value>Bildirim için çalışan kaydınız olmalıdır.</value></data>
 </root>

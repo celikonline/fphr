@@ -1435,4 +1435,32 @@ The report you requested has been generated. Click the link to view and download
   <data name="training.requirement.not_found" xml:space="preserve"><value>Prerequisite requirement not found.</value></data>
   <data name="training.enrollment.program_not_open" xml:space="preserve"><value>Participants cannot be added to a closed or archived program.</value></data>
   <data name="training.my.enrollments" xml:space="preserve"><value>My trainings</value></data>
+  <data name="ohs.hazard_classifications.view" xml:space="preserve"><value>View hazard classes</value></data>
+  <data name="ohs.hazard_classifications.manage" xml:space="preserve"><value>Manage hazard classes</value></data>
+  <data name="ohs.risk_assessments.view" xml:space="preserve"><value>View risk assessments</value></data>
+  <data name="ohs.risk_assessments.manage" xml:space="preserve"><value>Manage risk assessments</value></data>
+  <data name="ohs_hazard_classification.not_found" xml:space="preserve"><value>Hazard class record not found.</value></data>
+  <data name="ohs_hazard_classification.invalid" xml:space="preserve"><value>Invalid hazard class.</value></data>
+  <data name="ohs_hazard_classification.location_required" xml:space="preserve"><value>A location is required.</value></data>
+  <data name="ohs_hazard_classification.effective_date_duplicate" xml:space="preserve"><value>This location already has a classification starting on that date.</value></data>
+  <data name="ohs_risk_assessment.not_found" xml:space="preserve"><value>Risk assessment not found.</value></data>
+  <data name="ohs_risk_assessment.location_required" xml:space="preserve"><value>A location is required.</value></data>
+  <data name="ohs_risk_assessment.hazard_classification_missing" xml:space="preserve"><value>The location has no hazard class on the assessment date; assign one first.</value></data>
+  <data name="ohs_risk_assessment.prepared_by_required" xml:space="preserve"><value>The preparer is required.</value></data>
+  <data name="ohs.incidents.view" xml:space="preserve"><value>View work accidents and near misses</value></data>
+  <data name="ohs.incidents.manage" xml:space="preserve"><value>Manage work accidents and near misses</value></data>
+  <data name="ohs.my.incident_reports" xml:space="preserve"><value>My near-miss reports</value></data>
+  <data name="ohs_incident.not_found" xml:space="preserve"><value>Incident record not found.</value></data>
+  <data name="ohs_incident.kind_invalid" xml:space="preserve"><value>Invalid incident type.</value></data>
+  <data name="ohs_incident.date_in_future" xml:space="preserve"><value>The incident date cannot be in the future.</value></data>
+  <data name="ohs_incident.description_required" xml:space="preserve"><value>An incident description is required.</value></data>
+  <data name="ohs_incident.employee_required" xml:space="preserve"><value>A work accident must name the injured employee.</value></data>
+  <data name="ohs_incident.employee_not_found" xml:space="preserve"><value>The employee was not found or is not active.</value></data>
+  <data name="ohs_incident.sgk_deadline_required" xml:space="preserve"><value>The SGK notification deadline could not be calculated.</value></data>
+  <data name="ohs_incident.sgk_not_applicable" xml:space="preserve"><value>SGK notification applies to work accidents only.</value></data>
+  <data name="ohs_incident.sgk_date_invalid" xml:space="preserve"><value>The notification date cannot be before the accident or in the future.</value></data>
+  <data name="ohs_incident.sgk_not_notified" xml:space="preserve"><value>A work accident cannot be closed before it is notified to SGK.</value></data>
+  <data name="ohs_incident.corrective_action_required" xml:space="preserve"><value>A corrective action is required to close the incident.</value></data>
+  <data name="ohs_incident.already_closed" xml:space="preserve"><value>The incident is already closed.</value></data>
+  <data name="ohs_incident.reporter_not_employee" xml:space="preserve"><value>You need an employee record to report a near miss.</value></data>
 </root>

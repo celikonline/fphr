@@ -4,6 +4,8 @@ using Sense.Modules.OccupationalSafety.Domain.HazardClassifications;
 using Sense.Modules.OccupationalSafety.Domain.RiskAssessments;
 using Sense.Shared.Kernel.Results;
 
+using Sense.Modules.OccupationalSafety.Domain.Incidents;
+
 namespace Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 
 public sealed class WorkplaceHazardClassificationRepository(OhsDbContext context) : IWorkplaceHazardClassificationRepository
@@ -39,6 +41,28 @@ public sealed class WorkplaceHazardClassificationRepository(OhsDbContext context
             .Select(g => g.OrderByDescending(h => h.EffectiveFrom).First())
             .ToList();
     }
+}
+
+public sealed class OhsIncidentRepository(OhsDbContext context) : IOhsIncidentRepository
+{
+    public void Add(OhsIncident incident) => context.Incidents.Add(incident);
+
+    public async Task<Result<OhsIncident>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var incident = await context.Incidents.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        return incident is null ? Error.NotFound(OhsDomainErrors.IncidentNotFound) : incident;
+    }
+
+    public async Task<IReadOnlyList<OhsIncident>> ListAsync(CancellationToken cancellationToken = default) =>
+        await context.Incidents
+            .OrderByDescending(i => i.EventDate)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<OhsIncident>> ListReportedByAsync(Guid employeeId, CancellationToken cancellationToken = default) =>
+        await context.Incidents
+            .Where(i => i.ReportedByEmployeeId == employeeId)
+            .OrderByDescending(i => i.EventDate)
+            .ToListAsync(cancellationToken);
 }
 
 public sealed class RiskAssessmentRepository(OhsDbContext context) : IRiskAssessmentRepository

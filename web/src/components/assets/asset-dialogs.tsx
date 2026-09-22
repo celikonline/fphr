@@ -6,6 +6,7 @@ import EmployeePicker, { type PickedEmployee } from "@/components/employees/empl
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
+import { toDateOnly } from "@/lib/dates";
 import {
   assignAsset,
   createAsset,
@@ -15,13 +16,7 @@ import {
   type AssetCategory,
 } from "@/services/assets.service";
 
-/** Local calendar day as "yyyy-MM-dd" (DateOnly contract). */
-export function todayIso(): string {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${now.getFullYear()}-${month}-${day}`;
-}
+const todayIso = () => toDateOnly(new Date());
 
 function useActionToast() {
   const { t } = useTranslation(["assets", "common"]);

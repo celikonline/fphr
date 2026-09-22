@@ -47,5 +47,69 @@
       "medium": "Tehlikeli",
       "high": "Çok tehlikeli"
     }
+  },
+  "page": {
+    "title": "İSG",
+    "incidents": "Kaza ve ramak kala",
+    "myReports": "Bildirimlerim",
+    "hazardLink": "Tehlike sınıfları",
+    "riskLink": "Risk değerlendirmeleri"
+  },
+  "incidents": {
+    "record": "Olay kaydet",
+    "recordTitle": "İş kazası / ramak kala kaydı",
+    "recorded": "Olay kaydedildi.",
+    "reportTitle": "Ramak kala bildir",
+    "reported": "Bildiriminiz İSG ekibine iletildi.",
+    "send": "Bildir",
+    "empty": "Kayıtlı iş kazası ya da ramak kala yok.",
+    "loadError": "İSG kayıtları yüklenemedi.",
+    "actionFailed": "İşlem tamamlanamadı.",
+    "kinds": {
+      "workAccident": "İş kazası",
+      "nearMiss": "Ramak kala"
+    },
+    "statuses": {
+      "open": "Açık",
+      "closed": "Kapandı"
+    },
+    "fields": {
+      "kind": "Tür",
+      "eventDate": "Olay tarihi",
+      "employee": "Çalışan",
+      "injuredEmployee": "Kazazede çalışan",
+      "involvedEmployee": "İlgili çalışan (isteğe bağlı)",
+      "location": "Lokasyon",
+      "description": "Olayın anlatımı",
+      "sgk": "SGK bildirimi",
+      "status": "Durum",
+      "sgkNotifiedOn": "SGK bildirim tarihi",
+      "correctiveAction": "Düzeltici önlem"
+    },
+    "sgkHint": "İş kazası, kazadan sonraki 3 iş günü içinde SGK'ya bildirilmelidir; son gün otomatik hesaplanır.",
+    "reportHint": "Ne oldu, nerede oldu ve tekrarlanmaması için ne önerirsiniz?",
+    "sgkDue": "Son gün {{date}}",
+    "sgkOverdue": "Süre geçti ({{date}})",
+    "sgkNotifiedOn": "Bildirildi {{date}}",
+    "markSgk": "SGK'ya bildirildi",
+    "sgkTitle": "SGK bildirimini kaydet",
+    "sgkSaved": "SGK bildirimi kaydedildi.",
+    "close": "Kapat",
+    "closeTitle": "Olayı düzeltici önlemle kapat",
+    "closedToast": "Olay kapatıldı.",
+    "correctiveHint": "Tekrarlanmaması için alınan önlem (ör. korkuluk takıldı, eğitim verildi).",
+    "reportedBy": "Bildiren:",
+    "summary": {
+      "open": "Açık olay",
+      "sgkPending": "SGK bildirimi bekleyen",
+      "sgkOverdue": "SGK süresi geçen"
+    }
+  },
+  "myReports": {
+    "intro": "Kaza olmadan yakalanan tehlikeler (ıslak zemin, açık kablo, eksik koruyucu) raporlandığında kazalar önlenir.",
+    "report": "Ramak kala bildir",
+    "empty": "Henüz bildiriminiz yok.",
+    "underReview": "İnceleniyor",
+    "action": "Alınan önlem"
   }
 }

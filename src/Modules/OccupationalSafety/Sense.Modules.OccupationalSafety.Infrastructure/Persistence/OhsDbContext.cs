@@ -7,6 +7,8 @@ using Sense.Shared.Contracts.Context;
 using Sense.Shared.Infrastructure.Persistence;
 using Sense.Shared.Infrastructure.Persistence.Audit;
 
+using Sense.Modules.OccupationalSafety.Domain.Incidents;
+
 namespace Sense.Modules.OccupationalSafety.Infrastructure.Persistence;
 
 /// <summary>Occupational Safety (İSG) module DbContext (ADR 0003: one DbContext per module, own PostgreSQL schema "ohs").</summary>
@@ -20,6 +22,8 @@ public sealed class OhsDbContext(DbContextOptions<OhsDbContext> options, ITenant
     public DbSet<WorkplaceHazardClassification> HazardClassifications => Set<WorkplaceHazardClassification>();
 
     public DbSet<RiskAssessment> RiskAssessments => Set<RiskAssessment>();
+
+    public DbSet<OhsIncident> Incidents => Set<OhsIncident>();
 
     /// <summary>Shared AuditLogEntry type in this module's own schema (same pattern as Leave/Expense).</summary>
     public DbSet<AuditLogEntry> AuditLogEntries => Set<AuditLogEntry>();
@@ -36,6 +40,9 @@ internal static class OhsTables
 {
     public const string HazardClassifications = "hazard_classifications";
     public const string RiskAssessments = "risk_assessments";
+    public const string Incidents = "incidents";
+    public const int IncidentKindLength = 30;
+    public const int IncidentTextLength = 2000;
 
     public const int HazardClassLength = 30;
     public const int NoteLength = 1000;
@@ -55,6 +62,22 @@ public sealed class WorkplaceHazardClassificationConfiguration : IEntityTypeConf
         b.HasIndex(x => new { x.TenantId, x.LocationId });
         b.HasIndex(x => new { x.TenantId, x.LocationId, x.EffectiveFrom }).IsUnique();
 
+        b.Ignore(x => x.DomainEvents);
+    }
+}
+
+public sealed class OhsIncidentConfiguration : IEntityTypeConfiguration<OhsIncident>
+{
+    public void Configure(EntityTypeBuilder<OhsIncident> b)
+    {
+        b.ToTable(OhsTables.Incidents);
+        b.HasKey(x => x.Id);
+        b.Property(x => x.Kind).HasConversion<string>().HasMaxLength(OhsTables.IncidentKindLength).IsRequired();
+        b.Property(x => x.Description).HasMaxLength(OhsTables.IncidentTextLength).IsRequired();
+        b.Property(x => x.CorrectiveAction).HasMaxLength(OhsTables.IncidentTextLength);
+        b.Ignore(x => x.IsClosed);
+        b.HasIndex(x => new { x.TenantId, x.EventDate });
+        b.HasIndex(x => new { x.TenantId, x.ReportedByEmployeeId });
         b.Ignore(x => x.DomainEvents);
     }
 }

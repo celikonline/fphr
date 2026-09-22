@@ -47,5 +47,69 @@
       "medium": "Hazardous",
       "high": "Very hazardous"
     }
+  },
+  "page": {
+    "title": "OHS",
+    "incidents": "Accidents & near misses",
+    "myReports": "My reports",
+    "hazardLink": "Hazard classes",
+    "riskLink": "Risk assessments"
+  },
+  "incidents": {
+    "record": "Record incident",
+    "recordTitle": "Work accident / near miss",
+    "recorded": "Incident recorded.",
+    "reportTitle": "Report a near miss",
+    "reported": "Your report was sent to the OHS team.",
+    "send": "Report",
+    "empty": "No work accidents or near misses recorded.",
+    "loadError": "OHS records could not be loaded.",
+    "actionFailed": "The action could not be completed.",
+    "kinds": {
+      "workAccident": "Work accident",
+      "nearMiss": "Near miss"
+    },
+    "statuses": {
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "fields": {
+      "kind": "Type",
+      "eventDate": "Date",
+      "employee": "Employee",
+      "injuredEmployee": "Injured employee",
+      "involvedEmployee": "Involved employee (optional)",
+      "location": "Location",
+      "description": "What happened",
+      "sgk": "SGK notification",
+      "status": "Status",
+      "sgkNotifiedOn": "Date notified to SGK",
+      "correctiveAction": "Corrective action"
+    },
+    "sgkHint": "A work accident must be notified to SGK within 3 business days; the deadline is calculated automatically.",
+    "reportHint": "What happened, where, and what would prevent it from happening again?",
+    "sgkDue": "Due {{date}}",
+    "sgkOverdue": "Overdue ({{date}})",
+    "sgkNotifiedOn": "Notified {{date}}",
+    "markSgk": "Notified to SGK",
+    "sgkTitle": "Record SGK notification",
+    "sgkSaved": "SGK notification recorded.",
+    "close": "Close",
+    "closeTitle": "Close with corrective action",
+    "closedToast": "Incident closed.",
+    "correctiveHint": "The measure taken to prevent a recurrence (e.g. railing installed, training given).",
+    "reportedBy": "Reported by:",
+    "summary": {
+      "open": "Open incidents",
+      "sgkPending": "Awaiting SGK notification",
+      "sgkOverdue": "SGK deadline missed"
+    }
+  },
+  "myReports": {
+    "intro": "Reporting hazards caught before anyone is hurt (wet floor, exposed cable, missing guard) prevents accidents.",
+    "report": "Report a near miss",
+    "empty": "You have not reported anything yet.",
+    "underReview": "Under review",
+    "action": "Action taken"
   }
 }

@@ -47,5 +47,69 @@
       "medium": "Gefährlich",
       "high": "Hochgefährlich"
     }
+  },
+  "page": {
+    "title": "Arbeitsschutz",
+    "incidents": "Unfälle & Beinaheunfälle",
+    "myReports": "Meine Meldungen",
+    "hazardLink": "Gefahrenklassen",
+    "riskLink": "Gefährdungsbeurteilungen"
+  },
+  "incidents": {
+    "record": "Ereignis erfassen",
+    "recordTitle": "Arbeitsunfall / Beinaheunfall",
+    "recorded": "Ereignis erfasst.",
+    "reportTitle": "Beinaheunfall melden",
+    "reported": "Ihre Meldung wurde an das Arbeitsschutzteam gesendet.",
+    "send": "Melden",
+    "empty": "Keine Arbeitsunfälle oder Beinaheunfälle erfasst.",
+    "loadError": "Arbeitsschutzdaten konnten nicht geladen werden.",
+    "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+    "kinds": {
+      "workAccident": "Arbeitsunfall",
+      "nearMiss": "Beinaheunfall"
+    },
+    "statuses": {
+      "open": "Offen",
+      "closed": "Abgeschlossen"
+    },
+    "fields": {
+      "kind": "Art",
+      "eventDate": "Datum",
+      "employee": "Mitarbeitende",
+      "injuredEmployee": "Verletzte Person",
+      "involvedEmployee": "Beteiligte Person (optional)",
+      "location": "Standort",
+      "description": "Hergang",
+      "sgk": "SGK-Meldung",
+      "status": "Status",
+      "sgkNotifiedOn": "Meldedatum an SGK",
+      "correctiveAction": "Korrekturmaßnahme"
+    },
+    "sgkHint": "Ein Arbeitsunfall muss innerhalb von 3 Arbeitstagen an die SGK gemeldet werden; die Frist wird automatisch berechnet.",
+    "reportHint": "Was ist passiert, wo, und was würde eine Wiederholung verhindern?",
+    "sgkDue": "Frist {{date}}",
+    "sgkOverdue": "Frist überschritten ({{date}})",
+    "sgkNotifiedOn": "Gemeldet {{date}}",
+    "markSgk": "An SGK gemeldet",
+    "sgkTitle": "SGK-Meldung erfassen",
+    "sgkSaved": "SGK-Meldung erfasst.",
+    "close": "Abschließen",
+    "closeTitle": "Mit Korrekturmaßnahme abschließen",
+    "closedToast": "Ereignis abgeschlossen.",
+    "correctiveHint": "Maßnahme gegen eine Wiederholung (z. B. Geländer montiert, Unterweisung durchgeführt).",
+    "reportedBy": "Gemeldet von:",
+    "summary": {
+      "open": "Offene Ereignisse",
+      "sgkPending": "SGK-Meldung ausstehend",
+      "sgkOverdue": "SGK-Frist überschritten"
+    }
+  },
+  "myReports": {
+    "intro": "Wer Gefahren meldet, bevor jemand verletzt wird (nasser Boden, offenes Kabel, fehlender Schutz), verhindert Unfälle.",
+    "report": "Beinaheunfall melden",
+    "empty": "Sie haben noch nichts gemeldet.",
+    "underReview": "In Prüfung",
+    "action": "Ergriffene Maßnahme"
   }
 }
