@@ -25,5 +25,5 @@ public sealed class ListAssetCategoriesHandler(
         return Result.Success(dtos);
     }
 
-    internal static AssetCategoryDto ToDto(AssetCategory category) => new(category.Id, category.Code, category.Name);
+    internal static AssetCategoryDto ToDto(AssetCategory category) => new(category.Id, category.Code, category.Name, category.ReplacementIntervalDays);
 }

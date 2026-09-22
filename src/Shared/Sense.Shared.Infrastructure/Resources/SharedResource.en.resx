@@ -1484,4 +1484,5 @@ The report you requested has been generated. Click the link to view and download
   <data name="ohs_assignment.certificate_required" xml:space="preserve"><value>A certificate class is required for a safety expert.</value></data>
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>The record has already ended.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>The end date cannot be before the start date.</value></data>
+  <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>The replacement interval must be between 1 and 3650 days.</value></data>
 </root>

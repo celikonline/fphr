@@ -53,6 +53,7 @@ public sealed class AssetCategoryConfiguration : IEntityTypeConfiguration<AssetC
 
         b.Property(x => x.Code).HasMaxLength(AssetsTables.CodeLength).IsRequired();
         b.Property(x => x.Name).HasMaxLength(AssetsTables.NameLength).IsRequired();
+        b.Ignore(x => x.RequiresPeriodicReplacement);
 
         b.HasIndex(x => new { x.TenantId, x.Code }).IsUnique();
 

@@ -5,6 +5,7 @@ import { PackagePlus } from "lucide-react";
 import { Badge, Button, Card, Group, Select, Skeleton, Stack, Table, Text } from "@mantine/core";
 import ConfirmDialog from "@/components/confirm-dialog";
 import EmployeeNameLink from "@/components/employees/employee-name-link";
+import ReplacementDueBadge from "@/components/assets/replacement-due-badge";
 import PaginationFooter from "@/components/pagination-footer";
 import { usePermission } from "@/components/permission-guard";
 import {
@@ -173,7 +174,14 @@ export default function AssetInventory() {
                       "—"
                     )}
                   </Table.Td>
-                  <Table.Td>{asset.status === "assigned" ? date(asset.issuedAt) : "—"}</Table.Td>
+                  <Table.Td>
+                    {asset.status === "assigned" ? date(asset.issuedAt) : "—"}
+                    {asset.replacementDueOn && (
+                      <div>
+                        <ReplacementDueBadge asset={asset} />
+                      </div>
+                    )}
+                  </Table.Td>
                   {canManage && (
                     <Table.Td>
                       <RowActions asset={asset} onOpen={setDialog} />

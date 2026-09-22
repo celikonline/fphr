@@ -6,9 +6,9 @@ using Sense.Shared.Web.Controllers;
 
 namespace Sense.Modules.Assets.Api.Controllers;
 
-public sealed record CreateAssetCategoryRequest(string Code, string Name);
+public sealed record CreateAssetCategoryRequest(string Code, string Name, int? ReplacementIntervalDays = null);
 
-public sealed record UpdateAssetCategoryRequest(string Name);
+public sealed record UpdateAssetCategoryRequest(string Name, int? ReplacementIntervalDays = null);
 
 /// <summary>Equipment category catalog (seeded per tenant: Computer/Phone/Vehicle/Other). No admin management UI in this pass (deferred gap).</summary>
 [ApiVersion(ApiRoutes.DefaultVersion)]
@@ -24,10 +24,10 @@ public sealed class AssetCategoriesController : ApiControllerBase
     [HttpPost]
     [ProducesResponseType<Guid>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Create([FromBody] CreateAssetCategoryRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new CreateAssetCategoryCommand(request.Code, request.Name), ct));
+        FromResult(await Dispatcher.Send(new CreateAssetCategoryCommand(request.Code, request.Name, request.ReplacementIntervalDays), ct));
 
     [HttpPut(ApiRoutes.IdParam)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAssetCategoryRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new UpdateAssetCategoryCommand(id, request.Name), ct));
+        FromResult(await Dispatcher.Send(new UpdateAssetCategoryCommand(id, request.Name, request.ReplacementIntervalDays), ct));
 }

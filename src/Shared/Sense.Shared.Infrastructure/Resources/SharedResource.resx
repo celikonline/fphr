@@ -1493,4 +1493,5 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="ohs_assignment.certificate_required" xml:space="preserve"><value>İş güvenliği uzmanı için belge sınıfı zorunludur.</value></data>
   <data name="ohs_assignment.already_ended" xml:space="preserve"><value>Kayıt zaten sonlandırılmış.</value></data>
   <data name="ohs_assignment.end_before_start" xml:space="preserve"><value>Bitiş tarihi başlangıçtan önce olamaz.</value></data>
+  <data name="asset_category.replacement_interval_invalid" xml:space="preserve"><value>Yenileme aralığı 1 ile 3650 gün arasında olmalıdır.</value></data>
 </root>

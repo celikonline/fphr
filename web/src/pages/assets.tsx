@@ -5,6 +5,7 @@ import { Badge, Card, Group, Skeleton, Stack, Tabs, Text, Title } from "@mantine
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import AssetInventory, { ASSET_STATUS_COLOR } from "@/components/assets/asset-inventory";
+import ReplacementDueBadge from "@/components/assets/replacement-due-badge";
 import { formatDateOnly } from "@/lib/dates";
 import { getMyAssets, listAssetCategories } from "@/services/assets.service";
 
@@ -85,7 +86,10 @@ function MyAssets() {
           <Card key={asset.id} withBorder padding="md">
             <Group justify="space-between" wrap="nowrap" align="flex-start">
               <Stack gap={4}>
-                <Text fw={600}>{asset.name}</Text>
+                <Group gap="xs">
+                  <Text fw={600}>{asset.name}</Text>
+                  <ReplacementDueBadge asset={asset} />
+                </Group>
                 {details && (
                   <Text size="xs" c="dimmed">
                     {details}

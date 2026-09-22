@@ -34,15 +34,20 @@
     "codeLocked": "Der Code kann nach dem Anlegen nicht mehr geändert werden.",
     "columns": {
       "name": "Name",
-      "code": "Code"
+      "code": "Code",
+      "replacement": "Regelmäßiger Austausch"
     },
     "errors": {
       "generic": "Die Kategorie konnte nicht gespeichert werden.",
       "loadFailed": "Die Kategorien konnten nicht geladen werden.",
       "codeTaken": "Eine Kategorie mit diesem Code existiert bereits.",
       "codeRequired": "Code ist erforderlich.",
-      "nameRequired": "Name ist erforderlich."
-    }
+      "nameRequired": "Name ist erforderlich.",
+      "replacementInvalid": "Das Austauschintervall muss zwischen 1 und 3650 Tagen liegen."
+    },
+    "replacementEvery_one": "Alle {{count}} Tag",
+    "replacementEvery_other": "Alle {{count}} Tage",
+    "replacementHint": "Tage zwischen zwei Austauschen, z. B. für PSA; leer lassen, wenn kein Austausch verfolgt wird."
   },
   "enum": {
     "status": {
@@ -74,5 +79,9 @@
     "retireTitle": "Arbeitsmittel ausmustern?",
     "retireDescription": "„{{name}}\" wird ausgemustert und kann nicht mehr zugewiesen werden.",
     "retired": "Arbeitsmittel ausgemustert."
+  },
+  "replacement": {
+    "due": "Austausch bis {{date}}",
+    "overdue": "Austausch überfällig ({{date}})"
   }
 }

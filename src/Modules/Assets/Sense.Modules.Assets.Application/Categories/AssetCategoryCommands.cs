@@ -9,7 +9,7 @@ using Sense.Shared.Kernel.Results;
 namespace Sense.Modules.Assets.Application.Categories;
 
 [RequiresPermission("assets.categories.manage")]
-public sealed record CreateAssetCategoryCommand(string Code, string Name) : ICommand<Guid>;
+public sealed record CreateAssetCategoryCommand(string Code, string Name, int? ReplacementIntervalDays = null) : ICommand<Guid>;
 
 public sealed class CreateAssetCategoryValidator : AbstractValidator<CreateAssetCategoryCommand>
 {
@@ -17,6 +17,8 @@ public sealed class CreateAssetCategoryValidator : AbstractValidator<CreateAsset
     {
         RuleFor(x => x.Code).NotEmpty().MaximumLength(AssetsLimits.CategoryCodeMaxLength);
         RuleFor(x => x.Name).NotEmpty().MaximumLength(AssetsLimits.CategoryNameMaxLength);
+        RuleFor(x => x.ReplacementIntervalDays).InclusiveBetween(1, AssetsLimits.MaxReplacementIntervalDays)
+            .When(x => x.ReplacementIntervalDays is not null);
     }
 }
 
@@ -30,7 +32,8 @@ public sealed class CreateAssetCategoryHandler(ITenantContext tenant, IAssetCate
             return Error.Conflict(AssetsDomainErrors.CategoryCodeTaken);
         }
 
-        var created = AssetCategory.Create(tenant.TenantId, command.Code, command.Name);
+        var created = AssetCategory.Create(
+            tenant.TenantId, command.Code, command.Name, replacementIntervalDays: command.ReplacementIntervalDays);
         if (created.IsFailure)
         {
             return created.Error;
@@ -42,7 +45,7 @@ public sealed class CreateAssetCategoryHandler(ITenantContext tenant, IAssetCate
 }
 
 [RequiresPermission("assets.categories.manage")]
-public sealed record UpdateAssetCategoryCommand(Guid CategoryId, string Name) : ICommand;
+public sealed record UpdateAssetCategoryCommand(Guid CategoryId, string Name, int? ReplacementIntervalDays = null) : ICommand;
 
 public sealed class UpdateAssetCategoryValidator : AbstractValidator<UpdateAssetCategoryCommand>
 {
@@ -50,6 +53,8 @@ public sealed class UpdateAssetCategoryValidator : AbstractValidator<UpdateAsset
     {
         RuleFor(x => x.CategoryId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(AssetsLimits.CategoryNameMaxLength);
+        RuleFor(x => x.ReplacementIntervalDays).InclusiveBetween(1, AssetsLimits.MaxReplacementIntervalDays)
+            .When(x => x.ReplacementIntervalDays is not null);
     }
 }
 
@@ -63,6 +68,7 @@ public sealed class UpdateAssetCategoryHandler(IAssetCategoryRepository categori
             return existing.Error;
         }
 
-        return existing.Value.Rename(command.Name);
+        var renamed = existing.Value.Rename(command.Name);
+        return renamed.IsFailure ? renamed : existing.Value.SetReplacementInterval(command.ReplacementIntervalDays);
     }
 }

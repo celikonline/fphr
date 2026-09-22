@@ -5,6 +5,7 @@ import { Badge, Button, Card, Group, Modal, Select, Skeleton, Stack, Text, TextI
 import { useMediaQuery } from "@mantine/hooks";
 import { PackagePlus, Undo2 } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import ReplacementDueBadge from "@/components/assets/replacement-due-badge";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
@@ -111,6 +112,7 @@ export function AssetsSection({ employee }: EmployeeCardTabProps) {
                   <Badge variant="filled" color={STATUS_COLOR[asset.status]}>
                     {t(`assets:enum.status.${asset.status}`)}
                   </Badge>
+                  <ReplacementDueBadge asset={asset} />
                 </Group>
                 <Text size="xs" c="dimmed">
                   {[

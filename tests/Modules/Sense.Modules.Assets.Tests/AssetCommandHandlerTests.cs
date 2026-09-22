@@ -169,7 +169,7 @@ public sealed class AssetCommandHandlerTests
         var currentUser = Substitute.For<ICurrentUser>();
         currentUser.EmployeeId.Returns((Guid?)null);
         var assets = Substitute.For<IAssetRepository>();
-        var handler = new GetMyAssetsHandler(currentUser, assets);
+        var handler = new GetMyAssetsHandler(currentUser, assets, Substitute.For<IAssetCategoryRepository>());
 
         var result = await handler.Handle(new GetMyAssetsQuery(), CancellationToken.None);
 
@@ -186,7 +186,10 @@ public sealed class AssetCommandHandlerTests
         asset.Assign(EmployeeId, DateOnly.FromDateTime(DateTime.UtcNow));
         var assets = Substitute.For<IAssetRepository>();
         assets.ListByEmployeeAsync(EmployeeId, Arg.Any<CancellationToken>()).Returns(new List<Asset> { asset });
-        var handler = new GetMyAssetsHandler(currentUser, assets);
+        var categories = Substitute.For<IAssetCategoryRepository>();
+        var ppe = AssetCategory.Create(TenantId, "ppe", "KKD", CategoryId, replacementIntervalDays: 30).Value;
+        categories.ListAsync(Arg.Any<CancellationToken>()).Returns(new List<AssetCategory> { ppe });
+        var handler = new GetMyAssetsHandler(currentUser, assets, categories);
 
         var result = await handler.Handle(new GetMyAssetsQuery(), CancellationToken.None);
 
@@ -194,5 +197,6 @@ public sealed class AssetCommandHandlerTests
         result.Value.Count.ShouldBe(1);
         result.Value[0].Id.ShouldBe(asset.Id);
         result.Value[0].Status.ShouldBe(AssetStatus.Assigned);
+        result.Value[0].ReplacementDueOn.ShouldBe(asset.IssuedAt!.Value.AddDays(30));
     }
 }

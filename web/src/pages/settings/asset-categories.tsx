@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Package, Plus } from "lucide-react";
-import { Button, Card, Group, Modal, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Button, Card, Group, Modal, NumberInput, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
@@ -13,6 +13,9 @@ import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
 import { createAssetCategory, listAssetCategories, updateAssetCategory, type AssetCategory } from "@/services/assets.service";
 
 const CATEGORIES_QUERY_KEY = ["assets", "categories"] as const;
+
+/** Server limit (AssetsLimits.MaxReplacementIntervalDays). */
+const MAX_REPLACEMENT_DAYS = 3650;
 
 function categoryErrorMessage(error: unknown, t: (key: string) => string): string {
   const problem = getApiProblem(error);
@@ -58,6 +61,13 @@ function AssetCategoriesAdmin() {
           {row.original.code}
         </Text>
       ),
+    },
+    {
+      id: "replacement",
+      header: t("assets:categories.columns.replacement"),
+      meta: { label: t("assets:categories.columns.replacement") },
+      enableSorting: false,
+      cell: ({ row }) => <ReplacementText days={row.original.replacementIntervalDays} />,
     },
     {
       id: "actions",
@@ -155,6 +165,7 @@ function CategoriesMobileList({
               <Text size="xs" c="dimmed" ff="monospace">
                 {category.code}
               </Text>
+              <ReplacementText days={category.replacementIntervalDays} />
             </Stack>
             {canManage && (
               <Button type="button" size="xs" variant="subtle" onClick={() => onEdit(category)}>
@@ -168,6 +179,16 @@ function CategoriesMobileList({
   );
 }
 
+/** KKD periodic replacement interval, or a dash when the category has none. */
+function ReplacementText({ days }: { days?: number | null }) {
+  const { t } = useTranslation(["assets"]);
+  return (
+    <Text size="sm" c={days ? undefined : "dimmed"}>
+      {days ? t("assets:categories.replacementEvery", { count: days }) : "—"}
+    </Text>
+  );
+}
+
 function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; onClose: () => void }) {
   const { t } = useTranslation(["assets", "common"]);
   const queryClient = useQueryClient();
@@ -175,14 +196,18 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
 
   const [code, setCode] = useState(editing?.code ?? "");
   const [name, setName] = useState(editing?.name ?? "");
+  const [replacementInput, setReplacementInput] = useState<number | string>(
+    editing?.replacementIntervalDays ?? ""
+  );
   const [error, setError] = useState<string | null>(null);
+  const intervalDays = replacementInput === "" ? null : Number(replacementInput);
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (editing) {
-        await updateAssetCategory(editing.id, name.trim());
+        await updateAssetCategory(editing.id, name.trim(), intervalDays);
       } else {
-        await createAssetCategory(code.trim(), name.trim());
+        await createAssetCategory(code.trim(), name.trim(), intervalDays);
       }
     },
     onSuccess: () => {
@@ -197,6 +222,9 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
     event.preventDefault();
     if (!name.trim()) return setError(t("assets:categories.errors.nameRequired"));
     if (!editing && !code.trim()) return setError(t("assets:categories.errors.codeRequired"));
+    if (intervalDays !== null && (intervalDays < 1 || intervalDays > MAX_REPLACEMENT_DAYS)) {
+      return setError(t("assets:categories.errors.replacementInvalid"));
+    }
     setError(null);
     mutation.mutate();
   }
@@ -223,6 +251,18 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
             maxLength={100}
             onChange={(event) => setCode(event.currentTarget.value)}
             disabled={Boolean(editing) || mutation.isPending}
+            inputWrapperOrder={["label", "input", "description"]}
+          />
+          <NumberInput
+            id="category-replacement"
+            label={t("assets:categories.columns.replacement")}
+            description={t("assets:categories.replacementHint")}
+            value={replacementInput}
+            min={1}
+            max={MAX_REPLACEMENT_DAYS}
+            allowDecimal={false}
+            onChange={setReplacementInput}
+            disabled={mutation.isPending}
             inputWrapperOrder={["label", "input", "description"]}
           />
           {error && (

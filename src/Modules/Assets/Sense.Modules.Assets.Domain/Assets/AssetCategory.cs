@@ -29,8 +29,22 @@ public sealed class AssetCategory : TenantAggregateRoot<Guid>, IAuditLogged
     /// <summary>Display name (tenant-editable, e.g. "Bilgisayar").</summary>
     public string Name { get; private set; } = string.Empty;
 
-    public static Result<AssetCategory> Create(Guid tenantId, string code, string name, Guid? id = null)
+    /// <summary>
+    /// KKD (senseik-015 Faz 4): items of this category are replaced every N days after issue (6331 md.30 / KKD
+    /// Kullanımı Yönetmeliği - worn-out PPE must be renewed). Null = no periodic replacement.
+    /// </summary>
+    public int? ReplacementIntervalDays { get; private set; }
+
+    public bool RequiresPeriodicReplacement => ReplacementIntervalDays is not null;
+
+    public static Result<AssetCategory> Create(
+        Guid tenantId, string code, string name, Guid? id = null, int? replacementIntervalDays = null)
     {
+        if (!IsValidInterval(replacementIntervalDays))
+        {
+            return Error.Validation(AssetsDomainErrors.CategoryReplacementIntervalInvalid);
+        }
+
         if (string.IsNullOrWhiteSpace(code))
         {
             return Error.Validation(AssetsDomainErrors.CategoryCodeRequired);
@@ -45,8 +59,28 @@ public sealed class AssetCategory : TenantAggregateRoot<Guid>, IAuditLogged
             id ?? Guid.CreateVersion7(),
             tenantId,
             Guard.MaxLength(code.Trim(), AssetsLimits.CategoryCodeMaxLength),
-            Guard.MaxLength(name.Trim(), AssetsLimits.CategoryNameMaxLength));
+            Guard.MaxLength(name.Trim(), AssetsLimits.CategoryNameMaxLength))
+        {
+            ReplacementIntervalDays = replacementIntervalDays,
+        };
     }
+
+    public Result SetReplacementInterval(int? days)
+    {
+        if (!IsValidInterval(days))
+        {
+            return Error.Validation(AssetsDomainErrors.CategoryReplacementIntervalInvalid);
+        }
+
+        ReplacementIntervalDays = days;
+        return Result.Success();
+    }
+
+    /// <summary>When an item issued on <paramref name="issuedAt"/> is due for replacement; null without an interval.</summary>
+    public DateOnly? ReplacementDueOn(DateOnly? issuedAt) =>
+        issuedAt is { } issued && ReplacementIntervalDays is { } days ? issued.AddDays(days) : null;
+
+    private static bool IsValidInterval(int? days) => days is null or (> 0 and <= AssetsLimits.MaxReplacementIntervalDays);
 
     public Result Rename(string name)
     {

@@ -34,15 +34,20 @@
     "codeLocked": "Kod oluşturulduktan sonra değiştirilemez.",
     "columns": {
       "name": "Ad",
-      "code": "Kod"
+      "code": "Kod",
+      "replacement": "Periyodik yenileme"
     },
     "errors": {
       "generic": "Kategori kaydedilemedi.",
       "loadFailed": "Kategoriler yüklenemedi.",
       "codeTaken": "Bu kod ile zaten bir kategori var.",
       "codeRequired": "Kod zorunludur.",
-      "nameRequired": "Ad zorunludur."
-    }
+      "nameRequired": "Ad zorunludur.",
+      "replacementInvalid": "Yenileme aralığı 1 ile 3650 gün arasında olmalıdır."
+    },
+    "replacementEvery_one": "{{count}} günde bir",
+    "replacementEvery_other": "{{count}} günde bir",
+    "replacementHint": "KKD gibi belirli aralıkla yenilenmesi gereken ekipman için gün sayısı; boş bırakılırsa yenileme takibi yapılmaz."
   },
   "enum": {
     "status": {
@@ -74,5 +79,9 @@
     "retireTitle": "Zimmet kullanım dışı bırakılsın mı?",
     "retireDescription": "\"{{name}}\" kullanım dışı bırakılacak ve bir daha atanamayacak.",
     "retired": "Zimmet kullanım dışı bırakıldı."
+  },
+  "replacement": {
+    "due": "Yenileme: {{date}}",
+    "overdue": "Yenileme gecikti ({{date}})"
   }
 }

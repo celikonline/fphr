@@ -141,6 +141,10 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
+                    b.Property<int?>("ReplacementIntervalDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("replacement_interval_days");
+
                     b.Property<Guid>("TenantId")
                         .HasColumnType("uuid")
                         .HasColumnName("tenant_id");
