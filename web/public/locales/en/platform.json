@@ -2,6 +2,12 @@
   "title": "Companies",
   "subtitle": "View every company (tenant) on the platform and create new ones.",
   "add": "Create company",
+  "edit": "Edit company",
+  "updated": "Company details updated.",
+  "editDialog": {
+    "title": "Edit company details",
+    "taxNumber": "Tax number"
+  },
   "empty": "No companies yet.",
   "platformBadge": "Platform",
   "columns": {
@@ -40,6 +46,7 @@
     "withPassword": "Company created. The owner can sign in with the password you set."
   },
   "errors": {
+    "updateFailed": "The company details could not be updated. Please try again.",
     "generic": "The company could not be created. Please try again.",
     "loadFailed": "The company list could not be loaded.",
     "slugTaken": "This company address is already in use.",

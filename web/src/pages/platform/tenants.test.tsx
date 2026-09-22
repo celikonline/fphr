@@ -8,8 +8,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import trPlatform from "../../../public/locales/tr/platform.json";
 import trCommon from "../../../public/locales/tr/common.json";
+import trSetup from "../../../public/locales/tr/setup.json";
 import PlatformTenantsPage from "./tenants";
-import { createTenant, listTenants, type TenantSummary } from "@/services/platform.service";
+import { createTenant, listTenants, updateTenant, type TenantSummary } from "@/services/platform.service";
 import { toast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -17,6 +18,7 @@ vi.mock("@/services/platform.service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/platform.service")>()),
   listTenants: vi.fn(),
   createTenant: vi.fn(),
+  updateTenant: vi.fn(),
 }));
 
 vi.mock("@/hooks/use-toast", () => ({ toast: vi.fn() }));
@@ -50,6 +52,9 @@ const TENANTS: TenantSummary[] = [
     status: "trial",
     createdAt: "2026-09-20T10:00:00Z",
     isPlatform: false,
+    taxNumber: "1234567890",
+    locale: "tr-TR",
+    timeZone: "Europe/Istanbul",
   },
   {
     id: "t1",
@@ -58,6 +63,8 @@ const TENANTS: TenantSummary[] = [
     status: "active",
     createdAt: "2026-09-01T10:00:00Z",
     isPlatform: true,
+    locale: "tr-TR",
+    timeZone: "Europe/Istanbul",
   },
 ];
 
@@ -86,8 +93,8 @@ function renderPage() {
   void i18n.init({
     lng: "tr",
     fallbackLng: "tr",
-    ns: ["platform", "common"],
-    resources: { tr: { platform: trPlatform, common: trCommon } },
+    ns: ["platform", "common", "setup"],
+    resources: { tr: { platform: trPlatform, common: trCommon, setup: trSetup } },
     interpolation: { escapeValue: false },
     react: { useSuspense: false },
   });
@@ -242,5 +249,46 @@ describe("PlatformTenantsPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(trPlatform.errors.slugTaken);
     expect(screen.getByRole("button", { name: trPlatform.dialog.submit })).toBeInTheDocument();
+  });
+
+  it("edits a company: prefills the form, saves the changes and never sends the slug", async () => {
+    setPermissions(["platform.tenants.manage"]);
+    vi.mocked(updateTenant).mockResolvedValue({ ...TENANTS[0], name: "Acme Yazılım A.Ş." });
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByText("Acme A.Ş.");
+    await user.click(screen.getAllByRole("button", { name: trPlatform.edit })[0]);
+
+    const nameInput = await screen.findByLabelText(/^Şirket adı/);
+    expect(nameInput).toHaveValue("Acme A.Ş.");
+    expect(screen.getByLabelText(trPlatform.editDialog.taxNumber)).toHaveValue("1234567890");
+
+    await user.clear(nameInput);
+    await user.type(nameInput, "Acme Yazılım A.Ş.");
+    await user.click(screen.getByRole("button", { name: trCommon.save }));
+
+    await waitFor(() => expect(updateTenant).toHaveBeenCalledTimes(1));
+    expect(vi.mocked(updateTenant).mock.calls[0]).toEqual([
+      "t2",
+      { name: "Acme Yazılım A.Ş.", taxNumber: "1234567890", locale: "tr-TR", timeZone: "Europe/Istanbul" },
+    ]);
+    await waitFor(() =>
+      expect(toast).toHaveBeenCalledWith(expect.objectContaining({ description: trPlatform.updated }))
+    );
+  });
+
+  it("does not call the API when the company name is cleared", async () => {
+    setPermissions(["platform.tenants.manage"]);
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findAllByText("Acme A.Ş.");
+    await user.click(screen.getAllByRole("button", { name: trPlatform.edit })[0]);
+    await user.clear(await screen.findByLabelText(/^Şirket adı/));
+    await user.click(screen.getByRole("button", { name: trCommon.save }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(trPlatform.errors.companyRequired);
+    expect(updateTenant).not.toHaveBeenCalled();
   });
 });

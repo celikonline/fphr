@@ -27,6 +27,17 @@ export interface TenantSummary {
   createdAt: string;
   /** The platform tenant itself (not a customer). */
   isPlatform: boolean;
+  /** Omitted by the API when unset (WhenWritingNull). */
+  taxNumber?: string;
+  locale: string;
+  timeZone: string;
+}
+
+export interface UpdateTenantInput {
+  name: string;
+  taxNumber?: string;
+  locale: string;
+  timeZone: string;
 }
 
 export interface CreateTenantInput {
@@ -51,6 +62,11 @@ export interface CreateTenantResult {
 
 export async function listTenants(): Promise<TenantSummary[]> {
   const { data } = await apiClient.get<TenantSummary[]>(TENANTS);
+  return data;
+}
+
+export async function updateTenant(id: string, input: UpdateTenantInput): Promise<TenantSummary> {
+  const { data } = await apiClient.put<TenantSummary>(`${TENANTS}/${id}`, input);
   return data;
 }
 

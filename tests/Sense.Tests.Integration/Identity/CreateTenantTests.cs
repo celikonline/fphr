@@ -143,6 +143,38 @@ public sealed class CreateTenantTests : IdentityStackTestBase
         list.Single(t => t.Slug == "acme").IsPlatform.ShouldBeFalse();
     }
 
+    [Fact]
+    public async Task SuperAdmin_UpdatesAnotherTenantsProfile_AndSlugStaysUntouched()
+    {
+        var (platform, superAdmin) = await SeedPlatformAsync();
+        ActAs(platform, superAdmin);
+        var created = (await ExecuteCommandAsync(NewTenant("acme", TenantOwnerMode.Password, StrongPassword))).Value;
+
+        var updated = await ExecuteCommandAsync(new UpdateTenantByPlatformCommand(created.TenantId, "Acme Yazılım A.Ş.", "1234567890", "en-US", "Europe/London"));
+
+        updated.IsSuccess.ShouldBeTrue(updated.IsFailure ? updated.Error.Code : null);
+        updated.Value.Name.ShouldBe("Acme Yazılım A.Ş.");
+        updated.Value.TaxNumber.ShouldBe("1234567890");
+        updated.Value.Slug.ShouldBe("acme");
+
+        var listed = (await ExecuteQueryAsync(new ListTenantsQuery())).Value.Single(t => t.Slug == "acme");
+        listed.Name.ShouldBe("Acme Yazılım A.Ş.");
+        listed.Locale.ShouldBe("en-US");
+        listed.TimeZone.ShouldBe("Europe/London");
+    }
+
+    [Fact]
+    public async Task CustomerTenantOwner_CannotUpdateTenantProfilesThroughPlatformEndpoint()
+    {
+        await SeedPlatformAsync();
+        var customer = await SeedTenantAsync("customer");
+        var owner = await SeedUserAsync(customer, "owner@customer.test", SystemRoleCodes.Owner);
+
+        ActAs(customer, owner);
+
+        ShouldFailWith(await ExecuteCommandAsync(new UpdateTenantByPlatformCommand(customer, "Hacked", null, "tr-TR", "Europe/Istanbul")), ErrorCodes.Forbidden, ErrorType.Forbidden);
+    }
+
     private async Task<(Guid Platform, Guid SuperAdmin)> SeedPlatformAsync()
     {
         var platform = await SeedTenantAsync(PlatformTenant.Slug);

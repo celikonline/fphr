@@ -168,7 +168,14 @@ public sealed class TenantsController : ApiControllerBase
     public async Task<IActionResult> Create([FromBody] CreateTenantRequest request, CancellationToken ct) =>
         FromResult(await Dispatcher.Send(new CreateTenantCommand(request.CompanyName, request.Slug, request.OwnerEmail, request.OwnerFirstName,
             request.OwnerLastName, request.OwnerMode, request.Password, request.Phone, request.Language), ct));
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType<TenantSummaryDto>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateTenantRequest request, CancellationToken ct) =>
+        FromResult(await Dispatcher.Send(new UpdateTenantByPlatformCommand(id, request.Name, request.TaxNumber, request.Locale, request.TimeZone), ct));
 }
+
+public sealed record UpdateTenantRequest(string Name, string? TaxNumber, string Locale, string TimeZone);
 
 public sealed record AcceptInvitationRequest(string Token, string Password, bool PrivacyNoticeAccepted, string? PrivacyNoticeVersion);
 

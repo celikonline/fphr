@@ -2,8 +2,9 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Building2, Plus } from "lucide-react";
+import { Building2, Pencil, Plus } from "lucide-react";
 import {
+  ActionIcon,
   Badge,
   Button,
   Card,
@@ -11,6 +12,7 @@ import {
   Modal,
   PasswordInput,
   SegmentedControl,
+  Select,
   Stack,
   Text,
   TextInput,
@@ -27,11 +29,23 @@ import {
   PLATFORM_PERMISSIONS,
   createTenant,
   listTenants,
+  updateTenant,
   type CreateTenantInput,
   type TenantOwnerMode,
   type TenantStatus,
   type TenantSummary,
+  type UpdateTenantInput,
 } from "@/services/platform.service";
+import { SUPPORTED_TENANT_LOCALES } from "@/services/tenant-setup.service";
+
+const COMMON_TIME_ZONES = [
+  "Europe/Istanbul",
+  "Europe/London",
+  "Europe/Berlin",
+  "Europe/Paris",
+  "America/New_York",
+  "UTC",
+];
 
 const TENANTS_QUERY_KEY = ["platform", "tenants"] as const;
 
@@ -69,6 +83,7 @@ function TenantStatusBadge({ status }: { status: TenantStatus }) {
 function TenantsAdmin() {
   const { t, i18n } = useTranslation(["platform", "common"]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<TenantSummary | null>(null);
 
   const tenantsQuery = useQuery({ queryKey: TENANTS_QUERY_KEY, queryFn: listTenants });
   const tenants = useMemo(() => tenantsQuery.data ?? [], [tenantsQuery.data]);
@@ -115,6 +130,21 @@ function TenantsAdmin() {
       meta: { label: t("platform:columns.createdAt"), headerClassName: "w-48" },
       cell: ({ row }) => (
         <Text size="sm">{formatDateTime(row.original.createdAt, i18n.language)}</Text>
+      ),
+    },
+    {
+      id: "actions",
+      header: "",
+      enableSorting: false,
+      meta: { label: t("platform:edit"), headerClassName: "w-14" },
+      cell: ({ row }) => (
+        <ActionIcon
+          variant="subtle"
+          aria-label={t("platform:edit")}
+          onClick={() => setEditing(row.original)}
+        >
+          <Pencil size={16} />
+        </ActionIcon>
       ),
     },
   ];
@@ -174,7 +204,16 @@ function TenantsAdmin() {
                             {tenant.slug}
                           </Text>
                         </div>
-                        <TenantStatusBadge status={tenant.status} />
+                        <Group gap="xs" wrap="nowrap">
+                          <TenantStatusBadge status={tenant.status} />
+                          <ActionIcon
+                            variant="subtle"
+                            aria-label={t("platform:edit")}
+                            onClick={() => setEditing(tenant)}
+                          >
+                            <Pencil size={16} />
+                          </ActionIcon>
+                        </Group>
                       </Group>
                     </Card>
                   ))}
@@ -186,7 +225,108 @@ function TenantsAdmin() {
       </Card>
 
       {dialogOpen && <CreateTenantDialog onClose={() => setDialogOpen(false)} />}
+      {editing && <EditTenantDialog tenant={editing} onClose={() => setEditing(null)} />}
     </div>
+  );
+}
+
+function EditTenantDialog({ tenant, onClose }: { tenant: TenantSummary; onClose: () => void }) {
+  const { t } = useTranslation(["platform", "common", "setup"]);
+  const queryClient = useQueryClient();
+
+  const [name, setName] = useState(tenant.name);
+  const [taxNumber, setTaxNumber] = useState(tenant.taxNumber ?? "");
+  const [locale, setLocale] = useState(tenant.locale);
+  const [timeZone, setTimeZone] = useState(tenant.timeZone);
+  const [error, setError] = useState<string | null>(null);
+
+  const timeZones = COMMON_TIME_ZONES.includes(tenant.timeZone)
+    ? COMMON_TIME_ZONES
+    : [tenant.timeZone, ...COMMON_TIME_ZONES];
+
+  const mutation = useMutation({
+    mutationFn: (input: UpdateTenantInput) => updateTenant(tenant.id, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: TENANTS_QUERY_KEY });
+      toast({ variant: "success", title: t("common:success"), description: t("platform:updated") });
+      onClose();
+    },
+    onError: (err) => setError(getApiErrorMessage(err, t("platform:errors.updateFailed"))),
+  });
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!name.trim()) {
+      setError(t("platform:errors.companyRequired"));
+      return;
+    }
+    setError(null);
+    mutation.mutate({
+      name: name.trim(),
+      taxNumber: taxNumber.trim() || undefined,
+      locale,
+      timeZone,
+    });
+  }
+
+  return (
+    <Modal opened onClose={onClose} title={t("platform:editDialog.title")} size="36rem">
+      <form onSubmit={handleSubmit}>
+        <Stack gap="md">
+          <TextInput
+            label={t("platform:dialog.companyName")}
+            withAsterisk
+            value={name}
+            maxLength={200}
+            onChange={(event) => setName(event.currentTarget.value)}
+            disabled={mutation.isPending}
+          />
+          <TextInput label={t("platform:columns.slug")} value={tenant.slug} readOnly disabled />
+          <TextInput
+            label={t("platform:editDialog.taxNumber")}
+            value={taxNumber}
+            maxLength={20}
+            onChange={(event) => setTaxNumber(event.currentTarget.value)}
+            disabled={mutation.isPending}
+          />
+          <Group grow align="flex-start">
+            <Select
+              label={t("setup:company.locale")}
+              allowDeselect={false}
+              value={locale}
+              data={SUPPORTED_TENANT_LOCALES.map((value) => ({
+                value,
+                label: t(`setup:company.locales.${value}`),
+              }))}
+              onChange={(value) => value && setLocale(value)}
+              disabled={mutation.isPending}
+            />
+            <Select
+              label={t("setup:company.timeZone")}
+              allowDeselect={false}
+              searchable
+              value={timeZone}
+              data={timeZones}
+              onChange={(value) => value && setTimeZone(value)}
+              disabled={mutation.isPending}
+            />
+          </Group>
+          {error && (
+            <Text size="sm" c="red" role="alert">
+              {error}
+            </Text>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button type="button" variant="default" onClick={onClose} disabled={mutation.isPending}>
+              {t("common:cancel")}
+            </Button>
+            <Button type="submit" loading={mutation.isPending}>
+              {t("common:save")}
+            </Button>
+          </Group>
+        </Stack>
+      </form>
+    </Modal>
   );
 }
 

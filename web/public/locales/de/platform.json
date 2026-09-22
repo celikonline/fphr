@@ -2,6 +2,12 @@
   "title": "Unternehmen",
   "subtitle": "Alle Unternehmen (Mandanten) der Plattform ansehen und neue anlegen.",
   "add": "Unternehmen anlegen",
+  "edit": "Unternehmen bearbeiten",
+  "updated": "Unternehmensdaten aktualisiert.",
+  "editDialog": {
+    "title": "Unternehmensdaten bearbeiten",
+    "taxNumber": "Steuernummer"
+  },
   "empty": "Noch keine Unternehmen.",
   "platformBadge": "Plattform",
   "columns": {
@@ -40,6 +46,7 @@
     "withPassword": "Unternehmen angelegt. Der Owner kann sich mit dem festgelegten Passwort anmelden."
   },
   "errors": {
+    "updateFailed": "Die Unternehmensdaten konnten nicht aktualisiert werden. Bitte versuchen Sie es erneut.",
     "generic": "Das Unternehmen konnte nicht angelegt werden. Bitte versuchen Sie es erneut.",
     "loadFailed": "Die Unternehmensliste konnte nicht geladen werden.",
     "slugTaken": "Diese Unternehmensadresse ist bereits vergeben.",

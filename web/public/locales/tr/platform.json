@@ -2,6 +2,12 @@
   "title": "Şirketler",
   "subtitle": "Platformdaki tüm şirketleri (kiracıları) görüntüleyin ve yeni şirket oluşturun.",
   "add": "Şirket oluştur",
+  "edit": "Şirketi düzenle",
+  "updated": "Şirket bilgileri güncellendi.",
+  "editDialog": {
+    "title": "Şirket bilgilerini düzenle",
+    "taxNumber": "Vergi numarası"
+  },
   "empty": "Henüz şirket yok.",
   "platformBadge": "Platform",
   "columns": {
@@ -40,6 +46,7 @@
     "withPassword": "Şirket oluşturuldu. Owner belirlediğiniz parolayla giriş yapabilir."
   },
   "errors": {
+    "updateFailed": "Şirket bilgileri güncellenemedi. Lütfen tekrar deneyin.",
     "generic": "Şirket oluşturulamadı. Lütfen tekrar deneyin.",
     "loadFailed": "Şirket listesi yüklenemedi.",
     "slugTaken": "Bu şirket adresi zaten kullanımda.",
