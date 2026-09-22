@@ -1,0 +1,7 @@
+{{- subject = "Employee leaving: " + employee_name -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>An exit dated {{ termination_date }} was recorded for <strong>{{ employee_name | html.escape }}</strong>.</p>
+<p>Asset returns, the exit settlement and offboarding tasks can be followed on the employee record.</p>
+{{~ if action_url ~}}
+{{ button "Open employee record" action_url }}
+{{~ end ~}}

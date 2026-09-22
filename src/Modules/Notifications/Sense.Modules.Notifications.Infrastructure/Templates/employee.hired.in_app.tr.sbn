@@ -1,0 +1,2 @@
+{{- subject = "Yeni çalışan: " + employee_name -}}
+{{ employee_name }} {{ hire_date }} tarihinde işe başlıyor.

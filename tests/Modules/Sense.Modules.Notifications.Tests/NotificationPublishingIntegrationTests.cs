@@ -55,6 +55,9 @@ public sealed class NotificationPublishingIntegrationTests : TestFixture
         services.AddNotificationsCore(configuration);
         services.AddSingleton<IRealtimeNotifier>(_realtime);
         services.AddSingleton(_linkIssuer);
+        // Host-provided PDF ports behind the payslip / work certificate attachment providers.
+        services.AddSingleton(NSubstitute.Substitute.For<Sense.Modules.Payroll.Contracts.IPayslipDocumentProvider>());
+        services.AddSingleton(NSubstitute.Substitute.For<Sense.Modules.Employee.Contracts.IWorkCertificateProvider>());
     }
 
     protected override async Task OnDatabaseReadyAsync() =>

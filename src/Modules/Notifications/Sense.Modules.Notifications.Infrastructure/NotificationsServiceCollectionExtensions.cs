@@ -24,7 +24,8 @@ public static class NotificationsServiceCollectionExtensions
     /// repositories, template renderer, recipient resolution, e-mail sender and delivery processor. Sense.Api gets it via
     /// NotificationsModule; Sense.Worker calls it directly and additionally runs <see cref="EmailDeliveryPollingService"/>.
     /// The host must provide IEmployeeContactLookup, IUserProfileLookup, IRoleAssignmentLookup,
-    /// IApprovalDecisionLinkIssuer and SignalR (IHubContext&lt;NotificationsHub&gt;).
+    /// IApprovalDecisionLinkIssuer, IEmployeeLookup, IEmployeeAudienceLookup, IWorkCertificateProvider,
+    /// IPayslipDocumentProvider and SignalR (IHubContext&lt;NotificationsHub&gt;).
     /// </summary>
     public static IServiceCollection AddNotificationsCore(this IServiceCollection services, IConfiguration configuration)
     {
@@ -53,6 +54,10 @@ public static class NotificationsServiceCollectionExtensions
         services.AddScoped<NotificationPublisher>();
 
         services.AddScoped<IEmailModelEnricher, ApprovalDecisionLinkEnricher>();
+        // PDF attachments rendered at send time; need Payroll's IPayslipDocumentProvider and Employee's
+        // IWorkCertificateProvider in the host (both hosts register them).
+        services.AddScoped<IEmailAttachmentProvider, PayslipAttachmentProvider>();
+        services.AddScoped<IEmailAttachmentProvider, WorkCertificateAttachmentProvider>();
         services.AddScoped<EmailDeliverySender>();
         services.AddScoped<EmailDeliveryProcessor>();
 

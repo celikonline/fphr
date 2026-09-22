@@ -1,0 +1,4 @@
+{{- subject = period + " dönemi ücret pusulanız" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>{{ period }} dönemi ücretiniz ödendi. Ücret pusulanız (4857 sayılı İş Kanunu md. 37) bu e-postanın ekindedir.</p>
+<p>Pusuladaki kalemlerle ilgili sorularınız için İnsan Kaynakları ile iletişime geçebilirsiniz.</p>

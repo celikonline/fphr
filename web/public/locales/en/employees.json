@@ -63,9 +63,9 @@
     "disabled": "Disabled"
   },
   "accessType": {
-    "Employee": "Employee",
-    "Owner": "Account owner",
-    "Admin": "Administrator"
+    "HR": "HR Manager",
+    "PayrollSpecialist": "Accounting",
+    "Employee": "Employee"
   },
   "fields": {
     "firstName": "First name",
@@ -80,7 +80,7 @@
     "manager": "Manager",
     "accountStatus": "Account status",
     "lastInvitationSentAt": "Last invitation sent",
-    "accessType": "Access type",
+    "accessType": "User group",
     "contractType": "Contract type",
     "employmentType": "Employment type",
     "gender": "Gender",
@@ -366,8 +366,8 @@
       }
     },
     "noAccountHint": "This employee has no user account yet. Send an invitation from the three-dot menu to create one.",
-    "accessTypeHint": "Only an account owner can grant or revoke the account owner role.",
-    "accessTypeSaved": "Access type updated.",
+    "accessTypeHint": "HR Manager and Accounting can do everything in the company; Employee can only access their own information.",
+    "accessTypeSaved": "User group updated.",
     "sensitiveHidden": "You don't have permission to view military status, disability degree or blood type.",
     "leaveAccrualStartDateHint": "Enter the actual date; the system grants the first entitlement one year later.",
     "copy": "Copy",
@@ -817,5 +817,9 @@
     "uploaded": "Photo updated.",
     "removed": "Photo removed.",
     "failed": "The photo action could not be completed."
+  },
+  "workCertificate": {
+    "download": "Employment certificate (PDF)",
+    "failed": "Could not download the employment certificate."
   }
 }

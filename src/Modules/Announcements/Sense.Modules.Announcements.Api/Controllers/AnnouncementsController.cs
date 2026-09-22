@@ -14,7 +14,8 @@ public sealed record CreateAnnouncementRequest(string Title, string Content, Ann
 
 public sealed record UpdateAnnouncementRequest(string Title, string Content, AnnouncementType Type, AnnouncementPriority Priority, string? TargetAudience);
 
-public sealed record PublishAnnouncementRequest(DateTime? ExpiresAt);
+/// <summary><see cref="NotifyEmployees"/>: also e-mail/notify every active employee (default off for older clients).</summary>
+public sealed record PublishAnnouncementRequest(DateTime? ExpiresAt, bool NotifyEmployees = false);
 
 public sealed record InitiateAnnouncementAttachmentUploadRequest(string FileName, string ContentType, long FileSizeBytes, AnnouncementAttachmentKind Kind);
 
@@ -66,7 +67,7 @@ public sealed class AnnouncementsController : ApiControllerBase
     [HttpPost(ApiRoutes.IdParam + "/publish")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Publish(Guid id, [FromBody] PublishAnnouncementRequest request, CancellationToken ct) =>
-        FromResult(await Dispatcher.Send(new PublishAnnouncementCommand(id, request.ExpiresAt), ct));
+        FromResult(await Dispatcher.Send(new PublishAnnouncementCommand(id, request.ExpiresAt, request.NotifyEmployees), ct));
 
     [HttpPost(ApiRoutes.IdParam + "/archive")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

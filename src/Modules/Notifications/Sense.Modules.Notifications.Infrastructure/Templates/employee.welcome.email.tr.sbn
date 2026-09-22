@@ -1,0 +1,5 @@
+{{- subject = "Aramıza hoş geldiniz!" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>Ekibimize katıldığınız için çok mutluyuz. İlk iş gününüz: <strong>{{ hire_date }}</strong>.</p>
+<p>Hesabınız açıldığında izin taleplerinizi, belgelerinizi ve şirket duyurularını SenseİK üzerinden takip edebileceksiniz.</p>
+<p>Yeni görevinizde başarılar dileriz.</p>

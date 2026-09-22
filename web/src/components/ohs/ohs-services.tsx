@@ -271,7 +271,11 @@ function LocationCard({ summary, name }: { summary: LocationServiceSummary; name
           <Text fw={600} truncate style={{ minWidth: 0, flex: 1 }}>
             {name}
           </Text>
-          <Badge color={HAZARD_COLORS[summary.hazardClass]} variant="light" style={{ flexShrink: 0 }}>
+          <Badge
+            color={HAZARD_COLORS[summary.hazardClass]}
+            variant="light"
+            style={{ flexShrink: 0 }}
+          >
             {t(`ohs:enum.hazardClass.${summary.hazardClass}`)}
           </Badge>
         </Group>

@@ -1,0 +1,3 @@
+{{- subject = "Alles Gute zum Geburtstag, " + recipient_name + "!" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Herzlichen Glückwunsch zum Geburtstag! Wir wünschen Ihnen ein Jahr voller Gesundheit, Freude und Erfolg.</p>

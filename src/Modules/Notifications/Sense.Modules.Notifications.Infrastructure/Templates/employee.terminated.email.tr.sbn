@@ -1,0 +1,7 @@
+{{- subject = "İşten ayrılış: " + employee_name -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ employee_name | html.escape }}</strong> için {{ termination_date }} tarihli işten ayrılış kaydedildi.</p>
+<p>Zimmetlerin iadesi, çıkış hesabı ve işten çıkış görevlerini çalışan kartından takip edebilirsiniz.</p>
+{{~ if action_url ~}}
+{{ button "Çalışan kartını aç" action_url }}
+{{~ end ~}}

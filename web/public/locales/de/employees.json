@@ -63,9 +63,9 @@
     "disabled": "Deaktiviert"
   },
   "accessType": {
-    "Employee": "Mitarbeitende:r",
-    "Owner": "Kontoinhaber:in",
-    "Admin": "Administrator:in"
+    "HR": "HR-Leitung",
+    "PayrollSpecialist": "Buchhaltung",
+    "Employee": "Mitarbeiter"
   },
   "fields": {
     "firstName": "Vorname",
@@ -80,7 +80,7 @@
     "manager": "Führungskraft",
     "accountStatus": "Kontostatus",
     "lastInvitationSentAt": "Letzte Einladung gesendet",
-    "accessType": "Zugriffsart",
+    "accessType": "Benutzergruppe",
     "contractType": "Vertragsart",
     "employmentType": "Beschäftigungsart",
     "gender": "Geschlecht",
@@ -366,8 +366,8 @@
       }
     },
     "noAccountHint": "Diese Person hat noch kein Benutzerkonto. Senden Sie über das Drei-Punkte-Menü eine Einladung, um eines anzulegen.",
-    "accessTypeHint": "Nur Kontoinhaber:innen können die Rolle „Kontoinhaber:in“ vergeben oder entziehen.",
-    "accessTypeSaved": "Zugriffsart aktualisiert.",
+    "accessTypeHint": "HR-Leitung und Buchhaltung können im Unternehmen alles tun; Mitarbeiter greifen nur auf ihre eigenen Daten zu.",
+    "accessTypeSaved": "Benutzergruppe aktualisiert.",
     "sensitiveHidden": "Sie haben keine Berechtigung, Wehrdienststatus, Grad der Behinderung oder Blutgruppe einzusehen.",
     "leaveAccrualStartDateHint": "Geben Sie das tatsächliche Datum ein; das System gewährt den ersten Anspruch ein Jahr später.",
     "copy": "Kopieren",
@@ -817,5 +817,9 @@
     "uploaded": "Foto aktualisiert.",
     "removed": "Foto entfernt.",
     "failed": "Die Foto-Aktion konnte nicht abgeschlossen werden."
+  },
+  "workCertificate": {
+    "download": "Arbeitsbescheinigung (PDF)",
+    "failed": "Die Arbeitsbescheinigung konnte nicht heruntergeladen werden."
   }
 }

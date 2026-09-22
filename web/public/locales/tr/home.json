@@ -59,5 +59,10 @@
     "empty": "Görüntülenecek çalışan yok.",
     "unassigned": "Departmansız",
     "total": "Toplam"
+  },
+  "announcements": {
+    "title": "Son duyurular",
+    "empty": "Yayında duyuru yok.",
+    "new": "Yeni"
   }
 }

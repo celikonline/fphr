@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Inbox as InboxIcon,
+  Megaphone,
   MoreVertical,
   Plane,
   RotateCw,
@@ -55,9 +56,10 @@ import {
   getTeamLeaveRequests,
   type LeaveRequestStatus,
 } from "@/services/leave.service";
+import { getMyAnnouncementFeed } from "@/services/announcements.service";
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
-import { daysUntil, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
+import { daysUntil, formatDate, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
 
 // The charting library is the single heaviest dependency on this screen and only one widget needs it,
 // so it loads after the dashboard paints instead of holding up the first screen after sign-in.
@@ -71,6 +73,9 @@ const LIST_LIMIT = 3;
 const BIRTHDAY_PAGE_SIZE = 3;
 const REQUEST_LIMIT = 4;
 const APPROVAL_LIMIT = 5;
+const ANNOUNCEMENT_LIMIT = 5;
+/** Announcement priorities (`AnnouncementPriority`) that get a red dot on the home widget. */
+const HIGH_PRIORITIES = new Set(["high", "urgent", "High", "Urgent"]);
 const SLATE = "var(--mantine-color-gray-6)";
 const ACCENT = "var(--mantine-primary-color-filled)";
 /** Categorical palette of the distribution chart, taken from the corporate colors. */
@@ -993,6 +998,77 @@ const EVENT_DOT: Record<CompanyEventType, string> = {
   leaveStart: "var(--mantine-color-teal-6)",
 };
 
+/** Newest published announcements (the feed is already newest first); unread ones are bold with a "new" badge. */
+function AnnouncementsWidget() {
+  const { t, i18n } = useTranslation(["home", "navigation"]);
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["home", "announcements-feed"],
+    queryFn: getMyAnnouncementFeed,
+    retry: retryUnlessClientError,
+  });
+  const items = (data ?? []).slice(0, ANNOUNCEMENT_LIMIT);
+
+  return (
+    <WidgetCard
+      title={t("home:announcements.title")}
+      icon={<Megaphone size={18} />}
+      action={
+        <LinkMenu items={[{ to: "/app/announcements", label: t("navigation:apps.announcements") }]} />
+      }
+    >
+      {isLoading ? (
+        <WidgetSkeleton />
+      ) : error && getApiErrorStatus(error) !== 404 ? (
+        <WidgetMessage>{t("home:unavailable")}</WidgetMessage>
+      ) : items.length === 0 ? (
+        <WidgetMessage>{t("home:announcements.empty")}</WidgetMessage>
+      ) : (
+        <RowList
+          items={items}
+          rowKey={(item) => item.id}
+          render={(item) => (
+            <>
+              <Group gap="sm" wrap="nowrap" className="min-w-0">
+                <span
+                  className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: HIGH_PRIORITIES.has(item.priority)
+                      ? "var(--mantine-color-red-6)"
+                      : "var(--mantine-color-gray-4)",
+                  }}
+                  aria-hidden
+                />
+                <Anchor
+                  component={Link}
+                  to="/app/announcements"
+                  size="sm"
+                  c="inherit"
+                  fw={item.isRead ? 400 : 600}
+                  truncate
+                >
+                  {item.title}
+                </Anchor>
+              </Group>
+              <Group gap={6} wrap="nowrap" className="shrink-0">
+                {!item.isRead && (
+                  <Badge size="xs" variant="light">
+                    {t("home:announcements.new")}
+                  </Badge>
+                )}
+                {item.publishedAt && (
+                  <Text size="xs" c="dimmed">
+                    {formatDate(item.publishedAt, i18n.language)}
+                  </Text>
+                )}
+              </Group>
+            </>
+          )}
+        />
+      )}
+    </WidgetCard>
+  );
+}
+
 function EventsWidget() {
   const { t, i18n } = useTranslation(["home", "companyCalendar", "navigation"]);
   // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
@@ -1098,6 +1174,7 @@ export default function HomePage() {
   // The company calendar endpoint enforces `announcements.my.events` itself; checking it here keeps the
   // widget hidden (instead of 403-ing) for roles without the grant, same as the other gated widgets.
   const canViewEvents = usePermission("announcements.my.events") && announcementsEnabled;
+  const canViewAnnouncements = usePermission("announcements.my.feed") && announcementsEnabled;
   const showEvents = useAccessSetting("showEventCalendar") && canViewEvents;
 
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
@@ -1106,7 +1183,10 @@ export default function HomePage() {
       showOrgInfo && <OrgInfoWidget key="org" />,
       canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
     ],
-    [canViewLeaveBalances && <LeaveInfoWidget key="leave" />],
+    [
+      canViewAnnouncements && <AnnouncementsWidget key="announcements" />,
+      canViewLeaveBalances && <LeaveInfoWidget key="leave" />,
+    ],
     [
       showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,
       canViewInbox && <PendingApprovalsWidget key="pending-approvals" />,

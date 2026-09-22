@@ -1,0 +1,6 @@
+{{- subject = "Neue/r Mitarbeiter/in: " + employee_name -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p><strong>{{ employee_name | html.escape }}</strong> beginnt am {{ hire_date }}.</p>
+{{~ if action_url ~}}
+{{ button "Personalakte öffnen" action_url }}
+{{~ end ~}}

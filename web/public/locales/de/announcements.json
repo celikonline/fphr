@@ -24,7 +24,9 @@
     "empty": "Noch keine Ankündigungen.",
     "loadError": "Ankündigungen konnten nicht geladen werden.",
     "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
-    "edit": "Bearbeiten"
+    "edit": "Bearbeiten",
+    "notifyEmployees": "E-Mail und Benachrichtigung an Mitarbeitende senden",
+    "notifyEmployeesHint": "Alle aktiven Mitarbeitenden erhalten eine E-Mail und eine In-App-Benachrichtigung."
   },
   "fields": {
     "title": "Titel",

@@ -165,7 +165,7 @@ export async function listEmployeePayslips(employeeId: string): Promise<Employee
   return data;
 }
 
-/** Downloads one payslip as the plain-text ücret pusulası (İş K. m.37); server file name via Content-Disposition, else fallbackName. */
+/** Downloads one payslip as the ücret pusulası PDF (İş K. m.37); server file name via Content-Disposition, else fallbackName. */
 export async function downloadPayslipDocument(
   payslipId: string,
   fallbackName: string

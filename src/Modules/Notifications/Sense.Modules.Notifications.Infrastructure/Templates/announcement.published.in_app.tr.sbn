@@ -1,0 +1,2 @@
+{{- subject = "Yeni duyuru: " + announcement_title -}}
+{{ if announcement_excerpt }}{{ announcement_excerpt }}{{ else }}Duyuruyu okumak için tıklayın.{{ end }}

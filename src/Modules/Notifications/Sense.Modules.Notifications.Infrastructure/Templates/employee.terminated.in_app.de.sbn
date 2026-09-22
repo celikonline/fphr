@@ -1,0 +1,2 @@
+{{- subject = "Austritt: " + employee_name -}}
+Für {{ employee_name }} wurde ein Austritt zum {{ termination_date }} erfasst.

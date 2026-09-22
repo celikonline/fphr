@@ -14,6 +14,7 @@ namespace Sense.Modules.Notifications.Application.Deliveries;
 /// </summary>
 public sealed class EmailDeliverySender(
     IEnumerable<IEmailModelEnricher> enrichers,
+    IEnumerable<IEmailAttachmentProvider> attachmentProviders,
     INotificationTemplateRenderer renderer,
     IEmailSender emailSender,
     IOptions<NotificationsOptions> options,
@@ -37,9 +38,23 @@ public sealed class EmailDeliverySender(
                 }
             }
 
+            var attachments = new List<EmailAttachment>();
+            foreach (var provider in attachmentProviders.Where(p => string.Equals(p.TemplateKey, delivery.TemplateKey, StringComparison.Ordinal)))
+            {
+                var result = await provider.GetAsync(delivery.TenantId, model, ct);
+                if (result.SkipReason is not null)
+                {
+                    delivery.MarkSkipped(result.SkipReason);
+                    return;
+                }
+
+                attachments.AddRange(result.Attachments);
+            }
+
             var rendered = renderer.Render(delivery.TemplateKey, NotificationChannels.Email, delivery.Culture, model);
             await emailSender.SendAsync(
-                new EmailMessage(delivery.RecipientAddress, delivery.RecipientName, rendered.Subject, rendered.Body, rendered.HtmlBody), ct);
+                new EmailMessage(delivery.RecipientAddress, delivery.RecipientName, rendered.Subject, rendered.Body, rendered.HtmlBody,
+                    attachments.Count == 0 ? null : attachments), ct);
             delivery.MarkSent(clock.GetUtcNow().UtcDateTime);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

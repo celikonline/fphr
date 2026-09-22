@@ -148,5 +148,14 @@ public sealed class EmployeeModule : IModule
 
         // Cross-module contract consumed by Recruitment (ATS to HR core bridge: candidate hire -> employee provisioning, Faz 9)
         services.AddScoped<IEmployeeProvisioning, EmployeeProvisioning>();
+
+        // Cross-module contracts consumed by Notifications (exit e-mail's çalışma belgesi attachment, announcement
+        // audience) - registered in Sense.Worker too, where the delivery processor and event handlers run.
+        services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
+        services.AddScoped<IEmployeeAudienceLookup, EmployeeAudienceLookup>();
+
+        // Hangfire runs in Sense.Api: daily birthday pass publishing EmployeeBirthdaysToday for Notifications.
+        services.AddScoped<Sense.Shared.Contracts.BackgroundJobs.IScheduledJobHandler,
+            Infrastructure.BackgroundJobs.BirthdayGreetingJobHandler>();
     }
 }

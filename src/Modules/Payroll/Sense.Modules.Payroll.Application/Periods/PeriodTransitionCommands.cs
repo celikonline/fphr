@@ -1,6 +1,8 @@
 using FluentValidation;
 using Sense.Modules.Payroll.Application.Closing;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -40,16 +42,39 @@ public sealed class ApprovePayrollPeriodHandler(IPayrollPeriodRepository periods
     }
 }
 
-/// <summary>Marks an approved period as paid (Approved → Paid) once the salaries went out.</summary>
+/// <summary>
+/// Marks an approved period as paid (Approved → Paid) once the salaries went out, and publishes
+/// <see cref="PayrollPeriodPaid"/> so every employee gets their ücret pusulası by e-mail (4857 md.37).
+/// </summary>
 [RequiresPermission("payroll.period.approve")]
 public sealed record MarkPayrollPeriodPaidCommand(Guid PeriodId) : ICommand;
 
-public sealed class MarkPayrollPeriodPaidHandler(IPayrollPeriodRepository periods) : ICommandHandler<MarkPayrollPeriodPaidCommand>
+public sealed class MarkPayrollPeriodPaidHandler(IPayrollPeriodRepository periods, IPayslipRepository payslips, IIntegrationEventOutbox outbox)
+    : ICommandHandler<MarkPayrollPeriodPaidCommand>
 {
     public async Task<Result> Handle(MarkPayrollPeriodPaidCommand command, CancellationToken cancellationToken)
     {
         var period = await periods.FindByIdAsync(command.PeriodId, cancellationToken);
-        return period is null ? Error.NotFound(PayrollDomainErrors.PeriodNotFound) : period.MarkPaid();
+        if (period is null)
+        {
+            return Error.NotFound(PayrollDomainErrors.PeriodNotFound);
+        }
+
+        var paid = period.MarkPaid();
+        if (paid.IsFailure)
+        {
+            return paid;
+        }
+
+        var periodPayslips = await payslips.ListByPeriodAsync(period.Id, cancellationToken);
+        if (periodPayslips.Count > 0)
+        {
+            outbox.Enqueue(new PayrollPeriodPaid(
+                period.TenantId, period.Id, period.Year, period.Month,
+                periodPayslips.Select(p => new PaidPayslip(p.Id, p.EmployeeId)).ToList()));
+        }
+
+        return paid;
     }
 }
 

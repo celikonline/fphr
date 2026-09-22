@@ -76,7 +76,11 @@ function OhsScreen({
   const { t } = useTranslation(["ohs"]);
   const locations = useLocationOptions();
   const tabs = [
-    canIncidents && { value: "incidents", label: t("ohs:page.incidents"), body: <IncidentRegister /> },
+    canIncidents && {
+      value: "incidents",
+      label: t("ohs:page.incidents"),
+      body: <IncidentRegister />,
+    },
     canServices && {
       value: "services",
       label: t("ohs:page.services"),
@@ -85,7 +89,7 @@ function OhsScreen({
     canReport && { value: "mine", label: t("ohs:page.myReports"), body: <MyReports /> },
   ].filter((tab) => tab !== false);
   return (
-    <Stack gap="md">
+    <Stack gap="md" className="p-6 md:p-10">
       <Title order={2}>{t("ohs:page.title")}</Title>
       {tabs.length === 1 ? (
         tabs[0].body
@@ -151,7 +155,11 @@ function IncidentRegister() {
           <Group justify="space-between" align="center" wrap="wrap" gap="sm">
             <Group gap="md">
               {canHazard && (
-                <Anchor component={Link} to="/app/settings/company/ohs-hazard-classification" size="sm">
+                <Anchor
+                  component={Link}
+                  to="/app/settings/company/ohs-hazard-classification"
+                  size="sm"
+                >
                   {t("ohs:page.hazardLink")}
                 </Anchor>
               )}
@@ -162,7 +170,10 @@ function IncidentRegister() {
               )}
             </Group>
             {canManage && (
-              <Button leftSection={<Plus size={16} />} onClick={() => setDialog({ kind: "record" })}>
+              <Button
+                leftSection={<Plus size={16} />}
+                onClick={() => setDialog({ kind: "record" })}
+              >
                 {t("ohs:incidents.record")}
               </Button>
             )}

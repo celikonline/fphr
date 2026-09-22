@@ -7,25 +7,27 @@
  * (that needs a real docx→HTML converter); it only strips what would look broken.
  */
 export function cleanPastedWordHtml(html: string): string {
-  return html
-    // Conditional comments: <!--[if gte mso 9]>...<![endif]-->
-    .replace(/<!--\[if [^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, "")
-    .replace(/<!--[\s\S]*?-->/g, "")
-    // Word's own namespaced empty paragraph markers.
-    .replace(/<o:p>\s*<\/o:p>/gi, "")
-    .replace(/<\/?o:p>/gi, "")
-    // mso-* inline styles (keep the style attribute if something else useful remains).
-    .replace(/style="([^"]*)"/gi, (_match, styleValue: string) => {
-      const kept = styleValue
-        .split(";")
-        .map((rule) => rule.trim())
-        .filter((rule) => rule.length > 0 && !rule.toLowerCase().startsWith("mso-"))
-        .join("; ");
-      return kept.length > 0 ? `style="${kept}"` : "";
-    })
-    // Word's Mso* class names (e.g. class="MsoNormal").
-    .replace(/\sclass="Mso[^"]*"/gi, "")
-    // Collapse the empty tag soup the steps above can leave behind.
-    .replace(/<span[^>]*>\s*<\/span>/gi, "")
-    .replace(/<p[^>]*>(\s|&nbsp;)*<\/p>/gi, "");
+  return (
+    html
+      // Conditional comments: <!--[if gte mso 9]>...<![endif]-->
+      .replace(/<!--\[if [^\]]*\]>[\s\S]*?<!\[endif\]-->/gi, "")
+      .replace(/<!--[\s\S]*?-->/g, "")
+      // Word's own namespaced empty paragraph markers.
+      .replace(/<o:p>\s*<\/o:p>/gi, "")
+      .replace(/<\/?o:p>/gi, "")
+      // mso-* inline styles (keep the style attribute if something else useful remains).
+      .replace(/style="([^"]*)"/gi, (_match, styleValue: string) => {
+        const kept = styleValue
+          .split(";")
+          .map((rule) => rule.trim())
+          .filter((rule) => rule.length > 0 && !rule.toLowerCase().startsWith("mso-"))
+          .join("; ");
+        return kept.length > 0 ? `style="${kept}"` : "";
+      })
+      // Word's Mso* class names (e.g. class="MsoNormal").
+      .replace(/\sclass="Mso[^"]*"/gi, "")
+      // Collapse the empty tag soup the steps above can leave behind.
+      .replace(/<span[^>]*>\s*<\/span>/gi, "")
+      .replace(/<p[^>]*>(\s|&nbsp;)*<\/p>/gi, "")
+  );
 }

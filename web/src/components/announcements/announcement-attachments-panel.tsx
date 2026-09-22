@@ -28,7 +28,10 @@ export function AnnouncementAttachmentsPanel({ announcementId }: { announcementI
   const [uploading, setUploading] = useState(false);
   const queryKey = ["announcements", announcementId, "attachments"] as const;
 
-  const attachmentsQuery = useQuery({ queryKey, queryFn: () => listAnnouncementAttachments(announcementId) });
+  const attachmentsQuery = useQuery({
+    queryKey,
+    queryFn: () => listAnnouncementAttachments(announcementId),
+  });
   const files = (attachmentsQuery.data ?? []).filter((attachment) => attachment.kind === "file");
 
   const uploadMutation = useMutation({
@@ -37,14 +40,23 @@ export function AnnouncementAttachmentsPanel({ announcementId }: { announcementI
     onSettled: () => setUploading(false),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey }),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("announcements:editor.fileUploadFailed")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("announcements:editor.fileUploadFailed")),
+      }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (attachmentId: string) => deleteAnnouncementAttachment(announcementId, attachmentId),
+    mutationFn: (attachmentId: string) =>
+      deleteAnnouncementAttachment(announcementId, attachmentId),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey }),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("announcements:editor.attachmentDeleteFailed")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("announcements:editor.attachmentDeleteFailed")),
+      }),
   });
 
   return (
@@ -57,8 +69,14 @@ export function AnnouncementAttachmentsPanel({ announcementId }: { announcementI
           {files.map((file) => (
             <List.Item key={file.id} icon={<FileText size={16} />}>
               <Group gap="xs" justify="space-between" wrap="nowrap">
-                <Text size="sm" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {file.fileName} <Text component="span" size="xs" c="dimmed">({formatSize(file.sizeBytes)})</Text>
+                <Text
+                  size="sm"
+                  style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                >
+                  {file.fileName}{" "}
+                  <Text component="span" size="xs" c="dimmed">
+                    ({formatSize(file.sizeBytes)})
+                  </Text>
                 </Text>
                 <ActionIcon
                   variant="subtle"
@@ -84,7 +102,11 @@ export function AnnouncementAttachmentsPanel({ announcementId }: { announcementI
           toast({
             variant: "destructive",
             title: t("common:error"),
-            description: t(reason === "size" ? "announcements:editor.fileTooLarge" : "announcements:editor.fileTypeNotAllowed"),
+            description: t(
+              reason === "size"
+                ? "announcements:editor.fileTooLarge"
+                : "announcements:editor.fileTypeNotAllowed"
+            ),
           })
         }
         title={t("announcements:editor.dropFileHere")}

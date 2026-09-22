@@ -1,0 +1,4 @@
+{{- subject = "Your employment certificate" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Your exit was recorded with the date {{ termination_date }}. Your employment certificate (çalışma belgesi, Turkish Labour Law art. 28) is attached to this e-mail.</p>
+<p>Thank you for working with us, and all the best for the future.</p>

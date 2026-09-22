@@ -1,0 +1,4 @@
+{{- subject = "Çalışma belgeniz" -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p>İşten ayrılışınız {{ termination_date }} tarihiyle kaydedildi. 4857 sayılı İş Kanunu'nun 28. maddesi uyarınca düzenlenen çalışma belgeniz bu e-postanın ekindedir.</p>
+<p>Birlikte çalıştığımız için teşekkür eder, yeni yolunuzda başarılar dileriz.</p>

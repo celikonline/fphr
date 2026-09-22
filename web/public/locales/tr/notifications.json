@@ -22,6 +22,19 @@
     },
     "ohs": {
       "sgk_notification_due": "İş kazasının SGK bildirim süresi yaklaştığında ya da geçtiğinde"
+    },
+    "employee": {
+      "hired": "Yeni bir çalışan işe başladığında",
+      "welcome": "İşe başladığımda hoş geldin e-postası",
+      "terminated": "Bir çalışan işten ayrıldığında",
+      "work_certificate": "İşten ayrılışta çalışma belgesi",
+      "birthday": "Doğum günümde"
+    },
+    "announcement": {
+      "published": "Yeni bir duyuru yayınlandığında"
+    },
+    "payroll": {
+      "payslip_ready": "Ücret pusulam hazır olduğunda"
     }
   },
   "preferences": {
@@ -40,7 +53,10 @@
     "account": "Hesap",
     "request": "Talepler",
     "approval": "Onaylar",
-    "reminder": "Hatırlatmalar"
+    "reminder": "Hatırlatmalar",
+    "employee": "Çalışanlar",
+    "announcement": "Duyurular",
+    "payroll": "Bordro"
   },
   "types": {
     "documentExpiryReminder": "Belge süresi dolmak üzere"

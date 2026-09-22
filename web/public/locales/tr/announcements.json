@@ -24,7 +24,9 @@
     "empty": "Henüz duyuru yok.",
     "loadError": "Duyurular yüklenemedi.",
     "actionFailed": "İşlem tamamlanamadı.",
-    "edit": "Düzenle"
+    "edit": "Düzenle",
+    "notifyEmployees": "Çalışanlara e-posta ve bildirim gönder",
+    "notifyEmployeesHint": "Tüm aktif çalışanlara e-posta ve uygulama içi bildirim gider."
   },
   "fields": {
     "title": "Başlık",

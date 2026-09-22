@@ -1,6 +1,8 @@
 using FluentValidation;
+using Sense.Modules.Announcements.Contracts.Events;
 using Sense.Modules.Announcements.Domain;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Contracts.Messaging;
 using Sense.Shared.Contracts.Security;
 using Sense.Shared.Kernel.Results;
@@ -88,11 +90,15 @@ public sealed class UpdateAnnouncementHandler(ITenantContext tenant, IAnnounceme
     }
 }
 
-/// <summary>Taslak duyuruyu yayınla.</summary>
+/// <summary>
+/// Taslak duyuruyu yayınla. <see cref="NotifyEmployees"/> açıksa <see cref="AnnouncementPublished"/> yayınlanır ve
+/// Notifications tüm aktif çalışanlara e-posta + uygulama içi bildirim gönderir.
+/// </summary>
 [RequiresPermission("announcements.announcements.manage")]
-public sealed record PublishAnnouncementCommand(Guid AnnouncementId, DateTime? ExpiresAt = null) : ICommand;
+public sealed record PublishAnnouncementCommand(Guid AnnouncementId, DateTime? ExpiresAt = null, bool NotifyEmployees = false) : ICommand;
 
-public sealed class PublishAnnouncementHandler(ITenantContext tenant, ICurrentUser currentUser, IAnnouncementRepository announcements)
+public sealed class PublishAnnouncementHandler(
+    ITenantContext tenant, ICurrentUser currentUser, IAnnouncementRepository announcements, IIntegrationEventOutbox outbox)
     : ICommandHandler<PublishAnnouncementCommand>
 {
     public async Task<Result> Handle(PublishAnnouncementCommand command, CancellationToken cancellationToken)
@@ -103,7 +109,18 @@ public sealed class PublishAnnouncementHandler(ITenantContext tenant, ICurrentUs
             return Error.NotFound(AnnouncementDomainErrors.NotFound);
         }
 
-        return announcement.Publish(currentUser.UserId ?? Guid.Empty, command.ExpiresAt);
+        var published = announcement.Publish(currentUser.UserId ?? Guid.Empty, command.ExpiresAt);
+        if (published.IsSuccess && command.NotifyEmployees)
+        {
+            outbox.Enqueue(new AnnouncementPublished(
+                tenant.TenantId,
+                announcement.Id,
+                announcement.Title,
+                AnnouncementExcerpt.FromHtml(announcement.Content),
+                announcement.Priority >= AnnouncementPriority.High));
+        }
+
+        return published;
     }
 }
 

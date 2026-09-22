@@ -59,5 +59,10 @@
     "empty": "Es gibt keine Mitarbeitenden zum Anzeigen.",
     "unassigned": "Nicht zugeordnet",
     "total": "Gesamt"
+  },
+  "announcements": {
+    "title": "Neueste Ankündigungen",
+    "empty": "Keine veröffentlichten Ankündigungen.",
+    "new": "Neu"
   }
 }

@@ -39,13 +39,14 @@ public sealed class NotificationRecipientResolver(
     /// </summary>
     private static readonly IReadOnlyDictionary<string, string[]> PermissionRoleCodes = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
-        // documents.requirements.view: Owner/Admin ("*"), HR/HRSpecialist ("documents.*"), PayrollSpecialist/Manager/
-        // Recruiter ("documents.*.view").
-        ["documents.requirements.view"] = ["Owner", "Admin", "HR", "HRSpecialist", "PayrollSpecialist", "Manager", "Recruiter"],
+        // Dört kullanıcı grubunda İK Yöneticisi (HR) ve Muhasebe (PayrollSpecialist) her izni ("*") taşır; Owner da.
+        ["documents.requirements.view"] = ["Owner", "HR", "PayrollSpecialist"],
+        // employee.employees.update (hire/exit notices).
+        ["employee.employees.update"] = ["Owner", "HR", "PayrollSpecialist"],
     };
 
-    /// <summary>Owner/Admin always hold every permission (SystemRoleDefinitions' "*" wildcard) - the safe fallback for an unmapped key: no false positives, only possibly incomplete.</summary>
-    private static readonly string[] OwnerAdminOnly = ["Owner", "Admin"];
+    /// <summary>Owner/HR/PayrollSpecialist always hold every permission (SystemRoleDefinitions' "*" wildcard) - the safe fallback for an unmapped key.</summary>
+    private static readonly string[] OwnerAdminOnly = ["Owner", "HR", "PayrollSpecialist"];
 
     /// <summary>Employee ids of every user whose role(s) include <paramref name="permissionKey"/>, tenant-scoped, deduplicated. See <see cref="PermissionRoleCodes"/>'s remarks for the resolution strategy and its limits.</summary>
     public async Task<IReadOnlyList<Guid>> ResolveByPermissionAsync(Guid tenantId, string permissionKey, CancellationToken ct)
@@ -92,6 +93,25 @@ public sealed class NotificationRecipientResolver(
         }
 
         return recipients;
+    }
+
+    /// <summary>
+    /// A leaving employee's personal e-mail (whatever their status - the work mailbox and login are being closed),
+    /// or null when none is recorded. E-mail only: no user id, so no in-app notification.
+    /// </summary>
+    public async Task<NotificationRecipient?> ResolvePersonalAddressAsync(Guid tenantId, Guid employeeId, CancellationToken ct)
+    {
+        var contact = (await contacts.GetContactsAsync(tenantId, [employeeId], ct)).FirstOrDefault();
+        if (contact is null || string.IsNullOrWhiteSpace(contact.PersonalEmail))
+        {
+            return null;
+        }
+
+        var profile = contact.UserId is { } uid ? (await userProfiles.GetAsync(tenantId, [uid], ct)).GetValueOrDefault(uid) : null;
+        var name = $"{contact.FirstName} {contact.LastName}".Trim();
+        return new NotificationRecipient(
+            contact.EmployeeId, null, name, contact.PersonalEmail, AddressSources.PersonalEmail,
+            NormalizeLanguage(profile?.PreferredLanguage) ?? options.Value.DefaultLanguage);
     }
 
     /// <summary>"en-US" → "en"; null/blank → null.</summary>

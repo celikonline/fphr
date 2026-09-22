@@ -11,6 +11,7 @@ import type {
   PagedResult,
 } from "@/types";
 import type { CustomFieldDataType, CustomFieldSection } from "@/services/custom-fields.service";
+import { parseContentDispositionFileName } from "@/services/data-transfer.service";
 
 const EMPLOYEES_BASE = "/v1/employees";
 
@@ -121,7 +122,7 @@ export interface EmployeeDetail {
   managerDisplayName: string | null;
   userId: string | null;
   accountStatus: UserAccountStatus;
-  accessType: "Employee" | "Owner" | "Admin" | null;
+  accessType: "Employee" | "HR" | "PayrollSpecialist" | null;
   lastInvitationSentAt: string | null;
   gender: Gender;
   maritalStatus: MaritalStatus;
@@ -732,6 +733,22 @@ export async function terminateEmployee(
     input
   );
   return data;
+}
+
+/** Çalışma belgesi (İş K. m.28) PDF of a terminated employee; needs `employee.employees.update`. */
+export async function downloadWorkCertificate(
+  employeeId: string
+): Promise<{ blob: Blob; fileName: string }> {
+  const response = await apiClient.get<Blob>(`${EMPLOYEES_BASE}/${employeeId}/work-certificate`, {
+    responseType: "blob",
+  });
+  const disposition = response.headers["content-disposition"];
+  return {
+    blob: response.data,
+    fileName:
+      parseContentDispositionFileName(typeof disposition === "string" ? disposition : undefined) ??
+      "calisma-belgesi.pdf",
+  };
 }
 
 export async function getEmploymentPeriods(employeeId: string): Promise<EmploymentHistory> {

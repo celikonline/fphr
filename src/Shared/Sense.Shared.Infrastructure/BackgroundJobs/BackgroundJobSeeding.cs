@@ -83,6 +83,18 @@ public static class BackgroundJobSeeding
             Description = "Remind about work accidents approaching or past their SGK notification deadline",
             Payload = "{}"
         };
+
+        // Birthday greetings: per-tenant daily pass that publishes today's birthdays (Employee
+        // BirthdayGreetingJobHandler) for Notifications' e-mail + in-app greeting. 09:00 Europe/Istanbul intent;
+        // same TimeZoneInfo caveat as the seeds above.
+        yield return new BackgroundJobSeed
+        {
+            JobName = "EmployeeBirthdayGreeting",
+            JobType = JobType.EmployeeBirthdayGreeting,
+            CronExpression = "0 9 * * *", // 09:00 daily (Europe/Istanbul intent, see remark above)
+            Description = "Send birthday greetings to employees whose birthday is today",
+            Payload = "{}"
+        };
     }
 }
 

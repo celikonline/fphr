@@ -1,0 +1,4 @@
+{{- subject = "Ihre Arbeitsbescheinigung" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Ihr Austritt wurde zum {{ termination_date }} erfasst. Ihre Arbeitsbescheinigung (çalışma belgesi, türk. Arbeitsgesetz Art. 28) finden Sie im Anhang.</p>
+<p>Vielen Dank für die Zusammenarbeit und alles Gute für die Zukunft.</p>

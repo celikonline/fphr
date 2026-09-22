@@ -1,0 +1,15 @@
+{{-
+if is_high_priority == "true"
+  subject = "[Önemli] Yeni duyuru: " + announcement_title
+else
+  subject = "Yeni duyuru: " + announcement_title
+end
+-}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ announcement_title | html.escape }}</strong></p>
+{{~ if announcement_excerpt ~}}
+<p>{{ announcement_excerpt | html.escape }}</p>
+{{~ end ~}}
+{{~ if action_url ~}}
+{{ button "Duyuruyu oku" action_url }}
+{{~ end ~}}

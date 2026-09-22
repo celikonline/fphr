@@ -24,7 +24,9 @@
     "empty": "No announcements yet.",
     "loadError": "Announcements could not be loaded.",
     "actionFailed": "The action could not be completed.",
-    "edit": "Edit"
+    "edit": "Edit",
+    "notifyEmployees": "Send e-mail and notification to employees",
+    "notifyEmployeesHint": "Every active employee gets an e-mail and an in-app notification."
   },
   "fields": {
     "title": "Title",

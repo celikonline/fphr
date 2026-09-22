@@ -1,0 +1,4 @@
+{{- subject = "Your payslip for " + period -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Your salary for {{ period }} has been paid. Your payslip is attached to this e-mail.</p>
+<p>If you have questions about any item, please contact Human Resources.</p>

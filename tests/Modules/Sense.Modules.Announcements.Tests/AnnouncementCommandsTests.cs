@@ -1,7 +1,9 @@
 using NSubstitute;
 using Sense.Modules.Announcements.Application.Announcements;
+using Sense.Modules.Announcements.Contracts.Events;
 using Sense.Modules.Announcements.Domain;
 using Sense.Shared.Contracts.Context;
+using Sense.Shared.Contracts.Events;
 using Xunit;
 
 namespace Sense.Modules.Announcements.Tests;
@@ -57,11 +59,38 @@ public class AnnouncementCommandsTests
         var repository = Substitute.For<IAnnouncementRepository>();
         repository.GetByIdAsync(tenantId, announcement.Id, Arg.Any<CancellationToken>()).Returns(announcement);
 
-        var handler = new PublishAnnouncementHandler(tenant, currentUser, repository);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+
+        var handler = new PublishAnnouncementHandler(tenant, currentUser, repository, outbox);
         var result = await handler.Handle(new PublishAnnouncementCommand(announcement.Id), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Equal(AnnouncementStatus.Published, announcement.Status);
+        outbox.DidNotReceiveWithAnyArgs().Enqueue(default!);
+    }
+
+    [Fact]
+    public async Task PublishAnnouncement_WithNotifyEmployees_EnqueuesAnnouncementPublished()
+    {
+        var tenantId = Guid.NewGuid();
+        var announcement = Announcement.Create(
+            tenantId, "Yemekhane", "<p>Yarın <strong>kapalı</strong></p><p>Detaylar &amp; saat</p>", AnnouncementType.General, AnnouncementPriority.Urgent).Value;
+
+        var tenant = Substitute.For<ITenantContext>();
+        tenant.TenantId.Returns(tenantId);
+        var currentUser = Substitute.For<ICurrentUser>();
+        currentUser.UserId.Returns(Guid.NewGuid());
+        var repository = Substitute.For<IAnnouncementRepository>();
+        repository.GetByIdAsync(tenantId, announcement.Id, Arg.Any<CancellationToken>()).Returns(announcement);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+
+        var handler = new PublishAnnouncementHandler(tenant, currentUser, repository, outbox);
+        var result = await handler.Handle(new PublishAnnouncementCommand(announcement.Id, NotifyEmployees: true), CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        outbox.Received(1).Enqueue(Arg.Is<AnnouncementPublished>(e =>
+            e.TenantId == tenantId && e.AnnouncementId == announcement.Id && e.Title == "Yemekhane"
+            && e.Excerpt == "Yarın kapalı Detaylar & saat" && e.IsHighPriority));
     }
 
     [Fact]

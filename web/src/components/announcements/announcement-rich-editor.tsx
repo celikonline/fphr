@@ -21,7 +21,9 @@ const AttachmentImage = TiptapImage.extend({
         default: null,
         parseHTML: (element) => element.getAttribute("data-attachment-id"),
         renderHTML: (attributes) =>
-          attributes["data-attachment-id"] ? { "data-attachment-id": attributes["data-attachment-id"] as string } : {},
+          attributes["data-attachment-id"]
+            ? { "data-attachment-id": attributes["data-attachment-id"] as string }
+            : {},
       },
     };
   },
@@ -45,7 +47,12 @@ interface AnnouncementRichEditorProps {
  * yapıştırılan biçimli metin Tiptap'ın ProseMirror tabanlı yapıştırma ayrıştırıcısından geçer (kalın/italik/liste/
  * başlık korunur); `cleanPastedWordHtml` yalnızca Office'e özgü gürültüyü (mso-* stiller, koşullu yorumlar) temizler.
  */
-export function AnnouncementRichEditor({ announcementId, content, onChange, editable = true }: AnnouncementRichEditorProps) {
+export function AnnouncementRichEditor({
+  announcementId,
+  content,
+  onChange,
+  editable = true,
+}: AnnouncementRichEditorProps) {
   const { t } = useTranslation(["announcements", "common"]);
 
   const editor = useEditor({
@@ -63,7 +70,8 @@ export function AnnouncementRichEditor({ announcementId, content, onChange, edit
     editorProps: {
       transformPastedHTML: cleanPastedWordHtml,
       handlePaste: (_view, event) => handleImageFiles(Array.from(event.clipboardData?.files ?? [])),
-      handleDrop: (_view, event) => handleImageFiles(Array.from((event as DragEvent).dataTransfer?.files ?? [])),
+      handleDrop: (_view, event) =>
+        handleImageFiles(Array.from((event as DragEvent).dataTransfer?.files ?? [])),
     },
   });
 
@@ -83,21 +91,41 @@ export function AnnouncementRichEditor({ announcementId, content, onChange, edit
     }
 
     if (!announcementId) {
-      toast({ variant: "destructive", title: t("announcements:editor.saveDraftFirstTitle"), description: t("announcements:editor.saveDraftFirstHint") });
+      toast({
+        variant: "destructive",
+        title: t("announcements:editor.saveDraftFirstTitle"),
+        description: t("announcements:editor.saveDraftFirstHint"),
+      });
       return true;
     }
 
     if (image.size > MAX_IMAGE_BYTES) {
-      toast({ variant: "destructive", title: t("common:error"), description: t("announcements:editor.imageTooLarge") });
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: t("announcements:editor.imageTooLarge"),
+      });
       return true;
     }
 
     void uploadAnnouncementAttachment(announcementId, image, "inline")
       .then((attachment) => {
-        editor.chain().focus().setImage({ src: attachment.downloadUrl, alt: attachment.fileName, "data-attachment-id": attachment.id } as never).run();
+        editor
+          .chain()
+          .focus()
+          .setImage({
+            src: attachment.downloadUrl,
+            alt: attachment.fileName,
+            "data-attachment-id": attachment.id,
+          } as never)
+          .run();
       })
       .catch(() => {
-        toast({ variant: "destructive", title: t("common:error"), description: t("announcements:editor.imageUploadFailed") });
+        toast({
+          variant: "destructive",
+          title: t("common:error"),
+          description: t("announcements:editor.imageUploadFailed"),
+        });
       });
     return true;
   }

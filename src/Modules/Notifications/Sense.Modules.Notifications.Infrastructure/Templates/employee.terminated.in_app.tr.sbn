@@ -1,0 +1,2 @@
+{{- subject = "İşten ayrılış: " + employee_name -}}
+{{ employee_name }} için {{ termination_date }} tarihli işten ayrılış kaydedildi.

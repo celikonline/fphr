@@ -1,0 +1,2 @@
+{{- subject = "Employee leaving: " + employee_name -}}
+An exit dated {{ termination_date }} was recorded for {{ employee_name }}.

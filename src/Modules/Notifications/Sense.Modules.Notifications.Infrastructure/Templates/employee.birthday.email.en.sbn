@@ -1,0 +1,4 @@
+{{- subject = "Happy birthday, " + recipient_name + "!" -}}
+<p>Hello {{ recipient_name | html.escape }},</p>
+<p>Warmest wishes on your birthday - may the year ahead bring you health, happiness and success.</p>
+<p>Many happy returns!</p>

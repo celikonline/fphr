@@ -59,5 +59,10 @@
     "empty": "There are no employees to show.",
     "unassigned": "Unassigned",
     "total": "Total"
+  },
+  "announcements": {
+    "title": "Latest announcements",
+    "empty": "No published announcements.",
+    "new": "New"
   }
 }

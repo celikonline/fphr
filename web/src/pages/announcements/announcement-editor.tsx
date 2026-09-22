@@ -58,7 +58,9 @@ function AnnouncementEditorScreen() {
   if (isEditing && announcementQuery.isError) {
     return (
       <Stack gap="md" p="md">
-        <Text c="red">{getApiErrorMessage(announcementQuery.error, t("announcements:manage.loadError"))}</Text>
+        <Text c="red">
+          {getApiErrorMessage(announcementQuery.error, t("announcements:manage.loadError"))}
+        </Text>
       </Stack>
     );
   }
@@ -66,34 +68,63 @@ function AnnouncementEditorScreen() {
   // key={id} tekrar mount eder: her taslak kendi başlangıç state'iyle başlar, arkaplanda gelen bir yeniden
   // sorgulama kullanıcının o an yazdığını üzerine yazmaz (bkz. React hooks kuralı - efekt içinde setState yerine
   // lazy useState init).
-  return <AnnouncementEditorForm key={id ?? "new"} id={id} initial={announcementQuery.data ?? null} />;
+  return (
+    <AnnouncementEditorForm key={id ?? "new"} id={id} initial={announcementQuery.data ?? null} />
+  );
 }
 
-function AnnouncementEditorForm({ id, initial }: { id: string | undefined; initial: Announcement | null }) {
+function AnnouncementEditorForm({
+  id,
+  initial,
+}: {
+  id: string | undefined;
+  initial: Announcement | null;
+}) {
   const isEditing = Boolean(id);
   const navigate = useNavigate();
   const { t } = useTranslation(["announcements", "common"]);
 
   const [title, setTitle] = useState(initial?.title ?? "");
   const [content, setContent] = useState(initial?.content ?? "");
-  const [type, setType] = useState<AnnouncementType>(initial ? enumKey<AnnouncementType>(initial.type) : "general");
-  const [priority, setPriority] = useState<AnnouncementPriority>(initial ? enumKey<AnnouncementPriority>(initial.priority) : "normal");
+  const [type, setType] = useState<AnnouncementType>(
+    initial ? enumKey<AnnouncementType>(initial.type) : "general"
+  );
+  const [priority, setPriority] = useState<AnnouncementPriority>(
+    initial ? enumKey<AnnouncementPriority>(initial.priority) : "normal"
+  );
 
   const createMutation = useMutation({
     mutationFn: () => createAnnouncement({ title: title.trim(), content, type, priority }),
     onSuccess: (newId) => {
-      toast({ variant: "success", title: t("common:success"), description: t("announcements:manage.created") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("announcements:manage.created"),
+      });
       navigate(`/app/announcements/${newId}/edit`, { replace: true });
     },
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("announcements:manage.actionFailed")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("announcements:manage.actionFailed")),
+      }),
   });
 
   const updateMutation = useMutation({
     mutationFn: () => updateAnnouncement(id!, { title: title.trim(), content, type, priority }),
-    onSuccess: () => toast({ variant: "success", title: t("common:success"), description: t("announcements:editor.saved") }),
+    onSuccess: () =>
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("announcements:editor.saved"),
+      }),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("announcements:manage.actionFailed")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("announcements:manage.actionFailed")),
+      }),
   });
 
   const saving = createMutation.isPending || updateMutation.isPending;
@@ -101,11 +132,16 @@ function AnnouncementEditorForm({ id, initial }: { id: string | undefined; initi
 
   return (
     <Stack gap="md" p="md" maw={960}>
-      <Link to="/app/announcements" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+      <Link
+        to="/app/announcements"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline"
+      >
         <ArrowLeft size={14} /> {t("announcements:title")}
       </Link>
 
-      <Title order={2}>{isEditing ? t("announcements:editor.editTitle") : t("announcements:editor.newTitle")}</Title>
+      <Title order={2}>
+        {isEditing ? t("announcements:editor.editTitle") : t("announcements:editor.newTitle")}
+      </Title>
 
       <Card withBorder padding="lg">
         <Stack gap="md">
@@ -120,14 +156,20 @@ function AnnouncementEditorForm({ id, initial }: { id: string | undefined; initi
           <Group grow>
             <Select
               label={t("announcements:fields.type")}
-              data={ANNOUNCEMENT_TYPES.map((value) => ({ value, label: t(`announcements:types.${value}`) }))}
+              data={ANNOUNCEMENT_TYPES.map((value) => ({
+                value,
+                label: t(`announcements:types.${value}`),
+              }))}
               value={type}
               allowDeselect={false}
               onChange={(value) => value && setType(value as AnnouncementType)}
             />
             <Select
               label={t("announcements:fields.priority")}
-              data={ANNOUNCEMENT_PRIORITIES.map((value) => ({ value, label: t(`announcements:priorities.${value}`) }))}
+              data={ANNOUNCEMENT_PRIORITIES.map((value) => ({
+                value,
+                label: t(`announcements:priorities.${value}`),
+              }))}
               value={priority}
               allowDeselect={false}
               onChange={(value) => value && setPriority(value as AnnouncementPriority)}
@@ -138,7 +180,11 @@ function AnnouncementEditorForm({ id, initial }: { id: string | undefined; initi
             <Text size="sm" fw={500} mb={4}>
               {t("announcements:fields.content")}
             </Text>
-            <AnnouncementRichEditor announcementId={id ?? null} content={content} onChange={setContent} />
+            <AnnouncementRichEditor
+              announcementId={id ?? null}
+              content={content}
+              onChange={setContent}
+            />
           </div>
 
           {id && <AnnouncementAttachmentsPanel announcementId={id} />}

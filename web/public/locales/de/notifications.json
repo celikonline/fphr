@@ -22,6 +22,19 @@
     },
     "ohs": {
       "sgk_notification_due": "Wenn die SGK-Meldefrist eines Arbeitsunfalls naht oder überschritten ist"
+    },
+    "employee": {
+      "hired": "Wenn ein/e neue/r Mitarbeiter/in beginnt",
+      "welcome": "Willkommens-E-Mail zu meinem Start",
+      "terminated": "Wenn ein/e Mitarbeiter/in austritt",
+      "work_certificate": "Arbeitsbescheinigung beim Austritt",
+      "birthday": "An meinem Geburtstag"
+    },
+    "announcement": {
+      "published": "Wenn eine neue Ankündigung veröffentlicht wird"
+    },
+    "payroll": {
+      "payslip_ready": "Wenn meine Gehaltsabrechnung bereit ist"
     }
   },
   "preferences": {
@@ -40,7 +53,10 @@
     "account": "Konto",
     "request": "Anträge",
     "approval": "Genehmigungen",
-    "reminder": "Erinnerungen"
+    "reminder": "Erinnerungen",
+    "employee": "Mitarbeitende",
+    "announcement": "Ankündigungen",
+    "payroll": "Lohnabrechnung"
   },
   "types": {
     "documentExpiryReminder": "Dokument läuft bald ab"

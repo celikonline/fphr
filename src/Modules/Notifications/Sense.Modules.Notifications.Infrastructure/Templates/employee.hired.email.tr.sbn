@@ -1,0 +1,6 @@
+{{- subject = "Yeni çalışan: " + employee_name -}}
+<p>Merhaba {{ recipient_name | html.escape }},</p>
+<p><strong>{{ employee_name | html.escape }}</strong> {{ hire_date }} tarihinde işe başlıyor.</p>
+{{~ if action_url ~}}
+{{ button "Çalışan kartını aç" action_url }}
+{{~ end ~}}

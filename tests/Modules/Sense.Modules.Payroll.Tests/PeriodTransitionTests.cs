@@ -1,9 +1,11 @@
 using NSubstitute;
 using Sense.Modules.Payroll.Application.Closing;
 using Sense.Modules.Payroll.Application.Periods;
+using Sense.Modules.Payroll.Contracts;
 using Sense.Modules.Payroll.Domain;
 using Sense.Modules.Payroll.Domain.Payslips;
 using Sense.Modules.Payroll.Domain.Periods;
+using Sense.Shared.Contracts.Events;
 using Sense.Shared.Kernel.Results;
 using Shouldly;
 using Xunit;
@@ -120,10 +122,43 @@ public sealed class PeriodTransitionTests
         var period = PeriodIn(PayrollPeriodStatus.Approved);
         var repository = Repository(period);
 
-        (await new MarkPayrollPeriodPaidHandler(repository).Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
+        (await new MarkPayrollPeriodPaidHandler(repository, Substitute.For<IPayslipRepository>(), Substitute.For<IIntegrationEventOutbox>())
+            .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
         (await new LockPayrollPeriodHandler(repository).Handle(new LockPayrollPeriodCommand(period.Id), CancellationToken.None)).IsSuccess.ShouldBeTrue();
 
         period.Status.ShouldBe(PayrollPeriodStatus.Locked);
+    }
+
+    [Fact]
+    public async Task MarkPaid_PublishesPayrollPeriodPaid_WithEveryPayslip_SoEmployeesGetTheirPayslipByEmail()
+    {
+        var period = PeriodIn(PayrollPeriodStatus.Approved);
+        var first = Payslip.CreateFirstVersion(TenantId, Guid.NewGuid(), period.Id, "{}", "h1", 100m, 80m, 130m);
+        var second = Payslip.CreateFirstVersion(TenantId, Guid.NewGuid(), period.Id, "{}", "h2", 200m, 160m, 260m);
+        var payslips = Substitute.For<IPayslipRepository>();
+        payslips.ListByPeriodAsync(period.Id, Arg.Any<CancellationToken>()).Returns([first, second]);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+
+        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), payslips, outbox)
+            .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeTrue();
+        outbox.Received(1).Enqueue(Arg.Is<PayrollPeriodPaid>(e =>
+            e.PeriodId == period.Id && e.Year == 2026 && e.Month == 8 && e.Payslips.Count == 2
+            && e.Payslips[0].PayslipId == first.Id && e.Payslips[1].EmployeeId == second.EmployeeId));
+    }
+
+    [Fact]
+    public async Task MarkPaid_WhenRefused_PublishesNothing()
+    {
+        var period = PeriodIn(PayrollPeriodStatus.Open);
+        var outbox = Substitute.For<IIntegrationEventOutbox>();
+
+        var result = await new MarkPayrollPeriodPaidHandler(Repository(period), Substitute.For<IPayslipRepository>(), outbox)
+            .Handle(new MarkPayrollPeriodPaidCommand(period.Id), CancellationToken.None);
+
+        result.IsSuccess.ShouldBeFalse();
+        outbox.DidNotReceiveWithAnyArgs().Enqueue(default!);
     }
 
     [Fact]

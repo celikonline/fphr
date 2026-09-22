@@ -32,7 +32,7 @@ export function EmployeePayslipsCard({ employeeId }: { employeeId: string }) {
     mutationFn: (payslip: EmployeePayslip) =>
       downloadPayslipDocument(
         payslip.payslipId,
-        `ucret-pusulasi_${payslip.year}-${String(payslip.month).padStart(2, "0")}.txt`
+        `ucret-pusulasi_${payslip.year}-${String(payslip.month).padStart(2, "0")}.pdf`
       ),
     onSuccess: saveDownloadedPayrollFile,
     onError: (error) =>

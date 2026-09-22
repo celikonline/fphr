@@ -1,0 +1,5 @@
+{{- subject = "Herzlich willkommen!" -}}
+<p>Hallo {{ recipient_name | html.escape }},</p>
+<p>Wir freuen uns sehr, Sie im Team zu begrüßen. Ihr erster Arbeitstag: <strong>{{ hire_date }}</strong>.</p>
+<p>Sobald Ihr Konto eingerichtet ist, finden Sie Urlaubsanträge, Dokumente und Unternehmensankündigungen in SenseİK.</p>
+<p>Viel Erfolg in Ihrer neuen Rolle!</p>

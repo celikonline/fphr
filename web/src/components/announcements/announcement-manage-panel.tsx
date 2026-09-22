@@ -7,6 +7,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Group,
   Input,
   Modal,
@@ -51,6 +52,7 @@ export default function AnnouncementManagePanel() {
   const queryClient = useQueryClient();
   const [publishTarget, setPublishTarget] = useState<Announcement | null>(null);
   const [expiresOn, setExpiresOn] = useState("");
+  const [notifyEmployees, setNotifyEmployees] = useState(true);
   const [archiveTarget, setArchiveTarget] = useState<Announcement | null>(null);
 
   const listQuery = useQuery({ queryKey: LIST_QUERY_KEY, queryFn: listAnnouncements });
@@ -68,8 +70,8 @@ export default function AnnouncementManagePanel() {
   }
 
   const publishMutation = useMutation({
-    mutationFn: ({ id, expires }: { id: string; expires: string }) =>
-      publishAnnouncement(id, expires ? endOfDayIso(expires) : null),
+    mutationFn: ({ id, expires, notify }: { id: string; expires: string; notify: boolean }) =>
+      publishAnnouncement(id, expires ? endOfDayIso(expires) : null, notify),
     onSuccess: () => {
       toast({
         variant: "success",
@@ -160,6 +162,7 @@ export default function AnnouncementManagePanel() {
                             variant="light"
                             onClick={() => {
                               setExpiresOn("");
+                              setNotifyEmployees(true);
                               setPublishTarget(row);
                             }}
                           >
@@ -204,6 +207,12 @@ export default function AnnouncementManagePanel() {
               clearable
             />
           </Input.Wrapper>
+          <Checkbox
+            checked={notifyEmployees}
+            onChange={(event) => setNotifyEmployees(event.currentTarget.checked)}
+            label={t("announcements:manage.notifyEmployees")}
+            description={t("announcements:manage.notifyEmployeesHint")}
+          />
           <Group justify="flex-end" gap="sm">
             <Button
               variant="default"
@@ -216,7 +225,11 @@ export default function AnnouncementManagePanel() {
               loading={publishMutation.isPending}
               onClick={() =>
                 publishTarget &&
-                publishMutation.mutate({ id: publishTarget.id, expires: expiresOn })
+                publishMutation.mutate({
+                  id: publishTarget.id,
+                  expires: expiresOn,
+                  notify: notifyEmployees,
+                })
               }
             >
               {t("announcements:manage.publish")}

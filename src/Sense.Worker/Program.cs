@@ -128,6 +128,9 @@ builder.Services.AddScoped<Sense.Modules.Identity.Application.IIdentityUnitOfWor
 builder.Services.AddScoped<Sense.Shared.Contracts.Events.IIntegrationEventHandler<Sense.Modules.Employee.Contracts.Events.EmployeeTerminated>, Sense.Modules.Identity.Application.Users.EmployeeTerminatedHandler>();
 // Documents' EmployeeHired handler materializes requirements through this Employee read contract.
 builder.Services.AddScoped<IEmployeeDocumentEligibilityLookup, EmployeeDocumentEligibilityLookup>();
+// Notifications' announcement audience (every active employee) and the exit e-mail's çalışma belgesi PDF attachment.
+builder.Services.AddScoped<IEmployeeAudienceLookup, EmployeeAudienceLookup>();
+builder.Services.AddScoped<IWorkCertificateProvider, WorkCertificateProvider>();
 builder.Services.AddWorkflowDecisionLinks(builder.Configuration);
 builder.Services.AddNotificationsCore(builder.Configuration);
 builder.Services.AddHostedService<EmailDeliveryPollingService>();

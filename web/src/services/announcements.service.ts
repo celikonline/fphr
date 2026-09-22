@@ -184,9 +184,16 @@ export async function deleteAnnouncementAttachment(
   await apiClient.delete(`${BASE}/${announcementId}/attachments/${attachmentId}`);
 }
 
-/** `expiresAt` is an ISO instant; null keeps the announcement live until it is archived. */
-export async function publishAnnouncement(id: string, expiresAt: string | null): Promise<void> {
-  await apiClient.post(`${BASE}/${id}/publish`, { expiresAt });
+/**
+ * `expiresAt` is an ISO instant; null keeps the announcement live until it is archived. `notifyEmployees` also sends
+ * every active employee an e-mail and an in-app notification.
+ */
+export async function publishAnnouncement(
+  id: string,
+  expiresAt: string | null,
+  notifyEmployees = false
+): Promise<void> {
+  await apiClient.post(`${BASE}/${id}/publish`, { expiresAt, notifyEmployees });
 }
 
 export async function archiveAnnouncement(id: string): Promise<void> {

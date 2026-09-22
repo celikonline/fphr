@@ -43,6 +43,9 @@ public static class PayrollServiceCollectionExtensions
         // IncentiveDocument (HasIncentive), mirroring Assets.Contracts.IAssetLookup's registration.
         services.AddScoped<IEmployeeIncentiveLookup, EmployeeIncentiveLookup>();
 
+        // Ücret pusulası PDF: the payslip download and Notifications' payslip e-mail attachment (both hosts).
+        services.AddScoped<IPayslipDocumentProvider, Application.Declarations.PayslipDocumentProvider>();
+
         // senseik-019 2c: icra/nafaka kesinti emirleri.
         services.AddScoped<IGarnishmentOrderRepository, GarnishmentOrderRepository>();
 
