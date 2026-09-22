@@ -15,7 +15,9 @@ import { reportNearMiss, type OhsIncident } from "@/services/ohs-incidents.servi
 const permissions = vi.hoisted(() => ({ granted: new Set<string>() }));
 
 vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
+  const actual = await vi.importActual<typeof import("@/components/permission-guard")>(
+    "@/components/permission-guard"
+  );
   return {
     ...actual,
     usePermission: (key: string) => permissions.granted.has(key),
@@ -68,7 +70,9 @@ vi.mock("@/services/ohs-incidents.service", async () => {
 });
 
 vi.mock("@/services/employees.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
+  const actual = await vi.importActual<typeof import("@/services/employees.service")>(
+    "@/services/employees.service"
+  );
   return { ...actual, getEmployee: vi.fn(async () => ({ id: "e1", displayName: "Ayşe Demir" })) };
 });
 
@@ -135,7 +139,9 @@ describe("OhsPage", () => {
 
     const overdueRow = (await screen.findByText("Forklift ayağına çarptı")).closest("tr")!;
     expect(within(overdueRow).getByText(/Süre geçti/)).toBeInTheDocument();
-    expect(within(overdueRow).getByRole("button", { name: "SGK'ya bildirildi" })).toBeInTheDocument();
+    expect(
+      within(overdueRow).getByRole("button", { name: "SGK'ya bildirildi" })
+    ).toBeInTheDocument();
     expect(within(overdueRow).getByRole("button", { name: "Kapat" })).toBeDisabled();
 
     const notifiedRow = screen.getByText("Merdivenden kaydı").closest("tr")!;
@@ -170,7 +176,9 @@ describe("OhsPage", () => {
     await user.click(within(dialog).getByRole("button", { name: "Bildir" }));
 
     await waitFor(() =>
-      expect(reportNearMiss).toHaveBeenCalledWith(expect.objectContaining({ description: "Depo girişinde açık kablo" }))
+      expect(reportNearMiss).toHaveBeenCalledWith(
+        expect.objectContaining({ description: "Depo girişinde açık kablo" })
+      )
     );
   });
 });

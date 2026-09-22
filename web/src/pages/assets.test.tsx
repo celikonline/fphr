@@ -15,7 +15,9 @@ import { listAssets, retireAsset, type Asset } from "@/services/assets.service";
 const permissions = vi.hoisted(() => ({ granted: new Set<string>() }));
 
 vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
+  const actual = await vi.importActual<typeof import("@/components/permission-guard")>(
+    "@/components/permission-guard"
+  );
   return {
     ...actual,
     usePermission: (key: string) => permissions.granted.has(key),
@@ -49,7 +51,9 @@ const INVENTORY: Asset[] = [
 ];
 
 vi.mock("@/services/assets.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/assets.service")>("@/services/assets.service");
+  const actual = await vi.importActual<typeof import("@/services/assets.service")>(
+    "@/services/assets.service"
+  );
   return {
     ...actual,
     listAssets: vi.fn(async () => ({
@@ -71,7 +75,9 @@ vi.mock("@/services/assets.service", async () => {
 });
 
 vi.mock("@/services/employees.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
+  const actual = await vi.importActual<typeof import("@/services/employees.service")>(
+    "@/services/employees.service"
+  );
   return { ...actual, getEmployee: vi.fn(async () => ({ id: "e1", displayName: "Ayşe Demir" })) };
 });
 
@@ -148,7 +154,9 @@ describe("AssetsPage", () => {
       "href",
       "/app/employees/e1/assets"
     );
-    expect(within(screen.getByText("iPhone 16").closest("tr")!).getByText("Boşta")).toBeInTheDocument();
+    expect(
+      within(screen.getByText("iPhone 16").closest("tr")!).getByText("Boşta")
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Zimmet ekle" })).not.toBeInTheDocument();
   });
 
@@ -160,7 +168,9 @@ describe("AssetsPage", () => {
     const macRow = (await screen.findByText("MacBook Pro")).closest("tr")!;
     const phoneRow = screen.getByText("iPhone 16").closest("tr")!;
     expect(within(macRow).getByRole("button", { name: "İade al" })).toBeInTheDocument();
-    expect(within(macRow).queryByRole("button", { name: "Kullanım dışı bırak" })).not.toBeInTheDocument();
+    expect(
+      within(macRow).queryByRole("button", { name: "Kullanım dışı bırak" })
+    ).not.toBeInTheDocument();
     expect(within(phoneRow).getByRole("button", { name: "Zimmet ata" })).toBeInTheDocument();
 
     await user.click(within(phoneRow).getByRole("button", { name: "Kullanım dışı bırak" }));

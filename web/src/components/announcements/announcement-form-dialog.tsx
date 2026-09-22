@@ -22,7 +22,11 @@ interface AnnouncementFormDialogProps {
 }
 
 /** Yeni duyuru taslağı oluşturur; yayınlama ayrı bir adımdır (listede "Yayınla"). */
-export default function AnnouncementFormDialog({ open, onClose, onCreated }: AnnouncementFormDialogProps) {
+export default function AnnouncementFormDialog({
+  open,
+  onClose,
+  onCreated,
+}: AnnouncementFormDialogProps) {
   const { t } = useTranslation(["announcements", "common"]);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -38,9 +42,14 @@ export default function AnnouncementFormDialog({ open, onClose, onCreated }: Ann
   }
 
   const createMutation = useMutation({
-    mutationFn: () => createAnnouncement({ title: title.trim(), content: content.trim(), type, priority }),
+    mutationFn: () =>
+      createAnnouncement({ title: title.trim(), content: content.trim(), type, priority }),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("announcements:manage.created") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("announcements:manage.created"),
+      });
       onCreated();
       close();
     },
@@ -52,10 +61,17 @@ export default function AnnouncementFormDialog({ open, onClose, onCreated }: Ann
       }),
   });
 
-  const canSubmit = title.trim().length > 0 && content.trim().length > 0 && !createMutation.isPending;
+  const canSubmit =
+    title.trim().length > 0 && content.trim().length > 0 && !createMutation.isPending;
 
   return (
-    <Modal opened={open} onClose={close} title={t("announcements:manage.create")} centered size="lg">
+    <Modal
+      opened={open}
+      onClose={close}
+      title={t("announcements:manage.create")}
+      centered
+      size="lg"
+    >
       <Stack gap="md">
         <TextInput
           id="announcement-title"
@@ -78,7 +94,10 @@ export default function AnnouncementFormDialog({ open, onClose, onCreated }: Ann
           <Select
             id="announcement-type"
             label={t("announcements:fields.type")}
-            data={ANNOUNCEMENT_TYPES.map((value) => ({ value, label: t(`announcements:types.${value}`) }))}
+            data={ANNOUNCEMENT_TYPES.map((value) => ({
+              value,
+              label: t(`announcements:types.${value}`),
+            }))}
             value={type}
             allowDeselect={false}
             onChange={(value) => value && setType(value as AnnouncementType)}
@@ -86,7 +105,10 @@ export default function AnnouncementFormDialog({ open, onClose, onCreated }: Ann
           <Select
             id="announcement-priority"
             label={t("announcements:fields.priority")}
-            data={ANNOUNCEMENT_PRIORITIES.map((value) => ({ value, label: t(`announcements:priorities.${value}`) }))}
+            data={ANNOUNCEMENT_PRIORITIES.map((value) => ({
+              value,
+              label: t(`announcements:priorities.${value}`),
+            }))}
             value={priority}
             allowDeselect={false}
             onChange={(value) => value && setPriority(value as AnnouncementPriority)}
@@ -96,7 +118,11 @@ export default function AnnouncementFormDialog({ open, onClose, onCreated }: Ann
           <Button variant="default" onClick={close} disabled={createMutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => createMutation.mutate()} disabled={!canSubmit} loading={createMutation.isPending}>
+          <Button
+            onClick={() => createMutation.mutate()}
+            disabled={!canSubmit}
+            loading={createMutation.isPending}
+          >
             {t("announcements:manage.saveDraft")}
           </Button>
         </Group>

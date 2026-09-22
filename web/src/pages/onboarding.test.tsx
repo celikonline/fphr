@@ -19,7 +19,9 @@ import {
 const permissions = vi.hoisted(() => ({ granted: new Set<string>() }));
 
 vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
+  const actual = await vi.importActual<typeof import("@/components/permission-guard")>(
+    "@/components/permission-guard"
+  );
   return {
     ...actual,
     usePermission: (key: string) => permissions.granted.has(key),
@@ -55,7 +57,9 @@ const PENDING: OnboardingChecklistItem[] = [
 ];
 
 vi.mock("@/services/onboarding.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/onboarding.service")>("@/services/onboarding.service");
+  const actual = await vi.importActual<typeof import("@/services/onboarding.service")>(
+    "@/services/onboarding.service"
+  );
   return {
     ...actual,
     listPendingOnboardingTasks: vi.fn(async () => PENDING),
@@ -66,7 +70,9 @@ vi.mock("@/services/onboarding.service", async () => {
 });
 
 vi.mock("@/services/employees.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
+  const actual = await vi.importActual<typeof import("@/services/employees.service")>(
+    "@/services/employees.service"
+  );
   return { ...actual, getEmployee: vi.fn(async () => ({ id: "e1", displayName: "Ayşe Demir" })) };
 });
 
@@ -127,7 +133,9 @@ describe("OnboardingPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const sgkRow = (await screen.findByText("SGK işe giriş bildirgesinin verilmesi")).closest("tr")!;
+    const sgkRow = (await screen.findByText("SGK işe giriş bildirgesinin verilmesi")).closest(
+      "tr"
+    )!;
     expect(within(sgkRow).getByText("İK")).toBeInTheDocument();
     expect(within(sgkRow).getByText("Zorunlu")).toBeInTheDocument();
     expect(screen.getByText("1 görevin süresi geçti")).toBeInTheDocument();
@@ -143,7 +151,9 @@ describe("OnboardingPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    const sgkRow = (await screen.findByText("SGK işe giriş bildirgesinin verilmesi")).closest("tr")!;
+    const sgkRow = (await screen.findByText("SGK işe giriş bildirgesinin verilmesi")).closest(
+      "tr"
+    )!;
     await user.click(within(sgkRow).getByRole("button", { name: "Tamamlandı" }));
 
     await waitFor(() => expect(completeOnboardingTask).toHaveBeenCalledWith("t1"));

@@ -2,7 +2,17 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Megaphone } from "lucide-react";
-import { Badge, Card, Group, Skeleton, Stack, Tabs, Text, Title, UnstyledButton } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  Group,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  Title,
+  UnstyledButton,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import AnnouncementManagePanel from "@/components/announcements/announcement-manage-panel";
@@ -26,7 +36,10 @@ const PRIORITY_COLORS: Record<AnnouncementPriority, string> = {
 
 /** Duyurular: çalışan akışı (announcements.my.feed) + İK yönetimi (announcements.announcements.manage). */
 export default function AnnouncementsPage() {
-  const canAccess = useAnyPermission(["announcements.my.feed", "announcements.announcements.manage"]);
+  const canAccess = useAnyPermission([
+    "announcements.my.feed",
+    "announcements.announcements.manage",
+  ]);
   if (!canAccess) return <NoAccess />;
   return <AnnouncementsScreen />;
 }

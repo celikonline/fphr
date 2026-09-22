@@ -2,7 +2,18 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { Badge, Button, Card, Group, Input, Modal, Skeleton, Stack, Table, Text } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Card,
+  Group,
+  Input,
+  Modal,
+  Skeleton,
+  Stack,
+  Table,
+  Text,
+} from "@mantine/core";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
@@ -60,7 +71,11 @@ export default function AnnouncementManagePanel() {
     mutationFn: ({ id, expires }: { id: string; expires: string }) =>
       publishAnnouncement(id, expires ? endOfDayIso(expires) : null),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("announcements:manage.published") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("announcements:manage.published"),
+      });
       setPublishTarget(null);
       invalidate();
     },
@@ -70,7 +85,11 @@ export default function AnnouncementManagePanel() {
   const archiveMutation = useMutation({
     mutationFn: (id: string) => archiveAnnouncement(id),
     onSuccess: () => {
-      toast({ variant: "success", title: t("common:success"), description: t("announcements:manage.archived") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("announcements:manage.archived"),
+      });
       setArchiveTarget(null);
       invalidate();
     },
@@ -119,7 +138,9 @@ export default function AnnouncementManagePanel() {
                         {t(`announcements:statuses.${status}`)}
                       </Badge>
                     </Table.Td>
-                    <Table.Td>{row.publishedAt ? formatDateTime(row.publishedAt, i18n.language) : "—"}</Table.Td>
+                    <Table.Td>
+                      {row.publishedAt ? formatDateTime(row.publishedAt, i18n.language) : "—"}
+                    </Table.Td>
                     <Table.Td>{status === "draft" ? "—" : <ReadCount id={row.id} />}</Table.Td>
                     <Table.Td>
                       <Group gap="xs" justify="flex-end" wrap="nowrap">
@@ -136,7 +157,12 @@ export default function AnnouncementManagePanel() {
                           </Button>
                         )}
                         {status !== "archived" && (
-                          <Button size="compact-sm" variant="subtle" color="red" onClick={() => setArchiveTarget(row)}>
+                          <Button
+                            size="compact-sm"
+                            variant="subtle"
+                            color="red"
+                            onClick={() => setArchiveTarget(row)}
+                          >
                             {t("announcements:manage.archive")}
                           </Button>
                         )}
@@ -150,7 +176,11 @@ export default function AnnouncementManagePanel() {
         </Table.ScrollContainer>
       )}
 
-      <AnnouncementFormDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={invalidate} />
+      <AnnouncementFormDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={invalidate}
+      />
 
       <Modal
         opened={publishTarget !== null}
@@ -159,16 +189,31 @@ export default function AnnouncementManagePanel() {
         centered
       >
         <Stack gap="md">
-          <Input.Wrapper label={t("announcements:fields.expiresAt")} description={t("announcements:manage.expiresHint")}>
-            <DatePicker id="announcement-expires" value={expiresOn} onChange={setExpiresOn} clearable />
+          <Input.Wrapper
+            label={t("announcements:fields.expiresAt")}
+            description={t("announcements:manage.expiresHint")}
+          >
+            <DatePicker
+              id="announcement-expires"
+              value={expiresOn}
+              onChange={setExpiresOn}
+              clearable
+            />
           </Input.Wrapper>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={() => setPublishTarget(null)} disabled={publishMutation.isPending}>
+            <Button
+              variant="default"
+              onClick={() => setPublishTarget(null)}
+              disabled={publishMutation.isPending}
+            >
               {t("common:cancel")}
             </Button>
             <Button
               loading={publishMutation.isPending}
-              onClick={() => publishTarget && publishMutation.mutate({ id: publishTarget.id, expires: expiresOn })}
+              onClick={() =>
+                publishTarget &&
+                publishMutation.mutate({ id: publishTarget.id, expires: expiresOn })
+              }
             >
               {t("announcements:manage.publish")}
             </Button>
@@ -180,7 +225,9 @@ export default function AnnouncementManagePanel() {
         open={archiveTarget !== null}
         onOpenChange={(open) => !open && setArchiveTarget(null)}
         title={t("announcements:manage.archiveTitle")}
-        description={t("announcements:manage.archiveDescription", { title: archiveTarget?.title ?? "" })}
+        description={t("announcements:manage.archiveDescription", {
+          title: archiveTarget?.title ?? "",
+        })}
         confirmLabel={t("announcements:manage.archive")}
         onConfirm={() => archiveTarget && archiveMutation.mutate(archiveTarget.id)}
         isLoading={archiveMutation.isPending}
@@ -190,6 +237,9 @@ export default function AnnouncementManagePanel() {
 }
 
 function ReadCount({ id }: { id: string }) {
-  const query = useQuery({ queryKey: ["announcements", "read-count", id], queryFn: () => getAnnouncementReadCount(id) });
+  const query = useQuery({
+    queryKey: ["announcements", "read-count", id],
+    queryFn: () => getAnnouncementReadCount(id),
+  });
   return <>{query.data ?? "…"}</>;
 }

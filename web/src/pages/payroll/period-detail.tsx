@@ -79,35 +79,53 @@ function PayrollPeriodDetail() {
   const declarationMutation = useMutation({
     mutationFn: async () => {
       const period = periodQuery.data;
-      const fallbackName = period ? `beyanname-ozeti_${period.year}-${String(period.month).padStart(2, "0")}.csv` : "beyanname-ozeti.csv";
+      const fallbackName = period
+        ? `beyanname-ozeti_${period.year}-${String(period.month).padStart(2, "0")}.csv`
+        : "beyanname-ozeti.csv";
       return downloadPayrollDeclarationSummary(id!, fallbackName);
     },
     onSuccess: (file) => saveDownloadedPayrollFile(file),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.declarationError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.declarationError")),
+      }),
   });
 
   const canExportBankFile = usePermission("payroll.bankfile.export");
   const bankFileMutation = useMutation({
     mutationFn: async () => {
       const period = periodQuery.data;
-      const fallbackName = period ? `banka-odeme_${period.year}-${String(period.month).padStart(2, "0")}.csv` : "banka-odeme.csv";
+      const fallbackName = period
+        ? `banka-odeme_${period.year}-${String(period.month).padStart(2, "0")}.csv`
+        : "banka-odeme.csv";
       return downloadPayrollBankFile(id!, fallbackName);
     },
     onSuccess: (file) => saveDownloadedPayrollFile(file),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.bankFileError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.bankFileError")),
+      }),
   });
 
   const exportMutation = useMutation({
     mutationFn: async () => {
       const period = periodQuery.data;
-      const fallbackName = period ? `bordro-${period.year}-${String(period.month).padStart(2, "0")}.xlsx` : "bordro.xlsx";
+      const fallbackName = period
+        ? `bordro-${period.year}-${String(period.month).padStart(2, "0")}.xlsx`
+        : "bordro.xlsx";
       return downloadPayrollPeriodExport(id!, fallbackName);
     },
     onSuccess: (file) => saveDownloadedPayrollFile(file),
     onError: (error) =>
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("payroll:periodDetail.exportError")) }),
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("payroll:periodDetail.exportError")),
+      }),
   });
 
   const payslips = useMemo(() => periodQuery.data?.payslips ?? [], [periodQuery.data]);
@@ -123,22 +141,31 @@ function PayrollPeriodDetail() {
   if (periodQuery.isError || !periodQuery.data) {
     return (
       <div className="max-w-4xl space-y-6 p-6 md:p-10">
-        <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+        <Link
+          to="/app/payroll/periods"
+          className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline"
+        >
           <ArrowLeft size={14} /> {t("payroll:periods.title")}
         </Link>
-        <Text c="red">{getApiErrorMessage(periodQuery.error, t("payroll:periodDetail.loadError"))}</Text>
+        <Text c="red">
+          {getApiErrorMessage(periodQuery.error, t("payroll:periodDetail.loadError"))}
+        </Text>
       </div>
     );
   }
 
   const period = periodQuery.data;
-  const periodLabel = new Intl.DateTimeFormat(i18n.language, { year: "numeric", month: "long" }).format(
-    new Date(period.year, period.month - 1, 1),
-  );
+  const periodLabel = new Intl.DateTimeFormat(i18n.language, {
+    year: "numeric",
+    month: "long",
+  }).format(new Date(period.year, period.month - 1, 1));
 
   return (
     <div className="max-w-4xl space-y-6 p-6 md:p-10">
-      <Link to="/app/payroll/periods" className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline">
+      <Link
+        to="/app/payroll/periods"
+        className="inline-flex items-center gap-1 text-sm text-gray-500 hover:underline"
+      >
         <ArrowLeft size={14} /> {t("payroll:periods.title")}
       </Link>
 
@@ -153,7 +180,9 @@ function PayrollPeriodDetail() {
         </div>
         <Group gap="xs" wrap="wrap">
           <Select
-            placeholder={t("payroll:periodDetail.costCenterFilter", { defaultValue: "Maliyet merkezi seçin..." })}
+            placeholder={t("payroll:periodDetail.costCenterFilter", {
+              defaultValue: "Maliyet merkezi seçin...",
+            })}
             data={
               costCentersQuery.data?.map((cc) => ({
                 value: cc.id,
@@ -242,8 +271,12 @@ function PayrollPeriodDetail() {
                             {workedDays.text}
                           </Text>
                         </Table.Td>
-                        <Table.Td ta="right">{formatMoney(line.grossAmount, "TRY", i18n.language)}</Table.Td>
-                        <Table.Td ta="right">{formatMoney(line.netAmount, "TRY", i18n.language)}</Table.Td>
+                        <Table.Td ta="right">
+                          {formatMoney(line.grossAmount, "TRY", i18n.language)}
+                        </Table.Td>
+                        <Table.Td ta="right">
+                          {formatMoney(line.netAmount, "TRY", i18n.language)}
+                        </Table.Td>
                       </Table.Tr>
                     );
                   })}

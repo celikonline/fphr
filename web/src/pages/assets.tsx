@@ -76,7 +76,8 @@ function MyAssets() {
         const details = [
           categoryName(asset.categoryId),
           asset.serialNumber && `${t("assets:section.serialNumber")}: ${asset.serialNumber}`,
-          asset.issuedAt && `${t("assets:section.issuedAt")}: ${formatDateOnly(asset.issuedAt, i18n.language)}`,
+          asset.issuedAt &&
+            `${t("assets:section.issuedAt")}: ${formatDateOnly(asset.issuedAt, i18n.language)}`,
         ]
           .filter(Boolean)
           .join(" · ");

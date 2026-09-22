@@ -30,7 +30,8 @@ export interface LocationOption {
 function useNotify() {
   const { t } = useTranslation(["ohs", "common"]);
   return {
-    ok: (description: string) => toast({ variant: "success", title: t("common:success"), description }),
+    ok: (description: string) =>
+      toast({ variant: "success", title: t("common:success"), description }),
     fail: (error: unknown) =>
       toast({
         variant: "destructive",
@@ -51,7 +52,9 @@ interface IncidentFormDialogProps {
 export function IncidentFormDialog({ mode, locations, onClose, onSaved }: IncidentFormDialogProps) {
   const { t } = useTranslation(["ohs", "common"]);
   const notify = useNotify();
-  const [kind, setKind] = useState<OhsIncidentKind>(mode === "report" ? "nearMiss" : "workAccident");
+  const [kind, setKind] = useState<OhsIncidentKind>(
+    mode === "report" ? "nearMiss" : "workAccident"
+  );
   const [eventDate, setEventDate] = useState(todayIso());
   const [employee, setEmployee] = useState<PickedEmployee | null>(null);
   const [locationId, setLocationId] = useState<string | null>(null);
@@ -61,7 +64,13 @@ export function IncidentFormDialog({ mode, locations, onClose, onSaved }: Incide
     mutationFn: () =>
       mode === "report"
         ? reportNearMiss({ eventDate, locationId, description: description.trim() })
-        : recordIncident({ kind, eventDate, locationId, employeeId: employee?.id ?? null, description: description.trim() }),
+        : recordIncident({
+            kind,
+            eventDate,
+            locationId,
+            employeeId: employee?.id ?? null,
+            description: description.trim(),
+          }),
     onSuccess: () => {
       notify.ok(mode === "report" ? t("ohs:incidents.reported") : t("ohs:incidents.recorded"));
       onSaved();
@@ -72,7 +81,10 @@ export function IncidentFormDialog({ mode, locations, onClose, onSaved }: Incide
 
   const needsEmployee = mode === "record" && kind === "workAccident";
   const canSubmit =
-    eventDate !== "" && description.trim().length > 0 && (!needsEmployee || employee !== null) && !mutation.isPending;
+    eventDate !== "" &&
+    description.trim().length > 0 &&
+    (!needsEmployee || employee !== null) &&
+    !mutation.isPending;
   const title = mode === "report" ? t("ohs:incidents.reportTitle") : t("ohs:incidents.recordTitle");
 
   return (
@@ -82,7 +94,10 @@ export function IncidentFormDialog({ mode, locations, onClose, onSaved }: Incide
           <Select
             id="incident-kind"
             label={t("ohs:incidents.fields.kind")}
-            data={OHS_INCIDENT_KINDS.map((value) => ({ value, label: t(`ohs:incidents.kinds.${value}`) }))}
+            data={OHS_INCIDENT_KINDS.map((value) => ({
+              value,
+              label: t(`ohs:incidents.kinds.${value}`),
+            }))}
             value={kind}
             allowDeselect={false}
             onChange={(value) => value && setKind(value as OhsIncidentKind)}
@@ -93,13 +108,20 @@ export function IncidentFormDialog({ mode, locations, onClose, onSaved }: Incide
           description={kind === "workAccident" ? t("ohs:incidents.sgkHint") : undefined}
           required
         >
-          <DatePicker id="incident-date" value={eventDate} max={todayIso()} onChange={setEventDate} />
+          <DatePicker
+            id="incident-date"
+            value={eventDate}
+            max={todayIso()}
+            onChange={setEventDate}
+          />
         </Input.Wrapper>
         {mode === "record" && (
           <EmployeePicker
             id="incident-employee"
             label={
-              kind === "workAccident" ? t("ohs:incidents.fields.injuredEmployee") : t("ohs:incidents.fields.involvedEmployee")
+              kind === "workAccident"
+                ? t("ohs:incidents.fields.injuredEmployee")
+                : t("ohs:incidents.fields.involvedEmployee")
             }
             value={employee}
             onChange={setEmployee}
@@ -133,7 +155,11 @@ export function IncidentFormDialog({ mode, locations, onClose, onSaved }: Incide
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!canSubmit} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
             {mode === "report" ? t("ohs:incidents.send") : t("common:save")}
           </Button>
         </Group>
@@ -179,7 +205,11 @@ export function SgkNotifiedDialog({ incident, onClose, onDone }: IncidentActionD
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!notifiedOn} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!notifiedOn}
+            loading={mutation.isPending}
+          >
             {t("common:save")}
           </Button>
         </Group>
@@ -221,7 +251,11 @@ export function CloseIncidentDialog({ incident, onClose, onDone }: IncidentActio
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!action.trim()} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!action.trim()}
+            loading={mutation.isPending}
+          >
             {t("ohs:incidents.close")}
           </Button>
         </Group>

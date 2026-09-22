@@ -9,12 +9,18 @@ import { MantineProvider } from "@mantine/core";
 import trAnnouncements from "../../public/locales/tr/announcements.json";
 import trCommon from "../../public/locales/tr/common.json";
 import AnnouncementsPage from "./announcements";
-import { markAnnouncementRead, type Announcement, type AnnouncementFeedItem } from "@/services/announcements.service";
+import {
+  markAnnouncementRead,
+  type Announcement,
+  type AnnouncementFeedItem,
+} from "@/services/announcements.service";
 
 const permissions = vi.hoisted(() => ({ granted: new Set<string>() }));
 
 vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
+  const actual = await vi.importActual<typeof import("@/components/permission-guard")>(
+    "@/components/permission-guard"
+  );
   return {
     ...actual,
     usePermission: (key: string) => permissions.granted.has(key),
@@ -139,7 +145,9 @@ describe("AnnouncementsPage", () => {
 
     await user.click(await screen.findByText("Yeni yan haklar"));
 
-    expect(screen.getByText("Ekim ayından itibaren yemek kartı tutarı artıyor.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Ekim ayından itibaren yemek kartı tutarı artıyor.")
+    ).toBeInTheDocument();
     await waitFor(() => expect(markAnnouncementRead).toHaveBeenCalledWith("a1"));
     await waitFor(() => expect(screen.queryByText("Yeni")).not.toBeInTheDocument());
   });

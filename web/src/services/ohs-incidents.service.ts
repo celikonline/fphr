@@ -57,7 +57,11 @@ export async function listMyIncidentReports(): Promise<OhsIncident[]> {
   return data;
 }
 
-export async function reportNearMiss(input: { eventDate: string; locationId: string | null; description: string }): Promise<string> {
+export async function reportNearMiss(input: {
+  eventDate: string;
+  locationId: string | null;
+  description: string;
+}): Promise<string> {
   const { data } = await apiClient.post<string>(`${BASE}/my`, input);
   return data;
 }

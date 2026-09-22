@@ -1,7 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
-import { Button, Group, Input, Modal, Select, Stack, Text, TextInput, Textarea } from "@mantine/core";
+import {
+  Button,
+  Group,
+  Input,
+  Modal,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+  Textarea,
+} from "@mantine/core";
 import EmployeePicker, { type PickedEmployee } from "@/components/employees/employee-picker";
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
@@ -21,7 +31,8 @@ const todayIso = () => toDateOnly(new Date());
 function useActionToast() {
   const { t } = useTranslation(["assets", "common"]);
   return {
-    success: (description: string) => toast({ variant: "success", title: t("common:success"), description }),
+    success: (description: string) =>
+      toast({ variant: "success", title: t("common:success"), description }),
     failure: (error: unknown) =>
       toast({
         variant: "destructive",
@@ -66,10 +77,16 @@ export function AssetFormDialog({ asset, categories, onClose, onSaved }: AssetFo
     onError: notify.failure,
   });
 
-  const canSubmit = name.trim().length > 0 && (asset !== null || categoryId !== null) && !mutation.isPending;
+  const canSubmit =
+    name.trim().length > 0 && (asset !== null || categoryId !== null) && !mutation.isPending;
 
   return (
-    <Modal opened onClose={onClose} title={asset ? t("assets:inventory.editTitle") : t("assets:inventory.create")} centered>
+    <Modal
+      opened
+      onClose={onClose}
+      title={asset ? t("assets:inventory.editTitle") : t("assets:inventory.create")}
+      centered
+    >
       <Stack gap="md">
         {categories.length === 0 && !asset ? (
           <Text size="sm" c="dimmed">
@@ -111,7 +128,11 @@ export function AssetFormDialog({ asset, categories, onClose, onSaved }: AssetFo
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!canSubmit} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
             {t("common:save")}
           </Button>
         </Group>
@@ -144,7 +165,12 @@ export function AssignAssetFromInventoryDialog({ asset, onClose, onDone }: Asset
   });
 
   return (
-    <Modal opened onClose={onClose} title={t("assets:inventory.assignTitle", { name: asset.name })} centered>
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("assets:inventory.assignTitle", { name: asset.name })}
+      centered
+    >
       <Stack gap="md">
         <EmployeePicker
           id="asset-assign-employee"
@@ -190,7 +216,12 @@ export function ReturnAssetFromInventoryDialog({ asset, onClose, onDone }: Asset
   });
 
   return (
-    <Modal opened onClose={onClose} title={t("assets:section.returnTitle", { name: asset.name })} centered>
+    <Modal
+      opened
+      onClose={onClose}
+      title={t("assets:section.returnTitle", { name: asset.name })}
+      centered
+    >
       <Stack gap="md">
         <Input.Wrapper label={t("assets:section.returnedAt")} required>
           <DatePicker
@@ -204,7 +235,11 @@ export function ReturnAssetFromInventoryDialog({ asset, onClose, onDone }: Asset
           <Button variant="default" onClick={onClose} disabled={mutation.isPending}>
             {t("common:cancel")}
           </Button>
-          <Button onClick={() => mutation.mutate()} disabled={!returnedAt || mutation.isPending} loading={mutation.isPending}>
+          <Button
+            onClick={() => mutation.mutate()}
+            disabled={!returnedAt || mutation.isPending}
+            loading={mutation.isPending}
+          >
             {t("assets:section.return")}
           </Button>
         </Group>

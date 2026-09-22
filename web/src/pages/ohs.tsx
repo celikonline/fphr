@@ -3,7 +3,20 @@ import { useTranslation } from "react-i18next";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router";
 import { AlertTriangle, HardHat, Plus } from "lucide-react";
-import { Anchor, Badge, Button, Card, Group, SimpleGrid, Skeleton, Stack, Table, Tabs, Text, Title } from "@mantine/core";
+import {
+  Anchor,
+  Badge,
+  Button,
+  Card,
+  Group,
+  SimpleGrid,
+  Skeleton,
+  Stack,
+  Table,
+  Tabs,
+  Text,
+  Title,
+} from "@mantine/core";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import EmployeeNameLink from "@/components/employees/employee-name-link";
@@ -15,7 +28,11 @@ import {
 } from "@/components/ohs/incident-dialogs";
 import { formatDateOnly } from "@/lib/dates";
 import { listLocations } from "@/services/locations.service";
-import { listIncidents, listMyIncidentReports, type OhsIncident } from "@/services/ohs-incidents.service";
+import {
+  listIncidents,
+  listMyIncidentReports,
+  type OhsIncident,
+} from "@/services/ohs-incidents.service";
 
 const INCIDENTS_KEY = ["ohs", "incidents"] as const;
 const MY_REPORTS_KEY = ["ohs", "incidents", "my"] as const;
@@ -28,7 +45,10 @@ export default function OhsPage() {
   return <OhsScreen canIncidents={canIncidents} canReport={canReport} />;
 }
 
-function useLocationOptions(): { options: LocationOption[]; nameOf: (id?: string | null) => string } {
+function useLocationOptions(): {
+  options: LocationOption[];
+  nameOf: (id?: string | null) => string;
+} {
   const canReadLocations = usePermission("organization.locations.read");
   const query = useQuery({
     queryKey: ["organization", "locations", "for-ohs"],
@@ -69,7 +89,11 @@ function OhsScreen({ canIncidents, canReport }: { canIncidents: boolean; canRepo
   );
 }
 
-type Dialog = { kind: "record" } | { kind: "sgk"; incident: OhsIncident } | { kind: "close"; incident: OhsIncident } | null;
+type Dialog =
+  | { kind: "record" }
+  | { kind: "sgk"; incident: OhsIncident }
+  | { kind: "close"; incident: OhsIncident }
+  | null;
 
 function IncidentRegister() {
   const { t, i18n } = useTranslation(["ohs"]);
@@ -85,7 +109,9 @@ function IncidentRegister() {
   const incidents = query.data ?? [];
   const openCount = incidents.filter((i) => !i.closedOn).length;
   const overdueCount = incidents.filter((i) => i.isSgkOverdue).length;
-  const pendingSgk = incidents.filter((i) => i.kind === "workAccident" && !i.sgkNotifiedOn && !i.isSgkOverdue).length;
+  const pendingSgk = incidents.filter(
+    (i) => i.kind === "workAccident" && !i.sgkNotifiedOn && !i.isSgkOverdue
+  ).length;
   const date = (value?: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
 
   return (
@@ -93,7 +119,11 @@ function IncidentRegister() {
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
         <SummaryCard label={t("ohs:incidents.summary.open")} value={openCount} />
         <SummaryCard label={t("ohs:incidents.summary.sgkPending")} value={pendingSgk} />
-        <SummaryCard label={t("ohs:incidents.summary.sgkOverdue")} value={overdueCount} danger={overdueCount > 0} />
+        <SummaryCard
+          label={t("ohs:incidents.summary.sgkOverdue")}
+          value={overdueCount}
+          danger={overdueCount > 0}
+        />
       </SimpleGrid>
 
       <Group justify="space-between" wrap="wrap">
@@ -143,7 +173,10 @@ function IncidentRegister() {
                 <Table.Tr key={incident.id}>
                   <Table.Td>{date(incident.eventDate)}</Table.Td>
                   <Table.Td>
-                    <Badge color={incident.kind === "workAccident" ? "red" : "yellow"} variant="light">
+                    <Badge
+                      color={incident.kind === "workAccident" ? "red" : "yellow"}
+                      variant="light"
+                    >
                       {t(`ohs:incidents.kinds.${incident.kind}`)}
                     </Badge>
                   </Table.Td>
@@ -175,13 +208,26 @@ function IncidentRegister() {
       )}
 
       {dialog?.kind === "record" && (
-        <IncidentFormDialog mode="record" locations={locations.options} onClose={() => setDialog(null)} onSaved={refresh} />
+        <IncidentFormDialog
+          mode="record"
+          locations={locations.options}
+          onClose={() => setDialog(null)}
+          onSaved={refresh}
+        />
       )}
       {dialog?.kind === "sgk" && (
-        <SgkNotifiedDialog incident={dialog.incident} onClose={() => setDialog(null)} onDone={refresh} />
+        <SgkNotifiedDialog
+          incident={dialog.incident}
+          onClose={() => setDialog(null)}
+          onDone={refresh}
+        />
       )}
       {dialog?.kind === "close" && (
-        <CloseIncidentDialog incident={dialog.incident} onClose={() => setDialog(null)} onDone={refresh} />
+        <CloseIncidentDialog
+          incident={dialog.incident}
+          onClose={() => setDialog(null)}
+          onDone={refresh}
+        />
       )}
     </Stack>
   );
@@ -221,7 +267,13 @@ function StatusCell({ incident }: { incident: OhsIncident }) {
   );
 }
 
-function RowActions({ incident, onOpen }: { incident: OhsIncident; onOpen: (dialog: Dialog) => void }) {
+function RowActions({
+  incident,
+  onOpen,
+}: {
+  incident: OhsIncident;
+  onOpen: (dialog: Dialog) => void;
+}) {
   const { t } = useTranslation(["ohs"]);
   if (incident.closedOn) return null;
   const awaitingSgk = incident.kind === "workAccident" && !incident.sgkNotifiedOn;
@@ -232,14 +284,25 @@ function RowActions({ incident, onOpen }: { incident: OhsIncident; onOpen: (dial
           {t("ohs:incidents.markSgk")}
         </Button>
       )}
-      <Button size="compact-sm" variant="subtle" disabled={awaitingSgk} onClick={() => onOpen({ kind: "close", incident })}>
+      <Button
+        size="compact-sm"
+        variant="subtle"
+        disabled={awaitingSgk}
+        onClick={() => onOpen({ kind: "close", incident })}
+      >
         {t("ohs:incidents.close")}
       </Button>
     </Group>
   );
 }
 
-function SgkCell({ incident, date }: { incident: OhsIncident; date: (value?: string | null) => string }) {
+function SgkCell({
+  incident,
+  date,
+}: {
+  incident: OhsIncident;
+  date: (value?: string | null) => string;
+}) {
   const { t } = useTranslation(["ohs"]);
   if (incident.kind !== "workAccident") return <>—</>;
   if (incident.sgkNotifiedOn) {
@@ -252,7 +315,11 @@ function SgkCell({ incident, date }: { incident: OhsIncident; date: (value?: str
   return (
     <Group gap={4} wrap="nowrap">
       {incident.isSgkOverdue && <AlertTriangle size={14} color="var(--mantine-color-red-6)" />}
-      <Text size="sm" c={incident.isSgkOverdue ? "red" : undefined} fw={incident.isSgkOverdue ? 600 : undefined}>
+      <Text
+        size="sm"
+        c={incident.isSgkOverdue ? "red" : undefined}
+        fw={incident.isSgkOverdue ? 600 : undefined}
+      >
         {t(incident.isSgkOverdue ? "ohs:incidents.sgkOverdue" : "ohs:incidents.sgkDue", {
           date: date(incident.sgkNotificationDeadline),
         })}
@@ -261,7 +328,15 @@ function SgkCell({ incident, date }: { incident: OhsIncident; date: (value?: str
   );
 }
 
-function SummaryCard({ label, value, danger = false }: { label: string; value: number; danger?: boolean }) {
+function SummaryCard({
+  label,
+  value,
+  danger = false,
+}: {
+  label: string;
+  value: number;
+  danger?: boolean;
+}) {
   return (
     <Card withBorder padding="md">
       <Text size="sm" c="dimmed">
@@ -298,7 +373,9 @@ function MyReports() {
 
       {query.isLoading && <Skeleton height={100} />}
       {query.isError && <Text c="red">{t("ohs:incidents.loadError")}</Text>}
-      {query.isSuccess && reports.length === 0 && <Text c="dimmed">{t("ohs:myReports.empty")}</Text>}
+      {query.isSuccess && reports.length === 0 && (
+        <Text c="dimmed">{t("ohs:myReports.empty")}</Text>
+      )}
       {reports.map((report) => (
         <Card key={report.id} withBorder padding="md">
           <Group justify="space-between" align="flex-start" wrap="nowrap">

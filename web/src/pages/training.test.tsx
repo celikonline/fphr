@@ -21,7 +21,9 @@ import {
 const permissions = vi.hoisted(() => ({ granted: new Set<string>() }));
 
 vi.mock("@/components/permission-guard", async () => {
-  const actual = await vi.importActual<typeof import("@/components/permission-guard")>("@/components/permission-guard");
+  const actual = await vi.importActual<typeof import("@/components/permission-guard")>(
+    "@/components/permission-guard"
+  );
   return {
     ...actual,
     usePermission: (key: string) => permissions.granted.has(key),
@@ -50,7 +52,13 @@ const PROGRAMS: TrainingProgram[] = [
 ];
 
 const ENROLLMENTS: Enrollment[] = [
-  { id: "en1", trainingProgramId: "p1", employeeId: "e1", status: "Enrolled", enrolledAt: "2026-09-20T08:00:00Z" },
+  {
+    id: "en1",
+    trainingProgramId: "p1",
+    employeeId: "e1",
+    status: "Enrolled",
+    enrolledAt: "2026-09-20T08:00:00Z",
+  },
 ];
 
 const MINE: MyTraining[] = [
@@ -68,7 +76,9 @@ const MINE: MyTraining[] = [
 ];
 
 vi.mock("@/services/training.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/training.service")>("@/services/training.service");
+  const actual = await vi.importActual<typeof import("@/services/training.service")>(
+    "@/services/training.service"
+  );
   return {
     ...actual,
     listTrainingPrograms: vi.fn(async () => PROGRAMS),
@@ -81,7 +91,9 @@ vi.mock("@/services/training.service", async () => {
 });
 
 vi.mock("@/services/employees.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/employees.service")>("@/services/employees.service");
+  const actual = await vi.importActual<typeof import("@/services/employees.service")>(
+    "@/services/employees.service"
+  );
   return { ...actual, getEmployee: vi.fn(async () => ({ id: "e1", displayName: "Ayşe Demir" })) };
 });
 
@@ -181,7 +193,9 @@ describe("TrainingPage", () => {
 
     await user.click(within(dialog).getByRole("button", { name: "Tamamlandı" }));
     await user.type(await screen.findByLabelText("Sertifika no"), "ISG-2026-1");
-    const completeDialog = screen.getByRole("dialog", { name: "Eğitimi tamamlandı olarak işaretle" });
+    const completeDialog = screen.getByRole("dialog", {
+      name: "Eğitimi tamamlandı olarak işaretle",
+    });
     await user.click(within(completeDialog).getByRole("button", { name: "Tamamlandı" }));
 
     await waitFor(() => expect(completeEnrollment).toHaveBeenCalledWith("en1", "ISG-2026-1"));

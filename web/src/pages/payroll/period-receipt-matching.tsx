@@ -13,7 +13,13 @@ import { matchPayrollBankReceipts, type PayrollPeriodStatus } from "@/services/p
  * turned into this shape) and matches it against the period's expected payments. Only ever marks a payslip's payment confirmed;
  * mismatches, rejections and unmatched employees are reported so a bookkeeper can re-upload a corrected file, not written anywhere.
  */
-export function PeriodReceiptMatching({ periodId, status }: { periodId: string; status: PayrollPeriodStatus }) {
+export function PeriodReceiptMatching({
+  periodId,
+  status,
+}: {
+  periodId: string;
+  status: PayrollPeriodStatus;
+}) {
   const { t, i18n } = useTranslation(["payroll"]);
   const canMatch = usePermission("payroll.bankfile.export");
   const [file, setFile] = useState<File | null>(null);
@@ -49,7 +55,12 @@ export function PeriodReceiptMatching({ periodId, status }: { periodId: string; 
           clearable
           style={{ flex: 1, minWidth: 220 }}
         />
-        <Button leftSection={<Receipt size={14} />} disabled={!file} loading={match.isPending} onClick={() => match.mutate()}>
+        <Button
+          leftSection={<Receipt size={14} />}
+          disabled={!file}
+          loading={match.isPending}
+          onClick={() => match.mutate()}
+        >
           {t("payroll:receiptMatching.match")}
         </Button>
       </Group>
@@ -62,7 +73,9 @@ export function PeriodReceiptMatching({ periodId, status }: { periodId: string; 
 
       {data && (
         <div className="mt-4 space-y-3">
-          <Text size="sm">{t("payroll:receiptMatching.confirmed", { count: data.confirmedCount })}</Text>
+          <Text size="sm">
+            {t("payroll:receiptMatching.confirmed", { count: data.confirmedCount })}
+          </Text>
 
           {data.amountMismatches.length > 0 && (
             <Alert color="yellow" title={t("payroll:receiptMatching.mismatchTitle")}>

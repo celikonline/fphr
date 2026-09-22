@@ -2,17 +2,59 @@ import { Suspense, lazy, useMemo, useState, type CSSProperties, type ReactNode }
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Anchor, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
-import { BarChart3, Cake, CalendarDays, Check, ChevronLeft, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
+import {
+  ActionIcon,
+  Anchor,
+  Badge,
+  Box,
+  Card,
+  ColorSwatch,
+  Divider,
+  Group,
+  Menu,
+  Progress,
+  Skeleton,
+  Stack,
+  Text,
+} from "@mantine/core";
+import {
+  BarChart3,
+  Cake,
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Inbox as InboxIcon,
+  MoreVertical,
+  Plane,
+  RotateCw,
+  Umbrella,
+  Users,
+  X,
+} from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { useModuleEnabled } from "@/hooks/use-module-enabled";
 import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
-import { getUpcomingBirthdays, getUpcomingHolidays, type UpcomingHoliday } from "@/services/home.service";
-import { getCompanyCalendar, type CompanyCalendarEntry, type CompanyEventType } from "@/services/company-calendar.service";
-import { getLeaveCalendar, getMyLeaveBalances, getMyLeaveRequests, getTeamLeaveRequests, type LeaveRequestStatus } from "@/services/leave.service";
+import {
+  getUpcomingBirthdays,
+  getUpcomingHolidays,
+  type UpcomingHoliday,
+} from "@/services/home.service";
+import {
+  getCompanyCalendar,
+  type CompanyCalendarEntry,
+  type CompanyEventType,
+} from "@/services/company-calendar.service";
+import {
+  getLeaveCalendar,
+  getMyLeaveBalances,
+  getMyLeaveRequests,
+  getTeamLeaveRequests,
+  type LeaveRequestStatus,
+} from "@/services/leave.service";
 import { listInbox } from "@/services/workflow.service";
 import { getApiErrorStatus } from "@/lib/api-error";
 import { daysUntil, formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
@@ -50,7 +92,11 @@ const CARD_STYLE: CSSProperties = {
 };
 const SHORT_DATE: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" };
 /** `InboxTaskDto.submittedAt` is a full timestamp (not a `DateOnly`), so `formatDateOnly` doesn't apply. */
-const SUBMITTED_DATE: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric" };
+const SUBMITTED_DATE: Intl.DateTimeFormatOptions = {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+};
 
 /** 403/404 are expected (permission, access setting or module not deployed) - don't retry them. */
 function retryUnlessClientError(failureCount: number, error: unknown): boolean {
@@ -100,7 +146,11 @@ function WidgetCard({
         <Group gap="md" wrap="nowrap" className="min-w-0">
           <span
             className="flex h-8 w-8 shrink-0 items-center justify-center"
-            style={{ backgroundColor: accent, color: "white", borderRadius: "var(--mantine-radius-md)" }}
+            style={{
+              backgroundColor: accent,
+              color: "white",
+              borderRadius: "var(--mantine-radius-md)",
+            }}
           >
             {icon}
           </span>
@@ -191,7 +241,15 @@ function RowList<T>({
   );
 }
 
-function PersonName({ name, employeeId, canOpen }: { name: string; employeeId: string; canOpen: boolean }) {
+function PersonName({
+  name,
+  employeeId,
+  canOpen,
+}: {
+  name: string;
+  employeeId: string;
+  canOpen: boolean;
+}) {
   return canOpen ? (
     <Anchor component={Link} to={`/app/employees/${employeeId}`} size="sm" truncate>
       {name}
@@ -220,7 +278,11 @@ function Amount({ days, date }: { days?: string; date: string }) {
 function OrgInfoWidget() {
   const { t, i18n } = useTranslation(["home"]);
   const canReadEmployees = usePermission("employee.employees.read");
-  const { data: employee, isLoading, error } = useQuery({
+  const {
+    data: employee,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["home", "org-info"],
     queryFn: getMyEmployee,
     retry: retryUnlessClientError,
@@ -277,14 +339,22 @@ function OrgInfoWidget() {
           {row(
             t("home:orgInfo.manager"),
             employee.managerEmployeeId && employee.managerDisplayName ? (
-              <PersonName name={employee.managerDisplayName} employeeId={employee.managerEmployeeId} canOpen={canReadEmployees} />
+              <PersonName
+                name={employee.managerDisplayName}
+                employeeId={employee.managerEmployeeId}
+                canOpen={canReadEmployees}
+              />
             ) : (
               <Text size="sm">—</Text>
-            ),
+            )
           )}
           {row(
             t("home:orgInfo.hireDate"),
-            <Text size="sm">{employee.hireDate ? formatDateOnly(employee.hireDate, i18n.language, SHORT_DATE) : "—"}</Text>,
+            <Text size="sm">
+              {employee.hireDate
+                ? formatDateOnly(employee.hireDate, i18n.language, SHORT_DATE)
+                : "—"}
+            </Text>
           )}
           <FooterLink to="/app/account" label={t("home:orgInfo.account")} />
         </>
@@ -293,12 +363,27 @@ function OrgInfoWidget() {
   );
 }
 
-const STATUS_ICON: Record<LeaveRequestStatus, { background: string; color: string; icon: "check" | "x" }> = {
-  pending: { background: "var(--mantine-color-orange-1)", color: "var(--mantine-color-orange-6)", icon: "check" },
+const STATUS_ICON: Record<
+  LeaveRequestStatus,
+  { background: string; color: string; icon: "check" | "x" }
+> = {
+  pending: {
+    background: "var(--mantine-color-orange-1)",
+    color: "var(--mantine-color-orange-6)",
+    icon: "check",
+  },
   approved: { background: "#1e8e3e", color: "#ffffff", icon: "check" },
   rejected: { background: "var(--mantine-color-red-4)", color: "#ffffff", icon: "x" },
-  withdrawn: { background: "var(--mantine-color-gray-2)", color: "var(--mantine-color-gray-6)", icon: "x" },
-  cancelled: { background: "var(--mantine-color-gray-2)", color: "var(--mantine-color-gray-6)", icon: "x" },
+  withdrawn: {
+    background: "var(--mantine-color-gray-2)",
+    color: "var(--mantine-color-gray-6)",
+    icon: "x",
+  },
+  cancelled: {
+    background: "var(--mantine-color-gray-2)",
+    color: "var(--mantine-color-gray-6)",
+    icon: "x",
+  },
 };
 
 function LeaveStatusIcon({ status }: { status: LeaveRequestStatus }) {
@@ -350,10 +435,14 @@ function LeaveInfoWidget() {
   const balances = balancesQuery.data;
   const typeName = useLeaveTypeNames(balances, undefined);
   const recentRequests = useMemo(
-    () => [...(requestsQuery.data ?? [])].sort((a, b) => b.startDate.localeCompare(a.startDate)).slice(0, REQUEST_LIMIT),
-    [requestsQuery.data],
+    () =>
+      [...(requestsQuery.data ?? [])]
+        .sort((a, b) => b.startDate.localeCompare(a.startDate))
+        .slice(0, REQUEST_LIMIT),
+    [requestsQuery.data]
   );
-  const primary = balances?.balances.find((item) => item.leaveTypeCode === "annual") ?? balances?.balances[0];
+  const primary =
+    balances?.balances.find((item) => item.leaveTypeCode === "annual") ?? balances?.balances[0];
 
   const refresh = () => {
     void balancesQuery.refetch();
@@ -365,11 +454,14 @@ function LeaveInfoWidget() {
     const b = primary.balance;
     const available = Math.max(0, b.availableBalance);
     const pool = available + b.futureApprovedInPeriod + b.totalUsed;
-    const pct = (value: number) => (pool <= 0 ? 0 : Math.max(0, Math.min(100, (value / pool) * 100)));
+    const pct = (value: number) =>
+      pool <= 0 ? 0 : Math.max(0, Math.min(100, (value / pool) * 100));
     balance = (
       <Stack gap={0}>
         <Text size="sm" c="dimmed">
-          {t("home:leaveInfo.availableUntil", { date: formatDateOnly(b.currentPeriodTo, i18n.language, SHORT_DATE) })}
+          {t("home:leaveInfo.availableUntil", {
+            date: formatDateOnly(b.currentPeriodTo, i18n.language, SHORT_DATE),
+          })}
         </Text>
         <Text fz={28} fw={500} c="green.8" mt="sm" lh={1.3}>
           {days(b.availableBalance)} {t("leave:days")}
@@ -380,8 +472,16 @@ function LeaveInfoWidget() {
           <Progress.Section value={pct(b.totalUsed)} color="red.6" />
         </Progress.Root>
         <Group justify="space-between" mt="sm">
-          <LegendDot color="var(--mantine-color-orange-5)" label={t("home:leaveInfo.future")} value={days(b.futureApprovedInPeriod)} />
-          <LegendDot color="var(--mantine-color-red-6)" label={t("home:leaveInfo.used")} value={days(b.totalUsed)} />
+          <LegendDot
+            color="var(--mantine-color-orange-5)"
+            label={t("home:leaveInfo.future")}
+            value={days(b.futureApprovedInPeriod)}
+          />
+          <LegendDot
+            color="var(--mantine-color-red-6)"
+            label={t("home:leaveInfo.used")}
+            value={days(b.totalUsed)}
+          />
         </Group>
       </Stack>
     );
@@ -455,7 +555,11 @@ function UpcomingLeavesWidget() {
   // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
   const [{ from, to }] = useState(() => {
     const today = new Date();
-    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + UPCOMING_LEAVE_DAYS);
+    const end = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + UPCOMING_LEAVE_DAYS
+    );
     return { from: toDateOnly(today), to: toDateOnly(end) };
   });
   const { data, isLoading, error } = useQuery({
@@ -464,15 +568,18 @@ function UpcomingLeavesWidget() {
     retry: retryUnlessClientError,
   });
   const entries = useMemo(
-    () => [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, LIST_LIMIT),
-    [data],
+    () =>
+      [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, LIST_LIMIT),
+    [data]
   );
 
   return (
     <WidgetCard
       title={t("home:leaves.title")}
       icon={<Plane size={18} />}
-      action={<LinkMenu items={[{ to: "/app/leave/calendar", label: t("navigation:nav.calendar") }]} />}
+      action={
+        <LinkMenu items={[{ to: "/app/leave/calendar", label: t("navigation:nav.calendar") }]} />
+      }
     >
       {isLoading ? (
         <WidgetSkeleton />
@@ -488,7 +595,11 @@ function UpcomingLeavesWidget() {
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
                 <PersonAvatar employeeId={entry.employeeId} displayName={entry.employeeName} />
-                <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
+                <PersonName
+                  name={entry.employeeName}
+                  employeeId={entry.employeeId}
+                  canOpen={canReadEmployees}
+                />
               </Group>
               <Amount
                 days={`${days(entry.calculatedDays)}${t("home:daysSuffix")}`}
@@ -521,8 +632,9 @@ function TeamLeaveRequestsWidget() {
     retry: retryUnlessClientError,
   });
   const entries = useMemo(
-    () => [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, LIST_LIMIT),
-    [data],
+    () =>
+      [...(data ?? [])].sort((a, b) => a.startDate.localeCompare(b.startDate)).slice(0, LIST_LIMIT),
+    [data]
   );
 
   return (
@@ -531,7 +643,13 @@ function TeamLeaveRequestsWidget() {
       icon={<Plane size={18} />}
       accent="var(--mantine-color-orange-6)"
       action={
-        <ActionIcon variant="subtle" size="sm" onClick={() => void refetch()} loading={isFetching} aria-label={t("home:refresh")}>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={() => void refetch()}
+          loading={isFetching}
+          aria-label={t("home:refresh")}
+        >
           <RotateCw size={18} />
         </ActionIcon>
       }
@@ -551,7 +669,11 @@ function TeamLeaveRequestsWidget() {
               <>
                 <Group gap="sm" wrap="nowrap" className="min-w-0">
                   <PersonAvatar employeeId={entry.employeeId} displayName={entry.employeeName} />
-                  <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
+                  <PersonName
+                    name={entry.employeeName}
+                    employeeId={entry.employeeId}
+                    canOpen={canReadEmployees}
+                  />
                 </Group>
                 <Amount
                   days={`${days(entry.calculatedDays)}${t("home:daysSuffix")}`}
@@ -615,7 +737,9 @@ function PendingApprovalsWidget() {
                 <Group gap="xs" wrap="nowrap" className="shrink-0">
                   {entry.submittedAt && (
                     <Text size="sm" c="dimmed">
-                      {new Intl.DateTimeFormat(i18n.language, SUBMITTED_DATE).format(new Date(entry.submittedAt))}
+                      {new Intl.DateTimeFormat(i18n.language, SUBMITTED_DATE).format(
+                        new Date(entry.submittedAt)
+                      )}
                     </Text>
                   )}
                   <Text size="sm" c="dimmed" truncate>
@@ -689,7 +813,10 @@ function HolidaysWidget() {
               <Text size="sm" truncate>
                 {group.name}
               </Text>
-              <Amount days={`${days(group.days)}${t("home:daysSuffix")}`} date={formatDateOnly(group.start, i18n.language, SHORT_DATE)} />
+              <Amount
+                days={`${days(group.days)}${t("home:daysSuffix")}`}
+                date={formatDateOnly(group.start, i18n.language, SHORT_DATE)}
+              />
             </>
           )}
         />
@@ -760,9 +887,16 @@ function BirthdaysWidget() {
                   size={56}
                   radius="xl"
                 />
-                <PersonName name={birthday.displayName} employeeId={birthday.id} canOpen={canReadEmployees} />
+                <PersonName
+                  name={birthday.displayName}
+                  employeeId={birthday.id}
+                  canOpen={canReadEmployees}
+                />
                 <Text size="xs" c="dimmed">
-                  {formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "short" })}
+                  {formatDateOnly(birthday.nextBirthday, i18n.language, {
+                    day: "numeric",
+                    month: "short",
+                  })}
                 </Text>
               </Stack>
             );
@@ -789,7 +923,7 @@ function DepartmentDistributionWidget() {
         value: item.count,
         color: CHART_COLORS[index % CHART_COLORS.length],
       })),
-    [data, t],
+    [data, t]
   );
   const total = chartData.reduce((sum, item) => sum + item.value, 0);
 
@@ -810,9 +944,26 @@ function DepartmentDistributionWidget() {
           <Group justify="center" py="md">
             <Box pos="relative" w={230} h={230}>
               <Suspense fallback={<Skeleton circle height={230} />}>
-                <DonutChart data={chartData} size={230} thickness={48} startAngle={90} endAngle={-270} withTooltip={false} strokeWidth={0} />
+                <DonutChart
+                  data={chartData}
+                  size={230}
+                  thickness={48}
+                  startAngle={90}
+                  endAngle={-270}
+                  withTooltip={false}
+                  strokeWidth={0}
+                />
               </Suspense>
-              <Stack gap={0} align="center" justify="center" pos="absolute" top={0} left={0} right={0} bottom={0}>
+              <Stack
+                gap={0}
+                align="center"
+                justify="center"
+                pos="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+              >
                 <Text size="sm" c="dimmed" truncate maw={120} ta="center">
                   {t("home:departmentDistribution.total")}
                 </Text>
@@ -847,7 +998,11 @@ function EventsWidget() {
   // Computed once per mount: reading the clock during render is impure (react-hooks/purity).
   const [{ from, to }] = useState(() => {
     const today = new Date();
-    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate() + UPCOMING_EVENT_DAYS);
+    const end = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() + UPCOMING_EVENT_DAYS
+    );
     return { from: toDateOnly(today), to: toDateOnly(end) };
   });
   const { data, isLoading, error } = useQuery({
@@ -858,16 +1013,22 @@ function EventsWidget() {
   const entries: CompanyCalendarEntry[] = useMemo(
     () =>
       [...(data ?? [])]
-        .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, i18n.language))
+        .sort(
+          (a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title, i18n.language)
+        )
         .slice(0, LIST_LIMIT),
-    [data, i18n.language],
+    [data, i18n.language]
   );
 
   return (
     <WidgetCard
       title={t("home:events.title")}
       icon={<CalendarDays size={18} />}
-      action={<LinkMenu items={[{ to: "/app/company-calendar", label: t("navigation:apps.companyCalendar") }]} />}
+      action={
+        <LinkMenu
+          items={[{ to: "/app/company-calendar", label: t("navigation:apps.companyCalendar") }]}
+        />
+      }
     >
       {isLoading ? (
         <WidgetSkeleton />
@@ -879,7 +1040,9 @@ function EventsWidget() {
         <>
           <RowList
             items={entries}
-            rowKey={(entry) => entry.id ?? `${entry.type}-${entry.employeeId ?? entry.title}-${entry.date}`}
+            rowKey={(entry) =>
+              entry.id ?? `${entry.type}-${entry.employeeId ?? entry.title}-${entry.date}`
+            }
             render={(entry) => (
               <>
                 <Group gap="sm" wrap="nowrap" className="min-w-0">
@@ -897,7 +1060,13 @@ function EventsWidget() {
                     </Text>
                   </div>
                 </Group>
-                <Amount date={daysUntil(entry.date) <= 0 ? t("home:today") : formatDateOnly(entry.date, i18n.language, SHORT_DATE)} />
+                <Amount
+                  date={
+                    daysUntil(entry.date) <= 0
+                      ? t("home:today")
+                      : formatDateOnly(entry.date, i18n.language, SHORT_DATE)
+                  }
+                />
               </>
             )}
           />
@@ -933,7 +1102,10 @@ export default function HomePage() {
 
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
   const columns: ReactNode[][] = [
-    [showOrgInfo && <OrgInfoWidget key="org" />, canViewDirectory && <DepartmentDistributionWidget key="distribution" />],
+    [
+      showOrgInfo && <OrgInfoWidget key="org" />,
+      canViewDirectory && <DepartmentDistributionWidget key="distribution" />,
+    ],
     [canViewLeaveBalances && <LeaveInfoWidget key="leave" />],
     [
       showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,

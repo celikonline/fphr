@@ -11,7 +11,13 @@ import { previewPayrollPeriod, type PayrollPeriodStatus } from "@/services/payro
  * "Deneme bordrosu": calculates the open period exactly as the real run would, but stores nothing - so totals and per-employee net
  * pay can be reviewed (and inputs corrected) before the payslips are generated.
  */
-export function PeriodPreview({ periodId, status }: { periodId: string; status: PayrollPeriodStatus }) {
+export function PeriodPreview({
+  periodId,
+  status,
+}: {
+  periodId: string;
+  status: PayrollPeriodStatus;
+}) {
   const { t, i18n } = useTranslation(["payroll"]);
   const canRun = usePermission("payroll.period.recalculate");
   const preview = useMutation({ mutationFn: () => previewPayrollPeriod(periodId) });
@@ -32,7 +38,13 @@ export function PeriodPreview({ periodId, status }: { periodId: string; status: 
             {t("payroll:preview.subtitle")}
           </Text>
         </div>
-        <Button size="xs" variant="default" leftSection={<FlaskConical size={14} />} loading={preview.isPending} onClick={() => preview.mutate()}>
+        <Button
+          size="xs"
+          variant="default"
+          leftSection={<FlaskConical size={14} />}
+          loading={preview.isPending}
+          onClick={() => preview.mutate()}
+        >
           {t("payroll:preview.run")}
         </Button>
       </Group>
@@ -49,7 +61,10 @@ export function PeriodPreview({ periodId, status }: { periodId: string; status: 
             <Stat label={t("payroll:preview.calculated")} value={String(data.calculatedCount)} />
             <Stat label={t("payroll:preview.totalGross")} value={money(data.totalGross)} />
             <Stat label={t("payroll:preview.totalNet")} value={money(data.totalNet)} />
-            <Stat label={t("payroll:preview.totalEmployerCost")} value={money(data.totalEmployerCost)} />
+            <Stat
+              label={t("payroll:preview.totalEmployerCost")}
+              value={money(data.totalEmployerCost)}
+            />
           </Group>
           {data.skippedCount > 0 && (
             <Alert color="yellow" mb="sm">
