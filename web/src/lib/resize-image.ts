@@ -3,9 +3,16 @@ const DEFAULT_QUALITY = 0.85;
 const JPEG_TYPE = "image/jpeg";
 
 /** Largest side after downsizing while keeping the aspect ratio; never enlarges a smaller image. */
-export function fitWithin(width: number, height: number, maxSide: number): { width: number; height: number } {
+export function fitWithin(
+  width: number,
+  height: number,
+  maxSide: number
+): { width: number; height: number } {
   const scale = Math.min(1, maxSide / Math.max(width, height));
-  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
 }
 
 /**
@@ -13,7 +20,11 @@ export function fitWithin(width: number, height: number, maxSide: number): { wid
  * applies the EXIF orientation and strips metadata (location etc.) before the file leaves the browser.
  * Throws when the file cannot be decoded as an image.
  */
-export async function resizeImageToJpeg(file: Blob, maxSide = DEFAULT_MAX_SIDE, quality = DEFAULT_QUALITY): Promise<Blob> {
+export async function resizeImageToJpeg(
+  file: Blob,
+  maxSide = DEFAULT_MAX_SIDE,
+  quality = DEFAULT_QUALITY
+): Promise<Blob> {
   const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
   try {
     const { width, height } = fitWithin(bitmap.width, bitmap.height, maxSide);
@@ -26,7 +37,9 @@ export async function resizeImageToJpeg(file: Blob, maxSide = DEFAULT_MAX_SIDE, 
     context.fillStyle = "#ffffff";
     context.fillRect(0, 0, width, height);
     context.drawImage(bitmap, 0, 0, width, height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, JPEG_TYPE, quality));
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, JPEG_TYPE, quality)
+    );
     if (!blob) throw new Error("Image could not be encoded");
     return blob;
   } finally {

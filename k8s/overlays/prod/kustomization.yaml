@@ -1,0 +1,132 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: senseik-prod
+
+bases:
+  - ../../base
+
+namePrefix: prod-
+
+images:
+  - name: senseik-api
+    newTag: latest
+  - name: senseik-worker
+    newTag: latest
+  - name: senseik-web
+    newTag: latest
+
+resources:
+  - ingress.yaml
+  - hpa.yaml
+  - network-policies.yaml
+
+replicas:
+  - name: postgres
+    count: 1
+  - name: redis
+    count: 1
+  - name: minio
+    count: 1
+  - name: api
+    count: 3
+  - name: worker
+    count: 2
+  - name: web
+    count: 2
+
+patches:
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: Production
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 500m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 2000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 2Gi
+      - op: add
+        path: /spec/template/spec/affinity
+        value:
+          podAntiAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 100
+                podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                      - key: app
+                        operator: In
+                        values:
+                          - api
+                  topologyKey: kubernetes.io/hostname
+  - target:
+      kind: Deployment
+      name: worker
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 250m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 512Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 1000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 1Gi
+  - target:
+      kind: Deployment
+      name: web
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: IfNotPresent
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 100m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 256Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 1000m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 512Mi
+
+secretGenerator:
+  - name: postgres-secret
+    behavior: merge
+    literals:
+      - username=sense
+      - password=changeme-in-prod
+  - name: minio-secret
+    behavior: merge
+    literals:
+      - rootUser=minio-prod
+      - rootPassword=changeme-in-prod
+  - name: api-secret
+    behavior: merge
+    literals:
+      - databaseConnection=Host=prod-postgres;Port=5432;Database=senseik;Username=sense;Password=changeme-in-prod;Include Error Detail=false
+      - sentryDsn=https://changeme-in-prod@sentry.io/project-id
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,7 +1,18 @@
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Alert, Button, Checkbox, Group, Modal, NumberInput, Select, Stack, Text, TextInput } from "@mantine/core";
+import {
+  Alert,
+  Button,
+  Checkbox,
+  Group,
+  Modal,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -42,8 +53,12 @@ export function ExitSettlementLineDialog({ settlement, line, onClose }: Props) {
   const [grossAmount, setGrossAmount] = useState<number | string>(line?.grossAmount ?? "");
   const [taxes, setTaxes] = useState(
     line
-      ? { sgkSubject: line.sgkSubject, incomeTaxSubject: line.incomeTaxSubject, stampTaxSubject: line.stampTaxSubject }
-      : defaultTaxes("mutualRescissionPay"),
+      ? {
+          sgkSubject: line.sgkSubject,
+          incomeTaxSubject: line.incomeTaxSubject,
+          stampTaxSubject: line.stampTaxSubject,
+        }
+      : defaultTaxes("mutualRescissionPay")
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -62,7 +77,11 @@ export function ExitSettlementLineDialog({ settlement, line, onClose }: Props) {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["exit-settlement", settlement.employeeId] });
-      toast({ variant: "success", title: t("common:success"), description: t("employees:exitSettlement.success") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("employees:exitSettlement.success"),
+      });
       onClose();
     },
     onError: (err) => setError(getApiErrorMessage(err, t("employees:genericError"))),
@@ -78,7 +97,16 @@ export function ExitSettlementLineDialog({ settlement, line, onClose }: Props) {
   };
 
   return (
-    <Modal opened onClose={onClose} title={t(line ? "employees:exitSettlement.dialog.titleEdit" : "employees:exitSettlement.dialog.titleAdd")} size="30rem">
+    <Modal
+      opened
+      onClose={onClose}
+      title={t(
+        line
+          ? "employees:exitSettlement.dialog.titleEdit"
+          : "employees:exitSettlement.dialog.titleAdd"
+      )}
+      size="30rem"
+    >
       <form
         onSubmit={(event: FormEvent) => {
           event.preventDefault();
@@ -94,7 +122,10 @@ export function ExitSettlementLineDialog({ settlement, line, onClose }: Props) {
           ) : (
             <Select
               label={t("employees:exitSettlement.dialog.kind")}
-              data={MANUAL_EXIT_PAY_KINDS.map((value) => ({ value, label: t(`employees:exitSettlement.kinds.${value}`) }))}
+              data={MANUAL_EXIT_PAY_KINDS.map((value) => ({
+                value,
+                label: t(`employees:exitSettlement.kinds.${value}`),
+              }))}
               value={kind}
               onChange={changeKind}
               allowDeselect={false}
@@ -129,12 +160,16 @@ export function ExitSettlementLineDialog({ settlement, line, onClose }: Props) {
             <Checkbox
               label={t("employees:exitSettlement.dialog.incomeTaxSubject")}
               checked={taxes.incomeTaxSubject}
-              onChange={(event) => setTaxes({ ...taxes, incomeTaxSubject: event.currentTarget.checked })}
+              onChange={(event) =>
+                setTaxes({ ...taxes, incomeTaxSubject: event.currentTarget.checked })
+              }
             />
             <Checkbox
               label={t("employees:exitSettlement.dialog.stampTaxSubject")}
               checked={taxes.stampTaxSubject}
-              onChange={(event) => setTaxes({ ...taxes, stampTaxSubject: event.currentTarget.checked })}
+              onChange={(event) =>
+                setTaxes({ ...taxes, stampTaxSubject: event.currentTarget.checked })
+              }
             />
           </Stack>
           {error && <Alert color="red">{error}</Alert>}

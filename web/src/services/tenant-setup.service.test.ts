@@ -31,14 +31,27 @@ describe("tenant-setup.service", () => {
   });
 
   it("reads and updates the current tenant's profile", async () => {
-    const profile = { id: "t1", slug: "acme", name: "Acme", status: "Trial", locale: "tr-TR", timeZone: "Europe/Istanbul", setupCompleted: false };
+    const profile = {
+      id: "t1",
+      slug: "acme",
+      name: "Acme",
+      status: "Trial",
+      locale: "tr-TR",
+      timeZone: "Europe/Istanbul",
+      setupCompleted: false,
+    };
     mockApiClient.get.mockResolvedValueOnce({ data: profile });
     mockApiClient.put.mockResolvedValueOnce({ data: { ...profile, name: "Acme A.Ş." } });
 
     await expect(getTenantProfile()).resolves.toEqual(profile);
     expect(mockApiClient.get).toHaveBeenCalledWith("/v1/identity/tenants/current");
 
-    const input = { name: "Acme A.Ş.", taxNumber: "123", locale: "en-US", timeZone: "Europe/Berlin" };
+    const input = {
+      name: "Acme A.Ş.",
+      taxNumber: "123",
+      locale: "en-US",
+      timeZone: "Europe/Berlin",
+    };
     await expect(updateTenantProfile(input)).resolves.toMatchObject({ name: "Acme A.Ş." });
     expect(mockApiClient.put).toHaveBeenCalledWith("/v1/identity/tenants/current", input);
   });
@@ -56,13 +69,21 @@ describe("tenant-setup.service", () => {
 
     await ensureOrganization("Acme A.Ş.");
 
-    expect(mockApiClient.post).toHaveBeenCalledWith("/v1/organization/bootstrap", { companyName: "Acme A.Ş." });
+    expect(mockApiClient.post).toHaveBeenCalledWith("/v1/organization/bootstrap", {
+      companyName: "Acme A.Ş.",
+    });
   });
 
   it("creates an invited user (sendInvitation is always on) and returns its id", async () => {
     mockApiClient.post.mockResolvedValueOnce({ data: "user-1" });
 
-    const id = await inviteUser({ email: "hr@acme.test", firstName: "Ayşe", lastName: "Kaya", roleIds: ["r1"], language: "tr" });
+    const id = await inviteUser({
+      email: "hr@acme.test",
+      firstName: "Ayşe",
+      lastName: "Kaya",
+      roleIds: ["r1"],
+      language: "tr",
+    });
 
     expect(id).toBe("user-1");
     expect(mockApiClient.post).toHaveBeenCalledWith("/v1/identity/users", {

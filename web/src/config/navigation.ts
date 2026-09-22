@@ -244,8 +244,24 @@ export const NAV_FOOTER_ITEMS: NavItem[] = [
   },
 ];
 
-/** "Uygulamalar" launcher entries (header dropdown + /app/apps). Entries with a phase are shown disabled. */
+/** "Uygulamalar" launcher entries (header dropdown + /app/apps), ordered by module: general, attendance, payroll, expenses, performance, recruitment, analytics. Entries with a phase are shown disabled. */
 export const APP_LAUNCHER_ITEMS: NavItem[] = [
+  {
+    key: "workflowInbox",
+    labelKey: "apps.workflowInbox",
+    path: "/app/inbox",
+    icon: Inbox,
+    permissions: ["workflow.inbox.view"],
+    iconColor: "teal",
+  },
+  {
+    key: "companyCalendar",
+    labelKey: "apps.companyCalendar",
+    path: "/app/company-calendar",
+    icon: CalendarDays,
+    permissions: ["announcements.my.events"],
+    iconColor: "cyan",
+  },
   {
     key: "orgChart",
     labelKey: "apps.orgChart",
@@ -264,22 +280,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "blue",
   },
   {
-    key: "workflowInbox",
-    labelKey: "apps.workflowInbox",
-    path: "/app/inbox",
-    icon: Inbox,
-    permissions: ["workflow.inbox.view"],
-    iconColor: "teal",
-  },
-  {
-    key: "overtime",
-    labelKey: "apps.overtime",
-    path: "/app/leave/overtimes",
-    icon: Clock,
-    permissions: ["leave.my.overtimes"],
-    iconColor: "orange",
-  },
-  {
     key: "timesheet",
     labelKey: "apps.timesheet",
     path: "/app/attendance/timesheet",
@@ -294,6 +294,22 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: CalendarRange,
     permissions: ["attendance.shift.self"],
     iconColor: "teal",
+  },
+  {
+    key: "selfCheckIn",
+    labelKey: "apps.selfCheckIn",
+    path: "/app/attendance/self-check-in",
+    icon: QrCode,
+    permissions: ["attendance.my.checkin"],
+    iconColor: "teal",
+  },
+  {
+    key: "overtime",
+    labelKey: "apps.overtime",
+    path: "/app/leave/overtimes",
+    icon: Clock,
+    permissions: ["leave.my.overtimes"],
+    iconColor: "orange",
   },
   {
     key: "teamTimesheet",
@@ -320,28 +336,20 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "teal",
   },
   {
-    key: "deviceLogImport",
-    labelKey: "apps.deviceLogImport",
-    path: "/app/attendance/device-logs/import",
-    icon: Upload,
-    permissions: ["attendance.timesheet.import"],
-    iconColor: "orange",
-  },
-  {
-    key: "selfCheckIn",
-    labelKey: "apps.selfCheckIn",
-    path: "/app/attendance/self-check-in",
-    icon: QrCode,
-    permissions: ["attendance.my.checkin"],
-    iconColor: "teal",
-  },
-  {
     key: "liveBoard",
     labelKey: "apps.liveBoard",
     path: "/app/attendance/live-board",
     icon: MonitorCheck,
     permissions: ["attendance.board.view"],
     iconColor: "navy",
+  },
+  {
+    key: "deviceLogImport",
+    labelKey: "apps.deviceLogImport",
+    path: "/app/attendance/device-logs/import",
+    icon: Upload,
+    permissions: ["attendance.timesheet.import"],
+    iconColor: "orange",
   },
   {
     key: "payroll",
@@ -381,14 +389,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     path: "/app/performance/review-cycles",
     icon: CalendarRange,
     permissions: ["performance.my.reviews"],
-    iconColor: "gold",
-  },
-  {
-    key: "recruitment",
-    labelKey: "apps.recruitment",
-    path: "/app/recruitment/postings",
-    icon: UserPlus,
-    permissions: ["recruitment.postings.read"],
     iconColor: "gold",
   },
   {
@@ -440,6 +440,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "teal",
   },
   {
+    key: "recruitment",
+    labelKey: "apps.recruitment",
+    path: "/app/recruitment/postings",
+    icon: UserPlus,
+    permissions: ["recruitment.postings.read"],
+    iconColor: "gold",
+  },
+  {
     key: "recruitmentCandidates",
     labelKey: "apps.recruitmentCandidates",
     path: "/app/recruitment/candidates",
@@ -462,14 +470,6 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     icon: PieChart,
     permissions: ["analytics.kpi.view", "reports.catalog.view", "reports.my.executions"],
     iconColor: "blue",
-  },
-  {
-    key: "companyCalendar",
-    labelKey: "apps.companyCalendar",
-    path: "/app/company-calendar",
-    icon: CalendarDays,
-    permissions: ["announcements.my.events"],
-    iconColor: "cyan",
   },
 ];
 

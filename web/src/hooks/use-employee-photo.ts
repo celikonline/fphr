@@ -22,7 +22,8 @@ function objectUrlFor(target: string, blob: Blob): string {
 
 /** Query key of a photo; uploads/removals invalidate `["employees", "photo"]` to refresh every avatar at once. */
 /** The caller's own photo ("me") is also keyed by their employee id, so a different user signing in on the same tab never reuses it. */
-export const employeePhotoKey = (target: string, ownEmployeeId = "") => ["employees", "photo", target, ownEmployeeId] as const;
+export const employeePhotoKey = (target: string, ownEmployeeId = "") =>
+  ["employees", "photo", target, ownEmployeeId] as const;
 
 /** The caller's own photo is read through `/me` (needs no directory permission); everyone else's by id. */
 export function useOwnEmployeeId(): string | undefined {

@@ -2,7 +2,18 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { Check, ChevronRight, Copy, EyeOff, Mail, Phone } from "lucide-react";
-import { ActionIcon, Anchor, Card, CopyButton, Divider, Group, Progress, Stack, Text, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Anchor,
+  Card,
+  CopyButton,
+  Divider,
+  Group,
+  Progress,
+  Stack,
+  Text,
+  Title,
+} from "@mantine/core";
 import { usePermission } from "@/components/permission-guard";
 import { useAuthStore } from "@/store/auth.store";
 import { formatDateOnly, parseDateOnly, toDateOnly } from "@/lib/dates";
@@ -34,15 +45,33 @@ export function computeTenure(startDate: string, endDate: string): Tenure | null
   const end = parseDateOnly(endDate);
   if (end < start) return null;
 
-  let totalMonths = (end.getFullYear() - start.getFullYear()) * MONTHS_PER_YEAR + (end.getMonth() - start.getMonth());
+  let totalMonths =
+    (end.getFullYear() - start.getFullYear()) * MONTHS_PER_YEAR +
+    (end.getMonth() - start.getMonth());
   if (end.getDate() < start.getDate()) totalMonths -= 1;
 
   const anchorMonthStart = new Date(start.getFullYear(), start.getMonth() + totalMonths, 1);
-  const lastDayOfAnchorMonth = new Date(anchorMonthStart.getFullYear(), anchorMonthStart.getMonth() + 1, 0).getDate();
-  const anchor = new Date(anchorMonthStart.getFullYear(), anchorMonthStart.getMonth(), Math.min(start.getDate(), lastDayOfAnchorMonth));
+  const lastDayOfAnchorMonth = new Date(
+    anchorMonthStart.getFullYear(),
+    anchorMonthStart.getMonth() + 1,
+    0
+  ).getDate();
+  const anchor = new Date(
+    anchorMonthStart.getFullYear(),
+    anchorMonthStart.getMonth(),
+    Math.min(start.getDate(), lastDayOfAnchorMonth)
+  );
 
-  const days = Math.round((Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) - Date.UTC(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())) / MS_PER_DAY);
-  return { years: Math.floor(totalMonths / MONTHS_PER_YEAR), months: totalMonths % MONTHS_PER_YEAR, days };
+  const days = Math.round(
+    (Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()) -
+      Date.UTC(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())) /
+      MS_PER_DAY
+  );
+  return {
+    years: Math.floor(totalMonths / MONTHS_PER_YEAR),
+    months: totalMonths % MONTHS_PER_YEAR,
+    days,
+  };
 }
 
 export interface Completion {
@@ -51,7 +80,8 @@ export interface Completion {
   percent: number;
 }
 
-const isSet = (value: unknown) => value !== null && value !== undefined && value !== "" && value !== "unspecified";
+const isSet = (value: unknown) =>
+  value !== null && value !== undefined && value !== "" && value !== "unspecified";
 
 /** "Özlük doluluk oranı": how many of the tracked personnel-file fields are filled in. */
 export function profileCompletion(employee: EmployeeDetail): Completion {
@@ -78,11 +108,23 @@ export function profileCompletion(employee: EmployeeDetail): Completion {
     employee.orgUnitId,
   ];
   const completed = tracked.filter(isSet).length;
-  return { completed, total: tracked.length, percent: Math.round((completed / tracked.length) * 100) };
+  return {
+    completed,
+    total: tracked.length,
+    percent: Math.round((completed / tracked.length) * 100),
+  };
 }
 
 /** Grey-headed card ("Yöneticisi", "İletişim", …) as in the reference layout; `action` sits at the right of the header. */
-function InfoCard({ title, action, children }: { title: string; action?: ReactNode; children: ReactNode }) {
+function InfoCard({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <Card withBorder padding={0} radius="md">
       <Group
@@ -126,7 +168,13 @@ function CopyValue({ value }: { value: string }) {
   return (
     <CopyButton value={value}>
       {({ copied, copy }) => (
-        <ActionIcon variant="subtle" color={copied ? "teal" : "gray"} size="sm" onClick={copy} aria-label={label}>
+        <ActionIcon
+          variant="subtle"
+          color={copied ? "teal" : "gray"}
+          size="sm"
+          onClick={copy}
+          aria-label={label}
+        >
           {copied ? <Check size={15} /> : <Copy size={15} />}
         </ActionIcon>
       )}
@@ -135,7 +183,15 @@ function CopyValue({ value }: { value: string }) {
 }
 
 /** Icon + label + value row with a copy button (contact card). */
-function ContactRow({ icon, label, value }: { icon: ReactNode; label: string; value: string | null }) {
+function ContactRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string | null;
+}) {
   return (
     <Group gap="md" wrap="nowrap" py="xs">
       <Text component="span" c="brand" className="inline-flex shrink-0">
@@ -154,7 +210,11 @@ function ContactRow({ icon, label, value }: { icon: ReactNode; label: string; va
   );
 }
 
-function ContactList({ rows }: { rows: Array<{ key: string; icon: ReactNode; label: string; value: string | null }> }) {
+function ContactList({
+  rows,
+}: {
+  rows: Array<{ key: string; icon: ReactNode; label: string; value: string | null }>;
+}) {
   return (
     <Stack gap={0}>
       {rows.map((row, index) => (
@@ -172,26 +232,38 @@ const PRIVATE_ICON = <EyeOff size={18} />;
 function TenureText({ employee }: { employee: EmployeeDetail }) {
   const { t } = useTranslation(["employees"]);
   if (!employee.hireDate) return <>—</>;
-  const tenure = computeTenure(employee.hireDate, employee.terminationDate ?? toDateOnly(new Date()));
+  const tenure = computeTenure(
+    employee.hireDate,
+    employee.terminationDate ?? toDateOnly(new Date())
+  );
   if (!tenure) return <>—</>;
 
   const parts = [
     tenure.years > 0 && t("employees:card.tenure.years", { count: tenure.years }),
     tenure.months > 0 && t("employees:card.tenure.months", { count: tenure.months }),
-    (tenure.days > 0 || (tenure.years === 0 && tenure.months === 0)) && t("employees:card.tenure.days", { count: tenure.days }),
+    (tenure.days > 0 || (tenure.years === 0 && tenure.months === 0)) &&
+      t("employees:card.tenure.days", { count: tenure.days }),
   ].filter(Boolean);
   return <>{parts.join(" ")}</>;
 }
 
 /** Read-only "Profil": identity header with photo, employment dates and organisation, plus manager / contact / access cards. */
-export function ProfileView({ employee, editAction }: { employee: EmployeeDetail; editAction?: ReactNode }) {
+export function ProfileView({
+  employee,
+  editAction,
+}: {
+  employee: EmployeeDetail;
+  editAction?: ReactNode;
+}) {
   const { t, i18n } = useTranslation(["employees", "common"]);
   const tenantName = useAuthStore((state) => state.user?.tenant?.name);
   const canReadEmployees = usePermission("employee.employees.read");
   const { nameById } = useOrgUnits();
   const unitName = employee.orgUnitId ? nameById.get(employee.orgUnitId) : undefined;
-  const date = (value: string | null | undefined) => (value ? formatDateOnly(value, i18n.language) : "—");
-  const enumLabel = (group: string, value: string | null) => (value ? t(`employees:enum.${group}.${value}`) : "—");
+  const date = (value: string | null | undefined) =>
+    value ? formatDateOnly(value, i18n.language) : "—";
+  const enumLabel = (group: string, value: string | null) =>
+    value ? t(`employees:enum.${group}.${value}`) : "—";
 
   return (
     <div className="grid items-start gap-5 lg:grid-cols-3">
@@ -203,7 +275,10 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
                 {employee.displayName}
               </Title>
               <Group gap="xs" mt="xs">
-                <EmployeeStatusBadge status={employee.status} label={t("employees:card.statusLabel")} />
+                <EmployeeStatusBadge
+                  status={employee.status}
+                  label={t("employees:card.statusLabel")}
+                />
                 {employee.terminationDate && (
                   <Text size="xs" c="dimmed">
                     {t("employees:card.profile.terminationDate")}: {date(employee.terminationDate)}
@@ -216,19 +291,29 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
           <Divider mb="lg" />
           <InfoGrid>
             <Info label={t("employees:fields.hireDate")}>{date(employee.hireDate)}</Info>
-            <Info label={t("employees:fields.contractType")}>{enumLabel("contractType", employee.contractType)}</Info>
+            <Info label={t("employees:fields.contractType")}>
+              {enumLabel("contractType", employee.contractType)}
+            </Info>
             <Info label={t("employees:card.profile.tenure")}>
               <TenureText employee={employee} />
             </Info>
-            <Info label={t("employees:fields.leaveAccrualStartDate")}>{date(employee.leaveAccrualStartDate)}</Info>
+            <Info label={t("employees:fields.leaveAccrualStartDate")}>
+              {date(employee.leaveAccrualStartDate)}
+            </Info>
           </InfoGrid>
           <Divider my="lg" />
           <InfoGrid>
-            <Info label={t("employees:fields.positionStartDate")}>{date(employee.positionStartDate)}</Info>
-            <Info label={t("employees:fields.employmentType")}>{enumLabel("employmentType", employee.employmentType)}</Info>
+            <Info label={t("employees:fields.positionStartDate")}>
+              {date(employee.positionStartDate)}
+            </Info>
+            <Info label={t("employees:fields.employmentType")}>
+              {enumLabel("employmentType", employee.employmentType)}
+            </Info>
             <Info label={t("employees:card.profile.company")}>{tenantName ?? "—"}</Info>
             <Info label={t("employees:fields.orgUnit")}>{unitName ?? "—"}</Info>
-            <Info label={t("employees:card.profile.department")}>{employee.departmentName ?? "—"}</Info>
+            <Info label={t("employees:card.profile.department")}>
+              {employee.departmentName ?? "—"}
+            </Info>
             <Info label={t("employees:card.profile.title")}>{employee.titleName ?? "—"}</Info>
           </InfoGrid>
           <Divider my="lg" />
@@ -254,7 +339,13 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
                 radius="md"
               />
               {canReadEmployees ? (
-                <Anchor component={Link} to={`/app/employees/${employee.managerEmployeeId}/general`} size="sm" fw={500} truncate>
+                <Anchor
+                  component={Link}
+                  to={`/app/employees/${employee.managerEmployeeId}/general`}
+                  size="sm"
+                  fw={500}
+                  truncate
+                >
                   {employee.managerDisplayName}
                 </Anchor>
               ) : (
@@ -273,10 +364,30 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
         <InfoCard title={t("employees:card.groups.contact")}>
           <ContactList
             rows={[
-              { key: "workEmail", icon: <Mail size={18} />, label: t("employees:fields.workEmail"), value: employee.workEmail },
-              { key: "workPhone", icon: <Phone size={18} />, label: t("employees:fields.workPhone"), value: employee.workPhone },
-              { key: "personalEmail", icon: PRIVATE_ICON, label: t("employees:fields.personalEmail"), value: employee.personalEmail },
-              { key: "mobilePhone", icon: PRIVATE_ICON, label: t("employees:fields.mobilePhone"), value: employee.mobilePhone },
+              {
+                key: "workEmail",
+                icon: <Mail size={18} />,
+                label: t("employees:fields.workEmail"),
+                value: employee.workEmail,
+              },
+              {
+                key: "workPhone",
+                icon: <Phone size={18} />,
+                label: t("employees:fields.workPhone"),
+                value: employee.workPhone,
+              },
+              {
+                key: "personalEmail",
+                icon: PRIVATE_ICON,
+                label: t("employees:fields.personalEmail"),
+                value: employee.personalEmail,
+              },
+              {
+                key: "mobilePhone",
+                icon: PRIVATE_ICON,
+                label: t("employees:fields.mobilePhone"),
+                value: employee.mobilePhone,
+              },
             ]}
           />
         </InfoCard>
@@ -284,7 +395,9 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
         <InfoCard title={t("employees:card.groups.access")}>
           <InfoGrid>
             <Info label={t("employees:fields.accessType")}>
-              {employee.userId && employee.accessType ? t(`employees:accessType.${employee.accessType}`) : "—"}
+              {employee.userId && employee.accessType
+                ? t(`employees:accessType.${employee.accessType}`)
+                : "—"}
             </Info>
             <Info label={t("employees:fields.accountStatus")}>
               <AccountStatusBadge status={employee.accountStatus} />
@@ -297,14 +410,27 @@ export function ProfileView({ employee, editAction }: { employee: EmployeeDetail
 }
 
 /** Read-only "Kişisel bilgiler": citizenship, education, address on the left; completion and private contact on the right. */
-export function PersonalView({ employee, editAction }: { employee: EmployeeDetail; editAction?: ReactNode }) {
+export function PersonalView({
+  employee,
+  editAction,
+}: {
+  employee: EmployeeDetail;
+  editAction?: ReactNode;
+}) {
   const { t, i18n } = useTranslation(["employees", "common"]);
   const canViewSensitive = usePermission("employee.sensitive.view");
   const completion = profileCompletion(employee);
   const remaining = completion.total - completion.completed;
-  const completionColor = completion.percent >= HIGH_COMPLETION ? "green" : completion.percent >= MEDIUM_COMPLETION ? "orange" : "red";
-  const date = (value: string | null | undefined) => (value ? formatDateOnly(value, i18n.language) : "—");
-  const enumLabel = (group: string, value: string | null) => (value ? t(`employees:enum.${group}.${value}`) : "—");
+  const completionColor =
+    completion.percent >= HIGH_COMPLETION
+      ? "green"
+      : completion.percent >= MEDIUM_COMPLETION
+        ? "orange"
+        : "red";
+  const date = (value: string | null | undefined) =>
+    value ? formatDateOnly(value, i18n.language) : "—";
+  const enumLabel = (group: string, value: string | null) =>
+    value ? t(`employees:enum.${group}.${value}`) : "—";
 
   return (
     <div className="grid items-start gap-5 lg:grid-cols-3">
@@ -313,11 +439,19 @@ export function PersonalView({ employee, editAction }: { employee: EmployeeDetai
           <InfoGrid>
             <Info label={t("employees:fields.birthDate")}>{date(employee.birthDate)}</Info>
             <Info label={t("employees:fields.gender")}>{enumLabel("gender", employee.gender)}</Info>
-            <Info label={t("employees:fields.maritalStatus")}>{enumLabel("maritalStatus", employee.maritalStatus)}</Info>
+            <Info label={t("employees:fields.maritalStatus")}>
+              {enumLabel("maritalStatus", employee.maritalStatus)}
+            </Info>
             <Info label={t("employees:fields.childCount")}>{employee.childCount ?? "—"}</Info>
-            <Info label={t("employees:fields.disabilityDegree")}>{enumLabel("disabilityDegree", employee.disabilityDegree)}</Info>
-            <Info label={t("employees:fields.militaryStatus")}>{enumLabel("militaryStatus", employee.militaryStatus)}</Info>
-            <Info label={t("employees:fields.bloodType")}>{enumLabel("bloodType", employee.bloodType)}</Info>
+            <Info label={t("employees:fields.disabilityDegree")}>
+              {enumLabel("disabilityDegree", employee.disabilityDegree)}
+            </Info>
+            <Info label={t("employees:fields.militaryStatus")}>
+              {enumLabel("militaryStatus", employee.militaryStatus)}
+            </Info>
+            <Info label={t("employees:fields.bloodType")}>
+              {enumLabel("bloodType", employee.bloodType)}
+            </Info>
           </InfoGrid>
           <Divider my="lg" />
           <Group justify="space-between" wrap="nowrap" align="flex-start">
@@ -333,7 +467,9 @@ export function PersonalView({ employee, editAction }: { employee: EmployeeDetai
 
         <InfoCard title={t("employees:card.groups.education")}>
           <InfoGrid>
-            <Info label={t("employees:fields.educationStatus")}>{enumLabel("educationStatus", employee.educationStatus)}</Info>
+            <Info label={t("employees:fields.educationStatus")}>
+              {enumLabel("educationStatus", employee.educationStatus)}
+            </Info>
             <Info label={t("employees:fields.highestEducationLevel")}>
               {enumLabel("highestEducationLevel", employee.highestEducationLevel)}
             </Info>
@@ -360,13 +496,25 @@ export function PersonalView({ employee, editAction }: { employee: EmployeeDetai
           <Text fz={32} fw={600} c={completionColor} lh={1.1}>
             %{completion.percent}
           </Text>
-          <Progress value={completion.percent} color={completionColor} size="sm" my="sm" aria-label={t("employees:card.completion.title")} />
+          <Progress
+            value={completion.percent}
+            color={completionColor}
+            size="sm"
+            my="sm"
+            aria-label={t("employees:card.completion.title")}
+          />
           <Group justify="space-between">
             <Text size="sm">
-              {t("employees:card.completion.completed")} <Text component="span" fw={600}>{completion.completed}</Text>
+              {t("employees:card.completion.completed")}{" "}
+              <Text component="span" fw={600}>
+                {completion.completed}
+              </Text>
             </Text>
             <Text size="sm">
-              {t("employees:card.completion.remaining")} <Text component="span" fw={600}>{remaining}</Text>
+              {t("employees:card.completion.remaining")}{" "}
+              <Text component="span" fw={600}>
+                {remaining}
+              </Text>
             </Text>
           </Group>
         </Card>
@@ -374,9 +522,24 @@ export function PersonalView({ employee, editAction }: { employee: EmployeeDetai
         <InfoCard title={t("employees:card.groups.personalContact")}>
           <ContactList
             rows={[
-              { key: "personalEmail", icon: PRIVATE_ICON, label: t("employees:fields.personalEmail"), value: employee.personalEmail },
-              { key: "mobilePhone", icon: PRIVATE_ICON, label: t("employees:fields.mobilePhone"), value: employee.mobilePhone },
-              { key: "homePhone", icon: <Phone size={18} />, label: t("employees:fields.homePhone"), value: employee.homePhone },
+              {
+                key: "personalEmail",
+                icon: PRIVATE_ICON,
+                label: t("employees:fields.personalEmail"),
+                value: employee.personalEmail,
+              },
+              {
+                key: "mobilePhone",
+                icon: PRIVATE_ICON,
+                label: t("employees:fields.mobilePhone"),
+                value: employee.mobilePhone,
+              },
+              {
+                key: "homePhone",
+                icon: <Phone size={18} />,
+                label: t("employees:fields.homePhone"),
+                value: employee.homePhone,
+              },
             ]}
           />
         </InfoCard>

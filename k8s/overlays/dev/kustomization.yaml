@@ -1,0 +1,74 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: senseik-dev
+
+bases:
+  - ../../base
+
+namePrefix: dev-
+
+images:
+  - name: senseik-api
+    newTag: latest
+  - name: senseik-worker
+    newTag: latest
+  - name: senseik-web
+    newTag: latest
+
+replicas:
+  - name: postgres
+    count: 1
+  - name: redis
+    count: 1
+  - name: minio
+    count: 1
+  - name: api
+    count: 1
+  - name: worker
+    count: 1
+  - name: web
+    count: 1
+
+patches:
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+      - op: replace
+        path: /spec/template/spec/containers/0/env/3/value
+        value: Development
+  - target:
+      kind: Deployment
+      name: worker
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: Deployment
+      name: web
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+
+secretGenerator:
+  - name: postgres-secret
+    literals:
+      - username=sense
+      - password=sense
+  - name: minio-secret
+    literals:
+      - rootUser=minio
+      - rootPassword=minio12345
+  - name: api-secret
+    literals:
+      - databaseConnection=Host=dev-postgres;Port=5432;Database=senseik;Username=sense;Password=sense;Include Error Detail=true
+      - sentryDsn=
+
+generatorOptions:
+  disableNameSuffixHash: true

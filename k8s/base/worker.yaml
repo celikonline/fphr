@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  namespace: senseik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: worker
+        image: senseik-worker:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DOTNET_ENVIRONMENT
+          value: Production
+        - name: DOTNET_RUNNING_IN_CONTAINER
+          value: "true"
+        - name: ConnectionStrings__Database
+          valueFrom:
+            secretKeyRef:
+              name: api-secret
+              key: databaseConnection
+        - name: ConnectionStrings__Redis
+          value: redis:6379,abortConnect=false
+        - name: Storage__Provider
+          value: MinIO
+        - name: MinIO__Endpoint
+          value: minio:9000
+        - name: MinIO__AccessKey
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: rootUser
+        - name: MinIO__SecretKey
+          valueFrom:
+            secretKeyRef:
+              name: minio-secret
+              key: rootPassword
+        - name: MinIO__UseHttps
+          value: "false"
+        - name: Email__Smtp__Host
+          value: mailpit
+        - name: Email__Smtp__Port
+          value: "1025"
+        - name: Frontend__BaseUrl
+          value: http://localhost:3000
+        - name: Observability__OtlpEndpoint
+          value: http://jaeger:4317
+        - name: Observability__Logs__Enabled
+          value: "true"
+        - name: Observability__Logs__Endpoint
+          value: http://loki:3100/otlp/v1/logs
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+      initContainers:
+      - name: wait-for-db
+        image: busybox:latest
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']

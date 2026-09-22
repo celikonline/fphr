@@ -259,7 +259,7 @@ export default function LoginPage() {
           <BrandMark onDark />
           <Stack gap={2}>
             <Text fz={20} fw={800} lh={1.1} lts={-0.4}>
-              SenseİK
+              SenseHR
             </Text>
             <Text fz={10.5} lts={0.5} lh={1.2} className={classes.muted}>
               {t("auth:brandPoweredBy")}
@@ -330,7 +330,7 @@ export default function LoginPage() {
             <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
               <BrandMark />
               <Text fz={20} fw={800} lts={-0.4}>
-                SenseİK
+                SenseHR
               </Text>
             </Group>
 
@@ -406,7 +406,7 @@ export default function LoginPage() {
             <Group gap="sm" wrap="nowrap" mb={40} className="lg:hidden">
               <BrandMark />
               <Text fz={20} fw={800} lts={-0.4}>
-                SenseİK
+                SenseHR
               </Text>
             </Group>
 

@@ -94,7 +94,11 @@ export default function ScreenSearch() {
             if (event.key === "Escape") {
               setQuery("");
               inputRef.current?.blur();
-            } else if (event.key === "Enter" && results[0] && combobox.getSelectedOptionIndex() === -1) {
+            } else if (
+              event.key === "Enter" &&
+              results[0] &&
+              combobox.getSelectedOptionIndex() === -1
+            ) {
               event.preventDefault();
               open(results[0].path);
             }

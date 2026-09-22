@@ -3,7 +3,23 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, Trash2 } from "lucide-react";
-import { Anchor, Badge, Box, Button, Card, Group, Input, Modal, Select, Skeleton, Stack, Tabs, Text, Textarea, Title } from "@mantine/core";
+import {
+  Anchor,
+  Badge,
+  Box,
+  Button,
+  Card,
+  Group,
+  Input,
+  Modal,
+  Select,
+  Skeleton,
+  Stack,
+  Tabs,
+  Text,
+  Textarea,
+  Title,
+} from "@mantine/core";
 import { DatePicker } from "@/components/ui/date-picker";
 import ConfirmDialog from "@/components/confirm-dialog";
 import { usePermission } from "@/components/permission-guard";
@@ -86,7 +102,9 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
 
   const { levels } = useOrgLevels();
   const { nameById } = useUnitLookup();
-  const [dialog, setDialog] = useState<{ mode: "add" } | { mode: "edit"; record: CareerRecord } | null>(null);
+  const [dialog, setDialog] = useState<
+    { mode: "add" } | { mode: "edit"; record: CareerRecord } | null
+  >(null);
   const [deleting, setDeleting] = useState<CareerRecord | null>(null);
 
   const queryKey = ["employees", "career", employee.id];
@@ -98,7 +116,11 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
   const onTimelineChanged = (updated: CareerRecord[], message: string) => {
     queryClient.setQueryData(queryKey, updated);
     queryClient.invalidateQueries({ queryKey: ["employees", "detail", employee.id] });
-    queryClient.invalidateQueries({ queryKey: ["employees"], exact: false, predicate: (q) => q.queryKey[1] !== "career" });
+    queryClient.invalidateQueries({
+      queryKey: ["employees"],
+      exact: false,
+      predicate: (q) => q.queryKey[1] !== "career",
+    });
     toast({ variant: "success", title: t("common:success"), description: message });
   };
 
@@ -110,14 +132,19 @@ export function CareerSection({ employee }: { employee: EmployeeDetail }) {
     },
     onError: (error) => {
       setDeleting(null);
-      toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("employees:genericError")) });
+      toast({
+        variant: "destructive",
+        title: t("common:error"),
+        description: getApiErrorMessage(error, t("employees:genericError")),
+      });
     },
   });
 
   const current = records.find((r) => r.isCurrent) ?? null;
   const latest = records[0] ?? null;
   const date = (value: string | null) => (value ? formatDateOnly(value, i18n.language) : "—");
-  const unitName = (id: string | undefined) => (id ? (nameById.get(id) ?? t("employees:unknownUnit")) : "—");
+  const unitName = (id: string | undefined) =>
+    id ? (nameById.get(id) ?? t("employees:unknownUnit")) : "—";
   const placementSummary = (record: CareerRecord) =>
     levels
       .map((level) => record.assignments.find((a) => a.orgUnitTypeId === level.id))
@@ -205,7 +232,12 @@ function CareerPositionTab({
         <Group justify="space-between" wrap="nowrap" mb="md">
           <Title order={4}>{t("employees:career.currentTitle")}</Title>
           {editable && (
-            <Button type="button" size="sm" leftSection={<Plus size={16} />} onClick={() => setDialog({ mode: "add" })}>
+            <Button
+              type="button"
+              size="sm"
+              leftSection={<Plus size={16} />}
+              onClick={() => setDialog({ mode: "add" })}
+            >
               {t("employees:career.addPosition")}
             </Button>
           )}
@@ -219,12 +251,18 @@ function CareerPositionTab({
             <dl className="grid gap-4 sm:grid-cols-2">
               {levels.map((level) => (
                 <Field key={level.id} label={level.name}>
-                  {unitName(current.assignments.find((a) => a.orgUnitTypeId === level.id)?.orgUnitId)}
+                  {unitName(
+                    current.assignments.find((a) => a.orgUnitTypeId === level.id)?.orgUnitId
+                  )}
                 </Field>
               ))}
               <Field label={t("employees:fields.manager")}>
                 {current.managerEmployeeId ? (
-                  <Anchor component={Link} size="sm" to={`/app/employees/${current.managerEmployeeId}`}>
+                  <Anchor
+                    component={Link}
+                    size="sm"
+                    to={`/app/employees/${current.managerEmployeeId}`}
+                  >
                     {current.managerDisplayName ?? t("employees:unknownEmployee")}
                   </Anchor>
                 ) : (
@@ -232,10 +270,16 @@ function CareerPositionTab({
                 )}
               </Field>
               <Field label={t("employees:fields.employmentType")}>
-                {current.employmentType ? t(`employees:enum.employmentType.${current.employmentType}`) : "—"}
+                {current.employmentType
+                  ? t(`employees:enum.employmentType.${current.employmentType}`)
+                  : "—"}
               </Field>
-              <Field label={t("employees:fields.positionStartDate")}>{date(current.validFrom)}</Field>
-              <Field label={t("employees:career.changeType")}>{t(`employees:enum.careerChangeType.${current.changeType}`)}</Field>
+              <Field label={t("employees:fields.positionStartDate")}>
+                {date(current.validFrom)}
+              </Field>
+              <Field label={t("employees:career.changeType")}>
+                {t(`employees:enum.careerChangeType.${current.changeType}`)}
+              </Field>
             </dl>
           )}
         </div>
@@ -250,7 +294,11 @@ function CareerPositionTab({
             {t("employees:career.empty")}
           </Text>
         ) : (
-          <Box component="ol" className="relative space-y-4 pl-5" style={{ borderLeft: "1px solid var(--mantine-color-default-border)" }}>
+          <Box
+            component="ol"
+            className="relative space-y-4 pl-5"
+            style={{ borderLeft: "1px solid var(--mantine-color-default-border)" }}
+          >
             {records.map((record) => {
               const isLatest = record.id === latest?.id;
               return (
@@ -260,7 +308,9 @@ function CareerPositionTab({
                     className="absolute -left-[26px] top-1.5 h-2.5 w-2.5"
                     style={{
                       borderRadius: "50%",
-                      background: record.isCurrent ? "var(--mantine-primary-color-filled)" : "var(--mantine-color-dimmed)",
+                      background: record.isCurrent
+                        ? "var(--mantine-primary-color-filled)"
+                        : "var(--mantine-color-dimmed)",
                       opacity: record.isCurrent ? 1 : 0.4,
                     }}
                   />
@@ -270,16 +320,23 @@ function CareerPositionTab({
                         <Text size="sm" fw={500}>
                           {t("employees:career.period", {
                             from: date(record.validFrom),
-                            to: record.validTo ? date(record.validTo) : t("employees:career.ongoing"),
+                            to: record.validTo
+                              ? date(record.validTo)
+                              : t("employees:career.ongoing"),
                           })}
                         </Text>
-                        <Badge variant="light">{t(`employees:enum.careerChangeType.${record.changeType}`)}</Badge>
-                        {record.isCurrent && <Badge variant="filled">{t("employees:career.current")}</Badge>}
+                        <Badge variant="light">
+                          {t(`employees:enum.careerChangeType.${record.changeType}`)}
+                        </Badge>
+                        {record.isCurrent && (
+                          <Badge variant="filled">{t("employees:career.current")}</Badge>
+                        )}
                       </Group>
                       <Text size="sm">{placementSummary(record)}</Text>
                       <Text size="xs" c="dimmed">
                         {t("employees:fields.manager")}: {record.managerDisplayName ?? "—"}
-                        {record.employmentType && ` · ${t(`employees:enum.employmentType.${record.employmentType}`)}`}
+                        {record.employmentType &&
+                          ` · ${t(`employees:enum.employmentType.${record.employmentType}`)}`}
                       </Text>
                       {record.note && (
                         <Text size="xs" c="dimmed">
@@ -299,7 +356,13 @@ function CareerPositionTab({
                           {t("common:edit")}
                         </Button>
                         {isLatest && records.length > 1 && (
-                          <Button type="button" variant="subtle" size="sm" leftSection={<Trash2 size={16} />} onClick={() => setDeleting(record)}>
+                          <Button
+                            type="button"
+                            variant="subtle"
+                            size="sm"
+                            leftSection={<Trash2 size={16} />}
+                            onClick={() => setDeleting(record)}
+                          >
                             {t("common:delete")}
                           </Button>
                         )}
@@ -316,6 +379,7 @@ function CareerPositionTab({
       <EmploymentPeriodsSection employee={employee} />
 
       <ExitSettlementSection employee={employee} />
+
 
       {dialog && (
         <CareerRecordDialog
@@ -355,20 +419,38 @@ interface CareerRecordDialogProps {
   onSaved: (updated: CareerRecord[]) => void;
 }
 
-function CareerRecordDialog({ employee, levels, records, editing, onClose, onSaved }: CareerRecordDialogProps) {
+function CareerRecordDialog({
+  employee,
+  levels,
+  records,
+  editing,
+  onClose,
+  onSaved,
+}: CareerRecordDialogProps) {
   const { t, i18n } = useTranslation(["employees", "common"]);
   const { units, isDescendantOf } = useUnitLookup();
   const source = editing ?? records.find((r) => r.isCurrent) ?? records[0] ?? null;
   const latest = records[0] ?? null;
   const isLatest = !editing || editing.id === latest?.id;
   // The record right before the one being edited/added: its start bounds the new start date.
-  const previous = editing ? records[records.findIndex((r) => r.id === editing.id) + 1] ?? null : latest;
+  const previous = editing
+    ? (records[records.findIndex((r) => r.id === editing.id) + 1] ?? null)
+    : latest;
 
   const [validFrom, setValidFrom] = useState(editing?.validFrom ?? todayDateOnly());
-  const [changeType, setChangeType] = useState<CareerChangeType>(editing?.changeType ?? (records.length === 0 ? "hire" : "promotion"));
-  const [employmentType, setEmploymentType] = useState<EmploymentType | null>(source?.employmentType ?? employee.employmentType);
+  const [changeType, setChangeType] = useState<CareerChangeType>(
+    editing?.changeType ?? (records.length === 0 ? "hire" : "promotion")
+  );
+  const [employmentType, setEmploymentType] = useState<EmploymentType | null>(
+    source?.employmentType ?? employee.employmentType
+  );
   const [manager, setManager] = useState<PickedEmployee | null>(
-    source?.managerEmployeeId ? { id: source.managerEmployeeId, displayName: source.managerDisplayName ?? t("employees:unknownEmployee") } : null
+    source?.managerEmployeeId
+      ? {
+          id: source.managerEmployeeId,
+          displayName: source.managerDisplayName ?? t("employees:unknownEmployee"),
+        }
+      : null
   );
   const [note, setNote] = useState(editing?.note ?? "");
   const [selection, setSelection] = useState<Record<string, string | null>>(() =>
@@ -378,7 +460,9 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
 
   const mutation = useMutation({
     mutationFn: (input: CareerRecordInput) =>
-      editing ? updateCareerRecord(employee.id, editing.id, input) : addCareerRecord(employee.id, input),
+      editing
+        ? updateCareerRecord(employee.id, editing.id, input)
+        : addCareerRecord(employee.id, input),
     onSuccess: onSaved,
     onError: (err) => setError(getApiErrorMessage(err, t("employees:genericError"))),
   });
@@ -413,9 +497,15 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
     const formatted = (value: string) => formatDateOnly(value, i18n.language);
     if (!validFrom) return setError(t("employees:career.validation.validFromRequired"));
     if (previous && validFrom <= previous.validFrom)
-      return setError(t("employees:career.validation.validFromAfterPrevious", { date: formatted(previous.validFrom) }));
+      return setError(
+        t("employees:career.validation.validFromAfterPrevious", {
+          date: formatted(previous.validFrom),
+        })
+      );
     if (!previous && employee.hireDate && validFrom < employee.hireDate)
-      return setError(t("employees:career.validation.validFromBeforeHire", { date: formatted(employee.hireDate) }));
+      return setError(
+        t("employees:career.validation.validFromBeforeHire", { date: formatted(employee.hireDate) })
+      );
 
     setError(null);
     mutation.mutate({
@@ -483,10 +573,15 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
               label={t("employees:fields.employmentType")}
               data={[
                 { value: NONE, label: t("employees:enum.notSet") },
-                ...EMPLOYMENT_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.employmentType.${option}`) })),
+                ...EMPLOYMENT_TYPE_OPTIONS.map((option) => ({
+                  value: option,
+                  label: t(`employees:enum.employmentType.${option}`),
+                })),
               ]}
               value={employmentType ?? NONE}
-              onChange={(v) => setEmploymentType(v === null || v === NONE ? null : (v as EmploymentType))}
+              onChange={(v) =>
+                setEmploymentType(v === null || v === NONE ? null : (v as EmploymentType))
+              }
               allowDeselect={false}
               disabled={mutation.isPending}
             />
@@ -494,15 +589,27 @@ function CareerRecordDialog({ employee, levels, records, editing, onClose, onSav
               id="career-validFrom"
               label={t("employees:fields.positionStartDate")}
               withAsterisk
-              description={isLatest ? t("employees:career.validFromHint") : t("employees:career.validFromLocked")}
+              description={
+                isLatest
+                  ? t("employees:career.validFromHint")
+                  : t("employees:career.validFromLocked")
+              }
               inputWrapperOrder={["label", "input", "description"]}
             >
-              <DatePicker id="career-validFrom" value={validFrom} disabled={mutation.isPending || !isLatest} onChange={setValidFrom} />
+              <DatePicker
+                id="career-validFrom"
+                value={validFrom}
+                disabled={mutation.isPending || !isLatest}
+                onChange={setValidFrom}
+              />
             </Input.Wrapper>
             <Select
               id="career-changeType"
               label={t("employees:career.changeType")}
-              data={CAREER_CHANGE_TYPE_OPTIONS.map((option) => ({ value: option, label: t(`employees:enum.careerChangeType.${option}`) }))}
+              data={CAREER_CHANGE_TYPE_OPTIONS.map((option) => ({
+                value: option,
+                label: t(`employees:enum.careerChangeType.${option}`),
+              }))}
               value={changeType}
               onChange={(v) => v !== null && setChangeType(v as CareerChangeType)}
               allowDeselect={false}

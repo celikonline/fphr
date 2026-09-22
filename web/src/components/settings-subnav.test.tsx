@@ -9,7 +9,9 @@ import { SETTINGS_SECTIONS } from "@/config/navigation";
 import SettingsSubNav, { isSettingsSubPage } from "./settings-subnav";
 
 // Yetki/modül filtresi bu testin konusu değil: her bağlantı görünür kabul edilir.
-vi.mock("@/hooks/use-nav-visibility", () => ({ useVisibleItems: <T,>(items: readonly T[]) => [...items] }));
+vi.mock("@/hooks/use-nav-visibility", () => ({
+  useVisibleItems: <T,>(items: readonly T[]) => [...items],
+}));
 
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {

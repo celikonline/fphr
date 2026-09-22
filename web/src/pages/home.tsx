@@ -2,12 +2,11 @@ import { Suspense, lazy, useMemo, useState, type CSSProperties, type ReactNode }
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
-import { ActionIcon, Anchor, Avatar, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
-import { BarChart3, Cake, CalendarDays, Check, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
+import { ActionIcon, Anchor, Badge, Box, Card, ColorSwatch, Divider, Group, Menu, Progress, Skeleton, Stack, Text } from "@mantine/core";
+import { BarChart3, Cake, CalendarDays, Check, ChevronLeft, ChevronRight, Inbox as InboxIcon, MoreVertical, Plane, RotateCw, Umbrella, Users, X } from "lucide-react";
 import { usePermission } from "@/components/permission-guard";
 import { useAccessSetting } from "@/hooks/use-access-setting";
 import { useModuleEnabled } from "@/hooks/use-module-enabled";
-import { avatarColor } from "@/components/employees/employee-badges";
 import { EmployeeAvatar } from "@/components/employees/employee-avatar";
 import { useDays, useLeaveTypeNames } from "@/components/leave/leave-shared";
 import { getDepartmentDistribution, getMyEmployee } from "@/services/employees.service";
@@ -27,7 +26,7 @@ const BIRTHDAY_DAYS = 30;
 const UPCOMING_LEAVE_DAYS = 30;
 const UPCOMING_EVENT_DAYS = 30;
 const LIST_LIMIT = 3;
-const BIRTHDAY_LIMIT = 5;
+const BIRTHDAY_PAGE_SIZE = 3;
 const REQUEST_LIMIT = 4;
 const APPROVAL_LIMIT = 5;
 const SLATE = "var(--mantine-color-gray-6)";
@@ -60,10 +59,18 @@ function retryUnlessClientError(failureCount: number, error: unknown): boolean {
   return failureCount < 1;
 }
 
-/** Colleague rows only carry a display name: first letter of its first and last word. */
-function nameInitials(displayName: string): string {
+/** Colleague rows only carry a display name: its first and last word feed the photo avatar's initials fallback. */
+function PersonAvatar({ employeeId, displayName }: { employeeId: string; displayName: string }) {
   const parts = displayName.trim().split(/\s+/);
-  return `${parts[0]?.charAt(0) ?? ""}${parts.length > 1 ? parts[parts.length - 1].charAt(0) : ""}`.toLocaleUpperCase("tr") || "?";
+  return (
+    <EmployeeAvatar
+      employeeId={employeeId}
+      firstName={parts[0] ?? ""}
+      lastName={parts.length > 1 ? parts[parts.length - 1] : ""}
+      size={30}
+      radius="xl"
+    />
+  );
 }
 
 function WidgetFrame({ children }: { children: ReactNode }) {
@@ -480,9 +487,7 @@ function UpcomingLeavesWidget() {
           render={(entry) => (
             <>
               <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" color={avatarColor(entry.employeeId)}>
-                  {nameInitials(entry.employeeName)}
-                </Avatar>
+                <PersonAvatar employeeId={entry.employeeId} displayName={entry.employeeName} />
                 <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
               </Group>
               <Amount
@@ -545,9 +550,7 @@ function TeamLeaveRequestsWidget() {
             render={(entry) => (
               <>
                 <Group gap="sm" wrap="nowrap" className="min-w-0">
-                  <Avatar size={30} radius="xl" color={avatarColor(entry.employeeId)}>
-                    {nameInitials(entry.employeeName)}
-                  </Avatar>
+                  <PersonAvatar employeeId={entry.employeeId} displayName={entry.employeeName} />
                   <PersonName name={entry.employeeName} employeeId={entry.employeeId} canOpen={canReadEmployees} />
                 </Group>
                 <Amount
@@ -695,22 +698,49 @@ function HolidaysWidget() {
   );
 }
 
+/** Upcoming birthdays: three colleagues at a time (photo, name, date); the arrows page through the rest. */
 function BirthdaysWidget() {
   const { t, i18n } = useTranslation(["home", "navigation"]);
   const canReadEmployees = usePermission("employee.employees.read");
+  const [start, setStart] = useState(0);
   const { data, isLoading, error } = useQuery({
     queryKey: ["home", "upcoming-birthdays", BIRTHDAY_DAYS],
     queryFn: () => getUpcomingBirthdays(BIRTHDAY_DAYS),
     retry: retryUnlessClientError,
   });
-  const items = (data ?? []).slice(0, BIRTHDAY_LIMIT);
+  const items = data ?? [];
+  const maxStart = Math.max(0, items.length - BIRTHDAY_PAGE_SIZE);
+  const first = Math.min(start, maxStart);
+  const visible = items.slice(first, first + BIRTHDAY_PAGE_SIZE);
+
+  const arrows =
+    items.length > BIRTHDAY_PAGE_SIZE ? (
+      <Group gap={4} wrap="nowrap">
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={() => setStart(Math.max(0, first - 1))}
+          disabled={first === 0}
+          aria-label={t("home:birthdays.previous")}
+        >
+          <ChevronLeft size={18} />
+        </ActionIcon>
+        <ActionIcon
+          variant="subtle"
+          size="sm"
+          onClick={() => setStart(Math.min(maxStart, first + 1))}
+          disabled={first >= maxStart}
+          aria-label={t("home:birthdays.next")}
+        >
+          <ChevronRight size={18} />
+        </ActionIcon>
+      </Group>
+    ) : (
+      <LinkMenu items={[{ to: "/app/employees", label: t("navigation:nav.employees") }]} />
+    );
 
   return (
-    <WidgetCard
-      title={t("home:birthdays.title")}
-      icon={<Cake size={18} />}
-      action={<LinkMenu items={[{ to: "/app/employees", label: t("navigation:nav.employees") }]} />}
-    >
+    <WidgetCard title={t("home:birthdays.title")} icon={<Cake size={18} />} action={arrows}>
       {isLoading ? (
         <WidgetSkeleton />
       ) : error && getApiErrorStatus(error) !== 404 ? (
@@ -718,21 +748,26 @@ function BirthdaysWidget() {
       ) : items.length === 0 ? (
         <WidgetMessage>{t("home:birthdays.empty", { days: BIRTHDAY_DAYS })}</WidgetMessage>
       ) : (
-        <RowList
-          items={items}
-          rowKey={(birthday) => birthday.id}
-          render={(birthday) => (
-            <>
-              <Group gap="sm" wrap="nowrap" className="min-w-0">
-                <Avatar size={30} radius="xl" color={avatarColor(birthday.id)}>
-                  {nameInitials(birthday.displayName)}
-                </Avatar>
+        <Group grow gap="xs" align="flex-start" wrap="nowrap">
+          {visible.map((birthday) => {
+            const parts = birthday.displayName.trim().split(/\s+/);
+            return (
+              <Stack key={birthday.id} gap={6} align="center" className="min-w-0">
+                <EmployeeAvatar
+                  employeeId={birthday.id}
+                  firstName={parts[0] ?? ""}
+                  lastName={parts.length > 1 ? parts[parts.length - 1] : ""}
+                  size={56}
+                  radius="xl"
+                />
                 <PersonName name={birthday.displayName} employeeId={birthday.id} canOpen={canReadEmployees} />
-              </Group>
-              <Amount date={formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "short" })} />
-            </>
-          )}
-        />
+                <Text size="xs" c="dimmed">
+                  {formatDateOnly(birthday.nextBirthday, i18n.language, { day: "numeric", month: "short" })}
+                </Text>
+              </Stack>
+            );
+          })}
+        </Group>
       )}
     </WidgetCard>
   );
@@ -899,8 +934,9 @@ export default function HomePage() {
   // The reference dashboard's three columns; a hidden widget just leaves its column shorter.
   const columns: ReactNode[][] = [
     [showOrgInfo && <OrgInfoWidget key="org" />, canViewDirectory && <DepartmentDistributionWidget key="distribution" />],
-    [canViewLeaveBalances && <LeaveInfoWidget key="leave" />, showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />],
+    [canViewLeaveBalances && <LeaveInfoWidget key="leave" />],
     [
+      showBirthdays && canViewDirectory && <BirthdaysWidget key="birthdays" />,
       canViewInbox && <PendingApprovalsWidget key="pending-approvals" />,
       canViewTeamRequests && <TeamLeaveRequestsWidget key="team-requests" />,
       showLeaves && canViewLeaveCalendar && <UpcomingLeavesWidget key="upcoming" />,

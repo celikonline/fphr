@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: senseik
+
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - redis.yaml
+  - minio.yaml
+  - api.yaml
+  - worker.yaml
+  - web.yaml
+  - mailpit.yaml
+
+secretGenerator:
+  - name: postgres-secret
+    literals:
+      - username=sense
+      - password=sense
+  - name: minio-secret
+    literals:
+      - rootUser=minio
+      - rootPassword=minio12345
+  - name: api-secret
+    literals:
+      - databaseConnection=Host=postgres;Port=5432;Database=senseik;Username=sense;Password=sense;Include Error Detail=false
+      - sentryDsn=
+
+generatorOptions:
+  disableNameSuffixHash: true

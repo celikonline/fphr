@@ -10,7 +10,9 @@ import { SETTINGS_SECTIONS } from "@/config/navigation";
 import SettingsHomePage from "./settings-home";
 
 // Yetki/modül filtresi bu testin konusu değil: her bağlantı görünür kabul edilir.
-vi.mock("@/hooks/use-nav-visibility", () => ({ useVisibleItems: <T,>(items: readonly T[]) => [...items] }));
+vi.mock("@/hooks/use-nav-visibility", () => ({
+  useVisibleItems: <T,>(items: readonly T[]) => [...items],
+}));
 
 beforeAll(() => {
   Object.defineProperty(window, "matchMedia", {
@@ -73,7 +75,9 @@ describe("SettingsHomePage", () => {
 
   it("shows a whole group when the group name matches", () => {
     renderPage();
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "kullanıcılar ve güvenlik" } });
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "kullanıcılar ve güvenlik" },
+    });
     const system = SETTINGS_SECTIONS.find((section) => section.key === "system");
     expect(screen.getAllByRole("link")).toHaveLength(system?.links.length ?? -1);
   });

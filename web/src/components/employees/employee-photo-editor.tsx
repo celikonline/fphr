@@ -8,7 +8,11 @@ import { useOwnEmployeeId } from "@/hooks/use-employee-photo";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { resizeImageToJpeg } from "@/lib/resize-image";
-import { deleteEmployeePhoto, OWN_PHOTO_TARGET, uploadEmployeePhoto } from "@/services/employees.service";
+import {
+  deleteEmployeePhoto,
+  OWN_PHOTO_TARGET,
+  uploadEmployeePhoto,
+} from "@/services/employees.service";
 import { EmployeeAvatar } from "./employee-avatar";
 
 interface EmployeePhotoEditorProps {
@@ -22,7 +26,12 @@ interface EmployeePhotoEditorProps {
  * The employee's avatar with a small camera menu ("Fotoğraf yükle / Kaldır") for users who may change it: HR with
  * `employee.employees.update`, or the employee themself with `employee.self.edit`. Others just see the avatar.
  */
-export function EmployeePhotoEditor({ employee, size = 88, radius = "md", fz }: EmployeePhotoEditorProps) {
+export function EmployeePhotoEditor({
+  employee,
+  size = 88,
+  radius = "md",
+  fz,
+}: EmployeePhotoEditorProps) {
   const { t } = useTranslation(["employees", "common"]);
   const queryClient = useQueryClient();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -40,7 +49,11 @@ export function EmployeePhotoEditor({ employee, size = 88, radius = "md", fz }: 
     toast({ variant: "success", title: t("common:success"), description: message });
   };
   const onFailed = (error: unknown) =>
-    toast({ variant: "destructive", title: t("common:error"), description: getApiErrorMessage(error, t("employees:photo.failed")) });
+    toast({
+      variant: "destructive",
+      title: t("common:error"),
+      description: getApiErrorMessage(error, t("employees:photo.failed")),
+    });
 
   const upload = useMutation({
     mutationFn: async (file: File) => uploadEmployeePhoto(target, await resizeImageToJpeg(file)),
@@ -54,7 +67,14 @@ export function EmployeePhotoEditor({ employee, size = 88, radius = "md", fz }: 
   });
 
   const avatar = (
-    <EmployeeAvatar employeeId={employee.id} firstName={employee.firstName} lastName={employee.lastName} size={size} radius={radius} fz={fz} />
+    <EmployeeAvatar
+      employeeId={employee.id}
+      firstName={employee.firstName}
+      lastName={employee.lastName}
+      size={size}
+      radius={radius}
+      fz={fz}
+    />
   );
   if (!canEdit) return avatar;
 

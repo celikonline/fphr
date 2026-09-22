@@ -21,7 +21,13 @@ import {
   listUnitTypes,
   listUnits,
 } from "@/services/structure.service";
-import { completeTenantSetup, ensureOrganization, getTenantProfile, inviteUser, updateTenantProfile } from "@/services/tenant-setup.service";
+import {
+  completeTenantSetup,
+  ensureOrganization,
+  getTenantProfile,
+  inviteUser,
+  updateTenantProfile,
+} from "@/services/tenant-setup.service";
 import { listRoles } from "@/services/users.service";
 import { useAuthStore } from "@/store/auth.store";
 
@@ -33,7 +39,10 @@ vi.mock("@/services/tenant-setup.service", async (importOriginal) => ({
   completeTenantSetup: vi.fn(),
   inviteUser: vi.fn(),
 }));
-vi.mock("@/services/company.service", () => ({ getCompanyProfile: vi.fn(), updateCompanyProfile: vi.fn() }));
+vi.mock("@/services/company.service", () => ({
+  getCompanyProfile: vi.fn(),
+  updateCompanyProfile: vi.fn(),
+}));
 vi.mock("@/services/structure.service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/structure.service")>()),
   listCompanies: vi.fn(),
@@ -48,7 +57,10 @@ vi.mock("@/services/locations.service", async (importOriginal) => ({
   listLocations: vi.fn(),
   createLocation: vi.fn(),
 }));
-vi.mock("@/services/module-settings.service", () => ({ getModuleSettings: vi.fn(), updateModuleSettings: vi.fn() }));
+vi.mock("@/services/module-settings.service", () => ({
+  getModuleSettings: vi.fn(),
+  updateModuleSettings: vi.fn(),
+}));
 vi.mock("@/services/users.service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/services/users.service")>()),
   listRoles: vi.fn(),
@@ -91,7 +103,12 @@ function setUser(setupCompleted: boolean) {
       permissions: ["identity.tenant.manage"],
       tenant: { id: "t1", name: "Acme A.Ş.", slug: "acme", setupCompleted },
     },
-    features: { access: {} as never, accessSettingsBypass: true, mfaSetupRequired: false, disabledModules: [] },
+    features: {
+      access: {} as never,
+      accessSettingsBypass: true,
+      mfaSetupRequired: false,
+      disabledModules: [],
+    },
     refreshMe,
   });
 }
@@ -119,7 +136,7 @@ function renderWizard() {
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
 
@@ -151,20 +168,59 @@ function stubBackend() {
   });
   vi.mocked(updateCompanyProfile).mockResolvedValue({} as never);
   vi.mocked(listCompanies).mockResolvedValue([
-    { id: "co1", orgUnitId: "ou1", name: "Acme A.Ş.", holidayCalendarId: "cal1", jointEmploymentGroupCode: null },
+    {
+      id: "co1",
+      orgUnitId: "ou1",
+      name: "Acme A.Ş.",
+      holidayCalendarId: "cal1",
+      jointEmploymentGroupCode: null,
+    },
   ]);
   vi.mocked(listHolidayCalendars).mockResolvedValue([
     { id: "cal1", name: "Türkiye Resmi Tatilleri", countryCode: "TR", isSystemDefined: true },
   ]);
   vi.mocked(assignCompanyHolidayCalendar).mockResolvedValue({} as never);
-  vi.mocked(listLocations).mockResolvedValue({ items: [], page: 1, pageSize: 1, totalCount: 0, totalPages: 0, hasNext: false, hasPrevious: false });
+  vi.mocked(listLocations).mockResolvedValue({
+    items: [],
+    page: 1,
+    pageSize: 1,
+    totalCount: 0,
+    totalPages: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
   vi.mocked(createLocation).mockResolvedValue({} as never);
   vi.mocked(listUnitTypes).mockResolvedValue([
-    { id: "ty-company", code: "Company", name: "Şirket", sortOrder: 0, isActive: true, isSystem: true, allowsNesting: false },
-    { id: "ty-dept", code: "Department", name: "Departman", sortOrder: 2, isActive: true, isSystem: true, allowsNesting: true },
+    {
+      id: "ty-company",
+      code: "Company",
+      name: "Şirket",
+      sortOrder: 0,
+      isActive: true,
+      isSystem: true,
+      allowsNesting: false,
+    },
+    {
+      id: "ty-dept",
+      code: "Department",
+      name: "Departman",
+      sortOrder: 2,
+      isActive: true,
+      isSystem: true,
+      allowsNesting: true,
+    },
   ]);
   vi.mocked(listUnits).mockResolvedValue([
-    { id: "ou1", typeId: "ty-company", parentId: null, name: "Acme A.Ş.", managerEmployeeId: null, locationId: null, sortOrder: 0, isActive: true },
+    {
+      id: "ou1",
+      typeId: "ty-company",
+      parentId: null,
+      name: "Acme A.Ş.",
+      managerEmployeeId: null,
+      locationId: null,
+      sortOrder: 0,
+      isActive: true,
+    },
   ]);
   vi.mocked(createUnit).mockResolvedValue({} as never);
   vi.mocked(getModuleSettings).mockResolvedValue({
@@ -177,8 +233,26 @@ function stubBackend() {
   });
   vi.mocked(updateModuleSettings).mockResolvedValue(undefined);
   vi.mocked(listRoles).mockResolvedValue([
-    { id: "r-owner", code: "Owner", name: "Owner", description: null, isSystem: true, isLocked: true, userCount: 1, permissions: [] },
-    { id: "r-hr", code: "HR", name: "İK Uzmanı", description: null, isSystem: true, isLocked: false, userCount: 0, permissions: [] },
+    {
+      id: "r-owner",
+      code: "Owner",
+      name: "Owner",
+      description: null,
+      isSystem: true,
+      isLocked: true,
+      userCount: 1,
+      permissions: [],
+    },
+    {
+      id: "r-hr",
+      code: "HR",
+      name: "İK Uzmanı",
+      description: null,
+      isSystem: true,
+      isLocked: false,
+      userCount: 0,
+      permissions: [],
+    },
   ]);
 }
 
@@ -230,7 +304,7 @@ describe("SetupWizardPage", () => {
         taxNumber: "1234567890",
         operatingHours: { start: "09:00", end: "18:00" },
         workingDays: ["mon", "tue", "wed", "thu", "fri"],
-      }),
+      })
     );
     expect(refreshMe).toHaveBeenCalled();
   });
@@ -263,7 +337,12 @@ describe("SetupWizardPage", () => {
     await user.type(await screen.findByLabelText(/^Lokasyon adı/), "Merkez Ofis");
     await user.click(screen.getByRole("button", { name: NEXT }));
     await screen.findByText(trSetup.structure.heading);
-    expect(createLocation).toHaveBeenCalledWith({ name: "Merkez Ofis", type: "office", countryCode: "TR", address: null });
+    expect(createLocation).toHaveBeenCalledWith({
+      name: "Merkez Ofis",
+      type: "office",
+      countryCode: "TR",
+      address: null,
+    });
     expect(assignCompanyHolidayCalendar).not.toHaveBeenCalled();
 
     // Step 3: departments under the root company unit, in the order typed.
@@ -271,8 +350,20 @@ describe("SetupWizardPage", () => {
     await user.click(screen.getByRole("button", { name: NEXT }));
     await screen.findByRole("heading", { name: trSetup.modules.heading });
     expect(createUnit).toHaveBeenCalledTimes(2);
-    expect(createUnit).toHaveBeenNthCalledWith(1, { typeId: "ty-dept", parentId: "ou1", name: "Finans", managerEmployeeId: null, locationId: null });
-    expect(createUnit).toHaveBeenNthCalledWith(2, { typeId: "ty-dept", parentId: "ou1", name: "Satış", managerEmployeeId: null, locationId: null });
+    expect(createUnit).toHaveBeenNthCalledWith(1, {
+      typeId: "ty-dept",
+      parentId: "ou1",
+      name: "Finans",
+      managerEmployeeId: null,
+      locationId: null,
+    });
+    expect(createUnit).toHaveBeenNthCalledWith(2, {
+      typeId: "ty-dept",
+      parentId: "ou1",
+      name: "Satış",
+      managerEmployeeId: null,
+      locationId: null,
+    });
 
     // Step 4: switch a module off, invite an HR user, finish.
     await user.click(await screen.findByRole("switch", { name: "Bordro" }));
@@ -284,7 +375,13 @@ describe("SetupWizardPage", () => {
     await user.click(await screen.findByRole("option", { name: "İK Uzmanı", hidden: true }));
     await user.click(screen.getByRole("button", { name: trSetup.modules.invite }));
     expect(await screen.findByText("Davet gönderildi: hr@acme.test")).toBeInTheDocument();
-    expect(inviteUser).toHaveBeenCalledWith({ email: "hr@acme.test", firstName: "Ayşe", lastName: "Kaya", roleIds: ["r-hr"], language: "tr" });
+    expect(inviteUser).toHaveBeenCalledWith({
+      email: "hr@acme.test",
+      firstName: "Ayşe",
+      lastName: "Kaya",
+      roleIds: ["r-hr"],
+      language: "tr",
+    });
 
     await user.click(screen.getByRole("button", { name: trSetup.actions.finish }));
 
@@ -293,7 +390,9 @@ describe("SetupWizardPage", () => {
     expect(completeTenantSetup).toHaveBeenCalledTimes(1);
     // /me must be refreshed AFTER the completion call, otherwise the guard would still see setupCompleted=false.
     const refreshOrders = refreshMe.mock.invocationCallOrder;
-    expect(refreshOrders[refreshOrders.length - 1]).toBeGreaterThan(vi.mocked(completeTenantSetup).mock.invocationCallOrder[0]);
+    expect(refreshOrders[refreshOrders.length - 1]).toBeGreaterThan(
+      vi.mocked(completeTenantSetup).mock.invocationCallOrder[0]
+    );
   });
 
   it("lets optional steps be skipped without saving anything", async () => {

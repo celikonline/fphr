@@ -16,7 +16,9 @@
   },
   "birthdays": {
     "title": "Yaklaşan Doğum Günleri",
-    "empty": "Önümüzdeki {{days}} gün içinde doğum günü yok."
+    "empty": "Önümüzdeki {{days}} gün içinde doğum günü yok.",
+    "previous": "Önceki",
+    "next": "Sonraki"
   },
   "leaves": {
     "title": "Yaklaşan İzinler",

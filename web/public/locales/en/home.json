@@ -16,7 +16,9 @@
   },
   "birthdays": {
     "title": "Upcoming Birthdays",
-    "empty": "No birthdays in the next {{days}} days."
+    "empty": "No birthdays in the next {{days}} days.",
+    "previous": "Previous",
+    "next": "Next"
   },
   "leaves": {
     "title": "Upcoming Leave",

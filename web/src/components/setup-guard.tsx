@@ -14,7 +14,9 @@ export const SETUP_PATH = "/app/setup";
  */
 export function isSetupPending(user: User | null, impersonatorId: string | null): boolean {
   if (!user || impersonatorId) return false;
-  return user.tenant?.setupCompleted === false && user.permissions.includes(TENANT_MANAGE_PERMISSION);
+  return (
+    user.tenant?.setupCompleted === false && user.permissions.includes(TENANT_MANAGE_PERMISSION)
+  );
 }
 
 /**
@@ -27,7 +29,11 @@ export default function SetupGuard() {
   const impersonatorId = useImpersonatorId();
   const location = useLocation();
 
-  if (isSetupPending(user, impersonatorId) && !mfaSetupRequired && location.pathname !== SETUP_PATH) {
+  if (
+    isSetupPending(user, impersonatorId) &&
+    !mfaSetupRequired &&
+    location.pathname !== SETUP_PATH
+  ) {
     return <Navigate to={SETUP_PATH} replace />;
   }
 

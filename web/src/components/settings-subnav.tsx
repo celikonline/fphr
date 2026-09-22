@@ -34,7 +34,9 @@ export default function SettingsSubNav() {
     `${t(labelKey)} ${t(descriptionKey)}`.toLocaleLowerCase(i18n.language).includes(needle);
   const groups = SETTINGS_SECTIONS.map((section) => ({
     section,
-    links: section.links.filter((link) => visibleKeys.has(link.key) && matches(link.labelKey, link.descriptionKey)),
+    links: section.links.filter(
+      (link) => visibleKeys.has(link.key) && matches(link.labelKey, link.descriptionKey)
+    ),
   })).filter((group) => group.links.length > 0);
 
   return (

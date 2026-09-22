@@ -1,7 +1,5 @@
 import type { ComponentType } from "react";
-import { useTranslation } from "react-i18next";
-import { Badge, Card, Group, Stack, Text, Title } from "@mantine/core";
-import { Hourglass } from "lucide-react";
+import { Stack } from "@mantine/core";
 import { useAuthStore } from "@/store/auth.store";
 import type { AccessSettingKey } from "@/types";
 import type { ToggleableModuleKey } from "@/config/modules";
@@ -11,6 +9,7 @@ import { CareerSection } from "./career-section";
 import { CustomFieldsSection } from "./custom-fields-section";
 import { DOCUMENTS_CARD_TAB_PERMISSIONS, DocumentsSection } from "./documents-section";
 import { AccountSection, GeneralSection, PersonalSection } from "./employee-card-sections";
+import { OtherSection } from "./other-section";
 import { PaymentsSection } from "./payments-section";
 import { PAYROLL_CARD_TAB_PERMISSIONS, PayrollSection } from "./payroll-section";
 import { SubcontractorSection } from "./subcontractor-section";
@@ -35,31 +34,6 @@ export interface EmployeeCardTab {
   /** Roadmap phase badge ("Faz 1b") for a tab whose module is not built yet. */
   phase?: string;
   component: ComponentType<EmployeeCardTabProps>;
-}
-
-/** Placeholder for a tab whose content ships with a later package/module. */
-function Placeholder({ titleKey, noteKey, phase }: { titleKey: string; noteKey: string; phase?: string }) {
-  const { t } = useTranslation(["employees"]);
-  return (
-    <Card withBorder padding="lg">
-      <Group gap="xs" mb="sm">
-        <Hourglass size={16} color="var(--mantine-color-dimmed)" />
-        <Title order={4}>{t(titleKey)}</Title>
-        {phase && <Badge variant="light">{t("employees:phase", { phase })}</Badge>}
-      </Group>
-      <Text size="sm" c="dimmed">
-        {t(noteKey)}
-      </Text>
-    </Card>
-  );
-}
-
-function tabPlaceholder(key: string, phase?: string) {
-  const Component = () => (
-    <Placeholder titleKey={`employees:card.tabs.${key}`} noteKey={`employees:card.tabNotes.${key}`} phase={phase} />
-  );
-  Component.displayName = `EmployeeCardTab_${key}`;
-  return Component;
 }
 
 /** Genel bilgiler + "Alt işveren" (E5b). */
@@ -89,7 +63,11 @@ function PersonalWithUnion({ employee }: EmployeeCardTabProps) {
 export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
   { key: "general", labelKey: "employees:card.tabs.general", component: GeneralWithSubcontractor },
   { key: "personal", labelKey: "employees:card.tabs.personal", component: PersonalWithUnion },
-  { key: "customFields", labelKey: "employees:card.tabs.customFields", component: CustomFieldsSection },
+  {
+    key: "customFields",
+    labelKey: "employees:card.tabs.customFields",
+    component: CustomFieldsSection,
+  },
   { key: "career", labelKey: "employees:card.tabs.career", component: CareerSection },
   {
     key: "payments",
@@ -98,12 +76,41 @@ export const EMPLOYEE_CARD_TABS: EmployeeCardTab[] = [
     permission: ["employee.salary.view", "employee.employees.read", "employee.my.view"],
     component: PaymentsSection,
   },
-  { key: "payroll", labelKey: "employees:card.tabs.payroll", permission: PAYROLL_CARD_TAB_PERMISSIONS, module: "payroll", component: PayrollSection },
-  { key: "documents", labelKey: "employees:card.tabs.documents", permission: DOCUMENTS_CARD_TAB_PERMISSIONS, component: DocumentsSection },
-  { key: "assets", labelKey: "employees:card.tabs.assets", permission: ASSETS_CARD_TAB_PERMISSIONS, module: "assets", component: AssetsSection },
-  { key: "leave", labelKey: "employees:card.tabs.leave", permission: LEAVE_CARD_TAB_PERMISSIONS, module: "leave", component: LeaveSection },
-  { key: "overtime", labelKey: "employees:card.tabs.overtime", permission: OVERTIME_CARD_TAB_PERMISSION, module: "leave", component: OvertimeSection },
-  { key: "other", labelKey: "employees:card.tabs.other", component: tabPlaceholder("other") },
+  {
+    key: "payroll",
+    labelKey: "employees:card.tabs.payroll",
+    permission: PAYROLL_CARD_TAB_PERMISSIONS,
+    module: "payroll",
+    component: PayrollSection,
+  },
+  {
+    key: "documents",
+    labelKey: "employees:card.tabs.documents",
+    permission: DOCUMENTS_CARD_TAB_PERMISSIONS,
+    component: DocumentsSection,
+  },
+  {
+    key: "assets",
+    labelKey: "employees:card.tabs.assets",
+    permission: ASSETS_CARD_TAB_PERMISSIONS,
+    module: "assets",
+    component: AssetsSection,
+  },
+  {
+    key: "leave",
+    labelKey: "employees:card.tabs.leave",
+    permission: LEAVE_CARD_TAB_PERMISSIONS,
+    module: "leave",
+    component: LeaveSection,
+  },
+  {
+    key: "overtime",
+    labelKey: "employees:card.tabs.overtime",
+    permission: OVERTIME_CARD_TAB_PERMISSION,
+    module: "leave",
+    component: OvertimeSection,
+  },
+  { key: "other", labelKey: "employees:card.tabs.other", component: OtherSection },
   { key: "account", labelKey: "employees:card.tabs.account", component: AccountSection },
 ];
 
@@ -114,12 +121,15 @@ export function useVisibleEmployeeCardTabs(): EmployeeCardTab[] {
   const isModuleEnabled = useAuthStore((state) => state.isModuleEnabled);
 
   const allowed = (permission: EmployeeCardTab["permission"]) =>
-    !permission || (Array.isArray(permission) ? permission.some((key) => hasPermission(key)) : hasPermission(permission));
+    !permission ||
+    (Array.isArray(permission)
+      ? permission.some((key) => hasPermission(key))
+      : hasPermission(permission));
 
   return EMPLOYEE_CARD_TABS.filter(
     (tab) =>
       allowed(tab.permission) &&
       (!tab.accessSetting || isAccessSettingEnabled(tab.accessSetting)) &&
-      (!tab.module || isModuleEnabled(tab.module)),
+      (!tab.module || isModuleEnabled(tab.module))
   );
 }

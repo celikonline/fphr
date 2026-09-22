@@ -393,7 +393,7 @@ function Brand() {
       className={`flex w-14 shrink-0 items-center justify-center md:w-52 md:justify-start md:px-5 ${classes.brand}`}
     >
       <Text fz={22} fw={700} lh={1} className="hidden md:block">
-        SenseİK
+        SenseHR
       </Text>
       <Text fz={22} fw={700} lh={1} className="md:hidden">
         S

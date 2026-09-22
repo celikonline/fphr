@@ -2,7 +2,19 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Search, Settings } from "lucide-react";
-import { Badge, Card, Group, NavLink, SegmentedControl, SimpleGrid, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
+import {
+  Badge,
+  Card,
+  Group,
+  NavLink,
+  SegmentedControl,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { SETTINGS_SECTIONS, type SettingsLink, type SettingsSection } from "@/config/navigation";
 import { useVisibleItems } from "@/hooks/use-nav-visibility";
@@ -57,7 +69,13 @@ function SettingsLinkRow({ link }: { link: SettingsLink }) {
   );
 }
 
-function SettingsSectionCard({ section, links }: { section: SettingsSection; links: SettingsLink[] }) {
+function SettingsSectionCard({
+  section,
+  links,
+}: {
+  section: SettingsSection;
+  links: SettingsLink[];
+}) {
   const { t } = useTranslation(["navigation"]);
 
   return (
@@ -82,7 +100,10 @@ function SettingsSectionCard({ section, links }: { section: SettingsSection; lin
 export default function SettingsHomePage() {
   const { t, i18n } = useTranslation(["settings", "navigation"]);
   const [query, setQuery] = useState("");
-  const [columns, setColumns] = useLocalStorage<ColumnChoice>({ key: COLUMNS_KEY, defaultValue: DEFAULT_COLUMNS });
+  const [columns, setColumns] = useLocalStorage<ColumnChoice>({
+    key: COLUMNS_KEY,
+    defaultValue: DEFAULT_COLUMNS,
+  });
   const visibleLinks = useVisibleItems(ALL_LINKS);
 
   const visibleKeys = new Set(visibleLinks.map((link) => link.key));
@@ -90,7 +111,9 @@ export default function SettingsHomePage() {
   const needle = query.trim().toLocaleLowerCase(locale);
 
   const groups = SETTINGS_SECTIONS.map((section) => {
-    const sectionMatches = needle !== "" && t(section.labelKey, { ns: "navigation" }).toLocaleLowerCase(locale).includes(needle);
+    const sectionMatches =
+      needle !== "" &&
+      t(section.labelKey, { ns: "navigation" }).toLocaleLowerCase(locale).includes(needle);
     const links = section.links.filter((link) => {
       if (!visibleKeys.has(link.key)) return false;
       if (needle === "" || sectionMatches) return true;
@@ -112,27 +135,27 @@ export default function SettingsHomePage() {
       </div>
 
       <Group gap="md" align="flex-start" wrap="nowrap">
-      <TextInput
-        className="min-w-0 flex-1"
-        type="search"
-        size="md"
-        value={query}
-        onChange={(event) => setQuery(event.currentTarget.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") setQuery("");
-        }}
-        placeholder={t("settings:hub.searchPlaceholder")}
-        aria-label={t("settings:hub.searchLabel")}
-        leftSection={<Search className="h-4 w-4" />}
-      />
-      <SegmentedControl
-        size="md"
-        visibleFrom="sm"
-        value={columns}
-        onChange={(value) => setColumns(value as ColumnChoice)}
-        data={COLUMN_CHOICES.map((choice) => ({ value: choice, label: choice }))}
-        aria-label={t("settings:hub.columns")}
-      />
+        <TextInput
+          className="min-w-0 flex-1"
+          type="search"
+          size="md"
+          value={query}
+          onChange={(event) => setQuery(event.currentTarget.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") setQuery("");
+          }}
+          placeholder={t("settings:hub.searchPlaceholder")}
+          aria-label={t("settings:hub.searchLabel")}
+          leftSection={<Search className="h-4 w-4" />}
+        />
+        <SegmentedControl
+          size="md"
+          visibleFrom="sm"
+          value={columns}
+          onChange={(value) => setColumns(value as ColumnChoice)}
+          data={COLUMN_CHOICES.map((choice) => ({ value: choice, label: choice }))}
+          aria-label={t("settings:hub.columns")}
+        />
       </Group>
 
       {needle !== "" && (

@@ -18,7 +18,9 @@ import {
 } from "@/services/reports.service";
 
 vi.mock("@/services/reports.service", async () => {
-  const actual = await vi.importActual<typeof import("@/services/reports.service")>("@/services/reports.service");
+  const actual = await vi.importActual<typeof import("@/services/reports.service")>(
+    "@/services/reports.service"
+  );
   return { ...actual, getReportCatalog: vi.fn(), listReportExecutions: vi.fn() };
 });
 
@@ -65,15 +67,26 @@ const CATALOG: ReportCatalogItem[] = [
 /** 25 executions "rapor-001..025"; each carries its number in the file name so a page is recognisable in the DOM. */
 function executionsFor(page: number) {
   const first = (page - 1) * PAGE_SIZE;
-  const items: ReportExecution[] = Array.from({ length: Math.min(PAGE_SIZE, TOTAL_EXECUTIONS - first) }, (_, i) => ({
-    id: `exec-${first + i + 1}`,
-    reportKey: "leave.requests",
-    status: "succeeded",
-    requestedAt: "2026-09-20T10:00:00Z",
-    resultFileName: `rapor-${String(first + i + 1).padStart(3, "0")}.xlsx`,
-  }));
+  const items: ReportExecution[] = Array.from(
+    { length: Math.min(PAGE_SIZE, TOTAL_EXECUTIONS - first) },
+    (_, i) => ({
+      id: `exec-${first + i + 1}`,
+      reportKey: "leave.requests",
+      status: "succeeded",
+      requestedAt: "2026-09-20T10:00:00Z",
+      resultFileName: `rapor-${String(first + i + 1).padStart(3, "0")}.xlsx`,
+    })
+  );
   const totalPages = Math.ceil(TOTAL_EXECUTIONS / PAGE_SIZE);
-  return { items, page, pageSize: PAGE_SIZE, totalCount: TOTAL_EXECUTIONS, totalPages, hasNext: page < totalPages, hasPrevious: page > 1 };
+  return {
+    items,
+    page,
+    pageSize: PAGE_SIZE,
+    totalCount: TOTAL_EXECUTIONS,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrevious: page > 1,
+  };
 }
 
 function renderPage() {
@@ -97,7 +110,7 @@ function renderPage() {
           </MemoryRouter>
         </MantineProvider>
       </QueryClientProvider>
-    </I18nextProvider>,
+    </I18nextProvider>
   );
 }
 
@@ -105,7 +118,9 @@ describe("ReportsPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
     vi.mocked(getReportCatalog).mockResolvedValue(CATALOG);
-    vi.mocked(listReportExecutions).mockImplementation(async (params) => executionsFor(params?.page ?? 1));
+    vi.mocked(listReportExecutions).mockImplementation(async (params) =>
+      executionsFor(params?.page ?? 1)
+    );
   });
 
   it("asks for the next page and shows its rows when the pager moves on", async () => {
@@ -129,7 +144,9 @@ describe("ReportsPage", () => {
 
     await user.type(screen.getByPlaceholderText("Rapor ara"), "IZIN");
 
-    await waitFor(() => expect(screen.queryByText("Çalışan listesi raporu")).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByText("Çalışan listesi raporu")).not.toBeInTheDocument()
+    );
     expect(screen.queryByText("Maaş listesi raporu")).not.toBeInTheDocument();
     // The history table below also names "İzin raporu", so look for the catalog card (a button).
     expect(screen.getByRole("button", { name: /İzin raporu/ })).toBeInTheDocument();

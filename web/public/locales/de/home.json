@@ -16,7 +16,9 @@
   },
   "birthdays": {
     "title": "Anstehende Geburtstage",
-    "empty": "In den nächsten {{days}} Tagen gibt es keine Geburtstage."
+    "empty": "In den nächsten {{days}} Tagen gibt es keine Geburtstage.",
+    "previous": "Zurück",
+    "next": "Weiter"
   },
   "leaves": {
     "title": "Anstehender Urlaub",
