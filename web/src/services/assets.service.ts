@@ -48,7 +48,7 @@ export interface UpdateAssetInput {
 }
 
 export async function listAssets(
-  params: PagedQueryParams & { employeeId?: string; status?: AssetStatus; categoryId?: string } = {},
+  params: PagedQueryParams & { employeeId?: string; status?: AssetStatus; categoryId?: string } = {}
 ): Promise<PagedResult<Asset>> {
   const { data } = await apiClient.get<PagedResult<Asset>>(ASSETS_BASE, { params });
   return data;

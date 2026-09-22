@@ -83,7 +83,10 @@ export async function createAnnouncement(input: CreateAnnouncementInput): Promis
 }
 
 /** Taslak duyuruyu düzenle (tam sayfa editör); yalnızca taslak durumdayken serbesttir. */
-export async function updateAnnouncement(id: string, input: CreateAnnouncementInput): Promise<void> {
+export async function updateAnnouncement(
+  id: string,
+  input: CreateAnnouncementInput
+): Promise<void> {
   await apiClient.put(`${BASE}/${id}`, input);
 }
 
@@ -101,14 +104,22 @@ export interface AnnouncementAttachment {
 }
 
 /** Duyuru ekleri (yönetim/editör görünümü, taslak dahil her durum). */
-export async function listAnnouncementAttachments(announcementId: string): Promise<AnnouncementAttachment[]> {
-  const { data } = await apiClient.get<AnnouncementAttachment[]>(`${BASE}/${announcementId}/attachments`);
+export async function listAnnouncementAttachments(
+  announcementId: string
+): Promise<AnnouncementAttachment[]> {
+  const { data } = await apiClient.get<AnnouncementAttachment[]>(
+    `${BASE}/${announcementId}/attachments`
+  );
   return data;
 }
 
 /** Duyuru ekleri (çalışan akışı görünümü): yalnızca yayında ve süresi geçmemiş duyurular için. */
-export async function listMyAnnouncementAttachments(announcementId: string): Promise<AnnouncementAttachment[]> {
-  const { data } = await apiClient.get<AnnouncementAttachment[]>(`${BASE}/feed/${announcementId}/attachments`);
+export async function listMyAnnouncementAttachments(
+  announcementId: string
+): Promise<AnnouncementAttachment[]> {
+  const { data } = await apiClient.get<AnnouncementAttachment[]>(
+    `${BASE}/feed/${announcementId}/attachments`
+  );
   return data;
 }
 
@@ -136,12 +147,19 @@ export async function uploadAnnouncementAttachment(
 ): Promise<AnnouncementAttachment> {
   const { data: initiated } = await apiClient.post<InitiateAttachmentUploadResponse>(
     `${BASE}/${announcementId}/attachments/initiate-upload`,
-    { fileName: file.name, contentType: file.type || "application/octet-stream", fileSizeBytes: file.size, kind }
+    {
+      fileName: file.name,
+      contentType: file.type || "application/octet-stream",
+      fileSizeBytes: file.size,
+      kind,
+    }
   );
 
   // Upload bytes directly to storage via the presigned URL (not our API - no auth header, plain axios).
   const contentType = file.type || "application/octet-stream";
-  const uploadResponse = await axios.put(initiated.uploadUrl, file, { headers: { "Content-Type": contentType } });
+  const uploadResponse = await axios.put(initiated.uploadUrl, file, {
+    headers: { "Content-Type": contentType },
+  });
   const eTag = (uploadResponse.headers["etag"] as string | undefined) ?? initiated.requestId;
 
   const { data: confirmed } = await apiClient.post<ConfirmAttachmentUploadResponse>(
@@ -149,10 +167,20 @@ export async function uploadAnnouncementAttachment(
     { eTag, actualFileSizeBytes: file.size }
   );
 
-  return { id: confirmed.attachmentId, fileName: file.name, contentType: file.type, sizeBytes: file.size, kind, downloadUrl: confirmed.downloadUrl };
+  return {
+    id: confirmed.attachmentId,
+    fileName: file.name,
+    contentType: file.type,
+    sizeBytes: file.size,
+    kind,
+    downloadUrl: confirmed.downloadUrl,
+  };
 }
 
-export async function deleteAnnouncementAttachment(announcementId: string, attachmentId: string): Promise<void> {
+export async function deleteAnnouncementAttachment(
+  announcementId: string,
+  attachmentId: string
+): Promise<void> {
   await apiClient.delete(`${BASE}/${announcementId}/attachments/${attachmentId}`);
 }
 

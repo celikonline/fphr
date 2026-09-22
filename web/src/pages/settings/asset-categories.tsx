@@ -3,14 +3,30 @@ import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Package, Plus } from "lucide-react";
-import { Button, Card, Group, Modal, NumberInput, Skeleton, Stack, Text, TextInput, Title } from "@mantine/core";
+import {
+  Button,
+  Card,
+  Group,
+  Modal,
+  NumberInput,
+  Skeleton,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { DataTable, useDataTable } from "@/components/ui/data-table";
 import NoAccess from "@/components/no-access";
 import { usePermission } from "@/components/permission-guard";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage, getApiProblem } from "@/lib/api-error";
-import { createAssetCategory, listAssetCategories, updateAssetCategory, type AssetCategory } from "@/services/assets.service";
+import {
+  createAssetCategory,
+  listAssetCategories,
+  updateAssetCategory,
+  type AssetCategory,
+} from "@/services/assets.service";
 
 const CATEGORIES_QUERY_KEY = ["assets", "categories"] as const;
 
@@ -77,7 +93,12 @@ function AssetCategoriesAdmin() {
       cell: ({ row }) =>
         canManage && (
           <Group gap="xs" justify="flex-end" wrap="nowrap">
-            <Button type="button" size="xs" variant="subtle" onClick={() => setDialogTarget(row.original)}>
+            <Button
+              type="button"
+              size="xs"
+              variant="subtle"
+              onClick={() => setDialogTarget(row.original)}
+            >
               {t("common:edit")}
             </Button>
           </Group>
@@ -97,7 +118,11 @@ function AssetCategoriesAdmin() {
           <Text c="dimmed">{t("assets:categories.subtitle")}</Text>
         </div>
         {canManage && (
-          <Button type="button" leftSection={<Plus size={16} />} onClick={() => setDialogTarget("new")}>
+          <Button
+            type="button"
+            leftSection={<Plus size={16} />}
+            onClick={() => setDialogTarget("new")}
+          >
             {t("assets:categories.add")}
           </Button>
         )}
@@ -118,11 +143,17 @@ function AssetCategoriesAdmin() {
         />
       ) : (
         <Card withBorder padding={0}>
-          <DataTable table={table} isLoading={categoriesQuery.isLoading} emptyMessage={t("assets:categories.empty")} />
+          <DataTable
+            table={table}
+            isLoading={categoriesQuery.isLoading}
+            emptyMessage={t("assets:categories.empty")}
+          />
         </Card>
       )}
 
-      {dialogTarget && <CategoryDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />}
+      {dialogTarget && (
+        <CategoryDialog target={dialogTarget} onClose={() => setDialogTarget(null)} />
+      )}
     </div>
   );
 }
@@ -189,7 +220,13 @@ function ReplacementText({ days }: { days?: number | null }) {
   );
 }
 
-function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; onClose: () => void }) {
+function CategoryDialog({
+  target,
+  onClose,
+}: {
+  target: AssetCategory | "new";
+  onClose: () => void;
+}) {
   const { t } = useTranslation(["assets", "common"]);
   const queryClient = useQueryClient();
   const editing = target === "new" ? null : target;
@@ -212,7 +249,11 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: CATEGORIES_QUERY_KEY });
-      toast({ variant: "success", title: t("common:success"), description: t("assets:categories.saved") });
+      toast({
+        variant: "success",
+        title: t("common:success"),
+        description: t("assets:categories.saved"),
+      });
       onClose();
     },
     onError: (err) => setError(categoryErrorMessage(err, t)),
@@ -230,7 +271,12 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
   }
 
   return (
-    <Modal opened onClose={onClose} title={editing ? t("assets:categories.editTitle") : t("assets:categories.add")} size="32rem">
+    <Modal
+      opened
+      onClose={onClose}
+      title={editing ? t("assets:categories.editTitle") : t("assets:categories.add")}
+      size="32rem"
+    >
       <form onSubmit={submit}>
         <Stack gap="md">
           <TextInput
@@ -245,7 +291,9 @@ function CategoryDialog({ target, onClose }: { target: AssetCategory | "new"; on
           <TextInput
             id="category-code"
             label={t("assets:categories.columns.code")}
-            description={editing ? t("assets:categories.codeLocked") : t("assets:categories.codeHint")}
+            description={
+              editing ? t("assets:categories.codeLocked") : t("assets:categories.codeHint")
+            }
             withAsterisk={!editing}
             value={code}
             maxLength={100}
