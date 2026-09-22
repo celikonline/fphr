@@ -146,25 +146,29 @@ function IncidentRegister() {
         />
       </SimpleGrid>
 
-      <Group justify="space-between" wrap="wrap">
-        <Group gap="md">
-          {canHazard && (
-            <Anchor component={Link} to="/app/settings/company/ohs-hazard-classification" size="sm">
-              {t("ohs:page.hazardLink")}
-            </Anchor>
-          )}
-          {canRisk && (
-            <Anchor component={Link} to="/app/settings/company/ohs-risk-assessments" size="sm">
-              {t("ohs:page.riskLink")}
-            </Anchor>
-          )}
-        </Group>
-        {canManage && (
-          <Button leftSection={<Plus size={16} />} onClick={() => setDialog({ kind: "record" })}>
-            {t("ohs:incidents.record")}
-          </Button>
-        )}
-      </Group>
+      {(canHazard || canRisk || canManage) && (
+        <Card withBorder padding="md">
+          <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+            <Group gap="md">
+              {canHazard && (
+                <Anchor component={Link} to="/app/settings/company/ohs-hazard-classification" size="sm">
+                  {t("ohs:page.hazardLink")}
+                </Anchor>
+              )}
+              {canRisk && (
+                <Anchor component={Link} to="/app/settings/company/ohs-risk-assessments" size="sm">
+                  {t("ohs:page.riskLink")}
+                </Anchor>
+              )}
+            </Group>
+            {canManage && (
+              <Button leftSection={<Plus size={16} />} onClick={() => setDialog({ kind: "record" })}>
+                {t("ohs:incidents.record")}
+              </Button>
+            )}
+          </Group>
+        </Card>
+      )}
 
       {query.isLoading && <Skeleton height={160} />}
       {query.isError && <Text c="red">{t("ohs:incidents.loadError")}</Text>}
