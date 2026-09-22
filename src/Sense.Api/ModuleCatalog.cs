@@ -16,6 +16,7 @@ using Sense.Modules.Performance.Api;
 using Sense.Modules.Recruitment.Api;
 using Sense.Modules.Reporting.Api;
 using Sense.Modules.Training.Api;
+using Sense.Modules.Onboarding.Api;
 using Sense.Modules.Workflow.Api;
 using Sense.Modules.OccupationalSafety.Api;
 using Sense.Shared.Contracts.Modules;
@@ -47,5 +48,6 @@ public static class ModuleCatalog
         new AnnouncementsModule(),
         new OhsModule(),
         new TrainingModule(),
+        new OnboardingModule(),
     ];
 }

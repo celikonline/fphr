@@ -47,6 +47,7 @@ i18n
       "companyCalendar",
       "announcements",
       "training",
+      "onboarding",
       "ohs",
       "platform",
       "setup",

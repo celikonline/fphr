@@ -316,7 +316,8 @@
       "performance": "Leistung",
       "announcements": "Ankündigungen & Firmenkalender",
       "occupationalSafety": "Arbeitsschutz",
-      "training": "Schulungen"
+      "training": "Schulungen",
+      "onboarding": "On- und Offboarding"
     },
     "descriptions": {
       "identity": "Benutzer, Rollen, Berechtigungen und Anmeldung",
@@ -338,7 +339,8 @@
       "performance": "Ziele und Beurteilungszyklen",
       "announcements": "Ankündigungen und Firmen-Veranstaltungskalender",
       "occupationalSafety": "Gefahrenklasse und Gefährdungsbeurteilungen",
-      "training": "Schulungsprogramme, Teilnahmen und Pflichtschulungen"
+      "training": "Schulungsprogramme, Teilnahmen und Pflichtschulungen",
+      "onboarding": "Checklisten und Vorlagen für Eintritt und Austritt"
     }
   }
 }

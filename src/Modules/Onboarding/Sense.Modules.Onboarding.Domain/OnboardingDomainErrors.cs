@@ -23,4 +23,6 @@ public static class OnboardingLimits
     public const int TaskTemplateTitleMaxLength = 200;
 
     public const int WaivedReasonMaxLength = 500;
+    public const int ResponsibleRoleCodeMaxLength = 50;
+    public const int ResponsibleRoleCodeMaxLength = 50;
 }

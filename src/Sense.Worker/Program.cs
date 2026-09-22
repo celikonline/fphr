@@ -34,6 +34,7 @@ using Sense.Modules.Performance.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure;
 using Sense.Modules.Recruitment.Infrastructure.Persistence;
 using Sense.Modules.Training.Infrastructure;
+using Sense.Modules.Onboarding.Infrastructure;
 using Sense.Modules.Workflow.Contracts;
 using Sense.Modules.Workflow.Domain;
 using Sense.Modules.Workflow.Infrastructure.Messaging;
@@ -305,6 +306,19 @@ builder.Services.AddModuleHandlers(
     typeof(Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext).Assembly,
     typeof(Sense.Modules.Training.Contracts.TrainingPermissions).Assembly);
 builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Training.Infrastructure.Persistence.TrainingDbContext>>();
+
+// Onboarding: consumes EmployeeHired / EmployeeTerminated to materialize onboarding / offboarding checklists.
+builder.Services.AddModuleDbContext<Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext>(
+    builder.Configuration, Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName);
+builder.Services.AddOnboardingCoreServices();
+builder.Services.AddOnboardingIntegrationEventHandlers();
+builder.Services.AddModuleHandlers(
+    Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext.SchemaName,
+    typeof(Sense.Modules.Onboarding.Domain.Tasks.OnboardingTaskTemplate).Assembly,
+    typeof(Sense.Modules.Onboarding.Application.IOnboardingUnitOfWork).Assembly,
+    typeof(Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext).Assembly,
+    typeof(Sense.Modules.Onboarding.Contracts.OnboardingPermissions).Assembly);
+builder.Services.AddHostedService<Sense.Worker.OutboxPollingService<Sense.Modules.Onboarding.Infrastructure.Persistence.OnboardingDbContext>>();
 
 await builder.Build().RunAsync();
 

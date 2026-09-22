@@ -1,0 +1,76 @@
+{
+  "title": "İşe alış ve çıkış",
+  "tabs": {
+    "pending": "Açık görevler",
+    "employee": "Çalışan görev listesi",
+    "templates": "Şablonlar"
+  },
+  "loadError": "Görevler yüklenemedi.",
+  "actionFailed": "İşlem tamamlanamadı.",
+  "filters": {
+    "all": "Tümü"
+  },
+  "stages": {
+    "onboarding": "İşe alış",
+    "offboarding": "İşten çıkış"
+  },
+  "statuses": {
+    "pending": "Bekliyor",
+    "completed": "Tamamlandı",
+    "waived": "Muaf"
+  },
+  "roles": {
+    "hr": "İK",
+    "it": "BT",
+    "manager": "Yönetici",
+    "payroll": "Bordro"
+  },
+  "fields": {
+    "dueDate": "Son gün",
+    "employee": "Çalışan",
+    "task": "Görev",
+    "stage": "Aşama",
+    "responsible": "Sorumlu",
+    "status": "Durum",
+    "mandatory": "Zorunlu",
+    "offset": "Son gün (gün farkı)",
+    "active": "Aktif"
+  },
+  "offset": {
+    "sameDay": "Aynı gün",
+    "before": "{{count}} gün önce",
+    "after": "{{count}} gün sonra"
+  },
+  "tasks": {
+    "complete": "Tamamlandı",
+    "completedToast": "Görev tamamlandı.",
+    "waive": "Muaf tut",
+    "waiveTitle": "\"{{title}}\" muaf tutulsun mu?",
+    "waiveReason": "Muaf tutma nedeni",
+    "waivedToast": "Görev muaf tutuldu.",
+    "waivedBecause": "Muaf: {{reason}}",
+    "noPending": "Bekleyen görev yok.",
+    "overdueCount": "{{count}} görevin süresi geçti"
+  },
+  "checklist": {
+    "createHint": "Görev listesi işe girişte ve çıkışta otomatik oluşur. Modülden önce işe girmiş bir çalışan için elle oluşturabilirsiniz; zaten oluşmuş görevler tekrarlanmaz.",
+    "hireDate": "İşe giriş tarihi",
+    "exitDate": "Çıkış tarihi",
+    "create": "Görev listesini oluştur",
+    "created": "Görev listesi oluşturuldu.",
+    "empty": "Bu çalışan için görev yok."
+  },
+  "templates": {
+    "emptyHint": "Henüz görev şablonu yok. SGK bildirgeleri, çalışma belgesi, zimmet iadesi gibi önerilen görevleri yükleyip düzenleyebilirsiniz.",
+    "seed": "Önerilen şablonları yükle",
+    "seeded": "{{count}} şablon eklendi.",
+    "add": "Görev ekle",
+    "addTitle": "Görev şablonu ekle",
+    "edit": "Düzenle",
+    "editTitle": "Görev şablonunu düzenle",
+    "saved": "Şablon kaydedildi.",
+    "stageEmpty": "Bu aşama için görev yok.",
+    "offsetHintHire": "İşe giriş tarihine göre; eksi değer girişten önceyi gösterir (ör. SGK bildirgesi -1).",
+    "offsetHintExit": "Çıkış tarihine göre gün sayısı (ör. SGK işten ayrılış bildirgesi 10)."
+  }
+}

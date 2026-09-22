@@ -432,6 +432,14 @@ export const APP_LAUNCHER_ITEMS: NavItem[] = [
     iconColor: "orange",
   },
   {
+    key: "onboarding",
+    labelKey: "apps.onboarding",
+    path: "/app/onboarding",
+    icon: ListChecks,
+    permissions: ["onboarding.tasks.view"],
+    iconColor: "teal",
+  },
+  {
     key: "recruitmentCandidates",
     labelKey: "apps.recruitmentCandidates",
     path: "/app/recruitment/candidates",

@@ -316,7 +316,8 @@
       "performance": "Performans",
       "announcements": "Duyurular ve şirket takvimi",
       "occupationalSafety": "İş sağlığı ve güvenliği",
-      "training": "Eğitim"
+      "training": "Eğitim",
+      "onboarding": "İşe alış ve çıkış"
     },
     "descriptions": {
       "identity": "Kullanıcılar, roller, yetkiler ve oturum",
@@ -338,7 +339,8 @@
       "performance": "Hedefler ve değerlendirme dönemleri",
       "announcements": "Duyurular ve şirket etkinlik takvimi",
       "occupationalSafety": "Tehlike sınıfı ve risk değerlendirmeleri",
-      "training": "Eğitim programları, katılımlar ve zorunlu eğitimler"
+      "training": "Eğitim programları, katılımlar ve zorunlu eğitimler",
+      "onboarding": "İşe giriş ve çıkış görev listeleri ile şablonları"
     }
   }
 }

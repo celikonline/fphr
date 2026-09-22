@@ -85,7 +85,7 @@ public sealed class ModuleSettingsUseCasesTests
             ["identity", "organization", "employee", "workflow", "notifications", "documents", "dataTransfer", "reporting", "analytics", "integrations"],
             ignoreOrder: true);
         ProductModules.All.Where(m => m.IsToggleable).Select(m => m.Key).ShouldBe(
-            ["leave", "attendance", "payroll", "recruitment", "expense", "assets", "performance", "announcements", "occupationalSafety", "training"],
+            ["leave", "attendance", "payroll", "recruitment", "expense", "assets", "performance", "announcements", "occupationalSafety", "training", "onboarding"],
             ignoreOrder: true);
         ProductModules.All.Select(m => m.Key).ShouldBeUnique();
     }

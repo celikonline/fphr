@@ -28,6 +28,7 @@ export const TOGGLEABLE_MODULE_KEYS = [
   "announcements",
   "occupationalSafety",
   "training",
+  "onboarding",
 ] as const;
 
 export type CoreModuleKey = (typeof CORE_MODULE_KEYS)[number];
@@ -54,6 +55,7 @@ const MODULE_ROUTE_PREFIXES: ReadonlyArray<readonly [string, ToggleableModuleKey
   ["/app/performance", "performance"],
   ["/app/company-calendar", "announcements"],
   ["/app/announcements", "announcements"],
+  ["/app/onboarding", "onboarding"],
   ["/app/ohs", "occupationalSafety"],
   ["/app/training", "training"],
   ["/app/assets", "assets"],

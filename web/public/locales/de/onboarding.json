@@ -1,0 +1,76 @@
+{
+  "title": "On- und Offboarding",
+  "tabs": {
+    "pending": "Offene Aufgaben",
+    "employee": "Checkliste pro Person",
+    "templates": "Vorlagen"
+  },
+  "loadError": "Aufgaben konnten nicht geladen werden.",
+  "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+  "filters": {
+    "all": "Alle"
+  },
+  "stages": {
+    "onboarding": "Onboarding",
+    "offboarding": "Offboarding"
+  },
+  "statuses": {
+    "pending": "Offen",
+    "completed": "Erledigt",
+    "waived": "Entfallen"
+  },
+  "roles": {
+    "hr": "Personal",
+    "it": "IT",
+    "manager": "Führungskraft",
+    "payroll": "Lohnbuchhaltung"
+  },
+  "fields": {
+    "dueDate": "Fällig",
+    "employee": "Mitarbeitende",
+    "task": "Aufgabe",
+    "stage": "Phase",
+    "responsible": "Verantwortlich",
+    "status": "Status",
+    "mandatory": "Pflicht",
+    "offset": "Fällig (Tage)",
+    "active": "Aktiv"
+  },
+  "offset": {
+    "sameDay": "Am selben Tag",
+    "before": "{{count}} Tage vorher",
+    "after": "{{count}} Tage danach"
+  },
+  "tasks": {
+    "complete": "Erledigt",
+    "completedToast": "Aufgabe erledigt.",
+    "waive": "Entfallen lassen",
+    "waiveTitle": "„{{title}}\" entfallen lassen?",
+    "waiveReason": "Begründung",
+    "waivedToast": "Aufgabe entfällt.",
+    "waivedBecause": "Entfallen: {{reason}}",
+    "noPending": "Keine offenen Aufgaben.",
+    "overdueCount": "{{count}} Aufgaben überfällig"
+  },
+  "checklist": {
+    "createHint": "Checklisten entstehen automatisch bei Eintritt und Austritt. Für vor diesem Modul eingestellte Personen können Sie eine manuell anlegen; vorhandene Aufgaben werden nicht doppelt angelegt.",
+    "hireDate": "Eintrittsdatum",
+    "exitDate": "Austrittsdatum",
+    "create": "Checkliste anlegen",
+    "created": "Checkliste angelegt.",
+    "empty": "Keine Aufgaben für diese Person."
+  },
+  "templates": {
+    "emptyHint": "Noch keine Aufgabenvorlagen. Laden Sie die empfohlenen (SGK-Meldungen, Arbeitsbescheinigung, Rückgabe von Arbeitsmitteln …) und passen Sie sie an.",
+    "seed": "Empfohlene Vorlagen laden",
+    "seeded": "{{count}} Vorlagen hinzugefügt.",
+    "add": "Aufgabe hinzufügen",
+    "addTitle": "Aufgabenvorlage hinzufügen",
+    "edit": "Bearbeiten",
+    "editTitle": "Aufgabenvorlage bearbeiten",
+    "saved": "Vorlage gespeichert.",
+    "stageEmpty": "Keine Aufgaben in dieser Phase.",
+    "offsetHintHire": "Bezogen auf das Eintrittsdatum; negativ bedeutet davor (z. B. SGK-Meldung -1).",
+    "offsetHintExit": "Tage nach dem Austrittsdatum (z. B. SGK-Abmeldung 10)."
+  }
+}

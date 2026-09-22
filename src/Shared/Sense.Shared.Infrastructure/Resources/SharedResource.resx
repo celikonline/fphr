@@ -1474,4 +1474,14 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="ohs_incident.corrective_action_required" xml:space="preserve"><value>Kapatmak için düzeltici önlem yazılmalıdır.</value></data>
   <data name="ohs_incident.already_closed" xml:space="preserve"><value>Olay zaten kapatılmış.</value></data>
   <data name="ohs_incident.reporter_not_employee" xml:space="preserve"><value>Bildirim için çalışan kaydınız olmalıdır.</value></data>
+  <data name="onboarding.templates.manage" xml:space="preserve"><value>Oryantasyon şablonu yönetimi</value></data>
+  <data name="onboarding.tasks.view" xml:space="preserve"><value>Oryantasyon görevlerini görüntüleme</value></data>
+  <data name="onboarding.tasks.manage" xml:space="preserve"><value>Oryantasyon görevi yönetimi</value></data>
+  <data name="onboarding_task_template.not_found" xml:space="preserve"><value>Görev şablonu bulunamadı.</value></data>
+  <data name="onboarding_task_template.title_required" xml:space="preserve"><value>Görev başlığı zorunludur.</value></data>
+  <data name="onboarding_task_template.title_too_long" xml:space="preserve"><value>Görev başlığı 200 karakteri aşamaz.</value></data>
+  <data name="onboarding_task_template.responsible_role_required" xml:space="preserve"><value>Sorumlu seçilmelidir.</value></data>
+  <data name="employee_onboarding_task.not_found" xml:space="preserve"><value>Görev bulunamadı.</value></data>
+  <data name="employee_onboarding_task.already_finalized" xml:space="preserve"><value>Görev zaten tamamlanmış ya da muaf tutulmuş.</value></data>
+  <data name="employee_onboarding_task.waive_reason_required" xml:space="preserve"><value>Muaf tutma nedeni zorunludur.</value></data>
 </root>

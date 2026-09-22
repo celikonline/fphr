@@ -90,7 +90,9 @@ public static class SystemRoleDefinitions
              // senseik-015 (İSG modülü, Faz 0-1): hazard classification + risk assessments are HR/safety-compliance
              // territory, same tier as assets.*/documents.* above - appended rather than inserted to keep this a
              // pure addition (hot file, append-only).
-             "ohs.*"],
+             "ohs.*",
+             // Onboarding modülü: işe alış/çıkış görev listeleri ve şablonları İK işidir (append-only).
+             "onboarding.*"],
             [// senseik-050: kimlik yönetimi yetkileri (kullanıcı oluşturma/düzenleme + rol atama, 2FA sıfırlama,
              // askıya alma/etkinleştirme) yalnız System Administrator'da (Owner/Admin, joker "*" ile) kalmalı -
              // "identity.users.*" include joker'inden açıkça hariç tutuldu (bu dosyada zaten kullanılan desen,
@@ -107,7 +109,9 @@ public static class SystemRoleDefinitions
              "analytics.*",
              .. PermissionPatterns.SelfService,
              // senseik-015 (İSG modülü, Faz 0-1): same reasoning as the HR role above.
-             "ohs.*"],
+             "ohs.*",
+             // Onboarding modülü: günlük işe alış/çıkış görevlerini yürüten İK uzmanı.
+             "onboarding.*"],
             [.. PermissionPatterns.Sensitive, "employee.terminate", "compensation.*", "payroll.*", "employee.*.delete"]),
 
         new(SystemRoleCodes.PayrollSpecialist, DataScope.Company,

@@ -23,6 +23,7 @@
     <ProjectReference Include="../Modules/Announcements/Sense.Modules.Announcements.Infrastructure/Sense.Modules.Announcements.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/OccupationalSafety/Sense.Modules.OccupationalSafety.Infrastructure/Sense.Modules.OccupationalSafety.Infrastructure.csproj" />
     <ProjectReference Include="../Modules/Training/Sense.Modules.Training.Infrastructure/Sense.Modules.Training.Infrastructure.csproj" />
+    <ProjectReference Include="../Modules/Onboarding/Sense.Modules.Onboarding.Infrastructure/Sense.Modules.Onboarding.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

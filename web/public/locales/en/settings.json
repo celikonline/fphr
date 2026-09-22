@@ -316,7 +316,8 @@
       "performance": "Performance",
       "announcements": "Announcements & company calendar",
       "occupationalSafety": "Occupational health & safety",
-      "training": "Training"
+      "training": "Training",
+      "onboarding": "Onboarding & offboarding"
     },
     "descriptions": {
       "identity": "Users, roles, permissions and sign-in",
@@ -338,7 +339,8 @@
       "performance": "Goals and review cycles",
       "announcements": "Announcements and company event calendar",
       "occupationalSafety": "Hazard class and risk assessments",
-      "training": "Training programs, enrollments and required trainings"
+      "training": "Training programs, enrollments and required trainings",
+      "onboarding": "Hire and exit checklists and their templates"
     }
   }
 }
