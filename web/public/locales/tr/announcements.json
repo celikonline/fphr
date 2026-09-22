@@ -23,7 +23,8 @@
     "archived": "Duyuru arşivlendi.",
     "empty": "Henüz duyuru yok.",
     "loadError": "Duyurular yüklenemedi.",
-    "actionFailed": "İşlem tamamlanamadı."
+    "actionFailed": "İşlem tamamlanamadı.",
+    "edit": "Düzenle"
   },
   "fields": {
     "title": "Başlık",
@@ -52,5 +53,23 @@
     "published": "Yayında",
     "expired": "Süresi doldu",
     "archived": "Arşivlendi"
+  },
+  "editor": {
+    "newTitle": "Yeni duyuru",
+    "editTitle": "Duyuruyu düzenle",
+    "contentPlaceholder": "Duyuru içeriğini yazın...",
+    "saveDraftFirstTitle": "Önce taslağı kaydedin",
+    "saveDraftFirstHint": "Resim ekleyebilmek için önce \"Taslak olarak kaydet\" butonuna basın.",
+    "imageTooLarge": "Resim 10 MB'ı aşıyor.",
+    "imageUploadFailed": "Resim yüklenemedi.",
+    "attachments": "Dosya ekleri",
+    "removeAttachment": "Eki sil",
+    "dropFileHere": "Dosya eklemek için tıklayın ya da sürükleyin",
+    "allowedFileTypes": "PDF, Word, Excel, PowerPoint veya metin dosyası (azami 10 MB)",
+    "fileUploadFailed": "Dosya yüklenemedi.",
+    "fileTooLarge": "Dosya 10 MB'ı aşıyor.",
+    "fileTypeNotAllowed": "Bu dosya türüne izin verilmiyor.",
+    "attachmentDeleteFailed": "Ek silinemedi.",
+    "saved": "Değişiklikler kaydedildi."
   }
 }

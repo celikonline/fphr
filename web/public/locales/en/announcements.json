@@ -23,7 +23,8 @@
     "archived": "Announcement archived.",
     "empty": "No announcements yet.",
     "loadError": "Announcements could not be loaded.",
-    "actionFailed": "The action could not be completed."
+    "actionFailed": "The action could not be completed.",
+    "edit": "Edit"
   },
   "fields": {
     "title": "Title",
@@ -52,5 +53,23 @@
     "published": "Published",
     "expired": "Expired",
     "archived": "Archived"
+  },
+  "editor": {
+    "newTitle": "New announcement",
+    "editTitle": "Edit announcement",
+    "contentPlaceholder": "Write the announcement...",
+    "saveDraftFirstTitle": "Save the draft first",
+    "saveDraftFirstHint": "Click \"Save as draft\" before adding images.",
+    "imageTooLarge": "The image exceeds 10 MB.",
+    "imageUploadFailed": "The image could not be uploaded.",
+    "attachments": "Attachments",
+    "removeAttachment": "Remove attachment",
+    "dropFileHere": "Click or drop a file to attach it",
+    "allowedFileTypes": "PDF, Word, Excel, PowerPoint or text file (up to 10 MB)",
+    "fileUploadFailed": "The file could not be uploaded.",
+    "fileTooLarge": "The file exceeds 10 MB.",
+    "fileTypeNotAllowed": "This file type is not allowed.",
+    "attachmentDeleteFailed": "The attachment could not be removed.",
+    "saved": "Changes saved."
   }
 }

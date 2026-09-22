@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import {
   Badge,
   Button,
@@ -19,7 +20,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/dates";
-import AnnouncementFormDialog from "@/components/announcements/announcement-form-dialog";
 import {
   archiveAnnouncement,
   enumKey,
@@ -47,8 +47,8 @@ function endOfDayIso(date: string): string {
 /** İK duyuru yönetimi: tüm duyurular, oluştur, yayınla (isteğe bağlı bitiş tarihiyle), arşivle, okunma sayısı. */
 export default function AnnouncementManagePanel() {
   const { t, i18n } = useTranslation(["announcements", "common"]);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
   const [publishTarget, setPublishTarget] = useState<Announcement | null>(null);
   const [expiresOn, setExpiresOn] = useState("");
   const [archiveTarget, setArchiveTarget] = useState<Announcement | null>(null);
@@ -101,7 +101,7 @@ export default function AnnouncementManagePanel() {
   return (
     <Stack gap="md">
       <Group justify="flex-end">
-        <Button leftSection={<Plus size={16} />} onClick={() => setCreateOpen(true)}>
+        <Button leftSection={<Plus size={16} />} onClick={() => navigate("/app/announcements/new")}>
           {t("announcements:manage.create")}
         </Button>
       </Group>
@@ -147,6 +147,16 @@ export default function AnnouncementManagePanel() {
                         {status === "draft" && (
                           <Button
                             size="compact-sm"
+                            variant="default"
+                            leftSection={<Pencil size={14} />}
+                            onClick={() => navigate(`/app/announcements/${row.id}/edit`)}
+                          >
+                            {t("announcements:manage.edit")}
+                          </Button>
+                        )}
+                        {status === "draft" && (
+                          <Button
+                            size="compact-sm"
                             variant="light"
                             onClick={() => {
                               setExpiresOn("");
@@ -175,12 +185,6 @@ export default function AnnouncementManagePanel() {
           </Table>
         </Table.ScrollContainer>
       )}
-
-      <AnnouncementFormDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreated={invalidate}
-      />
 
       <Modal
         opened={publishTarget !== null}

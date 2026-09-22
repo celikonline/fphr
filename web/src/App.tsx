@@ -93,6 +93,7 @@ const TrainingPage = lazy(() => import("@/pages/training"));
 const OhsPage = lazy(() => import("@/pages/ohs"));
 const OnboardingPage = lazy(() => import("@/pages/onboarding"));
 const AnnouncementsPage = lazy(() => import("@/pages/announcements"));
+const AnnouncementEditorPage = lazy(() => import("@/pages/announcements/announcement-editor"));
 const SharedFilesPage = lazy(() => import("@/pages/shared-files"));
 const VisaRequestsPage = lazy(() => import("@/pages/visa-requests"));
 const VisaProcessesPage = lazy(() => import("@/pages/settings/visa-processes"));
@@ -158,6 +159,8 @@ export default function App() {
             <Route path="leave/overtimes" element={<MyOvertimesPage />} />
             <Route path="company-calendar" element={<CompanyCalendarPage />} />
             <Route path="announcements" element={<AnnouncementsPage />} />
+            <Route path="announcements/new" element={<AnnouncementEditorPage />} />
+            <Route path="announcements/:id/edit" element={<AnnouncementEditorPage />} />
             <Route path="onboarding" element={<OnboardingPage />} />
             <Route path="ohs" element={<OhsPage />} />
             <Route path="training" element={<TrainingPage />} />

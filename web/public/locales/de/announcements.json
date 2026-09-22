@@ -23,7 +23,8 @@
     "archived": "Ankündigung archiviert.",
     "empty": "Noch keine Ankündigungen.",
     "loadError": "Ankündigungen konnten nicht geladen werden.",
-    "actionFailed": "Die Aktion konnte nicht abgeschlossen werden."
+    "actionFailed": "Die Aktion konnte nicht abgeschlossen werden.",
+    "edit": "Bearbeiten"
   },
   "fields": {
     "title": "Titel",
@@ -52,5 +53,23 @@
     "published": "Veröffentlicht",
     "expired": "Abgelaufen",
     "archived": "Archiviert"
+  },
+  "editor": {
+    "newTitle": "Neue Ankündigung",
+    "editTitle": "Ankündigung bearbeiten",
+    "contentPlaceholder": "Ankündigung schreiben...",
+    "saveDraftFirstTitle": "Zuerst den Entwurf speichern",
+    "saveDraftFirstHint": "Klicken Sie auf \"Als Entwurf speichern\", bevor Sie Bilder hinzufügen.",
+    "imageTooLarge": "Das Bild überschreitet 10 MB.",
+    "imageUploadFailed": "Das Bild konnte nicht hochgeladen werden.",
+    "attachments": "Dateianhänge",
+    "removeAttachment": "Anhang entfernen",
+    "dropFileHere": "Klicken oder Datei hierher ziehen",
+    "allowedFileTypes": "PDF, Word, Excel, PowerPoint oder Textdatei (bis 10 MB)",
+    "fileUploadFailed": "Die Datei konnte nicht hochgeladen werden.",
+    "fileTooLarge": "Die Datei überschreitet 10 MB.",
+    "fileTypeNotAllowed": "Dieser Dateityp ist nicht erlaubt.",
+    "attachmentDeleteFailed": "Der Anhang konnte nicht entfernt werden.",
+    "saved": "Änderungen gespeichert."
   }
 }

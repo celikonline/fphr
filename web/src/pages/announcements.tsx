@@ -16,9 +16,11 @@ import {
 import NoAccess from "@/components/no-access";
 import { useAnyPermission, usePermission } from "@/components/permission-guard";
 import AnnouncementManagePanel from "@/components/announcements/announcement-manage-panel";
+import { AnnouncementRichContent } from "@/components/announcements/announcement-rich-content";
 import { formatDateTime } from "@/lib/dates";
 import {
   enumKey,
+  listMyAnnouncementAttachments,
   getMyAnnouncementFeed,
   markAnnouncementRead,
   type AnnouncementFeedItem,
@@ -104,6 +106,12 @@ function FeedCard({ item }: { item: AnnouncementFeedItem }) {
   const [expanded, setExpanded] = useState(false);
   const priority = enumKey<AnnouncementPriority>(item.priority);
 
+  const attachmentsQuery = useQuery({
+    queryKey: ["announcements", item.id, "feed-attachments"],
+    queryFn: () => listMyAnnouncementAttachments(item.id),
+    enabled: expanded,
+  });
+
   const readMutation = useMutation({
     mutationFn: () => markAnnouncementRead(item.id),
     onSuccess: () => {
@@ -143,9 +151,9 @@ function FeedCard({ item }: { item: AnnouncementFeedItem }) {
         </Group>
       </UnstyledButton>
       {expanded && (
-        <Text size="sm" mt="sm" style={{ whiteSpace: "pre-wrap" }}>
-          {item.content}
-        </Text>
+        <div className="mt-3 text-sm">
+          <AnnouncementRichContent html={item.content} attachments={attachmentsQuery.data} />
+        </div>
       )}
     </Card>
   );
