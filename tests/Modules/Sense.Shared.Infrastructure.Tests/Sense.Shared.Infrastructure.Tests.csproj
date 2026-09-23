@@ -20,6 +20,7 @@
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="ClosedXML" />
+    <PackageReference Include="Hangfire.InMemory" />
   </ItemGroup>
 
 </Project>

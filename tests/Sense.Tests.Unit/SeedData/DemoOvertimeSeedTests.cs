@@ -4,7 +4,7 @@ using Sense.Modules.Leave.Domain.Overtime;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration.SeedData;
+namespace Sense.Tests.Unit.SeedData;
 
 /// <summary>
 /// A11 (izin modülü denetimi): the seeded overtime conversion shown under "İzne dönüşümler" was a Kind=Pay row

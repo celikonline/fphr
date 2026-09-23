@@ -134,17 +134,5 @@ public sealed class TenantQueryFilterConventionTests
         return Type.GetType("Sense.Shared.Infrastructure.Persistence.ModuleDbContext, Sense.Shared.Infrastructure");
     }
 
-    private static List<Assembly> GetProductAssemblies()
-    {
-        var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-
-        return loadedAssemblies
-            .Where(a =>
-            {
-                var name = a.GetName().Name ?? "";
-                return name.StartsWith("Sense.", StringComparison.Ordinal) &&
-                       !name.Contains("Test", StringComparison.OrdinalIgnoreCase);
-            })
-            .ToList();
-    }
+    private static List<Assembly> GetProductAssemblies() => ProductAssemblies.Load();
 }

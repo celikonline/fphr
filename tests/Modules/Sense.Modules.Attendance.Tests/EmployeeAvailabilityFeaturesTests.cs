@@ -29,7 +29,8 @@ public sealed class EmployeeAvailabilityFeaturesTests
     [Fact]
     public async Task Submit_ValidRequest_AddsAvailability()
     {
-        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, TimeProvider.System);
+        var clock = new FixedTimeProvider(new DateTimeOffset(2026, 9, 21, 10, 0, 0, TimeSpan.Zero));
+        var handler = new SubmitMyAvailabilityHandler(_tenant, _currentUser, _availability, clock);
 
         var result = await handler.Handle(
             new SubmitMyAvailabilityCommand(new DateOnly(2026, 9, 21), null, null, AvailabilityKind.Unavailable, "not"), TestContext.Current.CancellationToken);

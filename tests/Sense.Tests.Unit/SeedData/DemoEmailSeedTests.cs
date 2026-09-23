@@ -3,7 +3,7 @@ using Sense.Modules.Employee.Domain.Employees;
 using Shouldly;
 using Xunit;
 
-namespace Sense.Tests.Integration.SeedData;
+namespace Sense.Tests.Unit.SeedData;
 
 /// <summary>
 /// The Employee module rejects non-ASCII work e-mails (EmployeeEmailRules, senseik-044), so every address the demo

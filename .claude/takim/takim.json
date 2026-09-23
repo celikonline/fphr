@@ -41,6 +41,8 @@
     ],
     "taban_sayi": null,
     "zaman_asimi_sn": 900,
-    "desenler": {}
+    "desenler": {
+      "dotnet test Sense.slnx": "^\\s*(?:Passed|Failed|Başarılı|Başarısız)!\\s+-\\s+(?:Failed|Başarısız):\\s*\\d+,\\s*(?:Passed|Başarılı):\\s*(\\d+)"
+    }
   }
 }

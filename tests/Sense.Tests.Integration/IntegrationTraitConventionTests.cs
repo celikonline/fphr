@@ -61,7 +61,10 @@ public sealed class IntegrationTraitConventionTests
 
         foreach (var (testClass, testMethod) in testMethods)
         {
-            var traits = testMethod.GetCustomAttributes<TraitAttribute>().ToList();
+            // xUnit semantics: a [Trait] on the test class applies to every test in it, so class-level traits count too.
+            var traits = testMethod.GetCustomAttributes<TraitAttribute>()
+                .Concat(testClass.GetCustomAttributes<TraitAttribute>())
+                .ToList();
 
             var hasIntegrationTrait = traits.Any(t =>
                 t.Name == "Category" && t.Value == "Integration");
