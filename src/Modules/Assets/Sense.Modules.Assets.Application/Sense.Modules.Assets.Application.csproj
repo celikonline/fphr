@@ -7,6 +7,10 @@
     <ProjectReference Include="../Sense.Modules.Assets.Domain/Sense.Modules.Assets.Domain.csproj" />
     <ProjectReference Include="../Sense.Modules.Assets.Contracts/Sense.Modules.Assets.Contracts.csproj" />
     <ProjectReference Include="../../Employee/Sense.Modules.Employee.Contracts/Sense.Modules.Employee.Contracts.csproj" />
+    <!-- Cross-module read contract only, per Modules_TalkOnlyThroughContracts -->
+    <ProjectReference Include="../../Organization/Sense.Modules.Organization.Contracts/Sense.Modules.Organization.Contracts.csproj" />
+    <!-- IWorkflowService (start the "AssetAssignment" approval) + ApprovalCompleted/ApprovalRejected event handlers (TK-018) -->
+    <ProjectReference Include="../../Workflow/Sense.Modules.Workflow.Contracts/Sense.Modules.Workflow.Contracts.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Kernel/Sense.Shared.Kernel.csproj" />
     <ProjectReference Include="../../../Shared/Sense.Shared.Contracts/Sense.Shared.Contracts.csproj" />
   </ItemGroup>

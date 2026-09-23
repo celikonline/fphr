@@ -30,6 +30,10 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<Guid?>("ApprovalRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("approval_request_id");
+
                     b.Property<Guid?>("AssignedEmployeeId")
                         .HasColumnType("uuid")
                         .HasColumnName("assigned_employee_id");
@@ -69,6 +73,14 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("name");
 
+                    b.Property<Guid?>("PendingEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("pending_employee_id");
+
+                    b.Property<DateOnly?>("PendingIssuedAt")
+                        .HasColumnType("date")
+                        .HasColumnName("pending_issued_at");
+
                     b.Property<DateOnly?>("ReturnedAt")
                         .HasColumnType("date")
                         .HasColumnName("returned_at");
@@ -93,6 +105,9 @@ namespace Sense.Modules.Assets.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("TenantId")
                         .HasDatabaseName("ix_assets_tenant_id");
+
+                    b.HasIndex("TenantId", "ApprovalRequestId")
+                        .HasDatabaseName("ix_assets_tenant_id_approval_request_id");
 
                     b.HasIndex("TenantId", "AssignedEmployeeId")
                         .HasDatabaseName("ix_assets_tenant_id_assigned_employee_id");

@@ -1212,6 +1212,7 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="asset.cannot_retire_while_assigned" xml:space="preserve"><value>Atanmış bir zimmet emekliye ayrılamaz; önce iade edilmelidir.</value></data>
   <data name="asset.serial_number_in_use" xml:space="preserve"><value>Bu seri numaralı cihaz şu anda başka bir çalışana zimmetli.</value></data>
   <data name="asset.return_before_issue" xml:space="preserve"><value>İade tarihi zimmet veriliş tarihinden önce olamaz.</value></data>
+  <data name="asset.assignment_approval_mismatch" xml:space="preserve"><value>Bu zimmet ataması onay bekleyen durumda değil ya da farklı bir onay sürecine ait.</value></data>
   <data name="assets.employee_not_found" xml:space="preserve"><value>Çalışan bulunamadı.</value></data>
   <data name="assets.issued_before_hire" xml:space="preserve"><value>Zimmet veriliş tarihi çalışanın işe giriş tarihinden önce olamaz.</value></data>
   <data name="assets.no_employee_for_user" xml:space="preserve"><value>Kullanıcı hesabınıza bağlı bir çalışan kaydı bulunamadı.</value></data>

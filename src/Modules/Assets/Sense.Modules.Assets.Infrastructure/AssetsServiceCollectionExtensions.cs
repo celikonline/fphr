@@ -7,6 +7,7 @@ using Sense.Modules.Assets.Domain;
 using Sense.Modules.Assets.Infrastructure.Lookups;
 using Sense.Modules.Assets.Infrastructure.Persistence;
 using Sense.Modules.Employee.Contracts.Events;
+using Sense.Modules.Workflow.Contracts.Events;
 using Sense.Shared.Contracts.Events;
 
 namespace Sense.Modules.Assets.Infrastructure;
@@ -29,13 +30,15 @@ public static class AssetsServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Assets' cross-module integration event handlers (faz4: EmployeeTerminated -> open-asset audit trail),
-    /// registered explicitly for Sense.Worker (not the whole Application assembly - mirrors Documents'
-    /// AddDocumentsIntegrationEventHandlers).
+    /// Assets' cross-module integration event handlers (faz4: EmployeeTerminated -> open-asset audit trail;
+    /// TK-018: Workflow ApprovalCompleted/ApprovalRejected -> finish/cancel a pending "AssetAssignment"), registered
+    /// explicitly for Sense.Worker (not the whole Application assembly - mirrors Documents' AddDocumentsIntegrationEventHandlers).
     /// </summary>
     public static IServiceCollection AddAssetsIntegrationEventHandlers(this IServiceCollection services)
     {
         services.AddScoped<IIntegrationEventHandler<EmployeeTerminated>, EmployeeTerminatedAssetAuditHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalCompleted>, AssetAssignmentApprovalCompletedHandler>();
+        services.AddScoped<IIntegrationEventHandler<ApprovalRejected>, AssetAssignmentApprovalRejectedHandler>();
         return services;
     }
 }
