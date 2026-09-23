@@ -39,7 +39,7 @@
         "komut": "pnpm test"
       }
     ],
-    "taban_sayi": null,
+    "taban_sayi": 3683,
     "zaman_asimi_sn": 900,
     "desenler": {
       "dotnet test Sense.slnx": "^\\s*(?:Passed|Failed|Başarılı|Başarısız)!\\s+-\\s+(?:Failed|Başarısız):\\s*\\d+,\\s*(?:Passed|Başarılı):\\s*(\\d+)"
