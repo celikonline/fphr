@@ -1,0 +1,18 @@
+{
+  "id": "TK-026",
+  "baslik": "Mobil - profil ekranina taleplerim listesi eklenmesi",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/mobil-profil-talepler",
+  "kaynak": "Kolay IK arastirmasi 2026-09-23 - profil ekraninda kisisel bilgi + talepler birlikte, senseik-mobile'da yalniz kisisel bilgi var",
+  "kabul": [
+    "ProfileScreen.tsx'e, kullanicinin kendi izin taleplerinin (LeaveService.getMyRequests) ozet bir listesi eklendi (son N talep + durum rozeti).",
+    "Listeye tiklaninca LeaveScreen'deki ilgili talebe gidiliyor (ya da ayni bilgiyi tekrar gosteriyor - navigasyon deseni mevcut ekranlarla tutarli).",
+    "Var olan kisisel bilgi karti DEGISMEDI.",
+    "En az bir component testi yeni listeyi dogruluyor."
+  ],
+  "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-026.md"
+}

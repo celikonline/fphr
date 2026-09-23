@@ -1,0 +1,18 @@
+{
+  "id": "TK-030",
+  "baslik": "Mobil - bordro pusulasi goruntuleme + okudum onayliyorum (RISKLI - PAYROLL)",
+  "durum": "backlog",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/mobil-bordro-pusulasi",
+  "kaynak": "Kolay IK arastirmasi 2026-09-23 - maas pusulasi goruntuleme + okudum onayliyorum, senseik-mobile'da PayrollScreen tamamen statik placeholder",
+  "kabul": [
+    "PayrollScreen.tsx artik kullanicinin kendi bordro pusulalarini (varsa mevcut Payroll modulu API'si uzerinden) listeliyor.",
+    "Bir pusula goruntulenip 'Okudum, onayliyorum' ile onaylanabiliyor (backend'de zaten bu akis varsa kullan, yoksa SORU olarak isaretle - yeni Payroll uc noktasi bu kartin kapsaminda YAPILMAZ, insan onayi gerekir).",
+    "Hicbir bordro/maas HESAPLAMA mantigina dokunulmuyor - yalniz goruntuleme + onay.",
+    "PII/bordro icerigi loglanmiyor (org guvenlik kurali)."
+  ],
+  "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY + INSAN ONAYI (payroll riskli alan, birlestirmeden once zorunlu)",
+  "riskli_alan": true,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-030.md"
+}

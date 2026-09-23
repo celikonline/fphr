@@ -1,0 +1,18 @@
+{
+  "id": "TK-027",
+  "baslik": "Mobil - vardiya goruntuleme (kendi+is arkadaslari) + musait olmama girisi",
+  "durum": "hazir",
+  "sahip": "takim-gelistirici-node",
+  "dal": "takim/mobil-vardiya",
+  "kaynak": "Kolay IK arastirmasi 2026-09-23 - vardiya ile calisan ekipler kendi+arkadas mesai planlarini goruyor, senseik-mobile'da hic yok",
+  "kabul": [
+    "Attendance modulunde zaten var olan vardiya (shift) API'lerini kullanan yeni bir mobil ekran: kullanicinin kendi vardiya planini gosteriyor.",
+    "Ayni ekranda iş arkadaslarinin (ayni birim/ekip) vardiya planlari da (yetkisi varsa) gorulebiliyor.",
+    "Kullanici musait olmadigi zamanlari (unavailable) girebiliyor - backend'de zaten bir uc nokta varsa onu kullan, yoksa SORU olarak isaretle, yeni backend islevi bu mobil kartin kapsaminda degil.",
+    "Yeni backend uc noktasi GEREKIYORSA bunu yapma, SORU olarak birak - bu kart yalniz mobil UI, var olan API'leri tuketir."
+  ],
+  "birlestirme_kapisi": "mobil test suite YESIL + gozden gecirici ONAY",
+  "riskli_alan": false,
+  "kanit": null,
+  "handoff": "docs/takim/handoff/TK-027.md"
+}
