@@ -1064,6 +1064,25 @@ SenseİK hesabınız etkinleştirildi. Giriş: {url}</value></data>
   <data name="import.column.attendance.checkIn.description" xml:space="preserve"><value>Giriş saati (SS:dd); boş bırakılabilir.</value></data>
   <data name="import.column.attendance.checkOut" xml:space="preserve"><value>Çıkış saati</value></data>
   <data name="import.column.attendance.checkOut.description" xml:space="preserve"><value>Çıkış saati (SS:dd); boş bırakılabilir.</value></data>
+  <data name="import.template.assets.zimmet.name" xml:space="preserve"><value>Zimmet</value></data>
+  <data name="import.template.assets.zimmet.description" xml:space="preserve"><value>Çalışanlara zimmetli ekipmanları (bilgisayar, telefon, araç vb.) toplu olarak içe aktarın.</value></data>
+  <data name="import.template.assets.zimmet.instruction.match" xml:space="preserve"><value>Çalışanlar kimlik numarasıyla eşleştirilir; eşleşen aktif çalışan bulunamazsa satır hatalı sayılır.</value></data>
+  <data name="import.template.assets.zimmet.instruction.category" xml:space="preserve"><value>Kategori adı sistemde yoksa otomatik oluşturulur; büyük/küçük harf ve boşluk farkı gözetilmeden mevcut kategoriyle eşleştirilir.</value></data>
+  <data name="import.template.assets.zimmet.instruction.returned" xml:space="preserve"><value>İade tarihi doldurulursa satır kapalı (iade edilmiş) bir zimmet olarak, boş bırakılırsa açık (üzerinde duran) bir zimmet olarak işlenir.</value></data>
+  <data name="import.template.assets.zimmet.sample.open" xml:space="preserve"><value>Doğru: hâlâ çalışanın üzerinde duran bir zimmet.</value></data>
+  <data name="import.template.assets.zimmet.sample.closed" xml:space="preserve"><value>Doğru: iade edilmiş, geçmiş bir zimmet.</value></data>
+  <data name="import.column.assets.employeeNationalId" xml:space="preserve"><value>Kimlik numarası</value></data>
+  <data name="import.column.assets.employeeNationalId.description" xml:space="preserve"><value>11 haneli T.C. kimlik numarası; çalışan bu numarayla eşleştirilir.</value></data>
+  <data name="import.column.assets.categoryName" xml:space="preserve"><value>Kategori</value></data>
+  <data name="import.column.assets.categoryName.description" xml:space="preserve"><value>Ekipman kategorisi (örn. Bilgisayar, Telefon, Araç); yoksa otomatik oluşturulur.</value></data>
+  <data name="import.column.assets.serialNumber" xml:space="preserve"><value>Seri numarası</value></data>
+  <data name="import.column.assets.serialNumber.description" xml:space="preserve"><value>Varsa cihazın seri numarası; aynı kategori + seri no ile mevcut zimmet güncellenir, boşsa yeni zimmet oluşturulur.</value></data>
+  <data name="import.column.assets.assignedAt" xml:space="preserve"><value>Zimmet veriliş tarihi</value></data>
+  <data name="import.column.assets.assignedAt.description" xml:space="preserve"><value>Ekipmanın çalışana verildiği tarih (GG.AA.YYYY).</value></data>
+  <data name="import.column.assets.returnedAt" xml:space="preserve"><value>İade tarihi</value></data>
+  <data name="import.column.assets.returnedAt.description" xml:space="preserve"><value>Ekipmanın iade edildiği tarih (GG.AA.YYYY); boş bırakılırsa zimmet hâlâ açık kabul edilir.</value></data>
+  <data name="import.column.assets.note" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="import.column.assets.note.description" xml:space="preserve"><value>Zimmetin önemli detayları (marka/model vb.); opsiyonel.</value></data>
   <data name="documents.file_name_invalid" xml:space="preserve"><value>Geçersiz dosya adı.</value></data>
   <data name="documents.file_type_not_allowed" xml:space="preserve"><value>Bu dosya türüne izin verilmiyor. İzin verilenler: pdf, jpg, jpeg, png, gif, webp, heic, doc, docx, xls, xlsx, ppt, pptx, txt, csv, odt, ods.</value></data>
   <data name="documents.upload_not_pending" xml:space="preserve"><value>Bu belgenin yüklemesi zaten onaylanmış veya belge artık yüklenebilir durumda değil.</value></data>

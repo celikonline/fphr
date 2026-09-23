@@ -30,10 +30,14 @@ public static class AssetsPermissions
     public static readonly Permission MyAssets = new(
         "assets.my.assets", Module, "Kendi Zimmetlerim", Group, "Üzerinize zimmetli ekipmanları görüntüleme");
 
+    public static readonly Permission AssetsImport = new(
+        "assets.assets.import", Module, "Zimmet İçe Aktarma", Group, "Zimmet Excel dosyasından toplu içe aktarma (Ayarlar > Veri aktar > Zimmet)");
+
     public static IEnumerable<Permission> All =>
     [
         AssetsView, AssetsManage,
         CategoriesView, CategoriesManage,
         MyAssets,
+        AssetsImport,
     ];
 }
