@@ -10,6 +10,7 @@ internal static class AnnouncementsTables
     public const string Announcements = "announcements";
     public const string AnnouncementReadRecords = "announcement_read_records";
     public const string AnnouncementAttachments = "announcement_attachments";
+    public const string Recognitions = "recognitions";
 
     public const int TitleLength = 200;
     public const int EnumLength = 30;
@@ -69,5 +70,19 @@ public sealed class AnnouncementReadRecordConfiguration : IEntityTypeConfigurati
 
         b.HasIndex(x => new { x.TenantId, x.AnnouncementId, x.EmployeeId }).IsUnique();
         b.HasIndex(x => new { x.TenantId, x.EmployeeId });
+    }
+}
+
+public sealed class RecognitionConfiguration : IEntityTypeConfiguration<Recognition>
+{
+    public void Configure(EntityTypeBuilder<Recognition> b)
+    {
+        b.ToTable(AnnouncementsTables.Recognitions);
+        b.HasKey(x => x.Id);
+
+        b.Property(x => x.Message).HasMaxLength(AnnouncementsLimits.RecognitionMessageMaxLength).IsRequired();
+
+        b.HasIndex(x => new { x.TenantId, x.CreatedAt });
+        b.HasIndex(x => new { x.TenantId, x.ReceiverEmployeeId });
     }
 }

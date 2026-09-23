@@ -321,6 +321,62 @@ namespace Sense.Modules.Announcements.Infrastructure.Migrations
                     b.ToTable("company_events", "announcements");
                 });
 
+            modelBuilder.Entity("Sense.Modules.Announcements.Domain.Recognition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_user_id");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("message");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("modified_date");
+
+                    b.Property<Guid?>("ModifiedUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("modified_user_id");
+
+                    b.Property<Guid>("ReceiverEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("receiver_employee_id");
+
+                    b.Property<Guid>("SenderEmployeeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sender_employee_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_recognitions");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("ix_recognitions_tenant_id");
+
+                    b.HasIndex("TenantId", "CreatedAt")
+                        .HasDatabaseName("ix_recognitions_tenant_id_created_at");
+
+                    b.HasIndex("TenantId", "ReceiverEmployeeId")
+                        .HasDatabaseName("ix_recognitions_tenant_id_receiver_employee_id");
+
+                    b.ToTable("recognitions", "announcements");
+                });
+
             modelBuilder.Entity("Sense.Modules.Announcements.Domain.Support.HelpSearchLog", b =>
                 {
                     b.Property<Guid>("Id")
